@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>{css_head}</style>
+        <script>
+         const API_URL = '{api_url}';
+        </script>
+        <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+        <script src="{api_url}/assets/js/vendor/marked.min.js"></script>
+        <script src="{api_url}/assets/js/vendor/rangy-1.3.1/rangy-core.js"></script>
+        <script src="{api_url}/assets/js/vendor/rangy-1.3.1/rangy-serializer.js"></script>
+        <script src="{api_url}/assets/js/vendor/rangy-1.3.1/rangy-classapplier.js"></script>
+        <script src="{api_url}/assets/js/vendor/rangy-1.3.1/rangy-highlighter.js"></script>
+        <script>{js_head}</script>
+    </head>
+    <body>
+        <div id="ssp_main">
+            {content}
+        </div>
+        <script>{js_body}</script>
+
+        <script src="{api_url}/assets/js/simsapa.min.js"></script>
+
+        {icons_html}
+
+    </body>
+</html>
