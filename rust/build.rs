@@ -9,8 +9,7 @@ fn main() {
         // - Qt Qml requires linking Qt Network on macOS
         .qt_module("Network")
         .qt_module("Quick")
-        .qt_module("WebEngineQuick")
-        .qt_module("WebEngineWidgets")
+        .qt_module("WebView")
         .qml_module(QmlModule {
             uri: "com.profound_labs.simsapa",
             rust_files: &[

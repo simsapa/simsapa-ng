@@ -17,8 +17,12 @@ crate-type = ["staticlib", "rlib"]
 [dependencies]
 chrono = "0.4.40"
 cxx = "1.0.148"
-cxx-qt = "0.7.1"
-cxx-qt-lib = { version = "0.7.1", features = ["full"] }
+# cxx-qt = "0.7.1"
+cxx-qt = { path = "../../src-lib/cxx-qt/crates/cxx-qt" }
+qt-build-utils = { path = "../../src-lib/cxx-qt/crates/qt-build-utils" }
+# cxx-qt-lib = { version = "0.7.1", features = ["full"] }
+cxx-qt-lib = { path = "../../src-lib/cxx-qt/crates/cxx-qt-lib", features = ["full"] }
+libsqlite3-sys = { version = "0.31", features = ["bundled"] }
 diesel = { version = "2.2.8", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"] }
 dotenvy = "0.15.7"
 rocket = "0.5.1"
@@ -29,4 +33,5 @@ ureq = "3.0.10"
 
 [build-dependencies]
 # The link_qt_object_files feature is required for statically linking Qt 6.
-cxx-qt-build = { version = "0.7.1", features = ["link_qt_object_files"] }
+# cxx-qt-build = { version = "0.7.1", features = ["link_qt_object_files"] }
+cxx-qt-build = { path =  "../../src-lib/cxx-qt/crates/cxx-qt-build", features = ["link_qt_object_files"] }

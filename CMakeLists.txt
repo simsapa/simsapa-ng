@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(example_simsapa)
+project(example_simsapa LANGUAGES CXX)
 
 # Rust always links against non-debug Windows runtime on *-msvc targets
 # Note it is best to set this on the command line to ensure all targets are consistent
@@ -14,10 +14,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_AUTORCC_OPTIONS --format-version 1)
+list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
+
 set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test)
 set(CXXQT_QTCOMPONENTS ${CXXQT_QTCOMPONENTS} QmlImportScanner)
 
-find_package(Qt6 COMPONENTS ${CXXQT_QTCOMPONENTS} Quick WebEngineQuick WebEngineWidgets)
+find_package(Qt6 COMPONENTS ${CXXQT_QTCOMPONENTS} Quick WebView)
 
 find_package(CxxQt QUIET)
 if(NOT CxxQt_FOUND)
@@ -36,8 +39,16 @@ cxx_qt_import_crate(
     MANIFEST_PATH rust/Cargo.toml 
     CRATES simsapa_lib
     LOCKED
-    QT_MODULES Qt::Core Qt::Gui Qt::Qml Qt::QuickControls2 Qt::Network Qt::Quick Qt::WebEngineQuick Qt6::WebEngineWidgets
-    QMAKE /usr/bin/qmake6
+    QMAKE /home/gambhiro/Qt/6.8.2/android_x86_64/bin/qmake6
+
+    QT_MODULES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+        Qt::QuickControls2
+        Qt::Network
+        Qt::WebView
 )
 
 cxx_qt_import_qml_module(simsapa_qml_module
@@ -46,12 +57,26 @@ cxx_qt_import_qml_module(simsapa_qml_module
 
 qt_add_resources(icons "assets/icons.qrc")
 
-add_executable(example_simsapa ${icons} cpp/main.cpp)
+qt_add_executable(example_simsapa ${icons} cpp/main.cpp)
+
+set_target_properties(example_simsapa PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 
 # Link to the qml module, which in turn links to the Rust simsapa library
 target_link_libraries(example_simsapa
     PRIVATE simsapa_qml_module
-    PUBLIC simsapa_lib sqlite3)
+    PUBLIC
+        simsapa_lib
+        Qt6::Core
+        Qt6::Gui
+        Qt6::Qml
+        Qt6::Quick
+        Qt::QuickControls2
+        Qt::Network
+        Qt::WebView
+    )
 
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(example_simsapa)

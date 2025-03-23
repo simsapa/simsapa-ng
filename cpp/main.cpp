@@ -1,10 +1,8 @@
 #include <iostream>
 #include <thread>
 #include <QtGui/QGuiApplication>
-#include <QtWebEngineQuick>
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
-#include <QWebEngineView>
 // #include <typeinfo>
 
 extern "C" void start_webserver();
@@ -15,8 +13,6 @@ int main(int argc, char* argv[]) {
 
   QCoreApplication::setApplicationName("Simsapa Dhamma Reader");
   QCoreApplication::setOrganizationName("Profound Labs");
-
-  QtWebEngineQuick::initialize();
 
   QGuiApplication app(argc, argv);
 

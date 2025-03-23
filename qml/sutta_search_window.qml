@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
-import QtWebEngine
+import QtWebView
 
 import com.profound_labs.simsapa 1.0
 
@@ -129,35 +129,12 @@ ApplicationWindow {
             }
         }
 
-        WebEngineView {
+        WebView {
             id: webEngineView
             /* focus: true */
-
             Layout.fillWidth: true
             Layout.fillHeight: true
-
-            /* anchors.top: search_bar.bottom */
-            /* anchors.bottom: parent.bottom */
-            /* anchors.left: parent.left */
-            /* anchors.right: parent.right */
-
-            /* width: 1200 */
-            /* height: 800 */
             url: "http://localhost:8484/"
-
-            settings.localContentCanAccessRemoteUrls: true
-            settings.localContentCanAccessFileUrls: false
-            /* settings.autoLoadImages: appSettings.autoLoadImages */
-            /* settings.javascriptEnabled: appSettings.javaScriptEnabled */
-            /* settings.errorPageEnabled: appSettings.errorPageEnabled */
-            /* settings.pluginsEnabled: appSettings.pluginsEnabled */
-            /* settings.fullScreenSupportEnabled: appSettings.fullScreenSupportEnabled */
-            /* settings.autoLoadIconsForPage: appSettings.autoLoadIconsForPage */
-            /* settings.touchIconsEnabled: appSettings.touchIconsEnabled */
-            /* settings.webRTCPublicInterfacesOnly: appSettings.webRTCPublicInterfacesOnly */
-            /* settings.pdfViewerEnabled: appSettings.pdfViewerEnabled */
-            /* settings.imageAnimationPolicy: appSettings.imageAnimationPolicy */
-            settings.screenCaptureEnabled: true
         }
     }
 }
