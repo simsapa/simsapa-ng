@@ -6,11 +6,17 @@ use std::env;
 use std::path::PathBuf;
 use std::fs;
 
+use crate::api::ffi::get_internal_storage_path;
+
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
 
-    let db_path = PathBuf::from(env::var("DATABASE_PATH").expect("DATABASE_PATH must be set"));
-    // let db_path = PathBuf::from("./rust/assets/appdata.sqlite3");
+    let db_path = match env::var("DATABASE_PATH") {
+        Ok(s) => PathBuf::from(s),
+        Err(_) => {
+            PathBuf::from(get_internal_storage_path().to_string()).join("appdata.sqlite3")
+        }
+    };
 
     if !db_path.exists() {
         panic!("File not found: {}", db_path.as_os_str().to_str().expect("os_str Error!"));

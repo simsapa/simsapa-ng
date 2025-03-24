@@ -57,11 +57,27 @@ cxx_qt_import_qml_module(simsapa_qml_module
 
 qt_add_resources(icons "assets/icons.qrc")
 
-qt_add_executable(example_simsapa ${icons} cpp/main.cpp)
+qt_add_executable(example_simsapa
+    cpp/main.cpp
+
+    ${icons}
+
+    android/AndroidManifest.xml
+    android/build.gradle
+    android/gradle.properties
+    android/gradlew
+    android/gradlew.bat
+    android/gradle/wrapper/gradle-wrapper.jar
+    android/gradle/wrapper/gradle-wrapper.properties
+    android/res/values/libs.xml
+    android/res/xml/network_security_config.xml
+    android/res/xml/qtprovider_paths.xml
+)
 
 set_target_properties(example_simsapa PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+    QT_ANDROID_PACKAGE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/android
 )
 
 # Link to the qml module, which in turn links to the Rust simsapa library
@@ -80,3 +96,9 @@ target_link_libraries(example_simsapa
 
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(example_simsapa)
+
+add_custom_command(
+    TARGET example_simsapa PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E echo "Copy assets..."
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/android_assets.sh ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}
+)

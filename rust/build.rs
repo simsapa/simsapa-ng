@@ -14,6 +14,7 @@ fn main() {
             uri: "com.profound_labs.simsapa",
             rust_files: &[
                     "src/sutta_bridge.rs",
+                    "src/api.rs",
             ],
             qml_files: &[
                     "../qml/sutta_search_window.qml",

@@ -30,6 +30,9 @@ rocket_cors = "0.6.0"
 serde = { version = "1.0", features = ["derive"] }
 tinytemplate = "1.2.1"
 ureq = "3.0.10"
+walkdir = "2.5.0"
+time = { version = "0.3.41", features = ["local-offset", "formatting", "macros"] }
+
 
 [build-dependencies]
 # The link_qt_object_files feature is required for statically linking Qt 6.

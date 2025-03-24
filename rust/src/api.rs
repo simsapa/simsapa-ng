@@ -1,3 +1,8 @@
+use std::path::PathBuf;
+use std::io::{Read, Write};
+use std::net::TcpStream;
+use std::time::Duration;
+
 use ureq;
 use rocket::{get, routes};
 use rocket::fs::FileServer;
@@ -5,18 +10,37 @@ use rocket::response::content;
 use rocket::Shutdown;
 use rocket_cors::CorsOptions;
 
-//use std::fs;
-use std::path::PathBuf;
-use std::io::{Read, Write};
-use std::net::TcpStream;
-use std::time::Duration;
-
+use ffi::get_internal_storage_path;
 use crate::{API_PORT, API_URL};
 use crate::html_content::html_page;
+use crate::dir_list::generate_html_directory_listing;
+
+#[cxx_qt::bridge]
+pub mod ffi {
+    unsafe extern "C++" {
+        include!("cxx-qt-lib/qstring.h");
+        type QString = cxx_qt_lib::QString;
+
+        // FIXME: How to avoid using the full path?
+        include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/main.h");
+        fn get_internal_storage_path() -> QString;
+    }
+}
 
 #[get("/")]
 fn index() -> content::RawHtml<String> {
-    content::RawHtml(html_page("", None, None, None))
+    let storage_path = get_internal_storage_path().to_string();
+
+    let folder_contents = generate_html_directory_listing(&storage_path, 2).unwrap_or(String::from("Error"));
+
+    let html = format!("
+<h1>Simsapa Dhamma Reader</h1>
+<img src='/assets/icons/simsapa-logo-horizontal-gray-w600.png'>
+<p>Assets path: {}</p>
+<p>Contents:</p>
+<pre>{}</pre>", storage_path, folder_contents);
+
+    content::RawHtml(html_page(&html, None, None, None))
 }
 
 #[get("/shutdown")]
@@ -28,8 +52,8 @@ fn shutdown(shutdown: Shutdown) {
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
-    let assets_path = PathBuf::from("./assets/");
-    // println!("Serving assets from: {}", assets_path.display());
+    // let p = ffi::getDatabasePath().to_string();
+    let storage_path = PathBuf::from(ffi::get_internal_storage_path().to_string());
 
     let cors = CorsOptions::default().to_cors().expect("Cors options error");
 
@@ -41,7 +65,7 @@ pub async extern "C" fn start_webserver() {
     let _ = rocket::build()
         .configure(config)
         .attach(cors)
-        .mount("/assets", FileServer::from(assets_path))
+        .mount("/assets", FileServer::from(storage_path))
         .mount("/", routes![
             index,
             shutdown
