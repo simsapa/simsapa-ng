@@ -22,8 +22,9 @@ pub mod ffi {
         type QString = cxx_qt_lib::QString;
 
         // FIXME: How to avoid using the full path?
-        include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/main.h");
+        include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/utils.h");
         fn get_internal_storage_path() -> QString;
+        fn get_app_assets_path() -> QString;
     }
 }
 
@@ -36,7 +37,7 @@ fn index() -> content::RawHtml<String> {
     let html = format!("
 <h1>Simsapa Dhamma Reader</h1>
 <img src='/assets/icons/simsapa-logo-horizontal-gray-w600.png'>
-<p>Assets path: {}</p>
+<p>Internal storage path: {}</p>
 <p>Contents:</p>
 <pre>{}</pre>", storage_path, folder_contents);
 
@@ -52,8 +53,7 @@ fn shutdown(shutdown: Shutdown) {
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
-    // let p = ffi::getDatabasePath().to_string();
-    let storage_path = PathBuf::from(ffi::get_internal_storage_path().to_string());
+    let storage_path = PathBuf::from(ffi::get_app_assets_path().to_string());
 
     let cors = CorsOptions::default().to_cors().expect("Cors options error");
 

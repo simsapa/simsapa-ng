@@ -6,7 +6,7 @@ use std::env;
 use std::path::PathBuf;
 use std::fs;
 
-use crate::api::ffi::get_internal_storage_path;
+use crate::api::ffi::get_app_assets_path;
 
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
@@ -14,7 +14,7 @@ pub fn establish_connection() -> SqliteConnection {
     let db_path = match env::var("DATABASE_PATH") {
         Ok(s) => PathBuf::from(s),
         Err(_) => {
-            PathBuf::from(get_internal_storage_path().to_string()).join("appdata.sqlite3")
+            PathBuf::from(get_app_assets_path().to_string()).join("appdata.sqlite3")
         }
     };
 

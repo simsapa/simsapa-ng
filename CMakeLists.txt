@@ -59,6 +59,7 @@ qt_add_resources(icons "assets/icons.qrc")
 
 qt_add_executable(example_simsapa
     cpp/main.cpp
+    cpp/utils.cpp
 
     ${icons}
 
