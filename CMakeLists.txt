@@ -97,9 +97,3 @@ target_link_libraries(example_simsapa
 
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(example_simsapa)
-
-add_custom_command(
-    TARGET example_simsapa PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E echo "Copy assets..."
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/android_assets.sh ${PROJECT_NAME} ${PROJECT_SOURCE_DIR}
-)

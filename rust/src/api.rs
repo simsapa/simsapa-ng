@@ -5,9 +5,10 @@ use std::time::Duration;
 
 use ureq;
 use rocket::{get, routes};
-use rocket::fs::FileServer;
 use rocket::response::content;
 use rocket::Shutdown;
+use rocket::State;
+use rocket::http::{Status, ContentType};
 use rocket_cors::CorsOptions;
 
 use ffi::get_internal_storage_path;
@@ -28,11 +29,59 @@ pub mod ffi {
     }
 }
 
+static APP_ASSETS: include_dir::Dir<'_> = include_dir::include_dir!("$CARGO_MANIFEST_DIR/../assets/");
+
+#[derive(Debug)]
+pub struct AssetsHandler {
+    files: &'static include_dir::Dir<'static>,
+}
+
+impl Default for AssetsHandler {
+    fn default() -> Self {
+        let files = &APP_ASSETS;
+        Self { files }
+    }
+}
+
+#[get("/assets/<path..>")]
+fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (ContentType, Vec<u8>)) {
+    let path_str = path.to_str().unwrap_or("");
+
+    let some_entry = assets.files.get_entry(path_str);
+
+    if let Some(entry) = some_entry {
+        if let Some(entry_file) = entry.as_file() {
+
+            let p = PathBuf::from(path_str);
+            let path_ext = match p.extension() {
+                Some(s) => s.to_str().unwrap_or("txt"),
+                None => "txt",
+            };
+
+            let content_type = ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain);
+
+            let body = Vec::from(entry_file.contents());
+
+            (Status::Ok, (content_type, body))
+
+        } else {
+            let s = format!{"404 Not Found: {}", path_str};
+            let ret = Vec::from(s.as_bytes());
+            (Status::NotFound, (ContentType::Plain, ret))
+        }
+
+    } else {
+        let s = format!{"404 Not Found: {}", path_str};
+        let ret = Vec::from(s.as_bytes());
+        (Status::NotFound, (ContentType::Plain, ret))
+    }
+}
+
 #[get("/")]
 fn index() -> content::RawHtml<String> {
     let storage_path = get_internal_storage_path().to_string();
 
-    let folder_contents = generate_html_directory_listing(&storage_path, 2).unwrap_or(String::from("Error"));
+    let folder_contents = generate_html_directory_listing(&storage_path, 3).unwrap_or(String::from("Error"));
 
     let html = format!("
 <h1>Simsapa Dhamma Reader</h1>
@@ -53,7 +102,7 @@ fn shutdown(shutdown: Shutdown) {
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
-    let storage_path = PathBuf::from(ffi::get_app_assets_path().to_string());
+    let assets_files: AssetsHandler = AssetsHandler::default();
 
     let cors = CorsOptions::default().to_cors().expect("Cors options error");
 
@@ -65,11 +114,12 @@ pub async extern "C" fn start_webserver() {
     let _ = rocket::build()
         .configure(config)
         .attach(cors)
-        .mount("/assets", FileServer::from(storage_path))
         .mount("/", routes![
             index,
-            shutdown
+            shutdown,
+            serve_assets,
         ])
+        .manage(assets_files)
         .launch().await;
 }
 

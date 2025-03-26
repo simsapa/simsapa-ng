@@ -1,4 +1,5 @@
 #include <QDir>
+#include <QDirIterator>
 #include <QFile>
 #include <QString>
 #include <QSysInfo>
@@ -25,6 +26,15 @@ QString copy_file(QString source_file, QString destination_file) {
     QFileInfo fileInfo(source_file);
     if (fileInfo.isDir()) {
         return QString("Error: Is a directory: " + source_file);
+    }
+
+    QDir dest_dir = QFileInfo(destination_file).dir();
+    if (!dest_dir.exists()) {
+        if (!dest_dir.mkpath(".")) {
+            QString ret_msg = QString("Failed to create directory for: " + destination_file);
+            qWarning() << ret_msg;
+            return ret_msg;
+        }
     }
 
     QFile source(source_file);
@@ -104,6 +114,67 @@ QString copy_apk_assets_to_internal_storage(QString apk_asset_path /* = QString(
         QString destination_file = dest_dir_path;
 
         copy_file(source_path, destination_file);
+    }
+
+    return ret_msg;
+}
+
+QStringList list_qrc_assets() {
+    qWarning() << "list_qrc_assets()";
+    QStringList resource_files;
+    // QDirIterator it(":/app_assets", QStringList() << "*", QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    QDirIterator it(":",                                  QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString i(it.next());
+        resource_files.append(i);
+        qWarning() << i;
+    }
+    qWarning() << resource_files.length();
+    return resource_files;
+}
+
+QString copy_qrc_app_assets_to_internal_storage() {
+    qWarning() << "copy_qrc_app_assets_to_internal_storage()";
+    QString assets_storage = get_app_assets_path();
+    QString ret_msg = QString("");
+
+    QDir assets_storage_dir(assets_storage);
+    if (!assets_storage_dir.exists()) {
+        if (!assets_storage_dir.mkpath(".")) {
+            ret_msg = QString("Failed to create directory: " + assets_storage);
+            qWarning() << ret_msg;
+            return ret_msg;
+        }
+    }
+
+    QStringList resource_files;
+    QDirIterator it(":/app_assets", QStringList() << "*", QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        QString i(it.next());
+        qWarning() << i;
+        resource_files.append(i);
+    }
+
+    qWarning() << resource_files.length();
+
+    foreach (const QString& source_path, resource_files) {
+        // Remove ":/app_assets/" prefix
+        QString relative_path = source_path.mid(12);
+        QString destination_path = assets_storage + "/" + relative_path;
+
+        qWarning() << "relative_path: " << relative_path;
+        // qWarning() << "destination_path: " << destination_path;
+
+        QFileInfo fileInfo(source_path);
+        if (fileInfo.isDir()) {
+            continue;
+        }
+
+        QString r = copy_file(source_path, destination_path);
+        if (!r.isEmpty()) {
+            qWarning() << r;
+            return r;
+        }
     }
 
     return ret_msg;

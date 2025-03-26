@@ -7,7 +7,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtQml/QQmlApplicationEngine>
 #include <QtQml/QQmlContext>
-#include "utils.h"
+// #include "utils.h"
 // #include <typeinfo>
 
 extern "C" void start_webserver();
@@ -20,17 +20,6 @@ int main(int argc, char* argv[]) {
   QCoreApplication::setOrganizationName("Profound Labs");
 
   QGuiApplication app(argc, argv);
-
-  if (QSysInfo::productType() == "android") {
-    // Check if we already copied assets.
-    QDir app_assets(get_app_assets_path());
-    if (!app_assets.exists()) {
-      QString r = copy_apk_assets_to_internal_storage();
-      if (!r.isEmpty()) {
-        qWarning() << r;
-      }
-    }
-  }
 
   QQmlApplicationEngine engine;
 
