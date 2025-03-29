@@ -1,10 +1,10 @@
 all: run
 
 build:
-	cmake -S . -B build && cmake --build build
+	cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/
 
 run: build
-	./build/example_simsapa
+	./build/simsapadhammareader/simsapadhammareader
 
 db_reset:
 	rm ../assets-testing/appdata.sqlite3 && \

@@ -9,7 +9,9 @@ fn main() {
         // - Qt Qml requires linking Qt Network on macOS
         .qt_module("Network")
         .qt_module("Quick")
+        .qt_module("QuickWidgets")
         .qt_module("WebView")
+        .qt_module("Widgets")
         .qml_module(QmlModule {
             uri: "com.profound_labs.simsapa",
             rust_files: &[
@@ -18,6 +20,7 @@ fn main() {
             ],
             qml_files: &[
                     "../qml/sutta_search_window.qml",
+                    "../qml/word_lookup_window.qml",
             ],
             ..Default::default()
         })

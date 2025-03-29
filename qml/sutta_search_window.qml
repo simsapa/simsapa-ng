@@ -6,13 +6,14 @@ import QtWebView
 
 import com.profound_labs.simsapa 1.0
 
-ApplicationWindow {
+Item {
+    anchors.fill: parent
+    // title: qsTr("Simsapa Dhamma Reader - Sutta Search")
     id: aw
-    title: qsTr("Simsapa Dhamma Reader - Sutta Search")
-    width: 1300
-    height: 900
+    /* width: 1300 */
+    /* height: 900 */
     visible: true
-    color: palette.window
+    // color: palette.window
 
     SuttaBridge {
         id: sb
@@ -22,77 +23,16 @@ ApplicationWindow {
         webEngineView.url = url;
     }
 
-    function show_sutta(uid) {
-        var html = sb.get_sutta_html();
+    function set_query(text) {
+        search_input.text = text;
+    }
+
+    function show_sutta(query) {
+        if (query.length < 4) {
+            return;
+        }
+        var html = sb.get_sutta_html(query);
         webEngineView.loadHtml(html);
-    }
-
-    Action {
-        id: action_focus_search
-        shortcut: "Ctrl+L"
-        onTriggered: {
-            search_input.forceActiveFocus();
-            search_input.selectAll();
-        }
-    }
-
-    Action {
-        id: action_quit
-        shortcut: StandardKey.Quit
-        onTriggered: aw.close()
-    }
-
-    Action {
-        id: action_sutta_search
-        shortcut: "F5"
-        onTriggered: aw.close()
-    }
-
-    Action {
-        id: action_Sutta_Study
-        shortcut: "Ctrl+F5"
-        onTriggered: aw.close()
-    }
-
-    Action {
-        id: action_Dictionary_Search
-        shortcut: "F6"
-        onTriggered: aw.close()
-    }
-
-    menuBar: MenuBar {
-        Menu {
-            title: "&File"
-            MenuItem {
-                text: "&Quit"
-                onTriggered: Qt.quit()
-            }
-        }
-
-        Menu {
-            title: "&Windows"
-            MenuItem {
-                text: "&Sutta Search"
-                icon.source: "qrc:/icons/book"
-                // book icon
-                // F5
-                /* onTriggered: aw.trigger action_Sutta_Search() */
-                action: action_sutta_search
-            }
-
-            /* MenuItem { */
-            /*     text: "Sutta Study" */
-            /*     // book icon */
-            /*     // Ctrl+F5 */
-            /*     onTriggered: action_Sutta_Study() */
-            /* } */
-            /* MenuItem { */
-            /*     text: "&Dictionary Search" */
-            /*     // dict icon */
-            /*     // F6 */
-            /*     onTriggered: action_Dictionary_Search() */
-            /* } */
-        }
     }
 
     ColumnLayout {
@@ -123,7 +63,7 @@ ApplicationWindow {
                 ToolButton {
                     id: search_btn
                     icon.source: "qrc:/icons/search"
-                    onClicked: show_sutta()
+                    onClicked: show_sutta(search_input.text)
                     activeFocusOnTab: !aw.platformIsMac
                 }
             }
@@ -134,7 +74,7 @@ ApplicationWindow {
             /* focus: true */
             Layout.fillWidth: true
             Layout.fillHeight: true
-            url: "http://localhost:8484/"
+            url: "http://localhost:4848/"
         }
     }
 }

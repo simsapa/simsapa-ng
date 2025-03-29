@@ -26,6 +26,9 @@ pub mod ffi {
         include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/utils.h");
         fn get_internal_storage_path() -> QString;
         fn get_app_assets_path() -> QString;
+
+        include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/gui.h");
+        fn callback_run_lookup_query(query_text: QString);
     }
 }
 
@@ -77,6 +80,12 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
     }
 }
 
+#[get("/lookup_window_query/<word>")]
+fn lookup_window_query(word: &str) -> Status {
+    ffi::callback_run_lookup_query(ffi::QString::from(word));
+    Status::Ok
+}
+
 #[get("/")]
 fn index() -> content::RawHtml<String> {
     let storage_path = get_internal_storage_path().to_string();
@@ -118,6 +127,7 @@ pub async extern "C" fn start_webserver() {
             index,
             shutdown,
             serve_assets,
+            lookup_window_query,
         ])
         .manage(assets_files)
         .launch().await;
