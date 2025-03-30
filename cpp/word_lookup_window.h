@@ -1,26 +1,23 @@
 #ifndef WORD_LOOKUP_WINDOW_H
 #define WORD_LOOKUP_WINDOW_H
 
-#include <QMainWindow>
-#include <QQmlEngine>
-#include <QQuickWidget>
-#include <QQuickItem>
+#include <QObject>
+#include <QApplication>
+#include <QQmlApplicationEngine>
 
-class WordLookupWindow : public QMainWindow {
+class WordLookupWindow : public QObject {
     Q_OBJECT
 
 public:
-    explicit WordLookupWindow(QApplication* app, const QString& word, QWidget* parent = nullptr);
+    explicit WordLookupWindow(QApplication* app, const QString& word, QObject* parent = nullptr);
     ~WordLookupWindow();
 
     QApplication* m_app;
-    QQuickWidget* m_view;
-    QQuickItem* m_root;
-    QQmlEngine* m_engine;
+    QObject* m_root;
+    QQmlApplicationEngine *m_engine;
 
 private:
     void setup_qml();
-    void setup_menu_bar();
 };
 
 #endif

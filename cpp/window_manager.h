@@ -15,17 +15,18 @@ class WindowManager : public QObject {
         static WindowManager& instance(QApplication* app);
         static void lookup_word(const QString& word);
 
+        void create_plain_sutta_search_window();
         SuttaSearchWindow* create_sutta_search_window();
         WordLookupWindow* create_word_lookup_window(const QString& word);
+
+        static WindowManager *m_instance;
+        QApplication* m_app;
+        QList<SuttaSearchWindow*> sutta_search_windows;
+        QList<WordLookupWindow*> word_lookup_windows;
 
     private:
         WindowManager(QApplication* app, QObject *parent = nullptr);
         ~WindowManager();
-
-        QApplication* m_app;
-        static WindowManager *m_instance;
-        QList<SuttaSearchWindow*> sutta_search_windows;
-        QList<WordLookupWindow*> word_lookup_windows;
 
     signals:
         void signal_run_lookup_query(const QString& query_text);

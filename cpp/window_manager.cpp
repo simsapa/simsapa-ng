@@ -35,14 +35,14 @@ WindowManager::~WindowManager() {
 SuttaSearchWindow* WindowManager::create_sutta_search_window() {
     SuttaSearchWindow* w = new SuttaSearchWindow(this->m_app);
     sutta_search_windows.append(w);
-    w->show();
+    // w->m_root->show();
     return w;
 }
 
 WordLookupWindow* WindowManager::create_word_lookup_window(const QString& word) {
     WordLookupWindow* w = new WordLookupWindow(this->m_app, word);
     word_lookup_windows.append(w);
-    w->show();
+    // w->show();
     return w;
 }
 

@@ -1,27 +1,23 @@
 #ifndef SUTTA_SEARCH_WINDOW_H
 #define SUTTA_SEARCH_WINDOW_H
 
-#include <QMainWindow>
-#include <QQmlEngine>
-#include <QQuickWidget>
-#include <QQuickItem>
-#include <QAction>
+#include <QObject>
+#include <QApplication>
+#include <QQmlApplicationEngine>
 
-class SuttaSearchWindow : public QMainWindow {
+class SuttaSearchWindow : public QObject {
     Q_OBJECT
 
 public:
-    explicit SuttaSearchWindow(QApplication* app, QWidget* parent = nullptr);
+    explicit SuttaSearchWindow(QApplication* app, QObject* parent = nullptr);
     ~SuttaSearchWindow();
 
     QApplication* m_app;
-    QQuickWidget* m_view;
-    QQuickItem* m_root;
-    QQmlEngine* m_engine;
+    QObject* m_root;
+    QQmlApplicationEngine *m_engine;
 
 private:
     void setup_qml();
-    void setup_menu_bar();
 };
 
 #endif

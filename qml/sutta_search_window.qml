@@ -6,14 +6,13 @@ import QtWebView
 
 import com.profound_labs.simsapa 1.0
 
-Item {
-    anchors.fill: parent
-    // title: qsTr("Simsapa Dhamma Reader - Sutta Search")
+ApplicationWindow {
     id: aw
-    /* width: 1300 */
-    /* height: 900 */
+    title: qsTr("Simsapa Dhamma Reader - Sutta Search")
+    width: 1300
+    height: 900
     visible: true
-    // color: palette.window
+    color: palette.window
 
     SuttaBridge {
         id: sb
@@ -33,6 +32,76 @@ Item {
         }
         var html = sb.get_sutta_html(query);
         webEngineView.loadHtml(html);
+    }
+
+    Action {
+        id: action_focus_search
+        shortcut: "Ctrl+L"
+        onTriggered: {
+            search_input.forceActiveFocus();
+            search_input.selectAll();
+        }
+    }
+
+    Action {
+        id: action_quit
+        shortcut: StandardKey.Quit
+        onTriggered: Qt.quit()
+    }
+
+    Action {
+        id: action_sutta_search
+        shortcut: "F5"
+        /* onTriggered: aw.close() */
+    }
+
+    Action {
+        id: action_Sutta_Study
+        shortcut: "Ctrl+F5"
+        /* onTriggered: aw.close() */
+    }
+
+    Action {
+        id: action_Dictionary_Search
+        shortcut: "F6"
+        /* onTriggered: aw.close() */
+    }
+
+    menuBar: MenuBar {
+        Menu {
+            title: "&File"
+            MenuItem {
+                text: "&Close Window"
+                onTriggered: aw.close()
+            }
+            MenuItem {
+                text: "&Quit Simsapa"
+                icon.source: "qrc:/icons/close"
+                action: action_quit
+            }
+        }
+
+        Menu {
+            title: "&Windows"
+            MenuItem {
+                text: "&Sutta Search"
+                icon.source: "qrc:/icons/book"
+                action: action_sutta_search
+            }
+
+            /* MenuItem { */
+            /*     text: "Sutta Study" */
+            /*     // book icon */
+            /*     // Ctrl+F5 */
+            /*     onTriggered: action_Sutta_Study() */
+            /* } */
+            /* MenuItem { */
+            /*     text: "&Dictionary Search" */
+            /*     // dict icon */
+            /*     // F6 */
+            /*     onTriggered: action_Dictionary_Search() */
+            /* } */
+        }
     }
 
     ColumnLayout {

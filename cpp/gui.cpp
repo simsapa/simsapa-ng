@@ -1,7 +1,4 @@
 #include <iostream>
-#include <qcoreevent.h>
-#include <qguiapplication.h>
-#include <qsysinfo.h>
 #include <thread>
 
 #include <QDir>
@@ -14,9 +11,9 @@
 #include <QSystemTrayIcon>
 #include <QApplication>
 #include <QMainWindow>
-#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+
 #include "window_manager.h"
 
 extern "C" void start_webserver();
