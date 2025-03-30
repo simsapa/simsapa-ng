@@ -1,8 +1,10 @@
-use std::path::PathBuf;
+use std::fs::File;
+use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
 
+use http;
 use ureq;
 use rocket::{get, routes};
 use rocket::response::content;
@@ -23,11 +25,11 @@ pub mod ffi {
         type QString = cxx_qt_lib::QString;
 
         // FIXME: How to avoid using the full path?
-        include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/utils.h");
+        include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/utils.h");
         fn get_internal_storage_path() -> QString;
         fn get_app_assets_path() -> QString;
 
-        include!("/home/gambhiro/prods/apps/simsapa-project/simsapa-cxx-qt/simsapa/cpp/gui.h");
+        include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/gui.h");
         fn callback_run_lookup_query(query_text: QString);
     }
 }
@@ -147,6 +149,66 @@ pub extern "C" fn shutdown_webserver() {
         }
         Err(_) => { println!("Error response from webserver shutdown."); }
     }
+}
+
+fn create_parent_directory(path: &str) -> String {
+    match Path::new(path).parent() {
+        None => format!("Invalid path: {}", path),
+        Some(parent) => match std::fs::create_dir_all(parent) {
+            Ok(_) => String::from(""),
+            Err(e) => format!("Failed to create directory: {}", e),
+        },
+    }
+}
+
+fn save_to_file(data: &[u8], path: &str) -> String {
+    match File::create(path) {
+        Ok(mut file) => match file.write_all(data) {
+            Ok(_) => String::from(format!("File saved successfully to {}", path)),
+            Err(e) => format!("Failed to write file: {}", e),
+        },
+        Err(e) => format!("Failed to create file: {}", e),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn download_small_database() {
+    let url = "https://github.com/simsapa/simsapa-ng-assets/releases/download/v0.1.0-alpha.1/appdata.sqlite3";
+    let p = PathBuf::from(ffi::get_app_assets_path().to_string()).join("appdata.sqlite3");
+    let save_path = p.to_string_lossy();
+
+    // Check and create directory
+    let dir_error = create_parent_directory(&save_path);
+    if !dir_error.is_empty() {
+        eprintln!("{}", dir_error);
+        return;
+    }
+
+    match ureq::get(url).call() {
+        Ok(mut response) => {
+            if response.status() != http::StatusCode::OK {
+                eprintln!("HTTP request failed with status {}", response.status());
+                return;
+            }
+
+            // The testing database is small, read it all to memory.
+            match response.body_mut().read_to_vec() {
+                Ok(buffer) => {
+                    let resp = save_to_file(&buffer, &save_path);
+                    println!("{}", resp);
+                    return;
+                },
+                Err(e) => {
+                    eprintln!("Failed to read to vec: {}", e);
+                    return;
+                }
+            }
+        },
+        Err(e) => {
+            eprintln!("HTTP request failed: {}", e);
+            return;
+        },
+    };
 }
 
 #[unsafe(no_mangle)]

@@ -18,6 +18,7 @@
 
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
+extern "C" void download_small_database();
 
 struct AppGlobals {
     static WindowManager* manager;
@@ -46,6 +47,8 @@ void start(int argc, char* argv[]) {
   //     app.setDesktopFileName(str(DESKTOP_FILE_PATH.with_suffix("")))
   //
   app.setApplicationVersion("v0.1.0");
+
+  download_small_database();
 
   // Start the API server after checking for APP_DB. If this is the first run,
   // the server would create the userdata db, and we can't use it to test in
