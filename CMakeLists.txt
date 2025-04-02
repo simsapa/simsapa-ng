@@ -28,7 +28,7 @@ if(NOT CxxQt_FOUND)
     FetchContent_Declare(
         CxxQt
         GIT_REPOSITORY https://github.com/kdab/cxx-qt-cmake.git
-        GIT_TAG main
+        GIT_TAG 0.7
     )
 
     FetchContent_MakeAvailable(CxxQt)
@@ -67,18 +67,6 @@ list(APPEND cpp_files
     cpp/sutta_search_window.cpp
     cpp/word_lookup_window.cpp)
 
-list(APPEND android_files
-    android/AndroidManifest.xml
-    android/build.gradle
-    android/gradle.properties
-    android/gradlew
-    android/gradlew.bat
-    android/gradle/wrapper/gradle-wrapper.jar
-    android/gradle/wrapper/gradle-wrapper.properties
-    android/res/values/libs.xml
-    android/res/xml/network_security_config.xml
-    android/res/xml/qtprovider_paths.xml)
-
 list(APPEND app_files ${cpp_files} ${icons})
 
 if (WIN32)
@@ -102,6 +90,18 @@ elseif (APPLE)
     qt_add_executable(simsapadhammareader MACOSX_BUNDLE ${app_files} ${app_icon_macos})
 
 elseif (ANDROID)
+    list(APPEND android_files
+        android/AndroidManifest.xml
+        android/build.gradle
+        android/gradle.properties
+        android/gradlew
+        android/gradlew.bat
+        android/gradle/wrapper/gradle-wrapper.jar
+        android/gradle/wrapper/gradle-wrapper.properties
+        android/res/values/libs.xml
+        android/res/xml/network_security_config.xml
+        android/res/xml/qtprovider_paths.xml)
+
     qt_add_executable(simsapadhammareader ${app_files} ${android_files})
 
 else()
