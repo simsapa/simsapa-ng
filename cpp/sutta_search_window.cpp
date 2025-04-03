@@ -1,5 +1,6 @@
 #include "sutta_search_window.h"
 
+#include <QSysInfo>
 #include <QUrl>
 
 SuttaSearchWindow::SuttaSearchWindow(QApplication* app, QObject* parent)
@@ -10,7 +11,13 @@ SuttaSearchWindow::SuttaSearchWindow(QApplication* app, QObject* parent)
 }
 
 void SuttaSearchWindow::setup_qml() {
-    const QUrl view_qml(QStringLiteral("qrc:/qt/qml/com/profound_labs/simsapa/qml/sutta_search_window.qml"));
+    QString os(QSysInfo::productType());
+    QUrl view_qml;
+    if (os == "android" || os == "ios") {
+        view_qml = QUrl(QStringLiteral("qrc:/qt/qml/com/profound_labs/simsapa/qml/sutta_search_window_mobile.qml"));
+    } else {
+        view_qml = QUrl(QStringLiteral("qrc:/qt/qml/com/profound_labs/simsapa/qml/sutta_search_window_desktop.qml"));
+    }
     m_engine = new QQmlApplicationEngine(view_qml, this);
     m_root = m_engine->rootObjects().constFirst();
 }

@@ -14,9 +14,6 @@ QString get_internal_storage_path() {
 QString get_app_assets_path() {
     QString path = get_internal_storage_path() + "/app_assets";
     return path;
-
-    // QString os(QSysInfo::productType());
-    // if (os == "android") { ... }
 }
 
 QString copy_file(QString source_file, QString destination_file) {

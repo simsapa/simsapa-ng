@@ -14,6 +14,9 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 
+// #include <QtWebView/QtWebView>
+// #include <QtWebEngineQuick/qtwebenginequickglobal.h>
+
 #include "window_manager.h"
 
 extern "C" void start_webserver();
@@ -33,6 +36,25 @@ void callback_run_lookup_query(QString query_text) {
 
 void start(int argc, char* argv[]) {
   std::cout << "gui::start()" << std::endl;
+
+  QString os(QSysInfo::productType());
+
+  // Initialize a QtWebView / QtWebEngineView. Otherwise the app errors:
+  //
+  // QtWebEngineWidgets must be imported or Qt.AA_ShareOpenGLContexts must be
+  // set before a QCoreApplication instance is created
+
+  // TODO How to avoid the linker trying to link one which doesn't exist for the platform?
+  // E.g. when building for desktop, we don't include QtWebView.
+  //
+  // gui.cpp:(.text+0x270): undefined reference to `QtWebView::initialize()'
+  // collect2: error: ld returned 1 exit status
+
+  // if (os == "android" || os == "ios") {
+  //   QtWebView::initialize();
+  // } else {
+  //   QtWebEngineQuick::initialize();
+  // }
 
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);

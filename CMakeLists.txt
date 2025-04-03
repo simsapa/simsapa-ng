@@ -17,10 +17,31 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC_OPTIONS --format-version 1)
 list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
 
-set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test)
-set(CXXQT_QTCOMPONENTS ${CXXQT_QTCOMPONENTS} QmlImportScanner)
+set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test QmlImportScanner)
 
-find_package(Qt6 COMPONENTS ${CXXQT_QTCOMPONENTS} Quick QuickWidgets WebView Widgets)
+list(APPEND app_components Widgets Quick QuickWidgets)
+
+list(APPEND qt_modules
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Network
+        Qt::Widgets
+        Qt::Quick
+        Qt::QuickWidgets
+        Qt::QuickControls2)
+
+if (ANDROID)
+    set(qmake_path "/home/gambhiro/Qt/6.8.2/android_x86_64/bin/qmake6")
+    list(APPEND app_components WebView)
+    list(APPEND qt_modules Qt::WebView)
+else()
+    set(qmake_path "/home/gambhiro/Qt/6.8.2/gcc_64/bin/qmake6")
+    list(APPEND app_components WebEngineQuick)
+    list(APPEND qt_modules Qt::WebEngineQuick)
+endif()
+
+find_package(Qt6 COMPONENTS ${CXXQT_QTCOMPONENTS} ${app_components})
 
 find_package(CxxQt QUIET)
 if(NOT CxxQt_FOUND)
@@ -39,18 +60,9 @@ cxx_qt_import_crate(
     MANIFEST_PATH rust/Cargo.toml 
     CRATES simsapa_lib
     LOCKED
-    QMAKE /home/gambhiro/Qt/6.8.2/android_x86_64/bin/qmake6
+    QMAKE ${qmake_path}
 
-    QT_MODULES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
-        Qt::QuickWidgets
-        Qt::QuickControls2
-        Qt::Network
-        Qt::WebView
-        Qt::Widgets
+    QT_MODULES ${qt_modules}
 )
 
 cxx_qt_import_qml_module(simsapa_qml_module
@@ -120,15 +132,7 @@ target_link_libraries(simsapadhammareader
     PRIVATE simsapa_qml_module
     PUBLIC
         simsapa_lib
-        Qt6::Core
-        Qt6::Gui
-        Qt6::Qml
-        Qt6::Quick
-        Qt6::QuickWidgets
-        Qt::QuickControls2
-        Qt::Network
-        Qt::WebView
-        Qt::Widgets
+        ${qt_modules}
     )
 
 # If we are using a statically linked Qt then we need to import any qml plugins
