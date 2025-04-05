@@ -23,7 +23,6 @@ fn main() {
         .qt_module("Network")
         .qt_module("Widgets")
         .qt_module("Quick")
-        .qt_module("QuickWidgets")
         .qml_module(QmlModule {
                 uri: "com.profoundlabs.simsapa",
                 rust_files: &[

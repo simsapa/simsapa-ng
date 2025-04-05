@@ -19,7 +19,7 @@ list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
 
 set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test QmlImportScanner)
 
-list(APPEND app_components Widgets Quick QuickWidgets)
+list(APPEND app_components Widgets Quick)
 
 list(APPEND qt_modules
         Qt::Core
@@ -28,15 +28,23 @@ list(APPEND qt_modules
         Qt::Network
         Qt::Widgets
         Qt::Quick
-        Qt::QuickWidgets
         Qt::QuickControls2)
 
 if (ANDROID)
-    set(qmake_path "$ENV{HOME}/Qt/6.8.2/android_x86_64/bin/qmake6")
+    set(qmake_path "$ENV{HOME}/Qt/6.8.3/android_x86_64/bin/qmake6")
     list(APPEND app_components WebView)
     list(APPEND qt_modules Qt::WebView)
+elseif (IOS)
+    set(Rust_CARGO_TARGET aarch64-apple-ios)
+    set(qmake_path "$ENV{HOME}/Qt/6.8.3/ios/bin/qmake6")
+    list(APPEND app_components WebView)
+    list(APPEND qt_modules Qt::WebView)
+elseif (APPLE)
+    set(qmake_path "$ENV{HOME}/Qt/6.8.3/macos/bin/qmake6")
+    list(APPEND app_components WebEngineQuick)
+    list(APPEND qt_modules Qt::WebEngineQuick)
 else()
-    set(qmake_path "$ENV{HOME}/Qt/6.8.2/gcc_64/bin/qmake6")
+    set(qmake_path "$ENV{HOME}/Qt/6.8.3/gcc_64/bin/qmake6")
     list(APPEND app_components WebEngineQuick)
     list(APPEND qt_modules Qt::WebEngineQuick)
 endif()

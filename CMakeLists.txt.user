@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 16.0.0, 2025-03-24T16:11:18. -->
+<!-- Written by QtCreator 16.0.0, 2025-04-05T20:44:22. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -92,9 +92,9 @@
   <variable>ProjectExplorer.Project.Target.0</variable>
   <valuemap type="QVariantMap">
    <value type="QString" key="DeviceType">Android.Device.Type</value>
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Android Qt 6.8.2 Clang x86_64</value>
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Android Qt 6.8.2 Clang x86_64</value>
-   <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{7b20a4bf-62e0-4902-a460-a904a7d9451b}</value>
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">Android Qt 6.8.3 Clang x86_64</value>
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">Android Qt 6.8.3 Clang x86_64</value>
+   <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">{ccb884d5-40c0-479e-9d50-39c880436bd5}</value>
    <value type="qlonglong" key="ProjectExplorer.Target.ActiveBuildConfiguration">0</value>
    <value type="qlonglong" key="ProjectExplorer.Target.ActiveDeployConfiguration">0</value>
    <value type="qlonglong" key="ProjectExplorer.Target.ActiveRunConfiguration">0</value>
@@ -103,29 +103,29 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
--DANDROID_PLATFORM:STRING=android-23
--DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
--DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
--DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DANDROID_STL:STRING=c++_shared
--DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
--DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
--DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
--DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DANDROID_ABI:STRING=x86_64
+    <value type="QString" key="CMake.Initial.Parameters">-DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
 -DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
+-DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
 -DCMAKE_BUILD_TYPE:STRING=Debug
--DQt6QmlImportScanner_DIR:PATH=/home/gambhiro/Qt/6.8.2/gcc_64/lib/cmake/Qt6QmlImportScanner
+-DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
+-DANDROID_ABI:STRING=x86_64
+-DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
+-DANDROID_PLATFORM:STRING=android-23
+-DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON
+-DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
+-DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
+-DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
 -DCMAKE_FIND_ROOT_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON
+-DANDROID_STL:STRING=c++_shared
 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
--DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
--DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON</value>
+-DQt6QmlImportScanner_DIR:PATH=/home/gambhiro/Qt/6.8.3/gcc_64/lib/cmake/Qt6QmlImportScanner</value>
     <value type="int" key="EnableQmlDebugging">0</value>
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_2_Clang_x86_64-Debug</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_3_Clang_x86_64-Debug</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="QString" key="CMakeProjectManager.MakeStep.BuildPreset"></value>
@@ -181,27 +181,27 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
--DANDROID_PLATFORM:STRING=android-23
--DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
--DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
--DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DANDROID_STL:STRING=c++_shared
--DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
--DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
--DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
--DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DANDROID_ABI:STRING=x86_64
+    <value type="QString" key="CMake.Initial.Parameters">-DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
 -DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
+-DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
 -DCMAKE_BUILD_TYPE:STRING=Release
+-DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
+-DANDROID_ABI:STRING=x86_64
+-DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
+-DANDROID_PLATFORM:STRING=android-23
+-DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON
+-DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
+-DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
+-DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
 -DCMAKE_FIND_ROOT_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON
--DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
--DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
--DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON</value>
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_2_Clang_x86_64-Release</value>
+-DANDROID_STL:STRING=c++_shared
+-DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_3_Clang_x86_64-Release</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="QString" key="CMakeProjectManager.MakeStep.BuildPreset"></value>
@@ -255,27 +255,27 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
--DANDROID_PLATFORM:STRING=android-23
--DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
--DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
--DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DANDROID_STL:STRING=c++_shared
--DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
--DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
--DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
--DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DANDROID_ABI:STRING=x86_64
+    <value type="QString" key="CMake.Initial.Parameters">-DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
 -DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
+-DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
 -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
+-DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
+-DANDROID_ABI:STRING=x86_64
+-DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
+-DANDROID_PLATFORM:STRING=android-23
+-DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON
+-DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
+-DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
+-DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
 -DCMAKE_FIND_ROOT_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON
--DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
--DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
--DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON</value>
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_2_Clang_x86_64-RelWithDebInfo</value>
+-DANDROID_STL:STRING=c++_shared
+-DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_3_Clang_x86_64-RelWithDebInfo</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="QString" key="CMakeProjectManager.MakeStep.BuildPreset"></value>
@@ -329,28 +329,28 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
--DANDROID_PLATFORM:STRING=android-23
--DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
--DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
--DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DANDROID_STL:STRING=c++_shared
--DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
--DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
--DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
--DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DANDROID_ABI:STRING=x86_64
+    <value type="QString" key="CMake.Initial.Parameters">-DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
 -DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
+-DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
 -DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
+-DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
+-DANDROID_ABI:STRING=x86_64
+-DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
+-DANDROID_PLATFORM:STRING=android-23
+-DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON
+-DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
+-DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
+-DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
 -DCMAKE_FIND_ROOT_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON
--DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
--DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
--DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON</value>
+-DANDROID_STL:STRING=c++_shared
+-DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake</value>
     <value type="int" key="EnableQmlDebugging">0</value>
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_2_Clang_x86_64-Profile</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_3_Clang_x86_64-Profile</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="QString" key="CMakeProjectManager.MakeStep.BuildPreset"></value>
@@ -404,27 +404,27 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
--DANDROID_PLATFORM:STRING=android-23
--DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
--DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
--DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DANDROID_STL:STRING=c++_shared
--DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
--DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
--DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
--DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DANDROID_ABI:STRING=x86_64
+    <value type="QString" key="CMake.Initial.Parameters">-DANDROID_NDK:PATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125
 -DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DQT_HOST_PATH:PATH=%{Qt:QT_HOST_PREFIX}
+-DANDROID_USE_LEGACY_TOOLCHAIN_FILE:BOOL=OFF
 -DCMAKE_BUILD_TYPE:STRING=MinSizeRel
+-DANDROID_SDK_ROOT:PATH=/home/gambhiro/Android/Sdk
+-DANDROID_ABI:STRING=x86_64
+-DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
+-DANDROID_PLATFORM:STRING=android-23
+-DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON
+-DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
+-DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
+-DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
 -DCMAKE_FIND_ROOT_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON
--DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake
--DQT_NO_GLOBAL_APK_TARGET_PART_OF_ALL:BOOL=ON
--DQT_USE_TARGET_ANDROID_BUILD_DIR:BOOL=ON</value>
-    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_2_Clang_x86_64-MinSizeRel</value>
+-DANDROID_STL:STRING=c++_shared
+-DCMAKE_TOOLCHAIN_FILE:FILEPATH=/home/gambhiro/Android/Sdk/ndk/26.1.10909125/build/cmake/android.toolchain.cmake</value>
+    <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Android_Qt_6_8_3_Clang_x86_64-MinSizeRel</value>
     <valuemap type="QVariantMap" key="ProjectExplorer.BuildConfiguration.BuildStepList.0">
      <valuemap type="QVariantMap" key="ProjectExplorer.BuildStepList.Step.0">
       <value type="QString" key="CMakeProjectManager.MakeStep.BuildPreset"></value>
@@ -518,7 +518,7 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">simsapadhammareader</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.AndroidRunConfiguration:</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">simsapadhammareader</value>
-    <value type="bool" key="ProjectExplorer.RunConfiguration.Customized">true</value>
+    <value type="bool" key="ProjectExplorer.RunConfiguration.Customized">false</value>
     <value type="bool" key="RunConfiguration.UseCppDebuggerAuto">true</value>
     <value type="bool" key="RunConfiguration.UseQmlDebuggerAuto">true</value>
    </valuemap>
@@ -540,13 +540,13 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DCMAKE_BUILD_TYPE:STRING=Debug
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
 -DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
--DCMAKE_BUILD_TYPE:STRING=Debug
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON</value>
     <value type="int" key="EnableQmlDebugging">0</value>
@@ -598,13 +598,13 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DCMAKE_BUILD_TYPE:STRING=Release
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
 -DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
--DCMAKE_BUILD_TYPE:STRING=Release
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON</value>
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Desktop-Release</value>
@@ -653,13 +653,13 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
 -DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
--DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON</value>
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Desktop-RelWithDebInfo</value>
@@ -708,13 +708,13 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
 -DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
--DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON</value>
     <value type="int" key="EnableQmlDebugging">0</value>
@@ -764,13 +764,13 @@
     <value type="int" key="CMake.Configure.BaseEnvironment">2</value>
     <value type="bool" key="CMake.Configure.ClearSystemEnvironment">false</value>
     <valuelist type="QVariantList" key="CMake.Configure.UserEnvironmentChanges"/>
-    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+    <value type="QString" key="CMake.Initial.Parameters">-DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
+-DCMAKE_C_COMPILER:FILEPATH=%{Compiler:Executable:C}
+-DCMAKE_BUILD_TYPE:STRING=MinSizeRel
+-DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DQT_QMAKE_EXECUTABLE:FILEPATH=%{Qt:qmakeExecutable}
 -DCMAKE_CXX_FLAGS_INIT:STRING=%{Qt:QML_DEBUG_FLAG}
--DCMAKE_CXX_COMPILER:FILEPATH=%{Compiler:Executable:Cxx}
 -DCMAKE_PROJECT_INCLUDE_BEFORE:FILEPATH=%{BuildConfig:BuildDirectory:NativeFilePath}/.qtc/package-manager/auto-setup.cmake
--DCMAKE_PREFIX_PATH:PATH=%{Qt:QT_INSTALL_PREFIX}
--DCMAKE_BUILD_TYPE:STRING=MinSizeRel
 -DCMAKE_GENERATOR:STRING=Ninja
 -DCMAKE_COLOR_DIAGNOSTICS:BOOL=ON</value>
     <value type="QString" key="ProjectExplorer.BuildConfiguration.BuildDirectory">/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/build/Desktop-MinSizeRel</value>
