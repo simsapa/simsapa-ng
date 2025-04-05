@@ -32,11 +32,11 @@ list(APPEND qt_modules
         Qt::QuickControls2)
 
 if (ANDROID)
-    set(qmake_path "/home/gambhiro/Qt/6.8.2/android_x86_64/bin/qmake6")
+    set(qmake_path "$ENV{HOME}/Qt/6.8.2/android_x86_64/bin/qmake6")
     list(APPEND app_components WebView)
     list(APPEND qt_modules Qt::WebView)
 else()
-    set(qmake_path "/home/gambhiro/Qt/6.8.2/gcc_64/bin/qmake6")
+    set(qmake_path "$ENV{HOME}/Qt/6.8.2/gcc_64/bin/qmake6")
     list(APPEND app_components WebEngineQuick)
     list(APPEND qt_modules Qt::WebEngineQuick)
 endif()
@@ -66,7 +66,7 @@ cxx_qt_import_crate(
 )
 
 cxx_qt_import_qml_module(simsapa_qml_module
-    URI "com.profound_labs.simsapa"
+    URI "com.profoundlabs.simsapa"
     SOURCE_CRATE simsapa_lib)
 
 qt_add_resources(icons "assets/icons.qrc")

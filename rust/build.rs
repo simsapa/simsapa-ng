@@ -25,7 +25,7 @@ fn main() {
         .qt_module("Quick")
         .qt_module("QuickWidgets")
         .qml_module(QmlModule {
-                uri: "com.profound_labs.simsapa",
+                uri: "com.profoundlabs.simsapa",
                 rust_files: &[
                         "src/sutta_bridge.rs",
                         "src/api.rs",

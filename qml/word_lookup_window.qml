@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import com.profound_labs.simsapa 1.0
+import com.profoundlabs.simsapa 1.0
 
 ApplicationWindow {
     id: aw
