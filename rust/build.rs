@@ -1,5 +1,6 @@
 use std::env;
 use cxx_qt_build::{CxxQtBuilder, QmlModule};
+use cxx_qt_build::{is_ios_target, thin_generated_fat_library_with_lipo};
 
 fn main() {
     let s = env::var("CXX_QT_QT_MODULES").expect("Env var not found");
@@ -39,4 +40,7 @@ fn main() {
         builder.qt_module("WebEngineQuick").build();
     }
 
+    if is_ios_target() {
+        thin_generated_fat_library_with_lipo("libsimsapa_lib-cxxqt-generated.a", "arm64");
+    }
 }

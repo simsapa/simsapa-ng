@@ -17,9 +17,9 @@ crate-type = ["staticlib", "rlib"]
 [dependencies]
 chrono = "0.4.40"
 cxx = "1.0.148"
-cxx-qt = { git = "https://github.com/simsapa/cxx-qt.git", branch = "no-zstd" }
-qt-build-utils = { git = "https://github.com/simsapa/cxx-qt.git", branch = "no-zstd" }
-cxx-qt-lib = { git = "https://github.com/simsapa/cxx-qt.git", branch = "no-zstd", features = ["full"] }
+cxx-qt = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build" }
+qt-build-utils = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build" }
+cxx-qt-lib = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build", features = ["full"] }
 libsqlite3-sys = { version = "0.31", features = ["bundled"] }
 diesel = { version = "2.2.8", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"] }
 dotenvy = "0.15.7"
@@ -35,4 +35,4 @@ http = "1.3.1"
 
 [build-dependencies]
 # The link_qt_object_files feature is required for statically linking Qt 6.
-cxx-qt-build = { git = "https://github.com/simsapa/cxx-qt.git", branch = "no-zstd", features = ["link_qt_object_files"] }
+cxx-qt-build = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build", features = ["link_qt_object_files"] }
