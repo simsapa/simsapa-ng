@@ -14,6 +14,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# TODO: This has no effect
+# set(QT_QML_GENERATE_QMLLS_INI ON)
+
 set(CMAKE_AUTORCC_OPTIONS --format-version 1)
 list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
 

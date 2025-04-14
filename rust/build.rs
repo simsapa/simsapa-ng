@@ -7,12 +7,12 @@ fn main() {
     let mobile_build = s.contains("Qt::WebView");
 
     let mut qml_files = Vec::new();
-    qml_files.push("../qml/word_lookup_window.qml");
+    qml_files.push("../assets/qml/word_lookup_window.qml");
 
     if mobile_build {
-        qml_files.push("../qml/sutta_search_window_mobile.qml");
+        qml_files.push("../assets/qml/sutta_search_window_mobile.qml");
     } else {
-        qml_files.push("../qml/sutta_search_window_desktop.qml");
+        qml_files.push("../assets/qml/sutta_search_window_desktop.qml");
     }
 
     let builder = CxxQtBuilder::new()

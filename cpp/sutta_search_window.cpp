@@ -14,9 +14,9 @@ void SuttaSearchWindow::setup_qml() {
     QString os(QSysInfo::productType());
     QUrl view_qml;
     if (os == "android" || os == "ios") {
-        view_qml = QUrl(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/qml/sutta_search_window_mobile.qml"));
+        view_qml = QUrl(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/sutta_search_window_mobile.qml"));
     } else {
-        view_qml = QUrl(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/qml/sutta_search_window_desktop.qml"));
+        view_qml = QUrl(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/sutta_search_window_desktop.qml"));
     }
     m_engine = new QQmlApplicationEngine(view_qml, this);
     m_root = m_engine->rootObjects().constFirst();

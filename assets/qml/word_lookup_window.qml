@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import com.profoundlabs.simsapa 1.0
+// import com.profoundlabs.simsapa 1.0
 
 ApplicationWindow {
     id: aw
@@ -30,7 +30,7 @@ ApplicationWindow {
             }
             MenuItem {
                 text: "&Quit Simsapa"
-                icon.source: "qrc:/icons/close"
+                icon.source: "icons/32x32/fa_times-circle.png"
                 action: action_quit
             }
         }
@@ -41,15 +41,15 @@ ApplicationWindow {
         spacing: 20
 
         Text {
-            text: word
+            text: aw.word
             font.pixelSize: 16
         }
 
         Text {
             id: definitionText
-            text: definition_plain
+            text: aw.definition_plain
             wrapMode: Text.WordWrap
-            width: parent.width
+            implicitWidth: parent.width
         }
     }
 }

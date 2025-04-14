@@ -12,7 +12,7 @@ WordLookupWindow::WordLookupWindow(QApplication* app, const QString& word, QObje
 }
 
 void WordLookupWindow::setup_qml() {
-    const QUrl view_qml(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/qml/word_lookup_window.qml"));
+    const QUrl view_qml(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/word_lookup_window.qml"));
     m_engine = new QQmlApplicationEngine(view_qml, this);
     m_root = m_engine->rootObjects().constFirst();
 }

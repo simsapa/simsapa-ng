@@ -63,7 +63,7 @@ void start(int argc, char* argv[]) {
   QCoreApplication::setOrganizationName("Profound Labs");
 
   // TODO :/icons/simsapa-appicon doesn't work, perhaps wrong size?
-  app.setWindowIcon(QIcon(":/icons/simsapa-tray"));
+  app.setWindowIcon(QIcon(":/qt/qml/com/profoundlabs/simsapa/assets/qml/icons/32x32/simsapa-tray.png"));
 
   // if DESKTOP_FILE_PATH is not None:
   //     app.setDesktopFileName(str(DESKTOP_FILE_PATH.with_suffix("")))
@@ -84,12 +84,12 @@ void start(int argc, char* argv[]) {
   // setup_system_tray();
 
   std::cout << "setup_system_tray(): start" << std::endl;
-  QSystemTrayIcon tray = QSystemTrayIcon(QIcon(":/icons/simsapa-tray"), &app);
+  QSystemTrayIcon tray = QSystemTrayIcon(QIcon(":/qt/qml/com/profoundlabs/simsapa/assets/qml/icons/32x32/simsapa-tray.png"), &app);
   tray.setVisible(true);
 
   QMenu* menu = new QMenu();
 
-  QAction* action_Quit = new QAction(QIcon(":/icons/close"), "Quit", &app);
+  QAction* action_Quit = new QAction(QIcon(":/qt/qml/com/profoundlabs/simsapa/assets/qml/icons/32x32/fa_times-circle.png"), "Quit", &app);
   QObject::connect(action_Quit, SIGNAL(triggered()), QApplication::instance(), SLOT(quit()));
 
   menu->addAction(action_Quit);
