@@ -109,10 +109,6 @@ ApplicationWindow {
     ColumnLayout {
         anchors.fill: parent
 
-        // SearchBar {
-        //     id: searchbar_layout
-        // }
-
         Frame {
             id: search_bar
             Layout.fillWidth: true
