@@ -4,9 +4,7 @@ import QtQuick.Controls
 import QtQuick.Window
 import QtWebEngine
 
-import QtQuick.Controls.Basic
-
-// import com.profoundlabs.simsapa 1.0
+import components as C
 
 ApplicationWindow {
     id: aw
@@ -16,32 +14,20 @@ ApplicationWindow {
     visible: true
     color: palette.window
 
-    // SuttaBridge {
-    //     id: sb
-    // }
-
     function load_url(url) {
         webEngineView.url = url;
     }
 
     function set_query(text) {
-        search_input.text = text;
-    }
-
-    function show_sutta(query) {
-        if (query.length < 4) {
-            return;
-        }
-        var html = sb.get_sutta_html(query);
-        webEngineView.loadHtml(html);
+        search_bar_input.search_input.text = text;
     }
 
     Action {
         id: action_focus_search
         shortcut: "Ctrl+L"
         onTriggered: {
-            search_input.forceActiveFocus();
-            search_input.selectAll();
+            search_bar_input.search_input.forceActiveFocus();
+            search_bar_input.search_input.selectAll();
         }
     }
 
@@ -109,38 +95,17 @@ ApplicationWindow {
     ColumnLayout {
         anchors.fill: parent
 
-        Frame {
-            id: search_bar
-            Layout.fillWidth: true
-            Layout.minimumHeight: 40
+        RowLayout {
 
-            RowLayout {
-                id: searchbar_layout
-                Layout.fillWidth: true
-
-                TextField {
-                    id: search_input
-                    Layout.fillWidth: true
-                    Layout.preferredWidth: 160
-
-                    focus: true
-                    font.pointSize: 12
-                    placeholderText: qsTr("Search for suttas...")
-                    /* Binding on text { */
-                    /*     when: webEngineView */
-                    /*     value: webEngineView.url */
-                    /* } */
-                    /* onAccepted: webEngineView.url = Utils.fromUserInput(text) */
-                    selectByMouse: true
-                }
-
-                Button {
-                    id: search_btn
-                    icon.source: "icons/32x32/bx_search_alt_2.png"
-                    onClicked: aw.show_sutta(search_input.text)
-                    // activeFocusOnTab: !aw.platformIsMac
-                }
+            C.SearchBarInput {
+                id: search_bar_input
+                web: webEngineView
             }
+
+            C.SearchBarOptions {
+                id: search_bar_options
+            }
+
         }
 
         // Main horizontal layout
@@ -186,10 +151,12 @@ ApplicationWindow {
                             TabButton {
                                 text: "Results"
                                 icon.source: "icons/32x32/bx_search_alt_2.png"
+                                padding: 5
                             }
                             TabButton {
                                 text: "History"
                                 icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                                padding: 5
                             }
                         }
 
@@ -216,16 +183,18 @@ ApplicationWindow {
                                         id: fulltext_prev_btn
                                         icon.source: "icons/32x32/fa_angle-left-solid.png"
                                         /* tooltip: qsTr("Previous page of results") */
+                                        Layout.preferredWidth: 40
                                     }
                                     Button {
                                         id: fulltext_next_btn
                                         icon.source: "icons/32x32/fa_angle-right-solid.png"
                                         /* tooltip: qsTr("Next page of results") */
+                                        Layout.preferredWidth: 40
                                     }
                                     Label { id: fulltext_label; text: "Showing a-b out of x" }
 
                                     // Spacer
-                                   Item {
+                                    Item {
                                         Layout.fillWidth: true
                                     }
 
@@ -233,11 +202,13 @@ ApplicationWindow {
                                         id: fulltext_first_page_btn
                                         icon.source: "icons/32x32/fa_angles-left-solid.png"
                                         /* tooltip: qsTr("First page of results") */
+                                        Layout.preferredWidth: 40
                                     }
                                     Button {
                                         id: fulltext_last_page_btn
                                         icon.source: "icons/32x32/fa_angles-right-solid.png"
                                         /* tooltip: qsTr("Last page of results") */
+                                        Layout.preferredWidth: 40
                                     }
                                 }
 

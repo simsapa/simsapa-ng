@@ -1,0 +1,3 @@
+module components
+SearchBarInput 1.0 SearchBarInput.qml
+SearchBarOptions 1.0 SearchBarOptions.qml

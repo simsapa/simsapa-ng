@@ -9,6 +9,9 @@ fn main() {
     let mut qml_files = Vec::new();
     qml_files.push("../assets/qml/word_lookup_window.qml");
 
+    qml_files.push("../assets/qml/components/SearchBarInput.qml");
+    qml_files.push("../assets/qml/components/SearchBarOptions.qml");
+
     if mobile_build {
         qml_files.push("../assets/qml/sutta_search_window_mobile.qml");
     } else {
