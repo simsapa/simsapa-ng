@@ -1,3 +1,5 @@
 module components
 SearchBarInput 1.0 SearchBarInput.qml
 SearchBarOptions 1.0 SearchBarOptions.qml
+FulltextResults 1.0 FulltextResults.qml
+MenuItem 1.0 MenuItem.qml

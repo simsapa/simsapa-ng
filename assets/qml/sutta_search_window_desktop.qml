@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -6,13 +8,53 @@ import QtWebEngine
 
 import components as C
 
+import com.profoundlabs.simsapa
+
 ApplicationWindow {
-    id: aw
+    id: root
     title: "Sutta Search - Simsapa"
     width: 1300
     height: 900
     visible: true
     color: palette.window
+
+    property var all_results: []
+    property bool is_loading: false
+
+    SuttaBridge {
+        id: sb
+    }
+
+    // Timer for incremental search debounce
+    Timer {
+        id: debounce_timer
+        interval: 400 // milliseconds
+        repeat: false
+        onTriggered: {
+            if (incremental_search.checked && search_bar_input.search_input.text.length >= 4) {
+                root.run_search(search_bar_input.search_input.text)
+            }
+        }
+    }
+
+    function run_search(query) {
+        root.is_loading = true
+        Qt.callLater(function() {
+            let json_res = sb.search(query)
+            root.all_results = JSON.parse(json_res)
+            fulltext_results.current_page = 1
+            fulltext_results.update_page()
+            root.is_loading = false
+        })
+    }
+
+    // function show_sutta(query) {
+    //     if (query.length < 4) {
+    //         return;
+    //     }
+    //     var html = sb.get_sutta_html(query);
+    //     web.loadHtml(html);
+    // }
 
     function load_url(url) {
         webEngineView.url = url;
@@ -22,73 +64,149 @@ ApplicationWindow {
         search_bar_input.search_input.text = text;
     }
 
-    Action {
-        id: action_focus_search
-        shortcut: "Ctrl+L"
-        onTriggered: {
-            search_bar_input.search_input.forceActiveFocus();
-            search_bar_input.search_input.selectAll();
-        }
-    }
-
-    Action {
-        id: action_quit
-        shortcut: StandardKey.Quit
-        onTriggered: Qt.quit()
-    }
-
-    Action {
-        id: action_sutta_search
-        shortcut: "F5"
-        /* onTriggered: aw.close() */
-    }
-
-    Action {
-        id: action_Sutta_Study
-        shortcut: "Ctrl+F5"
-        /* onTriggered: aw.close() */
-    }
-
-    Action {
-        id: action_Dictionary_Search
-        shortcut: "F6"
-        /* onTriggered: aw.close() */
-    }
-
     menuBar: MenuBar {
         Menu {
             title: "&File"
-            MenuItem {
+
+            C.MenuItem {
                 text: "&Close Window"
-                onTriggered: aw.close()
+                onTriggered: root.close()
             }
-            MenuItem {
-                text: "&Quit Simsapa"
-                icon.source: "icons/32x32/fa_times-circle.png"
-                action: action_quit
+
+            C.MenuItem {
+                action: Action {
+                    text: "&Quit Simsapa"
+                    icon.source: "icons/32x32/fa_times-circle.png"
+                    id: action_quit
+                    shortcut: Shortcut {
+                        /* FIXME sequences: [StandardKey.Quit] */
+                        sequences: ["Ctrl+Q"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_quit.trigger()
+                    }
+                    onTriggered: Qt.quit()
+                }
+            }
+        }
+
+        Menu {
+            title: "&Edit"
+
+            C.MenuItem {
+                action: Action {
+                    id: action_focus_search
+                    text: "Focus Search Input"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+L"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_focus_search.trigger()
+                    }
+                    onTriggered: {
+                        search_bar_input.search_input.forceActiveFocus();
+                        search_bar_input.search_input.selectAll();
+                    }
+                }
+            }
+        }
+
+        Menu {
+            title: "&Find"
+
+            C.MenuItem {
+                action: Action {
+                    id: incremental_search
+                    text: "Search As You Type"
+                    checkable: true
+                    checked: true
+                }
+            }
+
+            C.MenuItem {
+                action: Action {
+                    id: select_previous_result
+                    text: "Previous Result"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+Up", "Ctrl+K"]
+                        context: Qt.WindowShortcut
+                        onActivated: select_previous_result.trigger()
+                    }
+                    onTriggered: fulltext_results.select_previous_result()
+                }
+            }
+
+            C.MenuItem {
+                action: Action {
+                    id: select_next_result
+                    text: "Next Result"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+Down", "Ctrl+J"]
+                        context: Qt.WindowShortcut
+                        onActivated: select_next_result.trigger()
+                    }
+                    onTriggered: fulltext_results.select_next_result()
+                }
             }
         }
 
         Menu {
             title: "&Windows"
-            MenuItem {
-                text: "&Sutta Search"
-                icon.source: "icons/32x32/bxs_book_bookmark.png"
-                action: action_sutta_search
+
+            C.MenuItem {
+                action: Action {
+                    id: action_sutta_search
+                    text: "&Sutta Search"
+                    icon.source: "icons/32x32/bxs_book_bookmark.png"
+                    shortcut: Shortcut {
+                        sequences: ["F5"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_sutta_search.trigger()
+                    }
+                    /* onTriggered: TODO */
+                }
             }
 
-            /* MenuItem { */
-            /*     text: "Sutta Study" */
-            /*     // book icon */
-            /*     // Ctrl+F5 */
-            /*     onTriggered: action_Sutta_Study() */
-            /* } */
-            /* MenuItem { */
-            /*     text: "&Dictionary Search" */
-            /*     // dict icon */
-            /*     // F6 */
-            /*     onTriggered: action_Dictionary_Search() */
-            /* } */
+            C.MenuItem {
+                action: Action {
+                    id: action_sutta_study
+                    text: "&Sutta Study"
+                    icon.source: "icons/32x32/bxs_book_bookmark.png"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+F5"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_sutta_study.trigger()
+                    }
+                    /* onTriggered: TODO */
+                }
+            }
+
+            C.MenuItem {
+                action: Action {
+                    id: action_dictionary_search
+                    text: "&Dictionary Search"
+                    icon.source: "icons/32x32/bxs_book_content.png"
+                    shortcut: Shortcut {
+                        sequences: ["F6"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_dictionary_search.trigger()
+                    }
+                    /* onTriggered: TODO */
+                }
+            }
+
+            C.MenuItem {
+                action: Action {
+                    id: action_show_word_lookup
+                    text: "Show Word Lookup"
+                    checkable: true
+                    checked: false
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+F6"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_show_word_lookup.trigger()
+                    }
+                    /* onTriggered: TODO */
+                }
+            }
         }
     }
 
@@ -100,6 +218,9 @@ ApplicationWindow {
             C.SearchBarInput {
                 id: search_bar_input
                 web: webEngineView
+                run_search_fn: root.run_search
+                debounce_timer: debounce_timer
+                incremental_search: incremental_search
             }
 
             C.SearchBarOptions {
@@ -119,9 +240,22 @@ ApplicationWindow {
                 Layout.fillHeight: true
 
                 SplitView {
+                    id: panel_split
                     orientation: Qt.Horizontal
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+
+                    handle: Rectangle {
+                        id: split_handle
+                        implicitWidth: 2
+                        implicitHeight: panel_split.height
+                        color: SplitHandle.pressed ? panel_split.palette.dark : (SplitHandle.hovered ? panel_split.palette.midlight : panel_split.palette.mid)
+                        containmentMask: Item {
+                            x: (split_handle.width - width) / 2
+                            width: 20
+                            height: split_handle.height
+                        }
+                    }
 
                     // Left side tabs area
                     ColumnLayout {
@@ -147,14 +281,22 @@ ApplicationWindow {
                         TabBar {
                             id: rightside_tabs
                             anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+
+                            background: Rectangle {
+                                color: palette.window
+                            }
 
                             TabButton {
                                 text: "Results"
+                                id: results_tab
                                 icon.source: "icons/32x32/bx_search_alt_2.png"
                                 padding: 5
                             }
                             TabButton {
                                 text: "History"
+                                id: history_tab
                                 icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
                                 padding: 5
                             }
@@ -164,76 +306,18 @@ ApplicationWindow {
                         StackLayout {
                             currentIndex: rightside_tabs.currentIndex
                             anchors.top: rightside_tabs.bottom
-                            /* Layout.topMargin: 5 */
+                            anchors.topMargin: 5
 
-                            // Results Tab
-                            ColumnLayout {
-                                id: fulltext_tab
-                                /* anchors.fill: parent */
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-
-                                    SpinBox {
-                                        id: fulltext_page_input; from: 1; to: 999;
-                                        // Layout.alignment: Qt.AlignVCenter
-                                    }
-
-                                    Button {
-                                        id: fulltext_prev_btn
-                                        icon.source: "icons/32x32/fa_angle-left-solid.png"
-                                        /* tooltip: qsTr("Previous page of results") */
-                                        Layout.preferredWidth: 40
-                                    }
-                                    Button {
-                                        id: fulltext_next_btn
-                                        icon.source: "icons/32x32/fa_angle-right-solid.png"
-                                        /* tooltip: qsTr("Next page of results") */
-                                        Layout.preferredWidth: 40
-                                    }
-                                    Label { id: fulltext_label; text: "Showing a-b out of x" }
-
-                                    // Spacer
-                                    Item {
-                                        Layout.fillWidth: true
-                                    }
-
-                                    Button {
-                                        id: fulltext_first_page_btn
-                                        icon.source: "icons/32x32/fa_angles-left-solid.png"
-                                        /* tooltip: qsTr("First page of results") */
-                                        Layout.preferredWidth: 40
-                                    }
-                                    Button {
-                                        id: fulltext_last_page_btn
-                                        icon.source: "icons/32x32/fa_angles-right-solid.png"
-                                        /* tooltip: qsTr("Last page of results") */
-                                        Layout.preferredWidth: 40
-                                    }
-                                }
-
-                                // Rectangle {
-                                //     id: fulltext_loading_bar
-                                //     Layout.preferredHeight: 5
-                                //     color: "transparent"
-                                //     border.color: "black"
-                                //     Layout.fillWidth: true
-                                // }
-
-                                ListView {
-                                    id: fulltext_list
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                    /* frameVisible: false */
-                                    /* borderWidth: 1 */
-                                }
+                            C.FulltextResults {
+                                Layout.preferredWidth: root.width * 0.5
+                                id: fulltext_results
+                                all_results: root.all_results
+                                is_loading: root.is_loading
                             }
 
                             // History Tab
                             ColumnLayout {
                                 id: recent_tab
-                                /* anchors.fill: parent */
-
                                 ListView { id: recent_list }
                             }
                         }

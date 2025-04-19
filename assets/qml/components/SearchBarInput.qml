@@ -3,15 +3,17 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtWebEngine
 
-import com.profoundlabs.simsapa
-
 Frame {
-    id: search_bar_input
+    id: root
     // id: search_bar
     Layout.fillWidth: true
     Layout.minimumHeight: 40
 
-    property WebEngineView web
+    required property WebEngineView web
+    required property var run_search_fn
+    required property Timer debounce_timer
+    required property Action incremental_search
+
     property alias search_input: search_input
 
     background: Rectangle {
@@ -20,21 +22,9 @@ Frame {
         border.width: 0
     }
 
-    function show_sutta(query) {
-        if (query.length < 4) {
-            return;
-        }
-        var html = sb.get_sutta_html(query);
-        web.loadHtml(html);
-    }
-
     RowLayout {
         id: searchbar_layout
         Layout.fillWidth: true
-
-        SuttaBridge {
-            id: sb
-        }
 
         // === Search Input ====
         TextField {
@@ -47,11 +37,10 @@ Frame {
             font.pointSize: 12
             placeholderText: qsTr("Search in suttas")
 
-            /* Binding on text { */
-            /* when: webEngineView */
-            /* value: webEngineView.url */
-            /* } */
-            /* onAccepted: webEngineView.url = Utils.fromUserInput(text) */
+            onAccepted: search_btn.clicked()
+            onTextChanged: {
+                if (root.incremental_search.checked) root.debounce_timer.restart();
+            }
 
             selectByMouse: true
         }
@@ -59,8 +48,8 @@ Frame {
         Button {
             id: search_btn
             icon.source: "icons/32x32/bx_search_alt_2.png"
-            onClicked: search_bar_input.show_sutta(search_input.text)
-            // activeFocusOnTab: !aw.platformIsMac
+            enabled: search_input.text.length > 0
+            onClicked: root.run_search_fn(search_input.text)
             Layout.preferredHeight: 40
             Layout.preferredWidth: 40
         }

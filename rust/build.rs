@@ -3,7 +3,10 @@ use cxx_qt_build::{CxxQtBuilder, QmlModule};
 use cxx_qt_build::{is_ios_target, thin_generated_fat_library_with_lipo};
 
 fn main() {
-    let s = env::var("CXX_QT_QT_MODULES").expect("Env var not found");
+    let s = match env::var("CXX_QT_QT_MODULES") {
+        Ok(s) => s,
+        Err(_) => "".to_string(),
+    };
     let mobile_build = s.contains("Qt::WebView");
 
     let mut qml_files = Vec::new();
