@@ -4,7 +4,8 @@ appdata.sqlite3
 
 # build folders
 build/
-rust/target
+backend/target
+bridges/target
 .cache/
 compile_commands.json
 .qmlls.ini

@@ -6,7 +6,7 @@ use std::env;
 use std::path::PathBuf;
 use std::fs;
 
-use crate::api::ffi::get_app_assets_path;
+use crate::get_simsapa_app_root;
 
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
@@ -14,7 +14,11 @@ pub fn establish_connection() -> SqliteConnection {
     let db_path = match env::var("DATABASE_PATH") {
         Ok(s) => PathBuf::from(s),
         Err(_) => {
-            PathBuf::from(get_app_assets_path().to_string()).join("appdata.sqlite3")
+            if let Ok(p) = get_simsapa_app_root() {
+                PathBuf::from(p).join("appdata.sqlite3")
+            } else {
+                PathBuf::from("appdata.sqlite3")
+            }
         }
     };
 
@@ -29,26 +33,26 @@ pub fn establish_connection() -> SqliteConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub fn create_sutta(conn: &mut SqliteConnection,
-                    sutta_uid: &str,
-                    sutta_sutta_ref: &str,
-                    sutta_title: &str,
-                    sutta_content_html: &str) -> Sutta {
-    use crate::schema::suttas;
+// pub fn create_sutta(conn: &mut SqliteConnection,
+//                     sutta_uid: &str,
+//                     sutta_sutta_ref: &str,
+//                     sutta_title: &str,
+//                     sutta_content_html: &str) -> Sutta {
+//     use crate::schema::suttas;
 
-    let new_sutta = NewSutta {
-        uid: sutta_uid,
-        sutta_ref: sutta_sutta_ref,
-        title: sutta_title,
-        content_html: sutta_content_html,
-    };
+//     let new_sutta = NewSutta {
+//         uid: sutta_uid,
+//         sutta_ref: sutta_sutta_ref,
+//         title: sutta_title,
+//         content_html: sutta_content_html,
+//     };
 
-    diesel::insert_into(suttas::table)
-        .values(&new_sutta)
-        .returning(Sutta::as_returning())
-        .get_result(conn)
-        .expect("Error saving new sutta")
-}
+//     diesel::insert_into(suttas::table)
+//         .values(&new_sutta)
+//         .returning(Sutta::as_returning())
+//         .get_result(conn)
+//         .expect("Error saving new sutta")
+// }
 
 // pub fn populate_suttas() {
 //     let connection = &mut establish_connection();
@@ -84,7 +88,10 @@ pub fn get_sutta(sutta_uid: &str) -> Option<Sutta> {
 
     match sutta {
         Ok(x) => x,
-        Err(_) => None,
+        Err(e) => {
+            eprintln!("{}", e);
+            None
+        },
     }
 }
 

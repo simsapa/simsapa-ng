@@ -48,13 +48,13 @@ ApplicationWindow {
         })
     }
 
-    // function show_sutta(query) {
-    //     if (query.length < 4) {
-    //         return;
-    //     }
-    //     var html = sb.get_sutta_html(query);
-    //     web.loadHtml(html);
-    // }
+    /* function run_search(query) { */
+    /*     if (query.length < 4) { */
+    /*         return; */
+    /*     } */
+    /*     var html = sb.get_sutta_html(query); */
+    /*     webEngineView.loadHtml(html); */
+    /* } */
 
     function load_url(url) {
         webEngineView.url = url;
@@ -79,7 +79,6 @@ ApplicationWindow {
                     icon.source: "icons/32x32/fa_times-circle.png"
                     id: action_quit
                     shortcut: Shortcut {
-                        /* FIXME sequences: [StandardKey.Quit] */
                         sequences: ["Ctrl+Q"]
                         context: Qt.WindowShortcut
                         onActivated: action_quit.trigger()

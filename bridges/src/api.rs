@@ -13,10 +13,9 @@ use rocket::State;
 use rocket::http::{Status, ContentType};
 use rocket_cors::CorsOptions;
 
-use ffi::get_internal_storage_path;
-use crate::{API_PORT, API_URL};
-use crate::html_content::html_page;
-use crate::dir_list::generate_html_directory_listing;
+use simsapa_backend::{API_PORT, API_URL, get_simsapa_app_root, get_simsapa_appdata_db_path};
+use simsapa_backend::html_content::html_page;
+use simsapa_backend::dir_list::generate_html_directory_listing;
 
 #[cxx_qt::bridge]
 pub mod ffi {
@@ -24,11 +23,11 @@ pub mod ffi {
         include!("cxx-qt-lib/qstring.h");
         type QString = cxx_qt_lib::QString;
 
-        // FIXME: How to avoid using the full path?
         include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/utils.h");
         fn get_internal_storage_path() -> QString;
-        fn get_app_assets_path() -> QString;
+        // fn get_app_assets_path() -> QString;
 
+        // FIXME: How to avoid using the full path?
         include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/gui.h");
         fn callback_run_lookup_query(query_text: QString);
     }
@@ -90,16 +89,22 @@ fn lookup_window_query(word: &str) -> Status {
 
 #[get("/")]
 fn index() -> content::RawHtml<String> {
-    let storage_path = get_internal_storage_path().to_string();
+    let p = get_simsapa_app_root().unwrap_or(PathBuf::from("."));
+    let app_data_path = p.to_string_lossy();
+    let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
 
-    let folder_contents = generate_html_directory_listing(&storage_path, 3).unwrap_or(String::from("Error"));
+    let storage_path = ffi::get_internal_storage_path().to_string();
+    let storage_folder_contents = generate_html_directory_listing(&storage_path, 3).unwrap_or(String::from("Error"));
 
     let html = format!("
 <h1>Simsapa Dhamma Reader</h1>
 <img src='/assets/icons/simsapa-logo-horizontal-gray-w600.png'>
+<p>App data path: {}</p>
+<p>Contents:</p>
+<pre>{}</pre>
 <p>Internal storage path: {}</p>
 <p>Contents:</p>
-<pre>{}</pre>", storage_path, folder_contents);
+<pre>{}</pre>", app_data_path, app_data_folder_contents, storage_path, storage_folder_contents);
 
     content::RawHtml(html_page(&html, None, None, None))
 }
@@ -174,7 +179,7 @@ fn save_to_file(data: &[u8], path: &str) -> String {
 #[unsafe(no_mangle)]
 pub extern "C" fn download_small_database() {
     let url = "https://github.com/simsapa/simsapa-ng-assets/releases/download/v0.1.0-alpha.1/appdata.sqlite3";
-    let p = PathBuf::from(ffi::get_app_assets_path().to_string()).join("appdata.sqlite3");
+    let p = get_simsapa_appdata_db_path();
     let save_path = p.to_string_lossy();
 
     // Check and create directory

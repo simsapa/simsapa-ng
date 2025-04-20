@@ -65,8 +65,8 @@ endif()
 
 # CXX-Qt (using Corrosion) creates a CMake target with the same name as the crate.
 cxx_qt_import_crate(
-    MANIFEST_PATH rust/Cargo.toml 
-    CRATES simsapa_lib
+    MANIFEST_PATH bridges/Cargo.toml 
+    CRATES simsapa_bridges
     LOCKED
     QMAKE ${qmake_path}
 
@@ -75,7 +75,7 @@ cxx_qt_import_crate(
 
 cxx_qt_import_qml_module(simsapa_qml_module
     URI "com.profoundlabs.simsapa"
-    SOURCE_CRATE simsapa_lib)
+    SOURCE_CRATE simsapa_bridges)
 
 qt_add_resources(icons "assets/icons.qrc")
 
@@ -139,7 +139,7 @@ set_target_properties(simsapadhammareader PROPERTIES
 target_link_libraries(simsapadhammareader
     PRIVATE simsapa_qml_module
     PUBLIC
-        simsapa_lib
+        simsapa_bridges
         ${qt_modules}
     )
 

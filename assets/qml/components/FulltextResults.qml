@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import data
+/* import data */
 
 ColumnLayout {
     id: root
@@ -20,9 +20,9 @@ ColumnLayout {
     }
 
     property var all_results: []
-    property int page_size: 10
+    property int page_len: 10
     property int current_page: 1
-    property int total_pages: (all_results.length > 0 ? Math.ceil(all_results.length / page_size) : 1)
+    property int total_pages: (all_results.length > 0 ? Math.ceil(all_results.length / page_len) : 1)
     property bool is_loading: false
 
     RowLayout {
@@ -99,9 +99,9 @@ ColumnLayout {
     // Paginate results into the model
     function update_page() {
         results_model.clear()
-        total_pages = (all_results.length > 0 ? Math.ceil(all_results.length / page_size) : 1)
-        var start = (current_page - 1) * page_size
-        var end = Math.min(start + page_size, all_results.length)
+        total_pages = (all_results.length > 0 ? Math.ceil(all_results.length / page_len) : 1)
+        var start = (current_page - 1) * page_len
+        var end = Math.min(start + page_len, all_results.length)
         for (var i = start; i < end; ++i) {
             var item = all_results[i]
             results_model.append({
@@ -149,7 +149,7 @@ ColumnLayout {
         readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 11; font.bold: true }
         readonly property TextMetrics tm2: TextMetrics { text: "#"; font.pointSize: 11 }
 
-        Layout.preferredHeight: root.page_size * item_height
+        Layout.preferredHeight: root.page_len * item_height
         Layout.minimumWidth: contentItem.childrenRect.width + item_padding*2
         Layout.fillWidth: true
 
@@ -269,7 +269,7 @@ ColumnLayout {
         }
     }
 
-    BojjhangaData { id: results_model }
-    /* ListModel { id: results_model } */
+    /* BojjhangaData { id: results_model } */
+    ListModel { id: results_model }
 
 }

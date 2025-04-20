@@ -1,0 +1,95 @@
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
+use serde::{Serialize, Deserialize};
+
+use crate::models::Sutta;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SearchArea {
+    Suttas,
+    DictWords,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SearchMode {
+    FulltextMatch,
+    ContainsMatch,
+    HeadwordMatch,
+    TitleMatch,
+    DpdIdMatch,
+    DpdLookup,
+    Combined,
+    UidMatch,
+    RegExMatch,
+}
+
+#[derive(Debug, Clone)]
+pub struct SearchParams {
+    pub mode: SearchMode,
+    pub page_len: Option<usize>,
+    pub lang: Option<String>,
+    pub lang_include: bool,
+    pub source: Option<String>,
+    pub source_include: bool,
+    pub enable_regex: bool,
+    pub fuzzy_distance: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchResult {
+    pub uid: String,
+    // database schema name (appdata or userdata)
+    pub schema_name: String,
+    // database table name (e.g. suttas or dict_words)
+    pub table_name: String,
+    pub source_uid: Option<String>,
+    pub title: String,
+    pub sutta_ref: Option<String>,
+    pub nikaya: Option<String>,
+    pub author: Option<String>,
+    // highlighted snippet
+    pub snippet: String,
+    // page number in a document
+    pub page_number: Option<i32>,
+    pub score: Option<f32>,
+    pub rank: Option<i32>,
+}
+
+impl SearchResult {
+    pub fn load_from_json(path: &PathBuf) -> Result<Vec<Self>, String> {
+        let mut file = match File::open(path) {
+            Ok(file) => file,
+            Err(e) => return Err(format!("Failed to open file: {}", e)),
+        };
+
+        let mut contents = String::new();
+        match file.read_to_string(&mut contents) {
+            Ok(_) => (),
+            Err(e) => return Err(format!("Failed to read file: {}", e)),
+        }
+
+        match serde_json::from_str(&contents) {
+            Ok(results) => Ok(results),
+            Err(e) => Err(format!("Failed to parse JSON: {}", e)),
+        }
+    }
+
+    pub fn from_sutta(sutta: &Sutta, snippet: String) -> SearchResult {
+        SearchResult {
+            uid: sutta.uid.to_string(),
+            schema_name: "appdata".to_string(), // FIXME: implement later
+            table_name: "suttas".to_string(),
+            source_uid: sutta.source_uid.clone(),
+            title: sutta.title.clone().unwrap_or_default(),
+            sutta_ref: Some(sutta.sutta_ref.clone()),
+            nikaya: Some(sutta.nikaya.clone()),
+            author: None,
+            snippet,
+            page_number: None,
+            score: None,
+            rank: None,
+        }
+    }
+
+}

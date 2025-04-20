@@ -59,8 +59,8 @@ void start(int argc, char* argv[]) {
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);
 
-  QCoreApplication::setApplicationName("Simsapa Dhamma Reader");
-  QCoreApplication::setOrganizationName("Profound Labs");
+  QCoreApplication::setApplicationName("simsapa-ng");
+  // NOTE: Don't use setOrganizationName(), because Qt adds it as a folder to the internal storage path.
 
   // TODO :/icons/simsapa-appicon doesn't work, perhaps wrong size?
   app.setWindowIcon(QIcon(":/qt/qml/com/profoundlabs/simsapa/assets/qml/icons/32x32/simsapa-tray.png"));
@@ -70,7 +70,7 @@ void start(int argc, char* argv[]) {
   //
   app.setApplicationVersion("v0.1.0");
 
-  download_small_database();
+  // download_small_database();
 
   // Start the API server after checking for APP_DB. If this is the first run,
   // the server would create the userdata db, and we can't use it to test in
