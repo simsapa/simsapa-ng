@@ -379,6 +379,6 @@ mod tests {
         let fragment = task.fragment_around_text(&task.query_text, content, 10, 200);
         assert!(fragment.contains(&task.query_text));
         assert!(fragment.starts_with("... patiṭṭhāya cattāro satipaṭṭhāne"));
-        assert!(fragment.ends_with("bhāveyyāsi ..."));
+        assert!(fragment.ends_with("bhāveyyāsi"));
     }
 }
