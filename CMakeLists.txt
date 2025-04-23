@@ -137,7 +137,8 @@ set_target_properties(simsapadhammareader PROPERTIES
 
 # Link to the qml module, which in turn links to the Rust simsapa library
 target_link_libraries(simsapadhammareader
-    PRIVATE simsapa_qml_module
+    PRIVATE
+        simsapa_qml_module
     PUBLIC
         simsapa_bridges
         ${qt_modules}

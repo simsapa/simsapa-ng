@@ -4,9 +4,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
-import QtWebEngine
-
-import components as C
 
 import com.profoundlabs.simsapa
 
@@ -57,7 +54,7 @@ ApplicationWindow {
     /* } */
 
     function load_url(url) {
-        webEngineView.url = url;
+        html_view.url = url;
     }
 
     function set_query(text) {
@@ -68,12 +65,12 @@ ApplicationWindow {
         Menu {
             title: "&File"
 
-            C.MenuItem {
+            MenuItem {
                 text: "&Close Window"
                 onTriggered: root.close()
             }
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     text: "&Quit Simsapa"
                     icon.source: "icons/32x32/fa_times-circle.png"
@@ -91,7 +88,7 @@ ApplicationWindow {
         Menu {
             title: "&Edit"
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: action_focus_search
                     text: "Focus Search Input"
@@ -111,7 +108,7 @@ ApplicationWindow {
         Menu {
             title: "&Find"
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: incremental_search
                     text: "Search As You Type"
@@ -120,7 +117,7 @@ ApplicationWindow {
                 }
             }
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: select_previous_result
                     text: "Previous Result"
@@ -133,7 +130,7 @@ ApplicationWindow {
                 }
             }
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: select_next_result
                     text: "Next Result"
@@ -150,7 +147,7 @@ ApplicationWindow {
         Menu {
             title: "&Windows"
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: action_sutta_search
                     text: "&Sutta Search"
@@ -164,7 +161,7 @@ ApplicationWindow {
                 }
             }
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: action_sutta_study
                     text: "&Sutta Study"
@@ -178,7 +175,7 @@ ApplicationWindow {
                 }
             }
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: action_dictionary_search
                     text: "&Dictionary Search"
@@ -192,7 +189,7 @@ ApplicationWindow {
                 }
             }
 
-            C.MenuItem {
+            MenuItem {
                 action: Action {
                     id: action_show_word_lookup
                     text: "Show Word Lookup"
@@ -214,15 +211,15 @@ ApplicationWindow {
 
         RowLayout {
 
-            C.SearchBarInput {
+            SearchBarInput {
                 id: search_bar_input
-                web: webEngineView
+                web: html_view
                 run_search_fn: root.run_search
                 debounce_timer: debounce_timer
                 incremental_search: incremental_search
             }
 
-            C.SearchBarOptions {
+            SearchBarOptions {
                 id: search_bar_options
             }
 
@@ -263,9 +260,8 @@ ApplicationWindow {
                         ColumnLayout {
                             /* Layout.alignment: Qt.AlignTop */
 
-                            WebEngineView {
-                                id: webEngineView
-                                /* focus: true */
+                            SuttaHtmlView {
+                                id: html_view
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 url: "http://localhost:4848/"
@@ -307,7 +303,7 @@ ApplicationWindow {
                             anchors.top: rightside_tabs.bottom
                             anchors.topMargin: 5
 
-                            C.FulltextResults {
+                            FulltextResults {
                                 Layout.preferredWidth: root.width * 0.5
                                 id: fulltext_results
                                 all_results: root.all_results

@@ -1,15 +1,15 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtWebEngine
+
+import com.profoundlabs.simsapa
 
 Frame {
     id: root
-    // id: search_bar
     Layout.fillWidth: true
     Layout.minimumHeight: 40
 
-    required property WebEngineView web
+    required property SuttaHtmlView web
     required property var run_search_fn
     required property Timer debounce_timer
     required property Action incremental_search

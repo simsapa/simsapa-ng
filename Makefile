@@ -7,7 +7,7 @@ run: build
 	./build/simsapadhammareader/simsapadhammareader
 
 count-code:
-	tokei --type Rust,QML,C++ --exclude assets/qml/data/ . | grep -vE '===|---|Total'
+	tokei --type Rust,QML,C++,Javascript,CMake --compact --exclude assets/qml/data/ . | grep -vE '===|---|Total'
 
 db_reset:
 	rm ../assets-testing/appdata.sqlite3 && \

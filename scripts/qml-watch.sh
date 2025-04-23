@@ -27,8 +27,10 @@ if [ ! -f "$FILE" ]; then
     exit 2
 fi
 
+QML_DIR=$(dirname "$FILE")
+
 start_qml() {
-    qml "$FILE" &
+    QML_IMPORT_PATH="$QML_DIR" qml "$FILE" &
     local pid=$!
     # The xdotool search --sync query will block until the new window is created.
     xdotool search --sync --pid $pid > /dev/null 2>&1
@@ -38,7 +40,7 @@ start_qml() {
 read cur_pid < <(start_qml)
 
 while true; do
-    inotifywait -qq -e close_write "$FILE" ./assets/qml/**/*.qml
+    inotifywait -qq -e close_write "$FILE" "$QML_DIR"/**/*.qml
 
     # First, open a new window, which qtile will position where the previous one is.
     read new_pid < <(start_qml)

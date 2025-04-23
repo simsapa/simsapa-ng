@@ -6,7 +6,7 @@ use std::env;
 use std::path::PathBuf;
 use std::fs;
 
-use crate::get_simsapa_app_root;
+use crate::get_create_simsapa_app_root;
 
 pub fn establish_connection() -> SqliteConnection {
     dotenv().ok();
@@ -14,7 +14,7 @@ pub fn establish_connection() -> SqliteConnection {
     let db_path = match env::var("DATABASE_PATH") {
         Ok(s) => PathBuf::from(s),
         Err(_) => {
-            if let Ok(p) = get_simsapa_app_root() {
+            if let Ok(p) = get_create_simsapa_app_root() {
                 PathBuf::from(p).join("appdata.sqlite3")
             } else {
                 PathBuf::from("appdata.sqlite3")

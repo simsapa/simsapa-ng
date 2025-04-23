@@ -10,16 +10,17 @@ fn main() {
     let mobile_build = s.contains("Qt::WebView");
 
     let mut qml_files = Vec::new();
-    qml_files.push("../assets/qml/word_lookup_window.qml");
+    qml_files.push("../assets/qml/SuttaSearchWindow.qml");
+    qml_files.push("../assets/qml/WordLookupWindow.qml");
 
-    qml_files.push("../assets/qml/components/SearchBarInput.qml");
-    qml_files.push("../assets/qml/components/SearchBarOptions.qml");
+    qml_files.push("../assets/qml/SearchBarInput.qml");
+    qml_files.push("../assets/qml/SearchBarOptions.qml");
+    qml_files.push("../assets/qml/FulltextResults.qml");
+    qml_files.push("../assets/qml/MenuItem.qml");
 
-    if mobile_build {
-        qml_files.push("../assets/qml/sutta_search_window_mobile.qml");
-    } else {
-        qml_files.push("../assets/qml/sutta_search_window_desktop.qml");
-    }
+    qml_files.push("../assets/qml/SuttaHtmlView.qml");
+    qml_files.push("../assets/qml/SuttaHtmlView_Desktop.qml");
+    qml_files.push("../assets/qml/SuttaHtmlView_Mobile.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library
@@ -47,6 +48,6 @@ fn main() {
     }
 
     if is_ios_target() {
-        thin_generated_fat_library_with_lipo("libsimsapa_lib-cxxqt-generated.a", "arm64");
+        thin_generated_fat_library_with_lipo("libsimsapa_bridges-cxxqt-generated.a", "arm64");
     }
 }

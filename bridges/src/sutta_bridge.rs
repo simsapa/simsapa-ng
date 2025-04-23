@@ -5,7 +5,6 @@ use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
 use simsapa_backend::db::get_sutta;
 use simsapa_backend::html_content::html_page;
-// use simsapa_backend::get_simsapa_app_root;
 
 #[cxx_qt::bridge]
 pub mod qobject {

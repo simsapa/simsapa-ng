@@ -13,7 +13,7 @@ use rocket::State;
 use rocket::http::{Status, ContentType};
 use rocket_cors::CorsOptions;
 
-use simsapa_backend::{API_PORT, API_URL, get_simsapa_app_root, get_simsapa_appdata_db_path};
+use simsapa_backend::{API_PORT, API_URL, get_create_simsapa_app_root, get_create_simsapa_appdata_db_path};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 
@@ -89,7 +89,7 @@ fn lookup_window_query(word: &str) -> Status {
 
 #[get("/")]
 fn index() -> content::RawHtml<String> {
-    let p = get_simsapa_app_root().unwrap_or(PathBuf::from("."));
+    let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
     let app_data_path = p.to_string_lossy();
     let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
 
@@ -179,7 +179,7 @@ fn save_to_file(data: &[u8], path: &str) -> String {
 #[unsafe(no_mangle)]
 pub extern "C" fn download_small_database() {
     let url = "https://github.com/simsapa/simsapa-ng-assets/releases/download/v0.1.0-alpha.1/appdata.sqlite3";
-    let p = get_simsapa_appdata_db_path();
+    let p = get_create_simsapa_appdata_db_path();
     let save_path = p.to_string_lossy();
 
     // Check and create directory
