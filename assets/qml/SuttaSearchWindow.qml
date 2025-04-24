@@ -15,11 +15,35 @@ ApplicationWindow {
     visible: true
     color: palette.window
 
+    /* property SuttaHtmlView current_web_view: (suttas_tab_bar.currentIndex < suttas_tab_bar.count) ? sutta_html_view_layout.children[suttas_tab_bar.currentIndex] : null */
+
+    // TODO: implment find_bar
+    // onCurrent_web_viewChanged: {
+    //     find_bar.reset();
+    // }
+
+    property bool is_mac: Qt.platform.os == "osx"
+
     property var all_results: []
     property bool is_loading: false
 
     SuttaBridge {
         id: sb
+    }
+
+    ListModel {
+        id: tabs_pinned_model
+        /* ListElement { title: "Pinned"; pinned: true } */
+    }
+
+    ListModel {
+        id: tabs_results_model
+        /* ListElement { title: "Sutta"; pinned: false } */
+    }
+
+    ListModel {
+        id: tabs_translations_model
+        /* ListElement { title: "Translations"; pinned: false } */
     }
 
     // Timer for incremental search debounce
@@ -45,6 +69,25 @@ ApplicationWindow {
         })
     }
 
+    function create_new_tab_and_webview(sutta_uid, focus_on_new_tab = false) {
+        var data = { title: sutta_uid, pinned: false }
+        tabs_results_model.append(data);
+
+        // TODO: implement focusing/selecting the new tab
+
+        var webview = sutta_tab_component.createObject(sutta_html_view_layout, {sutta_uid: sutta_uid});
+        return webview;
+    }
+
+    Component.onCompleted: {
+        if (tabs_results_model.count == 0) {
+            tabs_results_model.append({title: "Sutta", pinned: false});
+        }
+        if (sutta_html_view_layout.count == 0) {
+            sutta_tab_component.createObject(sutta_html_view_layout, {sutta_uid: "Sutta"});
+        }
+    }
+
     /* function run_search(query) { */
     /*     if (query.length < 4) { */
     /*         return; */
@@ -52,10 +95,6 @@ ApplicationWindow {
     /*     var html = sb.get_sutta_html(query); */
     /*     webEngineView.loadHtml(html); */
     /* } */
-
-    function load_url(url) {
-        html_view.url = url;
-    }
 
     function set_query(text) {
         search_bar_input.search_input.text = text;
@@ -65,12 +104,12 @@ ApplicationWindow {
         Menu {
             title: "&File"
 
-            MenuItem {
+            CMenuItem {
                 text: "&Close Window"
                 onTriggered: root.close()
             }
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     text: "&Quit Simsapa"
                     icon.source: "icons/32x32/fa_times-circle.png"
@@ -88,7 +127,7 @@ ApplicationWindow {
         Menu {
             title: "&Edit"
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: action_focus_search
                     text: "Focus Search Input"
@@ -106,9 +145,25 @@ ApplicationWindow {
         }
 
         Menu {
+            title: "&View"
+
+            CMenuItem {
+                action: Action {
+                    id: web_reload
+                    text: "Reload Page"
+                    // TODO: implement reload
+                    // onTriggered: {
+                    //     if (root.current_web_view)
+                    //         root.current_web_view.reload();
+                    // }
+                }
+            }
+        }
+
+        Menu {
             title: "&Find"
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: incremental_search
                     text: "Search As You Type"
@@ -117,7 +172,7 @@ ApplicationWindow {
                 }
             }
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: select_previous_result
                     text: "Previous Result"
@@ -130,7 +185,7 @@ ApplicationWindow {
                 }
             }
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: select_next_result
                     text: "Next Result"
@@ -147,7 +202,7 @@ ApplicationWindow {
         Menu {
             title: "&Windows"
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: action_sutta_search
                     text: "&Sutta Search"
@@ -161,7 +216,7 @@ ApplicationWindow {
                 }
             }
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: action_sutta_study
                     text: "&Sutta Study"
@@ -175,7 +230,7 @@ ApplicationWindow {
                 }
             }
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: action_dictionary_search
                     text: "&Dictionary Search"
@@ -189,7 +244,7 @@ ApplicationWindow {
                 }
             }
 
-            MenuItem {
+            CMenuItem {
                 action: Action {
                     id: action_show_word_lookup
                     text: "Show Word Lookup"
@@ -213,7 +268,6 @@ ApplicationWindow {
 
             SearchBarInput {
                 id: search_bar_input
-                web: html_view
                 run_search_fn: root.run_search
                 debounce_timer: debounce_timer
                 incremental_search: incremental_search
@@ -253,19 +307,95 @@ ApplicationWindow {
                         }
                     }
 
-                    // Left side tabs area
-                    ColumnLayout {
+                    Item {
+                        id: suttas_tab_container
                         SplitView.preferredWidth: parent.width * 0.5
+                        /* Layout.alignment: Qt.AlignTop */
 
-                        ColumnLayout {
-                            /* Layout.alignment: Qt.AlignTop */
+                        TabBar {
+                            id: suttas_tab_bar
+                            anchors.top: parent.top
+                            /* anchors.left: parent.left */
+                            /* anchors.right: parent.right */
 
-                            SuttaHtmlView {
-                                id: html_view
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                url: "http://localhost:4848/"
+                            Component {
+                                id: sutta_tab_component
+
+                                SuttaHtmlView {
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    // focus: true
+                                }
                             }
+
+                            contentItem: RowLayout {
+                                spacing: 0
+
+                                Repeater {
+                                    id: tabs_pinned
+                                    model: tabs_pinned_model
+                                    delegate: SuttaTabButton {
+                                        id: pinned_tab_btn
+                                        onPinToggled: function (pinned) {
+                                            if (pinned) return;
+                                            // Unpin and move back to results group
+                                            var data = { title: pinned_tab_btn.title, pinned: false }
+                                            tabs_results_model.append(data)
+                                            tabs_pinned_model.remove(pinned_tab_btn.index)
+                                        }
+                                        onCloseClicked: tabs_pinned_model.remove(index)
+                                    }
+                                }
+
+                                Item { Layout.preferredWidth: 5 }
+
+                                Repeater {
+                                    id: tabs_results
+                                    model: tabs_results_model
+                                    delegate: SuttaTabButton {
+                                        id: results_tab_btn
+                                        onPinToggled: function (pinned) {
+                                            if (!pinned) return;
+                                            // Pin and move to pinned group
+                                            var data = { title: results_tab_btn.title, pinned: true };
+                                            tabs_pinned_model.append(data);
+                                            tabs_results_model.remove(results_tab_btn.index);
+                                        }
+                                        onCloseClicked: tabs_results_model.remove(index);
+                                    }
+                                }
+
+                                Item { Layout.preferredWidth: 5 }
+
+                                Repeater {
+                                    id: tabs_translations
+                                    model: tabs_translations_model
+                                    delegate: SuttaTabButton {
+                                        id: translations_tab_btn
+                                        onPinToggled: function (pinned) {
+                                            if (!pinned) return;
+                                            // Pin and move to pinned group
+                                            var data = { title: translations_tab_btn.title, pinned: true };
+                                            tabs_pinned_model.append(data);
+                                            tabs_translations_model.remove(translations_tab_btn.index);
+                                        }
+                                        onCloseClicked: tabs_translations_model.remove(index);
+                                    }
+                                }
+
+                            }
+
+                        }
+
+                        StackLayout {
+                            id: sutta_html_view_layout
+                            currentIndex: suttas_tab_bar.currentIndex
+
+                            anchors.top: suttas_tab_bar.bottom
+                            anchors.bottom: suttas_tab_container.bottom
+                            anchors.left: suttas_tab_container.left
+                            anchors.right: suttas_tab_container.right
+                            // anchors.topMargin: 5
                         }
                     }
 
@@ -278,10 +408,6 @@ ApplicationWindow {
                             anchors.top: parent.top
                             anchors.left: parent.left
                             anchors.right: parent.right
-
-                            background: Rectangle {
-                                color: palette.window
-                            }
 
                             TabButton {
                                 text: "Results"
@@ -302,12 +428,36 @@ ApplicationWindow {
                             currentIndex: rightside_tabs.currentIndex
                             anchors.top: rightside_tabs.bottom
                             anchors.topMargin: 5
+                            width: parent.width
 
                             FulltextResults {
-                                Layout.preferredWidth: root.width * 0.5
                                 id: fulltext_results
                                 all_results: root.all_results
                                 is_loading: root.is_loading
+
+                                function update_item() {
+                                    var all_results_count = fulltext_results.all_results.length;
+                                    /* console.log("update_item() count: " + all_results_count); */
+                                    /* if (all_results_count == 0) return; */
+                                    tabs_results_model.clear();
+                                    var uid = fulltext_results.current_uid();
+                                    var data = { title: uid, pinned: false };
+                                    tabs_results_model.append(data);
+
+                                    // In the StackLayout, the children for tabs_results_model are preceded by the
+                                    // items related to tabs_pinned_model.
+                                    /* var n_pinned = tabs_pinned_model.count; */
+
+                                    // The count is already index + 1.
+
+                                    if (sutta_html_view_layout.count == 0) {
+                                        sutta_tab_component.createObject(sutta_html_view_layout, {sutta_uid: uid});
+                                    } else {
+                                        sutta_html_view_layout.children[0].sutta_uid = uid;
+                                    }
+                                }
+
+                                onCurrentIndexChanged: fulltext_results.update_item()
                             }
 
                             // History Tab

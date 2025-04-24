@@ -87,5 +87,8 @@
     <file>icons/32x32/match-case.png</file><!-- alias="match-case" -->
     <file>icons/32x32/xmark-solid.png</file><!-- alias="xmark-solid" -->
     <file>icons/32x32/x-mark-20-solid.png</file><!-- alias="xmark-20-solid" -->
+    <file>icons/32x32/mdi--close.png</file>
+    <file>icons/32x32/material-symbols-light--push-pin.png</file>
+    <file>icons/32x32/material-symbols-light--push-pin-outline.png</file>
   </qresource>
 </RCC>

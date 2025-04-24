@@ -40,7 +40,7 @@ start_qml() {
 read cur_pid < <(start_qml)
 
 while true; do
-    inotifywait -qq -e close_write "$FILE" "$QML_DIR"/**/*.qml
+    inotifywait -qq -e close_write "$FILE" "$QML_DIR"/*.qml
 
     # First, open a new window, which qtile will position where the previous one is.
     read new_pid < <(start_qml)

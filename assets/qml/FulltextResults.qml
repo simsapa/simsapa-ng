@@ -24,6 +24,12 @@ ColumnLayout {
     property int current_page: 1
     property int total_pages: (all_results.length > 0 ? Math.ceil(all_results.length / page_len) : 1)
     property bool is_loading: false
+    property alias currentIndex: fulltext_list.currentIndex
+    property alias currentItem: fulltext_list.currentItem
+
+    function current_uid() {
+        return results_model.get(fulltext_list.currentIndex).uid;
+    }
 
     RowLayout {
         Layout.fillWidth: true
@@ -150,7 +156,7 @@ ColumnLayout {
         readonly property TextMetrics tm2: TextMetrics { text: "#"; font.pointSize: 11 }
 
         Layout.preferredHeight: root.page_len * item_height
-        Layout.minimumWidth: contentItem.childrenRect.width + item_padding*2
+        /* Layout.minimumWidth: contentItem.childrenRect.width + item_padding*2 */
         Layout.fillWidth: true
 
         model: results_model
@@ -185,6 +191,7 @@ ColumnLayout {
         id: search_result_delegate
         ItemDelegate {
             id: result_item
+            width: parent.width
             height: fulltext_list.item_height
 
             required property int index
@@ -199,12 +206,11 @@ ColumnLayout {
 
             Frame {
                 id: item_frame
-                width: fulltext_list.width
-                height: parent.height
+                anchors.fill: parent
 
                 background: Rectangle {
                     id: row_rect
-                    width: parent.width
+                    anchors.fill: parent
                     radius: 5 // slight rounding for a button feel
                     border.width: 1
                     border.color: Qt.darker(base_color, 1.15)
@@ -240,8 +246,7 @@ ColumnLayout {
                 }
 
                 ColumnLayout {
-                    anchors.margins: 8
-                    width: parent.width
+                    anchors.fill: parent
                     spacing: 4
 
                     // property color text_color: fulltext_list.currentIndex === result_item.index ? "#000" : "#fff"
