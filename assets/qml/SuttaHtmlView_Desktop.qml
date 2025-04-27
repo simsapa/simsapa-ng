@@ -7,8 +7,10 @@ WebEngineView {
     id: web
     anchors.fill: parent
 
+    property string item_key
     property string sutta_uid
 
+    // Load the sutta when the Loader in SuttaHtmlView updates sutta_uid.
     onSutta_uidChanged: function() {
         load_sutta_uid(web.sutta_uid);
     }

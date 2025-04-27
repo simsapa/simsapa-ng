@@ -2,6 +2,7 @@ import QtQuick
 
 Loader {
     id: loader
+    required property string item_key
     required property string sutta_uid
 
     /* signal loadingChanged(var loadRequest) */
@@ -15,6 +16,7 @@ Loader {
     }
 
     onLoaded: {
+        loader.item.item_key = Qt.binding(() => item_key);
         loader.item.sutta_uid = Qt.binding(() => sutta_uid);
         /* loader.item.loadingChanged.connect(loader.loadingChanged); */
     }

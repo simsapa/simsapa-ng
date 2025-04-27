@@ -18,10 +18,10 @@ fn main() {
     qml_files.push("../assets/qml/FulltextResults.qml");
     qml_files.push("../assets/qml/CMenuItem.qml");
     qml_files.push("../assets/qml/SuttaTabButton.qml");
-
     qml_files.push("../assets/qml/SuttaHtmlView.qml");
     qml_files.push("../assets/qml/SuttaHtmlView_Desktop.qml");
     qml_files.push("../assets/qml/SuttaHtmlView_Mobile.qml");
+    qml_files.push("../assets/qml/SuttaStackLayout.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library

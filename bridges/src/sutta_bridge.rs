@@ -1,9 +1,9 @@
 use core::pin::Pin;
-use cxx_qt_lib::QString;
+use cxx_qt_lib::{QString, QStringList};
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
-use simsapa_backend::db::get_sutta;
+use simsapa_backend::db;
 use simsapa_backend::html_content::html_page;
 
 #[cxx_qt::bridge]
@@ -12,6 +12,9 @@ pub mod qobject {
     unsafe extern "C++" {
         include!("cxx-qt-lib/qstring.h");
         type QString = cxx_qt_lib::QString;
+
+        include!("cxx-qt-lib/qstringlist.h");
+        type QStringList = cxx_qt_lib::QStringList;
     }
 
     extern "RustQt" {
@@ -39,6 +42,10 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "get_sutta_html"]
         fn get_sutta_html(self: &SuttaBridge, query: &QString) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "get_translations_for_sutta_uid"]
+        fn get_translations_for_sutta_uid(self: &SuttaBridge, sutta_uid: &QString) -> QStringList;
     }
 }
 
@@ -90,7 +97,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_sutta_html(&self, query: &QString) -> QString {
-        let sutta = get_sutta(&query.to_string());
+        let sutta = db::get_sutta(&query.to_string());
 
         let html = match sutta {
             Some(sutta) => html_page(&sutta.content_html.unwrap_or_default(), None, None, None),
@@ -98,5 +105,14 @@ impl qobject::SuttaBridge {
         };
 
         QString::from(html)
+    }
+
+    pub fn get_translations_for_sutta_uid(&self, sutta_uid: &QString) -> QStringList {
+        let translations: Vec<String> = db::get_translations_for_sutta_uid(&sutta_uid.to_string());
+        let mut res = QStringList::default();
+        for t in translations {
+            res.append(QString::from(t));
+        }
+        res
     }
 }

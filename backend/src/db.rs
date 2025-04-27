@@ -5,6 +5,7 @@ use dotenvy::dotenv;
 use std::env;
 use std::path::PathBuf;
 use std::fs;
+use regex::Regex;
 
 use crate::get_create_simsapa_app_root;
 
@@ -106,4 +107,64 @@ pub fn delete_sutta() {
         .expect("Error deleting suttas");
 
     println!("Deleted {} suttas", num_deleted);
+}
+
+fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
+    // Sort Pali ms first as the results.
+    // Then add Pali other sources,
+    // then the non-Pali items, sorted by language.
+    //
+    // Single-pass manual bucketing means we walk the vector once,
+    // avoiding per-element cloning.
+
+    let mut results = Vec::new();
+    let mut pli_others = Vec::new();
+    let mut remaining = Vec::new();
+
+    for s in res.into_iter() {
+        if s.language == "pli" {
+            if s.uid.ends_with("/ms") {
+                results.push(s);
+            } else {
+                pli_others.push(s);
+            }
+        } else {
+            remaining.push(s);
+        }
+    }
+
+    // Sort non-pli by language
+    remaining.sort_by(|a, b| a.language.cmp(&b.language));
+    // Assemble final list
+    results.extend(pli_others);
+    results.extend(remaining);
+    results
+}
+
+
+pub fn get_translations_for_sutta_uid(sutta_uid: &str) -> Vec<String> {
+    // See sutta_search_window_state.py::_add_related_tabs()
+
+    // Capture the reference before the first '/'
+    let re = Regex::new(r"^([^/]+)/.*").expect("Invalid regex");
+    let uid_ref = re.replace(&sutta_uid, "$1").to_string();
+
+    use crate::schema::suttas::dsl::suttas;
+
+    let conn = &mut establish_connection();
+
+    let mut res: Vec<Sutta> = Vec::new();
+
+    if let Ok(a) = suttas
+        .select(Sutta::as_select())
+        .filter(uid.ne(sutta_uid))
+        .filter(uid.like(format!("{}/%", uid_ref)))
+        .load(conn) {
+            res.extend(a);
+    }
+
+    let res_sorted_uids: Vec<String> = sort_suttas(res)
+        .into_iter().map(|s| s.uid).collect();
+
+    res_sorted_uids
 }

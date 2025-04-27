@@ -19,7 +19,7 @@ use crate::schema::suttas;
 //     .execute(conn)?;
 
 // Queryable struct for reading records
-#[derive(Queryable, Selectable, Identifiable)]
+#[derive(Clone, Queryable, Selectable, Identifiable)]
 #[diesel(table_name = suttas)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Sutta {
