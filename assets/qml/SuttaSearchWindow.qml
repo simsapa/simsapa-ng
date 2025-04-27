@@ -72,9 +72,13 @@ ApplicationWindow {
     // Returns the index of the tab in the model.
     function add_results_tab(sutta_uid: string, focus_on_new = true, new_tab = false): int {
         if (new_tab || tabs_results_model.count == 0) {
-            let data = root.new_tab_data(sutta_uid, false, focus_on_new)
+            let data = root.new_tab_data(sutta_uid, false, focus_on_new);
             if (tabs_results_model.count == 0) {
                 data.id_key = "ResultsTab_0";
+            }
+            if (data.web_item_key == "") {
+                data.web_item_key = root.generate_key();
+                sutta_html_view_layout.add_item(data.web_item_key, data.title, false);
             }
             tabs_results_model.append(data);
             return tabs_results_model.count-1;
@@ -87,7 +91,7 @@ ApplicationWindow {
         }
     }
 
-    function focus_on_tab(id_key) {
+    function focus_on_tab_with_id_key(id_key: string) {
         let tab = root.get_tab_with_id_key(id_key);
         if (tab) {
             tab.click();
@@ -392,7 +396,7 @@ ApplicationWindow {
 
                                 // Focus on the other tab, change the html view, delete this webview
                                 if (focus_tab_data) {
-                                    root.focus_on_tab(focus_tab_data.id_key);
+                                    root.focus_on_tab_with_id_key(focus_tab_data.id_key);
                                     // Show the other tab's webview
                                     sutta_html_view_layout.current_key = focus_tab_data.web_item_key;
                                 }
@@ -423,7 +427,7 @@ ApplicationWindow {
                                             let data = tabs_pinned_model.get(pinned_tab_btn.index);
                                             data.pinned = false;
                                             tabs_results_model.append(data);
-                                            root.focus_on_tab(data.id_key);
+                                            root.focus_on_tab_with_id_key(data.id_key);
                                             tabs_pinned_model.remove(pinned_tab_btn.index)
                                         }
                                         onCloseClicked: suttas_tab_bar.remove_tab_and_webview(pinned_tab_btn, tabs_pinned_model)
@@ -486,7 +490,7 @@ ApplicationWindow {
                                             let data = tabs_translations_model.get(translations_tab_btn.index);
                                             data.pinned = true;
                                             tabs_pinned_model.append(data);
-                                            root.focus_on_tab(data.id_key);
+                                            root.focus_on_tab_with_id_key(data.id_key);
                                             tabs_translations_model.remove(translations_tab_btn.index);
                                         }
                                         onCloseClicked: suttas_tab_bar.remove_tab_and_webview(translations_tab_btn, tabs_translations_model)
@@ -544,8 +548,10 @@ ApplicationWindow {
 
                                 function update_item() {
                                     let uid = fulltext_results.current_uid();
-                                    root.add_results_tab(uid, true);
-                                    root.focus_on_tab("ResultsTab_0");
+                                    let tab_idx = root.add_results_tab(uid, true);
+                                    // NOTE: It will not find the tab first time while window objects are still
+                                    // constructed, but succeeds later on.
+                                    root.focus_on_tab_with_id_key("ResultsTab_0");
 
                                     // Add translations tabs
 

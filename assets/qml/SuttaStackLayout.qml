@@ -21,7 +21,7 @@ StackLayout {
         }
     }
 
-    function add_item(key, uid) {
+    function add_item(key, uid, show_item = true) {
         if (root.items_map.hasOwnProperty(key)) {
             console.warn("Item with key", key, "already exists");
             return;
@@ -29,7 +29,9 @@ StackLayout {
 
         let comp = sutta_html_component.createObject(root, {item_key: key, sutta_uid: uid});
         root.items_map[key] = comp;
-        root.current_key = key;
+        if (show_item) {
+            root.current_key = key;
+        }
     }
 
     function get_item(key) {
