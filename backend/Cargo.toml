@@ -21,3 +21,5 @@ tinytemplate = "1.2.1"
 walkdir = "2.5.0"
 time = { version = "0.3.41", features = ["local-offset", "formatting", "macros"] }
 app_dirs = { package = "app_dirs2", version = "2.5" }
+anyhow = "1.0"
+thiserror = "2.0"

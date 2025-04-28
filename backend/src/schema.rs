@@ -1,6 +1,16 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
+    app_settings (id) {
+        id -> Integer,
+        key -> Text,
+        value -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
     suttas (id) {
         id -> Integer,
         uid -> Text,
@@ -33,3 +43,54 @@ diesel::table! {
         // indexed_at -> Nullable<Timestamp>,
     }
 }
+
+diesel::table! {
+    sutta_variants (id) {
+        id -> Integer,
+        sutta_id -> Integer,
+        sutta_uid -> Text,
+        language -> Nullable<Text>,
+        source_uid -> Nullable<Text>,
+        content_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    sutta_comments (id) {
+        id -> Integer,
+        sutta_id -> Integer,
+        sutta_uid -> Text,
+        language -> Nullable<Text>,
+        source_uid -> Nullable<Text>,
+        content_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    sutta_glosses (id) {
+        id -> Integer,
+        sutta_id -> Integer,
+        sutta_uid -> Text,
+        language -> Nullable<Text>,
+        source_uid -> Nullable<Text>,
+        content_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::joinable!(sutta_variants -> suttas (sutta_id));
+diesel::joinable!(sutta_comments -> suttas (sutta_id));
+diesel::joinable!(sutta_glosses -> suttas (sutta_id));
+
+diesel::allow_tables_to_appear_in_same_query!(
+    app_settings,
+    suttas,
+    sutta_variants,
+    sutta_comments,
+    sutta_glosses,
+);

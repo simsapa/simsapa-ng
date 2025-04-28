@@ -1,3 +1,13 @@
+CREATE TABLE app_settings (
+    id INTEGER NOT NULL,
+    "key" VARCHAR NOT NULL,
+    value VARCHAR,
+    created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+    updated_at DATETIME,
+    PRIMARY KEY (id),
+    UNIQUE ("key")
+);
+
 CREATE TABLE suttas (
     id INTEGER NOT NULL,
     uid VARCHAR NOT NULL,
@@ -30,4 +40,43 @@ CREATE TABLE suttas (
     indexed_at DATETIME,
     PRIMARY KEY (id),
     UNIQUE (uid)
+);
+
+CREATE TABLE sutta_variants (
+    id INTEGER NOT NULL,
+    sutta_id INTEGER NOT NULL,
+    sutta_uid VARCHAR NOT NULL,
+    language VARCHAR,
+    source_uid VARCHAR,
+    content_json VARCHAR,
+    created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+    updated_at DATETIME,
+    PRIMARY KEY (id),
+    FOREIGN KEY(sutta_id) REFERENCES suttas (id) ON DELETE CASCADE
+);
+
+CREATE TABLE sutta_comments (
+    id INTEGER NOT NULL,
+    sutta_id INTEGER NOT NULL,
+    sutta_uid VARCHAR NOT NULL,
+    language VARCHAR,
+    source_uid VARCHAR,
+    content_json VARCHAR,
+    created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+    updated_at DATETIME,
+    PRIMARY KEY (id),
+    FOREIGN KEY(sutta_id) REFERENCES suttas (id) ON DELETE CASCADE
+);
+
+CREATE TABLE sutta_glosses (
+    id INTEGER NOT NULL,
+    sutta_id INTEGER NOT NULL,
+    sutta_uid VARCHAR NOT NULL,
+    language VARCHAR,
+    source_uid VARCHAR,
+    content_json VARCHAR,
+    created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+    updated_at DATETIME,
+    PRIMARY KEY (id),
+    FOREIGN KEY(sutta_id) REFERENCES suttas (id) ON DELETE CASCADE
 );

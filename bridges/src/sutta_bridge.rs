@@ -1,10 +1,14 @@
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList};
 
+use std::collections::HashMap;
+
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
-use simsapa_backend::db;
+use simsapa_backend::app_data::AppData;
+use simsapa_backend::{db, API_URL};
 use simsapa_backend::html_content::html_page;
+use simsapa_backend::export_helpers::render_sutta_content;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -49,10 +53,18 @@ pub mod qobject {
     }
 }
 
-#[derive(Default)]
 pub struct SuttaBridgeRust {
     number: i32,
     string: QString,
+}
+
+impl Default for SuttaBridgeRust {
+    fn default() -> Self {
+        Self {
+            number: 0,
+            string: QString::from(""),
+        }
+    }
 }
 
 impl qobject::SuttaBridge {
@@ -100,7 +112,14 @@ impl qobject::SuttaBridge {
         let sutta = db::get_sutta(&query.to_string());
 
         let html = match sutta {
-            Some(sutta) => html_page(&sutta.content_html.unwrap_or_default(), None, None, None),
+            Some(sutta) => {
+                let db_conn = db::establish_connection();
+                let settings = HashMap::new();
+                let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
+
+                render_sutta_content(&mut app_data, &sutta, None)
+                .unwrap_or(html_page("Rendering error", None, None, None))
+            },
             None => String::from("<!doctype html><html><head></head><body><h1>No sutta</h1></body></html>"),
         };
 

@@ -2,8 +2,54 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 use serde::{Serialize, Deserialize};
+use std::str::FromStr;
+use anyhow::Result;
+use thiserror::Error;
 
 use crate::models::Sutta;
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum QueryType {
+    #[serde(rename = "suttas")]
+    Suttas,
+    #[serde(rename = "words")]
+    Words,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum QuoteScope {
+    #[serde(rename = "sutta")]
+    Sutta,
+    #[serde(rename = "nikaya")]
+    Nikaya,
+    #[serde(rename = "all")]
+    All,
+}
+
+// Custom error for parsing QuoteScope from string
+#[derive(Error, Debug, PartialEq, Eq)]
+#[error("Invalid QuoteScope value: {0}")]
+pub struct ParseQuoteScopeError(String);
+
+// Implement FromStr to parse strings into QuoteScope
+impl FromStr for QuoteScope {
+    type Err = ParseQuoteScopeError;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s {
+            "sutta" => Ok(QuoteScope::Sutta),
+            "nikaya" => Ok(QuoteScope::Nikaya),
+            "all" => Ok(QuoteScope::All),
+            _ => Err(ParseQuoteScopeError(s.to_string())),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SuttaQuote {
+    pub quote: String,
+    pub selection_range: Option<String>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SearchArea {

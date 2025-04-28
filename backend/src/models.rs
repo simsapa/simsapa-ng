@@ -1,6 +1,26 @@
 use diesel::prelude::*;
-use crate::schema::suttas;
+use crate::schema::*;
 // use chrono::NaiveDateTime;
+
+#[derive(Clone, Queryable, Selectable, Identifiable)]
+#[diesel(table_name = app_settings)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct AppSetting {
+    pub id: i32,
+    #[diesel(column_name = "key")]
+    pub key: String,
+    pub value: Option<String>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = app_settings)]
+pub struct NewAppSetting<'a> {
+    #[diesel(column_name = "key")]
+    pub key: &'a str,
+    pub value: Option<&'a str>,
+}
 
 // let new_sutta = NewSutta {
 //     uid: "mn10",
@@ -83,4 +103,79 @@ pub struct NewSutta<'a> {
     pub message: Option<&'a str>,
     pub copyright: Option<&'a str>,
     pub license: Option<&'a str>,
+}
+
+#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+#[diesel(belongs_to(Sutta, foreign_key = sutta_id))]
+#[diesel(table_name = sutta_variants)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct SuttaVariant {
+    pub id: i32,
+    pub sutta_id: i32,
+    pub sutta_uid: String,
+    pub language: Option<String>,
+    pub source_uid: Option<String>,
+    pub content_json: Option<String>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = sutta_variants)]
+pub struct NewSuttaVariant<'a> {
+    pub sutta_id: i32,
+    pub sutta_uid: &'a str,
+    pub language: Option<&'a str>,
+    pub source_uid: Option<&'a str>,
+    pub content_json: Option<&'a str>,
+}
+
+#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+#[diesel(belongs_to(Sutta, foreign_key = sutta_id))]
+#[diesel(table_name = sutta_comments)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct SuttaComment {
+    pub id: i32,
+    pub sutta_id: i32,
+    pub sutta_uid: String,
+    pub language: Option<String>,
+    pub source_uid: Option<String>,
+    pub content_json: Option<String>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = sutta_comments)]
+pub struct NewSuttaComment<'a> {
+    pub sutta_id: i32,
+    pub sutta_uid: &'a str,
+    pub language: Option<&'a str>,
+    pub source_uid: Option<&'a str>,
+    pub content_json: Option<&'a str>,
+}
+
+#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+#[diesel(belongs_to(Sutta, foreign_key = sutta_id))]
+#[diesel(table_name = sutta_glosses)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct SuttaGloss {
+    pub id: i32,
+    pub sutta_id: i32,
+    pub sutta_uid: String,
+    pub language: Option<String>,
+    pub source_uid: Option<String>,
+    pub content_json: Option<String>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = sutta_glosses)]
+pub struct NewSuttaGloss<'a> {
+    pub sutta_id: i32,
+    pub sutta_uid: &'a str,
+    pub language: Option<&'a str>,
+    pub source_uid: Option<&'a str>,
+    pub content_json: Option<&'a str>,
 }
