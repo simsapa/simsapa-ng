@@ -6,7 +6,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 /// Represents a single directory entry with its metadata
-struct DirInfo {
+pub struct DirInfo {
     name: String,
     size: u64,
     is_directory: bool,
@@ -20,20 +20,8 @@ impl fmt::Display for DirInfo {
     }
 }
 
-pub fn generate_html_directory_listing(root_path: &str, max_depth: usize) -> Result<String, Box<dyn Error>> {
+pub fn generate_directory_listing(root_path: &str, max_depth: usize) -> Result<Vec<(PathBuf, DirInfo)>, Box<dyn Error>> {
     let root_path = Path::new(root_path);
-
-    let mut html_rows = String::new();
-
-    let mut html = String::from(
-        "<table border='1' style='font-size: 0.7em'>
-            <tr>
-                <th>Path</th>
-                <th>Size</th>
-                <th>Modified</th>
-                <th>Type</th>
-            </tr>"
-    );
 
     let mut entries: Vec<(PathBuf, DirInfo)> = WalkDir::new(root_path)
         .max_depth(max_depth)
@@ -41,10 +29,14 @@ pub fn generate_html_directory_listing(root_path: &str, max_depth: usize) -> Res
         .filter_map(|e| e.ok())
         .map(|entry| {
             let metadata = entry.metadata().unwrap();
-            let relative_path = entry.path().strip_prefix(root_path)
+            let mut relative_path = entry.path().strip_prefix(root_path)
                 .unwrap_or_else(|_| entry.path())
                 .to_string_lossy()
                 .into_owned();
+
+            if relative_path.len() == 0 {
+                relative_path.push_str(".");
+            }
 
             (
                 entry.path().to_path_buf(),
@@ -62,8 +54,26 @@ pub fn generate_html_directory_listing(root_path: &str, max_depth: usize) -> Res
 
     entries.sort_by_key(|(_, info)| info.relative_path.clone());
 
+    Ok(entries)
+}
+
+pub fn generate_html_directory_listing(root_path: &str, max_depth: usize) -> Result<String, Box<dyn Error>> {
+    let entries = generate_directory_listing(root_path, max_depth)?;
+
+    let mut res = String::from(
+        "<table border='1' style='font-size: 0.7em'>
+            <tr>
+                <th>Path</th>
+                <th>Size</th>
+                <th>Modified</th>
+                <th>Type</th>
+            </tr>"
+    );
+
     for (_, info) in entries {
         let modified = info.modified.map_or("N/A".to_string(), |t| format_timestamp(t));
+
+        let entry_type = if info.is_directory { "Dir" } else { "File" };
 
         let row = format!(
             "<tr>
@@ -75,15 +85,39 @@ pub fn generate_html_directory_listing(root_path: &str, max_depth: usize) -> Res
             escape_html(&info.relative_path),
             format_size(info.size),
             modified,
-            if info.is_directory { "Dir" } else { "File" }
+            entry_type,
         );
 
-        html_rows.push_str(&row);
+        res.push_str(&row);
     }
 
-    html.push_str(&format!("{}{}", html_rows, "</table>"));
+    res.push_str("</table>");
 
-    Ok(html)
+    Ok(res)
+}
+
+pub fn generate_plain_directory_listing(root_path: &str, max_depth: usize) -> Result<String, Box<dyn Error>> {
+    let entries = generate_directory_listing(root_path, max_depth)?;
+
+    let mut res = String::from("| Path | Size | Modified | Type |\n|------+------+----------+------|\n");
+
+    for (_, info) in entries {
+        let modified = info.modified.map_or("N/A".to_string(), |t| format_timestamp(t));
+
+        let entry_type = if info.is_directory { "Dir" } else { "File" };
+
+        let row = format!(
+            "| {} | {} | {} | {} |\n",
+            info.relative_path,
+            format_size(info.size),
+            modified.trim(),
+            entry_type,
+        );
+
+        res.push_str(&row);
+    }
+
+    Ok(res)
 }
 
 fn format_timestamp(seconds: u64) -> String {

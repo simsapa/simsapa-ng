@@ -1,14 +1,17 @@
+use std::fs;
+use std::path::PathBuf;
+use std::collections::HashMap;
+
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList};
-
-use std::collections::HashMap;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
 use simsapa_backend::app_data::AppData;
-use simsapa_backend::{db, API_URL};
+use simsapa_backend::{db, API_URL, get_create_simsapa_app_root};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::export_helpers::render_sutta_content;
+use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -50,6 +53,22 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "get_translations_for_sutta_uid"]
         fn get_translations_for_sutta_uid(self: &SuttaBridge, sutta_uid: &QString) -> QStringList;
+
+        #[qinvokable]
+        #[cxx_name = "app_data_folder_path"]
+        fn app_data_folder_path(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "is_app_data_folder_writable"]
+        fn is_app_data_folder_writable(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        #[cxx_name = "app_data_contents_html_table"]
+        fn app_data_contents_html_table(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        #[cxx_name = "app_data_contents_plain_table"]
+        fn app_data_contents_plain_table(self: &SuttaBridge) -> QString;
     }
 }
 
@@ -133,5 +152,44 @@ impl qobject::SuttaBridge {
             res.append(QString::from(t));
         }
         res
+    }
+
+    pub fn app_data_folder_path(&self) -> QString {
+        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let app_data_path = p.as_os_str();
+        let s = match app_data_path.to_str() {
+            Some(x) => x,
+            None => "Path error",
+        };
+        QString::from(s)
+    }
+
+    pub fn is_app_data_folder_writable(&self) -> bool {
+        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let md = match fs::metadata(p) {
+            Ok(x) => x,
+            Err(_) => return false,
+        };
+        let permissions = md.permissions();
+        let read_only = permissions.readonly();
+        if read_only {
+            false
+        } else {
+            true
+        }
+    }
+
+    pub fn app_data_contents_html_table(&self) -> QString {
+        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let app_data_path = p.to_string_lossy();
+        let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
+        QString::from(app_data_folder_contents)
+    }
+
+    pub fn app_data_contents_plain_table(&self) -> QString {
+        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let app_data_path = p.to_string_lossy();
+        let app_data_folder_contents = generate_plain_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
+        QString::from(app_data_folder_contents)
     }
 }

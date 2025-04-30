@@ -292,7 +292,19 @@ ApplicationWindow {
                 }
             }
         }
+
+        Menu {
+            title: "&Help"
+            CMenuItem {
+                action: Action {
+                    text: "&About"
+                    onTriggered: about_dialog.show()
+                }
+            }
+        }
     }
+
+    AboutDialog { id: about_dialog }
 
     ColumnLayout {
         anchors.fill: parent

@@ -22,6 +22,7 @@ fn main() {
     qml_files.push("../assets/qml/SuttaHtmlView_Desktop.qml");
     qml_files.push("../assets/qml/SuttaHtmlView_Mobile.qml");
     qml_files.push("../assets/qml/SuttaStackLayout.qml");
+    qml_files.push("../assets/qml/AboutDialog.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library

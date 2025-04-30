@@ -20,4 +20,26 @@ Item {
         ];
         return translations;
     }
+
+    function app_data_folder_path(): string {
+        return "~/.local/share/simsapa-ng";
+    }
+
+    function is_app_data_folder_writable(): bool {
+        return true;
+    }
+
+    function app_data_contents_html_table() {
+        return `<table>
+                    <tr>
+                        <td>file</td>
+                        <td>size</td>
+                        <td>modified</td>
+                    </tr>
+                </table>`;
+    }
+
+    function app_data_contents_plain_table() {
+        return `| file | size | modified |`;
+    }
 }
