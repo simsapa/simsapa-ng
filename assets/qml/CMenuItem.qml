@@ -15,6 +15,12 @@ import QtQuick.Controls.Fusion.impl
 T.MenuItem {
     id: control
 
+    signal action_triggered()
+
+    function connect_action() {
+        control.action.triggered.connect(control.action_triggered);
+    }
+
     function action_seq_to_str(action) {
         if (!action) return "";
         if (!action.shortcut) return "";

@@ -7,6 +7,7 @@ Frame {
     Layout.fillWidth: true
     Layout.minimumHeight: 40
 
+    required property bool is_wide
     required property var run_search_fn
     required property Timer debounce_timer
     required property Action incremental_search
@@ -27,7 +28,7 @@ Frame {
         TextField {
             id: search_input
             Layout.fillWidth: true
-            Layout.preferredWidth: 500
+            Layout.preferredWidth: root.is_wide ? 500 : 250
             Layout.preferredHeight: 40
 
             focus: true

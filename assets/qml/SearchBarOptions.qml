@@ -63,15 +63,5 @@ Frame {
                 "cst4",
             ]
         }
-
-        Button {
-            id: show_sidebar_btn
-            icon.source: "icons/32x32/fa_angles-right-solid.png"
-            Layout.preferredHeight: 40
-            Layout.preferredWidth: 40
-            ToolTip.visible: hovered
-            ToolTip.text: "Toggle Sidebar"
-        }
-
     }
 }

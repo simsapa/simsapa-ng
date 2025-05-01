@@ -90,5 +90,6 @@
     <file>icons/32x32/mdi--close.png</file>
     <file>icons/32x32/material-symbols-light--push-pin.png</file>
     <file>icons/32x32/material-symbols-light--push-pin-outline.png</file>
+    <file>icons/32x32/mdi--menu.png</file>
   </qresource>
 </RCC>

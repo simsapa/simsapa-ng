@@ -20,7 +20,11 @@ ApplicationWindow {
     //     find_bar.reset();
     // }
 
-    property bool is_mac: Qt.platform.os == "osx"
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    /* readonly property bool is_mobile: true // for qml preview */
+    readonly property bool is_desktop: !root.is_mobile
+    readonly property bool is_wide: root.width > 600
+    readonly property bool is_mac: Qt.platform.os == "osx"
 
     property var all_results: []
     property bool is_loading: false
@@ -134,12 +138,18 @@ ApplicationWindow {
     }
 
     menuBar: MenuBar {
+        visible: root.is_desktop
+        // NOTE: A Menu > CMenuItem should always have an Action. This property
+        // is expected when constructing the mobile_menu Drawer.
         Menu {
+            id: file_menu
             title: "&File"
 
             CMenuItem {
-                text: "&Close Window"
-                onTriggered: root.close()
+                action: Action {
+                    text: "&Close Window"
+                    onTriggered: root.close()
+                }
             }
 
             CMenuItem {
@@ -158,6 +168,7 @@ ApplicationWindow {
         }
 
         Menu {
+            id: edit_menu
             title: "&Edit"
 
             CMenuItem {
@@ -178,6 +189,7 @@ ApplicationWindow {
         }
 
         Menu {
+            id: view_menu
             title: "&View"
 
             CMenuItem {
@@ -194,6 +206,7 @@ ApplicationWindow {
         }
 
         Menu {
+            id: find_menu
             title: "&Find"
 
             CMenuItem {
@@ -233,6 +246,7 @@ ApplicationWindow {
         }
 
         Menu {
+            id: windows_menu
             title: "&Windows"
 
             CMenuItem {
@@ -294,6 +308,7 @@ ApplicationWindow {
         }
 
         Menu {
+            id: help_menu
             title: "&Help"
             CMenuItem {
                 action: Action {
@@ -304,15 +319,33 @@ ApplicationWindow {
         }
     }
 
+    DrawerMenu {
+        id: mobile_menu
+        window_width: root.width
+        window_height: root.height
+        menu_list: [file_menu, edit_menu, view_menu, find_menu, windows_menu, help_menu]
+    }
+
     AboutDialog { id: about_dialog }
 
     ColumnLayout {
         anchors.fill: parent
 
         RowLayout {
+            Button {
+                id: show_menu
+                visible: root.is_mobile
+                icon.source: "icons/32x32/mdi--menu.png"
+                Layout.preferredHeight: 40
+                Layout.preferredWidth: 40
+                ToolTip.visible: hovered
+                ToolTip.text: "Show Menu"
+                onClicked: mobile_menu.open()
+            }
 
             SearchBarInput {
                 id: search_bar_input
+                is_wide: root.is_wide
                 run_search_fn: root.run_search
                 debounce_timer: debounce_timer
                 incremental_search: incremental_search
@@ -320,6 +353,18 @@ ApplicationWindow {
 
             SearchBarOptions {
                 id: search_bar_options
+                visible: (root.width - 550) > 550
+            }
+
+            Button {
+                id: show_sidebar_btn
+                icon.source: "icons/32x32/bxs_book_content.png"
+                Layout.preferredHeight: 40
+                Layout.preferredWidth: 40
+                checkable: true
+                checked: true
+                ToolTip.visible: hovered
+                ToolTip.text: "Show Sidebar"
             }
 
         }
@@ -354,7 +399,8 @@ ApplicationWindow {
 
                     Item {
                         id: suttas_tab_container
-                        SplitView.preferredWidth: parent.width * 0.5
+                        SplitView.preferredWidth: show_sidebar_btn.checked ? (root.is_wide ? (parent.width * 0.5) : 0) : parent.width
+                        visible: show_sidebar_btn.checked ? (root.is_wide ? true : false) : true
                         /* Layout.alignment: Qt.AlignTop */
 
                         TabBar {
@@ -523,7 +569,8 @@ ApplicationWindow {
                     }
 
                     Item {
-                        SplitView.preferredWidth: parent.width * 0.5
+                        SplitView.preferredWidth: show_sidebar_btn.checked ? (root.is_wide ? (parent.width * 0.5) : parent.width) : 0
+                        visible: show_sidebar_btn.checked
 
                         // Right side tabs
                         TabBar {
@@ -582,6 +629,10 @@ ApplicationWindow {
                                         let uid = translations_uids[i];
                                         let data = root.new_tab_data(uid, false, false);
                                         tabs_translations_model.append(data);
+                                    }
+
+                                    if (!root.is_wide) {
+                                        show_sidebar_btn.checked = false;
                                     }
                                 }
 

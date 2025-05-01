@@ -191,8 +191,8 @@ ColumnLayout {
         id: search_result_delegate
         ItemDelegate {
             id: result_item
-            // FIXME TypeError: Cannot read property 'width' of null
-            width: parent.width
+            // NOTE: parent.width occasionally causes: TypeError: Cannot read property 'width' of null
+            width: parent ? parent.width : 0
             height: fulltext_list.item_height
 
             required property int index
