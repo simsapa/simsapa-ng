@@ -11,8 +11,8 @@ path = "src/lib.rs"
 
 [dependencies]
 chrono = "0.4.40"
-libsqlite3-sys = { version = "0.31", features = ["bundled"] }
-diesel = { version = "2.2.8", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"] }
+libsqlite3-sys = { version = "*", features = ["bundled"] }
+diesel = { version = "2.2.10", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35"] }
 dotenvy = "0.15.7"
 regex = "1.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -23,3 +23,7 @@ time = { version = "0.3.41", features = ["local-offset", "formatting", "macros"]
 app_dirs = { package = "app_dirs2", version = "2.5" }
 anyhow = "1.0"
 thiserror = "2.0"
+# stardict = { version = "0.2.1", features = ["sqlite"] }
+stardict = { path = "../../src-lib/stardict-simsapa", features = ["sqlite"] }
+lazy_static = "1.5.0"
+html-escape = "0.2.13"

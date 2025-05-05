@@ -1,4 +1,8 @@
 use std::collections::BTreeMap;
+
+use regex::Regex;
+use lazy_static::lazy_static;
+use html_escape::decode_html_entities;
 use anyhow::{Context, Result};
 
 pub fn consistent_niggahita(text: Option<String>) -> String {
@@ -22,6 +26,192 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
         }
         None => String::from("")
     }
+}
+
+/// Convert Pāḷi text to ASCII equivalents.
+pub fn pali_to_ascii(text: Option<&str>) -> String {
+    let text = match text {
+        Some(t) => t,
+        None => return String::new(),
+    };
+
+    // including √ (root sign) and replacing it with space, which gets stripped
+    // if occurs at the beginning or end
+    let from_chars = "āīūṁṃṅñṭḍṇḷṛṣśĀĪŪṀṂṄÑṬḌṆḶṚṢŚ√";
+    let to_chars =   "aiummnntdnlrssAIUMMNNTDNLRSS ";
+
+    let translation: std::collections::HashMap<char, char> = from_chars.chars()
+        .zip(to_chars.chars())
+        .collect();
+
+    text.chars()
+        .map(|c| translation.get(&c).copied().unwrap_or(c))
+        .collect::<String>()
+        .trim()
+        .to_string()
+}
+
+/// Sanitize a word to UID form: remove punctuation, replace spaces with hyphens.
+pub fn word_uid_sanitize(word: &str) -> String {
+    lazy_static! {
+        static ref RE_PUNCT: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
+        static ref RE_DASH: Regex = Regex::new(r"--+").unwrap();
+    }
+    let mut w = RE_PUNCT.replace_all(word, " ").to_string();
+    w = w.replace("'", "")
+         .replace("\"", "")
+         .replace(' ', "-");
+    w = RE_DASH.replace_all(&w, "-").to_string();
+    w
+}
+
+/// Create a UID by combining sanitized word and dictionary label.
+pub fn word_uid(word: &str, dict_label: &str) -> String {
+    format!("{}/{}",
+            word_uid_sanitize(word).to_lowercase(),
+            dict_label.to_lowercase())
+}
+
+/// Remove punctuation from text, normalizing whitespace.
+pub fn remove_punct(text: Option<&str>) -> String {
+    let mut s = match text {
+        Some(t) => t.to_string(),
+        None => return String::new(),
+    };
+
+    lazy_static! {
+        static ref RE_PUNCT: Regex = Regex::new(r"[\.,;\?\!“”‘’…—-]").unwrap();
+        static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
+    }
+
+    // Replace punctuation marks with space. Removing them can join lines or words.
+    s = RE_PUNCT.replace_all(&s, " ").to_string();
+
+    // Newline and tab to space
+    s = s.replace("\n", " ")
+         .replace("\t", " ");
+
+    // Separate 'ti from the word, avoid joining it when ' is removed
+    s = s.replace("'ti", " ti");
+
+    // Remove remaining quote marks.
+    //
+    // Quote marks can occur in compounds: manopubbaṅ'gamā dhammā
+    s = s.replace("'", "")
+         .replace("\"", "");
+
+    // Normalize double spaces to single
+    s = RE_SPACES.replace_all(&s, " ").to_string();
+
+    s
+}
+
+pub fn compact_plain_text(text: &str) -> String {
+    // NOTE: Don't remove new lines here, useful for matching beginning of lines when setting snippets.
+    // TODO: But remove_punct() removes new lines, is that a problem?
+    lazy_static! {
+        static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
+    }
+    // Replace multiple spaces to one.
+    let mut s = RE_SPACES.replace_all(text, " ").to_string();
+    s = s.replace('{', "").replace('}', "");
+
+    // Make lowercase and remove punctuation to help matching query strings.
+    s = s.to_lowercase();
+    s = remove_punct(Some(&s));
+    s = consistent_niggahita(Some(s));
+    s.trim().to_string()
+}
+
+/// Compact rich HTML text: strip tags, normalize, then compact plain.
+pub fn compact_rich_text(text: &str) -> String {
+    lazy_static! {
+        static ref RE_REF_LINK: Regex = Regex::new(r#"<a class=.ref\b[^>]+>[^<]*</a>"#).unwrap();
+        // Respect word boundaries for <b> <strong> <i> <em> so that dhamm<b>āya</b> becomes dhammāya, not dhamm āya.
+        // Also matches corresponding closing tags
+        static ref RE_TAG_BOUNDARY: Regex = Regex::new(r"(\w*)<(/?)(b|strong|i|em)([^>]*)>(\w*)").unwrap();
+    }
+
+    // All on one line
+    let mut s = text.replace("\n", " ");
+
+    // remove SuttaCentral ref links
+    s = RE_REF_LINK.replace_all(&s, "").to_string();
+
+    s = s.replace("<br>", " ")
+         .replace("<br/>", " ");
+
+    s = RE_TAG_BOUNDARY.replace_all(&s, |caps: &regex::Captures| {
+        format!("{}{}", &caps[1], &caps[5])
+    }).to_string();
+
+    // Make sure there is space before and after other tags, so words don't get joined after removing tags.
+    //
+    // <td>dhammassa</td>
+    // <td>dhammāya</td>
+    //
+    // should become
+    //
+    // dhammassa dhammāya
+
+    // ensure spaces around other tags
+    s = s.replace('<', " <")
+         .replace("</", " </")
+         .replace('>', "> ");
+
+    s = strip_html(&s);
+    compact_plain_text(&s)
+}
+
+/// Strip HTML tags, scripts, styles, comments, and decode entities.
+pub fn strip_html(text: &str) -> String {
+    lazy_static! {
+        // thumb up and thumb down emoji
+        static ref RE_THUMBS: Regex = Regex::new(r"[\u{1F44D}\u{1F44E}]+").unwrap();
+        static ref RE_DOCTYPE: Regex = Regex::new(r"(?i)<!doctype html>").unwrap();
+        static ref RE_HEAD: Regex = Regex::new(r"<head(.*?)</head>").unwrap();
+        static ref RE_STYLE: Regex = Regex::new(r"<style(.*?)</style>").unwrap();
+        static ref RE_SCRIPT: Regex = Regex::new(r"<script(.*?)</script>").unwrap();
+        static ref RE_COMMENT: Regex = Regex::new(r"<!--(.*?)-->").unwrap();
+        static ref RE_TAG: Regex = Regex::new(r"</*\w[^>]*>").unwrap();
+        static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
+    }
+    // Decode HTML entities first (e.g., &amp; -> &)
+    let mut s = decode_html_entities(text).to_string();
+    // Remove html
+    s = RE_THUMBS.replace_all(&s, "").to_string();
+    s = RE_DOCTYPE.replace_all(&s, "").to_string();
+    s = RE_HEAD.replace_all(&s, "").to_string();
+    s = RE_STYLE.replace_all(&s, "").to_string();
+    s = RE_SCRIPT.replace_all(&s, "").to_string();
+    s = RE_COMMENT.replace_all(&s, "").to_string();
+    s = RE_TAG.replace_all(&s, "").to_string();
+    // Normalize spaces
+    s = RE_SPACES.replace_all(&s, " ").to_string();
+    s.trim().to_string()
+}
+
+/// Clean root info from HTML, returning plain text.
+pub fn root_info_clean_plaintext(html: &str) -> String {
+    let mut s = strip_html(html);
+    s = s.replace('･', " ");
+    s = s.replace("Pāḷi Root:", "");
+    lazy_static! {
+        static ref RE_BASES: Regex = Regex::new(r"Bases:.*$").unwrap();
+    }
+    s = RE_BASES.replace_all(&s, "").to_string();
+    s.trim().to_string()
+}
+
+/// Replace accented Pāḷi characters with ASCII latin equivalents.
+pub fn latinize(text: &str) -> String {
+    let accents = ["ā","ī","ū","ṃ","ṁ","ṅ","ñ","ṭ","ḍ","ṇ","ḷ","ṛ","ṣ","ś"];
+    let latin  =  ["a","i","u","m","m","n","n","t","d","n","l","r","s","s"];
+    let mut s = text.to_string().to_lowercase();
+    for (a, l) in accents.iter().zip(latin.iter()) {
+        s = s.replace(a, l);
+    }
+    s
 }
 
 /// Extracts the content of the <body> tag from an HTML string using basic string finding.
@@ -266,4 +456,83 @@ pub fn bilara_text_to_html(
     )?;
 
     bilara_content_json_to_html(&content_json)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_pali_to_ascii() {
+        assert_eq!(pali_to_ascii(Some("dhammāya")), "dhammaya");
+        assert_eq!(pali_to_ascii(Some("saṁsāra")), "samsara");
+        assert_eq!(pali_to_ascii(Some("Ñāṇa")), "Nana");
+        assert_eq!(pali_to_ascii(Some("  √muc  ")), "muc");
+        assert_eq!(pali_to_ascii(None), "");
+    }
+
+    #[test]
+    fn test_word_uid_sanitize() {
+        assert_eq!(word_uid_sanitize("word.with,punct;"), "word-with-punct-");
+        assert_eq!(word_uid_sanitize("word (bracket)"), "word-bracket-");
+        assert_eq!(word_uid_sanitize("word's quote\""), "words-quote");
+        assert_eq!(word_uid_sanitize("word--with---dashes"), "word-with-dashes");
+        assert_eq!(word_uid_sanitize("  leading space  "), "-leading-space-");
+    }
+
+    #[test]
+    fn test_word_uid() {
+        assert_eq!(word_uid("kammavācā", "PTS"), "kammavācā/pts");
+        assert_eq!(word_uid("paṭisallāna", "dpd"), "paṭisallāna/dpd");
+    }
+
+    #[test]
+    fn test_remove_punct() {
+        assert_eq!(remove_punct(Some("Hello, world! How are you? …")), "Hello world How are you ");
+        assert_eq!(remove_punct(Some("Line1.\nLine2;")), "Line1 Line2 ");
+        assert_eq!(remove_punct(Some("nibbāpethā'ti")), "nibbāpethā ti");
+        assert_eq!(remove_punct(Some("  Multiple   spaces.  ")), " Multiple spaces ");
+        assert_eq!(remove_punct(None), "");
+    }
+
+    #[test]
+    fn test_compact_plain_text() {
+        assert_eq!(compact_plain_text("  HELLO, World! ṃ {test}  "), "hello world ṁ test");
+        assert_eq!(compact_plain_text("Saṃsāra."), "saṁsāra");
+    }
+
+    #[test]
+    fn test_strip_html() {
+        assert_eq!(strip_html("<p>Hello <b>world</b></p>"), "Hello world");
+        assert_eq!(strip_html("Text with &amp; entity."), "Text with & entity.");
+        assert_eq!(strip_html("<head><title>T</title></head><body>Text</body>"), "Text");
+        assert_eq!(strip_html("👍 Text 👎"), "Text");
+    }
+
+    #[test]
+    fn test_compact_rich_text() {
+        assert_eq!(compact_rich_text("<p>Hello, <b>W</b>orld! ṃ</p>\n<a class=\"ref\">ref</a>"), "hello world ṁ");
+        assert_eq!(compact_rich_text("dhamm<b>āya</b>"), "dhammāya");
+        assert_eq!(compact_rich_text("<i>italic</i> test"), "italic test");
+        assert_eq!(compact_rich_text("<td>dhammassa</td><td>dhammāya</td>"), "dhammassa dhammāya");
+    }
+
+    #[test]
+    fn test_root_info_clean_plaintext() {
+        let html = "<div>Pāḷi Root: √gam ･ Bases: gacchati etc.</div>";
+        assert_eq!(root_info_clean_plaintext(html), "√gam");
+    }
+
+    #[test]
+    fn test_latinize() {
+        assert_eq!(latinize("dhammāya"), "dhammaya");
+        assert_eq!(latinize("saṁsāra"), "samsara");
+        assert_eq!(latinize("Ñāṇa"), "nana");
+    }
+
+    #[test]
+    fn test_consistent_niggahita() {
+        assert_eq!(consistent_niggahita(Some("saṃsāra".to_string())), "saṁsāra");
+        assert_eq!(consistent_niggahita(Some("dhammaṁ".to_string())), "dhammaṁ");
+    }
 }

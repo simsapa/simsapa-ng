@@ -2,12 +2,15 @@ pub mod db;
 pub mod types;
 pub mod helpers;
 pub mod export_helpers;
-pub mod models;
-pub mod schema;
+pub mod models_appdata;
+pub mod schema_appdata;
+pub mod models_dictionaries;
+pub mod schema_dictionaries;
 pub mod query_task;
 pub mod html_content;
 pub mod dir_list;
 pub mod app_data;
+pub mod stardict_parse;
 
 use std::fs::create_dir_all;
 use std::path::PathBuf;

@@ -1,5 +1,5 @@
-use crate::models::*;
-use crate::schema::suttas::dsl::*;
+use crate::models_appdata::*;
+use crate::schema_appdata::suttas::dsl::*;
 use diesel::prelude::*;
 
 use std::collections::{BTreeMap, HashMap};
@@ -56,7 +56,7 @@ impl AppData {
         sutta: &Sutta,
         use_template: bool,
     ) -> Result<BTreeMap<String, String>> {
-        use crate::schema::{sutta_variants, sutta_comments, sutta_glosses};
+        use crate::schema_appdata::{sutta_variants, sutta_comments, sutta_glosses};
 
         let variant_record = sutta_variants::table
             .filter(sutta_variants::sutta_uid.eq(&sutta.uid))

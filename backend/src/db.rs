@@ -1,68 +1,99 @@
-use crate::models::*;
-use crate::schema::suttas::dsl::*;
+use crate::models_appdata::*;
+use crate::models_dictionaries::*;
+use crate::schema_appdata::suttas::dsl::*;
 use diesel::prelude::*;
-use dotenvy::dotenv;
+// use diesel::sqlite::Sqlite;
+
 use std::env;
 use std::path::PathBuf;
 use std::fs;
+
+use dotenvy::dotenv;
 use regex::Regex;
 
 use crate::get_create_simsapa_app_root;
 
-pub fn establish_connection() -> SqliteConnection {
+/// Returns connections to appdata.sqlite3 and dictionaries.sqlite3
+pub fn establish_connection() -> (SqliteConnection, SqliteConnection) {
     dotenv().ok();
 
-    let db_path = match env::var("DATABASE_PATH") {
+    let simsapa_dir = match env::var("SIMSAPA_DIR") {
         Ok(s) => PathBuf::from(s),
         Err(_) => {
             if let Ok(p) = get_create_simsapa_app_root() {
-                PathBuf::from(p).join("appdata.sqlite3")
+                p
             } else {
-                PathBuf::from("appdata.sqlite3")
+                PathBuf::from(".")
             }
         }
     };
 
-    if !db_path.exists() {
-        panic!("File not found: {}", db_path.as_os_str().to_str().expect("os_str Error!"));
+    let app_assets_dir = simsapa_dir.join("app-assets");
+    let appdata_db_path = app_assets_dir.join("appdata.sqlite3");
+    let dict_db_path = app_assets_dir.join("dictionaries.sqlite3");
+
+    if !appdata_db_path.exists() {
+        panic!("Appdata database file not found at expected location: {:?}", appdata_db_path);
     }
 
-    let abs_path = fs::canonicalize(db_path.clone()).unwrap_or(db_path);
-    let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
+    if !dict_db_path.exists() {
+        panic!("Dictionary database file not found at expected location: {:?}", dict_db_path);
+    }
 
-    SqliteConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    // if !db_path.exists() {
+    //     panic!("File not found: {}", db_path.as_os_str().to_str().expect("os_str Error!"));
+    // }
+
+    let appdata_abs_path = fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path);
+    let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
+    let appdata_conn = SqliteConnection::establish(&appdata_database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", appdata_database_url));
+
+    let dict_abs_path = fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path);
+    let dict_database_url = format!("sqlite://{}", dict_abs_path.as_os_str().to_str().expect("os_str Error!"));
+    let dict_conn = SqliteConnection::establish(&dict_database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", dict_database_url));
+
+    (appdata_conn, dict_conn)
 }
 
-// pub fn create_sutta(conn: &mut SqliteConnection,
-//                     sutta_uid: &str,
-//                     sutta_sutta_ref: &str,
-//                     sutta_title: &str,
-//                     sutta_content_html: &str) -> Sutta {
-//     use crate::schema::suttas;
+pub fn create_dictionary(db_conn: &mut SqliteConnection,
+                         new_dict: NewDictionary) -> Result<Dictionary, diesel::result::Error> {
+    use crate::schema_dictionaries::dictionaries;
+    diesel::insert_into(dictionaries::table)
+        .values(&new_dict)
+        .returning(Dictionary::as_returning())
+        .get_result(db_conn)
+}
 
-//     let new_sutta = NewSutta {
-//         uid: sutta_uid,
-//         sutta_ref: sutta_sutta_ref,
-//         title: sutta_title,
-//         content_html: sutta_content_html,
-//     };
+pub fn delete_dictionary_by_label(db_conn: &mut SqliteConnection,
+                                  dict_label: &str) -> Result<usize, diesel::result::Error> {
+    use crate::schema_dictionaries::dictionaries::dsl::*;
 
-//     diesel::insert_into(suttas::table)
-//         .values(&new_sutta)
-//         .returning(Sutta::as_returning())
-//         .get_result(conn)
-//         .expect("Error saving new sutta")
-// }
+    let res = diesel::delete(dictionaries.filter(label.eq(dict_label)))
+        .execute(db_conn);
+    res
+}
 
-// pub fn populate_suttas() {
-//     let connection = &mut establish_connection();
-//     let post = create_sutta(connection, "New Post", "Amazing words in orders of terrible!");
-//     println!("\nSaved post '{}' with id {}", post.title, post.id);
-// }
+pub fn create_dict_word(db_conn: &mut SqliteConnection,
+                        new_dict_word: &NewDictWord) -> Result<DictWord, diesel::result::Error> {
+    use crate::schema_dictionaries::dict_words;
+    diesel::insert_into(dict_words::table)
+        .values(new_dict_word)
+        .returning(DictWord::as_returning())
+        .get_result(db_conn)
+}
+
+pub fn create_dict_words_batch(db_conn: &mut SqliteConnection,
+                               new_words: &[NewDictWord]) -> Result<usize, diesel::result::Error> {
+    use crate::schema_dictionaries::dict_words;
+    diesel::insert_into(dict_words::table)
+        .values(new_words)
+        .execute(db_conn)
+}
 
 // pub fn publish_post() {
-//     use crate::schema::posts::dsl::{posts, published};
+//     use crate::appdata_schema::posts::dsl::{posts, published};
 
 //     let post_id: i32 = 2;
 //     let connection = &mut establish_connection();
@@ -77,9 +108,9 @@ pub fn establish_connection() -> SqliteConnection {
 // }
 
 pub fn get_sutta(sutta_uid: &str) -> Option<Sutta> {
-    use crate::schema::suttas::dsl::suttas;
+    use crate::schema_appdata::suttas::dsl::suttas;
 
-    let conn = &mut establish_connection();
+    let (conn, _) = &mut establish_connection();
 
     let sutta = suttas
         .filter(uid.eq(sutta_uid))
@@ -97,13 +128,13 @@ pub fn get_sutta(sutta_uid: &str) -> Option<Sutta> {
 }
 
 pub fn delete_sutta() {
-    use crate::schema::suttas::dsl::*;
+    use crate::schema_appdata::suttas::dsl::*;
 
     let pattern = "unwholesome";
 
-    let connection = &mut establish_connection();
+    let (conn, _) = &mut establish_connection();
     let num_deleted = diesel::delete(suttas.filter(content_html.like(pattern)))
-        .execute(connection)
+        .execute(conn)
         .expect("Error deleting suttas");
 
     println!("Deleted {} suttas", num_deleted);
@@ -141,7 +172,6 @@ fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
     results
 }
 
-
 pub fn get_translations_for_sutta_uid(sutta_uid: &str) -> Vec<String> {
     // See sutta_search_window_state.py::_add_related_tabs()
 
@@ -149,9 +179,9 @@ pub fn get_translations_for_sutta_uid(sutta_uid: &str) -> Vec<String> {
     let re = Regex::new(r"^([^/]+)/.*").expect("Invalid regex");
     let uid_ref = re.replace(&sutta_uid, "$1").to_string();
 
-    use crate::schema::suttas::dsl::suttas;
+    use crate::schema_appdata::suttas::dsl::suttas;
 
-    let conn = &mut establish_connection();
+    let (conn, _) = &mut establish_connection();
 
     let mut res: Vec<Sutta> = Vec::new();
 

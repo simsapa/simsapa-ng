@@ -8,7 +8,8 @@ use diesel::prelude::*;
 use crate::PAGE_LEN;
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::helpers::consistent_niggahita;
-use crate::models::Sutta;
+use crate::models_appdata::Sutta;
+use crate::models_dictionaries::DictWord;
 use crate::db::establish_connection;
 
 pub struct SearchQueryTask {
@@ -189,14 +190,69 @@ impl SearchQueryTask {
     }
 
     /// Helper to choose content (plain or HTML) and create a snippet.
-    fn db_sutta_to_result(&self, sutta: &Sutta) -> SearchResult {
-        let content = sutta.content_plain.as_deref() // Prefer plain text
+    fn db_sutta_to_result(&self, x: &Sutta) -> SearchResult {
+        let content = x.content_plain.as_deref() // Prefer plain text
             .filter(|s| !s.is_empty()) // Ensure it's not empty
-            .or(sutta.content_html.as_deref()) // Fallback to HTML
+            .or(x.content_html.as_deref()) // Fallback to HTML
             .unwrap_or(""); // Default to empty string if both are None/empty
 
         let snippet = self.fragment_around_query(&self.query_text, content);
-        SearchResult::from_sutta(sutta, snippet)
+        SearchResult::from_sutta(x, snippet)
+    }
+
+    fn db_word_to_result(&self, x: &DictWord) -> SearchResult {
+        let content = x.summary.as_deref()
+            .filter(|s| !s.is_empty())
+            .or(x.definition_plain.as_deref())
+            .filter(|s| !s.is_empty())
+            .or(x.definition_html.as_deref())
+            .unwrap_or("");
+
+        let snippet = self.fragment_around_query(&self.query_text, content);
+        SearchResult::from_dict_word(x, snippet)
+    }
+
+    fn uid_sutta(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::schema_appdata::suttas::dsl::*;
+        let (db_conn, _) = &mut establish_connection();
+
+        let query_uid = self.query_text.to_lowercase().replace("uid:", "");
+
+        let res = suttas
+            .filter(uid.eq(query_uid))
+            .select(Sutta::as_select())
+            .first(db_conn);
+
+        match res {
+            Ok(sutta) => {
+                Ok(vec![self.db_sutta_to_result(&sutta)])
+            }
+            Err(_) => {
+                Ok(Vec::new())
+            }
+        }
+    }
+
+    fn uid_word(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // TODO: review details in query_task.py
+        use crate::schema_dictionaries::dict_words::dsl::*;
+        let (_, db_conn) = &mut establish_connection();
+
+        let query_uid = self.query_text.to_lowercase().replace("uid:", "");
+
+        let res = dict_words
+            .filter(uid.eq(query_uid))
+            .select(DictWord::as_select())
+            .first(db_conn);
+
+        match res {
+            Ok(res_word) => {
+                Ok(vec![self.db_word_to_result(&res_word)])
+            }
+            Err(_) => {
+                Ok(Vec::new())
+            }
+        }
     }
 
     /// Fetches a page of results for Suttas using CONTAINS or REGEX matching.
@@ -204,9 +260,10 @@ impl SearchQueryTask {
         &mut self,
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        use crate::schema::suttas::dsl::*;
+        // TODO: review details in query_task.py
+        use crate::schema_appdata::suttas::dsl::*;
 
-        let conn = &mut establish_connection();
+        let (conn, _) = &mut establish_connection();
 
         // Box query for dynamic filtering
         let mut query = suttas.into_boxed();
@@ -273,6 +330,80 @@ impl SearchQueryTask {
         Ok(search_results)
     }
 
+    fn dict_words_contains_or_regex_match_page(
+        &mut self,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // TODO: review details in query_task.py
+        use crate::schema_dictionaries::dict_words::dsl::*;
+
+        let (_, conn) = &mut establish_connection();
+
+        let mut query = dict_words.into_boxed();
+        let mut count_query = dict_words.into_boxed();
+
+        // --- Source Filtering ---
+        if let Some(ref source_val) = self.source {
+            let pattern = format!("%/{}", source_val);
+            if self.source_include {
+                query = query.filter(uid.like(pattern.clone()));
+                count_query = count_query.filter(uid.like(pattern.clone()));
+            } else {
+                query = query.filter(uid.not_like(pattern.clone()));
+                count_query = count_query.filter(uid.not_like(pattern.clone()));
+            }
+        }
+
+        // --- Term Filtering ---
+        let terms: Vec<&str> = if self.query_text.contains(" AND ") {
+            self.query_text.split(" AND ").map(|s| s.trim()).collect()
+        } else {
+            vec![self.query_text.as_str()]
+        };
+
+        for term in terms {
+            match self.search_mode {
+                SearchMode::ContainsMatch => {
+                    query = query.filter(definition_plain.like(format!("%{}%", term)));
+                    count_query = count_query.filter(definition_plain.like(format!("%{}%", term)));
+                }
+                SearchMode::RegExMatch => {
+                    // FIXME use diesel regex match
+                    query = query.filter(definition_plain.like(format!("%{}%", term)));
+                    count_query = count_query.filter(definition_plain.like(format!("%{}%", term)));
+                }
+                _ => {
+                    return Err(format!(
+                        "Invalid search mode in dict_words_contains_or_regex_match_page: {:?}",
+                        self.search_mode
+                    )
+                    .into());
+                }
+            }
+        }
+
+        // --- Count Total Hits ---
+        self.db_query_hits_count = count_query.select(diesel::dsl::count_star()).first(conn)?;
+
+        // --- Apply Pagination ---
+        let offset = (page_num * self.page_len) as i64;
+        query = query.offset(offset).limit(self.page_len as i64);
+
+        // --- Execute Query ---
+        // println!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query));
+        let db_results: Vec<DictWord> = query.load::<DictWord>(conn)?;
+
+        // --- Map to SearchResult ---
+        let search_results = db_results
+            .iter()
+            .map(|sutta| self.db_word_to_result(sutta))
+            .collect();
+
+        Ok(search_results)
+
+    }
+
+
     /// Gets a specific page of search results, performing the query if needed.
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // Check cache first
@@ -282,19 +413,28 @@ impl SearchQueryTask {
 
         // --- Perform Search Based on Mode and Area ---
         let results = match self.search_mode {
+            SearchMode::UidMatch => {
+                match self.search_area {
+                    SearchArea::Suttas => {
+                        self.uid_sutta()
+                    }
+                    SearchArea::DictWords => {
+                        self.uid_word()
+                    }
+                }
+            }
+
             SearchMode::ContainsMatch | SearchMode::RegExMatch => {
                 match self.search_area {
                     SearchArea::Suttas => {
                         self.suttas_contains_or_regex_match_page(page_num)
                     }
                     SearchArea::DictWords => {
-                        // FIXME: implement later
-                        eprintln!("Search area {:?} not yet implemented.", self.search_area);
-                        self.db_query_hits_count = 0;
-                        Ok(Vec::new())
+                        self.dict_words_contains_or_regex_match_page(page_num)
                     }
                 }
             }
+
             _ => {
                 // FIXME: implement later
                 eprintln!("Search mode {:?} not yet implemented.", self.search_mode);

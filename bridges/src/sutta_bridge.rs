@@ -132,7 +132,7 @@ impl qobject::SuttaBridge {
 
         let html = match sutta {
             Some(sutta) => {
-                let db_conn = db::establish_connection();
+                let (db_conn, _) = db::establish_connection();
                 let settings = HashMap::new();
                 let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 

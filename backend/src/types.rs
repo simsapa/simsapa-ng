@@ -6,7 +6,8 @@ use std::str::FromStr;
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::models::Sutta;
+use crate::models_appdata::Sutta;
+use crate::models_dictionaries::DictWord;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum QueryType {
@@ -125,7 +126,7 @@ impl SearchResult {
         SearchResult {
             uid: sutta.uid.to_string(),
             schema_name: "appdata".to_string(), // FIXME: implement later
-            table_name: "suttas".to_string(),
+            table_name: "suttas".to_string(), // TODO: can we get the table name from diesel?
             source_uid: sutta.source_uid.clone(),
             title: sutta.title.clone().unwrap_or_default(),
             sutta_ref: Some(sutta.sutta_ref.clone()),
@@ -138,4 +139,20 @@ impl SearchResult {
         }
     }
 
+    pub fn from_dict_word(x: &DictWord, snippet: String) -> SearchResult {
+        SearchResult {
+            uid: x.uid.to_string(),
+            schema_name: "appdata".to_string(), // FIXME: implement later
+            table_name: "dict_words".to_string(), // TODO: can we get the table name from diesel?
+            source_uid: x.source_uid.clone(),
+            title: x.word.clone(),
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            snippet,
+            page_number: None,
+            score: None,
+            rank: None,
+        }
+    }
 }

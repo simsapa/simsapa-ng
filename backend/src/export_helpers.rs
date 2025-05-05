@@ -1,5 +1,5 @@
-use crate::models::*;
-// use crate::schema::suttas::dsl::*;
+use crate::models_appdata::*;
+// use crate::appdata_schema::suttas::dsl::*;
 // use diesel::prelude::*;
 
 use std::collections::BTreeMap;

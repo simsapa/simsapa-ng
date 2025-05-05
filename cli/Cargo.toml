@@ -1,0 +1,11 @@
+[package]
+name = "simsapa_cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+simsapa_backend = { path = "../backend" }
+clap = { version = "4.5.37", features = ["derive", "env"] }
+dotenvy = "0.15.7"
+anyhow = "1.0"
+thiserror = "2.0"

@@ -4,6 +4,8 @@ appdata.sqlite3
 
 # build folders
 build/
+target/
+cli/target
 backend/target
 bridges/target
 .cache/
