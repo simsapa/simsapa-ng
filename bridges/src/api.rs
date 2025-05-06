@@ -87,6 +87,12 @@ fn lookup_window_query(word: &str) -> Status {
     Status::Ok
 }
 
+#[get("/summary_query/<word>")]
+fn summary_query(word: &str) -> Status {
+    println!("summary_query: {}", word);
+    Status::Ok
+}
+
 #[get("/")]
 fn index() -> content::RawHtml<String> {
     let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
@@ -135,6 +141,7 @@ pub async extern "C" fn start_webserver() {
             shutdown,
             serve_assets,
             lookup_window_query,
+            summary_query,
         ])
         .manage(assets_files)
         .launch().await;

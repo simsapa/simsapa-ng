@@ -9,6 +9,9 @@ import QtQuick.Controls
 ColumnLayout {
     id: root
 
+    /* BojjhangaData { id: results_model } */
+    ListModel { id: results_model }
+
     function select_previous_result() {
         if (fulltext_list.currentIndex > 0)
             fulltext_list.currentIndex--
@@ -208,33 +211,11 @@ ColumnLayout {
             Frame {
                 id: item_frame
                 anchors.fill: parent
+                padding: fulltext_list.item_padding
 
-                background: Rectangle {
-                    id: row_rect
-                    anchors.fill: parent
-                    radius: 5 // slight rounding for a button feel
-                    border.width: 1
-                    border.color: Qt.darker(base_color, 1.15)
-
-                    property color even_color: "#efefef"
-                    property color odd_color: "#ffffff"
-                    property color selected_color: "#a0c4ff"
-                    property color base_color: (result_item.index % 2 === 0 ? even_color : odd_color)
-
-                    color: fulltext_list.currentIndex === result_item.index ? row_rect.selected_color : row_rect.base_color
-
-                    // 3D–button gradient: darker edges, flat center
-                    gradient: Gradient {
-                        // very top edge: slightly lighter
-                        GradientStop { position: 0.0; color: Qt.lighter(row_rect.color, 1.15) }
-                        // just below edge: back to base
-                        GradientStop { position: 0.2; color: row_rect.color }
-                        // just above bottom edge: base
-                        GradientStop { position: 0.95; color: row_rect.color }
-                        // very bottom edge: slightly darker
-                        GradientStop { position: 1.0; color: Qt.darker(row_rect.color, 1.10) }
-                    }
-
+                background: ListBackground {
+                    results_list: fulltext_list
+                    result_item_index: result_item.index
                 }
 
                 MouseArea {
@@ -274,8 +255,4 @@ ColumnLayout {
             }
         }
     }
-
-    /* BojjhangaData { id: results_model } */
-    ListModel { id: results_model }
-
 }

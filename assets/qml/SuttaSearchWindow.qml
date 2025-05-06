@@ -647,6 +647,11 @@ ApplicationWindow {
                         }
                     }
                 }
+
+                WordSummary {
+                    id: word_summary
+                    window_height: root.height
+                }
             }
         }
     }

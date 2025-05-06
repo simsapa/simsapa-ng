@@ -25,6 +25,8 @@ fn main() {
     qml_files.push("../assets/qml/AboutDialog.qml");
     qml_files.push("../assets/qml/DrawerMenu.qml");
     qml_files.push("../assets/qml/DrawerEmptyItem.qml");
+    qml_files.push("../assets/qml/ListBackground.qml");
+    qml_files.push("../assets/qml/WordSummary.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library
