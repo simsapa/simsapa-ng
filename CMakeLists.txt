@@ -85,6 +85,7 @@ list(APPEND cpp_files
     cpp/gui.cpp
     cpp/window_manager.cpp
     cpp/sutta_search_window.cpp
+    cpp/download_appdata_window.cpp
     cpp/word_lookup_window.cpp)
 
 list(APPEND app_files ${cpp_files} ${icons})

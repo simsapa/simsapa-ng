@@ -7,6 +7,7 @@
 #include <QMainWindow>
 
 class SuttaSearchWindow;
+class DownloadAppdataWindow;
 class WordLookupWindow;
 
 class WindowManager : public QObject {
@@ -17,11 +18,13 @@ class WindowManager : public QObject {
 
         void create_plain_sutta_search_window();
         SuttaSearchWindow* create_sutta_search_window();
+        DownloadAppdataWindow* create_download_appdata_window();
         WordLookupWindow* create_word_lookup_window(const QString& word);
 
         static WindowManager *m_instance;
         QApplication* m_app;
         QList<SuttaSearchWindow*> sutta_search_windows;
+        QList<DownloadAppdataWindow*> download_appdata_windows;
         QList<WordLookupWindow*> word_lookup_windows;
 
     private:

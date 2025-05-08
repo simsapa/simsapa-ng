@@ -12,7 +12,7 @@ QString get_internal_storage_path() {
 }
 
 QString get_app_assets_path() {
-    QString path = get_internal_storage_path() + "/app_assets";
+    QString path = get_internal_storage_path() + "/app-assets";
     return path;
 }
 
@@ -116,7 +116,7 @@ QString copy_apk_assets_to_internal_storage(QString apk_asset_path /* = QString(
 QStringList list_qrc_assets() {
     qWarning() << "list_qrc_assets()";
     QStringList resource_files;
-    // QDirIterator it(":/app_assets", QStringList() << "*", QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    // QDirIterator it(":/app-assets", QStringList() << "*", QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     QDirIterator it(":",                                  QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QString i(it.next());
@@ -142,7 +142,7 @@ QString copy_qrc_app_assets_to_internal_storage() {
     }
 
     QStringList resource_files;
-    QDirIterator it(":/app_assets", QStringList() << "*", QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+    QDirIterator it(":/app-assets", QStringList() << "*", QDir::AllEntries | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QString i(it.next());
         qWarning() << i;
@@ -152,7 +152,7 @@ QString copy_qrc_app_assets_to_internal_storage() {
     qWarning() << resource_files.length();
 
     foreach (const QString& source_path, resource_files) {
-        // Remove ":/app_assets/" prefix
+        // Remove ":/app-assets/" prefix
         QString relative_path = source_path.mid(12);
         QString destination_path = assets_storage + "/" + relative_path;
 

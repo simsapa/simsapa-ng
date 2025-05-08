@@ -1,5 +1,6 @@
 #include "window_manager.h"
 #include "sutta_search_window.h"
+#include "download_appdata_window.h"
 #include "word_lookup_window.h"
 
 WindowManager* WindowManager::m_instance = nullptr;
@@ -26,6 +27,11 @@ WindowManager::~WindowManager() {
         w->deleteLater();
     }
 
+    while (!download_appdata_windows.isEmpty()) {
+        auto w = download_appdata_windows.takeFirst();
+        w->deleteLater();
+    }
+
     while (!word_lookup_windows.isEmpty()) {
         auto w = word_lookup_windows.takeFirst();
         w->deleteLater();
@@ -35,6 +41,13 @@ WindowManager::~WindowManager() {
 SuttaSearchWindow* WindowManager::create_sutta_search_window() {
     SuttaSearchWindow* w = new SuttaSearchWindow(this->m_app);
     sutta_search_windows.append(w);
+    // w->m_root->show();
+    return w;
+}
+
+DownloadAppdataWindow* WindowManager::create_download_appdata_window() {
+    DownloadAppdataWindow* w = new DownloadAppdataWindow(this->m_app);
+    download_appdata_windows.append(w);
     // w->m_root->show();
     return w;
 }

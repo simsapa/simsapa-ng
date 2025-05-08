@@ -12,6 +12,7 @@ fn main() {
     let mut qml_files = Vec::new();
     qml_files.push("../assets/qml/SuttaSearchWindow.qml");
     qml_files.push("../assets/qml/WordLookupWindow.qml");
+    qml_files.push("../assets/qml/DownloadAppdataWindow.qml");
 
     qml_files.push("../assets/qml/SearchBarInput.qml");
     qml_files.push("../assets/qml/SearchBarOptions.qml");
@@ -41,6 +42,7 @@ fn main() {
                 uri: "com.profoundlabs.simsapa",
                 rust_files: &[
                         "src/sutta_bridge.rs",
+                        "src/asset_manager.rs",
                         "src/api.rs",
                 ],
                 qml_files: &qml_files,

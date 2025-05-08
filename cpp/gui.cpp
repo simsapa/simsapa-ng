@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 
+#include <QUrl>
 #include <QDir>
 #include <QMenu>
 #include <QIcon>
@@ -21,7 +22,7 @@
 
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
-extern "C" void download_small_database();
+extern "C" bool appdata_db_exists();
 
 struct AppGlobals {
     static WindowManager* manager;
@@ -70,8 +71,6 @@ void start(int argc, char* argv[]) {
   //
   app.setApplicationVersion("v0.1.0");
 
-  // download_small_database();
-
   // Start the API server after checking for APP_DB. If this is the first run,
   // the server would create the userdata db, and we can't use it to test in
   // DownloadAppdataWindow() if this is the first ever start.
@@ -98,20 +97,33 @@ void start(int argc, char* argv[]) {
 
   std::cout << "setup_system_tray(): end" << std::endl;
 
-  // === Create first window ===
+  // Determine if this is the first start and we need to open
+  // DownloadAppdataWindow instead of the main app.
 
   AppGlobals::manager = &WindowManager::instance(&app);
-  AppGlobals::manager->create_sutta_search_window();
-  // AppGlobals::manager->create_word_lookup_window("hey ho");
+
+  if (!appdata_db_exists()) {
+
+    AppGlobals::manager->create_download_appdata_window();
+
+    // QUrl view_qml(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/DownloadAppdataWindow.qml"));
+    // QQmlApplicationEngine engine(&app);
+    // engine.load(view_qml);
+
+  } else {
+
+    // === Create the first app window ===
+
+    AppGlobals::manager->create_sutta_search_window();
+    // AppGlobals::manager->create_word_lookup_window("hey ho");
+  }
 
   std::cout << "app.exec()" << std::endl;
   int status = app.exec();
 
   shutdown_webserver();
-
   if (daemon_server_thread.joinable()) {
     daemon_server_thread.join();
   }
-
   std::cout << "Exiting with status " << status << "." << std::endl;
 }

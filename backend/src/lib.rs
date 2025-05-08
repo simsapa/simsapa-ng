@@ -37,7 +37,7 @@ pub fn get_create_simsapa_app_root() -> Result<PathBuf, Box<dyn Error>> {
 }
 
 pub fn get_create_simsapa_app_assets_path() -> PathBuf {
-    let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from(".")).join("app_assets/");
+    let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from(".")).join("app-assets/");
     if !p.exists() {
         let _ = create_dir_all(&p);
     }
@@ -46,4 +46,9 @@ pub fn get_create_simsapa_app_assets_path() -> PathBuf {
 
 pub fn get_create_simsapa_appdata_db_path() -> PathBuf {
     get_create_simsapa_app_assets_path().join("appdata.sqlite3")
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn appdata_db_exists() -> bool {
+    get_create_simsapa_appdata_db_path().exists()
 }
