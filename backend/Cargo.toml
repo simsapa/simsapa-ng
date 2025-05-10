@@ -23,7 +23,7 @@ time = { version = "0.3.41", features = ["local-offset", "formatting", "macros"]
 app_dirs = { package = "app_dirs2", version = "2.5" }
 anyhow = "1.0"
 thiserror = "2.0"
-# stardict = { version = "0.2.1", features = ["sqlite"] }
-stardict = { path = "../../src-lib/stardict-simsapa", features = ["sqlite"] }
+# v0.2.2 with public structs
+stardict = { git = "https://github.com/zangloo/stardict.git", rev = "0e446897bbc31ceae34051435a99f79ec28eb6ea", features = ["sqlite"] }
 lazy_static = "1.5.0"
 html-escape = "0.2.13"

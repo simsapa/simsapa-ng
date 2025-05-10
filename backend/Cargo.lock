@@ -711,7 +711,8 @@ checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
 
 [[package]]
 name = "stardict"
-version = "0.2.1"
+version = "0.2.2"
+source = "git+https://github.com/zangloo/stardict.git?rev=0e446897bbc31ceae34051435a99f79ec28eb6ea#0e446897bbc31ceae34051435a99f79ec28eb6ea"
 dependencies = [
  "byteorder",
  "dirs",
