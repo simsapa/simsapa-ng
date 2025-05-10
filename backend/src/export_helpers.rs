@@ -17,6 +17,7 @@ pub fn render_sutta_content(
     app_data: &mut AppData,
     sutta: &Sutta,
     sutta_quote: Option<&SuttaQuote>,
+    js_extra_pre: Option<String>,
 ) -> Result<String> {
     let content_html_body = if let Some(ref content_json_str) = sutta.content_json {
         if !content_json_str.is_empty() {
@@ -74,7 +75,13 @@ pub fn render_sutta_content(
 
     // Format CSS and JS extras
     let css_extra = format!("html {{ font-size: {}px; }} body {{ max-width: {}ex; }}", font_size, max_width);
+
     let mut js_extra = format!("const SUTTA_UID = '{}';", sutta.uid);
+
+    if let Some(js_pre) = js_extra_pre {
+        js_extra = format!("{}; {}", js_pre, js_extra);
+    }
+
     let show_bookmarks: bool = app_data.get_setting_or("show_bookmarks", true);
     js_extra.push_str(&format!(" const SHOW_BOOKMARKS = {};", show_bookmarks));
 

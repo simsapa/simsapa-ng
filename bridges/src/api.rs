@@ -30,6 +30,7 @@ pub mod ffi {
         // FIXME: How to avoid using the full path?
         include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/gui.h");
         fn callback_run_lookup_query(query_text: QString);
+        fn callback_run_summary_query(window_id: QString, query_text: QString);
     }
 }
 
@@ -81,15 +82,15 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
     }
 }
 
-#[get("/lookup_window_query/<word>")]
-fn lookup_window_query(word: &str) -> Status {
-    ffi::callback_run_lookup_query(ffi::QString::from(word));
+#[get("/lookup_window_query/<text>")]
+fn lookup_window_query(text: &str) -> Status {
+    ffi::callback_run_lookup_query(ffi::QString::from(text));
     Status::Ok
 }
 
-#[get("/summary_query/<word>")]
-fn summary_query(word: &str) -> Status {
-    println!("summary_query: {}", word);
+#[get("/summary_query/<window_id>/<text>")]
+fn summary_query(window_id: &str, text: &str) -> Status {
+    ffi::callback_run_summary_query(ffi::QString::from(window_id), ffi::QString::from(text));
     Status::Ok
 }
 

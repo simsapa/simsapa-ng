@@ -31,8 +31,11 @@ struct AppGlobals {
 WindowManager* AppGlobals::manager = nullptr;
 
 void callback_run_lookup_query(QString query_text) {
-  std::cout << "callback_run_lookup_query(): " << query_text.toStdString() << std::endl;
   emit AppGlobals::manager->signal_run_lookup_query(query_text);
+}
+
+void callback_run_summary_query(QString window_id, QString query_text) {
+  emit AppGlobals::manager->signal_run_summary_query(window_id, query_text);
 }
 
 void start(int argc, char* argv[]) {

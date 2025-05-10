@@ -6,7 +6,7 @@ import QtQuick.Controls
 
 import com.profoundlabs.simsapa
 
-RowLayout {
+Frame {
     id: root
     Layout.fillWidth: true
     Layout.minimumHeight: root.tm1.height*7
@@ -17,6 +17,12 @@ RowLayout {
     readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 9; font.bold: true }
 
     SuttaBridge { id: sb }
+
+    background: Rectangle {
+        color: palette.window
+        border.width: 1
+        border.color: Qt.darker(palette.window, 1.15)
+    }
 
     ListModel {
         id: deconstructor_model
@@ -33,12 +39,22 @@ RowLayout {
         ListElement { summary: "<b>iva 1</b> ind. <b>like; as</b>, ind" }
     }
 
-    function run_lookup(query) {
+    function set_query(query: string) {
+        if (query.length < 4) {
+            return;
+        }
+        root.visible = true;
+        lookup_input.text = query;
+    }
+
+    function run_lookup(query: string) {
         console.log("run_lookup(): " + query) // TODO
     }
 
     ColumnLayout {
         id: main_col
+        anchors.fill: parent
+
         RowLayout {
             TextField {
                 id: lookup_input

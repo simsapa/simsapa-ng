@@ -48,7 +48,7 @@ pub mod qobject {
 
         #[qinvokable]
         #[cxx_name = "get_sutta_html"]
-        fn get_sutta_html(self: &SuttaBridge, query: &QString) -> QString;
+        fn get_sutta_html(self: &SuttaBridge, window_id: &QString, query: &QString) -> QString;
 
         #[qinvokable]
         #[cxx_name = "get_translations_for_sutta_uid"]
@@ -127,7 +127,7 @@ impl qobject::SuttaBridge {
         println!("Hi from Rust! String is '{string}' and number is {number}");
     }
 
-    pub fn get_sutta_html(&self, query: &QString) -> QString {
+    pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
         let sutta = db::get_sutta(&query.to_string());
 
         let html = match sutta {
@@ -136,7 +136,9 @@ impl qobject::SuttaBridge {
                 let settings = HashMap::new();
                 let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
-                render_sutta_content(&mut app_data, &sutta, None)
+                let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
+
+                render_sutta_content(&mut app_data, &sutta, None, Some(js_extra))
                 .unwrap_or(html_page("Rendering error", None, None, None))
             },
             None => String::from("<!doctype html><html><head></head><body><h1>No sutta</h1></body></html>"),

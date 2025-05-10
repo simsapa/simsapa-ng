@@ -5,7 +5,7 @@ Item {
         console.log(query);
     }
 
-    function get_sutta_html(query: string): string {
+    function get_sutta_html(window_id: string, query: string): string {
         var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(query);
         return html;
     }

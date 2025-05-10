@@ -7,6 +7,8 @@ WebView {
     id: web
     anchors.fill: parent
 
+    required property string window_id
+
     property string item_key
     property string sutta_uid
 
@@ -24,7 +26,7 @@ WebView {
             // Initial blank page
             uid = "";
         }
-        var html = sb.get_sutta_html(uid);
+        var html = sb.get_sutta_html(web.window_id, uid);
         web.loadHtml(html);
     }
 

@@ -23,6 +23,7 @@ class WindowManager : public QObject {
 
         static WindowManager *m_instance;
         QApplication* m_app;
+        int m_window_id_count;
         QList<SuttaSearchWindow*> sutta_search_windows;
         QList<DownloadAppdataWindow*> download_appdata_windows;
         QList<WordLookupWindow*> word_lookup_windows;
@@ -33,9 +34,11 @@ class WindowManager : public QObject {
 
     signals:
         void signal_run_lookup_query(const QString& query_text);
+        void signal_run_summary_query(const QString& window_id, const QString& query_text);
 
     public slots:
-        void run_lookup_query(const QString& word);
+        void run_lookup_query(const QString& query_text);
+        void run_summary_query(const QString& window_id, const QString& query_text);
 
 };
 

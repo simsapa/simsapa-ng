@@ -20,6 +20,8 @@ ApplicationWindow {
     //     find_bar.reset();
     // }
 
+    property string window_id
+
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     /* readonly property bool is_mobile: true // for qml preview */
     readonly property bool is_desktop: !root.is_mobile
@@ -64,6 +66,10 @@ ApplicationWindow {
             fulltext_results.update_page()
             root.is_loading = false
         })
+    }
+
+    function set_summary_query(query_text: string) {
+        word_summary.set_query(query_text);
     }
 
     property int key_counter: 0
@@ -560,11 +566,19 @@ ApplicationWindow {
 
                         SuttaStackLayout {
                             id: sutta_html_view_layout
+                            window_id: root.window_id
                             anchors.top: suttas_tab_bar.bottom
                             anchors.bottom: suttas_tab_container.bottom
                             anchors.left: suttas_tab_container.left
                             anchors.right: suttas_tab_container.right
-                            // anchors.topMargin: 5
+                        }
+
+                        WordSummary {
+                            id: word_summary
+                            window_height: root.height
+                            anchors.bottom: suttas_tab_container.bottom
+                            anchors.left: suttas_tab_container.left
+                            anchors.right: suttas_tab_container.right
                         }
                     }
 
@@ -646,11 +660,6 @@ ApplicationWindow {
                             }
                         }
                     }
-                }
-
-                WordSummary {
-                    id: word_summary
-                    window_height: root.height
                 }
             }
         }

@@ -1,8 +1,11 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 
 StackLayout {
     id: root
+    required property string window_id
     property string current_key: ""
     property var items_map: ({})
 
@@ -11,6 +14,7 @@ StackLayout {
 
         SuttaHtmlView {
             id: html_view
+            window_id: root.window_id
             Layout.fillWidth: true
             Layout.fillHeight: true
             // focus: true

@@ -20,7 +20,7 @@ fn test_html_for_pali() {
     let settings = HashMap::new();
     let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
-    let html = render_sutta_content(&mut app_data, &sutta, None).expect("Can't render the html");
+    let html = render_sutta_content(&mut app_data, &sutta, None, None).expect("Can't render the html");
 
     assert!(html.contains(r#"<div class='suttacentral bilara-text'>"#));
 
@@ -38,7 +38,7 @@ fn test_line_by_line_with_variants() {
     let settings = HashMap::new();
     let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
-    let html = render_sutta_content(&mut app_data, &sutta, None).expect("Can't render the html");
+    let html = render_sutta_content(&mut app_data, &sutta, None, None).expect("Can't render the html");
 
     // fs::write(PathBuf::from("sn1.61_en_sujato.html"), html.clone()).expect("Unable to write file!");
 

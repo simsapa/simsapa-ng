@@ -9,6 +9,7 @@ WindowManager& WindowManager::instance(QApplication* app) {
     if (!m_instance) {
         m_instance = new WindowManager(app);
     }
+    m_instance->m_window_id_count = 0;
     return *m_instance;
 }
 
@@ -18,10 +19,12 @@ WindowManager::WindowManager(QApplication* app, QObject* parent)
     this->m_app = app;
 
     QObject::connect(this, &WindowManager::signal_run_lookup_query, this, &WindowManager::run_lookup_query);
+    QObject::connect(this, &WindowManager::signal_run_summary_query, this, &WindowManager::run_summary_query);
 }
 
 WindowManager::~WindowManager() {
     // Clean up all windows
+    // FIXME: does this clean up work?
     while (!sutta_search_windows.isEmpty()) {
         auto w = sutta_search_windows.takeFirst();
         w->deleteLater();
@@ -41,24 +44,32 @@ WindowManager::~WindowManager() {
 SuttaSearchWindow* WindowManager::create_sutta_search_window() {
     SuttaSearchWindow* w = new SuttaSearchWindow(this->m_app);
     sutta_search_windows.append(w);
-    // w->m_root->show();
+    w->m_root->setProperty("window_id", QString("window_%1").arg(this->m_window_id_count));
+    this->m_window_id_count++;
     return w;
 }
 
 DownloadAppdataWindow* WindowManager::create_download_appdata_window() {
     DownloadAppdataWindow* w = new DownloadAppdataWindow(this->m_app);
     download_appdata_windows.append(w);
-    // w->m_root->show();
     return w;
 }
 
 WordLookupWindow* WindowManager::create_word_lookup_window(const QString& word) {
     WordLookupWindow* w = new WordLookupWindow(this->m_app, word);
     word_lookup_windows.append(w);
-    // w->show();
     return w;
 }
 
-void WindowManager::run_lookup_query(const QString& word) {
-    this->create_word_lookup_window(word);
+void WindowManager::run_lookup_query(const QString& query_text) {
+    this->create_word_lookup_window(query_text);
+}
+
+void WindowManager::run_summary_query(const QString& window_id, const QString& query_text) {
+    // NOTE: .isEmpty() returns true even when .length() > 0
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+    auto w = this->sutta_search_windows[0];
+    QMetaObject::invokeMethod(w->m_root, "set_summary_query", Q_ARG(QString, query_text));
 }

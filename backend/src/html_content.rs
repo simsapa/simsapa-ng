@@ -72,6 +72,10 @@ pub fn html_page(content: &str,
         js.push_str(" const SHOW_QUOTE = null;");
     }
 
+    if let Some(js_extra) = &js_extra {
+        js.push_str(js_extra);
+    }
+
     // In suttas.js we expect SHOW_BOOKMARKS to be already set.
     js.push_str(SUTTAS_JS);
 
