@@ -52,20 +52,20 @@ ApplicationWindow {
         repeat: false
         onTriggered: {
             if (incremental_search.checked && search_bar_input.search_input.text.length >= 4) {
-                root.run_search(search_bar_input.search_input.text)
+                root.run_search(search_bar_input.search_input.text);
             }
         }
     }
 
     function run_search(query) {
-        root.is_loading = true
+        root.is_loading = true;
         Qt.callLater(function() {
-            let json_res = sb.search(query)
-            root.all_results = JSON.parse(json_res)
-            fulltext_results.current_page = 1
-            fulltext_results.update_page()
-            root.is_loading = false
-        })
+            let json_res = sb.search(query);
+            root.all_results = JSON.parse(json_res);
+            fulltext_results.current_page = 1;
+            fulltext_results.update_page();
+            root.is_loading = false;
+        });
     }
 
     function set_summary_query(query_text: string) {
@@ -576,6 +576,7 @@ ApplicationWindow {
                         WordSummary {
                             id: word_summary
                             window_height: root.height
+                            incremental_search_checked: incremental_search.checked
                             anchors.bottom: suttas_tab_container.bottom
                             anchors.left: suttas_tab_container.left
                             anchors.right: suttas_tab_container.right

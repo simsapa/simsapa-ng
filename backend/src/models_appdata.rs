@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use crate::schema_appdata::*;
 // use chrono::NaiveDateTime;
 
-#[derive(Clone, Queryable, Selectable, Identifiable)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = app_settings)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct AppSetting {
@@ -39,7 +39,7 @@ pub struct NewAppSetting<'a> {
 //     .execute(conn)?;
 
 // Queryable struct for reading records
-#[derive(Clone, Queryable, Selectable, Identifiable)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = suttas)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Sutta {
@@ -105,7 +105,7 @@ pub struct NewSutta<'a> {
     pub license: Option<&'a str>,
 }
 
-#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
 #[diesel(belongs_to(Sutta, foreign_key = sutta_id))]
 #[diesel(table_name = sutta_variants)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -130,7 +130,7 @@ pub struct NewSuttaVariant<'a> {
     pub content_json: Option<&'a str>,
 }
 
-#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
 #[diesel(belongs_to(Sutta, foreign_key = sutta_id))]
 #[diesel(table_name = sutta_comments)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -155,7 +155,7 @@ pub struct NewSuttaComment<'a> {
     pub content_json: Option<&'a str>,
 }
 
-#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
 #[diesel(belongs_to(Sutta, foreign_key = sutta_id))]
 #[diesel(table_name = sutta_glosses)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

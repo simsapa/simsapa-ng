@@ -16,6 +16,8 @@ Frame {
     required property int window_height
     readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 9; font.bold: true }
 
+    required property bool incremental_search_checked
+
     SuttaBridge { id: sb }
 
     background: Rectangle {
@@ -24,20 +26,35 @@ Frame {
         border.color: Qt.darker(palette.window, 1.15)
     }
 
-    ListModel {
-        id: deconstructor_model
-        ListElement { words_joined: "olokita + saññāṇena + eva" }
-        ListElement { words_joined: "olokita + saññāṇena + iva" }
+    Timer {
+        id: debounce_timer
+        interval: 400 // milliseconds
+        repeat: false
+        onTriggered: {
+            if (root.incremental_search_checked && lookup_input.text.length >= 4) {
+                root.run_lookup(lookup_input.text);
+            }
+        }
     }
 
-    ListModel {
-        id: summaries_model
-        ListElement { summary: "<b>olokita</b> pp. <b>looked at, inspected</b> [ava + √lok], pp of oloketi" }
-        ListElement { summary: "<b>saññāṇa 1</b> nt. <b>marking; signing</b> [saṁ + √ñā + aṇa], nt, act, from sañjānāti" }
-        ListElement { summary: "<b>saññāṇa 2</b> nt. <b>mental noting;</b> lit. marking [saṁ + √ñā + aṇa], nt, act, from sañjānāti" }
-        ListElement { summary: "<b>eva 1</b> ind. <b>only; just; merely; exclusively</b>, ind, emph" }
-        ListElement { summary: "<b>iva 1</b> ind. <b>like; as</b>, ind" }
-    }
+    ListModel { id: deconstructor_model }
+    ListModel { id: summaries_model }
+
+    // For qml preview
+    // ListModel {
+    //     id: deconstructor_model
+    //     ListElement { words_joined: "olokita + saññāṇena + eva" }
+    //     ListElement { words_joined: "olokita + saññāṇena + iva" }
+    // }
+    //
+    // ListModel {
+    //     id: summaries_model
+    //     ListElement { summary: "<b>olokita</b> pp. <b>looked at, inspected</b> [ava + √lok], pp of oloketi" }
+    //     ListElement { summary: "<b>saññāṇa 1</b> nt. <b>marking; signing</b> [saṁ + √ñā + aṇa], nt, act, from sañjānāti" }
+    //     ListElement { summary: "<b>saññāṇa 2</b> nt. <b>mental noting;</b> lit. marking [saṁ + √ñā + aṇa], nt, act, from sañjānāti" }
+    //     ListElement { summary: "<b>eva 1</b> ind. <b>only; just; merely; exclusively</b>, ind, emph" }
+    //     ListElement { summary: "<b>iva 1</b> ind. <b>like; as</b>, ind" }
+    // }
 
     function set_query(query: string) {
         if (query.length < 4) {
@@ -48,7 +65,26 @@ Frame {
     }
 
     function run_lookup(query: string) {
-        console.log("run_lookup(): " + query) // TODO
+        // root.is_loading = true; TODO
+        Qt.callLater(function() {
+            let res;
+            deconstructor_model.clear()
+            res = sb.dpd_deconstructor_list(query);
+            for (let i=0; i < res.length; i++) {
+                deconstructor_model.append({ words_joined: res[i] });
+            }
+            deconstructor.currentIndex = 0;
+
+            summaries_model.clear();
+            res = sb.dpd_lookup_list(query);
+            for (let i=0; i < res.length; i++) {
+                summaries_model.append({ summary: res[i] });
+            }
+            // clear the previous selection highlight
+            summaries_list.currentIndex = -1;
+
+            // root.is_loading = false; TODO
+        });
     }
 
     ColumnLayout {
@@ -59,7 +95,13 @@ Frame {
             TextField {
                 id: lookup_input
                 Layout.fillWidth: true
-                text: "olokitasaññāṇeneva"
+                text: ""
+
+                onAccepted: search_btn.clicked()
+                onTextChanged: {
+                    if (root.incremental_search_checked) debounce_timer.restart();
+                }
+                selectByMouse: true
             }
             Button {
                 id: search_btn
@@ -82,6 +124,7 @@ Frame {
         }
 
         RowLayout {
+            visible: deconstructor_model.count > 0
             ComboBox {
                 textRole: "words_joined"
                 id: deconstructor

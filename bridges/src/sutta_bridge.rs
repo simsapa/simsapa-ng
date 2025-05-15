@@ -39,6 +39,14 @@ pub mod qobject {
         fn search(self: &SuttaBridge, query: &QString) -> QString;
 
         #[qinvokable]
+        #[cxx_name = "dpd_deconstructor_list"]
+        fn dpd_deconstructor_list(self: &SuttaBridge, query: &QString) -> QStringList;
+
+        #[qinvokable]
+        #[cxx_name = "dpd_lookup_list"]
+        fn dpd_lookup_list(self: &SuttaBridge, query: &QString) -> QStringList;
+
+        #[qinvokable]
         #[cxx_name = "incrementNumber"]
         fn increment_number(self: Pin<&mut SuttaBridge>);
 
@@ -118,6 +126,24 @@ impl qobject::SuttaBridge {
         QString::from(json)
     }
 
+    pub fn dpd_deconstructor_list(&self, query: &QString) -> QStringList {
+        let list = db::dpd_deconstructor_list(&query.to_string());
+        let mut res = QStringList::default();
+        for i in list {
+            res.append(QString::from(i));
+        }
+        res
+    }
+
+    pub fn dpd_lookup_list(&self, query: &QString) -> QStringList {
+        let list = db::dpd_lookup_list(&query.to_string());
+        let mut res = QStringList::default();
+        for i in list {
+            res.append(QString::from(i));
+        }
+        res
+    }
+
     pub fn increment_number(self: Pin<&mut Self>) {
         let previous = *self.number();
         self.set_number(previous + 1);
@@ -132,7 +158,7 @@ impl qobject::SuttaBridge {
 
         let html = match sutta {
             Some(sutta) => {
-                let (db_conn, _) = db::establish_connection();
+                let (db_conn, _, _) = db::establish_connection();
                 let settings = HashMap::new();
                 let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 

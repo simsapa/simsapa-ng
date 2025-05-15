@@ -8,6 +8,7 @@ use thiserror::Error;
 
 use crate::models_appdata::Sutta;
 use crate::models_dictionaries::DictWord;
+use crate::models_dpd::{DpdHeadword, DpdRoot};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum QueryType {
@@ -140,6 +141,7 @@ impl SearchResult {
     }
 
     pub fn from_dict_word(x: &DictWord, snippet: String) -> SearchResult {
+        // From dict_word_to_search_result()
         SearchResult {
             uid: x.uid.to_string(),
             schema_name: "appdata".to_string(), // FIXME: implement later
@@ -155,4 +157,43 @@ impl SearchResult {
             rank: None,
         }
     }
+
+    pub fn from_dpd_headword(x: &DpdHeadword, snippet: String) -> SearchResult {
+        // FIXME: use UDpdWord enum
+        // From dict_word_to_search_result()
+        SearchResult {
+            uid: x.uid.to_string(),
+            schema_name: "dpd".to_string(), // FIXME: implement later
+            table_name: "dpd_headwords".to_string(), // TODO: can we get the table name from diesel?
+            source_uid: Some("dpd".to_string()), // TODO implement .source_uid()
+            title: x.word(),
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            snippet,
+            page_number: None,
+            score: None,
+            rank: None,
+        }
+    }
+
+    pub fn from_dpd_root(x: &DpdRoot, snippet: String) -> SearchResult {
+        // FIXME: use UDpdWord enum
+        // From dict_word_to_search_result()
+        SearchResult {
+            uid: x.uid.to_string(),
+            schema_name: "dpd".to_string(), // FIXME: implement later
+            table_name: "dpd_roots".to_string(), // TODO: can we get the table name from diesel?
+            source_uid: Some("dpd".to_string()), // TODO implement .source_uid()
+            title: x.word(),
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            snippet,
+            page_number: None,
+            score: None,
+            rank: None,
+        }
+    }
+
 }

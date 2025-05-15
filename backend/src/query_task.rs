@@ -10,7 +10,7 @@ use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::helpers::consistent_niggahita;
 use crate::models_appdata::Sutta;
 use crate::models_dictionaries::DictWord;
-use crate::db::establish_connection;
+use crate::db;
 
 pub struct SearchQueryTask {
     pub query_text: String,
@@ -214,7 +214,7 @@ impl SearchQueryTask {
 
     fn uid_sutta(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::schema_appdata::suttas::dsl::*;
-        let (db_conn, _) = &mut establish_connection();
+        let (db_conn, _, _) = &mut db::establish_connection();
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
@@ -236,7 +236,7 @@ impl SearchQueryTask {
     fn uid_word(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // TODO: review details in query_task.py
         use crate::schema_dictionaries::dict_words::dsl::*;
-        let (_, db_conn) = &mut establish_connection();
+        let (_, db_conn, _) = &mut db::establish_connection();
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
@@ -263,7 +263,7 @@ impl SearchQueryTask {
         // TODO: review details in query_task.py
         use crate::schema_appdata::suttas::dsl::*;
 
-        let (conn, _) = &mut establish_connection();
+        let (conn, _, _) = &mut db::establish_connection();
 
         // Box query for dynamic filtering
         let mut query = suttas.into_boxed();
@@ -337,7 +337,7 @@ impl SearchQueryTask {
         // TODO: review details in query_task.py
         use crate::schema_dictionaries::dict_words::dsl::*;
 
-        let (_, conn) = &mut establish_connection();
+        let (_, conn, _) = &mut db::establish_connection();
 
         let mut query = dict_words.into_boxed();
         let mut count_query = dict_words.into_boxed();
@@ -403,16 +403,62 @@ impl SearchQueryTask {
 
     }
 
+    pub fn dpd_lookup(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // DPD is English.
+        if self.lang != "en" {
+            return Ok(Vec::new());
+        }
+
+        let (_, _, db_conn) = &mut db::establish_connection();
+
+        let res_page = db::dpd_lookup(db_conn, &self.query_text, false, true)?;
+
+        // FIXME implement paging in DPD lookup results.
+        let limit_page = res_page[0..100].to_vec();
+
+        Ok(limit_page)
+    }
 
     /// Gets a specific page of search results, performing the query if needed.
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        // Check cache first
+        // Check cache first. If this results page has been calculated before, return it.
         if let Some(cached_page) = self.highlighted_result_pages.get(&page_num) {
             return Ok(cached_page.clone()); // Return a clone to avoid borrow issues
         }
 
+        // Otherwise, run the queries and return the results page.
+
         // --- Perform Search Based on Mode and Area ---
         let results = match self.search_mode {
+            SearchMode::Combined => {
+                let mut res: Vec<SearchResult> = Vec::new();
+
+                // Display all DPD Lookup results (not many) on the
+                // first (0 index) results page by boosting their scores.
+                if page_num == 0 {
+                    // Run DPD Lookup and boost results to the top.
+                    let mut dpd_results: Vec<SearchResult> = self.dpd_lookup()?;
+                    for item in dpd_results.iter_mut() {
+                        match item.score {
+                            Some(ref mut s) => *s += 10000.0,
+                            None => item.score = Some(10000.0),
+                        }
+                    }
+                    res.extend(dpd_results);
+                    self.db_all_results = res.clone();
+                }
+
+                // The fulltext query has been executed before this step,
+                // get highlighted snippets
+
+                // FIXME implement when fulltext query works
+                // let mut page_results = self.search_query.highlighted_results_page(page_num)?;
+                // res.extend(page_results);
+
+                // Deduplicate: unique by title, schema_name, and uid
+                Ok(db::unique_search_results(res))
+            }
+
             SearchMode::UidMatch => {
                 match self.search_area {
                     SearchArea::Suttas => {

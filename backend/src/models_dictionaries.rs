@@ -2,7 +2,7 @@ use diesel::prelude::*;
 use crate::schema_dictionaries::*;
 // use chrono::NaiveDateTime;
 
-#[derive(Clone, Queryable, Selectable, Identifiable)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = dictionaries)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Dictionary {
@@ -32,7 +32,22 @@ pub struct NewDictionary<'a> {
     pub version: Option<&'a str>,
 }
 
-#[derive(Clone, Queryable, Selectable, Identifiable, Associations)]
+impl Default for NewDictionary<'_> {
+    fn default() -> Self {
+        Self {
+            label: "",
+            title: "",
+            dict_type: "",
+            creator: None,
+            description: None,
+            feedback_email: None,
+            feedback_url: None,
+            version: None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
 #[diesel(table_name = dict_words)]
 #[diesel(belongs_to(Dictionary, foreign_key = dictionary_id))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -61,6 +76,12 @@ pub struct DictWord {
     // pub created_at: chrono::NaiveDateTime,
     // pub updated_at: Option<chrono::NaiveDateTime>,
     // pub indexed_at: Option<chrono::NaiveDateTime>,
+}
+
+impl DictWord {
+    pub fn word(&self) -> String {
+        self.word.clone()
+    }
 }
 
 // Hold owned Strings for improving batch insert.

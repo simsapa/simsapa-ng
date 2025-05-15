@@ -42,4 +42,11 @@ Item {
     function app_data_contents_plain_table() {
         return `| file | size | modified |`;
     }
+
+    function dpd_deconstructor_list(query: string): list<string> {
+        return [
+            "olokita + saññāṇena + eva",
+            "olokita + saññāṇena + iva",
+        ];
+    }
 }

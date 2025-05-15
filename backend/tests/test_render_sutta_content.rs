@@ -16,7 +16,7 @@ fn test_html_for_pali() {
     appdata_db_setup();
     let sutta = db::get_sutta("mn2/pli/ms").expect("Can't get sutta from db");
 
-    let (db_conn, _) = db::establish_connection();
+    let (db_conn, _, _) = db::establish_connection();
     let settings = HashMap::new();
     let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
@@ -34,7 +34,7 @@ fn test_line_by_line_with_variants() {
     appdata_db_setup();
     let sutta = db::get_sutta("sn1.61/en/sujato").expect("Can't get sutta from db");
 
-    let (db_conn, _) = db::establish_connection();
+    let (db_conn, _, _) = db::establish_connection();
     let settings = HashMap::new();
     let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 

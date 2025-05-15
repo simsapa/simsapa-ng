@@ -80,7 +80,7 @@ fn query_words(
 
 /// Simulates importing a dictionary into a specific database file.
 fn import_stardict_dictionary(new_dict_label: &str, unzipped_dir: &Path, limit: Option<usize>) -> Result<(), String> {
-    let (_, db_conn) = &mut db::establish_connection();
+    let (_, db_conn, _) = &mut db::establish_connection();
     import_stardict_as_new(db_conn, unzipped_dir, "pli", new_dict_label, true, true, limit)?;
     Ok(())
 }
@@ -135,6 +135,21 @@ enum Commands {
         // #[arg(value_name = "DIRECTORY_PATH")]
         limit: Option<usize>,
     },
+
+    /// Import a newly downloaded or generated DPD SQLite database for use in Simsapa
+    /// by migrating the db schema and moving the file to Simsapa's local assets folder.
+    /// The input db is modified and migrated before moving.
+    #[command(arg_required_else_help = true)]
+    ImportMigrateDpd {
+        /// Path to the DPD SQLite database to migrate and import
+        #[arg(value_name = "DIRECTORY_PATH")]
+        dpd_input_path: PathBuf,
+
+        /// Specify the path to move the migrated DPD SQLite database to,
+        /// if you don't want it to be moved to Simsapa's local assets folder.
+        #[arg(value_name = "DIRECTORY_PATH")]
+        dpd_output_path: Option<PathBuf>,
+    }
 }
 
 /// Enum for the different types of queries available.
@@ -188,9 +203,16 @@ fn main() {
                   Err(format!("Dictionary source path does not exist: {:?}", path))
              } else if !path.is_dir() {
                  Err(format!("Warning: Provided dictionary source path is a file, not a directory. Unzip the StarDict files to a directory."))
-             }
-             else {
+             } else {
                  import_stardict_dictionary(&dict_label, &path, limit)
+             }
+        }
+
+        Commands::ImportMigrateDpd { dpd_input_path, dpd_output_path } => {
+             if !dpd_input_path.exists() {
+                 Err(format!("DPD input path does not exist: {:?}", dpd_input_path))
+             } else {
+                 db::import_migrate_dpd(&dpd_input_path, dpd_output_path)
              }
         }
     };
