@@ -1,9 +1,11 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use regex::Regex;
 use lazy_static::lazy_static;
 use html_escape::decode_html_entities;
 use anyhow::{Context, Result};
+
+use crate::types::SearchResult;
 
 pub fn consistent_niggahita(text: Option<String>) -> String {
     // Use only ṁ, both in content and query strings.
@@ -535,4 +537,19 @@ mod tests {
         assert_eq!(consistent_niggahita(Some("saṃsāra".to_string())), "saṁsāra");
         assert_eq!(consistent_niggahita(Some("dhammaṁ".to_string())), "dhammaṁ");
     }
+}
+
+/// Remove duplicates based on title, schema_name, and uid
+pub fn unique_search_results(mut results: Vec<SearchResult>) -> Vec<SearchResult> {
+    let mut seen: HashSet<String> = HashSet::new();
+    results.retain(|item| {
+        let key = format!("{} {} {}", item.title, item.schema_name, item.uid);
+        if seen.contains(&key) {
+            false
+        } else {
+            seen.insert(key);
+            true
+        }
+    });
+    results
 }

@@ -1,9 +1,11 @@
 use std::fs;
 use std::path::PathBuf;
 use std::collections::HashMap;
+use std::thread;
 
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList};
+use cxx_qt::Threading;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
@@ -27,13 +29,18 @@ pub mod qobject {
     extern "RustQt" {
         #[qobject]
         #[qml_element]
-        #[qproperty(i32, number)]
-        #[qproperty(QString, string)]
+        #[qproperty(bool, db_loaded)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
     }
 
+    impl cxx_qt::Threading for SuttaBridge{}
+
     unsafe extern "RustQt" {
+        #[qinvokable]
+        #[cxx_name = "load_db"]
+        fn load_db(self: Pin<&mut SuttaBridge>);
+
         #[qinvokable]
         #[cxx_name = "search"]
         fn search(self: &SuttaBridge, query: &QString) -> QString;
@@ -45,14 +52,6 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "dpd_lookup_list"]
         fn dpd_lookup_list(self: &SuttaBridge, query: &QString) -> QStringList;
-
-        #[qinvokable]
-        #[cxx_name = "incrementNumber"]
-        fn increment_number(self: Pin<&mut SuttaBridge>);
-
-        #[qinvokable]
-        #[cxx_name = "sayHi"]
-        fn say_hi(self: &SuttaBridge, string: &QString, number: i32);
 
         #[qinvokable]
         #[cxx_name = "get_sutta_html"]
@@ -81,21 +80,32 @@ pub mod qobject {
 }
 
 pub struct SuttaBridgeRust {
-    number: i32,
-    string: QString,
+    db_loaded: bool,
 }
 
 impl Default for SuttaBridgeRust {
     fn default() -> Self {
         Self {
-            number: 0,
-            string: QString::from(""),
+            db_loaded: false,
         }
     }
 }
 
 impl qobject::SuttaBridge {
+    pub fn load_db(self: Pin<&mut Self>) {
+        println!("SuttaBridge::load_db()");
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let r = db::rust_backend_init_db();
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().set_db_loaded(r);
+            }).unwrap();
+        });
+    }
+
     pub fn search(&self, query: &QString) -> QString {
+        let dbm = db::get_dbm();
+
         let params = SearchParams {
             mode: SearchMode::ContainsMatch,
             page_len: None,
@@ -108,6 +118,7 @@ impl qobject::SuttaBridge {
         };
 
         let mut query_task = SearchQueryTask::new(
+            dbm,
             "en".to_string(),
             query.to_string(),
             params,
@@ -127,7 +138,8 @@ impl qobject::SuttaBridge {
     }
 
     pub fn dpd_deconstructor_list(&self, query: &QString) -> QStringList {
-        let list = db::dpd_deconstructor_list(&query.to_string());
+        let dbm = db::get_dbm();
+        let list = dbm.dpd.dpd_deconstructor_list(&query.to_string());
         let mut res = QStringList::default();
         for i in list {
             res.append(QString::from(i));
@@ -136,7 +148,8 @@ impl qobject::SuttaBridge {
     }
 
     pub fn dpd_lookup_list(&self, query: &QString) -> QStringList {
-        let list = db::dpd_lookup_list(&query.to_string());
+        let dbm = db::get_dbm();
+        let list = dbm.dpd.dpd_lookup_list(&query.to_string());
         let mut res = QStringList::default();
         for i in list {
             res.append(QString::from(i));
@@ -144,22 +157,19 @@ impl qobject::SuttaBridge {
         res
     }
 
-    pub fn increment_number(self: Pin<&mut Self>) {
-        let previous = *self.number();
-        self.set_number(previous + 1);
-    }
-
-    pub fn say_hi(&self, string: &QString, number: i32) {
-        println!("Hi from Rust! String is '{string}' and number is {number}");
-    }
-
     pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
-        let sutta = db::get_sutta(&query.to_string());
+        let blank_page_html = String::from("<!doctype html><html><head></head><body><h1>No sutta</h1></body></html>");
+        if query.trimmed().is_empty() {
+            return QString::from(blank_page_html);
+        }
+
+        let dbm = db::get_dbm();
+        let sutta = dbm.appdata.get_sutta(&query.to_string());
 
         let html = match sutta {
             Some(sutta) => {
-                let (db_conn, _, _) = db::establish_connection();
                 let settings = HashMap::new();
+                let db_conn = dbm.appdata.get_conn().expect("get_sutta_html(): No appdata conn");
                 let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
                 let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
@@ -167,14 +177,15 @@ impl qobject::SuttaBridge {
                 render_sutta_content(&mut app_data, &sutta, None, Some(js_extra))
                 .unwrap_or(html_page("Rendering error", None, None, None))
             },
-            None => String::from("<!doctype html><html><head></head><body><h1>No sutta</h1></body></html>"),
+            None => blank_page_html,
         };
 
         QString::from(html)
     }
 
     pub fn get_translations_for_sutta_uid(&self, sutta_uid: &QString) -> QStringList {
-        let translations: Vec<String> = db::get_translations_for_sutta_uid(&sutta_uid.to_string());
+        let dbm = db::get_dbm();
+        let translations: Vec<String> = dbm.appdata.get_translations_for_sutta_uid(&sutta_uid.to_string());
         let mut res = QStringList::default();
         for t in translations {
             res.append(QString::from(t));

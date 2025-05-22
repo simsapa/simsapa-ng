@@ -1,6 +1,12 @@
 import QtQuick
 
 Item {
+    property bool db_loaded: false;
+
+    function load_db() {
+        console.log("load_db()");
+    }
+
     function search(query: string) {
         console.log(query);
     }

@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use crate::schema_appdata::*;
+use crate::db::appdata_schema::*;
 // use chrono::NaiveDateTime;
 
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
@@ -21,22 +21,6 @@ pub struct NewAppSetting<'a> {
     pub key: &'a str,
     pub value: Option<&'a str>,
 }
-
-// let new_sutta = NewSutta {
-//     uid: "mn10",
-//     sutta_ref: "MN 10",
-//     nikaya: "Majjhima Nikāya",
-//     language: "en",
-//     group_path: Some("suttas/mn"),
-//     title: Some("Satipaṭṭhāna Sutta"),
-//     description: Some("The Foundations of Mindfulness"),
-//     // ... other fields
-//     ..Default::default()  // For any remaining Option fields you want to omit
-// };
-//
-// diesel::insert_into(suttas::table)
-//     .values(&new_sutta)
-//     .execute(conn)?;
 
 // Queryable struct for reading records
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]

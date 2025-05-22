@@ -1,3 +1,4 @@
+pub mod db;
 pub mod types;
 pub mod helpers;
 pub mod export_helpers;
@@ -7,14 +8,6 @@ pub mod dir_list;
 pub mod app_data;
 pub mod stardict_parse;
 pub mod pali_stemmer;
-
-pub mod db;
-pub mod models_appdata;
-pub mod schema_appdata;
-pub mod models_dictionaries;
-pub mod schema_dictionaries;
-pub mod models_dpd;
-pub mod schema_dpd;
 
 use std::fs::create_dir_all;
 use std::path::PathBuf;
@@ -55,4 +48,9 @@ pub fn get_create_simsapa_appdata_db_path() -> PathBuf {
 #[unsafe(no_mangle)]
 pub extern "C" fn appdata_db_exists() -> bool {
     get_create_simsapa_appdata_db_path().exists()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn rust_backend_init_db() -> bool {
+    db::rust_backend_init_db()
 }

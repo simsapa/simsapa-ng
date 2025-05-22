@@ -31,7 +31,11 @@ ApplicationWindow {
     property var all_results: []
     property bool is_loading: false
 
-    SuttaBridge { id: sb }
+    SuttaBridge {
+        id: sb
+        Component.onCompleted: sb.load_db()
+    }
+
     ListModel { id: tabs_pinned_model }
     ListModel { id: tabs_results_model }
     ListModel { id: tabs_translations_model }
@@ -352,6 +356,7 @@ ApplicationWindow {
             SearchBarInput {
                 id: search_bar_input
                 is_wide: root.is_wide
+                db_loaded: sb.db_loaded
                 run_search_fn: root.run_search
                 debounce_timer: debounce_timer
                 incremental_search: incremental_search

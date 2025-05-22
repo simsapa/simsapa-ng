@@ -11,6 +11,8 @@ use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
+    let dbm = db::get_dbm();
+
     let params = SearchParams {
         mode: SearchMode::ContainsMatch,
         page_len: None,
@@ -23,6 +25,7 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     };
 
     let mut query_task = SearchQueryTask::new(
+        dbm,
         "en".to_string(),
         query.to_string(),
         params,
@@ -79,9 +82,12 @@ fn query_words(
 }
 
 /// Simulates importing a dictionary into a specific database file.
-fn import_stardict_dictionary(new_dict_label: &str, unzipped_dir: &Path, limit: Option<usize>) -> Result<(), String> {
-    let (_, db_conn, _) = &mut db::establish_connection();
-    import_stardict_as_new(db_conn, unzipped_dir, "pli", new_dict_label, true, true, limit)?;
+fn import_stardict_dictionary(new_dict_label: &str,
+                              unzipped_dir: &Path,
+                              limit: Option<usize>)
+                              -> Result<(), String> {
+    let dbm = db::get_dbm();
+    import_stardict_as_new(dbm, unzipped_dir, "pli", new_dict_label, true, true, limit)?;
     Ok(())
 }
 
@@ -166,6 +172,7 @@ fn main() {
         println!("Info: No .env file found or failed to load.");
     }
 
+    db::rust_backend_init_db();
     let cli = Cli::parse();
 
     // Determine Base Simsapa Directory
@@ -212,7 +219,7 @@ fn main() {
              if !dpd_input_path.exists() {
                  Err(format!("DPD input path does not exist: {:?}", dpd_input_path))
              } else {
-                 db::import_migrate_dpd(&dpd_input_path, dpd_output_path)
+                 db::dpd::import_migrate_dpd(&dpd_input_path, dpd_output_path)
              }
         }
     };

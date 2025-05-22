@@ -1,6 +1,4 @@
-use crate::models_appdata::*;
-// use crate::appdata_schema::suttas::dsl::*;
-// use diesel::prelude::*;
+use crate::db::appdata_models::*;
 
 use std::collections::BTreeMap;
 use anyhow::{anyhow, Context, Result};

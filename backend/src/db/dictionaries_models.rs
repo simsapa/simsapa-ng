@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use crate::schema_dictionaries::*;
+use crate::db::dictionaries_schema::*;
 // use chrono::NaiveDateTime;
 
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]

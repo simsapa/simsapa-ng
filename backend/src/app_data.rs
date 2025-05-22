@@ -1,5 +1,5 @@
-use crate::models_appdata::*;
-use crate::schema_appdata::suttas::dsl::*;
+use crate::db::appdata_models::*;
+use crate::db::appdata_schema::suttas::dsl::*;
 use diesel::prelude::*;
 
 use std::collections::{BTreeMap, HashMap};
@@ -8,20 +8,21 @@ use serde_json::Value;
 use regex::Regex;
 use anyhow::{anyhow, Context, Result};
 
+use crate::db::DbConn;
 use crate::helpers::bilara_text_to_segments;
 
 // Represents the application data and settings
 pub struct AppData {
-    pub db_conn: SqliteConnection,
+    pub db_conn: DbConn,
     // App settings can be HashMap, key order is not critical
     pub app_settings: HashMap<String, Value>,
     pub api_url: String,
 }
 
 impl AppData {
-    pub fn new(db_conn: SqliteConnection, app_settings: HashMap<String, Value>, api_url: String) -> Self {
+    pub fn new(appdata_db_conn: DbConn, app_settings: HashMap<String, Value>, api_url: String) -> Self {
         AppData {
-            db_conn,
+            db_conn: appdata_db_conn,
             app_settings,
             api_url,
         }
@@ -56,7 +57,7 @@ impl AppData {
         sutta: &Sutta,
         use_template: bool,
     ) -> Result<BTreeMap<String, String>> {
-        use crate::schema_appdata::{sutta_variants, sutta_comments, sutta_glosses};
+        use crate::db::appdata_schema::{sutta_variants, sutta_comments, sutta_glosses};
 
         let variant_record = sutta_variants::table
             .filter(sutta_variants::sutta_uid.eq(&sutta.uid))

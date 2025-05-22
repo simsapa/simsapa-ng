@@ -12,7 +12,7 @@ path = "src/lib.rs"
 [dependencies]
 chrono = "0.4.40"
 libsqlite3-sys = { version = "*", features = ["bundled"] }
-diesel = { version = "2.2.10", features = ["sqlite", "chrono", "returning_clauses_for_sqlite_3_35", "64-column-tables"] }
+diesel = { version = "2.2.10", features = ["sqlite", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35", "64-column-tables"] }
 dotenvy = "0.15.7"
 regex = "1.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -23,7 +23,7 @@ time = { version = "0.3.41", features = ["local-offset", "formatting", "macros"]
 app_dirs = { package = "app_dirs2", version = "2.5" }
 anyhow = "1.0"
 thiserror = "2.0"
-# v0.2.2 with public structs
-stardict = { git = "https://github.com/zangloo/stardict.git", rev = "0e446897bbc31ceae34051435a99f79ec28eb6ea", features = ["sqlite"] }
+stardict = { version = "0.2.2", features = ["sqlite"] }
 lazy_static = "1.5.0"
 html-escape = "0.2.13"
+parking_lot = "0.12.3"

@@ -4,7 +4,7 @@ use diesel::prelude::*;
 
 use stardict::{self, Ifo, WordDefinition};
 
-use crate::{helpers as h, models_dictionaries::NewDictWord};
+use crate::{db::DbManager, helpers as h, db::dictionaries_models::NewDictWord};
 
 /// Replaces bword:// links with ssp:// links.
 fn parse_bword_links_to_ssp(definition: &str) -> String {
@@ -159,7 +159,7 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
     words_to_insert
 }
 
-pub fn import_stardict_as_new(db_conn: &mut SqliteConnection,
+pub fn import_stardict_as_new(dbm: &DbManager,
                               unzipped_dir: &Path,
                               lang: &str,
                               new_dict_label: &str,
@@ -167,7 +167,7 @@ pub fn import_stardict_as_new(db_conn: &mut SqliteConnection,
                               delete_if_exists: bool,
                               limit: Option<usize>)
                               -> Result<(), String> {
-    use crate::models_dictionaries::NewDictionary;
+    use crate::db::dictionaries_models::NewDictionary;
     use crate::db;
 
     let ifo_path = unzipped_dir.join(format!("{}.ifo", new_dict_label));
@@ -178,7 +178,7 @@ pub fn import_stardict_as_new(db_conn: &mut SqliteConnection,
 
     if delete_if_exists {
         // Delete dictionary. Associated words are dropped due to cascade.
-        match db::delete_dictionary_by_label(db_conn, new_dict_label) {
+        match dbm.dictionaries.delete_dictionary_by_label(new_dict_label) {
             Ok(n) => println!("Deleted {} dictionary.", n),
             Err(e) => return Err(format!("Error deleting: {}", e)),
         };
@@ -196,7 +196,7 @@ pub fn import_stardict_as_new(db_conn: &mut SqliteConnection,
         version: None,
     };
 
-    let dictionary_id = match db::create_dictionary(db_conn, new_dict) {
+    let dictionary_id = match dbm.dictionaries.create_dictionary(new_dict) {
         Ok(x) => x.id,
         Err(e) => return Err(format!("{}", e)),
     };
@@ -217,12 +217,15 @@ pub fn import_stardict_as_new(db_conn: &mut SqliteConnection,
 
     println!("Inserting {} words into the database via batch...", words_to_insert.len());
 
+    let _lock = dbm.dictionaries.write_lock.lock();
+    let db_conn = &mut dbm.dictionaries.get_conn().map_err(|e| format!("{}", e))?;
+
     let insert_result = db_conn.transaction::<_, diesel::result::Error, _>(|transaction_conn| {
         let chunk_size = 5000;
         for chunk in words_to_insert.chunks(chunk_size) {
             println!("Inserting chunk of size {}", chunk.len());
             // Explicitly handle the result of the batch insert
-            let batch_result = db::create_dict_words_batch(transaction_conn, chunk);
+            let batch_result = db::dictionaries::create_dict_words_batch(transaction_conn, chunk);
             if let Err(err) = batch_result {
                 // If an error occurs, collect UIDs from the failed chunk
                 eprintln!("Batch insertion failed for chunk. Error: {}", err);

@@ -1,5 +1,5 @@
 use diesel::prelude::*;
-use crate::schema_dpd::*;
+use crate::db::dpd_schema::*;
 // use chrono::NaiveDateTime;
 
 use lazy_static::lazy_static;

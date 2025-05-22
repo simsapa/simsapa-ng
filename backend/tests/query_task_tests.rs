@@ -1,17 +1,20 @@
 use simsapa_backend::types::SearchArea;
 use simsapa_backend::query_task::SearchQueryTask;
+use simsapa_backend::db;
 
 mod helpers;
-use helpers::{appdata_db_setup, get_contains_params};
+use helpers as h;
 
 #[test]
 fn test_sutta_search_contains_match() {
-    appdata_db_setup();
-    let params = get_contains_params();
+    h::appdata_db_setup();
+    let dbm = db::get_dbm();
+    let params = h::get_contains_params();
 
     let query = "satipaṭṭhāna";
 
     let mut query_task = SearchQueryTask::new(
+        dbm,
         "en".to_string(),
         query.to_string(),
         params,

@@ -6,9 +6,9 @@ use std::str::FromStr;
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::models_appdata::Sutta;
-use crate::models_dictionaries::DictWord;
-use crate::models_dpd::{DpdHeadword, DpdRoot};
+use crate::db::appdata_models::Sutta;
+use crate::db::dictionaries_models::DictWord;
+use crate::db::dpd_models::{DpdHeadword, DpdRoot};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum QueryType {

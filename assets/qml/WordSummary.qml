@@ -68,7 +68,7 @@ Frame {
         // root.is_loading = true; TODO
         Qt.callLater(function() {
             let res;
-            deconstructor_model.clear()
+            deconstructor_model.clear();
             res = sb.dpd_deconstructor_list(query);
             for (let i=0; i < res.length; i++) {
                 deconstructor_model.append({ words_joined: res[i] });

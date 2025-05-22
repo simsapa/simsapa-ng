@@ -1,5 +1,6 @@
 use simsapa_backend::types::SearchArea;
 use simsapa_backend::query_task::SearchQueryTask;
+use simsapa_backend::db;
 
 mod helpers;
 use helpers as h;
@@ -7,11 +8,14 @@ use helpers as h;
 #[test]
 fn test_sutta_search_contains_match() {
     h::appdata_db_setup();
+    let dbm = db::get_dbm();
+
     let params = h::get_contains_params();
 
     let query = "satipaṭṭhāna";
 
     let mut query_task = SearchQueryTask::new(
+        dbm,
         "en".to_string(),
         query.to_string(),
         params,
@@ -33,11 +37,13 @@ fn test_sutta_search_contains_match() {
 #[test]
 fn test_dict_word_search_contains_match() {
     h::appdata_db_setup();
+    let dbm = db::get_dbm();
     let params = h::get_uid_params();
 
     let query = "awakening factor of enlightenment";
 
     let mut query_task = SearchQueryTask::new(
+        dbm,
         "en".to_string(),
         query.to_string(),
         params,
@@ -60,11 +66,13 @@ fn test_dict_word_search_contains_match() {
 #[test]
 fn test_dict_word_uid_match() {
     h::appdata_db_setup();
+    let dbm = db::get_dbm();
     let params = h::get_uid_params();
 
     let query = "satipaṭṭhāna 1/dpd";
 
     let mut query_task = SearchQueryTask::new(
+        dbm,
         "en".to_string(),
         query.to_string(),
         params,

@@ -1,11 +1,14 @@
 use std::env;
 
+use simsapa_backend::db;
 use simsapa_backend::types::{SearchMode, SearchParams};
 
 pub fn appdata_db_setup() {
     unsafe { env::set_var("SIMSAPA_DIR", "../../assets-testing/"); }
+    db::rust_backend_init_db();
 }
 
+#[allow(dead_code)]
 pub fn get_contains_params() -> SearchParams {
     SearchParams {
         mode: SearchMode::ContainsMatch,
@@ -19,6 +22,7 @@ pub fn get_contains_params() -> SearchParams {
     }
 }
 
+#[allow(dead_code)]
 pub fn get_uid_params() -> SearchParams {
     SearchParams {
         mode: SearchMode::UidMatch,

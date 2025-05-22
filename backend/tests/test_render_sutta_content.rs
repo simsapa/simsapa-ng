@@ -14,10 +14,12 @@ use helpers::appdata_db_setup;
 #[test]
 fn test_html_for_pali() {
     appdata_db_setup();
-    let sutta = db::get_sutta("mn2/pli/ms").expect("Can't get sutta from db");
 
-    let (db_conn, _, _) = db::establish_connection();
+    let dbm = db::get_dbm();
+    let sutta = dbm.appdata.get_sutta("mn2/pli/ms").expect("Can't get sutta from db");
+
     let settings = HashMap::new();
+    let db_conn = dbm.appdata.get_conn().expect("No appdata conn");
     let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
     let html = render_sutta_content(&mut app_data, &sutta, None, None).expect("Can't render the html");
@@ -32,10 +34,12 @@ fn test_html_for_pali() {
 #[test]
 fn test_line_by_line_with_variants() {
     appdata_db_setup();
-    let sutta = db::get_sutta("sn1.61/en/sujato").expect("Can't get sutta from db");
 
-    let (db_conn, _, _) = db::establish_connection();
+    let dbm = db::get_dbm();
+    let sutta = dbm.appdata.get_sutta("sn1.61/en/sujato").expect("Can't get sutta from db");
+
     let settings = HashMap::new();
+    let db_conn = dbm.appdata.get_conn().expect("No appdata conn");
     let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
 
     let html = render_sutta_content(&mut app_data, &sutta, None, None).expect("Can't render the html");

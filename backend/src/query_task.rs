@@ -7,12 +7,13 @@ use diesel::prelude::*;
 
 use crate::PAGE_LEN;
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
-use crate::helpers::consistent_niggahita;
-use crate::models_appdata::Sutta;
-use crate::models_dictionaries::DictWord;
-use crate::db;
+use crate::helpers::{consistent_niggahita, unique_search_results};
+use crate::db::appdata_models::Sutta;
+use crate::db::dictionaries_models::DictWord;
+use crate::db::{self, DbManager};
 
-pub struct SearchQueryTask {
+pub struct SearchQueryTask<'a> {
+    pub dbm: &'a DbManager,
     pub query_text: String,
     pub search_mode: SearchMode,
     pub search_area: SearchArea,
@@ -26,14 +27,16 @@ pub struct SearchQueryTask {
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
 
-impl SearchQueryTask {
+impl<'a> SearchQueryTask<'a> {
     pub fn new(
+        dbm: &'a DbManager,
         lang: String,
         query_text_orig: String,
         params: SearchParams,
         area: SearchArea,
     ) -> Self {
         SearchQueryTask {
+            dbm,
             query_text: consistent_niggahita(Some(query_text_orig)),
             search_mode: params.mode,
             search_area: area,
@@ -213,8 +216,9 @@ impl SearchQueryTask {
     }
 
     fn uid_sutta(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        use crate::schema_appdata::suttas::dsl::*;
-        let (db_conn, _, _) = &mut db::establish_connection();
+        use crate::db::appdata_schema::suttas::dsl::*;
+        let dbm = db::get_dbm();
+        let db_conn = &mut dbm.appdata.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
@@ -235,8 +239,9 @@ impl SearchQueryTask {
 
     fn uid_word(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // TODO: review details in query_task.py
-        use crate::schema_dictionaries::dict_words::dsl::*;
-        let (_, db_conn, _) = &mut db::establish_connection();
+        use crate::db::dictionaries_schema::dict_words::dsl::*;
+        let dbm = db::get_dbm();
+        let db_conn = &mut dbm.dictionaries.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
@@ -261,9 +266,10 @@ impl SearchQueryTask {
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // TODO: review details in query_task.py
-        use crate::schema_appdata::suttas::dsl::*;
+        use crate::db::appdata_schema::suttas::dsl::*;
 
-        let (conn, _, _) = &mut db::establish_connection();
+        let dbm = db::get_dbm();
+        let db_conn = &mut dbm.appdata.get_conn()?;
 
         // Box query for dynamic filtering
         let mut query = suttas.into_boxed();
@@ -311,7 +317,7 @@ impl SearchQueryTask {
         }
 
         // --- Count Total Hits ---
-        self.db_query_hits_count = count_query.select(diesel::dsl::count_star()).first(conn)?;
+        self.db_query_hits_count = count_query.select(diesel::dsl::count_star()).first(db_conn)?;
 
         // --- Apply Pagination ---
         let offset = (page_num * self.page_len) as i64;
@@ -319,7 +325,7 @@ impl SearchQueryTask {
 
         // --- Execute Query ---
         // println!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query));
-        let db_results: Vec<Sutta> = query.load::<Sutta>(conn)?;
+        let db_results: Vec<Sutta> = query.load::<Sutta>(db_conn)?;
 
         // --- Map to SearchResult ---
         let search_results = db_results
@@ -335,9 +341,10 @@ impl SearchQueryTask {
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // TODO: review details in query_task.py
-        use crate::schema_dictionaries::dict_words::dsl::*;
+        use crate::db::dictionaries_schema::dict_words::dsl::*;
 
-        let (_, conn, _) = &mut db::establish_connection();
+        let dbm = db::get_dbm();
+        let db_conn = &mut dbm.dictionaries.get_conn()?;
 
         let mut query = dict_words.into_boxed();
         let mut count_query = dict_words.into_boxed();
@@ -383,7 +390,7 @@ impl SearchQueryTask {
         }
 
         // --- Count Total Hits ---
-        self.db_query_hits_count = count_query.select(diesel::dsl::count_star()).first(conn)?;
+        self.db_query_hits_count = count_query.select(diesel::dsl::count_star()).first(db_conn)?;
 
         // --- Apply Pagination ---
         let offset = (page_num * self.page_len) as i64;
@@ -391,7 +398,7 @@ impl SearchQueryTask {
 
         // --- Execute Query ---
         // println!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query));
-        let db_results: Vec<DictWord> = query.load::<DictWord>(conn)?;
+        let db_results: Vec<DictWord> = query.load::<DictWord>(db_conn)?;
 
         // --- Map to SearchResult ---
         let search_results = db_results
@@ -409,9 +416,8 @@ impl SearchQueryTask {
             return Ok(Vec::new());
         }
 
-        let (_, _, db_conn) = &mut db::establish_connection();
-
-        let res_page = db::dpd_lookup(db_conn, &self.query_text, false, true)?;
+        let dbm = db::get_dbm();
+        let res_page = dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
 
         // FIXME implement paging in DPD lookup results.
         let limit_page = res_page[0..100].to_vec();
@@ -456,7 +462,7 @@ impl SearchQueryTask {
                 // res.extend(page_results);
 
                 // Deduplicate: unique by title, schema_name, and uid
-                Ok(db::unique_search_results(res))
+                Ok(unique_search_results(res))
             }
 
             SearchMode::UidMatch => {
@@ -523,6 +529,8 @@ mod tests {
     use crate::types::{SearchParams, SearchArea, SearchMode};
 
     fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQueryTask {
+        let dbm = db::get_dbm();
+
         let params = SearchParams {
             mode: search_mode,
             page_len: Some(PAGE_LEN),
@@ -535,6 +543,7 @@ mod tests {
         };
 
         SearchQueryTask::new(
+            dbm,
             "en".to_string(),
             query_text.to_string(),
             params,

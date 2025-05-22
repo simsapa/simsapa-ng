@@ -8,6 +8,7 @@ Frame {
     Layout.minimumHeight: 40
 
     required property bool is_wide
+    required property bool db_loaded
     required property var run_search_fn
     required property Timer debounce_timer
     required property Action incremental_search
@@ -27,13 +28,14 @@ Frame {
         // === Search Input ====
         TextField {
             id: search_input
+            enabled: root.db_loaded
             Layout.fillWidth: true
             Layout.preferredWidth: root.is_wide ? 500 : 250
             Layout.preferredHeight: 40
 
             focus: true
             font.pointSize: 12
-            placeholderText: qsTr("Search in suttas")
+            placeholderText: root.db_loaded ? "Search in suttas" : "Loading..."
 
             onAccepted: search_btn.clicked()
             onTextChanged: {
