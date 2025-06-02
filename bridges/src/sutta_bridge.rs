@@ -8,7 +8,7 @@ use cxx_qt_lib::{QString, QStringList};
 use cxx_qt::Threading;
 
 use simsapa_backend::query_task::SearchQueryTask;
-use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
+use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::app_data::AppData;
 use simsapa_backend::{db, API_URL, get_create_simsapa_app_root};
 use simsapa_backend::html_content::html_page;
@@ -42,8 +42,8 @@ pub mod qobject {
         fn load_db(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
-        #[cxx_name = "search"]
-        fn search(self: &SuttaBridge, query: &QString) -> QString;
+        #[cxx_name = "results_page"]
+        fn results_page(self: &SuttaBridge, query: &QString, page_num: usize) -> QString;
 
         #[qinvokable]
         #[cxx_name = "dpd_deconstructor_list"]
@@ -103,7 +103,10 @@ impl qobject::SuttaBridge {
         });
     }
 
-    pub fn search(&self, query: &QString) -> QString {
+    pub fn results_page(&self, query: &QString, page_num: usize) -> QString {
+        // FIXME: Can't store the query_task on SuttaBridgeRust
+        // because it SearchQueryTask includes &'a DbManager reference.
+        // Store only a connection pool?
         let dbm = db::get_dbm();
 
         let params = SearchParams {
@@ -117,6 +120,8 @@ impl qobject::SuttaBridge {
             fuzzy_distance: 0,
         };
 
+        // FIXME: We have to create a SearchQueryTask for each search until we
+        // can store it on SuttaBridgeRust.
         let mut query_task = SearchQueryTask::new(
             dbm,
             "en".to_string(),
@@ -125,7 +130,7 @@ impl qobject::SuttaBridge {
             SearchArea::Suttas,
         );
 
-        let results = match query_task.results_page(0) {
+        let results = match query_task.results_page(page_num) {
             Ok(x) => x,
             Err(s) => {
                 println!("{}", s);
@@ -133,7 +138,14 @@ impl qobject::SuttaBridge {
             }
         };
 
-        let json = serde_json::to_string(&results).unwrap_or_default();
+        let results_page = SearchResultPage {
+            total_hits: query_task.total_hits() as usize,
+            page_len: query_task.page_len as usize,
+            page_num,
+            results,
+        };
+
+        let json = serde_json::to_string(&results_page).unwrap_or_default();
         QString::from(json)
     }
 

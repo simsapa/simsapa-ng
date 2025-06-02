@@ -16,11 +16,12 @@ Frame {
         ComboBox {
             id: search_mode_dropdown
             Layout.preferredHeight: 40
+            // FIXME implement search types and pass it as SearchParams
             model: [
-                "Fulltext Match",
+                /* "Fulltext Match", */
                 "Contains Match",
-                "Title Match",
-                "RegEx Match",
+                /* "Title Match", */
+                /* "RegEx Match", */
             ]
         }
 

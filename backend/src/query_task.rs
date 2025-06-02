@@ -54,12 +54,14 @@ impl<'a> SearchQueryTask<'a> {
     /// Highlights occurrences of a single plain text query term in the content
     /// using regex.
     pub fn highlight_text(&self, term: &str, content: &str) -> Result<String, regex::Error> {
+        // Lowercase the term. Content should already be in lowercase.
+        let term = term.to_lowercase();
         // Escape regex special characters in the search term
-        let escaped_term = regex::escape(term);
+        let escaped_term = regex::escape(&term);
         // Content and term are expected to be lowercase, no need for case-insensitive matching.
         let pattern = format!("({})", escaped_term);
         let re = Regex::new(&pattern)?;
-        let highlighted = re.replace_all(content, "<span class='match'>$1</span>");
+        let highlighted = re.replace_all(&content, "<span class='match'>$1</span>");
         Ok(highlighted.into_owned())
     }
 
@@ -554,6 +556,14 @@ mod tests {
     #[test]
     fn test_highlight_text_simple() {
         let task = create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
+        let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
+        let highlighted = task.highlight_text(&task.query_text, content).unwrap();
+        assert_eq!(highlighted, "sīlaṁ nissāya sīle patiṭṭhāya cattāro <span class='match'>satipaṭṭhā</span>ne bhāveyyāsi");
+    }
+
+    #[test]
+    fn test_highlight_text_uppercase() {
+        let task = create_test_task("SATIpaṭṭhā", SearchMode::ContainsMatch);
         let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
         let highlighted = task.highlight_text(&task.query_text, content).unwrap();
         assert_eq!(highlighted, "sīlaṁ nissāya sīle patiṭṭhāya cattāro <span class='match'>satipaṭṭhā</span>ne bhāveyyāsi");

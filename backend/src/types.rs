@@ -197,3 +197,11 @@ impl SearchResult {
     }
 
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SearchResultPage {
+    pub total_hits: usize,
+    pub page_len: usize,
+    pub page_num: usize,
+    pub results: Vec<SearchResult>,
+}

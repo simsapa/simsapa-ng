@@ -7,8 +7,9 @@ Item {
         console.log("load_db()");
     }
 
-    function search(query: string) {
+    function results_page(query: string, page_num: int): string {
         console.log(query);
+        return "{}";
     }
 
     function get_sutta_html(window_id: string, query: string): string {

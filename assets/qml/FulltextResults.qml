@@ -24,13 +24,26 @@ ColumnLayout {
 
     readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 11 }
 
-    property var all_results: []
+    required property var new_results_page_fn
+
+    property var current_results: []
     property int page_len: 10
-    property int current_page: 1
-    property int total_pages: (all_results.length > 0 ? Math.ceil(all_results.length / page_len) : 1)
+    property int page_num: 0
+    property int total_hits: 0
+    property int total_pages: (total_hits > 0 ? Math.ceil(total_hits / page_len) : 1)
     property bool is_loading: false
     property alias currentIndex: fulltext_list.currentIndex
     property alias currentItem: fulltext_list.currentItem
+
+    function set_search_result_page(search_result_page) {
+        // SearchResultPage { total_hits, page_len, page_num, results }
+        let d = search_result_page;
+        root.total_hits = d.total_hits;
+        root.page_len = d.page_len;
+        root.page_num = d.page_num;
+        root.current_results = d.results;
+        root.update_page();
+    }
 
     function current_uid() {
         return results_model.get(fulltext_list.currentIndex).uid;
@@ -52,8 +65,11 @@ ColumnLayout {
             icon.source: "icons/32x32/fa_angle-left-solid.png"
             ToolTip.visible: hovered
             ToolTip.text: "Previous page of results"
-            enabled: root.current_page > 1
-            onClicked: { root.current_page--; root.update_page(); }
+            enabled: root.page_num > 0
+            onClicked: {
+                root.page_num--;
+                root.new_results_page_fn(root.page_num); // qmllint disable use-proper-function
+            }
         }
         Button {
             id: fulltext_next_btn
@@ -61,14 +77,17 @@ ColumnLayout {
             icon.source: "icons/32x32/fa_angle-right-solid.png"
             ToolTip.visible: hovered
             ToolTip.text: "Next page of results"
-            enabled: root.current_page < root.total_pages
-            onClicked: { root.current_page++; root.update_page(); }
+            enabled: root.page_num < root.total_pages
+            onClicked: {
+                root.page_num++;
+                root.new_results_page_fn(root.page_num); // qmllint disable use-proper-function
+            }
         }
 
         Label {
             id: fulltext_label
             // TODO: Use result count range: Showing a-b out of x
-            text: "Page " + root.current_page + " of " + root.total_pages
+            text: "Page " + (root.page_num+1) + " of " + root.total_pages
         }
 
         // Spacer
@@ -108,14 +127,11 @@ ColumnLayout {
         }
     }
 
-    // Paginate results into the model
     function update_page() {
         results_model.clear()
-        total_pages = (all_results.length > 0 ? Math.ceil(all_results.length / page_len) : 1)
-        var start = (current_page - 1) * page_len
-        var end = Math.min(start + page_len, all_results.length)
-        for (var i = start; i < end; ++i) {
-            var item = all_results[i]
+        root.total_pages = (root.total_hits > 0 ? Math.ceil(root.total_hits / root.page_len) : 1)
+        for (var i = 0; i < root.current_results.length; i++) {
+            var item = root.current_results[i];
             results_model.append({
                 index: i,
 

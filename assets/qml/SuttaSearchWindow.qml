@@ -29,7 +29,6 @@ ApplicationWindow {
     readonly property bool is_tall: root.height > 800
     readonly property bool is_mac: Qt.platform.os == "osx"
 
-    property var all_results: []
     property bool is_loading: false
 
     SuttaBridge {
@@ -57,20 +56,28 @@ ApplicationWindow {
         repeat: false
         onTriggered: {
             if (incremental_search.checked && search_bar_input.search_input.text.length >= 4) {
-                root.run_search(search_bar_input.search_input.text);
+                root.run_new_query(search_bar_input.search_input.text);
             }
         }
     }
 
-    function run_search(query) {
+    function run_new_query(query) {
+        root.results_page(query, 0);
+    }
+
+    function results_page(query, page_num) {
         root.is_loading = true;
         Qt.callLater(function() {
-            let json_res = sb.search(query);
-            root.all_results = JSON.parse(json_res);
-            fulltext_results.current_page = 1;
-            fulltext_results.update_page();
+            let json_res = sb.results_page(query, page_num);
+            let d = JSON.parse(json_res);
+            fulltext_results.set_search_result_page(d);
             root.is_loading = false;
         });
+    }
+
+    function new_results_page(page_num) {
+        let query = search_bar_input.search_input.text;
+        root.results_page(query, page_num);
     }
 
     function set_summary_query(query_text: string) {
@@ -359,7 +366,7 @@ ApplicationWindow {
                 id: search_bar_input
                 is_wide: root.is_wide
                 db_loaded: sb.db_loaded
-                run_search_fn: root.run_search
+                run_new_query_fn: root.run_new_query
                 debounce_timer: debounce_timer
                 incremental_search: incremental_search
             }
@@ -646,8 +653,8 @@ ApplicationWindow {
 
                             FulltextResults {
                                 id: fulltext_results
-                                all_results: root.all_results
                                 is_loading: root.is_loading
+                                new_results_page_fn: root.new_results_page
 
                                 function update_item() {
                                     let uid = fulltext_results.current_uid();
