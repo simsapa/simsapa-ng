@@ -4,12 +4,12 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-/* import data */
+/* import data // for qml preview */
 
 ColumnLayout {
     id: root
 
-    /* BojjhangaData { id: results_model } */
+    /* BojjhangaData { id: results_model } // for qml preview */
     ListModel { id: results_model }
 
     function select_previous_result() {
@@ -21,6 +21,8 @@ ColumnLayout {
         if (fulltext_list.currentIndex < fulltext_list.count - 1)
             fulltext_list.currentIndex++
     }
+
+    readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 11 }
 
     property var all_results: []
     property int page_len: 10
@@ -35,6 +37,7 @@ ColumnLayout {
     }
 
     RowLayout {
+        id: controls_row
         Layout.fillWidth: true
 
         SpinBox {
@@ -153,13 +156,10 @@ ColumnLayout {
         orientation: ListView.Vertical
 
         readonly property int item_padding: 10
-        readonly property int item_height: tm1.height + tm2.height*3 + item_padding*2
+        readonly property int item_height: root.tm1.height*4 + item_padding*2
 
-        readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 11; font.bold: true }
-        readonly property TextMetrics tm2: TextMetrics { text: "#"; font.pointSize: 11 }
-
-        Layout.preferredHeight: root.page_len * item_height
-        /* Layout.minimumWidth: contentItem.childrenRect.width + item_padding*2 */
+        // FIXME: can't get this ListView to resize to fill the available height
+        Layout.preferredHeight: 500
         Layout.fillWidth: true
 
         model: results_model
@@ -169,6 +169,7 @@ ColumnLayout {
         delegate: search_result_delegate
 
         ScrollBar.vertical: ScrollBar {
+            // AlwaysOn b/c mobile can't hover to show the bar
             policy: ScrollBar.AlwaysOn
             padding: 5
         }
@@ -220,11 +221,7 @@ ColumnLayout {
 
                 MouseArea {
                     anchors.fill: parent
-                    onClicked: {
-                        fulltext_list.currentIndex = result_item.index
-                        // Ensure it's visible if scrolled out
-                        fulltext_list.positionViewAtIndex(result_item, ListView.Visible)
-                    }
+                    onClicked: fulltext_list.currentIndex = result_item.index
                 }
 
                 ColumnLayout {

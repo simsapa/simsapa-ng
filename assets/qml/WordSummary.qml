@@ -8,11 +8,12 @@ import com.profoundlabs.simsapa
 
 Frame {
     id: root
-    Layout.fillWidth: true
-    Layout.minimumHeight: root.tm1.height*7
-    Layout.maximumHeight: Math.min(root.window_height*0.5, main_col.height)
-    visible: false
+    height: Math.min(root.window_height*0.5, min_height)
 
+    required property var handle_summary_close_fn
+
+    readonly property int item_padding: 4
+    property int min_height: summaries_model.count * (root.tm1.height*2 + item_padding*2) + 100
     required property int window_height
     readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 9; font.bold: true }
 
@@ -41,26 +42,24 @@ Frame {
     ListModel { id: summaries_model }
 
     // For qml preview
-    // ListModel {
-    //     id: deconstructor_model
-    //     ListElement { words_joined: "olokita + saññāṇena + eva" }
-    //     ListElement { words_joined: "olokita + saññāṇena + iva" }
-    // }
-    //
-    // ListModel {
-    //     id: summaries_model
-    //     ListElement { summary: "<b>olokita</b> pp. <b>looked at, inspected</b> [ava + √lok], pp of oloketi" }
-    //     ListElement { summary: "<b>saññāṇa 1</b> nt. <b>marking; signing</b> [saṁ + √ñā + aṇa], nt, act, from sañjānāti" }
-    //     ListElement { summary: "<b>saññāṇa 2</b> nt. <b>mental noting;</b> lit. marking [saṁ + √ñā + aṇa], nt, act, from sañjānāti" }
-    //     ListElement { summary: "<b>eva 1</b> ind. <b>only; just; merely; exclusively</b>, ind, emph" }
-    //     ListElement { summary: "<b>iva 1</b> ind. <b>like; as</b>, ind" }
-    // }
+    /* ListModel { */
+    /*     id: deconstructor_model */
+    /*     ListElement { words_joined: "olokita + saññāṇena + eva" } */
+    /*     ListElement { words_joined: "olokita + saññāṇena + iva" } */
+    /* } */
+    /* ListModel { */
+    /*     id: summaries_model */
+    /*     ListElement { summary: "<b>olokita</b> pp. <b>looked at, inspected</b> [ava + √lok], pp of oloketi" } */
+    /*     ListElement { summary: "<b>saññāṇa 1</b> nt. <b>marking; signing</b> [saṁ + √ñā + aṇa], nt, act, from sañjānāti" } */
+    /*     ListElement { summary: "<b>saññāṇa 2</b> nt. <b>mental noting;</b> lit. marking [saṁ + √ñā + aṇa], nt, act, from sañjānāti" } */
+    /*     ListElement { summary: "<b>eva 1</b> ind. <b>only; just; merely; exclusively</b>, ind, emph" } */
+    /*     ListElement { summary: "<b>iva 1</b> ind. <b>like; as</b>, ind" } */
+    /* } */
 
     function set_query(query: string) {
         if (query.length < 4) {
             return;
         }
-        root.visible = true;
         lookup_input.text = query;
     }
 
@@ -92,6 +91,7 @@ Frame {
         anchors.fill: parent
 
         RowLayout {
+            id: row_one
             TextField {
                 id: lookup_input
                 Layout.fillWidth: true
@@ -119,11 +119,12 @@ Frame {
                 Layout.preferredWidth: lookup_input.height
                 ToolTip.visible: hovered
                 ToolTip.text: "Close word summaries"
-                onClicked: root.visible = false
+                onClicked: root.handle_summary_close_fn() // qmllint disable use-proper-function
             }
         }
 
         RowLayout {
+            id: row_two
             visible: deconstructor_model.count > 0
             ComboBox {
                 textRole: "words_joined"
@@ -155,17 +156,17 @@ Frame {
             clip: true
             spacing: 0
 
-            readonly property int item_padding: 4
-            readonly property int item_height: root.tm1.height*2 + item_padding*2
+            readonly property int item_height: root.tm1.height*2 + root.item_padding*2
 
-            Layout.preferredHeight: summaries_model.count * item_height
+            // FIXME: can't get this ListView to resize to fill the available height
+            Layout.preferredHeight: root.height - row_one.height - row_two.height - item_height
             Layout.fillWidth: true
 
             model: summaries_model
             delegate: summaries_delegate
 
             ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AlwaysOn // FIXME doesn't scroll
+                policy: ScrollBar.AlwaysOn
                 padding: 5
             }
         }
@@ -183,7 +184,7 @@ Frame {
                 Frame {
                     id: item_frame
                     anchors.fill: parent
-                    padding: summaries_list.item_padding
+                    padding: root.item_padding
 
                     background: ListBackground {
                         results_list: summaries_list
@@ -192,11 +193,7 @@ Frame {
 
                     MouseArea {
                         anchors.fill: parent
-                        onClicked: {
-                            summaries_list.currentIndex = result_item.index
-                            // Ensure it's visible if scrolled out
-                            summaries_list.positionViewAtIndex(result_item, ListView.Visible)
-                        }
+                        onClicked: summaries_list.currentIndex = result_item.index
                     }
 
                     ColumnLayout {

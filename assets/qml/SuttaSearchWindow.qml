@@ -26,6 +26,7 @@ ApplicationWindow {
     /* readonly property bool is_mobile: true // for qml preview */
     readonly property bool is_desktop: !root.is_mobile
     readonly property bool is_wide: root.width > 600
+    readonly property bool is_tall: root.height > 800
     readonly property bool is_mac: Qt.platform.os == "osx"
 
     property var all_results: []
@@ -73,6 +74,7 @@ ApplicationWindow {
     }
 
     function set_summary_query(query_text: string) {
+        word_summary_wrap.visible = true;
         word_summary.set_query(query_text);
     }
 
@@ -569,22 +571,44 @@ ApplicationWindow {
                             }
                         }
 
-                        SuttaStackLayout {
-                            id: sutta_html_view_layout
-                            window_id: root.window_id
+                        SplitView {
+                            id: sutta_split
+                            orientation: Qt.Vertical
+
                             anchors.top: suttas_tab_bar.bottom
                             anchors.bottom: suttas_tab_container.bottom
                             anchors.left: suttas_tab_container.left
                             anchors.right: suttas_tab_container.right
-                        }
 
-                        WordSummary {
-                            id: word_summary
-                            window_height: root.height
-                            incremental_search_checked: incremental_search.checked
-                            anchors.bottom: suttas_tab_container.bottom
-                            anchors.left: suttas_tab_container.left
-                            anchors.right: suttas_tab_container.right
+                            Item {
+                                SplitView.preferredHeight: root.is_tall ? parent.height*0.7 : parent.height*0.5
+                                SplitView.preferredWidth: parent.width
+
+                                SuttaStackLayout {
+                                    id: sutta_html_view_layout
+                                    anchors.fill: parent
+                                    window_id: root.window_id
+                                }
+                            }
+
+                            Item {
+                                id: word_summary_wrap
+                                SplitView.preferredHeight: root.is_tall ? parent.height*0.3 : parent.height*0.5
+                                SplitView.preferredWidth: parent.width
+                                visible: false
+
+                                function handle_summary_close() {
+                                    word_summary_wrap.visible = false;
+                                }
+
+                                WordSummary {
+                                    id: word_summary
+                                    anchors.fill: parent
+                                    window_height: root.height
+                                    handle_summary_close_fn: word_summary_wrap.handle_summary_close
+                                    incremental_search_checked: incremental_search.checked
+                                }
+                            }
                         }
                     }
 

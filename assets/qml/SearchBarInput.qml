@@ -49,7 +49,7 @@ Frame {
             id: search_btn
             icon.source: "icons/32x32/bx_search_alt_2.png"
             enabled: search_input.text.length > 0
-            onClicked: root.run_search_fn(search_input.text)
+            onClicked: root.run_search_fn(search_input.text) // qmllint disable use-proper-function
             Layout.preferredHeight: 40
             Layout.preferredWidth: 40
         }
