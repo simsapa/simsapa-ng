@@ -5,7 +5,11 @@ use simsapa_backend::types::{SearchMode, SearchParams};
 
 pub fn appdata_db_setup() {
     unsafe { env::set_var("SIMSAPA_DIR", "../../assets-testing/"); }
-    db::rust_backend_init_db();
+
+    match db::DATABASE_MANAGER.get() {
+        Some(_) => {},
+        None => { db::rust_backend_init_db(); },
+    }
 }
 
 #[allow(dead_code)]

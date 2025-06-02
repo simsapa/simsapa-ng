@@ -158,7 +158,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
-        let blank_page_html = String::from("<!doctype html><html><head></head><body><h1>No sutta</h1></body></html>");
+        let blank_page_html = html_page("", None, None, None);
         if query.trimmed().is_empty() {
             return QString::from(blank_page_html);
         }

@@ -42,7 +42,7 @@ pub struct DbManager {
     pub dpd: DpdDbHandle,
 }
 
-static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
+pub static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
 
 impl DatabaseHandle {
     pub fn new(database_url: &str) -> Result<Self> {

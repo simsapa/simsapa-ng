@@ -305,12 +305,25 @@ fn parse_words(
                 } else {
                     &h.meaning_2
                 };
-                let snippet = format!("{} <b>·</b> <i>{}</i>", meaning, strip_html(&h.grammar));
+                let construction = if h.construction.is_empty() {
+                    " ".to_string()
+                } else {
+                    // The construction field can contain variations, separated by newlines
+                    // [na > a + saṁ + √ñā + ā + a], [asaññā + a]
+                    format!(" <b>[{}]</b> ", h.construction.replace("\n", "], ["))
+                };
+                let snippet = format!("<b>{}</b> ({}) {}{}<i>{}</i>",
+                                      h.word(),
+                                      h.pos,
+                                      meaning,
+                                      construction,
+                                      strip_html(&h.grammar));
                 res_page.push(SearchResult::from_dpd_headword(h, snippet));
             }
             UDpdWord::Root(r) => {
                 let snippet = format!(
-                    "{} <b>·</b> <i>{}</i>",
+                    "<b>{}</b> {} <b>·</b> <i>{}</i>",
+                    r.word(),
                     r.root_meaning,
                     root_info_clean_plaintext(&r.root_info)
                 );
