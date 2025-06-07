@@ -25,7 +25,8 @@ ApplicationWindow {
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     /* readonly property bool is_mobile: true // for qml preview */
     readonly property bool is_desktop: !root.is_mobile
-    readonly property bool is_wide: root.width > 600
+    // Make sure is_wide is not triggered on iPad portrait mode
+    readonly property bool is_wide: is_desktop ? (root.width > 600) : (root.width > 800)
     readonly property bool is_tall: root.height > 800
     readonly property bool is_mac: Qt.platform.os == "osx"
 
