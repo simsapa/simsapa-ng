@@ -7,8 +7,7 @@ WebView {
     id: web
     anchors.fill: parent
 
-    required property string window_id
-
+    property string window_id
     property string item_key
     property string sutta_uid
 
