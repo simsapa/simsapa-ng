@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
-// use std::sync::Arc;
+use std::sync::Arc;
 
 use http;
 use ureq;
@@ -17,7 +17,7 @@ use rocket_cors::CorsOptions;
 use simsapa_backend::{API_PORT, API_URL, get_create_simsapa_app_root, get_create_simsapa_appdata_db_path};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
-// use simsapa_backend::db::DbManager;
+use simsapa_backend::db::DbManager;
 
 #[cxx_qt::bridge]
 pub mod ffi {
@@ -125,16 +125,16 @@ fn shutdown(shutdown: Shutdown) {
 }
 
 
-// #[get("/get_sutta_html_by_uid/<uid..>")]
-// fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-//     let uid_str = uid.to_string_lossy();
-//     println!("get_sutta_html_by_uid(): {}", uid_str);
+#[get("/get_sutta_html_by_uid/<uid..>")]
+fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+    let uid_str = uid.to_string_lossy();
+    println!("get_sutta_html_by_uid(): {}", uid_str);
 
-//     match dbm.appdata.get_sutta(&uid_str) {
-//         Some(sutta) => Ok(RawHtml(format!("<p>Found: {}</p>", &sutta.uid))),
-//         None => Err((Status::NotFound, format!("Sutta Not Found"))),
-//     }
-// }
+    match dbm.appdata.get_sutta(&uid_str) {
+        Some(sutta) => Ok(RawHtml(format!("<p>Found: {}</p>", &sutta.uid))),
+        None => Err((Status::NotFound, format!("Sutta Not Found"))),
+    }
+}
 
 #[rocket::main]
 #[unsafe(no_mangle)]
@@ -142,8 +142,8 @@ pub async extern "C" fn start_webserver() {
     println!("start_webserver()");
     let assets_files: AssetsHandler = AssetsHandler::default();
 
-    // let dbm = DbManager::new().expect("Api: Can't create DbManager");
-    // let db_manager = Arc::new(dbm);
+    let dbm = DbManager::new().expect("Api: Can't create DbManager");
+    let db_manager = Arc::new(dbm);
 
     let cors = CorsOptions::default().to_cors().expect("Cors options error");
 
@@ -161,10 +161,10 @@ pub async extern "C" fn start_webserver() {
             serve_assets,
             lookup_window_query,
             summary_query,
-            // get_sutta_html_by_uid,
+            get_sutta_html_by_uid,
         ])
         .manage(assets_files)
-        // .manage(db_manager)
+        .manage(db_manager)
         .launch().await;
 }
 
