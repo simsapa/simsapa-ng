@@ -24,6 +24,8 @@ extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
 
+extern "C" int init_logger_c();
+
 struct AppGlobals {
     static WindowManager* manager;
 };
@@ -80,6 +82,8 @@ void start(int argc, char* argv[]) {
   //
   // The port is determined in start_webserver().
   std::thread daemon_server_thread(start_webserver);
+
+  init_logger_c();
 
   // app_windows = AppWindows(app, app_data, hotkeys_manager, enable_tray_icon)
 

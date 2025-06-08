@@ -8,6 +8,7 @@ pub mod dir_list;
 pub mod app_data;
 pub mod stardict_parse;
 pub mod pali_stemmer;
+pub mod logger;
 
 use std::fs::create_dir_all;
 use std::path::PathBuf;

@@ -10,7 +10,7 @@ name = "simsapa_backend"
 path = "src/lib.rs"
 
 [dependencies]
-chrono = "0.4.40"
+chrono = { version = "0.4", features = ["serde"] }
 libsqlite3-sys = { version = "*", features = ["bundled"] }
 diesel = { version = "2.2.10", features = ["sqlite", "r2d2", "chrono", "returning_clauses_for_sqlite_3_35", "64-column-tables"] }
 dotenvy = "0.15.7"
@@ -27,3 +27,13 @@ stardict = { version = "0.2.2", features = ["sqlite"] }
 lazy_static = "1.5.0"
 html-escape = "0.2.13"
 parking_lot = "0.12.3"
+cfg-if = "1.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = "0.15"
+log = "0.4"
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+colored = "3.0"
