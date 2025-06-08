@@ -25,6 +25,8 @@ extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
 
 extern "C" int init_logger_c();
+extern "C" void log_info_c(const char* msg);
+extern "C" void log_info_with_options_c(const char* msg, bool start_new);
 
 struct AppGlobals {
     static WindowManager* manager;
@@ -41,7 +43,8 @@ void callback_run_summary_query(QString window_id, QString query_text) {
 }
 
 void start(int argc, char* argv[]) {
-  std::cout << "gui::start()" << std::endl;
+  init_logger_c();
+  log_info_with_options_c("gui::start()", true);
 
   QString os(QSysInfo::productType());
 
@@ -82,8 +85,6 @@ void start(int argc, char* argv[]) {
   //
   // The port is determined in start_webserver().
   std::thread daemon_server_thread(start_webserver);
-
-  init_logger_c();
 
   // app_windows = AppWindows(app, app_data, hotkeys_manager, enable_tray_icon)
 

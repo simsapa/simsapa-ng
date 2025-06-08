@@ -21,10 +21,11 @@ use dotenvy::dotenv;
 use parking_lot::Mutex;
 use anyhow::{Context, Result, Error as AnyhowError};
 
+use crate::logger::info;
 use crate::db::appdata::AppdataDbHandle;
 use crate::db::dictionaries::DictionariesDbHandle;
 use crate::db::dpd::DpdDbHandle;
-use crate::get_create_simsapa_app_root;
+use crate::{get_create_simsapa_app_root, check_file_exists_print_err};
 
 pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 pub type DbConn = PooledConnection<ConnectionManager<SqliteConnection>>;
@@ -87,7 +88,7 @@ impl DatabaseHandle {
 
 impl DbManager {
     pub fn new() -> Result<Self> {
-        println!("DbManager::new()");
+        info("DbManager::new()");
 
         dotenv().ok();
 
@@ -101,6 +102,7 @@ impl DbManager {
                 }
             }
         };
+        info(&format!("simsapa_dir: {}", simsapa_dir.to_string_lossy()));
 
         let app_assets_dir = simsapa_dir.join("app-assets");
 
@@ -108,17 +110,11 @@ impl DbManager {
         let dict_db_path = app_assets_dir.join("dictionaries.sqlite3");
         let dpd_db_path = app_assets_dir.join("dpd.sqlite3");
 
-        if !appdata_db_path.exists() {
-            panic!("Appdata database file not found at expected location: {:?}", appdata_db_path);
-        }
-
-        if !dict_db_path.exists() {
-            panic!("Dictionary database file not found at expected location: {:?}", dict_db_path);
-        }
-
-        if !dpd_db_path.exists() {
-            panic!("Dictionary database file not found at expected location: {:?}", dpd_db_path);
-        }
+        // PathBuf::exists() can crash on Android due to permission restrictions,
+        // but no errors are reported.
+        let _ = check_file_exists_print_err(&appdata_db_path);
+        let _ = check_file_exists_print_err(&dict_db_path);
+        let _ = check_file_exists_print_err(&dpd_db_path);
 
         let appdata_abs_path = fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path);
         let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
@@ -138,10 +134,10 @@ impl DbManager {
 }
 
 pub fn rust_backend_init_db() -> bool {
-    println!("rust_backend_init_db() start");
+    info("rust_backend_init_db() start");
     let manager = DbManager::new().expect("Can't create DbManager");
     DATABASE_MANAGER.set(manager).unwrap();
-    println!("rust_backend_init_db() end");
+    info("rust_backend_init_db() end");
     true
 }
 
@@ -171,17 +167,11 @@ pub fn establish_connection() -> (SqliteConnection, SqliteConnection, SqliteConn
     let dict_db_path = app_assets_dir.join("dictionaries.sqlite3");
     let dpd_db_path = app_assets_dir.join("dpd.sqlite3");
 
-    if !appdata_db_path.exists() {
-        panic!("Appdata database file not found at expected location: {:?}", appdata_db_path);
-    }
-
-    if !dict_db_path.exists() {
-        panic!("Dictionary database file not found at expected location: {:?}", dict_db_path);
-    }
-
-    if !dpd_db_path.exists() {
-        panic!("Dictionary database file not found at expected location: {:?}", dpd_db_path);
-    }
+    // PathBuf::exists() can crash on Android due to permission restrictions,
+    // but no errors are reported.
+    let _ = check_file_exists_print_err(&appdata_db_path);
+    let _ = check_file_exists_print_err(&dict_db_path);
+    let _ = check_file_exists_print_err(&dpd_db_path);
 
     let appdata_abs_path = fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path);
     let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));

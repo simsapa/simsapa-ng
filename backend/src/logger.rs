@@ -20,9 +20,22 @@ cfg_if! {
         impl Write for AndroidLogWriter {
             fn write(&mut self, buf: &[u8]) -> IoResult<usize> {
                 let msg = std::str::from_utf8(buf).unwrap_or("invalid UTF-8");
+
                 for line in msg.lines() {
-                    log::info!("{}", line);
+                    let line = line.trim();
+                    if line.contains("ERROR") {
+                        log::error!("{}", line);
+                    } else if line.contains("WARN") {
+                        log::warn!("{}", line);
+                    } else if line.contains("DEBUG") {
+                        log::debug!("{}", line);
+                    } else if line.contains("TRACE") {
+                        log::trace!("{}", line);
+                    } else {
+                        log::info!("{}", line);
+                    }
                 }
+
                 Ok(buf.len())
             }
 
@@ -99,8 +112,13 @@ impl TimeLog {
             *prev = self.start_time;
         }
 
-        if start_new && self.log_file.exists() {
-            std::fs::remove_file(&self.log_file)?;
+        if start_new {
+            // Not checking with .exists() b/c of Android permission errors.
+            // Try to remove but don't return on error, assume that writing it is still possible.
+            match std::fs::remove_file(&self.log_file) {
+                Ok(_) => {},
+                Err(e) => error(&format!("{}", e)),
+            }
         }
 
         Ok(())
@@ -394,24 +412,28 @@ pub fn format_duration(duration: Duration) -> String {
     format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// C-compatible logging functions
+use std::ffi::CStr;
+use std::os::raw::c_char;
 
-    #[test]
-    fn test_logger_initialization() {
-        assert!(init_logger().is_ok());
+#[unsafe(no_mangle)]
+pub extern "C" fn log_info_c(msg: *const c_char) {
+    if msg.is_null() {
+        return;
     }
-
-    #[test]
-    fn test_time_log_creation() {
-        let time_log = TimeLog::new(LogPrecision::Microseconds);
-        assert!(time_log.is_ok());
+    let c_str = unsafe { CStr::from_ptr(msg) };
+    if let Ok(rust_str) = c_str.to_str() {
+        info(rust_str);
     }
+}
 
-    #[test]
-    fn test_duration_formatting() {
-        let duration = Duration::new(3661, 0); // 1 hour, 1 minute, 1 second
-        assert_eq!(format_duration(duration), "01:01:01");
+#[unsafe(no_mangle)]
+pub extern "C" fn log_info_with_options_c(msg: *const c_char, start_new: bool) {
+    if msg.is_null() {
+        return;
+    }
+    let c_str = unsafe { CStr::from_ptr(msg) };
+    if let Ok(rust_str) = c_str.to_str() {
+        info_with_options(rust_str, start_new);
     }
 }

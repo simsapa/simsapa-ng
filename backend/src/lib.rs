@@ -11,9 +11,10 @@ pub mod pali_stemmer;
 pub mod logger;
 
 use std::fs::create_dir_all;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::error::Error;
 use app_dirs::{get_app_root, AppDataType, AppInfo};
+use logger::error;
 
 pub static PAGE_LEN: usize = 10;
 
@@ -22,13 +23,28 @@ pub static API_URL: &'static str = "http://localhost:4848";
 
 pub const APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
 
+/// PathBuf::exists() can crash on Android due to permission restrictions.
+/// This function only returns Ok(true), false is turned into an error message.
+fn check_file_exists_print_err<P: AsRef<Path>>(path: P) -> Result<bool, Box<dyn Error>> {
+    let path_ref = path.as_ref();
+    let exists = path_ref.try_exists()?;
+
+    if !exists {
+        let msg = format!("File doesn't exist: {}", path_ref.display());
+        error(&msg);
+        return Err(msg.into());
+    }
+
+    Ok(true)
+}
+
 pub fn get_create_simsapa_app_root() -> Result<PathBuf, Box<dyn Error>> {
     // AppDataType::UserData
     // - Android: /data/user/0/com.profoundlabs.simsapa/files/.local/share/simsapa-ng
     // AppDataType::UserConfig
     // - Android: /data/user/0/com.profoundlabs.simsapa/files/.config/simsapa-ng
     let p = get_app_root(AppDataType::UserData, &APP_INFO)?;
-    if !p.exists() {
+    if !p.try_exists()? {
         create_dir_all(&p)?;
     }
     Ok(p)
@@ -36,9 +52,14 @@ pub fn get_create_simsapa_app_root() -> Result<PathBuf, Box<dyn Error>> {
 
 pub fn get_create_simsapa_app_assets_path() -> PathBuf {
     let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from(".")).join("app-assets/");
-    if !p.exists() {
-        let _ = create_dir_all(&p);
+
+    match p.try_exists() {
+        Ok(r) => if !r {
+            let _ = create_dir_all(&p);
+        }
+        Err(e) => error(&format!("{}", e)),
     }
+
     p
 }
 
@@ -48,7 +69,13 @@ pub fn get_create_simsapa_appdata_db_path() -> PathBuf {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn appdata_db_exists() -> bool {
-    get_create_simsapa_appdata_db_path().exists()
+    match get_create_simsapa_appdata_db_path().try_exists() {
+        Ok(r) => r,
+        Err(e) => {
+            error(&format!("{}", e));
+            false
+        },
+    }
 }
 
 #[unsafe(no_mangle)]
