@@ -8,6 +8,7 @@ StackLayout {
     required property string window_id
     property string current_key: ""
     property var items_map: ({})
+    property bool is_drawer_menu_open: false
 
     Component {
         id: sutta_html_component
@@ -17,11 +18,13 @@ StackLayout {
             window_id: root.window_id
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // focus: true
+            // Hide the webview when the drawer menu is open. The mobile webview
+            // is always on top, obscuring the drawer menu.
+            visible: !root.is_drawer_menu_open
 
             property int index
-            Component.onCompleted: console.log("SuttaHtmlView created at index", html_view.index)
-            Component.onDestruction: console.log("SuttaHtmlView destroyed at index", html_view.index)
+            /* Component.onCompleted: console.log("SuttaHtmlView created at index", html_view.index) */
+            /* Component.onDestruction: console.log("SuttaHtmlView destroyed at index", html_view.index) */
         }
     }
 

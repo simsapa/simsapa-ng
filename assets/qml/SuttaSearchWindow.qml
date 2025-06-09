@@ -596,6 +596,7 @@ ApplicationWindow {
                                     id: sutta_html_view_layout
                                     anchors.fill: parent
                                     window_id: root.window_id
+                                    is_drawer_menu_open: mobile_menu.activeFocus
                                 }
                             }
 
