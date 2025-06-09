@@ -15,6 +15,7 @@ use crate::get_create_simsapa_app_assets_path;
 use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext};
 use crate::pali_stemmer::pali_stem;
 use crate::types::SearchResult;
+use crate::logger::{info, error};
 
 pub type DpdDbHandle = DatabaseHandle;
 
@@ -107,7 +108,7 @@ impl DpdDbHandle {
             }
 
             Err(e) => {
-                println!("ERROR: {}", e);
+                error(&format!("{}", e));
                 Vec::new()
             }
         }
@@ -269,7 +270,7 @@ impl DpdDbHandle {
             }
 
             Err(e) => {
-                println!("ERROR: {}", e);
+                error(&format!("{}", e));
                 Vec::new()
             }
         }
@@ -396,7 +397,7 @@ struct ColumnInfo {
 
 /// Iterates through all tables and text columns to replace 'ṃ' with 'ṁ'.
 pub fn replace_all_niggahitas(db_conn: &mut SqliteConnection) -> Result<(), diesel::result::Error> {
-    println!("replace_all_niggahitas()");
+    info("replace_all_niggahitas()");
 
     // Avoid "FOREIGN KEY constraint failed" errors when updating columns that
     // might be part of a foreign key relationship.
@@ -438,7 +439,7 @@ pub fn replace_all_niggahitas(db_conn: &mut SqliteConnection) -> Result<(), dies
 
 /// Update the DPD db schema to agree with Diesel dpd_models.rs
 pub fn dpd_update_schema(db_conn: &mut SqliteConnection) -> Result<(), diesel::result::Error> {
-    println!("dpd_update_schema()");
+    info("dpd_update_schema()");
     db_conn.transaction::<_, diesel::result::Error, _>(|conn| {
         // Remove some columns.
         diesel::sql_query("ALTER TABLE dpd_headwords DROP COLUMN created_at;").execute(conn)?;
@@ -484,7 +485,7 @@ pub fn dpd_update_schema(db_conn: &mut SqliteConnection) -> Result<(), diesel::r
 /// Performs schema changes and data migrations for DPD tables.
 pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
                    -> Result<(), diesel::result::Error> {
-    println!("migrate_dpd()");
+    info("migrate_dpd()");
 
     let abs_path = fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf());
     let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
@@ -497,7 +498,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
 
     use crate::db::dpd_schema::{dpd_headwords, dpd_roots};
 
-    println!("Updating dictionary_id ...");
+    info("Updating dictionary_id ...");
 
     let abs_path = fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf());
     let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
@@ -516,7 +517,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
         Ok(())
     })?; // End of transaction
 
-    println!("Updating dpd_headwords ...");
+    info("Updating dpd_headwords ...");
 
     // Update DpdHeadwords calculated fields
     db_conn.transaction::<_, diesel::result::Error, _>(|conn| {
@@ -539,7 +540,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
         Ok(())
     })?;
 
-    println!("Updating dpd_roots ...");
+    info("Updating dpd_roots ...");
 
     // Update DpdRoots calculated fields
     db_conn.transaction::<_, diesel::result::Error, _>(|conn| {

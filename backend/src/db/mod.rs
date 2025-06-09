@@ -47,7 +47,7 @@ pub static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
 
 impl DatabaseHandle {
     pub fn new(database_url: &str) -> Result<Self> {
-        println!("DatabaseHandle::new() {}", database_url);
+        info(&format!("DatabaseHandle::new() {}", database_url));
         let manager = ConnectionManager::new(database_url);
         let pool = Pool::builder()
             .max_size(5)
@@ -147,7 +147,7 @@ pub fn get_dbm() -> &'static DbManager {
 
 /// Returns connections as a tuple to appdata.sqlite3, dictionaries.sqlite3, dpd.sqlite3
 pub fn establish_connection() -> (SqliteConnection, SqliteConnection, SqliteConnection) {
-    println!("establish_connection()");
+    info("establish_connection()");
     dotenv().ok();
 
     let simsapa_dir = match env::var("SIMSAPA_DIR") {

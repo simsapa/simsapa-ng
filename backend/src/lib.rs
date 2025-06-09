@@ -14,6 +14,8 @@ use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};
 use std::error::Error;
 use app_dirs::{get_app_root, AppDataType, AppInfo};
+use dotenvy::dotenv;
+
 use logger::error;
 
 pub static PAGE_LEN: usize = 10;
@@ -81,4 +83,10 @@ pub extern "C" fn appdata_db_exists() -> bool {
 #[unsafe(no_mangle)]
 pub extern "C" fn rust_backend_init_db() -> bool {
     db::rust_backend_init_db()
+}
+
+
+#[unsafe(no_mangle)]
+pub extern "C" fn dotenv_c() {
+    dotenv().ok();
 }

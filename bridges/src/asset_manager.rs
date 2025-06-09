@@ -12,6 +12,7 @@ use bzip2::read::BzDecoder;
 use tar::Archive;
 
 use simsapa_backend::get_create_simsapa_app_assets_path;
+use simsapa_backend::logger::info;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -59,7 +60,7 @@ pub struct AssetManagerRust;
 
 impl qobject::AssetManager {
     fn download_urls(self: Pin<&mut Self>, urls: QStringList) {
-        println!("download_urls(): {}", urls.len());
+        info(&format!("download_urls(): {}", urls.len()));
 
         let qt_thread = self.qt_thread();
 

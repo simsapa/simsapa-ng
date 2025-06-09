@@ -4,7 +4,10 @@ use diesel::prelude::*;
 
 use stardict::{self, Ifo, WordDefinition};
 
-use crate::{db::DbManager, helpers as h, db::dictionaries_models::NewDictWord};
+use crate::db::DbManager;
+use crate::db::dictionaries_models::NewDictWord;
+use crate::helpers as h;
+use crate::logger::{info, warn, error};
 
 /// Replaces bword:// links with ssp:// links.
 fn parse_bword_links_to_ssp(definition: &str) -> String {
@@ -100,19 +103,19 @@ fn parse_word(word_def: &WordDefinition) -> DictEntry {
                 break;
             }
             _ => {
-                eprintln!(
+                warn(&format!(
                     "Segment type '{}' is not handled for word '{}'",
                     segment.types, parsed_data.word
-                );
+                ));
             }
         }
     }
 
     if parsed_data.definition_plain.is_none() && parsed_data.definition_html.is_none() {
-        eprintln!(
-            "[WARN] No 'm' or 'h' type definition found for word: {}",
+        warn(&format!(
+            "No 'm' or 'h' type definition found for word: {}",
             parsed_data.word
-        );
+        ));
     }
 
     // TODO: handle synonyms
@@ -147,10 +150,10 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
                 words_to_insert.push(db_entries(&dict_entry, dictionary_id, new_dict_label, lang));
             }
             Ok(None) => {
-                eprintln!("[WARN] No definitions found for index entry: {}", word);
+                warn(&format!("No definitions found for index entry: {}", word));
             }
             Err(e) => {
-                eprintln!("[ERROR] Failed to get definition for {}: {}", word, e);
+                error(&format!("Failed to get definition for {}: {}", word, e));
                 // Decide whether to stop or continue; here we continue
             }
         }
@@ -179,7 +182,7 @@ pub fn import_stardict_as_new(dbm: &DbManager,
     if delete_if_exists {
         // Delete dictionary. Associated words are dropped due to cascade.
         match dbm.dictionaries.delete_dictionary_by_label(new_dict_label) {
-            Ok(n) => println!("Deleted {} dictionary.", n),
+            Ok(n) => info(&format!("Deleted {} dictionary.", n)),
             Err(e) => return Err(format!("Error deleting: {}", e)),
         };
     }
@@ -209,13 +212,13 @@ pub fn import_stardict_as_new(dbm: &DbManager,
         Err(e) => return Err(format!("Error loading stardict dictionary: {}", e)),
     };
 
-    println!("Importing {}, {} total entries ...", &ifo.bookname, dict.idx.items.len());
+    info(&format!("Importing {}, {} total entries ...", &ifo.bookname, dict.idx.items.len()));
 
     let words_to_insert = parse_dict(&mut dict, dictionary_id, new_dict_label, lang, limit);
 
-    println!("Inserting {} ...", words_to_insert.len());
+    info(&format!("Inserting {} ...", words_to_insert.len()));
 
-    println!("Inserting {} words into the database via batch...", words_to_insert.len());
+    info(&format!("Inserting {} words into the database via batch...", words_to_insert.len()));
 
     let _lock = dbm.dictionaries.write_lock.lock();
     let db_conn = &mut dbm.dictionaries.get_conn().map_err(|e| format!("{}", e))?;
@@ -223,16 +226,16 @@ pub fn import_stardict_as_new(dbm: &DbManager,
     let insert_result = db_conn.transaction::<_, diesel::result::Error, _>(|transaction_conn| {
         let chunk_size = 5000;
         for chunk in words_to_insert.chunks(chunk_size) {
-            println!("Inserting chunk of size {}", chunk.len());
+            info(&format!("Inserting chunk of size {}", chunk.len()));
             // Explicitly handle the result of the batch insert
             let batch_result = db::dictionaries::create_dict_words_batch(transaction_conn, chunk);
             if let Err(err) = batch_result {
                 // If an error occurs, collect UIDs from the failed chunk
-                eprintln!("Batch insertion failed for chunk. Error: {}", err);
+                error(&format!("Batch insertion failed for chunk. Error: {}", err));
                 // let failed_uids: Vec<String> = chunk.iter()
                 //                                     .map(|word| word.uid.clone())
                 //                                     .collect();
-                // eprintln!("UIDs in failing chunk: {:?}", failed_uids);
+                // error(&format!("UIDs in failing chunk: {:?}", failed_uids));
                 // Return the error to roll back the transaction
                 return Err(err);
             }
@@ -249,7 +252,7 @@ pub fn import_stardict_as_new(dbm: &DbManager,
         }
     }
 
-    println!("Import finished for '{}'.", &ifo.bookname);
+    info(&format!("Import finished for '{}'.", &ifo.bookname));
 
     Ok(())
 }

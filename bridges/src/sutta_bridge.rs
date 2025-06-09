@@ -15,7 +15,7 @@ use simsapa_backend::html_content::html_page;
 use simsapa_backend::export_helpers::render_sutta_content;
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
-use simsapa_backend::logger::info;
+use simsapa_backend::logger::{info, error};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -95,13 +95,14 @@ impl Default for SuttaBridgeRust {
 
 impl qobject::SuttaBridge {
     pub fn load_db(self: Pin<&mut Self>) {
-        info("SuttaBridge::load_db()");
+        info("SuttaBridge::load_db() start");
         let qt_thread = self.qt_thread();
         thread::spawn(move || {
             let r = db::rust_backend_init_db();
             qt_thread.queue(move |mut qo| {
                 qo.as_mut().set_db_loaded(r);
             }).unwrap();
+            info("SuttaBridge::load_db() end");
         });
     }
 
@@ -134,8 +135,8 @@ impl qobject::SuttaBridge {
 
         let results = match query_task.results_page(page_num) {
             Ok(x) => x,
-            Err(s) => {
-                println!("{}", s);
+            Err(e) => {
+                error(&format!("{}", e));
                 return QString::from("");
             }
         };

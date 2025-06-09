@@ -5,6 +5,7 @@ use regex::Regex;
 use crate::db::get_dbm;
 use crate::db::appdata_models::*;
 use crate::db::DatabaseHandle;
+use crate::logger::{info, error};
 
 pub type AppdataDbHandle = DatabaseHandle;
 
@@ -23,7 +24,7 @@ impl AppdataDbHandle {
         match sutta {
             Ok(x) => x,
             Err(e) => {
-                eprintln!("{}", e);
+                error(&format!("{}", e));
                 None
             },
         }
@@ -72,7 +73,7 @@ pub fn delete_sutta() {
         .execute(db_conn)
         .expect("Error deleting suttas");
 
-    println!("Deleted {} suttas", num_deleted);
+    info(&format!("Deleted {} suttas", num_deleted));
 }
 
 fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {

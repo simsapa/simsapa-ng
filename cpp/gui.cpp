@@ -1,4 +1,4 @@
-#include <iostream>
+#include <sstream>
 #include <thread>
 
 #include <QUrl>
@@ -23,7 +23,7 @@
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
-
+extern "C" void dotenv_c();
 extern "C" int init_logger_c();
 extern "C" void log_info_c(const char* msg);
 extern "C" void log_info_with_options_c(const char* msg, bool start_new);
@@ -43,6 +43,7 @@ void callback_run_summary_query(QString window_id, QString query_text) {
 }
 
 void start(int argc, char* argv[]) {
+  dotenv_c();
   init_logger_c();
   log_info_with_options_c("gui::start()", true);
 
@@ -90,7 +91,7 @@ void start(int argc, char* argv[]) {
 
   // setup_system_tray();
 
-  std::cout << "setup_system_tray(): start" << std::endl;
+  log_info_c("setup_system_tray(): start");
   QSystemTrayIcon tray = QSystemTrayIcon(QIcon(":/qt/qml/com/profoundlabs/simsapa/assets/qml/icons/32x32/simsapa-tray.png"), &app);
   tray.setVisible(true);
 
@@ -103,7 +104,7 @@ void start(int argc, char* argv[]) {
 
   tray.setContextMenu(menu);
 
-  std::cout << "setup_system_tray(): end" << std::endl;
+  log_info_c("setup_system_tray(): end");
 
   // Determine if this is the first start and we need to open
   // DownloadAppdataWindow instead of the main app.
@@ -126,12 +127,14 @@ void start(int argc, char* argv[]) {
     // AppGlobals::manager->create_word_lookup_window("hey ho");
   }
 
-  std::cout << "app.exec()" << std::endl;
+  log_info_c("app.exec()");
   int status = app.exec();
 
   shutdown_webserver();
   if (daemon_server_thread.joinable()) {
     daemon_server_thread.join();
   }
-  std::cout << "Exiting with status " << status << "." << std::endl;
+  std::ostringstream msg;
+  msg << "Exiting with status " << status << ".";
+  log_info_c(msg.str().c_str());
 }

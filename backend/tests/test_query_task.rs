@@ -57,7 +57,7 @@ fn test_dict_word_search_contains_match() {
         }
     };
 
-    println!("{}", results[0].snippet);
+    // println!("{}", results[0].snippet);
 
     assert_eq!(results[0].uid, "sambojjhaṅga/dpd");
     assert!(results[0].snippet.starts_with("masc element of <span class='match'>awakening factor of enlightenment</span>"));
@@ -86,7 +86,7 @@ fn test_dict_word_uid_match() {
         }
     };
 
-    println!("{}", results[0].snippet);
+    // println!("{}", results[0].snippet);
 
     assert_eq!(results[0].uid, "satipaṭṭhāna 1/dpd");
     assert!(results[0].snippet.starts_with("masc attending mindfully being present with mindfulness [sati + upaṭṭhāna]"));

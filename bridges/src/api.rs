@@ -18,6 +18,7 @@ use simsapa_backend::{API_PORT, API_URL, get_create_simsapa_app_root, get_create
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
+use simsapa_backend::logger::{info, error};
 
 #[cxx_qt::bridge]
 pub mod ffi {
@@ -121,14 +122,14 @@ fn index() -> RawHtml<String> {
 #[get("/shutdown")]
 fn shutdown(shutdown: Shutdown) {
     shutdown.notify();
-    println!("Webserver shutting down...")
+    info("Webserver shutting down...")
 }
 
 
 #[get("/get_sutta_html_by_uid/<uid..>")]
 fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
     let uid_str = uid.to_string_lossy();
-    println!("get_sutta_html_by_uid(): {}", uid_str);
+    info(&format!("get_sutta_html_by_uid(): {}", uid_str));
 
     match dbm.appdata.get_sutta(&uid_str) {
         Some(sutta) => Ok(RawHtml(format!("<p>Found: {}</p>", &sutta.uid))),
@@ -139,7 +140,7 @@ fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<Ra
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
-    println!("start_webserver()");
+    info("start_webserver()");
     let assets_files: AssetsHandler = AssetsHandler::default();
 
     let dbm = DbManager::new().expect("Api: Can't create DbManager");
@@ -173,14 +174,14 @@ pub extern "C" fn shutdown_webserver() {
     match ureq::get(format!("{}/shutdown", API_URL)).call() {
         Ok(mut resp) => {
             match resp.body_mut().read_to_string() {
-                Ok(body) => { println!("{}", body); }
-                Err(_) => { println!("Response error."); }
+                Ok(body) => { info(&body); }
+                Err(_) => { error("Response error."); }
             }
         },
         Err(ureq::Error::StatusCode(code)) => {
-            println!("Error {}", code);
+            error(&format!("Error {}", code));
         }
-        Err(_) => { println!("Error response from webserver shutdown."); }
+        Err(_) => { error("Error response from webserver shutdown."); }
     }
 }
 
@@ -213,14 +214,14 @@ pub extern "C" fn download_small_database() {
     // Check and create directory
     let dir_error = create_parent_directory(&save_path);
     if !dir_error.is_empty() {
-        eprintln!("{}", dir_error);
+        error(&dir_error);
         return;
     }
 
     match ureq::get(url).call() {
         Ok(mut response) => {
             if response.status() != http::StatusCode::OK {
-                eprintln!("HTTP request failed with status {}", response.status());
+                error(&format!("HTTP request failed with status {}", response.status()));
                 return;
             }
 
@@ -228,17 +229,17 @@ pub extern "C" fn download_small_database() {
             match response.body_mut().read_to_vec() {
                 Ok(buffer) => {
                     let resp = save_to_file(&buffer, &save_path);
-                    println!("{}", resp);
+                    info(&resp);
                     return;
                 },
                 Err(e) => {
-                    eprintln!("Failed to read to vec: {}", e);
+                    error(&format!("Failed to read to vec: {}", e));
                     return;
                 }
             }
         },
         Err(e) => {
-            eprintln!("HTTP request failed: {}", e);
+            error(&format!("HTTP request failed: {}", e));
             return;
         },
     };
@@ -250,25 +251,25 @@ pub extern "C" fn shutdown_webserver_tcp() {
         Ok(mut connection) => {
             // Set a timeout of 5 seconds
             if let Err(e) = connection.set_read_timeout(Some(Duration::from_secs(5))) {
-                eprintln!("Error setting timeout: {}", e);
+                error(&format!("Error setting timeout: {}", e));
             }
 
             // Construct and send the HTTP GET request
             let request = format!("GET /shutdown HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
             if let Err(e) = connection.write_all(request.as_bytes()) {
-                eprintln!("Error sending request: {}", e);
+                error(&format!("Error sending request: {}", e));
             }
 
             // Read the response
             let mut response = String::new();
             if let Err(e) = connection.read_to_string(&mut response) {
-                eprintln!("Error reading response: {}", e);
+                error(&format!("Error reading response: {}", e));
             }
 
-            println!("{}", response);
+            info(&response);
         }
         Err(e) => {
-            eprintln!("Error connecting to server: {}", e);
+            error(&format!("Error connecting to server: {}", e));
         }
     }
 }

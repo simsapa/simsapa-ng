@@ -1,9 +1,11 @@
 use diesel::prelude::*;
-use crate::db::dpd_schema::*;
 // use chrono::NaiveDateTime;
 
 use lazy_static::lazy_static;
 use regex::Regex;
+
+use crate::db::dpd_schema::*;
+use crate::logger::{warn, error};
 
 #[derive(Debug, Clone)]
 pub enum UDpdWord {
@@ -148,16 +150,16 @@ pub struct Lookup {
 impl Lookup {
     pub fn headwords_unpack(&self) -> Vec<i32> {
         if self.headwords.is_empty() {
-            println!("WARN: headwords empty for lookup_key: {}", self.lookup_key);
+            warn(&format!("headwords empty for lookup_key: {}", self.lookup_key));
             return Vec::new();
         }
         let res: Vec<i32> = match serde_json::from_str(&self.headwords) {
             Ok(x) => x,
             Err(e) => {
-                println!("ERROR: Cannot parse headwords on lookup_key: {}\n'{}'\n'{}'",
+                error(&format!("Cannot parse headwords on lookup_key: {}\n'{}'\n'{}'",
                          e,
                          &self.lookup_key,
-                         &self.headwords);
+                         &self.headwords));
                 Vec::new()
             }
         };
@@ -167,16 +169,16 @@ impl Lookup {
 
     pub fn deconstructor_unpack(&self) -> Vec<String> {
         if self.deconstructor.is_empty() {
-            println!("WARN: deconstructor empty for lookup_key: {}", self.lookup_key);
+            warn(&format!("deconstructor empty for lookup_key: {}", self.lookup_key));
             return Vec::new();
         }
         let res: Vec<String> = match serde_json::from_str(&self.deconstructor) {
             Ok(x) => x,
             Err(e) => {
-                println!("ERROR: Cannot parse deconstructor on lookup_key: {}\n'{}'\n'{}'",
+                error(&format!("ERROR: Cannot parse deconstructor on lookup_key: {}\n'{}'\n'{}'",
                          e,
                          &self.lookup_key,
-                         &self.deconstructor);
+                         &self.deconstructor));
                 Vec::new()
             }
         };

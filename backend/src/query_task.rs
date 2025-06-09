@@ -11,6 +11,7 @@ use crate::helpers::{consistent_niggahita, unique_search_results};
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
 use crate::db::{self, DbManager};
+use crate::logger::error;
 
 pub struct SearchQueryTask<'a> {
     pub dbm: &'a DbManager,
@@ -79,7 +80,7 @@ impl<'a> SearchQueryTask<'a> {
             match self.highlight_text(term, &current_content) {
                 Ok(highlighted) => current_content = highlighted,
                 Err(e) => {
-                    eprintln!("Regex error during highlighting: {}", e);
+                    error(&format!("Regex error during highlighting: {}", e));
                     // Skip the term.
                     continue;
                 }
@@ -188,7 +189,7 @@ impl<'a> SearchQueryTask<'a> {
              }
         }
 
-        eprintln!("Can't create fragment, query not found: {}", query);
+        error(&format!("Can't create fragment, query not found: {}", query));
 
         // If no terms are found, return the beginning of the content
         self.fragment_around_text("", content, before, after)
@@ -326,7 +327,7 @@ impl<'a> SearchQueryTask<'a> {
         query = query.offset(offset).limit(self.page_len as i64);
 
         // --- Execute Query ---
-        // println!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query));
+        // info(&format!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query)));
         let db_results: Vec<Sutta> = query.load::<Sutta>(db_conn)?;
 
         // --- Map to SearchResult ---
@@ -399,7 +400,7 @@ impl<'a> SearchQueryTask<'a> {
         query = query.offset(offset).limit(self.page_len as i64);
 
         // --- Execute Query ---
-        // println!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query));
+        // info(&format!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query)));
         let db_results: Vec<DictWord> = query.load::<DictWord>(db_conn)?;
 
         // --- Map to SearchResult ---
@@ -491,7 +492,7 @@ impl<'a> SearchQueryTask<'a> {
 
             _ => {
                 // FIXME: implement later
-                eprintln!("Search mode {:?} not yet implemented.", self.search_mode);
+                error(&format!("Search mode {:?} not yet implemented.", self.search_mode));
                 // Reset count and return empty for unimplemented modes for now
                 self.db_query_hits_count = 0;
                 Ok(Vec::new())
