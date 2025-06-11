@@ -16,6 +16,7 @@ struct TmplContext {
     js_body: String,
     icons_html: String,
     content: String,
+    body_class: String,
 }
 
 impl Default for TmplContext {
@@ -27,6 +28,7 @@ impl Default for TmplContext {
             js_body: "".to_string(),
             icons_html: ICONS_HTML.to_string(),
             content: "".to_string(),
+            body_class: "".to_string(),
         }
     }
 }
@@ -34,13 +36,18 @@ impl Default for TmplContext {
 pub fn html_page(content: &str,
                  api_url: Option<String>,
                  css_extra: Option<String>,
-                 js_extra: Option<String>) -> String {
+                 js_extra: Option<String>,
+                 body_class: Option<String>) -> String {
 
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
     tt.add_template("page_html", PAGE_HTML).expect("Template error in page.html!");
 
     let mut ctx = TmplContext::default();
+
+    if let Some(s) = body_class {
+        ctx.body_class = String::from(s.clone());
+    }
 
     let mut css = String::new();
 

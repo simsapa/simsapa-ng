@@ -56,4 +56,16 @@ Item {
             "olokita + saññāṇena + iva",
         ];
     }
+
+    function get_theme_name(): string {
+        return 'dark';
+    }
+
+    function get_theme(theme_name: string): string {
+        return '{}';
+    }
+
+    function get_saved_theme(): string {
+        return '{}';
+    }
 }

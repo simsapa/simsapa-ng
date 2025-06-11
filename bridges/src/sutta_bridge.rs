@@ -9,6 +9,7 @@ use cxx_qt::Threading;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
+use simsapa_backend::theme_colors::ThemeColors;
 use simsapa_backend::app_data::AppData;
 use simsapa_backend::{db, API_URL, get_create_simsapa_app_root};
 use simsapa_backend::html_content::html_page;
@@ -26,6 +27,9 @@ pub mod qobject {
 
         include!("cxx-qt-lib/qstringlist.h");
         type QStringList = cxx_qt_lib::QStringList;
+
+        include!("system_palette.h");
+        fn get_system_palette_json() -> QString;
     }
 
     extern "RustQt" {
@@ -78,6 +82,18 @@ pub mod qobject {
         #[qinvokable]
         #[cxx_name = "app_data_contents_plain_table"]
         fn app_data_contents_plain_table(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_theme_name(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_saved_theme(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn save_theme_name(self: Pin<&mut SuttaBridge>, theme_name: &QString);
+
+        #[qinvokable]
+        fn get_theme(self: &SuttaBridge, theme_name: &QString) -> QString;
     }
 }
 
@@ -173,7 +189,16 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
-        let blank_page_html = html_page("", None, None, None);
+        // FIXME the early db access causes panic: DbManager is not initialized
+        // let dbm = db::get_dbm();
+        // let body_class = if dbm.get_theme_name() == "dark" {
+        //     Some("dark".to_string())
+        // } else {
+        //     None
+        // };
+        let body_class = Some("dark".to_string());
+
+        let blank_page_html = html_page("", None, None, None, body_class.clone());
         if query.trimmed().is_empty() {
             return QString::from(blank_page_html);
         }
@@ -190,7 +215,7 @@ impl qobject::SuttaBridge {
                 let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
 
                 render_sutta_content(&mut app_data, &sutta, None, Some(js_extra))
-                .unwrap_or(html_page("Rendering error", None, None, None))
+                .unwrap_or(html_page("Rendering error", None, None, None, body_class))
             },
             None => blank_page_html,
         };
@@ -245,5 +270,36 @@ impl qobject::SuttaBridge {
         let app_data_path = p.to_string_lossy();
         let app_data_folder_contents = generate_plain_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
         QString::from(app_data_folder_contents)
+    }
+
+    /// Get the current theme setting, 'system', 'light', or 'dark'
+    pub fn get_theme_name(&self) -> QString {
+        // FIXME the early db access causes panic: DbManager is not initialized
+        // let dbm = db::get_dbm();
+        // QString::from(dbm.get_theme_name())
+        QString::from("dark")
+    }
+
+    pub fn get_saved_theme(&self) -> QString {
+        self.get_theme(&self.get_theme_name())
+    }
+
+    /// Save the theme setting in the db
+    pub fn save_theme_name(self: Pin<&mut Self>, _theme_name: &QString) {
+        // FIXME: implement save_theme_name
+    }
+
+    /// Get theme colors as JSON string
+    pub fn get_theme(&self, theme_name: &QString) -> QString {
+        let theme = theme_name.to_string();
+
+        let theme_json = match theme.as_str() {
+            "system" => qobject::get_system_palette_json(),
+            "light" => QString::from(&ThemeColors::light_json()),
+            "dark" => QString::from(&ThemeColors::dark_json()),
+            _ => QString::from(serde_json::json!({}).to_string()),
+        };
+
+        theme_json
     }
 }

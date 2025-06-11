@@ -14,6 +14,7 @@
 #include <QMainWindow>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 
 // #include <QtWebView/QtWebView>
 // #include <QtWebEngineQuick/qtwebenginequickglobal.h>
@@ -68,6 +69,8 @@ void start(int argc, char* argv[]) {
 
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);
+
+  QQuickStyle::setStyle("Fusion");
 
   QCoreApplication::setApplicationName("simsapa-ng");
   // NOTE: Don't use setOrganizationName(), because Qt adds it as a folder to the internal storage path.

@@ -1,4 +1,5 @@
+@use "sass:meta"
 .cologne
-  @import "webtc-font"
-  @import "webtc-main"
-  @import "webtc2-main"
+  @include meta.load-css("webtc-font")
+  @include meta.load-css("webtc-main")
+  @include meta.load-css("webtc2-main")

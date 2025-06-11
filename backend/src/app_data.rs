@@ -117,4 +117,11 @@ impl AppData {
              .and_then(|v| serde_json::from_value(v.clone()).ok())
              .unwrap_or(default)
     }
+
+    pub fn get_theme_name(&self) -> Option<String> {
+        // FIXME return value from db lookup
+        // "system".to_string()
+        // "light".to_string()
+        Some("dark".to_string())
+    }
 }

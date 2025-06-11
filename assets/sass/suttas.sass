@@ -1,10 +1,11 @@
 @charset "utf-8"
 
-@import "base"
-@import "suttacentral"
-@import "cst4"
-@import "dhammatalks_org"
-@import "tipitaka_net"
+@use "sass:meta"
+@use "base"
+@use "suttacentral"
+@use "cst4"
+@use "dhammatalks_org"
+@use "tipitaka_net"
 
 html, body
   font-size: 22px
@@ -37,4 +38,4 @@ h3
 h4
   font-size: 1.0rem
 
-@import "gretil_post"
+@include meta.load-css("gretil_post")

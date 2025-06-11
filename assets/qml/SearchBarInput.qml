@@ -7,6 +7,9 @@ Frame {
     Layout.fillWidth: true
     Layout.minimumHeight: 40
 
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !root.is_mobile
+
     required property bool is_wide
     required property bool db_loaded
     required property var run_new_query_fn
@@ -34,7 +37,7 @@ Frame {
             Layout.preferredHeight: 40
 
             focus: true
-            font.pointSize: 12
+            font.pointSize: root.is_mobile ? 14 : 12
             placeholderText: root.db_loaded ? "Search in suttas" : "Loading..."
 
             onAccepted: search_btn.clicked()

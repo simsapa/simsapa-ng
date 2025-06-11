@@ -9,6 +9,11 @@ import QtQuick.Controls
 ColumnLayout {
     id: root
 
+    required property bool is_dark
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !root.is_mobile
+    readonly property string match_bg: root.is_dark ? "#007A31" : "#F6E600"
+
     /* BojjhangaData { id: results_model } // for qml preview */
     ListModel { id: results_model }
 
@@ -22,7 +27,8 @@ ColumnLayout {
             fulltext_list.currentIndex++
     }
 
-    readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 11 }
+    readonly property int font_point_size: root.is_mobile ? 14 : 11
+    readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: root.font_point_size }
 
     required property var new_results_page_fn
 
@@ -231,6 +237,7 @@ ColumnLayout {
                 padding: fulltext_list.item_padding
 
                 background: ListBackground {
+                    is_dark: root.is_dark
                     results_list: fulltext_list
                     result_item_index: result_item.index
                 }
@@ -249,18 +256,19 @@ ColumnLayout {
                     // Title and metadata
                     RowLayout {
                         spacing: 12
-                        Text { text: result_item.sutta_ref; font.pointSize: 11; font.bold: true }
-                        Text { text: result_item.title; font.pointSize: 11; font.bold: true }
+                        Text { text: result_item.sutta_ref; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
+                        Text { text: result_item.title; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
                         Item { Layout.fillWidth: true }
-                        Text { text: result_item.uid; font.pointSize: 11; font.italic: true }
+                        Text { text: result_item.uid; font.pointSize: root.font_point_size; font.italic: true; color: root.palette.active.text }
                     }
 
                     // Snippet with highlighted HTML
                     Text {
                         id: item_snippet
+                        color: root.palette.active.text
                         textFormat: Text.RichText
-                        font.pointSize: 11
-                        text: "<style> span.match { background-color: yellow; } </style>" + result_item.snippet
+                        font.pointSize: root.font_point_size
+                        text: "<style> span.match { background-color: %1; } </style>".arg(root.match_bg) + result_item.snippet
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }

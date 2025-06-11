@@ -131,6 +131,13 @@ impl DbManager {
             dpd: DatabaseHandle::new(&dpd_database_url)?,
         })
     }
+
+    pub fn get_theme_name(&self) -> String {
+        // FIXME return value from db lookup
+        // "system".to_string()
+        // "light".to_string()
+        "dark".to_string()
+    }
 }
 
 pub fn rust_backend_init_db() -> bool {

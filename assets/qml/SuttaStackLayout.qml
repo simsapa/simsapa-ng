@@ -6,6 +6,7 @@ import QtQuick.Layouts
 StackLayout {
     id: root
     required property string window_id
+    required property bool is_dark
     property string current_key: ""
     property var items_map: ({})
     property bool is_drawer_menu_open: false
@@ -16,6 +17,7 @@ StackLayout {
         SuttaHtmlView {
             id: html_view
             window_id: root.window_id
+            is_dark: root.is_dark
             Layout.fillWidth: true
             Layout.fillHeight: true
             // Hide the webview when the drawer menu is open. The mobile webview

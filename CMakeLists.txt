@@ -82,6 +82,7 @@ qt_add_resources(icons "assets/icons.qrc")
 list(APPEND cpp_files
     cpp/main.cpp
     cpp/utils.cpp
+    cpp/system_palette.cpp
     cpp/gui.cpp
     cpp/window_manager.cpp
     cpp/sutta_search_window.cpp

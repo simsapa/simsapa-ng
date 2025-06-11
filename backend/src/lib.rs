@@ -9,6 +9,7 @@ pub mod app_data;
 pub mod stardict_parse;
 pub mod pali_stemmer;
 pub mod logger;
+pub mod theme_colors;
 
 use std::fs::create_dir_all;
 use std::path::{Path, PathBuf};

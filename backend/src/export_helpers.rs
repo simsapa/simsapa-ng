@@ -94,7 +94,9 @@ pub fn render_sutta_content(
         &content_html_body,
         Some(app_data.api_url.to_string()),
         Some(css_extra.to_string()),
-        Some(js_extra.to_string()));
+        Some(js_extra.to_string()),
+        app_data.get_theme_name(),
+    );
 
     Ok(final_html)
 }

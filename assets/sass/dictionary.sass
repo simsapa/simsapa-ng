@@ -1,15 +1,17 @@
 @charset "utf-8"
 
-@import "base"
-@import "button_shadow"
-@import "ssp_button"
-@import "sanskrit/cologne"
+@use "sass:color"
+@use "sass:meta"
+@use "base"
+@use "button_shadow"
+@use "ssp_button"
+@use "sanskrit/cologne"
 
 .pali-word
-  @import "dpd/dpd"
+  @include meta.load-css("dpd/dpd")
 
 .pali-root
-  @import "dpd/roots"
+  @include meta.load-css("dpd/roots")
 
 html
   font-size: 16px
@@ -27,10 +29,10 @@ h1, h2, h3, h4, h5, h6
 
 .word-block
   padding: 0.5rem
-  background-color: $solarized-light-bg
+  background-color: base.$solarized_light_bg
 
   &:nth-child(2n)
-    background-color: $solarized-light-alt-bg
+    background-color: base.$solarized_light_alt_bg
 
 .flex-container
   display: flex
@@ -83,10 +85,10 @@ h1, h2, h3, h4, h5, h6
     display: inline-block
     padding: 0.25em 0.7em
     margin: 0 auto 0.25em auto
-    background-color: lighten($solarized-light-bg, 10%)
+    background-color: color.adjust(base.$solarized_light_bg, $lightness: 10%)
     border-radius: 7px
 
-    @include button-shadow
+    @include button_shadow.button-shadow
 
 .gloss-keys-wrap
   position: relative

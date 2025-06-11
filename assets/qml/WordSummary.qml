@@ -10,12 +10,18 @@ Frame {
     id: root
     height: Math.min(root.window_height*0.5, min_height)
 
+    required property bool is_dark
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !root.is_mobile
+
     required property var handle_summary_close_fn
 
     readonly property int item_padding: 4
     property int min_height: summaries_model.count * (root.tm1.height*2 + item_padding*2) + 100
     required property int window_height
-    readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: 9; font.bold: true }
+
+    readonly property int font_point_size: root.is_mobile ? 14 : 11
+    readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: root.font_point_size; font.bold: true }
 
     required property bool incremental_search_checked
 
@@ -96,6 +102,8 @@ Frame {
                 id: lookup_input
                 Layout.fillWidth: true
                 text: ""
+
+                font.pointSize: root.is_mobile ? 14 : 12
 
                 onAccepted: search_btn.clicked()
                 onTextChanged: {
@@ -187,6 +195,7 @@ Frame {
                     padding: root.item_padding
 
                     background: ListBackground {
+                        is_dark: root.is_dark
                         results_list: summaries_list
                         result_item_index: result_item.index
                     }
@@ -201,8 +210,9 @@ Frame {
                         spacing: 0
                         Text {
                             text: result_item.summary
+                            color: root.palette.active.text
                             textFormat: Text.RichText
-                            font.pointSize: 9
+                            font.pointSize: root.font_point_size
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                         }

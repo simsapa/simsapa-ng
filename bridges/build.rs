@@ -47,6 +47,13 @@ fn main() {
                 ],
                 qml_files: &qml_files,
                 ..Default::default()
+        })
+        .cc_builder(|cc| {
+            // Add include directory for custom headers
+            cc.include("../cpp/");
+            cc.file("../cpp/utils.cpp");
+            cc.file("../cpp/system_palette.cpp");
+            cc.file("../cpp/gui.cpp");
         });
 
     if mobile_build {

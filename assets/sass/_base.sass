@@ -1,9 +1,17 @@
-$black-90: #1a1a1a
-//$solarized-light-bg: #FDF6E3
-$solarized-light-bg: #FAE6B2
-$solarized-light-alt-bg: darken($solarized-light-bg, 5%)
+@use "sass:color"
+
+$black_90: #1a1a1a
+$solarized_light_bg: #FAE6B2
+$solarized_light_alt_bg: color.adjust($solarized_light_bg, $lightness: -5%)
+
+$body_text_color: $black_90
+$body_bg_color: $solarized_light_bg
+
+$body_text_color_dark: #E0E3E9
+$body_bg_color_dark: #23272E
 
 $title_bg_color: #FEF8E8
+$title_bg_color_dark: color.adjust($body_bg_color, $lightness: 10%)
 
 $dpd_blue: #00A4CC
 $dpd_light_blue: #65DBFF
@@ -12,18 +20,22 @@ $dpd_button_blue: #99e7ff
 $button_bg: $dpd_button_blue
 $button_active: $dpd_blue
 
-$button_primary_bg: darken($solarized-light-bg, 10%)
-$button_primary_active: $solarized-light-bg
+$button_primary_bg: color.adjust($solarized_light_bg, $lightness: -10%)
+$button_primary_active: $solarized_light_bg
 
-@import "type_crimson_pro"
-@import "type_abhaya_libre"
-@import "type_source_sans_3"
+@use "type_crimson_pro"
+@use "type_abhaya_libre"
+@use "type_source_sans_3"
 
 // let the background color fill the whole page
 html, body
   height: 100%
-  color: $black-90
-  background-color: $solarized-light-bg
+  color: $body_text_color
+  background-color: $solarized_light_bg
+  &.dark
+    color: $body_text_color_dark
+    background-color: $body_bg_color_dark
+
 
 pre
   font-family: serif
@@ -101,7 +113,7 @@ div.btn, span.btn
         color: white
 
   .bookmark-content
-    color: $black-90
+    color: $body_text_color
     font-size: 0.8rem
     padding: 0.5rem
 
@@ -124,6 +136,8 @@ div.btn, span.btn
   left: 0
   padding: 0.1em
   background-color: $title_bg_color
+  &.dark
+    background-color: $title_bg_color_dark
 
   .flex-container
     display: flex

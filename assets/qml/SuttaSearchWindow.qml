@@ -30,11 +30,54 @@ ApplicationWindow {
     readonly property bool is_tall: root.height > 800
     readonly property bool is_mac: Qt.platform.os == "osx"
 
+    property bool is_dark: false
+
     property bool is_loading: false
 
     SuttaBridge {
         id: sb
-        Component.onCompleted: sb.load_db()
+        Component.onCompleted: {
+            root.apply_theme();
+            sb.load_db();
+        }
+    }
+
+    function apply_theme() {
+        root.is_dark = sb.get_theme_name() === "dark";
+        var theme_json = sb.get_saved_theme();
+        /* console.log("Theme JSON:\n---\n", theme_json, "\n---\n"); */
+        if (theme_json.length === 0 || theme_json === "{}") {
+            console.error("Couldn't get theme JSON.")
+            return;
+        }
+
+        try {
+            var d = JSON.parse(theme_json);
+
+            for (var color_group_key in d) {
+                /* console.log(color_group_key); // active, inactive, disabled */
+                if (!root.palette.hasOwnProperty(color_group_key) || root.palette[color_group_key] === undefined) {
+                    console.error("Member not found on root.palette:", color_group_key);
+                    continue;
+                }
+                var color_group = d[color_group_key];
+                for (var color_role_key in color_group) {
+                    /* console.log(color_role_key); // window, windowText, etc. */
+                    /* console.log(color_group[color_role_key]); // #EFEFEF, #000000, etc. */
+                    if (!root.palette[color_group_key].hasOwnProperty(color_role_key) || root.palette[color_group_key][color_role_key] === undefined) {
+                        console.error("Member not found on root.palette:", color_group_key, color_role_key);
+                        continue;
+                    }
+                    try {
+                        root.palette[color_group_key][color_role_key] = color_group[color_role_key];
+                    } catch (e) {
+                        console.error("Could not set palette property:", color_group_key, color_role_key, e);
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Failed to parse theme JSON:", e);
+        }
     }
 
     ListModel { id: tabs_pinned_model }
@@ -407,14 +450,14 @@ ApplicationWindow {
                     Layout.fillHeight: true
 
                     handle: Rectangle {
-                        id: split_handle
-                        implicitWidth: 2
+                        id: panel_split_handle
+                        implicitWidth: root.is_desktop ? 2 : 4
                         implicitHeight: panel_split.height
                         color: SplitHandle.pressed ? panel_split.palette.dark : (SplitHandle.hovered ? panel_split.palette.midlight : panel_split.palette.mid)
                         containmentMask: Item {
-                            x: (split_handle.width - width) / 2
-                            width: 20
-                            height: split_handle.height
+                            x: (panel_split_handle.width - width) / 2
+                            width: root.is_desktop ? 20 : 40
+                            height: panel_split_handle.height
                         }
                     }
 
@@ -588,6 +631,18 @@ ApplicationWindow {
                             anchors.left: suttas_tab_container.left
                             anchors.right: suttas_tab_container.right
 
+                            handle: Rectangle {
+                                id: sutta_split_handle
+                                implicitHeight: root.is_desktop ? 2 : 4
+                                implicitWidth: sutta_split.width
+                                color: SplitHandle.pressed ? sutta_split.palette.dark : (SplitHandle.hovered ? sutta_split.palette.midlight : sutta_split.palette.mid)
+                                containmentMask: Item {
+                                    y: (sutta_split_handle.height - height) / 2
+                                    height: root.is_desktop ? 20 : 40
+                                    width: sutta_split_handle.width
+                                }
+                            }
+
                             Item {
                                 SplitView.preferredHeight: root.is_tall ? parent.height*0.7 : parent.height*0.5
                                 SplitView.preferredWidth: parent.width
@@ -596,6 +651,7 @@ ApplicationWindow {
                                     id: sutta_html_view_layout
                                     anchors.fill: parent
                                     window_id: root.window_id
+                                    is_dark: root.is_dark
                                     is_drawer_menu_open: mobile_menu.activeFocus
                                 }
                             }
@@ -613,6 +669,7 @@ ApplicationWindow {
                                 WordSummary {
                                     id: word_summary
                                     anchors.fill: parent
+                                    is_dark: root.is_dark
                                     window_height: root.height
                                     handle_summary_close_fn: word_summary_wrap.handle_summary_close
                                     incremental_search_checked: incremental_search.checked
@@ -656,6 +713,7 @@ ApplicationWindow {
                             FulltextResults {
                                 id: fulltext_results
                                 is_loading: root.is_loading
+                                is_dark: root.is_dark
                                 new_results_page_fn: root.new_results_page
 
                                 function update_item() {

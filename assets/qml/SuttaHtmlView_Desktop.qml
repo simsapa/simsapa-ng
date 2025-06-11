@@ -10,6 +10,13 @@ WebEngineView {
     property string window_id
     property string item_key
     property string sutta_uid
+    property bool is_dark
+
+    onLoadingChanged: {
+        if (web.is_dark) {
+            runJavaScript("document.documentElement.style.colorScheme = 'dark';");
+        }
+    }
 
     // Load the sutta when the Loader in SuttaHtmlView updates sutta_uid.
     onSutta_uidChanged: function() {

@@ -26,12 +26,11 @@ pub mod ffi {
         include!("cxx-qt-lib/qstring.h");
         type QString = cxx_qt_lib::QString;
 
-        include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/utils.h");
+        include!("utils.h");
         fn get_internal_storage_path() -> QString;
         // fn get_app_assets_path() -> QString;
 
-        // FIXME: How to avoid using the full path?
-        include!("/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/cpp/gui.h");
+        include!("gui.h");
         fn callback_run_lookup_query(query_text: QString);
         fn callback_run_summary_query(window_id: QString, query_text: QString);
     }
@@ -116,7 +115,7 @@ fn index() -> RawHtml<String> {
 <p>Contents:</p>
 <pre>{}</pre>", app_data_path, app_data_folder_contents, storage_path, storage_folder_contents);
 
-    RawHtml(html_page(&html, None, None, None))
+    RawHtml(html_page(&html, None, None, None, None))
 }
 
 #[get("/shutdown")]

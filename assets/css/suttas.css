@@ -81,6 +81,10 @@ html, body {
   color: #1a1a1a;
   background-color: #FAE6B2;
 }
+html.dark, body.dark {
+  color: #E0E3E9;
+  background-color: #23272E;
+}
 
 pre {
   font-family: serif;
@@ -198,6 +202,9 @@ div.btn a, span.btn a {
   left: 0;
   padding: 0.1em;
   background-color: #FEF8E8;
+}
+#window-title-bar.dark {
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
 }
 #window-title-bar .flex-container {
   display: flex;
@@ -524,6 +531,7 @@ h4 {
 .lang-san {
   font-family: "DejaVu Serif", "Georgia", serif;
 }
+
 .lang-san h1, .lang-san h2, .lang-san h3, .lang-san h4, .lang-san h5, .lang-san h6 {
   font-family: "DejaVu Serif", "Georgia", serif;
 }

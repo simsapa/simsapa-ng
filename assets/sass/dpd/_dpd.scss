@@ -1,3 +1,5 @@
+@use "../base";
+
 // h3 {
 //     font-size: 130%;
 //     margin-top: 10px;
@@ -29,12 +31,12 @@ p.heading {
 }
 
 .underlined {
-    border-bottom: 1px solid $dpd_blue;
+    border-bottom: 1px solid base.$dpd_blue;
     margin-bottom: 5px;
 }
 
 .overlined {
-    border-top: 1px solid $dpd_blue;
+    border-top: 1px solid base.$dpd_blue;
     margin-top: 5px;
 }
 
@@ -44,7 +46,7 @@ p.heading b {
 
 p.footer {
     padding: 5px 0px;
-    border-top: 1px solid $dpd_blue;
+    border-top: 1px solid base.$dpd_blue;
 }
 
 table {
@@ -63,7 +65,7 @@ table.grammar th {
 }
 
 table.grammar th {
-    color: $dpd_blue;
+    color: base.$dpd_blue;
     font-weight: 700;
     white-space: nowrap;
     padding: 0px 5px 2px 0px
@@ -74,7 +76,7 @@ table.grammar b {
 }
 
 p.sutta {
-    color: $dpd_blue;
+    color: base.$dpd_blue;
     font-style: italic;
     padding: 0px 0px 7px 0px;
 }
@@ -101,8 +103,8 @@ table.inflection th {
 }
 
 table.inflection th {
-    border: 1px solid $dpd_blue;
-    color: $dpd_blue;
+    border: 1px solid base.$dpd_blue;
+    color: base.$dpd_blue;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -112,7 +114,7 @@ span.gray {
 }
 
 a.jump {
-    color: $dpd_blue;
+    color: base.$dpd_blue;
     text-decoration: none;
     font-weight: bold;
 }
@@ -124,7 +126,7 @@ table.family th {
 }
 
 table.family th {
-    color: $dpd_blue;
+    color: base.$dpd_blue;
     font-weight: 700;
     white-space: nowrap;
 }
@@ -138,7 +140,7 @@ table.family b {
 }
 
 .link {
-    color: $dpd_blue;
+    color: base.$dpd_blue;
     font-weight: 700;
 }
 
@@ -152,7 +154,7 @@ table.freq thead th {
 }
 
 table.freq tbody th {
-    border: 1px solid $dpd_blue;
+    border: 1px solid base.$dpd_blue;
     border-radius: 7px;
     padding: 5px;
     text-align: center;
