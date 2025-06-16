@@ -1,7 +1,7 @@
 use serde::Serialize;
 use tinytemplate::TinyTemplate;
 
-use crate::API_URL;
+use crate::get_app_globals;
 
 static PAGE_HTML: &'static str = include_str!("../../assets/templates/page.html");
 static ICONS_HTML: &'static str = include_str!("../../assets/templates/icons.html");
@@ -21,9 +21,10 @@ struct TmplContext {
 
 impl Default for TmplContext {
     fn default() -> Self {
+        let g = get_app_globals();
         TmplContext {
             css_head: "".to_string(),
-            api_url: API_URL.to_string(),
+            api_url: g.api_url.clone(),
             js_head: "".to_string(),
             js_body: "".to_string(),
             icons_html: ICONS_HTML.to_string(),

@@ -5,13 +5,14 @@ use clap::{Parser, Subcommand, ValueEnum};
 use dotenvy::dotenv;
 use anyhow::Result;
 
+use simsapa_backend::{init_app_data, get_app_data};
 use simsapa_backend::db;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
-    let dbm = db::get_dbm();
+    let app_data = get_app_data();
 
     let params = SearchParams {
         mode: SearchMode::ContainsMatch,
@@ -25,7 +26,7 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     };
 
     let mut query_task = SearchQueryTask::new(
-        dbm,
+        &app_data.dbm,
         "en".to_string(),
         query.to_string(),
         params,
@@ -86,8 +87,7 @@ fn import_stardict_dictionary(new_dict_label: &str,
                               unzipped_dir: &Path,
                               limit: Option<usize>)
                               -> Result<(), String> {
-    let dbm = db::get_dbm();
-    import_stardict_as_new(dbm, unzipped_dir, "pli", new_dict_label, true, true, limit)?;
+    import_stardict_as_new(unzipped_dir, "pli", new_dict_label, true, true, limit)?;
     Ok(())
 }
 
@@ -172,7 +172,7 @@ fn main() {
         println!("Info: No .env file found or failed to load.");
     }
 
-    db::rust_backend_init_db();
+    init_app_data();
     let cli = Cli::parse();
 
     // Determine Base Simsapa Directory

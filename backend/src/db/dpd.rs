@@ -9,9 +9,9 @@ use anyhow::Result;
 use lazy_static::lazy_static;
 
 use crate::db::dpd_models::*;
-use crate::db::{get_dbm, DatabaseHandle};
+use crate::db::DatabaseHandle;
 
-use crate::get_create_simsapa_app_assets_path;
+use crate::{get_app_data, get_create_simsapa_app_assets_path};
 use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext};
 use crate::pali_stemmer::pali_stem;
 use crate::types::SearchResult;
@@ -341,8 +341,8 @@ pub fn import_migrate_dpd(dpd_input_path: &PathBuf, dpd_output_path: Option<Path
     let migrate_db_path = dpd_input_path.to_path_buf();
 
     // Find or create the DPD dict record in dictionaries
-    let dbm = get_dbm();
-    let dpd_dict = dbm.dictionaries.find_or_create_dpd_dictionary()
+    let app_data = get_app_data();
+    let dpd_dict = app_data.dbm.dictionaries.find_or_create_dpd_dictionary()
         .map_err(|e| format!("{}", e))?;
 
     // Run the migrations on the db

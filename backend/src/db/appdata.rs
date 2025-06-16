@@ -2,9 +2,10 @@ use diesel::prelude::*;
 use regex::Regex;
 // use anyhow::{Context, Result};
 
-use crate::db::get_dbm;
+use crate::get_app_data;
 use crate::db::appdata_models::*;
 use crate::db::DatabaseHandle;
+use crate::app_settings::AppSettings;
 use crate::logger::{info, error};
 
 pub type AppdataDbHandle = DatabaseHandle;
@@ -39,9 +40,9 @@ impl AppdataDbHandle {
 
         use crate::db::appdata_schema::suttas::dsl::*;
 
-        let dbm = get_dbm();
-        let _lock = dbm.appdata.write_lock.lock();
-        let mut db_conn = dbm.appdata.get_conn().expect("get_translations(): No appdata conn");
+        let app_data = get_app_data();
+        let _lock = app_data.dbm.appdata.write_lock.lock();
+        let mut db_conn = app_data.dbm.appdata.get_conn().expect("get_translations(): No appdata conn");
 
         let mut res: Vec<Sutta> = Vec::new();
 
@@ -58,6 +59,31 @@ impl AppdataDbHandle {
 
         res_sorted_uids
     }
+
+    pub fn get_app_settings(&self) -> AppSettings {
+        use crate::db::appdata_schema::app_settings::dsl::*;
+
+        let json = self.do_read(|db_conn| {
+            app_settings
+                .filter(key.eq("app_settings"))
+                .select(AppSetting::as_select())
+                .first(db_conn)
+                .optional()
+        });
+
+        match json {
+            Ok(None) => AppSettings::default(),
+            Ok(Some(setting)) => {
+                setting.value
+                       .map(|val| serde_json::from_str(&val).expect("Can't decode JSON"))
+                       .unwrap_or_default()
+            },
+            Err(e) => {
+                error(&format!("{}", e));
+                AppSettings::default()
+            }
+        }
+    }
 }
 
 pub fn delete_sutta() {
@@ -65,9 +91,9 @@ pub fn delete_sutta() {
 
     let pattern = "unwholesome";
 
-    let dbm = get_dbm();
-    let _lock = dbm.appdata.write_lock.lock();
-    let db_conn = &mut dbm.appdata.get_conn().expect("Can't get db conn");
+    let app_data = get_app_data();
+    let _lock = app_data.dbm.appdata.write_lock.lock();
+    let db_conn = &mut app_data.dbm.appdata.get_conn().expect("Can't get db conn");
 
     let num_deleted = diesel::delete(suttas.filter(content_html.like(pattern)))
         .execute(db_conn)

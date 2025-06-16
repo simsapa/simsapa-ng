@@ -1,6 +1,5 @@
 use std::fs;
 use std::path::PathBuf;
-use std::collections::HashMap;
 use std::thread;
 
 use core::pin::Pin;
@@ -10,10 +9,8 @@ use cxx_qt::Threading;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::app_data::AppData;
-use simsapa_backend::{db, API_URL, get_create_simsapa_app_root};
+use simsapa_backend::{get_app_data, get_create_simsapa_app_root};
 use simsapa_backend::html_content::html_page;
-use simsapa_backend::export_helpers::render_sutta_content;
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
 use simsapa_backend::logger::{info, error};
@@ -44,43 +41,39 @@ pub mod qobject {
 
     unsafe extern "RustQt" {
         #[qinvokable]
-        #[cxx_name = "load_db"]
         fn load_db(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
-        #[cxx_name = "results_page"]
+        fn appdata_first_query(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn dpd_first_query(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
         fn results_page(self: &SuttaBridge, query: &QString, page_num: usize) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "dpd_deconstructor_list"]
         fn dpd_deconstructor_list(self: &SuttaBridge, query: &QString) -> QStringList;
 
         #[qinvokable]
-        #[cxx_name = "dpd_lookup_list"]
         fn dpd_lookup_list(self: &SuttaBridge, query: &QString) -> QStringList;
 
         #[qinvokable]
-        #[cxx_name = "get_sutta_html"]
         fn get_sutta_html(self: &SuttaBridge, window_id: &QString, query: &QString) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "get_translations_for_sutta_uid"]
         fn get_translations_for_sutta_uid(self: &SuttaBridge, sutta_uid: &QString) -> QStringList;
 
         #[qinvokable]
-        #[cxx_name = "app_data_folder_path"]
         fn app_data_folder_path(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "is_app_data_folder_writable"]
         fn is_app_data_folder_writable(self: &SuttaBridge) -> bool;
 
         #[qinvokable]
-        #[cxx_name = "app_data_contents_html_table"]
         fn app_data_contents_html_table(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
-        #[cxx_name = "app_data_contents_plain_table"]
         fn app_data_contents_plain_table(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -114,7 +107,9 @@ impl qobject::SuttaBridge {
         info("SuttaBridge::load_db() start");
         let qt_thread = self.qt_thread();
         thread::spawn(move || {
-            let r = db::rust_backend_init_db();
+            // FIXME: should init AppData if not alrerady
+            // let r = db::rust_backend_init_db();
+            let r = true;
             qt_thread.queue(move |mut qo| {
                 qo.as_mut().set_db_loaded(r);
             }).unwrap();
@@ -122,11 +117,58 @@ impl qobject::SuttaBridge {
         });
     }
 
+    /// Runs a db query so that db is cached from the disk. It should finish by
+    /// the time the user types in the first actual query, and that will respond
+    /// faster.
+    pub fn appdata_first_query(self: Pin<&mut Self>) {
+        info("SuttaBridge::appdata_first_query() start");
+        thread::spawn(move || {
+            let app_data = get_app_data();
+
+            let params = SearchParams {
+                mode: SearchMode::ContainsMatch,
+                page_len: None,
+                lang: Some("en".to_string()),
+                lang_include: true,
+                source: None,
+                source_include: true,
+                enable_regex: false,
+                fuzzy_distance: 0,
+            };
+
+            let mut query_task = SearchQueryTask::new(
+                &app_data.dbm,
+                "en".to_string(),
+                "dhamma".to_string(),
+                params,
+                SearchArea::Suttas,
+            );
+
+            let _results = match query_task.results_page(0) {
+                Ok(_) => {},
+                Err(e) => {
+                    error(&format!("{}", e));
+                }
+            };
+
+            info("SuttaBridge::appdata_first_query() end");
+        });
+    }
+
+    pub fn dpd_first_query(self: Pin<&mut Self>) {
+        info("SuttaBridge::dpd_first_query() start");
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            let _list = app_data.dbm.dpd.dpd_lookup_list("dhamma");
+            info("SuttaBridge::dpd_first_query() end");
+        });
+    }
+
     pub fn results_page(&self, query: &QString, page_num: usize) -> QString {
         // FIXME: Can't store the query_task on SuttaBridgeRust
         // because it SearchQueryTask includes &'a DbManager reference.
         // Store only a connection pool?
-        let dbm = db::get_dbm();
+        let app_data = get_app_data();
 
         let params = SearchParams {
             mode: SearchMode::ContainsMatch,
@@ -142,7 +184,7 @@ impl qobject::SuttaBridge {
         // FIXME: We have to create a SearchQueryTask for each search until we
         // can store it on SuttaBridgeRust.
         let mut query_task = SearchQueryTask::new(
-            dbm,
+            &app_data.dbm,
             "en".to_string(),
             query.to_string(),
             params,
@@ -169,8 +211,8 @@ impl qobject::SuttaBridge {
     }
 
     pub fn dpd_deconstructor_list(&self, query: &QString) -> QStringList {
-        let dbm = db::get_dbm();
-        let list = dbm.dpd.dpd_deconstructor_list(&query.to_string());
+        let app_data = get_app_data();
+        let list = app_data.dbm.dpd.dpd_deconstructor_list(&query.to_string());
         let mut res = QStringList::default();
         for i in list {
             res.append(QString::from(i));
@@ -179,8 +221,8 @@ impl qobject::SuttaBridge {
     }
 
     pub fn dpd_lookup_list(&self, query: &QString) -> QStringList {
-        let dbm = db::get_dbm();
-        let list = dbm.dpd.dpd_lookup_list(&query.to_string());
+        let app_data = get_app_data();
+        let list = app_data.dbm.dpd.dpd_lookup_list(&query.to_string());
         let mut res = QStringList::default();
         for i in list {
             res.append(QString::from(i));
@@ -189,33 +231,22 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
-        // FIXME the early db access causes panic: DbManager is not initialized
-        // let dbm = db::get_dbm();
-        // let body_class = if dbm.get_theme_name() == "dark" {
-        //     Some("dark".to_string())
-        // } else {
-        //     None
-        // };
-        let body_class = Some("dark".to_string());
+        let app_data = get_app_data();
+        let body_class = app_data.app_settings_cache.theme_name_as_string();
 
-        let blank_page_html = html_page("", None, None, None, body_class.clone());
+        let blank_page_html = html_page("", None, None, None, Some(body_class.clone()));
         if query.trimmed().is_empty() {
             return QString::from(blank_page_html);
         }
 
-        let dbm = db::get_dbm();
-        let sutta = dbm.appdata.get_sutta(&query.to_string());
+        let sutta = app_data.dbm.appdata.get_sutta(&query.to_string());
 
         let html = match sutta {
             Some(sutta) => {
-                let settings = HashMap::new();
-                let db_conn = dbm.appdata.get_conn().expect("get_sutta_html(): No appdata conn");
-                let mut app_data = AppData::new(db_conn, settings, API_URL.to_string());
-
                 let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
 
-                render_sutta_content(&mut app_data, &sutta, None, Some(js_extra))
-                .unwrap_or(html_page("Rendering error", None, None, None, body_class))
+                app_data.render_sutta_content(&sutta, None, Some(js_extra))
+                .unwrap_or(html_page("Rendering error", None, None, None, Some(body_class)))
             },
             None => blank_page_html,
         };
@@ -224,8 +255,8 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_translations_for_sutta_uid(&self, sutta_uid: &QString) -> QStringList {
-        let dbm = db::get_dbm();
-        let translations: Vec<String> = dbm.appdata.get_translations_for_sutta_uid(&sutta_uid.to_string());
+        let app_data = get_app_data();
+        let translations: Vec<String> = app_data.dbm.appdata.get_translations_for_sutta_uid(&sutta_uid.to_string());
         let mut res = QStringList::default();
         for t in translations {
             res.append(QString::from(t));
@@ -274,10 +305,8 @@ impl qobject::SuttaBridge {
 
     /// Get the current theme setting, 'system', 'light', or 'dark'
     pub fn get_theme_name(&self) -> QString {
-        // FIXME the early db access causes panic: DbManager is not initialized
-        // let dbm = db::get_dbm();
-        // QString::from(dbm.get_theme_name())
-        QString::from("dark")
+        let app_data = get_app_data();
+        QString::from(app_data.app_settings_cache.theme_name_as_string())
     }
 
     pub fn get_saved_theme(&self) -> QString {

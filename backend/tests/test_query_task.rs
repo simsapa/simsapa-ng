@@ -1,21 +1,58 @@
-use simsapa_backend::types::SearchArea;
+use simsapa_backend::types::{SearchArea, SearchMode};
 use simsapa_backend::query_task::SearchQueryTask;
-use simsapa_backend::db;
+use simsapa_backend::get_app_data;
 
 mod helpers;
 use helpers as h;
 
 #[test]
-fn test_sutta_search_contains_match() {
-    h::appdata_db_setup();
-    let dbm = db::get_dbm();
+fn test_highlight_text_simple() {
+    h::app_data_setup();
+    let task = h::create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
+    let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
+    let highlighted = task.highlight_text(&task.query_text, content).unwrap();
+    assert_eq!(highlighted, "sīlaṁ nissāya sīle patiṭṭhāya cattāro <span class='match'>satipaṭṭhā</span>ne bhāveyyāsi");
+}
 
+#[test]
+fn test_highlight_text_uppercase() {
+    h::app_data_setup();
+    let task = h::create_test_task("SATIpaṭṭhā", SearchMode::ContainsMatch);
+    let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
+    let highlighted = task.highlight_text(&task.query_text, content).unwrap();
+    assert_eq!(highlighted, "sīlaṁ nissāya sīle patiṭṭhāya cattāro <span class='match'>satipaṭṭhā</span>ne bhāveyyāsi");
+}
+
+#[test]
+fn test_highlight_text_regex_special_chars() {
+    h::app_data_setup();
+    let task = h::create_test_task("test", SearchMode::ContainsMatch);
+    let content = "This has regex .*+ chars";
+    let highlighted = task.highlight_text(".*+", content).unwrap();
+    assert_eq!(highlighted, "This has regex <span class='match'>.*+</span> chars");
+}
+
+#[test]
+fn test_fragment_around_text_middle() {
+    h::app_data_setup();
+    let task = h::create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
+    let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
+    let fragment = task.fragment_around_text(&task.query_text, content, 10, 200);
+    assert!(fragment.contains(&task.query_text));
+    assert!(fragment.starts_with("... patiṭṭhāya cattāro satipaṭṭhāne"));
+    assert!(fragment.ends_with("bhāveyyāsi"));
+}
+
+#[test]
+fn test_sutta_search_contains_match() {
+    h::app_data_setup();
+    let app_data = get_app_data();
     let params = h::get_contains_params();
 
     let query = "satipaṭṭhāna";
 
     let mut query_task = SearchQueryTask::new(
-        dbm,
+        &app_data.dbm,
         "en".to_string(),
         query.to_string(),
         params,
@@ -36,14 +73,14 @@ fn test_sutta_search_contains_match() {
 
 #[test]
 fn test_dict_word_search_contains_match() {
-    h::appdata_db_setup();
-    let dbm = db::get_dbm();
+    h::app_data_setup();
+    let app_data = get_app_data();
     let params = h::get_uid_params();
 
     let query = "awakening factor of enlightenment";
 
     let mut query_task = SearchQueryTask::new(
-        dbm,
+        &app_data.dbm,
         "en".to_string(),
         query.to_string(),
         params,
@@ -65,14 +102,14 @@ fn test_dict_word_search_contains_match() {
 
 #[test]
 fn test_dict_word_uid_match() {
-    h::appdata_db_setup();
-    let dbm = db::get_dbm();
+    h::app_data_setup();
+    let app_data = get_app_data();
     let params = h::get_uid_params();
 
     let query = "satipaṭṭhāna 1/dpd";
 
     let mut query_task = SearchQueryTask::new(
-        dbm,
+        &app_data.dbm,
         "en".to_string(),
         query.to_string(),
         params,

@@ -1,15 +1,15 @@
-use simsapa_backend::db;
+use simsapa_backend::get_app_data;
 
 mod helpers;
 use helpers as h;
 
 #[test]
 fn test_dpd_deconstructor_list() {
-    h::appdata_db_setup();
-    let dbm = db::get_dbm();
+    h::app_data_setup();
+    let app_data = get_app_data();
 
     let query = "olokitasaññāṇeneva";
-    let result = dbm.dpd.dpd_deconstructor_list(query);
+    let result = app_data.dbm.dpd.dpd_deconstructor_list(query);
 
     let expected: Vec<String> = r#"
 olokita + saññāṇena + eva

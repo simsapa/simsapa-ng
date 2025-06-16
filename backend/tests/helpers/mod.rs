@@ -1,15 +1,17 @@
-use std::env;
+// use std::env;
 
-use simsapa_backend::db;
-use simsapa_backend::types::{SearchMode, SearchParams};
+use dotenvy::dotenv;
 
-pub fn appdata_db_setup() {
-    unsafe { env::set_var("SIMSAPA_DIR", "../../assets-testing/"); }
+use simsapa_backend::logger::init_logger;
+use simsapa_backend::{init_app_data, get_app_data, get_app_globals};
+use simsapa_backend::query_task::SearchQueryTask;
+use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
 
-    match db::DATABASE_MANAGER.get() {
-        Some(_) => {},
-        None => { db::rust_backend_init_db(); },
-    }
+pub fn app_data_setup() {
+    // unsafe { env::set_var("SIMSAPA_DIR", "../../assets-testing/"); }
+    dotenv().ok();
+    let _ = init_logger();
+    init_app_data();
 }
 
 #[allow(dead_code)]
@@ -38,4 +40,29 @@ pub fn get_uid_params() -> SearchParams {
         enable_regex: false,
         fuzzy_distance: 0,
     }
+}
+
+#[allow(dead_code)]
+pub fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQueryTask {
+    let app_data = get_app_data();
+    let g = get_app_globals();
+
+    let params = SearchParams {
+        mode: search_mode,
+        page_len: Some(g.page_len),
+        lang: Some("en".to_string()),
+        lang_include: false,
+        source: None,
+        source_include: false,
+        enable_regex: false,
+        fuzzy_distance: 0,
+    };
+
+    SearchQueryTask::new(
+        &app_data.dbm,
+        "en".to_string(),
+        query_text.to_string(),
+        params,
+        SearchArea::Suttas,
+    )
 }

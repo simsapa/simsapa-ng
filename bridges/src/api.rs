@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
-use std::sync::Arc;
+use std::sync::{OnceLock, Arc};
 
 use http;
 use ureq;
@@ -14,11 +14,24 @@ use rocket::State;
 use rocket::http::{ContentType, Status};
 use rocket_cors::CorsOptions;
 
-use simsapa_backend::{API_PORT, API_URL, get_create_simsapa_app_root, get_create_simsapa_appdata_db_path};
+use simsapa_backend::{AppGlobals, get_create_simsapa_app_root, get_create_simsapa_appdata_db_path};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
 use simsapa_backend::logger::{info, error};
+
+pub static APP_GLOBALS_API: OnceLock<AppGlobals> = OnceLock::new();
+
+pub fn init_app_globals_api() {
+    if APP_GLOBALS_API.get().is_none() {
+        let g = AppGlobals::new();
+        APP_GLOBALS_API.set(g).expect("Can't set AppGlobals for API");
+    }
+}
+
+pub fn get_app_globals_api() -> &'static AppGlobals {
+    APP_GLOBALS_API.get().expect("AppGlobals (in API) is not initialized")
+}
 
 #[cxx_qt::bridge]
 pub mod ffi {
@@ -140,17 +153,19 @@ fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<Ra
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
     info("start_webserver()");
+    init_app_globals_api();
     let assets_files: AssetsHandler = AssetsHandler::default();
 
     let dbm = DbManager::new().expect("Api: Can't create DbManager");
     let db_manager = Arc::new(dbm);
+    let g = get_app_globals_api();
 
     let cors = CorsOptions::default().to_cors().expect("Cors options error");
 
     let config = rocket::Config::figment()
         .merge(("log_level", rocket::config::LogLevel::Off))
         .merge(("address", "127.0.0.1"))
-        .merge(("port", API_PORT));
+        .merge(("port", g.api_port));
 
     let _ = rocket::build()
         .configure(config)
@@ -170,7 +185,8 @@ pub async extern "C" fn start_webserver() {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn shutdown_webserver() {
-    match ureq::get(format!("{}/shutdown", API_URL)).call() {
+    let g = get_app_globals_api();
+    match ureq::get(format!("{}/shutdown", g.api_url.clone())).call() {
         Ok(mut resp) => {
             match resp.body_mut().read_to_string() {
                 Ok(body) => { info(&body); }
@@ -246,7 +262,8 @@ pub extern "C" fn download_small_database() {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn shutdown_webserver_tcp() {
-    match TcpStream::connect(format!("localhost:{}", API_PORT)) {
+    let g = get_app_globals_api();
+    match TcpStream::connect(format!("localhost:{}", g.api_port)) {
         Ok(mut connection) => {
             // Set a timeout of 5 seconds
             if let Err(e) = connection.set_read_timeout(Some(Duration::from_secs(5))) {

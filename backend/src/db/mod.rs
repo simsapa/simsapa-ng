@@ -15,20 +15,27 @@ use std::sync::OnceLock;
 
 use diesel::prelude::*;
 use diesel::r2d2::{Pool, ConnectionManager, PooledConnection};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 // use diesel::sqlite::Sqlite;
 
 use dotenvy::dotenv;
 use parking_lot::Mutex;
 use anyhow::{Context, Result, Error as AnyhowError};
 
-use crate::logger::info;
+use crate::logger::{info, error};
 use crate::db::appdata::AppdataDbHandle;
+use crate::db::appdata_models::AppSetting;
 use crate::db::dictionaries::DictionariesDbHandle;
 use crate::db::dpd::DpdDbHandle;
-use crate::{get_create_simsapa_app_root, check_file_exists_print_err};
+use crate::app_settings::AppSettings;
+use crate::{check_file_exists_print_err, get_create_simsapa_app_root, get_app_globals};
 
 pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 pub type DbConn = PooledConnection<ConnectionManager<SqliteConnection>>;
+
+pub const APPDATA_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/appdata/");
+
+pub static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
 
 #[derive(Debug)]
 pub struct DatabaseHandle {
@@ -39,11 +46,10 @@ pub struct DatabaseHandle {
 #[derive(Debug)]
 pub struct DbManager {
     pub appdata: AppdataDbHandle,
+    pub userdata: AppdataDbHandle,
     pub dictionaries: DictionariesDbHandle,
     pub dpd: DpdDbHandle,
 }
-
-pub static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
 
 impl DatabaseHandle {
     pub fn new(database_url: &str) -> Result<Self> {
@@ -90,66 +96,122 @@ impl DbManager {
     pub fn new() -> Result<Self> {
         info("DbManager::new()");
 
-        dotenv().ok();
+        let g = get_app_globals();
 
-        let simsapa_dir = match env::var("SIMSAPA_DIR") {
-            Ok(s) => PathBuf::from(s),
-            Err(_) => {
-                if let Ok(p) = get_create_simsapa_app_root() {
-                    p
-                } else {
-                    PathBuf::from(".")
-                }
-            }
-        };
-        info(&format!("simsapa_dir: {}", simsapa_dir.to_string_lossy()));
-
-        let app_assets_dir = simsapa_dir.join("app-assets");
-
-        let appdata_db_path = app_assets_dir.join("appdata.sqlite3");
-        let dict_db_path = app_assets_dir.join("dictionaries.sqlite3");
-        let dpd_db_path = app_assets_dir.join("dpd.sqlite3");
+        info(&format!("simsapa_dir: {}", g.simsapa_dir.to_string_lossy()));
 
         // PathBuf::exists() can crash on Android due to permission restrictions,
         // but no errors are reported.
-        let _ = check_file_exists_print_err(&appdata_db_path);
-        let _ = check_file_exists_print_err(&dict_db_path);
-        let _ = check_file_exists_print_err(&dpd_db_path);
+        //
+        // FIXME: Return the errors
+        let _ = check_file_exists_print_err(&g.appdata_db_path);
+        let _ = check_file_exists_print_err(&g.dict_db_path);
+        let _ = check_file_exists_print_err(&g.dpd_db_path);
 
-        let appdata_abs_path = fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path);
-        let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
+        // If userdata doesn't exist, create it with default settings.
+        let userdata_exists = match check_file_exists_print_err(&g.userdata_db_path) {
+            Ok(r) => r,
+            Err(_) => false,
+        };
 
-        let dict_abs_path = fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path);
-        let dict_database_url = format!("sqlite://{}", dict_abs_path.as_os_str().to_str().expect("os_str Error!"));
-
-        let dpd_abs_path = fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path);
-        let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
+        if !userdata_exists {
+            initialize_userdata(&g.userdata_database_url)
+                .with_context(|| format!("Failed to initialize database at '{}'", g.userdata_database_url))?;
+        }
 
         Ok(Self {
-            appdata: DatabaseHandle::new(&appdata_database_url)?,
-            dictionaries: DatabaseHandle::new(&dict_database_url)?,
-            dpd: DatabaseHandle::new(&dpd_database_url)?,
+            appdata: DatabaseHandle::new(&g.appdata_database_url)?,
+            userdata: DatabaseHandle::new(&g.userdata_database_url)?,
+            dictionaries: DatabaseHandle::new(&g.dict_database_url)?,
+            dpd: DatabaseHandle::new(&g.dpd_database_url)?,
         })
     }
 
     pub fn get_theme_name(&self) -> String {
-        // FIXME return value from db lookup
-        // "system".to_string()
-        // "light".to_string()
-        "dark".to_string()
+        let app_settings = self.userdata.get_app_settings();
+        app_settings.theme_name_as_string()
     }
 }
 
-pub fn rust_backend_init_db() -> bool {
-    info("rust_backend_init_db() start");
-    let manager = DbManager::new().expect("Can't create DbManager");
-    DATABASE_MANAGER.set(manager).unwrap();
-    info("rust_backend_init_db() end");
-    true
+fn initialize_userdata(database_url: &str) -> Result<()> {
+    info(&format!("initialize_userdata(): {}", database_url));
+
+    // Create initial connection to create the database file
+    let mut db_conn = SqliteConnection::establish(database_url)
+        .with_context(|| format!("Failed to create initial database connection to '{}'", database_url))?;
+
+    run_appdata_migrations(&mut db_conn)
+        .context("Failed to run database migrations")?;
+
+    insert_default_settings(&mut db_conn)
+        .context("Failed to insert default application settings")?;
+
+    info(&format!("initialize_userdata(): end"));
+    Ok(())
 }
 
-pub fn get_dbm() -> &'static DbManager {
-    DATABASE_MANAGER.get().expect("DbManager is not initialized")
+fn insert_default_settings(db_conn: &mut SqliteConnection) -> Result<()> {
+    info("insert_default_settings()");
+    use crate::db::appdata_schema::app_settings;
+
+    let settings_json = serde_json::to_string(&AppSettings::default()).expect("Can't encode JSON");
+
+    let value = appdata_models::NewAppSetting {
+        key: "app_settings",
+        value: Some(&settings_json),
+    };
+
+    diesel::insert_into(app_settings::table)
+        .values(value)
+        .execute(db_conn)
+        .context("Failed to insert default settings into database")?;
+
+    Ok(())
+}
+
+pub fn get_app_settings() -> AppSettings {
+    info("get_app_settings()");
+    use crate::db::appdata_schema::app_settings;
+
+    let g = get_app_globals();
+
+    let _ = check_file_exists_print_err(&g.userdata_db_path);
+
+    let db_conn = &mut SqliteConnection::establish(&g.userdata_database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", g.userdata_database_url));
+
+    let json = app_settings::table
+        .select(AppSetting::as_select())
+        .filter(app_settings::key.eq("app_settings"))
+        .first(db_conn)
+        .optional();
+
+    match json {
+        Ok(x) => {
+            // FIXME simplify this expression
+            if let Some(setting) = x {
+                if let Some(val) = setting.value {
+                    let res: AppSettings = serde_json::from_str(&val).expect("Can't decode JSON");
+                    res
+                } else {
+                    AppSettings::default()
+                }
+            } else {
+                AppSettings::default()
+            }
+        },
+        Err(e) => {
+            error(&format!("{}", e));
+            AppSettings::default()
+        }
+    }
+}
+
+fn run_appdata_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
+    info("run_appdata_migrations()");
+    db_conn.run_pending_migrations(APPDATA_MIGRATIONS)
+           .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
+    Ok(())
 }
 
 /// Returns connections as a tuple to appdata.sqlite3, dictionaries.sqlite3, dpd.sqlite3

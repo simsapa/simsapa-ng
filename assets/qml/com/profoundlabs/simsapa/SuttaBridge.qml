@@ -7,6 +7,14 @@ Item {
         console.log("load_db()");
     }
 
+    function appdata_first_query() {
+        console.log("appdata_first_query()");
+    }
+
+    function dpd_first_query() {
+        console.log("dpd_first_query()");
+    }
+
     function results_page(query: string, page_num: int): string {
         console.log(query);
         return "{}";

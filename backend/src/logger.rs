@@ -327,11 +327,11 @@ impl Logger {
 static LOGGER: OnceLock<Logger> = OnceLock::new();
 
 pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
-    Logger::init_tracing()?;
-
-    let logger = Logger::new()?;
-    LOGGER.set(logger).map_err(|_| "Logger already initialized")?;
-
+    if LOGGER.get().is_none() {
+        Logger::init_tracing()?;
+        let logger = Logger::new()?;
+        LOGGER.set(logger).map_err(|_| "Logger already initialized")?;
+    }
     Ok(())
 }
 

@@ -5,12 +5,12 @@ use std::error::Error;
 use regex::Regex;
 use diesel::prelude::*;
 
-use crate::PAGE_LEN;
+use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::helpers::{consistent_niggahita, unique_search_results};
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
-use crate::db::{self, DbManager};
+use crate::db::DbManager;
 use crate::logger::error;
 
 pub struct SearchQueryTask<'a> {
@@ -36,12 +36,13 @@ impl<'a> SearchQueryTask<'a> {
         params: SearchParams,
         area: SearchArea,
     ) -> Self {
+        let g = get_app_globals();
         SearchQueryTask {
             dbm,
             query_text: consistent_niggahita(Some(query_text_orig)),
             search_mode: params.mode,
             search_area: area,
-            page_len: params.page_len.unwrap_or(PAGE_LEN),
+            page_len: params.page_len.unwrap_or(g.page_len),
             lang,
             lang_include: params.lang_include,
             source: params.source,
@@ -220,8 +221,8 @@ impl<'a> SearchQueryTask<'a> {
 
     fn uid_sutta(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::db::appdata_schema::suttas::dsl::*;
-        let dbm = db::get_dbm();
-        let db_conn = &mut dbm.appdata.get_conn()?;
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
@@ -243,8 +244,8 @@ impl<'a> SearchQueryTask<'a> {
     fn uid_word(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // TODO: review details in query_task.py
         use crate::db::dictionaries_schema::dict_words::dsl::*;
-        let dbm = db::get_dbm();
-        let db_conn = &mut dbm.dictionaries.get_conn()?;
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
@@ -271,8 +272,8 @@ impl<'a> SearchQueryTask<'a> {
         // TODO: review details in query_task.py
         use crate::db::appdata_schema::suttas::dsl::*;
 
-        let dbm = db::get_dbm();
-        let db_conn = &mut dbm.appdata.get_conn()?;
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
         // Box query for dynamic filtering
         let mut query = suttas.into_boxed();
@@ -346,8 +347,8 @@ impl<'a> SearchQueryTask<'a> {
         // TODO: review details in query_task.py
         use crate::db::dictionaries_schema::dict_words::dsl::*;
 
-        let dbm = db::get_dbm();
-        let db_conn = &mut dbm.dictionaries.get_conn()?;
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
 
         let mut query = dict_words.into_boxed();
         let mut count_query = dict_words.into_boxed();
@@ -419,8 +420,8 @@ impl<'a> SearchQueryTask<'a> {
             return Ok(Vec::new());
         }
 
-        let dbm = db::get_dbm();
-        let res_page = dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
+        let app_data = get_app_data();
+        let res_page = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
 
         // FIXME implement paging in DPD lookup results.
         let limit_page = res_page[0..100].to_vec();
@@ -524,67 +525,4 @@ impl<'a> SearchQueryTask<'a> {
         self.db_query_hits_count
     }
 
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::types::{SearchParams, SearchArea, SearchMode};
-
-    fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQueryTask {
-        let dbm = db::get_dbm();
-
-        let params = SearchParams {
-            mode: search_mode,
-            page_len: Some(PAGE_LEN),
-            lang: Some("en".to_string()),
-            lang_include: false,
-            source: None,
-            source_include: false,
-            enable_regex: false,
-            fuzzy_distance: 0,
-        };
-
-        SearchQueryTask::new(
-            dbm,
-            "en".to_string(),
-            query_text.to_string(),
-            params,
-            SearchArea::Suttas,
-        )
-    }
-
-    #[test]
-    fn test_highlight_text_simple() {
-        let task = create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
-        let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
-        let highlighted = task.highlight_text(&task.query_text, content).unwrap();
-        assert_eq!(highlighted, "sīlaṁ nissāya sīle patiṭṭhāya cattāro <span class='match'>satipaṭṭhā</span>ne bhāveyyāsi");
-    }
-
-    #[test]
-    fn test_highlight_text_uppercase() {
-        let task = create_test_task("SATIpaṭṭhā", SearchMode::ContainsMatch);
-        let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
-        let highlighted = task.highlight_text(&task.query_text, content).unwrap();
-        assert_eq!(highlighted, "sīlaṁ nissāya sīle patiṭṭhāya cattāro <span class='match'>satipaṭṭhā</span>ne bhāveyyāsi");
-    }
-
-    #[test]
-    fn test_highlight_text_regex_special_chars() {
-        let task = create_test_task("test", SearchMode::ContainsMatch);
-        let content = "This has regex .*+ chars";
-        let highlighted = task.highlight_text(".*+", content).unwrap();
-        assert_eq!(highlighted, "This has regex <span class='match'>.*+</span> chars");
-    }
-
-    #[test]
-    fn test_fragment_around_text_middle() {
-        let task = create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
-        let content = "sīlaṁ nissāya sīle patiṭṭhāya cattāro satipaṭṭhāne bhāveyyāsi";
-        let fragment = task.fragment_around_text(&task.query_text, content, 10, 200);
-        assert!(fragment.contains(&task.query_text));
-        assert!(fragment.starts_with("... patiṭṭhāya cattāro satipaṭṭhāne"));
-        assert!(fragment.ends_with("bhāveyyāsi"));
-    }
 }

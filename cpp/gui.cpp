@@ -24,6 +24,7 @@
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
+extern "C" void init_app_data();
 extern "C" void dotenv_c();
 extern "C" int init_logger_c();
 extern "C" void log_info_c(const char* msg);
@@ -47,6 +48,8 @@ void start(int argc, char* argv[]) {
   dotenv_c();
   init_logger_c();
   log_info_with_options_c("gui::start()", true);
+
+  init_app_data();
 
   QString os(QSysInfo::productType());
 

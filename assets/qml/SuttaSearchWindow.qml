@@ -39,6 +39,8 @@ ApplicationWindow {
         Component.onCompleted: {
             root.apply_theme();
             sb.load_db();
+            sb.appdata_first_query();
+            sb.dpd_first_query();
         }
     }
 

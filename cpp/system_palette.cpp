@@ -23,7 +23,6 @@ QString get_system_palette_json() {
         d["base"] = to_hex(palette.color(g, QPalette::Base));
         d["alternateBase"] = to_hex(palette.color(g, QPalette::AlternateBase));
         d["accent"] = to_hex(palette.color(g, QPalette::Accent));
-        d["noRole"] = to_hex(palette.color(g, QPalette::NoRole));
         d["text"] = to_hex(palette.color(g, QPalette::Text));
 
         d["button"] = to_hex(palette.color(g, QPalette::Button));

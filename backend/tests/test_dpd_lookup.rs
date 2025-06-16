@@ -1,15 +1,15 @@
-use simsapa_backend::db;
+use simsapa_backend::get_app_data;
 
 mod helpers;
 use helpers as h;
 
 #[test]
 fn test_dpd_lookup_list() {
-    h::appdata_db_setup();
-    let dbm = db::get_dbm();
+    h::app_data_setup();
+    let app_data = get_app_data();
 
     let query = "olokitasaññāṇeneva";
-    let result = dbm.dpd.dpd_lookup_list(query);
+    let result = app_data.dbm.dpd.dpd_lookup_list(query);
 
     let expected: Vec<String> = r#"
 <b>olokita</b> (pp) looked at; observed; viewed (by) <b>[ava + √lok + ita]</b> <i>pp of oloketi</i>

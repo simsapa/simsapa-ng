@@ -4,7 +4,8 @@ use diesel::prelude::*;
 
 use stardict::{self, Ifo, WordDefinition};
 
-use crate::db::DbManager;
+use crate::get_app_data;
+use crate::db;
 use crate::db::dictionaries_models::NewDictWord;
 use crate::helpers as h;
 use crate::logger::{info, warn, error};
@@ -162,8 +163,7 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
     words_to_insert
 }
 
-pub fn import_stardict_as_new(dbm: &DbManager,
-                              unzipped_dir: &Path,
+pub fn import_stardict_as_new(unzipped_dir: &Path,
                               lang: &str,
                               new_dict_label: &str,
                               _ignore_synonyms: bool,
@@ -171,7 +171,8 @@ pub fn import_stardict_as_new(dbm: &DbManager,
                               limit: Option<usize>)
                               -> Result<(), String> {
     use crate::db::dictionaries_models::NewDictionary;
-    use crate::db;
+
+    let app_data = get_app_data();
 
     let ifo_path = unzipped_dir.join(format!("{}.ifo", new_dict_label));
     let ifo = match Ifo::new(ifo_path.clone()) {
@@ -181,7 +182,7 @@ pub fn import_stardict_as_new(dbm: &DbManager,
 
     if delete_if_exists {
         // Delete dictionary. Associated words are dropped due to cascade.
-        match dbm.dictionaries.delete_dictionary_by_label(new_dict_label) {
+        match app_data.dbm.dictionaries.delete_dictionary_by_label(new_dict_label) {
             Ok(n) => info(&format!("Deleted {} dictionary.", n)),
             Err(e) => return Err(format!("Error deleting: {}", e)),
         };
@@ -199,7 +200,7 @@ pub fn import_stardict_as_new(dbm: &DbManager,
         version: None,
     };
 
-    let dictionary_id = match dbm.dictionaries.create_dictionary(new_dict) {
+    let dictionary_id = match app_data.dbm.dictionaries.create_dictionary(new_dict) {
         Ok(x) => x.id,
         Err(e) => return Err(format!("{}", e)),
     };
@@ -220,8 +221,8 @@ pub fn import_stardict_as_new(dbm: &DbManager,
 
     info(&format!("Inserting {} words into the database via batch...", words_to_insert.len()));
 
-    let _lock = dbm.dictionaries.write_lock.lock();
-    let db_conn = &mut dbm.dictionaries.get_conn().map_err(|e| format!("{}", e))?;
+    let _lock = app_data.dbm.dictionaries.write_lock.lock();
+    let db_conn = &mut app_data.dbm.dictionaries.get_conn().map_err(|e| format!("{}", e))?;
 
     let insert_result = db_conn.transaction::<_, diesel::result::Error, _>(|transaction_conn| {
         let chunk_size = 5000;
