@@ -69,6 +69,10 @@ Item {
         return 'dark';
     }
 
+    function set_theme_name(theme_name: string) {
+        console.log("set_theme_name():", theme_name);
+    }
+
     function get_theme(theme_name: string): string {
         return '{}';
     }

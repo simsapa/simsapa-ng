@@ -1,5 +1,7 @@
 use serde::{Serialize, Deserialize};
 
+use crate::logger::error;
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AppSettings {
     pub sutta_font_size: usize,
@@ -32,6 +34,19 @@ impl AppSettings {
             ThemeName::Light => "light".to_string(),
             ThemeName::Dark => "dark".to_string(),
         }
+    }
+
+    pub fn set_theme_name_from_str(&mut self, theme_name: &str) {
+        let theme_name = match theme_name.to_lowercase().as_str() {
+            "system" => ThemeName::System,
+            "light" => ThemeName::Light,
+            "dark" => ThemeName::Dark,
+            _ => {
+                error(&format!("Can't recognize theme name: {}", theme_name));
+                return;
+            }
+        };
+        self.theme_name = theme_name;
     }
 }
 

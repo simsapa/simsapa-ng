@@ -80,10 +80,10 @@ pub mod qobject {
         fn get_theme_name(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
-        fn get_saved_theme(self: &SuttaBridge) -> QString;
+        fn set_theme_name(self: Pin<&mut SuttaBridge>, theme_name: &QString);
 
         #[qinvokable]
-        fn save_theme_name(self: Pin<&mut SuttaBridge>, theme_name: &QString);
+        fn get_saved_theme(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
         fn get_theme(self: &SuttaBridge, theme_name: &QString) -> QString;
@@ -309,13 +309,14 @@ impl qobject::SuttaBridge {
         QString::from(app_data.app_settings_cache.theme_name_as_string())
     }
 
-    pub fn get_saved_theme(&self) -> QString {
-        self.get_theme(&self.get_theme_name())
+    /// Save the theme setting in the db
+    pub fn set_theme_name(self: Pin<&mut Self>, theme_name: &QString) {
+        let app_data = get_app_data();
+        app_data.set_theme_name(&theme_name.to_string());
     }
 
-    /// Save the theme setting in the db
-    pub fn save_theme_name(self: Pin<&mut Self>, _theme_name: &QString) {
-        // FIXME: implement save_theme_name
+    pub fn get_saved_theme(&self) -> QString {
+        self.get_theme(&self.get_theme_name())
     }
 
     /// Get theme colors as JSON string

@@ -7,6 +7,7 @@ use anyhow::{anyhow, Context, Result};
 use crate::db::{appdata_models::*, DbManager};
 use crate::db::appdata_schema::suttas::dsl::*;
 
+use crate::logger::error;
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
@@ -209,5 +210,41 @@ impl AppData {
 
     pub fn get_theme_name(&self) -> String {
         self.app_settings_cache.theme_name_as_string()
+    }
+
+    pub fn set_theme_name(&self, theme_name: &str) {
+        use crate::db::appdata_schema::app_settings;
+
+        // FIXME: In order to update self.app_settings_cache, get_app_data() has to return a mutable reference.
+        // self.app_settings_cache.set_theme_name_from_str(theme_name);
+
+        let mut app_settings = self.app_settings_cache.clone();
+        app_settings.set_theme_name_from_str(theme_name);
+
+        let settings_json = serde_json::to_string(&app_settings).expect("Can't encode JSON");
+
+        // let value = appdata_models::NewAppSetting {
+        //     key: "app_settings",
+        //     value: Some(&settings_json),
+        // };
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        // let db_conn = match self.dbm.userdata.get_conn() {
+        //     Ok(x) => x,
+        //     Err(e) => {
+        //         error(&format!("{}", e));
+        //         return;
+        //     }
+        // };
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => {}
+            Err(e) => error(&format!("{}", e))
+        };
     }
 }

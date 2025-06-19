@@ -259,14 +259,19 @@ ApplicationWindow {
 
             CMenuItem {
                 action: Action {
-                    id: web_reload
-                    text: "Reload Page"
-                    // TODO: implement reload
-                    // onTriggered: {
-                    //     if (root.current_web_view)
-                    //         root.current_web_view.reload();
-                    // }
+                    text: "Color Theme..."
+                    onTriggered: color_theme_dialog.open()
                 }
+
+                // action: Action {
+                //     id: web_reload
+                //     text: "Reload Page"
+                //     // TODO: implement reload
+                //     // onTriggered: {
+                //     //     if (root.current_web_view)
+                //     //         root.current_web_view.reload();
+                //     // }
+                // }
             }
         }
 
@@ -392,6 +397,14 @@ ApplicationWindow {
     }
 
     AboutDialog { id: about_dialog }
+
+    ColorThemeDialog {
+        id: color_theme_dialog
+        current_theme: sb.get_theme_name()
+        onThemeChanged: function(theme_name) {
+            sb.set_theme_name(theme_name);
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
