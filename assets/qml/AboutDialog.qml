@@ -8,12 +8,17 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
     title: `About ${root.app_name}`
-    width: 500
-    height: 400
+    width: is_mobile ? Screen.desktopAvailableWidth : 500
+    height: is_mobile ? Screen.desktopAvailableHeight : 500
     visible: false
     /* visible: true // for qml preview */
     color: palette.window
     flags: Qt.Dialog
+
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !root.is_mobile
+
+    readonly property int pointSize: is_mobile? 14 : 12
 
     // FIXME make text selectable
 
@@ -58,7 +63,7 @@ ApplicationWindow {
                 Label {
                     text: root.app_name
                     font.bold: true
-                    font.pointSize: 16
+                    font.pointSize: root.pointSize + 5
                 }
             }
 
@@ -66,7 +71,7 @@ ApplicationWindow {
                 spacing: 10
                 Text {
                     textFormat: Text.RichText
-                    font.pointSize: 11
+                    font.pointSize: root.pointSize
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     text: "<p>" + root.info_lines().join("</p><p>") + "</p>"
@@ -78,7 +83,7 @@ ApplicationWindow {
                 Text {
                     id: data_contents
                     textFormat: Text.RichText
-                    font.pointSize: 11
+                    font.pointSize: root.pointSize
                     text: ""
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true

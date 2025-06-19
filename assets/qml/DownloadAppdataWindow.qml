@@ -10,11 +10,17 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
     title: "Download Application Assets"
-    width: 500
-    height: 700
+    width: is_mobile ? Screen.desktopAvailableWidth : 500
+    height: is_mobile ? Screen.desktopAvailableHeight : 700
     visible: true
     color: palette.window
     flags: Qt.Dialog
+
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !root.is_mobile
+
+    readonly property int pointSize: is_mobile ? 16 : 12
+    readonly property int largePointSize: pointSize + 5
 
     Component.onCompleted: {
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
@@ -25,6 +31,32 @@ ApplicationWindow {
     property bool include_appdata_downloads: true
 
     AssetManager { id: manager }
+
+    Connections {
+        target: manager
+
+        function onDownloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int) {
+            let downloaded_bytes_mb_str = (downloaded_bytes / 1024 / 1024).toFixed(2);
+            let total_bytes_mb_str = (total_bytes / 1024 / 1024).toFixed(2);
+            var frac = total_bytes > 0 ? downloaded_bytes / total_bytes : 0;
+                                         progress_bar.value = frac;
+            if (downloaded_bytes == total_bytes) {
+                download_status.text = op_msg;
+            } else {
+                download_status.text = `${op_msg}: ${downloaded_bytes_mb_str} / ${total_bytes_mb_str} MB`;
+            }
+        }
+
+        function onDownloadShowMsg (message) {
+            download_status.text = message;
+        }
+
+        function onDownloadsCompleted (value: bool) {
+            if (value) {
+                views_stack.currentIndex = 3;
+            }
+        }
+    }
 
     function validate_and_run_download() {
         // TODO Check that all entered language codes are available.
@@ -47,18 +79,17 @@ ApplicationWindow {
 
             const appdata_tar_url = `https://github.com/${github_repo}/releases/download/${version}/appdata.tar.bz2`;
             const dictionaries_tar_url = `https://github.com/${github_repo}/releases/download/${version}/dictionaries.tar.bz2`;
+            const dpd_tar_url = `https://github.com/${github_repo}/releases/download/${version}/dpd.tar.bz2`;
 
             // Default: General bundle
             urls.push(appdata_tar_url);
             urls.push(dictionaries_tar_url);
+            urls.push(dpd_tar_url);
 
             /* console.log("Show progress bar"); */
             progress_bar.visible = true;
 
-            manager.download_urls(urls);
-
-            // TODO start_animation()
-            // TODO _run_download_post_hook()
+            manager.download_urls_and_extract(urls);
         }
 
     }
@@ -79,7 +110,7 @@ ApplicationWindow {
 
                 Text {
                     textFormat: Text.RichText
-                    font.pointSize: 11
+                    font.pointSize: root.pointSize
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignCenter
@@ -123,9 +154,16 @@ ApplicationWindow {
                 spacing: 10
                 anchors.fill: parent
 
+                Image {
+                    source: "icons/appicons/simsapa.png"
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: 100
+                    Layout.alignment: Qt.AlignCenter
+                }
+
                 Text {
                     textFormat: Text.RichText
-                    font.pointSize: 11
+                    font.pointSize: root.pointSize
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignCenter
@@ -147,37 +185,64 @@ ApplicationWindow {
                 }
 
                 ColumnLayout {
+                    Layout.margins: 20
+
                     RadioButton {
                         text: "General bundle"
+                        font.pointSize: root.pointSize
                         checked: true
+                        enabled: false
                         onClicked: {} // _toggled_general_bundle
                     }
 
-                    Label { text: "Pāli and English + pre-generated search index" }
-                    Label { text: "" }
-
-                    RadioButton {
-                        text: "Include additional texts"
-                        checked: false
-                        enabled: false
+                    Label {
+                        text: "Pāli and English + pre-generated search index"
+                        font.pointSize: root.pointSize
                     }
+                    Label { text: ""; font.pointSize: root.pointSize }
+
+                    Label {
+                        text: "(Note: Choices for sutta translations are coming later.)"
+                        font.pointSize: root.pointSize
+                    }
+
+                    // RadioButton {
+                    //     text: "Include additional texts"
+                    //     checked: false
+                    //     enabled: false
+                    // }
                 }
 
                 Item { Layout.fillHeight: true }
 
-                Button {
-                    text: "Download"
-                    Layout.alignment: Qt.AlignCenter
-                    onClicked: {
-                        views_stack.currentIndex = 2;
-                        root.validate_and_run_download();
+                RowLayout {
+                    Layout.margins: 20
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: Qt.quit()
                     }
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Download"
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: {
+                            views_stack.currentIndex = 2;
+                            root.validate_and_run_download();
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
 
-                Button {
-                    Layout.alignment: Qt.AlignCenter
-                    text: "Quit"
-                    onClicked: Qt.quit()
+                Item {
+                    visible: root.is_mobile
+                    Layout.fillHeight: true
                 }
             }
         }
@@ -193,10 +258,18 @@ ApplicationWindow {
 
                 Item { Layout.fillHeight: true }
 
+                AnimatedImage {
+                    id: simsapa_loading_gif
+                    source: "icons/gif/simsapa-loading.gif"
+                    playing: true
+                    Layout.alignment: Qt.AlignCenter
+                }
+
                 Label {
                     id: download_status
                     Layout.alignment: Qt.AlignCenter
                     text: "Downloading ..."
+                    font.pointSize: root.pointSize
                 }
 
                 ProgressBar {
@@ -207,43 +280,87 @@ ApplicationWindow {
                     from: 0
                     to: 1
                     value: 0
+                    font.pointSize: root.pointSize
                 }
 
-                Button {
-                    id: progress_cancel_button
-                    text: "Cancel"
-                    Layout.alignment: Qt.AlignCenter
-                    enabled: false
-                    onClicked: {} // _handle_cancel_download
-                }
+                // Text {
+                //     id: download_msg
+                //     text: ""
+                //     textFormat: Text.RichText
+                //     font.pointSize: root.pointSize
+                //     Layout.alignment: Qt.AlignCenter
+                // }
 
-                Button {
-                    Layout.alignment: Qt.AlignCenter
-                    text: "Quit"
-                    onClicked: Qt.quit()
+                RowLayout {
+                    Layout.margins: 20
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        id: download_quit_button
+                        text: "Quit"
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        Layout.alignment: Qt.AlignCenter
+                        onClicked: Qt.quit()
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
 
                 Item { Layout.fillHeight: true }
+            }
+        }
 
-                Connections {
-                    target: manager
+        // Idx 3: Completed
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
-                    function onDownloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int) {
-                        var frac = total_bytes > 0 ? downloaded_bytes / total_bytes : 0;
-                        progress_bar.value = frac;
-                        if (downloaded_bytes == total_bytes) {
-                            download_status.text = op_msg;
-                        } else {
-                            download_status.text = `${op_msg}: ${downloaded_bytes} / ${total_bytes} bytes`;
-                        }
+            ColumnLayout {
+                spacing: 10
+                anchors.fill: parent
+
+                Image {
+                    source: "icons/appicons/simsapa.png"
+                    Layout.preferredWidth: 100
+                    Layout.preferredHeight: 100
+                    Layout.alignment: Qt.AlignCenter
+                }
+
+                ColumnLayout {
+                    Layout.margins: 20
+
+                    Item { Layout.fillHeight: true }
+
+                    Text {
+                        text: `
+<style>p { text-align: center; }</style>
+<p>Completed.</p>
+<p>Quit and start the application again.</p>`
+                        textFormat: Text.RichText
+                        font.pointSize: root.pointSize
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignCenter
                     }
 
-                    function onDownloadFinished (message) {
-                        download_status.text = message;
-                        /* quitButton.enabled = true; */
+                    Item { Layout.fillHeight: true }
+
+                    Button {
+                        id: completed_quit_button
+                        text: "Quit"
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        Layout.alignment: Qt.AlignCenter
+                        onClicked: Qt.quit()
                     }
+                }
+
+                Item {
+                    visible: root.is_mobile
+                    Layout.fillHeight: true
                 }
             }
         }
+
     }
 }

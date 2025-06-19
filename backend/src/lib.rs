@@ -12,13 +12,15 @@ pub mod theme_colors;
 pub mod app_settings;
 
 use std::env;
-use std::fs::{self, create_dir_all};
+use std::io;
+use std::fs::{self, create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::error::Error;
 use std::sync::OnceLock;
 
 use app_dirs::{get_app_root, AppDataType, AppInfo};
 use dotenvy::dotenv;
+use walkdir::WalkDir;
 
 use crate::logger::{info, error};
 use crate::app_data::AppData;
@@ -27,7 +29,8 @@ pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-lab
 static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
 
-pub fn init_app_globals() {
+#[unsafe(no_mangle)]
+pub extern "C" fn init_app_globals() {
     if APP_GLOBALS.get().is_none() {
         let g = AppGlobals::new();
         APP_GLOBALS.set(g).expect("Can't set AppGlobals");
@@ -45,7 +48,7 @@ pub fn get_app_globals() -> &'static AppGlobals {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_data() {
-    if APP_GLOBALS.get().is_none() {
+    if APP_DATA.get().is_none() {
         info("init_app_data() start");
         let app_data = AppData::new();
         APP_DATA.set(app_data).expect("Can't set AppData");
@@ -63,6 +66,8 @@ pub struct AppGlobals {
     pub api_port: i32,
     pub api_url: String,
     pub simsapa_dir: PathBuf,
+    pub download_temp_folder: PathBuf,
+    pub extract_temp_folder: PathBuf,
     pub app_assets_dir: PathBuf,
 
     pub appdata_db_path: PathBuf,
@@ -97,6 +102,9 @@ impl AppGlobals {
             }
         };
 
+        let download_temp_folder = simsapa_dir.join("temp-download");
+        let extract_temp_folder = download_temp_folder.join("temp-extract");
+
         let app_assets_dir = simsapa_dir.join("app-assets");
 
         let appdata_db_path = app_assets_dir.join("appdata.sqlite3");
@@ -120,6 +128,8 @@ impl AppGlobals {
             api_port: 4848,
             api_url: "http://localhost:4848".to_string(),
             simsapa_dir,
+            download_temp_folder,
+            extract_temp_folder,
             app_assets_dir,
 
             appdata_db_path,
@@ -184,7 +194,10 @@ pub fn get_create_simsapa_app_assets_path() -> PathBuf {
 
     match p.try_exists() {
         Ok(r) => if !r {
-            let _ = create_dir_all(&p);
+            match create_dir_all(&p) {
+                Ok(_) => {},
+                Err(e) => error(&format!("{}", e)),
+            };
         }
         Err(e) => error(&format!("{}", e)),
     }
@@ -210,4 +223,101 @@ pub extern "C" fn appdata_db_exists() -> bool {
 #[unsafe(no_mangle)]
 pub extern "C" fn dotenv_c() {
     dotenv().ok();
+}
+
+
+#[unsafe(no_mangle)]
+pub extern "C" fn ensure_no_empty_db_files() {
+    let g = get_app_globals();
+    for p in [g.appdata_db_path.clone(),
+              g.userdata_db_path.clone(),
+              g.dict_db_path.clone(),
+              g.dpd_db_path.clone()] {
+        match p.try_exists() {
+            Ok(true) => {
+                match fs::metadata(&p) {
+                    Ok(metadata) if metadata.len() == 0 => {
+                        if let Err(e) = fs::remove_file(&p) {
+                            eprintln!("Failed to remove file {:?}: {}", p, e);
+                        }
+                    }
+                    Ok(_) => {}, // File exists but is not empty
+                    Err(e) => eprintln!("Failed to get metadata for {:?}: {}", p, e),
+                }
+            }
+            Ok(false) => {}, // File doesn't exist
+            Err(e) => eprintln!("Failed to check if file exists {:?}: {}", p, e),
+        }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn remove_download_temp_folder() {
+    let g = get_app_globals();
+
+    match g.download_temp_folder.try_exists() {
+        Ok(exists) => {
+            if exists {
+                let _ = remove_dir_all(&g.download_temp_folder);
+            }
+        }
+
+        Err(e) => {
+            error(&format!("{}", e));
+            return;
+        }
+    }
+}
+
+pub fn move_folder_contents<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
+    let src_path = src.as_ref();
+    let dest_path = dest.as_ref();
+
+    // Create destination directory if it doesn't exist
+    fs::create_dir_all(dest_path)?;
+
+    // Collect all entries and sort by depth (deepest first for proper deletion)
+    let mut entries: Vec<_> = WalkDir::new(src_path)
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+    // Sort by depth (deepest first) to handle nested structures properly
+    entries.sort_by(|a, b| b.depth().cmp(&a.depth()));
+
+    // Create directory structure first
+    for entry in &entries {
+        if entry.file_type().is_dir() && entry.path() != src_path {
+            let relative_path = entry.path().strip_prefix(src_path)
+                                            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            let dest_dir = dest_path.join(relative_path);
+            fs::create_dir_all(&dest_dir)?;
+        }
+    }
+
+    // Move files and remove directories
+    for entry in entries {
+        let entry_path = entry.path();
+
+        if entry_path == src_path {
+            continue; // Skip the root source directory itself
+        }
+
+        if entry.file_type().is_file() {
+            let relative_path = entry_path.strip_prefix(src_path)
+                                          .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            let dest_file = dest_path.join(relative_path);
+            fs::rename(entry_path, dest_file)?;
+        } else if entry.file_type().is_dir() {
+            // Remove directory after its contents have been moved
+            if let Err(e) = fs::remove_dir(entry_path) {
+                // Only error if it's not already empty/removed
+                if e.kind() != io::ErrorKind::NotFound {
+                    return Err(e);
+                }
+            }
+        }
+    }
+
+    Ok(())
 }

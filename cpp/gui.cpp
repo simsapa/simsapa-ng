@@ -19,11 +19,15 @@
 // #include <QtWebView/QtWebView>
 // #include <QtWebEngineQuick/qtwebenginequickglobal.h>
 
+#include "errors.h"
 #include "window_manager.h"
 
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
+extern "C" void ensure_no_empty_db_files();
+extern "C" void remove_download_temp_folder();
+extern "C" void init_app_globals();
 extern "C" void init_app_data();
 extern "C" void dotenv_c();
 extern "C" int init_logger_c();
@@ -48,8 +52,12 @@ void start(int argc, char* argv[]) {
   dotenv_c();
   init_logger_c();
   log_info_with_options_c("gui::start()", true);
+  init_app_globals();
+  remove_download_temp_folder();
 
-  init_app_data();
+  // There may be a 0-byte size db file remaining from a failed
+  // install attempt.
+  ensure_no_empty_db_files();
 
   QString os(QSysInfo::productType());
 
@@ -86,13 +94,6 @@ void start(int argc, char* argv[]) {
   //
   app.setApplicationVersion("v0.1.0");
 
-  // Start the API server after checking for APP_DB. If this is the first run,
-  // the server would create the userdata db, and we can't use it to test in
-  // DownloadAppdataWindow() if this is the first ever start.
-  //
-  // The port is determined in start_webserver().
-  std::thread daemon_server_thread(start_webserver);
-
   // app_windows = AppWindows(app, app_data, hotkeys_manager, enable_tray_icon)
 
   // setup_system_tray();
@@ -125,13 +126,28 @@ void start(int argc, char* argv[]) {
     // QQmlApplicationEngine engine(&app);
     // engine.load(view_qml);
 
-  } else {
+    log_info_c("app.exec()");
+    int status = app.exec();
 
-    // === Create the first app window ===
+    std::ostringstream msg;
+    msg << "Exiting with status " << status << ".";
+    log_info_c(msg.str().c_str());
 
-    AppGlobals::manager->create_sutta_search_window();
-    // AppGlobals::manager->create_word_lookup_window("hey ho");
+    throw NormalExit("Exiting after DownloadAppdataWindow", status);
   }
+
+  // Init AppData and start the API server after checking for APP_DB. If this is the first run,
+  // init_app_data() would create the userdata db, and we can't use it to test in
+  // DownloadAppdataWindow() if this is the first ever start.
+  init_app_data();
+
+  // The port is determined in start_webserver().
+  std::thread daemon_server_thread(start_webserver);
+
+  // === Create the first app window ===
+
+  AppGlobals::manager->create_sutta_search_window();
+  // AppGlobals::manager->create_word_lookup_window("hey ho");
 
   log_info_c("app.exec()");
   int status = app.exec();

@@ -10,8 +10,8 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
     title: "Sutta Search - Simsapa"
-    width: 1300
-    height: 900
+    width: is_mobile ? Screen.desktopAvailableWidth : 1300
+    height: is_mobile ? Screen.desktopAvailableHeight : 900
     visible: true
     color: palette.window
 

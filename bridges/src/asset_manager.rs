@@ -1,5 +1,5 @@
 use std::thread;
-use std::fs::{File, create_dir_all, remove_file};
+use std::fs::{File, create_dir_all, remove_file, remove_dir_all};
 use std::io::{self, Read, Write, BufReader};
 use std::path::Path;
 use std::error::Error;
@@ -11,8 +11,8 @@ use reqwest::blocking::Client;
 use bzip2::read::BzDecoder;
 use tar::Archive;
 
-use simsapa_backend::get_create_simsapa_app_assets_path;
-use simsapa_backend::logger::info;
+use simsapa_backend::{get_app_globals, move_folder_contents};
+use simsapa_backend::logger::{info, error};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -39,8 +39,7 @@ pub mod qobject {
 
     extern "RustQt" {
         #[qinvokable]
-        #[cxx_name = "download_urls"]
-        fn download_urls(self: Pin<&mut AssetManager>, urls: QStringList);
+        fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList);
 
         #[qsignal]
         #[cxx_name = "downloadProgressChanged"]
@@ -50,8 +49,12 @@ pub mod qobject {
                                      total_bytes: usize);
 
         #[qsignal]
-        #[cxx_name = "downloadFinished"]
-        fn download_finished(self: Pin<&mut AssetManager>, message: QString);
+        #[cxx_name = "downloadShowMsg"]
+        fn download_show_msg(self: Pin<&mut AssetManager>, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "downloadsCompleted"]
+        fn downloads_completed(self: Pin<&mut AssetManager>, value: bool);
     }
 }
 
@@ -59,8 +62,15 @@ pub mod qobject {
 pub struct AssetManagerRust;
 
 impl qobject::AssetManager {
-    fn download_urls(self: Pin<&mut Self>, urls: QStringList) {
-        info(&format!("download_urls(): {}", urls.len()));
+    fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList) {
+        info(&format!("download_urls_and_extract(): {} urls", urls.len()));
+
+        // Save to a temp folder (not in app-assets).
+        // Only replace the assets after downloading and extracting succeeds.
+        let g = get_app_globals();
+        let download_temp_folder = g.download_temp_folder.clone();
+        let extract_temp_folder = g.extract_temp_folder.clone();
+        let app_assets_folder = g.app_assets_dir.clone();
 
         let qt_thread = self.qt_thread();
 
@@ -71,8 +81,29 @@ impl qobject::AssetManager {
                 let url_str = url_qstr.to_string();
                 let url = QUrl::from(&url_str);
 
-                let file_name = url.file_name().to_string();
-                let file_path = get_create_simsapa_app_assets_path().join(&file_name);
+                let download_file_name = url.file_name().to_string();
+                let download_temp_file_path = download_temp_folder.join(&download_file_name);
+
+                match extract_temp_folder.try_exists() {
+                    Ok(exists) => {
+                        if exists {
+                            // If it exists, remove and re-create it to make sure we extract to an empty folder
+                            let _ = remove_dir_all(&extract_temp_folder);
+                        }
+                        match create_dir_all(&extract_temp_folder) {
+                            Ok(_) => {},
+                            Err(e) => {
+                                error(&format!("{}", e));
+                                return;
+                            },
+                        };
+                    }
+
+                    Err(e) => {
+                        error(&format!("{}", e));
+                        return;
+                    }
+                }
 
                 let client = Client::new();
                 // Start blocking GET
@@ -82,18 +113,18 @@ impl qobject::AssetManager {
                         // Emit finished signal with the error message
                         qt_thread.queue(move |mut qo| {
                             let msg = QString::from(&format!("Error: {}", e));
-                            qo.as_mut().download_finished(msg);
+                            qo.as_mut().download_show_msg(msg);
                         }).unwrap();
                         return;
                     }
                 };
 
-                let mut file = match File::create(&file_path) {
+                let mut file = match File::create(&download_temp_file_path) {
                     Ok(f) => f,
                     Err(e) => {
                         qt_thread.queue(move |mut qo| {
                             let msg = QString::from(&format!("Error creating the file: {}", e));
-                            qo.as_mut().download_finished(msg);
+                            qo.as_mut().download_show_msg(msg);
                         }).unwrap();
                         return;
                     }
@@ -104,10 +135,10 @@ impl qobject::AssetManager {
                     None => {
                         qt_thread.queue(move |mut qo| {
                             let msg = QString::from("Error: can't read download content length.");
-                            qo.as_mut().download_finished(msg);
+                            qo.as_mut().download_show_msg(msg);
                         }).unwrap();
                         // The download file may have already been created with 0 length.
-                        let _ = remove_file(file_path);
+                        let _ = remove_file(download_temp_file_path);
                         return;
                     }
                 };
@@ -121,29 +152,48 @@ impl qobject::AssetManager {
                     if n == 0 { break; } // EOF
                     file.write_all(&buf[..n]).unwrap();
                     downloaded += n;
-                    let op_msg = QString::from(format!("Downloading {}", &file_name));
+                    let op_msg = QString::from(format!("Downloading {}", &download_file_name));
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().download_progress_changed(op_msg, downloaded, total);
                     }).unwrap();
                 }
 
-                let op_msg = QString::from(format!("Extracting {}", &file_name));
+                let op_msg = QString::from(format!("Extracting {}", &download_file_name));
                 qt_thread.queue(move |mut qo| {
                     qo.as_mut().download_progress_changed(op_msg, 0, 0);
                 }).unwrap();
 
-                let msg = match extract_tar_bz2_with_progress(&file_path, file_path.parent().unwrap(), &qt_thread) {
-                    Ok(_) => QString::from(format!("Completed extracting {}", &file_name)),
+                // Extract contents to a temp folder and move contents on success
+                let msg = match extract_tar_bz2_with_progress(&download_temp_file_path,
+                                                              &extract_temp_folder,
+                                                              &qt_thread) {
+                    Ok(_) => QString::from(format!("Completed extracting {}", &download_file_name)),
                     Err(e) => QString::from(format!("{}", e)),
                 };
 
                 // Remove the downloaded tar.bz2 whether the extraction was successful or not.
-                let _ = remove_file(file_path);
+                let _ = remove_file(download_temp_file_path);
+
+                // Move extracted contents to assets
+                match move_folder_contents(&extract_temp_folder, &app_assets_folder) {
+                    Ok(_) => {}
+                    Err(e) => error(&format!("{}", e))
+                }
 
                 qt_thread.queue(move |mut qo| {
-                    qo.as_mut().download_finished(msg);
+                    qo.as_mut().download_show_msg(msg);
                 }).unwrap();
             } // end of for loop
+
+            // Clean-up. All downloads are completed and extracted, remove the
+            // download temp folder.
+            let _ = remove_dir_all(&download_temp_folder);
+
+            info("download_urls_and_extract(): all downloads completed");
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().downloads_completed(true);
+            }).unwrap();
+
         }); // end of thread
     }
 }
