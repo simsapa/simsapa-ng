@@ -232,7 +232,8 @@ impl qobject::SuttaBridge {
 
     pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
         let app_data = get_app_data();
-        let body_class = app_data.app_settings_cache.theme_name_as_string();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        let body_class = app_settings.theme_name_as_string();
 
         let blank_page_html = html_page("", None, None, None, Some(body_class.clone()));
         if query.trimmed().is_empty() {
@@ -306,7 +307,8 @@ impl qobject::SuttaBridge {
     /// Get the current theme setting, 'system', 'light', or 'dark'
     pub fn get_theme_name(&self) -> QString {
         let app_data = get_app_data();
-        QString::from(app_data.app_settings_cache.theme_name_as_string())
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        QString::from(app_settings.theme_name_as_string())
     }
 
     /// Save the theme setting in the db

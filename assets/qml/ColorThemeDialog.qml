@@ -68,17 +68,13 @@ Dialog {
             onClicked: root.selected_theme = "dark"
         }
 
-        Label {
-            text: "Restart Simsapa for the new setting to take effect."
-            font.pointSize: root.pointSize
-            Layout.fillWidth: true
-            wrapMode: Label.WordWrap
-        }
-
         Item { Layout.fillHeight: true }
     }
 
-    onAccepted: themeChanged(root.selected_theme)
+    onAccepted: {
+        root.current_theme = root.selected_theme;
+        themeChanged(root.selected_theme);
+    }
 
     onRejected: {
         // Reset to current theme if canceled

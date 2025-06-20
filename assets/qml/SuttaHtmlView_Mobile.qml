@@ -23,6 +23,24 @@ WebView {
         load_sutta_uid(web.sutta_uid);
     }
 
+    onIs_darkChanged: function() {
+        let js = "";
+        if (web.is_dark) {
+            js = `
+document.body.classList.add('dark');
+document.documentElement.classList.add('dark');
+document.documentElement.style.colorScheme = 'dark';
+`;
+        } else {
+            js = `
+document.body.classList.remove('dark');
+document.documentElement.classList.remove('dark');
+document.documentElement.style.colorScheme = 'light';
+`;
+        }
+        runJavaScript(js);
+    }
+
     SuttaBridge {
         id: sb
     }

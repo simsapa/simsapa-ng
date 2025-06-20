@@ -1,3 +1,4 @@
+use std::sync::RwLock;
 use std::collections::BTreeMap;
 
 use diesel::prelude::*;
@@ -18,7 +19,7 @@ use crate::{init_app_globals, get_app_globals};
 #[derive(Debug)]
 pub struct AppData {
     pub dbm: DbManager,
-    pub app_settings_cache: AppSettings,
+    pub app_settings_cache: RwLock<AppSettings>,
     pub api_url: String,
 }
 
@@ -26,7 +27,7 @@ impl AppData {
     pub fn new() -> Self {
         init_app_globals();
         let dbm = DbManager::new().expect("Can't create DbManager");
-        let app_settings_cache = dbm.userdata.get_app_settings().clone();
+        let app_settings_cache = RwLock::new(dbm.userdata.get_app_settings().clone());
         let g = get_app_globals();
 
         AppData {
@@ -105,14 +106,16 @@ impl AppData {
         let content_str = sutta.content_json.as_deref()
             .ok_or_else(|| anyhow!("Sutta {} is missing content_json", sutta.uid))?;
 
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+
         bilara_text_to_segments(
             content_str,
             tmpl_str,
             variant_json_str.as_deref(),
             comment_json_str.as_deref(),
             gloss_json_str.as_deref(),
-            self.app_settings_cache.show_all_variant_readings,
-            self.app_settings_cache.show_glosses,
+            app_settings.show_all_variant_readings,
+            app_settings.show_glosses,
         )
     }
 
@@ -125,10 +128,12 @@ impl AppData {
         sutta_quote: Option<&SuttaQuote>,
         js_extra_pre: Option<String>,
     ) -> Result<String> {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+
         let content_html_body = if let Some(ref content_json_str) = sutta.content_json {
             if !content_json_str.is_empty() {
                 // Check setting for line-by-line view
-                let line_by_line = self.app_settings_cache.show_translation_and_pali_line_by_line;
+                let line_by_line = app_settings.show_translation_and_pali_line_by_line;
 
                 // Attempt to fetch Pali sutta if needed
                 let pali_sutta_result = if line_by_line && sutta.language != "pli" {
@@ -176,8 +181,8 @@ impl AppData {
         };
 
         // Get display settings
-        let font_size = self.app_settings_cache.sutta_font_size;
-        let max_width = self.app_settings_cache.sutta_max_width;
+        let font_size = app_settings.sutta_font_size;
+        let max_width = app_settings.sutta_max_width;
 
         // Format CSS and JS extras
         let css_extra = format!("html {{ font-size: {}px; }} body {{ max-width: {}ex; }}", font_size, max_width);
@@ -188,7 +193,7 @@ impl AppData {
             js_extra = format!("{}; {}", js_pre, js_extra);
         }
 
-        js_extra.push_str(&format!(" const SHOW_BOOKMARKS = {};", self.app_settings_cache.show_bookmarks));
+        js_extra.push_str(&format!(" const SHOW_BOOKMARKS = {};", app_settings.show_bookmarks));
 
         if let Some(quote) = sutta_quote {
             // Escape the quote text for JavaScript string literal
@@ -209,24 +214,18 @@ impl AppData {
     }
 
     pub fn get_theme_name(&self) -> String {
-        self.app_settings_cache.theme_name_as_string()
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.theme_name_as_string()
     }
 
     pub fn set_theme_name(&self, theme_name: &str) {
         use crate::db::appdata_schema::app_settings;
 
-        // FIXME: In order to update self.app_settings_cache, get_app_data() has to return a mutable reference.
-        // self.app_settings_cache.set_theme_name_from_str(theme_name);
-
-        let mut app_settings = self.app_settings_cache.clone();
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
         app_settings.set_theme_name_from_str(theme_name);
 
-        let settings_json = serde_json::to_string(&app_settings).expect("Can't encode JSON");
-
-        // let value = appdata_models::NewAppSetting {
-        //     key: "app_settings",
-        //     value: Some(&settings_json),
-        // };
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
         let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
 

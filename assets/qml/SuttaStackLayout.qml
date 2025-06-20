@@ -9,7 +9,6 @@ StackLayout {
     required property bool is_dark
     property string current_key: ""
     property var items_map: ({})
-    property bool is_drawer_menu_open: false
 
     Component {
         id: sutta_html_component
@@ -20,9 +19,6 @@ StackLayout {
             is_dark: root.is_dark
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // Hide the webview when the drawer menu is open. The mobile webview
-            // is always on top, obscuring the drawer menu.
-            visible: !root.is_drawer_menu_open
 
             property int index
             /* Component.onCompleted: console.log("SuttaHtmlView created at index", html_view.index) */

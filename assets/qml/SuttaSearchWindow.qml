@@ -403,6 +403,7 @@ ApplicationWindow {
         current_theme: sb.get_theme_name()
         onThemeChanged: function(theme_name) {
             sb.set_theme_name(theme_name);
+            root.apply_theme();
         }
     }
 
@@ -667,7 +668,9 @@ ApplicationWindow {
                                     anchors.fill: parent
                                     window_id: root.window_id
                                     is_dark: root.is_dark
-                                    is_drawer_menu_open: mobile_menu.activeFocus
+                                    // Hide the webview when the drawer menu or a dialog is open. The mobile webview
+                                    // is always on top, obscuring other items.
+                                    visible: !mobile_menu.activeFocus && !color_theme_dialog.visible
                                 }
                             }
 
