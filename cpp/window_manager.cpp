@@ -20,6 +20,7 @@ WindowManager::WindowManager(QApplication* app, QObject* parent)
 
     QObject::connect(this, &WindowManager::signal_run_lookup_query, this, &WindowManager::run_lookup_query);
     QObject::connect(this, &WindowManager::signal_run_summary_query, this, &WindowManager::run_summary_query);
+    QObject::connect(this, &WindowManager::signal_run_sutta_menu_action, this, &WindowManager::run_sutta_menu_action);
 }
 
 WindowManager::~WindowManager() {
@@ -72,4 +73,12 @@ void WindowManager::run_summary_query(const QString& window_id, const QString& q
     }
     auto w = this->sutta_search_windows[0];
     QMetaObject::invokeMethod(w->m_root, "set_summary_query", Q_ARG(QString, query_text));
+}
+
+void WindowManager::run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text) {
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+    auto w = this->sutta_search_windows[0];
+    QMetaObject::invokeMethod(w->m_root, "run_sutta_menu_action", Q_ARG(QString, action), Q_ARG(QString, query_text));
 }

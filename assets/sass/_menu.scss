@@ -1,0 +1,352 @@
+$black_90: #1a1a1a;
+
+// theme_colors_light.json values, e.g. active.highlight, active.mid
+$active_mid: #B8B8B8;
+$active_shadow: #767676;
+$active_highlight: #308CC6;
+
+$edge_margin: 10px;
+$button_size: 40px;
+$border_radius: 2px;
+$font_size: 13px;
+$font_size_small: 13px;
+
+:root {
+    // Light mode colors
+    --bg-primary: #f5f5f5;
+    --bg-content: white;
+    --text-primary: $black_90;
+    --text-secondary: #666;
+    --text-muted: #999;
+
+    // Button colors (light)
+    --btn-bg-start: #fefefe;
+    --btn-bg-end: #ededed;
+
+    --btn-bg-hover-start: #fefefe;
+    --btn-bg-hover-end: #fefefe;
+
+    --btn-bg-active-start: #d0d0d0;
+    --btn-bg-active-end: #f0f0f0;
+
+    --btn-border: #ababab; // #a0a0a0;
+    --btn-border-hover: #909090;
+    --btn-border-active: #808080;
+    --btn-icon: #333;
+
+    // Menu colors (light)
+    --menu-bg-start: #f8f8f8;
+    --menu-bg-end: #eeeeee;
+    --menu-border: #a0a0a0;
+    --menu-separator: #c0c0c0;
+
+    // Group header colors (light)
+    --group-bg-start: #f0f0f0;
+    --group-bg-end: #e8e8e8;
+    --group-bg-hover-start: #f5f5f5;
+    --group-bg-hover-end: #ededed;
+    --group-bg-active-start: #e8e8e8;
+    --group-bg-active-end: #f0f0f0;
+    --group-border: #d0d0d0;
+    --group-arrow: #666;
+
+    // Menu item colors (light)
+    --item-bg-start: #fafafa;
+    --item-bg-end: #f2f2f2;
+    --item-separator: rgba(192, 192, 192, 0.3);
+    --item-bg-hover-start: #e6f3ff;
+    --item-bg-hover-end: #cce7ff;
+    --item-bg-active-start: #cce7ff;
+    --item-bg-active-end: #b3d9ff;
+    --item-border-hover: #0078d4;
+    --item-bullet: #999;
+
+    // Selection colors
+    --selection-bg: #0078d4;
+    --selection-shadow: rgba(0, 120, 212, 0.2);
+
+    // Text shadows
+    --text-shadow-light: rgba(255, 255, 255, 0.8);
+    --text-shadow-dark: rgba(0, 0, 0, 0.5);
+}
+
+// Dark mode colors
+body.dark {
+    --bg-primary: #2b2b2b;
+    --bg-content: #3c3c3c;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --text-muted: #999999;
+
+    // Button colors (dark)
+    --btn-bg-start: #464646;
+    --btn-bg-end: #3c3c3c;
+
+    --btn-bg-hover-start: #464646;
+    --btn-bg-hover-end: #464646;
+
+    --btn-bg-active-start: #363636;
+    --btn-bg-active-end: #4a4a4a;
+
+    --btn-border: #5d5d5d; // #606060;
+    --btn-border-hover: #707070;
+    --btn-border-active: #505050;
+    --btn-icon: #ffffff;
+
+    // Menu colors (dark)
+    --menu-bg-start: #404040;
+    --menu-bg-end: #363636;
+    --menu-border: #606060;
+    --menu-separator: #505050;
+
+    // Group header colors (dark)
+    --group-bg-start: #464646;
+    --group-bg-end: #3c3c3c;
+    --group-bg-hover-start: #4c4c4c;
+    --group-bg-hover-end: #424242;
+    --group-bg-active-start: #3c3c3c;
+    --group-bg-active-end: #464646;
+    --group-border: #555555;
+    --group-arrow: #cccccc;
+
+    // Menu item colors (dark)
+    --item-bg-start: #424242;
+    --item-bg-end: #383838;
+    --item-separator: rgba(96, 96, 96, 0.3);
+    --item-bg-hover-start: #1e3a5f;
+    --item-bg-hover-end: #1a3352;
+    --item-bg-active-start: #1a3352;
+    --item-bg-active-end: #162d45;
+    --item-border-hover: #4a9eff;
+    --item-bullet: #888888;
+
+    // Selection colors (dark)
+    --selection-bg: #4a9eff;
+    --selection-shadow: rgba(74, 158, 255, 0.2);
+
+    // Text shadows (dark)
+    --text-shadow-light: rgba(0, 0, 0, 0.5);
+    --text-shadow-dark: rgba(0, 0, 0, 0.8);
+}
+
+.menu-button, .menu-dropdown {
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: sans-serif;
+    }
+}
+
+// Menu Button - Qt Fusion Style
+.menu-button {
+    position: fixed;
+    top: $edge_margin;
+    right: $edge_margin;
+    width: $button_size;
+    height: $button_size;
+    background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+    border: 1px solid var(--btn-border);
+    border-radius: $border_radius;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+    box-shadow:
+        inset 0 1px 0 var(--text-shadow-light),
+        0 1px 2px rgba(0, 0, 0, 0.15);
+
+    &:hover {
+        background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+        border-color: var(--btn-border-hover);
+        // box-shadow:
+        //     inset 0 1px 0 var(--text-shadow-light),
+        //     0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active,
+    &.active {
+        background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+        border-color: var(--btn-border-active);
+        box-shadow:
+            inset 0 1px 3px rgba(0, 0, 0, 0.2),
+            inset 0 0 5px rgba(0, 0, 0, 0.1);
+        transform: translateY(1px);
+    }
+
+    // Hamburger Icon - Qt Style
+    .hamburger-line {
+        width: 23px;
+        height: 2px;
+        background: var(--btn-icon);
+        transition: all 0.2s ease;
+        border-radius: 1px;
+    }
+
+    &.active {
+        .hamburger-line {
+            &:nth-child(1) {
+                transform: rotate(45deg) translate(4px, 4px);
+            }
+
+            &:nth-child(2) {
+                opacity: 0;
+            }
+
+            &:nth-child(3) {
+                transform: rotate(-45deg) translate(4px, -4px);
+            }
+        }
+    }
+}
+
+// Menu Dropdown - Qt Fusion Style
+.menu-dropdown {
+    position: fixed;
+    top: ($edge_margin + $button_size + 10px);
+    right: $edge_margin;
+    width: 280px;
+    background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+    border: 1px solid var(--menu-border);
+    border-radius: $border_radius;
+    box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.25),
+        inset 0 1px 0 var(--text-shadow-light);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-5px);
+    transition: all 0.2s ease;
+    max-height: 80vh;
+    overflow-y: auto;
+
+    &.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+}
+
+// Menu Groups - Qt Fusion Style
+.menu-group {
+    border-bottom: 1px solid var(--menu-separator);
+    background: transparent;
+
+    &:last-child {
+        border-bottom: none;
+    }
+
+    .group-header {
+        padding: 8px 16px;
+        font-weight: 600;
+        font-size: $font_size;
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.15s ease;
+        background: linear-gradient(to bottom, var(--group-bg-start) 0%, var(--group-bg-end) 100%);
+        border-bottom: 1px solid var(--group-border);
+        text-shadow: 0 1px 0 var(--text-shadow-light);
+
+        &:hover {
+            background: linear-gradient(to bottom, var(--group-bg-hover-start) 0%, var(--group-bg-hover-end) 100%);
+            color: var(--text-primary);
+        }
+
+        &:active {
+            background: linear-gradient(to bottom, var(--group-bg-active-start) 0%, var(--group-bg-active-end) 100%);
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .group-arrow {
+            font-size: $font_size_small;
+            color: var(--group-arrow);
+            transition: transform 0.2s ease;
+        }
+
+        &.expanded .group-arrow {
+            transform: rotate(90deg);
+        }
+    }
+}
+
+// Group Items - Qt Fusion Style
+.group-items {
+    overflow: hidden;
+    transition: all 0.2s ease;
+    opacity: 0;
+    max-height: 0;
+    background: linear-gradient(to bottom, var(--item-bg-start) 0%, var(--item-bg-end) 100%);
+
+    &.show {
+        opacity: 1;
+        max-height: 200px;
+    }
+
+    .menu-item {
+        padding: 6px 16px 6px 32px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.15s ease;
+        font-size: $font_size;
+        border-bottom: 1px solid var(--item-separator);
+        position: relative;
+        text-shadow: 0 1px 0 var(--text-shadow-light);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &:hover {
+            background: linear-gradient(to bottom, var(--item-bg-hover-start) 0%, var(--item-bg-hover-end) 100%);
+            color: var(--text-primary);
+            border-left: 2px solid var(--item-border-hover);
+        }
+
+        &:active {
+            background: linear-gradient(to bottom, var(--item-bg-active-start) 0%, var(--item-bg-active-end) 100%);
+            box-shadow: inset 0 1px 2px var(--selection-shadow);
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--item-bullet);
+            border-radius: 50%;
+        }
+    }
+}
+
+// Overlay
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.1);
+    z-index: 998;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+
+    &.show {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+body.dark .menu-overlay.show {
+    background: rgba(0,0,0,0.4);
+}

@@ -1,0 +1,49 @@
+<!-- Menu Button -->
+<button class="menu-button" id="menuButton">
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+</button>
+
+<!-- Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Menu Dropdown -->
+<div class="menu-dropdown" id="menuDropdown">
+    <!-- Copy Group -->
+    <div class="menu-group">
+        <div class="group-header" data-group="copy">
+            Copy
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items" id="copy-items">
+            <div class="menu-item" data-action="copy-selection">Copy Selection</div>
+            <div class="menu-item" data-action="copy-link-sutta">Copy Link to Sutta and Selection</div>
+            <div class="menu-item" data-action="copy-sutta-url">Copy Sutta URL</div>
+        </div>
+    </div>
+
+    <!-- Dictionary Group -->
+    <div class="menu-group">
+        <div class="group-header" data-group="dictionary">
+            Dictionary
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items" id="dictionary-items">
+            <div class="menu-item" data-action="lookup">Lookup</div>
+            <div class="menu-item" data-action="gloss">Gloss</div>
+        </div>
+    </div>
+
+    <!-- Prompts Group -->
+    <div class="menu-group">
+        <div class="group-header" data-group="prompts">
+            Prompts
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items" id="prompts-items">
+            <div class="menu-item" data-action="summarize-sutta">Summarize the current sutta</div>
+            <div class="menu-item" data-action="analyse-selection">Analyse the selection</div>
+        </div>
+    </div>
+</div>

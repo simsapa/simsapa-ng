@@ -1,9 +1,10 @@
 use serde::Serialize;
 use tinytemplate::TinyTemplate;
 
-use crate::get_app_globals;
+use crate::{get_app_globals, is_mobile};
 
 static PAGE_HTML: &'static str = include_str!("../../assets/templates/page.html");
+static MENU_HTML: &'static str = include_str!("../../assets/templates/menu.html");
 static ICONS_HTML: &'static str = include_str!("../../assets/templates/icons.html");
 static SUTTAS_CSS: &'static str = include_str!("../../assets/css/suttas.css");
 static SUTTAS_JS: &'static str = include_str!("../../assets/js/suttas.js");
@@ -14,6 +15,7 @@ struct TmplContext {
     api_url: String,
     js_head: String,
     js_body: String,
+    menu_html: String,
     icons_html: String,
     content: String,
     body_class: String,
@@ -27,6 +29,7 @@ impl Default for TmplContext {
             api_url: g.api_url.clone(),
             js_head: "".to_string(),
             js_body: "".to_string(),
+            menu_html: MENU_HTML.to_string(),
             icons_html: ICONS_HTML.to_string(),
             content: "".to_string(),
             body_class: "".to_string(),
@@ -79,6 +82,8 @@ pub fn html_page(content: &str,
     } else {
         js.push_str(" const SHOW_QUOTE = null;");
     }
+
+    js.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
 
     if let Some(js_extra) = &js_extra {
         js.push_str(js_extra);

@@ -21,6 +21,7 @@ use std::sync::OnceLock;
 use app_dirs::{get_app_root, AppDataType, AppInfo};
 use dotenvy::dotenv;
 use walkdir::WalkDir;
+use cfg_if::cfg_if;
 
 use crate::logger::{info, error};
 use crate::app_data::AppData;
@@ -320,4 +321,14 @@ pub fn move_folder_contents<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
     }
 
     Ok(())
+}
+
+fn is_mobile() -> bool {
+    cfg_if! {
+        if #[cfg(any(target_os = "android", target_os = "ios"))] {
+            true
+        } else {
+            false
+        }
+    }
 }

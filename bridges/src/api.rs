@@ -5,12 +5,13 @@ use std::net::TcpStream;
 use std::time::Duration;
 use std::sync::{OnceLock, Arc};
 
+use rocket::serde::Deserialize;
+use rocket::serde::json::Json;
+
 use http;
 use ureq;
-use rocket::{get, routes};
+use rocket::{get, post, routes, State, Shutdown};
 use rocket::response::content::RawHtml;
-use rocket::Shutdown;
-use rocket::State;
 use rocket::http::{ContentType, Status};
 use rocket_cors::CorsOptions;
 
@@ -18,7 +19,7 @@ use simsapa_backend::{AppGlobals, get_create_simsapa_app_root, get_create_simsap
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
-use simsapa_backend::logger::{info, error};
+use simsapa_backend::logger::{info, warn, error, profile};
 
 pub static APP_GLOBALS_API: OnceLock<AppGlobals> = OnceLock::new();
 
@@ -46,6 +47,7 @@ pub mod ffi {
         include!("gui.h");
         fn callback_run_lookup_query(query_text: QString);
         fn callback_run_summary_query(window_id: QString, query_text: QString);
+        fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
     }
 }
 
@@ -105,7 +107,44 @@ fn lookup_window_query(text: &str) -> Status {
 
 #[get("/summary_query/<window_id>/<text>")]
 fn summary_query(window_id: &str, text: &str) -> Status {
-    ffi::callback_run_summary_query(ffi::QString::from(window_id), ffi::QString::from(text));
+    ffi::callback_run_summary_query(ffi::QString::from(window_id),
+                                    ffi::QString::from(text));
+    Status::Ok
+}
+
+#[derive(Deserialize)]
+struct SuttaMenuRequest {
+    window_id: String,
+    action: String,
+    text: String,
+}
+
+#[post("/sutta_menu_action", data = "<request>")]
+fn sutta_menu_action(request: Json<SuttaMenuRequest>) -> Status {
+    info(&format!("sutta_menu_action(): window_id: {}, action: {}, text len: {}",
+                  request.window_id, request.action, request.text.len()));
+
+    ffi::callback_run_sutta_menu_action(ffi::QString::from(&request.window_id),
+                                        ffi::QString::from(&request.action),
+                                        ffi::QString::from(&request.text));
+    Status::Ok
+}
+
+#[derive(Deserialize)]
+struct LoggerRequest {
+    log_level: String,
+    msg: String,
+}
+
+#[post("/logger", data = "<req>")]
+fn logger_route(req: Json<LoggerRequest>) -> Status {
+    match req.log_level.as_str() {
+        "info" => info(&req.msg),
+        "warn" => warn(&req.msg),
+        "error" => error(&req.msg),
+        "profile" => profile(&req.msg),
+        _ => {},
+    }
     Status::Ok
 }
 
@@ -174,8 +213,10 @@ pub async extern "C" fn start_webserver() {
             index,
             shutdown,
             serve_assets,
+            logger_route,
             lookup_window_query,
             summary_query,
+            sutta_menu_action,
             get_sutta_html_by_uid,
         ])
         .manage(assets_files)

@@ -13,7 +13,7 @@ use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
 use crate::html_content::html_page;
-use crate::{init_app_globals, get_app_globals};
+use crate::{get_app_globals, init_app_globals};
 
 /// Represents the application data and settings
 #[derive(Debug)]

@@ -35,10 +35,12 @@ class WindowManager : public QObject {
     signals:
         void signal_run_lookup_query(const QString& query_text);
         void signal_run_summary_query(const QString& window_id, const QString& query_text);
+        void signal_run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text);
 
     public slots:
         void run_lookup_query(const QString& query_text);
         void run_summary_query(const QString& window_id, const QString& query_text);
+        void run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text);
 
 };
 

@@ -131,6 +131,10 @@ ApplicationWindow {
         word_summary.set_query(query_text);
     }
 
+    function run_sutta_menu_action(action: string, query_text: string) {
+        console.log("run_sutta_menu_action():", action, query_text);
+    }
+
     property int key_counter: 0
 
     function generate_key(): string {
