@@ -9,7 +9,7 @@ use cxx_qt::Threading;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, get_create_simsapa_app_root};
+use simsapa_backend::{get_app_data, get_create_simsapa_dir};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
@@ -266,7 +266,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn app_data_folder_path(&self) -> QString {
-        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
         let app_data_path = p.as_os_str();
         let s = match app_data_path.to_str() {
             Some(x) => x,
@@ -276,7 +276,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn is_app_data_folder_writable(&self) -> bool {
-        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
         let md = match fs::metadata(p) {
             Ok(x) => x,
             Err(_) => return false,
@@ -291,14 +291,14 @@ impl qobject::SuttaBridge {
     }
 
     pub fn app_data_contents_html_table(&self) -> QString {
-        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
         let app_data_path = p.to_string_lossy();
         let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
         QString::from(app_data_folder_contents)
     }
 
     pub fn app_data_contents_plain_table(&self) -> QString {
-        let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+        let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
         let app_data_path = p.to_string_lossy();
         let app_data_folder_contents = generate_plain_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
         QString::from(app_data_folder_contents)

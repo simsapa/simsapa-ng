@@ -206,6 +206,8 @@ ApplicationWindow {
         return tab;
     }
 
+    StorageDialog { id: storage_dialog }
+
     menuBar: MenuBar {
         visible: root.is_desktop
         // NOTE: A Menu > CMenuItem should always have an Action. This property
@@ -218,6 +220,13 @@ ApplicationWindow {
                 action: Action {
                     text: "&Close Window"
                     onTriggered: root.close()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    text: "Select Storage..."
+                    onTriggered: storage_dialog.open()
                 }
             }
 

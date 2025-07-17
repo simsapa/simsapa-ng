@@ -26,11 +26,17 @@ ApplicationWindow {
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
         // Assuming there is a network connection, show the download selection screen.
         views_stack.currentIndex = 1;
+
+        if (root.is_mobile) {
+            storage_dialog.open();
+        }
     }
 
     property bool include_appdata_downloads: true
 
     AssetManager { id: manager }
+
+    StorageDialog { id: storage_dialog }
 
     Connections {
         target: manager
@@ -235,6 +241,13 @@ ApplicationWindow {
                             views_stack.currentIndex = 2;
                             root.validate_and_run_download();
                         }
+                    }
+
+                    Button {
+                        text: "Select Storage"
+                        visible: root.is_mobile
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: storage_dialog.open()
                     }
 
                     Item { Layout.fillWidth: true }

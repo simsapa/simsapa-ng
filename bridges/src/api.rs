@@ -15,7 +15,7 @@ use rocket::response::content::RawHtml;
 use rocket::http::{ContentType, Status};
 use rocket_cors::CorsOptions;
 
-use simsapa_backend::{AppGlobals, get_create_simsapa_app_root, get_create_simsapa_appdata_db_path};
+use simsapa_backend::{AppGlobals, get_create_simsapa_dir, get_create_simsapa_appdata_db_path};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
@@ -150,7 +150,7 @@ fn logger_route(req: Json<LoggerRequest>) -> Status {
 
 #[get("/")]
 fn index() -> RawHtml<String> {
-    let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from("."));
+    let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
     let app_data_path = p.to_string_lossy();
     let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
 

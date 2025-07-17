@@ -12,8 +12,8 @@ pub mod theme_colors;
 pub mod app_settings;
 
 use std::env;
-use std::io;
-use std::fs::{self, create_dir_all, remove_dir_all};
+use std::io::{self, Read};
+use std::fs::{self, File, create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::error::Error;
 use std::sync::OnceLock;
@@ -23,7 +23,7 @@ use dotenvy::dotenv;
 use walkdir::WalkDir;
 use cfg_if::cfg_if;
 
-use crate::logger::{info, error};
+use crate::logger::{info, warn, error};
 use crate::app_data::AppData;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
@@ -92,15 +92,10 @@ impl AppGlobals {
     pub fn new() -> Self {
         dotenv().ok();
 
-        let simsapa_dir = match env::var("SIMSAPA_DIR") {
-            Ok(s) => PathBuf::from(s),
-            Err(_) => {
-                if let Ok(p) = get_create_simsapa_app_root() {
-                    p
-                } else {
-                    PathBuf::from(".")
-                }
-            }
+        let simsapa_dir = if let Ok(p) = get_create_simsapa_dir() {
+            p
+        } else {
+            PathBuf::from(".")
         };
 
         let download_temp_folder = simsapa_dir.join("temp-download");
@@ -178,7 +173,7 @@ fn check_file_exists_print_err<P: AsRef<Path>>(path: P) -> Result<bool, Box<dyn 
     Ok(true)
 }
 
-pub fn get_create_simsapa_app_root() -> Result<PathBuf, Box<dyn Error>> {
+pub fn get_create_simsapa_internal_app_root() -> Result<PathBuf, Box<dyn Error>> {
     // AppDataType::UserData
     // - Android: /data/user/0/com.profoundlabs.simsapa/files/.local/share/simsapa-ng
     // AppDataType::UserConfig
@@ -190,8 +185,54 @@ pub fn get_create_simsapa_app_root() -> Result<PathBuf, Box<dyn Error>> {
     Ok(p)
 }
 
+pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
+    let simsapa_dir = match env::var("SIMSAPA_DIR") {
+        // If SIMSAPA_DIR env variable was defined, use that.
+        Ok(s) => Ok(PathBuf::from(s)),
+        Err(_) => {
+            // Else, check if storage path was selected before.
+            let internal_app_root = if let Ok(p) = get_create_simsapa_internal_app_root() {
+                p
+            } else {
+                PathBuf::from(".")
+            };
+
+            // If there is a file storage-path.txt, read the path from there.
+            // Else, use the internal app root.
+
+            // Should already end with .../simsapa-ng/
+            let storage_config_path = internal_app_root.join("storage-path.txt");
+            let mut file = match File::open(storage_config_path) {
+                Ok(file) => file,
+                Err(e) => {
+                    warn(&format!("{}", e));
+                    return Ok(internal_app_root);
+                },
+            };
+
+            let mut contents = String::new();
+            match file.read_to_string(&mut contents) {
+                Ok(_) => (),
+                Err(e) => {
+                    error(&format!("Failed to read file: {}", e));
+                    return Ok(internal_app_root);
+                },
+            }
+
+            // storage path
+            let p = PathBuf::from(contents);
+            if !p.try_exists()? {
+                create_dir_all(&p)?;
+            }
+            Ok(p)
+        }
+    };
+
+    simsapa_dir
+}
+
 pub fn get_create_simsapa_app_assets_path() -> PathBuf {
-    let p = get_create_simsapa_app_root().unwrap_or(PathBuf::from(".")).join("app-assets/");
+    let p = get_create_simsapa_dir().unwrap_or(PathBuf::from(".")).join("app-assets/");
 
     match p.try_exists() {
         Ok(r) => if !r {

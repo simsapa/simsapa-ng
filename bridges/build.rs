@@ -29,6 +29,7 @@ fn main() {
     qml_files.push("../assets/qml/DrawerEmptyItem.qml");
     qml_files.push("../assets/qml/ListBackground.qml");
     qml_files.push("../assets/qml/WordSummary.qml");
+    qml_files.push("../assets/qml/StorageDialog.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library
@@ -44,6 +45,7 @@ fn main() {
                 rust_files: &[
                         "src/sutta_bridge.rs",
                         "src/asset_manager.rs",
+                        "src/storage_manager.rs",
                         "src/api.rs",
                 ],
                 qml_files: &qml_files,

@@ -1,3 +1,4 @@
 module com.profoundlabs.simsapa
 SuttaBridge 1.0 SuttaBridge.qml
 AssetManager 1.0 AssetManager.qml
+StorageManager 1.0 StorageManager.qml

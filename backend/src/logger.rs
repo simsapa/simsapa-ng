@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use tracing_subscriber::EnvFilter;
 use cfg_if::cfg_if;
 
-use crate::get_create_simsapa_app_root;
+use crate::get_create_simsapa_dir;
 
 cfg_if! {
     if #[cfg(target_os = "android")] {
@@ -90,8 +90,8 @@ pub struct TimeLog {
 
 impl TimeLog {
     pub fn new(precision: LogPrecision) -> Result<Self, Box<dyn std::error::Error>> {
-        let data_dir = get_create_simsapa_app_root()
-            .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+        let data_dir = get_create_simsapa_dir()
+            .map_err(|e| format!("Failed to get simsapa_dir: {}", e))?;
 
         std::fs::create_dir_all(&data_dir)?;
         let log_file = data_dir.join("profile_time.dat");
@@ -174,8 +174,8 @@ pub struct Logger {
 
 impl Logger {
     pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
-        let data_dir = get_create_simsapa_app_root()
-            .map_err(|e| format!("Failed to get app data directory: {}", e))?;
+        let data_dir = get_create_simsapa_dir()
+            .map_err(|e| format!("Failed to get simsapa_dir: {}", e))?;
 
         std::fs::create_dir_all(&data_dir)?;
         let log_file = data_dir.join("log.txt");

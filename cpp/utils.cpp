@@ -1,9 +1,17 @@
+#include <vector>
+#include <string>
+
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
 #include <QString>
 #include <QSysInfo>
 #include <QStandardPaths>
+#include <QStorageInfo>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonDocument>
+
 #include "utils.h"
 
 QString get_internal_storage_path() {
@@ -14,6 +22,65 @@ QString get_internal_storage_path() {
 QString get_app_assets_path() {
     QString path = get_internal_storage_path() + "/app-assets";
     return path;
+}
+
+QJsonArray get_storage_locations() {
+    QJsonArray storageArray;
+
+    // Get the standard app data location to identify internal storage
+    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QString internalRoot;
+
+    // Find the root of the internal storage by comparing mount points
+    QList<QStorageInfo> volumes = QStorageInfo::mountedVolumes();
+
+    for (const QStorageInfo &storage : volumes) {
+        if (storage.isValid() && storage.isReady()) {
+            QString rootPath = storage.rootPath();
+            if (appDataPath.startsWith(rootPath)) {
+                if (rootPath.length() > internalRoot.length()) {
+                    internalRoot = rootPath;
+                }
+            }
+        }
+    }
+
+    // Process each storage volume
+    for (const QStorageInfo &storage : volumes) {
+        if (!storage.isValid() || !storage.isReady()) {
+            continue;
+        }
+
+        QJsonObject item;
+        QString rootPath = storage.rootPath();
+
+        // Skip system-only mounts (like /proc, /sys on Linux)
+        std::vector<std::string> restrictedPaths = {"/boot", "/dev", "/proc", "/run", "/sys", "/tmp", "/var"};
+
+        if (std::any_of(restrictedPaths.begin(), restrictedPaths.end(),
+                        [&rootPath](const std::string &path) {
+                          return rootPath.startsWith(QString::fromStdString(path));
+                        })) {
+          continue;
+        }
+
+        item["path"] = rootPath;
+        item["label"] = storage.displayName().isEmpty() ?
+                       QDir(rootPath).dirName() : storage.displayName();
+        item["is_internal"] = (rootPath == internalRoot);
+        item["megabytes_total"] = static_cast<int>(storage.bytesTotal() / (1024 * 1024));
+        item["megabytes_available"] = static_cast<int>(storage.bytesAvailable() / (1024 * 1024));
+
+        storageArray.append(item);
+    }
+
+    return storageArray;
+}
+
+QString get_storage_locations_json() {
+    QJsonArray storageArray = get_storage_locations();
+    QJsonDocument doc(storageArray);
+    return doc.toJson(QJsonDocument::Compact);
 }
 
 QString copy_file(QString source_file, QString destination_file) {

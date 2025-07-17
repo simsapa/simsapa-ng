@@ -8,7 +8,6 @@ pub mod dpd;
 pub mod dpd_models;
 pub mod dpd_schema;
 
-use std::env;
 use std::path::PathBuf;
 use std::fs;
 use std::sync::OnceLock;
@@ -28,7 +27,7 @@ use crate::db::appdata_models::AppSetting;
 use crate::db::dictionaries::DictionariesDbHandle;
 use crate::db::dpd::DpdDbHandle;
 use crate::app_settings::AppSettings;
-use crate::{check_file_exists_print_err, get_create_simsapa_app_root, get_app_globals};
+use crate::{check_file_exists_print_err, get_create_simsapa_dir, get_app_globals};
 
 pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 pub type DbConn = PooledConnection<ConnectionManager<SqliteConnection>>;
@@ -219,15 +218,10 @@ pub fn establish_connection() -> (SqliteConnection, SqliteConnection, SqliteConn
     info("establish_connection()");
     dotenv().ok();
 
-    let simsapa_dir = match env::var("SIMSAPA_DIR") {
-        Ok(s) => PathBuf::from(s),
-        Err(_) => {
-            if let Ok(p) = get_create_simsapa_app_root() {
-                p
-            } else {
-                PathBuf::from(".")
-            }
-        }
+    let simsapa_dir = if let Ok(p) = get_create_simsapa_dir() {
+        p
+    } else {
+        PathBuf::from(".")
     };
 
     let app_assets_dir = simsapa_dir.join("app-assets");
