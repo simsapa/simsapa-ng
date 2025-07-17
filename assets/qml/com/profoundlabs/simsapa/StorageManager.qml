@@ -1,8 +1,8 @@
 import QtQuick
 
 Item {
-    function get_storage_locations_json(): string {
-        console.log("get_storage_locations_json()");
+    function get_app_data_storage_paths_json(): string {
+        console.log("get_app_data_storage_paths_json()");
     }
 
     function save_storage_path(path: string, is_internal: bool) {

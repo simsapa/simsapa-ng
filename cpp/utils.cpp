@@ -1,6 +1,3 @@
-#include <vector>
-#include <string>
-
 #include <QDir>
 #include <QDirIterator>
 #include <QFile>
@@ -11,6 +8,11 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QJsonDocument>
+
+#ifdef Q_OS_ANDROID
+#include <QJniObject>
+#include <QJniEnvironment>
+#endif
 
 #include "utils.h"
 
@@ -24,61 +26,99 @@ QString get_app_assets_path() {
     return path;
 }
 
-QJsonArray get_storage_locations() {
+// Helper function to create storage info JSON object
+QJsonObject createStorageInfo(const QString& path, const QString& internalAppDataPath) {
+    QJsonObject item;
+    item["path"] = path;
+
+    // Get storage info for the path
+    QStorageInfo storage(path);
+
+    // Set label
+    QString label = storage.displayName().isEmpty() ?
+        QDir(storage.rootPath()).dirName() :
+        storage.displayName();
+    item["label"] = label;
+
+    // Check if internal
+    item["is_internal"] = (path == internalAppDataPath);
+
+    // Storage sizes in megabytes
+    item["megabytes_total"] = static_cast<int>(storage.bytesTotal() / (1024 * 1024));
+    item["megabytes_available"] = static_cast<int>(storage.bytesAvailable() / (1024 * 1024));
+
+    return item;
+}
+
+QJsonArray get_app_data_storage_paths() {
     QJsonArray storageArray;
 
-    // Get the standard app data location to identify internal storage
-    QString appDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QString internalRoot;
+    // Get internal app data path (common for all platforms)
+    QString internalAppDataPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
-    // Find the root of the internal storage by comparing mount points
-    QList<QStorageInfo> volumes = QStorageInfo::mountedVolumes();
+    // Add internal storage path
+    if (!internalAppDataPath.isEmpty()) {
+        storageArray.append(createStorageInfo(internalAppDataPath, internalAppDataPath));
+    }
 
-    for (const QStorageInfo &storage : volumes) {
-        if (storage.isValid() && storage.isReady()) {
-            QString rootPath = storage.rootPath();
-            if (appDataPath.startsWith(rootPath)) {
-                if (rootPath.length() > internalRoot.length()) {
-                    internalRoot = rootPath;
+#ifdef Q_OS_ANDROID
+    // On Android, get external storage paths
+    QJniEnvironment env;
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;"
+    );
+
+    if (activity.isValid()) {
+        // Call getExternalFilesDirs(null) to get all external storage paths
+        QJniObject externalDirs = activity.callObjectMethod(
+            "getExternalFilesDirs",
+            "(Ljava/lang/String;)[Ljava/io/File;",
+            nullptr
+        );
+
+        if (externalDirs.isValid()) {
+            // Get the array length
+            jsize length = env->GetArrayLength(externalDirs.object<jobjectArray>());
+
+            for (int i = 0; i < length; ++i) {
+                QJniObject fileObject = env->GetObjectArrayElement(
+                    externalDirs.object<jobjectArray>(),
+                    i
+                );
+
+                if (fileObject.isValid()) {
+                    // Get the absolute path of the File object
+                    QJniObject pathObject = fileObject.callObjectMethod(
+                        "getAbsolutePath",
+                        "()Ljava/lang/String;"
+                    );
+
+                    if (pathObject.isValid()) {
+                        QString externalPath = pathObject.toString();
+
+                        // Only add if it's different from internal path and not empty
+                        if (!externalPath.isEmpty() && externalPath != internalAppDataPath) {
+                            storageArray.append(createStorageInfo(externalPath, internalAppDataPath));
+                        }
+                    }
                 }
             }
         }
     }
 
-    // Process each storage volume
-    for (const QStorageInfo &storage : volumes) {
-        if (!storage.isValid() || !storage.isReady()) {
-            continue;
-        }
-
-        QJsonObject item;
-        QString rootPath = storage.rootPath();
-
-        // Skip system-only mounts (like /proc, /sys on Linux)
-        std::vector<std::string> restrictedPaths = {"/boot", "/dev", "/proc", "/run", "/sys", "/tmp", "/var"};
-
-        if (std::any_of(restrictedPaths.begin(), restrictedPaths.end(),
-                        [&rootPath](const std::string &path) {
-                          return rootPath.startsWith(QString::fromStdString(path));
-                        })) {
-          continue;
-        }
-
-        item["path"] = rootPath;
-        item["label"] = storage.displayName().isEmpty() ?
-                       QDir(rootPath).dirName() : storage.displayName();
-        item["is_internal"] = (rootPath == internalRoot);
-        item["megabytes_total"] = static_cast<int>(storage.bytesTotal() / (1024 * 1024));
-        item["megabytes_available"] = static_cast<int>(storage.bytesAvailable() / (1024 * 1024));
-
-        storageArray.append(item);
+    // Clear any pending JNI exceptions
+    if (env.checkAndClearExceptions()) {
+        // Exception was cleared
     }
+#endif
 
     return storageArray;
 }
 
-QString get_storage_locations_json() {
-    QJsonArray storageArray = get_storage_locations();
+QString get_app_data_storage_paths_json() {
+    QJsonArray storageArray = get_app_data_storage_paths();
     QJsonDocument doc(storageArray);
     return doc.toJson(QJsonDocument::Compact);
 }

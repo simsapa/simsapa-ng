@@ -6,7 +6,7 @@
 extern "C++" {
     QString get_internal_storage_path();
     QString get_app_assets_path();
-    QString get_storage_locations_json();
+    QString get_app_data_storage_paths_json();
 }
 
 QString copy_apk_assets_to_internal_storage(QString apk_asset_path = QString());

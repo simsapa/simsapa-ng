@@ -9,7 +9,7 @@ pub mod qobject {
         type QString = cxx_qt_lib::QString;
 
         include!("utils.h");
-        fn get_storage_locations_json() -> QString;
+        fn get_app_data_storage_paths_json() -> QString;
     }
 
     extern "RustQt" {
@@ -21,7 +21,7 @@ pub mod qobject {
 
     unsafe extern "RustQt" {
         #[qinvokable]
-        fn get_storage_locations_json(self: &StorageManager) -> QString;
+        fn get_app_data_storage_paths_json(self: &StorageManager) -> QString;
 
         #[qinvokable]
         fn save_storage_path(self: &StorageManager, path: &QString, is_internal: bool);
@@ -37,8 +37,8 @@ impl Default for StorageManagerRust {
 }
 
 impl qobject::StorageManager {
-    pub fn get_storage_locations_json(&self) -> QString {
-        qobject::get_storage_locations_json()
+    pub fn get_app_data_storage_paths_json(&self) -> QString {
+        qobject::get_app_data_storage_paths_json()
     }
 
     pub fn save_storage_path(&self, path: &QString, is_internal: bool) {

@@ -683,7 +683,7 @@ ApplicationWindow {
                                     is_dark: root.is_dark
                                     // Hide the webview when the drawer menu or a dialog is open. The mobile webview
                                     // is always on top, obscuring other items.
-                                    visible: !mobile_menu.activeFocus && !color_theme_dialog.visible
+                                    visible: !mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible
                                 }
                             }
 

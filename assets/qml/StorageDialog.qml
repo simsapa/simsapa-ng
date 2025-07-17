@@ -25,7 +25,7 @@ Dialog {
     ListModel { id: storage_locations_model }
 
     Component.onCompleted: {
-        var s = sm.get_storage_locations_json();
+        var s = sm.get_app_data_storage_paths_json();
         var d = JSON.parse(s);
         for (var i = 0; i < d.length; i++) {
             var item = d[i];
@@ -64,6 +64,7 @@ Dialog {
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.minimumHeight: (root.tm1.height+10)*3
 
             ListView {
                 id: storageListView
