@@ -12,7 +12,7 @@ pub mod theme_colors;
 pub mod app_settings;
 
 use std::env;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::fs::{self, File, create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::error::Error;
@@ -178,7 +178,18 @@ pub fn get_create_simsapa_internal_app_root() -> Result<PathBuf, Box<dyn Error>>
     // - Android: /data/user/0/com.profoundlabs.simsapa/files/.local/share/simsapa-ng
     // AppDataType::UserConfig
     // - Android: /data/user/0/com.profoundlabs.simsapa/files/.config/simsapa-ng
-    let p = get_app_root(AppDataType::UserData, &APP_INFO)?;
+    let mut p = get_app_root(AppDataType::UserData, &APP_INFO)?;
+
+    // On Android and iOS, strip .local/share/simsapa-ng from the path, so that
+    // it is consistent with the storage selection path saved by
+    // storage_manager::save_storage_path().
+    if is_mobile() && p.ends_with(".local/share/simsapa-ng") {
+        p = p.parent().unwrap()
+             .parent().unwrap()
+             .parent().unwrap()
+             .to_path_buf()
+    }
+
     if !p.try_exists()? {
         create_dir_all(&p)?;
     }
@@ -186,6 +197,7 @@ pub fn get_create_simsapa_internal_app_root() -> Result<PathBuf, Box<dyn Error>>
 }
 
 pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
+    info(&format!("get_create_simsapa_dir()"));
     let simsapa_dir = match env::var("SIMSAPA_DIR") {
         // If SIMSAPA_DIR env variable was defined, use that.
         Ok(s) => Ok(PathBuf::from(s)),
@@ -197,15 +209,24 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
                 PathBuf::from(".")
             };
 
-            // If there is a file storage-path.txt, read the path from there.
+            // On desktop, always use the internal app root.
+            if !is_mobile() {
+                return Ok(internal_app_root);
+            }
+
+            // On mobile, if there is a file storage-path.txt, read the path from there.
             // Else, use the internal app root.
 
-            // Should already end with .../simsapa-ng/
             let storage_config_path = internal_app_root.join("storage-path.txt");
-            let mut file = match File::open(storage_config_path) {
-                Ok(file) => file,
+            let mut file = match File::open(&storage_config_path) {
+                Ok(file) => {
+                    info(&format!("Found: {}", &storage_config_path.to_str().unwrap_or_default()));
+                    file
+                },
                 Err(e) => {
-                    warn(&format!("{}", e));
+                    warn(&format!("File not found: {}, Error: {}",
+                                  &storage_config_path.to_str().unwrap_or_default(),
+                                  e));
                     return Ok(internal_app_root);
                 },
             };
@@ -218,6 +239,8 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
                     return Ok(internal_app_root);
                 },
             }
+
+            info(&format!("Contents: {}", &contents));
 
             // storage path
             let p = PathBuf::from(contents);
@@ -364,12 +387,32 @@ pub fn move_folder_contents<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
     Ok(())
 }
 
-fn is_mobile() -> bool {
+pub fn is_mobile() -> bool {
     cfg_if! {
         if #[cfg(any(target_os = "android", target_os = "ios"))] {
             true
         } else {
             false
         }
+    }
+}
+
+pub fn create_parent_directory(path: &str) -> String {
+    match Path::new(path).parent() {
+        None => format!("Invalid path: {}", path),
+        Some(parent) => match std::fs::create_dir_all(parent) {
+            Ok(_) => String::from(""),
+            Err(e) => format!("Failed to create directory: {}", e),
+        },
+    }
+}
+
+pub fn save_to_file(data: &[u8], path: &str) -> String {
+    match File::create(path) {
+        Ok(mut file) => match file.write_all(data) {
+            Ok(_) => String::from(format!("File saved successfully to {}", path)),
+            Err(e) => format!("Failed to write file: {}", e),
+        },
+        Err(e) => format!("Failed to create file: {}", e),
     }
 }

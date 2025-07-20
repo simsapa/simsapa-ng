@@ -1,6 +1,9 @@
+use std::path::PathBuf;
+
 use cxx_qt_lib::QString;
 
 use simsapa_backend::logger::info;
+use simsapa_backend::{get_create_simsapa_internal_app_root, save_to_file};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -41,13 +44,32 @@ impl qobject::StorageManager {
         qobject::get_app_data_storage_paths_json()
     }
 
-    pub fn save_storage_path(&self, path: &QString, is_internal: bool) {
-        // FIXME save to storage-path.txt
-        // Should already end with .../simsapa-ng/
-        // let storage_config_path = internal_app_root.join("storage-path.txt");
-        // Storage path: /
-        // Storage path: /home/gambhiro/.local/share/simsapa-ng
-        // Storage path: /home
-        info(&format!("Storage path: {}, is_internal: {}", path, is_internal));
+    /// Save the storage path selected with the StorageDialog.
+    pub fn save_storage_path(&self, selected_path: &QString, is_internal: bool) {
+        // Write storage_path.txt to the internal storage, in the folder returned
+        // by get_create_simsapa_internal_app_root()
+        //
+        // On Android the path does not include '.local/share/simsapa-ng':
+        // /data/user/0/com.profoundlabs.simsapa/files/storage_path.txt
+        //
+        // Values returned from accepting the StorageDialog:
+        //
+        // Linux:
+        // /home/gambhiro/.local/share/simsapa-ng, is_internal: true
+        //
+        // Android:
+        // /data/user/0/com.profoundlabs.simsapa/files, is_internal: true
+        // /storage/emulated/0/Android/data/com.profoundlabs.simsapa/files, is_internal: false
+        info(&format!("Selected path: {}, is_internal: {}", selected_path, is_internal));
+
+        let internal_app_root = if let Ok(p) = get_create_simsapa_internal_app_root() {
+            p
+        } else {
+            PathBuf::from(".")
+        };
+
+        let save_path = internal_app_root.join("storage-path.txt");
+        let msg = save_to_file(selected_path.to_string().as_bytes(), &save_path.to_str().unwrap_or_default());
+        info(&msg);
     }
 }

@@ -223,12 +223,12 @@ ApplicationWindow {
                 }
             }
 
-            CMenuItem {
-                action: Action {
-                    text: "Select Storage..."
-                    onTriggered: storage_dialog.open()
-                }
-            }
+            // CMenuItem {
+            //     action: Action {
+            //         text: "Select Storage..."
+            //         onTriggered: storage_dialog.open()
+            //     }
+            // }
 
             CMenuItem {
                 action: Action {

@@ -1,5 +1,4 @@
-use std::fs::File;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
@@ -15,7 +14,7 @@ use rocket::response::content::RawHtml;
 use rocket::http::{ContentType, Status};
 use rocket_cors::CorsOptions;
 
-use simsapa_backend::{AppGlobals, get_create_simsapa_dir, get_create_simsapa_appdata_db_path};
+use simsapa_backend::{AppGlobals, get_create_simsapa_dir, get_create_simsapa_appdata_db_path, save_to_file, create_parent_directory};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
@@ -238,26 +237,6 @@ pub extern "C" fn shutdown_webserver() {
             error(&format!("Error {}", code));
         }
         Err(_) => { error("Error response from webserver shutdown."); }
-    }
-}
-
-fn create_parent_directory(path: &str) -> String {
-    match Path::new(path).parent() {
-        None => format!("Invalid path: {}", path),
-        Some(parent) => match std::fs::create_dir_all(parent) {
-            Ok(_) => String::from(""),
-            Err(e) => format!("Failed to create directory: {}", e),
-        },
-    }
-}
-
-fn save_to_file(data: &[u8], path: &str) -> String {
-    match File::create(path) {
-        Ok(mut file) => match file.write_all(data) {
-            Ok(_) => String::from(format!("File saved successfully to {}", path)),
-            Err(e) => format!("Failed to write file: {}", e),
-        },
-        Err(e) => format!("Failed to create file: {}", e),
     }
 }
 
