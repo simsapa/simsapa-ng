@@ -17,6 +17,7 @@ use std::fs::{self, File, create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::error::Error;
 use std::sync::OnceLock;
+use std::net::{TcpListener, SocketAddr};
 
 use app_dirs::{get_app_root, AppDataType, AppInfo};
 use dotenvy::dotenv;
@@ -90,6 +91,8 @@ pub struct AppGlobals {
 
 impl AppGlobals {
     pub fn new() -> Self {
+        // Does not override existing env variables, e.g. if API_PORT is set
+        // earlier by find_port_set_env().
         dotenv().ok();
 
         let simsapa_dir = if let Ok(p) = get_create_simsapa_dir() {
@@ -119,10 +122,21 @@ impl AppGlobals {
         let dpd_abs_path = fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone());
         let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
+        let api_port: i32 = if let Ok(port_str) = env::var("API_PORT") {
+            if let Ok(port) = port_str.parse::<i32>() { port } else { 4848 }
+        } else {
+            4848
+        };
+
+        let api_url = format!("http://localhost:{}", api_port);
+
+        let simsapa_api_port_path = simsapa_dir.join("api-port.txt");
+        save_to_file(format!("{}", api_port).as_bytes(), simsapa_api_port_path.to_str().expect("Path error"));
+
         AppGlobals {
             page_len: 10,
-            api_port: 4848,
-            api_url: "http://localhost:4848".to_string(),
+            api_port,
+            api_url,
             simsapa_dir,
             download_temp_folder,
             extract_temp_folder,
@@ -290,7 +304,6 @@ pub extern "C" fn dotenv_c() {
     dotenv().ok();
 }
 
-
 #[unsafe(no_mangle)]
 pub extern "C" fn ensure_no_empty_db_files() {
     let g = get_app_globals();
@@ -415,4 +428,91 @@ pub fn save_to_file(data: &[u8], path: &str) -> String {
         },
         Err(e) => format!("Failed to create file: {}", e),
     }
+}
+
+/// Finds an available port for a local webserver.
+///
+/// First checks the API_PORT environment variable. If set and valid, returns that port.
+/// Otherwise, starts checking from port 4848 and finds the next available port.
+///
+/// # Returns
+///
+/// Returns `Ok(port)` with the available port number, or `Err` if no port could be found
+/// within a reasonable range (up to port 65535).
+///
+/// # Examples
+///
+/// ```
+/// let port = find_available_port().expect("Failed to find available port");
+/// println!("Using port: {}", port);
+/// ```
+pub fn find_available_port() -> Result<u16, Box<dyn std::error::Error>> {
+    // First check if API_PORT environment variable is set
+    if let Ok(port_str) = env::var("API_PORT") {
+        if let Ok(port) = port_str.parse::<u16>() {
+            if is_port_available(port) {
+                return Ok(port);
+            }
+            // If the specified port is not available, we'll fall back to the default logic
+            println!("Warning: API_PORT {} is not available, falling back to default", port);
+        } else {
+            println!("Warning: API_PORT value '{}' is not a valid port number", port_str);
+        }
+    }
+
+    // Start from the default port 4848 and find the next available one
+    const DEFAULT_PORT: u16 = 4848;
+    const MAX_PORT: u16 = 65535;
+
+    for port in DEFAULT_PORT..=MAX_PORT {
+        if is_port_available(port) {
+            return Ok(port);
+        }
+    }
+
+    Err("No available ports found in the range 4848-65535".into())
+}
+
+/// Finds an available port and sets the API_PORT environment variable.
+///
+/// Uses `find_available_port()` internally to find an available port. If successful,
+/// sets the API_PORT environment variable to the found port number. If no port is
+/// found, sets API_PORT to "-1".
+///
+/// # Returns
+///
+/// Returns `true` if an available port was found and API_PORT was set to that port,
+/// `false` if no port was found (in which case API_PORT is set to "-1").
+///
+/// # Examples
+///
+/// ```
+/// if find_port_set_env() {
+///     println!("API_PORT set to: {}", env::var("API_PORT").unwrap());
+/// } else {
+///     println!("Failed to find available port, API_PORT set to -1");
+/// }
+/// ```
+pub fn find_port_set_env() -> bool {
+    match find_available_port() {
+        Ok(port) => {
+            unsafe { env::set_var("API_PORT", port.to_string()); }
+            true
+        }
+        Err(_) => {
+            unsafe { env::set_var("API_PORT", "-1"); }
+            false
+        }
+    }
+}
+
+/// Checks if a given port is available by attempting to bind to it.
+fn is_port_available(port: u16) -> bool {
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    TcpListener::bind(addr).is_ok()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn find_port_set_env_c() -> bool {
+    find_port_set_env()
 }

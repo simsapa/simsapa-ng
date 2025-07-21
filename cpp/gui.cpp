@@ -30,6 +30,7 @@ extern "C" void remove_download_temp_folder();
 extern "C" void init_app_globals();
 extern "C" void init_app_data();
 extern "C" void dotenv_c();
+extern "C" bool find_port_set_env_c();
 extern "C" int init_logger_c();
 extern "C" void log_info_c(const char* msg);
 extern "C" void log_info_with_options_c(const char* msg, bool start_new);
@@ -56,6 +57,7 @@ void start(int argc, char* argv[]) {
   dotenv_c();
   init_logger_c();
   log_info_with_options_c("gui::start()", true);
+  find_port_set_env_c();
   init_app_globals();
   remove_download_temp_folder();
 
