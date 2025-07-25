@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::collections::HashSet;
+use std::time::Instant;
 
 use diesel::prelude::*;
 use diesel::sql_types::{Text, Integer};
@@ -142,6 +143,9 @@ impl DpdDbHandle {
         do_pali_sort: bool,
         exact_only: bool,
     ) -> Result<Vec<SearchResult>> {
+        info(&format!("dpd_lookup(): query_text_orig: {}", query_text_orig));
+        let timer = Instant::now();
+
         use crate::db::dpd_schema::dpd_headwords;
         use crate::db::dpd_schema::dpd_roots;
 
@@ -194,12 +198,23 @@ impl DpdDbHandle {
             .load::<DpdHeadword>(db_conn)?;
         res_words.extend(r.into_iter().map(UDpdWord::Headword));
 
-        let r = dpd_roots::table
-            .filter(dpd_roots::root_clean.eq(&query_text)
-                    .or(dpd_roots::root_no_sign.eq(&query_text))
-                    .or(dpd_roots::word_ascii.eq(&query_text)))
-            .load::<DpdRoot>(db_conn)?;
-        res_words.extend(r.into_iter().map(UDpdWord::Root));
+        // For two OR conditions on indexed columns, SQLite can efficiently use the indexes to combine the results.
+        // For three OR conditions, it is recommended to split the queries.
+        //
+        // let r = dpd_roots::table
+        //     .filter(dpd_roots::root_clean.eq(&query_text)
+        //             .or(dpd_roots::root_no_sign.eq(&query_text))
+        //             .or(dpd_roots::word_ascii.eq(&query_text)))
+        //     .load::<DpdRoot>(db_conn)?;
+        // res_words.extend(r.into_iter().map(UDpdWord::Root));
+
+        // Instead, use a HashSet to collect results:
+
+        let mut roots = HashSet::new();
+        roots.extend(dpd_roots::table.filter(dpd_roots::root_clean.eq(&query_text)).load::<DpdRoot>(db_conn)?);
+        roots.extend(dpd_roots::table.filter(dpd_roots::root_no_sign.eq(&query_text)).load::<DpdRoot>(db_conn)?);
+        roots.extend(dpd_roots::table.filter(dpd_roots::word_ascii.eq(&query_text)).load::<DpdRoot>(db_conn)?);
+        res_words.extend(roots.into_iter().map(UDpdWord::Root));
 
         // Add matches from DPD inflections_to_headwords, regardless of earlier results.
         // This will include cases such as:
@@ -260,6 +275,7 @@ impl DpdDbHandle {
             }
         }
 
+        info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(parse_words(res_words, do_pali_sort))
     }
 

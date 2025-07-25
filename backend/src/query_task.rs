@@ -1,9 +1,12 @@
 // use std::any::Any;
 use std::collections::HashMap;
 use std::error::Error;
+use std::time::Instant;
 
 use regex::Regex;
 use diesel::prelude::*;
+use diesel::sql_query;
+use diesel::sql_types::{Text, BigInt};
 
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
@@ -11,7 +14,13 @@ use crate::helpers::{consistent_niggahita, unique_search_results};
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
 use crate::db::DbManager;
-use crate::logger::error;
+use crate::logger::{info, error};
+
+#[derive(QueryableByName)]
+struct CountResult {
+    #[diesel(sql_type = BigInt)]
+    count: i64,
+}
 
 pub struct SearchQueryTask<'a> {
     pub dbm: &'a DbManager,
@@ -265,10 +274,14 @@ impl<'a> SearchQueryTask<'a> {
     }
 
     /// Fetches a page of results for Suttas using CONTAINS or REGEX matching.
+    #[allow(dead_code)]
     fn suttas_contains_or_regex_match_page(
         &mut self,
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("suttas_contains_or_regex_match_page(): page_num: {}", page_num));
+        info(&format!("query_text: {}", &self.query_text));
+        let timer = Instant::now();
         // TODO: review details in query_task.py
         use crate::db::appdata_schema::suttas::dsl::*;
 
@@ -337,6 +350,71 @@ impl<'a> SearchQueryTask<'a> {
             .map(|sutta| self.db_sutta_to_result(sutta))
             .collect();
 
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(search_results)
+    }
+
+    fn suttas_contains_match_fts5(
+        &mut self,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("suttas_contains_match_fts5(): page_num: {}", page_num));
+        info(&format!("query_text: {}", &self.query_text));
+        let timer = Instant::now();
+
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        // TODO --- Source Filtering ---
+        // TODO --- Term Filtering ---
+
+        let like_pattern = format!("%{}%", self.query_text);
+
+        // --- Count Total Hits ---
+        let count_result: CountResult = sql_query(
+            r#"
+            SELECT COUNT(*) as count
+            FROM suttas_fts f
+            JOIN suttas s ON f.sutta_id = s.id
+            WHERE f.content_plain LIKE ?
+            "#
+        )
+        .bind::<Text, _>(&like_pattern)
+        .get_result(db_conn)?;
+
+        self.db_query_hits_count = count_result.count;
+
+        // --- Apply Pagination ---
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        // NOTE: 'ORDER BY rank' is very slow.
+        // Ordering by id for predictable results on the same query.
+        // Without specifying the ordering, FTS5 results are not ordered and fluctuate.
+
+        // --- Execute Query with Pagination ---
+        let db_results: Vec<Sutta> = sql_query(
+            r#"
+            SELECT *
+            FROM suttas_fts f
+            JOIN suttas s ON f.sutta_id = s.id
+            WHERE f.content_plain LIKE ?
+            ORDER BY id
+            LIMIT ? OFFSET ?
+            "#
+        )
+        .bind::<Text, _>(&like_pattern)
+        .bind::<BigInt, _>(limit)
+        .bind::<BigInt, _>(offset)
+        .load(db_conn)?;
+
+        // --- Map to SearchResult ---
+        let search_results = db_results
+            .iter()
+            .map(|sutta| self.db_sutta_to_result(sutta))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
 
@@ -480,16 +558,28 @@ impl<'a> SearchQueryTask<'a> {
                 }
             }
 
-            SearchMode::ContainsMatch | SearchMode::RegExMatch => {
+            SearchMode::ContainsMatch => {
                 match self.search_area {
                     SearchArea::Suttas => {
-                        self.suttas_contains_or_regex_match_page(page_num)
+                        self.suttas_contains_match_fts5(page_num)
                     }
                     SearchArea::DictWords => {
                         self.dict_words_contains_or_regex_match_page(page_num)
                     }
                 }
             }
+
+            // TODO handle SearchMode::RegExMatch with diesel regex
+            // SearchMode::ContainsMatch | SearchMode::RegExMatch => {
+            //     match self.search_area {
+            //         SearchArea::Suttas => {
+            //             self.suttas_contains_or_regex_match_page(page_num)
+            //         }
+            //         SearchArea::DictWords => {
+            //             self.dict_words_contains_or_regex_match_page(page_num)
+            //         }
+            //     }
+            // }
 
             _ => {
                 // FIXME: implement later

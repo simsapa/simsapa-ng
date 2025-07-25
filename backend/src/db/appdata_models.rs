@@ -23,7 +23,7 @@ pub struct NewAppSetting<'a> {
 }
 
 // Queryable struct for reading records
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = suttas)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Sutta {
