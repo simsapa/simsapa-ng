@@ -17,9 +17,9 @@ crate-type = ["staticlib", "rlib"]
 [dependencies]
 simsapa_backend = { path = "../backend" }
 cxx = "1.0.148"
-cxx-qt = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build" }
-qt-build-utils = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build" }
-cxx-qt-lib = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build", features = ["full"] }
+cxx-qt = { git = "https://github.com/simsapa/cxx-qt.git", branch = "simsapa" }
+cxx-qt-lib = { git = "https://github.com/simsapa/cxx-qt.git", branch = "simsapa", features = ["full"] }
+qt-build-utils = { git = "https://github.com/simsapa/cxx-qt.git", branch = "simsapa" }
 rocket = { version = "0.5", features = ["json"] }
 rocket_cors = "0.6.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -33,4 +33,4 @@ bzip2 = { version = "0.5.2", default-features = false, features = ["libbz2-rs-sy
 
 [build-dependencies]
 # The link_qt_object_files feature is required for statically linking Qt 6.
-cxx-qt-build = { git = "https://github.com/simsapa/cxx-qt.git", branch = "ios-build", features = ["link_qt_object_files"] }
+cxx-qt-build = { git = "https://github.com/simsapa/cxx-qt.git", branch = "simsapa", features = ["link_qt_object_files"] }

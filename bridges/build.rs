@@ -1,6 +1,6 @@
 use std::env;
 use cxx_qt_build::{CxxQtBuilder, QmlModule};
-use cxx_qt_build::{is_ios_target, thin_generated_fat_library_with_lipo};
+// use cxx_qt_build::{is_ios_target, thin_generated_fat_library_with_lipo};
 
 fn main() {
     let s = match env::var("CXX_QT_QT_MODULES") {
@@ -65,7 +65,7 @@ fn main() {
         builder.qt_module("WebEngineQuick").build();
     }
 
-    if is_ios_target() {
-        thin_generated_fat_library_with_lipo("libsimsapa_bridges-cxxqt-generated.a", "arm64");
-    }
+    // if is_ios_target() {
+    //     thin_generated_fat_library_with_lipo("libsimsapa_bridges-cxxqt-generated.a", "arm64");
+    // }
 }

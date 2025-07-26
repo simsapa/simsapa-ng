@@ -29,17 +29,15 @@ pub mod qobject {
         fn get_system_palette_json() -> QString;
     }
 
+    impl cxx_qt::Threading for SuttaBridge{}
+
     extern "RustQt" {
         #[qobject]
         #[qml_element]
         #[qproperty(bool, db_loaded)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
-    }
 
-    impl cxx_qt::Threading for SuttaBridge{}
-
-    unsafe extern "RustQt" {
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
 

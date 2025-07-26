@@ -20,9 +20,7 @@ pub mod qobject {
         #[qml_element]
         #[namespace = "storage_manager"]
         type StorageManager = super::StorageManagerRust;
-    }
 
-    unsafe extern "RustQt" {
         #[qinvokable]
         fn get_app_data_storage_paths_json(self: &StorageManager) -> QString;
 
