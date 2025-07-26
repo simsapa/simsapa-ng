@@ -67,7 +67,13 @@ pub struct AppGlobals {
     pub page_len: usize,
     pub api_port: i32,
     pub api_url: String,
+    pub paths: AppGlobalPaths,
+}
+
+#[derive(Debug)]
+pub struct AppGlobalPaths {
     pub simsapa_dir: PathBuf,
+    pub simsapa_api_port_path: PathBuf,
     pub download_temp_folder: PathBuf,
     pub extract_temp_folder: PathBuf,
     pub app_assets_dir: PathBuf,
@@ -95,11 +101,40 @@ impl AppGlobals {
         // earlier by find_port_set_env().
         dotenv().ok();
 
+        let paths = AppGlobalPaths::new();
+
+        let api_port: i32 = if let Ok(port_str) = env::var("API_PORT") {
+            if let Ok(port) = port_str.parse::<i32>() { port } else { 4848 }
+        } else {
+            4848
+        };
+
+        let api_url = format!("http://localhost:{}", api_port);
+
+        save_to_file(format!("{}", api_port).as_bytes(), paths.simsapa_api_port_path.to_str().expect("Path error"));
+
+        AppGlobals {
+            page_len: 10,
+            api_port,
+            api_url,
+            paths,
+        }
+    }
+
+    pub fn re_init_paths(&mut self) {
+        self.paths = AppGlobalPaths::new();
+    }
+}
+
+impl AppGlobalPaths {
+    pub fn new() -> Self {
         let simsapa_dir = if let Ok(p) = get_create_simsapa_dir() {
             p
         } else {
             PathBuf::from(".")
         };
+
+        let simsapa_api_port_path = simsapa_dir.join("api-port.txt");
 
         let download_temp_folder = simsapa_dir.join("temp-download");
         let extract_temp_folder = download_temp_folder.join("temp-extract");
@@ -122,22 +157,9 @@ impl AppGlobals {
         let dpd_abs_path = fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone());
         let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
-        let api_port: i32 = if let Ok(port_str) = env::var("API_PORT") {
-            if let Ok(port) = port_str.parse::<i32>() { port } else { 4848 }
-        } else {
-            4848
-        };
-
-        let api_url = format!("http://localhost:{}", api_port);
-
-        let simsapa_api_port_path = simsapa_dir.join("api-port.txt");
-        save_to_file(format!("{}", api_port).as_bytes(), simsapa_api_port_path.to_str().expect("Path error"));
-
-        AppGlobals {
-            page_len: 10,
-            api_port,
-            api_url,
+        AppGlobalPaths {
             simsapa_dir,
+            simsapa_api_port_path,
             download_temp_folder,
             extract_temp_folder,
             app_assets_dir,
@@ -307,10 +329,10 @@ pub extern "C" fn dotenv_c() {
 #[unsafe(no_mangle)]
 pub extern "C" fn ensure_no_empty_db_files() {
     let g = get_app_globals();
-    for p in [g.appdata_db_path.clone(),
-              g.userdata_db_path.clone(),
-              g.dict_db_path.clone(),
-              g.dpd_db_path.clone()] {
+    for p in [g.paths.appdata_db_path.clone(),
+              g.paths.userdata_db_path.clone(),
+              g.paths.dict_db_path.clone(),
+              g.paths.dpd_db_path.clone()] {
         match p.try_exists() {
             Ok(true) => {
                 match fs::metadata(&p) {
@@ -333,10 +355,10 @@ pub extern "C" fn ensure_no_empty_db_files() {
 pub extern "C" fn remove_download_temp_folder() {
     let g = get_app_globals();
 
-    match g.download_temp_folder.try_exists() {
+    match g.paths.download_temp_folder.try_exists() {
         Ok(exists) => {
             if exists {
-                let _ = remove_dir_all(&g.download_temp_folder);
+                let _ = remove_dir_all(&g.paths.download_temp_folder);
             }
         }
 

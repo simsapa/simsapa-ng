@@ -235,19 +235,21 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
 
                     Button {
+                        text: "Select Storage"
+                        visible: root.is_mobile
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: storage_dialog.open()
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
                         text: "Download"
                         font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
                         onClicked: {
                             views_stack.currentIndex = 2;
                             root.validate_and_run_download();
                         }
-                    }
-
-                    Button {
-                        text: "Select Storage"
-                        visible: root.is_mobile
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: storage_dialog.open()
                     }
 
                     Item { Layout.fillWidth: true }

@@ -11,7 +11,7 @@ use reqwest::blocking::Client;
 use bzip2::read::BzDecoder;
 use tar::Archive;
 
-use simsapa_backend::{get_app_globals, move_folder_contents};
+use simsapa_backend::{move_folder_contents, AppGlobalPaths};
 use simsapa_backend::logger::{info, error};
 
 #[cxx_qt::bridge]
@@ -65,12 +65,15 @@ impl qobject::AssetManager {
     fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList) {
         info(&format!("download_urls_and_extract(): {} urls", urls.len()));
 
+        // AppGlobals was initialized before the storage path selection.
+        // Get new paths to apply storage path selection.
+        let paths = AppGlobalPaths::new();
+
         // Save to a temp folder (not in app-assets).
         // Only replace the assets after downloading and extracting succeeds.
-        let g = get_app_globals();
-        let download_temp_folder = g.download_temp_folder.clone();
-        let extract_temp_folder = g.extract_temp_folder.clone();
-        let app_assets_folder = g.app_assets_dir.clone();
+        let download_temp_folder = paths.download_temp_folder.clone();
+        let extract_temp_folder = paths.extract_temp_folder.clone();
+        let app_assets_folder = paths.app_assets_dir.clone();
 
         let qt_thread = self.qt_thread();
 

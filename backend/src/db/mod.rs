@@ -97,32 +97,32 @@ impl DbManager {
 
         let g = get_app_globals();
 
-        info(&format!("simsapa_dir: {}", g.simsapa_dir.to_string_lossy()));
+        info(&format!("simsapa_dir: {}", g.paths.simsapa_dir.to_string_lossy()));
 
         // PathBuf::exists() can crash on Android due to permission restrictions,
         // but no errors are reported.
         //
         // FIXME: Return the errors
-        let _ = check_file_exists_print_err(&g.appdata_db_path);
-        let _ = check_file_exists_print_err(&g.dict_db_path);
-        let _ = check_file_exists_print_err(&g.dpd_db_path);
+        let _ = check_file_exists_print_err(&g.paths.appdata_db_path);
+        let _ = check_file_exists_print_err(&g.paths.dict_db_path);
+        let _ = check_file_exists_print_err(&g.paths.dpd_db_path);
 
         // If userdata doesn't exist, create it with default settings.
-        let userdata_exists = match check_file_exists_print_err(&g.userdata_db_path) {
+        let userdata_exists = match check_file_exists_print_err(&g.paths.userdata_db_path) {
             Ok(r) => r,
             Err(_) => false,
         };
 
         if !userdata_exists {
-            initialize_userdata(&g.userdata_database_url)
-                .with_context(|| format!("Failed to initialize database at '{}'", g.userdata_database_url))?;
+            initialize_userdata(&g.paths.userdata_database_url)
+                .with_context(|| format!("Failed to initialize database at '{}'", g.paths.userdata_database_url))?;
         }
 
         Ok(Self {
-            appdata: DatabaseHandle::new(&g.appdata_database_url)?,
-            userdata: DatabaseHandle::new(&g.userdata_database_url)?,
-            dictionaries: DatabaseHandle::new(&g.dict_database_url)?,
-            dpd: DatabaseHandle::new(&g.dpd_database_url)?,
+            appdata: DatabaseHandle::new(&g.paths.appdata_database_url)?,
+            userdata: DatabaseHandle::new(&g.paths.userdata_database_url)?,
+            dictionaries: DatabaseHandle::new(&g.paths.dict_database_url)?,
+            dpd: DatabaseHandle::new(&g.paths.dpd_database_url)?,
         })
     }
 
@@ -174,10 +174,10 @@ pub fn get_app_settings() -> AppSettings {
 
     let g = get_app_globals();
 
-    let _ = check_file_exists_print_err(&g.userdata_db_path);
+    let _ = check_file_exists_print_err(&g.paths.userdata_db_path);
 
-    let db_conn = &mut SqliteConnection::establish(&g.userdata_database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", g.userdata_database_url));
+    let db_conn = &mut SqliteConnection::establish(&g.paths.userdata_database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", g.paths.userdata_database_url));
 
     let json = app_settings::table
         .select(AppSetting::as_select())
