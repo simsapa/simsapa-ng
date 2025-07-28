@@ -13,4 +13,4 @@ sass-watch:
 	sass --no-source-map --watch './assets/sass/:./assets/css/'
 
 count-code:
-	tokei --type Rust,QML,C++,Javascript,CMake --compact --exclude assets/qml/data/ . | grep -vE '===|---|Total'
+	tokei --type Rust,QML,C++,Javascript,CMake --compact --exclude assets/qml/data/ --exclude assets/dpd-res/ . | grep -vE '===|---|Total'
