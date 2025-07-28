@@ -722,13 +722,19 @@ ApplicationWindow {
 
                             TabButton {
                                 text: "Results"
-                                id: results_tab
+                                id: fulltext_results_tab_btn
                                 icon.source: "icons/32x32/bx_search_alt_2.png"
                                 padding: 5
                             }
                             TabButton {
+                                text: "Dictionary"
+                                id: dictionary_tab_btn
+                                icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                                padding: 5
+                            }
+                            TabButton {
                                 text: "History"
-                                id: history_tab
+                                id: history_tab_btn
                                 icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
                                 padding: 5
                             }
@@ -740,6 +746,7 @@ ApplicationWindow {
                             anchors.top: rightside_tabs.bottom
                             anchors.topMargin: 5
                             width: parent.width
+                            anchors.bottom: parent.bottom
 
                             FulltextResults {
                                 id: fulltext_results
@@ -781,11 +788,19 @@ ApplicationWindow {
                                 onCurrentIndexChanged: fulltext_results.update_item()
                             }
 
-                            // History Tab
-                            ColumnLayout {
-                                id: recent_tab
-                                ListView { id: recent_list }
+                            DictionaryTab {
+                                id: dictionary_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
                             }
+
+                            // History Tab
+                            // ColumnLayout {
+                            //     id: recent_tab
+                            //     ListView { id: recent_list }
+                            // }
                         }
                     }
                 }

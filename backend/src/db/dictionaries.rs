@@ -3,10 +3,31 @@ use anyhow::{Context, Result};
 
 use crate::db::dictionaries_models::*;
 use crate::db::DatabaseHandle;
+use crate::logger::error;
 
 pub type DictionariesDbHandle = DatabaseHandle;
 
 impl DictionariesDbHandle {
+    pub fn get_word(&self, word_uid: &str) -> Option<DictWord> {
+        use crate::db::dictionaries_schema::dict_words::dsl::*;
+
+        let dict_word = self.do_read(|db_conn| {
+            dict_words
+                .filter(uid.eq(word_uid))
+                .select(DictWord::as_select())
+                .first(db_conn)
+                .optional()
+        });
+
+        match dict_word {
+            Ok(x) => x,
+            Err(e) => {
+                error(&format!("{}", e));
+                None
+            },
+        }
+    }
+
     pub fn create_dictionary(&self,
                              new_dict: NewDictionary) -> Result<Dictionary> {
         use crate::db::dictionaries_schema::dictionaries;

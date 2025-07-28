@@ -22,6 +22,10 @@ fn main() {
     qml_files.push("../assets/qml/SuttaHtmlView.qml");
     qml_files.push("../assets/qml/SuttaHtmlView_Desktop.qml");
     qml_files.push("../assets/qml/SuttaHtmlView_Mobile.qml");
+    qml_files.push("../assets/qml/DictionaryHtmlView.qml");
+    qml_files.push("../assets/qml/DictionaryHtmlView_Desktop.qml");
+    qml_files.push("../assets/qml/DictionaryHtmlView_Mobile.qml");
+    qml_files.push("../assets/qml/DictionaryTab.qml");
     qml_files.push("../assets/qml/SuttaStackLayout.qml");
     qml_files.push("../assets/qml/AboutDialog.qml");
     qml_files.push("../assets/qml/ColorThemeDialog.qml");

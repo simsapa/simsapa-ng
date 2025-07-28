@@ -5,15 +5,20 @@ use std::thread;
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList};
 use cxx_qt::Threading;
+use regex::{Regex, Captures};
+use lazy_static::lazy_static;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, get_create_simsapa_dir};
+use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile};
 use simsapa_backend::html_content::html_page;
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
 use simsapa_backend::logger::{info, error};
+
+static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
+static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -57,7 +62,10 @@ pub mod qobject {
         fn dpd_lookup_list(self: &SuttaBridge, query: &QString) -> QStringList;
 
         #[qinvokable]
-        fn get_sutta_html(self: &SuttaBridge, window_id: &QString, query: &QString) -> QString;
+        fn get_sutta_html(self: &SuttaBridge, window_id: &QString, uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_word_html(self: &SuttaBridge, window_id: &QString, uid: &QString) -> QString;
 
         #[qinvokable]
         fn get_translations_for_sutta_uid(self: &SuttaBridge, sutta_uid: &QString) -> QStringList;
@@ -228,17 +236,17 @@ impl qobject::SuttaBridge {
         res
     }
 
-    pub fn get_sutta_html(&self, window_id: &QString, query: &QString) -> QString {
+    pub fn get_sutta_html(&self, window_id: &QString, uid: &QString) -> QString {
         let app_data = get_app_data();
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
         let body_class = app_settings.theme_name_as_string();
 
         let blank_page_html = html_page("", None, None, None, Some(body_class.clone()));
-        if query.trimmed().is_empty() {
+        if uid.trimmed().is_empty() {
             return QString::from(blank_page_html);
         }
 
-        let sutta = app_data.dbm.appdata.get_sutta(&query.to_string());
+        let sutta = app_data.dbm.appdata.get_sutta(&uid.to_string());
 
         let html = match sutta {
             Some(sutta) => {
@@ -246,6 +254,66 @@ impl qobject::SuttaBridge {
 
                 app_data.render_sutta_content(&sutta, None, Some(js_extra))
                 .unwrap_or(html_page("Rendering error", None, None, None, Some(body_class)))
+            },
+            None => blank_page_html,
+        };
+
+        QString::from(html)
+    }
+
+    pub fn get_word_html(&self, window_id: &QString, uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        let body_class = app_settings.theme_name_as_string();
+
+        let blank_page_html = html_page("", None, None, None, Some(body_class.clone()));
+        if uid.trimmed().is_empty() {
+            return QString::from(blank_page_html);
+        }
+
+        let word = app_data.dbm.dictionaries.get_word(&uid.to_string());
+
+        lazy_static! {
+            // (<link href=")(main.js)(") class="load_js" rel="preload" as="script">
+            static ref RE_LINK_HREF: Regex = Regex::new(r#"(<link +[^>]*href=['"])([^'"]+)(['"])"#).unwrap();
+        }
+
+        let html = match word {
+            Some(word) => match word.definition_html {
+                Some(html) => {
+                    let mut extra_js = "".to_string();
+                    extra_js.push_str(&format!(" const API_URL = '{}';", &app_data.api_url));
+                    extra_js.push_str(&format!(" const WINDOW_ID = '{}';", &window_id.to_string()));
+                    extra_js.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
+                    extra_js.push_str(DICTIONARY_JS);
+
+                    let mut word_html = html.clone();
+
+                    word_html = word_html.replace(
+                        "</head>",
+                        &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, extra_js));
+
+                    word_html = word_html.replace(
+                        "<body>",
+                        &format!(r#"
+<body>
+    <div class='word-heading'>
+        <div class='word-title'>
+            <h1>{}</h1>
+        </div>
+    </div>"#, uid.to_string().replace("/dpd", "")));
+
+                    word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
+                        format!("{}{}{}{}",
+                                &caps[1],
+                                &format!("{}/assets/dpd-res/", &app_data.api_url),
+                                &caps[2],
+                                &caps[3])
+                    }).to_string();
+
+                    word_html
+                },
+                None => blank_page_html,
             },
             None => blank_page_html,
         };

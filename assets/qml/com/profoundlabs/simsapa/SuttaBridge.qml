@@ -20,8 +20,13 @@ Item {
         return "{}";
     }
 
-    function get_sutta_html(window_id: string, query: string): string {
-        var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(query);
+    function get_sutta_html(window_id: string, uid: string): string {
+        var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(uid);
+        return html;
+    }
+
+    function get_word_html(window_id: string, uid: string): string {
+        var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(uid);
         return html;
     }
 
