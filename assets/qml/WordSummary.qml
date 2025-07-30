@@ -15,6 +15,7 @@ Frame {
     readonly property bool is_desktop: !root.is_mobile
 
     required property var handle_summary_close_fn
+    required property var handle_open_dict_tab_fn
 
     readonly property int item_padding: 4
     property int min_height: summaries_model.count * (root.tm1.height*2 + item_padding*2) + 100
@@ -72,18 +73,21 @@ Frame {
     function run_lookup(query: string) {
         // root.is_loading = true; TODO
         Qt.callLater(function() {
-            let res;
             deconstructor_model.clear();
-            res = sb.dpd_deconstructor_list(query);
-            for (let i=0; i < res.length; i++) {
-                deconstructor_model.append({ words_joined: res[i] });
+            let dec_list = sb.dpd_deconstructor_list(query);
+            for (let i=0; i < dec_list.length; i++) {
+                deconstructor_model.append({ words_joined: dec_list[i] });
             }
             deconstructor.currentIndex = 0;
 
             summaries_model.clear();
-            res = sb.dpd_lookup_list(query);
-            for (let i=0; i < res.length; i++) {
-                summaries_model.append({ summary: res[i] });
+            let sum_list = JSON.parse(sb.dpd_lookup_json(query));
+            for (let i=0; i < sum_list.length; i++) {
+                summaries_model.append({
+                    uid: sum_list[i].uid,
+                    word: sum_list[i].word,
+                    summary: sum_list[i].summary,
+                });
             }
             // clear the previous selection highlight
             summaries_list.currentIndex = -1;
@@ -175,7 +179,7 @@ Frame {
 
             ScrollBar.vertical: ScrollBar {
                 policy: ScrollBar.AlwaysOn
-                padding: 5
+                padding: 0
             }
         }
 
@@ -187,6 +191,8 @@ Frame {
                 height: summaries_list.item_height
 
                 required property int index
+                required property string uid
+                required property string word
                 required property string summary
 
                 Frame {
@@ -205,7 +211,7 @@ Frame {
                         onClicked: summaries_list.currentIndex = result_item.index
                     }
 
-                    ColumnLayout {
+                    RowLayout {
                         anchors.fill: parent
                         spacing: 0
                         Text {
@@ -215,6 +221,15 @@ Frame {
                             font.pointSize: root.font_point_size
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
+                        }
+
+                        Button {
+                            icon.source: "icons/32x32/bxs_book_content.png"
+                            // NOTE: result_item.uid is the numerical dpd id, but dictionaries.sqlite3 has uid based on word lemma_1
+                            onClicked: root.handle_open_dict_tab_fn(result_item.word + "/dpd") // qmllint disable use-proper-function
+                            Layout.preferredHeight: lookup_input.height
+                            Layout.preferredWidth: lookup_input.height
+                            Layout.rightMargin: 5
                         }
                     }
                 }

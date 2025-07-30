@@ -44,6 +44,7 @@ function summary_selection() {
 
 function open_dpd_button(button_name = 'grammar') {
     // <meta data_key="data_pāpuṇāti_1">
+    // <meta data_key="rootdata_vatt">
     const metaElement = document.querySelector('meta[data_key]');
     if (!metaElement) {
         console.error('Meta element with data_key not found');
@@ -52,17 +53,28 @@ function open_dpd_button(button_name = 'grammar') {
 
     const dataKey = metaElement.getAttribute('data_key');
     if (!dataKey) {
-        console.error('data_key attribute is empty');
+        // console.error('data_key attribute is empty');
         return;
     }
 
     // <a class="button" data-target="grammar_pāpuṇāti_1" href="#">
+    // <a class="button" data-target="root_info_√vatt" href="#">
+    //
     // <div class="dpd content hidden" id="grammar_pāpuṇāti_1">
-    const targetId = dataKey.replace('data_', button_name + '_');
+    // <div class="dpd content hidden" id="root_info_√vatt">
+    let targetId;
+    if (dataKey.startsWith('data_')) {
+        targetId = dataKey.replace('data_', button_name + '_');
+    } else if (dataKey.startsWith('rootdata_')) {
+        targetId = dataKey.replace('rootdata_', button_name + '_√');
+    } else {
+        // console.error(`Unrecognised data key format: "${dataKey}"`);
+        return;
+    }
 
     const button = document.querySelector(`a.button[data-target="${targetId}"]`);
     if (!button) {
-        console.error(`Button with data-target="${targetId}" not found`);
+        // console.error(`Button with data-target="${targetId}" not found`);
         return;
     }
 
@@ -71,7 +83,7 @@ function open_dpd_button(button_name = 'grammar') {
     // Find the corresponding content div and remove 'hidden' class
     const contentDiv = document.getElementById(targetId);
     if (!contentDiv) {
-        console.error(`Content div with id="${targetId}" not found`);
+        // console.error(`Content div with id="${targetId}" not found`);
         return;
     }
 
@@ -80,7 +92,9 @@ function open_dpd_button(button_name = 'grammar') {
 
 document.addEventListener("DOMContentLoaded", function(_event) {
     open_dpd_button('grammar');
+    open_dpd_button('example');
     open_dpd_button('examples');
+    open_dpd_button('root_info');
 
     if (IS_MOBILE) {
         // On mobile in a WebView, there is no double click event, so listen to

@@ -15,7 +15,9 @@ ColumnLayout {
     readonly property bool is_desktop: !root.is_mobile
     readonly property string match_bg: root.is_dark ? "#007A31" : "#F6E600"
 
-    property string word_uid: "pāpuṇāti 1/dpd"
+    // dict_words.uid in dictionaries.sqlite3: pāpuṇāti 1/dpd
+    // not the dpd number id uid
+    property alias word_uid: html_view.word_uid
 
     DictionaryHtmlView {
         id: html_view

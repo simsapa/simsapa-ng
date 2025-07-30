@@ -12,7 +12,7 @@ use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
 use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile};
-use simsapa_backend::html_content::html_page;
+use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
 use simsapa_backend::logger::{info, error};
@@ -59,7 +59,7 @@ pub mod qobject {
         fn dpd_deconstructor_list(self: &SuttaBridge, query: &QString) -> QStringList;
 
         #[qinvokable]
-        fn dpd_lookup_list(self: &SuttaBridge, query: &QString) -> QStringList;
+        fn dpd_lookup_json(self: &SuttaBridge, query: &QString) -> QString;
 
         #[qinvokable]
         fn get_sutta_html(self: &SuttaBridge, window_id: &QString, uid: &QString) -> QString;
@@ -165,7 +165,7 @@ impl qobject::SuttaBridge {
         info("SuttaBridge::dpd_first_query() start");
         thread::spawn(move || {
             let app_data = get_app_data();
-            let _list = app_data.dbm.dpd.dpd_lookup_list("dhamma");
+            let _json = app_data.dbm.dpd.dpd_lookup_json("dhamma");
             info("SuttaBridge::dpd_first_query() end");
         });
     }
@@ -226,14 +226,10 @@ impl qobject::SuttaBridge {
         res
     }
 
-    pub fn dpd_lookup_list(&self, query: &QString) -> QStringList {
+    pub fn dpd_lookup_json(&self, query: &QString) -> QString {
         let app_data = get_app_data();
-        let list = app_data.dbm.dpd.dpd_lookup_list(&query.to_string());
-        let mut res = QStringList::default();
-        for i in list {
-            res.append(QString::from(i));
-        }
-        res
+        let s = app_data.dbm.dpd.dpd_lookup_json(&query.to_string());
+        QString::from(s)
     }
 
     pub fn get_sutta_html(&self, window_id: &QString, uid: &QString) -> QString {
@@ -241,7 +237,7 @@ impl qobject::SuttaBridge {
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
         let body_class = app_settings.theme_name_as_string();
 
-        let blank_page_html = html_page("", None, None, None, Some(body_class.clone()));
+        let blank_page_html = blank_html_page(Some(body_class.clone()));
         if uid.trimmed().is_empty() {
             return QString::from(blank_page_html);
         }
@@ -253,7 +249,7 @@ impl qobject::SuttaBridge {
                 let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
 
                 app_data.render_sutta_content(&sutta, None, Some(js_extra))
-                .unwrap_or(html_page("Rendering error", None, None, None, Some(body_class)))
+                .unwrap_or(sutta_html_page("Rendering error", None, None, None, Some(body_class)))
             },
             None => blank_page_html,
         };
@@ -266,7 +262,7 @@ impl qobject::SuttaBridge {
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
         let body_class = app_settings.theme_name_as_string();
 
-        let blank_page_html = html_page("", None, None, None, Some(body_class.clone()));
+        let blank_page_html = blank_html_page(Some(body_class.clone()));
         if uid.trimmed().is_empty() {
             return QString::from(blank_page_html);
         }
@@ -280,18 +276,18 @@ impl qobject::SuttaBridge {
 
         let html = match word {
             Some(word) => match word.definition_html {
-                Some(html) => {
-                    let mut extra_js = "".to_string();
-                    extra_js.push_str(&format!(" const API_URL = '{}';", &app_data.api_url));
-                    extra_js.push_str(&format!(" const WINDOW_ID = '{}';", &window_id.to_string()));
-                    extra_js.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
-                    extra_js.push_str(DICTIONARY_JS);
+                Some(ref definition_html) => {
+                    let mut js_extra = "".to_string();
+                    js_extra.push_str(&format!(" const API_URL = '{}';", &app_data.api_url));
+                    js_extra.push_str(&format!(" const WINDOW_ID = '{}';", &window_id.to_string()));
+                    js_extra.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
+                    js_extra.push_str(DICTIONARY_JS);
 
-                    let mut word_html = html.clone();
+                    let mut word_html = definition_html.clone();
 
                     word_html = word_html.replace(
                         "</head>",
-                        &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, extra_js));
+                        &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, js_extra));
 
                     word_html = word_html.replace(
                         "<body>",
@@ -301,7 +297,7 @@ impl qobject::SuttaBridge {
         <div class='word-title'>
             <h1>{}</h1>
         </div>
-    </div>"#, uid.to_string().replace("/dpd", "")));
+    </div>"#, word.word()));
 
                     word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
                         format!("{}{}{}{}",

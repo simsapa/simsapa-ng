@@ -12,7 +12,7 @@ use crate::logger::error;
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
-use crate::html_content::html_page;
+use crate::html_content::sutta_html_page;
 use crate::{get_app_globals, init_app_globals};
 
 /// Represents the application data and settings
@@ -202,7 +202,7 @@ impl AppData {
         }
 
         // Wrap content in the full HTML page structure
-        let final_html = html_page(
+        let final_html = sutta_html_page(
             &content_html_body,
             Some(self.api_url.to_string()),
             Some(css_extra.to_string()),

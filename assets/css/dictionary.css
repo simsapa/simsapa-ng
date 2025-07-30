@@ -1,3 +1,14 @@
+html, body {
+  height: 100%;
+  color: #1a1a1a;
+  background-color: #FAE6B2;
+}
+
+html.dark, body.dark {
+  color: #E0E3E9;
+  background-color: #23272E;
+}
+
 .word-heading .word-title {
   padding-top: 10pt;
 }
@@ -8,4 +19,8 @@
   padding-top: 0;
   padding-bottom: 0;
   margin-top: 0;
+}
+
+.dark .word-heading .word-title h1 {
+  color: #E0E3E9;
 }

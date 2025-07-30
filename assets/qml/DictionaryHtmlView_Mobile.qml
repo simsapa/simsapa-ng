@@ -11,6 +11,10 @@ WebView {
     property string word_uid
     property bool is_dark
 
+    Component.onCompleted: {
+        web.load_word_uid(web.word_uid);
+    }
+
     onLoadingChanged: {
         if (web.is_dark) {
             runJavaScript("document.documentElement.style.colorScheme = 'dark';");

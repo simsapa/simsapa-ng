@@ -34,6 +34,8 @@ ApplicationWindow {
 
     property bool is_loading: false
 
+    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible)
+
     SuttaBridge {
         id: sb
         Component.onCompleted: {
@@ -204,6 +206,11 @@ ApplicationWindow {
             }
         }
         return tab;
+    }
+
+    function open_dict_tab(uid: string) {
+        rightside_tabs.setCurrentIndex(1) // idx 1 = Dictionary
+        dictionary_tab.word_uid = uid;
     }
 
     StorageDialog { id: storage_dialog }
@@ -683,7 +690,7 @@ ApplicationWindow {
                                     is_dark: root.is_dark
                                     // Hide the webview when the drawer menu or a dialog is open. The mobile webview
                                     // is always on top, obscuring other items.
-                                    visible: !mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible
+                                    visible: root.webview_visible
                                 }
                             }
 
@@ -703,6 +710,7 @@ ApplicationWindow {
                                     is_dark: root.is_dark
                                     window_height: root.height
                                     handle_summary_close_fn: word_summary_wrap.handle_summary_close
+                                    handle_open_dict_tab_fn: root.open_dict_tab
                                     incremental_search_checked: incremental_search.checked
                                 }
                             }
@@ -792,8 +800,10 @@ ApplicationWindow {
                                 id: dictionary_tab
                                 window_id: root.window_id
                                 is_dark: root.is_dark
+                                word_uid: ""
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                visible: root.webview_visible
                             }
 
                             // History Tab

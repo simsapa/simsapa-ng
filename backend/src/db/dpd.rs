@@ -8,6 +8,8 @@ use diesel::sql_types::{Text, Integer};
 use regex::Regex;
 use anyhow::Result;
 use lazy_static::lazy_static;
+use serde_json;
+use serde::Serialize;
 
 use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
@@ -19,6 +21,13 @@ use crate::types::SearchResult;
 use crate::logger::{info, error};
 
 pub type DpdDbHandle = DatabaseHandle;
+
+#[derive(Serialize)]
+pub struct LookupResult {
+    uid: String,
+    word: String,
+    summary: String,
+}
 
 impl DpdDbHandle {
     /// Map an inflected word form to headwords
@@ -290,6 +299,26 @@ impl DpdDbHandle {
                 Vec::new()
             }
         }
+    }
+
+    pub fn dpd_lookup_json(&self, query: &str) -> String {
+        let list: Vec<LookupResult> = match self.dpd_lookup(query, false, true) {
+            Ok(res) => {
+                res.iter().map(|i|
+                               LookupResult {
+                                   uid: i.uid.clone(),
+                                   word: i.title.clone(),
+                                   summary: i.snippet.clone(),
+                               })
+                          .collect()
+            }
+
+            Err(e) => {
+                error(&format!("{}", e));
+                Vec::new()
+            }
+        };
+        serde_json::to_string(&list).unwrap_or_default()
     }
 }
 

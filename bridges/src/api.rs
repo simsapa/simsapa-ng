@@ -15,7 +15,7 @@ use rocket::http::{ContentType, Status};
 use rocket_cors::CorsOptions;
 
 use simsapa_backend::{AppGlobals, get_create_simsapa_dir, get_create_simsapa_appdata_db_path, save_to_file, create_parent_directory};
-use simsapa_backend::html_content::html_page;
+use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
 use simsapa_backend::logger::{info, warn, error, profile};
@@ -166,7 +166,7 @@ fn index() -> RawHtml<String> {
 <p>Contents:</p>
 <pre>{}</pre>", app_data_path, app_data_folder_contents, storage_path, storage_folder_contents);
 
-    RawHtml(html_page(&html, None, None, None, None))
+    RawHtml(sutta_html_page(&html, None, None, None, None))
 }
 
 #[get("/shutdown")]
