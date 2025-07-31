@@ -30,6 +30,26 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
     }
 }
 
+pub fn normalize_query_text(text: Option<String>) -> String {
+    let res = match text {
+        Some(text) => {
+            let text = text.to_lowercase();
+            lazy_static! {
+                static ref re_ti: Regex = Regex::new(r#"[’'"”]ti$"#).unwrap();
+                static ref re_trail_punct: Regex = Regex::new(r#"[\.,;:\!\?'’"” ]+$"#).unwrap();
+            };
+            let text = re_ti.replace_all(&text, "ti").into_owned();
+            let text = re_trail_punct.replace_all(&text, "").into_owned();
+
+            text
+        }
+
+        None => String::from(""),
+    };
+
+    res
+}
+
 /// Convert Pāḷi text to ASCII equivalents.
 pub fn pali_to_ascii(text: Option<&str>) -> String {
     let text = match text {

@@ -5,9 +5,7 @@ use std::time::Instant;
 
 use diesel::prelude::*;
 use diesel::sql_types::{Text, Integer};
-use regex::Regex;
 use anyhow::Result;
-use lazy_static::lazy_static;
 use serde_json;
 use serde::Serialize;
 
@@ -15,7 +13,7 @@ use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
 
 use crate::{get_app_data, get_create_simsapa_app_assets_path};
-use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext};
+use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text};
 use crate::pali_stemmer::pali_stem;
 use crate::types::SearchResult;
 use crate::logger::{info, error};
@@ -59,9 +57,11 @@ impl DpdDbHandle {
 
         // NOTE: Return exact match if possible because 'starts with' matches show confusing additional words.
 
+        let query_text = normalize_query_text(Some(query_text.to_string()));
+
         // Attempt 1: Exact match.
         let mut result: Option<Lookup> = lookup
-            .filter(lookup_key.eq(query_text))
+            .filter(lookup_key.eq(query_text.clone()))
             .first::<Lookup>(db_conn)
             .optional()?; // .optional() converts NotFound to Ok(None), other errors propagate.
 
@@ -160,12 +160,7 @@ impl DpdDbHandle {
 
         let db_conn = &mut self.get_conn().expect("Can't get db conn");
 
-        // Normalize
-        let query_text = query_text_orig.to_lowercase();
-        lazy_static! {
-           static ref re_ti: Regex = Regex::new(r"[’']ti$").unwrap();
-        };
-        let query_text = re_ti.replace_all(&query_text, "ti").into_owned();
+        let query_text = normalize_query_text(Some(query_text_orig.to_string()));
 
         let mut res_words: Vec<UDpdWord> = Vec::new();
 

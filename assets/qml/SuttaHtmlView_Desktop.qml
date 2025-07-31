@@ -12,6 +12,11 @@ WebEngineView {
     property string sutta_uid
     property bool is_dark
 
+    function show_transient_message(msg: string) {
+        let js = `var msg = \`${msg}\`; document.SSP.show_transient_message(msg, "transient-messages-top");`;
+        runJavaScript(js);
+    }
+
     onLoadingChanged: {
         if (web.is_dark) {
             runJavaScript("document.documentElement.style.colorScheme = 'dark';");

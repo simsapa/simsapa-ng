@@ -135,6 +135,27 @@ ApplicationWindow {
 
     function run_sutta_menu_action(action: string, query_text: string) {
         console.log("run_sutta_menu_action():", action, query_text);
+
+        switch (action) {
+        case "copy-selection":
+            clip.copy_text(query_text);
+            sutta_html_view_layout.show_transient_message(`Copied: ${query_text.slice(0, 30)} ...`);
+            break;
+
+        case "lookup-selection":
+            root.set_summary_query(query_text);
+            sutta_html_view_layout.show_transient_message(`Lookup: ${query_text.slice(0, 30)} ...`);
+            break;
+
+        case "copy-link-sutta":
+        case "copy-sutta-url":
+        case "gloss-selection":
+        case "summarize-sutta":
+        case "analyse-selection":
+            let msg = `TODO: ${action}`;
+            sutta_html_view_layout.show_transient_message(msg);
+            break;
+        }
     }
 
     property int key_counter: 0
@@ -814,6 +835,17 @@ ApplicationWindow {
                         }
                     }
                 }
+            }
+        }
+
+        // Invisible helper for clipboard
+        TextEdit {
+            id: clip
+            visible: false
+            function copy_text(text) {
+                clip.text = text;
+                clip.selectAll();
+                clip.copy();
             }
         }
     }

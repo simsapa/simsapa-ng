@@ -11,6 +11,7 @@ bridges/target
 .cache/
 compile_commands.json
 .qmlls.ini
+node_modules/
 
 # Emacs temp files
 *~

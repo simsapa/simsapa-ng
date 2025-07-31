@@ -12,11 +12,18 @@
     </head>
     <body class="{body_class}">
         <div id="ssp_main">
+            <div class="transient-messages-wrap">
+                <div id="transient-messages-top" class="transient-messages">
+                </div>
+            </div>
+
             {menu_html}
 
             {content}
         </div>
         <script>{js_body}</script>
+
+        <script src="{api_url}/assets/js/simsapa.min.js"></script>
 
         {icons_html}
 

@@ -10,6 +10,10 @@ StackLayout {
     property string current_key: ""
     property var items_map: ({})
 
+    function show_transient_message(msg) {
+        root.items_map[root.current_key].show_transient_message(msg);
+    }
+
     Component {
         id: sutta_html_component
 

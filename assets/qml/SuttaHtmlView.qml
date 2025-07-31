@@ -7,6 +7,10 @@ Loader {
     required property string sutta_uid
     required property bool is_dark
 
+    function show_transient_message(msg) {
+        loader.item.show_transient_message(msg); // qmllint disable missing-property
+    }
+
     /* signal loadingChanged(var loadRequest) */
 
     source: {
