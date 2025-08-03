@@ -6,7 +6,7 @@ Item {
     property var dpd_lookup_test_data: ({})
 
     Component.onCompleted: {
-        root.dpd_lookup_test_data = JSON.parse(root.dpd_lookup_test_json);
+        root.dpd_lookup_test_data = JSON.parse(dpd_lookup_data.json);
     }
 
     function load_db() {
@@ -148,7 +148,10 @@ Item {
         return "file_name.csv";
     }
 
-    property string dpd_lookup_test_json: `
+    Item {
+        id: dpd_lookup_data
+        visible: false
+        property string json: `
 {
   "akusalehi": [
     {
@@ -900,5 +903,5 @@ Item {
   ]
 }
 `;
-
+    }
 }
