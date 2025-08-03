@@ -755,18 +755,27 @@ ApplicationWindow {
                                 icon.source: "icons/32x32/bx_search_alt_2.png"
                                 padding: 5
                             }
+
                             TabButton {
                                 text: "Dictionary"
                                 id: dictionary_tab_btn
-                                icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                                icon.source: "icons/32x32/bxs_book_content.png"
                                 padding: 5
                             }
+
                             TabButton {
-                                text: "History"
-                                id: history_tab_btn
+                                text: "Gloss"
+                                id: gloss_tab_btn
                                 icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
                                 padding: 5
                             }
+
+                            // TabButton {
+                            //     text: "History"
+                            //     id: history_tab_btn
+                            //     icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                            //     padding: 5
+                            // }
                         }
 
                         // Tab content areas
@@ -825,6 +834,14 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 visible: root.webview_visible
+                            }
+
+                            GlossTab {
+                                id: gloss_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
                             }
 
                             // History Tab

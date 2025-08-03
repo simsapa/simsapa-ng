@@ -1,4 +1,10 @@
+use std::fs;
+use std::path::PathBuf;
+use std::collections::BTreeMap;
+
 use simsapa_backend::get_app_data;
+use simsapa_backend::helpers::{extract_words, normalize_query_text};
+use simsapa_backend::db::dpd::LookupResult;
 
 mod helpers;
 use helpers as h;
@@ -39,4 +45,34 @@ fn test_dpd_lookup_list() {
     for (idx, result_i) in result.iter().enumerate() {
         assert_eq!(result_i.to_string(), expected[idx].to_string());
     }
+}
+
+#[test]
+fn test_dpd_lookup_json() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let text = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ. So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ vivekajaṁ pītisukhaṁ paṭhamaṁ jhānaṁ upasampajja viharati. / Saddhassa hi, sāriputta, ariyasāvakassa āraddhavīriyassa upaṭṭhitassatino etaṁ pāṭikaṅkhaṁ yaṁ vossaggārammaṇaṁ karitvā labhissati samādhiṁ, labhissati cittassa ekaggataṁ. Yo hissa, sāriputta, samādhi tadassa samādhindriyaṁ.";
+
+    // Use a BTreeMap for consistent key sorting across test runs.
+    let mut lookup_data: BTreeMap<String, Vec<LookupResult>> = BTreeMap::new();
+
+    for word in extract_words(text) {
+        if word.len() <= 1 {
+            continue;
+        }
+        let word = normalize_query_text(Some(word.to_string()));
+        let res = app_data.dbm.dpd.dpd_lookup(&word, false, true).unwrap();
+        lookup_data.insert(word, LookupResult::from_search_results(&res));
+    }
+
+    let json = serde_json::to_string_pretty(&lookup_data).expect("Can't encode JSON");
+
+    // fs::write(PathBuf::from("tests/data/dpd_lookup.json"),
+    //           json.clone()).expect("Unable to write file!");
+
+    let expected_json = fs::read_to_string(PathBuf::from("tests/data/dpd_lookup.json"))
+        .expect("Failed to read file");
+
+    assert_eq!(json, expected_json);
 }

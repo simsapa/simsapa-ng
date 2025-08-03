@@ -93,6 +93,24 @@ pub mod qobject {
 
         #[qinvokable]
         fn get_theme(self: &SuttaBridge, theme_name: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_common_words_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn save_common_words_json(self: &SuttaBridge, words_json: &QString);
+
+        #[qinvokable]
+        fn get_gloss_history_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn update_gloss_session(self: &SuttaBridge, session_uid: &QString, gloss_data_json: &QString);
+
+        #[qinvokable]
+        fn save_new_gloss_session(self: &SuttaBridge, gloss_data_json: &QString) -> QString;
+
+        #[qinvokable]
+        fn save_anki_csv(self: &SuttaBridge, csv_content: &QString) -> QString;
     }
 }
 
@@ -395,5 +413,29 @@ impl qobject::SuttaBridge {
         };
 
         theme_json
+    }
+
+    pub fn get_common_words_json(&self) -> QString {
+        QString::from(r#"["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "sāriputta", "etaṁ", "yaṁ"]"#)
+    }
+
+    pub fn save_common_words_json(&self, words_json: &QString) {
+        return
+    }
+
+    pub fn get_gloss_history_json(&self) -> QString {
+        QString::from("[]")
+    }
+
+    pub fn update_gloss_session(&self, session_uid: &QString, gloss_data_json: &QString) {
+        return
+    }
+
+    pub fn save_new_gloss_session(&self, gloss_data_json: &QString) -> QString {
+        QString::from("session-uid")
+    }
+
+    pub fn save_anki_csv(&self, csv_content: &QString) -> QString {
+        QString::from("file_name.csv")
     }
 }

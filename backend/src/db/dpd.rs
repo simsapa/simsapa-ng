@@ -27,6 +27,21 @@ pub struct LookupResult {
     summary: String,
 }
 
+impl LookupResult {
+    pub fn from_search_result(i: &SearchResult) -> LookupResult {
+        LookupResult {
+            uid: i.uid.clone(),
+            word: i.title.clone(),
+            summary: i.snippet.clone(),
+        }
+    }
+
+    pub fn from_search_results(res: &Vec<SearchResult>) -> Vec<LookupResult> {
+        res.iter().map(|i| { LookupResult::from_search_result(i) })
+                  .collect()
+    }
+}
+
 impl DpdDbHandle {
     /// Map an inflected word form to headwords
     fn inflection_to_pali_words(&self, word_form: &str) -> Result<Vec<DpdHeadword>> {
@@ -298,15 +313,7 @@ impl DpdDbHandle {
 
     pub fn dpd_lookup_json(&self, query: &str) -> String {
         let list: Vec<LookupResult> = match self.dpd_lookup(query, false, true) {
-            Ok(res) => {
-                res.iter().map(|i|
-                               LookupResult {
-                                   uid: i.uid.clone(),
-                                   word: i.title.clone(),
-                                   summary: i.snippet.clone(),
-                               })
-                          .collect()
-            }
+            Ok(res) => LookupResult::from_search_results(&res),
 
             Err(e) => {
                 error(&format!("{}", e));

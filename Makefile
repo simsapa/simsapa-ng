@@ -17,3 +17,9 @@ count-code:
 
 simsapa.min.js:
 	npx webpack
+
+# qml-test-one:
+# 	env QT_QPA_PLATFORM=offscreen qmltestrunner -import ./assets/qml/ -input ./assets/qml/ -functions 'CommonWords::test_clean_stem'
+
+qml-test:
+	env QT_QPA_PLATFORM=offscreen qmltestrunner -import ./assets/qml/ -input ./assets/qml/

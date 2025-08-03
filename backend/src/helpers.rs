@@ -30,24 +30,41 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
     }
 }
 
+// NOTE: This seems to work with Rust Regex, but using the version mirroring the
+// QML function instead.
+//
+// pub fn extract_words(text: &str) -> Vec<String> {
+//     lazy_static! {
+//         static ref re_split_to_words: Regex = Regex::new(r"\b\w+\b").unwrap();
+//     }
+//
+//     re_split_to_words.find_iter(text)
+//                      .map(|m| m.as_str().to_string())
+//                      .collect()
+// }
+
+pub fn extract_words(text: &str) -> Vec<String> {
+    text.replace("\n", " ")
+        .split(" ")
+        .map(|i| i.to_string())
+        .collect()
+}
+
 pub fn normalize_query_text(text: Option<String>) -> String {
-    let res = match text {
-        Some(text) => {
-            let text = text.to_lowercase();
-            lazy_static! {
-                static ref re_ti: Regex = Regex::new(r#"[’'"”]ti$"#).unwrap();
-                static ref re_trail_punct: Regex = Regex::new(r#"[\.,;:\!\?'’"” ]+$"#).unwrap();
-            };
-            let text = re_ti.replace_all(&text, "ti").into_owned();
-            let text = re_trail_punct.replace_all(&text, "").into_owned();
+    let text = consistent_niggahita(text);
+    if text.is_empty() {
+        return text;
+    }
 
-            text
-        }
-
-        None => String::from(""),
+    let text = text.to_lowercase();
+    lazy_static! {
+        static ref re_ti: Regex = Regex::new(r#"[’'"”]ti$"#).unwrap();
+        static ref re_trail_punct: Regex = Regex::new(r#"[\.,;:\!\?'’"” ]+$"#).unwrap();
     };
+    let text = re_ti.replace_all(&text, "ti").into_owned();
+    let text = re_trail_punct.replace_all(&text, "").into_owned();
 
-    res
+    text
 }
 
 /// Convert Pāḷi text to ASCII equivalents.
