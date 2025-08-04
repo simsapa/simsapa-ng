@@ -29,6 +29,7 @@ ApplicationWindow {
     readonly property bool is_wide: is_desktop ? (root.width > 600) : (root.width > 800)
     readonly property bool is_tall: root.height > 800
     readonly property bool is_mac: Qt.platform.os == "osx"
+    readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
     property bool is_dark: false
 
@@ -39,6 +40,7 @@ ApplicationWindow {
     SuttaBridge {
         id: sb
         Component.onCompleted: {
+            if (root.is_qml_preview) return;
             root.apply_theme();
             sb.load_db();
             sb.appdata_first_query();
@@ -201,6 +203,14 @@ ApplicationWindow {
         if (tabs_results_model.count == 0) {
             root.add_results_tab("Sutta");
         }
+
+        if (root.is_qml_preview) {
+            root.qml_preview_state();
+        }
+    }
+
+    function qml_preview_state() {
+        gloss_tab_btn.click();
     }
 
     function set_query(text: string) {
@@ -780,6 +790,7 @@ ApplicationWindow {
 
                         // Tab content areas
                         StackLayout {
+                            id: tab_stack
                             currentIndex: rightside_tabs.currentIndex
                             anchors.top: rightside_tabs.bottom
                             anchors.topMargin: 5

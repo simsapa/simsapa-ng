@@ -18,11 +18,13 @@ Dialog {
     property int selectedIndex: -1
 
     readonly property int font_point_size: 12
+    readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
     StorageManager { id: sm }
     ListModel { id: storage_locations_model }
 
     Component.onCompleted: {
+        if (root.is_qml_preview) return;
         var s = sm.get_app_data_storage_paths_json();
         var d = JSON.parse(s);
         for (var i = 0; i < d.length; i++) {

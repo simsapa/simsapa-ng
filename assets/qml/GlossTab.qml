@@ -14,6 +14,7 @@ Item {
     required property bool is_dark
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
+    readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
     SuttaBridge { id: sb }
 
@@ -39,6 +40,26 @@ Item {
     Component.onCompleted: {
         load_history();
         load_common_words();
+        if (root.is_qml_preview) {
+            qml_preview_state();
+        }
+    }
+
+    Timer {
+        id: delayed_click
+        interval: 100
+        running: false
+        repeat: false
+        onTriggered: update_all_glosses_btn.click()
+    }
+
+    function qml_preview_state() {
+        let text = `Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+
+So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ vivekajaṁ pītisukhaṁ paṭhamaṁ jhānaṁ upasampajja viharati.`;
+
+        gloss_text_input.text = text;
+        delayed_click.start();
     }
 
     function load_common_words() {
@@ -386,6 +407,7 @@ Item {
                             }
 
                             Button {
+                                id: update_all_glosses_btn
                                 text: "Update All Glosses"
                                 onClicked: root.update_all_glosses()
                             }
@@ -506,7 +528,6 @@ Item {
 
                         model: {
                             try {
-                                /* console.log(paragraphGroup.words_data); */
                                 return JSON.parse(paragraphGroup.words_data);
                             } catch (e) {
                                 return [];
@@ -574,7 +595,7 @@ Item {
                                                 anchors.leftMargin: 10
                                                 visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
                                                 text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                          wordItem.modelData.results[0].word : wordItem.modelData.originalWord
+                                                          wordItem.modelData.results[0].word : wordItem.modelData.original_word
                                                 verticalAlignment: Text.AlignVCenter
                                             }
                                         }
