@@ -853,6 +853,7 @@ ApplicationWindow {
                                 is_dark: root.is_dark
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                handle_open_dict_tab_fn: root.open_dict_tab
                             }
 
                             // History Tab

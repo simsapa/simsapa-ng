@@ -16,6 +16,8 @@ Item {
     readonly property bool is_desktop: !root.is_mobile
     readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
+    required property var handle_open_dict_tab_fn
+
     SuttaBridge { id: sb }
 
     // Current session data
@@ -322,6 +324,18 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         // FIXME
     }
 
+    function update_word_selection(paragraphIndex, wordIndex, selectedIndex) {
+        var paragraph = paragraph_model.get(paragraphIndex);
+        var words = JSON.parse(paragraph.words_data);
+        words[wordIndex].selectedIndex = selectedIndex;
+
+        // Update stem for the new selection (keep original with numbers for display)
+        words[wordIndex].stem = words[wordIndex].results[selectedIndex].word;
+
+        /* FIXME binding loop paragraph_model.setProperty(paragraphIndex, "words_data", JSON.stringify(words)); */
+        root.save_session();
+    }
+
     function update_paragraph_text(index, new_text) {
         paragraph_model.setProperty(index, "text", new_text);
         root.save_session();
@@ -361,7 +375,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                 GroupBox {
                     Layout.fillWidth: true
                     Layout.margins: 10
-                    title: "Input Text"
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -372,9 +385,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                             TextArea {
                                 id: gloss_text_input
-                                placeholderText: "Enter text to gloss (multiple paragraphs supported)..."
+                                font.pointSize: 12
+                                placeholderText: "Enter paragraphs to gloss ..."
                                 selectByMouse: true
-                                wrapMode: TextArea.Wrap
+                                wrapMode: Text.WordWrap
                             }
                         }
 
@@ -452,6 +466,16 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             Layout.margins: 10
             title: "Paragraph " + (index + 1)
 
+            background: Rectangle {
+                anchors.fill: parent
+                radius: 5
+                border.width: 1
+                border.color: "#ddd"
+                /* color: "#FAE6B2" */
+                color: "#ffffff"
+                /* color: "#cccccc" */
+            }
+
             ColumnLayout {
                 anchors.fill: parent
                 spacing: 10
@@ -463,6 +487,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                     TextArea {
                         text: paragraphGroup.text
+                        font.pointSize: 12
                         selectByMouse: true
                         wrapMode: TextArea.Wrap
                         onTextChanged: {
@@ -484,45 +509,13 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
-                    border.color: "#ddd"
+                    border.color: "#eee"
                     border.width: 1
-                    radius: 4
-
-                    // Header
-                    Rectangle {
-                        id: glossHeader
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        height: 40
-                        color: "#f0f0f0"
-                        radius: 4
-
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.margins: 10
-
-                            Text {
-                                text: "Word"
-                                font.bold: true
-                                Layout.preferredWidth: 200
-                            }
-
-                            Text {
-                                text: "Summary"
-                                font.bold: true
-                                Layout.fillWidth: true
-                            }
-                        }
-                    }
 
                     // Vocabulary list
                     ListView {
                         id: wordListView
-                        anchors.top: glossHeader.bottom
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.bottom: parent.bottom
+                        anchors.fill: parent
                         anchors.margins: 1
                         clip: true
 
@@ -545,77 +538,96 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                         ItemDelegate {
                             id: wordItem
+                            width: parent ? parent.width : 0
+                            height: 90
+
                             required property int index
                             required property var modelData
 
                             property int paragraphIndex: wordListView.paragraphIndex
 
-                            /* width: wordListView.width */
-                            /* height: mainContent.height + (compoundSection.visible ? compoundSection.height : 0) */
-                            height: 50
 
-                            background: Rectangle {
-                                color: wordItem.index % 2 === 0 ? "#fafafa" : "#ffffff"
-                            }
-
-                            contentItem: Column {
+                            Frame {
                                 id: mainContent
+                                anchors.fill: parent
+                                padding: 4
 
-                                // Main word row
-                                Rectangle {
-                                    width: parent.width
-                                    height: 50
-                                    color: "transparent"
+                                background: ListBackground {
+                                    is_dark: root.is_dark
+                                    results_list: wordListView
+                                    result_item_index: wordItem.index
+                                    highlight_selected: false
+                                    use_flat_bg: true
+                                }
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    spacing: 10
 
                                     RowLayout {
-                                        anchors.fill: parent
-                                        anchors.margins: 10
-                                        spacing: 10
-
-                                        // Word column with ComboBox if multiple results
-                                        Item {
-                                            Layout.preferredWidth: 200
-                                            Layout.fillHeight: true
-
-                                            ComboBox {
-                                                anchors.fill: parent
-                                                visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
-                                                model: wordItem.modelData.results
-                                                textRole: "word"
-                                                currentIndex: wordItem.modelData.selectedIndex || 0
-                                                onCurrentIndexChanged: {
-                                                    if (currentIndex !== wordItem.modelData.selectedIndex) {
-                                                        // FIXME updateWordSelection(wordItem.paragraphIndex, wordItem.index, currentIndex)
-                                                    }
-                                                }
-                                            }
-
-                                            Text {
-                                                anchors.fill: parent
-                                                anchors.leftMargin: 10
-                                                visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
-                                                text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                          wordItem.modelData.results[0].word : wordItem.modelData.original_word
-                                                verticalAlignment: Text.AlignVCenter
-                                            }
-                                        }
-
-                                        // Summary column
-                                        Text {
+                                        ComboBox {
+                                            id: word_select
                                             Layout.fillWidth: true
-                                            Layout.fillHeight: true
-                                            text: {
-                                                if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
-                                                    var idx = wordItem.modelData.selectedIndex || 0
-                                                    return wordItem.modelData.results[idx].summary || "No summary available"
+                                            visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
+                                            model: wordItem.modelData.results
+                                            textRole: "word"
+                                            currentIndex: wordItem.modelData.selectedIndex || 0
+                                            onCurrentIndexChanged: {
+                                                if (currentIndex !== wordItem.modelData.selectedIndex) {
+                                                    root.update_word_selection(wordItem.paragraphIndex,
+                                                                            wordItem.index,
+                                                                            currentIndex);
                                                 }
-                                                return "No definition found"
                                             }
-                                            wrapMode: Text.Wrap
-                                            verticalAlignment: Text.AlignVCenter
-                                            textFormat: Text.RichText
                                         }
+
+                                        Text {
+                                            id: word_select_empty_text
+                                            Layout.fillWidth: true
+                                            visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
+                                            text: ""
+                                        }
+
+                                        // Text {
+                                        //     Layout.fillWidth: true
+                                        //     visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
+                                        //     text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                        //                 wordItem.modelData.results[0].word : wordItem.modelData.original_word
+                                        //     verticalAlignment: Text.AlignVCenter
+                                        //     font.bold: true
+                                        //     wrapMode: Text.WordWrap
+                                        // }
+
+                                        Button {
+                                            icon.source: "icons/32x32/bxs_book_content.png"
+                                            Layout.preferredHeight: word_select.height
+                                            Layout.preferredWidth: word_select.height
+                                            onClicked: {
+                                                var idx = word_select.currentIndex || 0;
+                                                let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                                    wordItem.modelData.results[idx].word : wordItem.modelData.original_word;
+                                                root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
+                                            }
+                                        }
+
                                     }
+
+
+                                    Text {
+                                        Layout.fillHeight: true
+                                        Layout.fillWidth: true
+                                        text: {
+                                            if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
+                                                var idx = word_select.currentIndex || 0;
+                                                return wordItem.modelData.results[idx].summary || "No summary";
+                                            }
+                                            return "No summary";
+                                        }
+                                        verticalAlignment: Text.AlignTop
+                                        wrapMode: Text.WordWrap
+                                        textFormat: Text.RichText
+                                    }
+
                                 }
                             }
                         }
