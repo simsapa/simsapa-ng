@@ -215,7 +215,7 @@ Frame {
                         anchors.fill: parent
                         spacing: 0
                         Text {
-                            text: result_item.summary
+                            text: `<b>${result_item.word}</b> ${result_item.summary}`
                             color: root.palette.active.text
                             textFormat: Text.RichText
                             font.pointSize: root.font_point_size

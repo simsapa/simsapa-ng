@@ -16,6 +16,9 @@ Item {
     readonly property bool is_desktop: !root.is_mobile
     readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
+    readonly property int vocab_font_point_size: 10
+    readonly property TextMetrics vocab_tm1: TextMetrics { text: "#"; font.pointSize: root.vocab_font_point_size }
+
     required property var handle_open_dict_tab_fn
 
     SuttaBridge { id: sb }
@@ -512,11 +515,13 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
                     border.width: 0
+                    color: "#FAE6B2"
 
                     ListView {
                         id: wordListView
                         anchors.fill: parent
                         clip: true
+                        spacing: 5
 
                         model: {
                             try {
@@ -538,7 +543,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                         ItemDelegate {
                             id: wordItem
                             width: parent ? parent.width : 0
-                            height: 90
+                            height: root.vocab_tm1.height * 3
 
                             required property int index
                             required property var modelData
@@ -568,6 +573,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                         model: wordItem.modelData.results
                                         textRole: "word"
                                         font.bold: true
+                                        font.pointSize: root.vocab_font_point_size
                                         currentIndex: wordItem.modelData.selectedIndex || 0
                                         onCurrentIndexChanged: {
                                             if (currentIndex !== wordItem.modelData.selectedIndex) {
@@ -586,7 +592,8 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                         text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
                                                     wordItem.modelData.results[0].word : wordItem.modelData.original_word
                                         font.bold: true
-                                        wrapMode: TextEdit.WrapAnywhere
+                                        font.pointSize: root.vocab_font_point_size
+                                        wrapMode: TextEdit.WordWrap
                                     }
 
                                     RowLayout {
@@ -604,6 +611,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                                 }
                                                 return "No summary";
                                             }
+                                            font.pointSize: root.vocab_font_point_size
                                             wrapMode: TextEdit.WordWrap
                                             textFormat: Text.RichText
                                         }

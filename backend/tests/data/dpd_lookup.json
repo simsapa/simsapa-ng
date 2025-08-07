@@ -3,748 +3,748 @@
     {
       "uid": "243/dpd",
       "word": "akusala 1",
-      "summary": "<b>akusala 1</b> (adj) (of a person or animal) unskilful; incompetent; inexperienced <b>[na > a + kusala]</b> <i>adj, from na kusala</i>"
+      "summary": "(adj) (of a person or animal) unskilful; incompetent; inexperienced <b>[na > a + kusala]</b> <i>adj, from na kusala</i>"
     },
     {
       "uid": "244/dpd",
       "word": "akusala 2",
-      "summary": "<b>akusala 2</b> (nt) unbeneficial actions; unskilful deeds; the unwholesome <b>[na > a + kusala]</b> <i>nt, from na kusala</i>"
+      "summary": "(nt) unbeneficial actions; unskilful deeds; the unwholesome <b>[na > a + kusala]</b> <i>nt, from na kusala</i>"
     },
     {
       "uid": "246/dpd",
       "word": "akusala 3",
-      "summary": "<b>akusala 3</b> (adj) unhealthy; unwholesome; unskilful; unbeneficial; kammically unprofitable <b>[na > a + kusala]</b> <i>adj, from na kusala</i>"
+      "summary": "(adj) unhealthy; unwholesome; unskilful; unbeneficial; kammically unprofitable <b>[na > a + kusala]</b> <i>adj, from na kusala</i>"
     }
   ],
   "ariyasāvakassa": [
     {
       "uid": "9022/dpd",
       "word": "ariyasāvaka",
-      "summary": "<b>ariyasāvaka</b> (masc) disciple of the noble ones; a noble disciple <b>[ariya + sāvaka]</b> <i>masc, agent, comp</i>"
+      "summary": "(masc) disciple of the noble ones; a noble disciple <b>[ariya + sāvaka]</b> <i>masc, agent, comp</i>"
     }
   ],
   "ariyasāvako": [
     {
       "uid": "9022/dpd",
       "word": "ariyasāvaka",
-      "summary": "<b>ariyasāvaka</b> (masc) disciple of the noble ones; a noble disciple <b>[ariya + sāvaka]</b> <i>masc, agent, comp</i>"
+      "summary": "(masc) disciple of the noble ones; a noble disciple <b>[ariya + sāvaka]</b> <i>masc, agent, comp</i>"
     }
   ],
   "bhikkhave": [
     {
       "uid": "49868/dpd",
       "word": "bhikkhave",
-      "summary": "<b>bhikkhave</b> (masc) monks <b>[√bhikkh + u + ave], [bhikkhu + ave]</b> <i>masc, voc pl of bhikkhu</i>"
+      "summary": "(masc) monks <b>[√bhikkh + u + ave], [bhikkhu + ave]</b> <i>masc, voc pl of bhikkhu</i>"
     },
     {
       "uid": "49885/dpd",
       "word": "bhikkhu",
-      "summary": "<b>bhikkhu</b> (masc) monk; monastic; mendicant; fully ordained monk <b>[√bhikkh + u]</b> <i>masc, from bhikkhati</i>"
+      "summary": "(masc) monk; monastic; mendicant; fully ordained monk <b>[√bhikkh + u]</b> <i>masc, from bhikkhati</i>"
     }
   ],
   "cittassa": [
     {
       "uid": "26555/dpd",
       "word": "citta 1.1",
-      "summary": "<b>citta 1.1</b> (nt) mind; heart <b>[√cit + ta]</b> <i>nt, from ceteti</i>"
+      "summary": "(nt) mind; heart <b>[√cit + ta]</b> <i>nt, from ceteti</i>"
     },
     {
       "uid": "26556/dpd",
       "word": "citta 1.2",
-      "summary": "<b>citta 1.2</b> (nt) thought; intention; idea <b>[√cit + ta]</b> <i>nt, from ceteti</i>"
+      "summary": "(nt) thought; intention; idea <b>[√cit + ta]</b> <i>nt, from ceteti</i>"
     },
     {
       "uid": "26557/dpd",
       "word": "citta 2.1",
-      "summary": "<b>citta 2.1</b> (adj) decorated; beautiful; adorned <b>[√citt + a]</b> <i>adj, from citteti</i>"
+      "summary": "(adj) decorated; beautiful; adorned <b>[√citt + a]</b> <i>adj, from citteti</i>"
     },
     {
       "uid": "26558/dpd",
       "word": "citta 2.2",
-      "summary": "<b>citta 2.2</b> (adj) varied; different; diverse <b>[√citt + a]</b> <i>adj, from citteti</i>"
+      "summary": "(adj) varied; different; diverse <b>[√citt + a]</b> <i>adj, from citteti</i>"
     },
     {
       "uid": "26559/dpd",
       "word": "citta 2.3",
-      "summary": "<b>citta 2.3</b> (nt) painting; picture; artwork; illusion <b>[√citt + a]</b> <i>nt, from citteti</i>"
+      "summary": "(nt) painting; picture; artwork; illusion <b>[√citt + a]</b> <i>nt, from citteti</i>"
     },
     {
       "uid": "26560/dpd",
       "word": "citta 2.4",
-      "summary": "<b>citta 2.4</b> (masc) name of a householder lay-disciple; foremost lay disciple in giving Dhamma talks <b>[√citt + a]</b> <i>masc, from citteti</i>"
+      "summary": "(masc) name of a householder lay-disciple; foremost lay disciple in giving Dhamma talks <b>[√citt + a]</b> <i>masc, from citteti</i>"
     },
     {
       "uid": "26561/dpd",
       "word": "citta 2.5",
-      "summary": "<b>citta 2.5</b> (masc) name of a monk; Citta Hatthisāriputta <b>[√citt + a]</b> <i>masc, from citteti</i>"
+      "summary": "(masc) name of a monk; Citta Hatthisāriputta <b>[√citt + a]</b> <i>masc, from citteti</i>"
     },
     {
       "uid": "26562/dpd",
       "word": "citta 2.6",
-      "summary": "<b>citta 2.6</b> (masc) name of a lunar month; March-April <b>[√citt + a]</b> <i>masc, from citteti</i>"
+      "summary": "(masc) name of a lunar month; March-April <b>[√citt + a]</b> <i>masc, from citteti</i>"
     },
     {
       "uid": "26563/dpd",
       "word": "citta 1.3",
-      "summary": "<b>citta 1.3</b> (nt) thought moment, mental act <b>[√cit + ta]</b> <i>nt</i>"
+      "summary": "(nt) thought moment, mental act <b>[√cit + ta]</b> <i>nt</i>"
     }
   ],
   "dhammehi": [
     {
       "uid": "34626/dpd",
       "word": "dhamma 1.01",
-      "summary": "<b>dhamma 1.01</b> (masc) nature; character <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) nature; character <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34627/dpd",
       "word": "dhamma 1.02",
-      "summary": "<b>dhamma 1.02</b> (masc) quality; characteristic; trait; inherent quality <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) quality; characteristic; trait; inherent quality <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34628/dpd",
       "word": "dhamma 1.03",
-      "summary": "<b>dhamma 1.03</b> (masc) teaching; discourse; doctrine <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) teaching; discourse; doctrine <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34629/dpd",
       "word": "dhamma 1.04",
-      "summary": "<b>dhamma 1.04</b> (masc) mental phenomena; thoughts <b>[√dhar + ma]</b> <i>masc, normally pl dhammā, from dharati</i>"
+      "summary": "(masc) mental phenomena; thoughts <b>[√dhar + ma]</b> <i>masc, normally pl dhammā, from dharati</i>"
     },
     {
       "uid": "34630/dpd",
       "word": "dhamma 1.05",
-      "summary": "<b>dhamma 1.05</b> (masc) mental states <b>[√dhar + ma]</b> <i>masc, normally pl dhammā, from dharati</i>"
+      "summary": "(masc) mental states <b>[√dhar + ma]</b> <i>masc, normally pl dhammā, from dharati</i>"
     },
     {
       "uid": "34631/dpd",
       "word": "dhamma 1.06",
-      "summary": "<b>dhamma 1.06</b> (masc) matter; thing; phenomena <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) matter; thing; phenomena <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34632/dpd",
       "word": "dhamma 1.07",
-      "summary": "<b>dhamma 1.07</b> (masc) truth; reality; principle; truth behind the teaching <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) truth; reality; principle; truth behind the teaching <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34633/dpd",
       "word": "dhamma 1.08",
-      "summary": "<b>dhamma 1.08</b> (masc) virtue; moral behaviour <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) virtue; moral behaviour <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34634/dpd",
       "word": "dhamma 1.09",
-      "summary": "<b>dhamma 1.09</b> (masc) law; case; rule; legal process <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) law; case; rule; legal process <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34635/dpd",
       "word": "dhamma 1.10",
-      "summary": "<b>dhamma 1.10</b> (adj) of such nature; liable (to); prone (to); destined (for) <b>[√dhar + ma]</b> <i>adj, from dharati</i>"
+      "summary": "(adj) of such nature; liable (to); prone (to); destined (for) <b>[√dhar + ma]</b> <i>adj, from dharati</i>"
     },
     {
       "uid": "34636/dpd",
       "word": "dhamma 1.11",
-      "summary": "<b>dhamma 1.11</b> (masc) name of king Mahāsudassana's palace <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) name of king Mahāsudassana's palace <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34637/dpd",
       "word": "dhamma 1.12",
-      "summary": "<b>dhamma 1.12</b> (nt) teaching; discourse; doctrine <b>[√dhar + ma]</b> <i>nt, from dharati, irreg</i>"
+      "summary": "(nt) teaching; discourse; doctrine <b>[√dhar + ma]</b> <i>nt, from dharati, irreg</i>"
     },
     {
       "uid": "34638/dpd",
       "word": "dhamma 1.13",
-      "summary": "<b>dhamma 1.13</b> (masc) religion <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) religion <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34639/dpd",
       "word": "dhamma 1.14",
-      "summary": "<b>dhamma 1.14</b> (masc) act; practice <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) act; practice <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34640/dpd",
       "word": "dhamma 1.15",
-      "summary": "<b>dhamma 1.15</b> (masc) duty; obligation <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
+      "summary": "(masc) duty; obligation <b>[√dhar + ma]</b> <i>masc, from dharati</i>"
     },
     {
       "uid": "34641/dpd",
       "word": "dhamma 2.1",
-      "summary": "<b>dhamma 2.1</b> (adj) having a bow <b>[dhanu + a > dhanva > dhamma]</b> <i>adj, in comps, from dhanu</i>"
+      "summary": "(adj) having a bow <b>[dhanu + a > dhanva > dhamma]</b> <i>adj, in comps, from dhanu</i>"
     }
   ],
   "ekaggataṁ": [
     {
       "uid": "17414/dpd",
       "word": "ekaggatā",
-      "summary": "<b>ekaggatā</b> (fem) unification; oneness <b>[eka + agga + tā], [ekagga + tā]</b> <i>fem, abstr, comp, from ekagga</i>"
+      "summary": "(fem) unification; oneness <b>[eka + agga + tā], [ekagga + tā]</b> <i>fem, abstr, comp, from ekagga</i>"
     }
   ],
   "etaṁ": [
     {
       "uid": "17896/dpd",
       "word": "etaṁ 1",
-      "summary": "<b>etaṁ 1</b> (pron) this; this thing (subject) <b>[eta + aṁ]</b> <i>pron, nt nom sg of eta</i>"
+      "summary": "(pron) this; this thing (subject) <b>[eta + aṁ]</b> <i>pron, nt nom sg of eta</i>"
     },
     {
       "uid": "17897/dpd",
       "word": "etaṁ 2",
-      "summary": "<b>etaṁ 2</b> (pron) this; this man; this thing (object) <b>[eta + aṁ]</b> <i>pron, masc fem & nt acc sg of eta</i>"
+      "summary": "(pron) this; this man; this thing (object) <b>[eta + aṁ]</b> <i>pron, masc fem & nt acc sg of eta</i>"
     },
     {
       "uid": "17847/dpd",
       "word": "eta",
-      "summary": "<b>eta</b> (pron) this <i>pron, base</i>"
+      "summary": "(pron) this <i>pron, base</i>"
     },
     {
       "uid": "17914/dpd",
       "word": "eti 1",
-      "summary": "<b>eti 1</b> (pr) comes (to) <b>[e + ti]</b> <i>pr</i>"
+      "summary": "(pr) comes (to) <b>[e + ti]</b> <i>pr</i>"
     },
     {
       "uid": "17915/dpd",
       "word": "eti 2",
-      "summary": "<b>eti 2</b> (pr) goes (to) <b>[e + ti]</b> <i>pr</i>"
+      "summary": "(pr) goes (to) <b>[e + ti]</b> <i>pr</i>"
     },
     {
       "uid": "17970/dpd",
       "word": "enta",
-      "summary": "<b>enta</b> (prp) coming <b>[e + nta]</b> <i>prp of eti</i>"
+      "summary": "(prp) coming <b>[e + nta]</b> <i>prp of eti</i>"
     },
     {
       "uid": "80558/dpd",
       "word": "eti 3",
-      "summary": "<b>eti 3</b> (pr) becomes <b>[e + ti]</b> <i>pr</i>"
+      "summary": "(pr) becomes <b>[e + ti]</b> <i>pr</i>"
     }
   ],
   "hi": [
     {
       "uid": "71212/dpd",
       "word": "hi 1",
-      "summary": "<b>hi 1</b> (ind) indeed; certainly; truly; definitely <i>ind, emph</i>"
+      "summary": "(ind) indeed; certainly; truly; definitely <i>ind, emph</i>"
     },
     {
       "uid": "71213/dpd",
       "word": "hi 2",
-      "summary": "<b>hi 2</b> (ind) because; for <i>ind</i>"
+      "summary": "(ind) because; for <i>ind</i>"
     },
     {
       "uid": "71214/dpd",
       "word": "hi 3",
-      "summary": "<b>hi 3</b> (ve) (gram) hi; verbal ending of imperative 2nd person singular <i>ve, masc</i>"
-    },
-    {
-      "uid": "√hi-1/dpd",
-      "word": "√hi 1",
-      "summary": "<b>√hi 1</b> send <b>·</b> <i>√hi 4 svādigaṇa + ṇā (send)</i>"
+      "summary": "(ve) (gram) hi; verbal ending of imperative 2nd person singular <i>ve, masc</i>"
     },
     {
       "uid": "√hi-2/dpd",
       "word": "√hi 2",
       "summary": "<b>√hi 2</b> impel <b>·</b> <i>√hi×7 tanādigaṇa + o (impel)Base:hinoDhātupātha:hi gatiyaṁ (going) #525Dhātumañjūsa:hi gatimhi (going) #713Saddanīti:hi gati-buddhīsu upatāpe ca (going, knowing and vexation, tormenting)Sanskrit Root:√hi 1, 5 (impel)Pāṇinīya Dhātupāṭha:hi gatau vṛddhau ca (going and cutting off)</i>"
+    },
+    {
+      "uid": "√hi-1/dpd",
+      "word": "√hi 1",
+      "summary": "<b>√hi 1</b> send <b>·</b> <i>√hi 4 svādigaṇa + ṇā (send)</i>"
     }
   ],
   "hissa": [
     {
       "uid": "71304/dpd",
       "word": "hissa 1",
-      "summary": "<b>hissa 1</b> (sandhi) indeed his; certainly of that; truly his <b>[hi + assa]</b> <i>sandhi, ind + pron</i>"
+      "summary": "(sandhi) indeed his; certainly of that; truly his <b>[hi + assa]</b> <i>sandhi, ind + pron</i>"
     },
     {
       "uid": "71305/dpd",
       "word": "hissa 2",
-      "summary": "<b>hissa 2</b> (sandhi) certainly; truly; verily <b>[hi + ssa]</b> <i>sandhi, ind + pron</i>"
+      "summary": "(sandhi) certainly; truly; verily <b>[hi + ssa]</b> <i>sandhi, ind + pron</i>"
     },
     {
       "uid": "79690/dpd",
       "word": "hissa 3",
-      "summary": "<b>hissa 3</b> (sandhi) indeed for him; certainly to that; truly to him <b>[hi + assa]</b> <i>sandhi, ind + pron</i>"
+      "summary": "(sandhi) indeed for him; certainly to that; truly to him <b>[hi + assa]</b> <i>sandhi, ind + pron</i>"
     },
     {
       "uid": "71214/dpd",
       "word": "hi 3",
-      "summary": "<b>hi 3</b> (ve) (gram) hi; verbal ending of imperative 2nd person singular <i>ve, masc</i>"
+      "summary": "(ve) (gram) hi; verbal ending of imperative 2nd person singular <i>ve, masc</i>"
     }
   ],
   "idha": [
     {
       "uid": "13686/dpd",
       "word": "idha 1",
-      "summary": "<b>idha 1</b> (ind) here; now; in this world <b>[ima + dha]</b> <i>ind, adv, from ima</i>"
+      "summary": "(ind) here; now; in this world <b>[ima + dha]</b> <i>ind, adv, from ima</i>"
     },
     {
       "uid": "13687/dpd",
       "word": "idha 2",
-      "summary": "<b>idha 2</b> (ind) here; in this regard; in this case <b>[ima + dha]</b> <i>ind, adv, from ima</i>"
+      "summary": "(ind) here; in this regard; in this case <b>[ima + dha]</b> <i>ind, adv, from ima</i>"
     },
     {
       "uid": "13688/dpd",
       "word": "idha 3",
-      "summary": "<b>idha 3</b> (ind) (comm) in this teaching; here in this doctrine <b>[ima + dha]</b> <i>ind, adv, from ima</i>"
+      "summary": "(ind) (comm) in this teaching; here in this doctrine <b>[ima + dha]</b> <i>ind, adv, from ima</i>"
     }
   ],
   "jhānaṁ": [
     {
       "uid": "28748/dpd",
       "word": "jhāna 1",
-      "summary": "<b>jhāna 1</b> (nt) state of deep meditative calm <b>[√jhā + ana]</b> <i>nt, from jhāyati</i>"
+      "summary": "(nt) state of deep meditative calm <b>[√jhā + ana]</b> <i>nt, from jhāyati</i>"
     },
     {
       "uid": "28749/dpd",
       "word": "jhāna 2",
-      "summary": "<b>jhāna 2</b> (nt) meditation; stage of meditation <b>[√jhā + ana]</b> <i>nt, from jhāyati</i>"
+      "summary": "(nt) meditation; stage of meditation <b>[√jhā + ana]</b> <i>nt, from jhāyati</i>"
     },
     {
       "uid": "28750/dpd",
       "word": "jhāna 3",
-      "summary": "<b>jhāna 3</b> (adj) having meditation; related to meditation <b>[√jhā + ana]</b> <i>adj, from jhāyati</i>"
+      "summary": "(adj) having meditation; related to meditation <b>[√jhā + ana]</b> <i>adj, from jhāyati</i>"
     },
     {
       "uid": "80485/dpd",
       "word": "jhāna 4",
-      "summary": "<b>jhāna 4</b> (nt) thinking about; contemplating <b>[√jhā + ana]</b> <i>nt, act, from jhāyati</i>"
+      "summary": "(nt) thinking about; contemplating <b>[√jhā + ana]</b> <i>nt, act, from jhāyati</i>"
     }
   ],
   "karitvā": [
     {
       "uid": "20502/dpd",
       "word": "karitvā 1",
-      "summary": "<b>karitvā 1</b> (abs) having done; having performed <b>[√kar + itvā]</b> <i>abs of karoti</i>"
+      "summary": "(abs) having done; having performed <b>[√kar + itvā]</b> <i>abs of karoti</i>"
     },
     {
       "uid": "20503/dpd",
       "word": "karitvā 2",
-      "summary": "<b>karitvā 2</b> (abs) having made <b>[√kar + itvā]</b> <i>abs of karoti</i>"
+      "summary": "(abs) having made <b>[√kar + itvā]</b> <i>abs of karoti</i>"
     },
     {
       "uid": "20504/dpd",
       "word": "karitvā 3",
-      "summary": "<b>karitvā 3</b> (abs) having built; having constructed <b>[√kar + itvā]</b> <i>abs of karoti</i>"
+      "summary": "(abs) having built; having constructed <b>[√kar + itvā]</b> <i>abs of karoti</i>"
     },
     {
       "uid": "80543/dpd",
       "word": "karitvā 4",
-      "summary": "<b>karitvā 4</b> (abs) having compared (somebody with) <b>[√kar + itvā]</b> <i>abs of karoti</i>"
+      "summary": "(abs) having compared (somebody with) <b>[√kar + itvā]</b> <i>abs of karoti</i>"
     }
   ],
   "katamañca": [
     {
       "uid": "19645/dpd",
       "word": "katama",
-      "summary": "<b>katama</b> (pron) what?; which (of the many)? <b>[ka + tama]</b> <i>pron, interr, from ka</i>"
+      "summary": "(pron) what?; which (of the many)? <b>[ka + tama]</b> <i>pron, interr, from ka</i>"
     }
   ],
   "kāmehi": [
     {
       "uid": "20957/dpd",
       "word": "kāma 1",
-      "summary": "<b>kāma 1</b> (adj) wishing (to); wanting (to); would be delighted (to) <b>[√kam > kām + *a]</b> <i>adj, in comps, from kāmeti</i>"
+      "summary": "(adj) wishing (to); wanting (to); would be delighted (to) <b>[√kam > kām + *a]</b> <i>adj, in comps, from kāmeti</i>"
     },
     {
       "uid": "20958/dpd",
       "word": "kāma 2",
-      "summary": "<b>kāma 2</b> (adj) enjoying; fond (of); who likes; who loves <b>[√kam > kām + *a]</b> <i>adj, in comps, from kāmeti</i>"
+      "summary": "(adj) enjoying; fond (of); who likes; who loves <b>[√kam > kām + *a]</b> <i>adj, in comps, from kāmeti</i>"
     },
     {
       "uid": "20959/dpd",
       "word": "kāma 3",
-      "summary": "<b>kāma 3</b> (masc) sense desire (of); sensual pleasure (of) <b>[√kam > kām + *a]</b> <i>masc, from kāmeti</i>"
+      "summary": "(masc) sense desire (of); sensual pleasure (of) <b>[√kam > kām + *a]</b> <i>masc, from kāmeti</i>"
     },
     {
       "uid": "20960/dpd",
       "word": "kāma 4",
-      "summary": "<b>kāma 4</b> (masc) (objects of) pleasure; sensual pleasure; sexual pleasure <b>[√kam > kām + *a]</b> <i>masc, from kāmeti</i>"
+      "summary": "(masc) (objects of) pleasure; sensual pleasure; sexual pleasure <b>[√kam > kām + *a]</b> <i>masc, from kāmeti</i>"
     },
     {
       "uid": "21117/dpd",
       "word": "kāmeti",
-      "summary": "<b>kāmeti</b> (pr) desires; longs (for); is in love (with) <b>[kāme + ti]</b> <i>pr</i>"
+      "summary": "(pr) desires; longs (for); is in love (with) <b>[kāme + ti]</b> <i>pr</i>"
     }
   ],
   "labhati": [
     {
       "uid": "55630/dpd",
       "word": "labhati 1",
-      "summary": "<b>labhati 1</b> (pr) gets; receives; obtains (something for) <b>[labha + ti]</b> <i>pr</i>"
+      "summary": "(pr) gets; receives; obtains (something for) <b>[labha + ti]</b> <i>pr</i>"
     },
     {
       "uid": "55631/dpd",
       "word": "labhati 2",
-      "summary": "<b>labhati 2</b> (pr) is possible; is permissible; is allowable <b>[labha + ti]</b> <i>pr</i>"
+      "summary": "(pr) is possible; is permissible; is allowable <b>[labha + ti]</b> <i>pr</i>"
     },
     {
       "uid": "78404/dpd",
       "word": "labhati 3",
-      "summary": "<b>labhati 3</b> (pr) gets through (to somebody); makes (somebody) understand <b>[labha + ti]</b> <i>pr</i>"
+      "summary": "(pr) gets through (to somebody); makes (somebody) understand <b>[labha + ti]</b> <i>pr</i>"
     }
   ],
   "labhissati": [
     {
       "uid": "55640/dpd",
       "word": "labhissati",
-      "summary": "<b>labhissati</b> (fut) will get; will obtain <b>[√labh + issa + ti]</b> <i>fut of labhati</i>"
+      "summary": "(fut) will get; will obtain <b>[√labh + issa + ti]</b> <i>fut of labhati</i>"
     },
     {
       "uid": "55630/dpd",
       "word": "labhati 1",
-      "summary": "<b>labhati 1</b> (pr) gets; receives; obtains (something for) <b>[labha + ti]</b> <i>pr</i>"
+      "summary": "(pr) gets; receives; obtains (something for) <b>[labha + ti]</b> <i>pr</i>"
     },
     {
       "uid": "55631/dpd",
       "word": "labhati 2",
-      "summary": "<b>labhati 2</b> (pr) is possible; is permissible; is allowable <b>[labha + ti]</b> <i>pr</i>"
+      "summary": "(pr) is possible; is permissible; is allowable <b>[labha + ti]</b> <i>pr</i>"
     },
     {
       "uid": "78404/dpd",
       "word": "labhati 3",
-      "summary": "<b>labhati 3</b> (pr) gets through (to somebody); makes (somebody) understand <b>[labha + ti]</b> <i>pr</i>"
+      "summary": "(pr) gets through (to somebody); makes (somebody) understand <b>[labha + ti]</b> <i>pr</i>"
     }
   ],
   "paṭhamaṁ": [
     {
       "uid": "41468/dpd",
       "word": "paṭhamaṁ 1",
-      "summary": "<b>paṭhamaṁ 1</b> (ind) first; firstly; at first; first of all <b>[pa + √ṭhā + ma + aṁ], [paṭhama + aṁ]</b> <i>ind, adv, acc sg of paṭhama</i>"
+      "summary": "(ind) first; firstly; at first; first of all <b>[pa + √ṭhā + ma + aṁ], [paṭhama + aṁ]</b> <i>ind, adv, acc sg of paṭhama</i>"
     },
     {
       "uid": "41469/dpd",
       "word": "paṭhamaṁ 2",
-      "summary": "<b>paṭhamaṁ 2</b> (ind) before; recently; newly; just <b>[pa + √ṭhā + ma + aṁ], [paṭhama + aṁ]</b> <i>ind, adv, acc sg of paṭhama</i>"
+      "summary": "(ind) before; recently; newly; just <b>[pa + √ṭhā + ma + aṁ], [paṭhama + aṁ]</b> <i>ind, adv, acc sg of paṭhama</i>"
     },
     {
       "uid": "41150/dpd",
       "word": "paṭhama 1",
-      "summary": "<b>paṭhama 1</b> (ordin) first (1st); prime <b>[pa + tama > ṭhama]</b> <i>ordin, from pa</i>"
+      "summary": "(ordin) first (1st); prime <b>[pa + tama > ṭhama]</b> <i>ordin, from pa</i>"
     },
     {
       "uid": "41151/dpd",
       "word": "paṭhama 2",
-      "summary": "<b>paṭhama 2</b> (adj) (gram) 3rd (person); he; she; it; they <b>[pa + tama > ṭhama]</b> <i>adj, from pa</i>"
+      "summary": "(adj) (gram) 3rd (person); he; she; it; they <b>[pa + tama > ṭhama]</b> <i>adj, from pa</i>"
     },
     {
       "uid": "41152/dpd",
       "word": "paṭhama 3",
-      "summary": "<b>paṭhama 3</b> (masc) (gram) first consonant of each vagga; k, c, ṭ, t, p <b>[pa + tama > ṭhama]</b> <i>masc, from pa</i>"
+      "summary": "(masc) (gram) first consonant of each vagga; k, c, ṭ, t, p <b>[pa + tama > ṭhama]</b> <i>masc, from pa</i>"
     },
     {
       "uid": "41470/dpd",
       "word": "paṭhamā",
-      "summary": "<b>paṭhamā</b> (fem) (gram) nominative case <i>fem</i>"
+      "summary": "(fem) (gram) nominative case <i>fem</i>"
     }
   ],
   "pāṭikaṅkhaṁ": [
     {
       "uid": "45303/dpd",
       "word": "pāṭikaṅkha",
-      "summary": "<b>pāṭikaṅkha</b> (ptp) to be expected (for); certain (for); can be anticipated <b>[pati > pāṭi + √kaṅkh + *ya]</b> <i>ptp of paṭikaṅkhati</i>"
+      "summary": "(ptp) to be expected (for); certain (for); can be anticipated <b>[pati > pāṭi + √kaṅkh + *ya]</b> <i>ptp of paṭikaṅkhati</i>"
     }
   ],
   "pītisukhaṁ": [
     {
       "uid": "46409/dpd",
       "word": "pītisukha 1",
-      "summary": "<b>pītisukha 1</b> (nt) delight and ease; joy and happiness <b>[pīti + sukha]</b> <i>nt, abstr, comp</i>"
+      "summary": "(nt) delight and ease; joy and happiness <b>[pīti + sukha]</b> <i>nt, abstr, comp</i>"
     },
     {
       "uid": "75647/dpd",
       "word": "pītisukha 2",
-      "summary": "<b>pītisukha 2</b> (adj) having delight and ease; with joy and happiness <b>[pīti + sukha]</b> <i>adj, comp</i>"
+      "summary": "(adj) having delight and ease; with joy and happiness <b>[pīti + sukha]</b> <i>adj, comp</i>"
     }
   ],
   "saddhassa": [
     {
       "uid": "58040/dpd",
       "word": "saddha 1",
-      "summary": "<b>saddha 1</b> (adj) faithful; confident; believing; devoted; trusting <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>adj, from saddhā</i>"
+      "summary": "(adj) faithful; confident; believing; devoted; trusting <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>adj, from saddhā</i>"
     },
     {
       "uid": "58041/dpd",
       "word": "saddha 2",
-      "summary": "<b>saddha 2</b> (adj) credulous; gullible <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>adj, from saddhā</i>"
+      "summary": "(adj) credulous; gullible <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>adj, from saddhā</i>"
     },
     {
       "uid": "58042/dpd",
       "word": "saddha 3",
-      "summary": "<b>saddha 3</b> (masc) name of a monk <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>masc, from saddhā</i>"
+      "summary": "(masc) name of a monk <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>masc, from saddhā</i>"
     },
     {
       "uid": "58043/dpd",
       "word": "saddha 4",
-      "summary": "<b>saddha 4</b> (masc) name of a monk; son of Sudatta <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>masc, from saddhā</i>"
+      "summary": "(masc) name of a monk; son of Sudatta <b>[sad + √dhā + ā + a], [saddhā + a]</b> <i>masc, from saddhā</i>"
     }
   ],
   "samādhi": [
     {
       "uid": "59623/dpd",
       "word": "samādhi 1",
-      "summary": "<b>samādhi 1</b> (masc) perfect peace of mind; stability of mind; stillness of mind; mental composure <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
+      "summary": "(masc) perfect peace of mind; stability of mind; stillness of mind; mental composure <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
     },
     {
       "uid": "59624/dpd",
       "word": "samādhi 2",
-      "summary": "<b>samādhi 2</b> (masc) stability; stabilizer <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
+      "summary": "(masc) stability; stabilizer <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
     }
   ],
   "samādhindriyaṁ": [
     {
       "uid": "59641/dpd",
       "word": "samādhindriya",
-      "summary": "<b>samādhindriya</b> (nt) power of a collected mind; faculty of mental stability <b>[samādhi + indriya]</b> <i>nt, abstr, comp</i>"
+      "summary": "(nt) power of a collected mind; faculty of mental stability <b>[samādhi + indriya]</b> <i>nt, abstr, comp</i>"
     }
   ],
   "samādhiṁ": [
     {
       "uid": "59623/dpd",
       "word": "samādhi 1",
-      "summary": "<b>samādhi 1</b> (masc) perfect peace of mind; stability of mind; stillness of mind; mental composure <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
+      "summary": "(masc) perfect peace of mind; stability of mind; stillness of mind; mental composure <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
     },
     {
       "uid": "59624/dpd",
       "word": "samādhi 2",
-      "summary": "<b>samādhi 2</b> (masc) stability; stabilizer <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
+      "summary": "(masc) stability; stabilizer <b>[saṁ + ā + √dhā + i]</b> <i>masc, abstr, from samādahati</i>"
     }
   ],
   "savicāraṁ": [
     {
       "uid": "61334/dpd",
       "word": "savicāra",
-      "summary": "<b>savicāra</b> (adj) with management; with planning; with consideration <b>[sa + vi + cāre + a]</b> <i>adj, from vicāra</i>"
+      "summary": "(adj) with management; with planning; with consideration <b>[sa + vi + cāre + a]</b> <i>adj, from vicāra</i>"
     }
   ],
   "savitakkaṁ": [
     {
       "uid": "61341/dpd",
       "word": "savitakka",
-      "summary": "<b>savitakka</b> (adj) with thinking; accompanied with reflection <b>[sa + vi + √takk + a]</b> <i>adj, from vitakka</i>"
+      "summary": "(adj) with thinking; accompanied with reflection <b>[sa + vi + √takk + a]</b> <i>adj, from vitakka</i>"
     }
   ],
   "so": [
     {
       "uid": "65082/dpd",
       "word": "so 1.1",
-      "summary": "<b>so 1.1</b> (pron) he; that person; that thing <i>pron, masc nom sg of ta</i>"
+      "summary": "(pron) he; that person; that thing <i>pron, masc nom sg of ta</i>"
     },
     {
       "uid": "65083/dpd",
       "word": "so 1.2",
-      "summary": "<b>so 1.2</b> (ind) (emphatic usage; referring to what has just been said) <i>ind, emph</i>"
+      "summary": "(ind) (emphatic usage; referring to what has just been said) <i>ind, emph</i>"
     },
     {
       "uid": "65084/dpd",
       "word": "so 2.1",
-      "summary": "<b>so 2.1</b> (suffix) as; according to; by way of; by means of <i>suffix, adv, abl sg</i>"
+      "summary": "(suffix) as; according to; by way of; by means of <i>suffix, adv, abl sg</i>"
     },
     {
       "uid": "65085/dpd",
       "word": "so 2.2",
-      "summary": "<b>so 2.2</b> (suffix) (gram) by; in x ways <i>suffix, adv</i>"
+      "summary": "(suffix) (gram) by; in x ways <i>suffix, adv</i>"
     },
     {
       "uid": "29188/dpd",
       "word": "ta 1.1",
-      "summary": "<b>ta 1.1</b> (pron) that <i>pron, base</i>"
+      "summary": "(pron) that <i>pron, base</i>"
     },
     {
       "uid": "56233/dpd",
       "word": "sa 3.1",
-      "summary": "<b>sa 3.1</b> (pron) own; one's own; one's own possession <i>pron, base, reflx</i>"
+      "summary": "(pron) own; one's own; one's own possession <i>pron, base, reflx</i>"
     },
     {
       "uid": "56234/dpd",
       "word": "sa 3.2",
-      "summary": "<b>sa 3.2</b> (adj) self-; personal- <i>adj, in comps, reflx</i>"
+      "summary": "(adj) self-; personal- <i>adj, in comps, reflx</i>"
     },
     {
       "uid": "56236/dpd",
       "word": "sa 1.1",
-      "summary": "<b>sa 1.1</b> (letter) (gram) letter s; 36th letter of the alphabet; dental consonant <i>letter, masc</i>"
+      "summary": "(letter) (gram) letter s; 36th letter of the alphabet; dental consonant <i>letter, masc</i>"
     }
   ],
   "sāriputta": [
     {
       "uid": "62518/dpd",
       "word": "sāriputta",
-      "summary": "<b>sāriputta</b> (masc) name of an arahant monk; chief disciple; great disciple of the Buddha; foremost disciple in great wisdom <b>[sāri + putta]</b> <i>masc, matr, comp</i>"
+      "summary": "(masc) name of an arahant monk; chief disciple; great disciple of the Buddha; foremost disciple in great wisdom <b>[sāri + putta]</b> <i>masc, matr, comp</i>"
     }
   ],
   "tadassa": [
     {
       "uid": "29794/dpd",
       "word": "tadassa 1",
-      "summary": "<b>tadassa 1</b> (sandhi) that would be; that could be <b>[tad + assa]</b> <i>sandhi, pron + opt</i>"
+      "summary": "(sandhi) that would be; that could be <b>[tad + assa]</b> <i>sandhi, pron + opt</i>"
     },
     {
       "uid": "29795/dpd",
       "word": "tadassa 2",
-      "summary": "<b>tadassa 2</b> (sandhi) that is his <b>[tad + assa]</b> <i>sandhi, pron + pron</i>"
+      "summary": "(sandhi) that is his <b>[tad + assa]</b> <i>sandhi, pron + pron</i>"
     }
   ],
   "upasampajja": [
     {
       "uid": "16124/dpd",
       "word": "upasampajja 1",
-      "summary": "<b>upasampajja 1</b> (ger) reaching; attaining; arriving at <b>[upa + saṁ + √pad + ya]</b> <i>ger of upasampajjati</i>"
+      "summary": "(ger) reaching; attaining; arriving at <b>[upa + saṁ + √pad + ya]</b> <i>ger of upasampajjati</i>"
     },
     {
       "uid": "16125/dpd",
       "word": "upasampajja 2",
-      "summary": "<b>upasampajja 2</b> (ger) becoming fully ordained; taking higher ordination <b>[upa + saṁ + √pad + ya]</b> <i>ger of upasampajjati</i>"
+      "summary": "(ger) becoming fully ordained; taking higher ordination <b>[upa + saṁ + √pad + ya]</b> <i>ger of upasampajjati</i>"
     },
     {
       "uid": "16126/dpd",
       "word": "upasampajja 3",
-      "summary": "<b>upasampajja 3</b> (ger) undertaking <b>[upa + saṁ + √pad + ya]</b> <i>ger of upasampajjati</i>"
+      "summary": "(ger) undertaking <b>[upa + saṁ + √pad + ya]</b> <i>ger of upasampajjati</i>"
     },
     {
       "uid": "16127/dpd",
       "word": "upasampajjati 1",
-      "summary": "<b>upasampajjati 1</b> (pr) becomes fully ordained; takes higher ordination <b>[upa + saṁ + pajja + ti]</b> <i>pr</i>"
+      "summary": "(pr) becomes fully ordained; takes higher ordination <b>[upa + saṁ + pajja + ti]</b> <i>pr</i>"
     },
     {
       "uid": "16128/dpd",
       "word": "upasampajji",
-      "summary": "<b>upasampajji</b> (aor) attained, entered on, became fully ordained <b>[upa + saṁ + pajja +]</b> <i>aor of upasampajjati</i>"
+      "summary": "(aor) attained, entered on, became fully ordained <b>[upa + saṁ + pajja +]</b> <i>aor of upasampajjati</i>"
     },
     {
       "uid": "80055/dpd",
       "word": "upasampajjati 2",
-      "summary": "<b>upasampajjati 2</b> (pr) attains, enters <b>[upa + saṁ + pajja + ti]</b> <i>pr</i>"
+      "summary": "(pr) attains, enters <b>[upa + saṁ + pajja + ti]</b> <i>pr</i>"
     }
   ],
   "upaṭṭhitassatino": [
     {
       "uid": "15578/dpd",
       "word": "upaṭṭhitassatī",
-      "summary": "<b>upaṭṭhitassatī</b> (adj) with presence of mind; attending mindfully <b>[upaṭṭhita + satī]</b> <i>adj, comp</i>"
+      "summary": "(adj) with presence of mind; attending mindfully <b>[upaṭṭhita + satī]</b> <i>adj, comp</i>"
     }
   ],
   "viharati": [
     {
       "uid": "69661/dpd",
       "word": "viharati 1",
-      "summary": "<b>viharati 1</b> (pr) lives (in); dwells (in); stays (in) <b>[vi + hara + ti]</b> <i>pr</i>"
+      "summary": "(pr) lives (in); dwells (in); stays (in) <b>[vi + hara + ti]</b> <i>pr</i>"
     },
     {
       "uid": "69662/dpd",
       "word": "viharati 2",
-      "summary": "<b>viharati 2</b> (pr) stays (in); remains (in); continues (in); dwells (in) <b>[vi + hara + ti]</b> <i>pr</i>"
+      "summary": "(pr) stays (in); remains (in); continues (in); dwells (in) <b>[vi + hara + ti]</b> <i>pr</i>"
     }
   ],
   "vivekajaṁ": [
     {
       "uid": "69606/dpd",
       "word": "vivekaja",
-      "summary": "<b>vivekaja</b> (adj) born from seclusion; (or) born from discrimination; (comm) secluded from the defilements <b>[viveka + ja]</b> <i>adj, comp</i>"
+      "summary": "(adj) born from seclusion; (or) born from discrimination; (comm) secluded from the defilements <b>[viveka + ja]</b> <i>adj, comp</i>"
     }
   ],
   "vivicca": [
     {
       "uid": "69591/dpd",
       "word": "vivicca",
-      "summary": "<b>vivicca</b> (ger) separating (from); aloof (from) <b>[vi + √vic + ya]</b> <i>ger of viviccati</i>"
+      "summary": "(ger) separating (from); aloof (from) <b>[vi + √vic + ya]</b> <i>ger of viviccati</i>"
     },
     {
       "uid": "69592/dpd",
       "word": "viviccati",
-      "summary": "<b>viviccati</b> (pr) is separate; is detached; is disengaged; is secluded (from) <b>[vi + vicca + ti]</b> <i>pr, pass of vi √vic</i>"
+      "summary": "(pr) is separate; is detached; is disengaged; is secluded (from) <b>[vi + vicca + ti]</b> <i>pr, pass of vi √vic</i>"
     }
   ],
   "vivicceva": [
     {
       "uid": "69593/dpd",
       "word": "vivicceva",
-      "summary": "<b>vivicceva</b> (sandhi) secluding oneself entirely (from) <b>[vivicca + eva]</b> <i>sandhi, ger + ind</i>"
+      "summary": "(sandhi) secluding oneself entirely (from) <b>[vivicca + eva]</b> <i>sandhi, ger + ind</i>"
     },
     {
       "uid": "69591/dpd",
       "word": "vivicca",
-      "summary": "<b>vivicca</b> (ger) separating (from); aloof (from) <b>[vi + √vic + ya]</b> <i>ger of viviccati</i>"
+      "summary": "(ger) separating (from); aloof (from) <b>[vi + √vic + ya]</b> <i>ger of viviccati</i>"
     },
     {
       "uid": "69592/dpd",
       "word": "viviccati",
-      "summary": "<b>viviccati</b> (pr) is separate; is detached; is disengaged; is secluded (from) <b>[vi + vicca + ti]</b> <i>pr, pass of vi √vic</i>"
+      "summary": "(pr) is separate; is detached; is disengaged; is secluded (from) <b>[vi + vicca + ti]</b> <i>pr, pass of vi √vic</i>"
     }
   ],
   "vossaggārammaṇaṁ": [
     {
       "uid": "70646/dpd",
       "word": "vossaggārammaṇa",
-      "summary": "<b>vossaggārammaṇa</b> (nt) basis of letting go; foundation of complete relinquishment <b>[vossagga + ārammaṇa]</b> <i>nt, comp</i>"
+      "summary": "(nt) basis of letting go; foundation of complete relinquishment <b>[vossagga + ārammaṇa]</b> <i>nt, comp</i>"
     }
   ],
   "yaṁ": [
     {
       "uid": "53872/dpd",
       "word": "yaṁ 1",
-      "summary": "<b>yaṁ 1</b> (pron) which; whoever; whatever; that which <b>[ya + aṁ]</b> <i>pron, nt nom sg of ya</i>"
+      "summary": "(pron) which; whoever; whatever; that which <b>[ya + aṁ]</b> <i>pron, nt nom sg of ya</i>"
     },
     {
       "uid": "53873/dpd",
       "word": "yaṁ 2",
-      "summary": "<b>yaṁ 2</b> (pron) whoever; whatever; that which <b>[ya + aṁ]</b> <i>pron, masc fem & nt acc sg of ya</i>"
+      "summary": "(pron) whoever; whatever; that which <b>[ya + aṁ]</b> <i>pron, masc fem & nt acc sg of ya</i>"
     },
     {
       "uid": "53874/dpd",
       "word": "yaṁ 3",
-      "summary": "<b>yaṁ 3</b> (ind) because; because of; since; when <b>[ya + aṁ]</b> <i>ind, adv, acc sg of ya</i>"
+      "summary": "(ind) because; because of; since; when <b>[ya + aṁ]</b> <i>ind, adv, acc sg of ya</i>"
     },
     {
       "uid": "53444/dpd",
       "word": "ya 2.1",
-      "summary": "<b>ya 2.1</b> (pron) whoever; whatever; whichever <i>pron, base</i>"
+      "summary": "(pron) whoever; whatever; whichever <i>pron, base</i>"
     },
     {
       "uid": "53445/dpd",
       "word": "ya 1.1",
-      "summary": "<b>ya 1.1</b> (letter) (gram) letter y; 34th letter of the alphabet; palatal semi-vowel <i>letter, masc</i>"
+      "summary": "(letter) (gram) letter y; 34th letter of the alphabet; palatal semi-vowel <i>letter, masc</i>"
     },
     {
       "uid": "53446/dpd",
       "word": "ya 3.1",
-      "summary": "<b>ya 3.1</b> (cs) (gram) ya; suffix used to form impersonal and passive verbs <i>cs, masc</i>"
+      "summary": "(cs) (gram) ya; suffix used to form impersonal and passive verbs <i>cs, masc</i>"
     },
     {
       "uid": "53447/dpd",
       "word": "ya 3.2",
-      "summary": "<b>ya 3.2</b> (cs) (gram) ya; conjugational sign of group 3 divādigaṇa verbs <i>cs, masc</i>"
+      "summary": "(cs) (gram) ya; conjugational sign of group 3 divādigaṇa verbs <i>cs, masc</i>"
     }
   ],
   "yo": [
     {
       "uid": "54208/dpd",
       "word": "yo",
-      "summary": "<b>yo</b> (pron) whoever; whatever; whichever <i>pron, masc nom sg of ya</i>"
+      "summary": "(pron) whoever; whatever; whichever <i>pron, masc nom sg of ya</i>"
     },
     {
       "uid": "53444/dpd",
       "word": "ya 2.1",
-      "summary": "<b>ya 2.1</b> (pron) whoever; whatever; whichever <i>pron, base</i>"
+      "summary": "(pron) whoever; whatever; whichever <i>pron, base</i>"
     },
     {
       "uid": "53445/dpd",
       "word": "ya 1.1",
-      "summary": "<b>ya 1.1</b> (letter) (gram) letter y; 34th letter of the alphabet; palatal semi-vowel <i>letter, masc</i>"
+      "summary": "(letter) (gram) letter y; 34th letter of the alphabet; palatal semi-vowel <i>letter, masc</i>"
     },
     {
       "uid": "53446/dpd",
       "word": "ya 3.1",
-      "summary": "<b>ya 3.1</b> (cs) (gram) ya; suffix used to form impersonal and passive verbs <i>cs, masc</i>"
+      "summary": "(cs) (gram) ya; suffix used to form impersonal and passive verbs <i>cs, masc</i>"
     },
     {
       "uid": "53447/dpd",
       "word": "ya 3.2",
-      "summary": "<b>ya 3.2</b> (cs) (gram) ya; conjugational sign of group 3 divādigaṇa verbs <i>cs, masc</i>"
+      "summary": "(cs) (gram) ya; conjugational sign of group 3 divādigaṇa verbs <i>cs, masc</i>"
     }
   ],
   "āraddhavīriyassa": [
     {
       "uid": "12380/dpd",
       "word": "āraddhavīriya 1",
-      "summary": "<b>āraddhavīriya 1</b> (adj) energetic (in); with energy aroused (to); applying energy (to); making an effort (to) <b>[āraddha + vīriya]</b> <i>adj, comp</i>"
+      "summary": "(adj) energetic (in); with energy aroused (to); applying energy (to); making an effort (to) <b>[āraddha + vīriya]</b> <i>adj, comp</i>"
     },
     {
       "uid": "74162/dpd",
       "word": "āraddhavīriya 2",
-      "summary": "<b>āraddhavīriya 2</b> (masc) energetic person; who applies oneself; who makes an effort <b>[āraddha + vīriya]</b> <i>masc, comp</i>"
+      "summary": "(masc) energetic person; who applies oneself; who makes an effort <b>[āraddha + vīriya]</b> <i>masc, comp</i>"
     }
   ]
 }

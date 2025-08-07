@@ -301,7 +301,7 @@ impl DpdDbHandle {
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
         match self.dpd_lookup(query, false, true) {
             Ok(res) => {
-                res.iter().map(|i| i.snippet.clone()).collect()
+                res.iter().map(|i| format!("<b>{}</b> {}", i.title, i.snippet)).collect()
             }
 
             Err(e) => {
@@ -360,8 +360,9 @@ fn parse_words(
                     // [na > a + saṁ + √ñā + ā + a], [asaññā + a]
                     format!(" <b>[{}]</b> ", h.construction.replace("\n", "], ["))
                 };
-                let snippet = format!("<b>{}</b> ({}) {}{}<i>{}</i>",
-                                      h.word(),
+                // NOTE: Don't prefix the snippet with the word, it causes repetition.
+                // If needed, it can be added just before display.
+                let snippet = format!("({}) {}{}<i>{}</i>",
                                       h.pos,
                                       meaning,
                                       construction,
