@@ -21,6 +21,13 @@ Item {
 
     required property var handle_open_dict_tab_fn
 
+    property string text_color: root.is_dark ? "#F0F0F0" : "#000000"
+    property string bg_color: root.is_dark ? "#23272E" : "#FAE6B2"
+    property string bg_color_lighter: root.is_dark ? "#2E333D" : "#FBEDC7"
+    property string bg_color_darker: root.is_dark ? "#1C2025" : "#F8DA8E"
+
+    property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
+
     SuttaBridge { id: sb }
 
     // Current session data
@@ -373,7 +380,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             background: Rectangle {
                 anchors.fill: parent
                 border.width: 0
-                color: "#FAE6B2"
+                color: root.bg_color
             }
 
             ColumnLayout {
@@ -384,6 +391,14 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     id: main_gloss_input_group
                     Layout.fillWidth: true
                     Layout.margins: 10
+
+                    background: Rectangle {
+                        anchors.fill: parent
+                        border.width: 1
+                        border.color: root.border_color
+                        radius: 5
+                        color: root.bg_color_darker
+                    }
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -465,57 +480,63 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     Component {
         id: paragraph_gloss_component
 
-        GroupBox {
-            id: paragraphGroup
+        ColumnLayout {
+            id: paragraph_item
+            /* anchors.fill: parent */
+
             required property int index
             required property string text
             required property string words_data
 
-            Layout.fillWidth: true
-            Layout.margins: 10
-            title: "Paragraph " + (index + 1)
+            GroupBox {
+                Layout.fillWidth: true
+                Layout.margins: 10
+                title: "Paragraph " + (paragraph_item.index + 1)
 
-            background: Rectangle {
-                anchors.fill: parent
-                border.width: 0
-                color: "#FAE6B2"
-            }
+                background: Rectangle {
+                    anchors.fill: parent
+                    color: root.bg_color_darker
+                    border.width: 1
+                    border.color: root.border_color
+                    radius: 5
+                }
 
-            ColumnLayout {
-                anchors.fill: parent
-                spacing: 10
+                ColumnLayout {
+                    anchors.fill: parent
 
-                // Editable paragraph text
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 100
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 100
 
-                    TextArea {
-                        text: paragraphGroup.text
-                        font.pointSize: 12
-                        selectByMouse: true
-                        wrapMode: TextEdit.WordWrap
-                        onTextChanged: {
-                            if (text !== paragraphGroup.text) {
-                                root.update_paragraph_text(paragraphGroup.index, text);
+                        TextArea {
+                            text: paragraph_item.text
+                            font.pointSize: 12
+                            selectByMouse: true
+                            wrapMode: TextEdit.WordWrap
+                            onTextChanged: {
+                                if (text !== paragraph_item.text) {
+                                    root.update_paragraph_text(paragraph_item.index, text);
+                                }
                             }
                         }
                     }
-                }
 
-                // Update button for this paragraph
-                Button {
-                    text: "Update Gloss"
-                    Layout.alignment: Qt.AlignRight
-                    onClicked: root.update_paragraph_gloss(paragraphGroup.index)
+                    Button {
+                        text: "Update Gloss"
+                        Layout.alignment: Qt.AlignRight
+                        onClicked: root.update_paragraph_gloss(paragraph_item.index)
+                    }
                 }
+            }
 
-                Rectangle {
+            ColumnLayout {
+                spacing: 10
+                Layout.margins: 10
+
+                Item {
                     id: vocabulary_gloss
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
-                    border.width: 0
-                    color: "#FAE6B2"
 
                     ListView {
                         id: wordListView
@@ -525,7 +546,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                         model: {
                             try {
-                                return JSON.parse(paragraphGroup.words_data);
+                                return JSON.parse(paragraph_item.words_data);
                             } catch (e) {
                                 return [];
                             }
@@ -533,100 +554,101 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                         delegate: wordItemDelegate
 
-                        property int paragraphIndex: paragraphGroup.index
+                        property int paragraphIndex: paragraph_item.index
                     }
+                }
 
-                    // Component for word list delegate
-                    Component {
-                        id: wordItemDelegate
+                Component {
+                    id: wordItemDelegate
 
-                        ItemDelegate {
-                            id: wordItem
-                            width: parent ? parent.width : 0
-                            height: root.vocab_tm1.height * 3
+                    ItemDelegate {
+                        id: wordItem
+                        width: parent ? parent.width : 0
+                        height: root.vocab_tm1.height * 3
 
-                            required property int index
-                            required property var modelData
+                        required property int index
+                        required property var modelData
 
-                            property int paragraphIndex: wordListView.paragraphIndex
+                        property int paragraphIndex: wordListView.paragraphIndex
 
 
-                            Frame {
-                                id: mainContent
+                        Frame {
+                            id: mainContent
+                            anchors.fill: parent
+                            padding: 4
+
+                            background: Rectangle {
+                                border.width: 0
+                                color: (wordItem.index % 2 === 0 ?  root.bg_color_lighter : root.bg_color)
+                            }
+
+                            RowLayout {
                                 anchors.fill: parent
-                                padding: 4
+                                spacing: 10
 
-                                background: Rectangle {
-                                    border.width: 0
-                                    color: "#FAE6B2"
+                                ComboBox {
+                                    id: word_select
+                                    Layout.alignment: Qt.AlignTop
+                                    Layout.preferredWidth: wordItem.width * 0.2
+                                    visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
+                                    model: wordItem.modelData.results
+                                    textRole: "word"
+                                    font.bold: true
+                                    font.pointSize: root.vocab_font_point_size
+                                    currentIndex: wordItem.modelData.selectedIndex || 0
+                                    onCurrentIndexChanged: {
+                                        if (currentIndex !== wordItem.modelData.selectedIndex) {
+                                            root.update_word_selection(wordItem.paragraphIndex,
+                                                                        wordItem.index,
+                                                                        currentIndex);
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    Layout.preferredWidth: wordItem.width * 0.2
+                                    Layout.fillHeight: true
+                                    verticalAlignment: Text.AlignTop
+                                    visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
+                                    text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                                wordItem.modelData.results[0].word : wordItem.modelData.original_word
+                                    color: root.text_color
+                                    font.bold: true
+                                    font.pointSize: root.vocab_font_point_size
+                                    wrapMode: TextEdit.WordWrap
                                 }
 
                                 RowLayout {
-                                    anchors.fill: parent
-                                    spacing: 10
-
-                                    ComboBox {
-                                        id: word_select
-                                        Layout.alignment: Qt.AlignTop
-                                        Layout.preferredWidth: wordItem.width * 0.2
-                                        visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
-                                        model: wordItem.modelData.results
-                                        textRole: "word"
-                                        font.bold: true
-                                        font.pointSize: root.vocab_font_point_size
-                                        currentIndex: wordItem.modelData.selectedIndex || 0
-                                        onCurrentIndexChanged: {
-                                            if (currentIndex !== wordItem.modelData.selectedIndex) {
-                                                root.update_word_selection(wordItem.paragraphIndex,
-                                                                            wordItem.index,
-                                                                            currentIndex);
-                                            }
-                                        }
-                                    }
+                                    Layout.preferredWidth: wordItem.width * 0.8
+                                    Layout.fillHeight: true
 
                                     Text {
-                                        Layout.preferredWidth: wordItem.width * 0.2
                                         Layout.fillHeight: true
+                                        Layout.fillWidth: true
                                         verticalAlignment: Text.AlignTop
-                                        visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
-                                        text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                    wordItem.modelData.results[0].word : wordItem.modelData.original_word
-                                        font.bold: true
+                                        text: {
+                                            if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
+                                                var idx = word_select.currentIndex || 0;
+                                                return wordItem.modelData.results[idx].summary || "No summary";
+                                            }
+                                            return "No summary";
+                                        }
+                                        color: root.text_color
                                         font.pointSize: root.vocab_font_point_size
                                         wrapMode: TextEdit.WordWrap
+                                        textFormat: Text.RichText
                                     }
 
-                                    RowLayout {
-                                        Layout.preferredWidth: wordItem.width * 0.8
-                                        Layout.fillHeight: true
-
-                                        Text {
-                                            Layout.fillHeight: true
-                                            Layout.fillWidth: true
-                                            verticalAlignment: Text.AlignTop
-                                            text: {
-                                                if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
-                                                    var idx = word_select.currentIndex || 0;
-                                                    return wordItem.modelData.results[idx].summary || "No summary";
-                                                }
-                                                return "No summary";
-                                            }
-                                            font.pointSize: root.vocab_font_point_size
-                                            wrapMode: TextEdit.WordWrap
-                                            textFormat: Text.RichText
-                                        }
-
-                                        Button {
-                                            icon.source: "icons/32x32/bxs_book_content.png"
-                                            Layout.preferredHeight: word_select.height
-                                            Layout.preferredWidth: word_select.height
-                                            Layout.alignment: Qt.AlignTop
-                                            onClicked: {
-                                                var idx = word_select.currentIndex || 0;
-                                                let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                    wordItem.modelData.results[idx].word : wordItem.modelData.original_word;
-                                                root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
-                                            }
+                                    Button {
+                                        icon.source: "icons/32x32/bxs_book_content.png"
+                                        Layout.preferredHeight: word_select.height
+                                        Layout.preferredWidth: word_select.height
+                                        Layout.alignment: Qt.AlignTop
+                                        onClicked: {
+                                            var idx = word_select.currentIndex || 0;
+                                            let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                                wordItem.modelData.results[idx].word : wordItem.modelData.original_word;
+                                            root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
                                         }
                                     }
                                 }
