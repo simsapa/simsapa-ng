@@ -367,12 +367,18 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         ScrollView {
             contentWidth: availableWidth
 
+            background: Rectangle {
+                anchors.fill: parent
+                border.width: 0
+                color: "#FAE6B2"
+            }
+
             ColumnLayout {
                 width: parent.width
                 spacing: 20
 
-                // Text input area
                 GroupBox {
+                    id: main_gloss_input_group
                     Layout.fillWidth: true
                     Layout.margins: 10
 
@@ -388,7 +394,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                 font.pointSize: 12
                                 placeholderText: "Enter paragraphs to gloss ..."
                                 selectByMouse: true
-                                wrapMode: Text.WordWrap
+                                wrapMode: TextEdit.WordWrap
                             }
                         }
 
@@ -397,7 +403,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                             CheckBox {
                                 id: globalDedupeCheckBox
-                                text: "No duplicate words across entire text"
+                                text: "No duplicates"
                                 checked: root.no_duplicates_globally
                                 onCheckedChanged: {
                                     root.no_duplicates_globally = globalDedupeCheckBox.checked;
@@ -468,12 +474,8 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
             background: Rectangle {
                 anchors.fill: parent
-                radius: 5
-                border.width: 1
-                border.color: "#ddd"
-                /* color: "#FAE6B2" */
-                color: "#ffffff"
-                /* color: "#cccccc" */
+                border.width: 0
+                color: "#FAE6B2"
             }
 
             ColumnLayout {
@@ -489,7 +491,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                         text: paragraphGroup.text
                         font.pointSize: 12
                         selectByMouse: true
-                        wrapMode: TextArea.Wrap
+                        wrapMode: TextEdit.WordWrap
                         onTextChanged: {
                             if (text !== paragraphGroup.text) {
                                 root.update_paragraph_text(paragraphGroup.index, text);
@@ -505,18 +507,15 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     onClicked: root.update_paragraph_gloss(paragraphGroup.index)
                 }
 
-                // Vocabulary gloss
                 Rectangle {
+                    id: vocabulary_gloss
                     Layout.fillWidth: true
                     Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
-                    border.color: "#eee"
-                    border.width: 1
+                    border.width: 0
 
-                    // Vocabulary list
                     ListView {
                         id: wordListView
                         anchors.fill: parent
-                        anchors.margins: 1
                         clip: true
 
                         model: {
@@ -552,56 +551,68 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                 anchors.fill: parent
                                 padding: 4
 
-                                background: ListBackground {
-                                    is_dark: root.is_dark
-                                    results_list: wordListView
-                                    result_item_index: wordItem.index
-                                    highlight_selected: false
-                                    use_flat_bg: true
+                                background: Rectangle {
+                                    border.width: 0
+                                    color: "#FAE6B2"
                                 }
 
-                                ColumnLayout {
+                                RowLayout {
                                     anchors.fill: parent
                                     spacing: 10
 
-                                    RowLayout {
-                                        ComboBox {
-                                            id: word_select
-                                            Layout.fillWidth: true
-                                            visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
-                                            model: wordItem.modelData.results
-                                            textRole: "word"
-                                            currentIndex: wordItem.modelData.selectedIndex || 0
-                                            onCurrentIndexChanged: {
-                                                if (currentIndex !== wordItem.modelData.selectedIndex) {
-                                                    root.update_word_selection(wordItem.paragraphIndex,
+                                    ComboBox {
+                                        id: word_select
+                                        Layout.alignment: Qt.AlignTop
+                                        Layout.preferredWidth: wordItem.width * 0.2
+                                        visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
+                                        model: wordItem.modelData.results
+                                        textRole: "word"
+                                        font.bold: true
+                                        currentIndex: wordItem.modelData.selectedIndex || 0
+                                        onCurrentIndexChanged: {
+                                            if (currentIndex !== wordItem.modelData.selectedIndex) {
+                                                root.update_word_selection(wordItem.paragraphIndex,
                                                                             wordItem.index,
                                                                             currentIndex);
-                                                }
                                             }
                                         }
+                                    }
+
+                                    Text {
+                                        Layout.preferredWidth: wordItem.width * 0.2
+                                        Layout.fillHeight: true
+                                        verticalAlignment: Text.AlignTop
+                                        visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
+                                        text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                                    wordItem.modelData.results[0].word : wordItem.modelData.original_word
+                                        font.bold: true
+                                        wrapMode: TextEdit.WrapAnywhere
+                                    }
+
+                                    RowLayout {
+                                        Layout.preferredWidth: wordItem.width * 0.8
+                                        Layout.fillHeight: true
 
                                         Text {
-                                            id: word_select_empty_text
+                                            Layout.fillHeight: true
                                             Layout.fillWidth: true
-                                            visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
-                                            text: ""
+                                            verticalAlignment: Text.AlignTop
+                                            text: {
+                                                if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
+                                                    var idx = word_select.currentIndex || 0;
+                                                    return wordItem.modelData.results[idx].summary || "No summary";
+                                                }
+                                                return "No summary";
+                                            }
+                                            wrapMode: TextEdit.WordWrap
+                                            textFormat: Text.RichText
                                         }
-
-                                        // Text {
-                                        //     Layout.fillWidth: true
-                                        //     visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
-                                        //     text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                        //                 wordItem.modelData.results[0].word : wordItem.modelData.original_word
-                                        //     verticalAlignment: Text.AlignVCenter
-                                        //     font.bold: true
-                                        //     wrapMode: Text.WordWrap
-                                        // }
 
                                         Button {
                                             icon.source: "icons/32x32/bxs_book_content.png"
                                             Layout.preferredHeight: word_select.height
                                             Layout.preferredWidth: word_select.height
+                                            Layout.alignment: Qt.AlignTop
                                             onClicked: {
                                                 var idx = word_select.currentIndex || 0;
                                                 let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
@@ -609,25 +620,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                                 root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
                                             }
                                         }
-
                                     }
-
-
-                                    Text {
-                                        Layout.fillHeight: true
-                                        Layout.fillWidth: true
-                                        text: {
-                                            if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
-                                                var idx = word_select.currentIndex || 0;
-                                                return wordItem.modelData.results[idx].summary || "No summary";
-                                            }
-                                            return "No summary";
-                                        }
-                                        verticalAlignment: Text.AlignTop
-                                        wrapMode: Text.WordWrap
-                                        textFormat: Text.RichText
-                                    }
-
                                 }
                             }
                         }
