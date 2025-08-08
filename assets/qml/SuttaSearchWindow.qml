@@ -135,6 +135,13 @@ ApplicationWindow {
         word_summary.set_query(query_text);
     }
 
+    function gloss_text(query_text: string) {
+        show_sidebar_btn.checked = true;
+        tab_stack.currentIndex = 2; // gloss tab
+        gloss_tab.gloss_text_input_area.text = query_text;
+        gloss_tab.update_all_glosses();
+    }
+
     function run_sutta_menu_action(action: string, query_text: string) {
         console.log("run_sutta_menu_action():", action, query_text);
 
@@ -145,13 +152,17 @@ ApplicationWindow {
             break;
 
         case "lookup-selection":
-            root.set_summary_query(query_text);
             sutta_html_view_layout.show_transient_message(`Lookup: ${query_text.slice(0, 30)} ...`);
+            root.set_summary_query(query_text);
+            break;
+
+        case "gloss-selection":
+            sutta_html_view_layout.show_transient_message(`Gloss: ${query_text.slice(0, 30)} ...`);
+            root.gloss_text(query_text);
             break;
 
         case "copy-link-sutta":
         case "copy-sutta-url":
-        case "gloss-selection":
         case "summarize-sutta":
         case "analyse-selection":
             let msg = `TODO: ${action}`;

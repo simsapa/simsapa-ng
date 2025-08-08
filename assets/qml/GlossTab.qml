@@ -19,6 +19,8 @@ Item {
     readonly property int vocab_font_point_size: 10
     readonly property TextMetrics vocab_tm1: TextMetrics { text: "#"; font.pointSize: root.vocab_font_point_size }
 
+    property alias gloss_text_input_area: gloss_text_input
+
     required property var handle_open_dict_tab_fn
 
     property string text_color: root.is_dark ? "#F0F0F0" : "#000000"
