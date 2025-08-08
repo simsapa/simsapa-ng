@@ -362,7 +362,7 @@ fn parse_words(
                 };
                 // NOTE: Don't prefix the snippet with the word, it causes repetition.
                 // If needed, it can be added just before display.
-                let snippet = format!("({}) {}{}<i>{}</i>",
+                let snippet = format!("<i>({})</i> {} {} <i>{}</i>",
                                       h.pos,
                                       meaning,
                                       construction,

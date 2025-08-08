@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-// import QtQuick.Dialogs
+import QtQuick.Dialogs
 
 import com.profoundlabs.simsapa
 
@@ -50,6 +50,8 @@ Item {
 
     // Gloss data per paragraph
     ListModel { id: paragraph_model }
+    // Saving changes here to avoid binding loop with paragraph_model
+    ListModel { id: paragraph_model_export }
 
     Component.onCompleted: {
         load_history();
@@ -57,6 +59,51 @@ Item {
         if (root.is_qml_preview) {
             qml_preview_state();
         }
+    }
+
+    FolderDialog {
+        id: export_folder_dialog
+        acceptLabel: "Export to Folder"
+        onAccepted: root.export_dialog_accepted()
+    }
+
+    function export_dialog_accepted() {
+        let save_file_name = null
+        let save_fn = null;
+        if (export_btn.currentValue === "HTML") {
+            /* TODO */
+        } else if (export_btn.currentValue === "Markdown") {
+            save_file_name = "gloss_export.md";
+            save_fn = root.save_as_markdown;
+        } else if (export_btn.currentValue === "Org-Mode") {
+            /* TODO */
+        }
+
+        if (save_file_name) {
+            let exists = sb.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
+            if (exists) {
+                msg_dialog_cancel_ok.text = `${save_file_name} exists. Overwrite?`;
+                msg_dialog_cancel_ok.accept_fn = function() { save_fn(save_file_name); };
+                msg_dialog_cancel_ok.open();
+            } else {
+                save_fn(save_file_name);
+            }
+        }
+
+        // set the button back to default
+        export_btn.currentIndex = 0;
+    }
+
+    MessageDialog {
+        id: msg_dialog_ok
+        buttons: MessageDialog.Ok
+    }
+
+    MessageDialog {
+        id: msg_dialog_cancel_ok
+        buttons: MessageDialog.Cancel | MessageDialog.Ok
+        property var accept_fn: console.log("accepted")
+        onAccepted: accept_fn() // qmllint disable use-proper-function
     }
 
     Timer {
@@ -122,8 +169,8 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             var words = [];
 
             // Extract words data from the paragraph's words_json property
-            if (paragraph.words_json) {
-                words = JSON.parse(paragraph.words_json);
+            if (paragraph.words_data_json) {
+                words = JSON.parse(paragraph.words_data_json);
             }
 
             gloss_data.paragraphs.push({
@@ -146,7 +193,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         // splits Pāli words: samādhi → ['sam', 'dhi']
         // Hence simply splitting on space.
         // Need to filter empty strings, spiltting "" with " " results in [""].
-        return text.replace('\n', ' ').split(' ').filter(i => i.length != 0) || [];
+        return text.replace(/\n/g, ' ').split(' ').filter(i => i.length != 0) || [];
     }
 
     function extract_words_with_context(text: string): list<var> {
@@ -191,10 +238,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     function process_word_for_glossing(word_info, paragraph_shown_stems, global_stems, check_global) {
-        var lookup_result = sb.dpd_lookup_json(word_info.word.toLowerCase());
+        var lookup_results_json = sb.dpd_lookup_json(word_info.word.toLowerCase());
         var results = [];
         try {
-            results = JSON.parse(lookup_result);
+            results = JSON.parse(lookup_results_json);
         } catch (e) {
             console.error("Failed to parse lookup result:", e);
             return null;
@@ -281,7 +328,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
         for (var p = 0; p < up_to_index; p++) {
             var prev_para = paragraph_model.get(p);
-            var prev_words = JSON.parse(prev_para.words_data);
+            var prev_words = JSON.parse(prev_para.words_data_json);
             for (var w = 0; w < prev_words.length; w++) {
                 previous_stems[root.clean_stem(prev_words[w].stem)] = true;
             }
@@ -294,6 +341,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         var paragraphs = gloss_text_input.text.split('\n\n').filter(p => p.trim() !== '');
         root.current_text = gloss_text_input.text;
         paragraph_model.clear();
+        paragraph_model_export.clear();
         root.global_shown_stems = {};
 
         for (var i = 0; i < paragraphs.length; i++) {
@@ -303,12 +351,14 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                 paragraph_shown_stems,
                 root.global_shown_stems,
                 root.no_duplicates_globally,
-            )
+            );
 
-            paragraph_model.append({
+            var item = {
                 text: paragraphs[i],
-                words_data: JSON.stringify(glossed_words),
-            });
+                words_data_json: JSON.stringify(glossed_words),
+            };
+            paragraph_model.append(item);
+            paragraph_model_export.append(item);
         }
 
         root.save_session();
@@ -328,7 +378,9 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             root.no_duplicates_globally,
         );
 
-        paragraph_model.setProperty(index, "words_data", JSON.stringify(glossed_words));
+        var glossed_words_json = JSON.stringify(glossed_words);
+        paragraph_model.setProperty(index, "words_data_json", glossed_words_json);
+        paragraph_model_export.setProperty(index, "words_data_json", glossed_words_json);
         root.save_session();
     }
 
@@ -336,21 +388,106 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         // FIXME
     }
 
-    function update_word_selection(paragraphIndex, wordIndex, selectedIndex) {
-        var paragraph = paragraph_model.get(paragraphIndex);
-        var words = JSON.parse(paragraph.words_data);
-        words[wordIndex].selectedIndex = selectedIndex;
+    function update_word_selection(paragraph_idx: int, word_idx: int, selected_idx: int) {
+        var paragraph = paragraph_model.get(paragraph_idx);
+        var words = JSON.parse(paragraph.words_data_json);
+        words[word_idx].selected_index = selected_idx;
 
         // Update stem for the new selection (keep original with numbers for display)
-        words[wordIndex].stem = words[wordIndex].results[selectedIndex].word;
+        words[word_idx].stem = words[word_idx].results[selected_idx].word;
 
-        /* FIXME binding loop paragraph_model.setProperty(paragraphIndex, "words_data", JSON.stringify(words)); */
+        // Not saving to paragraph_model to avoid binding loop
+        paragraph_model_export.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words));
         root.save_session();
     }
 
     function update_paragraph_text(index, new_text) {
         paragraph_model.setProperty(index, "text", new_text);
+        paragraph_model_export.setProperty(index, "text", new_text);
         root.save_session();
+    }
+
+    function summary_html_to_md(text: string): string {
+        text = text
+            .replace(/<i>/g, "*")
+            .replace(/<\/i>/g, "*")
+            .replace(/<b>/g, "**")
+            .replace(/<\/b>/g, "**");
+        return text;
+    }
+
+    function gloss_as_markdown(): string {
+        // paragraph_model_export:
+        // {
+        //     text: paragraphs[i],
+        //     words_data_json: JSON.stringify(glossed_words),
+        // }
+        //
+        // words_data:
+        // {
+        //     original_word: word,
+        //     results: lookup_results,
+        //     selected_index: 0,
+        //     stem: lookup_results[0].word,
+        //     example_sentence: sentence || "",
+        // }
+        //
+        // results (Vec<LookupResult>):
+        // {
+        //     uid: String,
+        //     word: String,
+        //     summary: String,
+        // }
+
+        // output markdown
+        let out_md = "# Gloss Export\n";
+
+        // Add the main gloss text in a quote
+        out_md += "\n> " + gloss_text_input.text.trim().replace(/\n/g, "\n> ") + "\n";
+
+        out_md += "\n## Paragraphs\n";
+
+        for (var i = 0; i < paragraph_model_export.count; i++) {
+            var paragraph = paragraph_model_export.get(i);
+
+            // Add each paragraph text in a quote
+            out_md += "\n> " + paragraph.text.trim().replace(/\n/g, "\n> ") + "\n";
+
+            var words_data = JSON.parse(paragraph.words_data_json);
+            if (!words_data || words_data.length == 0) continue;
+
+            // Table header for syntax recognition, but leave empty to save space
+            out_md += `
+|    |    |
+|----|----|
+`
+
+            for (var j = 0; j < words_data.length; j++) {
+                var w_data = words_data[j];
+                if (!w_data.results || w_data.results.length == 0) continue;
+
+                // Add one line of word vocabulary info.
+                // For each word, only export the selected result.
+                var res = w_data.results[w_data.selected_index];
+                var summary = root.summary_html_to_md(res.summary);
+                out_md += `| **${res.word}** | ${summary} |\n`;
+            }
+        }
+
+        return out_md.trim();
+    }
+
+    function save_as_markdown(file_name: string) {
+        if (!file_name) return;
+        let markdown = root.gloss_as_markdown();
+        let ok = sb.save_file(export_folder_dialog.selectedFolder, file_name, markdown);
+        if (ok) {
+            msg_dialog_ok.text = "Export completed."
+            msg_dialog_ok.open();
+        } else {
+            msg_dialog_ok.text = "Export failed."
+            msg_dialog_ok.open();
+        }
     }
 
     TabBar {
@@ -435,10 +572,15 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                             Item { Layout.fillWidth: true }
 
-                            Button {
-                                text: "Export as Anki CSV"
+                            ComboBox {
+                                id: export_btn
+                                model: ["Export As...", "HTML", "Markdown", "Org-Mode"]
                                 enabled: paragraph_model.count > 0
-                                // onClicked: root.exportAnkiCSV() FIXME
+                                onCurrentIndexChanged: {
+                                    if (export_btn.currentIndex !== 0) {
+                                        export_folder_dialog.open();
+                                    }
+                                }
                             }
 
                             Button {
@@ -488,7 +630,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
             required property int index
             required property string text
-            required property string words_data
+            required property string words_data_json
 
             GroupBox {
                 Layout.fillWidth: true
@@ -548,7 +690,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                         model: {
                             try {
-                                return JSON.parse(paragraph_item.words_data);
+                                return JSON.parse(paragraph_item.words_data_json);
                             } catch (e) {
                                 return [];
                             }
@@ -556,7 +698,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                         delegate: wordItemDelegate
 
-                        property int paragraphIndex: paragraph_item.index
+                        property int paragraph_index: paragraph_item.index
                     }
                 }
 
@@ -571,7 +713,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                         required property int index
                         required property var modelData
 
-                        property int paragraphIndex: wordListView.paragraphIndex
+                        property int paragraph_index: wordListView.paragraph_index
 
 
                         Frame {
@@ -597,12 +739,12 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                                     textRole: "word"
                                     font.bold: true
                                     font.pointSize: root.vocab_font_point_size
-                                    currentIndex: wordItem.modelData.selectedIndex || 0
+                                    currentIndex: wordItem.modelData.selected_index || 0
                                     onCurrentIndexChanged: {
-                                        if (currentIndex !== wordItem.modelData.selectedIndex) {
-                                            root.update_word_selection(wordItem.paragraphIndex,
-                                                                        wordItem.index,
-                                                                        currentIndex);
+                                        if (currentIndex !== wordItem.modelData.selected_index) {
+                                            root.update_word_selection(wordItem.paragraph_index,
+                                                                       wordItem.index,
+                                                                       currentIndex);
                                         }
                                     }
                                 }

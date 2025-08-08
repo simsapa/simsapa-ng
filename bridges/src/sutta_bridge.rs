@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use std::thread;
 
 use core::pin::Pin;
-use cxx_qt_lib::{QString, QStringList};
+use cxx_qt_lib::{QString, QStringList, QUrl};
 use cxx_qt::Threading;
 use regex::{Regex, Captures};
 use lazy_static::lazy_static;
@@ -11,7 +11,7 @@ use lazy_static::lazy_static;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile};
+use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 
@@ -29,6 +29,9 @@ pub mod qobject {
 
         include!("cxx-qt-lib/qstringlist.h");
         type QStringList = cxx_qt_lib::QStringList;
+
+        include!("cxx-qt-lib/qurl.h");
+        type QUrl = cxx_qt_lib::QUrl;
 
         include!("system_palette.h");
         fn get_system_palette_json() -> QString;
@@ -111,6 +114,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn save_anki_csv(self: &SuttaBridge, csv_content: &QString) -> QString;
+
+        #[qinvokable]
+        fn save_file(self: &SuttaBridge, folder_url: &QUrl, filename: &QString, content: &QString) -> bool;
+
+        #[qinvokable]
+        fn check_file_exists_in_folder(self: &SuttaBridge, folder_url: &QUrl, filename: &QString) -> bool;
     }
 }
 
@@ -416,7 +425,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_common_words_json(&self) -> QString {
-        QString::from(r#"["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "sāriputta", "etaṁ", "yaṁ"]"#)
+        QString::from(r#"["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "ānanda", "sāriputta", "etaṁ", "yaṁ"]"#)
     }
 
     pub fn save_common_words_json(&self, words_json: &QString) {
@@ -437,5 +446,32 @@ impl qobject::SuttaBridge {
 
     pub fn save_anki_csv(&self, csv_content: &QString) -> QString {
         QString::from("file_name.csv")
+    }
+
+    pub fn save_file(&self,
+                     folder_url: &QUrl,
+                     filename: &QString,
+                     content: &QString) -> bool {
+        let folder_path = PathBuf::from(folder_url.path().to_string());
+        let output_path = folder_path.join(&filename.to_string());
+        match output_path.to_str() {
+            Some(p) => {
+                save_to_file(content.to_string().as_bytes(), p);
+                return true;
+            },
+            None => return false,
+        }
+    }
+
+    pub fn check_file_exists_in_folder(&self,
+                                       folder_url: &QUrl,
+                                       filename: &QString) -> bool {
+        let folder_path = PathBuf::from(folder_url.path().to_string());
+        let output_path = folder_path.join(&filename.to_string());
+        let exists = match check_file_exists_print_err(&output_path) {
+            Ok(r) => r,
+            Err(_) => false,
+        };
+        exists
     }
 }

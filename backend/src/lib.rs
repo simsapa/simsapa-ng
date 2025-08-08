@@ -186,7 +186,7 @@ impl AppGlobalPaths {
 /// PathBuf::exists() can crash on Android due to permission restrictions.
 /// This function only returns Ok(true), false is turned into an error message.
 /// If the file exists but is 0 byte length, this is also returned as an error.
-fn check_file_exists_print_err<P: AsRef<Path>>(path: P) -> Result<bool, Box<dyn Error>> {
+pub fn check_file_exists_print_err<P: AsRef<Path>>(path: P) -> Result<bool, Box<dyn Error>> {
     let path_ref = path.as_ref();
 
     let exists = path_ref.try_exists()?;

@@ -143,7 +143,7 @@ ApplicationWindow {
     }
 
     function run_sutta_menu_action(action: string, query_text: string) {
-        console.log("run_sutta_menu_action():", action, query_text);
+        console.log("run_sutta_menu_action():", action, query_text.slice(0, 30));
 
         switch (action) {
         case "copy-selection":
