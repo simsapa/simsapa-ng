@@ -125,7 +125,7 @@ Item {
     }
 
     function get_common_words_json(): string {
-        return `["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "ānanda", "sāriputta", "etaṁ", "yaṁ"]`;
+        return `["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "bhagavā", "bhagavant", "ānanda", "sāriputta", "etaṁ", "yaṁ"]`;
     }
 
     function save_common_words_json(words_json: string) {

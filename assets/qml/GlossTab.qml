@@ -41,6 +41,7 @@ Item {
 
     // Global deduplication option
     property bool no_duplicates_globally: true
+    property bool skip_common: true
 
     // Track globally shown stem words
     property var global_shown_stems: ({})
@@ -274,7 +275,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         var stem_clean = root.clean_stem(stem);
 
         // Skip common words
-        if (root.is_common_word(stem)) {
+        if (root.skip_common && root.is_common_word(stem)) {
             return null;
         }
 
@@ -714,6 +715,18 @@ ${table_rows}
                                 }
                             }
 
+                            CheckBox {
+                                id: skip_common_check
+                                text: "Skip common"
+                                checked: root.skip_common
+                                onCheckedChanged: {
+                                    root.skip_common = skip_common_check.checked;
+                                    if (paragraph_model.count > 0) {
+                                        root.update_all_glosses();
+                                    }
+                                }
+                            }
+
                             Item { Layout.fillWidth: true }
 
                             ComboBox {
@@ -729,7 +742,7 @@ ${table_rows}
 
                             Button {
                                 text: "Common Words..."
-                                // onClicked: commonWordsDialog.open() FIXME
+                                onClicked: commonWordsDialog.open()
                             }
 
                             Button {
@@ -967,6 +980,62 @@ ${table_rows}
                         }
                     }
                 }
+            }
+        }
+    }
+
+    Dialog {
+        id: commonWordsDialog
+        title: "Edit Common Words"
+        width: 400
+        height: 500
+        anchors.centerIn: parent
+
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: 10
+
+            Label {
+                text: "Enter common words (one per line):"
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                TextArea {
+                    id: commonWordsTextArea
+                    selectByMouse: true
+                    text: root.common_words.join('\n')
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Button {
+                    text: "Cancel"
+                    onClicked: commonWordsDialog.close()
+                }
+
+                Button {
+                    text: "Save"
+                    onClicked: {
+                        var words = commonWordsTextArea.text.split('\n')
+                            .map(w => w.trim().toLowerCase())
+                            .filter(w => w.length > 0);
+                        root.common_words = words;
+                        sb.save_common_words_json(JSON.stringify(root.common_words));
+                        commonWordsDialog.close();
+                        root.update_all_glosses();
+                    }
+                }
+            }
+
+            Label {
+                text: "<p><b>TODO:</b> The common word list is updated for<br>the current session but is not yet saved to db.</p>"
+                textFormat: Text.RichText
+                wrapMode: TextEdit.WordWrap
             }
         }
     }

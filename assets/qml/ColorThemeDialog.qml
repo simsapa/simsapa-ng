@@ -10,7 +10,7 @@ Dialog {
     id: root
     title: "Color Theme"
     modal: true
-    standardButtons: Dialog.Ok | Dialog.Cancel
+    standardButtons: Dialog.Cancel | Dialog.Ok
 
     readonly property int pointSize: is_mobile ? 16 : 12
 
