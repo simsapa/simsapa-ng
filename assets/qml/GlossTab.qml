@@ -68,25 +68,42 @@ Item {
     }
 
     function export_dialog_accepted() {
+        if (export_btn.currentIndex === 0) return;
         let save_file_name = null
-        let save_fn = null;
+        let save_content = null;
+
         if (export_btn.currentValue === "HTML") {
-            /* TODO */
+            save_file_name = "gloss_export.html";
+            save_content = root.gloss_as_html();
+
         } else if (export_btn.currentValue === "Markdown") {
             save_file_name = "gloss_export.md";
-            save_fn = root.save_as_markdown;
+            save_content = root.gloss_as_markdown();
+
         } else if (export_btn.currentValue === "Org-Mode") {
-            /* TODO */
+            save_file_name = "gloss_export.org";
+            save_content = root.gloss_as_orgmode();
         }
+
+        let save_fn = function() {
+            let ok = sb.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
+            if (ok) {
+                msg_dialog_ok.text = "Export completed."
+                msg_dialog_ok.open();
+            } else {
+                msg_dialog_ok.text = "Export failed."
+                msg_dialog_ok.open();
+            }
+        };
 
         if (save_file_name) {
             let exists = sb.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
             if (exists) {
                 msg_dialog_cancel_ok.text = `${save_file_name} exists. Overwrite?`;
-                msg_dialog_cancel_ok.accept_fn = function() { save_fn(save_file_name); };
+                msg_dialog_cancel_ok.accept_fn = save_fn;
                 msg_dialog_cancel_ok.open();
             } else {
-                save_fn(save_file_name);
+                save_fn();
             }
         }
 
@@ -416,7 +433,16 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return text;
     }
 
-    function gloss_as_markdown(): string {
+    function summary_html_to_orgmode(text: string): string {
+        text = text
+            .replace(/<i>/g, "/")
+            .replace(/<\/i>/g, "/")
+            .replace(/<b>/g, "*")
+            .replace(/<\/b>/g, "*");
+        return text;
+    }
+
+    function gloss_export_data(): var {
         // paragraph_model_export:
         // {
         //     text: paragraphs[i],
@@ -438,56 +464,174 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         //     word: String,
         //     summary: String,
         // }
+        //
+        // Returns:
+        // {
+        //     text: "...",
+        //     paragraphs: [
+        //         {
+        //             text: "...",
+        //             vocabulary: [
+        //                 {
+        //                     word: "...",
+        //                     summary: "...",
+        //                 }
+        //             ]
+        //         }
+        //     ]
+        // }
 
-        // output markdown
-        let out_md = "# Gloss Export\n";
-
-        // Add the main gloss text in a quote
-        out_md += "\n> " + gloss_text_input.text.trim().replace(/\n/g, "\n> ") + "\n";
-
-        out_md += "\n## Paragraphs\n";
+        let gloss_data = {
+            text: gloss_text_input.text.trim(),
+            paragraphs: [],
+        };
 
         for (var i = 0; i < paragraph_model_export.count; i++) {
             var paragraph = paragraph_model_export.get(i);
 
-            // Add each paragraph text in a quote
-            out_md += "\n> " + paragraph.text.trim().replace(/\n/g, "\n> ") + "\n";
+            var para_data = {
+                text: paragraph.text.trim(),
+                vocabulary: [],
+            };
 
             var words_data = JSON.parse(paragraph.words_data_json);
             if (!words_data || words_data.length == 0) continue;
-
-            // Table header for syntax recognition, but leave empty to save space
-            out_md += `
-|    |    |
-|----|----|
-`
 
             for (var j = 0; j < words_data.length; j++) {
                 var w_data = words_data[j];
                 if (!w_data.results || w_data.results.length == 0) continue;
 
                 // Add one line of word vocabulary info.
-                // For each word, only export the selected result.
-                var res = w_data.results[w_data.selected_index];
-                var summary = root.summary_html_to_md(res.summary);
-                out_md += `| **${res.word}** | ${summary} |\n`;
+                // For each word, export only the selected result.
+                para_data.vocabulary.push(w_data.results[w_data.selected_index]);
             }
+
+            gloss_data.paragraphs.push(para_data);
         }
 
-        return out_md.trim();
+        return gloss_data;
     }
 
-    function save_as_markdown(file_name: string) {
-        if (!file_name) return;
-        let markdown = root.gloss_as_markdown();
-        let ok = sb.save_file(export_folder_dialog.selectedFolder, file_name, markdown);
-        if (ok) {
-            msg_dialog_ok.text = "Export completed."
-            msg_dialog_ok.open();
-        } else {
-            msg_dialog_ok.text = "Export failed."
-            msg_dialog_ok.open();
+    function gloss_as_html(): string {
+        let gloss_data = root.gloss_export_data();
+
+        let main_text = "\n<blockquote>\n" + gloss_data.text.replace(/\n/g, "<br>\n") + "\n</blockquote>\n";
+
+        let out = `
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Gloss Export</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Gloss Export</h1>
+
+${main_text}
+
+<h2>Paragraphs</h2>
+`;
+
+        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
+            var paragraph = gloss_data.paragraphs[i];
+            let para_text = "\n<blockquote>\n" + paragraph.text.replace(/\n/g, "<br>\n") + "\n</blockquote>\n";
+
+            var table_rows = "";
+            for (var j = 0; j < paragraph.vocabulary.length; j++) {
+                var res = paragraph.vocabulary[j];
+                table_rows += `<tr><td> <b>${res.word}</b> </td><td> ${res.summary} </td></tr>\n`;
+            }
+
+            out += `
+${para_text}
+
+<table><tbody>
+${table_rows}
+</tbody></table>
+`;
+
         }
+
+        out += "\n</body>\n</html>";
+        return out.trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function gloss_as_markdown(): string {
+        let gloss_data = root.gloss_export_data();
+
+        // The main gloss text in a quote
+        let main_text = "\n> " + gloss_data.text.replace(/\n/g, "\n> ");
+
+        let out = `
+# Gloss Export
+
+${main_text}
+
+## Paragraphs
+`;
+
+        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
+            var paragraph = gloss_data.paragraphs[i];
+            // Add each paragraph text in a quote
+            var para_text = "\n> " + paragraph.text.replace(/\n/g, "\n> ");
+
+            var table_rows = "";
+            for (var j = 0; j < paragraph.vocabulary.length; j++) {
+                var res = paragraph.vocabulary[j];
+                var summary = root.summary_html_to_md(res.summary);
+                table_rows += `| **${res.word}** | ${summary} |\n`;
+            }
+
+            // Add the table header for syntax recognition, but leave empty to save space when rendered.
+            out += `
+${para_text}
+
+|    |    |
+|----|----|
+${table_rows}
+`;
+
+        }
+
+        // only two new lines for paragraph breaks
+        return out.trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function gloss_as_orgmode(): string {
+        let gloss_data = root.gloss_export_data();
+
+        let main_text = "\n#+begin_quote\n" + gloss_data.text + "\n#+end_quote\n";
+
+        let out = `
+* Gloss Export
+
+${main_text}
+
+** Paragraphs
+`;
+
+        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
+            var paragraph = gloss_data.paragraphs[i];
+            let para_text = "\n#+begin_quote\n" + paragraph.text + "\n#+end_quote\n";
+
+            var table_rows = "";
+            for (var j = 0; j < paragraph.vocabulary.length; j++) {
+                var res = paragraph.vocabulary[j];
+                var summary = root.summary_html_to_orgmode(res.summary);
+                table_rows += `| *${res.word}* | ${summary} |\n`;
+            }
+
+            out += `
+${para_text}
+
+${table_rows}
+`;
+
+        }
+
+        return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
     TabBar {
