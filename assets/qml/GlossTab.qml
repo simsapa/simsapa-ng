@@ -119,7 +119,7 @@ Item {
     MessageDialog {
         id: msg_dialog_cancel_ok
         buttons: MessageDialog.Cancel | MessageDialog.Ok
-        property var accept_fn: console.log("accepted")
+        property var accept_fn: {}
         onAccepted: accept_fn() // qmllint disable use-proper-function
     }
 
@@ -776,167 +776,190 @@ ${table_rows}
             required property string text
             required property string words_data_json
 
-            GroupBox {
-                Layout.fillWidth: true
-                Layout.margins: 10
-                title: "Paragraph " + (paragraph_item.index + 1)
+            property bool is_collapsed: collapse_btn.checked
 
-                background: Rectangle {
-                    anchors.fill: parent
-                    color: root.bg_color_darker
-                    border.width: 1
-                    border.color: root.border_color
-                    radius: 5
+            RowLayout {
+                Layout.leftMargin: 10
+
+                Button {
+                    id: collapse_btn
+                    checkable: true
+                    checked: false
+                    icon.source: checked ? "icons/32x32/fa_plus-solid.png" : "icons/32x32/fa_minus-solid.png"
+                    Layout.alignment: Qt.AlignLeft
+                    Layout.preferredWidth: collapse_btn.height
                 }
 
-                ColumnLayout {
-                    anchors.fill: parent
-
-                    ScrollView {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 100
-
-                        TextArea {
-                            text: paragraph_item.text
-                            font.pointSize: 12
-                            selectByMouse: true
-                            wrapMode: TextEdit.WordWrap
-                            onTextChanged: {
-                                if (text !== paragraph_item.text) {
-                                    root.update_paragraph_text(paragraph_item.index, text);
-                                }
-                            }
-                        }
-                    }
-
-                    Button {
-                        text: "Update Gloss"
-                        Layout.alignment: Qt.AlignRight
-                        onClicked: root.update_paragraph_gloss(paragraph_item.index)
-                    }
+                Label {
+                    text: "Paragraph " + (paragraph_item.index + 1)
+                    font.pointSize: root.vocab_font_point_size
                 }
             }
 
             ColumnLayout {
-                spacing: 10
-                Layout.margins: 10
+                visible: !collapse_btn.checked
 
-                Item {
-                    id: vocabulary_gloss
+                GroupBox {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
+                    Layout.margins: 10
 
-                    ListView {
-                        id: wordListView
+                    background: Rectangle {
                         anchors.fill: parent
-                        clip: true
-                        spacing: 5
+                        color: root.bg_color_darker
+                        border.width: 1
+                        border.color: root.border_color
+                        radius: 5
+                    }
 
-                        model: {
-                            try {
-                                return JSON.parse(paragraph_item.words_data_json);
-                            } catch (e) {
-                                return [];
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 100
+
+                            TextArea {
+                                text: paragraph_item.text
+                                font.pointSize: 12
+                                selectByMouse: true
+                                wrapMode: TextEdit.WordWrap
+                                onTextChanged: {
+                                    if (text !== paragraph_item.text) {
+                                        root.update_paragraph_text(paragraph_item.index, text);
+                                    }
+                                }
                             }
                         }
 
-                        delegate: wordItemDelegate
-
-                        property int paragraph_index: paragraph_item.index
+                        Button {
+                            text: "Update Gloss"
+                            Layout.alignment: Qt.AlignRight
+                            onClicked: root.update_paragraph_gloss(paragraph_item.index)
+                        }
                     }
                 }
 
-                Component {
-                    id: wordItemDelegate
+                ColumnLayout {
+                    spacing: 10
+                    Layout.margins: 10
 
-                    ItemDelegate {
-                        id: wordItem
-                        width: parent ? parent.width : 0
-                        height: root.vocab_tm1.height * 3
+                    Item {
+                        id: vocabulary_gloss
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
 
-                        required property int index
-                        required property var modelData
-
-                        property int paragraph_index: wordListView.paragraph_index
-
-
-                        Frame {
-                            id: mainContent
+                        ListView {
+                            id: wordListView
                             anchors.fill: parent
-                            padding: 4
+                            clip: true
+                            spacing: 5
 
-                            background: Rectangle {
-                                border.width: 0
-                                color: (wordItem.index % 2 === 0 ?  root.bg_color_lighter : root.bg_color)
+                            model: {
+                                try {
+                                    return JSON.parse(paragraph_item.words_data_json);
+                                } catch (e) {
+                                    return [];
+                                }
                             }
 
-                            RowLayout {
+                            delegate: wordItemDelegate
+
+                            property int paragraph_index: paragraph_item.index
+                        }
+                    }
+
+                    Component {
+                        id: wordItemDelegate
+
+                        ItemDelegate {
+                            id: wordItem
+                            width: parent ? parent.width : 0
+                            height: root.vocab_tm1.height * 3
+
+                            required property int index
+                            required property var modelData
+
+                            property int paragraph_index: wordListView.paragraph_index
+
+
+                            Frame {
+                                id: mainContent
                                 anchors.fill: parent
-                                spacing: 10
+                                padding: 4
 
-                                ComboBox {
-                                    id: word_select
-                                    Layout.alignment: Qt.AlignTop
-                                    Layout.preferredWidth: wordItem.width * 0.2
-                                    visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
-                                    model: wordItem.modelData.results
-                                    textRole: "word"
-                                    font.bold: true
-                                    font.pointSize: root.vocab_font_point_size
-                                    currentIndex: wordItem.modelData.selected_index || 0
-                                    onCurrentIndexChanged: {
-                                        if (currentIndex !== wordItem.modelData.selected_index) {
-                                            root.update_word_selection(wordItem.paragraph_index,
-                                                                       wordItem.index,
-                                                                       currentIndex);
-                                        }
-                                    }
-                                }
-
-                                Text {
-                                    Layout.preferredWidth: wordItem.width * 0.2
-                                    Layout.fillHeight: true
-                                    verticalAlignment: Text.AlignTop
-                                    visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
-                                    text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                wordItem.modelData.results[0].word : wordItem.modelData.original_word
-                                    color: root.text_color
-                                    font.bold: true
-                                    font.pointSize: root.vocab_font_point_size
-                                    wrapMode: TextEdit.WordWrap
+                                background: Rectangle {
+                                    border.width: 0
+                                    color: (wordItem.index % 2 === 0 ?  root.bg_color_lighter : root.bg_color)
                                 }
 
                                 RowLayout {
-                                    Layout.preferredWidth: wordItem.width * 0.8
-                                    Layout.fillHeight: true
+                                    anchors.fill: parent
+                                    spacing: 10
 
-                                    Text {
-                                        Layout.fillHeight: true
-                                        Layout.fillWidth: true
-                                        verticalAlignment: Text.AlignTop
-                                        text: {
-                                            if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
-                                                var idx = word_select.currentIndex || 0;
-                                                return wordItem.modelData.results[idx].summary || "No summary";
-                                            }
-                                            return "No summary";
-                                        }
-                                        color: root.text_color
+                                    ComboBox {
+                                        id: word_select
+                                        Layout.alignment: Qt.AlignTop
+                                        Layout.preferredWidth: wordItem.width * 0.2
+                                        visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
+                                        model: wordItem.modelData.results
+                                        textRole: "word"
+                                        font.bold: true
                                         font.pointSize: root.vocab_font_point_size
-                                        wrapMode: TextEdit.WordWrap
-                                        textFormat: Text.RichText
+                                        currentIndex: wordItem.modelData.selected_index || 0
+                                        onCurrentIndexChanged: {
+                                            if (currentIndex !== wordItem.modelData.selected_index) {
+                                                root.update_word_selection(wordItem.paragraph_index,
+                                                                        wordItem.index,
+                                                                        currentIndex);
+                                            }
+                                        }
                                     }
 
-                                    Button {
-                                        icon.source: "icons/32x32/bxs_book_content.png"
-                                        Layout.preferredHeight: word_select.height
-                                        Layout.preferredWidth: word_select.height
-                                        Layout.alignment: Qt.AlignTop
-                                        onClicked: {
-                                            var idx = word_select.currentIndex || 0;
-                                            let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                wordItem.modelData.results[idx].word : wordItem.modelData.original_word;
-                                            root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
+                                    Text {
+                                        Layout.preferredWidth: wordItem.width * 0.2
+                                        Layout.fillHeight: true
+                                        verticalAlignment: Text.AlignTop
+                                        visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
+                                        text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                                    wordItem.modelData.results[0].word : wordItem.modelData.original_word
+                                        color: root.text_color
+                                        font.bold: true
+                                        font.pointSize: root.vocab_font_point_size
+                                        wrapMode: TextEdit.WordWrap
+                                    }
+
+                                    RowLayout {
+                                        Layout.preferredWidth: wordItem.width * 0.8
+                                        Layout.fillHeight: true
+
+                                        Text {
+                                            Layout.fillHeight: true
+                                            Layout.fillWidth: true
+                                            verticalAlignment: Text.AlignTop
+                                            text: {
+                                                if (wordItem.modelData.results && wordItem.modelData.results.length > 0) {
+                                                    var idx = word_select.currentIndex || 0;
+                                                    return wordItem.modelData.results[idx].summary || "No summary";
+                                                }
+                                                return "No summary";
+                                            }
+                                            color: root.text_color
+                                            font.pointSize: root.vocab_font_point_size
+                                            wrapMode: TextEdit.WordWrap
+                                            textFormat: Text.RichText
+                                        }
+
+                                        Button {
+                                            icon.source: "icons/32x32/bxs_book_content.png"
+                                            Layout.preferredHeight: word_select.height
+                                            Layout.preferredWidth: word_select.height
+                                            Layout.alignment: Qt.AlignTop
+                                            onClicked: {
+                                                var idx = word_select.currentIndex || 0;
+                                                let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
+                                                    wordItem.modelData.results[idx].word : wordItem.modelData.original_word;
+                                                root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
+                                            }
                                         }
                                     }
                                 }
