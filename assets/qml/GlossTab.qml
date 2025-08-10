@@ -31,6 +31,53 @@ Item {
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
 
     SuttaBridge { id: sb }
+    PromptManager { id: pm }
+
+    Connections {
+        target: pm
+
+        function onPromptResponse (paragraph_idx: int, translation_idx: int, model_name: string, response: string) {
+            let paragraph = paragraph_model.get(paragraph_idx);
+            let translations = JSON.parse(paragraph.translations_json);
+            translations[translation_idx].status = "completed";
+            translations[translation_idx].response = response;
+            let translations_json = JSON.stringify(translations);
+            paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
+            paragraph_model_export.setProperty(paragraph_idx, "translations_json", translations_json);
+        }
+    }
+
+    property string translation_prompt_template: `Translate the following Pāli passage to English, keeping in mind the provided dictionary definitions.
+
+Pāli passage:
+
+<<PALI_PASSAGE>>
+
+Dictionary definitions:
+
+<<DICTIONARY_DEFINITIONS>>
+
+Respond with only the translation of the Pāli passage.
+`
+
+    property list<var> translation_models_init: [
+        { model_name: "deepseek/deepseek-r1-0528:free", enabled: true },
+        { model_name: "deepseek/deepseek-chat-v3-0324:free", enabled: false },
+        { model_name: "google/gemini-2.0-flash-exp:free", enabled: true },
+        { model_name: "google/gemma-3-27b-it:free", enabled: true },
+        { model_name: "openai/gpt-oss-20b:free", enabled: false },
+        { model_name: "meta-llama/llama-3.3-70b-instruct:free", enabled: true },
+        { model_name: "meta-llama/llama-3.1-405b-instruct:free", enabled: false },
+    ]
+
+    ListModel { id: translation_models }
+
+    function load_translation_models() {
+        for (var i = 0; i < root.translation_models_init.length; i++) {
+            var item = root.translation_models_init[i];
+            translation_models.append(item);
+        }
+    }
 
     // Current session data
     property string current_session_id: ""
@@ -57,6 +104,7 @@ Item {
     Component.onCompleted: {
         load_history();
         load_common_words();
+        load_translation_models();
         if (root.is_qml_preview) {
             qml_preview_state();
         }
@@ -355,12 +403,52 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return previous_stems;
     }
 
+    function dictionary_definitions(glossed_words: var): string {
+        let out = "";
+        for (var i = 0; i < glossed_words.length; i++) {
+            var w = glossed_words[i];
+            var summary = summary_strip_html(w.results[w.selected_index].summary);
+            var def = `- ${w.original_word}: stem '${clean_stem(w.stem)}', ${summary}\n`;
+            out += def;
+        }
+        return out;
+    }
+
     function update_all_glosses() {
         var paragraphs = gloss_text_input.text.split('\n\n').filter(p => p.trim() !== '');
         root.current_text = gloss_text_input.text;
         paragraph_model.clear();
         paragraph_model_export.clear();
         root.global_shown_stems = {};
+
+        let translations_json = "[]";
+
+        if (root.is_qml_preview) {
+            let translations = [
+                { model_name: "deepseek/deepseek-r1-0528:free",
+                  status: "completed",
+                  response: `
+And what, bhikkhus, is concentration?
+
+And what, bhikkhus, is concentration?
+
+And what, bhikkhus, is concentration?
+
+And what, bhikkhus, is concentration?
+
+And what, bhikkhus, is concentration?
+
+And what, bhikkhus, is concentration?
+
+And what, bhikkhus, is concentration?
+`,
+                },
+                { model_name: "google/gemini-2.0-flash-exp:free", status: "waiting", response: "" },
+                { model_name: "google/gemma-3-27b-it:free", status: "completed", response: "And what, bhikkhus, is collectedness?" },
+                { model_name: "meta-llama/llama-3.3-70b-instruct:free", status: "completed", response: "And what, bhikkhus, is the faculty of concentration?" },
+            ];
+            translations_json = JSON.stringify(translations);
+        }
 
         for (var i = 0; i < paragraphs.length; i++) {
             var paragraph_shown_stems = {};
@@ -374,6 +462,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             var item = {
                 text: paragraphs[i],
                 words_data_json: JSON.stringify(glossed_words),
+                translations_json: translations_json,
             };
             paragraph_model.append(item);
             paragraph_model_export.append(item);
@@ -423,6 +512,15 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         paragraph_model.setProperty(index, "text", new_text);
         paragraph_model_export.setProperty(index, "text", new_text);
         root.save_session();
+    }
+
+    function summary_strip_html(text: string): string {
+        text = text
+            .replace(/<i>/g, "")
+            .replace(/<\/i>/g, "")
+            .replace(/<b>/g, "")
+            .replace(/<\/b>/g, "");
+        return text;
     }
 
     function summary_html_to_md(text: string): string {
@@ -754,7 +852,6 @@ ${table_rows}
                     }
                 }
 
-                // Paragraph glosses
                 Repeater {
                     model: paragraph_model
                     delegate: paragraph_gloss_component
@@ -788,6 +885,7 @@ ${table_rows}
             required property int index
             required property string text
             required property string words_data_json
+            required property string translations_json
 
             property bool is_collapsed: collapse_btn.checked
 
@@ -844,10 +942,46 @@ ${table_rows}
                             }
                         }
 
-                        Button {
-                            text: "Update Gloss"
+                        RowLayout {
                             Layout.alignment: Qt.AlignRight
-                            onClicked: root.update_paragraph_gloss(paragraph_item.index)
+
+                            Button {
+                                text: "AI-Translate"
+                                Layout.alignment: Qt.AlignRight
+                                onClicked: {
+                                    let paragraph = paragraph_model_export.get(paragraph_item.index);
+
+                                    let glossed_words = JSON.parse(paragraph.words_data_json);
+
+                                    let prompt = root.translation_prompt_template
+                                        .replace("<<PALI_PASSAGE>>", paragraph_item.text)
+                                        .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions(glossed_words));
+
+                                    let translations = [];
+
+                                    for (var i = 0; i < translation_models.count; i++) {
+                                        var item = translation_models.get(i);
+                                        if (item.enabled) {
+                                            pm.prompt_request(paragraph_item.index, i, item.model_name, prompt);
+                                            translations.push({
+                                                model_name: item.model_name,
+                                                status: "waiting",
+                                                response: "",
+                                            });
+                                        }
+                                    }
+
+                                    let translations_json = JSON.stringify(translations);
+                                    paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
+                                    paragraph_model_export.setProperty(paragraph_item.index, "translations_json", translations_json);
+                                }
+                            }
+
+                            Button {
+                                text: "Update Gloss"
+                                Layout.alignment: Qt.AlignRight
+                                onClicked: root.update_paragraph_gloss(paragraph_item.index)
+                            }
                         }
                     }
                 }
@@ -980,6 +1114,67 @@ ${table_rows}
                         }
                     }
                 }
+
+                Repeater {
+                    model: {
+                        try {
+                            return JSON.parse(paragraph_item.translations_json);
+                        } catch (e) {
+                            return [];
+                        }
+                    }
+                    delegate: translation_delegate
+                }
+
+                Component {
+                    id: translation_delegate
+                    Rectangle {
+                        id: tr_item
+                        required property int index
+                        required property string model_name
+                        required property string status
+                        required property string response
+
+                        Layout.minimumHeight: status === "completed" ? 250 : 50
+
+                        ColumnLayout {
+                            GroupBox {
+                                Layout.preferredWidth: vocabulary_gloss.width
+                                Layout.fillWidth: true
+                                Layout.margins: 10
+
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    id: tr_col
+
+                                    Text {
+                                        text: `(${tr_item.model_name}: ${tr_item.status})`
+                                        font.pointSize: 10
+                                        font.bold: true
+                                    }
+
+                                    ScrollView {
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 200
+                                        visible: tr_item.status === "completed"
+
+                                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+
+                                        TextArea {
+                                            text: "<p>" + tr_item.response.trim().replace(/\n/g, "<br>") + "</p>"
+                                            font.pointSize: root.vocab_font_point_size
+                                            selectByMouse: true
+                                            readOnly: true
+                                            textFormat: Text.RichText
+                                            wrapMode: TextEdit.WordWrap
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }

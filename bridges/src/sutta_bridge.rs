@@ -425,7 +425,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_common_words_json(&self) -> QString {
-        QString::from(r#"["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "bhagavā", "bhagavant", "ānanda", "sāriputta", "etaṁ", "yaṁ"]"#)
+        QString::from(r#"["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "na", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "bhagavā", "bhagavant", "ānanda", "sāriputta", "etaṁ", "yaṁ"]"#)
     }
 
     pub fn save_common_words_json(&self, words_json: &QString) {

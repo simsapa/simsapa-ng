@@ -51,6 +51,7 @@ fn main() {
                         "src/sutta_bridge.rs",
                         "src/asset_manager.rs",
                         "src/storage_manager.rs",
+                        "src/prompt_manager.rs",
                         "src/api.rs",
                 ],
                 qml_files: &qml_files,
