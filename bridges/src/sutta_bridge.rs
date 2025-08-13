@@ -425,11 +425,17 @@ impl qobject::SuttaBridge {
     }
 
     pub fn get_common_words_json(&self) -> QString {
-        QString::from(r#"["a", "ca", "va", "vā", "yo", "so", "sa", "ta", "na", "ña", "taṁ", "dhamma", "viharati", "kho", "pana", "hi", "pi", "tena", "bhikkhu", "bhikkhave", "idha", "bhagavā", "bhagavant", "ānanda", "sāriputta", "etaṁ", "yaṁ"]"#)
+        let app_data = get_app_data();
+        let s = app_data.dbm.userdata.get_common_words_json();
+        QString::from(s)
     }
 
     pub fn save_common_words_json(&self, words_json: &QString) {
-        return
+        let app_data = get_app_data();
+        match app_data.dbm.userdata.save_common_words_json(&words_json.to_string()) {
+            Ok(_) => {},
+            Err(e) => error(&format!("{}", e))
+        }
     }
 
     pub fn get_gloss_history_json(&self) -> QString {

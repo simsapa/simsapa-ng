@@ -38,9 +38,22 @@ Item {
 
         function onPromptResponse (paragraph_idx: int, translation_idx: int, model_name: string, response: string) {
             let paragraph = paragraph_model.get(paragraph_idx);
-            let translations = JSON.parse(paragraph.translations_json);
-            translations[translation_idx].status = "completed";
-            translations[translation_idx].response = response;
+            let translations = [];
+            if (paragraph.translations_json) {
+                try {
+                    translations = JSON.parse(paragraph.translations_json);
+                } catch (e) {
+                    console.error("Failed to parse paragraph.translations_json:", e);
+                }
+            } else {
+                console.error(`Missing paragraph.translations_json for paragraph_idx ${paragraph_idx}, translation_idx ${translation_idx}`);
+            }
+            let item = {
+                model_name: model_name,
+                status: "completed",
+                response: response,
+            };
+            translations[translation_idx] = item;
             let translations_json = JSON.stringify(translations);
             paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
             paragraph_model_export.setProperty(paragraph_idx, "translations_json", translations_json);
@@ -61,13 +74,16 @@ Respond with only the translation of the Pāli passage.
 `
 
     property list<var> translation_models_init: [
-        { model_name: "deepseek/deepseek-r1-0528:free", enabled: true },
+        { model_name: "tngtech/deepseek-r1t2-chimera:free", enabled: true },
+        { model_name: "deepseek/deepseek-r1-0528:free", enabled: false },
         { model_name: "deepseek/deepseek-chat-v3-0324:free", enabled: false },
-        { model_name: "google/gemini-2.0-flash-exp:free", enabled: true },
-        { model_name: "google/gemma-3-27b-it:free", enabled: true },
+        { model_name: "google/gemini-2.0-flash-exp:free", enabled: false },
+        { model_name: "google/gemma-3-12b-it:free", enabled: true },
+        { model_name: "google/gemma-3-27b-it:free", enabled: false },
         { model_name: "openai/gpt-oss-20b:free", enabled: false },
-        { model_name: "meta-llama/llama-3.3-70b-instruct:free", enabled: true },
-        { model_name: "meta-llama/llama-3.1-405b-instruct:free", enabled: false },
+        { model_name: "meta-llama/llama-3.3-70b-instruct:free", enabled: false },
+        { model_name: "meta-llama/llama-3.1-405b-instruct:free", enabled: true },
+        { model_name: "mistralai/mistral-small-3.2-24b-instruct:free", enabled: true },
     ]
 
     ListModel { id: translation_models }
@@ -525,6 +541,7 @@ And what, bhikkhus, is concentration?
 
     function summary_html_to_md(text: string): string {
         text = text
+            .replace(/\*/g, "&ast;") // escape asterisks in the text
             .replace(/<i>/g, "*")
             .replace(/<\/i>/g, "*")
             .replace(/<b>/g, "**")
@@ -534,6 +551,7 @@ And what, bhikkhus, is concentration?
 
     function summary_html_to_orgmode(text: string): string {
         text = text
+            .replace(/\*/g, "&ast;") // escape asterisks in the text
             .replace(/<i>/g, "/")
             .replace(/<\/i>/g, "/")
             .replace(/<b>/g, "*")
@@ -1135,7 +1153,9 @@ ${table_rows}
                         required property string status
                         required property string response
 
-                        Layout.minimumHeight: status === "completed" ? 250 : 50
+                        Layout.minimumHeight: (!tr_item_collapse_btn.checked && status === "completed") ? 150 : 50
+                        // FIXME length and status check shouldn't be necessary, but duplicate items are showing up
+                        visible: tr_item.model_name.length != 0 && status === "completed"
 
                         ColumnLayout {
                             GroupBox {
@@ -1147,16 +1167,27 @@ ${table_rows}
                                     anchors.fill: parent
                                     id: tr_col
 
-                                    Text {
-                                        text: `(${tr_item.model_name}: ${tr_item.status})`
-                                        font.pointSize: 10
-                                        font.bold: true
+                                    RowLayout {
+                                        Button {
+                                            id: tr_item_collapse_btn
+                                            checkable: true
+                                            checked: false
+                                            icon.source: checked ? "icons/32x32/fa_plus-solid.png" : "icons/32x32/fa_minus-solid.png"
+                                            Layout.alignment: Qt.AlignLeft
+                                            Layout.preferredWidth: tr_item_collapse_btn.height
+                                        }
+
+                                        Text {
+                                            text: `(${tr_item.model_name}: ${tr_item.status})`
+                                            font.pointSize: 10
+                                            font.bold: true
+                                        }
                                     }
 
                                     ScrollView {
                                         Layout.fillWidth: true
-                                        Layout.preferredHeight: 200
-                                        visible: tr_item.status === "completed"
+                                        Layout.preferredHeight: 100
+                                        visible: !tr_item_collapse_btn.checked && tr_item.status === "completed"
 
                                         ScrollBar.vertical.policy: ScrollBar.AlwaysOn
 
@@ -1225,12 +1256,6 @@ ${table_rows}
                         root.update_all_glosses();
                     }
                 }
-            }
-
-            Label {
-                text: "<p><b>TODO:</b> The common word list is updated for<br>the current session but is not yet saved to db.</p>"
-                textFormat: Text.RichText
-                wrapMode: TextEdit.WordWrap
             }
         }
     }

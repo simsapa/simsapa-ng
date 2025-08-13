@@ -137,7 +137,7 @@ ApplicationWindow {
 
     function gloss_text(query_text: string) {
         show_sidebar_btn.checked = true;
-        tab_stack.currentIndex = 2; // gloss tab
+        rightside_tabs.setCurrentIndex(2); // gloss tab
         gloss_tab.gloss_text_input_area.text = query_text;
         gloss_tab.update_all_glosses();
     }

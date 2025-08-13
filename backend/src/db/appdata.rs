@@ -1,12 +1,14 @@
 use diesel::prelude::*;
 use regex::Regex;
-// use anyhow::{Context, Result};
+use anyhow::Result;
 
 use crate::get_app_data;
 use crate::db::appdata_models::*;
 use crate::db::DatabaseHandle;
 use crate::app_settings::AppSettings;
 use crate::logger::{info, error};
+
+static COMMON_WORDS_JSON: &'static str = include_str!("../../../assets/common-words.json");
 
 pub type AppdataDbHandle = DatabaseHandle;
 
@@ -83,6 +85,58 @@ impl AppdataDbHandle {
                 AppSettings::default()
             }
         }
+    }
+
+    pub fn get_common_words_json(&self) -> String {
+        use crate::db::appdata_schema::app_settings::dsl::*;
+
+        let json = self.do_read(|db_conn| {
+            app_settings
+                .filter(key.eq("common_words_json"))
+                .select(AppSetting::as_select())
+                .first(db_conn)
+                .optional()
+        });
+
+        match json {
+            Ok(None) => String::from(COMMON_WORDS_JSON),
+            Ok(Some(setting)) => {
+                setting.value.unwrap_or(String::from(COMMON_WORDS_JSON))
+            }
+            Err(e) => {
+                error(&format!("{}", e));
+                String::from(COMMON_WORDS_JSON)
+            }
+        }
+    }
+
+    pub fn save_common_words_json(&self, words_json: &str) -> Result<usize> {
+        use crate::db::appdata_schema::app_settings::dsl::*;
+
+        self.do_write(|db_conn| {
+            let existing_setting = app_settings
+                .filter(key.eq("common_words_json"))
+                .first::<AppSetting>(db_conn)
+                .optional()?;
+
+            match existing_setting {
+                Some(setting) => {
+                    diesel::update(app_settings.find(setting.id))
+                        .set(value.eq(Some(words_json)))
+                        .execute(db_conn)
+                }
+                None => {
+                    let new_setting = NewAppSetting {
+                        key: "common_words_json",
+                        value: Some(words_json),
+                    };
+
+                    diesel::insert_into(app_settings)
+                        .values(&new_setting)
+                        .execute(db_conn)
+                }
+            }
+        })
     }
 }
 
