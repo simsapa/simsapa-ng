@@ -7,6 +7,7 @@ pub mod dir_list;
 pub mod app_data;
 pub mod stardict_parse;
 pub mod pali_stemmer;
+pub mod pali_sort;
 pub mod logger;
 pub mod theme_colors;
 pub mod app_settings;

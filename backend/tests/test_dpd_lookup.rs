@@ -48,7 +48,7 @@ fn test_dpd_lookup_list() {
 }
 
 #[test]
-fn test_dpd_lookup_json() {
+fn test_dpd_lookup_generate_json_for_qml() {
     h::app_data_setup();
     let app_data = get_app_data();
 

@@ -158,6 +158,23 @@ impl SearchResult {
         }
     }
 
+    pub fn from_title_str(title: &str) -> SearchResult {
+        SearchResult {
+            uid: title.to_string(),
+            schema_name: "".to_string(),
+            table_name: "".to_string(),
+            source_uid: Some(title.to_string()),
+            title: title.to_string(),
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            snippet: "".to_string(),
+            page_number: None,
+            score: None,
+            rank: None,
+        }
+    }
+
     pub fn from_dpd_headword(x: &DpdHeadword, snippet: String) -> SearchResult {
         // FIXME: use UDpdWord enum
         // From dict_word_to_search_result()

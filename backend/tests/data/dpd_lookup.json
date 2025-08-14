@@ -54,6 +54,11 @@
       "summary": "<i>(nt)</i> thought; intention; idea  <b>[√cit + ta]</b>  <i>nt, from ceteti</i>"
     },
     {
+      "uid": "26563/dpd",
+      "word": "citta 1.3",
+      "summary": "<i>(nt)</i> thought moment, mental act  <b>[√cit + ta]</b>  <i>nt</i>"
+    },
+    {
       "uid": "26557/dpd",
       "word": "citta 2.1",
       "summary": "<i>(adj)</i> decorated; beautiful; adorned  <b>[√citt + a]</b>  <i>adj, from citteti</i>"
@@ -82,11 +87,6 @@
       "uid": "26562/dpd",
       "word": "citta 2.6",
       "summary": "<i>(masc)</i> name of a lunar month; March-April  <b>[√citt + a]</b>  <i>masc, from citteti</i>"
-    },
-    {
-      "uid": "26563/dpd",
-      "word": "citta 1.3",
-      "summary": "<i>(nt)</i> thought moment, mental act  <b>[√cit + ta]</b>  <i>nt</i>"
     }
   ],
   "dhammehi": [
@@ -190,6 +190,11 @@
       "summary": "<i>(pron)</i> this; this man; this thing (object)  <b>[eta + aṁ]</b>  <i>pron, masc fem & nt acc sg of eta</i>"
     },
     {
+      "uid": "17970/dpd",
+      "word": "enta",
+      "summary": "<i>(prp)</i> coming  <b>[e + nta]</b>  <i>prp of eti</i>"
+    },
+    {
       "uid": "17847/dpd",
       "word": "eta",
       "summary": "<i>(pron)</i> this   <i>pron, base</i>"
@@ -203,11 +208,6 @@
       "uid": "17915/dpd",
       "word": "eti 2",
       "summary": "<i>(pr)</i> goes (to)  <b>[e + ti]</b>  <i>pr</i>"
-    },
-    {
-      "uid": "17970/dpd",
-      "word": "enta",
-      "summary": "<i>(prp)</i> coming  <b>[e + nta]</b>  <i>prp of eti</i>"
     },
     {
       "uid": "80558/dpd",
@@ -538,9 +538,9 @@
       "summary": "<i>(suffix)</i> (gram) by; in x ways   <i>suffix, adv</i>"
     },
     {
-      "uid": "29188/dpd",
-      "word": "ta 1.1",
-      "summary": "<i>(pron)</i> that   <i>pron, base</i>"
+      "uid": "56236/dpd",
+      "word": "sa 1.1",
+      "summary": "<i>(letter)</i> (gram) letter s; 36th letter of the alphabet; dental consonant   <i>letter, masc</i>"
     },
     {
       "uid": "56233/dpd",
@@ -553,9 +553,9 @@
       "summary": "<i>(adj)</i> self-; personal-   <i>adj, in comps, reflx</i>"
     },
     {
-      "uid": "56236/dpd",
-      "word": "sa 1.1",
-      "summary": "<i>(letter)</i> (gram) letter s; 36th letter of the alphabet; dental consonant   <i>letter, masc</i>"
+      "uid": "29188/dpd",
+      "word": "ta 1.1",
+      "summary": "<i>(pron)</i> that   <i>pron, base</i>"
     }
   ],
   "sāriputta": [
@@ -599,14 +599,14 @@
       "summary": "<i>(pr)</i> becomes fully ordained; takes higher ordination  <b>[upa + saṁ + pajja + ti]</b>  <i>pr</i>"
     },
     {
-      "uid": "16128/dpd",
-      "word": "upasampajji",
-      "summary": "<i>(aor)</i> attained, entered on, became fully ordained  <b>[upa + saṁ + pajja +]</b>  <i>aor of upasampajjati</i>"
-    },
-    {
       "uid": "80055/dpd",
       "word": "upasampajjati 2",
       "summary": "<i>(pr)</i> attains, enters  <b>[upa + saṁ + pajja + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "16128/dpd",
+      "word": "upasampajji",
+      "summary": "<i>(aor)</i> attained, entered on, became fully ordained  <b>[upa + saṁ + pajja +]</b>  <i>aor of upasampajjati</i>"
     }
   ],
   "upaṭṭhitassatino": [
@@ -688,14 +688,14 @@
       "summary": "<i>(ind)</i> because; because of; since; when  <b>[ya + aṁ]</b>  <i>ind, adv, acc sg of ya</i>"
     },
     {
-      "uid": "53444/dpd",
-      "word": "ya 2.1",
-      "summary": "<i>(pron)</i> whoever; whatever; whichever   <i>pron, base</i>"
-    },
-    {
       "uid": "53445/dpd",
       "word": "ya 1.1",
       "summary": "<i>(letter)</i> (gram) letter y; 34th letter of the alphabet; palatal semi-vowel   <i>letter, masc</i>"
+    },
+    {
+      "uid": "53444/dpd",
+      "word": "ya 2.1",
+      "summary": "<i>(pron)</i> whoever; whatever; whichever   <i>pron, base</i>"
     },
     {
       "uid": "53446/dpd",
@@ -715,14 +715,14 @@
       "summary": "<i>(pron)</i> whoever; whatever; whichever   <i>pron, masc nom sg of ya</i>"
     },
     {
-      "uid": "53444/dpd",
-      "word": "ya 2.1",
-      "summary": "<i>(pron)</i> whoever; whatever; whichever   <i>pron, base</i>"
-    },
-    {
       "uid": "53445/dpd",
       "word": "ya 1.1",
       "summary": "<i>(letter)</i> (gram) letter y; 34th letter of the alphabet; palatal semi-vowel   <i>letter, masc</i>"
+    },
+    {
+      "uid": "53444/dpd",
+      "word": "ya 2.1",
+      "summary": "<i>(pron)</i> whoever; whatever; whichever   <i>pron, base</i>"
     },
     {
       "uid": "53446/dpd",

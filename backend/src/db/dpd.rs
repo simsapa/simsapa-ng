@@ -15,6 +15,7 @@ use crate::db::DatabaseHandle;
 use crate::{get_app_data, get_create_simsapa_app_assets_path};
 use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text};
 use crate::pali_stemmer::pali_stem;
+use crate::pali_sort::{pali_sort_key, sort_search_results_natural};
 use crate::types::SearchResult;
 use crate::logger::{info, error};
 
@@ -177,45 +178,67 @@ impl DpdDbHandle {
 
         let query_text = normalize_query_text(Some(query_text_orig.to_string()));
 
-        let mut res_words: Vec<UDpdWord> = Vec::new();
+        // Collect word results in groups, with more "obvious" results grouped first.
+        // Sort within groups by "natural" order to get dict numbers right,
+        // but don't sort the final list to not lose the priority groups.
+
+        let mut results: Vec<SearchResult> = Vec::new();
+        let mut results_uids: Vec<String> = Vec::new();
 
         // Query text may be an uid or an id number.
         // DpdHeadword uid is id_number/dpd, DpdRoot uid is root/dpd.
         if query_text.ends_with("/dpd") || query_text.chars().all(char::is_numeric) {
-           let ref_str = query_text.replace("/dpd", "");
-           // If the remaining reference string is numeric, it is a DpdHeadword
-           if ref_str.chars().all(char::is_numeric) {
-           if let Ok(id_val) = ref_str.parse::<i32>() {
-           let r_opt = dpd_headwords::table
-               .filter(dpd_headwords::id.eq(id_val))
+            let mut res_words: Vec<UDpdWord> = Vec::new();
+            let ref_str = query_text.replace("/dpd", "");
+            // If the remaining reference string is numeric, it is a DpdHeadword
+            if ref_str.chars().all(char::is_numeric) {
+                if let Ok(id_val) = ref_str.parse::<i32>() {
+                    let r_opt = dpd_headwords::table
+                        .filter(dpd_headwords::id.eq(id_val))
                         .first::<DpdHeadword>(db_conn)
-               .optional()?;
-           if let Some(r) = r_opt {
-           res_words.push(UDpdWord::Headword(r));
+                        .optional()?;
+                    if let Some(r) = r_opt {
+                        res_words.push(UDpdWord::Headword(r));
                     }
                 }
             } else {
-           // Else it is a DpdRoot
-           let r_opt = dpd_roots::table
-               .filter(dpd_roots::uid.eq(&query_text))
+                // Else it is a DpdRoot
+                let r_opt = dpd_roots::table
+                    .filter(dpd_roots::uid.eq(&query_text))
                     .first::<DpdRoot>(db_conn)
-               .optional()?;
-           if let Some(r) = r_opt {
-           res_words.push(UDpdWord::Root(r));
+                    .optional()?;
+                if let Some(r) = r_opt {
+                    res_words.push(UDpdWord::Root(r));
                 }
             }
+
+            let mut res = parse_words(res_words, do_pali_sort);
+            results_uids.extend(res.iter().map(|i| i.uid.clone()));
+
+            sort_search_results_natural(&mut res);
+            results.extend(res);
         }
 
-        if !res_words.is_empty() {
-           return Ok(parse_words(res_words, do_pali_sort));
+        if !results.is_empty() {
+            return Ok(results);
         }
 
         // Word exact match.
-        let r = dpd_headwords::table
-            .filter(dpd_headwords::lemma_clean.eq(&query_text)
-                    .or(dpd_headwords::word_ascii.eq(&query_text)))
-            .load::<DpdHeadword>(db_conn)?;
-        res_words.extend(r.into_iter().map(UDpdWord::Headword));
+        {
+            let r = dpd_headwords::table
+                .filter(dpd_headwords::lemma_clean.eq(&query_text)
+                        .or(dpd_headwords::word_ascii.eq(&query_text)))
+                .load::<DpdHeadword>(db_conn)?;
+
+            let mut res_words: Vec<UDpdWord> = Vec::new();
+            res_words.extend(r.into_iter().map(UDpdWord::Headword));
+
+            let mut res = parse_words(res_words, do_pali_sort);
+            res.retain(|i| !results_uids.contains(&i.uid));
+            results_uids.extend(res.iter().map(|i| i.uid.clone()));
+            sort_search_results_natural(&mut res);
+            results.extend(res);
+        }
 
         // For two OR conditions on indexed columns, SQLite can efficiently use the indexes to combine the results.
         // For three OR conditions, it is recommended to split the queries.
@@ -233,69 +256,134 @@ impl DpdDbHandle {
         roots.extend(dpd_roots::table.filter(dpd_roots::root_clean.eq(&query_text)).load::<DpdRoot>(db_conn)?);
         roots.extend(dpd_roots::table.filter(dpd_roots::root_no_sign.eq(&query_text)).load::<DpdRoot>(db_conn)?);
         roots.extend(dpd_roots::table.filter(dpd_roots::word_ascii.eq(&query_text)).load::<DpdRoot>(db_conn)?);
-        res_words.extend(roots.into_iter().map(UDpdWord::Root));
+
+        {
+            let mut res_words: Vec<UDpdWord> = Vec::new();
+            res_words.extend(roots.into_iter().map(UDpdWord::Root));
+
+            let mut res = parse_words(res_words, do_pali_sort);
+            res.retain(|i| !results_uids.contains(&i.uid));
+            results_uids.extend(res.iter().map(|i| i.uid.clone()));
+            sort_search_results_natural(&mut res);
+            results.extend(res);
+        }
 
         // Add matches from DPD inflections_to_headwords, regardless of earlier results.
         // This will include cases such as:
         // - assa: gen. of ima
         // - assa: imp 2nd sg of assati
         let r = self.inflection_to_pali_words(&query_text)?;
-        res_words.extend(r.into_iter().map(UDpdWord::Headword));
+        {
+            let mut res_words: Vec<UDpdWord> = Vec::new();
+            res_words.extend(r.into_iter().map(UDpdWord::Headword));
 
-        if res_words.is_empty() {
-           // Stem form exact match.
-           let stem = pali_stem(&query_text, false);
-           let r = dpd_headwords::table
-               .filter(dpd_headwords::stem.eq(&stem))
-                .load::<DpdHeadword>(db_conn)?;
-           res_words.extend(r.into_iter().map(UDpdWord::Headword));
+            let mut res = parse_words(res_words, do_pali_sort);
+            res.retain(|i| !results_uids.contains(&i.uid));
+            results_uids.extend(res.iter().map(|i| i.uid.clone()));
+            sort_search_results_natural(&mut res);
+            results.extend(res);
         }
 
-        if res_words.is_empty() {
-           // If the query contained multiple words, remove spaces to find compound forms.
-           if query_text.contains(' ') {
-           let nospace_query = query_text.replace(' ', "");
-           let r = dpd_headwords::table
-               .filter(dpd_headwords::lemma_clean.eq(&nospace_query)
-                            .or(dpd_headwords::word_ascii.eq(&nospace_query)))
-                    .load::<DpdHeadword>(db_conn)?;
-           res_words.extend(r.into_iter().map(UDpdWord::Headword));
+        if results.is_empty() {
+            // Stem form exact match.
+            let stem = pali_stem(&query_text, false);
+            let r = dpd_headwords::table
+                .filter(dpd_headwords::stem.eq(&stem))
+                .load::<DpdHeadword>(db_conn)?;
+            {
+                let mut res_words: Vec<UDpdWord> = Vec::new();
+                res_words.extend(r.into_iter().map(UDpdWord::Headword));
+
+                let mut res = parse_words(res_words, do_pali_sort);
+                res.retain(|i| !results_uids.contains(&i.uid));
+                results_uids.extend(res.iter().map(|i| i.uid.clone()));
+                sort_search_results_natural(&mut res);
+                results.extend(res);
             }
         }
 
-        if res_words.is_empty() {
-           // i2h result doesn't exist.
-           // Lookup query text in dpd_deconstructor.
-           let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only)?;
-           res_words.extend(r.into_iter().map(UDpdWord::Headword));
+        if results.is_empty() {
+            // If the query contained multiple words, remove spaces to find compound forms.
+            if query_text.contains(' ') {
+                let nospace_query = query_text.replace(' ', "");
+                let r = dpd_headwords::table
+                    .filter(dpd_headwords::lemma_clean.eq(&nospace_query)
+                            .or(dpd_headwords::word_ascii.eq(&nospace_query)))
+                    .load::<DpdHeadword>(db_conn)?;
+                {
+                    let mut res_words: Vec<UDpdWord> = Vec::new();
+                    res_words.extend(r.into_iter().map(UDpdWord::Headword));
+
+                    let mut res = parse_words(res_words, do_pali_sort);
+                    res.retain(|i| !results_uids.contains(&i.uid));
+                    results_uids.extend(res.iter().map(|i| i.uid.clone()));
+                    sort_search_results_natural(&mut res);
+                    results.extend(res);
+                }
+            }
         }
 
-        if res_words.is_empty() {
-           // - no exact match in dpd_headwords or dpd_roots
-           // - not in i2h
-           // - not in deconstructor.
-           //
-           // Lookup dpd_headwords which start with the query_text.
+        if results.is_empty() {
+            // i2h result doesn't exist.
+            // Lookup query text in dpd_deconstructor.
+            let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only)?;
+            {
+                let mut res_words: Vec<UDpdWord> = Vec::new();
+                res_words.extend(r.into_iter().map(UDpdWord::Headword));
 
-           // Word starts with.
-           let r = dpd_headwords::table
-               .filter(dpd_headwords::lemma_clean.like(format!("{}%", query_text))
+                let mut res = parse_words(res_words, do_pali_sort);
+                res.retain(|i| !results_uids.contains(&i.uid));
+                results_uids.extend(res.iter().map(|i| i.uid.clone()));
+                sort_search_results_natural(&mut res);
+                results.extend(res);
+            }
+        }
+
+        if results.is_empty() {
+            // - no exact match in dpd_headwords or dpd_roots
+            // - not in i2h
+            // - not in deconstructor.
+            //
+            // Lookup dpd_headwords which start with the query_text.
+
+            // Word starts with.
+            let r = dpd_headwords::table
+                .filter(dpd_headwords::lemma_clean.like(format!("{}%", query_text))
                         .or(dpd_headwords::word_ascii.like(format!("{}%", query_text))))
                 .load::<DpdHeadword>(db_conn)?;
-           res_words.extend(r.into_iter().map(UDpdWord::Headword));
 
-           if res_words.is_empty() {
-           // Stem form starts with.
-           let stem = pali_stem(&query_text, false);
-           let r = dpd_headwords::table
-               .filter(dpd_headwords::stem.like(format!("{}%", stem)))
+            {
+                let mut res_words: Vec<UDpdWord> = Vec::new();
+                res_words.extend(r.into_iter().map(UDpdWord::Headword));
+
+                let mut res = parse_words(res_words, do_pali_sort);
+                res.retain(|i| !results_uids.contains(&i.uid));
+                results_uids.extend(res.iter().map(|i| i.uid.clone()));
+                sort_search_results_natural(&mut res);
+                results.extend(res);
+            }
+
+            if results.is_empty() {
+                // Stem form starts with.
+                let stem = pali_stem(&query_text, false);
+                let r = dpd_headwords::table
+                    .filter(dpd_headwords::stem.like(format!("{}%", stem)))
                     .load::<DpdHeadword>(db_conn)?;
-           res_words.extend(r.into_iter().map(UDpdWord::Headword));
+                {
+                    let mut res_words: Vec<UDpdWord> = Vec::new();
+                    res_words.extend(r.into_iter().map(UDpdWord::Headword));
+
+                    let mut res = parse_words(res_words, do_pali_sort);
+                    res.retain(|i| !results_uids.contains(&i.uid));
+                    results_uids.extend(res.iter().map(|i| i.uid.clone()));
+                    sort_search_results_natural(&mut res);
+                    results.extend(res);
+                }
             }
         }
 
         info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(parse_words(res_words, do_pali_sort))
+        Ok(results)
     }
 
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
@@ -327,7 +415,7 @@ impl DpdDbHandle {
 /// Parse word models into search results, deduplicating and optional sorting
 fn parse_words(
     words_res: Vec<UDpdWord>,
-    _do_pali_sort: bool,
+    do_pali_sort: bool,
 ) -> Vec<SearchResult> {
     let mut uniq_pali_keys: HashSet<String> = HashSet::new();
     let mut uniq_words: Vec<UDpdWord> = Vec::new();
@@ -338,10 +426,9 @@ fn parse_words(
         }
     }
 
-    // FIXME implement sorting
-    // if do_pali_sort {
-    //     uniq_words.sort_by_key(|w| pali_sort_key(w.word()));
-    // }
+    if do_pali_sort {
+        uniq_words.sort_by_key(|w| pali_sort_key(&w.word()));
+    }
 
     let mut res_page: Vec<SearchResult> = Vec::new();
 
