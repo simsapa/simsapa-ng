@@ -21,7 +21,7 @@ Item {
 
     property alias gloss_text_input_area: gloss_text_input
 
-    required property var handle_open_dict_tab_fn
+    property var handle_open_dict_tab_fn
 
     property string text_color: root.is_dark ? "#F0F0F0" : "#000000"
     property string bg_color: root.is_dark ? "#23272E" : "#FAE6B2"
@@ -270,21 +270,13 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         root.load_history();
     }
 
-    function extract_words(text: string): list<string> {
-        // NOTE: QML regex text.match(/\b\w+\b/g) doesn't match unicode and
-        // splits Pāli words: samādhi → ['sam', 'dhi']
-        // Hence simply splitting on space.
-        // Need to filter empty strings, spiltting "" with " " results in [""].
-        return text.replace(/\n/g, ' ').split(' ').filter(i => i.length != 0) || [];
-    }
-
     function extract_words_with_context(text: string): list<var> {
         var sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
         var words_with_context = [];
 
         for (var i = 0; i < sentences.length; i++) {
             var sentence = sentences[i].trim();
-            var words = root.extract_words(sentence);
+            var words = sb.extract_words(sentence);
 
             for (var j = 0; j < words.length; j++) {
                 words_with_context.push({
@@ -304,13 +296,21 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return stem.replace(/\s+\d+(\.\d+)?$/, '').toLowerCase();
     }
 
+    function clean_word(word: string): string {
+        // NOTE: QML \w doesn't include accented Pāli letters.
+        return word
+            .toLowerCase()
+            .replace(/^[^\wāīūṃṁṅñṭḍṇḷṛṣś]+/, '')
+            .replace(/[^\wāīūṃṁṅñṭḍṇḷṛṣś]+$/, '');
+    }
+
     function is_common_word(stem: string): bool {
         return root.common_words.includes(clean_stem(stem));
     }
 
     function process_word(word: string, lookup_results, sentence: string): var {
         var word_data = {
-            original_word: word,
+            original_word: clean_word(word),
             results: lookup_results,
             selected_index: 0,
             stem: lookup_results[0].word,
@@ -384,7 +384,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     // }
 
     function process_paragraph_for_glossing(paragraph_text, paragraph_shown_stems, global_stems, check_global) {
-        var words = root.extract_words(paragraph_text);
+        var words = sb.extract_words(paragraph_text);
         // console.log(words);
         var glossed_words = [];
 

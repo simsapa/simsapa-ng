@@ -14,6 +14,7 @@ use simsapa_backend::theme_colors::ThemeColors;
 use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
+use simsapa_backend::helpers::{extract_words, normalize_query_text};
 
 use simsapa_backend::logger::{info, error};
 
@@ -57,6 +58,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn results_page(self: &SuttaBridge, query: &QString, page_num: usize) -> QString;
+
+        #[qinvokable]
+        fn extract_words(self: &SuttaBridge, text: &QString) -> QStringList;
+
+        #[qinvokable]
+        fn normalize_query_text(self: &SuttaBridge, text: &QString) -> QString;
 
         #[qinvokable]
         fn dpd_deconstructor_list(self: &SuttaBridge, query: &QString) -> QStringList;
@@ -241,6 +248,19 @@ impl qobject::SuttaBridge {
 
         let json = serde_json::to_string(&results_page).unwrap_or_default();
         QString::from(json)
+    }
+
+    pub fn extract_words(&self, text: &QString) -> QStringList {
+        let words = extract_words(&text.to_string());
+        let mut res = QStringList::default();
+        for i in words {
+            res.append(QString::from(i));
+        }
+        res
+    }
+
+    pub fn normalize_query_text(&self, text: &QString) -> QString {
+        QString::from(normalize_query_text(Some(text.to_string())))
     }
 
     pub fn dpd_deconstructor_list(&self, query: &QString) -> QStringList {

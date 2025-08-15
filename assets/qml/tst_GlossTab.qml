@@ -164,5 +164,42 @@ Item {
             }
             compare(n, 1);
         }
+
+        function test_clean_word() {
+            compare(gloss_tab.clean_word("Hello"), "hello");
+            compare(gloss_tab.clean_word("!!!Hello!!!"), "hello");
+            compare(gloss_tab.clean_word(" Word123 "), "word123");
+            compare(gloss_tab.clean_word("@#$test@#$"), "test");
+            compare(gloss_tab.clean_word(""), "");
+            compare(gloss_tab.clean_word("!!!"), "");
+        }
+
+        function test_clean_word_pali_examples() {
+            let test_words = [
+                "‘sakkomi",
+                "gantun’",
+                "sampannasīlā,",
+                "(Yathā",
+                "vitthāretabbaṁ.)",
+                "anāsavaṁ …",
+            ];
+
+            let cleaned_words = [];
+
+            for (var i = 0; i < test_words.length; i++) {
+                cleaned_words.push(gloss_tab.clean_word(test_words[i]));
+            }
+
+            let expected_words = [
+                "sakkomi",
+                "gantun",
+                "sampannasīlā",
+                "yathā",
+                "vitthāretabbaṁ",
+                "anāsavaṁ",
+            ];
+
+            compare(cleaned_words.join(" "), expected_words.join(" "));
+        }
     }
 }

@@ -1,6 +1,6 @@
 use std::fs;
 use std::path::PathBuf;
-use std::collections::BTreeMap;
+use std::collections::{HashMap, BTreeMap};
 
 use simsapa_backend::get_app_data;
 use simsapa_backend::helpers::{extract_words, normalize_query_text};
@@ -48,31 +48,56 @@ fn test_dpd_lookup_list() {
 }
 
 #[test]
-fn test_dpd_lookup_generate_json_for_qml() {
+fn test_dpd_lookup_generate_json() {
     h::app_data_setup();
     let app_data = get_app_data();
 
-    let text = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ. So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ vivekajaṁ pītisukhaṁ paṭhamaṁ jhānaṁ upasampajja viharati. / Saddhassa hi, sāriputta, ariyasāvakassa āraddhavīriyassa upaṭṭhitassatino etaṁ pāṭikaṅkhaṁ yaṁ vossaggārammaṇaṁ karitvā labhissati samādhiṁ, labhissati cittassa ekaggataṁ. Yo hissa, sāriputta, samādhi tadassa samādhindriyaṁ.";
+    let mut texts: HashMap<&str, &str> = HashMap::new();
+    texts.insert("dpd_lookup"                         , "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ. So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ vivekajaṁ pītisukhaṁ paṭhamaṁ jhānaṁ upasampajja viharati. / Saddhassa hi, sāriputta, ariyasāvakassa āraddhavīriyassa upaṭṭhitassatino etaṁ pāṭikaṅkhaṁ yaṁ vossaggārammaṇaṁ karitvā labhissati samādhiṁ, labhissati cittassa ekaggataṁ. Yo hissa, sāriputta, samādhi tadassa samādhindriyaṁ.");
+    texts.insert("yam-janna"                          , "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti.");
+    texts.insert("anumattesu-vajjesu"                 , "aṇumattesu vajjesu bhayadassāvino, samādāya sikkhatha sikkhāpadesū’ti");
+    texts.insert("anasavanca-vo"                      , "“Anāsavañca vo, bhikkhave, desessāmi anāsavagāmiñca maggaṁ. Taṁ suṇātha. Katamañca, bhikkhave, anāsavaṁ …pe….");
+    texts.insert("suriyassa-bhikkhave"                , "“Sūriyassa, bhikkhave, udayato");
+    texts.insert("yatha-asankhatam"                   , "(Yathā asaṅkhataṁ tathā vitthāretabbaṁ.)");
+    texts.insert("parens-48.10-katamanca-bhikkhave"   , "(SN 48.10) Katamañca, bhikkhave, samādhindriyaṁ?");
+    texts.insert("brackets-48.10-katamanca-bhikkhave" , "[SN 48:10] Katamañca, bhikkhave, samādhindriyaṁ?");
+    texts.insert("te-jananti"                         , "Te jānanti atthaññe āvāsikā bhikkhū");
 
-    // Use a BTreeMap for consistent key sorting across test runs.
-    let mut lookup_data: BTreeMap<String, Vec<LookupResult>> = BTreeMap::new();
+    texts.insert("idha-nandati", r#"
+18.
 
-    for word in extract_words(text) {
-        if word.len() <= 1 {
-            continue;
+idha nandati pecca nandati, katapuñño ubhayattha nandati.
+
+‘‘puññaṁ me kata’’nti nandati, bhiyyo nandati suggatiṁ gato..
+"#);
+
+    texts.insert("gataddhino", r#"
+Gataddhino visokassa,
+vippamuttassa sabbadhi;
+Sabbaganthappahīnassa,
+pariḷāho na vijjati.
+"#);
+
+    for (file_name, quote) in texts.into_iter() {
+        // Use a BTreeMap for consistent key sorting across test runs.
+        let mut lookup_data: BTreeMap<String, Vec<LookupResult>> = BTreeMap::new();
+
+        for word in extract_words(quote) {
+            if word.len() <= 1 {
+                continue;
+            }
+            let word = normalize_query_text(Some(word.to_string()));
+            let res = app_data.dbm.dpd.dpd_lookup(&word, false, true).unwrap();
+            lookup_data.insert(word, LookupResult::from_search_results(&res));
         }
-        let word = normalize_query_text(Some(word.to_string()));
-        let res = app_data.dbm.dpd.dpd_lookup(&word, false, true).unwrap();
-        lookup_data.insert(word, LookupResult::from_search_results(&res));
+
+        let json = serde_json::to_string_pretty(&lookup_data).expect("Can't encode JSON");
+
+        let path = PathBuf::from(format!("tests/data/{}.json", file_name));
+        // fs::write(&path, json.clone()).expect("Unable to write file!");
+
+        let expected_json = fs::read_to_string(&path).expect("Failed to read file");
+
+        assert_eq!(json, expected_json);
     }
-
-    let json = serde_json::to_string_pretty(&lookup_data).expect("Can't encode JSON");
-
-    // fs::write(PathBuf::from("tests/data/dpd_lookup.json"),
-    //           json.clone()).expect("Unable to write file!");
-
-    let expected_json = fs::read_to_string(PathBuf::from("tests/data/dpd_lookup.json"))
-        .expect("Failed to read file");
-
-    assert_eq!(json, expected_json);
 }

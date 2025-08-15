@@ -1,0 +1,133 @@
+{
+  "gataddhino": [
+    {
+      "uid": "24195/dpd",
+      "word": "gataddhī",
+      "summary": "<i>(adj)</i> who has walked the path; who has completed the journey  <b>[gata + addha + ī], [gataddha + ī]</b>  <i>adj, comp, from gataddha</i>"
+    }
+  ],
+  "na": [
+    {
+      "uid": "35345/dpd",
+      "word": "na 1",
+      "summary": "<i>(ind)</i> no; not; neither; nor   <i>ind</i>"
+    },
+    {
+      "uid": "35346/dpd",
+      "word": "na 2",
+      "summary": "<i>(ind)</i> (adds a question mark) surely?; does one not?   <i>ind, interr</i>"
+    },
+    {
+      "uid": "35347/dpd",
+      "word": "na 3",
+      "summary": "<i>(prefix)</i> not   <i>prefix, in comps</i>"
+    },
+    {
+      "uid": "35348/dpd",
+      "word": "na 4",
+      "summary": "<i>(masc)</i> (gram) negative prefix na   <i>masc, prefix</i>"
+    },
+    {
+      "uid": "36020/dpd",
+      "word": "nā",
+      "summary": "<i>(cs)</i> (gram) nā; conjugational sign of group 5 kiyādigaṇa verbs   <i>cs, masc</i>"
+    },
+    {
+      "uid": "28831/dpd",
+      "word": "ña 1.1",
+      "summary": "<i>(ind)</i> 10th item in a numerical list   <i>ind</i>"
+    },
+    {
+      "uid": "28832/dpd",
+      "word": "ña 2.1",
+      "summary": "<i>(adj)</i> knowing; who knows; familiar with  <b>[√ñā + a]</b>  <i>adj, in comps</i>"
+    },
+    {
+      "uid": "28853/dpd",
+      "word": "ñā",
+      "summary": "<i>(root)</i> (gram) √ñā (know)  <b>[√ñā + ā]</b>  <i>root, masc</i>"
+    },
+    {
+      "uid": "78576/dpd",
+      "word": "ṅa",
+      "summary": "<i>(ind)</i> 5th item in a numerical list   <i>ind</i>"
+    },
+    {
+      "uid": "29174/dpd",
+      "word": "ṇa",
+      "summary": "<i>(masc)</i> (gram) indicatory letter ṇ; sign indicating that vuddhi takes place   <i>masc, prefix</i>"
+    },
+    {
+      "uid": "29180/dpd",
+      "word": "ṇā",
+      "summary": "<i>(cs)</i> (gram) ṇā; conjugational sign of group 4 svādigaṇa verbs   <i>cs, masc</i>"
+    },
+    {
+      "uid": "√ñā/dpd",
+      "word": "√ñā",
+      "summary": "<b>√ñā</b> know <b>·</b> <i>√ñā 5 kiyādigaṇa + nā (know)</i>"
+    }
+  ],
+  "pariḷāho": [
+    {
+      "uid": "44386/dpd",
+      "word": "pariḷāha 1",
+      "summary": "<i>(masc)</i> affliction (of); discomfort (of); distress (in)  <b>[pari + √ḍah > ḷah > ḷāh + *a]</b>  <i>masc, from pariḍahati</i>"
+    },
+    {
+      "uid": "44387/dpd",
+      "word": "pariḷāha 2",
+      "summary": "<i>(masc)</i> fever (for); burning passion (for); strong desire (for)  <b>[pari + √ḍah > ḷah > ḷāh + *a]</b>  <i>masc, from pariḍahati</i>"
+    },
+    {
+      "uid": "44388/dpd",
+      "word": "pariḷāha 3",
+      "summary": "<i>(masc)</i> humidity; sweating  <b>[pari + √ḍah > ḷah > ḷāh + *a]</b>  <i>masc, from pariḍahati</i>"
+    }
+  ],
+  "sabbadhi": [
+    {
+      "uid": "58875/dpd",
+      "word": "sabbadhi",
+      "summary": "<i>(ind)</i> everywhere; in every way; in all respects  <b>[sabba + dhi]</b>  <i>ind, adv, from sabba</i>"
+    },
+    {
+      "uid": "75496/dpd",
+      "word": "sabbadhī",
+      "summary": "<i>(ind)</i> everywhere; in every way; in all respects  <b>[sabba + dhi > dhī]</b>  <i>ind, adv, from sabba, irreg form of sabbadhi</i>"
+    }
+  ],
+  "sabbaganthappahīnassa": [
+    {
+      "uid": "58806/dpd",
+      "word": "sabbaganthappahīna",
+      "summary": "<i>(adj)</i> eliminated all ties; abandoned all bonds  <b>[sabbagantha + pahīna]</b>  <i>adj, comp</i>"
+    }
+  ],
+  "vijjati": [
+    {
+      "uid": "67615/dpd",
+      "word": "vijjati 1",
+      "summary": "<i>(pr)</i> exists (in); is found (in); is present (in)  <b>[vijja + ti]</b>  <i>pr, pass of vindati</i>"
+    },
+    {
+      "uid": "67616/dpd",
+      "word": "vijjati 2",
+      "summary": "<i>(pr)</i> is possible; is plausible  <b>[vijja + ti]</b>  <i>pr, pass of vindati</i>"
+    }
+  ],
+  "vippamuttassa": [
+    {
+      "uid": "68475/dpd",
+      "word": "vippamutta",
+      "summary": "<i>(pp)</i> freed (from); released (from); saved (from)  <b>[vi + pa + √muc + ta]</b>  <i>pp of vipamuccati</i>"
+    }
+  ],
+  "visokassa": [
+    {
+      "uid": "69357/dpd",
+      "word": "visoka",
+      "summary": "<i>(adj)</i> without grief; sorrow-free  <b>[vi + soka]</b>  <i>adj, comp, from soka</i>"
+    }
+  ]
+}

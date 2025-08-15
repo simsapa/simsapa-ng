@@ -76,6 +76,10 @@ Item {
         return text.replace("ṃ", "ṁ");
     }
 
+    function extract_words(text: string): list<string> {
+        return text.replace(/\n/g, ' ').split(' ').filter(i => i.length != 0) || [];
+    }
+
     function normalize_query_text(text: string): string {
         text = consistent_niggahita(text);
         if (text.length == 0) {
@@ -125,7 +129,7 @@ Item {
     }
 
     function get_common_words_json(): string {
-        return `["a", "ānanda", "ariya", "bhagavā", "bhagavant", "bhikkhave", "bhikkhu", "bhikkhū", "ca", "cattāro", "ce", "dhamma", "dukkha", "dve", "eka", "eko", "etaṁ", "eva", "hi", "honti", "idaṁ", "idha", "kho", "magga", "na", "nirodha", "pana", "pañca", "pi", "sa", "samudaya", "sāriputta", "so", "ta", "taṁ", "tayo", "te", "tena", "ti", "va", "vā", "viharati", "yaṁ", "yo"]`;
+        return `["a", "ānanda", "ariya", "bhagavā", "bhagavant", "bhikkhave", "bhikkhu", "bhikkhū", "ca", "cattāro", "ce", "dhamma", "dukkha", "dve", "eka", "eko", "etaṁ", "eva", "hi", "honti", "idaṁ", "idha", "iti", "kho", "magga", "na", "nirodha", "pana", "pañca", "pe", "pi", "sa", "samudaya", "sāriputta", "so", "ta", "taṁ", "tayo", "te", "tena", "ti", "va", "vā", "viharati", "yaṁ", "yo"]`;
     }
 
     function save_common_words_json(words_json: string) {

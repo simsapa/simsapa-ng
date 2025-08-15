@@ -1,0 +1,53 @@
+{
+  "bhikkhave": [
+    {
+      "uid": "49868/dpd",
+      "word": "bhikkhave",
+      "summary": "<i>(masc)</i> monks  <b>[√bhikkh + u + ave], [bhikkhu + ave]</b>  <i>masc, voc pl of bhikkhu</i>"
+    },
+    {
+      "uid": "49885/dpd",
+      "word": "bhikkhu",
+      "summary": "<i>(masc)</i> monk; monastic; mendicant; fully ordained monk  <b>[√bhikkh + u]</b>  <i>masc, from bhikkhati</i>"
+    }
+  ],
+  "sūriyassa": [
+    {
+      "uid": "64759/dpd",
+      "word": "sūriya 1",
+      "summary": "<i>(masc)</i> sun  <b>[√sur > sūr + *a + iya], [sūra + iya]</b>  <i>masc, from sūra</i>"
+    },
+    {
+      "uid": "64760/dpd",
+      "word": "sūriya 2",
+      "summary": "<i>(masc)</i> name of the sun deity  <b>[√sur > sūr + *a + iya], [sūra + iya]</b>  <i>masc, from sūra</i>"
+    },
+    {
+      "uid": "80308/dpd",
+      "word": "sūriya 3",
+      "summary": "<i>(nt)</i> heroism; valour; courage; (comm) fearlessness  <b>[√sur > sūr + *a + iya], [sūra + iya]</b>  <i>nt, abstr, from sūra</i>"
+    }
+  ],
+  "udayato": [
+    {
+      "uid": "14967/dpd",
+      "word": "udaya 1",
+      "summary": "<i>(masc)</i> rising; coming; up; appearance  <b>[ud + √i > ay + *a]</b>  <i>masc, from udeti</i>"
+    },
+    {
+      "uid": "14968/dpd",
+      "word": "udaya 2",
+      "summary": "<i>(masc)</i> income; profit; revenue  <b>[ud + √i > ay + *a]</b>  <i>masc, from udeti</i>"
+    },
+    {
+      "uid": "14969/dpd",
+      "word": "udaya 3",
+      "summary": "<i>(masc)</i> name of a Brahman ascetic  <b>[ud + √i > ay + *a]</b>  <i>masc, from udeti</i>"
+    },
+    {
+      "uid": "14977/dpd",
+      "word": "udayanta",
+      "summary": "<i>(prp)</i> rising; coming up  <b>[ud + aya + nta]</b>  <i>prp of udayati</i>"
+    }
+  ]
+}

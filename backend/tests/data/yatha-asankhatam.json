@@ -1,0 +1,55 @@
+{
+  "asaṅkhataṁ": [
+    {
+      "uid": "9320/dpd",
+      "word": "asaṅkhata",
+      "summary": "<i>(pp)</i> unconditioned; not created; unformed; unconstructed; epithet of Nibbāna; (comm) not made  <b>[na > a + saṁ + √kar > khar + ta]</b>  <i>pp of na saṅkharoti</i>"
+    }
+  ],
+  "tathā": [
+    {
+      "uid": "29660/dpd",
+      "word": "tathā",
+      "summary": "<i>(ind)</i> so; thus; in such a way; likewise; similarly  <b>[ta + thā]</b>  <i>ind, adv, from ta</i>"
+    },
+    {
+      "uid": "29645/dpd",
+      "word": "tatha 1",
+      "summary": "<i>(adj)</i> true; real; actual  <b>[tathā + a]</b>  <i>adj, from tathā</i>"
+    },
+    {
+      "uid": "29646/dpd",
+      "word": "tatha 2",
+      "summary": "<i>(nt)</i> truth; actuality  <b>[tathā + a]</b>  <i>nt, from tathā</i>"
+    },
+    {
+      "uid": "29647/dpd",
+      "word": "tatha 3",
+      "summary": "<i>(masc)</i> name of a privately awakened Buddha  <b>[tathā + a]</b>  <i>masc, from tathā</i>"
+    }
+  ],
+  "vitthāretabbaṁ": [
+    {
+      "uid": "67943/dpd",
+      "word": "vitthāretabba",
+      "summary": "<i>(ptp)</i> should be expanded in detail; should be filled out  <b>[vi + thāre + tabba]</b>  <i>ptp of vitthāreti</i>"
+    }
+  ],
+  "yathā": [
+    {
+      "uid": "53575/dpd",
+      "word": "yathā 1",
+      "summary": "<i>(ind)</i> like; as; as per; according to; how; in whatever way  <b>[ya + thā]</b>  <i>ind, adv, from ya</i>"
+    },
+    {
+      "uid": "53576/dpd",
+      "word": "yathā 2",
+      "summary": "<i>(ind)</i> because; since  <b>[ya + thā]</b>  <i>ind, adv, from ya</i>"
+    },
+    {
+      "uid": "53577/dpd",
+      "word": "yathā 3",
+      "summary": "<i>(ind)</i> (gram) for example  <b>[ya + thā]</b>  <i>ind, adv, from ya</i>"
+    }
+  ]
+}

@@ -30,24 +30,40 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
     }
 }
 
-// NOTE: This seems to work with Rust Regex, but using the version mirroring the
-// QML function instead.
-//
-// pub fn extract_words(text: &str) -> Vec<String> {
-//     lazy_static! {
-//         static ref re_split_to_words: Regex = Regex::new(r"\b\w+\b").unwrap();
-//     }
-//
-//     re_split_to_words.find_iter(text)
-//                      .map(|m| m.as_str().to_string())
-//                      .collect()
-// }
+lazy_static! {
+    static ref RE_TRAIL_TI: Regex = Regex::new(r#"[’'"”]n*ti$"#).unwrap();
+    static ref RE_NTI: Regex =    Regex::new(r#"n*[’'"”]n*ti"#).unwrap();
+    static ref RE_TRAIL_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'’"” ]+$"#).unwrap();
+}
 
 pub fn extract_words(text: &str) -> Vec<String> {
-    text.replace("\n", " ")
-        .split(" ")
-        .map(|i| i.to_string())
-        .collect()
+    lazy_static! {
+        static ref re_nonword: Regex = Regex::new(r"[^\w]+").unwrap();
+        static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
+    }
+
+    // gantun’ti gantu’nti -> gantuṁ ti
+    let text_a = RE_NTI.replace_all(text, "ṁ ti").to_string();
+    let text_b = re_nonword.replace_all(&text_a, " ");
+    let text_c = re_digits.replace_all(&text_b, " ");
+    let text_d = text_c.trim();
+
+    text_d.replace("\n", " ")
+          .split(" ")
+          .map(|i| i.to_string())
+          .collect()
+}
+
+pub fn clean_word(word: &str) -> String {
+    lazy_static! {
+        static ref re_start_nonword: Regex = Regex::new(r"^[^\w]+").unwrap();
+        static ref re_end_nonword: Regex = Regex::new(r"[^\w]+$").unwrap();
+    }
+
+    let lowercased = word.to_lowercase();
+    let without_start = re_start_nonword.replace(&lowercased, "");
+    let without_end = re_end_nonword.replace(&without_start, "");
+    without_end.into_owned()
 }
 
 pub fn normalize_query_text(text: Option<String>) -> String {
@@ -56,13 +72,9 @@ pub fn normalize_query_text(text: Option<String>) -> String {
         return text;
     }
 
-    let text = text.to_lowercase();
-    lazy_static! {
-        static ref re_ti: Regex = Regex::new(r#"[’'"”]ti$"#).unwrap();
-        static ref re_trail_punct: Regex = Regex::new(r#"[\.,;:\!\?'’"” ]+$"#).unwrap();
-    };
-    let text = re_ti.replace_all(&text, "ti").into_owned();
-    let text = re_trail_punct.replace_all(&text, "").into_owned();
+    let text = clean_word(&text);
+    let text = RE_TRAIL_TI.replace_all(&text, "ti").into_owned();
+    let text = RE_TRAIL_PUNCT.replace_all(&text, "").into_owned();
 
     text
 }
@@ -497,6 +509,21 @@ pub fn bilara_text_to_html(
     bilara_content_json_to_html(&content_json)
 }
 
+/// Remove duplicates based on title, schema_name, and uid
+pub fn unique_search_results(mut results: Vec<SearchResult>) -> Vec<SearchResult> {
+    let mut seen: HashSet<String> = HashSet::new();
+    results.retain(|item| {
+        let key = format!("{} {} {}", item.title, item.schema_name, item.uid);
+        if seen.contains(&key) {
+            false
+        } else {
+            seen.insert(key);
+            true
+        }
+    });
+    results
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -574,19 +601,58 @@ mod tests {
         assert_eq!(consistent_niggahita(Some("saṃsāra".to_string())), "saṁsāra");
         assert_eq!(consistent_niggahita(Some("dhammaṁ".to_string())), "dhammaṁ");
     }
-}
 
-/// Remove duplicates based on title, schema_name, and uid
-pub fn unique_search_results(mut results: Vec<SearchResult>) -> Vec<SearchResult> {
-    let mut seen: HashSet<String> = HashSet::new();
-    results.retain(|item| {
-        let key = format!("{} {} {}", item.title, item.schema_name, item.uid);
-        if seen.contains(&key) {
-            false
-        } else {
-            seen.insert(key);
-            true
-        }
-    });
-    results
+    #[test]
+    fn test_clean_word() {
+        assert_eq!(clean_word("Hello"), "hello");
+        assert_eq!(clean_word("!!!Hello!!!"), "hello");
+        assert_eq!(clean_word("  Word123  "), "word123");
+        assert_eq!(clean_word("@#$test@#$"), "test");
+        assert_eq!(clean_word(""), "");
+        assert_eq!(clean_word("!!!"), "");
+    }
+
+    #[test]
+    fn test_clean_word_pali_examples() {
+        let test_words = [
+            "‘sakkomi",
+            "gantun’",
+            "sampannasīlā,",
+            "(Yathā",
+            "vitthāretabbaṁ.)",
+            "anāsavaṁ …",
+        ];
+
+        let cleaned_words: Vec<String> = test_words
+            .iter()
+            .map(|word| clean_word(word))
+            .collect();
+
+        let expected_words = [
+            "sakkomi",
+            "gantun",
+            "sampannasīlā",
+            "yathā",
+            "vitthāretabbaṁ",
+            "anāsavaṁ",
+        ];
+
+        assert_eq!(cleaned_words.join(" "), expected_words.join(" "));
+    }
+
+    #[test]
+    fn text_extract_word_nti() {
+        let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu”nti.";
+        let words: String = extract_words(text).join(" ");
+        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti".to_string();
+        assert_eq!(words, expected_words);
+    }
+
+    #[test]
+    fn text_extract_word_filter_numbers() {
+        let text = "18. idha nandati";
+        let words: String = extract_words(text).join(" ");
+        let expected_words = "idha nandati".to_string();
+        assert_eq!(words, expected_words);
+    }
 }

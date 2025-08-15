@@ -1,0 +1,95 @@
+{
+  "aṇumattesu": [
+    {
+      "uid": "1977/dpd",
+      "word": "aṇumatta",
+      "summary": "<i>(adj)</i> tiniest; smallest  <b>[aṇu + matta]</b>  <i>adj, comp</i>"
+    }
+  ],
+  "bhayadassāvino": [
+    {
+      "uid": "49444/dpd",
+      "word": "bhayadassāvī",
+      "summary": "<i>(adj)</i> seeing the danger (of); aware of the danger (in)  <b>[bhaya + dassāvī]</b>  <i>adj, comp</i>"
+    }
+  ],
+  "samādāya": [
+    {
+      "uid": "59598/dpd",
+      "word": "samādāya 1",
+      "summary": "<i>(ger)</i> taking along; taking away  <b>[saṁ + √ādā + ya]</b>  <i>ger of samādāti</i>"
+    },
+    {
+      "uid": "59599/dpd",
+      "word": "samādāya 2",
+      "summary": "<i>(ger)</i> undertaking; taking up; accepting  <b>[saṁ + √ādā + ya]</b>  <i>ger of samādāti</i>"
+    }
+  ],
+  "sikkhatha": [
+    {
+      "uid": "62711/dpd",
+      "word": "sikkhati 1",
+      "summary": "<i>(pr)</i> learns; trains (in); practices  <b>[sikkha + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "62712/dpd",
+      "word": "sikkhati 2",
+      "summary": "<i>(pr)</i> trains (in); trains (for the purpose of); practices (for the sake of); practice (to)  <b>[sikkha + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "62713/dpd",
+      "word": "sikkhati 3",
+      "summary": "<i>(pr)</i> tempts; entices; lures (somebody with)  <b>[sikkha + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "62767/dpd",
+      "word": "sikkhi",
+      "summary": "<i>(aor)</i> learnt, trained oneself, practised  <b>[√sikkh + i]</b>  <i>aor of sikkhati</i>"
+    }
+  ],
+  "sikkhāpadesūṁ": [],
+  "ti": [
+    {
+      "uid": "30430/dpd",
+      "word": "ti 1",
+      "summary": "<i>(card)</i> three (3)   <i>card, masc fem & nt pl</i>"
+    },
+    {
+      "uid": "30431/dpd",
+      "word": "ti 2",
+      "summary": "<i>(ind)</i> (end of direct speech) ' '  <b>[iti > ti]</b>  <i>ind, in comps, abbrev of iti</i>"
+    },
+    {
+      "uid": "30432/dpd",
+      "word": "ti 3",
+      "summary": "<i>(ve)</i> (gram) ti; verbal ending of the present tense 3rd person singular   <i>ve, masc</i>"
+    },
+    {
+      "uid": "28972/dpd",
+      "word": "ṭī",
+      "summary": "<i>(abbrev)</i> abbreviation of ṭīkā   <i>abbrev</i>"
+    }
+  ],
+  "vajjesu": [
+    {
+      "uid": "65708/dpd",
+      "word": "vajja 1.1",
+      "summary": "<i>(ptp)</i> speaking; saying  <b>[√vad + ya > vajja]</b>  <i>ptp of vadati</i>"
+    },
+    {
+      "uid": "65712/dpd",
+      "word": "vajja 1.3",
+      "summary": "<i>(nt)</i> musical instrument  <b>[√vad + ya > vajja]</b>  <i>nt</i>"
+    },
+    {
+      "uid": "65710/dpd",
+      "word": "vajja 2.1",
+      "summary": "<i>(nt)</i> fault (of); error (of); mistake (of)  <b>[√vajj + ya > vajja]</b>  <i>nt, ptp of vajjeti</i>"
+    },
+    {
+      "uid": "65711/dpd",
+      "word": "vajja 2.2",
+      "summary": "<i>(ptp)</i> which should be avoided  <b>[√vajj + ya > vajja]</b>  <i>ptp of vajjeti</i>"
+    }
+  ]
+}

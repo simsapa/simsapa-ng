@@ -1,0 +1,257 @@
+{
+  "atthaññe": [
+    {
+      "uid": "2597/dpd",
+      "word": "attha 1.1",
+      "summary": "<i>(masc)</i> meaning; sense; significance  <b>[√ar + tha]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "2598/dpd",
+      "word": "attha 1.2",
+      "summary": "<i>(masc)</i> benefit; profit; good; welfare  <b>[√ar + tha]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "2599/dpd",
+      "word": "attha 1.3",
+      "summary": "<i>(masc)</i> purpose; use; function; goal  <b>[√ar + tha]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "2600/dpd",
+      "word": "attha 1.4",
+      "summary": "<i>(masc)</i> matter; affair; legal case; lawsuit  <b>[√ar + tha]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "2601/dpd",
+      "word": "attha 1.5",
+      "summary": "<i>(adj)</i> for the purpose (of); for the sake (of); for the benefit (of)  <b>[√ar + tha]</b>  <i>adj, in comps</i>"
+    },
+    {
+      "uid": "2602/dpd",
+      "word": "attha 1.6",
+      "summary": "<i>(nt)</i> matter; affair  <b>[√ar + tha]</b>  <i>nt</i>"
+    },
+    {
+      "uid": "2603/dpd",
+      "word": "attha 2.1",
+      "summary": "<i>(masc)</i> need (for); want (for)  <b>[√atth + a]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "2604/dpd",
+      "word": "attha 2.2",
+      "summary": "<i>(adj)</i> needing; wanting; seeking  <b>[√atth + a]</b>  <i>adj, in comps</i>"
+    },
+    {
+      "uid": "2605/dpd",
+      "word": "attha 3.1",
+      "summary": "<i>(masc)</i> home; rest; shelter   <i>masc</i>"
+    },
+    {
+      "uid": "78587/dpd",
+      "word": "attha 3.2",
+      "summary": "<i>(masc)</i> death; end; annihilation; destruction   <i>masc</i>"
+    },
+    {
+      "uid": "2718/dpd",
+      "word": "atthaṁ",
+      "summary": "<i>(ind)</i> for the sake (of); for the purpose (of); for the benefit (of)  <b>[√ar + tha + aṁ], [attha + aṁ]</b>  <i>ind, adv, in comps, acc sg of attha</i>"
+    },
+    {
+      "uid": "2736/dpd",
+      "word": "atthi 1.1",
+      "summary": "<i>(pr)</i> there is; there exists  <b>[√as + ti > atthi]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "2737/dpd",
+      "word": "atthi 1.2",
+      "summary": "<i>(pr)</i> there are; they are  <b>[√as + ti > atthi]</b>  <i>pr 3rd pl of atthi</i>"
+    },
+    {
+      "uid": "2738/dpd",
+      "word": "atthi 2.1",
+      "summary": "<i>(masc)</i> seeker; who wants; who needs; who desires  <b>[√atth + i]</b>  <i>masc, agent</i>"
+    },
+    {
+      "uid": "2758/dpd",
+      "word": "atthu",
+      "summary": "<i>(imp)</i> may it be!; may there be!  <b>[√as + tu > atthu]</b>  <i>imp of atthi</i>"
+    },
+    {
+      "uid": "2757/dpd",
+      "word": "atthī",
+      "summary": "<i>(adj)</i> wanting; seeking; needing; desirous (of)  <b>[√atth + ī]</b>  <i>adj, from attha</i>"
+    },
+    {
+      "uid": "1497/dpd",
+      "word": "añña 1.1",
+      "summary": "<i>(pron)</i> another; other; different; someone else; not oneself   <i>pron</i>"
+    },
+    {
+      "uid": "1498/dpd",
+      "word": "añña 1.2",
+      "summary": "<i>(pron)</i> something more; something further; something else   <i>pron</i>"
+    },
+    {
+      "uid": "80675/dpd",
+      "word": "añña 1.3",
+      "summary": "<i>(pron)</i> other (than); apart (from)   <i>pron</i>"
+    },
+    {
+      "uid": "74340/dpd",
+      "word": "añña 2.1",
+      "summary": "<i>(adj)</i> ignorant; foolish; stupid  <b>[na > a + √ñā + a]</b>  <i>adj, from na jānāti</i>"
+    },
+    {
+      "uid": "1660/dpd",
+      "word": "aññe",
+      "summary": "<i>(pron)</i> others; other people; the rest  <b>[añña + e]</b>  <i>pron, masc nom & acc pl of añña</i>"
+    },
+    {
+      "uid": "1601/dpd",
+      "word": "aññā 1",
+      "summary": "<i>(fem)</i> gnosis; spiritual insight; awakening; final knowledge  <b>[ā + √ñā + ā]</b>  <i>fem, abstr, from ājānāti</i>"
+    },
+    {
+      "uid": "1631/dpd",
+      "word": "aññāti 1.1",
+      "summary": "<i>(pr)</i> knows; understands; is aware (of)  <b>[ā + √ñā + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "35345/dpd",
+      "word": "na 1",
+      "summary": "<i>(ind)</i> no; not; neither; nor   <i>ind</i>"
+    },
+    {
+      "uid": "35346/dpd",
+      "word": "na 2",
+      "summary": "<i>(ind)</i> (adds a question mark) surely?; does one not?   <i>ind, interr</i>"
+    },
+    {
+      "uid": "35347/dpd",
+      "word": "na 3",
+      "summary": "<i>(prefix)</i> not   <i>prefix, in comps</i>"
+    },
+    {
+      "uid": "35348/dpd",
+      "word": "na 4",
+      "summary": "<i>(masc)</i> (gram) negative prefix na   <i>masc, prefix</i>"
+    },
+    {
+      "uid": "31404/dpd",
+      "word": "thañña",
+      "summary": "<i>(nt)</i> breast milk; mother's milk  <b>[thana + ya]</b>  <i>nt, from thana</i>"
+    }
+  ],
+  "bhikkhū": [
+    {
+      "uid": "49882/dpd",
+      "word": "bhikkhi",
+      "summary": "<i>(aor)</i> begged alms, asked for  <b>[√bhikkh +]</b>  <i>aor of bhikkhati</i>"
+    },
+    {
+      "uid": "49885/dpd",
+      "word": "bhikkhu",
+      "summary": "<i>(masc)</i> monk; monastic; mendicant; fully ordained monk  <b>[√bhikkh + u]</b>  <i>masc, from bhikkhati</i>"
+    }
+  ],
+  "jānanti": [
+    {
+      "uid": "28313/dpd",
+      "word": "jānāti 1",
+      "summary": "<i>(pr)</i> knows; understands  <b>[jānā + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "28314/dpd",
+      "word": "jānāti 2",
+      "summary": "<i>(pr)</i> knows (as)  <b>[jānā + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "28315/dpd",
+      "word": "jānāti 3",
+      "summary": "<i>(pr)</i> finds out (if); learns (if); gets to know (if)  <b>[jānā + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "79971/dpd",
+      "word": "jānāti 4",
+      "summary": "<i>(pr)</i> (rightly or wrongly) believes; assumes; considers (someone to be)  <b>[jānā + ti]</b>  <i>pr</i>"
+    }
+  ],
+  "te": [
+    {
+      "uid": "31134/dpd",
+      "word": "te 1.1",
+      "summary": "<i>(pron)</i> they; those   <i>pron, masc nom pl of ta</i>"
+    },
+    {
+      "uid": "31135/dpd",
+      "word": "te 1.2",
+      "summary": "<i>(pron)</i> them; those   <i>pron, masc acc pl of ta</i>"
+    },
+    {
+      "uid": "31136/dpd",
+      "word": "te 2.1",
+      "summary": "<i>(pron)</i> you; to you (object)   <i>pron, 2nd acc sg of tvaṁ</i>"
+    },
+    {
+      "uid": "31137/dpd",
+      "word": "te 2.2",
+      "summary": "<i>(pron)</i> by you   <i>pron, 2nd instr sg of tvaṁ</i>"
+    },
+    {
+      "uid": "31138/dpd",
+      "word": "te 2.3",
+      "summary": "<i>(pron)</i> for you; to you   <i>pron, 2nd dat sg of tvaṁ</i>"
+    },
+    {
+      "uid": "31139/dpd",
+      "word": "te 2.4",
+      "summary": "<i>(pron)</i> your; of you   <i>pron, 2nd gen sg of tvaṁ</i>"
+    },
+    {
+      "uid": "31140/dpd",
+      "word": "te 2.5",
+      "summary": "<i>(pron)</i> when you   <i>pron, 2nd gen sg of tvaṁ, gen abs</i>"
+    },
+    {
+      "uid": "31141/dpd",
+      "word": "te 3",
+      "summary": "<i>(card)</i> three (3)  <b>[ti > te]</b>  <i>card, in comps, from ti</i>"
+    },
+    {
+      "uid": "29188/dpd",
+      "word": "ta 1.1",
+      "summary": "<i>(pron)</i> that   <i>pron, base</i>"
+    },
+    {
+      "uid": "29189/dpd",
+      "word": "ta 2.1",
+      "summary": "<i>(letter)</i> (gram) letter t; 24th letter of the alphabet; dental sibilant   <i>letter, masc</i>"
+    },
+    {
+      "uid": "30430/dpd",
+      "word": "ti 1",
+      "summary": "<i>(card)</i> three (3)   <i>card, masc fem & nt pl</i>"
+    },
+    {
+      "uid": "31017/dpd",
+      "word": "tumha",
+      "summary": "<i>(pron)</i> you   <i>pron, base of tvaṁ</i>"
+    },
+    {
+      "uid": "31383/dpd",
+      "word": "tvaṁ 1",
+      "summary": "<i>(pron)</i> you (subject)  <b>[tumha + aṁ > tuvaṁ > tvaṁ]</b>  <i>pron, 2nd nom sg of tumha</i>"
+    }
+  ],
+  "āvāsikā": [
+    {
+      "uid": "13059/dpd",
+      "word": "āvāsika 1",
+      "summary": "<i>(adj)</i> related to living; who lives  <b>[ā + √vas > vās + *a + ika], [āvāsa + ika]</b>  <i>adj, from āvāsa</i>"
+    },
+    {
+      "uid": "13060/dpd",
+      "word": "āvāsika 2",
+      "summary": "<i>(adj)</i> resident  <b>[ā + √vas > vās + *a + ika], [āvāsa + ika]</b>  <i>adj, from āvāsa</i>"
+    }
+  ]
+}

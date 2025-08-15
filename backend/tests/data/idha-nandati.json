@@ -1,0 +1,238 @@
+{
+  "bhiyyo": [
+    {
+      "uid": "50009/dpd",
+      "word": "bhiyyo",
+      "summary": "<i>(ind)</i> more (than); greater than (than); better than (than); superior (to)  <b>[√bhū > bhī + ya + o], [bhiyya + o]</b>  <i>ind, adv, compar of bhūri</i>"
+    }
+  ],
+  "gato": [
+    {
+      "uid": "23997/dpd",
+      "word": "ga 1.1",
+      "summary": "<i>(adj)</i> who goes; goes after; going; gone; having gone; being  <b>[√gam + a]</b>  <i>adj, in comps, from gacchati</i>"
+    },
+    {
+      "uid": "24184/dpd",
+      "word": "gata 1",
+      "summary": "<i>(pp)</i> gone (to); went (for)  <b>[√gam + ta]</b>  <i>pp of gacchati</i>"
+    },
+    {
+      "uid": "24185/dpd",
+      "word": "gata 2",
+      "summary": "<i>(pp)</i> become (a certain way); being in (some state); gone into (a state)  <b>[√gam + ta]</b>  <i>pp of gacchati</i>"
+    },
+    {
+      "uid": "24186/dpd",
+      "word": "gata 3",
+      "summary": "<i>(pp)</i> related to; referring to; kind of; type of; of a sort  <b>[√gam + ta]</b>  <i>pp of gacchati, in comps</i>"
+    },
+    {
+      "uid": "24188/dpd",
+      "word": "gata 5",
+      "summary": "<i>(pp)</i> walked; travelled  <b>[√gam + ta]</b>  <i>pp of gacchati</i>"
+    },
+    {
+      "uid": "77840/dpd",
+      "word": "gata 6",
+      "summary": "<i>(pp)</i> passed  <b>[√gam + ta]</b>  <i>pp of gacchati</i>"
+    }
+  ],
+  "idha": [
+    {
+      "uid": "13686/dpd",
+      "word": "idha 1",
+      "summary": "<i>(ind)</i> here; now; in this world  <b>[ima + dha]</b>  <i>ind, adv, from ima</i>"
+    },
+    {
+      "uid": "13687/dpd",
+      "word": "idha 2",
+      "summary": "<i>(ind)</i> here; in this regard; in this case  <b>[ima + dha]</b>  <i>ind, adv, from ima</i>"
+    },
+    {
+      "uid": "13688/dpd",
+      "word": "idha 3",
+      "summary": "<i>(ind)</i> (comm) in this teaching; here in this doctrine  <b>[ima + dha]</b>  <i>ind, adv, from ima</i>"
+    }
+  ],
+  "kata": [
+    {
+      "uid": "19594/dpd",
+      "word": "kata 1",
+      "summary": "<i>(pp)</i> done; did; completed  <b>[√kar + ta]</b>  <i>pp of karoti</i>"
+    },
+    {
+      "uid": "19595/dpd",
+      "word": "kata 2",
+      "summary": "<i>(nt)</i> something done; performed action  <b>[√kar + ta]</b>  <i>nt, pp of karoti</i>"
+    },
+    {
+      "uid": "19596/dpd",
+      "word": "kata 3",
+      "summary": "<i>(pp)</i> made (of); built (of)  <b>[√kar + ta]</b>  <i>pp of karoti</i>"
+    },
+    {
+      "uid": "19597/dpd",
+      "word": "kata 4",
+      "summary": "<i>(pp)</i> (of gold) formed; shaped; wrought; forged  <b>[√kar + ta]</b>  <i>pp of karoti</i>"
+    },
+    {
+      "uid": "19598/dpd",
+      "word": "kata 5",
+      "summary": "<i>(masc)</i> mat, cheek  <b>[√kar + ta]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "19316/dpd",
+      "word": "kaṭa 1",
+      "summary": "<i>(masc)</i> winning dice  <b>[√kar + ta]</b>  <i>masc</i>"
+    },
+    {
+      "uid": "73800/dpd",
+      "word": "kaṭa 2",
+      "summary": "<i>(pp)</i> done; did; completed  <b>[√kar + ta]</b>  <i>pp of karoti, in comps</i>"
+    },
+    {
+      "uid": "20910/dpd",
+      "word": "kāṭa",
+      "summary": "<i>(masc)</i> hole; (comm) penis; male sexual organ   <i>masc</i>"
+    }
+  ],
+  "katapuñño": [
+    {
+      "uid": "19635/dpd",
+      "word": "katapuñña",
+      "summary": "<i>(adj)</i> who has made merit; who has done good; has gained spiritual wealth  <b>[kata + puñña]</b>  <i>adj, comp</i>"
+    }
+  ],
+  "me": [
+    {
+      "uid": "53163/dpd",
+      "word": "me 1",
+      "summary": "<i>(pron)</i> myself; me (object)   <i>pron, 1st acc sg of ahaṁ</i>"
+    },
+    {
+      "uid": "53164/dpd",
+      "word": "me 2",
+      "summary": "<i>(pron)</i> by me   <i>pron, 1st instr sg of ahaṁ</i>"
+    },
+    {
+      "uid": "53165/dpd",
+      "word": "me 3",
+      "summary": "<i>(pron)</i> to me; for me   <i>pron, 1st dat sg of ahaṁ</i>"
+    },
+    {
+      "uid": "53166/dpd",
+      "word": "me 4",
+      "summary": "<i>(pron)</i> from me   <i>pron, 1st abl sg of ahaṁ</i>"
+    },
+    {
+      "uid": "53167/dpd",
+      "word": "me 5",
+      "summary": "<i>(pron)</i> my; mine   <i>pron, 1st gen sg of ahaṁ</i>"
+    },
+    {
+      "uid": "53168/dpd",
+      "word": "me 6",
+      "summary": "<i>(pron)</i> when I; since I   <i>pron, 1st gen sg of ahaṁ, gen abs</i>"
+    },
+    {
+      "uid": "10868/dpd",
+      "word": "ahaṁ",
+      "summary": "<i>(pron)</i> I   <i>pron</i>"
+    },
+    {
+      "uid": "50429/dpd",
+      "word": "ma 1.1",
+      "summary": "<i>(letter)</i> (gram) letter m; 31st letter of the alphabet; nasal consonant   <i>letter, masc</i>"
+    },
+    {
+      "uid": "50426/dpd",
+      "word": "ma 3.1",
+      "summary": "<i>(ve)</i> (gram) ma; verbal ending of the present tense 1st person plural   <i>ve, masc</i>"
+    },
+    {
+      "uid": "52133/dpd",
+      "word": "mā 2.1",
+      "summary": "<i>(fem)</i> moon   <i>fem, in comps</i>"
+    },
+    {
+      "uid": "52134/dpd",
+      "word": "mā 3.1",
+      "summary": "<i>(root)</i> (gram) √mā (measure)  <b>[√mā + ā]</b>  <i>root, masc</i>"
+    }
+  ],
+  "nandati": [
+    {
+      "uid": "35611/dpd",
+      "word": "nandati",
+      "summary": "<i>(pr)</i> is happy (with); delights (in); likes; enjoys  <b>[nanda + ti]</b>  <i>pr</i>"
+    }
+  ],
+  "pecca": [
+    {
+      "uid": "47270/dpd",
+      "word": "pecca",
+      "summary": "<i>(ind)</i> after death  <b>[pa + √i > e + *tya]</b>  <i>ind, adv, ger of peti</i>"
+    }
+  ],
+  "puññaṁ": [
+    {
+      "uid": "46519/dpd",
+      "word": "puñña 1",
+      "summary": "<i>(nt)</i> merit; good deed; spiritual wealth  <b>[√puṇ + ya]</b>  <i>nt</i>"
+    },
+    {
+      "uid": "46520/dpd",
+      "word": "puñña 2",
+      "summary": "<i>(adj)</i> having merit; meritorious; auspicious; virtuous  <b>[√puṇ + ya]</b>  <i>adj</i>"
+    }
+  ],
+  "suggatiṁ": [
+    {
+      "uid": "63641/dpd",
+      "word": "suggati",
+      "summary": "<i>(fem)</i> state of happiness; good destination; heaven  <b>[su + √gam + ti]</b>  <i>fem, from gati</i>"
+    }
+  ],
+  "ti": [
+    {
+      "uid": "30430/dpd",
+      "word": "ti 1",
+      "summary": "<i>(card)</i> three (3)   <i>card, masc fem & nt pl</i>"
+    },
+    {
+      "uid": "30431/dpd",
+      "word": "ti 2",
+      "summary": "<i>(ind)</i> (end of direct speech) ' '  <b>[iti > ti]</b>  <i>ind, in comps, abbrev of iti</i>"
+    },
+    {
+      "uid": "30432/dpd",
+      "word": "ti 3",
+      "summary": "<i>(ve)</i> (gram) ti; verbal ending of the present tense 3rd person singular   <i>ve, masc</i>"
+    },
+    {
+      "uid": "28972/dpd",
+      "word": "ṭī",
+      "summary": "<i>(abbrev)</i> abbreviation of ṭīkā   <i>abbrev</i>"
+    }
+  ],
+  "ubhayattha": [
+    {
+      "uid": "16851/dpd",
+      "word": "ubhayattha 1",
+      "summary": "<i>(ind)</i> in both cases; on both sides  <b>[ubhaya + attha]</b>  <i>ind, adv, comp</i>"
+    },
+    {
+      "uid": "16852/dpd",
+      "word": "ubhayattha 2",
+      "summary": "<i>(masc)</i> benefit of both; welfare of both  <b>[ubhaya + attha]</b>  <i>masc, comp</i>"
+    }
+  ],
+  "ṁ": [
+    {
+      "uid": "71509/dpd",
+      "word": "ṁa",
+      "summary": "<i>(cs)</i> (gram) ṁ-a; conjugational sign of group 2 rudhādigaṇa verbs   <i>cs, masc</i>"
+    }
+  ]
+}

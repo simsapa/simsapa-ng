@@ -1,0 +1,109 @@
+{
+  "ajjeva": [
+    {
+      "uid": "1252/dpd",
+      "word": "ajjeva",
+      "summary": "<i>(sandhi)</i> this very day; just today; right now  <b>[ajja + eva]</b>  <i>sandhi, adv + ind</i>"
+    },
+    {
+      "uid": "1225/dpd",
+      "word": "ajja",
+      "summary": "<i>(ind)</i> today; now  <b>[ima + jja]</b>  <i>ind, adv</i>"
+    }
+  ],
+  "gantuṁ": [
+    {
+      "uid": "24266/dpd",
+      "word": "gantuṁ",
+      "summary": "<i>(inf)</i> to go (to); to travel (to)  <b>[√gam + tuṁ]</b>  <i>inf of gacchati</i>"
+    }
+  ],
+  "jaññā": [
+    {
+      "uid": "27813/dpd",
+      "word": "jaññā 1",
+      "summary": "<i>(ger)</i> knowing; understanding  <b>[jānā + ya > jaññā]</b>  <i>ger of jānāti</i>"
+    },
+    {
+      "uid": "27814/dpd",
+      "word": "jaññā 2",
+      "summary": "<i>(opt)</i> could know; must understand  <b>[jānā + eyya], [jāneyya > jaññā]</b>  <i>opt of jānāti, irreg</i>"
+    },
+    {
+      "uid": "27811/dpd",
+      "word": "jañña",
+      "summary": "<i>(adj)</i> lovely; precious; fine  <b>[√jan + ya]</b>  <i>adj, from jāyati</i>"
+    },
+    {
+      "uid": "28336/dpd",
+      "word": "jāniyā",
+      "summary": "<i>(opt)</i> may know; could understand  <b>[jānā + eyya > iyā]</b>  <i>opt of jānāti, irreg</i>"
+    }
+  ],
+  "sakkomi": [
+    {
+      "uid": "56475/dpd",
+      "word": "sakkoti",
+      "summary": "<i>(pr)</i> is able (to)  <b>[sakko + ti]</b>  <i>pr</i>"
+    }
+  ],
+  "ti": [
+    {
+      "uid": "30430/dpd",
+      "word": "ti 1",
+      "summary": "<i>(card)</i> three (3)   <i>card, masc fem & nt pl</i>"
+    },
+    {
+      "uid": "30431/dpd",
+      "word": "ti 2",
+      "summary": "<i>(ind)</i> (end of direct speech) ' '  <b>[iti > ti]</b>  <i>ind, in comps, abbrev of iti</i>"
+    },
+    {
+      "uid": "30432/dpd",
+      "word": "ti 3",
+      "summary": "<i>(ve)</i> (gram) ti; verbal ending of the present tense 3rd person singular   <i>ve, masc</i>"
+    },
+    {
+      "uid": "28972/dpd",
+      "word": "ṭī",
+      "summary": "<i>(abbrev)</i> abbreviation of ṭīkā   <i>abbrev</i>"
+    }
+  ],
+  "yaṁ": [
+    {
+      "uid": "53872/dpd",
+      "word": "yaṁ 1",
+      "summary": "<i>(pron)</i> which; whoever; whatever; that which  <b>[ya + aṁ]</b>  <i>pron, nt nom sg of ya</i>"
+    },
+    {
+      "uid": "53873/dpd",
+      "word": "yaṁ 2",
+      "summary": "<i>(pron)</i> whoever; whatever; that which  <b>[ya + aṁ]</b>  <i>pron, masc fem & nt acc sg of ya</i>"
+    },
+    {
+      "uid": "53874/dpd",
+      "word": "yaṁ 3",
+      "summary": "<i>(ind)</i> because; because of; since; when  <b>[ya + aṁ]</b>  <i>ind, adv, acc sg of ya</i>"
+    },
+    {
+      "uid": "53445/dpd",
+      "word": "ya 1.1",
+      "summary": "<i>(letter)</i> (gram) letter y; 34th letter of the alphabet; palatal semi-vowel   <i>letter, masc</i>"
+    },
+    {
+      "uid": "53444/dpd",
+      "word": "ya 2.1",
+      "summary": "<i>(pron)</i> whoever; whatever; whichever   <i>pron, base</i>"
+    },
+    {
+      "uid": "53446/dpd",
+      "word": "ya 3.1",
+      "summary": "<i>(cs)</i> (gram) ya; suffix used to form impersonal and passive verbs   <i>cs, masc</i>"
+    },
+    {
+      "uid": "53447/dpd",
+      "word": "ya 3.2",
+      "summary": "<i>(cs)</i> (gram) ya; conjugational sign of group 3 divādigaṇa verbs   <i>cs, masc</i>"
+    }
+  ]
+}
