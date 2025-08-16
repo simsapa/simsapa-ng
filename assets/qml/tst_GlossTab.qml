@@ -29,41 +29,6 @@ Item {
             gloss_tab.no_duplicates_globally = true;
         }
 
-        function test_extract_words() {
-            var result = gloss_tab.extract_words("Hello world test");
-            compare(result.length, 3);
-            compare(result[0], "Hello");
-            compare(result[1], "world");
-            compare(result[2], "test");
-
-            // Test punctuation
-            result = gloss_tab.extract_words("Hello, world!");
-            compare(result.length, 2);
-            compare(result[0], "Hello,");
-            compare(result[1], "world!");
-
-            // Test empty string
-            result = gloss_tab.extract_words("");
-            compare(result.length, 0);
-
-            // Unicode text
-            result = gloss_tab.extract_words("Pāḷi ñāṇa");
-            compare(result.length, 2);
-            compare(result[0], "Pāḷi");
-            compare(result[1], "ñāṇa");
-
-            // Multiple spaces
-            result = gloss_tab.extract_words("word1    word2");
-            compare(result.length, 2);
-
-            // Filter punctuation and non-words
-            // result = gloss_tab.extract_words("(48.50) samādhi1 ... hey ho! !!"); FIXME
-            // compare(result.length, 3);
-            // compare(result[0], "samādhi1");
-            // compare(result[1], "hey");
-            // compare(result[2], "ho!");
-        }
-
         function test_extract_words_with_context() {
             var text = "This is a test. Another sentence here!";
             var result = gloss_tab.extract_words_with_context(text);
@@ -163,6 +128,19 @@ Item {
                 if (w === "ariyasāvaka") n++;
             }
             compare(n, 1);
+        }
+
+        function test_gloss_word_selection_and_export() {
+            var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            gloss_tab.gloss_text_input_area.text = paragraph;
+            gloss_tab.update_all_glosses();
+            // 1st paragraph, 5th word 'karitvā 1', change to 4th selection 'karitvā 4'
+            gloss_tab.update_word_selection(0, 4, 3);
+            // 1st paragraph, 8th word 'citta 1.1', change to 3rd selection 'citta 1.3'
+            gloss_tab.update_word_selection(0, 7, 2);
+            let org_content = gloss_tab.gloss_as_orgmode();
+            verify(org_content.includes("karitvā 4"));
+            verify(org_content.includes("citta 1.3"));
         }
 
         function test_clean_word() {

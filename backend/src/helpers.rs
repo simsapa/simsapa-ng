@@ -38,19 +38,25 @@ lazy_static! {
 }
 
 pub fn extract_words(text: &str) -> Vec<String> {
+    let text = text.trim();
+    if text.is_empty() {
+        return Vec::new();
+    }
+
     lazy_static! {
         static ref re_nonword: Regex = Regex::new(r"[^\w]+").unwrap();
         static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
     }
 
+    let text = text.replace("\n", " ").to_string();
     // gantun’ti gantu’nti -> gantuṁ ti
-    let text = RE_NTI.replace_all(text, "ṁ ti").into_owned();
+    let text = RE_NTI.replace_all(&text, "ṁ ti").into_owned();
     let text = re_nonword.replace_all(&text, " ").into_owned();
     let text = re_digits.replace_all(&text, " ").into_owned();
+    let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
     let text = text.trim();
 
-    text.replace("\n", " ")
-        .split(" ")
+    text.split(" ")
         .map(|i| i.to_string())
         .collect()
 }
@@ -670,7 +676,43 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_word_nti() {
+    fn test_extract_words_basic() {
+        let results = extract_words("Hello world test");
+        assert_eq!(results.len(), 3);
+        assert_eq!(results[0], "Hello");
+        assert_eq!(results[1], "world");
+        assert_eq!(results[2], "test");
+
+        // Test punctuation
+        let results = extract_words("Hello, world!");
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0], "Hello");
+        assert_eq!(results[1], "world");
+
+        // Test empty string
+        let results = extract_words("");
+        assert_eq!(results.len(), 0);
+
+        // Unicode text
+        let results = extract_words("Pāḷi ñāṇa");
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0], "Pāḷi");
+        assert_eq!(results[1], "ñāṇa");
+
+        // Multiple spaces
+        let results = extract_words("word1    word2");
+        assert_eq!(results.len(), 2);
+
+        // Filter punctuation and non-words
+        let results = extract_words("(48.50) samādhi1 ... hey ho! !!");
+        assert_eq!(results.len(), 3);
+        assert_eq!(results[0], "samādhi");
+        assert_eq!(results[1], "hey");
+        assert_eq!(results[2], "ho");
+    }
+
+    #[test]
+    fn test_extract_words_nti() {
         let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu”nti.";
         let words: String = extract_words(text).join(" ");
         let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti".to_string();
@@ -678,7 +720,7 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_word_filter_numbers() {
+    fn test_extract_words_filter_numbers() {
         let text = "18. idha nandati";
         let words: String = extract_words(text).join(" ");
         let expected_words = "idha nandati".to_string();

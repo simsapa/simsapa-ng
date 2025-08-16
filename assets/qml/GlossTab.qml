@@ -512,7 +512,9 @@ And what, bhikkhus, is concentration?
     }
 
     function update_word_selection(paragraph_idx: int, word_idx: int, selected_idx: int) {
-        var paragraph = paragraph_model.get(paragraph_idx);
+        // Take the paragraph data from the _export model, because this is where
+        // any previous word selections were saved to as json.
+        var paragraph = paragraph_model_export.get(paragraph_idx);
         var words = JSON.parse(paragraph.words_data_json);
         words[word_idx].selected_index = selected_idx;
 
