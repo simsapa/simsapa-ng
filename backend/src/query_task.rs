@@ -8,9 +8,9 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
+use crate::helpers::{normalize_query_text, unique_search_results};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
-use crate::helpers::{consistent_niggahita, unique_search_results};
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
 use crate::db::DbManager;
@@ -48,7 +48,7 @@ impl<'a> SearchQueryTask<'a> {
         let g = get_app_globals();
         SearchQueryTask {
             dbm,
-            query_text: consistent_niggahita(Some(query_text_orig)),
+            query_text: normalize_query_text(Some(query_text_orig)),
             search_mode: params.mode,
             search_area: area,
             page_len: params.page_len.unwrap_or(g.page_len),

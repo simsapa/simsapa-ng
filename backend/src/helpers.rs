@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashSet, HashMap};
 
 use regex::Regex;
 use lazy_static::lazy_static;
@@ -33,7 +33,8 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
 lazy_static! {
     static ref RE_TRAIL_TI: Regex = Regex::new(r#"[’'"”]n*ti$"#).unwrap();
     static ref RE_NTI: Regex =    Regex::new(r#"n*[’'"”]n*ti"#).unwrap();
-    static ref RE_TRAIL_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'’"” ]+$"#).unwrap();
+    static ref RE_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'’"”…—–-]+"#).unwrap();
+    static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
 }
 
 pub fn extract_words(text: &str) -> Vec<String> {
@@ -43,15 +44,15 @@ pub fn extract_words(text: &str) -> Vec<String> {
     }
 
     // gantun’ti gantu’nti -> gantuṁ ti
-    let text_a = RE_NTI.replace_all(text, "ṁ ti").to_string();
-    let text_b = re_nonword.replace_all(&text_a, " ");
-    let text_c = re_digits.replace_all(&text_b, " ");
-    let text_d = text_c.trim();
+    let text = RE_NTI.replace_all(text, "ṁ ti").into_owned();
+    let text = re_nonword.replace_all(&text, " ").into_owned();
+    let text = re_digits.replace_all(&text, " ").into_owned();
+    let text = text.trim();
 
-    text_d.replace("\n", " ")
-          .split(" ")
-          .map(|i| i.to_string())
-          .collect()
+    text.replace("\n", " ")
+        .split(" ")
+        .map(|i| i.to_string())
+        .collect()
 }
 
 pub fn clean_word(word: &str) -> String {
@@ -74,7 +75,10 @@ pub fn normalize_query_text(text: Option<String>) -> String {
 
     let text = clean_word(&text);
     let text = RE_TRAIL_TI.replace_all(&text, "ti").into_owned();
-    let text = RE_TRAIL_PUNCT.replace_all(&text, "").into_owned();
+    let text = text.replace("-", "");
+    let text = RE_PUNCT.replace_all(&text, " ").into_owned();
+    let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
+    let text = text.trim().to_string();
 
     text
 }
@@ -91,7 +95,7 @@ pub fn pali_to_ascii(text: Option<&str>) -> String {
     let from_chars = "āīūṁṃṅñṭḍṇḷṛṣśĀĪŪṀṂṄÑṬḌṆḶṚṢŚ√";
     let to_chars =   "aiummnntdnlrssAIUMMNNTDNLRSS ";
 
-    let translation: std::collections::HashMap<char, char> = from_chars.chars()
+    let translation: HashMap<char, char> = from_chars.chars()
         .zip(to_chars.chars())
         .collect();
 
@@ -641,7 +645,32 @@ mod tests {
     }
 
     #[test]
-    fn text_extract_word_nti() {
+    fn test_normalize_query_text() {
+        let mut texts: HashMap<&str, &str> = HashMap::new();
+        texts.insert(
+            "Anāsavañca vo, bhikkhave, desessāmi",
+            "anāsavañca vo bhikkhave desessāmi",
+        );
+        texts.insert(
+            "padakkhiṇaṁ mano-kammaṁ",
+            "padakkhiṇaṁ manokammaṁ",
+        );
+        texts.insert(
+            "saraṇaṁ…pe॰…anusāsanī’’ti?",
+            "saraṇaṁ pe॰ anusāsanī ti",
+        );
+        texts.insert(
+            "katamañca, bhikkhave, nibbānaṁ…pe॰… abyāpajjhañca [abyāpajjhañca (sī॰ syā॰ kaṁ॰ pī॰)] vo, bhikkhave, desessāmi abyāpajjhagāmiñca maggaṁ.",
+            "katamañca bhikkhave nibbānaṁ pe॰ abyāpajjhañca [abyāpajjhañca (sī॰ syā॰ kaṁ॰ pī॰)] vo bhikkhave desessāmi abyāpajjhagāmiñca maggaṁ",
+        );
+
+        for (query_text, expected) in texts.into_iter() {
+            assert_eq!(normalize_query_text(Some(query_text.to_string())), expected.to_string());
+        }
+    }
+
+    #[test]
+    fn test_extract_word_nti() {
         let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu”nti.";
         let words: String = extract_words(text).join(" ");
         let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti".to_string();
@@ -649,7 +678,7 @@ mod tests {
     }
 
     #[test]
-    fn text_extract_word_filter_numbers() {
+    fn test_extract_word_filter_numbers() {
         let text = "18. idha nandati";
         let words: String = extract_words(text).join(" ");
         let expected_words = "idha nandati".to_string();
