@@ -11,6 +11,7 @@ pub mod pali_sort;
 pub mod logger;
 pub mod theme_colors;
 pub mod app_settings;
+pub mod lookup;
 
 use std::env;
 use std::io::{self, Read, Write};

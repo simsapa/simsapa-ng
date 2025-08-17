@@ -13,7 +13,7 @@ sass-watch:
 	sass --no-source-map --watch './assets/sass/:./assets/css/'
 
 count-code:
-	tokei --type Rust,QML,C++,Javascript,CMake --compact --exclude assets/qml/data/ --exclude assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml --exclude assets/dpd-res/ . | grep -vE '===|---'
+	tokei --type Rust,QML,C++,Javascript,CMake --compact --exclude assets/qml/data/ --exclude assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml --exclude assets/dpd-res/ --exclude backend/src/lookup.rs . | grep -vE '===|---'
 
 simsapa.min.js:
 	npx webpack
