@@ -21,7 +21,11 @@ Item {
         console.log("dpd_first_query()");
     }
 
-    function results_page(query: string, page_num: int): string {
+    function query_text_to_uid_field_query(query_text: string): string {
+      return query_text;
+    }
+
+    function results_page(query: string, page_num: int, params_json: string): string {
         console.log(query);
         return "{}";
     }
@@ -128,10 +132,6 @@ Item {
         return '{}';
     }
 
-    function get_common_words_json(): string {
-        return `["a", "ānanda", "ariya", "bhagavā", "bhagavant", "bhikkhave", "bhikkhu", "bhikkhū", "ca", "cattāro", "ce", "dhamma", "dukkha", "dve", "eka", "eko", "etaṁ", "eva", "hi", "honti", "idaṁ", "idha", "iti", "kho", "magga", "na", "nirodha", "pana", "pañca", "pe", "pi", "sa", "samudaya", "sāriputta", "so", "ta", "taṁ", "tayo", "te", "tena", "ti", "va", "vā", "viharati", "yaṁ", "yo"]`;
-    }
-
     function save_common_words_json(words_json: string) {
         return;
     }
@@ -160,6 +160,62 @@ Item {
     function check_file_exists_in_folder(folder_url: url, filename: string): bool {
         console.log(`check_file_exists_in_folder(): ${folder_url}, ${filename}`);
         return true;
+    }
+
+    function get_common_words_json(): string {
+        return `
+[
+"a",
+"ānanda",
+"ariya",
+"bhagavā",
+"bhagavant",
+"bhagavatā",
+"bhante",
+"bhikkhave",
+"bhikkhu",
+"bhikkhū",
+"ca",
+"cattāro",
+"ce",
+"dhamma",
+"dukkha",
+"dve",
+"eka",
+"eko",
+"etaṁ",
+"eva",
+"hi",
+"honti",
+"idaṁ",
+"idha",
+"iti",
+"kho",
+"magga",
+"me",
+"na",
+"nirodha",
+"pana",
+"pañca",
+"pe",
+"pi",
+"sa",
+"samudaya",
+"sāriputta",
+"so",
+"ta",
+"taṁ",
+"tayo",
+"te",
+"tena",
+"ti",
+"va",
+"vā",
+"viharati",
+"yaṁ",
+"yo"
+]
+`;
     }
 
     Item {

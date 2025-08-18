@@ -42,10 +42,28 @@ pub fn is_pts_sutta_ref(reference: &str) -> bool {
 }
 
 pub fn query_text_to_uid_field_query(query_text: &str) -> String {
-    // Replace user input sutta refs such as 'SN 56.11' with query language
+    let query_text = query_text.to_lowercase();
+    if query_text.starts_with("uid:") {
+        return query_text.to_string();
+    }
+
+    // Detect if query is already uid-like, e.g. sn56.11/pli/ms
+    if is_complete_sutta_uid(&query_text) {
+        return format!("uid:{}", query_text);
+    }
+
+    // Or it could be a partial uid, e.g. sn56.11/pli
+    lazy_static! {
+        static ref re_partial_uid: Regex = Regex::new(r"/[a-z0-9-]+$").unwrap();
+    }
+    if re_partial_uid.is_match(&query_text) {
+        return format!("uid:{}", query_text);
+    }
+
+    // Replace user input sutta refs such as 'SN 56.11' with query expression uid:sn56.11
     let mut result = query_text.to_string();
 
-    for cap in RE_ALL_BOOK_SUTTA_REF.captures_iter(query_text) {
+    for cap in RE_ALL_BOOK_SUTTA_REF.captures_iter(&query_text) {
         let full_match = cap.get(0).unwrap().as_str();
         let nikaya = cap.get(1).unwrap().as_str().to_lowercase();
         let number = cap.get(2).unwrap().as_str();
@@ -353,6 +371,9 @@ pub fn clean_word(word: &str) -> String {
 pub fn normalize_query_text(text: Option<String>) -> String {
     let text = consistent_niggahita(text);
     if text.is_empty() {
+        return text;
+    }
+    if text.starts_with("uid:") {
         return text;
     }
 

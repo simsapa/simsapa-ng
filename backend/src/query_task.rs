@@ -184,6 +184,9 @@ impl<'a> SearchQueryTask<'a> {
 
     /// Creates a snippet around query terms (handles "AND").
     pub fn fragment_around_query(&self, query: &str, content: &str) -> String {
+        if query.starts_with("uid:") {
+            return self.fragment_around_text("", content, 20, 500);
+        }
         // Simple approach: find the first term and fragment around it.
         // FIXME: A more complex approach could try to find a fragment containing multiple terms.
         let (terms, before, after) = if query.contains(" AND ") {
@@ -228,26 +231,85 @@ impl<'a> SearchQueryTask<'a> {
         SearchResult::from_dict_word(x, snippet)
     }
 
-    fn uid_sutta(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    fn uid_sutta(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::db::appdata_schema::suttas::dsl::*;
+        use diesel::result::Error as DieselError;
+
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
-        let res = suttas
-            .filter(uid.eq(query_uid))
+        // First, try exact match
+        let exact_match_result = suttas
+            .filter(uid.eq(query_uid.clone()))
             .select(Sutta::as_select())
             .first(db_conn);
 
-        match res {
+        match exact_match_result {
             Ok(sutta) => {
+                // Found exact match - return single result
+                self.db_query_hits_count = 1;
                 Ok(vec![self.db_sutta_to_result(&sutta)])
             }
-            Err(_) => {
+            Err(DieselError::NotFound) => {
+                // No exact match found - try LIKE query with pagination
+                self.uid_sutta_like(&query_uid, page_num)
+            }
+            Err(e) => {
+                error(&format!("{}", e));
+                // Err(Box::new(e))
+                // return an empty list instead of the error.
                 Ok(Vec::new())
             }
         }
+    }
+
+    fn uid_sutta_like(
+        &mut self,
+        query_uid: &str,
+        page_num: usize
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        let like_pattern = format!("{}%", query_uid);
+
+        // Count total hits for pagination
+        let count = suttas
+            .filter(uid.like(&like_pattern))
+            .count()
+            .get_result::<i64>(db_conn)?;
+
+        self.db_query_hits_count = count;
+
+        // If no results, return empty vector
+        if count == 0 {
+            return Ok(Vec::new());
+        }
+
+        // Calculate pagination
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        // Execute paginated query
+        let results = suttas
+            .filter(uid.like(&like_pattern))
+            .order(uid.asc()) // Order by uid for consistent pagination
+            .limit(limit)
+            .offset(offset)
+            .select(Sutta::as_select())
+            .load::<Sutta>(db_conn)?;
+
+        // Map to SearchResult
+        let search_results = results
+            .iter()
+            .map(|sutta| self.db_sutta_to_result(sutta))
+            .collect();
+
+        Ok(search_results)
     }
 
     fn uid_word(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
@@ -550,7 +612,7 @@ impl<'a> SearchQueryTask<'a> {
             SearchMode::UidMatch => {
                 match self.search_area {
                     SearchArea::Suttas => {
-                        self.uid_sutta()
+                        self.uid_sutta(page_num)
                     }
                     SearchArea::DictWords => {
                         self.uid_word()

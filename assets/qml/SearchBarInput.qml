@@ -12,9 +12,9 @@ Frame {
 
     required property bool is_wide
     required property bool db_loaded
-    required property var run_new_query_fn
-    required property Timer debounce_timer
-    required property Action incremental_search
+    required property var handle_query_fn
+    required property Timer search_timer
+    required property Action search_as_you_type
 
     property alias search_input: search_input
 
@@ -22,6 +22,11 @@ Frame {
         color: "transparent"
         border.color: "transparent"
         border.width: 0
+    }
+
+    function user_typed() {
+        // TODO self._show_search_normal_icon()
+        if (root.search_as_you_type.checked) root.search_timer.restart();
     }
 
     RowLayout {
@@ -41,10 +46,7 @@ Frame {
             placeholderText: root.db_loaded ? "Search in suttas" : "Loading..."
 
             onAccepted: search_btn.clicked()
-            onTextChanged: {
-                if (root.incremental_search.checked) root.debounce_timer.restart();
-            }
-
+            onTextChanged: root.user_typed()
             selectByMouse: true
         }
 
@@ -52,7 +54,7 @@ Frame {
             id: search_btn
             icon.source: "icons/32x32/bx_search_alt_2.png"
             enabled: search_input.text.length > 0
-            onClicked: root.run_new_query_fn(search_input.text) // qmllint disable use-proper-function
+            onClicked: root.handle_query_fn(search_input.text, 1) // qmllint disable use-proper-function
             Layout.preferredHeight: 40
             Layout.preferredWidth: 40
         }

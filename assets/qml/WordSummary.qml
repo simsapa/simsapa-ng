@@ -24,7 +24,7 @@ Frame {
     readonly property int font_point_size: root.is_mobile ? 14 : 11
     readonly property TextMetrics tm1: TextMetrics { text: "#"; font.pointSize: root.font_point_size; font.bold: true }
 
-    required property bool incremental_search_checked
+    required property bool search_as_you_type_checked
 
     SuttaBridge { id: sb }
 
@@ -35,11 +35,11 @@ Frame {
     }
 
     Timer {
-        id: debounce_timer
+        id: search_timer
         interval: 400 // milliseconds
         repeat: false
         onTriggered: {
-            if (root.incremental_search_checked && lookup_input.text.length >= 4) {
+            if (root.search_as_you_type_checked) {
                 root.run_lookup(lookup_input.text);
             }
         }
@@ -70,7 +70,10 @@ Frame {
         lookup_input.text = query;
     }
 
-    function run_lookup(query: string) {
+    function run_lookup(query: string, min_length = 4) {
+        if (query.length < min_length)
+            return;
+
         // root.is_loading = true; TODO
         Qt.callLater(function() {
             deconstructor_model.clear();
@@ -111,7 +114,7 @@ Frame {
 
                 onAccepted: search_btn.clicked()
                 onTextChanged: {
-                    if (root.incremental_search_checked) debounce_timer.restart();
+                    if (root.search_as_you_type_checked) search_timer.restart();
                 }
                 selectByMouse: true
             }

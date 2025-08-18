@@ -59,7 +59,7 @@ pub enum SearchArea {
     DictWords,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub enum SearchMode {
     FulltextMatch,
     ContainsMatch,
@@ -72,7 +72,8 @@ pub enum SearchMode {
     RegExMatch,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
+#[serde(default)]
 pub struct SearchParams {
     pub mode: SearchMode,
     pub page_len: Option<usize>,
@@ -82,6 +83,21 @@ pub struct SearchParams {
     pub source_include: bool,
     pub enable_regex: bool,
     pub fuzzy_distance: i32,
+}
+
+impl Default for SearchParams {
+    fn default() -> Self {
+        SearchParams {
+            mode: SearchMode::ContainsMatch,
+            page_len: None,
+            lang: Some("en".to_string()),
+            lang_include: true,
+            source: None,
+            source_include: true,
+            enable_regex: false,
+            fuzzy_distance: 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

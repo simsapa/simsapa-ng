@@ -14,7 +14,7 @@ use simsapa_backend::theme_colors::ThemeColors;
 use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
-use simsapa_backend::helpers::{extract_words, normalize_query_text};
+use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
 
 use simsapa_backend::logger::{info, error};
 
@@ -57,7 +57,10 @@ pub mod qobject {
         fn dpd_first_query(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
-        fn results_page(self: &SuttaBridge, query: &QString, page_num: usize) -> QString;
+        fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
+
+        #[qinvokable]
+        fn results_page(self: &SuttaBridge, query: &QString, page_num: usize, params_json: &QString) -> QString;
 
         #[qinvokable]
         fn extract_words(self: &SuttaBridge, text: &QString) -> QStringList;
@@ -204,22 +207,17 @@ impl qobject::SuttaBridge {
         });
     }
 
-    pub fn results_page(&self, query: &QString, page_num: usize) -> QString {
+    pub fn query_text_to_uid_field_query(&self, query_text: &QString) -> QString {
+        QString::from(query_text_to_uid_field_query(&query_text.to_string()))
+    }
+
+    pub fn results_page(&self, query: &QString, page_num: usize, params_json: &QString) -> QString {
         // FIXME: Can't store the query_task on SuttaBridgeRust
         // because it SearchQueryTask includes &'a DbManager reference.
         // Store only a connection pool?
         let app_data = get_app_data();
 
-        let params = SearchParams {
-            mode: SearchMode::ContainsMatch,
-            page_len: None,
-            lang: Some("en".to_string()),
-            lang_include: true,
-            source: None,
-            source_include: true,
-            enable_regex: false,
-            fuzzy_distance: 0,
-        };
+        let params: SearchParams = serde_json::from_str(&params_json.to_string()).unwrap_or_default();
 
         // FIXME: We have to create a SearchQueryTask for each search until we
         // can store it on SuttaBridgeRust.

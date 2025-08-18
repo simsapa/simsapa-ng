@@ -101,24 +101,70 @@ ApplicationWindow {
 
     // Timer for incremental search debounce
     Timer {
-        id: debounce_timer
+        id: search_timer
         interval: 400 // milliseconds
         repeat: false
         onTriggered: {
-            if (incremental_search.checked && search_bar_input.search_input.text.length >= 4) {
-                root.run_new_query(search_bar_input.search_input.text);
+            if (search_as_you_type.checked) {
+                root.handle_query(search_bar_input.search_input.text, 4);
             }
         }
     }
 
-    function run_new_query(query) {
-        root.results_page(query, 0);
+    function handle_query(query_text_orig: string, min_length=4) {
+        if (query_text_orig === 'uid:')
+            return;
+
+        let params = root.get_search_params_from_ui();
+        let search_area = 'Suttas';
+
+        let query_text = sb.query_text_to_uid_field_query(query_text_orig);
+
+        if (query_text.startsWith('uid:')) {
+            params['mode'] = 'UidMatch';
+            min_length = 7; // e.g. uid:mn8
+        }
+
+        if (query_text.length < min_length)
+            return;
+
+        // Not aborting, show the user that the app started processsing
+        // TODO self._show_search_stopwatch_icon()
+
+        // self.start_loading_animation()
+
+        // self._last_query_time = datetime.now()
+
+        // self._queries.start_search_query_workers()
+        root.start_search_query_workers(
+            query_text,
+            search_area,
+            /* self._last_query_time, */
+            /* partial(self._search_query_finished), */
+            params,
+        )
     }
 
-    function results_page(query, page_num) {
+    function start_search_query_workers(
+        query_text: string,
+        search_area: string,
+        params: var,
+    ) {
+        // FIXME: page number
+        root.results_page(query_text, 0, params);
+
+        // if len(results) > 0 and hits == 1 and results[0]['uid'] is not None:
+        //     self._show_sutta_by_uid(results[0]['uid'])
+
+        // elif self.query_in_tab:
+        //     self._render_results_in_active_tab(hits)
+    }
+
+    function results_page(query_text: string, page_num: int, params: var) {
         root.is_loading = true;
         Qt.callLater(function() {
-            let json_res = sb.results_page(query, page_num);
+            let params_json = JSON.stringify(params);
+            let json_res = sb.results_page(query_text, page_num, params_json);
             let d = JSON.parse(json_res);
             fulltext_results.set_search_result_page(d);
             root.is_loading = false;
@@ -128,6 +174,31 @@ ApplicationWindow {
     function new_results_page(page_num) {
         let query = search_bar_input.search_input.text;
         root.results_page(query, page_num);
+    }
+
+    function get_search_params_from_ui(): var {
+        // Extract params from the state of UI such as SearchBarInput and SearchBarOptions.
+
+        // class SearchParams(TypedDict):
+        //     mode: SearchMode
+        //     page_len: Optional[int]
+        //     lang: Optional[str]
+        //     lang_include: bool
+        //     source: Optional[str]
+        //     source_include: bool
+        //     enable_regex: bool
+        //     fuzzy_distance: int
+
+        return {
+            mode: "ContainsMatch",
+            page_len: 10,
+            lang: null,
+            lang_include: false,
+            source: null,
+            source_include: false,
+            enable_regex: false,
+            fuzzy_distance: 0,
+        };
     }
 
     function set_summary_query(query_text: string) {
@@ -343,7 +414,7 @@ ApplicationWindow {
 
             CMenuItem {
                 action: Action {
-                    id: incremental_search
+                    id: search_as_you_type
                     text: "Search As You Type"
                     checkable: true
                     checked: true
@@ -488,9 +559,9 @@ ApplicationWindow {
                 id: search_bar_input
                 is_wide: root.is_wide
                 db_loaded: sb.db_loaded
-                run_new_query_fn: root.run_new_query
-                debounce_timer: debounce_timer
-                incremental_search: incremental_search
+                handle_query_fn: root.handle_query
+                search_timer: search_timer
+                search_as_you_type: search_as_you_type
             }
 
             SearchBarOptions {
@@ -753,7 +824,7 @@ ApplicationWindow {
                                     window_height: root.height
                                     handle_summary_close_fn: word_summary_wrap.handle_summary_close
                                     handle_open_dict_tab_fn: root.open_dict_tab
-                                    incremental_search_checked: incremental_search.checked
+                                    search_as_you_type_checked: search_as_you_type.checked
                                 }
                             }
                         }
