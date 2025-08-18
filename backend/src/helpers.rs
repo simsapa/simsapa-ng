@@ -326,8 +326,8 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
 }
 
 lazy_static! {
-    static ref RE_TRAIL_TI: Regex = Regex::new(r#"[’'"”]n*ti$"#).unwrap();
-    static ref RE_NTI: Regex =    Regex::new(r#"n*[’'"”]n*ti"#).unwrap();
+    static ref RE_NTI: Regex =    Regex::new(r#"n*[’'"”]+n*ti"#).unwrap();
+    static ref RE_IITI: Regex =   Regex::new(r#"ī*[’'"”]+ī*ti"#).unwrap();
     static ref RE_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'’"”…—–-]+"#).unwrap();
     static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
 }
@@ -346,6 +346,8 @@ pub fn extract_words(text: &str) -> Vec<String> {
     let text = text.replace("\n", " ").to_string();
     // gantun’ti gantu’nti -> gantuṁ ti
     let text = RE_NTI.replace_all(&text, "ṁ ti").into_owned();
+    // dhārayāmī’”ti -> dhārayāmi ti
+    let text = RE_IITI.replace_all(&text, "i ti").into_owned();
     let text = re_nonword.replace_all(&text, " ").into_owned();
     let text = re_digits.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
@@ -378,7 +380,8 @@ pub fn normalize_query_text(text: Option<String>) -> String {
     }
 
     let text = clean_word(&text);
-    let text = RE_TRAIL_TI.replace_all(&text, "ti").into_owned();
+    let text = RE_NTI.replace_all(&text, "ṁ ti").into_owned();
+    let text = RE_IITI.replace_all(&text, "i ti").into_owned();
     let text = text.replace("-", "");
     let text = RE_PUNCT.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();

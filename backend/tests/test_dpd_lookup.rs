@@ -62,6 +62,7 @@ fn test_dpd_lookup_generate_json() {
     texts.insert("parens-48.10-katamanca-bhikkhave"   , "(SN 48.10) Katamañca, bhikkhave, samādhindriyaṁ?");
     texts.insert("brackets-48.10-katamanca-bhikkhave" , "[SN 48:10] Katamañca, bhikkhave, samādhindriyaṁ?");
     texts.insert("te-jananti"                         , "Te jānanti atthaññe āvāsikā bhikkhū");
+    texts.insert("evametam-dharayami"                 , "evametaṁ dhārayāmī’”ti.");
 
     texts.insert("idha-nandati", r#"
 18.

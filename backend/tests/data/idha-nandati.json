@@ -55,7 +55,14 @@
       "summary": "<i>(ind)</i> (comm) in this teaching; here in this doctrine  <b>[ima + dha]</b>  <i>ind, adv, from ima</i>"
     }
   ],
-  "kata": [
+  "katapuñño": [
+    {
+      "uid": "19635/dpd",
+      "word": "katapuñña",
+      "summary": "<i>(adj)</i> who has made merit; who has done good; has gained spiritual wealth  <b>[kata + puñña]</b>  <i>adj, comp</i>"
+    }
+  ],
+  "kataṁ": [
     {
       "uid": "19594/dpd",
       "word": "kata 1",
@@ -80,28 +87,6 @@
       "uid": "19598/dpd",
       "word": "kata 5",
       "summary": "<i>(masc)</i> mat, cheek  <b>[√kar + ta]</b>  <i>masc</i>"
-    },
-    {
-      "uid": "19316/dpd",
-      "word": "kaṭa 1",
-      "summary": "<i>(masc)</i> winning dice  <b>[√kar + ta]</b>  <i>masc</i>"
-    },
-    {
-      "uid": "73800/dpd",
-      "word": "kaṭa 2",
-      "summary": "<i>(pp)</i> done; did; completed  <b>[√kar + ta]</b>  <i>pp of karoti, in comps</i>"
-    },
-    {
-      "uid": "20910/dpd",
-      "word": "kāṭa",
-      "summary": "<i>(masc)</i> hole; (comm) penis; male sexual organ   <i>masc</i>"
-    }
-  ],
-  "katapuñño": [
-    {
-      "uid": "19635/dpd",
-      "word": "katapuñña",
-      "summary": "<i>(adj)</i> who has made merit; who has done good; has gained spiritual wealth  <b>[kata + puñña]</b>  <i>adj, comp</i>"
     }
   ],
   "me": [
@@ -226,13 +211,6 @@
       "uid": "16852/dpd",
       "word": "ubhayattha 2",
       "summary": "<i>(masc)</i> benefit of both; welfare of both  <b>[ubhaya + attha]</b>  <i>masc, comp</i>"
-    }
-  ],
-  "ṁ": [
-    {
-      "uid": "71509/dpd",
-      "word": "ṁa",
-      "summary": "<i>(cs)</i> (gram) ṁ-a; conjugational sign of group 2 rudhādigaṇa verbs   <i>cs, masc</i>"
     }
   ]
 }
