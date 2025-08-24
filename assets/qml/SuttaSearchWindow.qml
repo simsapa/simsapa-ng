@@ -37,20 +37,26 @@ ApplicationWindow {
 
     property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible)
 
-    SuttaBridge {
-        id: sb
-        Component.onCompleted: {
-            if (root.is_qml_preview) return;
-            root.apply_theme();
-            sb.load_db();
-            sb.appdata_first_query();
-            sb.dpd_first_query();
+    Connections {
+        target: SuttaBridge
+        function onUpdateWindowTitle(sutta_uid: string, sutta_ref: string, sutta_title: string) {
+            /* console.log("onUpdateWindowTitle():", sutta_uid, sutta_ref, sutta_title); */
+            const current_key = sutta_html_view_layout.current_key;
+            if (sutta_html_view_layout.items_map[current_key].sutta_uid === sutta_uid) {
+                root.update_window_title(sutta_uid, sutta_ref, sutta_title);
+            }
         }
     }
 
+    function update_window_title(sutta_uid: string, sutta_ref: string, sutta_title: string) {
+        let title_parts = [sutta_ref, sutta_title, sutta_uid].filter(i => i !== "");
+        let title = title_parts.join(" ");
+        root.setTitle(`${title} - Simsapa`);
+    }
+
     function apply_theme() {
-        root.is_dark = sb.get_theme_name() === "dark";
-        var theme_json = sb.get_saved_theme();
+        root.is_dark = SuttaBridge.get_theme_name() === "dark";
+        var theme_json = SuttaBridge.get_saved_theme();
         /* console.log("Theme JSON:\n---\n", theme_json, "\n---\n"); */
         if (theme_json.length === 0 || theme_json === "{}") {
             console.error("Couldn't get theme JSON.")
@@ -90,13 +96,30 @@ ApplicationWindow {
     ListModel { id: tabs_results_model }
     ListModel { id: tabs_translations_model }
 
-    function new_tab_data(title, pinned, focus_on_new, id_key = null, web_item_key = "") {
+    function new_tab_data(fulltext_results_data: var, pinned = false, focus_on_new = false, id_key = null, web_item_key = ""): var {
+        /* console.log("new_tab_data()", fulltext_results_data, pinned, focus_on_new); */
         if (!id_key) {
             id_key = root.generate_key();
         }
         // Generate the tabs with empty web_item_key. An item_key and associated webview
         // will be created when the tab is first focused.
-        return { title: title, pinned: pinned, focus_on_new: focus_on_new, id_key: id_key, web_item_key: web_item_key}
+        //
+        // NOTE: same attributes as on TabButton.
+        /* console.log("sutta_uid", fulltext_results_data.sutta_uid); */
+        /* console.log("sutta_title", fulltext_results_data.sutta_title); */
+        return {
+            sutta_uid:   fulltext_results_data.sutta_uid,
+            sutta_title: fulltext_results_data.sutta_title,
+            sutta_ref:   fulltext_results_data.sutta_ref,
+            pinned: pinned,
+            focus_on_new: focus_on_new,
+            id_key: id_key,
+            web_item_key: web_item_key,
+        };
+    }
+
+    function blank_sutta_tab_data(): var {
+        return root.new_tab_data({sutta_uid: "Sutta", sutta_title: "", sutta_ref: ""});
     }
 
     // Timer for incremental search debounce
@@ -118,7 +141,7 @@ ApplicationWindow {
         let params = root.get_search_params_from_ui();
         let search_area = 'Suttas';
 
-        let query_text = sb.query_text_to_uid_field_query(query_text_orig);
+        let query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
 
         if (query_text.startsWith('uid:')) {
             params['mode'] = 'UidMatch';
@@ -164,7 +187,7 @@ ApplicationWindow {
         root.is_loading = true;
         Qt.callLater(function() {
             let params_json = JSON.stringify(params);
-            let json_res = sb.results_page(query_text, page_num, params_json);
+            let json_res = SuttaBridge.results_page(query_text, page_num, params_json);
             let d = JSON.parse(json_res);
             fulltext_results.set_search_result_page(d);
             root.is_loading = false;
@@ -214,7 +237,7 @@ ApplicationWindow {
     }
 
     function run_sutta_menu_action(action: string, query_text: string) {
-        console.log("run_sutta_menu_action():", action, query_text.slice(0, 30));
+        /* console.log("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
 
         switch (action) {
         case "copy-selection":
@@ -250,40 +273,65 @@ ApplicationWindow {
     }
 
     // Returns the index of the tab in the model.
-    function add_results_tab(sutta_uid: string, focus_on_new = true, new_tab = false): int {
+    function add_results_tab(fulltext_results_data: var, focus_on_new = true, new_tab = false): int {
+        /* console.log("add_results_tab()", "sutta_uid", fulltext_results_data.sutta_uid, "sutta_title", fulltext_results_data.sutta_title); */
         if (new_tab || tabs_results_model.count == 0) {
-            let data = root.new_tab_data(sutta_uid, false, focus_on_new);
+            /* console.log("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
+            let tab_data = root.new_tab_data(fulltext_results_data, false, focus_on_new);
             if (tabs_results_model.count == 0) {
-                data.id_key = "ResultsTab_0";
+                tab_data.id_key = "ResultsTab_0";
             }
-            if (data.web_item_key == "") {
-                data.web_item_key = root.generate_key();
-                sutta_html_view_layout.add_item(data.web_item_key, data.title, false);
+            if (tab_data.web_item_key == "") {
+                tab_data.web_item_key = root.generate_key();
+                sutta_html_view_layout.add_item(tab_data, false);
             }
-            tabs_results_model.append(data);
+            tabs_results_model.append(tab_data);
             return tabs_results_model.count-1;
         } else {
+            /* console.log("Updating existing results tab"); */
             // Not creating a new tab, update the existing one at idx 0.
-            tabs_results_model.setProperty(0, "title", sutta_uid);
-            let tab = root.get_tab_with_id_key(tabs_results_model.get(0).id_key);
-            tab.title = sutta_uid;
+            let tab_data = root.new_tab_data(
+                fulltext_results_data,
+                false,
+                focus_on_new,
+                tabs_results_model.get(0).id_key,
+                tabs_results_model.get(0).web_item_key);
+
+            tabs_results_model.set(0, tab_data);
+
+            if (tab_data.sutta_uid !== "Sutta") {
+                SuttaBridge.emit_update_window_title(tab_data.sutta_uid, tab_data.sutta_ref, tab_data.sutta_title);
+            }
+
             return 0;
         }
     }
 
     function focus_on_tab_with_id_key(id_key: string) {
+        /* console.log("focus_on_tab_with_id_key()", id_key); */
         let tab = root.get_tab_with_id_key(id_key);
         if (tab) {
             tab.click();
         } else {
-            console.log("Error: Tab not found with id_key: " + id_key);
+            console.error("Error: Tab not found with id_key: " + id_key);
         }
     }
 
     Component.onCompleted: {
+        /* console.log("SuttaSearchWindow: Component.onCompleted()"); */
+        if (root.is_qml_preview) {
+            return;
+        } else {
+            root.apply_theme();
+            SuttaBridge.load_db();
+            SuttaBridge.appdata_first_query();
+            SuttaBridge.dpd_first_query();
+        }
+
         // Add the default blank tab. The corresponding webview is created when it is focused.
         if (tabs_results_model.count == 0) {
-            root.add_results_tab("Sutta");
+            /* console.log("tabs_results_model.count", tabs_results_model.count); */
+            root.add_results_tab(root.blank_sutta_tab_data());
         }
 
         if (root.is_qml_preview) {
@@ -533,9 +581,9 @@ ApplicationWindow {
 
     ColorThemeDialog {
         id: color_theme_dialog
-        current_theme: sb.get_theme_name()
+        current_theme: SuttaBridge.get_theme_name()
         onThemeChanged: function(theme_name) {
-            sb.set_theme_name(theme_name);
+            SuttaBridge.set_theme_name(theme_name);
             root.apply_theme();
         }
     }
@@ -558,7 +606,7 @@ ApplicationWindow {
             SearchBarInput {
                 id: search_bar_input
                 is_wide: root.is_wide
-                db_loaded: sb.db_loaded
+                db_loaded: SuttaBridge.db_loaded
                 handle_query_fn: root.handle_query
                 search_timer: search_timer
                 search_as_you_type: search_as_you_type
@@ -623,24 +671,30 @@ ApplicationWindow {
                             /* anchors.right: parent.right */
 
                             function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
+                                /* console.log("tab_focus_changed()", tab.index, "sutta_uid:", tab.sutta_uid, "web_item_key:", tab.web_item_key); */
                                 if (!tab.focus) return;
                                 // If this tab doesn't have a webview associated yet, create it.
                                 if (tab.web_item_key == "") {
                                     let key = root.generate_key();
-
-                                    // Update the key in both the model and the tab's property
-                                    let data = tab_model.get(tab.index);
-                                    data.web_item_key = key;
-                                    tab_model.set(tab.index, data);
-
                                     tab.web_item_key = key;
 
-                                    sutta_html_view_layout.add_item(tab.web_item_key, tab.title);
+                                    // Update the key in both the model and the tab's property
+                                    if (tab_model.count > tab.index) {
+                                        let tab_data = tab_model.get(tab.index);
+                                        tab_data.web_item_key = key;
+                                        tab_model.set(tab.index, tab_data);
+                                        tab.web_item_key = key;
+                                        sutta_html_view_layout.add_item(tab_data);
+                                    } else {
+                                        console.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
+                                    }
                                 }
+                                // show the sutta tab
                                 sutta_html_view_layout.current_key = tab.web_item_key;
                             }
 
                             function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
+                                /* console.log("remove_tab_and_webview()", tab.index, tab.sutta_uid, tab.web_item_key); */
                                 // Remove the tab and webview, focus the next or the previous
                                 let old_idx = tab.index;
                                 let old_web_item_key = tab_model.get(old_idx).web_item_key;
@@ -695,14 +749,14 @@ ApplicationWindow {
                                             // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                             if (pinned) return;
                                             // Unpin and move back to results group
-                                            let data = tabs_pinned_model.get(pinned_tab_btn.index);
-                                            data.pinned = false;
-                                            tabs_results_model.append(data);
-                                            root.focus_on_tab_with_id_key(data.id_key);
+                                            let old_tab_data = tabs_pinned_model.get(pinned_tab_btn.index);
+                                            let new_tab_data = root.new_tab_data(old_tab_data, false, true, root.generate_key(), old_tab_data.web_item_key);
+                                            tabs_results_model.append(new_tab_data);
                                             tabs_pinned_model.remove(pinned_tab_btn.index)
+                                            root.focus_on_tab_with_id_key(new_tab_data.id_key);
                                         }
                                         onCloseClicked: suttas_tab_bar.remove_tab_and_webview(pinned_tab_btn, tabs_pinned_model)
-                                        onFocusChanged: suttas_tab_bar.tab_focus_changed(pinned_tab_btn, tabs_results_model)
+                                        onFocusChanged: suttas_tab_bar.tab_focus_changed(pinned_tab_btn, tabs_pinned_model)
                                     }
                                 }
 
@@ -717,28 +771,30 @@ ApplicationWindow {
                                             // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                             if (!pinned) return;
                                             // Pin and move to pinned group
-                                            let d = tabs_results_model.get(results_tab_btn.index);
+                                            let old_tab_data = tabs_results_model.get(results_tab_btn.index);
                                             // New pinned tab will get focus.
-                                            let data = root.new_tab_data(d.title, true, true, root.generate_key(), d.web_item_key);
-                                            tabs_pinned_model.append(data);
+                                            let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
+                                            tabs_pinned_model.append(new_tab_data);
                                             // Remove the tab data, but webview remains associated with the pinned item.
                                             tabs_results_model.remove(results_tab_btn.index);
-                                            root.add_results_tab("Sutta", false);
+                                            root.add_results_tab(root.blank_sutta_tab_data(), false);
+                                            // TODO: If this is before add_results_tab(), the new results tab gets focus, despite of focus_on_new = false.
+                                            root.focus_on_tab_with_id_key(new_tab_data.id_key);
                                         }
                                         onCloseClicked: {
                                             if (tabs_results_model.count == 1) {
                                                 // If this is the only tab, don't remove it, just set it to blank
-                                                results_tab_btn.title = "Sutta";
-                                                tabs_results_model.setProperty(0, "title", "Sutta");
+                                                results_tab_btn.sutta_uid = "Sutta";
+                                                tabs_results_model.set(0, root.blank_sutta_tab_data());
                                             } else {
                                                 suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
                                             }
                                         }
                                         onFocusChanged: suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model)
-                                        onTitleChanged: {
+                                        onSutta_uidChanged: {
                                             if (results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
                                                 let i = sutta_html_view_layout.get_item(results_tab_btn.web_item_key);
-                                                i.sutta_uid = results_tab_btn.title;
+                                                i.sutta_uid = results_tab_btn.sutta_uid;
                                                 // The title changes when an item in FulltextResults is selected,
                                                 // so focus on this tab.
                                                 results_tab_btn.click();
@@ -758,11 +814,11 @@ ApplicationWindow {
                                             // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                             if (!pinned) return;
                                             // Pin and move to pinned group
-                                            let data = tabs_translations_model.get(translations_tab_btn.index);
-                                            data.pinned = true;
-                                            tabs_pinned_model.append(data);
-                                            root.focus_on_tab_with_id_key(data.id_key);
+                                            let old_tab_data = tabs_translations_model.get(translations_tab_btn.index);
+                                            let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
+                                            tabs_pinned_model.append(new_tab_data);
                                             tabs_translations_model.remove(translations_tab_btn.index);
+                                            root.focus_on_tab_with_id_key(new_tab_data.id_key);
                                         }
                                         onCloseClicked: suttas_tab_bar.remove_tab_and_webview(translations_tab_btn, tabs_translations_model)
                                         onFocusChanged: suttas_tab_bar.tab_focus_changed(translations_tab_btn, tabs_translations_model)
@@ -886,8 +942,9 @@ ApplicationWindow {
                                 new_results_page_fn: root.new_results_page
 
                                 function update_item() {
-                                    let uid = fulltext_results.current_uid();
-                                    let tab_idx = root.add_results_tab(uid, true);
+                                    /* console.log("update_item()"); */
+                                    let tab_data = root.new_tab_data(fulltext_results.current_result_data());
+                                    let tab_idx = root.add_results_tab(tab_data, true);
                                     // NOTE: It will not find the tab first time while window objects are still
                                     // constructed, but succeeds later on.
                                     root.focus_on_tab_with_id_key("ResultsTab_0");
@@ -896,19 +953,18 @@ ApplicationWindow {
 
                                     // Remove existing webviews for translation tabs
                                     for (let i=0; i < tabs_translations_model.count; i++) {
-                                        let data = tabs_translations_model.get(i);
-                                        if (data.web_item_key !== "") {
-                                            sutta_html_view_layout.delete_item(data.web_item_key);
+                                        let tr_tab_data = tabs_translations_model.get(i);
+                                        if (tr_tab_data.web_item_key !== "") {
+                                            sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
                                         }
                                     }
                                     tabs_translations_model.clear();
 
-                                    let translations_uids = sb.get_translations_for_sutta_uid(uid);
+                                    let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.sutta_uid));
 
-                                    for (let i=0; i < translations_uids.length; i++) {
-                                        let uid = translations_uids[i];
-                                        let data = root.new_tab_data(uid, false, false);
-                                        tabs_translations_model.append(data);
+                                    for (let i=0; i < translations_data.length; i++) {
+                                        let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
+                                        tabs_translations_model.append(tr_tab_data);
                                     }
 
                                     if (!root.is_wide) {

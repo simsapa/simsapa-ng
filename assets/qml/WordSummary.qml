@@ -26,8 +26,6 @@ Frame {
 
     required property bool search_as_you_type_checked
 
-    SuttaBridge { id: sb }
-
     background: Rectangle {
         color: palette.window
         border.width: 1
@@ -77,14 +75,14 @@ Frame {
         // root.is_loading = true; TODO
         Qt.callLater(function() {
             deconstructor_model.clear();
-            let dec_list = sb.dpd_deconstructor_list(query);
+            let dec_list = SuttaBridge.dpd_deconstructor_list(query);
             for (let i=0; i < dec_list.length; i++) {
                 deconstructor_model.append({ words_joined: dec_list[i] });
             }
             deconstructor.currentIndex = 0;
 
             summaries_model.clear();
-            let sum_list = JSON.parse(sb.dpd_lookup_json(query));
+            let sum_list = JSON.parse(SuttaBridge.dpd_lookup_json(query));
             for (let i=0; i < sum_list.length; i++) {
                 summaries_model.append({
                     uid: sum_list[i].uid,

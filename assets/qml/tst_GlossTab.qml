@@ -13,8 +13,6 @@ Item {
         anchors.centerIn: parent
     }
 
-    SuttaBridge { id: sb }
-
     Component.onCompleted: {
         console.log("Running Gloss Widget Tests...");
     }
@@ -66,7 +64,7 @@ Item {
         }
 
         function test_dpd_lookup() {
-            let json = sb.dpd_lookup_json("cittassa");
+            let json = SuttaBridge.dpd_lookup_json("cittassa");
             var results = JSON.parse(json);
             compare(results[0].word, "citta 1.1");
             compare(results[1].word, "citta 1.2");

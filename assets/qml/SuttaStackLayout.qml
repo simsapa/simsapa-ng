@@ -3,6 +3,8 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 
+import com.profoundlabs.simsapa
+
 StackLayout {
     id: root
     required property string window_id
@@ -30,13 +32,21 @@ StackLayout {
         }
     }
 
-    function add_item(key, uid, show_item = true) {
+    function add_item(tab_data: var, show_item = true) {
+        /* console.log("add_item()", "sutta_uid:", tab_data.sutta_uid, "web_item_key:", tab_data.web_item_key); */
+        let key = tab_data.web_item_key;
         if (root.items_map.hasOwnProperty(key)) {
             console.warn("Item with key", key, "already exists");
             return;
         }
 
-        let comp = sutta_html_component.createObject(root, {item_key: key, sutta_uid: uid});
+        let data = {
+            item_key: key,
+            sutta_uid: tab_data.sutta_uid,
+            sutta_ref: tab_data.sutta_ref,
+            sutta_title: tab_data.sutta_title,
+        };
+        let comp = sutta_html_component.createObject(root, data);
         root.items_map[key] = comp;
         if (show_item) {
             root.current_key = key;
@@ -74,6 +84,12 @@ StackLayout {
         if (!root.items_map[root.current_key]) {
             root.currentIndex = -1;
             return;
+        }
+
+        let item = root.items_map[root.current_key];
+        if (item.sutta_uid !== "Sutta") {
+            /* console.log("SuttaBridge.emit_update_window_title()", item.sutta_uid, item.sutta_ref, item.sutta_title); */
+            SuttaBridge.emit_update_window_title(item.sutta_uid, item.sutta_ref, item.sutta_title);
         }
 
         for (let i = 0; i < root.children.length; i++) {

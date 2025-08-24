@@ -10,6 +10,8 @@ WebView {
     property string window_id
     property string item_key
     property string sutta_uid
+    property string sutta_ref
+    property string sutta_title
     property bool is_dark
 
     function show_transient_message(msg: string) {
@@ -46,16 +48,12 @@ document.documentElement.style.colorScheme = 'light';
         runJavaScript(js);
     }
 
-    SuttaBridge {
-        id: sb
-    }
-
     function load_sutta_uid(uid) {
         if (uid == "Sutta") {
             // Initial blank page
             uid = "";
         }
-        var html = sb.get_sutta_html(web.window_id, uid);
+        var html = SuttaBridge.get_sutta_html(web.window_id, uid);
         web.loadHtml(html);
     }
 

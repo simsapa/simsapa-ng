@@ -1,3 +1,5 @@
+pragma Singleton
+
 import QtQuick
 
 Item {
@@ -7,6 +9,12 @@ Item {
 
     Component.onCompleted: {
         root.dpd_lookup_test_data = JSON.parse(dpd_lookup_data.json);
+    }
+
+    signal updateWindowTitle(sutta_uid: string, sutta_ref: string, sutta_title: string);
+
+    function emit_update_window_title(sutta_uid: string, sutta_ref: string, sutta_title: string) {
+        console.log("update_window_title()");
     }
 
     function load_db() {
@@ -40,15 +48,17 @@ Item {
         return html;
     }
 
-    function get_translations_for_sutta_uid(sutta_uid: string): list<string> {
+    function get_translations_data_json_for_sutta_uid(sutta_uid: string): string {
         // See sutta_search_window_state.py _add_related_tabs()
         let uid_ref = sutta_uid.replace('^([^/]+)/.*', '$1');
-        let translations = [
-            `${uid_ref}/en/thanissaro`,
-            `${uid_ref}/en/bodhi`,
-            `${uid_ref}/en/sujato`,
-        ];
-        return translations;
+        let translations_json = `
+[
+{ "sutta_uid": "${uid_ref}/en/thanissaro", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" },
+{ "sutta_uid": "${uid_ref}/en/bodhi", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" },
+{ "sutta_uid": "${uid_ref}/en/sujato", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" }
+]
+`;
+        return translations_json;
     }
 
     function app_data_folder_path(): string {

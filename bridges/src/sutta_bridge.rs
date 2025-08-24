@@ -7,6 +7,7 @@ use cxx_qt_lib::{QString, QStringList, QUrl};
 use cxx_qt::Threading;
 use regex::{Regex, Captures};
 use lazy_static::lazy_static;
+use serde::Serialize;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
@@ -43,9 +44,17 @@ pub mod qobject {
     extern "RustQt" {
         #[qobject]
         #[qml_element]
+        #[qml_singleton]
         #[qproperty(bool, db_loaded)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
+
+        #[qsignal]
+        #[cxx_name = "updateWindowTitle"]
+        fn update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
+
+        #[qinvokable]
+        fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
@@ -81,7 +90,7 @@ pub mod qobject {
         fn get_word_html(self: &SuttaBridge, window_id: &QString, uid: &QString) -> QString;
 
         #[qinvokable]
-        fn get_translations_for_sutta_uid(self: &SuttaBridge, sutta_uid: &QString) -> QStringList;
+        fn get_translations_data_json_for_sutta_uid(self: &SuttaBridge, sutta_uid: &QString) -> QString;
 
         #[qinvokable]
         fn app_data_folder_path(self: &SuttaBridge) -> QString;
@@ -146,6 +155,11 @@ impl Default for SuttaBridgeRust {
 }
 
 impl qobject::SuttaBridge {
+    pub fn emit_update_window_title(self: Pin<&mut Self>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString) {
+        // info(&format!("emit_update_window_title(): {} {} {}", &sutta_uid.to_string(), &sutta_ref.to_string(), &sutta_title.to_string()));
+        self.update_window_title(sutta_uid, sutta_ref, sutta_title);
+    }
+
     pub fn load_db(self: Pin<&mut Self>) {
         info("SuttaBridge::load_db() start");
         let qt_thread = self.qt_thread();
@@ -362,14 +376,10 @@ impl qobject::SuttaBridge {
         QString::from(html)
     }
 
-    pub fn get_translations_for_sutta_uid(&self, sutta_uid: &QString) -> QStringList {
+    pub fn get_translations_data_json_for_sutta_uid(&self, sutta_uid: &QString) -> QString {
         let app_data = get_app_data();
-        let translations: Vec<String> = app_data.dbm.appdata.get_translations_for_sutta_uid(&sutta_uid.to_string());
-        let mut res = QStringList::default();
-        for t in translations {
-            res.append(QString::from(t));
-        }
-        res
+        let r = app_data.dbm.appdata.get_translations_data_json_for_sutta_uid(&sutta_uid.to_string());
+        QString::from(r)
     }
 
     pub fn app_data_folder_path(&self) -> QString {

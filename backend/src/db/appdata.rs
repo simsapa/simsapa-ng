@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use regex::Regex;
 use anyhow::Result;
+use serde::Serialize;
 
 use crate::get_app_data;
 use crate::db::appdata_models::*;
@@ -33,7 +34,7 @@ impl AppdataDbHandle {
         }
     }
 
-    pub fn get_translations_for_sutta_uid(&self, sutta_uid: &str) -> Vec<String> {
+    pub fn get_translations_data_json_for_sutta_uid(&self, sutta_uid: &str) -> String {
         // See sutta_search_window_state.py::_add_related_tabs()
 
         // Capture the reference before the first '/'
@@ -44,7 +45,7 @@ impl AppdataDbHandle {
 
         let app_data = get_app_data();
         let _lock = app_data.dbm.appdata.write_lock.lock();
-        let mut db_conn = app_data.dbm.appdata.get_conn().expect("get_translations(): No appdata conn");
+        let mut db_conn = app_data.dbm.appdata.get_conn().expect("get_translations_data_json_for_sutta_uid(): No appdata conn");
 
         let mut res: Vec<Sutta> = Vec::new();
 
@@ -56,10 +57,21 @@ impl AppdataDbHandle {
                 res.extend(a);
             }
 
-        let res_sorted_uids: Vec<String> = sort_suttas(res)
-            .into_iter().map(|s| s.uid).collect();
+        #[derive(Serialize)]
+        struct TranslationData {
+            sutta_uid: String,
+            sutta_title: String,
+            sutta_ref: String,
+        }
 
-        res_sorted_uids
+        let res_sorted_data: Vec<TranslationData> = sort_suttas(res)
+            .into_iter().map(|s| TranslationData {
+                sutta_uid: s.uid,
+                sutta_title: s.title.unwrap_or("".to_string()),
+                sutta_ref: s.sutta_ref,
+            }).collect();
+
+        serde_json::to_string(&res_sorted_data).expect("Can't encode JSON")
     }
 
     pub fn get_app_settings(&self) -> AppSettings {

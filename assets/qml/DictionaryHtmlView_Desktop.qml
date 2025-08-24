@@ -43,16 +43,12 @@ document.documentElement.style.colorScheme = 'light';
         runJavaScript(js);
     }
 
-    SuttaBridge {
-        id: sb
-    }
-
     function load_word_uid(uid) {
         if (uid == "Word") {
             // Initial blank page
             uid = "";
         }
-        var html = sb.get_word_html(web.window_id, uid);
+        var html = SuttaBridge.get_word_html(web.window_id, uid);
         web.loadHtml(html);
     }
 

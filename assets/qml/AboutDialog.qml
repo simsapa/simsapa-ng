@@ -31,15 +31,13 @@ ApplicationWindow {
 
     property string current_platform: ""
 
-    SuttaBridge { id: sb }
-
     function info_lines() {
         return [
             `App version: ${root.app_version}`,
             `Qt Version: ${root.qt_version}`,
             `Current platform: ${root.current_platform}`,
-            `App data folder: ${sb.app_data_folder_path()}`,
-            `App data folder is writable: ${sb.is_app_data_folder_writable()}`,
+            `App data folder: ${SuttaBridge.app_data_folder_path()}`,
+            `App data folder is writable: ${SuttaBridge.is_app_data_folder_writable()}`,
         ];
     }
 
@@ -78,7 +76,7 @@ ApplicationWindow {
                 }
                 Button {
                     text: "List Contents"
-                    onClicked: data_contents.text = sb.app_data_contents_html_table()
+                    onClicked: data_contents.text = SuttaBridge.app_data_contents_html_table()
                 }
                 Text {
                     id: data_contents
@@ -111,7 +109,7 @@ ApplicationWindow {
                     text: "Copy"
                     onClicked: {
                         let info = root.info_lines().join("\n");
-                        info += "\nContents:\n\n" + sb.app_data_contents_plain_table()
+                        info += "\nContents:\n\n" + SuttaBridge.app_data_contents_plain_table()
                         clip.copy_text(info);
                     }
                 }

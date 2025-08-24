@@ -30,7 +30,6 @@ Item {
 
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
 
-    SuttaBridge { id: sb }
     PromptManager { id: pm }
 
     Connections {
@@ -151,7 +150,7 @@ Respond with only the translation of the Pāli passage.
         }
 
         let save_fn = function() {
-            let ok = sb.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
+            let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
             if (ok) {
                 msg_dialog_ok.text = "Export completed."
                 msg_dialog_ok.open();
@@ -162,7 +161,7 @@ Respond with only the translation of the Pāli passage.
         };
 
         if (save_file_name) {
-            let exists = sb.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
+            let exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
             if (exists) {
                 msg_dialog_cancel_ok.text = `${save_file_name} exists. Overwrite?`;
                 msg_dialog_cancel_ok.accept_fn = save_fn;
@@ -206,7 +205,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     function load_common_words() {
-        var saved_words = sb.get_common_words_json();
+        var saved_words = SuttaBridge.get_common_words_json();
         if (saved_words) {
             try {
                 root.common_words = JSON.parse(saved_words);
@@ -217,12 +216,12 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     function save_common_words() {
-        sb.save_common_words_json(JSON.stringify(root.common_words));
+        SuttaBridge.save_common_words_json(JSON.stringify(root.common_words));
     }
 
     function load_history() {
         history_model.clear()
-        var history_json = sb.get_gloss_history_json();
+        var history_json = SuttaBridge.get_gloss_history_json();
         if (history_json) {
             try {
                 var data = JSON.parse(history_json);
@@ -262,9 +261,9 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         }
 
         if (root.current_session_id) {
-            sb.update_gloss_session(root.current_session_id, JSON.stringify(gloss_data));
+            SuttaBridge.update_gloss_session(root.current_session_id, JSON.stringify(gloss_data));
         } else {
-            root.current_session_id = sb.save_new_gloss_session(JSON.stringify(gloss_data));
+            root.current_session_id = SuttaBridge.save_new_gloss_session(JSON.stringify(gloss_data));
         }
 
         root.load_history();
@@ -276,7 +275,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
         for (var i = 0; i < sentences.length; i++) {
             var sentence = sentences[i].trim();
-            var words = sb.extract_words(sentence);
+            var words = SuttaBridge.extract_words(sentence);
 
             for (var j = 0; j < words.length; j++) {
                 words_with_context.push({
@@ -320,7 +319,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     function process_word_for_glossing(word_info, paragraph_shown_stems, global_stems, check_global) {
-        var lookup_results_json = sb.dpd_lookup_json(word_info.word.toLowerCase());
+        var lookup_results_json = SuttaBridge.dpd_lookup_json(word_info.word.toLowerCase());
         var results = [];
         try {
             results = JSON.parse(lookup_results_json);
@@ -384,7 +383,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     // }
 
     function process_paragraph_for_glossing(paragraph_text, paragraph_shown_stems, global_stems, check_global) {
-        var words = sb.extract_words(paragraph_text);
+        var words = SuttaBridge.extract_words(paragraph_text);
         // console.log(words);
         var glossed_words = [];
 
@@ -1253,7 +1252,7 @@ ${table_rows}
                             .map(w => w.trim().toLowerCase())
                             .filter(w => w.length > 0);
                         root.common_words = words;
-                        sb.save_common_words_json(JSON.stringify(root.common_words));
+                        SuttaBridge.save_common_words_json(JSON.stringify(root.common_words));
                         commonWordsDialog.close();
                         root.update_all_glosses();
                     }

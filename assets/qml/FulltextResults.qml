@@ -51,8 +51,12 @@ ColumnLayout {
         root.update_page();
     }
 
-    function current_uid() {
-        return results_model.get(fulltext_list.currentIndex).uid;
+    function current_result_sutta_uid(): var {
+        return results_model.get(fulltext_list.currentIndex).sutta_uid;
+    }
+
+    function current_result_data(): var {
+        return results_model.get(fulltext_list.currentIndex);
     }
 
     RowLayout {
@@ -138,7 +142,7 @@ ColumnLayout {
         root.total_pages = (root.total_hits > 0 ? Math.ceil(root.total_hits / root.page_len) : 1)
         for (var i = 0; i < root.current_results.length; i++) {
             var item = root.current_results[i];
-            results_model.append({
+            var result_data = {
                 index: i,
 
                 // uid:         item.uid,
@@ -154,12 +158,13 @@ ColumnLayout {
                 // score:       item.score,
                 // rank:        item.rank,
 
-                uid:         item.uid,
-                title:       item.title,
-                snippet:     item.snippet,
+                sutta_uid:   item.uid,
+                sutta_title: item.title,
                 sutta_ref:   item.sutta_ref,
+                snippet:     item.snippet,
                 /* author:      item.author, */
-            })
+            };
+            results_model.append(result_data);
         }
     }
 
@@ -222,11 +227,11 @@ ColumnLayout {
             height: fulltext_list.item_height
 
             required property int index
-            required property string uid
-            required property string title
+            required property string sutta_uid
+            required property string sutta_title
+            required property string sutta_ref
             required property string snippet
             /* required property string nikaya */
-            required property string sutta_ref
             property string author: ""
             /* required property int page_number */
             /* required property real score */
@@ -257,9 +262,9 @@ ColumnLayout {
                     RowLayout {
                         spacing: 12
                         Text { text: result_item.sutta_ref; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
-                        Text { text: result_item.title; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
+                        Text { text: result_item.sutta_title; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
                         Item { Layout.fillWidth: true }
-                        Text { text: result_item.uid; font.pointSize: root.font_point_size; font.italic: true; color: root.palette.active.text }
+                        Text { text: result_item.sutta_uid; font.pointSize: root.font_point_size; font.italic: true; color: root.palette.active.text }
                     }
 
                     // Snippet with highlighted HTML

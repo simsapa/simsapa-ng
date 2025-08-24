@@ -6,11 +6,15 @@ TabButton {
     id: control
 
     required property int index
-    required property string id_key
-    required property string web_item_key
-    required property string title
+
+    // NOTE: same attributes as returned from new_tab_data().
+    required property string sutta_uid
+    required property string sutta_title
+    required property string sutta_ref
     required property bool pinned
     required property bool focus_on_new
+    required property string id_key
+    required property string web_item_key
 
     signal pinToggled(bool pinned)
     signal closeClicked()
@@ -29,7 +33,7 @@ TabButton {
         }
 
         Label {
-            text: control.title
+            text: control.sutta_uid
             elide: Text.ElideRight
             /* Layout.fillWidth: true */
         }
