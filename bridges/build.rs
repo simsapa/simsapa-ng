@@ -35,6 +35,7 @@ fn main() {
     qml_files.push("../assets/qml/WordSummary.qml");
     qml_files.push("../assets/qml/StorageDialog.qml");
     qml_files.push("../assets/qml/GlossTab.qml");
+    qml_files.push("../assets/qml/PromptsTab.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library

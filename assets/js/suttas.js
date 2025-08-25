@@ -142,7 +142,12 @@ class HamburgerMenu {
         e.stopPropagation();
 
         const action = e.currentTarget.dataset.action;
-        const selectedText = this.getSelectedText();
+        let query_text = "";
+        if (action === "summarize-sutta") {
+            query_text = this.getAllContentText();
+        } else {
+            query_text = this.getSelectedText();
+        }
 
         try {
             const response = await fetch(`${API_URL}/sutta_menu_action/`, {
@@ -153,7 +158,7 @@ class HamburgerMenu {
                 body: JSON.stringify({
                     window_id: WINDOW_ID,
                     action: action,
-                    text: selectedText,
+                    text: query_text,
                 })
             });
 
@@ -176,6 +181,17 @@ class HamburgerMenu {
             return document.selection.createRange().text;
         }
         return '';
+    }
+
+    getAllContentText() {
+        const content_div = document.getElementById('ssp_content');
+        if (!content_div) {
+            console.error('Element with id "ssp_content" not found');
+            return null;
+        }
+        // .textContent gets all text content, including text from hidden elements
+        // .innerText respects styling and won't include text from hidden elements
+        return content_div.innerText || '';
     }
 }
 

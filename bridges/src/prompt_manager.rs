@@ -7,7 +7,7 @@ use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
-// use simsapa_backend::logger::info;
+use simsapa_backend::logger::error;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -29,9 +29,16 @@ pub mod qobject {
         #[qinvokable]
         fn prompt_request(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model: &QString, prompt: &QString);
 
+        #[qinvokable]
+        fn prompt_request_with_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, model: &QString, messages_json: &QString);
+
         #[qsignal]
         #[cxx_name = "promptResponse"]
         fn prompt_response(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model: QString, response: QString);
+
+        #[qsignal]
+        #[cxx_name = "promptResponseForMessages"]
+        fn prompt_response_for_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, response: QString);
     }
 }
 
@@ -82,7 +89,55 @@ impl qobject::PromptManager {
                     paragraph_idx,
                     translation_idx,
                     QString::from(model_text),
-                    QString::from(response_content));
+                    QString::from(response_content.trim()));
+            }).unwrap();
+        }); // end of thread
+    }
+
+    fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, model: &QString, messages_json: &QString) {
+        let qt_thread = self.qt_thread();
+
+        // FIXME: read OPENROUTER_API_KEY from db
+        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| String::from(""));
+
+        let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
+
+        let messages: Vec<ChatMessage> = match serde_json::from_str(&messages_json.to_string()) {
+            Ok(r) => r,
+            Err(e) => {
+                error(&format!("{}", e));
+                return;
+            }
+        };
+        let model_text = model.to_string();
+
+        // Spawn a thread so Qt event loop is not blocked
+        thread::spawn(move || {
+            let client = Client::new();
+
+            let request_body = ChatRequest {
+                model: model_text.clone(),
+                messages,
+                max_tokens: None,
+                temperature: None,
+            };
+
+            let response_content = match make_api_request(
+                &client,
+                &api_url,
+                &api_key,
+                request_body
+            ) {
+                Ok(content) => content,
+                Err(e) => format!("Error: {}", e),
+            };
+
+            // Emit signal with the prompt response
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().prompt_response_for_messages(
+                    sender_message_idx,
+                    QString::from(response_content.trim()),
+                );
             }).unwrap();
         }); // end of thread
     }
@@ -139,7 +194,7 @@ fn make_api_request(
 }
 
 // Structures for OpenRouter API
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct ChatMessage {
     role: String,
     content: String,

@@ -19,7 +19,7 @@ Item {
     readonly property int vocab_font_point_size: 10
     readonly property TextMetrics vocab_tm1: TextMetrics { text: "#"; font.pointSize: root.vocab_font_point_size }
 
-    property alias gloss_text_input_area: gloss_text_input
+    property alias gloss_text_input: gloss_text_input
 
     property var handle_open_dict_tab_fn
 

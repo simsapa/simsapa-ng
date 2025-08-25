@@ -130,7 +130,7 @@ Item {
 
         function test_gloss_word_selection_and_export() {
             var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
-            gloss_tab.gloss_text_input_area.text = paragraph;
+            gloss_tab.gloss_text_input.text = paragraph;
             gloss_tab.update_all_glosses();
             // 1st paragraph, 5th word 'karitvā 1', change to 4th selection 'karitvā 4'
             gloss_tab.update_word_selection(0, 4, 3);

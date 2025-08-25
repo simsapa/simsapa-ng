@@ -232,8 +232,14 @@ ApplicationWindow {
     function gloss_text(query_text: string) {
         show_sidebar_btn.checked = true;
         rightside_tabs.setCurrentIndex(2); // gloss tab
-        gloss_tab.gloss_text_input_area.text = query_text;
+        gloss_tab.gloss_text_input.text = query_text;
         gloss_tab.update_all_glosses();
+    }
+
+    function new_prompt(prompt: string) {
+        show_sidebar_btn.checked = true;
+        rightside_tabs.setCurrentIndex(3); // prompts tab
+        prompts_tab.new_prompt(prompt);
     }
 
     function run_sutta_menu_action(action: string, query_text: string) {
@@ -255,10 +261,29 @@ ApplicationWindow {
             root.gloss_text(query_text);
             break;
 
+        case "summarize-sutta":
+            var prompt = `Summarize the following sutta text:
+
+${query_text}`;
+            root.new_prompt(prompt);
+            break;
+
+        case "translate-selection":
+            var prompt = `Translate the following passage:
+
+${query_text}`;
+            root.new_prompt(prompt);
+            break;
+
+        case "analyse-selection":
+            var prompt = `Analyse the following passage and provide a word-by-word breakdown as a list:
+
+${query_text}`;
+            root.new_prompt(prompt);
+            break;
+
         case "copy-link-sutta":
         case "copy-sutta-url":
-        case "summarize-sutta":
-        case "analyse-selection":
             let msg = `TODO: ${action}`;
             sutta_html_view_layout.show_transient_message(msg);
             break;
@@ -918,6 +943,13 @@ ApplicationWindow {
                                 padding: 5
                             }
 
+                            TabButton {
+                                text: "Prompts"
+                                id: prompts_tab_btn
+                                icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                                padding: 5
+                            }
+
                             // TabButton {
                             //     text: "History"
                             //     id: history_tab_btn
@@ -992,6 +1024,14 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 handle_open_dict_tab_fn: root.open_dict_tab
+                            }
+
+                            PromptsTab {
+                                id: prompts_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
                             }
 
                             // History Tab

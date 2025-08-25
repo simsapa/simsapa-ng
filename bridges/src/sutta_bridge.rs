@@ -7,7 +7,6 @@ use cxx_qt_lib::{QString, QStringList, QUrl};
 use cxx_qt::Threading;
 use regex::{Regex, Captures};
 use lazy_static::lazy_static;
-use serde::Serialize;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
