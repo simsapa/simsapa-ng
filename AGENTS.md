@@ -8,6 +8,14 @@ For detailed information about the codebase organization, folder structure, and 
 
 Keep [PROJECT_MAP.md](./PROJECT_MAP.md) updated as changes are made.
 
+# AI Dev Tasks
+
+Use these files when I request structured feature development using PRDs:
+
+- [create-prd.md](./ai-dev-tasks/create-prd.md)
+- [generate-tasks.md](./ai-dev-tasks/generate-tasks.md)
+- [process-task-list.md](./ai-dev-tasks/process-task-list.md)
+
 ## Build/Test Commands
 
 - **Build:** `make build -B` (CMake + Qt6) or `cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/`
@@ -20,11 +28,20 @@ Keep [PROJECT_MAP.md](./PROJECT_MAP.md) updated as changes are made.
 
 ## Code Style
 
+Use lowercase snake_case for new functions, variables and id names, E.g:
+- `id: next_message, id: message_item, property bool is_collapsed`
+- `function export_dialog_accepted()`
+
 - **Rust:** snake_case, standard rustfmt, use `anyhow::Result` for error handling, prefer `tracing` over `println!`
+
 - **TypeScript:** 2-space indents, import * as alias style, use webpack for bundling
-- **C++:** snake_case functions, PascalCase classes, include proper error handling with custom exceptions
+
+- **C++:** lowercase snake_case functions, PascalCase classes, include proper error handling with custom exceptions
+
 - **QML:** PascalCase components, camelCase properties, follow Qt conventions
+
 - **Naming:** Descriptive names, avoid abbreviations, use domain-specific terms (sutta, pali, dhamma)
+
 - **Errors:** Use Result types in Rust, exceptions in C++, proper error propagation throughout stack
 
 ## Architecture
