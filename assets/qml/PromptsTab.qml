@@ -31,22 +31,27 @@ Item {
     Connections {
         target: pm
 
-        function onPromptResponseForMessages(sender_message_idx: int, response: string) {
+        function onPromptResponseForMessages(sender_message_idx: int, response: string, response_html: string) {
             root.waiting_for_response = false;
 
             messages_model.append({
                 role: "assistant",
                 content: response,
+                content_html: response_html,
             });
             messages_model.append({
                 role: "user",
                 content: "",
+                content_html: "",
             });
+
+            // Scroll to bottom after adding new messages
+            root.scroll_to_bottom();
         }
     }
 
     property string model_name: "tngtech/deepseek-r1t2-chimera:free"
-    property string system_prompt: "You are a helpful assistant for studying the suttas of the Theravāda Pāli Tipitaka and the Pāli language. Respond with concise answers and respond only with the information requested in the task."
+    property string system_prompt: "You are a helpful assistant for studying the suttas of the Theravāda Pāli Tipitaka and the Pāli language. Respond with concise answers and respond only with the information requested in the task. Respond with GFM-Markdown formatted text."
     property bool waiting_for_response: false
 
     ListModel { id: messages_model }
@@ -56,11 +61,52 @@ Item {
         messages_model.append({
             role: "system",
             content: root.system_prompt,
+            content_html: "",
         });
         messages_model.append({
             role: "user",
             content: "",
+            content_html: "",
         });
+
+        // Initialize content height tracking after initial messages
+        Qt.callLater(function() {
+            if (messages_scroll_view.contentItem) {
+                root.last_content_height = messages_scroll_view.contentItem.contentHeight;
+            }
+        });
+    }
+
+    function scroll_to_bottom() {
+        // Only scroll if needed - check if content exceeds view
+        scroll_timer.restart();
+    }
+
+    property real last_content_height: 0
+
+    function perform_scroll_if_needed() {
+        var contentHeight = messages_scroll_view.contentItem.contentHeight; // qmllint disable missing-property
+        var viewHeight = messages_scroll_view.height;
+
+        // Check if new content was added that exceeds the current view
+        var contentGrew = contentHeight > root.last_content_height;
+        root.last_content_height = contentHeight;
+
+        // Only scroll if:
+        // 1. Content actually grew (new messages were added), AND
+        // 2. The content now exceeds the view height
+        if (contentGrew && contentHeight > viewHeight) {
+            messages_scroll_view.ScrollBar.vertical.position = 1.0 - messages_scroll_view.ScrollBar.vertical.size;
+        }
+    }
+
+    Timer {
+        id: scroll_timer
+        interval: 150  // Increased delay to ensure layout completion
+        repeat: false
+        onTriggered: {
+            root.perform_scroll_if_needed();
+        }
     }
 
     function new_prompt(prompt: string) {
@@ -68,10 +114,12 @@ Item {
         messages_model.append({
             role: "system",
             content: root.system_prompt,
+            content_html: "",
         });
         messages_model.append({
             role: "user",
             content: prompt,
+            content_html: "",
         });
         var item = messages_repeater.itemAt(1);
         if (item && item.send_btn) { // qmllint disable missing-property
@@ -173,6 +221,7 @@ Item {
 
         // Prompt Tab
         ScrollView {
+            id: messages_scroll_view
             contentWidth: availableWidth
 
             background: Rectangle {
@@ -182,6 +231,7 @@ Item {
             }
 
             ColumnLayout {
+                id: messages_column_layout
                 Layout.topMargin: 20
                 width: parent.width
                 spacing: 20
@@ -212,6 +262,7 @@ Item {
                 RowLayout {
                     Layout.leftMargin: 10
                     Label {
+                        id: waiting_msg
                         text: "Waiting for response..."
                         visible: root.waiting_for_response
                         font.pointSize: root.vocab_font_point_size
@@ -245,6 +296,7 @@ Item {
                 required property int index
                 required property string role
                 required property string content
+                required property string content_html
 
                 property bool is_collapsed: collapse_btn.checked
                 property bool is_editable: ["user", "system"].includes(message_item.role)
@@ -289,9 +341,10 @@ Item {
                             anchors.fill: parent
 
                             TextArea {
-                                id: next_message
+                                id: message_content
                                 Layout.fillWidth: true
-                                text: message_item.content
+                                text: message_item.role === "assistant" ? message_item.content_html : message_item.content
+                                textFormat: message_item.role === "assistant" ? Text.RichText : Text.PlainText
                                 font.pointSize: 12
                                 selectByMouse: true
                                 wrapMode: TextEdit.WordWrap
@@ -302,6 +355,7 @@ Item {
                                         messages_model.set(message_item.index, {
                                             role: message_item.role,
                                             content: text,
+                                            content_html: message_item.content_html,
                                         });
                                     }
                                 }
@@ -316,7 +370,7 @@ Item {
                                     visible: message_item.role === "user"
                                     Layout.alignment: Qt.AlignRight
                                     onClicked: {
-                                        if (next_message.text.trim().length == 0) {
+                                        if (message_content.text.trim().length == 0) {
                                             msg_dialog_ok.text = "Prompt message is empty";
                                             msg_dialog_ok.open();
                                             return;
@@ -336,6 +390,9 @@ Item {
                                         for (var i=messages_model.count-1; i > message_item.index; i--) {
                                             messages_model.remove(i);
                                         }
+
+                                        // Scroll to bottom to show waiting message
+                                        root.scroll_to_bottom();
                                     }
                                 }
                             }
