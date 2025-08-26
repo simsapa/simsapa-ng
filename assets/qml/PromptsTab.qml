@@ -85,7 +85,7 @@ Item {
     property real last_content_height: 0
 
     function perform_scroll_if_needed() {
-        var contentHeight = messages_scroll_view.contentItem.contentHeight;
+        var contentHeight = messages_scroll_view.contentItem.contentHeight; // qmllint disable missing-property
         var viewHeight = messages_scroll_view.height;
 
         // Check if new content was added that exceeds the current view
@@ -105,7 +105,7 @@ Item {
         interval: 150  // Increased delay to ensure layout completion
         repeat: false
         onTriggered: {
-            perform_scroll_if_needed();
+            root.perform_scroll_if_needed();
         }
     }
 
