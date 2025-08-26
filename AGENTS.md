@@ -16,6 +16,42 @@ Use these files when I request structured feature development using PRDs:
 - [generate-tasks.md](./ai-dev-tasks/generate-tasks.md)
 - [process-task-list.md](./ai-dev-tasks/process-task-list.md)
 
+## Specific coding procedures
+
+### New QML components
+
+When you create a new QML component such as `SearchBarInput.qml`, the file has to be added to the `qml_files` list in `bridges/build.rs`.
+
+``` rust
+qml_files.push("../assets/qml/SearchBarInput.qml");
+```
+
+### New Rust bridges
+
+When you create a new Rust bridge such as `bridges/src/prompt_manager.rs`, it has to be registered as a QmlModule and the Rust file name has to be added to the `rust_files` list in `bridges/build.rs`:
+
+``` rust
+.qml_module(QmlModule {
+        uri: "com.profoundlabs.simsapa",
+        rust_files: &[
+                "src/sutta_bridge.rs",
+                "src/asset_manager.rs",
+                "src/storage_manager.rs",
+                "src/prompt_manager.rs",
+                "src/api.rs",
+        ],
+        qml_files: &qml_files,
+        ..Default::default()
+})
+```
+
+`qmllint` requires that the corresponding QML type definition for the Rust bridge has to be created and it should be declared in the `qmldir` file.
+
+```
+assets/qml/com/profoundlabs/simsapa/PromptManager.qml
+assets/qml/com/profoundlabs/simsapa/qmldir
+```
+
 ## Build/Test Commands
 
 - **Build:** `make build -B` (CMake + Qt6) or `cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/`
