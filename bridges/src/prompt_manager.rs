@@ -7,6 +7,7 @@ use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
+use simsapa_backend::helpers::consistent_niggahita;
 use simsapa_backend::logger::error;
 
 #[cxx_qt::bridge]
@@ -79,7 +80,7 @@ impl qobject::PromptManager {
                 &api_key,
                 request_body
             ) {
-                Ok(content) => content,
+                Ok(content) => consistent_niggahita(Some(content)),
                 Err(e) => format!("Error: {}", e),
             };
 
@@ -128,7 +129,7 @@ impl qobject::PromptManager {
                 &api_key,
                 request_body
             ) {
-                Ok(content) => content,
+                Ok(content) => consistent_niggahita(Some(content)),
                 Err(e) => format!("Error: {}", e),
             };
 

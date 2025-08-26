@@ -289,7 +289,7 @@ Item {
                             anchors.fill: parent
 
                             TextArea {
-                                id: next_message
+                                id: message_content
                                 Layout.fillWidth: true
                                 text: message_item.content
                                 font.pointSize: 12
@@ -316,7 +316,7 @@ Item {
                                     visible: message_item.role === "user"
                                     Layout.alignment: Qt.AlignRight
                                     onClicked: {
-                                        if (next_message.text.trim().length == 0) {
+                                        if (message_content.text.trim().length == 0) {
                                             msg_dialog_ok.text = "Prompt message is empty";
                                             msg_dialog_ok.open();
                                             return;

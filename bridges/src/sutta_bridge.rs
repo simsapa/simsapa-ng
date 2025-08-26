@@ -469,15 +469,15 @@ impl qobject::SuttaBridge {
         QString::from("[]")
     }
 
-    pub fn update_gloss_session(&self, session_uid: &QString, gloss_data_json: &QString) {
+    pub fn update_gloss_session(&self, _session_uid: &QString, _gloss_data_json: &QString) {
         return
     }
 
-    pub fn save_new_gloss_session(&self, gloss_data_json: &QString) -> QString {
+    pub fn save_new_gloss_session(&self, _gloss_data_json: &QString) -> QString {
         QString::from("session-uid")
     }
 
-    pub fn save_anki_csv(&self, csv_content: &QString) -> QString {
+    pub fn save_anki_csv(&self, _csv_content: &QString) -> QString {
         QString::from("file_name.csv")
     }
 
