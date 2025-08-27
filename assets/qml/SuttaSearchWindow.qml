@@ -35,7 +35,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !api_keys_dialog.visible)
 
     Connections {
         target: SuttaBridge

@@ -39,6 +39,13 @@ ApplicationWindow {
         load_current_api_key();
     }
 
+    onVisibilityChanged: {
+        // When the dialog is closed, reset the state of key visibility.
+        if (!root.visible) {
+            show_key.checked = false;
+        }
+    }
+
     Item {
         x: 10
         y: 10
