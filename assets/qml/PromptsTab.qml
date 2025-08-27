@@ -51,16 +51,18 @@ Item {
     }
 
     property string model_name: "tngtech/deepseek-r1t2-chimera:free"
-    property string system_prompt: "You are a helpful assistant for studying the suttas of the Theravāda Pāli Tipitaka and the Pāli language. Respond with concise answers and respond only with the information requested in the task. Respond with GFM-Markdown formatted text."
     property bool waiting_for_response: false
 
     ListModel { id: messages_model }
 
     Component.onCompleted: {
+        // Load system prompt dynamically from database
+        let system_prompt_text = SuttaBridge.get_system_prompt("Prompts Tab: System Prompt");
+
         // Add a system prompt and an empty user message.
         messages_model.append({
             role: "system",
-            content: root.system_prompt,
+            content: system_prompt_text,
             content_html: "",
         });
         messages_model.append({
@@ -111,9 +113,13 @@ Item {
 
     function new_prompt(prompt: string) {
         messages_model.clear();
+
+        // Load system prompt dynamically from database
+        let system_prompt_text = SuttaBridge.get_system_prompt("Prompts Tab: System Prompt");
+
         messages_model.append({
             role: "system",
-            content: root.system_prompt,
+            content: system_prompt_text,
             content_html: "",
         });
         messages_model.append({

@@ -59,18 +59,7 @@ Item {
         }
     }
 
-    property string translation_prompt_template: `Translate the following Pāli passage to English, keeping in mind the provided dictionary definitions.
 
-Pāli passage:
-
-<<PALI_PASSAGE>>
-
-Dictionary definitions:
-
-<<DICTIONARY_DEFINITIONS>>
-
-Respond with only the translation of the Pāli passage.
-`
 
     property list<var> translation_models_init: [
         { model_name: "tngtech/deepseek-r1t2-chimera:free", enabled: true },
@@ -972,7 +961,9 @@ ${table_rows}
 
                                     let glossed_words = JSON.parse(paragraph.words_data_json);
 
-                                    let prompt = root.translation_prompt_template
+                                    // Load prompt template dynamically from database
+                                    let template = SuttaBridge.get_system_prompt("Gloss Tab: AI-Translation");
+                                    let prompt = template
                                         .replace("<<PALI_PASSAGE>>", paragraph_item.text)
                                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions(glossed_words));
 

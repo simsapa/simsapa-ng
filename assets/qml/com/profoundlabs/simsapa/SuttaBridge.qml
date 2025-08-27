@@ -134,6 +134,18 @@ Item {
         console.log("set_api_keys()");
     }
 
+    function get_system_prompt(prompt_name: string): string {
+        return 'prompt_value';
+    }
+
+    function set_system_prompts_json(prompts_json: string) {
+        console.log("set_system_prompts_json()");
+    }
+
+    function get_system_prompts_json(): string {
+        return '{}';
+    }
+
     function get_theme_name(): string {
         return 'dark';
     }

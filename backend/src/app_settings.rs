@@ -15,6 +15,7 @@ pub struct AppSettings {
     pub show_glosses: bool,
     pub theme_name: ThemeName,
     pub api_keys: BTreeMap<String, String>,
+    pub system_prompts: BTreeMap<String, String>,
 }
 
 impl Default for AppSettings {
@@ -28,6 +29,32 @@ impl Default for AppSettings {
             show_glosses: false,
             theme_name: ThemeName::System,
             api_keys: BTreeMap::new(),
+            system_prompts: {
+                let mut prompts = BTreeMap::new();
+                prompts.insert("Gloss Tab: AI-Translation".to_string(),
+                    r#"
+Translate the following Pāli passage to English, keeping in mind the provided dictionary definitions.
+
+Pāli passage:
+
+<<PALI_PASSAGE>>
+
+Dictionary definitions:
+
+<<DICTIONARY_DEFINITIONS>>
+
+Respond with only the translation of the Pāli passage.
+"#.trim().to_string());
+
+                prompts.insert("Prompts Tab: System Prompt".to_string(),
+                    r#"
+You are a helpful assistant for studying the suttas of the Theravāda Pāli Tipitaka and the Pāli language.
+Respond with concise answers and respond only with the information requested in the task.
+Respond with GFM-Markdown formatted text.
+"#.trim().to_string());
+
+                prompts
+            },
         }
     }
 }

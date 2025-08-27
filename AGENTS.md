@@ -26,6 +26,18 @@ When you create a new QML component such as `SearchBarInput.qml`, the file has t
 qml_files.push("../assets/qml/SearchBarInput.qml");
 ```
 
+### New functions on Rust bridge QML components
+
+When adding new functions to Rust bridge QML components such as SuttaBridge, add a corresponding function in the `qmllint` type definition, e.g. SuttaBridge.qml
+
+For example, when implementing the `get_api_key()` method in `sutta_bridge.rs`, add a corresponding function in `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` with the correct function signature and a simple return value. The internal logic doesn't have to be repeated, because this is only for the benefit of `qmllint`.
+
+``` qml
+function get_api_key(key_name: string): string {
+    return 'key_value';
+}
+```
+
 ### New Rust bridges
 
 When you create a new Rust bridge such as `bridges/src/prompt_manager.rs`, it has to be registered as a QmlModule and the Rust file name has to be added to the `rust_files` list in `bridges/build.rs`:

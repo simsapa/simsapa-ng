@@ -116,6 +116,15 @@ pub mod qobject {
         fn set_api_keys(self: Pin<&mut SuttaBridge>, api_keys_json: &QString);
 
         #[qinvokable]
+        fn get_system_prompt(self: &SuttaBridge, prompt_name: &QString) -> QString;
+
+        #[qinvokable]
+        fn set_system_prompts_json(self: Pin<&mut SuttaBridge>, prompts_json: &QString);
+
+        #[qinvokable]
+        fn get_system_prompts_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
         fn get_saved_theme(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -450,6 +459,26 @@ impl qobject::SuttaBridge {
     pub fn set_api_keys(self: Pin<&mut Self>, api_keys_json: &QString) {
         let app_data = get_app_data();
         app_data.set_api_keys(&api_keys_json.to_string());
+    }
+
+    /// Get a specific system prompt by name
+    pub fn get_system_prompt(&self, prompt_name: &QString) -> QString {
+        let app_data = get_app_data();
+        let prompt = app_data.get_system_prompt(&prompt_name.to_string());
+        QString::from(prompt)
+    }
+
+    /// Save system prompts in the db as JSON
+    pub fn set_system_prompts_json(self: Pin<&mut Self>, prompts_json: &QString) {
+        let app_data = get_app_data();
+        app_data.set_system_prompts_json(&prompts_json.to_string());
+    }
+
+    /// Get all system prompts as JSON
+    pub fn get_system_prompts_json(&self) -> QString {
+        let app_data = get_app_data();
+        let prompts_json = app_data.get_system_prompts_json();
+        QString::from(prompts_json)
     }
 
     pub fn get_saved_theme(&self) -> QString {

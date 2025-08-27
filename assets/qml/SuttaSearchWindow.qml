@@ -608,7 +608,7 @@ ${query_text}`;
                 action: Action {
                     id: action_system_prompts
                     text: "&System Prompts..."
-                    /* onTriggered: TODO */
+                    onTriggered: system_prompts_dialog.show()
                 }
             }
         }
@@ -634,6 +634,7 @@ ${query_text}`;
 
     AboutDialog { id: about_dialog }
     ApiKeysDialog { id: api_keys_dialog }
+    SystemPromptsDialog { id: system_prompts_dialog }
 
     ColorThemeDialog {
         id: color_theme_dialog
