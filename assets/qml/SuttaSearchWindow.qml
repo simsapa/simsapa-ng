@@ -692,8 +692,8 @@ ${query_text}`;
                         TabBar {
                             id: suttas_tab_bar
                             anchors.top: parent.top
-                            /* anchors.left: parent.left */
-                            /* anchors.right: parent.right */
+                            anchors.left: parent.left
+                            anchors.right: parent.right
 
                             function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
                                 /* console.log("tab_focus_changed()", tab.index, "sutta_uid:", tab.sutta_uid, "web_item_key:", tab.web_item_key); */
@@ -849,6 +849,8 @@ ${query_text}`;
                                         onFocusChanged: suttas_tab_bar.tab_focus_changed(translations_tab_btn, tabs_translations_model)
                                     }
                                 }
+
+                                Item { Layout.fillWidth: true }
                             }
                         }
 

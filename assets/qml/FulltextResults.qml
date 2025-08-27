@@ -185,8 +185,7 @@ ColumnLayout {
         readonly property int item_padding: 10
         readonly property int item_height: root.tm1.height*4 + item_padding*2
 
-        // FIXME: can't get this ListView to resize to fill the available height
-        Layout.preferredHeight: 500
+        Layout.fillHeight: true
         Layout.fillWidth: true
 
         model: results_model
