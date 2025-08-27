@@ -1,8 +1,11 @@
+use std::collections::BTreeMap;
+
 use serde::{Serialize, Deserialize};
 
 use crate::logger::error;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AppSettings {
     pub sutta_font_size: usize,
     pub sutta_max_width: usize,
@@ -11,6 +14,7 @@ pub struct AppSettings {
     pub show_all_variant_readings: bool,
     pub show_glosses: bool,
     pub theme_name: ThemeName,
+    pub api_keys: BTreeMap<String, String>,
 }
 
 impl Default for AppSettings {
@@ -23,6 +27,7 @@ impl Default for AppSettings {
             show_all_variant_readings: false,
             show_glosses: false,
             theme_name: ThemeName::System,
+            api_keys: BTreeMap::new(),
         }
     }
 }

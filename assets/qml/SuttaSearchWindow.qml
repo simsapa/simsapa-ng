@@ -584,6 +584,36 @@ ${query_text}`;
         }
 
         Menu {
+            id: prompts_menu
+            title: "&Prompts"
+
+            CMenuItem {
+                action: Action {
+                    id: action_api_keys
+                    text: "&API Keys..."
+                    icon.source: "icons/32x32/mdi--key-variant.png"
+                    onTriggered: api_keys_dialog.show()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_models
+                    text: "&Models..."
+                    /* onTriggered: TODO */
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_system_prompts
+                    text: "&System Prompts..."
+                    /* onTriggered: TODO */
+                }
+            }
+        }
+
+        Menu {
             id: help_menu
             title: "&Help"
             CMenuItem {
@@ -603,6 +633,7 @@ ${query_text}`;
     }
 
     AboutDialog { id: about_dialog }
+    ApiKeysDialog { id: api_keys_dialog }
 
     ColorThemeDialog {
         id: color_theme_dialog
@@ -941,14 +972,14 @@ ${query_text}`;
                             TabButton {
                                 text: "Gloss"
                                 id: gloss_tab_btn
-                                icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                                icon.source: "icons/32x32/material-symbols--list-alt-outline.png"
                                 padding: 5
                             }
 
                             TabButton {
                                 text: "Prompts"
                                 id: prompts_tab_btn
-                                icon.source: "icons/32x32/fa_clock-rotate-left-solid.png"
+                                icon.source: "icons/32x32/grommet-icons--chat.png"
                                 padding: 5
                             }
 

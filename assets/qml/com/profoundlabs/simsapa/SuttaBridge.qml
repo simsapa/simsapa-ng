@@ -126,6 +126,14 @@ Item {
         return "[{}]";
     }
 
+    function get_api_key(key_name: string): string {
+        return 'key_value';
+    }
+
+    function set_api_keys(api_keys_json: string) {
+        console.log("set_api_keys()");
+    }
+
     function get_theme_name(): string {
         return 'dark';
     }

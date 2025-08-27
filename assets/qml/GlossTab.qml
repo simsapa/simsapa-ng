@@ -915,7 +915,7 @@ ${table_rows}
                     id: collapse_btn
                     checkable: true
                     checked: false
-                    icon.source: checked ? "icons/32x32/fa_plus-solid.png" : "icons/32x32/fa_minus-solid.png"
+                    icon.source: checked ? "icons/32x32/material-symbols--expand-all.png" : "icons/32x32/material-symbols--collapse-all.png"
                     Layout.alignment: Qt.AlignLeft
                     Layout.preferredWidth: collapse_btn.height
                 }

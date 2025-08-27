@@ -28,6 +28,7 @@ fn main() {
     qml_files.push("../assets/qml/DictionaryTab.qml");
     qml_files.push("../assets/qml/SuttaStackLayout.qml");
     qml_files.push("../assets/qml/AboutDialog.qml");
+    qml_files.push("../assets/qml/ApiKeysDialog.qml");
     qml_files.push("../assets/qml/ColorThemeDialog.qml");
     qml_files.push("../assets/qml/DrawerMenu.qml");
     qml_files.push("../assets/qml/DrawerEmptyItem.qml");

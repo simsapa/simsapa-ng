@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use simsapa_backend::helpers::consistent_niggahita;
 use simsapa_backend::logger::error;
+use simsapa_backend::get_app_data;
 use markdown::{to_html_with_options, Options};
 
 #[cxx_qt::bridge]
@@ -51,8 +52,10 @@ impl qobject::PromptManager {
     fn prompt_request(self: Pin<&mut Self>, paragraph_idx: usize, translation_idx: usize, model: &QString, prompt: &QString) {
         let qt_thread = self.qt_thread();
 
-        // FIXME: read OPENROUTER_API_KEY from db
-        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| String::from(""));
+        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
+            let app_data = get_app_data();
+            app_data.get_api_key("OPENROUTER_API_KEY")
+        });
 
         let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
 
@@ -102,8 +105,10 @@ impl qobject::PromptManager {
     fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, model: &QString, messages_json: &QString) {
         let qt_thread = self.qt_thread();
 
-        // FIXME: read OPENROUTER_API_KEY from db
-        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| String::from(""));
+        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
+            let app_data = get_app_data();
+            app_data.get_api_key("OPENROUTER_API_KEY")
+        });
 
         let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
 

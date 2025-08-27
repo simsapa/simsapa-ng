@@ -1,8 +1,9 @@
 #!/bin/bash
 
-for i in ./svg/*.svg; do
+for i in ./new-svg/*.svg; do
     echo "$i"
     inkscape --export-type=png -w 32 -h 32 "$i"
 done
 
-mv ./svg/*.png ./32x32
+mv ./new-svg/*.svg ./svg
+mv ./new-svg/*.png ./32x32

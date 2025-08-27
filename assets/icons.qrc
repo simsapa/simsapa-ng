@@ -92,5 +92,12 @@
     <file>icons/32x32/material-symbols-light--push-pin-outline.png</file>
     <file>icons/32x32/mdi--menu.png</file>
     <file>icons/32x32/lucide-lab--copy-text.png</file>
+    <file>icons/32x32/grommet-icons--chat.png</file>
+    <file>icons/32x32/material-symbols--collapse-all.png</file>
+    <file>icons/32x32/material-symbols--expand-all.png</file>
+    <file>icons/32x32/mdi--eye-off-outline.png</file>
+    <file>icons/32x32/mdi--eye-outline.png</file>
+    <file>icons/32x32/mdi--key-variant.png</file>
+    <file>icons/32x32/material-symbols--list-alt-outline.png</file>
   </qresource>
 </RCC>
