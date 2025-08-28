@@ -30,6 +30,7 @@ fn main() {
     qml_files.push("../assets/qml/AboutDialog.qml");
     qml_files.push("../assets/qml/ApiKeysDialog.qml");
     qml_files.push("../assets/qml/SystemPromptsDialog.qml");
+    qml_files.push("../assets/qml/ModelsDialog.qml");
     qml_files.push("../assets/qml/ColorThemeDialog.qml");
     qml_files.push("../assets/qml/DrawerMenu.qml");
     qml_files.push("../assets/qml/DrawerEmptyItem.qml");

@@ -311,4 +311,39 @@ impl AppData {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         serde_json::to_string(&app_settings.system_prompts).unwrap_or_default()
     }
+
+    pub fn get_models_json(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        serde_json::to_string(&app_settings.models).unwrap_or_default()
+    }
+
+    pub fn set_models_json(&self, models_json: &str) {
+        use crate::db::appdata_schema::app_settings;
+        use crate::app_settings::ModelEntry;
+
+        let models_vec: Vec<ModelEntry> = match serde_json::from_str(models_json) {
+            Ok(models) => models,
+            Err(e) => {
+                error(&format!("Failed to parse models JSON: {}", e));
+                return;
+            }
+        };
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.models = models_vec;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => {}
+            Err(e) => error(&format!("{}", e))
+        };
+    }
 }

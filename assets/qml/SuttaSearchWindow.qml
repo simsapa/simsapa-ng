@@ -35,7 +35,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !api_keys_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !api_keys_dialog.visible && !models_dialog.visible && !api_keys_dialog.visible)
 
     Connections {
         target: SuttaBridge
@@ -599,8 +599,8 @@ ${query_text}`;
             CMenuItem {
                 action: Action {
                     id: action_models
-                    text: "&Models..."
-                    /* onTriggered: TODO */
+                    text: "AI &Models..."
+                    onTriggered: models_dialog.show()
                 }
             }
 
@@ -635,6 +635,7 @@ ${query_text}`;
     AboutDialog { id: about_dialog }
     ApiKeysDialog { id: api_keys_dialog }
     SystemPromptsDialog { id: system_prompts_dialog }
+    ModelsDialog { id: models_dialog }
 
     ColorThemeDialog {
         id: color_theme_dialog

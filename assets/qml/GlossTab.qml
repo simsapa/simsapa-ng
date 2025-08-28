@@ -61,25 +61,19 @@ Item {
 
 
 
-    property list<var> translation_models_init: [
-        { model_name: "tngtech/deepseek-r1t2-chimera:free", enabled: true },
-        { model_name: "deepseek/deepseek-r1-0528:free", enabled: false },
-        { model_name: "deepseek/deepseek-chat-v3-0324:free", enabled: false },
-        { model_name: "google/gemini-2.0-flash-exp:free", enabled: false },
-        { model_name: "google/gemma-3-12b-it:free", enabled: true },
-        { model_name: "google/gemma-3-27b-it:free", enabled: false },
-        { model_name: "openai/gpt-oss-20b:free", enabled: false },
-        { model_name: "meta-llama/llama-3.3-70b-instruct:free", enabled: false },
-        { model_name: "meta-llama/llama-3.1-405b-instruct:free", enabled: true },
-        { model_name: "mistralai/mistral-small-3.2-24b-instruct:free", enabled: true },
-    ]
-
     ListModel { id: translation_models }
 
     function load_translation_models() {
-        for (var i = 0; i < root.translation_models_init.length; i++) {
-            var item = root.translation_models_init[i];
-            translation_models.append(item);
+        translation_models.clear();
+        let models_json = SuttaBridge.get_models_json();
+        try {
+            let models_array = JSON.parse(models_json);
+            for (var i = 0; i < models_array.length; i++) {
+                var item = models_array[i];
+                translation_models.append(item);
+            }
+        } catch (e) {
+            console.error("Failed to parse models JSON:", e);
         }
     }
 
@@ -108,7 +102,6 @@ Item {
     Component.onCompleted: {
         load_history();
         load_common_words();
-        load_translation_models();
         if (root.is_qml_preview) {
             qml_preview_state();
         }
@@ -957,6 +950,8 @@ ${table_rows}
                                 text: "AI-Translate"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: {
+                                    root.load_translation_models();
+
                                     let paragraph = paragraph_model_export.get(paragraph_item.index);
 
                                     let glossed_words = JSON.parse(paragraph.words_data_json);

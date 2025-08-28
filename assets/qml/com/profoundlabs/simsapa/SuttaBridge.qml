@@ -146,6 +146,14 @@ Item {
         return '{}';
     }
 
+    function get_models_json(): string {
+        return '[]';
+    }
+
+    function set_models_json(models_json: string) {
+        console.log("set_models_json()");
+    }
+
     function get_theme_name(): string {
         return 'dark';
     }

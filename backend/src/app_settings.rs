@@ -5,6 +5,12 @@ use serde::{Serialize, Deserialize};
 use crate::logger::error;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ModelEntry {
+    pub model_name: String,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppSettings {
     pub sutta_font_size: usize,
@@ -16,6 +22,7 @@ pub struct AppSettings {
     pub theme_name: ThemeName,
     pub api_keys: BTreeMap<String, String>,
     pub system_prompts: BTreeMap<String, String>,
+    pub models: Vec<ModelEntry>,
 }
 
 impl Default for AppSettings {
@@ -55,6 +62,17 @@ Respond with GFM-Markdown formatted text.
 
                 prompts
             },
+            models: vec![
+                ModelEntry { model_name: "tngtech/deepseek-r1t2-chimera:free".to_string(), enabled: true },
+                ModelEntry { model_name: "deepseek/deepseek-r1-0528:free".to_string(), enabled: false },
+                ModelEntry { model_name: "deepseek/deepseek-chat-v3-0324:free".to_string(), enabled: false },
+                ModelEntry { model_name: "google/gemini-2.0-flash-exp:free".to_string(), enabled: false },
+                ModelEntry { model_name: "google/gemma-3-27b-it:free".to_string(), enabled: true },
+                ModelEntry { model_name: "openai/gpt-oss-20b:free".to_string(), enabled: false },
+                ModelEntry { model_name: "meta-llama/llama-3.3-70b-instruct:free".to_string(), enabled: false },
+                ModelEntry { model_name: "meta-llama/llama-3.1-405b-instruct:free".to_string(), enabled: true },
+                ModelEntry { model_name: "mistralai/mistral-small-3.2-24b-instruct:free".to_string(), enabled: true },
+            ],
         }
     }
 }

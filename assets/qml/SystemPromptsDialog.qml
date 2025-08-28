@@ -110,7 +110,7 @@ ApplicationWindow {
             RowLayout {
                 spacing: 8
                 Image {
-                    source: "icons/svg/settings.svg"
+                    source: "icons/32x32/grommet-icons--chat.png"
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
                 }

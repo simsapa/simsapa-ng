@@ -125,6 +125,12 @@ pub mod qobject {
         fn get_system_prompts_json(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
+        fn get_models_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_models_json(self: Pin<&mut SuttaBridge>, models_json: &QString);
+
+        #[qinvokable]
         fn get_saved_theme(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -479,6 +485,19 @@ impl qobject::SuttaBridge {
         let app_data = get_app_data();
         let prompts_json = app_data.get_system_prompts_json();
         QString::from(prompts_json)
+    }
+
+    /// Get all models as JSON
+    pub fn get_models_json(&self) -> QString {
+        let app_data = get_app_data();
+        let models_json = app_data.get_models_json();
+        QString::from(models_json)
+    }
+
+    /// Save models in the db as JSON
+    pub fn set_models_json(self: Pin<&mut Self>, models_json: &QString) {
+        let app_data = get_app_data();
+        app_data.set_models_json(&models_json.to_string());
     }
 
     pub fn get_saved_theme(&self) -> QString {
