@@ -132,6 +132,12 @@ Item {
             var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
             gloss_tab.gloss_text_input.text = paragraph;
             gloss_tab.update_all_glosses();
+
+            // Test that we have words data
+            verify(gloss_tab.paragraph_model.count > 0);
+            var paragraph_data = gloss_tab.paragraph_model.get(0);
+            verify(paragraph_data.words_data_json.length > 0);
+
             // 1st paragraph, 5th word 'karitvā 1', change to 4th selection 'karitvā 4'
             gloss_tab.update_word_selection(0, 4, 3);
             // 1st paragraph, 8th word 'citta 1.1', change to 3rd selection 'citta 1.3'

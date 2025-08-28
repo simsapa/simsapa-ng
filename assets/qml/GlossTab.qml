@@ -20,6 +20,7 @@ Item {
     readonly property TextMetrics vocab_tm1: TextMetrics { text: "#"; font.pointSize: root.vocab_font_point_size }
 
     property alias gloss_text_input: gloss_text_input
+    property alias paragraph_model: paragraph_model
 
     property var handle_open_dict_tab_fn
 
@@ -55,7 +56,6 @@ Item {
             translations[translation_idx] = item;
             let translations_json = JSON.stringify(translations);
             paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
-            paragraph_model_export.setProperty(paragraph_idx, "translations_json", translations_json);
         }
     }
 
@@ -94,10 +94,14 @@ Item {
     // Stores recent glossing sessions
     ListModel { id: history_model }
 
-    // Gloss data per paragraph
-    ListModel { id: paragraph_model }
-    // Saving changes here to avoid binding loop with paragraph_model
-    ListModel { id: paragraph_model_export }
+    // Single paragraph model with nested word models
+    ListModel {
+        id: paragraph_model
+        // Each paragraph item contains:
+        // - text: string (paragraph text)
+        // - words_data: Array (vocabulary words data)
+        // - translations_json: string (keep JSON for external API data)
+    }
 
     Component.onCompleted: {
         load_history();
@@ -229,16 +233,19 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
         for (var i = 0; i < paragraph_model.count; i++) {
             var paragraph = paragraph_model.get(i);
-            var words = [];
+            var words_data = [];
 
-            // Extract words data from the paragraph's words_json property
             if (paragraph.words_data_json) {
-                words = JSON.parse(paragraph.words_data_json);
+                try {
+                    words_data = JSON.parse(paragraph.words_data_json);
+                } catch (e) {
+                    console.error("Failed to parse words_data_json:", e);
+                }
             }
 
             gloss_data.paragraphs.push({
                 text: paragraph.text,
-                words: words,
+                words: words_data,
             });
         }
 
@@ -289,15 +296,51 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return root.common_words.includes(clean_stem(stem));
     }
 
-    function process_word(word: string, lookup_results, sentence: string): var {
-        var word_data = {
+    function create_word_model_item(word: string, lookup_results, sentence: string): var {
+        return {
             original_word: clean_word(word),
             results: lookup_results,
             selected_index: 0,
             stem: lookup_results[0].word,
             example_sentence: sentence || "",
         };
-        return word_data;
+    }
+
+    function create_paragraph_with_words_model(text: string): var {
+        return {
+            text: text,
+            words_data: [],
+            translations_json: "[]"
+        };
+    }
+
+    function get_word_from_data(paragraph_idx: int, word_idx: int): var {
+        var paragraph = paragraph_model.get(paragraph_idx);
+        if (!paragraph || !paragraph.words_data_json) return null;
+
+        try {
+            var words_data = JSON.parse(paragraph.words_data_json);
+            if (word_idx >= words_data.length) return null;
+            return words_data[word_idx];
+        } catch (e) {
+            console.error("Failed to parse words_data_json:", e);
+            return null;
+        }
+    }
+
+    function update_word_in_data(paragraph_idx: int, word_idx: int, property_name: string, value): void {
+        var paragraph = paragraph_model.get(paragraph_idx);
+        if (!paragraph || !paragraph.words_data_json) return;
+
+        try {
+            var words_data = JSON.parse(paragraph.words_data_json);
+            if (word_idx < words_data.length) {
+                words_data[word_idx][property_name] = value;
+                paragraph_model.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words_data));
+            }
+        } catch (e) {
+            console.error("Failed to parse words_data_json:", e);
+        }
     }
 
     function process_word_for_glossing(word_info, paragraph_shown_stems, global_stems, check_global) {
@@ -340,7 +383,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             global_stems[stem_clean] = true;
         }
 
-        return process_word(word_info.word, results, word_info.sentence);
+        return create_word_model_item(word_info.word, results, word_info.sentence);
     }
 
     // FIXME extract_words_with_context()
@@ -364,9 +407,26 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     //     return glossed_words;
     // }
 
+    function populate_paragraph_words_data(paragraph_item, paragraph_text, paragraph_shown_stems, global_stems, check_global) {
+        paragraph_item.words_data = [];
+        var words = SuttaBridge.extract_words(paragraph_text);
+
+        for (var i = 0; i < words.length; i++) {
+            var processed_word = root.process_word_for_glossing(
+                { word: words[i], sentence: "" },
+                paragraph_shown_stems,
+                global_stems,
+                check_global,
+            );
+
+            if (processed_word) {
+                paragraph_item.words_data.push(processed_word);
+            }
+        }
+    }
+
     function process_paragraph_for_glossing(paragraph_text, paragraph_shown_stems, global_stems, check_global) {
         var words = SuttaBridge.extract_words(paragraph_text);
-        // console.log(words);
         var glossed_words = [];
 
         for (var i = 0; i < words.length; i++) {
@@ -391,31 +451,50 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
         for (var p = 0; p < up_to_index; p++) {
             var prev_para = paragraph_model.get(p);
-            var prev_words = JSON.parse(prev_para.words_data_json);
-            for (var w = 0; w < prev_words.length; w++) {
-                previous_stems[root.clean_stem(prev_words[w].stem)] = true;
+            if (prev_para && prev_para.words_data_json) {
+                try {
+                    var words_data = JSON.parse(prev_para.words_data_json);
+                    for (var w = 0; w < words_data.length; w++) {
+                        var word_item = words_data[w];
+                        previous_stems[root.clean_stem(word_item.stem)] = true;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse words_data_json:", e);
+                }
             }
         }
 
         return previous_stems;
     }
 
-    function dictionary_definitions(glossed_words: var): string {
-        let out = "";
-        for (var i = 0; i < glossed_words.length; i++) {
-            var w = glossed_words[i];
-            var summary = summary_strip_html(w.results[w.selected_index].summary);
-            var def = `- ${w.original_word}: stem '${clean_stem(w.stem)}', ${summary}\n`;
-            out += def;
+    function dictionary_definitions_from_paragraph(paragraph): string {
+        if (!paragraph || !paragraph.words_data_json) return "";
+
+        try {
+            var words_data = JSON.parse(paragraph.words_data_json);
+            let out = "";
+            for (var i = 0; i < words_data.length; i++) {
+                var w = words_data[i];
+                if (!w || !w.results || !w.results.length) continue;
+
+                var selected_idx = w.selected_index || 0;
+                if (selected_idx >= w.results.length) selected_idx = 0;
+
+                var summary = summary_strip_html(w.results[selected_idx].summary);
+                var def = `- ${w.original_word}: stem '${clean_stem(w.stem)}', ${summary}\n`;
+                out += def;
+            }
+            return out;
+        } catch (e) {
+            console.error("Failed to parse words_data_json:", e);
+            return "";
         }
-        return out;
     }
 
     function update_all_glosses() {
         var paragraphs = gloss_text_input.text.split('\n\n').filter(p => p.trim() !== '');
         root.current_text = gloss_text_input.text;
         paragraph_model.clear();
-        paragraph_model_export.clear();
         root.global_shown_stems = {};
 
         let translations_json = "[]";
@@ -449,20 +528,28 @@ And what, bhikkhus, is concentration?
 
         for (var i = 0; i < paragraphs.length; i++) {
             var paragraph_shown_stems = {};
-            var glossed_words = root.process_paragraph_for_glossing(
+
+            // Create paragraph with words data array
+            var paragraph_item = root.create_paragraph_with_words_model(paragraphs[i]);
+            paragraph_item.translations_json = translations_json;
+
+            // Populate the words data
+            root.populate_paragraph_words_data(
+                paragraph_item,
                 paragraphs[i],
                 paragraph_shown_stems,
                 root.global_shown_stems,
                 root.no_duplicates_globally,
             );
 
-            var item = {
-                text: paragraphs[i],
-                words_data_json: JSON.stringify(glossed_words),
-                translations_json: translations_json,
+            // Convert words_data to JSON for storage in ListModel, as ListModel can't handle complex JS arrays
+            var model_item = {
+                text: paragraph_item.text,
+                words_data_json: JSON.stringify(paragraph_item.words_data),
+                translations_json: paragraph_item.translations_json
             };
-            paragraph_model.append(item);
-            paragraph_model_export.append(item);
+
+            paragraph_model.append(model_item);
         }
 
         root.save_session();
@@ -470,46 +557,84 @@ And what, bhikkhus, is concentration?
 
     function update_paragraph_gloss(index) {
         var paragraph = paragraph_model.get(index);
+        if (!paragraph) return;
+
         var paragraph_shown_stems = {};
 
         // If global deduplication, collect stems from previous paragraphs
         var previous_stems = root.no_duplicates_globally ? root.get_previous_paragraph_stems(index) : {};
 
-        var glossed_words = root.process_paragraph_for_glossing(
+        // Create temporary paragraph item to populate words data
+        var temp_paragraph = { words_data: [] };
+        root.populate_paragraph_words_data(
+            temp_paragraph,
             paragraph.text,
             paragraph_shown_stems,
             previous_stems,
-            root.no_duplicates_globally,
+            root.no_duplicates_globally
         );
 
-        var glossed_words_json = JSON.stringify(glossed_words);
-        paragraph_model.setProperty(index, "words_data_json", glossed_words_json);
-        paragraph_model_export.setProperty(index, "words_data_json", glossed_words_json);
+        // Update the model with JSON
+        paragraph_model.setProperty(index, "words_data_json", JSON.stringify(temp_paragraph.words_data));
+
         root.save_session();
     }
 
     function load_session(db_id, gloss_data_json) {
-        // FIXME
+        try {
+            var session_data = JSON.parse(gloss_data_json);
+
+            paragraph_model.clear();
+            root.current_text = session_data.text || "";
+            root.no_duplicates_globally = session_data.no_duplicates_globally !== undefined ?
+                                         session_data.no_duplicates_globally : true;
+
+            gloss_text_input.text = root.current_text;
+
+            // Load paragraphs
+            if (session_data.paragraphs) {
+                for (var i = 0; i < session_data.paragraphs.length; i++) {
+                    var para_data = session_data.paragraphs[i];
+                    var model_item = {
+                        text: para_data.text || "",
+                        words_data_json: JSON.stringify(para_data.words || []),
+                        translations_json: "[]"
+                    };
+
+                    paragraph_model.append(model_item);
+                }
+            }
+
+            root.current_session_id = db_id;
+        } catch (e) {
+            console.error("Failed to load session:", e);
+        }
     }
 
     function update_word_selection(paragraph_idx: int, word_idx: int, selected_idx: int) {
-        // Take the paragraph data from the _export model, because this is where
-        // any previous word selections were saved to as json.
-        var paragraph = paragraph_model_export.get(paragraph_idx);
-        var words = JSON.parse(paragraph.words_data_json);
-        words[word_idx].selected_index = selected_idx;
+        if (paragraph_idx >= paragraph_model.count) return;
 
-        // Update stem for the new selection (keep original with numbers for display)
-        words[word_idx].stem = words[word_idx].results[selected_idx].word;
+        var paragraph = paragraph_model.get(paragraph_idx);
+        if (!paragraph || !paragraph.words_data_json) return;
 
-        // Not saving to paragraph_model to avoid binding loop
-        paragraph_model_export.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words));
+        var words_data = JSON.parse(paragraph.words_data_json);
+        if (word_idx >= words_data.length) return;
+
+        var word_item = words_data[word_idx];
+        if (!word_item || !word_item.results || selected_idx >= word_item.results.length) return;
+
+        // Update selection index and stem directly
+        words_data[word_idx].selected_index = selected_idx;
+        words_data[word_idx].stem = word_item.results[selected_idx].word;
+
+        // Update model with new JSON
+        paragraph_model.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words_data));
+
         root.save_session();
     }
 
     function update_paragraph_text(index, new_text) {
         paragraph_model.setProperty(index, "text", new_text);
-        paragraph_model_export.setProperty(index, "text", new_text);
         root.save_session();
     }
 
@@ -586,24 +711,32 @@ And what, bhikkhus, is concentration?
             paragraphs: [],
         };
 
-        for (var i = 0; i < paragraph_model_export.count; i++) {
-            var paragraph = paragraph_model_export.get(i);
+        for (var i = 0; i < paragraph_model.count; i++) {
+            var paragraph = paragraph_model.get(i);
+            if (!paragraph) continue;
 
             var para_data = {
-                text: paragraph.text.trim(),
+                text: paragraph.text ? paragraph.text.trim() : "",
                 vocabulary: [],
             };
 
-            var words_data = JSON.parse(paragraph.words_data_json);
-            if (!words_data || words_data.length == 0) continue;
+            if (paragraph.words_data_json) {
+                try {
+                    var words_data = JSON.parse(paragraph.words_data_json);
+                    for (var j = 0; j < words_data.length; j++) {
+                        var w_data = words_data[j];
+                        if (!w_data || !w_data.results || w_data.results.length == 0) continue;
 
-            for (var j = 0; j < words_data.length; j++) {
-                var w_data = words_data[j];
-                if (!w_data.results || w_data.results.length == 0) continue;
+                        var selected_index = w_data.selected_index || 0;
+                        if (selected_index >= w_data.results.length) selected_index = 0;
 
-                // Add one line of word vocabulary info.
-                // For each word, export only the selected result.
-                para_data.vocabulary.push(w_data.results[w_data.selected_index]);
+                        // Add one line of word vocabulary info.
+                        // For each word, export only the selected result.
+                        para_data.vocabulary.push(w_data.results[selected_index]);
+                    }
+                } catch (e) {
+                    console.error("Failed to parse words_data_json:", e);
+                }
             }
 
             gloss_data.paragraphs.push(para_data);
@@ -953,15 +1086,13 @@ ${table_rows}
                                 onClicked: {
                                     root.load_translation_models();
 
-                                    let paragraph = paragraph_model_export.get(paragraph_item.index);
-
-                                    let glossed_words = JSON.parse(paragraph.words_data_json);
+                                    let paragraph = paragraph_model.get(paragraph_item.index);
 
                                     // Load prompt template dynamically from database
                                     let template = SuttaBridge.get_system_prompt("Gloss Tab: AI-Translation");
                                     let prompt = template
                                         .replace("<<PALI_PASSAGE>>", paragraph_item.text)
-                                        .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions(glossed_words));
+                                        .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
 
                                     let translations = [];
 
@@ -979,7 +1110,6 @@ ${table_rows}
 
                                     let translations_json = JSON.stringify(translations);
                                     paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
-                                    paragraph_model_export.setProperty(paragraph_item.index, "translations_json", translations_json);
                                 }
                             }
 
@@ -995,6 +1125,12 @@ ${table_rows}
                 ColumnLayout {
                     spacing: 10
                     Layout.margins: 10
+
+                    Text {
+                        text:  "Dictionary definitions from DPD:"
+                        font.bold: true
+                        font.pointSize: root.vocab_font_point_size
+                    }
 
                     Item {
                         id: vocabulary_gloss
