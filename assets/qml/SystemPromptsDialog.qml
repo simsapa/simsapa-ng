@@ -24,7 +24,6 @@ ApplicationWindow {
 
     property var current_prompts: ({})
     property string selected_prompt_key: ""
-    property bool has_unsaved_changes: false
 
     function load_prompts() {
         let prompts_json = SuttaBridge.get_system_prompts_json();
@@ -48,54 +47,21 @@ ApplicationWindow {
         } catch (e) {
             console.error("Failed to parse system prompts:", e);
         }
-        root.has_unsaved_changes = false;
     }
 
-    function save_prompts() {
-        // Update current prompts with the text from the editor
-        if (root.selected_prompt_key) {
+    function save_current_prompt_immediately() {
+        if (root.selected_prompt_key && root.current_prompts) {
             root.current_prompts[root.selected_prompt_key] = prompt_text_area.text;
+            let prompts_json = JSON.stringify(root.current_prompts);
+            SuttaBridge.set_system_prompts_json(prompts_json);
         }
-        
-        let prompts_json = JSON.stringify(root.current_prompts);
-        SuttaBridge.set_system_prompts_json(prompts_json);
-        root.has_unsaved_changes = false;
-        root.close();
     }
 
     Component.onCompleted: {
         load_prompts();
     }
 
-    // FIXME: not effective, since the dialog is closed with visible: false
-    onClosing: function(close) {
-        if (root.has_unsaved_changes) {
-            unsaved_changes_dialog.open();
-            close.accepted = false;
-        }
-    }
-
     ListModel { id: prompt_names_model }
-
-    Dialog {
-        id: unsaved_changes_dialog
-        title: "Unsaved Changes"
-        anchors.centerIn: parent
-        standardButtons: Dialog.Yes | Dialog.No | Dialog.Cancel
-        
-        Label {
-            text: "You have unsaved changes. Do you want to save them?"
-        }
-        
-        onAccepted: {
-            root.save_prompts();
-        }
-        
-        onRejected: {
-            root.has_unsaved_changes = false;
-            root.close();
-        }
-    }
 
     Item {
         x: 10
@@ -179,9 +145,7 @@ ApplicationWindow {
 
                                 onClicked: {
                                     // Save current prompt text before switching
-                                    if (root.selected_prompt_key) {
-                                        root.current_prompts[root.selected_prompt_key] = prompt_text_area.text;
-                                    }
+                                    root.save_current_prompt_immediately();
                                     
                                     prompt_list_view.currentIndex = index;
                                     root.selected_prompt_key = item_delegate.prompt_key;
@@ -219,7 +183,9 @@ ApplicationWindow {
                                 enabled: root.selected_prompt_key !== ""
 
                                 onTextChanged: {
-                                    root.has_unsaved_changes = true;
+                                    if (root.visible && root.selected_prompt_key) {
+                                        root.save_current_prompt_immediately();
+                                    }
                                 }
                             }
                         }
@@ -230,24 +196,11 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
 
-                Label {
-                    text: root.has_unsaved_changes ? "• Unsaved changes" : ""
-                    font.pointSize: root.pointSize - 1
-                    color: "orange"
-                    visible: root.has_unsaved_changes
-                }
-
                 Item { Layout.fillWidth: true }
 
                 Button {
-                    text: "Cancel"
+                    text: "OK"
                     onClicked: root.close()
-                }
-
-                Button {
-                    text: "Save"
-                    enabled: root.has_unsaved_changes
-                    onClicked: root.save_prompts()
                 }
             }
         }

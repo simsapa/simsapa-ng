@@ -27,12 +27,11 @@ ApplicationWindow {
         api_key_input.text = root.current_api_key;
     }
 
-    function save_api_key() {
+    function save_api_key_immediately() {
         let api_keys_json = JSON.stringify({
             "OPENROUTER_API_KEY": api_key_input.text.trim()
         });
         SuttaBridge.set_api_keys(api_keys_json);
-        root.close();
     }
 
     Component.onCompleted: {
@@ -85,6 +84,11 @@ ApplicationWindow {
                         placeholderText: "Enter your OpenRouter API key..."
                         echoMode: show_key.checked ? TextInput.Normal : TextInput.Password
                         font.pointSize: root.pointSize
+                        onTextChanged: {
+                            if (root.visible) {
+                                root.save_api_key_immediately();
+                            }
+                        }
                     }
 
                     Button {
@@ -122,14 +126,8 @@ ApplicationWindow {
                 Item { Layout.fillWidth: true }
 
                 Button {
-                    text: "Cancel"
+                    text: "OK"
                     onClicked: root.close()
-                }
-
-                Button {
-                    text: "Save"
-                    enabled: api_key_input.text.trim().length > 0
-                    onClicked: root.save_api_key()
                 }
             }
         }

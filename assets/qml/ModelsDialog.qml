@@ -23,7 +23,6 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile? 14 : 12
 
     property var current_models: []
-    property bool has_unsaved_changes: false
 
     function load_models() {
         let models_json = SuttaBridge.get_models_json();
@@ -42,14 +41,11 @@ ApplicationWindow {
         } catch (e) {
             console.error("Failed to parse models JSON:", e);
         }
-        root.has_unsaved_changes = false;
     }
 
-    function save_models() {
+    function save_models_immediately() {
         let models_json = JSON.stringify(root.current_models);
         SuttaBridge.set_models_json(models_json);
-        root.has_unsaved_changes = false;
-        root.close();
     }
 
     function refresh_list_indices() {
@@ -90,18 +86,18 @@ ApplicationWindow {
 
         refresh_list_indices();
         new_model_input.text = "";
-        root.has_unsaved_changes = true;
+        root.save_models_immediately();
     }
 
     function remove_model(list_index) {
         root.current_models.splice(list_index, 1);
         refresh_list_indices();
-        root.has_unsaved_changes = true;
+        root.save_models_immediately();
     }
 
     function toggle_model_enabled(list_index, enabled) {
         root.current_models[list_index].enabled = enabled;
-        root.has_unsaved_changes = true;
+        root.save_models_immediately();
     }
 
     Component.onCompleted: {
@@ -249,24 +245,11 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
 
-                Label {
-                    text: root.has_unsaved_changes ? "• Unsaved changes" : ""
-                    font.pointSize: root.pointSize - 1
-                    color: "orange"
-                    visible: root.has_unsaved_changes
-                }
-
                 Item { Layout.fillWidth: true }
 
                 Button {
-                    text: "Cancel"
+                    text: "OK"
                     onClicked: root.close()
-                }
-
-                Button {
-                    text: "Save"
-                    enabled: root.has_unsaved_changes
-                    onClicked: root.save_models()
                 }
             }
         }
