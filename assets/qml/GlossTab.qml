@@ -947,6 +947,7 @@ ${table_rows}
                             Layout.alignment: Qt.AlignRight
 
                             Button {
+                                id: ai_translate_btn
                                 text: "AI-Translate"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: {

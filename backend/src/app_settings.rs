@@ -51,6 +51,7 @@ Dictionary definitions:
 <<DICTIONARY_DEFINITIONS>>
 
 Respond with only the translation of the Pāli passage.
+Respond with GFM-Markdown formatted text.
 "#.trim().to_string());
 
                 prompts.insert("Prompts Tab: System Prompt".to_string(),
