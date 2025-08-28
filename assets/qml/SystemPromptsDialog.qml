@@ -170,21 +170,36 @@ ApplicationWindow {
                             font.pointSize: root.pointSize
                         }
 
-                        ScrollView {
+                        GroupBox {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
 
-                            TextArea {
-                                id: prompt_text_area
-                                placeholderText: "Select a prompt from the list to edit..."
-                                wrapMode: TextArea.Wrap
-                                selectByMouse: true
-                                font.pointSize: root.pointSize
-                                enabled: root.selected_prompt_key !== ""
+                            background: Rectangle {
+                                anchors.fill: parent
+                                color: "white"
+                                border.width: 1
+                                border.color: "#ccc"
+                                radius: 5
+                            }
 
-                                onTextChanged: {
-                                    if (root.visible && root.selected_prompt_key) {
-                                        root.save_current_prompt_immediately();
+                            ScrollView {
+                                anchors.fill: parent
+
+                                TextArea {
+                                    id: prompt_text_area
+                                    placeholderText: "Select a prompt from the list to edit..."
+                                    wrapMode: TextArea.Wrap
+                                    selectByMouse: true
+                                    font.pointSize: root.pointSize
+                                    enabled: root.selected_prompt_key !== ""
+                                    background: Rectangle {
+                                        color: "transparent"
+                                    }
+
+                                    onTextChanged: {
+                                        if (root.visible && root.selected_prompt_key) {
+                                            root.save_current_prompt_immediately();
+                                        }
                                     }
                                 }
                             }
