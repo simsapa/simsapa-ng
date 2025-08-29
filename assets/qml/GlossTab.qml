@@ -264,10 +264,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         target_scroll_view: main_scroll_view
     }
 
-    function scroll_to_bottom() {
-        scroll_helper.scroll_to_bottom();
-    }
-
     function handle_retry_request(paragraph_idx, model_name, new_request_id) {
         var paragraph = paragraph_model.get(paragraph_idx);
         if (!paragraph || !paragraph.translations_json) return;
@@ -1183,6 +1179,7 @@ ${ai_translations_section}
                 }
 
                 Repeater {
+                    id: paragraph_repeater
                     model: paragraph_model
                     delegate: paragraph_gloss_component
                 }
@@ -1322,11 +1319,6 @@ ${ai_translations_section}
                                     console.log(`📊 Created ${translations.length} translation entries`);
                                     let translations_json = JSON.stringify(translations);
                                     paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
-
-                                    // Scroll to show the new AssistantResponses component after UI updates
-                                    Qt.callLater(function() {
-                                        root.scroll_to_bottom();
-                                    });
                                 }
                             }
 
@@ -1336,6 +1328,31 @@ ${ai_translations_section}
                                 onClicked: root.update_paragraph_gloss(paragraph_item.index)
                             }
                         }
+                    }
+                }
+
+                AssistantResponses {
+                    id: assistant_responses_component
+                    is_dark: root.is_dark
+                    Layout.fillWidth: true
+                    translations_data: {
+                        try {
+                            return JSON.parse(paragraph_item.translations_json);
+                        } catch (e) {
+                            console.error(`❌ Error parsing translations_json for paragraph ${paragraph_item.index}:`, e);
+                            return [];
+                        }
+                    }
+                    paragraph_text: paragraph_item.text
+                    paragraph_index: paragraph_item.index
+                    selected_tab_index: paragraph_item.selected_ai_tab || 0
+
+                    onRetryRequest: function(model_name, request_id) {
+                        root.handle_retry_request(paragraph_item.index, model_name, request_id);
+                    }
+
+                    onTabSelectionChanged: function(tab_index, model_name) {
+                        root.update_tab_selection(paragraph_item.index, tab_index, model_name);
                     }
                 }
 
@@ -1471,29 +1488,6 @@ ${ai_translations_section}
                                 }
                             }
                         }
-                    }
-                }
-
-                AssistantResponses {
-                    is_dark: root.is_dark
-                    Layout.fillWidth: true
-                    translations_data: {
-                        try {
-                            return JSON.parse(paragraph_item.translations_json);
-                        } catch (e) {
-                            return [];
-                        }
-                    }
-                    paragraph_text: paragraph_item.text
-                    paragraph_index: paragraph_item.index
-                    selected_tab_index: paragraph_item.selected_ai_tab || 0
-
-                    onRetryRequest: function(model_name, request_id) {
-                        root.handle_retry_request(paragraph_item.index, model_name, request_id);
-                    }
-
-                    onTabSelectionChanged: function(tab_index, model_name) {
-                        root.update_tab_selection(paragraph_item.index, tab_index, model_name);
                     }
                 }
 
