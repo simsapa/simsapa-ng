@@ -259,14 +259,13 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return response_text.includes("API Error: Rate limit exceeded");
     }
 
+    ScrollableHelper {
+        id: scroll_helper
+        target_scroll_view: main_scroll_view
+    }
+
     function scroll_to_bottom() {
-        // Scroll to bottom when new AssistantResponses element appears
-        if (main_gloss_input_group.parent) {
-            var scrollView = main_gloss_input_group.parent.parent;
-            if (scrollView && scrollView.ScrollBar && scrollView.ScrollBar.vertical) {
-                scrollView.ScrollBar.vertical.position = 1.0 - scrollView.ScrollBar.vertical.size;
-            }
-        }
+        scroll_helper.scroll_to_bottom();
     }
 
     function handle_retry_request(paragraph_idx, model_name, new_request_id) {
@@ -1087,6 +1086,7 @@ ${ai_translations_section}
 
         // Gloss Tab
         ScrollView {
+            id: main_scroll_view
             contentWidth: availableWidth
 
             background: Rectangle {
@@ -1323,8 +1323,10 @@ ${ai_translations_section}
                                     let translations_json = JSON.stringify(translations);
                                     paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
 
-                                    // Scroll to show the new AssistantResponses component
-                                    root.scroll_to_bottom();
+                                    // Scroll to show the new AssistantResponses component after UI updates
+                                    Qt.callLater(function() {
+                                        root.scroll_to_bottom();
+                                    });
                                 }
                             }
 

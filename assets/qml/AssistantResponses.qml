@@ -45,12 +45,6 @@ ColumnLayout {
     signal retryRequest(string model_name, string request_id)
     signal tabSelectionChanged(int tab_index, string model_name)
 
-    function scroll_to_bottom() {
-        if (root.parent && root.parent.parent && typeof root.parent.parent.scroll_to_bottom === "function") {
-            root.parent.parent.scroll_to_bottom()
-        }
-    }
-
     function retry_request(model_name) {
         // Generate new request ID and emit signal
         var request_id = generate_request_id()

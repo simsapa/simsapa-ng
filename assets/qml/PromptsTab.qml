@@ -45,7 +45,7 @@ Item {
             });
 
             // Scroll to bottom after adding new messages
-            root.scroll_to_bottom();
+            scroll_helper.scroll_to_bottom();
         }
     }
 
@@ -70,44 +70,15 @@ Item {
             content_html: "",
         });
 
-        // Initialize content height tracking after initial messages
+        // Initialize ScrollableHelper after initial messages
         Qt.callLater(function() {
-            if (messages_scroll_view.contentItem) {
-                root.last_content_height = messages_scroll_view.contentItem.contentHeight;
-            }
+            scroll_helper.initialize();
         });
     }
 
-    function scroll_to_bottom() {
-        // Only scroll if needed - check if content exceeds view
-        scroll_timer.restart();
-    }
-
-    property real last_content_height: 0
-
-    function perform_scroll_if_needed() {
-        var contentHeight = messages_scroll_view.contentItem.contentHeight; // qmllint disable missing-property
-        var viewHeight = messages_scroll_view.height;
-
-        // Check if new content was added that exceeds the current view
-        var contentGrew = contentHeight > root.last_content_height;
-        root.last_content_height = contentHeight;
-
-        // Only scroll if:
-        // 1. Content actually grew (new messages were added), AND
-        // 2. The content now exceeds the view height
-        if (contentGrew && contentHeight > viewHeight) {
-            messages_scroll_view.ScrollBar.vertical.position = 1.0 - messages_scroll_view.ScrollBar.vertical.size;
-        }
-    }
-
-    Timer {
-        id: scroll_timer
-        interval: 150  // Increased delay to ensure layout completion
-        repeat: false
-        onTriggered: {
-            root.perform_scroll_if_needed();
-        }
+    ScrollableHelper {
+        id: scroll_helper
+        target_scroll_view: messages_scroll_view
     }
 
     function new_prompt(prompt: string) {
@@ -397,7 +368,7 @@ Item {
                                         }
 
                                         // Scroll to bottom to show waiting message
-                                        root.scroll_to_bottom();
+                                        scroll_helper.scroll_to_bottom();
                                     }
                                 }
                             }
