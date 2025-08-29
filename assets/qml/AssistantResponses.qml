@@ -10,6 +10,12 @@ ColumnLayout {
     id: root
 
     required property bool is_dark
+
+    required property var translations_data
+    required property string paragraph_text
+    required property int paragraph_index
+    property int selected_tab_index: 0
+
     readonly property int vocab_font_point_size: 10
 
     property string text_color: root.is_dark ? "#F0F0F0" : "#000000"
@@ -17,11 +23,6 @@ ColumnLayout {
     property string bg_color_lighter: root.is_dark ? "#2E333D" : "#FBEDC7"
     property string bg_color_darker: root.is_dark ? "#1C2025" : "#F8DA8E"
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
-
-    required property var translations_data
-    required property string paragraph_text
-    required property int paragraph_index
-    property int selected_tab_index: 0
 
     // Debug logging when translations_data changes
     onTranslations_dataChanged: {
@@ -189,12 +190,12 @@ ColumnLayout {
                                     // Handle empty or invalid data
                                     if (!data || Object.keys(data).length === 0) {
                                         console.log(`⚠️  Empty or invalid data, showing waiting message`);
-                                        return "Waiting for response (up to 3min)...";
+                                        return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                     }
 
                                     if (data.status === "waiting") {
-                                        console.log(`⏳ Showing waiting message`);
-                                        return "Waiting for response (up to 3min)..."
+                                        console.log(`⏳ Showing waiting message for ${data.model_name}`);
+                                        return `Waiting for response from ${data.model_name} (up to 3min)...`
                                     } else if (data.status === "error") {
                                         console.log(`❌ Showing error message`);
                                         var error_text = data.response || "Unknown error occurred"
@@ -206,8 +207,8 @@ ColumnLayout {
                                         console.log(`🎨 Converted HTML: "${html_content}"`);
                                         return html_content;
                                     } else {
-                                        console.log(`❓ Unknown status: "${data.status}", showing waiting message`);
-                                        return "Waiting for response (up to 3min)...";
+                                        console.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
+                                        return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                     }
                                 }
                                 font.pointSize: root.vocab_font_point_size

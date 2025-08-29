@@ -12,6 +12,8 @@ Item {
 
     required property string window_id
     required property bool is_dark
+    required property bool ai_models_auto_retry
+
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
     readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
@@ -72,12 +74,16 @@ Item {
                 console.log(`✅ Updated translation data:`, JSON.stringify(translations[translation_idx]));
 
                 // Handle automatic retry for errors (up to 5 times)
-                if (is_error && current_retry_count < 5) {
+                if (is_error && current_retry_count < 5 && root.ai_models_auto_retry && !root.is_rate_limit_error(response)) {
                     console.log(`🔁 Scheduling automatic retry for ${model_name}`);
                     // Schedule automatic retry
                     Qt.callLater(function() {
                         root.handle_retry_request(paragraph_idx, model_name, root.generate_request_id());
                     });
+                } else if (is_error && root.is_rate_limit_error(response)) {
+                    console.log(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
+                } else if (is_error && !root.ai_models_auto_retry) {
+                    console.log(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
                 }
 
                 let translations_json = JSON.stringify(translations);
@@ -247,6 +253,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return response_text.includes("API Error:") ||
                response_text.includes("Error:") ||
                response_text.includes("Failed:");
+    }
+
+    function is_rate_limit_error(response_text) {
+        return response_text.includes("API Error: Rate limit exceeded");
     }
 
     function scroll_to_bottom() {
