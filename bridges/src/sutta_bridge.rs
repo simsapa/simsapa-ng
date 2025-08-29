@@ -15,8 +15,9 @@ use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile, save_to_f
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
-
 use simsapa_backend::logger::{info, error};
+
+use crate::markdown_to_html;
 
 static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
 static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");
@@ -159,6 +160,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn check_file_exists_in_folder(self: &SuttaBridge, folder_url: &QUrl, filename: &QString) -> bool;
+
+        #[qinvokable]
+        fn markdown_to_html(self: &SuttaBridge, markdown_text: &QString) -> QString;
     }
 }
 
@@ -573,5 +577,9 @@ impl qobject::SuttaBridge {
             Err(_) => false,
         };
         exists
+    }
+
+    pub fn markdown_to_html(&self, markdown_text: &QString) -> QString {
+        QString::from(markdown_to_html(&markdown_text.to_string()))
     }
 }

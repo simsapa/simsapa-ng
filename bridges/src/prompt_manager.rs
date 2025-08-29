@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use simsapa_backend::helpers::consistent_niggahita;
 use simsapa_backend::logger::error;
 use simsapa_backend::get_app_data;
-use markdown::{to_html_with_options, Options};
+use crate::markdown_to_html;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -153,13 +153,6 @@ impl qobject::PromptManager {
                 );
             }).unwrap();
         }); // end of thread
-    }
-}
-
-fn markdown_to_html(markdown_text: &str) -> String {
-    match to_html_with_options(markdown_text, &Options::gfm()) {
-        Ok(html) => html,
-        Err(_) => markdown_text.to_string(), // Fallback to plain text on error
     }
 }
 

@@ -200,6 +200,10 @@ Item {
         return true;
     }
 
+    function markdown_to_html(markdown_text: string): string {
+        return "# Hello Markdown";
+    }
+
     function get_common_words_json(): string {
         return `
 [

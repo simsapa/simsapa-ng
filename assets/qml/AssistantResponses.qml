@@ -61,26 +61,6 @@ ColumnLayout {
                response_text.includes("Failed:")
     }
 
-    function markdown_to_html(markdown_text) {
-        console.log(`🔄 markdown_to_html input: "${markdown_text}"`);
-
-        // Return early if empty or null
-        if (!markdown_text || markdown_text.trim() === "") {
-            console.log(`⚠️  Empty markdown text, returning placeholder`);
-            return "No response content available";
-        }
-
-        // Simple markdown to HTML conversion similar to existing pattern
-        var html = markdown_text
-            .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')  // bold
-            .replace(/\*(.*?)\*/g, '<i>$1</i>')      // italic
-            .replace(/\n/g, '<br>')                   // line breaks
-
-        var result = '<p>' + html + '</p>';
-        console.log(`✅ markdown_to_html output: "${result}"`);
-        return result;
-    }
-
     spacing: 10
 
     GroupBox {
@@ -197,7 +177,7 @@ ColumnLayout {
                                         return error_text + retry_text
                                     } else if (data.status === "completed") {
                                         console.log(`✅ Showing completed response, raw content: "${data.response}"`);
-                                        var html_content = root.markdown_to_html(data.response || "");
+                                        var html_content = SuttaBridge.markdown_to_html(data.response || "");
                                         console.log(`🎨 Converted HTML: "${html_content}"`);
                                         return html_content;
                                     } else {
