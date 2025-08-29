@@ -26,8 +26,24 @@ fn markdown_to_html(markdown_text: &str) -> String {
         trimmed_text
     };
 
-    match to_html_with_options(processed_text, &Options::gfm()) {
+    // Remove wrapping bold/italics syntax if present
+    let final_text = {
+        let patterns = ["***", "**", "*", "___", "__", "_"];
+
+        // Try each pattern and return the first match
+        patterns.iter()
+            .find_map(|&pattern| {
+                if processed_text.starts_with(pattern) && processed_text.ends_with(pattern) && processed_text.len() > pattern.len() * 2 {
+                    Some(processed_text.trim_start_matches(pattern).trim_end_matches(pattern))
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(processed_text)
+    };
+
+    match to_html_with_options(final_text, &Options::gfm()) {
         Ok(html) => html,
-        Err(_) => processed_text.to_string(), // Fallback to plain text on error
+        Err(_) => final_text.to_string(), // Fallback to plain text on error
     }
 }
