@@ -37,25 +37,55 @@ Item {
         target: pm
 
         function onPromptResponse (paragraph_idx: int, translation_idx: int, model_name: string, response: string) {
+            console.log(`🤖 onPromptResponse received: paragraph_idx=${paragraph_idx}, translation_idx=${translation_idx}, model_name=${model_name}`);
+            console.log(`📝 Response content: "${response.substring(0, 100)}..."`);
+
             let paragraph = paragraph_model.get(paragraph_idx);
+            if (!paragraph) {
+                console.error(`❌ No paragraph found at index ${paragraph_idx}`);
+                return;
+            }
+
             let translations = [];
             if (paragraph.translations_json) {
                 try {
                     translations = JSON.parse(paragraph.translations_json);
+                    console.log(`📚 Parsed ${translations.length} existing translations`);
                 } catch (e) {
                     console.error("Failed to parse paragraph.translations_json:", e);
                 }
             } else {
                 console.error(`Missing paragraph.translations_json for paragraph_idx ${paragraph_idx}, translation_idx ${translation_idx}`);
             }
-            let item = {
-                model_name: model_name,
-                status: "completed",
-                response: response,
-            };
-            translations[translation_idx] = item;
-            let translations_json = JSON.stringify(translations);
-            paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
+
+            if (translation_idx < translations.length) {
+                let is_error = root.is_error_response(response);
+                let current_retry_count = translations[translation_idx].retry_count || 0;
+
+                console.log(`🔄 Updating translation at index ${translation_idx}: is_error=${is_error}, retry_count=${current_retry_count}`);
+
+                // Update the existing translation entry
+                translations[translation_idx].response = response;
+                translations[translation_idx].status = is_error ? "error" : "completed";
+                translations[translation_idx].last_updated = Date.now();
+
+                console.log(`✅ Updated translation data:`, JSON.stringify(translations[translation_idx]));
+
+                // Handle automatic retry for errors (up to 5 times)
+                if (is_error && current_retry_count < 5) {
+                    console.log(`🔁 Scheduling automatic retry for ${model_name}`);
+                    // Schedule automatic retry
+                    Qt.callLater(function() {
+                        root.handle_retry_request(paragraph_idx, model_name, root.generate_request_id());
+                    });
+                }
+
+                let translations_json = JSON.stringify(translations);
+                paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
+                console.log(`💾 Saved translations_json to paragraph model`);
+            } else {
+                console.error(`❌ translation_idx ${translation_idx} is out of bounds for ${translations.length} translations`);
+            }
         }
     }
 
@@ -64,12 +94,16 @@ Item {
     ListModel { id: translation_models }
 
     function load_translation_models() {
+        console.log(`🔄 Loading translation models...`);
         translation_models.clear();
         let models_json = SuttaBridge.get_models_json();
+        console.log(`📥 Raw models JSON: "${models_json}"`);
         try {
             let models_array = JSON.parse(models_json);
+            console.log(`📊 Parsed ${models_array.length} models`);
             for (var i = 0; i < models_array.length; i++) {
                 var item = models_array[i];
+                console.log(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
                 translation_models.append(item);
             }
         } catch (e) {
@@ -203,6 +237,73 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
     function save_common_words() {
         SuttaBridge.save_common_words_json(JSON.stringify(root.common_words));
+    }
+
+    function generate_request_id() {
+        return Date.now().toString() + "_" + Math.random().toString(36);
+    }
+
+    function is_error_response(response_text) {
+        return response_text.includes("API Error:") ||
+               response_text.includes("Error:") ||
+               response_text.includes("Failed:");
+    }
+
+    function scroll_to_bottom() {
+        // Scroll to bottom when new AssistantResponses element appears
+        if (main_gloss_input_group.parent) {
+            var scrollView = main_gloss_input_group.parent.parent;
+            if (scrollView && scrollView.ScrollBar && scrollView.ScrollBar.vertical) {
+                scrollView.ScrollBar.vertical.position = 1.0 - scrollView.ScrollBar.vertical.size;
+            }
+        }
+    }
+
+    function handle_retry_request(paragraph_idx, model_name, new_request_id) {
+        var paragraph = paragraph_model.get(paragraph_idx);
+        if (!paragraph || !paragraph.translations_json) return;
+
+        try {
+            var translations = JSON.parse(paragraph.translations_json);
+            for (var i = 0; i < translations.length; i++) {
+                if (translations[i].model_name === model_name) {
+                    // Update the translation entry for retry
+                    translations[i].request_id = new_request_id;
+                    translations[i].status = "waiting";
+                    translations[i].retry_count = (translations[i].retry_count || 0) + 1;
+                    translations[i].last_updated = Date.now();
+
+                    // Append retry message to response
+                    var retry_msg = `\n\nRetrying... (${translations[i].retry_count}x)`;
+                    if (translations[i].response && !translations[i].response.includes("Retrying...")) {
+                        translations[i].response += retry_msg;
+                    }
+
+                    // Update the model
+                    paragraph_model.setProperty(paragraph_idx, "translations_json", JSON.stringify(translations));
+
+                    // Send new request
+                    var template = SuttaBridge.get_system_prompt("Gloss Tab: AI-Translation");
+                    var prompt = template
+                        .replace("<<PALI_PASSAGE>>", paragraph.text)
+                        .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
+
+                    pm.prompt_request(paragraph_idx, i, model_name, prompt);
+                    break;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to handle retry request:", e);
+        }
+    }
+
+    function update_tab_selection(paragraph_idx, tab_index, model_name) {
+        // Just update the selected tab index without modifying translations_json to avoid binding loop
+        var paragraph = paragraph_model.get(paragraph_idx);
+        if (paragraph) {
+            // Store the selected tab index directly in the paragraph item
+            paragraph_model.setProperty(paragraph_idx, "selected_ai_tab", tab_index);
+        }
     }
 
     function load_history() {
@@ -546,7 +647,8 @@ And what, bhikkhus, is concentration?
             var model_item = {
                 text: paragraph_item.text,
                 words_data_json: JSON.stringify(paragraph_item.words_data),
-                translations_json: paragraph_item.translations_json
+                translations_json: paragraph_item.translations_json,
+                selected_ai_tab: 0
             };
 
             paragraph_model.append(model_item);
@@ -598,7 +700,8 @@ And what, bhikkhus, is concentration?
                     var model_item = {
                         text: para_data.text || "",
                         words_data_json: JSON.stringify(para_data.words || []),
-                        translations_json: "[]"
+                        translations_json: "[]",
+                        selected_ai_tab: 0
                     };
 
                     paragraph_model.append(model_item);
@@ -718,6 +821,7 @@ And what, bhikkhus, is concentration?
             var para_data = {
                 text: paragraph.text ? paragraph.text.trim() : "",
                 vocabulary: [],
+                ai_translations: [],
             };
 
             if (paragraph.words_data_json) {
@@ -736,6 +840,43 @@ And what, bhikkhus, is concentration?
                     }
                 } catch (e) {
                     console.error("Failed to parse words_data_json:", e);
+                }
+            }
+
+            // Add AI translations if they exist
+            if (paragraph.translations_json) {
+                try {
+                    var translations = JSON.parse(paragraph.translations_json);
+                    var selected_translation = null;
+                    var other_translations = [];
+
+                    for (var k = 0; k < translations.length; k++) {
+                        var trans = translations[k];
+                        if (trans.status === "completed" && trans.response && trans.response.trim()) {
+                            if (trans.user_selected) {
+                                selected_translation = {
+                                    model_name: trans.model_name,
+                                    response: trans.response,
+                                    is_selected: true
+                                };
+                            } else {
+                                other_translations.push({
+                                    model_name: trans.model_name,
+                                    response: trans.response,
+                                    is_selected: false
+                                });
+                            }
+                        }
+                    }
+
+                    // Add selected translation first, then others
+                    if (selected_translation) {
+                        para_data.ai_translations.push(selected_translation);
+                    }
+                    para_data.ai_translations = para_data.ai_translations.concat(other_translations);
+
+                } catch (e) {
+                    console.error("Failed to parse translations_json:", e);
                 }
             }
 
@@ -777,12 +918,27 @@ ${main_text}
                 table_rows += `<tr><td> <b>${res.word}</b> </td><td> ${res.summary} </td></tr>\n`;
             }
 
+            // Add AI translations section if they exist
+            var ai_translations_section = "";
+            if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
+                ai_translations_section = "\n<h3>AI Translations</h3>\n";
+                for (var k = 0; k < paragraph.ai_translations.length; k++) {
+                    var ai_trans = paragraph.ai_translations[k];
+                    var model_display = ai_trans.model_name.split('/').pop();
+                    var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
+                    ai_translations_section += `<h4>${model_display}${selected_indicator}</h4>\n`;
+                    ai_translations_section += `<blockquote>${ai_trans.response.replace(/\n/g, "<br>\n")}</blockquote>\n`;
+                }
+            }
+
             out += `
 ${para_text}
 
 <table><tbody>
 ${table_rows}
 </tbody></table>
+
+${ai_translations_section}
 `;
 
         }
@@ -817,6 +973,19 @@ ${main_text}
                 table_rows += `| **${res.word}** | ${summary} |\n`;
             }
 
+            // Add AI translations section if they exist
+            var ai_translations_section = "";
+            if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
+                ai_translations_section = "\n### AI Translations\n";
+                for (var k = 0; k < paragraph.ai_translations.length; k++) {
+                    var ai_trans = paragraph.ai_translations[k];
+                    var model_display = ai_trans.model_name.split('/').pop();
+                    var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
+                    ai_translations_section += `\n#### ${model_display}${selected_indicator}\n\n`;
+                    ai_translations_section += `> ${ai_trans.response.replace(/\n/g, "\n> ")}\n`;
+                }
+            }
+
             // Add the table header for syntax recognition, but leave empty to save space when rendered.
             out += `
 ${para_text}
@@ -824,6 +993,8 @@ ${para_text}
 |    |    |
 |----|----|
 ${table_rows}
+
+${ai_translations_section}
 `;
 
         }
@@ -856,10 +1027,25 @@ ${main_text}
                 table_rows += `| *${res.word}* | ${summary} |\n`;
             }
 
+            // Add AI translations section if they exist
+            var ai_translations_section = "";
+            if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
+                ai_translations_section = "\n*** AI Translations\n";
+                for (var k = 0; k < paragraph.ai_translations.length; k++) {
+                    var ai_trans = paragraph.ai_translations[k];
+                    var model_display = ai_trans.model_name.split('/').pop();
+                    var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
+                    ai_translations_section += `\n**** ${model_display}${selected_indicator}\n\n`;
+                    ai_translations_section += `#+begin_quote\n${ai_trans.response}\n#+end_quote\n`;
+                }
+            }
+
             out += `
 ${para_text}
 
 ${table_rows}
+
+${ai_translations_section}
 `;
 
         }
@@ -1020,6 +1206,7 @@ ${table_rows}
             required property string text
             required property string words_data_json
             required property string translations_json
+            required property int selected_ai_tab
 
             property bool is_collapsed: collapse_btn.checked
 
@@ -1084,7 +1271,10 @@ ${table_rows}
                                 text: "AI-Translate"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: {
+                                    console.log(`🚀 AI-Translate button clicked for paragraph ${paragraph_item.index}`);
+
                                     root.load_translation_models();
+                                    console.log(`📋 Loaded ${translation_models.count} translation models`);
 
                                     let paragraph = paragraph_model.get(paragraph_item.index);
 
@@ -1094,22 +1284,37 @@ ${table_rows}
                                         .replace("<<PALI_PASSAGE>>", paragraph_item.text)
                                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
 
+                                    console.log(`📝 Generated prompt: "${prompt.substring(0, 100)}..."`);
+
                                     let translations = [];
 
                                     for (var i = 0; i < translation_models.count; i++) {
                                         var item = translation_models.get(i);
                                         if (item.enabled) {
-                                            pm.prompt_request(paragraph_item.index, i, item.model_name, prompt);
+                                            let request_id = root.generate_request_id();
+                                            let translation_idx = translations.length; // Use the current translations array length as index
+                                            console.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
+                                            pm.prompt_request(paragraph_item.index, translation_idx, item.model_name, prompt);
                                             translations.push({
                                                 model_name: item.model_name,
                                                 status: "waiting",
                                                 response: "",
+                                                request_id: request_id,
+                                                retry_count: 0,
+                                                last_updated: Date.now(),
+                                                user_selected: translation_idx === 0
                                             });
+                                        } else {
+                                            console.log(`⏭️  Skipping disabled model ${item.model_name}`);
                                         }
                                     }
 
+                                    console.log(`📊 Created ${translations.length} translation entries`);
                                     let translations_json = JSON.stringify(translations);
                                     paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
+
+                                    // Scroll to show the new AssistantResponses component
+                                    root.scroll_to_bottom();
                                 }
                             }
 
@@ -1257,76 +1462,26 @@ ${table_rows}
                     }
                 }
 
-                Repeater {
-                    model: {
+                AssistantResponses {
+                    is_dark: root.is_dark
+                    Layout.fillWidth: true
+                    translations_data: {
                         try {
                             return JSON.parse(paragraph_item.translations_json);
                         } catch (e) {
                             return [];
                         }
                     }
-                    delegate: translation_delegate
-                }
+                    paragraph_text: paragraph_item.text
+                    paragraph_index: paragraph_item.index
+                    selected_tab_index: paragraph_item.selected_ai_tab || 0
 
-                Component {
-                    id: translation_delegate
-                    Rectangle {
-                        id: tr_item
-                        required property int index
-                        required property string model_name
-                        required property string status
-                        required property string response
+                    onRetryRequest: function(model_name, request_id) {
+                        root.handle_retry_request(paragraph_item.index, model_name, request_id);
+                    }
 
-                        Layout.minimumHeight: (!tr_item_collapse_btn.checked && status === "completed") ? 150 : 50
-                        // FIXME length and status check shouldn't be necessary, but duplicate items are showing up
-                        visible: tr_item.model_name.length != 0 && status === "completed"
-
-                        ColumnLayout {
-                            GroupBox {
-                                Layout.preferredWidth: vocabulary_gloss.width
-                                Layout.fillWidth: true
-                                Layout.margins: 10
-
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    id: tr_col
-
-                                    RowLayout {
-                                        Button {
-                                            id: tr_item_collapse_btn
-                                            checkable: true
-                                            checked: false
-                                            icon.source: checked ? "icons/32x32/material-symbols--expand-all.png" : "icons/32x32/material-symbols--collapse-all.png"
-                                            Layout.alignment: Qt.AlignLeft
-                                            Layout.preferredWidth: tr_item_collapse_btn.height
-                                        }
-
-                                        Text {
-                                            text: `(${tr_item.model_name}: ${tr_item.status})`
-                                            font.pointSize: 10
-                                            font.bold: true
-                                        }
-                                    }
-
-                                    ScrollView {
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: 100
-                                        visible: !tr_item_collapse_btn.checked && tr_item.status === "completed"
-
-                                        ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-
-                                        TextArea {
-                                            text: "<p>" + tr_item.response.trim().replace(/\n/g, "<br>") + "</p>"
-                                            font.pointSize: root.vocab_font_point_size
-                                            selectByMouse: true
-                                            readOnly: true
-                                            textFormat: Text.RichText
-                                            wrapMode: TextEdit.WordWrap
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    onTabSelectionChanged: function(tab_index, model_name) {
+                        root.update_tab_selection(paragraph_item.index, tab_index, model_name);
                     }
                 }
 

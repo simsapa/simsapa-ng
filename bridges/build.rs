@@ -39,6 +39,8 @@ fn main() {
     qml_files.push("../assets/qml/StorageDialog.qml");
     qml_files.push("../assets/qml/GlossTab.qml");
     qml_files.push("../assets/qml/PromptsTab.qml");
+    qml_files.push("../assets/qml/AssistantResponses.qml");
+    qml_files.push("../assets/qml/ResponseTabButton.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library

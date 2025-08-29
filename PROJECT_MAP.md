@@ -328,11 +328,21 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Main Windows:** `cpp/window_manager.cpp`, QML window components
 - **Search Interface:** `cpp/sutta_search_window.cpp`, `assets/qml/SuttaSearchWindow.qml`
 - **Dictionary Interface:** `cpp/word_lookup_window.cpp`, `assets/qml/WordLookupWindow.qml`
+- **Gloss Tab:** `assets/qml/GlossTab.qml` - Pali text analysis with vocabulary and AI translations
+  - **AI Translation Interface:** `assets/qml/AssistantResponses.qml` - Tabbed interface for multiple AI model responses
+  - **Response Tab Buttons:** `assets/qml/ResponseTabButton.qml` - Individual tabs with status indicators
+- **Prompts Tab:** `assets/qml/PromptsTab.qml` - AI conversation interface
 
 ### Platform Integration
 - **Mobile Detection:** `backend/src/lib.rs:427` - `is_mobile()`
 - **Storage Management:** `bridges/src/storage_manager.rs`
 - **Asset Management:** `bridges/src/asset_manager.rs`
+
+### AI Integration
+- **Prompt Manager:** `bridges/src/prompt_manager.rs` - AI API communication and request handling
+- **Translation Requests:** Multi-model support with automatic retry logic and error handling
+- **Markdown Processing:** Built-in markdown to HTML conversion for AI responses
+- **Export Integration:** AI translations included in HTML, Markdown, and Org-Mode exports
 
 ### Configuration & Settings
 - **App Settings:** `backend/src/app_settings.rs`

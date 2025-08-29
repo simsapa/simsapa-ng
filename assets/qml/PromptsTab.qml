@@ -23,7 +23,6 @@ Item {
     property string bg_color: root.is_dark ? "#23272E" : "#FAE6B2"
     property string bg_color_lighter: root.is_dark ? "#2E333D" : "#FBEDC7"
     property string bg_color_darker: root.is_dark ? "#1C2025" : "#F8DA8E"
-
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
 
     PromptManager { id: pm }
