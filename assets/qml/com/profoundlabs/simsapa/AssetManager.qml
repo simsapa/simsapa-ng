@@ -1,12 +1,10 @@
 import QtQuick
 
 Item {
-    Logger { id: logger }
-
     function download_urls_and_extract(urls: list<string>) {
-        logger.log("download_urls_and_extract():")
+        console.log("download_urls_and_extract():")
         for (let i=0; i < urls.length; i++) {
-            logger.log(i);
+            console.log(i);
         }
     }
 
