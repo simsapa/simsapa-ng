@@ -25,6 +25,7 @@ Item {
     property string bg_color_darker: root.is_dark ? "#1C2025" : "#F8DA8E"
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
 
+    Logger { id: logger }
     PromptManager { id: pm }
 
     property alias prompt_connections: prompt_connections
@@ -34,8 +35,8 @@ Item {
         target: pm
 
         function onPromptResponseForMessages(sender_message_idx: int, model_name: string, response: string) {
-            Logger.log(`🤖 onPromptResponseForMessages received: sender_message_idx=${sender_message_idx}, model_name=${model_name}`);
-            Logger.log(`📝 Response content: "${response.substring(0, 100)}..."`);
+            logger.log(`🤖 onPromptResponseForMessages received: sender_message_idx=${sender_message_idx}, model_name=${model_name}`);
+            logger.log(`📝 Response content: "${response.substring(0, 100)}..."`);
 
             root.waiting_for_response = false;
 
@@ -43,13 +44,13 @@ Item {
             // The assistant message will be after the sender message
             let assistant_message_idx = sender_message_idx + 1;
             if (assistant_message_idx >= messages_model.count) {
-                Logger.error(`❌ Assistant message index ${assistant_message_idx} is out of bounds (count: ${messages_model.count})`);
+                logger.error(`❌ Assistant message index ${assistant_message_idx} is out of bounds (count: ${messages_model.count})`);
                 return;
             }
 
             let assistant_message = messages_model.get(assistant_message_idx);
             if (!assistant_message || assistant_message.role !== "assistant") {
-                Logger.error(`❌ No assistant message found at index ${assistant_message_idx}`);
+                logger.error(`❌ No assistant message found at index ${assistant_message_idx}`);
                 return;
             }
 
@@ -58,9 +59,9 @@ Item {
             if (assistant_message.responses_json) {
                 try {
                     responses = JSON.parse(assistant_message.responses_json);
-                    Logger.log(`📚 Parsed ${responses.length} existing responses`);
+                    logger.log(`📚 Parsed ${responses.length} existing responses`);
                 } catch (e) {
-                    Logger.error("Failed to parse responses_json:", e);
+                    logger.error("Failed to parse responses_json:", e);
                     return;
                 }
             }
@@ -71,7 +72,7 @@ Item {
                     let is_error = root.is_error_response(response);
                     let current_retry_count = responses[i].retry_count || 0;
 
-                    Logger.log(`🔄 Updating response for ${model_name}: is_error=${is_error}, retry_count=${current_retry_count}`);
+                    logger.log(`🔄 Updating response for ${model_name}: is_error=${is_error}, retry_count=${current_retry_count}`);
 
                     responses[i].response = response;
                     responses[i].status = is_error ? "error" : "completed";
@@ -79,24 +80,24 @@ Item {
 
                     // Handle automatic retry for errors (up to 5 times)
                     if (is_error && current_retry_count < 5 && root.ai_models_auto_retry && !root.is_rate_limit_error(response)) {
-                        Logger.log(`🔁 Scheduling automatic retry for ${model_name}`);
+                        logger.log(`🔁 Scheduling automatic retry for ${model_name}`);
                         Qt.callLater(function() {
                             root.handle_retry_request(assistant_message_idx, model_name, root.generate_request_id());
                         });
                     } else if (is_error && root.is_rate_limit_error(response)) {
-                        Logger.log(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
+                        logger.log(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
                     } else if (is_error && !root.ai_models_auto_retry) {
-                        Logger.log(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
+                        logger.log(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
                     }
 
-                    Logger.log(`✅ Updated response data:`, JSON.stringify(responses[i]));
+                    logger.log(`✅ Updated response data:`, JSON.stringify(responses[i]));
                     break;
                 }
             }
 
             // Update the assistant message with new responses
             messages_model.setProperty(assistant_message_idx, "responses_json", JSON.stringify(responses));
-            Logger.log(`💾 Saved responses_json to message model`);
+            logger.log(`💾 Saved responses_json to message model`);
         }
     }
 
@@ -110,20 +111,20 @@ Item {
     ListModel { id: available_models }
 
     function load_available_models() {
-        Logger.log(`🔄 Loading available models...`);
+        logger.log(`🔄 Loading available models...`);
         available_models.clear();
         let models_json = SuttaBridge.get_models_json();
-        Logger.log(`📥 Raw models JSON: "${models_json}"`);
+        logger.log(`📥 Raw models JSON: "${models_json}"`);
         try {
             let models_array = JSON.parse(models_json);
-            Logger.log(`📊 Parsed ${models_array.length} models`);
+            logger.log(`📊 Parsed ${models_array.length} models`);
             for (var i = 0; i < models_array.length; i++) {
                 var item = models_array[i];
-                Logger.log(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
+                logger.log(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
                 available_models.append(item);
             }
         } catch (e) {
-            Logger.error("Failed to parse models JSON:", e);
+            logger.error("Failed to parse models JSON:", e);
         }
     }
 
@@ -182,7 +183,7 @@ Item {
                                         });
                                     }
                                 } catch (e) {
-                                    Logger.error("Failed to parse assistant responses_json:", e);
+                                    logger.error("Failed to parse assistant responses_json:", e);
                                 }
                             } else {
                                 // For user/system messages
@@ -201,13 +202,16 @@ Item {
                 }
             }
         } catch (e) {
-            Logger.error("Failed to handle retry request:", e);
+            logger.error("Failed to handle retry request:", e);
         }
     }
 
     function update_tab_selection(message_idx, tab_index, model_name) {
         // Update the selected tab index for this message
-        messages_model.setProperty(message_idx, "selected_ai_tab", tab_index);
+        var message = messages_model.get(message_idx);
+        if (message) {
+            messages_model.setProperty(message_idx, "selected_ai_tab", tab_index);
+        }
     }
 
     Component.onCompleted: {
@@ -487,13 +491,13 @@ Item {
 
 
                                 translations_data: {
-                                    Logger.log(`🔍 AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`);
+                                    logger.log(`🔍 AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`);
                                     try {
                                         let data = JSON.parse(message_item.responses_json || "[]");
-                                        Logger.log(`📊 Parsed translations_data:`, JSON.stringify(data));
+                                        logger.log(`📊 Parsed translations_data:`, JSON.stringify(data));
                                         return data;
                                     } catch (e) {
-                                        Logger.error(`❌ Error parsing responses_json for message ${message_item.index}:`, e);
+                                        logger.error(`❌ Error parsing responses_json for message ${message_item.index}:`, e);
                                         return [];
                                     }
                                 }
@@ -550,18 +554,18 @@ Item {
                                             return;
                                         }
 
-                                        Logger.log(`🚀 Send button clicked for message ${message_item.index}`);
+                                        logger.log(`🚀 Send button clicked for message ${message_item.index}`);
 
                                         // Load enabled models
                                         root.load_available_models();
-                                        Logger.log(`📋 Loaded ${available_models.count} available models`);
+                                        logger.log(`📋 Loaded ${available_models.count} available models`);
 
                                         // Create responses array for each enabled model
                                         let responses = [];
                                         for (var i = 0; i < available_models.count; i++) {
                                             var model = available_models.get(i);
                                             if (model.enabled) {
-                                                Logger.log(`✅ Adding enabled model: ${model.model_name}`);
+                                                logger.log(`✅ Adding enabled model: ${model.model_name}`);
                                                 responses.push({
                                                     model_name: model.model_name,
                                                     status: "waiting",
@@ -572,11 +576,11 @@ Item {
                                                     user_selected: responses.length === 0  // First model selected by default
                                                 });
                                             } else {
-                                                Logger.log(`⏭️  Skipping disabled model: ${model.model_name}`);
+                                                logger.log(`⏭️  Skipping disabled model: ${model.model_name}`);
                                             }
                                         }
 
-                                        Logger.log(`📊 Created ${responses.length} response entries`);
+                                        logger.log(`📊 Created ${responses.length} response entries`);
 
                                         if (responses.length === 0) {
                                             msg_dialog_ok.text = "No AI models are enabled. Please enable at least one model in settings.";
@@ -619,11 +623,11 @@ Item {
                                                             role: "assistant",
                                                             content: assistant_responses[selected_idx].response
                                                         });
-                                                        Logger.log(`📝 Added assistant message from ${assistant_responses[selected_idx].model_name}`);
+                                                        logger.log(`📝 Added assistant message from ${assistant_responses[selected_idx].model_name}`);
                                                     }
                                                     // Skip assistant messages that don't have completed selected responses
                                                 } catch (e) {
-                                                    Logger.error("Failed to parse assistant responses_json:", e);
+                                                    logger.error("Failed to parse assistant responses_json:", e);
                                                 }
                                             } else {
                                                 // For user/system messages
@@ -631,15 +635,15 @@ Item {
                                                     role: msg.role,
                                                     content: msg.content
                                                 });
-                                                Logger.log(`📝 Added ${msg.role} message`);
+                                                logger.log(`📝 Added ${msg.role} message`);
                                             }
                                         }
                                         let messages_json = JSON.stringify(messages);
-                                        Logger.log(`📤 Composed message history with ${messages.length} messages`);
+                                        logger.log(`📤 Composed message history with ${messages.length} messages`);
 
                                         // Send requests to all enabled models using the same message history
                                         for (var j = 0; j < responses.length; j++) {
-                                            Logger.log(`🎯 Sending request to ${responses[j].model_name}`);
+                                            logger.log(`🎯 Sending request to ${responses[j].model_name}`);
                                             pm.prompt_request_with_messages(
                                                 message_item.index, // sender message index (user message that triggered this)
                                                 responses[j].model_name,

@@ -38,10 +38,12 @@ ApplicationWindow {
 
     property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !api_keys_dialog.visible && !models_dialog.visible && !api_keys_dialog.visible)
 
+    Logger { id: logger }
+
     Connections {
         target: SuttaBridge
         function onUpdateWindowTitle(sutta_uid: string, sutta_ref: string, sutta_title: string) {
-            /* Logger.log("onUpdateWindowTitle():", sutta_uid, sutta_ref, sutta_title); */
+            /* logger.log("onUpdateWindowTitle():", sutta_uid, sutta_ref, sutta_title); */
             const current_key = sutta_html_view_layout.current_key;
             if (sutta_html_view_layout.items_map[current_key].sutta_uid === sutta_uid) {
                 root.update_window_title(sutta_uid, sutta_ref, sutta_title);
@@ -58,9 +60,9 @@ ApplicationWindow {
     function apply_theme() {
         root.is_dark = SuttaBridge.get_theme_name() === "dark";
         var theme_json = SuttaBridge.get_saved_theme();
-        /* Logger.log("Theme JSON:\n---\n", theme_json, "\n---\n"); */
+        /* logger.log("Theme JSON:\n---\n", theme_json, "\n---\n"); */
         if (theme_json.length === 0 || theme_json === "{}") {
-            Logger.error("Couldn't get theme JSON.")
+            logger.error("Couldn't get theme JSON.")
             return;
         }
 
@@ -68,28 +70,28 @@ ApplicationWindow {
             var d = JSON.parse(theme_json);
 
             for (var color_group_key in d) {
-                /* Logger.log(color_group_key); // active, inactive, disabled */
+                /* logger.log(color_group_key); // active, inactive, disabled */
                 if (!root.palette.hasOwnProperty(color_group_key) || root.palette[color_group_key] === undefined) {
-                    Logger.error("Member not found on root.palette:", color_group_key);
+                    logger.error("Member not found on root.palette:", color_group_key);
                     continue;
                 }
                 var color_group = d[color_group_key];
                 for (var color_role_key in color_group) {
-                    /* Logger.log(color_role_key); // window, windowText, etc. */
-                    /* Logger.log(color_group[color_role_key]); // #EFEFEF, #000000, etc. */
+                    /* logger.log(color_role_key); // window, windowText, etc. */
+                    /* logger.log(color_group[color_role_key]); // #EFEFEF, #000000, etc. */
                     if (!root.palette[color_group_key].hasOwnProperty(color_role_key) || root.palette[color_group_key][color_role_key] === undefined) {
-                        Logger.error("Member not found on root.palette:", color_group_key, color_role_key);
+                        logger.error("Member not found on root.palette:", color_group_key, color_role_key);
                         continue;
                     }
                     try {
                         root.palette[color_group_key][color_role_key] = color_group[color_role_key];
                     } catch (e) {
-                        Logger.error("Could not set palette property:", color_group_key, color_role_key, e);
+                        logger.error("Could not set palette property:", color_group_key, color_role_key, e);
                     }
                 }
             }
         } catch (e) {
-            Logger.error("Failed to parse theme JSON:", e);
+            logger.error("Failed to parse theme JSON:", e);
         }
     }
 
@@ -98,7 +100,7 @@ ApplicationWindow {
     ListModel { id: tabs_translations_model }
 
     function new_tab_data(fulltext_results_data: var, pinned = false, focus_on_new = false, id_key = null, web_item_key = ""): var {
-        /* Logger.log("new_tab_data()", fulltext_results_data, pinned, focus_on_new); */
+        /* logger.log("new_tab_data()", fulltext_results_data, pinned, focus_on_new); */
         if (!id_key) {
             id_key = root.generate_key();
         }
@@ -106,8 +108,8 @@ ApplicationWindow {
         // will be created when the tab is first focused.
         //
         // NOTE: same attributes as on TabButton.
-        /* Logger.log("sutta_uid", fulltext_results_data.sutta_uid); */
-        /* Logger.log("sutta_title", fulltext_results_data.sutta_title); */
+        /* logger.log("sutta_uid", fulltext_results_data.sutta_uid); */
+        /* logger.log("sutta_title", fulltext_results_data.sutta_title); */
         return {
             sutta_uid:   fulltext_results_data.sutta_uid,
             sutta_title: fulltext_results_data.sutta_title,
@@ -244,7 +246,7 @@ ApplicationWindow {
     }
 
     function run_sutta_menu_action(action: string, query_text: string) {
-        /* Logger.log("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
+        /* logger.log("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
 
         switch (action) {
         case "copy-selection":
@@ -300,9 +302,9 @@ ${query_text}`;
 
     // Returns the index of the tab in the model.
     function add_results_tab(fulltext_results_data: var, focus_on_new = true, new_tab = false): int {
-        /* Logger.log("add_results_tab()", "sutta_uid", fulltext_results_data.sutta_uid, "sutta_title", fulltext_results_data.sutta_title); */
+        /* logger.log("add_results_tab()", "sutta_uid", fulltext_results_data.sutta_uid, "sutta_title", fulltext_results_data.sutta_title); */
         if (new_tab || tabs_results_model.count == 0) {
-            /* Logger.log("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
+            /* logger.log("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
             let tab_data = root.new_tab_data(fulltext_results_data, false, focus_on_new);
             if (tabs_results_model.count == 0) {
                 tab_data.id_key = "ResultsTab_0";
@@ -314,7 +316,7 @@ ${query_text}`;
             tabs_results_model.append(tab_data);
             return tabs_results_model.count-1;
         } else {
-            /* Logger.log("Updating existing results tab"); */
+            /* logger.log("Updating existing results tab"); */
             // Not creating a new tab, update the existing one at idx 0.
             let tab_data = root.new_tab_data(
                 fulltext_results_data,
@@ -334,17 +336,17 @@ ${query_text}`;
     }
 
     function focus_on_tab_with_id_key(id_key: string) {
-        /* Logger.log("focus_on_tab_with_id_key()", id_key); */
+        /* logger.log("focus_on_tab_with_id_key()", id_key); */
         let tab = root.get_tab_with_id_key(id_key);
         if (tab) {
             tab.click();
         } else {
-            Logger.error("Error: Tab not found with id_key: " + id_key);
+            logger.error("Error: Tab not found with id_key: " + id_key);
         }
     }
 
     Component.onCompleted: {
-        /* Logger.log("SuttaSearchWindow: Component.onCompleted()"); */
+        /* logger.log("SuttaSearchWindow: Component.onCompleted()"); */
         if (root.is_qml_preview) {
             return;
         } else {
@@ -356,7 +358,7 @@ ${query_text}`;
 
         // Add the default blank tab. The corresponding webview is created when it is focused.
         if (tabs_results_model.count == 0) {
-            /* Logger.log("tabs_results_model.count", tabs_results_model.count); */
+            /* logger.log("tabs_results_model.count", tabs_results_model.count); */
             root.add_results_tab(root.blank_sutta_tab_data());
         }
 
@@ -739,7 +741,7 @@ ${query_text}`;
                             anchors.right: parent.right
 
                             function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
-                                /* Logger.log("tab_focus_changed()", tab.index, "sutta_uid:", tab.sutta_uid, "web_item_key:", tab.web_item_key); */
+                                /* logger.log("tab_focus_changed()", tab.index, "sutta_uid:", tab.sutta_uid, "web_item_key:", tab.web_item_key); */
                                 if (!tab.focus) return;
                                 // If this tab doesn't have a webview associated yet, create it.
                                 if (tab.web_item_key == "") {
@@ -754,7 +756,7 @@ ${query_text}`;
                                         tab.web_item_key = key;
                                         sutta_html_view_layout.add_item(tab_data);
                                     } else {
-                                        Logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
+                                        logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
                                     }
                                 }
                                 // show the sutta tab
@@ -762,7 +764,7 @@ ${query_text}`;
                             }
 
                             function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
-                                /* Logger.log("remove_tab_and_webview()", tab.index, tab.sutta_uid, tab.web_item_key); */
+                                /* logger.log("remove_tab_and_webview()", tab.index, tab.sutta_uid, tab.web_item_key); */
                                 // Remove the tab and webview, focus the next or the previous
                                 let old_idx = tab.index;
                                 let old_web_item_key = tab_model.get(old_idx).web_item_key;
@@ -1019,7 +1021,7 @@ ${query_text}`;
                                 new_results_page_fn: root.new_results_page
 
                                 function update_item() {
-                                    /* Logger.log("update_item()"); */
+                                    /* logger.log("update_item()"); */
                                     let tab_data = root.new_tab_data(fulltext_results.current_result_data());
                                     let tab_idx = root.add_results_tab(tab_data, true);
                                     // NOTE: It will not find the tab first time while window objects are still

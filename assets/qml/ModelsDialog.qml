@@ -25,6 +25,8 @@ ApplicationWindow {
 
     property var current_models: []
 
+    Logger { id: logger }
+
     function load_models() {
         let models_json = SuttaBridge.get_models_json();
         try {
@@ -40,7 +42,7 @@ ApplicationWindow {
                 });
             }
         } catch (e) {
-            Logger.error("Failed to parse models JSON:", e);
+            logger.error("Failed to parse models JSON:", e);
         }
     }
 

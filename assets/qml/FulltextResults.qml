@@ -15,6 +15,8 @@ ColumnLayout {
     readonly property bool is_desktop: !root.is_mobile
     readonly property string match_bg: root.is_dark ? "#007A31" : "#F6E600"
 
+    Logger { id: logger }
+
     /* BojjhangaData { id: results_model } // for qml preview */
     ListModel { id: results_model }
 
@@ -202,7 +204,7 @@ ColumnLayout {
         }
 
         Keys.onPressed: function(event) {
-            Logger.log("key:" + event.key);
+            logger.log("key:" + event.key);
             if (event.key === Qt.Key_Up ||
                 (event.key === Qt.Key_K && event.modifiers & Qt.ControlModifier)) {
                 if (fulltext_list.currentIndex > 0)

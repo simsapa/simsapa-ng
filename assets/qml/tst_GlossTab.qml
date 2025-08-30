@@ -89,7 +89,7 @@ Item {
             all_results.push(...result);
 
             var result_words = result.map(i => i.original_word);
-            // Logger.log(result_words);
+            // logger.log(result_words);
             // [ariyasāvako,vossaggārammaṇaṁ,karitvā,labhati,samādhiṁ,,cittassa,ekaggataṁ.]
 
             // Should skip common words and local duplicates
@@ -225,7 +225,8 @@ Item {
             gloss_tab.paragraph_model.append({
                 text: "Test paragraph",
                 words_data_json: "[]",
-                translations_json: JSON.stringify(sample_translations)
+                translations_json: JSON.stringify(sample_translations),
+                selected_ai_tab: 0
             });
 
             verify(gloss_tab.paragraph_model.count > 0);
@@ -278,7 +279,7 @@ Item {
 
             verify(gloss_tab.paragraph_model.count > 0);
 
-            // Add sample AI translations
+            // Add sample AI translations AFTER update_all_glosses to avoid being overridden
             var translations = [{
                 model_name: "deepseek/deepseek-r1-0528:free",
                 status: "completed",
@@ -313,16 +314,16 @@ Item {
             var markdown_content = gloss_tab.gloss_as_markdown();
             verify(markdown_content.length > 0);
             verify(markdown_content.includes("Katamañca"));
-            verify(markdown_content.includes("## AI Translations"));
-            verify(markdown_content.includes("### deepseek/deepseek-r1-0528:free"));
+            verify(markdown_content.includes("### AI Translations"));
+            verify(markdown_content.includes("#### deepseek/deepseek-r1-0528:free"));
             verify(markdown_content.includes("**concentration faculty**"));
 
             // Test Org-mode export
             var org_content = gloss_tab.gloss_as_orgmode();
             verify(org_content.length > 0);
             verify(org_content.includes("Katamañca"));
-            verify(org_content.includes("** AI Translations"));
-            verify(org_content.includes("*** deepseek/deepseek-r1-0528:free"));
+            verify(org_content.includes("*** AI Translations"));
+            verify(org_content.includes("**** deepseek/deepseek-r1-0528:free"));
         }
 
         function test_translation_model_loading() {
@@ -415,12 +416,14 @@ Item {
             // Test tab selection update
             gloss_tab.update_tab_selection(gloss_tab.paragraph_model.count - 1, 1, "google/gemma-3-12b-it:free");
 
-            // Verify selection was updated
+            // Verify selection was updated via selected_ai_tab property
             paragraph_data = gloss_tab.paragraph_model.get(gloss_tab.paragraph_model.count - 1);
+            compare(paragraph_data.selected_ai_tab, 1); // Should be set to index 1
+
             var updated_translations = JSON.parse(paragraph_data.translations_json);
-            verify(!updated_translations[0].user_selected);
-            verify(updated_translations[1].user_selected);
             verify(updated_translations.length === 2);
+            compare(updated_translations[0].status, "completed");
+            compare(updated_translations[1].status, "error");
         }
     }
 }

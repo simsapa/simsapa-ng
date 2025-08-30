@@ -26,6 +26,8 @@ ApplicationWindow {
     property var current_prompts: ({})
     property string selected_prompt_key: ""
 
+    Logger { id: logger }
+
     function load_prompts() {
         let prompts_json = SuttaBridge.get_system_prompts_json();
         try {
@@ -46,7 +48,7 @@ ApplicationWindow {
                 prompt_text_area.text = root.current_prompts[root.selected_prompt_key] || "";
             }
         } catch (e) {
-            Logger.error("Failed to parse system prompts:", e);
+            logger.error("Failed to parse system prompts:", e);
         }
     }
 

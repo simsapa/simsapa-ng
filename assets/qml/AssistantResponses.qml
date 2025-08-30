@@ -25,21 +25,23 @@ ColumnLayout {
     property string bg_color_darker: root.is_dark ? "#1C2025" : "#F8DA8E"
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
 
+    Logger { id: logger }
+
     // Debug logging when translations_data changes
     onTranslations_dataChanged: {
-        Logger.log(`🔄 AssistantResponses: translations_data changed for paragraph ${paragraph_index}`);
+        logger.log(`🔄 AssistantResponses: translations_data changed for paragraph ${paragraph_index}`);
         if (translations_data) {
-            Logger.log(`📊 New data has ${translations_data.length} translations:`);
+            logger.log(`📊 New data has ${translations_data.length} translations:`);
             for (var i = 0; i < translations_data.length; i++) {
                 var item = translations_data[i];
                 if (item) {
-                    Logger.log(`  [${i}] ${item.model_name}: status=${item.status}, response_length=${item.response ? item.response.length : 0}`);
+                    logger.log(`  [${i}] ${item.model_name}: status=${item.status}, response_length=${item.response ? item.response.length : 0}`);
                 } else {
-                    Logger.log(`  [${i}] null/undefined item`);
+                    logger.log(`  [${i}] null/undefined item`);
                 }
             }
         } else {
-            Logger.log(`❌ translations_data is null/undefined`);
+            logger.log(`❌ translations_data is null/undefined`);
         }
     }
 
@@ -162,29 +164,29 @@ ColumnLayout {
                                 property var data: response_content_item.modelData || {}
 
                                 text: {
-                                    Logger.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
+                                    logger.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
 
                                     // Handle empty or invalid data
                                     if (!data || Object.keys(data).length === 0) {
-                                        Logger.log(`⚠️  Empty or invalid data, showing waiting message`);
+                                        logger.log(`⚠️  Empty or invalid data, showing waiting message`);
                                         return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                     }
 
                                     if (data.status === "waiting") {
-                                        Logger.log(`⏳ Showing waiting message for ${data.model_name}`);
+                                        logger.log(`⏳ Showing waiting message for ${data.model_name}`);
                                         return `Waiting for response from ${data.model_name} (up to 3min)...`
                                     } else if (data.status === "error") {
-                                        Logger.log(`❌ Showing error message`);
+                                        logger.log(`❌ Showing error message`);
                                         var error_text = data.response || "Unknown error occurred"
                                         var retry_text = data.retry_count > 0 ? `\n\nRetrying... (${data.retry_count}x)` : ""
                                         return error_text + retry_text
                                     } else if (data.status === "completed") {
-                                        Logger.log(`✅ Showing completed response, raw content: "${data.response}"`);
+                                        logger.log(`✅ Showing completed response, raw content: "${data.response}"`);
                                         var html_content = SuttaBridge.markdown_to_html(data.response || "");
-                                        Logger.log(`🎨 Converted HTML: "${html_content}"`);
+                                        logger.log(`🎨 Converted HTML: "${html_content}"`);
                                         return html_content;
                                     } else {
-                                        Logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
+                                        logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
                                         return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                     }
                                 }

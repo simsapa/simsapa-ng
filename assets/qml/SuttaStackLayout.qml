@@ -17,6 +17,8 @@ StackLayout {
         root.items_map[root.current_key].show_transient_message(msg);
     }
 
+    Logger { id: logger }
+
     Component {
         id: sutta_html_component
 
@@ -28,16 +30,16 @@ StackLayout {
             Layout.fillHeight: true
 
             property int index
-            /* Component.onCompleted: Logger.log("SuttaHtmlView created at index", html_view.index) */
-            /* Component.onDestruction: Logger.log("SuttaHtmlView destroyed at index", html_view.index) */
+            /* Component.onCompleted: logger.log("SuttaHtmlView created at index", html_view.index) */
+            /* Component.onDestruction: logger.log("SuttaHtmlView destroyed at index", html_view.index) */
         }
     }
 
     function add_item(tab_data: var, show_item = true) {
-        /* Logger.log("add_item()", "sutta_uid:", tab_data.sutta_uid, "web_item_key:", tab_data.web_item_key); */
+        /* logger.log("add_item()", "sutta_uid:", tab_data.sutta_uid, "web_item_key:", tab_data.web_item_key); */
         let key = tab_data.web_item_key;
         if (root.items_map.hasOwnProperty(key)) {
-            Logger.error("Item with key", key, "already exists");
+            logger.error("Item with key", key, "already exists");
             return;
         }
 
@@ -64,7 +66,7 @@ StackLayout {
 
     function delete_item(key, show_key_after_delete = null) {
         if (!root.items_map.hasOwnProperty(key)) {
-            Logger.error("Item with key", key, "not found")
+            logger.error("Item with key", key, "not found")
             return;
         }
 
@@ -89,7 +91,7 @@ StackLayout {
 
         let item = root.items_map[root.current_key];
         if (item.sutta_uid !== "Sutta") {
-            /* Logger.log("SuttaBridge.emit_update_window_title()", item.sutta_uid, item.sutta_ref, item.sutta_title); */
+            /* logger.log("SuttaBridge.emit_update_window_title()", item.sutta_uid, item.sutta_ref, item.sutta_title); */
             SuttaBridge.emit_update_window_title(item.sutta_uid, item.sutta_ref, item.sutta_title);
         }
 
@@ -110,5 +112,5 @@ StackLayout {
         }
     }
 
-    Component.onDestruction: Logger.log("SuttaStackLayout destroyed, children: ", root.children.length)
+    Component.onDestruction: logger.log("SuttaStackLayout destroyed, children: ", root.children.length)
 }

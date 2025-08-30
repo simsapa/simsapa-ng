@@ -2,6 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
+import com.profoundlabs.simsapa
+
 /**
  * ScrollableHelper - Reusable component for managing automatic scrolling to bottom
  *
@@ -31,6 +33,8 @@ QtObject {
         }
     }
 
+    property Logger logger: Logger { id: logger }
+
     // Main function to trigger scroll to bottom
     function scroll_to_bottom() {
         // Only scroll if needed - check if content exceeds view
@@ -40,7 +44,7 @@ QtObject {
     // Internal function that performs the actual scroll check and operation
     function perform_scroll_if_needed() {
         if (!target_scroll_view || !target_scroll_view.contentItem) {
-            Logger.warn("ScrollableHelper: target_scroll_view or contentItem is null");
+            logger.warn("ScrollableHelper: target_scroll_view or contentItem is null");
             return;
         }
 
@@ -57,9 +61,9 @@ QtObject {
         if (contentGrew && contentHeight > viewHeight) {
             var maxContentY = Math.max(0, contentHeight - viewHeight);
             if (scroll_to_position(maxContentY)) {
-                Logger.log(`✅ ScrollableHelper: scrolled to bottom`);
+                logger.log(`✅ ScrollableHelper: scrolled to bottom`);
             } else {
-                Logger.warn("ScrollableHelper: Unable to scroll - no valid scroll method found");
+                logger.warn("ScrollableHelper: Unable to scroll - no valid scroll method found");
             }
         }
     }

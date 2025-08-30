@@ -23,6 +23,8 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 5
 
+    Logger { id: logger }
+
     Component.onCompleted: {
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
         // Assuming there is a network connection, show the download selection screen.
@@ -93,7 +95,7 @@ ApplicationWindow {
             urls.push(dictionaries_tar_url);
             urls.push(dpd_tar_url);
 
-            /* Logger.log("Show progress bar"); */
+            /* logger.log("Show progress bar"); */
             progress_bar.visible = true;
 
             manager.download_urls_and_extract(urls);
@@ -122,7 +124,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignCenter
                     onLinkActivated: function(link) {
-                        /* Logger.log(link + " link activated"); */
+                        /* logger.log(link + " link activated"); */
                         Qt.openUrlExternally(link);
                     }
                     text: `
