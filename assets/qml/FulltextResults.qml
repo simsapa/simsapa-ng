@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
+import com.profoundlabs.simsapa
 /* import data // for qml preview */
 
 ColumnLayout {
@@ -201,7 +202,7 @@ ColumnLayout {
         }
 
         Keys.onPressed: function(event) {
-            console.log("key:" + event.key)
+            Logger.log("key:" + event.key);
             if (event.key === Qt.Key_Up ||
                 (event.key === Qt.Key_K && event.modifiers & Qt.ControlModifier)) {
                 if (fulltext_list.currentIndex > 0)

@@ -4,6 +4,7 @@ import QtQuick
 
 Item {
     id: root
+
     property bool db_loaded: false;
     property var dpd_lookup_test_data: ({})
 
@@ -14,19 +15,19 @@ Item {
     signal updateWindowTitle(sutta_uid: string, sutta_ref: string, sutta_title: string);
 
     function emit_update_window_title(sutta_uid: string, sutta_ref: string, sutta_title: string) {
-        console.log("update_window_title()");
+        Logger.log("update_window_title()");
     }
 
     function load_db() {
-        console.log("load_db()");
+        Logger.log("load_db()");
     }
 
     function appdata_first_query() {
-        console.log("appdata_first_query()");
+        Logger.log("appdata_first_query()");
     }
 
     function dpd_first_query() {
-        console.log("dpd_first_query()");
+        Logger.log("dpd_first_query()");
     }
 
     function query_text_to_uid_field_query(query_text: string): string {
@@ -34,7 +35,7 @@ Item {
     }
 
     function results_page(query: string, page_num: int, params_json: string): string {
-        console.log(query);
+        Logger.log(query);
         return "{}";
     }
 
@@ -131,7 +132,7 @@ Item {
     }
 
     function set_api_keys(api_keys_json: string) {
-        console.log("set_api_keys()");
+        Logger.log("set_api_keys()");
     }
 
     function get_system_prompt(prompt_name: string): string {
@@ -139,7 +140,7 @@ Item {
     }
 
     function set_system_prompts_json(prompts_json: string) {
-        console.log("set_system_prompts_json()");
+        Logger.log("set_system_prompts_json()");
     }
 
     function get_system_prompts_json(): string {
@@ -151,7 +152,7 @@ Item {
     }
 
     function set_models_json(models_json: string) {
-        console.log("set_models_json()");
+        Logger.log("set_models_json()");
     }
 
     function get_theme_name(): string {
@@ -159,7 +160,7 @@ Item {
     }
 
     function set_theme_name(theme_name: string) {
-        console.log("set_theme_name():", theme_name);
+        Logger.log("set_theme_name():", theme_name);
     }
 
     function get_theme(theme_name: string): string {
@@ -191,12 +192,12 @@ Item {
     }
 
     function save_file(folder_url: url, filename: string, content: string): bool {
-        console.log(`save_file(): ${folder_url}, ${filename}, ${content}`);
+        Logger.log(`save_file(): ${folder_url}, ${filename}, ${content}`);
         return true;
     }
 
     function check_file_exists_in_folder(folder_url: url, filename: string): bool {
-        console.log(`check_file_exists_in_folder(): ${folder_url}, ${filename}`);
+        Logger.log(`check_file_exists_in_folder(): ${folder_url}, ${filename}`);
         return true;
     }
 

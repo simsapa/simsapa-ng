@@ -2,9 +2,9 @@ import QtQuick
 
 Item {
     function download_urls_and_extract(urls: list<string>) {
-        console.log("download_urls_and_extract():")
+        Logger.log("download_urls_and_extract():")
         for (let i=0; i < urls.length; i++) {
-            console.log(i);
+            Logger.log(i);
         }
     }
 

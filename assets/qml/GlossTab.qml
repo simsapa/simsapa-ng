@@ -39,12 +39,12 @@ Item {
         target: pm
 
         function onPromptResponse (paragraph_idx: int, translation_idx: int, model_name: string, response: string) {
-            console.log(`🤖 onPromptResponse received: paragraph_idx=${paragraph_idx}, translation_idx=${translation_idx}, model_name=${model_name}`);
-            console.log(`📝 Response content: "${response.substring(0, 100)}..."`);
+            Logger.debug(`🤖 onPromptResponse received: paragraph_idx=${paragraph_idx}, translation_idx=${translation_idx}, model_name=${model_name}`);
+            Logger.debug(`📝 Response content: "${response.substring(0, 100)}..."`);
 
             let paragraph = paragraph_model.get(paragraph_idx);
             if (!paragraph) {
-                console.error(`❌ No paragraph found at index ${paragraph_idx}`);
+                Logger.error(`❌ No paragraph found at index ${paragraph_idx}`);
                 return;
             }
 
@@ -52,68 +52,68 @@ Item {
             if (paragraph.translations_json) {
                 try {
                     translations = JSON.parse(paragraph.translations_json);
-                    console.log(`📚 Parsed ${translations.length} existing translations`);
+                    Logger.debug(`📚 Parsed ${translations.length} existing translations`);
                 } catch (e) {
-                    console.error("Failed to parse paragraph.translations_json:", e);
+                    Logger.error("Failed to parse paragraph.translations_json:", e);
                 }
             } else {
-                console.error(`Missing paragraph.translations_json for paragraph_idx ${paragraph_idx}, translation_idx ${translation_idx}`);
+                Logger.error(`Missing paragraph.translations_json for paragraph_idx ${paragraph_idx}, translation_idx ${translation_idx}`);
             }
 
             if (translation_idx < translations.length) {
                 let is_error = root.is_error_response(response);
                 let current_retry_count = translations[translation_idx].retry_count || 0;
 
-                console.log(`🔄 Updating translation at index ${translation_idx}: is_error=${is_error}, retry_count=${current_retry_count}`);
+                Logger.debug(`🔄 Updating translation at index ${translation_idx}: is_error=${is_error}, retry_count=${current_retry_count}`);
 
                 // Update the existing translation entry
                 translations[translation_idx].response = response;
                 translations[translation_idx].status = is_error ? "error" : "completed";
                 translations[translation_idx].last_updated = Date.now();
 
-                console.log(`✅ Updated translation data:`, JSON.stringify(translations[translation_idx]));
+                Logger.debug(`✅ Updated translation data:`, JSON.stringify(translations[translation_idx]));
 
                 // Handle automatic retry for errors (up to 5 times)
                 if (is_error && current_retry_count < 5 && root.ai_models_auto_retry && !root.is_rate_limit_error(response)) {
-                    console.log(`🔁 Scheduling automatic retry for ${model_name}`);
+                    Logger.debug(`🔁 Scheduling automatic retry for ${model_name}`);
                     // Schedule automatic retry
                     Qt.callLater(function() {
                         root.handle_retry_request(paragraph_idx, model_name, root.generate_request_id());
                     });
                 } else if (is_error && root.is_rate_limit_error(response)) {
-                    console.log(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
+                    Logger.debug(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
                 } else if (is_error && !root.ai_models_auto_retry) {
-                    console.log(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
+                    Logger.debug(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
                 }
 
                 let translations_json = JSON.stringify(translations);
                 paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
-                console.log(`💾 Saved translations_json to paragraph model`);
+                Logger.debug(`💾 Saved translations_json to paragraph model`);
             } else {
-                console.error(`❌ translation_idx ${translation_idx} is out of bounds for ${translations.length} translations`);
+                Logger.error(`❌ translation_idx ${translation_idx} is out of bounds for ${translations.length} translations`);
             }
         }
     }
 
-
+    property alias translation_models: translation_models
 
     ListModel { id: translation_models }
 
     function load_translation_models() {
-        console.log(`🔄 Loading translation models...`);
+        Logger.debug(`🔄 Loading translation models...`);
         translation_models.clear();
         let models_json = SuttaBridge.get_models_json();
-        console.log(`📥 Raw models JSON: "${models_json}"`);
+        Logger.debug(`📥 Raw models JSON: "${models_json}"`);
         try {
             let models_array = JSON.parse(models_json);
-            console.log(`📊 Parsed ${models_array.length} models`);
+            Logger.debug(`📊 Parsed ${models_array.length} models`);
             for (var i = 0; i < models_array.length; i++) {
                 var item = models_array[i];
-                console.log(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
+                Logger.debug(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
                 translation_models.append(item);
             }
         } catch (e) {
-            console.error("Failed to parse models JSON:", e);
+            Logger.error("Failed to parse models JSON:", e);
         }
     }
 
@@ -236,7 +236,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             try {
                 root.common_words = JSON.parse(saved_words);
             } catch (e) {
-                console.error("Failed to parse common words:", e);
+                Logger.error("Failed to parse common words:", e);
             }
         }
     }
@@ -298,7 +298,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                 }
             }
         } catch (e) {
-            console.error("Failed to handle retry request:", e);
+            Logger.error("Failed to handle retry request:", e);
         }
     }
 
@@ -325,7 +325,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     });
                 }
             } catch (e) {
-                console.error("Failed to parse history:", e);
+                Logger.error("Failed to parse history:", e);
             }
         }
     }
@@ -345,7 +345,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                 try {
                     words_data = JSON.parse(paragraph.words_data_json);
                 } catch (e) {
-                    console.error("Failed to parse words_data_json:", e);
+                    Logger.error("Failed to parse words_data_json:", e);
                 }
             }
 
@@ -429,7 +429,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             if (word_idx >= words_data.length) return null;
             return words_data[word_idx];
         } catch (e) {
-            console.error("Failed to parse words_data_json:", e);
+            Logger.error("Failed to parse words_data_json:", e);
             return null;
         }
     }
@@ -445,7 +445,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                 paragraph_model.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words_data));
             }
         } catch (e) {
-            console.error("Failed to parse words_data_json:", e);
+            Logger.error("Failed to parse words_data_json:", e);
         }
     }
 
@@ -455,7 +455,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         try {
             results = JSON.parse(lookup_results_json);
         } catch (e) {
-            console.error("Failed to parse lookup result:", e);
+            Logger.error("Failed to parse lookup result:", e);
             return null;
         }
 
@@ -565,7 +565,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                         previous_stems[root.clean_stem(word_item.stem)] = true;
                     }
                 } catch (e) {
-                    console.error("Failed to parse words_data_json:", e);
+                    Logger.error("Failed to parse words_data_json:", e);
                 }
             }
         }
@@ -592,7 +592,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             }
             return out;
         } catch (e) {
-            console.error("Failed to parse words_data_json:", e);
+            Logger.error("Failed to parse words_data_json:", e);
             return "";
         }
     }
@@ -715,7 +715,7 @@ And what, bhikkhus, is concentration?
 
             root.current_session_id = db_id;
         } catch (e) {
-            console.error("Failed to load session:", e);
+            Logger.error("Failed to load session:", e);
         }
     }
 
@@ -844,7 +844,7 @@ And what, bhikkhus, is concentration?
                         para_data.vocabulary.push(w_data.results[selected_index]);
                     }
                 } catch (e) {
-                    console.error("Failed to parse words_data_json:", e);
+                    Logger.error("Failed to parse words_data_json:", e);
                 }
             }
 
@@ -881,7 +881,7 @@ And what, bhikkhus, is concentration?
                     para_data.ai_translations = para_data.ai_translations.concat(other_translations);
 
                 } catch (e) {
-                    console.error("Failed to parse translations_json:", e);
+                    Logger.error("Failed to parse translations_json:", e);
                 }
             }
 
@@ -1290,10 +1290,10 @@ ${table_rows}
                                 text: "AI Translate"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: {
-                                    console.log(`🚀 AI Translate button clicked for paragraph ${paragraph_item.index}`);
+                                    Logger.log(`🚀 AI Translate button clicked for paragraph ${paragraph_item.index}`);
 
                                     root.load_translation_models();
-                                    console.log(`📋 Loaded ${translation_models.count} translation models`);
+                                    Logger.log(`📋 Loaded ${translation_models.count} translation models`);
 
                                     let paragraph = paragraph_model.get(paragraph_item.index);
 
@@ -1303,7 +1303,7 @@ ${table_rows}
                                         .replace("<<PALI_PASSAGE>>", paragraph_item.text)
                                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
 
-                                    console.log(`📝 Generated prompt: "${prompt.substring(0, 100)}..."`);
+                                    Logger.log(`📝 Generated prompt: "${prompt.substring(0, 100)}..."`);
 
                                     let translations = [];
 
@@ -1312,7 +1312,7 @@ ${table_rows}
                                         if (item.enabled) {
                                             let request_id = root.generate_request_id();
                                             let translation_idx = translations.length; // Use the current translations array length as index
-                                            console.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
+                                            Logger.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
                                             pm.prompt_request(paragraph_item.index, translation_idx, item.model_name, prompt);
                                             translations.push({
                                                 model_name: item.model_name,
@@ -1324,11 +1324,11 @@ ${table_rows}
                                                 user_selected: translation_idx === 0
                                             });
                                         } else {
-                                            console.log(`⏭️  Skipping disabled model ${item.model_name}`);
+                                            Logger.log(`⏭️  Skipping disabled model ${item.model_name}`);
                                         }
                                     }
 
-                                    console.log(`📊 Created ${translations.length} translation entries`);
+                                    Logger.log(`📊 Created ${translations.length} translation entries`);
                                     let translations_json = JSON.stringify(translations);
                                     paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
                                 }
@@ -1352,7 +1352,7 @@ ${table_rows}
                         try {
                             return JSON.parse(paragraph_item.translations_json);
                         } catch (e) {
-                            console.error(`❌ Error parsing translations_json for paragraph ${paragraph_item.index}:`, e);
+                            Logger.error(`❌ Error parsing translations_json for paragraph ${paragraph_item.index}:`, e);
                             return [];
                         }
                     }

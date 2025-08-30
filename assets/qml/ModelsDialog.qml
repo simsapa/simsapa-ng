@@ -9,6 +9,7 @@ import com.profoundlabs.simsapa
 
 ApplicationWindow {
     id: root
+
     title: "AI Models"
     width: is_mobile ? Screen.desktopAvailableWidth : 600
     height: is_mobile ? Screen.desktopAvailableHeight : 500
@@ -39,7 +40,7 @@ ApplicationWindow {
                 });
             }
         } catch (e) {
-            console.error("Failed to parse models JSON:", e);
+            Logger.error("Failed to parse models JSON:", e);
         }
     }
 

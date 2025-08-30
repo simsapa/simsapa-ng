@@ -9,12 +9,9 @@ Item {
     GlossTab {
         id: gloss_tab
         window_id: "window_0"
+        ai_models_auto_retry: false
         is_dark: false
         anchors.centerIn: parent
-    }
-
-    Component.onCompleted: {
-        console.log("Running Gloss Widget Tests...");
     }
 
     TestCase {
@@ -92,7 +89,7 @@ Item {
             all_results.push(...result);
 
             var result_words = result.map(i => i.original_word);
-            // console.log(result_words);
+            // Logger.log(result_words);
             // [ariyasāvako,vossaggārammaṇaṁ,karitvā,labhati,samādhiṁ,,cittassa,ekaggataṁ.]
 
             // Should skip common words and local duplicates
@@ -142,7 +139,7 @@ Item {
             gloss_tab.update_word_selection(0, 4, 3);
             // 1st paragraph, 8th word 'citta 1.1', change to 3rd selection 'citta 1.3'
             gloss_tab.update_word_selection(0, 7, 2);
-            let org_content = gloss_tab.gloss_as_orgmode();
+            var org_content = gloss_tab.gloss_as_orgmode();
             verify(org_content.includes("karitvā 4"));
             verify(org_content.includes("citta 1.3"));
         }
@@ -157,7 +154,7 @@ Item {
         }
 
         function test_clean_word_pali_examples() {
-            let test_words = [
+            var test_words = [
                 "‘sakkomi",
                 "gantun’",
                 "sampannasīlā,",
@@ -166,13 +163,13 @@ Item {
                 "anāsavaṁ …",
             ];
 
-            let cleaned_words = [];
+            var cleaned_words = [];
 
             for (var i = 0; i < test_words.length; i++) {
                 cleaned_words.push(gloss_tab.clean_word(test_words[i]));
             }
 
-            let expected_words = [
+            var expected_words = [
                 "sakkomi",
                 "gantun",
                 "sampannasīlā",
@@ -182,6 +179,248 @@ Item {
             ];
 
             compare(cleaned_words.join(" "), expected_words.join(" "));
+        }
+
+        function test_ai_translation_request_processing() {
+            var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+
+            // Setup paragraph with text
+            gloss_tab.gloss_text_input.text = paragraph;
+            gloss_tab.update_all_glosses();
+
+            verify(gloss_tab.paragraph_model.count > 0);
+            var paragraph_data = gloss_tab.paragraph_model.get(0);
+
+            // Test AI translation data structure
+            verify(paragraph_data);
+            compare(paragraph_data.text, paragraph);
+
+            // Initially no translations
+            var initial_translations = paragraph_data.translations_json || "[]";
+            var parsed_initial = JSON.parse(initial_translations);
+            compare(parsed_initial.length, 0);
+        }
+
+        function test_ai_translation_data_structure() {
+            // Test sample translation data processing
+            var sample_translations = [{
+                model_name: "deepseek/deepseek-r1-0528:free",
+                status: "completed",
+                response: "What is the concentration faculty, monks?",
+                request_id: "test_request_1",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: true
+            }, {
+                model_name: "google/gemma-3-12b-it:free",
+                status: "waiting",
+                response: "",
+                request_id: "test_request_2",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: false
+            }];
+
+            // Add paragraph with translation data
+            gloss_tab.paragraph_model.append({
+                text: "Test paragraph",
+                words_data_json: "[]",
+                translations_json: JSON.stringify(sample_translations)
+            });
+
+            verify(gloss_tab.paragraph_model.count > 0);
+            var paragraph = gloss_tab.paragraph_model.get(gloss_tab.paragraph_model.count - 1);
+
+            var translations = JSON.parse(paragraph.translations_json);
+            compare(translations.length, 2);
+            compare(translations[0].model_name, "deepseek/deepseek-r1-0528:free");
+            compare(translations[0].status, "completed");
+            compare(translations[1].status, "waiting");
+            verify(translations[0].user_selected);
+            verify(!translations[1].user_selected);
+        }
+
+        function test_error_response_detection() {
+            // Test error detection functions
+            verify(gloss_tab.is_error_response("API Error: Rate limit exceeded"));
+            verify(gloss_tab.is_error_response("Error: Connection timeout"));
+            verify(gloss_tab.is_error_response("Failed: Authentication failed"));
+            verify(!gloss_tab.is_error_response("Normal translation response"));
+            verify(!gloss_tab.is_error_response("Successfully translated text"));
+
+            // Test rate limit specific detection
+            verify(gloss_tab.is_rate_limit_error("API Error: Rate limit exceeded"));
+            verify(!gloss_tab.is_rate_limit_error("API Error: Connection failed"));
+            verify(!gloss_tab.is_rate_limit_error("Normal response"));
+        }
+
+        function test_request_id_generation() {
+            var id1 = gloss_tab.generate_request_id();
+            var id2 = gloss_tab.generate_request_id();
+
+            // IDs should be unique
+            verify(id1 !== id2);
+            verify(id1.length > 10);
+            verify(id1.includes("_"));
+
+            // Should be timestamp + random
+            var parts = id1.split("_");
+            compare(parts.length, 2);
+            verify(!isNaN(parseInt(parts[0]))); // timestamp part should be numeric
+        }
+
+        function test_export_with_ai_translations() {
+            var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ?";
+
+            // Setup paragraph with glossing
+            gloss_tab.gloss_text_input.text = paragraph;
+            gloss_tab.update_all_glosses();
+
+            verify(gloss_tab.paragraph_model.count > 0);
+
+            // Add sample AI translations
+            var translations = [{
+                model_name: "deepseek/deepseek-r1-0528:free",
+                status: "completed",
+                response: "What is the **concentration faculty**, monks?",
+                request_id: "test_request_1",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: true
+            }, {
+                model_name: "google/gemma-3-12b-it:free",
+                status: "completed",
+                response: "What is the faculty of *concentration*, O monks?",
+                request_id: "test_request_2",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: false
+            }];
+
+            gloss_tab.paragraph_model.setProperty(0, "translations_json", JSON.stringify(translations));
+
+            // Test HTML export
+            var html_content = gloss_tab.gloss_as_html();
+            verify(html_content.length > 0);
+            verify(html_content.includes("<html>"));
+            verify(html_content.includes("Katamañca"));
+            verify(html_content.includes("AI Translations"));
+            verify(html_content.includes("deepseek/deepseek-r1-0528:free"));
+            verify(html_content.includes("concentration faculty"));
+            verify(html_content.includes("(selected)"));
+
+            // Test Markdown export
+            var markdown_content = gloss_tab.gloss_as_markdown();
+            verify(markdown_content.length > 0);
+            verify(markdown_content.includes("Katamañca"));
+            verify(markdown_content.includes("## AI Translations"));
+            verify(markdown_content.includes("### deepseek/deepseek-r1-0528:free"));
+            verify(markdown_content.includes("**concentration faculty**"));
+
+            // Test Org-mode export
+            var org_content = gloss_tab.gloss_as_orgmode();
+            verify(org_content.length > 0);
+            verify(org_content.includes("Katamañca"));
+            verify(org_content.includes("** AI Translations"));
+            verify(org_content.includes("*** deepseek/deepseek-r1-0528:free"));
+        }
+
+        function test_translation_model_loading() {
+            // Test model loading functionality
+            gloss_tab.load_translation_models();
+
+            // Should have loaded some models (depends on test environment)
+            verify(gloss_tab.translation_models.count >= 0);
+
+            // Check that models have required properties if any exist
+            if (gloss_tab.translation_models.count > 0) {
+                var first_model = gloss_tab.translation_models.get(0);
+                verify(first_model.hasOwnProperty("model_name"));
+                verify(first_model.hasOwnProperty("enabled"));
+            }
+        }
+
+        function test_retry_request_handling() {
+            // Setup paragraph with error translation
+            var error_translations = [{
+                model_name: "test/model:free",
+                status: "error",
+                response: "API Error: Connection timeout",
+                request_id: "test_request_error",
+                retry_count: 1,
+                last_updated: Date.now(),
+                user_selected: true
+            }];
+
+            gloss_tab.paragraph_model.append({
+                text: "Test paragraph for retry",
+                words_data_json: "[]",
+                translations_json: JSON.stringify(error_translations),
+                selected_ai_tab: 0
+            });
+
+            var paragraph_idx = gloss_tab.paragraph_model.count - 1;
+            var paragraph = gloss_tab.paragraph_model.get(paragraph_idx);
+
+            // Test retry request handling
+            var new_request_id = gloss_tab.generate_request_id();
+            gloss_tab.handle_retry_request(paragraph_idx, "test/model:free", new_request_id);
+
+            // Check that request ID was updated
+            paragraph = gloss_tab.paragraph_model.get(paragraph_idx);
+            var updated_translations = JSON.parse(paragraph.translations_json);
+            compare(updated_translations[0].request_id, new_request_id);
+            compare(updated_translations[0].status, "waiting");
+            compare(updated_translations[0].retry_count, 2);
+        }
+
+        function test_assistant_responses_integration() {
+            var paragraph = "Test paragraph with AI responses";
+
+            // Setup paragraph with AI translations
+            var translations = [{
+                model_name: "deepseek/deepseek-r1-0528:free",
+                status: "completed",
+                response: "First model response",
+                request_id: "test_request_1",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: true
+            }, {
+                model_name: "google/gemma-3-12b-it:free",
+                status: "error",
+                response: "API Error: Rate limit exceeded",
+                request_id: "test_request_2",
+                retry_count: 1,
+                last_updated: Date.now(),
+                user_selected: false
+            }];
+
+            gloss_tab.paragraph_model.append({
+                text: paragraph,
+                words_data_json: "[]",
+                translations_json: JSON.stringify(translations),
+                selected_ai_tab: 0
+            });
+
+            verify(gloss_tab.paragraph_model.count > 0);
+            var paragraph_data = gloss_tab.paragraph_model.get(gloss_tab.paragraph_model.count - 1);
+
+            // Verify data is accessible for AssistantResponses component
+            var parsed_translations = JSON.parse(paragraph_data.translations_json);
+            compare(parsed_translations.length, 2);
+            compare(parsed_translations[0].status, "completed");
+            compare(parsed_translations[1].status, "error");
+
+            // Test tab selection update
+            gloss_tab.update_tab_selection(gloss_tab.paragraph_model.count - 1, 1, "google/gemma-3-12b-it:free");
+
+            // Verify selection was updated
+            paragraph_data = gloss_tab.paragraph_model.get(gloss_tab.paragraph_model.count - 1);
+            var updated_translations = JSON.parse(paragraph_data.translations_json);
+            verify(!updated_translations[0].user_selected);
+            verify(updated_translations[1].user_selected);
+            verify(updated_translations.length === 2);
         }
     }
 }

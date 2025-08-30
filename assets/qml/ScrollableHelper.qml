@@ -40,7 +40,7 @@ QtObject {
     // Internal function that performs the actual scroll check and operation
     function perform_scroll_if_needed() {
         if (!target_scroll_view || !target_scroll_view.contentItem) {
-            console.warn("ScrollableHelper: target_scroll_view or contentItem is null");
+            Logger.warn("ScrollableHelper: target_scroll_view or contentItem is null");
             return;
         }
 
@@ -57,9 +57,9 @@ QtObject {
         if (contentGrew && contentHeight > viewHeight) {
             var maxContentY = Math.max(0, contentHeight - viewHeight);
             if (scroll_to_position(maxContentY)) {
-                console.log(`✅ ScrollableHelper: scrolled to bottom`);
+                Logger.log(`✅ ScrollableHelper: scrolled to bottom`);
             } else {
-                console.warn("ScrollableHelper: Unable to scroll - no valid scroll method found");
+                Logger.warn("ScrollableHelper: Unable to scroll - no valid scroll method found");
             }
         }
     }

@@ -9,6 +9,7 @@ import com.profoundlabs.simsapa
 
 ApplicationWindow {
     id: root
+
     title: "Download Application Assets"
     width: is_mobile ? Screen.desktopAvailableWidth : 500
     height: is_mobile ? Screen.desktopAvailableHeight : 700
@@ -92,7 +93,7 @@ ApplicationWindow {
             urls.push(dictionaries_tar_url);
             urls.push(dpd_tar_url);
 
-            /* console.log("Show progress bar"); */
+            /* Logger.log("Show progress bar"); */
             progress_bar.visible = true;
 
             manager.download_urls_and_extract(urls);
@@ -121,7 +122,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignCenter
                     onLinkActivated: function(link) {
-                        /* console.log(link + " link activated"); */
+                        /* Logger.log(link + " link activated"); */
                         Qt.openUrlExternally(link);
                     }
                     text: `

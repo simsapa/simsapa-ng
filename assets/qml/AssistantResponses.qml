@@ -27,19 +27,19 @@ ColumnLayout {
 
     // Debug logging when translations_data changes
     onTranslations_dataChanged: {
-        console.log(`🔄 AssistantResponses: translations_data changed for paragraph ${paragraph_index}`);
+        Logger.log(`🔄 AssistantResponses: translations_data changed for paragraph ${paragraph_index}`);
         if (translations_data) {
-            console.log(`📊 New data has ${translations_data.length} translations:`);
+            Logger.log(`📊 New data has ${translations_data.length} translations:`);
             for (var i = 0; i < translations_data.length; i++) {
                 var item = translations_data[i];
                 if (item) {
-                    console.log(`  [${i}] ${item.model_name}: status=${item.status}, response_length=${item.response ? item.response.length : 0}`);
+                    Logger.log(`  [${i}] ${item.model_name}: status=${item.status}, response_length=${item.response ? item.response.length : 0}`);
                 } else {
-                    console.log(`  [${i}] null/undefined item`);
+                    Logger.log(`  [${i}] null/undefined item`);
                 }
             }
         } else {
-            console.log(`❌ translations_data is null/undefined`);
+            Logger.log(`❌ translations_data is null/undefined`);
         }
     }
 
@@ -162,29 +162,29 @@ ColumnLayout {
                                 property var data: response_content_item.modelData || {}
 
                                 text: {
-                                    console.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
+                                    Logger.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
 
                                     // Handle empty or invalid data
                                     if (!data || Object.keys(data).length === 0) {
-                                        console.log(`⚠️  Empty or invalid data, showing waiting message`);
+                                        Logger.log(`⚠️  Empty or invalid data, showing waiting message`);
                                         return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                     }
 
                                     if (data.status === "waiting") {
-                                        console.log(`⏳ Showing waiting message for ${data.model_name}`);
+                                        Logger.log(`⏳ Showing waiting message for ${data.model_name}`);
                                         return `Waiting for response from ${data.model_name} (up to 3min)...`
                                     } else if (data.status === "error") {
-                                        console.log(`❌ Showing error message`);
+                                        Logger.log(`❌ Showing error message`);
                                         var error_text = data.response || "Unknown error occurred"
                                         var retry_text = data.retry_count > 0 ? `\n\nRetrying... (${data.retry_count}x)` : ""
                                         return error_text + retry_text
                                     } else if (data.status === "completed") {
-                                        console.log(`✅ Showing completed response, raw content: "${data.response}"`);
+                                        Logger.log(`✅ Showing completed response, raw content: "${data.response}"`);
                                         var html_content = SuttaBridge.markdown_to_html(data.response || "");
-                                        console.log(`🎨 Converted HTML: "${html_content}"`);
+                                        Logger.log(`🎨 Converted HTML: "${html_content}"`);
                                         return html_content;
                                     } else {
-                                        console.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
+                                        Logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
                                         return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                     }
                                 }

@@ -3,3 +3,4 @@ singleton SuttaBridge 1.0 SuttaBridge.qml
 AssetManager 1.0 AssetManager.qml
 StorageManager 1.0 StorageManager.qml
 PromptManager 1.0 PromptManager.qml
+singleton Logger 1.0 Logger.qml

@@ -9,6 +9,7 @@ import com.profoundlabs.simsapa
 
 ApplicationWindow {
     id: root
+
     title: "System Prompts"
     width: is_mobile ? Screen.desktopAvailableWidth : 800
     height: is_mobile ? Screen.desktopAvailableHeight : 600
@@ -45,7 +46,7 @@ ApplicationWindow {
                 prompt_text_area.text = root.current_prompts[root.selected_prompt_key] || "";
             }
         } catch (e) {
-            console.error("Failed to parse system prompts:", e);
+            Logger.error("Failed to parse system prompts:", e);
         }
     }
 
