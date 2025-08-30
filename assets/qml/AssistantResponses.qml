@@ -68,15 +68,13 @@ ColumnLayout {
 
     GroupBox {
         Layout.fillWidth: true
-        Layout.margins: 10
+        Layout.margins: 0
         visible: root.translations_data && root.translations_data.length > 0
 
         background: Rectangle {
             anchors.fill: parent
-            color: root.bg_color_darker
-            border.width: 1
-            border.color: root.border_color
-            radius: 5
+            color: root.bg_color
+            border.width: 0
         }
 
         ColumnLayout {
@@ -156,50 +154,46 @@ ColumnLayout {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
 
-                        ScrollView {
+                        TextArea {
                             anchors.fill: parent
-                            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                            property var data: response_content_item.modelData || {}
 
-                            TextArea {
-                                property var data: response_content_item.modelData || {}
+                            text: {
+                                logger.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
 
-                                text: {
-                                    logger.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
-
-                                    // Handle empty or invalid data
-                                    if (!data || Object.keys(data).length === 0) {
-                                        logger.log(`⚠️  Empty or invalid data, showing waiting message`);
-                                        return `Waiting for response from ${data.model_name} (up to 3min)...`;
-                                    }
-
-                                    if (data.status === "waiting") {
-                                        logger.log(`⏳ Showing waiting message for ${data.model_name}`);
-                                        return `Waiting for response from ${data.model_name} (up to 3min)...`
-                                    } else if (data.status === "error") {
-                                        logger.log(`❌ Showing error message`);
-                                        var error_text = data.response || "Unknown error occurred"
-                                        var retry_text = data.retry_count > 0 ? `\n\nRetrying... (${data.retry_count}x)` : ""
-                                        return error_text + retry_text
-                                    } else if (data.status === "completed") {
-                                        logger.log(`✅ Showing completed response, raw content: "${data.response}"`);
-                                        var html_content = SuttaBridge.markdown_to_html(data.response || "");
-                                        logger.log(`🎨 Converted HTML: "${html_content}"`);
-                                        return html_content;
-                                    } else {
-                                        logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
-                                        return `Waiting for response from ${data.model_name} (up to 3min)...`;
-                                    }
+                                // Handle empty or invalid data
+                                if (!data || Object.keys(data).length === 0) {
+                                    logger.log(`⚠️  Empty or invalid data, showing waiting message`);
+                                    return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                 }
-                                font.pointSize: root.vocab_font_point_size
-                                selectByMouse: true
-                                readOnly: true
-                                textFormat: data.status === "completed" ? Text.RichText : Text.PlainText
-                                wrapMode: TextEdit.WordWrap
-                                color: root.text_color
 
-                                background: Rectangle {
-                                    color: "transparent"
+                                if (data.status === "waiting") {
+                                    logger.log(`⏳ Showing waiting message for ${data.model_name}`);
+                                    return `Waiting for response from ${data.model_name} (up to 3min)...`;
+                                } else if (data.status === "error") {
+                                    logger.log(`❌ Showing error message`);
+                                    var error_text = data.response || "Unknown error occurred"
+                                    var retry_text = data.retry_count > 0 ? `\n\nRetrying... (${data.retry_count}x)` : ""
+                                    return error_text + retry_text;
+                                } else if (data.status === "completed") {
+                                    logger.log(`✅ Showing completed response, raw content: "${data.response}"`);
+                                    var html_content = SuttaBridge.markdown_to_html(data.response || "");
+                                    logger.log(`🎨 Converted HTML: "${html_content}"`);
+                                    return html_content;
+                                } else {
+                                    logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
+                                    return `Waiting for response from ${data.model_name} (up to 3min)...`;
                                 }
+                            }
+                            font.pointSize: root.vocab_font_point_size
+                            selectByMouse: true
+                            readOnly: true
+                            textFormat: data.status === "completed" ? Text.RichText : Text.PlainText
+                            wrapMode: TextEdit.WordWrap
+                            color: root.text_color
+
+                            background: Rectangle {
+                                color: "transparent"
                             }
                         }
                     }

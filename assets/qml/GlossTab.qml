@@ -1248,6 +1248,7 @@ ${table_rows}
 
                 Label {
                     text: "Paragraph " + (paragraph_item.index + 1)
+                    font.bold: true
                     font.pointSize: root.vocab_font_point_size
                 }
             }
