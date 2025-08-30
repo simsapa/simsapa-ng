@@ -63,7 +63,10 @@ impl qobject::PromptManager {
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let client = Client::new();
+            let client = Client::builder()
+                .timeout(std::time::Duration::from_secs(180)) // 3 minutes timeout
+                .build()
+                .expect("Failed to build HTTP client");
 
             let request_body = ChatRequest {
                 model: model_text.clone(),
@@ -122,7 +125,10 @@ impl qobject::PromptManager {
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let client = Client::new();
+            let client = Client::builder()
+                .timeout(std::time::Duration::from_secs(180)) // 3 minutes timeout
+                .build()
+                .expect("Failed to build HTTP client");
 
             let request_body = ChatRequest {
                 model: model_text.clone(),
@@ -172,13 +178,21 @@ fn make_api_request(
         .header(AUTHORIZATION, auth_header)
         .body(json_body)
         .send()
-        .map_err(|e| format!("Request failed: {}", e))?;
+        .map_err(|e| {
+            let msg = format!("HTTP request failed. Error kind: {:?}. Error: {}", e, e);
+            error(&msg);
+            msg
+        })?;
 
     let status = response.status();
 
     let response_text = response
         .text()
-        .map_err(|e| format!("Failed to read response: {}", e))?;
+        .map_err(|e| {
+            let msg = format!("Failed to read response body. HTTP status: {}. Error kind: {:?}. Error: {}", status, e, e);
+            error(&msg);
+            msg
+        })?;
 
     if !status.is_success() {
         if let Ok(error_response) = serde_json::from_str::<ErrorResponse>(&response_text) {
@@ -189,7 +203,11 @@ fn make_api_request(
     }
 
     let chat_response: ChatResponse = serde_json::from_str(&response_text)
-        .map_err(|e| format!("Failed to parse response: {}. Raw response: {}", e, response_text))?;
+        .map_err(|e| {
+            let msg = format!("Failed to parse JSON response: {}. Raw response: {}", e, response_text);
+            error(&msg);
+            msg
+        })?;
 
     // Check for API-level errors in the response
     if let Some(error) = chat_response.error {
