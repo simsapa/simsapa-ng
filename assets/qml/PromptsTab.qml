@@ -30,29 +30,179 @@ Item {
     Connections {
         target: pm
 
-        function onPromptResponseForMessages(sender_message_idx: int, response: string, response_html: string) {
+        function onPromptResponseForMessages(sender_message_idx: int, model_name: string, response: string) {
+            console.log(`🤖 onPromptResponseForMessages received: sender_message_idx=${sender_message_idx}, model_name=${model_name}`);
+            console.log(`📝 Response content: "${response.substring(0, 100)}..."`);
+
             root.waiting_for_response = false;
 
-            messages_model.append({
-                role: "assistant",
-                content: response,
-                content_html: response_html,
-            });
-            messages_model.append({
-                role: "user",
-                content: "",
-                content_html: "",
-            });
+            // Find the assistant message that should receive this response
+            // The assistant message will be after the sender message
+            let assistant_message_idx = sender_message_idx + 1;
+            if (assistant_message_idx >= messages_model.count) {
+                console.error(`❌ Assistant message index ${assistant_message_idx} is out of bounds (count: ${messages_model.count})`);
+                return;
+            }
 
-            // Scroll to bottom after adding new messages
-            scroll_helper.scroll_to_bottom();
+            let assistant_message = messages_model.get(assistant_message_idx);
+            if (!assistant_message || assistant_message.role !== "assistant") {
+                console.error(`❌ No assistant message found at index ${assistant_message_idx}`);
+                return;
+            }
+
+            // Parse current responses
+            let responses = [];
+            if (assistant_message.responses_json) {
+                try {
+                    responses = JSON.parse(assistant_message.responses_json);
+                    console.log(`📚 Parsed ${responses.length} existing responses`);
+                } catch (e) {
+                    console.error("Failed to parse responses_json:", e);
+                    return;
+                }
+            }
+
+            // Update the specific model's response
+            for (var i = 0; i < responses.length; i++) {
+                if (responses[i].model_name === model_name) {
+                    let is_error = root.is_error_response(response);
+                    let current_retry_count = responses[i].retry_count || 0;
+
+                    console.log(`🔄 Updating response for ${model_name}: is_error=${is_error}, retry_count=${current_retry_count}`);
+
+                    responses[i].response = response;
+                    responses[i].status = is_error ? "error" : "completed";
+                    responses[i].last_updated = Date.now();
+
+                    // Handle automatic retry for errors (up to 5 times)
+                    if (is_error && current_retry_count < 5 && root.ai_models_auto_retry && !root.is_rate_limit_error(response)) {
+                        console.log(`🔁 Scheduling automatic retry for ${model_name}`);
+                        Qt.callLater(function() {
+                            root.handle_retry_request(assistant_message_idx, model_name, root.generate_request_id());
+                        });
+                    } else if (is_error && root.is_rate_limit_error(response)) {
+                        console.log(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
+                    } else if (is_error && !root.ai_models_auto_retry) {
+                        console.log(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
+                    }
+
+                    console.log(`✅ Updated response data:`, JSON.stringify(responses[i]));
+                    break;
+                }
+            }
+
+            // Update the assistant message with new responses
+            messages_model.setProperty(assistant_message_idx, "responses_json", JSON.stringify(responses));
+            console.log(`💾 Saved responses_json to message model`);
         }
     }
 
-    property string model_name: "tngtech/deepseek-r1t2-chimera:free"
     property bool waiting_for_response: false
+    required property bool ai_models_auto_retry
 
     ListModel { id: messages_model }
+    ListModel { id: available_models }
+
+    function load_available_models() {
+        console.log(`🔄 Loading available models...`);
+        available_models.clear();
+        let models_json = SuttaBridge.get_models_json();
+        console.log(`📥 Raw models JSON: "${models_json}"`);
+        try {
+            let models_array = JSON.parse(models_json);
+            console.log(`📊 Parsed ${models_array.length} models`);
+            for (var i = 0; i < models_array.length; i++) {
+                var item = models_array[i];
+                console.log(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
+                available_models.append(item);
+            }
+        } catch (e) {
+            console.error("Failed to parse models JSON:", e);
+        }
+    }
+
+    function generate_request_id() {
+        return Date.now().toString() + "_" + Math.random().toString(36);
+    }
+
+    function is_error_response(response_text) {
+        return response_text.includes("API Error:") ||
+               response_text.includes("Error:") ||
+               response_text.includes("Failed:");
+    }
+
+    function is_rate_limit_error(response_text) {
+        return response_text.includes("API Error: Rate limit exceeded");
+    }
+
+    function handle_retry_request(message_idx, model_name, new_request_id) {
+        var message = messages_model.get(message_idx);
+        if (!message || !message.responses_json) return;
+
+        try {
+            var responses = JSON.parse(message.responses_json);
+            for (var i = 0; i < responses.length; i++) {
+                if (responses[i].model_name === model_name) {
+                    // Update the response entry for retry
+                    responses[i].request_id = new_request_id;
+                    responses[i].status = "waiting";
+                    responses[i].retry_count = (responses[i].retry_count || 0) + 1;
+                    responses[i].last_updated = Date.now();
+
+                    // Append retry message to response
+                    var retry_msg = `\n\nRetrying... (${responses[i].retry_count}x)`;
+                    if (responses[i].response && !responses[i].response.includes("Retrying...")) {
+                        responses[i].response += retry_msg;
+                    }
+
+                    // Update the model
+                    messages_model.setProperty(message_idx, "responses_json", JSON.stringify(responses));
+
+                    // Compose message history up to the user message that triggered the original request
+                    let user_message_idx = message_idx - 1; // Assistant message is after user message
+                    if (user_message_idx >= 0) {
+                        let messages = [];
+                        for (var j = 0; j <= user_message_idx; j++) {
+                            let msg = messages_model.get(j);
+                            if (msg.role === "assistant" && msg.responses_json) {
+                                // For multi-response assistant messages, use the currently selected response
+                                try {
+                                    let assistant_responses = JSON.parse(msg.responses_json);
+                                    let selected_idx = msg.selected_ai_tab || 0;
+                                    if (selected_idx < assistant_responses.length && assistant_responses[selected_idx].status === "completed") {
+                                        messages.push({
+                                            role: "assistant",
+                                            content: assistant_responses[selected_idx].response
+                                        });
+                                    }
+                                } catch (e) {
+                                    console.error("Failed to parse assistant responses_json:", e);
+                                }
+                            } else {
+                                // For user/system messages
+                                messages.push({
+                                    role: msg.role,
+                                    content: msg.content
+                                });
+                            }
+                        }
+                        let messages_json = JSON.stringify(messages);
+
+                        // Send new request
+                        pm.prompt_request_with_messages(user_message_idx, model_name, messages_json);
+                    }
+                    break;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to handle retry request:", e);
+        }
+    }
+
+    function update_tab_selection(message_idx, tab_index, model_name) {
+        // Update the selected tab index for this message
+        messages_model.setProperty(message_idx, "selected_ai_tab", tab_index);
+    }
 
     Component.onCompleted: {
         // Load system prompt dynamically from database
@@ -63,11 +213,15 @@ Item {
             role: "system",
             content: system_prompt_text,
             content_html: "",
+            responses_json: "[]",
+            selected_ai_tab: 0
         });
         messages_model.append({
             role: "user",
             content: "",
             content_html: "",
+            responses_json: "[]",
+            selected_ai_tab: 0
         });
 
         // Initialize ScrollableHelper after initial messages
@@ -273,6 +427,8 @@ Item {
                 required property string role
                 required property string content
                 required property string content_html
+                required property string responses_json
+                required property int selected_ai_tab
 
                 property bool is_collapsed: collapse_btn.checked
                 property bool is_editable: ["user", "system"].includes(message_item.role)
@@ -316,11 +472,45 @@ Item {
                         ColumnLayout {
                             anchors.fill: parent
 
+                            // AssistantResponses for assistant messages
+                            AssistantResponses {
+                                id: assistant_responses_component
+                                visible: message_item.role === "assistant"
+                                is_dark: root.is_dark
+                                Layout.fillWidth: true
+
+
+                                translations_data: {
+                                    console.log(`🔍 AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`);
+                                    try {
+                                        let data = JSON.parse(message_item.responses_json || "[]");
+                                        console.log(`📊 Parsed translations_data:`, JSON.stringify(data));
+                                        return data;
+                                    } catch (e) {
+                                        console.error(`❌ Error parsing responses_json for message ${message_item.index}:`, e);
+                                        return [];
+                                    }
+                                }
+                                paragraph_text: message_item.content
+                                paragraph_index: message_item.index
+                                selected_tab_index: message_item.selected_ai_tab || 0
+
+                                onRetryRequest: function(model_name, request_id) {
+                                    root.handle_retry_request(message_item.index, model_name, request_id);
+                                }
+
+                                onTabSelectionChanged: function(tab_index, model_name) {
+                                    root.update_tab_selection(message_item.index, tab_index, model_name);
+                                }
+                            }
+
+                            // TextArea for user/system messages
                             TextArea {
                                 id: message_content
+                                visible: message_item.role !== "assistant"
                                 Layout.fillWidth: true
-                                text: message_item.role === "assistant" ? message_item.content_html : message_item.content
-                                textFormat: message_item.role === "assistant" ? Text.RichText : Text.PlainText
+                                text: message_item.content
+                                textFormat: Text.PlainText
                                 font.pointSize: 12
                                 selectByMouse: true
                                 wrapMode: TextEdit.WordWrap
@@ -332,6 +522,8 @@ Item {
                                             role: message_item.role,
                                             content: text,
                                             content_html: message_item.content_html,
+                                            responses_json: message_item.responses_json || "",
+                                            selected_ai_tab: message_item.selected_ai_tab || 0
                                         });
                                     }
                                 }
@@ -352,20 +544,104 @@ Item {
                                             return;
                                         }
 
-                                        let messages = [];
-                                        // Send messages up to this item, so user can change the chat conversation from this point onward
-                                        for (var i=0; i <= message_item.index; i++) {
-                                            messages.push(messages_model.get(i));
-                                        }
-                                        let messages_json = JSON.stringify(messages);
-                                        pm.prompt_request_with_messages(message_item.index, root.model_name, messages_json);
+                                        console.log(`🚀 Send button clicked for message ${message_item.index}`);
 
-                                        root.waiting_for_response = true;
+                                        // Load enabled models
+                                        root.load_available_models();
+                                        console.log(`📋 Loaded ${available_models.count} available models`);
+
+                                        // Create responses array for each enabled model
+                                        let responses = [];
+                                        for (var i = 0; i < available_models.count; i++) {
+                                            var model = available_models.get(i);
+                                            if (model.enabled) {
+                                                console.log(`✅ Adding enabled model: ${model.model_name}`);
+                                                responses.push({
+                                                    model_name: model.model_name,
+                                                    status: "waiting",
+                                                    response: "",
+                                                    request_id: root.generate_request_id(),
+                                                    retry_count: 0,
+                                                    last_updated: Date.now(),
+                                                    user_selected: responses.length === 0  // First model selected by default
+                                                });
+                                            } else {
+                                                console.log(`⏭️  Skipping disabled model: ${model.model_name}`);
+                                            }
+                                        }
+
+                                        console.log(`📊 Created ${responses.length} response entries`);
+
+                                        if (responses.length === 0) {
+                                            msg_dialog_ok.text = "No AI models are enabled. Please enable at least one model in settings.";
+                                            msg_dialog_ok.open();
+                                            return;
+                                        }
 
                                         // Remove chat items after the sender message.
                                         for (var i=messages_model.count-1; i > message_item.index; i--) {
                                             messages_model.remove(i);
                                         }
+
+                                        // Add assistant message with responses_json
+                                        messages_model.append({
+                                            role: "assistant",
+                                            content: "",
+                                            content_html: "",
+                                            responses_json: JSON.stringify(responses),
+                                            selected_ai_tab: 0
+                                        });
+
+                                        // Add new empty user message for next turn
+                                        messages_model.append({
+                                            role: "user",
+                                            content: "",
+                                            content_html: ""
+                                        });
+
+                                        // Compose chat message list from conversation history
+                                        let messages = [];
+                                        for (var i = 0; i <= message_item.index; i++) {
+                                            let msg = messages_model.get(i);
+                                            if (msg.role === "assistant" && msg.responses_json) {
+                                                // For multi-response assistant messages, use the currently selected response
+                                                try {
+                                                    let assistant_responses = JSON.parse(msg.responses_json);
+                                                    let selected_idx = msg.selected_ai_tab || 0;
+                                                    if (selected_idx < assistant_responses.length && assistant_responses[selected_idx].status === "completed") {
+                                                        messages.push({
+                                                            role: "assistant",
+                                                            content: assistant_responses[selected_idx].response
+                                                        });
+                                                        console.log(`📝 Added assistant message from ${assistant_responses[selected_idx].model_name}`);
+                                                    }
+                                                    // Skip assistant messages that don't have completed selected responses
+                                                } catch (e) {
+                                                    console.error("Failed to parse assistant responses_json:", e);
+                                                }
+                                            } else {
+                                                // For user/system messages
+                                                messages.push({
+                                                    role: msg.role,
+                                                    content: msg.content
+                                                });
+                                                console.log(`📝 Added ${msg.role} message`);
+                                            }
+                                        }
+                                        let messages_json = JSON.stringify(messages);
+                                        console.log(`📤 Composed message history with ${messages.length} messages`);
+
+                                        // Send requests to all enabled models using the same message history
+                                        for (var j = 0; j < responses.length; j++) {
+                                            console.log(`🎯 Sending request to ${responses[j].model_name}`);
+                                            pm.prompt_request_with_messages(
+                                                message_item.index, // sender message index (user message that triggered this)
+                                                responses[j].model_name,
+                                                messages_json
+                                            );
+                                        }
+
+                                        root.waiting_for_response = true;
 
                                         // Scroll to bottom to show waiting message
                                         scroll_helper.scroll_to_bottom();

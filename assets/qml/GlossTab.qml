@@ -909,8 +909,6 @@ And what, bhikkhus, is concentration?
 <h1>Gloss Export</h1>
 
 ${main_text}
-
-<h2>Paragraphs</h2>
 `;
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
@@ -937,13 +935,19 @@ ${main_text}
             }
 
             out += `
+<h2>Paragraph ${i+1}</h2>
+
 ${para_text}
+
+${ai_translations_section}
+
+<h3>Vocabulary</h3>
+
+<p><b>Dictionary definitions from DPD:</b></p>
 
 <table><tbody>
 ${table_rows}
 </tbody></table>
-
-${ai_translations_section}
 `;
 
         }
@@ -962,8 +966,6 @@ ${ai_translations_section}
 # Gloss Export
 
 ${main_text}
-
-## Paragraphs
 `;
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
@@ -993,13 +995,19 @@ ${main_text}
 
             // Add the table header for syntax recognition, but leave empty to save space when rendered.
             out += `
+## Paragraph ${i+1}
+
 ${para_text}
+
+${ai_translations_section}
+
+### Vocabulary
+
+**Dictionary definitions from DPD:**
 
 |    |    |
 |----|----|
 ${table_rows}
-
-${ai_translations_section}
 `;
 
         }
@@ -1017,8 +1025,6 @@ ${ai_translations_section}
 * Gloss Export
 
 ${main_text}
-
-** Paragraphs
 `;
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
@@ -1046,11 +1052,17 @@ ${main_text}
             }
 
             out += `
+** Paragraph ${i+1}
+
 ${para_text}
 
-${table_rows}
-
 ${ai_translations_section}
+
+*** Vocabulary
+
+*Dictionary definitions from DPD:*
+
+${table_rows}
 `;
 
         }

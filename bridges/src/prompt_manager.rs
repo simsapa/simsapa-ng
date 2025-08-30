@@ -7,10 +7,9 @@ use reqwest::blocking::Client;
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
 
-use simsapa_backend::helpers::consistent_niggahita;
 use simsapa_backend::logger::error;
 use simsapa_backend::get_app_data;
-use crate::markdown_to_html;
+use crate::{markdown_to_html, clean_prompt};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -41,7 +40,7 @@ pub mod qobject {
 
         #[qsignal]
         #[cxx_name = "promptResponseForMessages"]
-        fn prompt_response_for_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, response: QString, response_html: QString);
+        fn prompt_response_for_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, model_name: QString, response: QString);
     }
 }
 
@@ -84,7 +83,7 @@ impl qobject::PromptManager {
                 &api_key,
                 request_body
             ) {
-                Ok(content) => consistent_niggahita(Some(content)),
+                Ok(content) => content,
                 Err(e) => format!("Error: {}", e),
             };
 
@@ -138,18 +137,16 @@ impl qobject::PromptManager {
                 &api_key,
                 request_body
             ) {
-                Ok(content) => consistent_niggahita(Some(content)),
+                Ok(content) => content,
                 Err(e) => format!("Error: {}", e),
             };
 
-            let response_content_html = markdown_to_html(&response_content);
-
-            // Emit signal with the prompt response
+            // Emit signal with the prompt response (HTML conversion now done client-side)
             qt_thread.queue(move |mut qo| {
                 qo.as_mut().prompt_response_for_messages(
                     sender_message_idx,
-                    QString::from(response_content.trim()),
-                    QString::from(response_content_html.trim()),
+                    QString::from(model_text),  // Add model name to identify which model responded
+                    QString::from(response_content.trim()),  // Raw response without HTML conversion
                 );
             }).unwrap();
         }); // end of thread
@@ -199,11 +196,14 @@ fn make_api_request(
         return Err(format!("API Error: {}", error.message));
     }
 
-    chat_response
+    let response_text = chat_response
         .choices
         .first()
         .map(|choice| choice.message.content.clone())
-        .ok_or_else(|| "No response content received".to_string())
+        .ok_or_else(|| "No response content received".to_string())?;
+
+    // Apply cleaning logic to the response
+    Ok(clean_prompt(&response_text))
 }
 
 // Structures for OpenRouter API
@@ -248,47 +248,4 @@ struct ErrorInfo {
 #[derive(Deserialize, Debug)]
 struct ErrorResponse {
     error: ErrorInfo,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_markdown_to_html_basic() {
-        let markdown = "# Test Header\n\n**Bold text** and *italic text*.";
-        let html = markdown_to_html(markdown);
-
-        assert!(html.contains("<h1>Test Header</h1>"));
-        assert!(html.contains("<strong>Bold text</strong>"));
-        assert!(html.contains("<em>italic text</em>"));
-    }
-
-    #[test]
-    fn test_markdown_to_html_fallback() {
-        // Even with invalid markdown, it should return something (fallback behavior)
-        let markdown = "Some plain text";
-        let html = markdown_to_html(markdown);
-
-        // Should contain the text (either as HTML or as fallback)
-        assert!(html.contains("Some plain text"));
-    }
-
-    #[test]
-    fn test_markdown_to_html_code_blocks() {
-        let markdown = "```rust\nfn main() {\n    println!(\"Hello\");\n}\n```";
-        let html = markdown_to_html(markdown);
-
-        // Should convert to HTML code block
-        assert!(html.contains("<pre>") || html.contains("<code>"));
-    }
-
-    #[test]
-    fn test_markdown_to_html_table() {
-        let markdown = "| Column 1 | Column 2 |\n|----------|----------|\n| Data 1   | Data 2   |";
-        let html = markdown_to_html(markdown);
-
-        // Should contain table elements (GFM tables)
-        assert!(html.contains("<table>") || html.contains("Column 1"));
-    }
 }

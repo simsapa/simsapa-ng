@@ -1075,6 +1075,7 @@ ${query_text}`;
                                 id: prompts_tab
                                 window_id: root.window_id
                                 is_dark: root.is_dark
+                                ai_models_auto_retry: ai_models_auto_retry.checked
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                             }
