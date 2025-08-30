@@ -288,7 +288,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     paragraph_model.setProperty(paragraph_idx, "translations_json", JSON.stringify(translations));
 
                     // Send new request
-                    var template = SuttaBridge.get_system_prompt("Gloss Tab: AI-Translation");
+                    var template = SuttaBridge.get_system_prompt("Gloss Tab: AI Translation");
                     var prompt = template
                         .replace("<<PALI_PASSAGE>>", paragraph.text)
                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
@@ -1287,10 +1287,10 @@ ${table_rows}
 
                             Button {
                                 id: ai_translate_btn
-                                text: "AI-Translate"
+                                text: "AI Translate"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: {
-                                    console.log(`🚀 AI-Translate button clicked for paragraph ${paragraph_item.index}`);
+                                    console.log(`🚀 AI Translate button clicked for paragraph ${paragraph_item.index}`);
 
                                     root.load_translation_models();
                                     console.log(`📋 Loaded ${translation_models.count} translation models`);
@@ -1298,7 +1298,7 @@ ${table_rows}
                                     let paragraph = paragraph_model.get(paragraph_item.index);
 
                                     // Load prompt template dynamically from database
-                                    let template = SuttaBridge.get_system_prompt("Gloss Tab: AI-Translation");
+                                    let template = SuttaBridge.get_system_prompt("Gloss Tab: AI Translation");
                                     let prompt = template
                                         .replace("<<PALI_PASSAGE>>", paragraph_item.text)
                                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
@@ -1345,6 +1345,7 @@ ${table_rows}
 
                 AssistantResponses {
                     id: assistant_responses_component
+                    title: "AI Translations:"
                     is_dark: root.is_dark
                     Layout.fillWidth: true
                     translations_data: {

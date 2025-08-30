@@ -38,7 +38,7 @@ impl Default for AppSettings {
             api_keys: BTreeMap::new(),
             system_prompts: {
                 let mut prompts = BTreeMap::new();
-                prompts.insert("Gloss Tab: AI-Translation".to_string(),
+                prompts.insert("Gloss Tab: AI Translation".to_string(),
                     r#"
 Translate the following Pāli passage to English, keeping in mind the provided dictionary definitions.
 

@@ -14,6 +14,7 @@ ColumnLayout {
     required property var translations_data
     required property string paragraph_text
     required property int paragraph_index
+    property string title: ""
     property int selected_tab_index: 0
 
     readonly property int vocab_font_point_size: 10
@@ -80,7 +81,9 @@ ColumnLayout {
             anchors.fill: parent
 
             Text {
-                text: "AI Translations:"
+                id: assistant_title
+                text: root.title
+                visible: root.title.length > 0
                 font.bold: true
                 font.pointSize: root.vocab_font_point_size
                 color: root.text_color
