@@ -29,14 +29,14 @@ pub mod qobject {
 
     extern "RustQt" {
         #[qinvokable]
-        fn prompt_request(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model: &QString, prompt: &QString);
+        fn prompt_request(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model_name: &QString, prompt: &QString);
 
         #[qinvokable]
-        fn prompt_request_with_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, model: &QString, messages_json: &QString);
+        fn prompt_request_with_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, model_name: &QString, messages_json: &QString);
 
         #[qsignal]
         #[cxx_name = "promptResponse"]
-        fn prompt_response(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model: QString, response: QString, response_html: QString);
+        fn prompt_response(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model_name: QString, response: QString, response_html: QString);
 
         #[qsignal]
         #[cxx_name = "promptResponseForMessages"]
@@ -48,7 +48,7 @@ pub mod qobject {
 pub struct PromptManagerRust;
 
 impl qobject::PromptManager {
-    fn prompt_request(self: Pin<&mut Self>, paragraph_idx: usize, translation_idx: usize, model: &QString, prompt: &QString) {
+    fn prompt_request(self: Pin<&mut Self>, paragraph_idx: usize, translation_idx: usize, model_name: &QString, prompt: &QString) {
         let qt_thread = self.qt_thread();
 
         let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
@@ -56,20 +56,13 @@ impl qobject::PromptManager {
             app_data.get_api_key("OPENROUTER_API_KEY")
         });
 
-        let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
-
         let prompt_text = prompt.to_string();
-        let model_text = model.to_string();
+        let model_name_text = model_name.to_string();
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let client = Client::builder()
-                .timeout(std::time::Duration::from_secs(180)) // 3 minutes timeout
-                .build()
-                .expect("Failed to build HTTP client");
-
             let request_body = ChatRequest {
-                model: model_text.clone(),
+                model: model_name_text.clone(),
                 messages: vec![
                     ChatMessage {
                         role: "user".to_string(),
@@ -80,9 +73,7 @@ impl qobject::PromptManager {
                 temperature: None,
             };
 
-            let response_content = match make_api_request(
-                &client,
-                &api_url,
+            let response_content = match make_openrouter_api_request(
                 &api_key,
                 request_body
             ) {
@@ -97,22 +88,20 @@ impl qobject::PromptManager {
                 qo.as_mut().prompt_response(
                     paragraph_idx,
                     translation_idx,
-                    QString::from(model_text),
+                    QString::from(model_name_text),
                     QString::from(response_content.trim()),
                     QString::from(response_content_html.trim()));
             }).unwrap();
         }); // end of thread
     }
 
-    fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, model: &QString, messages_json: &QString) {
+    fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, model_name: &QString, messages_json: &QString) {
         let qt_thread = self.qt_thread();
 
         let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
             let app_data = get_app_data();
             app_data.get_api_key("OPENROUTER_API_KEY")
         });
-
-        let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
 
         let messages: Vec<ChatMessage> = match serde_json::from_str(&messages_json.to_string()) {
             Ok(r) => r,
@@ -121,25 +110,18 @@ impl qobject::PromptManager {
                 return;
             }
         };
-        let model_text = model.to_string();
+        let model_name_text = model_name.to_string();
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let client = Client::builder()
-                .timeout(std::time::Duration::from_secs(180)) // 3 minutes timeout
-                .build()
-                .expect("Failed to build HTTP client");
-
             let request_body = ChatRequest {
-                model: model_text.clone(),
+                model: model_name_text.clone(),
                 messages,
                 max_tokens: None,
                 temperature: None,
             };
 
-            let response_content = match make_api_request(
-                &client,
-                &api_url,
+            let response_content = match make_openrouter_api_request(
                 &api_key,
                 request_body
             ) {
@@ -151,7 +133,7 @@ impl qobject::PromptManager {
             qt_thread.queue(move |mut qo| {
                 qo.as_mut().prompt_response_for_messages(
                     sender_message_idx,
-                    QString::from(model_text),  // Add model name to identify which model responded
+                    QString::from(model_name_text),  // Add model name to identify which model responded
                     QString::from(response_content.trim()),  // Raw response without HTML conversion
                 );
             }).unwrap();
@@ -159,12 +141,14 @@ impl qobject::PromptManager {
     }
 }
 
-fn make_api_request(
-    client: &Client,
-    api_url: &str,
-    api_key: &str,
-    request_body: ChatRequest,
-) -> Result<String, String> {
+fn make_openrouter_api_request(api_key: &str, request_body: ChatRequest) -> Result<String, String> {
+    let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
+
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(180)) // 3 minutes timeout
+        .build()
+        .expect("Failed to build HTTP client");
+
     let json_body = match serde_json::to_string(&request_body) {
         Ok(json) => json,
         Err(e) => return Err(format!("Failed to serialize request: {}", e)),
