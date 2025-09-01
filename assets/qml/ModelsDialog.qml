@@ -158,6 +158,7 @@ ApplicationWindow {
                 }
 
                 Text {
+                    id: provider_description
                     text: "See available models at <a href='https://openrouter.ai/models'>https://openrouter.ai/models</a>"
                     font.pointSize: root.pointSize - 1
                     color: palette.windowText

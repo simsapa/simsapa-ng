@@ -3,9 +3,12 @@ use core::pin::Pin;
 
 use cxx_qt_lib::QString;
 use cxx_qt::Threading;
-use reqwest::blocking::Client;
-use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
+
+
 use serde::{Deserialize, Serialize};
+use rig::{completion::Prompt, completion::request::Chat, providers::deepseek, providers::gemini, providers::xai, providers::openrouter, providers::anthropic, providers::openai, client::CompletionClient, message::Message};
+use rig::providers::gemini::completion::gemini_api_types::{AdditionalParameters, GenerationConfig};
+use tokio::runtime::Runtime;
 
 use simsapa_backend::logger::error;
 use simsapa_backend::get_app_data;
@@ -47,38 +50,86 @@ pub mod qobject {
 #[derive(Default, Copy, Clone)]
 pub struct PromptManagerRust;
 
+// Helper function to extract API keys
+fn get_api_key(key_name: &str) -> String {
+    std::env::var(key_name).unwrap_or_else(|_| {
+        let app_data = get_app_data();
+        app_data.get_api_key(key_name)
+    })
+}
+
+// Helper function to create HTTP client with timeout for async operations
+fn create_http_client() -> Result<reqwest::Client, String> {
+    reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(180))
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))
+}
+
+
+
+// Helper function to convert ChatMessage to rig-core Message
+fn convert_chat_messages_to_rig_messages(messages: &[ChatMessage]) -> Vec<Message> {
+    messages.iter().map(|msg| {
+        match msg.role.as_str() {
+            "user" => Message::user(&msg.content),
+            "assistant" => Message::assistant(&msg.content),
+            _ => Message::user(&msg.content), // Default to user for unknown roles
+        }
+    }).collect()
+}
+
 impl qobject::PromptManager {
     fn prompt_request(self: Pin<&mut Self>, paragraph_idx: usize, translation_idx: usize, model_name: &QString, prompt: &QString) {
         let qt_thread = self.qt_thread();
-
-        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
-            let app_data = get_app_data();
-            app_data.get_api_key("OPENROUTER_API_KEY")
-        });
 
         let prompt_text = prompt.to_string();
         let model_name_text = model_name.to_string();
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let request_body = ChatRequest {
-                model: model_name_text.clone(),
-                messages: vec![
-                    ChatMessage {
-                        role: "user".to_string(),
-                        content: prompt_text,
-                    }
-                ],
-                max_tokens: None,
-                temperature: None,
-            };
+            // Create a single message for the chat request
+            let single_message = vec![ChatMessage {
+                role: "user".to_string(),
+                content: prompt_text,
+            }];
 
-            let response_content = match make_openrouter_api_request(
-                &api_key,
-                request_body
-            ) {
-                Ok(content) => content,
-                Err(e) => format!("Error: {}", e),
+            let response_content = if model_name_text == "deepseek-chat" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_deepseek_api_request(&single_message, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "gemini-2.5-flash" || model_name_text == "gemini-2.5-pro" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_gemini_api_request(&single_message, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "grok-4" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_xai_api_request(&single_message, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "claude-sonnet-4-0" || model_name_text == "claude-opus-4-0" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_anthropic_api_request(&single_message, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "gpt-4" || model_name_text == "gpt-4o" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_openai_api_request(&single_message, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_openrouter_api_request(&single_message, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
             };
 
             let response_content_html = markdown_to_html(&response_content);
@@ -98,11 +149,6 @@ impl qobject::PromptManager {
     fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, model_name: &QString, messages_json: &QString) {
         let qt_thread = self.qt_thread();
 
-        let api_key = std::env::var("OPENROUTER_API_KEY").unwrap_or_else(|_| {
-            let app_data = get_app_data();
-            app_data.get_api_key("OPENROUTER_API_KEY")
-        });
-
         let messages: Vec<ChatMessage> = match serde_json::from_str(&messages_json.to_string()) {
             Ok(r) => r,
             Err(e) => {
@@ -114,19 +160,42 @@ impl qobject::PromptManager {
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let request_body = ChatRequest {
-                model: model_name_text.clone(),
-                messages,
-                max_tokens: None,
-                temperature: None,
-            };
-
-            let response_content = match make_openrouter_api_request(
-                &api_key,
-                request_body
-            ) {
-                Ok(content) => content,
-                Err(e) => format!("Error: {}", e),
+            let response_content = if model_name_text == "deepseek-chat" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_deepseek_api_request(&messages, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "gemini-2.5-flash" || model_name_text == "gemini-2.5-pro" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_gemini_api_request(&messages, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "grok-4" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_xai_api_request(&messages, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "claude-sonnet-4-0" || model_name_text == "claude-opus-4-0" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_anthropic_api_request(&messages, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else if model_name_text == "gpt-4" || model_name_text == "gpt-4o" {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_openai_api_request(&messages, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
+            } else {
+                let rt = Runtime::new().unwrap();
+                match rt.block_on(make_openrouter_api_request(&messages, &model_name_text)) {
+                    Ok(content) => content,
+                    Err(e) => format!("Error: {}", e),
+                }
             };
 
             // Emit signal with the prompt response (HTML conversion now done client-side)
@@ -141,113 +210,266 @@ impl qobject::PromptManager {
     }
 }
 
-fn make_openrouter_api_request(api_key: &str, request_body: ChatRequest) -> Result<String, String> {
-    let api_url = "https://openrouter.ai/api/v1/chat/completions".to_string();
-
-    let client = Client::builder()
-        .timeout(std::time::Duration::from_secs(180)) // 3 minutes timeout
-        .build()
-        .expect("Failed to build HTTP client");
-
-    let json_body = match serde_json::to_string(&request_body) {
-        Ok(json) => json,
-        Err(e) => return Err(format!("Failed to serialize request: {}", e)),
-    };
-
-    let auth_header = format!("Bearer {}", api_key);
-
-    let response = client
-        .post(api_url)
-        .header(CONTENT_TYPE, "application/json")
-        .header(AUTHORIZATION, auth_header)
-        .body(json_body)
-        .send()
-        .map_err(|e| {
-            let msg = format!("HTTP request failed. Error kind: {:?}. Error: {}", e, e);
-            error(&msg);
-            msg
-        })?;
-
-    let status = response.status();
-
-    let response_text = response
-        .text()
-        .map_err(|e| {
-            let msg = format!("Failed to read response body. HTTP status: {}. Error kind: {:?}. Error: {}", status, e, e);
-            error(&msg);
-            msg
-        })?;
-
-    if !status.is_success() {
-        if let Ok(error_response) = serde_json::from_str::<ErrorResponse>(&response_text) {
-            return Err(format!("API Error: {}", error_response.error.message));
-        } else {
-            return Err(format!("HTTP Error {}: {}", status, response_text));
-        }
-    }
-
-    let chat_response: ChatResponse = serde_json::from_str(&response_text)
-        .map_err(|e| {
-            let msg = format!("Failed to parse JSON response: {}. Raw response: {}", e, response_text);
-            error(&msg);
-            msg
-        })?;
-
-    // Check for API-level errors in the response
-    if let Some(error) = chat_response.error {
-        return Err(format!("API Error: {}", error.message));
-    }
-
-    let response_text = chat_response
-        .choices
-        .first()
-        .map(|choice| choice.message.content.clone())
-        .ok_or_else(|| "No response content received".to_string())?;
-
-    // Apply cleaning logic to the response
-    Ok(clean_prompt(&response_text))
-}
-
-// Structures for OpenRouter API
 #[derive(Serialize, Deserialize)]
 struct ChatMessage {
     role: String,
     content: String,
 }
 
-#[derive(Serialize)]
-struct ChatRequest {
-    model: String,
-    messages: Vec<ChatMessage>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    max_tokens: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    temperature: Option<f32>,
+async fn make_openrouter_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
+    let api_key = get_api_key("OPENROUTER_API_KEY");
+
+    let http_client = create_http_client()?;
+
+    let client = openrouter::Client::builder(&api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build OpenRouter client: {}", e))?;
+
+    let agent = client.agent(model)
+        .temperature(0.7)
+        .build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
+
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
 }
 
-#[derive(Deserialize, Debug)]
-struct ChatResponse {
-    choices: Vec<Choice>,
-    #[serde(default)]
-    error: Option<ErrorInfo>,
+async fn make_deepseek_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
+    let api_key = get_api_key("DEEPSEEK_API_KEY");
+
+    let http_client = create_http_client()?;
+
+    let client = deepseek::Client::builder(&api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build DeepSeek client: {}", e))?;
+
+    let agent = client.agent(model)
+        .temperature(0.7)
+        .build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
+
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
 }
 
-#[derive(Deserialize, Debug)]
-struct Choice {
-    message: ResponseMessage,
+async fn make_gemini_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
+    let api_key = get_api_key("GEMINI_API_KEY");
+
+    let http_client = create_http_client()?;
+
+    let client = gemini::Client::builder(&api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build Gemini client: {}", e))?;
+
+    let gen_cfg = GenerationConfig {
+        top_k: Some(1),
+        top_p: Some(0.95),
+        candidate_count: Some(1),
+        max_output_tokens: Some(4096),
+        ..Default::default()
+    };
+    let cfg = AdditionalParameters::default().with_config(gen_cfg);
+
+    let agent = client
+        .agent(model)
+        .temperature(0.7)
+        .additional_params(serde_json::to_value(cfg).map_err(|e| format!("Failed to serialize config: {}", e))?)
+        .build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
+
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
 }
 
-#[derive(Deserialize, Debug)]
-struct ResponseMessage {
-    content: String,
+async fn make_xai_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
+    let api_key = get_api_key("XAI_API_KEY");
+
+    let http_client = create_http_client()?;
+
+    let client = xai::Client::builder(&api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build xAI client: {}", e))?;
+
+    let agent = client
+        .agent(model)
+        .temperature(0.7)
+        .build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
+
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
 }
 
-#[derive(Deserialize, Debug)]
-struct ErrorInfo {
-    message: String,
+async fn make_anthropic_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
+    let api_key = get_api_key("ANTHROPIC_API_KEY");
+
+    let http_client = create_http_client()?;
+
+    let client = anthropic::Client::builder(&api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build Anthropic client: {}", e))?;
+
+    let agent = client.agent(model)
+        .temperature(0.7)
+        .build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
+
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
 }
 
-#[derive(Deserialize, Debug)]
-struct ErrorResponse {
-    error: ErrorInfo,
+async fn make_openai_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
+    let api_key = get_api_key("OPENAI_API_KEY");
+
+    let http_client = create_http_client()?;
+
+    let client = openai::Client::builder(&api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build OpenAI client: {}", e))?;
+
+    let agent = client.agent(model)
+        .temperature(0.7)
+        .build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
+
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
 }

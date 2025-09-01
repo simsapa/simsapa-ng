@@ -2,19 +2,20 @@
 
 Simsapa is a sutta reader app for reading the Theravāda Tipitaka in Pāli and translated languages, providing Pāli language tools to analyse passages.
 
+## Architecture
+
+This is a Qt app with QML window layouts, connecting to a Rust back-end using bridge elements with the CXX-Qt library.
+
+- Multi-platform Qt6 app
+- C++ and Rust using the CXX-Qt library with QML for window layouts and UI widgets
+- Rust backend uses SQLite with Diesel ORM
+- Rust CXX-Qt bridges define backend functions used in QML elements
+
 ## Project Structure
 
 For detailed information about the codebase organization, folder structure, and locations of essential functions, read [PROJECT_MAP.md](./PROJECT_MAP.md).
 
 Keep [PROJECT_MAP.md](./PROJECT_MAP.md) updated as changes are made.
-
-# AI Dev Tasks
-
-Use these files when I request structured feature development using PRDs:
-
-- [create-prd.md](./ai-dev-tasks/create-prd.md)
-- [generate-tasks.md](./ai-dev-tasks/generate-tasks.md)
-- [process-task-list.md](./ai-dev-tasks/process-task-list.md)
 
 ## Specific coding procedures
 
@@ -92,9 +93,3 @@ Use lowercase snake_case for new functions, variables and id names, E.g:
 
 - **Errors:** Use Result types in Rust, exceptions in C++, proper error propagation throughout stack
 
-## Architecture
-
-- Multi-platform Qt6 app
-- C++ and Rust using the CXX-Qt library with QML for window layouts and UI widgets
-- Rust backend uses SQLite with Diesel ORM
-- Rust CXX-Qt bridges define backend functions used in QML elements

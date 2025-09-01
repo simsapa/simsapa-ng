@@ -12,22 +12,17 @@ use simsapa_backend::helpers::consistent_niggahita;
 
 pub fn clean_prompt(text: &str) -> String {
     lazy_static! {
-        // Regex to match code blocks with any language identifier (rust, md, markdown, etc.) or no identifier
-        static ref RE_STARTS_WITH_CODE_BLOCK: Regex = Regex::new(r"(?s)^```\s*\w*\s*\n(.*)\n```$").unwrap();
+        // Regex to match code blocks fence pairs with language identifier anywhere in the text and remove only the identifier
+        static ref RE_CODE_BLOCK_WITH_LANG: Regex = Regex::new(r"(?s)``` *(\w+)\s*\n(.*?)\n```").unwrap();
     }
 
     // Trim whitespace before processing
     let trimmed_text = text.trim();
 
-    // Remove wrapping code block syntax if present
-    let processed_text = if let Some(captures) = RE_STARTS_WITH_CODE_BLOCK.captures(trimmed_text) {
-        // Extract the content inside the code block (group 1)
-        captures.get(1).map_or(trimmed_text, |m| m.as_str())
-    } else {
-        trimmed_text
-    };
+    // Remove language identifier from ALL code blocks but keep the code block structure
+    let processed_text = RE_CODE_BLOCK_WITH_LANG.replace_all(trimmed_text, "```\n$2\n```");
 
-    // Remove wrapping bold/italics syntax if present
+    // Remove wrapping bold/italics syntax if present (only if entire text is wrapped)
     let final_text = {
         let patterns = ["***", "**", "*", "___", "__", "_"];
 
@@ -40,7 +35,7 @@ pub fn clean_prompt(text: &str) -> String {
                     None
                 }
             })
-            .unwrap_or(processed_text)
+            .unwrap_or(&processed_text)
     };
 
     // Apply consistent_niggahita to the cleaned text
@@ -49,7 +44,11 @@ pub fn clean_prompt(text: &str) -> String {
 
 pub fn markdown_to_html(markdown_text: &str) -> String {
     match to_html_with_options(markdown_text.trim(), &Options::gfm()) {
-        Ok(html) => html,
+        Ok(html) => {
+            // LLM responses sometimes use code blocks for verses or quotes,
+            // display them with sans-serif font instead of the default monospace.
+            html.replace("<pre>", "<pre style='font-family: sans-serif;'>")
+        },
         Err(_) => markdown_text.trim().to_string(), // Fallback to plain text on error
     }
 }
@@ -63,9 +62,9 @@ mod tests {
         // Test the case you mentioned with 'md' language
         let text = "```md\nBetter than horses, thoroughbreds from Sindh,\nElephants and mighty giants—the self-restrained one is superior to these.\n```";
         let result = clean_prompt(text);
-        
-        // Should strip code block wrapper
-        assert!(!result.contains("```"));
+
+        // Should keep code block but remove language identifier
+        assert!(result.contains("```"));
         assert!(!result.contains("md"));
         assert!(result.contains("Better than horses, thoroughbreds from Sindh"));
         assert!(result.contains("Elephants and mighty giants"));
@@ -75,29 +74,96 @@ mod tests {
     fn test_clean_prompt_code_block_rust() {
         let text = "```rust\nfn main() {\n    println!(\"Hello\");\n}\n```";
         let result = clean_prompt(text);
-        
-        // Should strip code block wrapper
-        assert!(!result.contains("```"));
+
+        // Should keep code block but remove language identifier
+        assert!(result.contains("```"));
         assert!(!result.contains("rust"));
         assert!(result.contains("fn main()"));
     }
 
     #[test]
-    fn test_clean_prompt_code_block_markdown() {
-        let text = "```markdown\nHere, friend, while I was alone and secluded...\n```";
+    fn test_clean_prompt_code_block_space_markdown() {
+        // There may be space after the code block fences
+        let text = "``` markdown\nHere, friend, while I was alone and secluded...\n```";
         let result = clean_prompt(text);
-        
-        // Should strip code block wrapper
-        assert!(!result.contains("```"));
+
+        // Should keep code block but remove language identifier
+        assert!(result.contains("```"));
         assert!(!result.contains("markdown"));
         assert!(result.contains("Here, friend, while I was alone and secluded"));
+    }
+
+    #[test]
+    fn test_clean_prompt_code_block_no_language() {
+        let text = "```\nSome code without language\n```";
+        let result = clean_prompt(text);
+
+        // Should remain unchanged
+        assert!(result.contains("```"));
+        assert!(result.contains("Some code without language"));
+    }
+
+    #[test]
+    fn test_clean_prompt_multiple_code_blocks() {
+        let text = "Here is some text with ```rust\nfn main() {}\n``` and also ```python\nprint('hello')\n``` in it.";
+        let result = clean_prompt(text);
+
+        // Should remove language identifiers from both code blocks
+        assert!(!result.contains("rust"));
+        assert!(!result.contains("python"));
+        // But keep the code blocks themselves
+        assert!(result.contains("```\nfn main() {}\n```"));
+        assert!(result.contains("```\nprint('hello')\n```"));
+        assert!(result.contains("Here is some text"));
+    }
+
+    #[test]
+    fn test_clean_prompt_mixed_code_blocks() {
+        let text = r#"Text with ```rust
+code1
+code1
+```
+
+and also
+
+```
+code2
+```
+
+and
+
+``` md
+code3
+code 3
+```
+
+```
+code 4
+
+code 4
+``` blocks."#;
+        let result = clean_prompt(text);
+
+        println!("{}", &result);
+
+        // Should remove language identifier from first block only
+        assert!(!result.contains("rust"));
+        assert!(result.contains("```\ncode1\ncode1\n```"));
+        assert!(result.contains("and also"));
+        // Second block should remain unchanged
+        assert!(result.contains("```\ncode2\n```"));
+        assert!(result.contains("```\ncode3\ncode 3\n```"));
+        assert!(result.contains("```\ncode 4\n\ncode 4\n```"));
+        assert!(result.contains("Text with"));
+        // Should not be removed because not in a code block fence pair
+        assert!(result.contains("blocks."));
     }
 
     #[test]
     fn test_clean_prompt_bold_stripping() {
         let text = "**This is bold text**";
         let result = clean_prompt(text);
-        
+
         // Should strip wrapping bold syntax
         assert!(result.contains("This is bold text"));
         assert!(!result.contains("**"));
@@ -107,7 +173,7 @@ mod tests {
     fn test_clean_prompt_italics_stripping() {
         let text = "*This is italic text*";
         let result = clean_prompt(text);
-        
+
         // Should strip wrapping italics syntax
         assert!(result.contains("This is italic text"));
         assert!(!result.contains("*This is italic text*"));
@@ -118,7 +184,7 @@ mod tests {
         // Test that consistent_niggahita is applied
         let text = "saṃvaro";  // Using ṃ
         let result = clean_prompt(text);
-        
+
         // Should convert ṃ to ṁ
         assert!(result.contains("saṁvaro"));
         assert!(!result.contains("saṃvaro"));
@@ -128,7 +194,7 @@ mod tests {
     fn test_clean_prompt_no_cleaning_needed() {
         let text = "Just plain text here";
         let result = clean_prompt(text);
-        
+
         // Should return the same text
         assert_eq!(result, "Just plain text here");
     }
@@ -176,7 +242,7 @@ mod tests {
         // Test that markdown_to_html no longer strips code blocks or formatting
         let markdown = "```markdown\n**Bold text**\n```";
         let html = markdown_to_html(markdown);
-        
+
         // Should convert to HTML code block, not strip the wrapper
         assert!(html.contains("<pre>") || html.contains("<code>"));
         // The bold text should remain as literal text inside code block
@@ -187,7 +253,7 @@ mod tests {
     fn test_markdown_to_html_empty_input() {
         // Test empty input
         let html = markdown_to_html("");
-        
+
         // Should handle empty input gracefully
         assert_eq!(html.trim(), "");
     }
@@ -197,7 +263,7 @@ mod tests {
         // Test plain text without any markdown
         let markdown = "Just plain text here";
         let html = markdown_to_html(markdown);
-        
+
         // Should return the text, possibly wrapped in HTML
         assert!(html.contains("Just plain text here"));
     }
