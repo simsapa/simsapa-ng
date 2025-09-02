@@ -61,6 +61,13 @@ impl Default for AppSettings {
             api_keys: BTreeMap::new(),
             system_prompts: {
                 let mut prompts = BTreeMap::new();
+                prompts.insert("Gloss Tab: System Prompt".to_string(),
+                    r#"
+You are a helpful assistant for studying the suttas of the Theravāda Pāli Tipitaka and the Pāli language.
+Respond with concise answers and respond only with the information requested in the task.
+Respond with GFM-Markdown formatted text.
+"#.trim().to_string());
+
                 prompts.insert("Gloss Tab: AI Translation".to_string(),
                     r#"
 Translate the following Pāli passage to English, keeping in mind the provided dictionary definitions.
