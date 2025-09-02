@@ -56,7 +56,6 @@ Item {
             // Test available models loading
             prompts_tab.load_available_models();
 
-            // Should call SuttaBridge.get_models_json() and populate available_models
             verify(prompts_tab.available_models.count >= 0);
 
             // If models exist, they should have required properties

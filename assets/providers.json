@@ -1,0 +1,140 @@
+[
+    {
+        "name": "Gemini",
+        "enabled": true,
+        "api_key_env_var_name": "GEMINI_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "gemini-2.5-flash",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "gemini-2.5-pro",
+                "enabled": false,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "OpenRouter",
+        "enabled": true,
+        "api_key_env_var_name": "OPENROUTER_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "tngtech/deepseek-r1t2-chimera:free",
+                "enabled": true,
+                "removable": true
+            },
+            {
+                "model_name": "deepseek/deepseek-r1-0528:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "deepseek/deepseek-chat-v3.1:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "google/gemini-2.0-flash-exp:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "google/gemma-3-27b-it:free",
+                "enabled": true,
+                "removable": true
+            },
+            {
+                "model_name": "openai/gpt-oss-20b:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "meta-llama/llama-3.3-70b-instruct:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "meta-llama/llama-3.1-405b-instruct:free",
+                "enabled": true,
+                "removable": true
+            },
+            {
+                "model_name": "mistralai/mistral-small-3.2-24b-instruct:free",
+                "enabled": true,
+                "removable": true
+            }
+        ]
+    },
+    {
+        "name": "Anthropic",
+        "enabled": true,
+        "api_key_env_var_name": "ANTHROPIC_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "claude-sonnet-4-0",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "claude-opus-4-0",
+                "enabled": false,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "OpenAI",
+        "enabled": true,
+        "api_key_env_var_name": "OPENAI_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "gpt-4o",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "gpt-4",
+                "enabled": true,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "DeepSeek",
+        "enabled": true,
+        "api_key_env_var_name": "DEEPSEEK_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "deepseek-chat",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "deepseek-reasoner",
+                "enabled": false,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "XAI",
+        "enabled": true,
+        "api_key_env_var_name": "XAI_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "grok-4",
+                "enabled": true,
+                "removable": false
+            }
+        ]
+    }
+]

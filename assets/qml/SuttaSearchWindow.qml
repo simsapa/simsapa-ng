@@ -36,7 +36,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !api_keys_dialog.visible && !models_dialog.visible && !api_keys_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible)
 
     Logger { id: logger }
 
@@ -590,14 +590,7 @@ ${query_text}`;
             id: prompts_menu
             title: "&Prompts"
 
-            CMenuItem {
-                action: Action {
-                    id: action_api_keys
-                    text: "&API Keys..."
-                    icon.source: "icons/32x32/mdi--key-variant.png"
-                    onTriggered: api_keys_dialog.show()
-                }
-            }
+
 
             CMenuItem {
                 action: Action {
@@ -645,7 +638,7 @@ ${query_text}`;
     }
 
     AboutDialog { id: about_dialog }
-    ApiKeysDialog { id: api_keys_dialog }
+
     SystemPromptsDialog { id: system_prompts_dialog }
     ModelsDialog { id: models_dialog }
 

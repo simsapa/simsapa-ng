@@ -32,10 +32,10 @@ pub mod qobject {
 
     extern "RustQt" {
         #[qinvokable]
-        fn prompt_request(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, model_name: &QString, prompt: &QString);
+        fn prompt_request(self: Pin<&mut PromptManager>, paragraph_idx: usize, translation_idx: usize, provider_name: &QString, model_name: &QString, prompt: &QString);
 
         #[qinvokable]
-        fn prompt_request_with_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, model_name: &QString, messages_json: &QString);
+        fn prompt_request_with_messages(self: Pin<&mut PromptManager>, sender_message_idx: usize, provider_name: &QString, model_name: &QString, messages_json: &QString);
 
         #[qsignal]
         #[cxx_name = "promptResponse"]
@@ -50,12 +50,35 @@ pub mod qobject {
 #[derive(Default, Copy, Clone)]
 pub struct PromptManagerRust;
 
-// Helper function to extract API keys
-fn get_api_key(key_name: &str) -> String {
-    std::env::var(key_name).unwrap_or_else(|_| {
-        let app_data = get_app_data();
-        app_data.get_api_key(key_name)
-    })
+// Helper function to extract API keys with provider-based fallback
+fn get_provider_api_key(provider_name: &str) -> String {
+    let app_data = get_app_data();
+    let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+
+    if let Some(provider) = app_settings.providers.iter().find(|p| format!("{:?}", p.name) == provider_name) {
+        // First check environment variable
+        if let Ok(env_key) = std::env::var(&provider.api_key_env_var_name) {
+            return env_key;
+        }
+        // Fall back to stored value
+        if let Some(ref stored_key) = provider.api_key_value {
+            return stored_key.clone();
+        }
+    }
+
+    String::new()
+}
+
+// Helper function to check if a provider is enabled
+fn is_provider_enabled(provider_name: &str) -> bool {
+    let app_data = get_app_data();
+    let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+
+    if let Some(provider) = app_settings.providers.iter().find(|p| format!("{:?}", p.name) == provider_name) {
+        return provider.enabled;
+    }
+
+    false
 }
 
 // Helper function to create HTTP client with timeout for async operations
@@ -80,53 +103,37 @@ fn convert_chat_messages_to_rig_messages(messages: &[ChatMessage]) -> Vec<Messag
 }
 
 impl qobject::PromptManager {
-    fn prompt_request(self: Pin<&mut Self>, paragraph_idx: usize, translation_idx: usize, model_name: &QString, prompt: &QString) {
+    fn prompt_request(self: Pin<&mut Self>, paragraph_idx: usize, translation_idx: usize, provider_name: &QString, model_name: &QString, prompt: &QString) {
         let qt_thread = self.qt_thread();
 
         let prompt_text = prompt.to_string();
         let model_name_text = model_name.to_string();
+        let provider_name_text = provider_name.to_string();
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
+            // Check if provider is enabled
+            if !is_provider_enabled(&provider_name_text) {
+                let error_msg = format!("Provider {} is disabled", provider_name_text);
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().prompt_response(
+                        paragraph_idx,
+                        translation_idx,
+                        QString::from(model_name_text),
+                        QString::from(error_msg.clone()),
+                        QString::from(error_msg));
+                }).unwrap();
+                return;
+            }
             // Create a single message for the chat request
             let single_message = vec![ChatMessage {
                 role: "user".to_string(),
                 content: prompt_text,
             }];
 
-            let response_content = if model_name_text == "deepseek-chat" {
+            let response_content = {
                 let rt = Runtime::new().unwrap();
-                match rt.block_on(make_deepseek_api_request(&single_message, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "gemini-2.5-flash" || model_name_text == "gemini-2.5-pro" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_gemini_api_request(&single_message, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "grok-4" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_xai_api_request(&single_message, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "claude-sonnet-4-0" || model_name_text == "claude-opus-4-0" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_anthropic_api_request(&single_message, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "gpt-4" || model_name_text == "gpt-4o" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_openai_api_request(&single_message, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_openrouter_api_request(&single_message, &model_name_text)) {
+                match rt.block_on(make_api_request(&single_message, &model_name_text, &provider_name_text)) {
                     Ok(content) => content,
                     Err(e) => format!("Error: {}", e),
                 }
@@ -146,7 +153,7 @@ impl qobject::PromptManager {
         }); // end of thread
     }
 
-    fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, model_name: &QString, messages_json: &QString) {
+    fn prompt_request_with_messages(self: Pin<&mut Self>, sender_message_idx: usize, provider_name: &QString, model_name: &QString, messages_json: &QString) {
         let qt_thread = self.qt_thread();
 
         let messages: Vec<ChatMessage> = match serde_json::from_str(&messages_json.to_string()) {
@@ -157,42 +164,24 @@ impl qobject::PromptManager {
             }
         };
         let model_name_text = model_name.to_string();
+        let provider_name_text = provider_name.to_string();
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            let response_content = if model_name_text == "deepseek-chat" {
+            // Check if provider is enabled
+            if !is_provider_enabled(&provider_name_text) {
+                let error_msg = format!("Provider {} is disabled", provider_name_text);
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().prompt_response_for_messages(
+                        sender_message_idx,
+                        QString::from(model_name_text),
+                        QString::from(error_msg));
+                }).unwrap();
+                return;
+            }
+            let response_content = {
                 let rt = Runtime::new().unwrap();
-                match rt.block_on(make_deepseek_api_request(&messages, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "gemini-2.5-flash" || model_name_text == "gemini-2.5-pro" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_gemini_api_request(&messages, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "grok-4" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_xai_api_request(&messages, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "claude-sonnet-4-0" || model_name_text == "claude-opus-4-0" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_anthropic_api_request(&messages, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else if model_name_text == "gpt-4" || model_name_text == "gpt-4o" {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_openai_api_request(&messages, &model_name_text)) {
-                    Ok(content) => content,
-                    Err(e) => format!("Error: {}", e),
-                }
-            } else {
-                let rt = Runtime::new().unwrap();
-                match rt.block_on(make_openrouter_api_request(&messages, &model_name_text)) {
+                match rt.block_on(make_api_request(&messages, &model_name_text, &provider_name_text)) {
                     Ok(content) => content,
                     Err(e) => format!("Error: {}", e),
                 }
@@ -216,60 +205,39 @@ struct ChatMessage {
     content: String,
 }
 
-async fn make_openrouter_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
-    let api_key = get_api_key("OPENROUTER_API_KEY");
+async fn make_api_request(messages: &[ChatMessage], model: &str, provider_name: &str) -> Result<String, String> {
+    let api_key = get_provider_api_key(provider_name);
+    if api_key.is_empty() {
+        return Err(format!("No API key found for provider: {}", provider_name));
+    }
 
     let http_client = create_http_client()?;
 
-    let client = openrouter::Client::builder(&api_key)
-        .custom_client(http_client)
-        .build()
-        .map_err(|e| format!("Failed to build OpenRouter client: {}", e))?;
-
-    let agent = client.agent(model)
-        .temperature(0.7)
-        .build();
-
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
-
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    };
-
-    Ok(clean_prompt(&response))
+    match provider_name {
+        "DeepSeek" => handle_deepseek_request(messages, model, &api_key, http_client).await,
+        "Gemini" => handle_gemini_request(messages, model, &api_key, http_client).await,
+        "XAI" => handle_xai_request(messages, model, &api_key, http_client).await,
+        "Anthropic" => handle_anthropic_request(messages, model, &api_key, http_client).await,
+        "OpenAI" => handle_openai_request(messages, model, &api_key, http_client).await,
+        "OpenRouter" => handle_openrouter_request(messages, model, &api_key, http_client).await,
+        _ => Err(format!("Unsupported provider: {}", provider_name)),
+    }
 }
 
-async fn make_deepseek_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
-    let api_key = get_api_key("DEEPSEEK_API_KEY");
 
-    let http_client = create_http_client()?;
 
-    let client = deepseek::Client::builder(&api_key)
+async fn handle_deepseek_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = deepseek::Client::builder(api_key)
         .custom_client(http_client)
         .build()
         .map_err(|e| format!("Failed to build DeepSeek client: {}", e))?;
 
-    let agent = client.agent(model)
-        .temperature(0.7)
-        .build();
+    let agent = client.agent(model).temperature(0.7).build();
 
     let response = if messages.len() == 1 {
         // Single message - handle as prompt
@@ -282,7 +250,6 @@ async fn make_deepseek_api_request(messages: &[ChatMessage], model: &str) -> Res
         // Multiple messages - handle as chat
         // Convert ChatMessage to rig-core Messages
         let rig_messages = convert_chat_messages_to_rig_messages(messages);
-
         let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
             (rest.to_vec(), last.clone())
         } else {
@@ -298,12 +265,13 @@ async fn make_deepseek_api_request(messages: &[ChatMessage], model: &str) -> Res
     Ok(clean_prompt(&response))
 }
 
-async fn make_gemini_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
-    let api_key = get_api_key("GEMINI_API_KEY");
-
-    let http_client = create_http_client()?;
-
-    let client = gemini::Client::builder(&api_key)
+async fn handle_gemini_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = gemini::Client::builder(api_key)
         .custom_client(http_client)
         .build()
         .map_err(|e| format!("Failed to build Gemini client: {}", e))?;
@@ -334,7 +302,6 @@ async fn make_gemini_api_request(messages: &[ChatMessage], model: &str) -> Resul
         // Multiple messages - handle as chat
         // Convert ChatMessage to rig-core Messages
         let rig_messages = convert_chat_messages_to_rig_messages(messages);
-
         let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
             (rest.to_vec(), last.clone())
         } else {
@@ -350,20 +317,18 @@ async fn make_gemini_api_request(messages: &[ChatMessage], model: &str) -> Resul
     Ok(clean_prompt(&response))
 }
 
-async fn make_xai_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
-    let api_key = get_api_key("XAI_API_KEY");
-
-    let http_client = create_http_client()?;
-
-    let client = xai::Client::builder(&api_key)
+async fn handle_xai_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = xai::Client::builder(api_key)
         .custom_client(http_client)
         .build()
         .map_err(|e| format!("Failed to build xAI client: {}", e))?;
 
-    let agent = client
-        .agent(model)
-        .temperature(0.7)
-        .build();
+    let agent = client.agent(model).temperature(0.7).build();
 
     let response = if messages.len() == 1 {
         // Single message - handle as prompt
@@ -376,7 +341,6 @@ async fn make_xai_api_request(messages: &[ChatMessage], model: &str) -> Result<S
         // Multiple messages - handle as chat
         // Convert ChatMessage to rig-core Messages
         let rig_messages = convert_chat_messages_to_rig_messages(messages);
-
         let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
             (rest.to_vec(), last.clone())
         } else {
@@ -392,19 +356,18 @@ async fn make_xai_api_request(messages: &[ChatMessage], model: &str) -> Result<S
     Ok(clean_prompt(&response))
 }
 
-async fn make_anthropic_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
-    let api_key = get_api_key("ANTHROPIC_API_KEY");
-
-    let http_client = create_http_client()?;
-
-    let client = anthropic::Client::builder(&api_key)
+async fn handle_anthropic_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = anthropic::Client::builder(api_key)
         .custom_client(http_client)
         .build()
         .map_err(|e| format!("Failed to build Anthropic client: {}", e))?;
 
-    let agent = client.agent(model)
-        .temperature(0.7)
-        .build();
+    let agent = client.agent(model).temperature(0.7).build();
 
     let response = if messages.len() == 1 {
         // Single message - handle as prompt
@@ -417,7 +380,6 @@ async fn make_anthropic_api_request(messages: &[ChatMessage], model: &str) -> Re
         // Multiple messages - handle as chat
         // Convert ChatMessage to rig-core Messages
         let rig_messages = convert_chat_messages_to_rig_messages(messages);
-
         let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
             (rest.to_vec(), last.clone())
         } else {
@@ -433,19 +395,18 @@ async fn make_anthropic_api_request(messages: &[ChatMessage], model: &str) -> Re
     Ok(clean_prompt(&response))
 }
 
-async fn make_openai_api_request(messages: &[ChatMessage], model: &str) -> Result<String, String> {
-    let api_key = get_api_key("OPENAI_API_KEY");
-
-    let http_client = create_http_client()?;
-
-    let client = openai::Client::builder(&api_key)
+async fn handle_openai_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = openai::Client::builder(api_key)
         .custom_client(http_client)
         .build()
         .map_err(|e| format!("Failed to build OpenAI client: {}", e))?;
 
-    let agent = client.agent(model)
-        .temperature(0.7)
-        .build();
+    let agent = client.agent(model).temperature(0.7).build();
 
     let response = if messages.len() == 1 {
         // Single message - handle as prompt
@@ -458,7 +419,45 @@ async fn make_openai_api_request(messages: &[ChatMessage], model: &str) -> Resul
         // Multiple messages - handle as chat
         // Convert ChatMessage to rig-core Messages
         let rig_messages = convert_chat_messages_to_rig_messages(messages);
+        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
+            (rest.to_vec(), last.clone())
+        } else {
+            return Err("No messages provided".to_string());
+        };
 
+        agent
+            .chat(current_prompt, chat_history)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    };
+
+    Ok(clean_prompt(&response))
+}
+
+async fn handle_openrouter_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = openrouter::Client::builder(api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build OpenRouter client: {}", e))?;
+
+    let agent = client.agent(model).temperature(0.7).build();
+
+    let response = if messages.len() == 1 {
+        // Single message - handle as prompt
+        let prompt_content = &messages[0].content;
+        agent
+            .prompt(prompt_content)
+            .await
+            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    } else {
+        // Multiple messages - handle as chat
+        // Convert ChatMessage to rig-core Messages
+        let rig_messages = convert_chat_messages_to_rig_messages(messages);
         let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
             (rest.to_vec(), last.clone())
         } else {

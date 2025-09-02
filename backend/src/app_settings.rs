@@ -4,10 +4,33 @@ use serde::{Serialize, Deserialize};
 
 use crate::logger::error;
 
+static PROVIDERS_JSON: &str = include_str!("../../assets/providers.json");
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModelEntry {
     pub model_name: String,
     pub enabled: bool,
+    pub removable: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Provider {
+    pub name: ProviderName,
+    pub enabled: bool,
+    /// e.g. OPENROUTER_API_KEY, DEEPSEEK_API_KEY, etc. which may be present as env variables.
+    pub api_key_env_var_name: String,
+    pub api_key_value: Option<String>,
+    pub models: Vec<ModelEntry>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ProviderName {
+    Gemini,
+    OpenRouter,
+    Anthropic,
+    OpenAI,
+    DeepSeek,
+    XAI,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -22,7 +45,7 @@ pub struct AppSettings {
     pub theme_name: ThemeName,
     pub api_keys: BTreeMap<String, String>,
     pub system_prompts: BTreeMap<String, String>,
-    pub models: Vec<ModelEntry>,
+    pub providers: Vec<Provider>,
 }
 
 impl Default for AppSettings {
@@ -63,17 +86,15 @@ Respond with GFM-Markdown formatted text.
 
                 prompts
             },
-            models: vec![
-                ModelEntry { model_name: "tngtech/deepseek-r1t2-chimera:free".to_string(), enabled: true },
-                ModelEntry { model_name: "deepseek/deepseek-r1-0528:free".to_string(), enabled: false },
-                ModelEntry { model_name: "deepseek/deepseek-chat-v3-0324:free".to_string(), enabled: false },
-                ModelEntry { model_name: "google/gemini-2.0-flash-exp:free".to_string(), enabled: false },
-                ModelEntry { model_name: "google/gemma-3-27b-it:free".to_string(), enabled: true },
-                ModelEntry { model_name: "openai/gpt-oss-20b:free".to_string(), enabled: false },
-                ModelEntry { model_name: "meta-llama/llama-3.3-70b-instruct:free".to_string(), enabled: false },
-                ModelEntry { model_name: "meta-llama/llama-3.1-405b-instruct:free".to_string(), enabled: true },
-                ModelEntry { model_name: "mistralai/mistral-small-3.2-24b-instruct:free".to_string(), enabled: true },
-            ],
+            providers: {
+                match serde_json::from_str::<Vec<Provider>>(PROVIDERS_JSON) {
+                    Ok(providers) => providers,
+                    Err(e) => {
+                        error(&format!("Failed to parse providers JSON: {}", e));
+                        vec![]
+                    }
+                }
+            },
         }
     }
 }

@@ -48,6 +48,7 @@ pub fn markdown_to_html(markdown_text: &str) -> String {
             // LLM responses sometimes use code blocks for verses or quotes,
             // display them with sans-serif font instead of the default monospace.
             html.replace("<pre>", "<pre style='font-family: sans-serif;'>")
+                .replace("<code>", "<code style='font-family: sans-serif;'>")
         },
         Err(_) => markdown_text.trim().to_string(), // Fallback to plain text on error
     }

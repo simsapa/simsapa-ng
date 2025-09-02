@@ -101,20 +101,35 @@ Item {
     ListModel { id: translation_models }
 
     function load_translation_models() {
-        logger.debug(`🔄 Loading translation models...`);
+        logger.debug(`🔄 Loading translation models from all providers...`);
         translation_models.clear();
-        let models_json = SuttaBridge.get_models_json();
-        logger.debug(`📥 Raw models JSON: "${models_json}"`);
+        let providers_json = SuttaBridge.get_providers_json();
+        logger.debug(`📥 Raw providers JSON: "${providers_json}"`);
         try {
-            let models_array = JSON.parse(models_json);
-            logger.debug(`📊 Parsed ${models_array.length} models`);
-            for (var i = 0; i < models_array.length; i++) {
-                var item = models_array[i];
-                logger.debug(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
-                translation_models.append(item);
+            let providers_array = JSON.parse(providers_json);
+            logger.debug(`📊 Parsing ${providers_array.length} providers`);
+            for (var i = 0; i < providers_array.length; i++) {
+                var provider = providers_array[i];
+                logger.debug(`  Provider ${provider.name}: enabled=${provider.enabled}`);
+
+                // Only load models from enabled providers
+                if (provider.enabled) {
+                    for (var j = 0; j < provider.models.length; j++) {
+                        var model = provider.models[j];
+                        logger.debug(`    [${j}] ${model.model_name}: enabled=${model.enabled}`);
+                        translation_models.append({
+                            model_name: model.model_name,
+                            enabled: model.enabled,
+                            removable: model.removable
+                        });
+                    }
+                } else {
+                    logger.debug(`    Skipping disabled provider ${provider.name}`);
+                }
             }
+            logger.debug(`🎯 Total models loaded: ${translation_models.count}`);
         } catch (e) {
-            logger.error("Failed to parse models JSON:", e);
+            logger.error("Failed to parse providers JSON:", e);
         }
     }
 
@@ -294,7 +309,8 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                         .replace("<<PALI_PASSAGE>>", paragraph.text)
                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
 
-                    pm.prompt_request(paragraph_idx, i, model_name, prompt);
+                    let provider_name = SuttaBridge.get_provider_for_model(model_name);
+                    pm.prompt_request(paragraph_idx, i, provider_name, model_name, prompt);
                     break;
                 }
             }
@@ -1319,7 +1335,8 @@ ${table_rows}
                                             let request_id = root.generate_request_id();
                                             let translation_idx = translations.length; // Use the current translations array length as index
                                             logger.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
-                                            pm.prompt_request(paragraph_item.index, translation_idx, item.model_name, prompt);
+                                            let provider_name = SuttaBridge.get_provider_for_model(item.model_name);
+                                            pm.prompt_request(paragraph_item.index, translation_idx, provider_name, item.model_name, prompt);
                                             translations.push({
                                                 model_name: item.model_name,
                                                 status: "waiting",

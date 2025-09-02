@@ -111,20 +111,35 @@ Item {
     ListModel { id: available_models }
 
     function load_available_models() {
-        logger.log(`🔄 Loading available models...`);
+        logger.log(`🔄 Loading available models from all providers...`);
         available_models.clear();
-        let models_json = SuttaBridge.get_models_json();
-        logger.log(`📥 Raw models JSON: "${models_json}"`);
+        let providers_json = SuttaBridge.get_providers_json();
+        logger.log(`📥 Raw providers JSON: "${providers_json}"`);
         try {
-            let models_array = JSON.parse(models_json);
-            logger.log(`📊 Parsed ${models_array.length} models`);
-            for (var i = 0; i < models_array.length; i++) {
-                var item = models_array[i];
-                logger.log(`  [${i}] ${item.model_name}: enabled=${item.enabled}`);
-                available_models.append(item);
+            let providers_array = JSON.parse(providers_json);
+            logger.log(`📊 Parsing ${providers_array.length} providers`);
+            for (var i = 0; i < providers_array.length; i++) {
+                var provider = providers_array[i];
+                logger.log(`  Provider ${provider.name}: enabled=${provider.enabled}`);
+
+                // Only load models from enabled providers
+                if (provider.enabled) {
+                    for (var j = 0; j < provider.models.length; j++) {
+                        var model = provider.models[j];
+                        logger.log(`    [${j}] ${model.model_name}: enabled=${model.enabled}`);
+                        available_models.append({
+                            model_name: model.model_name,
+                            enabled: model.enabled,
+                            removable: model.removable
+                        });
+                    }
+                } else {
+                    logger.log(`    Skipping disabled provider ${provider.name}`);
+                }
             }
+            logger.log(`🎯 Total models loaded: ${available_models.count}`);
         } catch (e) {
-            logger.error("Failed to parse models JSON:", e);
+            logger.error("Failed to parse providers JSON:", e);
         }
     }
 
@@ -196,7 +211,8 @@ Item {
                         let messages_json = JSON.stringify(messages);
 
                         // Send new request
-                        pm.prompt_request_with_messages(user_message_idx, model_name, messages_json);
+                        let provider_name = SuttaBridge.get_provider_for_model(model_name);
+                        pm.prompt_request_with_messages(user_message_idx, provider_name, model_name, messages_json);
                     }
                     break;
                 }
@@ -644,8 +660,10 @@ Item {
                                         // Send requests to all enabled models using the same message history
                                         for (var j = 0; j < responses.length; j++) {
                                             logger.log(`🎯 Sending request to ${responses[j].model_name}`);
+                                            let provider_name = SuttaBridge.get_provider_for_model(responses[j].model_name);
                                             pm.prompt_request_with_messages(
                                                 message_item.index, // sender message index (user message that triggered this)
+                                                provider_name,
                                                 responses[j].model_name,
                                                 messages_json
                                             );

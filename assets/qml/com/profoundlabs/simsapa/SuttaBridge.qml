@@ -147,12 +147,36 @@ Item {
         return '{}';
     }
 
-    function get_models_json(): string {
+    function get_providers_json(): string {
         return '[]';
     }
 
-    function set_models_json(models_json: string) {
-        console.log("set_models_json()");
+    function set_providers_json(providers_json: string) {
+        console.log("set_providers_json()");
+    }
+
+    function get_provider_api_key(provider_name: string): string {
+        return 'api_key_value';
+    }
+
+    function set_provider_api_key(provider_name: string, api_key: string) {
+        console.log("set_provider_api_key():", provider_name, api_key);
+    }
+
+    function set_provider_enabled(provider_name: string, enabled: bool) {
+        console.log("set_provider_enabled():", provider_name, enabled);
+    }
+
+    function add_provider_model(provider_name: string, model_name: string) {
+        console.log("add_provider_model():", provider_name, model_name);
+    }
+
+    function remove_provider_model(provider_name: string, model_name: string) {
+        console.log("remove_provider_model():", provider_name, model_name);
+    }
+
+    function get_provider_for_model(model_name: string): string {
+        return "OpenRouter";
     }
 
     function get_theme_name(): string {

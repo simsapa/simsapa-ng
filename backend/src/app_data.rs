@@ -312,25 +312,25 @@ impl AppData {
         serde_json::to_string(&app_settings.system_prompts).unwrap_or_default()
     }
 
-    pub fn get_models_json(&self) -> String {
+    pub fn get_providers_json(&self) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
-        serde_json::to_string(&app_settings.models).unwrap_or_default()
+        serde_json::to_string(&app_settings.providers).unwrap_or_default()
     }
 
-    pub fn set_models_json(&self, models_json: &str) {
+    pub fn set_providers_json(&self, providers_json: &str) {
         use crate::db::appdata_schema::app_settings;
-        use crate::app_settings::ModelEntry;
+        use crate::app_settings::Provider;
 
-        let models_vec: Vec<ModelEntry> = match serde_json::from_str(models_json) {
-            Ok(models) => models,
+        let providers_vec: Vec<Provider> = match serde_json::from_str(providers_json) {
+            Ok(providers) => providers,
             Err(e) => {
-                error(&format!("Failed to parse models JSON: {}", e));
+                error(&format!("Failed to parse providers JSON: {}", e));
                 return;
             }
         };
 
         let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.models = models_vec;
+        app_settings.providers = providers_vec;
 
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
@@ -342,8 +342,8 @@ impl AppData {
             .set(app_settings::value.eq(Some(settings_json)))
             .execute(db_conn)
         {
-            Ok(_) => {}
-            Err(e) => error(&format!("{}", e))
-        };
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
     }
 }
