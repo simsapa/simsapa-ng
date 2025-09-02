@@ -4,7 +4,6 @@ use core::pin::Pin;
 use cxx_qt_lib::QString;
 use cxx_qt::Threading;
 
-
 use serde::{Deserialize, Serialize};
 use rig::{completion::Prompt, completion::request::Chat, providers::deepseek, providers::gemini, providers::xai, providers::openrouter, providers::anthropic, providers::openai, client::CompletionClient, message::Message};
 use rig::providers::gemini::completion::gemini_api_types::{AdditionalParameters, GenerationConfig};
@@ -91,15 +90,15 @@ fn create_http_client() -> Result<reqwest::Client, String> {
 
 
 
-// Helper function to convert ChatMessage to rig-core Message
-fn convert_chat_messages_to_rig_messages(messages: &[ChatMessage]) -> Vec<Message> {
-    messages.iter().map(|msg| {
-        match msg.role.as_str() {
-            "user" => Message::user(&msg.content),
-            "assistant" => Message::assistant(&msg.content),
-            _ => Message::user(&msg.content), // Default to user for unknown roles
+// Helper function to extract system prompt from ChatMessage array
+// Returns the first system message content, or None if no system message found
+fn extract_system_prompt(messages: &[ChatMessage]) -> Option<String> {
+    for msg in messages {
+        if msg.role.as_str() == "system" {
+            return Some(msg.content.clone());
         }
-    }).collect()
+    }
+    None
 }
 
 impl qobject::PromptManager {
@@ -199,7 +198,7 @@ impl qobject::PromptManager {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 struct ChatMessage {
     role: String,
     content: String,
@@ -224,8 +223,6 @@ async fn make_api_request(messages: &[ChatMessage], model: &str, provider_name: 
     }
 }
 
-
-
 async fn handle_deepseek_request(
     messages: &[ChatMessage],
     model: &str,
@@ -237,19 +234,45 @@ async fn handle_deepseek_request(
         .build()
         .map_err(|e| format!("Failed to build DeepSeek client: {}", e))?;
 
-    let agent = client.agent(model).temperature(0.7).build();
+    let system_prompt = extract_system_prompt(messages);
 
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
+    };
+
+    // TODO: extract to get_response(agent, messages)
     let response = if messages.len() == 1 {
-        // Single message - handle as prompt
+        // Single message - handle as prompt.
+        // In the single message case (GlossTab.qml) the system prompt is already prepended to the message content.
         let prompt_content = &messages[0].content;
         agent
             .prompt(prompt_content)
             .await
             .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
     } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
+        // Multiple messages - handle as chat.
+        //
+        // Skip system messages, they're handled via preamble(). The rig
+        // completion::message::Message type only has User and Assistant variants.
+        let rig_messages = messages.iter().filter(|msg| msg.role.as_str() != "system")
+            .map(|msg| {
+                match msg.role.as_str() {
+                    "user" => Message::user(&msg.content),
+                    "assistant" => Message::assistant(&msg.content),
+                    _ => Message::user(&msg.content),
+                }
+            }).collect::<Vec<_>>();
+
         let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
             (rest.to_vec(), last.clone())
         } else {
@@ -276,6 +299,8 @@ async fn handle_gemini_request(
         .build()
         .map_err(|e| format!("Failed to build Gemini client: {}", e))?;
 
+    let system_prompt = extract_system_prompt(messages);
+
     let gen_cfg = GenerationConfig {
         top_k: Some(1),
         top_p: Some(0.95),
@@ -285,34 +310,23 @@ async fn handle_gemini_request(
     };
     let cfg = AdditionalParameters::default().with_config(gen_cfg);
 
-    let agent = client
-        .agent(model)
-        .temperature(0.7)
-        .additional_params(serde_json::to_value(cfg).map_err(|e| format!("Failed to serialize config: {}", e))?)
-        .build();
-
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .additional_params(serde_json::to_value(cfg).map_err(|e| format!("Failed to serialize config: {}", e))?)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .additional_params(serde_json::to_value(cfg).map_err(|e| format!("Failed to serialize config: {}", e))?)
+                  .build()
+        }
     };
+
+    // TODO: get_response(agent, messages)
 
     Ok(clean_prompt(&response))
 }
@@ -328,30 +342,23 @@ async fn handle_xai_request(
         .build()
         .map_err(|e| format!("Failed to build xAI client: {}", e))?;
 
-    let agent = client.agent(model).temperature(0.7).build();
+    let system_prompt = extract_system_prompt(messages);
 
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
     };
+
+    // TODO: get_response(agent, messages)
 
     Ok(clean_prompt(&response))
 }
@@ -367,30 +374,23 @@ async fn handle_anthropic_request(
         .build()
         .map_err(|e| format!("Failed to build Anthropic client: {}", e))?;
 
-    let agent = client.agent(model).temperature(0.7).build();
+    let system_prompt = extract_system_prompt(messages);
 
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
     };
+
+    // TODO: get_response(agent, messages)
 
     Ok(clean_prompt(&response))
 }
@@ -406,30 +406,23 @@ async fn handle_openai_request(
         .build()
         .map_err(|e| format!("Failed to build OpenAI client: {}", e))?;
 
-    let agent = client.agent(model).temperature(0.7).build();
+    let system_prompt = extract_system_prompt(messages);
 
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
     };
+
+    // TODO: get_response(agent, messages)
 
     Ok(clean_prompt(&response))
 }
@@ -445,30 +438,23 @@ async fn handle_openrouter_request(
         .build()
         .map_err(|e| format!("Failed to build OpenRouter client: {}", e))?;
 
-    let agent = client.agent(model).temperature(0.7).build();
+    let system_prompt = extract_system_prompt(messages);
 
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat
-        // Convert ChatMessage to rig-core Messages
-        let rig_messages = convert_chat_messages_to_rig_messages(messages);
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
     };
+
+    // TODO: get_response(agent, messages)
 
     Ok(clean_prompt(&response))
 }

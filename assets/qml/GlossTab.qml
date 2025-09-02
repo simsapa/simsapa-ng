@@ -303,14 +303,21 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     // Update the model
                     paragraph_model.setProperty(paragraph_idx, "translations_json", JSON.stringify(translations));
 
-                    // Send new request
+                    // Send new request with system prompt
+                    let system_prompt = SuttaBridge.get_system_prompt("Gloss Tab: System Prompt");
                     var template = SuttaBridge.get_system_prompt("Gloss Tab: AI Translation");
-                    var prompt = template
+                    var user_prompt = template
                         .replace("<<PALI_PASSAGE>>", paragraph.text)
                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
 
+                    // Combine system prompt with user prompt
+                    var combined_prompt = user_prompt;
+                    if (system_prompt && system_prompt.trim() !== "") {
+                        combined_prompt = system_prompt + "\n\n" + user_prompt;
+                    }
+
                     let provider_name = SuttaBridge.get_provider_for_model(model_name);
-                    pm.prompt_request(paragraph_idx, i, provider_name, model_name, prompt);
+                    pm.prompt_request(paragraph_idx, i, provider_name, model_name, combined_prompt);
                     break;
                 }
             }
@@ -1319,13 +1326,20 @@ ${table_rows}
 
                                     let paragraph = paragraph_model.get(paragraph_item.index);
 
-                                    // Load prompt template dynamically from database
+                                    // Load system prompt and translation template
+                                    let system_prompt = SuttaBridge.get_system_prompt("Gloss Tab: System Prompt");
                                     let template = SuttaBridge.get_system_prompt("Gloss Tab: AI Translation");
-                                    let prompt = template
+                                    let user_prompt = template
                                         .replace("<<PALI_PASSAGE>>", paragraph_item.text)
                                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
 
-                                    logger.log(`📝 Generated prompt: "${prompt.substring(0, 100)}..."`);
+                                    // Combine system prompt with user prompt (simple approach)
+                                    let combined_prompt = user_prompt;
+                                    if (system_prompt && system_prompt.trim() !== "") {
+                                        combined_prompt = system_prompt + "\n\n" + user_prompt;
+                                    }
+
+                                    logger.log(`📝 Generated prompt with system context: "${combined_prompt.substring(0, 200)}..."`);
 
                                     let translations = [];
 
@@ -1336,7 +1350,7 @@ ${table_rows}
                                             let translation_idx = translations.length; // Use the current translations array length as index
                                             logger.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
                                             let provider_name = SuttaBridge.get_provider_for_model(item.model_name);
-                                            pm.prompt_request(paragraph_item.index, translation_idx, provider_name, item.model_name, prompt);
+                                            pm.prompt_request(paragraph_item.index, translation_idx, provider_name, item.model_name, combined_prompt);
                                             translations.push({
                                                 model_name: item.model_name,
                                                 status: "waiting",
