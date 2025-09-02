@@ -18,6 +18,7 @@ ColumnLayout {
     property int selected_tab_index: 0
 
     readonly property int vocab_font_point_size: 10
+    readonly property TextMetrics vocab_tm1: TextMetrics { text: "#"; font.pointSize: root.vocab_font_point_size }
 
     property string text_color: root.is_dark ? "#F0F0F0" : "#000000"
     property string bg_color: root.is_dark ? "#23272E" : "#FAE6B2"
@@ -138,8 +139,13 @@ ColumnLayout {
             }
 
             StackLayout {
+                id: stack_layout
                 Layout.fillWidth: true
-                Layout.preferredHeight: 200
+                Layout.preferredHeight: {
+                    // Get the current item and use its preferred height
+                    var current_item = itemAt(currentIndex)
+                    return current_item ? current_item.Layout.preferredHeight : 200
+                }
                 currentIndex: tab_bar.currentIndex
 
                 Repeater {
@@ -152,9 +158,10 @@ ColumnLayout {
                         required property var modelData
 
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        Layout.preferredHeight: Math.max(text_area.contentHeight + root.vocab_tm1.height, 200)
 
                         TextArea {
+                            id: text_area
                             anchors.fill: parent
                             property var data: response_content_item.modelData || {}
 
@@ -164,12 +171,12 @@ ColumnLayout {
                                 // Handle empty or invalid data
                                 if (!data || Object.keys(data).length === 0) {
                                     logger.log(`⚠️  Empty or invalid data, showing waiting message`);
-                                    return `Waiting for response from ${data.model_name} (up to 3min)...`;
+                                    return `Waiting for response from ${data.model_name} (3min timeout) ...`;
                                 }
 
                                 if (data.status === "waiting") {
                                     logger.log(`⏳ Showing waiting message for ${data.model_name}`);
-                                    return `Waiting for response from ${data.model_name} (up to 3min)...`;
+                                    return `Waiting for response from ${data.model_name} (3min timeout) ...`;
                                 } else if (data.status === "error") {
                                     logger.log(`❌ Showing error message`);
                                     var error_text = data.response || "Unknown error occurred"
@@ -182,7 +189,7 @@ ColumnLayout {
                                     return html_content;
                                 } else {
                                     logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
-                                    return `Waiting for response from ${data.model_name} (up to 3min)...`;
+                                    return `Waiting for response from ${data.model_name} (3min timeout) ...`;
                                 }
                             }
                             font.pointSize: root.vocab_font_point_size
