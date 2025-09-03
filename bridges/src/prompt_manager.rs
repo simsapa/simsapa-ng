@@ -11,6 +11,7 @@ use tokio::runtime::Runtime;
 
 use simsapa_backend::logger::error;
 use simsapa_backend::get_app_data;
+use simsapa_backend::app_settings::ProviderName;
 use crate::{markdown_to_html, clean_prompt};
 
 #[cxx_qt::bridge]
@@ -251,16 +252,20 @@ async fn make_api_request(messages: &[ChatMessage], model: &str, provider_name: 
         return Err(format!("No API key found for provider: {}", provider_name));
     }
 
+    // Deserialize provider_name string to ProviderName enum
+    let provider_enum: ProviderName = serde_json::from_str(&format!("\"{}\"", provider_name))
+        .map_err(|e| format!("Invalid provider name '{}': {}", provider_name, e))?;
+
     let http_client = create_http_client()?;
 
-    match provider_name {
-        "DeepSeek" => handle_deepseek_request(messages, model, &api_key, http_client).await,
-        "Gemini" => handle_gemini_request(messages, model, &api_key, http_client).await,
-        "xAI" => handle_xai_request(messages, model, &api_key, http_client).await,
-        "Anthropic" => handle_anthropic_request(messages, model, &api_key, http_client).await,
-        "OpenAI" => handle_openai_request(messages, model, &api_key, http_client).await,
-        "OpenRouter" => handle_openrouter_request(messages, model, &api_key, http_client).await,
-        _ => Err(format!("Unsupported provider: {}", provider_name)),
+    // Match on the ProviderName enum to handle all possible values
+    match provider_enum {
+        ProviderName::DeepSeek => handle_deepseek_request(messages, model, &api_key, http_client).await,
+        ProviderName::Gemini => handle_gemini_request(messages, model, &api_key, http_client).await,
+        ProviderName::XAI => handle_xai_request(messages, model, &api_key, http_client).await,
+        ProviderName::Anthropic => handle_anthropic_request(messages, model, &api_key, http_client).await,
+        ProviderName::OpenAI => handle_openai_request(messages, model, &api_key, http_client).await,
+        ProviderName::OpenRouter => handle_openrouter_request(messages, model, &api_key, http_client).await,
     }
 }
 
