@@ -39,6 +39,7 @@ ApplicationWindow {
                 let provider = root.current_providers[i];
                 provider_list_model.append({
                     provider_name: provider.name,
+                    provider_description: provider.description,
                     provider_enabled: provider.enabled,
                     provider_index: i
                 });
@@ -310,6 +311,22 @@ ApplicationWindow {
                             text: root.selected_provider ? root.selected_provider + " Settings" : "Select a provider"
                             font.bold: true
                             font.pointSize: root.pointSize + 1
+                        }
+
+                        Text {
+                            visible: root.selected_provider !== ""
+                            text: root.selected_provider ? root.current_providers[root.selected_provider_index].description : ""
+                            textFormat: Text.RichText
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            onLinkActivated: function(link) {
+                                Qt.openUrlExternally(link);
+                            }
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.NoButton
+                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            }
                         }
 
                         // API Key Section

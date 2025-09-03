@@ -16,6 +16,7 @@ pub struct ModelEntry {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Provider {
     pub name: ProviderName,
+    pub description: String,
     pub enabled: bool,
     /// e.g. OPENROUTER_API_KEY, DEEPSEEK_API_KEY, etc. which may be present as env variables.
     pub api_key_env_var_name: String,

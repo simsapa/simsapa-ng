@@ -1,7 +1,8 @@
 [
     {
         "name": "Gemini",
-        "enabled": true,
+        "description": "<p>Links: <a href='https://aistudio.google.com/app/apikey'>API Keys</a>, <a href='https://ai.google.dev/gemini-api/docs/pricing'>Pricing</a> (free with rate limit)</p>",
+        "enabled": false,
         "api_key_env_var_name": "GEMINI_API_KEY",
         "api_key_value": null,
         "models": [
@@ -19,7 +20,8 @@
     },
     {
         "name": "OpenRouter",
-        "enabled": true,
+        "description": "<p>Links: <a href='https://openrouter.ai/keys'>API Keys</a>, <a href='https://openrouter.ai/models'>Models</a> (some models are free with rate limit)</p>",
+        "enabled": false,
         "api_key_env_var_name": "OPENROUTER_API_KEY",
         "api_key_value": null,
         "models": [
@@ -72,7 +74,8 @@
     },
     {
         "name": "Anthropic",
-        "enabled": true,
+        "description": "<p>Links: <a href='https://console.anthropic.com/settings/keys'>API Keys</a></p>",
+        "enabled": false,
         "api_key_env_var_name": "ANTHROPIC_API_KEY",
         "api_key_value": null,
         "models": [
@@ -90,7 +93,8 @@
     },
     {
         "name": "OpenAI",
-        "enabled": true,
+        "description": "<p>Links: <a href='https://platform.openai.com/api-keys'>API Keys</a></p>",
+        "enabled": false,
         "api_key_env_var_name": "OPENAI_API_KEY",
         "api_key_value": null,
         "models": [
@@ -108,7 +112,8 @@
     },
     {
         "name": "DeepSeek",
-        "enabled": true,
+        "description": "<p>Links: <a href='https://platform.deepseek.com/api_keys'>API Keys</a></p>",
+        "enabled": false,
         "api_key_env_var_name": "DEEPSEEK_API_KEY",
         "api_key_value": null,
         "models": [
@@ -126,7 +131,8 @@
     },
     {
         "name": "xAI",
-        "enabled": true,
+        "description": "<p>Links: <a href='https://console.x.ai/team/default/api-keys'>API Keys</a></p>",
+        "enabled": false,
         "api_key_env_var_name": "XAI_API_KEY",
         "api_key_value": null,
         "models": [
