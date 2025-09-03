@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
+import QtQuick.Dialogs
 
 import com.profoundlabs.simsapa
 
@@ -88,12 +89,26 @@ ApplicationWindow {
         }
     }
 
-    function toggle_provider_enabled(provider_index, enabled) {
+    function toggle_provider_enabled(provider_index, enabled): bool {
+        if (enabled) {
+            // Check if API key is empty before enabling
+            let provider_name = root.current_providers[provider_index].name;
+            let api_key = SuttaBridge.get_provider_api_key(provider_name);
+
+            if (api_key.trim() === "") {
+                api_key_missing_dialog.open();
+                // Reset the switch to disabled state
+                provider_list_model.setProperty(provider_index, "provider_enabled", false);
+                return false;
+            }
+        }
+
         root.current_providers[provider_index].enabled = enabled;
         SuttaBridge.set_provider_enabled(root.current_providers[provider_index].name, enabled);
 
         // Update the list model
         provider_list_model.setProperty(provider_index, "provider_enabled", enabled);
+        return enabled;
     }
 
     function add_model() {
@@ -291,7 +306,11 @@ ApplicationWindow {
                                             id: provider_switch
                                             checked: provider_item.provider_enabled
                                             onToggled: {
-                                                root.toggle_provider_enabled(provider_item.provider_index, provider_switch.checked);
+                                                let enabled = root.toggle_provider_enabled(provider_item.provider_index, provider_switch.checked);
+                                                // If the API key check failed, reset the switch to disabled.
+                                                if (!enabled && provider_switch.checked) {
+                                                    provider_switch.checked = false;
+                                                }
                                             }
                                         }
                                     }
@@ -572,5 +591,12 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    MessageDialog {
+        id: api_key_missing_dialog
+        title: "API Key Missing"
+        text: "Provider's API Key is missing"
+        buttons: MessageDialog.Ok
     }
 }
