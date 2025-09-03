@@ -27,6 +27,8 @@ ApplicationWindow {
     property string selected_provider: ""
     property int selected_provider_index: -1
 
+    property alias auto_retry: auto_retry
+
     Logger { id: logger }
 
     function load_providers() {
@@ -44,16 +46,17 @@ ApplicationWindow {
                     provider_index: i
                 });
             }
-
-            // Select first provider by default
-            if (root.current_providers.length > 0) {
-                root.selected_provider = root.current_providers[0].name;
-                root.selected_provider_index = 0;
-                provider_list_view.currentIndex = 0;
-                load_provider_details();
-            }
         } catch (e) {
             logger.error("Failed to parse providers JSON:", e);
+        }
+    }
+
+    function select_first_provider() {
+        if (root.current_providers.length > 0) {
+            root.selected_provider = root.current_providers[0].name;
+            root.selected_provider_index = 0;
+            provider_list_view.currentIndex = 0;
+            load_provider_details();
         }
     }
 
@@ -166,6 +169,8 @@ ApplicationWindow {
 
     Component.onCompleted: {
         load_providers();
+        // Select first provider by default
+        select_first_provider();
     }
 
     onVisibilityChanged: {
@@ -199,6 +204,14 @@ ApplicationWindow {
                     text: "AI Models"
                     font.bold: true
                     font.pointSize: root.pointSize + 3
+                }
+            }
+
+            RowLayout {
+                CheckBox {
+                    id: auto_retry
+                    text: "Auto-retry AI Model Requests"
+                    checked: false
                 }
             }
 

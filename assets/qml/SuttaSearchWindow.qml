@@ -602,15 +602,6 @@ ${query_text}`;
 
             CMenuItem {
                 action: Action {
-                    id: ai_models_auto_retry
-                    text: "Auto-retry AI Model Requests"
-                    checkable: true
-                    checked: false
-                }
-            }
-
-            CMenuItem {
-                action: Action {
                     id: action_system_prompts
                     text: "&System Prompts..."
                     onTriggered: system_prompts_dialog.show()
@@ -1061,7 +1052,7 @@ ${query_text}`;
                                 id: gloss_tab
                                 window_id: root.window_id
                                 is_dark: root.is_dark
-                                ai_models_auto_retry: ai_models_auto_retry.checked
+                                ai_models_auto_retry: models_dialog.auto_retry.checked
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 handle_open_dict_tab_fn: root.open_dict_tab
@@ -1071,7 +1062,7 @@ ${query_text}`;
                                 id: prompts_tab
                                 window_id: root.window_id
                                 is_dark: root.is_dark
-                                ai_models_auto_retry: ai_models_auto_retry.checked
+                                ai_models_auto_retry: models_dialog.auto_retry.checked
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                             }

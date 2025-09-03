@@ -591,7 +591,9 @@ impl qobject::SuttaBridge {
                     enabled: true,
                     removable: true,
                 };
-                provider.models.push(new_model);
+                // Add the new model to the top of the list, where the user can
+                // more easily see it.
+                provider.models.insert(0, new_model);
 
                 // Save via backend function
                 let providers_json = serde_json::to_string(&app_settings.providers).expect("Can't encode providers JSON");
