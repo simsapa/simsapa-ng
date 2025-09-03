@@ -465,11 +465,16 @@ ApplicationWindow {
                                                 }
 
                                                 Button {
-                                                    text: "Remove"
+                                                    id: remove_btn
+                                                    Layout.preferredHeight: remove_btn.height
+                                                    Layout.preferredWidth: remove_btn.height
+                                                    icon.source: "icons/32x32/ion--trash-outline.png"
                                                     font.pointSize: root.pointSize - 1
                                                     enabled: model_item.model_removable
                                                     visible: model_item.model_removable
                                                     onClicked: root.remove_model_with_confirmation(model_item.model_index)
+                                                    ToolTip.visible: hovered
+                                                    ToolTip.text: "Remove this model"
                                                 }
                                             }
                                         }
@@ -525,6 +530,7 @@ ApplicationWindow {
 
                 Button {
                     text: "Remove"
+                    icon.source: "icons/32x32/ion--trash-outline.png"
                     onClicked: {
                         root.remove_model(confirmation_dialog.model_index);
                         confirmation_dialog.close();

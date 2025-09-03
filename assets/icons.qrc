@@ -99,5 +99,6 @@
     <file>icons/32x32/mdi--eye-outline.png</file>
     <file>icons/32x32/mdi--key-variant.png</file>
     <file>icons/32x32/material-symbols--list-alt-outline.png</file>
+    <file>icons/32x32/ion--trash-outline.png</file>
   </qresource>
 </RCC>
