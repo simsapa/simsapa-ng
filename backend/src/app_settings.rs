@@ -30,6 +30,7 @@ pub enum ProviderName {
     Anthropic,
     OpenAI,
     DeepSeek,
+    #[serde(rename = "xAI")]
     XAI,
 }
 

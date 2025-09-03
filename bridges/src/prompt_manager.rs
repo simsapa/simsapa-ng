@@ -256,7 +256,7 @@ async fn make_api_request(messages: &[ChatMessage], model: &str, provider_name: 
     match provider_name {
         "DeepSeek" => handle_deepseek_request(messages, model, &api_key, http_client).await,
         "Gemini" => handle_gemini_request(messages, model, &api_key, http_client).await,
-        "XAI" => handle_xai_request(messages, model, &api_key, http_client).await,
+        "xAI" => handle_xai_request(messages, model, &api_key, http_client).await,
         "Anthropic" => handle_anthropic_request(messages, model, &api_key, http_client).await,
         "OpenAI" => handle_openai_request(messages, model, &api_key, http_client).await,
         "OpenRouter" => handle_openrouter_request(messages, model, &api_key, http_client).await,

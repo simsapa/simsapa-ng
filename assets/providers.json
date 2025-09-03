@@ -125,7 +125,7 @@
         ]
     },
     {
-        "name": "XAI",
+        "name": "xAI",
         "enabled": true,
         "api_key_env_var_name": "XAI_API_KEY",
         "api_key_value": null,
