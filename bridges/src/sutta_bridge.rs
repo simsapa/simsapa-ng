@@ -641,6 +641,8 @@ impl qobject::SuttaBridge {
 
     /// Get the provider name for a given model name
     pub fn get_provider_for_model(&self, model_name: &QString) -> QString {
+        // NOTE: This matches model_name in any provider, so two providers should not have the model_name.
+        // However it shouldn't be a problem because model names are quite specific to the providers.
         let app_data = get_app_data();
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
 

@@ -291,42 +291,7 @@ async fn handle_deepseek_request(
         }
     };
 
-    // TODO: extract to get_response(agent, messages)
-    let response = if messages.len() == 1 {
-        // Single message - handle as prompt.
-        // In the single message case (GlossTab.qml) the system prompt is already prepended to the message content.
-        let prompt_content = &messages[0].content;
-        agent
-            .prompt(prompt_content)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    } else {
-        // Multiple messages - handle as chat.
-        //
-        // Skip system messages, they're handled via preamble(). The rig
-        // completion::message::Message type only has User and Assistant variants.
-        let rig_messages = messages.iter().filter(|msg| msg.role.as_str() != "system")
-            .map(|msg| {
-                match msg.role.as_str() {
-                    "user" => Message::user(&msg.content),
-                    "assistant" => Message::assistant(&msg.content),
-                    _ => Message::user(&msg.content),
-                }
-            }).collect::<Vec<_>>();
-
-        let (chat_history, current_prompt) = if let Some((last, rest)) = rig_messages.split_last() {
-            (rest.to_vec(), last.clone())
-        } else {
-            return Err("No messages provided".to_string());
-        };
-
-        agent
-            .chat(current_prompt, chat_history)
-            .await
-            .map_err(|e| format!("Failed to prompt {}: {}", model, e))?
-    };
-
-    Ok(clean_prompt(&response))
+    Ok(get_response!(agent, messages, model))
 }
 
 async fn handle_gemini_request(
