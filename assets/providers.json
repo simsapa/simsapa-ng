@@ -1,7 +1,7 @@
 [
     {
         "name": "Gemini",
-        "description": "<p>Links: <a href='https://aistudio.google.com/app/apikey'>API Keys</a>, <a href='https://ai.google.dev/gemini-api/docs/pricing'>Pricing</a> (free with rate limit)</p>",
+        "description": "<p>Links: <a href='https://aistudio.google.com/app/apikey'>API Keys</a>, <a href='https://ai.google.dev/gemini-api/docs/pricing'>Pricing</a> (free)</p>",
         "enabled": false,
         "api_key_env_var_name": "GEMINI_API_KEY",
         "api_key_value": null,
@@ -20,7 +20,7 @@
     },
     {
         "name": "OpenRouter",
-        "description": "<p>Links: <a href='https://openrouter.ai/keys'>API Keys</a>, <a href='https://openrouter.ai/models'>Models</a> (some models are free with rate limit)</p>",
+        "description": "<p>Links: <a href='https://openrouter.ai/keys'>API Keys</a>, <a href='https://openrouter.ai/models'>Models</a> (some models are free)</p>",
         "enabled": false,
         "api_key_env_var_name": "OPENROUTER_API_KEY",
         "api_key_value": null,
@@ -69,6 +69,25 @@
                 "model_name": "mistralai/mistral-small-3.2-24b-instruct:free",
                 "enabled": true,
                 "removable": true
+            }
+        ]
+    },
+    {
+        "name": "Mistral",
+        "description": "<p>Links: <a href='https://console.mistral.ai/api-keys'>API Keys</a> (free)</p>",
+        "enabled": false,
+        "api_key_env_var_name": "MISTRAL_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "mistral-small-latest",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "mistral-large-latest",
+                "enabled": false,
+                "removable": false
             }
         ]
     },
@@ -139,6 +158,39 @@
             {
                 "model_name": "grok-4",
                 "enabled": true,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "HuggingFace",
+        "description": "<p>Links: <a href='https://huggingface.co/settings/tokens'>API Keys</a></p>",
+        "enabled": false,
+        "api_key_env_var_name": "HUGGINGFACE_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+                "enabled": true,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "Perplexity",
+        "description": "<p>Links: <a href='https://www.perplexity.ai/settings/api'>API Keys</a></p>",
+        "enabled": false,
+        "api_key_env_var_name": "PERPLEXITY_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "sonar",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "sonar-pro",
+                "enabled": false,
                 "removable": false
             }
         ]

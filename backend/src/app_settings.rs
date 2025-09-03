@@ -33,6 +33,9 @@ pub enum ProviderName {
     DeepSeek,
     #[serde(rename = "xAI")]
     XAI,
+    Mistral,
+    HuggingFace,
+    Perplexity,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

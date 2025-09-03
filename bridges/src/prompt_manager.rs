@@ -5,7 +5,7 @@ use cxx_qt_lib::QString;
 use cxx_qt::Threading;
 
 use serde::{Deserialize, Serialize};
-use rig::{completion::Prompt, completion::request::Chat, providers::deepseek, providers::gemini, providers::xai, providers::openrouter, providers::anthropic, providers::openai, client::CompletionClient, message::Message};
+use rig::{completion::Prompt, completion::request::Chat, providers::deepseek, providers::gemini, providers::xai, providers::openrouter, providers::anthropic, providers::openai, providers::mistral, providers::huggingface, providers::perplexity, client::CompletionClient, message::Message};
 use rig::providers::gemini::completion::gemini_api_types::{AdditionalParameters, GenerationConfig};
 use tokio::runtime::Runtime;
 
@@ -266,6 +266,9 @@ async fn make_api_request(messages: &[ChatMessage], model: &str, provider_name: 
         ProviderName::Anthropic => handle_anthropic_request(messages, model, &api_key, http_client).await,
         ProviderName::OpenAI => handle_openai_request(messages, model, &api_key, http_client).await,
         ProviderName::OpenRouter => handle_openrouter_request(messages, model, &api_key, http_client).await,
+        ProviderName::Mistral => handle_mistral_request(messages, model, &api_key, http_client).await,
+        ProviderName::HuggingFace => handle_huggingface_request(messages, model, &api_key, http_client).await,
+        ProviderName::Perplexity => handle_perplexity_request(messages, model, &api_key, http_client).await,
     }
 }
 
@@ -440,6 +443,96 @@ async fn handle_openrouter_request(
         .custom_client(http_client)
         .build()
         .map_err(|e| format!("Failed to build OpenRouter client: {}", e))?;
+
+    let system_prompt = extract_system_prompt(messages);
+
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
+    };
+
+    Ok(get_response!(agent, messages, model))
+}
+
+async fn handle_mistral_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = mistral::Client::builder(api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build Mistral client: {}", e))?;
+
+    let system_prompt = extract_system_prompt(messages);
+
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
+    };
+
+    Ok(get_response!(agent, messages, model))
+}
+
+async fn handle_huggingface_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = huggingface::Client::builder(api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build HuggingFace client: {}", e))?;
+
+    let system_prompt = extract_system_prompt(messages);
+
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
+    };
+
+    Ok(get_response!(agent, messages, model))
+}
+
+async fn handle_perplexity_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+) -> Result<String, String> {
+    let client = perplexity::Client::builder(api_key)
+        .custom_client(http_client)
+        .build()
+        .map_err(|e| format!("Failed to build Perplexity client: {}", e))?;
 
     let system_prompt = extract_system_prompt(messages);
 

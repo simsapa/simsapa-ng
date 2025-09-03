@@ -2271,9 +2271,9 @@ dependencies = [
 
 [[package]]
 name = "rig-core"
-version = "0.18.2"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e588b3da859ea33f7132e9b3312a9aeda499d166cda63329fb68f7d022aa75bb"
+checksum = "e9cb9f39172ac833f95a88456fa7408cddd1ce99293175beaf1ad14304ff3aed"
 dependencies = [
  "as-any",
  "async-stream",
