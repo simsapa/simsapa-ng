@@ -338,6 +338,13 @@ Item {
         buttons: MessageDialog.Ok
     }
 
+    MessageDialog {
+        id: no_models_dialog
+        title: "No AI Models"
+        text: "There are no enabled models. See Prompts menu > AI Models"
+        buttons: MessageDialog.Ok
+    }
+
     function prompt_as_html(): string {
         // FIXME implement html export
         return "<h1>Prompt Messages</h1>";
@@ -575,6 +582,11 @@ Item {
                                         // Load enabled models
                                         root.load_available_models();
                                         logger.log(`📋 Loaded ${available_models.count} available models`);
+
+                                        if (available_models.count === 0) {
+                                            no_models_dialog.open();
+                                            return;
+                                        }
 
                                         // Create responses array for each enabled model
                                         let responses = [];

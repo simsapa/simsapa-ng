@@ -229,6 +229,13 @@ Item {
         onAccepted: accept_fn() // qmllint disable use-proper-function
     }
 
+    MessageDialog {
+        id: no_models_dialog
+        title: "No AI Models"
+        text: "There are no enabled models. See Prompts menu > AI Models"
+        buttons: MessageDialog.Ok
+    }
+
     Timer {
         id: delayed_click
         interval: 100
@@ -1323,6 +1330,11 @@ ${table_rows}
 
                                     root.load_translation_models();
                                     logger.log(`📋 Loaded ${translation_models.count} translation models`);
+
+                                    if (translation_models.count === 0) {
+                                        no_models_dialog.open();
+                                        return;
+                                    }
 
                                     let paragraph = paragraph_model.get(paragraph_item.index);
 
