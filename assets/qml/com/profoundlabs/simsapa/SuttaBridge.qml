@@ -195,6 +195,14 @@ Item {
         return '{}';
     }
 
+    function get_ai_models_auto_retry(): bool {
+        return false;
+    }
+
+    function set_ai_models_auto_retry(auto_retry: bool) {
+        console.log("set_ai_models_auto_retry():", auto_retry);
+    }
+
     function save_common_words_json(words_json: string) {
         return;
     }

@@ -48,6 +48,7 @@ pub struct AppSettings {
     pub api_keys: BTreeMap<String, String>,
     pub system_prompts: BTreeMap<String, String>,
     pub providers: Vec<Provider>,
+    pub ai_models_auto_retry: bool,
 }
 
 impl Default for AppSettings {
@@ -104,6 +105,7 @@ Respond with GFM-Markdown formatted text.
                     }
                 }
             },
+            ai_models_auto_retry: false,
         }
     }
 }

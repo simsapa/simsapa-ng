@@ -111,6 +111,12 @@ pub mod qobject {
         fn set_theme_name(self: Pin<&mut SuttaBridge>, theme_name: &QString);
 
         #[qinvokable]
+        fn get_ai_models_auto_retry(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_ai_models_auto_retry(self: Pin<&mut SuttaBridge>, auto_retry: bool);
+
+        #[qinvokable]
         fn get_api_key(self: &SuttaBridge, key_name: &QString) -> QString;
 
         #[qinvokable]
@@ -474,6 +480,19 @@ impl qobject::SuttaBridge {
     pub fn set_theme_name(self: Pin<&mut Self>, theme_name: &QString) {
         let app_data = get_app_data();
         app_data.set_theme_name(&theme_name.to_string());
+    }
+
+    /// Get the AI models auto retry setting
+    pub fn get_ai_models_auto_retry(&self) -> bool {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.ai_models_auto_retry
+    }
+
+    /// Save the AI models auto retry setting in the db
+    pub fn set_ai_models_auto_retry(self: Pin<&mut Self>, auto_retry: bool) {
+        let app_data = get_app_data();
+        app_data.set_ai_models_auto_retry(auto_retry);
     }
 
     /// Get a specific API key by name

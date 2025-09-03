@@ -171,6 +171,7 @@ ApplicationWindow {
         load_providers();
         // Select first provider by default
         select_first_provider();
+        auto_retry.checked = SuttaBridge.get_ai_models_auto_retry();
     }
 
     onVisibilityChanged: {
@@ -212,6 +213,9 @@ ApplicationWindow {
                     id: auto_retry
                     text: "Auto-retry AI Model Requests"
                     checked: false
+                    onCheckedChanged: {
+                        SuttaBridge.set_ai_models_auto_retry(auto_retry.checked);
+                    }
                 }
             }
 
