@@ -445,6 +445,7 @@ impl<'a> SearchQueryTask<'a> {
         .get_result(db_conn)?;
 
         self.db_query_hits_count = count_result.count;
+        info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
 
         // --- Apply Pagination ---
         let offset = (page_num * self.page_len) as i64;

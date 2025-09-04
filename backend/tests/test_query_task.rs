@@ -112,6 +112,40 @@ fn test_sutta_search_contains_match_with_punctuation() {
 }
 
 #[test]
+fn test_sutta_search_contains_match_exact_results() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let params = h::get_contains_params();
+
+    let mut queries: HashMap<&str, Vec<&str>> = HashMap::new();
+    queries.insert("Anāsavañca vo, bhikkhave, desessāmi",
+                   vec!["sn43.14-43/pli/ms", "sn43.14/pli/cst4"]);
+
+    for (query_text, expected_uids) in queries.into_iter() {
+        let mut query_task = SearchQueryTask::new(
+            &app_data.dbm,
+            "en".to_string(),
+            query_text.to_string(),
+            params.clone(),
+            SearchArea::Suttas,
+        );
+
+        let results = match query_task.results_page(0) {
+            Ok(x) => x,
+            Err(s) => {
+                panic!("{}", s);
+            }
+        };
+
+        assert!(!results.is_empty());
+        assert_eq!(results.len(), expected_uids.len());
+        for (idx, expected_uid) in expected_uids.iter().enumerate() {
+            assert_eq!(results[idx].uid, expected_uid.to_string());
+        }
+    }
+}
+
+#[test]
 fn test_dict_word_search_contains_match() {
     h::app_data_setup();
     let app_data = get_app_data();
