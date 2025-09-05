@@ -33,6 +33,7 @@ pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 pub type DbConn = PooledConnection<ConnectionManager<SqliteConnection>>;
 
 pub const APPDATA_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/appdata/");
+pub const DICTIONARIES_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/dictionaries/");
 
 pub static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
 
@@ -104,7 +105,6 @@ impl DbManager {
         //
         // FIXME: Return the errors
         let _ = check_file_exists_print_err(&g.paths.appdata_db_path);
-        let _ = check_file_exists_print_err(&g.paths.dict_db_path);
         let _ = check_file_exists_print_err(&g.paths.dpd_db_path);
 
         // If userdata doesn't exist, create it with default settings.
@@ -116,6 +116,16 @@ impl DbManager {
         if !userdata_exists {
             initialize_userdata(&g.paths.userdata_database_url)
                 .with_context(|| format!("Failed to initialize database at '{}'", g.paths.userdata_database_url))?;
+        }
+
+        let dictionaries_exists = match check_file_exists_print_err(&g.paths.dict_db_path) {
+            Ok(r) => r,
+            Err(_) => false,
+        };
+
+        if !dictionaries_exists {
+            initialize_dictionaries(&g.paths.dict_database_url)
+                .with_context(|| format!("Failed to initialize database at '{}'", g.paths.dict_database_url))?;
         }
 
         Ok(Self {
@@ -145,7 +155,19 @@ fn initialize_userdata(database_url: &str) -> Result<()> {
     insert_default_settings(&mut db_conn)
         .context("Failed to insert default application settings")?;
 
-    info(&format!("initialize_userdata(): end"));
+    Ok(())
+}
+
+fn initialize_dictionaries(database_url: &str) -> Result<()> {
+    info(&format!("initialize_dictionaries(): {}", database_url));
+
+    // Create initial connection to create the database file
+    let mut db_conn = SqliteConnection::establish(database_url)
+        .with_context(|| format!("Failed to create initial database connection to '{}'", database_url))?;
+
+    run_dictionaries_migrations(&mut db_conn)
+        .context("Failed to run database migrations")?;
+
     Ok(())
 }
 
@@ -209,6 +231,13 @@ pub fn get_app_settings() -> AppSettings {
 fn run_appdata_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
     info("run_appdata_migrations()");
     db_conn.run_pending_migrations(APPDATA_MIGRATIONS)
+           .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
+    Ok(())
+}
+
+fn run_dictionaries_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
+    info("run_dictionaries_migrations()");
+    db_conn.run_pending_migrations(DICTIONARIES_MIGRATIONS)
            .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
     Ok(())
 }

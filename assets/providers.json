@@ -7,12 +7,12 @@
         "api_key_value": null,
         "models": [
             {
-                "model_name": "gemini-2.5-flash",
+                "model_name": "gemini-2.5-pro",
                 "enabled": true,
                 "removable": false
             },
             {
-                "model_name": "gemini-2.5-pro",
+                "model_name": "gemini-2.5-flash",
                 "enabled": false,
                 "removable": false
             }

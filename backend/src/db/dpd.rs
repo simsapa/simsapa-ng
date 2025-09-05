@@ -704,5 +704,11 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
 
     replace_all_niggahitas(&mut db_conn)?;
 
+    // Execute DPD B-tree indexes SQL script
+    info("Executing DPD B-tree indexes script...");
+    let sql_content = include_str!("../../../scripts/dpd-btree-indexes.sql");
+    diesel::sql_query(sql_content).execute(&mut db_conn)?;
+    info("Successfully created DPD B-tree indexes");
+
     Ok(())
 }
