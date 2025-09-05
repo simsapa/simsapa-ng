@@ -134,7 +134,7 @@ fn appdata_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
     println!("=== appdata_migrate() ===");
 
     let source_db_path = bootstrap_assets_dir
-        .join("appdata-db-for-bootstrap/2025-06-07-v0.5.1-alpha.1/appdata.sqlite3");
+        .join("appdata-db-for-bootstrap/current/appdata.sqlite3");
     let dest_db_path = assets_dir.join("appdata.sqlite3");
 
     // Check if source database exists
