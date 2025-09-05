@@ -1,3 +1,5 @@
+mod bootstrap;
+
 use std::path::{Path, PathBuf};
 use std::process::exit;
 
@@ -5,8 +7,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use dotenvy::dotenv;
 use anyhow::Result;
 
-use simsapa_backend::{init_app_data, get_app_data};
-use simsapa_backend::db;
+use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir};
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
@@ -155,6 +156,13 @@ enum Commands {
         /// if you don't want it to be moved to Simsapa's local assets folder.
         #[arg(value_name = "DIRECTORY_PATH")]
         dpd_output_path: Option<PathBuf>,
+    },
+
+    /// Rebuild the application database from local assets and create asset release archives.
+    Bootstrap {
+        /// Write a new .env file even if one already exists
+        #[arg(long, default_value_t = false)]
+        write_new_dotenv: bool,
     }
 }
 
@@ -172,17 +180,35 @@ fn main() {
         println!("Info: No .env file found or failed to load.");
     }
 
-    init_app_data();
     let cli = Cli::parse();
 
+    // Don't initialize app data for bootstrap command since it needs to create directories first
+    match &cli.command {
+        Commands::Bootstrap { .. } => {
+            // Skip app data initialization for bootstrap
+        }
+        _ => {
+            init_app_data();
+        }
+    }
+
     // Determine Base Simsapa Directory
+    // Precedence:
+    // - given with --simsapa-dir
+    // - set with env var SIMSAPA_DIR
+    // - get_create_simsapa_dir()
     let simsapa_dir = match cli.simsapa_dir {
         Some(path) => path,
         None => {
-            // If cli.simsapa_dir is None here, clap didn't find it via --simsapa-dir OR the env var.
-             eprintln!("Error: Simsapa directory is not specified.");
-             eprintln!("Use the --simsapa-dir option or set the SIMSAPA_DIR environment variable.");
-             exit(1);
+            let simsapa_dir = get_create_simsapa_dir();
+            match simsapa_dir {
+                Ok(p) => p,
+                Err(e) => {
+                    eprintln!("Failed to get Simsapa directory: {}", e);
+                    eprintln!("Use the --simsapa-dir option or set the SIMSAPA_DIR environment variable.");
+                    exit(1);
+                }
+            }
         }
     };
 
@@ -221,6 +247,11 @@ fn main() {
              } else {
                  db::dpd::import_migrate_dpd(&dpd_input_path, dpd_output_path)
              }
+        }
+
+        Commands::Bootstrap { write_new_dotenv } => {
+            bootstrap::bootstrap(write_new_dotenv)
+                .map_err(|e| e.to_string())
         }
     };
 
