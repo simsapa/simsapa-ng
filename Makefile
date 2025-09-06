@@ -26,3 +26,6 @@ qml-test:
 
 project-tree:
 	tree --gitignore --dirsfirst -I docs/ -I CMakeLists.txt.user -I res/ -I gradle/ -I vendor/ -I dpd-res/ -I fonts/ -I icons/ -I scripts/ -I package-lock.json -I Cargo.lock -o project_tree.txt
+
+bootstrap:
+	cd cli/ && cargo build && cargo run -- bootstrap --write-new-dotenv

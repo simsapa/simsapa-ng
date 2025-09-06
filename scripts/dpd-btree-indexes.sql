@@ -1,4 +1,3 @@
-
 -- Add B-tree indexes
 CREATE INDEX IF NOT EXISTS idx_dpd_headwords_lemma_clean ON dpd_headwords(lemma_clean);
 CREATE INDEX IF NOT EXISTS idx_dpd_headwords_word_ascii ON dpd_headwords(word_ascii);
