@@ -707,7 +707,35 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
     // Execute DPD B-tree indexes SQL script
     info("Executing DPD B-tree indexes script...");
     let sql_content = include_str!("../../../scripts/dpd-btree-indexes.sql");
-    diesel::sql_query(sql_content).execute(&mut db_conn)?;
+
+    // Remove comments (both full-line and inline) and split into individual commands
+    let cleaned_sql = sql_content
+        .lines()
+        .map(|line| {
+            // Remove inline comments by finding '--' and keeping the content before it
+            if let Some(comment_pos) = line.find("--") {
+                &line[..comment_pos]
+            } else {
+                line
+            }
+        })
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<&str>>()
+        .join("\n");
+
+    let sql_commands: Vec<&str> = cleaned_sql
+        .split(';')
+        .map(|cmd| cmd.trim())
+        .filter(|cmd| !cmd.is_empty())
+        .collect();
+
+    // Execute each SQL command individually
+    for sql_command in sql_commands {
+        info(&format!("Executing SQL: {}", sql_command));
+        diesel::sql_query(sql_command).execute(&mut db_conn)?;
+    }
+
     info("Successfully created DPD B-tree indexes");
 
     Ok(())
