@@ -4,9 +4,10 @@
 
 - `package.json` - Added dom-find-and-replace npm dependency
 - `src-ts/tsconfig.json` - Updated to include find.ts and module resolution settings
-- `src-ts/find.ts` - New TypeScript module implementing find functionality (basic structure created)
+- `src-ts/find.ts` - New TypeScript module implementing find functionality (core implementation complete, uses global Map for state persistence)
 - `src-ts/find.test.ts` - Unit tests for find module
-- `src-ts/simsapa.ts` - Update to import and expose find module in document.SSP
+- `src-ts/simsapa.ts` - Updated to import and expose find module in document.SSP.find
+- `assets/js/simsapa.min.js` - Compiled JavaScript including dom-find-and-replace library
 - `assets/templates/find.html` - HTML template for find bar UI (complete structure created)
 - `assets/templates/page.html` - Updated to include {find_html} template before menu
 - `assets/sass/_find.scss` - SCSS styling for find bar components (Qt Fusion style created)
@@ -36,12 +37,12 @@
   - [x] 2.4 Update `assets/sass/suttas.sass` to load find styles using `@include meta.load-css("find")`
   - [x] 2.5 Test template rendering and basic styling (find bar should be hidden by default)
 
-- [ ] 3.0 Implement Core TypeScript Find Module
-  - [ ] 3.1 Create basic FindManager class structure in `src-ts/find.ts`
-  - [ ] 3.2 Add dom-find-and-replace import and basic wrapper functions
-  - [ ] 3.3 Implement debounced search with 400ms delay
-  - [ ] 3.4 Add show/hide find bar functionality
-  - [ ] 3.5 Update `src-ts/simsapa.ts` to import and expose find module in `document.SSP.find`
+- [x] 3.0 Implement Core TypeScript Find Module
+  - [x] 3.1 Create basic FindManager class structure in `src-ts/find.ts`
+  - [x] 3.2 Add dom-find-and-replace import and basic wrapper functions
+  - [x] 3.3 Implement debounced search with 400ms delay
+  - [x] 3.4 Add show/hide find bar functionality
+  - [x] 3.5 Update `src-ts/simsapa.ts` to import and expose find module in `document.SSP.find`
 
 - [ ] 4.0 Add Search Functionality and DOM Integration
   - [ ] 4.1 Implement search within `#ssp_content` element only
