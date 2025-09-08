@@ -5,7 +5,10 @@
 - `package.json` - Added dom-find-and-replace npm dependency
 - `src-ts/tsconfig.json` - Updated to include find.ts and module resolution settings
 - `src-ts/find.ts` - New TypeScript module implementing find functionality (core implementation complete, uses global Map for state persistence)
-- `src-ts/find.test.ts` - Unit tests for find module
+- `src-ts/find.test.ts` - Unit tests for find module (12 tests covering search, accent folding, navigation)
+- `src-ts/test-setup.ts` - Jest test setup file
+- `jest.config.js` - Jest configuration for TypeScript testing
+- `package.json` - Added test dependencies and npm test script
 - `src-ts/simsapa.ts` - Updated to import and expose find module in document.SSP.find
 - `assets/js/simsapa.min.js` - Compiled JavaScript including dom-find-and-replace library
 - `assets/templates/find.html` - HTML template for find bar UI (complete structure created)
