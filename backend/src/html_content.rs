@@ -4,6 +4,7 @@ use tinytemplate::TinyTemplate;
 use crate::{get_app_globals, is_mobile};
 
 static PAGE_HTML: &'static str = include_str!("../../assets/templates/page.html");
+static FIND_HTML: &'static str = include_str!("../../assets/templates/find.html");
 static MENU_HTML: &'static str = include_str!("../../assets/templates/menu.html");
 static ICONS_HTML: &'static str = include_str!("../../assets/templates/icons.html");
 
@@ -16,6 +17,7 @@ struct TmplContext {
     api_url: String,
     js_head: String,
     js_body: String,
+    find_html: String,
     menu_html: String,
     icons_html: String,
     content: String,
@@ -30,6 +32,7 @@ impl Default for TmplContext {
             api_url: g.api_url.clone(),
             js_head: "".to_string(),
             js_body: "".to_string(),
+            find_html: FIND_HTML.to_string(),
             menu_html: MENU_HTML.to_string(),
             icons_html: ICONS_HTML.to_string(),
             content: "".to_string(),
@@ -109,6 +112,7 @@ pub fn blank_html_page(body_class: Option<String>) -> String {
     tt.add_template("page_html", PAGE_HTML).expect("Template error in page.html!");
 
     let mut ctx = TmplContext::default();
+    ctx.find_html = "".to_string();
     ctx.menu_html = "".to_string();
     ctx.icons_html = "".to_string();
 

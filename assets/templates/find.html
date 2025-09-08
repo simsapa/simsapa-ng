@@ -1,0 +1,41 @@
+<!-- Find Bar -->
+<div class="find-container" id="findContainer">
+    <!-- Search Icon Button (always visible) -->
+    <button class="find-search-button" id="findSearchButton">
+        <img src="{api_url}/assets/icons/32x32/fa_magnifying-glass-solid.png" alt="Search" class="search-icon">
+    </button>
+    
+    <!-- Find Bar (hidden by default, slides out from search button) -->
+    <div class="find-bar" id="findBar">
+        <!-- Search Input -->
+        <input type="text" class="find-input" id="findInput" placeholder="Find in page..." autocomplete="off" spellcheck="false">
+        
+        <!-- Match Counter -->
+        <div class="find-counter" id="findCounter">0/0</div>
+        
+        <!-- Navigation Buttons -->
+        <button class="find-nav-button find-prev-button" id="findPrevButton" title="Previous match (Shift+Enter)">
+            <span class="nav-arrow">&lt;</span>
+        </button>
+        
+        <button class="find-nav-button find-next-button" id="findNextButton" title="Next match (Enter)">
+            <span class="nav-arrow">&gt;</span>
+        </button>
+        
+        <!-- Search Options -->
+        <div class="find-options">
+            <label class="find-option">
+                <input type="checkbox" id="findAccentFold" checked>
+                <span class="option-label">ā</span>
+            </label>
+            
+            <label class="find-option">
+                <input type="checkbox" id="findCaseSensitive">
+                <span class="option-label">Aa</span>
+            </label>
+        </div>
+        
+        <!-- Error Message Area -->
+        <div class="find-error" id="findError"></div>
+    </div>
+</div>
