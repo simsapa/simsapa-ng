@@ -75,16 +75,14 @@
   - [ ] 7.4 Ensure both options work correctly together and separately
   - [ ] 7.5 Test with Pali text examples (ā, ī, ū, ṃ, ṁ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ, ṛ, ṣ, ś)
 
-- [ ] 8.0 Add State Persistence and Error Handling
-  - [ ] 8.1 Implement localStorage for search term persistence
-  - [ ] 8.2 Implement localStorage for accent folding and case-sensitive preferences
+- [ ] 8.0 Add State Persistence and Error Handling (not using localStorage)
+  - [ ] 8.1 State persistence for search term persistence
+  - [ ] 8.2 State persistence for accent folding and case-sensitive preferences
   - [ ] 8.3 Add error handling for invalid regex patterns with user-friendly messages
   - [ ] 8.4 Add warning when result count exceeds 1000 matches (hard limit)
   - [ ] 8.5 Implement proper cleanup when find bar is closed (remove highlights, event listeners)
 
 - [ ] 9.0 Final Integration and Testing
   - [ ] 9.1 Create comprehensive unit tests in `src-ts/find.test.ts` covering all functionality
-  - [ ] 9.2 Test mobile responsiveness and ensure identical functionality to desktop
-  - [ ] 9.3 Performance testing with large documents (up to 100KB)
-  - [ ] 9.4 Integration testing with existing menu and page functionality
-  - [ ] 9.5 Final code review, cleanup, and documentation
+  - [ ] 9.2 Integration testing with existing menu and page functionality
+  - [ ] 9.3 Final code review, cleanup, and documentation
