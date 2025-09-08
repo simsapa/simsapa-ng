@@ -94,6 +94,9 @@ class FindManager {
                 const target = e.target as HTMLInputElement;
                 this.debouncedSearch(target.value);
             });
+
+            // Input keyboard shortcuts
+            this.findInput.addEventListener('keydown', (e) => this.handleInputKeydown(e));
         }
 
         // Navigation buttons
@@ -122,6 +125,46 @@ class FindManager {
                 }
                 this.savePreferences();
             });
+        }
+
+        // Global keyboard shortcuts
+        document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
+    }
+
+    /**
+     * Handle keyboard events when find input is focused
+     */
+    private handleInputKeydown(e: KeyboardEvent): void {
+        if (e.key === 'Enter') {
+            if (e.shiftKey) {
+                e.preventDefault();
+                this.previousMatch();
+            } else {
+                e.preventDefault();
+                this.nextMatch();
+            }
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            this.hide();
+        }
+    }
+
+    /**
+     * Handle global keyboard shortcuts
+     */
+    private handleGlobalKeydown(e: KeyboardEvent): void {
+        // Ctrl+F to open find bar
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            this.show();
+            return;
+        }
+
+        // Escape to close find bar (only if find bar is visible)
+        if (e.key === 'Escape' && this.isVisible) {
+            e.preventDefault();
+            this.hide();
+            return;
         }
     }
 

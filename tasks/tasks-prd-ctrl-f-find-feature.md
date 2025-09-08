@@ -58,12 +58,12 @@
   - [x] 5.4 Ensure current match is scrolled into view on navigation
   - [x] 5.5 Handle edge cases (single match, no matches, navigation at boundaries)
 
-- [ ] 6.0 Add Keyboard Shortcuts and Event Handling
-  - [ ] 6.1 Implement Ctrl+F to open find bar and focus search input
-  - [ ] 6.2 Implement Escape to close find bar and clear highlights
-  - [ ] 6.3 Implement Enter for next match navigation
-  - [ ] 6.4 Implement Shift+Enter for previous match navigation
-  - [ ] 6.5 Add click handlers for search icon, previous/next buttons
+- [x] 6.0 Add Keyboard Shortcuts and Event Handling
+  - [x] 6.1 Implement Ctrl+F to open find bar and focus search input
+  - [x] 6.2 Implement Escape to close find bar and clear highlights
+  - [x] 6.3 Implement Enter for next match navigation
+  - [x] 6.4 Implement Shift+Enter for previous match navigation
+  - [x] 6.5 Add click handlers for search icon, previous/next buttons
 
 - [ ] 7.0 Implement Pali/Sanskrit Accent Folding
   - [ ] 7.1 Create accent folding utility function using provided character mappings
