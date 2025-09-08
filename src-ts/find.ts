@@ -359,6 +359,11 @@ class FindManager {
             return recover as Recover;
         }
 
+        // Warn if too many matches (performance)
+        if (highlights.length > 1000) {
+            this.showError(`Too many matches (${highlights.length}). Results limited to improve performance.`);
+        }
+
         // Set first match as current
         (highlights[0] as HTMLElement).classList.add('current');
         this.scrollToElement(highlights[0] as HTMLElement);

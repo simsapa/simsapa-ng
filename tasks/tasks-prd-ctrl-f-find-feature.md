@@ -68,21 +68,21 @@
   - [x] 6.4 Implement Shift+Enter for previous match navigation
   - [x] 6.5 Add click handlers for search icon, previous/next buttons
 
-- [ ] 7.0 Implement Pali/Sanskrit Accent Folding
-  - [ ] 7.1 Create accent folding utility function using provided character mappings
-  - [ ] 7.2 Integrate accent folding with search when checkbox is enabled
-  - [ ] 7.3 Add case-sensitive search option when checkbox is enabled
-  - [ ] 7.4 Ensure both options work correctly together and separately
-  - [ ] 7.5 Test with Pali text examples (ā, ī, ū, ṃ, ṁ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ, ṛ, ṣ, ś)
+- [x] 7.0 Implement Pali/Sanskrit Accent Folding
+  - [x] 7.1 Create accent folding utility function using provided character mappings
+  - [x] 7.2 Integrate accent folding with search when checkbox is enabled
+  - [x] 7.3 Add case-sensitive search option when checkbox is enabled
+  - [x] 7.4 Ensure both options work correctly together and separately
+  - [x] 7.5 Test with Pali text examples (ā, ī, ū, ṃ, ṁ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ, ṛ, ṣ, ś)
 
-- [ ] 8.0 Add State Persistence and Error Handling (not using localStorage)
-  - [ ] 8.1 State persistence for search term persistence
-  - [ ] 8.2 State persistence for accent folding and case-sensitive preferences
-  - [ ] 8.3 Add error handling for invalid regex patterns with user-friendly messages
-  - [ ] 8.4 Add warning when result count exceeds 1000 matches (hard limit)
-  - [ ] 8.5 Implement proper cleanup when find bar is closed (remove highlights, event listeners)
+- [x] 8.0 Add State Persistence and Error Handling
+  - [x] 8.1 State persistence for search term persistence
+  - [x] 8.2 State persistence for accent folding and case-sensitive preferences
+  - [x] 8.3 Add error handling for invalid regex patterns with user-friendly messages
+  - [x] 8.4 Add warning when result count exceeds 1000 matches (hard limit)
+  - [x] 8.5 Implement proper cleanup when find bar is closed (remove highlights, event listeners)
 
-- [ ] 9.0 Final Integration and Testing
-  - [ ] 9.1 Create comprehensive unit tests in `src-ts/find.test.ts` covering all functionality
-  - [ ] 9.2 Integration testing with existing menu and page functionality
-  - [ ] 9.3 Final code review, cleanup, and documentation
+- [x] 9.0 Final Integration and Testing
+  - [x] 9.1 Create comprehensive unit tests in `src-ts/find.test.ts` covering all functionality
+  - [x] 9.2 Integration testing with existing menu and page functionality
+  - [x] 9.3 Final code review, cleanup, and documentation
