@@ -32,7 +32,7 @@ impl Default for TmplContext {
             api_url: g.api_url.clone(),
             js_head: "".to_string(),
             js_body: "".to_string(),
-            find_html: FIND_HTML.to_string(),
+            find_html: FIND_HTML.replace("{api_url}", &g.api_url).to_string(),
             menu_html: MENU_HTML.to_string(),
             icons_html: ICONS_HTML.to_string(),
             content: "".to_string(),
