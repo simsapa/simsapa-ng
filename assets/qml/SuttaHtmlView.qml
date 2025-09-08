@@ -13,6 +13,18 @@ Loader {
         loader.item.show_transient_message(msg); // qmllint disable missing-property
     }
 
+    function show_find_bar() {
+        loader.item.show_find_bar(); // qmllint disable missing-property
+    }
+
+    function find_next() {
+        loader.item.find_next(); // qmllint disable missing-property
+    }
+
+    function find_previous() {
+        loader.item.find_previous(); // qmllint disable missing-property
+    }
+
     /* signal loadingChanged(var loadRequest) */
 
     source: {

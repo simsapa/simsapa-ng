@@ -60,6 +60,10 @@ StackLayout {
         return root.items_map[key] || null;
     }
 
+    function get_current_item(key) {
+        return root.items_map[root.current_key];
+    }
+
     function has_item(key) {
         return root.items_map.hasOwnProperty(key);
     }

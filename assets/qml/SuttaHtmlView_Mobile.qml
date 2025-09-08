@@ -19,6 +19,18 @@ WebView {
         runJavaScript(js);
     }
 
+    function show_find_bar() {
+        runJavaScript(`document.SSP.find.show();`);
+    }
+
+    function find_next() {
+        runJavaScript(`document.SSP.find.nextMatch();`);
+    }
+
+    function find_previous() {
+        runJavaScript(`document.SSP.find.previousMatch();`);
+    }
+
     onLoadingChanged: {
         if (web.is_dark) {
             runJavaScript("document.documentElement.style.colorScheme = 'dark';");
