@@ -376,17 +376,23 @@ class FindManager {
         const accented = ["ā","ī","ū","ṃ","ṁ","ṅ","ñ","ṭ","ḍ","ṇ","ḷ","ṛ","ṣ","ś"];
         const latin = ["a","i","u","m","m","n","n","t","d","n","l","r","s","s"];
 
-        let pattern = term;
+        // Create a mapping from each character to its folded character class
+        const foldMap = new Map<string, string>();
         
-        // Replace each character with character class that includes both forms
         for (let i = 0; i < accented.length; i++) {
             const accentedChar = accented[i];
             const latinChar = latin[i];
             
-            // Replace accented with [accentedlatin]
-            pattern = pattern.replace(new RegExp(accentedChar, 'g'), `[${accentedChar}${latinChar}]`);
-            // Replace latin with [latinaccented]
-            pattern = pattern.replace(new RegExp(latinChar, 'g'), `[${latinChar}${accentedChar}]`);
+            // Both characters map to the same character class
+            const charClass = `[${latinChar}${accentedChar}]`;
+            foldMap.set(latinChar, charClass);
+            foldMap.set(accentedChar, charClass);
+        }
+
+        // Replace each character in the term with its folded version
+        let pattern = '';
+        for (const char of term) {
+            pattern += foldMap.get(char) || char;
         }
 
         return pattern;

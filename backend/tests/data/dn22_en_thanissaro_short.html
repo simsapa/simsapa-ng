@@ -1,0 +1,1448 @@
+<!doctype html>
+<html class="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-BoldItalic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 500;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 600;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 800;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-ExtraBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-It.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
+}
+html, body {
+  height: 100%;
+  color: #1a1a1a;
+  background-color: #FAE6B2;
+}
+html.dark, body.dark {
+  color: #E0E3E9;
+  background-color: #23272E;
+}
+
+pre {
+  font-family: serif;
+  white-space: pre-wrap;
+}
+
+a {
+  color: black;
+}
+
+.ssp-toolbar {
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  font-size: 0.7rem;
+}
+
+.svg-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
+.hide {
+  display: none;
+}
+
+.highlight {
+  padding: 0.2rem 0pt;
+  background: #027f55;
+  color: white;
+}
+
+.scrollto-highlight {
+  padding: 0.2rem 0pt;
+  background: #027f85;
+  color: white;
+}
+
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+  vertical-align: middle;
+}
+
+div.btn, span.btn {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+div.btn a, span.btn a {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.open-button {
+  font-size: 15px;
+}
+.open-button .icon {
+  color: #027f55;
+  opacity: 0.5;
+}
+
+.pull-left {
+  float: left;
+}
+
+.pull-right {
+  float: right;
+}
+
+.bookmark-comment {
+  border: 1px solid hsl(160, 65%, 35%);
+  border-radius: 5px;
+  background-color: hsl(160, 65%, 60%);
+}
+.bookmark-comment .bookmark-title {
+  background-color: hsl(160, 65%, 35%);
+  height: 30px;
+  font-size: 20px;
+}
+.bookmark-comment .bookmark-title .btn {
+  margin: 2.5px 5px;
+}
+.bookmark-comment .bookmark-title .btn a {
+  color: white;
+}
+.bookmark-comment .bookmark-content {
+  color: #1a1a1a;
+  font-size: 0.8rem;
+  padding: 0.5rem;
+}
+.bookmark-comment .bookmark-content p {
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-top: 0.4rem;
+}
+.bookmark-comment .bookmark-content p:first-child {
+  padding-top: 0;
+}
+.bookmark-comment .bookmark-content a {
+  color: #700909;
+}
+
+#window-title-bar {
+  font-size: 18px;
+  line-height: 1;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 0.1em;
+  background-color: #FEF8E8;
+}
+#window-title-bar.dark {
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
+}
+#window-title-bar .flex-container {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  gap: 0.2em;
+}
+#window-title-bar .flex-container #left-btn-box,
+#window-title-bar .flex-container #right-btn-box {
+  flex: 1;
+}
+#window-title-bar .flex-container #preview-title-text {
+  display: inline-block;
+  color: black;
+  text-align: center;
+}
+#window-title-bar .flex-container .icon {
+  font-size: 0.8rem;
+  color: black;
+  padding-top: 0.1rem;
+  margin: 0.1rem 0.3rem;
+}
+
+.suttacentral span.segment span.translated {
+  display: block;
+  padding-top: 0.5rem;
+  font-size: 1rem;
+}
+.suttacentral span.segment span.pali {
+  display: block;
+  padding-top: 0.5rem;
+  font-family: "Source Sans 3 SSP";
+  font-size: 0.8rem;
+}
+
+.suttacentral header {
+  text-align: center;
+}
+.suttacentral header ul {
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  padding-inline-start: 0pt;
+}
+.suttacentral header ul li {
+  font-family: "Source Sans 3 SSP";
+  font-weight: 400;
+  list-style-type: none;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1pt;
+  word-spacing: 1.5pt;
+  padding-top: 0.3rem;
+}
+.suttacentral header ul li .segment .pali,
+.suttacentral header ul li .segment .translated {
+  font-family: "Source Sans 3 SSP";
+  font-weight: 400;
+  list-style-type: none;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1pt;
+  word-spacing: 1.5pt;
+  padding-top: 0.15rem;
+}
+.suttacentral header h1 {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+}
+.suttacentral header h1 .segment .pali,
+.suttacentral header h1 .segment .translated {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+.suttacentral h2 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 1rem;
+}
+.suttacentral h3 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 1rem;
+}
+.suttacentral .evam {
+  text-transform: lowercase;
+  font-variant: small-caps;
+  font-size: 1.15rem;
+  letter-spacing: 0.8pt;
+  word-spacing: 1pt;
+}
+.suttacentral .speaker {
+  font-style: italic;
+  text-indent: 3em;
+  display: block;
+}
+.suttacentral blockquote.gatha {
+  font-style: normal;
+  margin-left: 2rem;
+}
+.suttacentral blockquote.gatha .verse-line {
+  display: block;
+}
+.suttacentral .endsutta {
+  font-style: italic;
+}
+.suttacentral a.ref {
+  display: none;
+}
+.suttacentral footer {
+  margin-top: 4rem;
+  border-top: 1px solid #aaa;
+  font-size: 0.8rem;
+  line-height: 1rem;
+}
+.suttacentral footer span.author {
+  font-style: italic;
+}
+.suttacentral footer span.publication-date {
+  font-style: italic;
+}
+.suttacentral .variant-wrap .mark, .suttacentral .comment-wrap .mark {
+  font-size: 0.6rem;
+  position: relative;
+  top: -0.1rem;
+  padding: 3px;
+}
+.suttacentral .variant-wrap .mark:hover, .suttacentral .comment-wrap .mark:hover {
+  border-bottom: 2px solid black;
+}
+.suttacentral .variant, .suttacentral .comment {
+  font-size: 0.8rem;
+}
+
+.cst4 .note {
+  color: blue;
+}
+.cst4 .bld {
+  font-weight: bold;
+}
+.cst4 .paranum {
+  font-weight: bold;
+}
+.cst4 .indent {
+  font-size: 1rem;
+  text-indent: 2em;
+  margin-left: 3em;
+}
+.cst4 .bodytext {
+  font-size: 1rem;
+  text-indent: 2em;
+}
+.cst4 .hangnum {
+  font-size: 1rem;
+  margin-bottom: -18pt;
+  text-indent: 2em;
+}
+.cst4 .centered {
+  font-size: 1rem;
+  text-align: center;
+}
+.cst4 .unindented {
+  font-size: 1rem;
+}
+.cst4 .nikaya {
+  text-align: center;
+  font-family: "Source Sans 3 SSP";
+  font-weight: 400;
+  list-style-type: none;
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 1pt;
+  word-spacing: 1.5pt;
+  padding-top: 0.3rem;
+}
+.cst4 .book, .cst4 .title, .cst4 .subhead, .cst4 .subsubhead, .cst4 .chapter {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+  text-align: center;
+}
+.cst4 .book {
+  font-size: 1.6rem;
+}
+.cst4 .title {
+  font-size: 1.4rem;
+}
+.cst4 .subhead, .cst4 .subsubhead, .cst4 .chapter {
+  font-size: 1.2rem;
+  text-align: left;
+  text-decoration: underline;
+  margin-top: 4rem;
+}
+.cst4 .chapter + .subhead {
+  margin-top: 1rem;
+}
+.cst4 .gatha1 {
+  font-size: 1rem;
+  margin-bottom: 0em;
+  margin-left: 4em;
+}
+.cst4 .gatha2 {
+  font-size: 1rem;
+  margin-bottom: 0em;
+  margin-left: 4em;
+}
+.cst4 .gatha3 {
+  font-size: 1rem;
+  margin-bottom: 0em;
+  margin-left: 4em;
+}
+.cst4 .gathalast {
+  font-size: 1rem;
+  margin-bottom: 0.5cm;
+  margin-left: 4em;
+}
+
+.dhammatalks_org .author {
+  font-style: italic;
+  font-size: 1em;
+}
+.dhammatalks_org .title {
+  font-weight: bold;
+  font-size: 1em;
+}
+.dhammatalks_org .fn {
+  vertical-align: 0.4em;
+  font-size: 0.8em;
+}
+.dhammatalks_org .verse {
+  margin: 0.8em 8%;
+  text-indent: 0;
+}
+.dhammatalks_org .verse p {
+  margin-top: 0;
+}
+.dhammatalks_org .verse p.v2 {
+  text-indent: -2%;
+  padding-left: 10%;
+}
+.dhammatalks_org .verse p.vspk {
+  margin-bottom: 0.1em;
+  text-indent: -2.6em;
+  font-style: italic;
+}
+.dhammatalks_org .verse p.seealso {
+  margin-top: 0.8em;
+  font-style: italic;
+  font-size: 0.9em;
+}
+.dhammatalks_org .suttaCite {
+  font-style: italic;
+  margin-left: 50%;
+  margin-top: 0.6em;
+}
+.dhammatalks_org .verse-add {
+  margin-top: 0.4em;
+  text-indent: 0;
+}
+.dhammatalks_org .note {
+  margin: 0.6em 4%;
+  font-size: 0.85em;
+}
+
+.tipitaka_net ul.toc li {
+  font-size: 0.8em;
+}
+
+html, body {
+  font-size: 22px;
+  line-height: 1.5;
+  font-family: "Crimson Pro SSP";
+  font-weight: 400;
+}
+
+#ssp_main {
+  padding-bottom: 4rem;
+  font-size: 1rem;
+}
+
+body {
+  padding: 0 1rem;
+  max-width: 75ex;
+  margin: 0 auto;
+}
+
+p {
+  margin: 0.8rem 0 0 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.4rem;
+}
+
+h3 {
+  font-size: 1.2rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
+
+.transient-messages-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.transient-messages {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  padding: 1em 0;
+  text-align: center;
+}
+
+.message {
+  text-align: center;
+}
+.message .msg-content {
+  display: inline-block;
+  padding: 0.25em 0.7em;
+  margin: 0 auto 0.25em auto;
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
+  border-radius: 7px;
+}
+
+:root {
+  --bg-primary: #f5f5f5;
+  --bg-content: white;
+  --text-primary: $black_90;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --btn-bg-start: #fefefe;
+  --btn-bg-end: #ededed;
+  --btn-bg-hover-start: #fefefe;
+  --btn-bg-hover-end: #fefefe;
+  --btn-bg-active-start: #d0d0d0;
+  --btn-bg-active-end: #f0f0f0;
+  --btn-border: #ababab;
+  --btn-border-hover: #909090;
+  --btn-border-active: #808080;
+  --btn-icon: #333;
+  --menu-bg-start: #f8f8f8;
+  --menu-bg-end: #eeeeee;
+  --menu-border: #a0a0a0;
+  --menu-separator: #c0c0c0;
+  --group-bg-start: #f0f0f0;
+  --group-bg-end: #e8e8e8;
+  --group-bg-hover-start: #f5f5f5;
+  --group-bg-hover-end: #ededed;
+  --group-bg-active-start: #e8e8e8;
+  --group-bg-active-end: #f0f0f0;
+  --group-border: #d0d0d0;
+  --group-arrow: #666;
+  --item-bg-start: #fafafa;
+  --item-bg-end: #f2f2f2;
+  --item-separator: rgba(192, 192, 192, 0.3);
+  --item-bg-hover-start: #e6f3ff;
+  --item-bg-hover-end: #cce7ff;
+  --item-bg-active-start: #cce7ff;
+  --item-bg-active-end: #b3d9ff;
+  --item-border-hover: #0078d4;
+  --item-bullet: #999;
+  --selection-bg: #0078d4;
+  --selection-shadow: rgba(0, 120, 212, 0.2);
+  --text-shadow-light: rgba(255, 255, 255, 0.8);
+  --text-shadow-dark: rgba(0, 0, 0, 0.5);
+}
+
+body.dark {
+  --bg-primary: #2b2b2b;
+  --bg-content: #3c3c3c;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #999999;
+  --btn-bg-start: #464646;
+  --btn-bg-end: #3c3c3c;
+  --btn-bg-hover-start: #464646;
+  --btn-bg-hover-end: #464646;
+  --btn-bg-active-start: #363636;
+  --btn-bg-active-end: #4a4a4a;
+  --btn-border: #5d5d5d;
+  --btn-border-hover: #707070;
+  --btn-border-active: #505050;
+  --btn-icon: #ffffff;
+  --menu-bg-start: #404040;
+  --menu-bg-end: #363636;
+  --menu-border: #606060;
+  --menu-separator: #505050;
+  --group-bg-start: #464646;
+  --group-bg-end: #3c3c3c;
+  --group-bg-hover-start: #4c4c4c;
+  --group-bg-hover-end: #424242;
+  --group-bg-active-start: #3c3c3c;
+  --group-bg-active-end: #464646;
+  --group-border: #555555;
+  --group-arrow: #cccccc;
+  --item-bg-start: #424242;
+  --item-bg-end: #383838;
+  --item-separator: rgba(96, 96, 96, 0.3);
+  --item-bg-hover-start: #1e3a5f;
+  --item-bg-hover-end: #1a3352;
+  --item-bg-active-start: #1a3352;
+  --item-bg-active-end: #162d45;
+  --item-border-hover: #4a9eff;
+  --item-bullet: #888888;
+  --selection-bg: #4a9eff;
+  --selection-shadow: rgba(74, 158, 255, 0.2);
+  --text-shadow-light: rgba(0, 0, 0, 0.5);
+  --text-shadow-dark: rgba(0, 0, 0, 0.8);
+}
+
+.menu-button *, .menu-dropdown * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.menu-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.menu-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.menu-button:active, .menu-button.active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.menu-button .hamburger-line {
+  width: 23px;
+  height: 2px;
+  background: var(--btn-icon);
+  transition: all 0.2s ease;
+  border-radius: 1px;
+}
+
+.menu-button.active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.menu-button.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-button.active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
+}
+
+.menu-dropdown {
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  width: 280px;
+  background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+  border: 1px solid var(--menu-border);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--text-shadow-light);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.menu-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-group {
+  border-bottom: 1px solid var(--menu-separator);
+  background: transparent;
+}
+
+.menu-group:last-child {
+  border-bottom: none;
+}
+
+.menu-group .group-header {
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+  background: linear-gradient(to bottom, var(--group-bg-start) 0%, var(--group-bg-end) 100%);
+  border-bottom: 1px solid var(--group-border);
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.menu-group .group-header:hover {
+  background: linear-gradient(to bottom, var(--group-bg-hover-start) 0%, var(--group-bg-hover-end) 100%);
+  color: var(--text-primary);
+}
+
+.menu-group .group-header:active {
+  background: linear-gradient(to bottom, var(--group-bg-active-start) 0%, var(--group-bg-active-end) 100%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.menu-group .group-header .group-arrow {
+  font-size: 13px;
+  color: var(--group-arrow);
+  transition: transform 0.2s ease;
+}
+
+.menu-group .group-header.expanded .group-arrow {
+  transform: rotate(90deg);
+}
+
+.group-items {
+  overflow: hidden;
+  transition: all 0.2s ease;
+  opacity: 0;
+  max-height: 0;
+  background: linear-gradient(to bottom, var(--item-bg-start) 0%, var(--item-bg-end) 100%);
+}
+
+.group-items.show {
+  opacity: 1;
+  max-height: 200px;
+}
+
+.group-items .menu-item {
+  padding: 6px 16px 6px 32px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  border-bottom: 1px solid var(--item-separator);
+  position: relative;
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.group-items .menu-item:last-child {
+  border-bottom: none;
+}
+
+.group-items .menu-item:hover {
+  background: linear-gradient(to bottom, var(--item-bg-hover-start) 0%, var(--item-bg-hover-end) 100%);
+  color: var(--text-primary);
+  border-left: 2px solid var(--item-border-hover);
+}
+
+.group-items .menu-item:active {
+  background: linear-gradient(to bottom, var(--item-bg-active-start) 0%, var(--item-bg-active-end) 100%);
+  box-shadow: inset 0 1px 2px var(--selection-shadow);
+}
+
+.group-items .menu-item::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--item-bullet);
+  border-radius: 50%;
+}
+
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.menu-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.dark .menu-overlay.show {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.find-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.find-search-button {
+  position: fixed;
+  top: 10px;
+  right: 60px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.find-search-button .search-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+
+.find-search-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.find-search-button:active, .find-search-button.active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.find-bar {
+  position: fixed;
+  top: 10px;
+  right: 108px;
+  height: 40px;
+  width: 380px;
+  background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+  border: 1px solid var(--menu-border);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--text-shadow-light);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.find-bar.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.find-input {
+  flex: 1;
+  min-width: 150px;
+  height: 24px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-content);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.find-input:focus {
+  border-color: var(--item-border-hover);
+  box-shadow: 0 0 3px var(--selection-shadow);
+}
+
+.find-input::placeholder {
+  color: var(--text-muted);
+}
+
+.find-counter {
+  min-width: 40px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--item-bg-start);
+  border: 1px solid var(--group-border);
+  border-radius: 2px;
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.find-nav-button {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light);
+}
+
+.find-nav-button .nav-arrow {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--btn-icon);
+  line-height: 1;
+}
+
+.find-nav-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.find-nav-button:active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.find-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.find-nav-button:disabled:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border-color: var(--btn-border);
+}
+
+.find-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.find-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.find-option input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.find-option .option-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+  user-select: none;
+  cursor: pointer;
+}
+
+.find-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+  border-radius: 2px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+}
+
+.find-error.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+body.dark .find-error {
+  background: #3c1e1e;
+  color: #ff6b6b;
+  border-color: #5c2e2e;
+}
+
+.ssp-find-highlight {
+  background-color: #ffff00 !important;
+  color: inherit !important;
+  padding: 1px 0px;
+}
+
+.ssp-find-highlight.current {
+  background-color: #ff9632 !important;
+}
+
+@media (max-width: 768px) {
+  .find-bar.show {
+    width: calc(100vw - 20px - 40px - 8px);
+    min-width: 280px;
+  }
+  .find-input {
+    min-width: 100px;
+  }
+}
+.lang-san {
+  font-family: "DejaVu Serif", "Georgia", serif;
+}
+
+.lang-san h1, .lang-san h2, .lang-san h3, .lang-san h4, .lang-san h5, .lang-san h6 {
+  font-family: "DejaVu Serif", "Georgia", serif;
+}
+
+.gretil {
+  font-size: 16px;
+  margin-left: -5ex;
+  margin-right: -5ex;
+}
+
+.gretil > footer {
+  padding-top: 4em;
+  font-size: 14px;
+}
+
+
+html { font-size: 22px; } body { max-width: 75ex; }</style>
+        <script>
+         const API_URL = 'http://localhost:4848';
+        </script>
+        <script> const SHOW_QUOTE = null; const IS_MOBILE = false;const SUTTA_UID = 'dn22/en/thanissaro'; const SHOW_BOOKMARKS = true;async function send_log(msg, log_level) {
+    const response = await fetch(`${API_URL}/logger/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            log_level: log_level,
+            msg: msg,
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+    }
+}
+
+async function log_info(msg) {
+    console.log(msg);
+    send_log(msg, 'info');
+}
+
+async function log_error(msg) {
+    console.error(msg);
+    send_log(msg, 'error');
+}
+
+function selection_text() {
+    const selection = document.getSelection();
+    let text = "";
+    if (selection) {
+        text = selection.toString().trim();
+    }
+    return text;
+}
+
+function lookup_selection() {
+    const selected_text = window.getSelection().toString().trim();
+
+    if (!selected_text) {
+        console.log('No text selected');
+        return;
+    }
+
+    fetch(`${API_URL}/lookup_window_query/${encodeURIComponent(selected_text)}`);
+}
+
+function summary_selection() {
+    const text = selection_text();
+    if (text !== "") {
+        fetch(`${API_URL}/summary_query/${WINDOW_ID}/${encodeURIComponent(text)}`);
+    }
+}
+
+class HamburgerMenu {
+    constructor() {
+        this.menuButton = document.getElementById('menuButton');
+        this.menuDropdown = document.getElementById('menuDropdown');
+        this.menuOverlay = document.getElementById('menuOverlay');
+        this.groupHeaders = document.querySelectorAll('.group-header');
+        this.menuItems = document.querySelectorAll('.menu-item');
+        this.isOpen = false;
+
+        this.init();
+    }
+
+    init() {
+        // Menu button click
+        this.menuButton.addEventListener('click', () => this.toggleMenu());
+
+        // Overlay click to close menu
+        this.menuOverlay.addEventListener('click', () => this.closeMenu());
+
+        // Group header clicks
+        this.groupHeaders.forEach(header => {
+            header.addEventListener('click', (e) => this.toggleGroup(e));
+            // Prevent text selection clearing
+            header.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Menu item clicks
+        this.menuItems.forEach(item => {
+            item.addEventListener('click', (e) => this.handleMenuItemClick(e));
+            // Prevent text selection clearing
+            item.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.closeMenu();
+            }
+        });
+    }
+
+    toggleMenu() {
+        if (this.isOpen) {
+            this.closeMenu();
+        } else {
+            this.openMenu();
+        }
+    }
+
+    openMenu() {
+        this.isOpen = true;
+        this.menuButton.classList.add('active');
+        this.menuDropdown.classList.add('show');
+        this.menuOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeMenu() {
+        this.isOpen = false;
+        this.menuButton.classList.remove('active');
+        this.menuDropdown.classList.remove('show');
+        this.menuOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    toggleGroup(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const header = e.currentTarget;
+        const groupName = header.dataset.group;
+        const groupItems = document.getElementById(`${groupName}-items`);
+        const isExpanded = header.classList.contains('expanded');
+
+        if (isExpanded) {
+            // Collapse group
+            header.classList.remove('expanded');
+            groupItems.classList.remove('show');
+        } else {
+            // Expand group
+            header.classList.add('expanded');
+            groupItems.classList.add('show');
+        }
+    }
+
+    async handleMenuItemClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = e.currentTarget.dataset.action;
+        let query_text = "";
+        if (action === "summarize-sutta") {
+            query_text = this.getAllContentText();
+        } else {
+            query_text = this.getSelectedText();
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/sutta_menu_action/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    window_id: WINDOW_ID,
+                    action: action,
+                    text: query_text,
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+            }
+
+            log_info(`Action '${action}' completed`);
+        } catch (error) {
+            log_error(`Action '${action}' error:` + error);
+        }
+
+        this.closeMenu();
+    }
+
+    getSelectedText() {
+        if (window.getSelection) {
+            return window.getSelection().toString();
+        } else if (document.selection && document.selection.type !== "Control") {
+            return document.selection.createRange().text;
+        }
+        return '';
+    }
+
+    getAllContentText() {
+        const content_div = document.getElementById('ssp_content');
+        if (!content_div) {
+            console.error('Element with id "ssp_content" not found');
+            return null;
+        }
+        // .textContent gets all text content, including text from hidden elements
+        // .innerText respects styling and won't include text from hidden elements
+        return content_div.innerText || '';
+    }
+}
+
+// TODO: Both Double click and selection event runs the summary search, lookup query is stated from the summary UI.
+// TODO: Allow the user to configure which action should run a lookup query.
+
+document.addEventListener("DOMContentLoaded", function(_event) {
+    new HamburgerMenu();
+    if (IS_MOBILE) {
+        // On mobile in a WebView, there is no double click event, so listen to
+        // selection change (from a long press action).
+        // FIXME: avoid lookup when selection is changed by dragging the boundaries
+        document.addEventListener("selectionchange", function (_event) {
+            summary_selection();
+        });
+
+    } else {
+        // On desktop, double click works to select a word and trigger a lookup.
+        // Double click always triggers a lookup.
+        document.addEventListener("dblclick", function (_event) {
+            summary_selection();
+        });
+    }
+});
+</script>
+    </head>
+    <body class="light">
+      <div id="ssp_main">
+        <div class="transient-messages-wrap">
+          <div id="transient-messages-top" class="transient-messages">
+          </div>
+        </div>
+
+        <!-- Find Bar -->
+        <div class="find-container" id="findContainer">
+          <!-- Search Icon Button (always visible) -->
+          <button class="find-search-button" id="findSearchButton">
+            <img src="{api_url}/assets/icons/32x32/fa_magnifying-glass-solid.png" alt="Search" class="search-icon">
+          </button>
+
+          <!-- Find Bar (hidden by default, slides out from search button) -->
+          <div class="find-bar" id="findBar">
+            <!-- Search Input -->
+            <input type="text" class="find-input" id="findInput" placeholder="Find in page..." autocomplete="off" spellcheck="false">
+
+            <!-- Match Counter -->
+            <div class="find-counter" id="findCounter">0/0</div>
+
+            <!-- Navigation Buttons -->
+            <button class="find-nav-button find-prev-button" id="findPrevButton" title="Previous match (Shift+Enter)">
+              <span class="nav-arrow">&lt;</span>
+            </button>
+
+            <button class="find-nav-button find-next-button" id="findNextButton" title="Next match (Enter)">
+              <span class="nav-arrow">&gt;</span>
+            </button>
+
+            <!-- Search Options -->
+            <div class="find-options">
+              <label class="find-option">
+                <input type="checkbox" id="findAccentFold" checked>
+                <span class="option-label">ā</span>
+              </label>
+
+              <label class="find-option">
+                <input type="checkbox" id="findCaseSensitive">
+                <span class="option-label">Aa</span>
+              </label>
+            </div>
+
+            <!-- Error Message Area -->
+            <div class="find-error" id="findError"></div>
+          </div>
+        </div>
+
+
+        <!-- Menu Button -->
+        <button class="menu-button" id="menuButton">
+          <div class="hamburger-line"></div>
+          <div class="hamburger-line"></div>
+          <div class="hamburger-line"></div>
+        </button>
+
+        <!-- Menu Overlay -->
+        <div class="menu-overlay" id="menuOverlay"></div>
+
+        <!-- Menu Dropdown -->
+        <div class="menu-dropdown" id="menuDropdown">
+          <!-- Copy Group -->
+          <div class="menu-group">
+            <div class="group-header" data-group="copy">
+              Copy
+              <span class="group-arrow">▶</span>
+            </div>
+            <div class="group-items" id="copy-items">
+              <div class="menu-item" data-action="copy-selection">Copy Selection</div>
+              <div class="menu-item" data-action="copy-link-sutta">Copy Link to Sutta and Selection</div>
+              <div class="menu-item" data-action="copy-sutta-url">Copy Sutta URL</div>
+            </div>
+          </div>
+
+          <!-- Dictionary Group -->
+          <div class="menu-group">
+            <div class="group-header" data-group="dictionary">
+              Dictionary
+              <span class="group-arrow">▶</span>
+            </div>
+            <div class="group-items" id="dictionary-items">
+              <div class="menu-item" data-action="gloss-selection">Gloss Selection</div>
+              <div class="menu-item" data-action="lookup-selection">Lookup Selection</div>
+            </div>
+          </div>
+
+          <!-- Prompts Group -->
+          <div class="menu-group">
+            <div class="group-header" data-group="prompts">
+              Prompts
+              <span class="group-arrow">▶</span>
+            </div>
+            <div class="group-items" id="prompts-items">
+              <div class="menu-item" data-action="summarize-sutta">Summarize the current sutta</div>
+              <div class="menu-item" data-action="translate-selection">Translate the selection</div>
+              <div class="menu-item" data-action="analyse-selection">Analyse the selection</div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="ssp_content">
+          <div class="dhammatalks_org">
+            <div id="DN22">
+              <h1>The Great Establishing of Mindfulness Discourse<br/>
+                Mahā Satipaṭṭhāna Sutta  (DN 22)</h1>
+              <h2 class="intro" id="toc_1">Introduction</h2>
+              <p><em>Satipaṭṭhāna—the establishing</em> (upaṭṭhāna) <em>of mindfulness</em> (sati)<em>—is a meditative technique for training the mind to keep mindfulness firmly established in a particular frame of reference in all its activities. The term</em> sati <em>is related to the verb</em> sarati, <em>to remember or to keep in mind. It is sometimes translated as non-reactive awareness, free from agendas, simply present with whatever arises, but the formula for satipaṭṭhāna doesn’t support that translation. Non-reactive awareness is actually an aspect of equanimity, one of the mental qualities fostered in the course of satipaṭṭhāna. The activity of satipaṭṭhāna, however, definitely has a motivating agenda: the desire for awakening, which is classed not as a cause of suffering, but as part of the path to its ending (see <a href="ssp://suttas/sn51.15/en/thanissaro">SN 51:15</a>). The role of mindfulness is to keep the mind properly focused in frames of reference that will give it guidance in what present events to develop, and which ones to abandon, so as to keep it on the path. To make an analogy, awakening is like a mountain on the horizon, the destination to which you are driving a car. Mindfulness is what remembers to keep attention focused on the road to the mountain, rather than letting it stay focused on glimpses of the mountain or get distracted by other paths leading away from the road.</em></p>
+              <p><em>Satipaṭṭhāna plays a role in many formulations of the path to awakening. In the noble eightfold path, it is the seventh factor, following on right effort and leading to right concentration. In the five strengths and five faculties, it is the third factor, following on persistence and leading to concentration. In the seven factors for awakening, it is the first factor, providing a foundation for the remaining six factors: analysis of qualities, persistence, rapture, calm, concentration, and equanimity.</em></p>
+              <p><em>The following sutta contains the longest treatment of satipaṭṭhāna found in the Canon. However, despite its length, its treatment of the topic is far from complete. This partly has to do with the nature of the topic itself. As the Buddha states in MN 12:</em></p>
+              <div class="block">
+                <p>“Sāriputta, suppose that I had four disciples with a 100-year life span, living for 100 years, and endowed with excellent mindfulness, retention, recall, &amp; keenness of discernment. Just as an archer with a good bow—trained, dexterous, &amp; practiced—could easily shoot a light arrow across the shadow of a palmyra tree, they—endowed with that great an extent of mindfulness, that great an extent of retention, that great an extent of recall, &amp; that keenness of discernment—would ask me one question after another on the four establishings of mindfulness. And I, asked again &amp; again, would answer. Answered, they would remember what I had answered, and they wouldn’t counter-question me about it a second time more. Aside from eating, drinking, chewing, &amp; savoring, aside from urinating &amp; defecating, aside from relieving sleepiness &amp; weariness, there would be no ending of the Tathāgata’s Dhamma teaching, there would be no ending of the Tathāgata’s phrasing of Dhamma statements, there would be no ending of the Tathāgata’s quick-wittedness (in answering) questions; but those four disciples of mine, with their 100-year life span, living for 100 years, would die with the passing of 100 years.”</p>
+              </div>
+              <p class="stars">* * *</p>
+              <p>I have heard that on one occasion the Blessed One was staying among the Kurus. Now there is a town of the Kurus called Kammāsadhamma. There the Blessed One addressed the monks, “Monks.”</p>
+              <p>“Lord,” the monks responded to him.</p>
+              <p>The Blessed One said: “This is the direct path<span class="fn"><a href="#dn22note01">1</a></span><!--end fn cite--> for the purification of beings, for the overcoming of sorrow &amp; lamentation, for the disappearance of pain &amp; distress, for the attainment of the right method, &amp; for the realization of unbinding—in other words, the four establishings of mindfulness. Which four?</p>
+              <p>“There is the case where a monk remains focused on the body in &amp; of itself—ardent, alert, &amp; mindful—subduing greed &amp; distress with reference to the world. He remains focused on feelings… mind… mental qualities in &amp; of themselves—ardent,<span class="fn"><a href="#dn22note02">2</a></span><!--end fn cite--> alert,<span class="fn"><a href="#dn22note03">3</a></span><!--end fn cite--> &amp; mindful<span class="fn"><a href="#dn22note04">4</a></span><!--end fn cite-->—subduing greed &amp; distress with reference to the world.<span class="fn"><a href="#dn22note05">5</a></span><!--end fn cite--></p>
+              <h2 id="toc_2">A. Body</h2>
+              <p>“And how does a monk remain focused on the body in &amp; of itself?</p>
+              <p>[1] “There is the case where a monk—having gone to the wilderness, to the shade of a tree, or to an empty building—sits down folding his legs crosswise, holding his body erect and establishing mindfulness to the fore.<span class="fn"><a href="#dn22note06">6</a></span><!--end fn cite--> Always mindful, he breathes in; mindful he breathes out.</p>
+              <p>“Breathing in long, he discerns, ‘I am breathing in long’; or breathing out long, he discerns, ‘I am breathing out long.’ Or breathing in short, he discerns, ‘I am breathing in short’; or breathing out short, he discerns, ‘I am breathing out short.’ He trains himself, ‘I will breathe in sensitive to the entire body’;<span class="fn"><a href="#dn22note07">7</a></span><!--end fn cite--> he trains himself, ‘I will breathe out sensitive to the entire body.’ He trains himself, ‘I will breathe in calming bodily fabrication’;<span class="fn"><a href="#dn22note08">8</a></span><!--end fn cite--> he trains himself, ‘I will breathe out calming bodily fabrication.’ Just as a dexterous turner or his apprentice, when making a long turn, discerns, ‘I am making a long turn,’ or when making a short turn discerns, ‘I am making a short turn’; in the same way the monk, when breathing in long, discerns, ‘I am breathing in long’; or breathing out long, he discerns, ‘I am breathing out long.’ … He trains himself, ‘I will breathe in calming bodily fabrication’; he trains himself, ‘I will breathe out calming bodily fabrication.’</p>
+              <p>“In this way he remains focused internally on the body in &amp; of itself, or externally on the body in &amp; of itself, or both internally &amp; externally on the body in &amp; of itself. Or he remains focused on the phenomenon of origination with regard to the body, on the phenomenon of passing away with regard to the body, or on the phenomenon of origination &amp; passing away with regard to the body. Or his mindfulness that ‘There is a body’ is maintained to the extent of knowledge &amp; remembrance. And he remains independent, unsustained by [not clinging to] anything in the world. This is how a monk remains focused on the body in &amp; of itself.</p>
+            </div><!--end DN#-->
+          </div>
+        </div>
+
+      </div><!-- end #ssp_main -->
+
+      <script src="http://localhost:4848/assets/js/simsapa.min.js"></script>
+
+    </body>
+</html>
