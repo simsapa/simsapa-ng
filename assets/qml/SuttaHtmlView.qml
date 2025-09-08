@@ -9,6 +9,10 @@ Loader {
     required property string sutta_title
     required property bool is_dark
 
+    function active_focus() {
+        loader.item.forceActiveFocus(); // qmllint disable missing-property
+    }
+
     function show_transient_message(msg) {
         loader.item.show_transient_message(msg); // qmllint disable missing-property
     }
