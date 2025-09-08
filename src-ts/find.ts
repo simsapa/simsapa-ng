@@ -243,6 +243,11 @@ class FindManager {
             if (this.findInput) {
                 this.findInput.focus();
                 this.findInput.select();
+                
+                // If there's a previous search term, start searching
+                if (this.findInput.value && this.findInput.value.length >= 2) {
+                    this.search(this.findInput.value);
+                }
             }
         }, 100);
     }
