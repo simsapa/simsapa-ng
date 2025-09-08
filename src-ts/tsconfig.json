@@ -1,9 +1,12 @@
 {
   "files": [
     "simsapa.ts",
+    "find.ts",
+    "helpers.ts",
     "index.d.ts"
   ],
   "include": ["**/*.ts"],
+  "exclude": ["**/*.test.ts", "test-setup.ts"],
   "compilerOptions": {
     "outDir": "../simsapa/assets/js/",
     "lib": [
@@ -12,6 +15,9 @@
       "esnext"
     ],
     "module": "es6",
-    "target": "es6"
+    "target": "es6",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   }
 }

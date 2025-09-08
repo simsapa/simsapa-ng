@@ -1,80 +1,86 @@
-@font-face {
+<!doctype html>
+<html class="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>@font-face {
   font-family: "Crimson Pro SSP";
   font-style: normal;
   font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/crimson-pro/CrimsonPro-Regular.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Regular.ttf") format("truetype");
 }
 @font-face {
   font-family: "Crimson Pro SSP";
   font-style: italic;
   font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/crimson-pro/CrimsonPro-Italic.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Italic.ttf") format("truetype");
 }
 @font-face {
   font-family: "Crimson Pro SSP";
   font-style: normal;
   font-weight: 700;
-  src: url("http://localhost:8000/assets/fonts/crimson-pro/CrimsonPro-Bold.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Bold.ttf") format("truetype");
 }
 @font-face {
   font-family: "Crimson Pro SSP";
   font-style: italic;
   font-weight: 700;
-  src: url("http://localhost:8000/assets/fonts/crimson-pro/CrimsonPro-BoldItalic.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-BoldItalic.ttf") format("truetype");
 }
 @font-face {
   font-family: "Abhaya Libre SSP";
   font-style: normal;
   font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/abhaya-libre/AbhayaLibreX-Regular.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Regular.ttf") format("truetype");
 }
 @font-face {
   font-family: "Abhaya Libre SSP";
   font-style: normal;
   font-weight: 500;
-  src: url("http://localhost:8000/assets/fonts/abhaya-libre/AbhayaLibreX-Medium.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Medium.ttf") format("truetype");
 }
 @font-face {
   font-family: "Abhaya Libre SSP";
   font-style: normal;
   font-weight: 600;
-  src: url("http://localhost:8000/assets/fonts/abhaya-libre/AbhayaLibreX-SemiBold.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-SemiBold.ttf") format("truetype");
 }
 @font-face {
   font-family: "Abhaya Libre SSP";
   font-style: normal;
   font-weight: 700;
-  src: url("http://localhost:8000/assets/fonts/abhaya-libre/AbhayaLibreX-Bold.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Bold.ttf") format("truetype");
 }
 @font-face {
   font-family: "Abhaya Libre SSP";
   font-style: normal;
   font-weight: 800;
-  src: url("http://localhost:8000/assets/fonts/abhaya-libre/AbhayaLibreX-ExtraBold.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-ExtraBold.ttf") format("truetype");
 }
 @font-face {
   font-family: "Source Sans 3 SSP";
   font-style: normal;
   font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-Regular.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-Regular.ttf") format("truetype");
 }
 @font-face {
   font-family: "Source Sans 3 SSP";
   font-style: italic;
   font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-It.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-It.ttf") format("truetype");
 }
 @font-face {
   font-family: "Source Sans 3 SSP";
   font-style: normal;
   font-weight: 700;
-  src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-Bold.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-Bold.ttf") format("truetype");
 }
 @font-face {
   font-family: "Source Sans 3 SSP";
   font-style: italic;
   font-weight: 700;
-  src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
 }
 html, body {
   height: 100%;
@@ -1080,3 +1086,363 @@ body.dark .find-error {
   padding-top: 4em;
   font-size: 14px;
 }
+
+
+html { font-size: 22px; } body { max-width: 75ex; }</style>
+        <script>
+         const API_URL = 'http://localhost:4848';
+        </script>
+        <script> const SHOW_QUOTE = null; const IS_MOBILE = false;const SUTTA_UID = 'dn22/en/thanissaro'; const SHOW_BOOKMARKS = true;async function send_log(msg, log_level) {
+    const response = await fetch(`${API_URL}/logger/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            log_level: log_level,
+            msg: msg,
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+    }
+}
+
+async function log_info(msg) {
+    console.log(msg);
+    send_log(msg, 'info');
+}
+
+async function log_error(msg) {
+    console.error(msg);
+    send_log(msg, 'error');
+}
+
+function selection_text() {
+    const selection = document.getSelection();
+    let text = "";
+    if (selection) {
+        text = selection.toString().trim();
+    }
+    return text;
+}
+
+function lookup_selection() {
+    const selected_text = window.getSelection().toString().trim();
+
+    if (!selected_text) {
+        console.log('No text selected');
+        return;
+    }
+
+    fetch(`${API_URL}/lookup_window_query/${encodeURIComponent(selected_text)}`);
+}
+
+function summary_selection() {
+    const text = selection_text();
+    if (text !== "") {
+        fetch(`${API_URL}/summary_query/${WINDOW_ID}/${encodeURIComponent(text)}`);
+    }
+}
+
+class HamburgerMenu {
+    constructor() {
+        this.menuButton = document.getElementById('menuButton');
+        this.menuDropdown = document.getElementById('menuDropdown');
+        this.menuOverlay = document.getElementById('menuOverlay');
+        this.groupHeaders = document.querySelectorAll('.group-header');
+        this.menuItems = document.querySelectorAll('.menu-item');
+        this.isOpen = false;
+
+        this.init();
+    }
+
+    init() {
+        // Menu button click
+        this.menuButton.addEventListener('click', () => this.toggleMenu());
+
+        // Overlay click to close menu
+        this.menuOverlay.addEventListener('click', () => this.closeMenu());
+
+        // Group header clicks
+        this.groupHeaders.forEach(header => {
+            header.addEventListener('click', (e) => this.toggleGroup(e));
+            // Prevent text selection clearing
+            header.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Menu item clicks
+        this.menuItems.forEach(item => {
+            item.addEventListener('click', (e) => this.handleMenuItemClick(e));
+            // Prevent text selection clearing
+            item.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.closeMenu();
+            }
+        });
+    }
+
+    toggleMenu() {
+        if (this.isOpen) {
+            this.closeMenu();
+        } else {
+            this.openMenu();
+        }
+    }
+
+    openMenu() {
+        this.isOpen = true;
+        this.menuButton.classList.add('active');
+        this.menuDropdown.classList.add('show');
+        this.menuOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeMenu() {
+        this.isOpen = false;
+        this.menuButton.classList.remove('active');
+        this.menuDropdown.classList.remove('show');
+        this.menuOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    toggleGroup(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const header = e.currentTarget;
+        const groupName = header.dataset.group;
+        const groupItems = document.getElementById(`${groupName}-items`);
+        const isExpanded = header.classList.contains('expanded');
+
+        if (isExpanded) {
+            // Collapse group
+            header.classList.remove('expanded');
+            groupItems.classList.remove('show');
+        } else {
+            // Expand group
+            header.classList.add('expanded');
+            groupItems.classList.add('show');
+        }
+    }
+
+    async handleMenuItemClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = e.currentTarget.dataset.action;
+        let query_text = "";
+        if (action === "summarize-sutta") {
+            query_text = this.getAllContentText();
+        } else {
+            query_text = this.getSelectedText();
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/sutta_menu_action/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    window_id: WINDOW_ID,
+                    action: action,
+                    text: query_text,
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+            }
+
+            log_info(`Action '${action}' completed`);
+        } catch (error) {
+            log_error(`Action '${action}' error:` + error);
+        }
+
+        this.closeMenu();
+    }
+
+    getSelectedText() {
+        if (window.getSelection) {
+            return window.getSelection().toString();
+        } else if (document.selection && document.selection.type !== "Control") {
+            return document.selection.createRange().text;
+        }
+        return '';
+    }
+
+    getAllContentText() {
+        const content_div = document.getElementById('ssp_content');
+        if (!content_div) {
+            console.error('Element with id "ssp_content" not found');
+            return null;
+        }
+        // .textContent gets all text content, including text from hidden elements
+        // .innerText respects styling and won't include text from hidden elements
+        return content_div.innerText || '';
+    }
+}
+
+// TODO: Both Double click and selection event runs the summary search, lookup query is stated from the summary UI.
+// TODO: Allow the user to configure which action should run a lookup query.
+
+document.addEventListener("DOMContentLoaded", function(_event) {
+    new HamburgerMenu();
+    if (IS_MOBILE) {
+        // On mobile in a WebView, there is no double click event, so listen to
+        // selection change (from a long press action).
+        // FIXME: avoid lookup when selection is changed by dragging the boundaries
+        document.addEventListener("selectionchange", function (_event) {
+            summary_selection();
+        });
+
+    } else {
+        // On desktop, double click works to select a word and trigger a lookup.
+        // Double click always triggers a lookup.
+        document.addEventListener("dblclick", function (_event) {
+            summary_selection();
+        });
+    }
+});
+</script>
+    </head>
+    <body class="light">
+      <div id="ssp_main">
+        <div class="transient-messages-wrap">
+          <div id="transient-messages-top" class="transient-messages">
+          </div>
+        </div>
+
+        <!-- Find Bar -->
+        <div class="find-container" id="findContainer">
+          <!-- Search Icon Button (always visible) -->
+          <button class="find-search-button" id="findSearchButton">
+            <img src="{api_url}/assets/icons/32x32/fa_magnifying-glass-solid.png" alt="Search" class="search-icon">
+          </button>
+
+          <!-- Find Bar (hidden by default, slides out from search button) -->
+          <div class="find-bar" id="findBar">
+            <!-- Search Input -->
+            <input type="text" class="find-input" id="findInput" placeholder="Find in page..." autocomplete="off" spellcheck="false">
+
+            <!-- Match Counter -->
+            <div class="find-counter" id="findCounter">0/0</div>
+
+            <!-- Navigation Buttons -->
+            <button class="find-nav-button find-prev-button" id="findPrevButton" title="Previous match (Shift+Enter)">
+              <span class="nav-arrow">&lt;</span>
+            </button>
+
+            <button class="find-nav-button find-next-button" id="findNextButton" title="Next match (Enter)">
+              <span class="nav-arrow">&gt;</span>
+            </button>
+
+            <!-- Search Options -->
+            <div class="find-options">
+              <label class="find-option">
+                <input type="checkbox" id="findAccentFold" checked>
+                <span class="option-label">ā</span>
+              </label>
+
+              <label class="find-option">
+                <input type="checkbox" id="findCaseSensitive">
+                <span class="option-label">Aa</span>
+              </label>
+            </div>
+
+            <!-- Error Message Area -->
+            <div class="find-error" id="findError"></div>
+          </div>
+        </div>
+
+
+        <!-- Menu Button -->
+        <button class="menu-button" id="menuButton">
+          <div class="hamburger-line"></div>
+          <div class="hamburger-line"></div>
+          <div class="hamburger-line"></div>
+        </button>
+
+        <!-- Menu Overlay -->
+        <div class="menu-overlay" id="menuOverlay"></div>
+
+        <!-- Menu Dropdown -->
+        <div class="menu-dropdown" id="menuDropdown">
+          <!-- Copy Group -->
+          <div class="menu-group">
+            <div class="group-header" data-group="copy">
+              Copy
+              <span class="group-arrow">▶</span>
+            </div>
+            <div class="group-items" id="copy-items">
+              <div class="menu-item" data-action="copy-selection">Copy Selection</div>
+              <div class="menu-item" data-action="copy-link-sutta">Copy Link to Sutta and Selection</div>
+              <div class="menu-item" data-action="copy-sutta-url">Copy Sutta URL</div>
+            </div>
+          </div>
+
+          <!-- Dictionary Group -->
+          <div class="menu-group">
+            <div class="group-header" data-group="dictionary">
+              Dictionary
+              <span class="group-arrow">▶</span>
+            </div>
+            <div class="group-items" id="dictionary-items">
+              <div class="menu-item" data-action="gloss-selection">Gloss Selection</div>
+              <div class="menu-item" data-action="lookup-selection">Lookup Selection</div>
+            </div>
+          </div>
+
+          <!-- Prompts Group -->
+          <div class="menu-group">
+            <div class="group-header" data-group="prompts">
+              Prompts
+              <span class="group-arrow">▶</span>
+            </div>
+            <div class="group-items" id="prompts-items">
+              <div class="menu-item" data-action="summarize-sutta">Summarize the current sutta</div>
+              <div class="menu-item" data-action="translate-selection">Translate the selection</div>
+              <div class="menu-item" data-action="analyse-selection">Analyse the selection</div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="ssp_content">
+          <div class="dhammatalks_org">
+            <div id="DN22">
+              <h1>The Great Establishing of Mindfulness Discourse<br/>
+                Mahā Satipaṭṭhāna Sutta  (DN 22)</h1>
+              <h2 class="intro" id="toc_1">Introduction</h2>
+              <p><em>Satipaṭṭhāna—the establishing</em> (upaṭṭhāna) <em>of mindfulness</em> (sati)<em>—is a meditative technique for training the mind to keep mindfulness firmly established in a particular frame of reference in all its activities. The term</em> sati <em>is related to the verb</em> sarati, <em>to remember or to keep in mind. It is sometimes translated as non-reactive awareness, free from agendas, simply present with whatever arises, but the formula for satipaṭṭhāna doesn’t support that translation. Non-reactive awareness is actually an aspect of equanimity, one of the mental qualities fostered in the course of satipaṭṭhāna. The activity of satipaṭṭhāna, however, definitely has a motivating agenda: the desire for awakening, which is classed not as a cause of suffering, but as part of the path to its ending (see <a href="ssp://suttas/sn51.15/en/thanissaro">SN 51:15</a>). The role of mindfulness is to keep the mind properly focused in frames of reference that will give it guidance in what present events to develop, and which ones to abandon, so as to keep it on the path. To make an analogy, awakening is like a mountain on the horizon, the destination to which you are driving a car. Mindfulness is what remembers to keep attention focused on the road to the mountain, rather than letting it stay focused on glimpses of the mountain or get distracted by other paths leading away from the road.</em></p>
+              <p><em>Satipaṭṭhāna plays a role in many formulations of the path to awakening. In the noble eightfold path, it is the seventh factor, following on right effort and leading to right concentration. In the five strengths and five faculties, it is the third factor, following on persistence and leading to concentration. In the seven factors for awakening, it is the first factor, providing a foundation for the remaining six factors: analysis of qualities, persistence, rapture, calm, concentration, and equanimity.</em></p>
+              <p><em>The following sutta contains the longest treatment of satipaṭṭhāna found in the Canon. However, despite its length, its treatment of the topic is far from complete. This partly has to do with the nature of the topic itself. As the Buddha states in MN 12:</em></p>
+              <div class="block">
+                <p>“Sāriputta, suppose that I had four disciples with a 100-year life span, living for 100 years, and endowed with excellent mindfulness, retention, recall, &amp; keenness of discernment. Just as an archer with a good bow—trained, dexterous, &amp; practiced—could easily shoot a light arrow across the shadow of a palmyra tree, they—endowed with that great an extent of mindfulness, that great an extent of retention, that great an extent of recall, &amp; that keenness of discernment—would ask me one question after another on the four establishings of mindfulness. And I, asked again &amp; again, would answer. Answered, they would remember what I had answered, and they wouldn’t counter-question me about it a second time more. Aside from eating, drinking, chewing, &amp; savoring, aside from urinating &amp; defecating, aside from relieving sleepiness &amp; weariness, there would be no ending of the Tathāgata’s Dhamma teaching, there would be no ending of the Tathāgata’s phrasing of Dhamma statements, there would be no ending of the Tathāgata’s quick-wittedness (in answering) questions; but those four disciples of mine, with their 100-year life span, living for 100 years, would die with the passing of 100 years.”</p>
+              </div>
+              <p class="stars">* * *</p>
+              <p>I have heard that on one occasion the Blessed One was staying among the Kurus. Now there is a town of the Kurus called Kammāsadhamma. There the Blessed One addressed the monks, “Monks.”</p>
+              <p>“Lord,” the monks responded to him.</p>
+              <p>The Blessed One said: “This is the direct path<span class="fn"><a href="#dn22note01">1</a></span><!--end fn cite--> for the purification of beings, for the overcoming of sorrow &amp; lamentation, for the disappearance of pain &amp; distress, for the attainment of the right method, &amp; for the realization of unbinding—in other words, the four establishings of mindfulness. Which four?</p>
+              <p>“There is the case where a monk remains focused on the body in &amp; of itself—ardent, alert, &amp; mindful—subduing greed &amp; distress with reference to the world. He remains focused on feelings… mind… mental qualities in &amp; of themselves—ardent,<span class="fn"><a href="#dn22note02">2</a></span><!--end fn cite--> alert,<span class="fn"><a href="#dn22note03">3</a></span><!--end fn cite--> &amp; mindful<span class="fn"><a href="#dn22note04">4</a></span><!--end fn cite-->—subduing greed &amp; distress with reference to the world.<span class="fn"><a href="#dn22note05">5</a></span><!--end fn cite--></p>
+              <h2 id="toc_2">A. Body</h2>
+              <p>“And how does a monk remain focused on the body in &amp; of itself?</p>
+              <p>[1] “There is the case where a monk—having gone to the wilderness, to the shade of a tree, or to an empty building—sits down folding his legs crosswise, holding his body erect and establishing mindfulness to the fore.<span class="fn"><a href="#dn22note06">6</a></span><!--end fn cite--> Always mindful, he breathes in; mindful he breathes out.</p>
+              <p>“Breathing in long, he discerns, ‘I am breathing in long’; or breathing out long, he discerns, ‘I am breathing out long.’ Or breathing in short, he discerns, ‘I am breathing in short’; or breathing out short, he discerns, ‘I am breathing out short.’ He trains himself, ‘I will breathe in sensitive to the entire body’;<span class="fn"><a href="#dn22note07">7</a></span><!--end fn cite--> he trains himself, ‘I will breathe out sensitive to the entire body.’ He trains himself, ‘I will breathe in calming bodily fabrication’;<span class="fn"><a href="#dn22note08">8</a></span><!--end fn cite--> he trains himself, ‘I will breathe out calming bodily fabrication.’ Just as a dexterous turner or his apprentice, when making a long turn, discerns, ‘I am making a long turn,’ or when making a short turn discerns, ‘I am making a short turn’; in the same way the monk, when breathing in long, discerns, ‘I am breathing in long’; or breathing out long, he discerns, ‘I am breathing out long.’ … He trains himself, ‘I will breathe in calming bodily fabrication’; he trains himself, ‘I will breathe out calming bodily fabrication.’</p>
+              <p>“In this way he remains focused internally on the body in &amp; of itself, or externally on the body in &amp; of itself, or both internally &amp; externally on the body in &amp; of itself. Or he remains focused on the phenomenon of origination with regard to the body, on the phenomenon of passing away with regard to the body, or on the phenomenon of origination &amp; passing away with regard to the body. Or his mindfulness that ‘There is a body’ is maintained to the extent of knowledge &amp; remembrance. And he remains independent, unsustained by [not clinging to] anything in the world. This is how a monk remains focused on the body in &amp; of itself.</p>
+            </div><!--end DN#-->
+          </div>
+        </div>
+
+      </div><!-- end #ssp_main -->
+
+      <script src="http://localhost:4848/assets/js/simsapa.min.js"></script>
+
+    </body>
+</html>

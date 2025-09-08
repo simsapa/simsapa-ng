@@ -16,11 +16,6 @@ ApplicationWindow {
     visible: true
     color: palette.window
 
-    // TODO: implment find_bar
-    // onCurrent_web_viewChanged: {
-    //     find_bar.reset();
-    // }
-
     property string window_id
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
@@ -520,6 +515,55 @@ ${query_text}`;
                         onActivated: select_next_result.trigger()
                     }
                     onTriggered: fulltext_results.select_next_result()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_find_in_page
+                    text: "Find in Page..."
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+F"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_find_in_page.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        html_view.active_focus();
+                        html_view.show_find_bar();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_find_next_in_page
+                    text: "Find Next in Page..."
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+N"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_find_next_in_page.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        html_view.find_next();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_find_previous_in_page
+                    text: "Find Previous in Page..."
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+P"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_find_previous_in_page.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        html_view.find_previous();
+                    }
                 }
             }
         }
