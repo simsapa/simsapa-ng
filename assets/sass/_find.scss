@@ -2,7 +2,7 @@
 // Matches the existing menu design patterns
 
 $find_button_size: 40px;
-$find_bar_height: 36px;
+$find_bar_height: 40px;
 $edge_margin: 10px;
 $border_radius: 2px;
 $font_size: 13px;
@@ -59,12 +59,13 @@ $animation_duration: 1s;
     }
 }
 
-// Find Bar - slides out from search button
+// Find Bar - fades in/out with simple opacity transition
 .find-bar {
     position: fixed;
     top: $edge_margin;
     right: ($edge_margin + $find_button_size + $find_button_size + 18px);  // Start from search button position
     height: $find_bar_height;
+    width: 380px;
     background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
     border: 1px solid var(--menu-border);
     border-radius: $border_radius;
@@ -78,18 +79,13 @@ $animation_duration: 1s;
     padding: 6px 12px;
     
     // Hidden by default
-    width: 0;
     opacity: 0;
     visibility: hidden;
-    overflow: hidden;
-    transform: translateX(10px);
-    transition: all $animation_duration ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 
     &.show {
-        width: 380px;
         opacity: 1;
         visibility: visible;
-        transform: translateX(0);
     }
 }
 
@@ -242,13 +238,11 @@ body.dark .find-error {
 .ssp-find-highlight {
     background-color: #ffff00 !important;
     color: inherit !important;
-    border-radius: 2px;
-    padding: 1px 2px;
+    padding: 1px 0px;
 }
 
 .ssp-find-highlight.current {
     background-color: #ff9632 !important;
-    box-shadow: 0 0 3px rgba(255, 150, 50, 0.5);
 }
 
 // Mobile Responsiveness

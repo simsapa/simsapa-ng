@@ -44,12 +44,12 @@
   - [x] 3.4 Add show/hide find bar functionality
   - [x] 3.5 Update `src-ts/simsapa.ts` to import and expose find module in `document.SSP.find`
 
-- [ ] 4.0 Add Search Functionality and DOM Integration
-  - [ ] 4.1 Implement search within `#ssp_content` element only
-  - [ ] 4.2 Add match highlighting with background colors (#ffff00 for matches, #ff9632 for current)
-  - [ ] 4.3 Implement match counter display ("current/total" format)
-  - [ ] 4.4 Add scroll-to-match functionality for current match
-  - [ ] 4.5 Handle "No matches found" state and display appropriate message
+- [x] 4.0 Add Search Functionality and DOM Integration
+  - [x] 4.1 Implement search within `#ssp_content` element only
+  - [x] 4.2 Add match highlighting with background colors (#ffff00 for matches, #ff9632 for current)
+  - [x] 4.3 Implement match counter display ("current/total" format)
+  - [x] 4.4 Add scroll-to-match functionality for current match
+  - [x] 4.5 Handle "No matches found" state and display appropriate message
 
 - [ ] 5.0 Implement Navigation and Match Management
   - [ ] 5.1 Add next match navigation with wrap-around behavior

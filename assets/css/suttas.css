@@ -885,7 +885,8 @@ body.dark .menu-overlay.show {
   position: fixed;
   top: 10px;
   right: 108px;
-  height: 36px;
+  height: 40px;
+  width: 380px;
   background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
   border: 1px solid var(--menu-border);
   border-radius: 2px;
@@ -895,19 +896,14 @@ body.dark .menu-overlay.show {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
-  width: 0;
   opacity: 0;
   visibility: hidden;
-  overflow: hidden;
-  transform: translateX(10px);
-  transition: all 1s ease;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .find-bar.show {
-  width: 380px;
   opacity: 1;
   visibility: visible;
-  transform: translateX(0);
 }
 
 .find-input {
@@ -1050,13 +1046,11 @@ body.dark .find-error {
 .ssp-find-highlight {
   background-color: #ffff00 !important;
   color: inherit !important;
-  border-radius: 2px;
-  padding: 1px 2px;
+  padding: 1px 0px;
 }
 
 .ssp-find-highlight.current {
   background-color: #ff9632 !important;
-  box-shadow: 0 0 3px rgba(255, 150, 50, 0.5);
 }
 
 @media (max-width: 768px) {

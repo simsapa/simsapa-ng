@@ -259,7 +259,7 @@ class FindManager {
         this.clearHighlights();
         this.clearError();
 
-        if (!term || !this.contentArea) {
+        if (!term || term.length < 2 || !this.contentArea) {
             return;
         }
 
@@ -305,11 +305,15 @@ class FindManager {
         const highlights = this.contentArea.querySelectorAll('.ssp-find-highlight');
         this.updateCounter(highlights.length > 0 ? 1 : 0, highlights.length);
 
-        // Set first match as current
-        if (highlights.length > 0) {
-            (highlights[0] as HTMLElement).classList.add('current');
-            this.scrollToElement(highlights[0] as HTMLElement);
+        // Handle no matches case
+        if (highlights.length === 0) {
+            this.showError('No matches found');
+            return recover as Recover;
         }
+
+        // Set first match as current
+        (highlights[0] as HTMLElement).classList.add('current');
+        this.scrollToElement(highlights[0] as HTMLElement);
 
         return recover as Recover;
     }
