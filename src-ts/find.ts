@@ -394,14 +394,53 @@ class FindManager {
      * Navigate to next match
      */
     nextMatch(): void {
-        // To be implemented
+        if (!this.contentArea || this.totalMatches === 0) return;
+
+        const highlights = this.contentArea.querySelectorAll('.ssp-find-highlight');
+        if (highlights.length === 0) return;
+
+        // Remove current class from all highlights
+        highlights.forEach(h => h.classList.remove('current'));
+
+        // Calculate next index with wrap-around
+        let nextIndex = this.currentMatchIndex % this.totalMatches;
+        
+        // Add current class to next match
+        (highlights[nextIndex] as HTMLElement).classList.add('current');
+        
+        // Update counter (1-based display)
+        this.updateCounter(nextIndex + 1, this.totalMatches);
+        
+        // Scroll to the new current match
+        this.scrollToElement(highlights[nextIndex] as HTMLElement);
     }
 
     /**
      * Navigate to previous match
      */
     previousMatch(): void {
-        // To be implemented
+        if (!this.contentArea || this.totalMatches === 0) return;
+
+        const highlights = this.contentArea.querySelectorAll('.ssp-find-highlight');
+        if (highlights.length === 0) return;
+
+        // Remove current class from all highlights
+        highlights.forEach(h => h.classList.remove('current'));
+
+        // Calculate previous index with wrap-around
+        let prevIndex = this.currentMatchIndex - 2; // -2 because currentMatchIndex is 1-based
+        if (prevIndex < 0) {
+            prevIndex = this.totalMatches - 1; // Wrap to last match
+        }
+        
+        // Add current class to previous match
+        (highlights[prevIndex] as HTMLElement).classList.add('current');
+        
+        // Update counter (1-based display)
+        this.updateCounter(prevIndex + 1, this.totalMatches);
+        
+        // Scroll to the new current match
+        this.scrollToElement(highlights[prevIndex] as HTMLElement);
     }
 
     /**

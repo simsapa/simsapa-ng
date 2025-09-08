@@ -51,12 +51,12 @@
   - [x] 4.4 Add scroll-to-match functionality for current match
   - [x] 4.5 Handle "No matches found" state and display appropriate message
 
-- [ ] 5.0 Implement Navigation and Match Management
-  - [ ] 5.1 Add next match navigation with wrap-around behavior
-  - [ ] 5.2 Add previous match navigation with wrap-around behavior
-  - [ ] 5.3 Update current match highlighting when navigating
-  - [ ] 5.4 Ensure current match is scrolled into view on navigation
-  - [ ] 5.5 Handle edge cases (single match, no matches, navigation at boundaries)
+- [x] 5.0 Implement Navigation and Match Management
+  - [x] 5.1 Add next match navigation with wrap-around behavior
+  - [x] 5.2 Add previous match navigation with wrap-around behavior
+  - [x] 5.3 Update current match highlighting when navigating
+  - [x] 5.4 Ensure current match is scrolled into view on navigation
+  - [x] 5.5 Handle edge cases (single match, no matches, navigation at boundaries)
 
 - [ ] 6.0 Add Keyboard Shortcuts and Event Handling
   - [ ] 6.1 Implement Ctrl+F to open find bar and focus search input
