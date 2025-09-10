@@ -30,9 +30,9 @@ Based on analysis of the PRD and existing codebase:
 
 - [ ] 1.0 Update HTML Output Format to Match SuttaCentral Structure
   - [x] 1.1 Update `bilara_content_json_to_html()` to generate SuttaCentral span structure instead of `data-tmpl-key` format
-  - [ ] 1.2 Modify segment HTML generation to use nested spans: `<span class="segment" id="segment_id"><span class="root" lang="pli" translate="no"><span class="text" lang="la">content</span></span></span>`
-  - [ ] 1.3 Add proper language attributes (`lang="pli"` for root spans, `lang="la"` for text spans)
-  - [ ] 1.4 Update existing tests to validate new HTML format structure
+  - [x] 1.2 Modify segment HTML generation to use nested spans: `<span class="segment" id="segment_id"><span class="root" lang="pli" translate="no"><span class="text" lang="la">content</span></span></span>`
+  - [x] 1.3 Add proper language attributes (`lang="pli"` for root spans, `lang="la"` for text spans)
+  - [x] 1.4 Update existing tests to validate new HTML format structure
   - [ ] 1.5 Create specific test for sn56.11 HTML format validation against reference file
 
 - [ ] 2.0 Fix Segment Order Preservation in BTreeMap Processing  

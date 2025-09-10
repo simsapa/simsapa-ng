@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html class="light">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
@@ -86,6 +86,10 @@ html, body {
   height: 100%;
   color: #1a1a1a;
   background-color: #FAE6B2;
+}
+html.dark, body.dark {
+  color: #E0E3E9;
+  background-color: #23272E;
 }
 
 pre {
@@ -204,6 +208,9 @@ div.btn a, span.btn a {
   left: 0;
   padding: 0.1em;
   background-color: #FEF8E8;
+}
+#window-title-bar.dark {
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
 }
 #window-title-bar .flex-container {
   display: flex;
@@ -527,9 +534,544 @@ h4 {
   font-size: 1rem;
 }
 
+.transient-messages-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.transient-messages {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  padding: 1em 0;
+  text-align: center;
+}
+
+.message {
+  text-align: center;
+}
+.message .msg-content {
+  display: inline-block;
+  padding: 0.25em 0.7em;
+  margin: 0 auto 0.25em auto;
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
+  border-radius: 7px;
+}
+
+:root {
+  --bg-primary: #f5f5f5;
+  --bg-content: white;
+  --text-primary: $black_90;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --btn-bg-start: #fefefe;
+  --btn-bg-end: #ededed;
+  --btn-bg-hover-start: #fefefe;
+  --btn-bg-hover-end: #fefefe;
+  --btn-bg-active-start: #d0d0d0;
+  --btn-bg-active-end: #f0f0f0;
+  --btn-border: #ababab;
+  --btn-border-hover: #909090;
+  --btn-border-active: #808080;
+  --btn-icon: #333;
+  --menu-bg-start: #f8f8f8;
+  --menu-bg-end: #eeeeee;
+  --menu-border: #a0a0a0;
+  --menu-separator: #c0c0c0;
+  --group-bg-start: #f0f0f0;
+  --group-bg-end: #e8e8e8;
+  --group-bg-hover-start: #f5f5f5;
+  --group-bg-hover-end: #ededed;
+  --group-bg-active-start: #e8e8e8;
+  --group-bg-active-end: #f0f0f0;
+  --group-border: #d0d0d0;
+  --group-arrow: #666;
+  --item-bg-start: #fafafa;
+  --item-bg-end: #f2f2f2;
+  --item-separator: rgba(192, 192, 192, 0.3);
+  --item-bg-hover-start: #e6f3ff;
+  --item-bg-hover-end: #cce7ff;
+  --item-bg-active-start: #cce7ff;
+  --item-bg-active-end: #b3d9ff;
+  --item-border-hover: #0078d4;
+  --item-bullet: #999;
+  --selection-bg: #0078d4;
+  --selection-shadow: rgba(0, 120, 212, 0.2);
+  --text-shadow-light: rgba(255, 255, 255, 0.8);
+  --text-shadow-dark: rgba(0, 0, 0, 0.5);
+}
+
+body.dark {
+  --bg-primary: #2b2b2b;
+  --bg-content: #3c3c3c;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #999999;
+  --btn-bg-start: #464646;
+  --btn-bg-end: #3c3c3c;
+  --btn-bg-hover-start: #464646;
+  --btn-bg-hover-end: #464646;
+  --btn-bg-active-start: #363636;
+  --btn-bg-active-end: #4a4a4a;
+  --btn-border: #5d5d5d;
+  --btn-border-hover: #707070;
+  --btn-border-active: #505050;
+  --btn-icon: #ffffff;
+  --menu-bg-start: #404040;
+  --menu-bg-end: #363636;
+  --menu-border: #606060;
+  --menu-separator: #505050;
+  --group-bg-start: #464646;
+  --group-bg-end: #3c3c3c;
+  --group-bg-hover-start: #4c4c4c;
+  --group-bg-hover-end: #424242;
+  --group-bg-active-start: #3c3c3c;
+  --group-bg-active-end: #464646;
+  --group-border: #555555;
+  --group-arrow: #cccccc;
+  --item-bg-start: #424242;
+  --item-bg-end: #383838;
+  --item-separator: rgba(96, 96, 96, 0.3);
+  --item-bg-hover-start: #1e3a5f;
+  --item-bg-hover-end: #1a3352;
+  --item-bg-active-start: #1a3352;
+  --item-bg-active-end: #162d45;
+  --item-border-hover: #4a9eff;
+  --item-bullet: #888888;
+  --selection-bg: #4a9eff;
+  --selection-shadow: rgba(74, 158, 255, 0.2);
+  --text-shadow-light: rgba(0, 0, 0, 0.5);
+  --text-shadow-dark: rgba(0, 0, 0, 0.8);
+}
+
+.menu-button *, .menu-dropdown * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.menu-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.menu-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.menu-button:active, .menu-button.active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.menu-button .hamburger-line {
+  width: 23px;
+  height: 2px;
+  background: var(--btn-icon);
+  transition: all 0.2s ease;
+  border-radius: 1px;
+}
+
+.menu-button.active .hamburger-line:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.menu-button.active .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+
+.menu-button.active .hamburger-line:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
+}
+
+.menu-dropdown {
+  position: fixed;
+  top: 60px;
+  right: 10px;
+  width: 280px;
+  background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+  border: 1px solid var(--menu-border);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--text-shadow-light);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.menu-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-group {
+  border-bottom: 1px solid var(--menu-separator);
+  background: transparent;
+}
+
+.menu-group:last-child {
+  border-bottom: none;
+}
+
+.menu-group .group-header {
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+  background: linear-gradient(to bottom, var(--group-bg-start) 0%, var(--group-bg-end) 100%);
+  border-bottom: 1px solid var(--group-border);
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.menu-group .group-header:hover {
+  background: linear-gradient(to bottom, var(--group-bg-hover-start) 0%, var(--group-bg-hover-end) 100%);
+  color: var(--text-primary);
+}
+
+.menu-group .group-header:active {
+  background: linear-gradient(to bottom, var(--group-bg-active-start) 0%, var(--group-bg-active-end) 100%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.menu-group .group-header .group-arrow {
+  font-size: 13px;
+  color: var(--group-arrow);
+  transition: transform 0.2s ease;
+}
+
+.menu-group .group-header.expanded .group-arrow {
+  transform: rotate(90deg);
+}
+
+.group-items {
+  overflow: hidden;
+  transition: all 0.2s ease;
+  opacity: 0;
+  max-height: 0;
+  background: linear-gradient(to bottom, var(--item-bg-start) 0%, var(--item-bg-end) 100%);
+}
+
+.group-items.show {
+  opacity: 1;
+  max-height: 200px;
+}
+
+.group-items .menu-item {
+  padding: 6px 16px 6px 32px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  border-bottom: 1px solid var(--item-separator);
+  position: relative;
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.group-items .menu-item:last-child {
+  border-bottom: none;
+}
+
+.group-items .menu-item:hover {
+  background: linear-gradient(to bottom, var(--item-bg-hover-start) 0%, var(--item-bg-hover-end) 100%);
+  color: var(--text-primary);
+  border-left: 2px solid var(--item-border-hover);
+}
+
+.group-items .menu-item:active {
+  background: linear-gradient(to bottom, var(--item-bg-active-start) 0%, var(--item-bg-active-end) 100%);
+  box-shadow: inset 0 1px 2px var(--selection-shadow);
+}
+
+.group-items .menu-item::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--item-bullet);
+  border-radius: 50%;
+}
+
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 998;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.menu-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+body.dark .menu-overlay.show {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.find-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.find-search-button {
+  position: fixed;
+  top: 10px;
+  right: 60px;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.find-search-button .search-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.8;
+}
+
+.find-search-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.find-search-button:active, .find-search-button.active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.find-bar {
+  position: fixed;
+  top: 10px;
+  right: 108px;
+  height: 40px;
+  width: 380px;
+  background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+  border: 1px solid var(--menu-border);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--text-shadow-light);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.find-bar.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.find-input {
+  flex: 1;
+  min-width: 150px;
+  height: 24px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-content);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.find-input:focus {
+  border-color: var(--item-border-hover);
+  box-shadow: 0 0 3px var(--selection-shadow);
+}
+
+.find-input::placeholder {
+  color: var(--text-muted);
+}
+
+.find-counter {
+  min-width: 40px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--item-bg-start);
+  border: 1px solid var(--group-border);
+  border-radius: 2px;
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.find-nav-button {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light);
+}
+
+.find-nav-button .nav-arrow {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--btn-icon);
+  line-height: 1;
+}
+
+.find-nav-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.find-nav-button:active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.find-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.find-nav-button:disabled:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border-color: var(--btn-border);
+}
+
+.find-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.find-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.find-option input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.find-option .option-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+  user-select: none;
+  cursor: pointer;
+}
+
+.find-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+  border-radius: 2px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+}
+
+.find-error.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+body.dark .find-error {
+  background: #3c1e1e;
+  color: #ff6b6b;
+  border-color: #5c2e2e;
+}
+
+.ssp-find-highlight {
+  background-color: #ffff00 !important;
+  color: inherit !important;
+  padding: 1px 0px;
+}
+
+.ssp-find-highlight.current {
+  background-color: #ff9632 !important;
+}
+
+@media (max-width: 768px) {
+  .find-bar.show {
+    width: calc(100vw - 20px - 40px - 8px);
+    min-width: 280px;
+  }
+  .find-input {
+    min-width: 100px;
+  }
+}
 .lang-san {
   font-family: "DejaVu Serif", "Georgia", serif;
 }
+
 .lang-san h1, .lang-san h2, .lang-san h3, .lang-san h4, .lang-san h5, .lang-san h6 {
   font-family: "DejaVu Serif", "Georgia", serif;
 }
@@ -550,7 +1092,43 @@ html { font-size: 22px; } body { max-width: 75ex; }</style>
         <script>
          const API_URL = 'http://localhost:4848';
         </script>
-        <script> const SHOW_QUOTE = null;function lookup_selection() {
+        <script> const SHOW_QUOTE = null; const IS_MOBILE = false;const SUTTA_UID = 'sn1.61/en/sujato'; const SHOW_BOOKMARKS = true;async function send_log(msg, log_level) {
+    const response = await fetch(`${API_URL}/logger/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            log_level: log_level,
+            msg: msg,
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+    }
+}
+
+async function log_info(msg) {
+    console.log(msg);
+    send_log(msg, 'info');
+}
+
+async function log_error(msg) {
+    console.error(msg);
+    send_log(msg, 'error');
+}
+
+function selection_text() {
+    const selection = document.getSelection();
+    let text = "";
+    if (selection) {
+        text = selection.toString().trim();
+    }
+    return text;
+}
+
+function lookup_selection() {
     const selected_text = window.getSelection().toString().trim();
 
     if (!selected_text) {
@@ -561,23 +1139,283 @@ html { font-size: 22px; } body { max-width: 75ex; }</style>
     fetch(`${API_URL}/lookup_window_query/${encodeURIComponent(selected_text)}`);
 }
 
-function page_dblclick(_event) {
-    lookup_selection();
+function summary_selection() {
+    const text = selection_text();
+    if (text !== "") {
+        fetch(`${API_URL}/summary_query/${WINDOW_ID}/${encodeURIComponent(text)}`);
+    }
 }
 
+class HamburgerMenu {
+    constructor() {
+        this.menuButton = document.getElementById('menuButton');
+        this.menuDropdown = document.getElementById('menuDropdown');
+        this.menuOverlay = document.getElementById('menuOverlay');
+        this.groupHeaders = document.querySelectorAll('.group-header');
+        this.menuItems = document.querySelectorAll('.menu-item');
+        this.isOpen = false;
+
+        this.init();
+    }
+
+    init() {
+        // Menu button click
+        this.menuButton.addEventListener('click', () => this.toggleMenu());
+
+        // Overlay click to close menu
+        this.menuOverlay.addEventListener('click', () => this.closeMenu());
+
+        // Group header clicks
+        this.groupHeaders.forEach(header => {
+            header.addEventListener('click', (e) => this.toggleGroup(e));
+            // Prevent text selection clearing
+            header.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Menu item clicks
+        this.menuItems.forEach(item => {
+            item.addEventListener('click', (e) => this.handleMenuItemClick(e));
+            // Prevent text selection clearing
+            item.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.closeMenu();
+            }
+        });
+    }
+
+    toggleMenu() {
+        if (this.isOpen) {
+            this.closeMenu();
+        } else {
+            this.openMenu();
+        }
+    }
+
+    openMenu() {
+        this.isOpen = true;
+        this.menuButton.classList.add('active');
+        this.menuDropdown.classList.add('show');
+        this.menuOverlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeMenu() {
+        this.isOpen = false;
+        this.menuButton.classList.remove('active');
+        this.menuDropdown.classList.remove('show');
+        this.menuOverlay.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    toggleGroup(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const header = e.currentTarget;
+        const groupName = header.dataset.group;
+        const groupItems = document.getElementById(`${groupName}-items`);
+        const isExpanded = header.classList.contains('expanded');
+
+        if (isExpanded) {
+            // Collapse group
+            header.classList.remove('expanded');
+            groupItems.classList.remove('show');
+        } else {
+            // Expand group
+            header.classList.add('expanded');
+            groupItems.classList.add('show');
+        }
+    }
+
+    async handleMenuItemClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = e.currentTarget.dataset.action;
+        let query_text = "";
+        if (action === "summarize-sutta") {
+            query_text = this.getAllContentText();
+        } else {
+            query_text = this.getSelectedText();
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/sutta_menu_action/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    window_id: WINDOW_ID,
+                    action: action,
+                    text: query_text,
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+            }
+
+            log_info(`Action '${action}' completed`);
+        } catch (error) {
+            log_error(`Action '${action}' error:` + error);
+        }
+
+        this.closeMenu();
+    }
+
+    getSelectedText() {
+        if (window.getSelection) {
+            return window.getSelection().toString();
+        } else if (document.selection && document.selection.type !== "Control") {
+            return document.selection.createRange().text;
+        }
+        return '';
+    }
+
+    getAllContentText() {
+        const content_div = document.getElementById('ssp_content');
+        if (!content_div) {
+            console.error('Element with id "ssp_content" not found');
+            return null;
+        }
+        // .textContent gets all text content, including text from hidden elements
+        // .innerText respects styling and won't include text from hidden elements
+        return content_div.innerText || '';
+    }
+}
+
+// TODO: Both Double click and selection event runs the summary search, lookup query is stated from the summary UI.
+// TODO: Allow the user to configure which action should run a lookup query.
+
 document.addEventListener("DOMContentLoaded", function(_event) {
-    let body = document.querySelector("body");
-    if (body) {
-        body.addEventListener("dblclick", page_dblclick);
+    new HamburgerMenu();
+    if (IS_MOBILE) {
+        // On mobile in a WebView, there is no double click event, so listen to
+        // selection change (from a long press action).
+        // FIXME: avoid lookup when selection is changed by dragging the boundaries
+        document.addEventListener("selectionchange", function (_event) {
+            summary_selection();
+        });
+
+    } else {
+        // On desktop, double click works to select a word and trigger a lookup.
+        // Double click always triggers a lookup.
+        document.addEventListener("dblclick", function (_event) {
+            summary_selection();
+        });
     }
 });
 </script>
     </head>
-    <body>
+    <body class="light">
         <div id="ssp_main">
-            <p><button onclick="page_dblclick()">Lookup selection</button></p>
+            <div class="transient-messages-wrap">
+                <div id="transient-messages-top" class="transient-messages">
+                </div>
+            </div>
 
-            <div class='suttacentral bilara-text'><article id='sn1.61'><header><ul><li class='division'><span class='segment'>
+            <!-- Find Bar -->
+<div class="find-container" id="findContainer">
+    <!-- Search Icon Button (always visible) -->
+    <button class="find-search-button" id="findSearchButton">
+        <img src="http://localhost:4848/assets/icons/32x32/bx_search_alt_2.png" alt="Search" class="search-icon">
+    </button>
+    
+    <!-- Find Bar (hidden by default, slides out from search button) -->
+    <div class="find-bar" id="findBar">
+        <!-- Search Input -->
+        <input type="text" class="find-input" id="findInput" placeholder="Find in page..." autocomplete="off" spellcheck="false">
+        
+        <!-- Match Counter -->
+        <div class="find-counter" id="findCounter">0/0</div>
+        
+        <!-- Navigation Buttons -->
+        <button class="find-nav-button find-prev-button" id="findPrevButton" title="Previous match (Shift+Enter)">
+            <span class="nav-arrow">&lt;</span>
+        </button>
+        
+        <button class="find-nav-button find-next-button" id="findNextButton" title="Next match (Enter)">
+            <span class="nav-arrow">&gt;</span>
+        </button>
+        
+        <!-- Search Options -->
+        <div class="find-options">
+            <label class="find-option">
+                <input type="checkbox" id="findAccentFold" checked>
+                <span class="option-label">ā</span>
+            </label>
+            
+            <label class="find-option">
+                <input type="checkbox" id="findCaseSensitive">
+                <span class="option-label">Aa</span>
+            </label>
+        </div>
+        
+        <!-- Error Message Area -->
+        <div class="find-error" id="findError"></div>
+    </div>
+</div>
+
+
+            <!-- Menu Button -->
+<button class="menu-button" id="menuButton">
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+    <div class="hamburger-line"></div>
+</button>
+
+<!-- Menu Overlay -->
+<div class="menu-overlay" id="menuOverlay"></div>
+
+<!-- Menu Dropdown -->
+<div class="menu-dropdown" id="menuDropdown">
+    <!-- Copy Group -->
+    <div class="menu-group">
+        <div class="group-header" data-group="copy">
+            Copy
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items" id="copy-items">
+            <div class="menu-item" data-action="copy-selection">Copy Selection</div>
+            <div class="menu-item" data-action="copy-link-sutta">Copy Link to Sutta and Selection</div>
+            <div class="menu-item" data-action="copy-sutta-url">Copy Sutta URL</div>
+        </div>
+    </div>
+
+    <!-- Dictionary Group -->
+    <div class="menu-group">
+        <div class="group-header" data-group="dictionary">
+            Dictionary
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items" id="dictionary-items">
+            <div class="menu-item" data-action="gloss-selection">Gloss Selection</div>
+            <div class="menu-item" data-action="lookup-selection">Lookup Selection</div>
+        </div>
+    </div>
+
+    <!-- Prompts Group -->
+    <div class="menu-group">
+        <div class="group-header" data-group="prompts">
+            Prompts
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items" id="prompts-items">
+            <div class="menu-item" data-action="summarize-sutta">Summarize the current sutta</div>
+            <div class="menu-item" data-action="translate-selection">Translate the selection</div>
+            <div class="menu-item" data-action="analyse-selection">Analyse the selection</div>
+        </div>
+    </div>
+</div>
+
+
+            <div id="ssp_content">
+                <div class='suttacentral bilara-text'><article id='sn1.61'><header><ul><li class='division'><span class='segment'>
                 <span class='translated'>Linked Discourses 1.61 </span>
                 <span class='pali'>Saṁyutta Nikāya 1.61 </span>
             </span></li>
@@ -597,7 +1435,7 @@ document.addEventListener("DOMContentLoaded", function(_event) {
             </span></h1></header>
 
 <blockquote class='gatha'><p><span class='verse-line'><span class='segment'>
-                <span class='translated'>“What oppresses everything? </span>
+                <span class='translated'>“What overcomes everything? </span>
                 <span class='pali'>“Kiṁsu sabbaṁ addhabhavi, 
                                     <span class='variant-wrap'>
                                         <span class='mark'>⧫</span>
@@ -606,7 +1444,7 @@ document.addEventListener("DOMContentLoaded", function(_event) {
             </span></span>
 
 <span class='verse-line'><span class='segment'>
-                <span class='translated'>What is nothing bigger than? </span>
+                <span class='translated'>What is it that nothing excels? </span>
                 <span class='pali'>kismā bhiyyo na vijjati; </span>
             </span></span>
 
@@ -625,12 +1463,12 @@ document.addEventListener("DOMContentLoaded", function(_event) {
             </span></span></p>
 
 <p><span class='verse-line'><span class='segment'>
-                <span class='translated'>“Name oppresses everything. </span>
+                <span class='translated'>“Name overcomes everything. </span>
                 <span class='pali'>“Nāmaṁ sabbaṁ addhabhavi, </span>
             </span></span>
 
 <span class='verse-line'><span class='segment'>
-                <span class='translated'>Nothing’s bigger than name. </span>
+                <span class='translated'>Nothing excels name. </span>
                 <span class='pali'>nāmā bhiyyo na vijjati; </span>
             </span></span>
 
@@ -643,8 +1481,11 @@ document.addEventListener("DOMContentLoaded", function(_event) {
                 <span class='translated'>that has everything under its sway.” </span>
                 <span class='pali'>sabbeva vasamanvagū”ti. </span>
             </span></span></p></blockquote></article></div>
+            </div>
         </div>
         <script></script>
+
+        <script src="http://localhost:4848/assets/js/simsapa.min.js"></script>
 
         <svg style="display:none;">
     <symbol id="icon-triangle-exclamation-solid" viewBox="0 0 512 512">

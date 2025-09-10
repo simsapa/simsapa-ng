@@ -66,7 +66,7 @@ fn test_pali_only() {
 
     let sutta_uid = "sn56.11/pli/ms".to_string();
     let sutta_filename = format!("{}.html", sutta_uid.replace("/", "_"));
-    let do_write = true;
+    let do_write = false;
 
     let app_data = get_app_data();
     let sutta = app_data.dbm.appdata.get_sutta(&sutta_uid).expect("Can't get sutta from db");
