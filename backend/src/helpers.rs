@@ -724,8 +724,12 @@ pub fn bilara_text_to_segments(
             // Apply template if available
             let final_segment = if let Some(ref tmpl) = tmpl_json {
                 if let Some(template_str) = tmpl.get(&i) {
-                    // Wrap the combined content before inserting into the template
-                    let wrapped_content = format!("<span data-tmpl-key='{}'>{}</span>", i, final_segment_content);
+                    // Wrap the combined content in SuttaCentral format before inserting into the template
+                    let wrapped_content = format!(
+                        "<span class=\"segment\" id=\"{}\"><span class=\"root\" lang=\"pli\" translate=\"no\"><span class=\"text\" lang=\"la\">{}</span></span></span>",
+                        i,
+                        final_segment_content
+                    );
                     template_str.replace("{}", &wrapped_content)
                 } else {
                     // No template for this key

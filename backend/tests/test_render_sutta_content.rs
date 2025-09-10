@@ -19,9 +19,11 @@ fn test_html_for_pali() {
 
     assert!(html.contains(r#"<div class='suttacentral bilara-text'>"#));
 
-    assert!(html.contains(r#"<header><ul><li class='division'><span data-tmpl-key='mn2:0.1'>Majjhima Nikāya 2 </span></li></ul>"#));
+    assert!(html.contains(r#"<header><ul><li class='division'><span class="segment" id="mn2:0.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">Majjhima Nikāya 2 </span></span></span></li></ul>"#));
 
-    assert!(html.contains(r#"<p><span data-tmpl-key='mn2:2.1'>“sabbāsavasaṁvarapariyāyaṁ vo, bhikkhave, desessāmi. </span>"#));
+    assert!(html.contains(r#"<span class="segment" id="mn2:1.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">Evaṁ me sutaṁ—</span></span></span>"#));
+
+    assert!(html.contains(r#"<span class="segment" id="mn2:2.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">“sabbāsavasaṁvarapariyāyaṁ vo, bhikkhave, desessāmi. </span></span></span>"#));
 }
 
 #[test]
