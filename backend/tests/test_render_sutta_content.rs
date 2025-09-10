@@ -57,3 +57,26 @@ fn test_line_by_line_with_variants() {
 
     assert_eq!(html, expected_html);
 }
+
+#[test]
+fn test_pali_only() {
+    h::app_data_setup();
+
+    let sutta_uid = "sn56.11/pli/ms".to_string();
+    let sutta_filename = format!("{}.html", sutta_uid.replace("/", "_"));
+    let do_write = true;
+
+    let app_data = get_app_data();
+    let sutta = app_data.dbm.appdata.get_sutta(&sutta_uid).expect("Can't get sutta from db");
+
+    let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+
+    if do_write {
+        fs::write(PathBuf::from(&sutta_filename), html.clone()).expect("Unable to write file!");
+    }
+
+    let expected_html = fs::read_to_string(PathBuf::from(&format!("tests/data/{}", &sutta_filename)))
+        .expect("Failed to read file");
+
+    assert_eq!(html, expected_html);
+}
