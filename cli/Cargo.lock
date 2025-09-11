@@ -557,6 +557,7 @@ checksum = "f2481980430f9f78649238835720ddccc57e52df14ffce1c6f37391d61b563e9"
 dependencies = [
  "equivalent",
  "hashbrown 0.15.5",
+ "serde",
 ]
 
 [[package]]
@@ -1012,6 +1013,7 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "html-escape",
+ "indexmap",
  "lazy_static",
  "libsqlite3-sys",
  "log",

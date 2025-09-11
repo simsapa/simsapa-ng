@@ -1,5 +1,5 @@
 use std::sync::RwLock;
-use std::collections::BTreeMap;
+use indexmap::IndexMap;
 
 use diesel::prelude::*;
 use regex::Regex;
@@ -61,13 +61,13 @@ impl AppData {
         Ok(res)
     }
 
-    /// Converts sutta data into a BTreeMap of segments, potentially including variants, comments, glosses.
-    /// Returns BTreeMap to preserve order.
+    /// Converts sutta data into an IndexMap of segments, potentially including variants, comments, glosses.
+    /// Returns IndexMap to preserve JSON insertion order.
     pub fn sutta_to_segments_json(
         &self,
         sutta: &Sutta,
         use_template: bool,
-    ) -> Result<BTreeMap<String, String>> {
+    ) -> Result<IndexMap<String, String>> {
         use crate::db::appdata_schema::{sutta_variants, sutta_comments, sutta_glosses};
 
         let db_conn = &mut self.dbm.appdata.get_conn().expect("No appdata conn");
@@ -153,9 +153,9 @@ impl AppData {
 
                     let tmpl_str = sutta.content_json_tmpl.as_deref()
                                                           .ok_or_else(|| anyhow!("Sutta {} requires content_json_tmpl for line-by-line view", sutta.uid))?;
-                    // Parse template into BTreeMap as well
-                    let tmpl_json: BTreeMap<String, String> = serde_json::from_str(tmpl_str)
-                        .with_context(|| format!("Failed to parse template JSON into BTreeMap for line-by-line view (Sutta: {})", sutta.uid))?;
+                    // Parse template into IndexMap as well
+                    let tmpl_json: IndexMap<String, String> = serde_json::from_str(tmpl_str)
+                        .with_context(|| format!("Failed to parse template JSON into IndexMap for line-by-line view (Sutta: {})", sutta.uid))?;
 
                     bilara_line_by_line_html(&translated_segments, &pali_segments, &tmpl_json)?
                 } else {
@@ -268,7 +268,7 @@ impl AppData {
     pub fn set_api_keys(&self, api_keys_json: &str) {
         use crate::db::appdata_schema::app_settings;
 
-        let api_keys_map: BTreeMap<String, String> = match serde_json::from_str(api_keys_json) {
+        let api_keys_map: IndexMap<String, String> = match serde_json::from_str(api_keys_json) {
             Ok(keys) => keys,
             Err(e) => {
                 error(&format!("Failed to parse API keys JSON: {}", e));
@@ -302,7 +302,7 @@ impl AppData {
     pub fn set_system_prompts_json(&self, prompts_json: &str) {
         use crate::db::appdata_schema::app_settings;
 
-        let prompts_map: BTreeMap<String, String> = match serde_json::from_str(prompts_json) {
+        let prompts_map: IndexMap<String, String> = match serde_json::from_str(prompts_json) {
             Ok(prompts) => prompts,
             Err(e) => {
                 error(&format!("Failed to parse system prompts JSON: {}", e));

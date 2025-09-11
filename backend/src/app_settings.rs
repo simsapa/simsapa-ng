@@ -1,5 +1,4 @@
-use std::collections::BTreeMap;
-
+use indexmap::IndexMap;
 use serde::{Serialize, Deserialize};
 
 use crate::logger::error;
@@ -48,8 +47,8 @@ pub struct AppSettings {
     pub show_all_variant_readings: bool,
     pub show_glosses: bool,
     pub theme_name: ThemeName,
-    pub api_keys: BTreeMap<String, String>,
-    pub system_prompts: BTreeMap<String, String>,
+    pub api_keys: IndexMap<String, String>,
+    pub system_prompts: IndexMap<String, String>,
     pub providers: Vec<Provider>,
     pub ai_models_auto_retry: bool,
 }
@@ -64,9 +63,9 @@ impl Default for AppSettings {
             show_all_variant_readings: false,
             show_glosses: false,
             theme_name: ThemeName::System,
-            api_keys: BTreeMap::new(),
+            api_keys: IndexMap::new(),
             system_prompts: {
-                let mut prompts = BTreeMap::new();
+                let mut prompts = IndexMap::new();
                 prompts.insert("Gloss Tab: System Prompt".to_string(),
                     r#"
 You are a helpful assistant for studying the suttas of the Theravāda Pāli Tipitaka and the Pāli language.

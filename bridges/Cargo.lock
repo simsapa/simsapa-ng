@@ -2675,6 +2675,7 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "html-escape",
+ "indexmap",
  "lazy_static",
  "libsqlite3-sys",
  "log",

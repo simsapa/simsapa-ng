@@ -1,4 +1,5 @@
-use std::collections::{BTreeMap, HashSet, HashMap};
+use std::collections::{HashSet, HashMap};
+use indexmap::IndexMap;
 
 use regex::Regex;
 use lazy_static::lazy_static;
@@ -622,7 +623,7 @@ pub fn bilara_html_post_process(body: &str) -> String {
     body.replace("<footer>", "<footer class='noindex'>")
 }
 
-/// Converts Bilara text JSON data into a BTreeMap of processed HTML segments, preserving key order.
+/// Converts Bilara text JSON data into an IndexMap of processed HTML segments, preserving insertion order.
 pub fn bilara_text_to_segments(
     content_json_str: &str,
     tmpl_json_str: Option<&str>,
@@ -631,34 +632,34 @@ pub fn bilara_text_to_segments(
     gloss_json_str: Option<&str>,
     show_variant_readings: bool,
     show_glosses: bool,
-) -> Result<BTreeMap<String, String>> {
+) -> Result<IndexMap<String, String>> {
 
-    // Parse the JSON strings into BTreeMaps to preserve order
-    let mut content_json: BTreeMap<String, String> = serde_json::from_str(content_json_str)
+    // Parse the JSON strings into IndexMaps to preserve insertion order
+    let mut content_json: IndexMap<String, String> = serde_json::from_str(content_json_str)
         .with_context(|| format!("Failed to parse content JSON: '{}'", content_json_str))?;
 
-    // Optional JSONs are also parsed into BTreeMaps
-    let tmpl_json: Option<BTreeMap<String, String>> = tmpl_json_str
+    // Optional JSONs also use IndexMap to preserve order consistency
+    let tmpl_json: Option<IndexMap<String, String>> = tmpl_json_str
         .map(|s| serde_json::from_str(s))
-        .transpose() // Converts Option<Result<T, E>> to Result<Option<T>, E>
+        .transpose()
         .with_context(|| format!("Failed to parse template JSON: '{:?}'", tmpl_json_str))?;
 
-    let variant_json: Option<BTreeMap<String, String>> = variant_json_str
+    let variant_json: Option<IndexMap<String, String>> = variant_json_str
         .map(|s| serde_json::from_str(s))
         .transpose()
         .with_context(|| format!("Failed to parse variant JSON: '{:?}'", variant_json_str))?;
 
-    let comment_json: Option<BTreeMap<String, String>> = comment_json_str
+    let comment_json: Option<IndexMap<String, String>> = comment_json_str
         .map(|s| serde_json::from_str(s))
         .transpose()
         .with_context(|| format!("Failed to parse comment JSON: '{:?}'", comment_json_str))?;
 
-    let gloss_json: Option<BTreeMap<String, String>> = gloss_json_str
+    let gloss_json: Option<IndexMap<String, String>> = gloss_json_str
         .map(|s| serde_json::from_str(s))
         .transpose()
         .with_context(|| format!("Failed to parse gloss JSON: '{:?}'", gloss_json_str))?;
 
-    // Iterate through the content keys (BTreeMap iterator preserves order)
+    // Iterate through the content keys (IndexMap iterator preserves insertion order)
     // We modify the map in place, so we need to collect keys first if we were removing/inserting differently,
     // but since we are just updating values, iterating directly might be okay.
     // However, collecting keys is safer if logic becomes more complex.
@@ -745,13 +746,14 @@ pub fn bilara_text_to_segments(
         }
     }
 
-    // Return the modified BTreeMap
+    // Return the modified IndexMap
     Ok(content_json)
 }
 
-/// Converts a BTreeMap of processed HTML segments into a single HTML string, preserving order.
-pub fn bilara_content_json_to_html(content_json: &BTreeMap<String, String>) -> Result<String> {
-    // BTreeMap iteration is already sorted by key.
+
+/// Converts an IndexMap of processed HTML segments into a single HTML string, preserving insertion order.
+pub fn bilara_content_json_to_html(content_json: &IndexMap<String, String>) -> Result<String> {
+    // IndexMap preserves insertion order from JSON, so no custom sorting needed
     let page: String = content_json
         .values()
         .cloned() // Get owned Strings
@@ -766,18 +768,17 @@ pub fn bilara_content_json_to_html(content_json: &BTreeMap<String, String>) -> R
     Ok(content_html)
 }
 
-/// Creates line-by-line HTML view combining translated and Pali segments using BTreeMaps.
+/// Creates line-by-line HTML view combining translated and Pali segments using IndexMaps.
 pub fn bilara_line_by_line_html(
-    translated_json: &BTreeMap<String, String>,
-    pali_json: &BTreeMap<String, String>,
-    tmpl_json: &BTreeMap<String, String>,
+    translated_content_json: &IndexMap<String, String>,
+    pali_content_json: &IndexMap<String, String>,
+    tmpl_json: &IndexMap<String, String>,
 ) -> Result<String> {
-    // Result map will also be a BTreeMap to maintain order for the final conversion
-    let mut content_json: BTreeMap<String, String> = BTreeMap::new();
+    let mut content_json: IndexMap<String, String> = IndexMap::new();
 
-    // Iterate through the translated map (already sorted by key)
-    for (i, translated_segment) in translated_json.iter() {
-        let pali_segment = pali_json.get(i).cloned().unwrap_or_default(); // Get Pali or empty string
+    // Iterate through the translated map (preserves insertion order)
+    for (i, translated_segment) in translated_content_json.iter() {
+        let pali_segment = pali_content_json.get(i).cloned().unwrap_or_default(); // Get Pali or empty string
 
         let combined_segment = format!(
             "<span class='segment'>
