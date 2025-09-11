@@ -58,5 +58,14 @@ Frame {
             Layout.preferredHeight: 40
             Layout.preferredWidth: 40
         }
+
+        ComboBox {
+            id: search_area_dropdown
+            Layout.preferredHeight: 40
+            model: [
+                "Suttas",
+                "Dictionary",
+            ]
+        }
     }
 }

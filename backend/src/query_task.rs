@@ -615,7 +615,7 @@ impl<'a> SearchQueryTask<'a> {
                     SearchArea::Suttas => {
                         self.uid_sutta(page_num)
                     }
-                    SearchArea::DictWords => {
+                    SearchArea::Dictionary => {
                         self.uid_word()
                     }
                 }
@@ -626,7 +626,7 @@ impl<'a> SearchQueryTask<'a> {
                     SearchArea::Suttas => {
                         self.suttas_contains_match_fts5(page_num)
                     }
-                    SearchArea::DictWords => {
+                    SearchArea::Dictionary => {
                         self.dict_words_contains_or_regex_match_page(page_num)
                     }
                 }
@@ -638,7 +638,7 @@ impl<'a> SearchQueryTask<'a> {
             //         SearchArea::Suttas => {
             //             self.suttas_contains_or_regex_match_page(page_num)
             //         }
-            //         SearchArea::DictWords => {
+            //         SearchArea::Dictionary => {
             //             self.dict_words_contains_or_regex_match_page(page_num)
             //         }
             //     }

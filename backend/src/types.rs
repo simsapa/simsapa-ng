@@ -56,7 +56,7 @@ pub struct SuttaQuote {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SearchArea {
     Suttas,
-    DictWords,
+    Dictionary,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]

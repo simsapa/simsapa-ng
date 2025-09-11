@@ -69,7 +69,7 @@ fn query_words(
     print_titles: bool,
     print_count: bool,
 ) -> Result<(), String> {
-    let results = get_query_results(query, SearchArea::DictWords);
+    let results = get_query_results(query, SearchArea::Dictionary);
 
     if print_titles {
         for i in results.iter() {
