@@ -23,34 +23,33 @@
 
 ## Tasks
 
-- [ ] 1.0 Extend SearchBarInput UI with Search Area Selection
-  - [ ] 1.1 Add ComboBox dropdown with "Suttas" and "Dictionary" options positioned after search button
-  - [ ] 1.2 Set default selection to "Suttas" to maintain existing behavior
-  - [ ] 1.3 Update placeholder text dynamically based on search area selection ("Search in suttas" vs "Search in dictionary")
-  - [ ] 1.4 Expose search_area_dropdown.currentText property to parent SuttaSearchWindow component
-  - [ ] 1.5 Ensure ComboBox styling matches existing UI components and works on mobile
+- [x] 1.0 Extend SearchBarInput UI with Search Area Selection
+  - [x] 1.1 Add ComboBox dropdown with "Suttas" and "Dictionary" options positioned after search button
+  - [x] 1.2 Set default selection to "Suttas" to maintain existing behavior
+  - [x] 1.3 Update placeholder text dynamically based on search area selection ("Search in suttas" vs "Search in dictionary")
+  - [x] 1.4 Expose search_area_dropdown.currentText property to parent SuttaSearchWindow component
+  - [x] 1.5 Ensure ComboBox styling matches existing UI components and works on mobile
 
-- [ ] 2.0 Update Query Processing Pipeline for Search Area Support  
-  - [ ] 2.1 Modify handle_query() in SuttaSearchWindow to read search area from SearchBarInput
-  - [ ] 2.2 Update start_search_query_workers() to accept and pass search_area parameter
-  - [ ] 2.3 Modify results_page() in SuttaSearchWindow to accept search_area parameter and pass to backend
-  - [ ] 2.4 Ensure search area state is preserved during query processing but allow result persistence when switching areas
-  - [ ] 2.5 Update get_search_params_from_ui() if needed to include search area context
+- [x] 2.0 Update Query Processing Pipeline for Search Area Support  
+  - [x] 2.1 Modify handle_query() in SuttaSearchWindow to read search area from SearchBarInput
+  - [x] 2.2 Update start_search_query_workers() to accept and pass search_area parameter
+  - [x] 2.3 Modify results_page() in SuttaSearchWindow to accept search_area parameter and pass to backend
+  - [x] 2.4 Ensure search area state is preserved during query processing but allow result persistence when switching areas
+  - [x] 2.5 Update get_search_params_from_ui() if needed to include search area context
 
-- [ ] 3.0 Extend Backend to Support Dictionary Search via Unified Interface
-  - [ ] 3.1 Modify SuttaBridge.results_page() signature to accept search_area parameter from QML
-  - [ ] 3.2 Update SearchQueryTask::new() call to use search_area parameter instead of hardcoded SearchArea::Suttas
-  - [ ] 3.3 Verify existing db_word_to_result() functionality works correctly for dictionary SearchArea
-  - [ ] 3.4 Ensure SearchResult objects from dictionary searches are compatible with FulltextResults display
-  - [ ] 3.5 Test that dictionary search results contain proper sutta_uid, sutta_title, sutta_ref fields for FulltextResults
+- [x] 3.0 Extend Backend to Support Dictionary Search via Unified Interface
+  - [x] 3.1 Modify SuttaBridge.results_page() signature to accept search_area parameter from QML
+  - [x] 3.2 Update SearchQueryTask::new() call to use search_area parameter instead of hardcoded SearchArea::Suttas
+  - [x] 3.3 Verify existing db_word_to_result() functionality works correctly for dictionary SearchArea
+  - [x] 3.4 Ensure SearchResult objects from dictionary searches are compatible with FulltextResults display
+  - [x] 3.5 Test that dictionary search results contain proper sutta_uid, sutta_title, sutta_ref fields for FulltextResults
 
 - [ ] 4.0 Adapt Content Display Components for Dictionary Results
   - [ ] 4.1 Analyze how DictionaryHtmlView renders dictionary content for reference implementation
-  - [ ] 4.2 Extend SuttaHtmlView to detect dictionary content vs sutta content (via sutta_uid pattern or additional property)
+  - [ ] 4.2 Extend SuttaHtmlView to detect dictionary content vs sutta content (via table_name property equals `dict_words`)
   - [ ] 4.3 Implement dictionary content loading in SuttaHtmlView using DictionaryHtmlView rendering approach
   - [ ] 4.4 Update SuttaStackLayout to handle dictionary content items alongside sutta content items
-  - [ ] 4.5 Ensure dictionary content displayed in SuttaStackLayout uses same styling approach as DictionaryTab
-  - [ ] 4.6 Verify FulltextResults can properly trigger dictionary content display when dictionary results are clicked
+  - [ ] 4.5 Verify FulltextResults can properly trigger dictionary content display when dictionary results are clicked
 
 - [ ] 5.0 Integration Testing and Validation
   - [ ] 5.1 Test basic search area switching between Suttas and Dictionary modes
