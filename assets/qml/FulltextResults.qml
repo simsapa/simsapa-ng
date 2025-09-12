@@ -146,7 +146,7 @@ ColumnLayout {
                 item_uid:    item.uid,
                 table_name:  item.table_name,
                 sutta_title: item.title,
-                sutta_ref:   item.sutta_ref,
+                sutta_ref:   item.sutta_ref || "", // Can be 'None' from SearchResult::from_dict_word()
                 snippet:     item.snippet,
                 /* author:      item.author, */
             };
@@ -247,7 +247,13 @@ ColumnLayout {
                     // Title and metadata
                     RowLayout {
                         spacing: 12
-                        Text { text: result_item.sutta_ref; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
+                        Text { 
+                            text: result_item.sutta_ref
+                            visible: result_item.sutta_ref !== ""
+                            font.pointSize: root.font_point_size
+                            font.bold: true
+                            color: root.palette.active.text
+                        }
                         Text { text: result_item.sutta_title; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
                         Item { Layout.fillWidth: true }
                         Text { text: result_item.item_uid; font.pointSize: root.font_point_size; font.italic: true; color: root.palette.active.text }

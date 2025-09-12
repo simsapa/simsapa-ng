@@ -36,8 +36,23 @@
 - No TypeScript/QML errors
 - Rust backend compiles and links
 
+### Dictionary Search Error Fix: ✅ PASS
+- Fixed QML error: "sutta_ref is null" when displaying dictionary results
+- Made sutta_ref property optional in FulltextResults component
+- Added proper null handling with fallback to empty string
+- sutta_ref display is now hidden for dictionary results (when empty)
+- Application starts without QML delegate creation errors
+
+## Implementation Details
+- Updated to use item_uid instead of sutta_uid throughout codebase
+- Dictionary results identified by table_name == "dict_words"
+- Fixed FulltextResults to handle dictionary results without sutta_ref
+- Proper null coalescing: `item.sutta_ref || ""`
+- Conditional display logic for sutta_ref field
+
 ## Notes
 - Implementation follows existing code patterns
 - Leverages existing SearchArea enum and db_word_to_result() function
 - Dictionary content detection via table_name field in SearchResult
 - Maintains backward compatibility with existing search functionality
+- Fixed critical error that prevented dictionary search results from displaying

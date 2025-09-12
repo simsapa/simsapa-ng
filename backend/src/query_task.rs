@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::{normalize_query_text, unique_search_results};
+use crate::helpers::normalize_query_text;
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::Sutta;
