@@ -5,6 +5,10 @@ import QtQuick.Controls
 Frame {
     id: row_two_frame
 
+    required property string search_area_text
+
+    property alias search_mode_dropdown: search_mode_dropdown
+
     background: Rectangle {
         color: "transparent"
         border.color: "transparent"
@@ -17,12 +21,21 @@ Frame {
             id: search_mode_dropdown
             Layout.preferredHeight: 40
             // FIXME implement search types and pass it as SearchParams
-            model: [
-                /* "Fulltext Match", */
-                "Contains Match",
-                /* "Title Match", */
-                /* "RegEx Match", */
-            ]
+            model: {
+                if (row_two_frame.search_area_text === "Suttas") {
+                    return [
+                            /* "Fulltext Match", */
+                            "Contains Match",
+                            /* "Title Match", */
+                            /* "RegEx Match", */
+                    ];
+                } else {
+                    return [
+                            "Combined",
+                            "Contains Match",
+                    ];
+                }
+            }
         }
 
         // Button {

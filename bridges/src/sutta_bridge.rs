@@ -69,7 +69,7 @@ pub mod qobject {
         fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
 
         #[qinvokable]
-        fn results_page(self: &SuttaBridge, query: &QString, page_num: usize, params_json: &QString) -> QString;
+        fn results_page(self: &SuttaBridge, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) -> QString;
 
         #[qinvokable]
         fn extract_words(self: &SuttaBridge, text: &QString) -> QStringList;
@@ -273,13 +273,18 @@ impl qobject::SuttaBridge {
         QString::from(query_text_to_uid_field_query(&query_text.to_string()))
     }
 
-    pub fn results_page(&self, query: &QString, page_num: usize, params_json: &QString) -> QString {
+    pub fn results_page(&self, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) -> QString {
         // FIXME: Can't store the query_task on SuttaBridgeRust
         // because it SearchQueryTask includes &'a DbManager reference.
         // Store only a connection pool?
         let app_data = get_app_data();
 
         let params: SearchParams = serde_json::from_str(&params_json.to_string()).unwrap_or_default();
+
+        let search_area_enum = match search_area.to_string().as_str() {
+            "Dictionary" => SearchArea::Dictionary,
+            _ => SearchArea::Suttas, // Default to Suttas for any other value
+        };
 
         // FIXME: We have to create a SearchQueryTask for each search until we
         // can store it on SuttaBridgeRust.
@@ -288,7 +293,7 @@ impl qobject::SuttaBridge {
             "en".to_string(),
             query.to_string(),
             params,
-            SearchArea::Suttas,
+            search_area_enum,
         );
 
         let results = match query_task.results_page(page_num) {

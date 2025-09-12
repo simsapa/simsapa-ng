@@ -54,10 +54,6 @@ ColumnLayout {
         root.update_page();
     }
 
-    function current_result_sutta_uid(): var {
-        return results_model.get(fulltext_list.currentIndex).sutta_uid;
-    }
-
     function current_result_data(): var {
         return results_model.get(fulltext_list.currentIndex);
     }
@@ -147,21 +143,8 @@ ColumnLayout {
             var item = root.current_results[i];
             var result_data = {
                 index: i,
-
-                // uid:         item.uid,
-                // schemaName:  item.schema_name,
-                // tableName:   item.table_name,
-                // sourceUid:   item.source_uid,
-                // title:       item.title,
-                // ref:         item.ref,
-                // nikaya:      item.nikaya,
-                // author:      item.author,
-                // snippet:     item.snippet,
-                // pageNumber:  item.page_number,
-                // score:       item.score,
-                // rank:        item.rank,
-
-                sutta_uid:   item.uid,
+                item_uid:    item.uid,
+                table_name:  item.table_name,
                 sutta_title: item.title,
                 sutta_ref:   item.sutta_ref,
                 snippet:     item.snippet,
@@ -229,7 +212,8 @@ ColumnLayout {
             height: fulltext_list.item_height
 
             required property int index
-            required property string sutta_uid
+            required property string item_uid
+            required property string table_name
             required property string sutta_title
             required property string sutta_ref
             required property string snippet
@@ -266,7 +250,7 @@ ColumnLayout {
                         Text { text: result_item.sutta_ref; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
                         Text { text: result_item.sutta_title; font.pointSize: root.font_point_size; font.bold: true; color: root.palette.active.text }
                         Item { Layout.fillWidth: true }
-                        Text { text: result_item.sutta_uid; font.pointSize: root.font_point_size; font.italic: true; color: root.palette.active.text }
+                        Text { text: result_item.item_uid; font.pointSize: root.font_point_size; font.italic: true; color: root.palette.active.text }
                     }
 
                     // Snippet with highlighted HTML

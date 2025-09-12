@@ -59,14 +59,14 @@ impl AppdataDbHandle {
 
         #[derive(Serialize)]
         struct TranslationData {
-            sutta_uid: String,
+            item_uid: String,
             sutta_title: String,
             sutta_ref: String,
         }
 
         let res_sorted_data: Vec<TranslationData> = sort_suttas(res)
             .into_iter().map(|s| TranslationData {
-                sutta_uid: s.uid,
+                item_uid: s.uid,
                 sutta_title: s.title.unwrap_or("".to_string()),
                 sutta_ref: s.sutta_ref,
             }).collect();

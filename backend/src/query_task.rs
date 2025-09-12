@@ -565,7 +565,11 @@ impl<'a> SearchQueryTask<'a> {
         let res_page = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
 
         // FIXME implement paging in DPD lookup results.
-        let limit_page = res_page[0..100].to_vec();
+        let limit_page = if res_page.len() >= 100 {
+            res_page[0..100].to_vec()
+        } else {
+            res_page.to_vec()
+        };
 
         Ok(limit_page)
     }
@@ -607,7 +611,10 @@ impl<'a> SearchQueryTask<'a> {
                 // res.extend(page_results);
 
                 // Deduplicate: unique by title, schema_name, and uid
-                Ok(unique_search_results(res))
+                // NOTE: Is this necessary?
+                // Ok(unique_search_results(res))
+
+                Ok(res)
             }
 
             SearchMode::UidMatch => {

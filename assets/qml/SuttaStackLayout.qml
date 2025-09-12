@@ -36,7 +36,7 @@ StackLayout {
     }
 
     function add_item(tab_data: var, show_item = true) {
-        /* logger.log("add_item()", "sutta_uid:", tab_data.sutta_uid, "web_item_key:", tab_data.web_item_key); */
+        /* logger.log("add_item()", "item_uid:", tab_data.item_uid, "web_item_key:", tab_data.web_item_key); */
         let key = tab_data.web_item_key;
         if (root.items_map.hasOwnProperty(key)) {
             logger.error("Item with key", key, "already exists");
@@ -45,7 +45,8 @@ StackLayout {
 
         let data = {
             item_key: key,
-            sutta_uid: tab_data.sutta_uid,
+            item_uid: tab_data.item_uid,
+            table_name: tab_data.table_name,
             sutta_ref: tab_data.sutta_ref,
             sutta_title: tab_data.sutta_title,
         };
@@ -94,9 +95,8 @@ StackLayout {
         }
 
         let item = root.items_map[root.current_key];
-        if (item.sutta_uid !== "Sutta") {
-            /* logger.log("SuttaBridge.emit_update_window_title()", item.sutta_uid, item.sutta_ref, item.sutta_title); */
-            SuttaBridge.emit_update_window_title(item.sutta_uid, item.sutta_ref, item.sutta_title);
+        if (item.item_uid !== "Sutta" && item.item_uid !== "Word") {
+            SuttaBridge.emit_update_window_title(item.item_uid, item.sutta_ref, item.sutta_title);
         }
 
         for (let i = 0; i < root.children.length; i++) {

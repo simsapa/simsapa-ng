@@ -9,7 +9,8 @@ WebView {
 
     property string window_id
     property string item_key
-    property string sutta_uid
+    property string item_uid
+    property string table_name
     property string sutta_ref
     property string sutta_title
     property bool is_dark
@@ -37,9 +38,13 @@ WebView {
         }
     }
 
-    // Load the sutta when the Loader in SuttaHtmlView updates sutta_uid.
-    onSutta_uidChanged: function() {
-        load_sutta_uid(web.sutta_uid);
+    // Load the sutta or dictionary word when the Loader in SuttaHtmlView updates item_uid.
+    onItem_uidChanged: function() {
+        if (web.table_name === "dict_words") {
+            load_word_uid(web.item_uid);
+        } else {
+            load_sutta_uid(web.item_uid);
+        }
     }
 
     onIs_darkChanged: function() {
@@ -69,4 +74,12 @@ document.documentElement.style.colorScheme = 'light';
         web.loadHtml(html);
     }
 
+    function load_word_uid(uid) {
+        if (uid == "Word") {
+            // Initial blank page
+            uid = "";
+        }
+        var html = SuttaBridge.get_word_html(web.window_id, uid);
+        web.loadHtml(html);
+    }
 }

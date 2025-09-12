@@ -12,9 +12,9 @@ Item {
         root.dpd_lookup_test_data = JSON.parse(dpd_lookup_data.json);
     }
 
-    signal updateWindowTitle(sutta_uid: string, sutta_ref: string, sutta_title: string);
+    signal updateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string);
 
-    function emit_update_window_title(sutta_uid: string, sutta_ref: string, sutta_title: string) {
+    function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
     }
 
@@ -54,9 +54,9 @@ Item {
         let uid_ref = sutta_uid.replace('^([^/]+)/.*', '$1');
         let translations_json = `
 [
-{ "sutta_uid": "${uid_ref}/en/thanissaro", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" },
-{ "sutta_uid": "${uid_ref}/en/bodhi", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" },
-{ "sutta_uid": "${uid_ref}/en/sujato", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" }
+{ "item_uid": "${uid_ref}/en/thanissaro", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" },
+{ "item_uid": "${uid_ref}/en/bodhi", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" },
+{ "item_uid": "${uid_ref}/en/sujato", "sutta_title": "Sutta Title", "sutta_ref": "AN 11.22" }
 ]
 `;
         return translations_json;

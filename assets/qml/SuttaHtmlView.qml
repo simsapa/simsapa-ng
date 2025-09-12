@@ -4,9 +4,11 @@ Loader {
     id: loader
     required property string window_id
     required property string item_key
-    required property string sutta_uid
+    required property string item_uid
+    required property string table_name
     required property string sutta_ref
     required property string sutta_title
+
     required property bool is_dark
 
     function active_focus() {
@@ -42,7 +44,8 @@ Loader {
     onLoaded: {
         loader.item.window_id = Qt.binding(() => window_id);
         loader.item.item_key = Qt.binding(() => item_key);
-        loader.item.sutta_uid = Qt.binding(() => sutta_uid);
+        loader.item.item_uid = Qt.binding(() => item_uid);
+        loader.item.table_name = Qt.binding(() => table_name);
         loader.item.sutta_ref = Qt.binding(() => sutta_ref);
         loader.item.sutta_title = Qt.binding(() => sutta_title);
         loader.item.is_dark = Qt.binding(() => is_dark);

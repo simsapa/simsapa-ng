@@ -37,17 +37,17 @@ ApplicationWindow {
 
     Connections {
         target: SuttaBridge
-        function onUpdateWindowTitle(sutta_uid: string, sutta_ref: string, sutta_title: string) {
-            /* logger.log("onUpdateWindowTitle():", sutta_uid, sutta_ref, sutta_title); */
+        function onUpdateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string) {
+            /* logger.log("onUpdateWindowTitle():", item_uid, sutta_ref, sutta_title); */
             const current_key = sutta_html_view_layout.current_key;
-            if (sutta_html_view_layout.items_map[current_key].sutta_uid === sutta_uid) {
-                root.update_window_title(sutta_uid, sutta_ref, sutta_title);
+            if (sutta_html_view_layout.items_map[current_key].item_uid === item_uid) {
+                root.update_window_title(item_uid, sutta_ref, sutta_title);
             }
         }
     }
 
-    function update_window_title(sutta_uid: string, sutta_ref: string, sutta_title: string) {
-        let title_parts = [sutta_ref, sutta_title, sutta_uid].filter(i => i !== "");
+    function update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
+        let title_parts = [sutta_ref, sutta_title, item_uid].filter(i => i !== "");
         let title = title_parts.join(" ");
         root.setTitle(`${title} - Simsapa`);
     }
@@ -103,12 +103,13 @@ ApplicationWindow {
         // will be created when the tab is first focused.
         //
         // NOTE: same attributes as on TabButton.
-        /* logger.log("sutta_uid", fulltext_results_data.sutta_uid); */
+        /* logger.log("item_uid", fulltext_results_data.item_uid); */
         /* logger.log("sutta_title", fulltext_results_data.sutta_title); */
         return {
-            sutta_uid:   fulltext_results_data.sutta_uid,
-            sutta_title: fulltext_results_data.sutta_title,
-            sutta_ref:   fulltext_results_data.sutta_ref,
+            item_uid:    fulltext_results_data.item_uid || "",
+            table_name:  fulltext_results_data.table_name || "",
+            sutta_title: fulltext_results_data.sutta_title || "",
+            sutta_ref:   fulltext_results_data.sutta_ref || "",
             pinned: pinned,
             focus_on_new: focus_on_new,
             id_key: id_key,
@@ -117,7 +118,7 @@ ApplicationWindow {
     }
 
     function blank_sutta_tab_data(): var {
-        return root.new_tab_data({sutta_uid: "Sutta", sutta_title: "", sutta_ref: ""});
+        return root.new_tab_data({item_uid: "Sutta", sutta_title: "", sutta_ref: ""});
     }
 
     // Timer for incremental search debounce
@@ -137,7 +138,7 @@ ApplicationWindow {
             return;
 
         let params = root.get_search_params_from_ui();
-        let search_area = 'Suttas';
+        let search_area = search_bar_input.search_area_dropdown.currentText;
 
         let query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
 
@@ -172,7 +173,7 @@ ApplicationWindow {
         params: var,
     ) {
         // FIXME: page number
-        root.results_page(query_text, 0, params);
+        root.results_page(query_text, 0, search_area, params);
 
         // if len(results) > 0 and hits == 1 and results[0]['uid'] is not None:
         //     self._show_sutta_by_uid(results[0]['uid'])
@@ -181,11 +182,11 @@ ApplicationWindow {
         //     self._render_results_in_active_tab(hits)
     }
 
-    function results_page(query_text: string, page_num: int, params: var) {
+    function results_page(query_text: string, page_num: int, search_area: string, params: var) {
         root.is_loading = true;
         Qt.callLater(function() {
             let params_json = JSON.stringify(params);
-            let json_res = SuttaBridge.results_page(query_text, page_num, params_json);
+            let json_res = SuttaBridge.results_page(query_text, page_num, search_area, params_json);
             let d = JSON.parse(json_res);
             fulltext_results.set_search_result_page(d);
             root.is_loading = false;
@@ -194,7 +195,9 @@ ApplicationWindow {
 
     function new_results_page(page_num) {
         let query = search_bar_input.search_input.text;
-        root.results_page(query, page_num);
+        let search_area = search_bar_input.search_area_dropdown.currentText;
+        let params = root.get_search_params_from_ui();
+        root.results_page(query, page_num, search_area, params);
     }
 
     function get_search_params_from_ui(): var {
@@ -211,7 +214,7 @@ ApplicationWindow {
         //     fuzzy_distance: int
 
         return {
-            mode: "ContainsMatch",
+            mode: search_bar_options.search_mode_dropdown.currentText,
             page_len: 10,
             lang: null,
             lang_include: false,
@@ -297,7 +300,7 @@ ${query_text}`;
 
     // Returns the index of the tab in the model.
     function add_results_tab(fulltext_results_data: var, focus_on_new = true, new_tab = false): int {
-        /* logger.log("add_results_tab()", "sutta_uid", fulltext_results_data.sutta_uid, "sutta_title", fulltext_results_data.sutta_title); */
+        /* logger.log("add_results_tab()", "item_uid", fulltext_results_data.item_uid, "sutta_title", fulltext_results_data.sutta_title); */
         if (new_tab || tabs_results_model.count == 0) {
             /* logger.log("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
             let tab_data = root.new_tab_data(fulltext_results_data, false, focus_on_new);
@@ -322,8 +325,8 @@ ${query_text}`;
 
             tabs_results_model.set(0, tab_data);
 
-            if (tab_data.sutta_uid !== "Sutta") {
-                SuttaBridge.emit_update_window_title(tab_data.sutta_uid, tab_data.sutta_ref, tab_data.sutta_title);
+            if (tab_data.item_uid !== "Sutta") {
+                SuttaBridge.emit_update_window_title(tab_data.item_uid, tab_data.sutta_ref, tab_data.sutta_title);
             }
 
             return 0;
@@ -710,9 +713,11 @@ ${query_text}`;
                 search_as_you_type: search_as_you_type
             }
 
+            // FIXME combine SearchBarOptions with SearchBarInput
             SearchBarOptions {
                 id: search_bar_options
-                visible: (root.width - 550) > 550
+                search_area_text: search_bar_input.search_area_dropdown.currentText
+                visible: (root.width - 550) > 550 // FIXME: make search bar optionally visible in a second row on small screens
             }
 
             Button {
@@ -769,7 +774,7 @@ ${query_text}`;
                             anchors.right: parent.right
 
                             function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
-                                /* logger.log("tab_focus_changed()", tab.index, "sutta_uid:", tab.sutta_uid, "web_item_key:", tab.web_item_key); */
+                                /* logger.log("tab_focus_changed()", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key); */
                                 if (!tab.focus) return;
                                 // If this tab doesn't have a webview associated yet, create it.
                                 if (tab.web_item_key == "") {
@@ -792,7 +797,7 @@ ${query_text}`;
                             }
 
                             function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
-                                /* logger.log("remove_tab_and_webview()", tab.index, tab.sutta_uid, tab.web_item_key); */
+                                /* logger.log("remove_tab_and_webview()", tab.index, tab.item_uid, tab.web_item_key); */
                                 // Remove the tab and webview, focus the next or the previous
                                 let old_idx = tab.index;
                                 let old_web_item_key = tab_model.get(old_idx).web_item_key;
@@ -882,17 +887,17 @@ ${query_text}`;
                                         onCloseClicked: {
                                             if (tabs_results_model.count == 1) {
                                                 // If this is the only tab, don't remove it, just set it to blank
-                                                results_tab_btn.sutta_uid = "Sutta";
+                                                results_tab_btn.item_uid = "Sutta";
                                                 tabs_results_model.set(0, root.blank_sutta_tab_data());
                                             } else {
                                                 suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
                                             }
                                         }
                                         onFocusChanged: suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model)
-                                        onSutta_uidChanged: {
+                                        onItem_uidChanged: {
                                             if (results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
                                                 let i = sutta_html_view_layout.get_item(results_tab_btn.web_item_key);
-                                                i.sutta_uid = results_tab_btn.sutta_uid;
+                                                i.item_uid = results_tab_btn.item_uid;
                                                 // The title changes when an item in FulltextResults is selected,
                                                 // so focus on this tab.
                                                 results_tab_btn.click();
@@ -1056,22 +1061,33 @@ ${query_text}`;
                                     // constructed, but succeeds later on.
                                     root.focus_on_tab_with_id_key("ResultsTab_0");
 
-                                    // Add translations tabs
-
-                                    // Remove existing webviews for translation tabs
-                                    for (let i=0; i < tabs_translations_model.count; i++) {
-                                        let tr_tab_data = tabs_translations_model.get(i);
-                                        if (tr_tab_data.web_item_key !== "") {
-                                            sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+                                    // Only add translation tabs for sutta results, not dictionary results
+                                    if (!tab_data.table_name || tab_data.table_name !== "dict_words") {
+                                        // Add translations tabs for the sutta
+                                        // Remove existing webviews for translation tabs
+                                        for (let i=0; i < tabs_translations_model.count; i++) {
+                                            let tr_tab_data = tabs_translations_model.get(i);
+                                            if (tr_tab_data.web_item_key !== "") {
+                                                sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+                                            }
                                         }
-                                    }
-                                    tabs_translations_model.clear();
+                                        tabs_translations_model.clear();
 
-                                    let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.sutta_uid));
+                                        let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.item_uid));
 
-                                    for (let i=0; i < translations_data.length; i++) {
-                                        let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
-                                        tabs_translations_model.append(tr_tab_data);
+                                        for (let i=0; i < translations_data.length; i++) {
+                                            let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
+                                            tabs_translations_model.append(tr_tab_data);
+                                        }
+                                    } else {
+                                        // For dictionary results, clear translation tabs
+                                        for (let i=0; i < tabs_translations_model.count; i++) {
+                                            let tr_tab_data = tabs_translations_model.get(i);
+                                            if (tr_tab_data.web_item_key !== "") {
+                                                sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+                                            }
+                                        }
+                                        tabs_translations_model.clear();
                                     }
 
                                     if (!root.is_wide) {

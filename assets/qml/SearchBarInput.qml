@@ -17,6 +17,7 @@ Frame {
     required property Action search_as_you_type
 
     property alias search_input: search_input
+    property alias search_area_dropdown: search_area_dropdown
 
     background: Rectangle {
         color: "transparent"
@@ -43,7 +44,7 @@ Frame {
 
             focus: true
             font.pointSize: root.is_mobile ? 14 : 12
-            placeholderText: root.db_loaded ? "Search in suttas" : "Loading..."
+            placeholderText: root.db_loaded ? (search_area_dropdown.currentText === "Dictionary" ? "Search in dictionary" : "Search in suttas") : "Loading..."
 
             onAccepted: search_btn.clicked()
             onTextChanged: root.user_typed()
@@ -62,6 +63,8 @@ Frame {
         ComboBox {
             id: search_area_dropdown
             Layout.preferredHeight: 40
+            Layout.preferredWidth: root.is_mobile ? 120 : 100
+            currentIndex: 0 // Default to "Suttas"
             model: [
                 "Suttas",
                 "Dictionary",
