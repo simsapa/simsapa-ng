@@ -555,23 +555,29 @@ impl<'a> SearchQueryTask<'a> {
 
     }
 
-    pub fn dpd_lookup(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // DPD is English.
         if self.lang != "en" {
             return Ok(Vec::new());
         }
 
         let app_data = get_app_data();
-        let res_page = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
+        let all_results = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
 
-        // FIXME implement paging in DPD lookup results.
-        let limit_page = if res_page.len() >= 100 {
-            res_page[0..100].to_vec()
+        // Set total hits count for pagination
+        self.db_query_hits_count = all_results.len() as i64;
+
+        // Apply pagination
+        let offset = page_num * self.page_len;
+        let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
+
+        let paginated_results = if offset >= all_results.len() {
+            Vec::new() // Return empty if page_num is beyond available results
         } else {
-            res_page.to_vec()
+            all_results[offset..end_idx].to_vec()
         };
 
-        Ok(limit_page)
+        Ok(paginated_results)
     }
 
     /// Gets a specific page of search results, performing the query if needed.
@@ -585,6 +591,20 @@ impl<'a> SearchQueryTask<'a> {
 
         // --- Perform Search Based on Mode and Area ---
         let results = match self.search_mode {
+            SearchMode::DpdLookup => {
+                // DPD Lookup mode - only works for Dictionary search area
+                match self.search_area {
+                    SearchArea::Dictionary => {
+                        self.dpd_lookup(page_num)
+                    }
+                    SearchArea::Suttas => {
+                        // DPD Lookup doesn't make sense for suttas
+                        self.db_query_hits_count = 0;
+                        Ok(Vec::new())
+                    }
+                }
+            }
+
             SearchMode::Combined => {
                 let mut res: Vec<SearchResult> = Vec::new();
 
@@ -592,7 +612,7 @@ impl<'a> SearchQueryTask<'a> {
                 // first (0 index) results page by boosting their scores.
                 if page_num == 0 {
                     // Run DPD Lookup and boost results to the top.
-                    let mut dpd_results: Vec<SearchResult> = self.dpd_lookup()?;
+                    let mut dpd_results: Vec<SearchResult> = self.dpd_lookup(0)?;
                     for item in dpd_results.iter_mut() {
                         match item.score {
                             Some(ref mut s) => *s += 10000.0,
@@ -611,7 +631,7 @@ impl<'a> SearchQueryTask<'a> {
                 // res.extend(page_results);
 
                 // Deduplicate: unique by title, schema_name, and uid
-                // NOTE: Is this necessary?
+                // NOTE: Is this necessary? Maybe When fulltext results are also added.
                 // Ok(unique_search_results(res))
 
                 Ok(res)

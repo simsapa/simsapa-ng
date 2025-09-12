@@ -31,7 +31,7 @@ Frame {
                     ];
                 } else {
                     return [
-                            "Combined",
+                            "DPD Lookup",
                             "Contains Match",
                     ];
                 }

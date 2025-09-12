@@ -43,6 +43,14 @@
 - sutta_ref display is now hidden for dictionary results (when empty)
 - Application starts without QML delegate creation errors
 
+### DPD Lookup Pagination: ✅ PASS
+- Implemented proper pagination in query_task.rs::dpd_lookup()
+- Function now accepts page_num parameter instead of hardcoded 100-item limit
+- Sets db_query_hits_count to total results count for pagination controls
+- Applies proper offset calculation: page_num * page_len
+- Handles out-of-bounds pages gracefully with empty results
+- Added dedicated SearchMode::DpdLookup case for dictionary-only searches
+
 ## Implementation Details
 - Updated to use item_uid instead of sutta_uid throughout codebase
 - Dictionary results identified by table_name == "dict_words"

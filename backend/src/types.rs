@@ -66,6 +66,7 @@ pub enum SearchMode {
     HeadwordMatch,
     TitleMatch,
     DpdIdMatch,
+    #[serde(rename = "DPD Lookup")]
     DpdLookup,
     Combined,
     UidMatch,
