@@ -51,6 +51,18 @@
 - Handles out-of-bounds pages gracefully with empty results
 - Added dedicated SearchMode::DpdLookup case for dictionary-only searches
 
+### Dictionary Three-Phase Search Enhancement: ✅ PASS
+- Implemented advanced three-phase dictionary search with optimal result ordering
+- Phase 1: Exact matches on DpdHeadword.lemma_clean (highest priority)
+- Phase 2: Contains matches on DpdHeadword.lemma_1 (medium priority, sorted by lemma_1 length ascending)
+- Phase 3: Contains matches on DictWord.definition_plain (lowest priority)
+- Matches DpdHeadword.lemma_1 to DictWord.word for proper result linking
+- Uses word field for deduplication across all three phases
+- Array-based pagination applied to combined result set from all phases
+- Proper database schema separation with scoped column references
+- Efficient deduplication using HashSet across all three phases
+- Phase 2 results sorted by DpdHeadword.lemma_1 length in ascending order
+
 ## Implementation Details
 - Updated to use item_uid instead of sutta_uid throughout codebase
 - Dictionary results identified by table_name == "dict_words"

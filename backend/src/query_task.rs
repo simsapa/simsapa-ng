@@ -1,5 +1,5 @@
 // use std::any::Any;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::error::Error;
 use std::time::Instant;
 
@@ -492,66 +492,182 @@ impl<'a> SearchQueryTask<'a> {
         let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
 
         let mut query = dict_words.into_boxed();
-        let mut count_query = dict_words.into_boxed();
 
         // --- Source Filtering ---
         if let Some(ref source_val) = self.source {
             let pattern = format!("%/{}", source_val);
             if self.source_include {
-                query = query.filter(uid.like(pattern.clone()));
-                count_query = count_query.filter(uid.like(pattern.clone()));
+                query = query.filter(uid.like(pattern));
             } else {
-                query = query.filter(uid.not_like(pattern.clone()));
-                count_query = count_query.filter(uid.not_like(pattern.clone()));
+                query = query.filter(uid.not_like(pattern));
             }
         }
 
-        // --- Term Filtering ---
+        // --- Term Filtering and Query Execution ---
         let terms: Vec<&str> = if self.query_text.contains(" AND ") {
             self.query_text.split(" AND ").map(|s| s.trim()).collect()
         } else {
             vec![self.query_text.as_str()]
         };
 
-        for term in terms {
-            match self.search_mode {
-                SearchMode::ContainsMatch => {
-                    query = query.filter(definition_plain.like(format!("%{}%", term)));
-                    count_query = count_query.filter(definition_plain.like(format!("%{}%", term)));
+        match self.search_mode {
+            SearchMode::ContainsMatch => {
+                // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
+
+                use crate::db::dpd_models::DpdHeadword;
+
+                let mut all_results: Vec<DictWord> = Vec::new();
+                let mut result_uids: HashSet<String> = HashSet::new();
+
+                let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
+
+                // Phase 1: Exact matches on DpdHeadword.lemma_clean
+                for term in &terms {
+                    use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
+
+                    let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                        .filter(dpd_dsl::lemma_clean.eq(term))
+                        .load::<DpdHeadword>(dpd_conn)?;
+
+                    // Convert DpdHeadword results to DictWord using their UIDs
+                    for headword in exact_matches {
+                        // Use the lemma_1 as the key for deduplication
+                        let headword_key = headword.lemma_1.clone();
+
+                        if !result_uids.contains(&headword_key) {
+                            // Find corresponding DictWord by matching the word field to headword.lemma_1
+                            use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
+                            let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                            // Apply source filtering
+                            if let Some(ref source_val) = self.source {
+                                let source_pattern = format!("%/{}", source_val);
+                                if self.source_include {
+                                    dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
+                                } else {
+                                    dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
+                                }
+                            }
+
+                            // Match DictWord.word with DpdHeadword.lemma_1
+                            let dict_word_result: Result<DictWord, _> = dict_query
+                                .filter(dict_dsl::word.eq(&headword.lemma_1))
+                                .first::<DictWord>(db_conn);
+
+                            if let Ok(dict_word) = dict_word_result {
+                                result_uids.insert(headword_key);
+                                all_results.push(dict_word);
+                            }
+                        }
+                    }
                 }
-                SearchMode::RegExMatch => {
-                    // FIXME use diesel regex match
-                    query = query.filter(definition_plain.like(format!("%{}%", term)));
-                    count_query = count_query.filter(definition_plain.like(format!("%{}%", term)));
+
+                // Phase 2: Contains matches on DpdHeadword.lemma_1
+                for term in &terms {
+                    use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
+
+                    let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                        .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
+                        .load::<DpdHeadword>(dpd_conn)?;
+
+                    // Sort by lemma_1 length in ascending order (shorter lemmas first)
+                    contains_matches.sort_by_key(|h| h.lemma_1.len());
+
+                    // Convert DpdHeadword results to DictWord by matching lemma_1 to word
+                    for headword in contains_matches {
+                        // Use the lemma_1 as the key for deduplication
+                        let headword_key = headword.lemma_1.clone();
+
+                        if !result_uids.contains(&headword_key) {
+                            // Find corresponding DictWord by matching the word field to headword.lemma_1
+                            use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
+                            let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                            // Apply source filtering
+                            if let Some(ref source_val) = self.source {
+                                let source_pattern = format!("%/{}", source_val);
+                                if self.source_include {
+                                    dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
+                                } else {
+                                    dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
+                                }
+                            }
+
+                            // Match DictWord.word with DpdHeadword.lemma_1
+                            let dict_word_result: Result<DictWord, _> = dict_query
+                                .filter(dict_dsl::word.eq(&headword.lemma_1))
+                                .first::<DictWord>(db_conn);
+
+                            if let Ok(dict_word) = dict_word_result {
+                                result_uids.insert(headword_key);
+                                all_results.push(dict_word);
+                            }
+                        }
+                    }
                 }
-                _ => {
-                    return Err(format!(
-                        "Invalid search mode in dict_words_contains_or_regex_match_page: {:?}",
-                        self.search_mode
-                    )
-                    .into());
+
+                // Phase 3: Contains matches on DictWord.definition_plain
+                for term in &terms {
+                    use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
+                    let mut def_query = dict_dsl::dict_words.into_boxed();
+
+                    // Apply source filtering to definition query
+                    if let Some(ref source_val) = self.source {
+                        let source_pattern = format!("%/{}", source_val);
+                        if self.source_include {
+                            def_query = def_query.filter(dict_dsl::uid.like(source_pattern));
+                        } else {
+                            def_query = def_query.filter(dict_dsl::uid.not_like(source_pattern));
+                        }
+                    }
+
+                    def_query = def_query.filter(dict_dsl::definition_plain.like(format!("%{}%", term)));
+
+                    let def_results: Vec<DictWord> = def_query.load::<DictWord>(db_conn)?;
+
+                    // Add definition results that aren't already included
+                    for result in def_results {
+                        if !result_uids.contains(&result.word) {
+                            result_uids.insert(result.word.clone());
+                            all_results.push(result);
+                        }
+                    }
                 }
+
+                // Set total hits count
+                self.db_query_hits_count = all_results.len() as i64;
+
+                // Apply array-based pagination
+                let offset = page_num * self.page_len;
+                let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
+
+                let paginated_results = if offset >= all_results.len() {
+                    Vec::new()
+                } else {
+                    all_results[offset..end_idx].to_vec()
+                };
+
+                // Map to SearchResult
+                let search_results = paginated_results
+                    .iter()
+                    .map(|dict_word| self.db_word_to_result(dict_word))
+                    .collect();
+
+                Ok(search_results)
+            }
+
+            SearchMode::RegExMatch => {
+                // Implement later with diesel regex match.
+                Ok(Vec::new())
+            }
+
+            _ => {
+                Err(format!(
+                    "Invalid search mode in dict_words_contains_or_regex_match_page: {:?}",
+                    self.search_mode
+                ).into())
             }
         }
-
-        // --- Count Total Hits ---
-        self.db_query_hits_count = count_query.select(diesel::dsl::count_star()).first(db_conn)?;
-
-        // --- Apply Pagination ---
-        let offset = (page_num * self.page_len) as i64;
-        query = query.offset(offset).limit(self.page_len as i64);
-
-        // --- Execute Query ---
-        // info(&format!("Executing Query: {:?}", diesel::debug_query::<diesel::sqlite::Sqlite, _>(&query)));
-        let db_results: Vec<DictWord> = query.load::<DictWord>(db_conn)?;
-
-        // --- Map to SearchResult ---
-        let search_results = db_results
-            .iter()
-            .map(|sutta| self.db_word_to_result(sutta))
-            .collect();
-
-        Ok(search_results)
 
     }
 
