@@ -53,6 +53,10 @@ pub mod qobject {
         #[cxx_name = "updateWindowTitle"]
         fn update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
+        #[qsignal]
+        #[cxx_name = "resultsPageReady"]
+        fn results_page_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -69,7 +73,7 @@ pub mod qobject {
         fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
 
         #[qinvokable]
-        fn results_page(self: &SuttaBridge, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) -> QString;
+        fn results_page(self: Pin<&mut SuttaBridge>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString);
 
         #[qinvokable]
         fn extract_words(self: &SuttaBridge, text: &QString) -> QStringList;
@@ -273,46 +277,66 @@ impl qobject::SuttaBridge {
         QString::from(query_text_to_uid_field_query(&query_text.to_string()))
     }
 
-    pub fn results_page(&self, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) -> QString {
-        // FIXME: Can't store the query_task on SuttaBridgeRust
-        // because it SearchQueryTask includes &'a DbManager reference.
-        // Store only a connection pool?
-        let app_data = get_app_data();
+    pub fn results_page(self: Pin<&mut Self>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) {
+        info("SuttaBridge::results_page() start");
+        let qt_thread = self.qt_thread();
 
-        let params: SearchParams = serde_json::from_str(&params_json.to_string()).unwrap_or_default();
+        let query_text = query.to_string();
+        let search_area_text = search_area.to_string();
+        let params_json_text = params_json.to_string();
 
-        let search_area_enum = match search_area.to_string().as_str() {
-            "Dictionary" => SearchArea::Dictionary,
-            _ => SearchArea::Suttas, // Default to Suttas for any other value
-        };
+        // Spawn a thread so Qt event loop is not blocked
+        thread::spawn(move || {
+            // FIXME: Can't store the query_task on SuttaBridgeRust
+            // because it SearchQueryTask includes &'a DbManager reference.
+            // Store only a connection pool?
+            let app_data = get_app_data();
 
-        // FIXME: We have to create a SearchQueryTask for each search until we
-        // can store it on SuttaBridgeRust.
-        let mut query_task = SearchQueryTask::new(
-            &app_data.dbm,
-            "en".to_string(),
-            query.to_string(),
-            params,
-            search_area_enum,
-        );
+            let params: SearchParams = serde_json::from_str(&params_json_text).unwrap_or_default();
 
-        let results = match query_task.results_page(page_num) {
-            Ok(x) => x,
-            Err(e) => {
-                error(&format!("{}", e));
-                return QString::from("");
-            }
-        };
+            let search_area_enum = match search_area_text.as_str() {
+                "Dictionary" => SearchArea::Dictionary,
+                _ => SearchArea::Suttas, // Default to Suttas for any other value
+            };
 
-        let results_page = SearchResultPage {
-            total_hits: query_task.total_hits() as usize,
-            page_len: query_task.page_len as usize,
-            page_num,
-            results,
-        };
+            // FIXME: We have to create a SearchQueryTask for each search until we
+            // can store it on SuttaBridgeRust.
+            let mut query_task = SearchQueryTask::new(
+                &app_data.dbm,
+                "en".to_string(),
+                query_text,
+                params,
+                search_area_enum,
+            );
 
-        let json = serde_json::to_string(&results_page).unwrap_or_default();
-        QString::from(json)
+            let results = match query_task.results_page(page_num) {
+                Ok(x) => x,
+                Err(e) => {
+                    error(&format!("{}", e));
+                    let error_json = serde_json::json!({"error": format!("{}", e)}).to_string();
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().results_page_ready(QString::from(error_json));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            let results_page = SearchResultPage {
+                total_hits: query_task.total_hits() as usize,
+                page_len: query_task.page_len as usize,
+                page_num,
+                results,
+            };
+
+            let json = serde_json::to_string(&results_page).unwrap_or_default();
+
+            // Emit signal with the results
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().results_page_ready(QString::from(json));
+            }).unwrap();
+
+            info("SuttaBridge::results_page() end");
+        });
     }
 
     pub fn extract_words(&self, text: &QString) -> QStringList {

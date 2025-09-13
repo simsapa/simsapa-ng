@@ -37,12 +37,19 @@ ApplicationWindow {
 
     Connections {
         target: SuttaBridge
+
         function onUpdateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string) {
             /* logger.log("onUpdateWindowTitle():", item_uid, sutta_ref, sutta_title); */
             const current_key = sutta_html_view_layout.current_key;
             if (sutta_html_view_layout.items_map[current_key].get_data_value('item_uid') === item_uid) {
                 root.update_window_title(item_uid, sutta_ref, sutta_title);
             }
+        }
+
+        function onResultsPageReady(results_json: string) {
+            let d = JSON.parse(results_json);
+            fulltext_results.set_search_result_page(d);
+            root.is_loading = false;
         }
     }
 
@@ -134,24 +141,6 @@ ApplicationWindow {
         }
     }
 
-    // Timer to delay search execution to allow UI update
-    Timer {
-        id: search_delay_timer
-        interval: 50 // milliseconds - just enough for UI to update
-        repeat: false
-        property string query_text
-        property int page_num
-        property string search_area
-        property var params
-        onTriggered: {
-            let params_json = JSON.stringify(params);
-            let json_res = SuttaBridge.results_page(query_text, page_num, search_area, params_json);
-            let d = JSON.parse(json_res);
-            fulltext_results.set_search_result_page(d);
-            root.is_loading = false;
-        }
-    }
-
     function handle_query(query_text_orig: string, min_length=4) {
         if (query_text_orig === 'uid:')
             return;
@@ -203,12 +192,8 @@ ApplicationWindow {
 
     function results_page(query_text: string, page_num: int, search_area: string, params: var) {
         root.is_loading = true;
-        // Give UI a chance to update the icon before starting the blocking operation
-        search_delay_timer.query_text = query_text;
-        search_delay_timer.page_num = page_num;
-        search_delay_timer.search_area = search_area;
-        search_delay_timer.params = params;
-        search_delay_timer.start();
+        let params_json = JSON.stringify(params);
+        SuttaBridge.results_page(query_text, page_num, search_area, params_json);
     }
 
     function new_results_page(page_num) {

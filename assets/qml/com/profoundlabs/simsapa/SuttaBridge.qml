@@ -13,6 +13,7 @@ Item {
     }
 
     signal updateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string);
+    signal resultsPageReady(results_json: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -34,9 +35,12 @@ Item {
       return query_text;
     }
 
-    function results_page(query: string, page_num: int, params_json: string): string {
+    function results_page(query: string, page_num: int, search_area: string, params_json: string) {
         console.log(query);
-        return "{}";
+        // Simulate async behavior
+        Qt.callLater(function() {
+            resultsPageReady("{}");
+        });
     }
 
     function get_sutta_html(window_id: string, uid: string): string {
