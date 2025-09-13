@@ -8,7 +8,8 @@ TabButton {
     required property int index
 
     // NOTE: same attributes as returned from new_tab_data().
-    required property string sutta_uid
+    required property string item_uid
+    required property string table_name
     required property string sutta_title
     required property string sutta_ref
     required property bool pinned
@@ -33,7 +34,14 @@ TabButton {
         }
 
         Label {
-            text: control.sutta_uid
+            text: {
+                if (control.table_name && control.table_name === "dpd_headwords") {
+                    // "25671/dpd" -> "cakka 1/dpd"
+                    return `${control.sutta_title}/dpd`;
+                } else {
+                    return control.item_uid;
+                }
+            }
             elide: Text.ElideRight
             /* Layout.fillWidth: true */
         }

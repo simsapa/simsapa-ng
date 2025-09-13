@@ -75,6 +75,17 @@ assets/qml/com/profoundlabs/simsapa/qmldir
 - **Rust Tests:** `cd backend && cargo test` (runs all backend tests)
 - **Single Test:** `cd backend && cargo test test_name` (replace test_name with specific test function)
 
+### GUI Testing for Agents
+
+**⚠️ Avoid GUI Testing:** As an AI agent, avoid running the GUI application for testing purposes. The WebEngine components require proper process cleanup that may interfere with your terminal session.
+
+If you must test GUI functionality:
+- Use `make build -B` to verify compilation only
+- Test individual Rust components with `cd backend && cargo test`
+- GUI functionality should be tested manually by the user
+
+The command `export QT_QPA_PLATFORM=offscreen && timeout 10 make run` may leave hanging processes that require manual cleanup, which is not suitable for automated agent testing.
+
 ## Code Style
 
 Use lowercase snake_case for new functions, variables and id names, E.g:

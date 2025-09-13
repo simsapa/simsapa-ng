@@ -158,7 +158,7 @@ fn test_dict_word_search_contains_match() {
         "en".to_string(),
         query.to_string(),
         params,
-        SearchArea::DictWords,
+        SearchArea::Dictionary,
     );
 
     let results = match query_task.results_page(0) {
@@ -187,7 +187,7 @@ fn test_dict_word_uid_match() {
         "en".to_string(),
         query.to_string(),
         params,
-        SearchArea::DictWords,
+        SearchArea::Dictionary,
     );
 
     let results = match query_task.results_page(0) {
