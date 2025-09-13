@@ -486,22 +486,9 @@ impl<'a> SearchQueryTask<'a> {
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // TODO: review details in query_task.py
-        use crate::db::dictionaries_schema::dict_words::dsl::*;
 
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
-
-        let mut query = dict_words.into_boxed();
-
-        // --- Source Filtering ---
-        if let Some(ref source_val) = self.source {
-            let pattern = format!("%/{}", source_val);
-            if self.source_include {
-                query = query.filter(uid.like(pattern));
-            } else {
-                query = query.filter(uid.not_like(pattern));
-            }
-        }
 
         // --- Term Filtering and Query Execution ---
         let terms: Vec<&str> = if self.query_text.contains(" AND ") {
