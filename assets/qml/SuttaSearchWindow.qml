@@ -134,6 +134,24 @@ ApplicationWindow {
         }
     }
 
+    // Timer to delay search execution to allow UI update
+    Timer {
+        id: search_delay_timer
+        interval: 50 // milliseconds - just enough for UI to update
+        repeat: false
+        property string query_text
+        property int page_num
+        property string search_area
+        property var params
+        onTriggered: {
+            let params_json = JSON.stringify(params);
+            let json_res = SuttaBridge.results_page(query_text, page_num, search_area, params_json);
+            let d = JSON.parse(json_res);
+            fulltext_results.set_search_result_page(d);
+            root.is_loading = false;
+        }
+    }
+
     function handle_query(query_text_orig: string, min_length=4) {
         if (query_text_orig === 'uid:')
             return;
@@ -185,13 +203,12 @@ ApplicationWindow {
 
     function results_page(query_text: string, page_num: int, search_area: string, params: var) {
         root.is_loading = true;
-        Qt.callLater(function() {
-            let params_json = JSON.stringify(params);
-            let json_res = SuttaBridge.results_page(query_text, page_num, search_area, params_json);
-            let d = JSON.parse(json_res);
-            fulltext_results.set_search_result_page(d);
-            root.is_loading = false;
-        });
+        // Give UI a chance to update the icon before starting the blocking operation
+        search_delay_timer.query_text = query_text;
+        search_delay_timer.page_num = page_num;
+        search_delay_timer.search_area = search_area;
+        search_delay_timer.params = params;
+        search_delay_timer.start();
     }
 
     function new_results_page(page_num) {
@@ -725,6 +742,7 @@ ${query_text}`;
                 handle_query_fn: root.handle_query
                 search_timer: search_timer
                 search_as_you_type: search_as_you_type
+                is_loading: root.is_loading
             }
 
             // FIXME combine SearchBarOptions with SearchBarInput

@@ -15,6 +15,7 @@ Frame {
     required property var handle_query_fn
     required property Timer search_timer
     required property Action search_as_you_type
+    required property bool is_loading
 
     property alias search_input: search_input
     property alias search_area_dropdown: search_area_dropdown
@@ -53,7 +54,7 @@ Frame {
 
         Button {
             id: search_btn
-            icon.source: "icons/32x32/bx_search_alt_2.png"
+            icon.source: root.is_loading ? "icons/32x32/fa_stopwatch-solid.png" : "icons/32x32/bx_search_alt_2.png"
             enabled: search_input.text.length > 0
             onClicked: root.handle_query_fn(search_input.text, 1) // qmllint disable use-proper-function
             Layout.preferredHeight: 40
