@@ -40,7 +40,7 @@ ApplicationWindow {
         function onUpdateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string) {
             /* logger.log("onUpdateWindowTitle():", item_uid, sutta_ref, sutta_title); */
             const current_key = sutta_html_view_layout.current_key;
-            if (sutta_html_view_layout.items_map[current_key].item_uid === item_uid) {
+            if (sutta_html_view_layout.items_map[current_key].get_data_value('item_uid') === item_uid) {
                 root.update_window_title(item_uid, sutta_ref, sutta_title);
             }
         }
@@ -105,7 +105,7 @@ ApplicationWindow {
         // NOTE: same attributes as on TabButton.
         /* logger.log("item_uid", fulltext_results_data.item_uid); */
         /* logger.log("sutta_title", fulltext_results_data.sutta_title); */
-        return {
+        let tab_data = {
             item_uid:    fulltext_results_data.item_uid || "",
             table_name:  fulltext_results_data.table_name || "",
             sutta_title: fulltext_results_data.sutta_title || "",
@@ -115,6 +115,7 @@ ApplicationWindow {
             id_key: id_key,
             web_item_key: web_item_key,
         };
+        return tab_data;
     }
 
     function blank_sutta_tab_data(): var {
@@ -325,7 +326,20 @@ ${query_text}`;
 
             tabs_results_model.set(0, tab_data);
 
-            if (tab_data.item_uid !== "Sutta") {
+            // Update the existing webview component with new properties
+            let comp = sutta_html_view_layout.get_item(tab_data.web_item_key);
+            if (comp) {
+                // Update all properties
+                let data = {
+                    item_uid: tab_data.item_uid,
+                    table_name: tab_data.table_name,
+                    sutta_ref: tab_data.sutta_ref,
+                    sutta_title: tab_data.sutta_title,
+                };
+                comp.data_json = JSON.stringify(data);
+            }
+
+            if (tab_data.item_uid !== "Sutta" && tab_data.item_uid !== "Word") {
                 SuttaBridge.emit_update_window_title(tab_data.item_uid, tab_data.sutta_ref, tab_data.sutta_title);
             }
 
@@ -897,7 +911,7 @@ ${query_text}`;
                                         onItem_uidChanged: {
                                             if (results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
                                                 let i = sutta_html_view_layout.get_item(results_tab_btn.web_item_key);
-                                                i.item_uid = results_tab_btn.item_uid;
+                                                i.set_data_value('item_uid', results_tab_btn.item_uid);
                                                 // The title changes when an item in FulltextResults is selected,
                                                 // so focus on this tab.
                                                 results_tab_btn.click();
@@ -1055,14 +1069,15 @@ ${query_text}`;
 
                                 function update_item() {
                                     /* logger.log("update_item()"); */
-                                    let tab_data = root.new_tab_data(fulltext_results.current_result_data());
+                                    let result_data = fulltext_results.current_result_data();
+                                    let tab_data = root.new_tab_data(result_data);
                                     let tab_idx = root.add_results_tab(tab_data, true);
                                     // NOTE: It will not find the tab first time while window objects are still
                                     // constructed, but succeeds later on.
                                     root.focus_on_tab_with_id_key("ResultsTab_0");
 
                                     // Only add translation tabs for sutta results, not dictionary results
-                                    if (!tab_data.table_name || tab_data.table_name !== "dict_words") {
+                                    if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords") {
                                         // Add translations tabs for the sutta
                                         // Remove existing webviews for translation tabs
                                         for (let i=0; i < tabs_translations_model.count; i++) {

@@ -3,13 +3,31 @@ import QtQuick
 Loader {
     id: loader
     required property string window_id
-    required property string item_key
-    required property string item_uid
-    required property string table_name
-    required property string sutta_ref
-    required property string sutta_title
-
     required property bool is_dark
+    required property string item_key
+
+    // Passing on tab_data properties as json to avoid the UI reacting to one
+    // property (e.g. item_uid) while the other has not yet been set (e.g.
+    // table_name).
+    required property string data_json
+    // NOTE: data_json properties:
+    // let data = {
+    //     item_uid: tab_data.item_uid,
+    //     table_name: tab_data.table_name,
+    //     sutta_ref: tab_data.sutta_ref,
+    //     sutta_title: tab_data.sutta_title,
+    // };
+
+    function get_data_value(key: string): string {
+        let data = JSON.parse(loader.data_json);
+        return data[key];
+    }
+
+    function set_data_value(key: string, value: string): string {
+        let data = JSON.parse(loader.data_json);
+        data[key] = value;
+        loader.data_json = JSON.stringify(data);
+    }
 
     function active_focus() {
         loader.item.forceActiveFocus(); // qmllint disable missing-property
@@ -43,13 +61,8 @@ Loader {
 
     onLoaded: {
         loader.item.window_id = Qt.binding(() => window_id);
-        loader.item.item_key = Qt.binding(() => item_key);
-        loader.item.item_uid = Qt.binding(() => item_uid);
-        loader.item.table_name = Qt.binding(() => table_name);
-        loader.item.sutta_ref = Qt.binding(() => sutta_ref);
-        loader.item.sutta_title = Qt.binding(() => sutta_title);
         loader.item.is_dark = Qt.binding(() => is_dark);
-        /* loader.item.loadingChanged.connect(loader.loadingChanged); */
+        loader.item.data_json = Qt.binding(() => data_json);
     }
 
 }

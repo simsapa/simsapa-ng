@@ -44,13 +44,13 @@ StackLayout {
         }
 
         let data = {
-            item_key: key,
             item_uid: tab_data.item_uid,
             table_name: tab_data.table_name,
             sutta_ref: tab_data.sutta_ref,
             sutta_title: tab_data.sutta_title,
         };
-        let comp = sutta_html_component.createObject(root, data);
+        let data_json = JSON.stringify(data);
+        let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json });
         root.items_map[key] = comp;
         if (show_item) {
             root.current_key = key;
@@ -95,8 +95,10 @@ StackLayout {
         }
 
         let item = root.items_map[root.current_key];
-        if (item.item_uid !== "Sutta" && item.item_uid !== "Word") {
-            SuttaBridge.emit_update_window_title(item.item_uid, item.sutta_ref, item.sutta_title);
+        let item_data = JSON.parse(item.data_json);
+
+        if (item_data.item_uid !== "Sutta" && item_data.item_uid !== "Word") {
+            SuttaBridge.emit_update_window_title(item_data.item_uid, item_data.sutta_ref, item_data.sutta_title);
         }
 
         for (let i = 0; i < root.children.length; i++) {
