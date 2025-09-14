@@ -73,7 +73,7 @@ Respond with concise answers and respond only with the information requested in 
 Respond with GFM-Markdown formatted text.
 "#.trim().to_string());
 
-                prompts.insert("Gloss Tab: AI Translation".to_string(),
+                prompts.insert("Gloss Tab: AI Translation with Vocabulary".to_string(),
                     r#"
 Translate the following Pāli passage to English, keeping in mind the provided dictionary definitions.
 
@@ -84,6 +84,18 @@ Pāli passage:
 Dictionary definitions:
 
 <<DICTIONARY_DEFINITIONS>>
+
+Respond with only the translation of the Pāli passage.
+Respond with GFM-Markdown formatted text.
+"#.trim().to_string());
+
+                prompts.insert("Gloss Tab: AI Translation without Vocabulary".to_string(),
+                    r#"
+Translate the following Pāli passage to English.
+
+Pāli passage:
+
+<<PALI_PASSAGE>>
 
 Respond with only the translation of the Pāli passage.
 Respond with GFM-Markdown formatted text.

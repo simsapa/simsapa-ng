@@ -312,7 +312,9 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
                     // Send new request with system prompt
                     let system_prompt = SuttaBridge.get_system_prompt("Gloss Tab: System Prompt");
-                    var template = SuttaBridge.get_system_prompt("Gloss Tab: AI Translation");
+                    // Determine the correct prompt template based on the original request
+                    var template_key = translations[i].with_vocab ? "Gloss Tab: AI Translation with Vocabulary" : "Gloss Tab: AI Translation without Vocabulary";
+                    var template = SuttaBridge.get_system_prompt(template_key);
                     var user_prompt = template
                         .replace("<<PALI_PASSAGE>>", paragraph.text)
                         .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
@@ -331,6 +333,65 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         } catch (e) {
             logger.error("Failed to handle retry request:", e);
         }
+    }
+
+    function handle_ai_translate_request(paragraph_index: int, with_vocab = true) {
+        logger.log(`🚀 AI Translate button clicked for paragraph ${paragraph_index}, with_vocab=${with_vocab}`);
+
+        root.load_translation_models();
+        logger.log(`📋 Loaded ${translation_models.count} translation models`);
+
+        if (translation_models.count === 0) {
+            no_models_dialog.open();
+            return;
+        }
+
+        let paragraph = paragraph_model.get(paragraph_index);
+
+        // Load system prompt and translation template
+        let system_prompt = SuttaBridge.get_system_prompt("Gloss Tab: System Prompt");
+        let template_key = with_vocab ? "Gloss Tab: AI Translation with Vocabulary" : "Gloss Tab: AI Translation without Vocabulary";
+        let template = SuttaBridge.get_system_prompt(template_key);
+        let user_prompt = template
+            .replace("<<PALI_PASSAGE>>", paragraph.text)
+            .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
+
+        // Combine system prompt with user prompt (simple approach)
+        let combined_prompt = user_prompt;
+        if (system_prompt && system_prompt.trim() !== "") {
+            combined_prompt = system_prompt + "\n\n" + user_prompt;
+        }
+
+        logger.log(`📝 Generated prompt with system context: "${combined_prompt.substring(0, 200)}..."`);
+
+        let translations = [];
+
+        for (var i = 0; i < translation_models.count; i++) {
+            var item = translation_models.get(i);
+            if (item.enabled) {
+                let request_id = root.generate_request_id();
+                let translation_idx = translations.length; // Use the current translations array length as index
+                logger.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
+                let provider_name = SuttaBridge.get_provider_for_model(item.model_name);
+                pm.prompt_request(paragraph_index, translation_idx, provider_name, item.model_name, combined_prompt);
+                translations.push({
+                    model_name: item.model_name,
+                    status: "waiting",
+                    response: "",
+                    request_id: request_id,
+                    retry_count: 0,
+                    last_updated: Date.now(),
+                    user_selected: translation_idx === 0,
+                    with_vocab: with_vocab
+                });
+            } else {
+                logger.log(`⏭️  Skipping disabled model ${item.model_name}`);
+            }
+        }
+
+        logger.log(`📊 Created ${translations.length} translation entries`);
+        let translations_json = JSON.stringify(translations);
+        paragraph_model.setProperty(paragraph_index, "translations_json", translations_json);
     }
 
     function update_tab_selection(paragraph_idx, tab_index, model_name) {
@@ -1323,64 +1384,16 @@ ${table_rows}
 
                             Button {
                                 id: ai_translate_btn
-                                text: "AI Translate"
+                                text: "AI Translate w/ Vocab"
                                 Layout.alignment: Qt.AlignRight
-                                onClicked: {
-                                    logger.log(`🚀 AI Translate button clicked for paragraph ${paragraph_item.index}`);
+                                onClicked: root.handle_ai_translate_request(paragraph_item.index, true)
+                            }
 
-                                    root.load_translation_models();
-                                    logger.log(`📋 Loaded ${translation_models.count} translation models`);
-
-                                    if (translation_models.count === 0) {
-                                        no_models_dialog.open();
-                                        return;
-                                    }
-
-                                    let paragraph = paragraph_model.get(paragraph_item.index);
-
-                                    // Load system prompt and translation template
-                                    let system_prompt = SuttaBridge.get_system_prompt("Gloss Tab: System Prompt");
-                                    let template = SuttaBridge.get_system_prompt("Gloss Tab: AI Translation");
-                                    let user_prompt = template
-                                        .replace("<<PALI_PASSAGE>>", paragraph_item.text)
-                                        .replace("<<DICTIONARY_DEFINITIONS>>", root.dictionary_definitions_from_paragraph(paragraph));
-
-                                    // Combine system prompt with user prompt (simple approach)
-                                    let combined_prompt = user_prompt;
-                                    if (system_prompt && system_prompt.trim() !== "") {
-                                        combined_prompt = system_prompt + "\n\n" + user_prompt;
-                                    }
-
-                                    logger.log(`📝 Generated prompt with system context: "${combined_prompt.substring(0, 200)}..."`);
-
-                                    let translations = [];
-
-                                    for (var i = 0; i < translation_models.count; i++) {
-                                        var item = translation_models.get(i);
-                                        if (item.enabled) {
-                                            let request_id = root.generate_request_id();
-                                            let translation_idx = translations.length; // Use the current translations array length as index
-                                            logger.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
-                                            let provider_name = SuttaBridge.get_provider_for_model(item.model_name);
-                                            pm.prompt_request(paragraph_item.index, translation_idx, provider_name, item.model_name, combined_prompt);
-                                            translations.push({
-                                                model_name: item.model_name,
-                                                status: "waiting",
-                                                response: "",
-                                                request_id: request_id,
-                                                retry_count: 0,
-                                                last_updated: Date.now(),
-                                                user_selected: translation_idx === 0
-                                            });
-                                        } else {
-                                            logger.log(`⏭️  Skipping disabled model ${item.model_name}`);
-                                        }
-                                    }
-
-                                    logger.log(`📊 Created ${translations.length} translation entries`);
-                                    let translations_json = JSON.stringify(translations);
-                                    paragraph_model.setProperty(paragraph_item.index, "translations_json", translations_json);
-                                }
+                            Button {
+                                id: ai_translate_no_vocab_btn
+                                text: "w/o Vocab"
+                                Layout.alignment: Qt.AlignRight
+                                onClicked: root.handle_ai_translate_request(paragraph_item.index, false)
                             }
 
                             Button {
@@ -1394,7 +1407,20 @@ ${table_rows}
 
                 AssistantResponses {
                     id: assistant_responses_component
-                    title: "AI Translations:"
+                    title: {
+                        try {
+                            let translations = JSON.parse(paragraph_item.translations_json);
+                            if (translations && translations.length > 0) {
+                                // Check the first translation to determine if it was with or without vocab
+                                let with_vocab = translations[0].with_vocab;
+                                return with_vocab ? "AI Translations w/ Vocab:" : "AI Translations w/o Vocab:";
+                            }
+                            return "AI Translations:";
+                        } catch (e) {
+                            logger.error(`❌ Error parsing translations_json for title in paragraph ${paragraph_item.index}:`, e);
+                            return "AI Translations:";
+                        }
+                    }
                     is_dark: root.is_dark
                     Layout.fillWidth: true
                     translations_data: {
