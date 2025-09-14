@@ -29,3 +29,12 @@ project-tree:
 
 bootstrap:
 	cd cli/ && cargo build && cargo run -- bootstrap --write-new-dotenv
+
+appimage: build
+	./build-appimage.sh
+
+appimage-clean:
+	rm -rf Simsapa.AppDir appimage-tools Simsapa-*.AppImage
+
+appimage-rebuild: appimage-clean
+	./build-appimage.sh --clean --force-download

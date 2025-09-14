@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Simsapa Dhamma Reader
+Comment=A sutta reader and Pali dictionary application
+Exec=simsapadhammareader
+Icon=simsapa
+Categories=Education;Literature;Office;
+Keywords=pali;buddhism;tipitaka;dictionary;sutta;dhamma;
+StartupNotify=true
+MimeType=text/plain;
+Terminal=false
+StartupWMClass=simsapadhammareader
