@@ -241,6 +241,10 @@ Item {
         return "# Hello Markdown";
     }
 
+    function open_sutta_search_window() {
+        console.log("open_sutta_search_window()");
+    }
+
     function get_common_words_json(): string {
         return `
 [

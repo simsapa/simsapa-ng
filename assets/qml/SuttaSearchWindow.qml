@@ -601,52 +601,54 @@ ${query_text}`;
                         context: Qt.WindowShortcut
                         onActivated: action_sutta_search.trigger()
                     }
-                    /* onTriggered: TODO */
+                    onTriggered: {
+                        SuttaBridge.open_sutta_search_window()
+                    }
                 }
             }
 
-            CMenuItem {
-                action: Action {
-                    id: action_sutta_study
-                    text: "&Sutta Study"
-                    icon.source: "icons/32x32/bxs_book_bookmark.png"
-                    shortcut: Shortcut {
-                        sequences: ["Ctrl+F5"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_sutta_study.trigger()
-                    }
-                    /* onTriggered: TODO */
-                }
-            }
+            // CMenuItem {
+            //     action: Action {
+            //         id: action_sutta_study
+            //         text: "&Sutta Study"
+            //         icon.source: "icons/32x32/bxs_book_bookmark.png"
+            //         shortcut: Shortcut {
+            //             sequences: ["Ctrl+F5"]
+            //             context: Qt.WindowShortcut
+            //             onActivated: action_sutta_study.trigger()
+            //         }
+            //         /* onTriggered: TODO */
+            //     }
+            // }
 
-            CMenuItem {
-                action: Action {
-                    id: action_dictionary_search
-                    text: "&Dictionary Search"
-                    icon.source: "icons/32x32/bxs_book_content.png"
-                    shortcut: Shortcut {
-                        sequences: ["F6"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_dictionary_search.trigger()
-                    }
-                    /* onTriggered: TODO */
-                }
-            }
+            // CMenuItem {
+            //     action: Action {
+            //         id: action_dictionary_search
+            //         text: "&Dictionary Search"
+            //         icon.source: "icons/32x32/bxs_book_content.png"
+            //         shortcut: Shortcut {
+            //             sequences: ["F6"]
+            //             context: Qt.WindowShortcut
+            //             onActivated: action_dictionary_search.trigger()
+            //         }
+            //         /* onTriggered: TODO */
+            //     }
+            // }
 
-            CMenuItem {
-                action: Action {
-                    id: action_show_word_lookup
-                    text: "Show Word Lookup"
-                    checkable: true
-                    checked: false
-                    shortcut: Shortcut {
-                        sequences: ["Ctrl+F6"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_show_word_lookup.trigger()
-                    }
-                    /* onTriggered: TODO */
-                }
-            }
+            // CMenuItem {
+            //     action: Action {
+            //         id: action_show_word_lookup
+            //         text: "Show Word Lookup"
+            //         checkable: true
+            //         checked: false
+            //         shortcut: Shortcut {
+            //             sequences: ["Ctrl+F6"]
+            //             context: Qt.WindowShortcut
+            //             onActivated: action_show_word_lookup.trigger()
+            //         }
+            //         /* onTriggered: TODO */
+            //     }
+            // }
         }
 
         Menu {

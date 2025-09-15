@@ -148,6 +148,9 @@ pub mod qobject {
         fn set_provider_api_key(self: Pin<&mut SuttaBridge>, provider_name: &QString, api_key: &QString);
 
         #[qinvokable]
+        fn open_sutta_search_window(self: &SuttaBridge);
+
+        #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
 
         #[qinvokable]
@@ -762,5 +765,10 @@ impl qobject::SuttaBridge {
 
     pub fn markdown_to_html(&self, markdown_text: &QString) -> QString {
         QString::from(markdown_to_html(&markdown_text.to_string()))
+    }
+
+    pub fn open_sutta_search_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_sutta_search_window();
     }
 }

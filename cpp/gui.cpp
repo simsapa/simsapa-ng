@@ -53,6 +53,10 @@ void callback_run_sutta_menu_action(QString window_id, QString action, QString q
   emit AppGlobals::manager->signal_run_sutta_menu_action(window_id, action, query_text);
 }
 
+void callback_open_sutta_search_window() {
+  AppGlobals::manager->create_sutta_search_window();
+}
+
 void start(int argc, char* argv[]) {
   dotenv_c();
   init_logger_c();
