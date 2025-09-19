@@ -142,11 +142,13 @@ ApplicationWindow {
     function toggle_model_enabled(model_index, enabled) {
         if (root.selected_provider_index >= 0) {
             let provider = root.current_providers[root.selected_provider_index];
-            provider.models[model_index].enabled = enabled;
+            let model = provider.models[model_index];
 
-            // Save via providers JSON
-            let providers_json = JSON.stringify(root.current_providers);
-            SuttaBridge.set_providers_json(providers_json);
+            // Use the new bridge function to directly update the backend
+            SuttaBridge.set_provider_model_enabled(provider.name, model.model_name, enabled);
+
+            // Update the local data structure
+            provider.models[model_index].enabled = enabled;
 
             // Update the model list display
             model_list_model.setProperty(model_index, "model_enabled", enabled);

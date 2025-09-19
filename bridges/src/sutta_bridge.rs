@@ -160,6 +160,9 @@ pub mod qobject {
         fn remove_provider_model(self: Pin<&mut SuttaBridge>, provider_name: &QString, model_name: &QString);
 
         #[qinvokable]
+        fn set_provider_model_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, model_name: &QString, enabled: bool);
+
+        #[qinvokable]
         fn get_provider_for_model(self: &SuttaBridge, model_name: &QString) -> QString;
 
         #[qinvokable]
@@ -668,6 +671,25 @@ impl qobject::SuttaBridge {
             let providers_json = serde_json::to_string(&app_settings.providers).expect("Can't encode providers JSON");
             drop(app_settings); // Release the lock before saving
             app_data.set_providers_json(&providers_json);
+        }
+    }
+
+    /// Set the enabled status of a specific model for a provider
+    pub fn set_provider_model_enabled(self: Pin<&mut Self>, provider_name: &QString, model_name: &QString, enabled: bool) {
+        let app_data = get_app_data();
+        let mut app_settings = app_data.app_settings_cache.write().expect("Failed to write app settings");
+
+        let provider_name_str = provider_name.to_string();
+        if let Some(provider) = app_settings.providers.iter_mut().find(|p| format!("{:?}", p.name) == provider_name_str) {
+            // Find the model and update its enabled status
+            if let Some(model) = provider.models.iter_mut().find(|m| m.model_name == model_name.to_string()) {
+                model.enabled = enabled;
+
+                // Save via backend function
+                let providers_json = serde_json::to_string(&app_settings.providers).expect("Can't encode providers JSON");
+                drop(app_settings); // Release the lock before saving
+                app_data.set_providers_json(&providers_json);
+            }
         }
     }
 
