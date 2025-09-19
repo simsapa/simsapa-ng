@@ -179,6 +179,10 @@ Item {
         console.log("remove_provider_model():", provider_name, model_name);
     }
 
+    function set_provider_model_enabled(provider_name: string, model_name: string, enabled: bool) {
+        console.log("set_provider_model_enabled():", provider_name, model_name, enabled);
+    }
+
     function get_provider_for_model(model_name: string): string {
         return "OpenRouter";
     }
