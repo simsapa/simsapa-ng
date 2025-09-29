@@ -1397,6 +1397,7 @@ ${table_rows}
                             }
 
                             Button {
+                                id: update_gloss_btn
                                 text: "Update Gloss"
                                 Layout.alignment: Qt.AlignRight
                                 onClicked: root.update_paragraph_gloss(paragraph_item.index)
@@ -1449,7 +1450,7 @@ ${table_rows}
                     Layout.margins: 10
 
                     Text {
-                        text:  "Dictionary definitions from DPD:"
+                        text: "Dictionary definitions from DPD:"
                         font.bold: true
                         font.pointSize: root.vocab_font_point_size
                     }
