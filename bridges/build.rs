@@ -42,6 +42,7 @@ fn main() {
     qml_files.push("../assets/qml/ResponseTabButton.qml");
     qml_files.push("../assets/qml/ScrollableHelper.qml");
     qml_files.push("../assets/qml/Logger.qml");
+    qml_files.push("../assets/qml/UnrecognizedWordsList.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library
