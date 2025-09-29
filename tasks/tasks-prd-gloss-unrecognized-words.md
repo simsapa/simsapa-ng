@@ -18,23 +18,23 @@
 
 ## Tasks
 
-- [ ] 1.0 Add data collection for unrecognized words during DPD lookup
-  - [ ] 1.1 Add properties to GlossTab for storing unrecognized word collections (`global_unrecognized_words: []`, `paragraph_unrecognized_words: {}`)
-  - [ ] 1.2 Modify `process_word_for_glossing()` function to track words where DPD lookup returns empty results
-  - [ ] 1.3 Create helper function `collect_unrecognized_words()` to aggregate failed lookups per paragraph and globally
-  - [ ] 1.4 Update `update_all_glosses()` and `update_gloss()` functions to collect and store unrecognized words
-- [ ] 2.0 Create reusable UnrecognizedWordsList component with Button styling  
-  - [ ] 2.1 Create new QML file `assets/qml/UnrecognizedWordsList.qml` with required properties (word_list, prefix_text)
-  - [ ] 2.2 Implement horizontal Flow layout for Button elements that wrap to available width
-  - [ ] 2.3 Style buttons with `bg_color_darker` background, rounded corners, and hover effects (`bg_color_lighter`)
-  - [ ] 2.4 Add signal `wordClicked(string word)` for external handling of word clicks
-  - [ ] 2.5 Register new component in `bridges/build.rs` qml_files list
-- [ ] 3.0 Integrate unrecognized words display in global location
-  - [ ] 3.1 Add UnrecognizedWordsList component under `main_gloss_input_group` after the button row
-  - [ ] 3.2 Bind component's `word_list` property to `global_unrecognized_words`
-  - [ ] 3.3 Set prefix_text to "Click for deconstructor lookup:"
-  - [ ] 3.4 Implement visibility logic to hide when `global_unrecognized_words` is empty
-  - [ ] 3.5 Connect `wordClicked` signal to WordSummary lookup functionality
+- [x] 1.0 Add data collection for unrecognized words during DPD lookup
+  - [x] 1.1 Add properties to GlossTab for storing unrecognized word collections (`global_unrecognized_words: []`, `paragraph_unrecognized_words: {}`)
+  - [x] 1.2 Modify `process_word_for_glossing()` function to track words where DPD lookup returns empty results
+  - [x] 1.3 Create helper function `collect_unrecognized_words()` to aggregate failed lookups per paragraph and globally
+  - [x] 1.4 Update `update_all_glosses()` and `update_gloss()` functions to collect and store unrecognized words
+- [x] 2.0 Create reusable UnrecognizedWordsList component with Button styling  
+  - [x] 2.1 Create new QML file `assets/qml/UnrecognizedWordsList.qml` with required properties (word_list, prefix_text)
+  - [x] 2.2 Implement horizontal Flow layout for Button elements that wrap to available width
+  - [x] 2.3 Style buttons with `bg_color_darker` background, rounded corners, and hover effects (`bg_color_lighter`)
+  - [x] 2.4 Add signal `wordClicked(string word)` for external handling of word clicks
+  - [x] 2.5 Register new component in `bridges/build.rs` qml_files list
+- [x] 3.0 Integrate unrecognized words display in global location
+  - [x] 3.1 Add UnrecognizedWordsList component under `main_gloss_input_group` after the button row
+  - [x] 3.2 Bind component's `word_list` property to `global_unrecognized_words`
+  - [x] 3.3 Set prefix_text to "Click for deconstructor lookup:"
+  - [x] 3.4 Implement visibility logic to hide when `global_unrecognized_words` is empty
+  - [x] 3.5 Connect `wordClicked` signal to WordSummary lookup functionality
 - [ ] 4.0 Integrate unrecognized words display per-paragraph
   - [ ] 4.1 Modify paragraph delegate component to include UnrecognizedWordsList above "Dictionary definitions from DPD:" text
   - [ ] 4.2 Bind word_list to paragraph-specific unrecognized words from `paragraph_unrecognized_words[paragraph_index]`

@@ -26,12 +26,19 @@ Item {
 
     property var handle_open_dict_tab_fn
 
+    // Unrecognized words tracking
+    property var global_unrecognized_words: []
+    property var paragraph_unrecognized_words: ({})
+
     property string text_color: root.is_dark ? "#F0F0F0" : "#000000"
     property string bg_color: root.is_dark ? "#23272E" : "#FAE6B2"
     property string bg_color_lighter: root.is_dark ? "#2E333D" : "#FBEDC7"
     property string bg_color_darker: root.is_dark ? "#1C2025" : "#F8DA8E"
 
     property string border_color: root.is_dark ? "#0a0a0a" : "#ccc"
+
+    // Signals
+    signal requestWordSummary(string word)
 
     Logger { id: logger }
     PromptManager { id: pm }
@@ -553,9 +560,9 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             return null;
         }
 
-        // Skip if no results
+        // Skip if no results - but return info about unrecognized word
         if (!results || results.length === 0) {
-            return null;
+            return { is_unrecognized: true, word: word_info.word };
         }
 
         // Get the stem from the first result
@@ -607,9 +614,16 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     //     return glossed_words;
     // }
 
-    function populate_paragraph_words_data(paragraph_item, paragraph_text, paragraph_shown_stems, global_stems, check_global) {
+    function populate_paragraph_words_data(paragraph_item, paragraph_text, paragraph_shown_stems, global_stems, check_global, paragraph_index) {
         paragraph_item.words_data = [];
         var words = SuttaBridge.extract_words(paragraph_text);
+
+        // Initialize paragraph unrecognized words array if it doesn't exist
+        if (paragraph_index !== undefined) {
+            if (!root.paragraph_unrecognized_words[paragraph_index]) {
+                root.paragraph_unrecognized_words[paragraph_index] = [];
+            }
+        }
 
         for (var i = 0; i < words.length; i++) {
             var processed_word = root.process_word_for_glossing(
@@ -620,7 +634,33 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             );
 
             if (processed_word) {
-                paragraph_item.words_data.push(processed_word);
+                if (processed_word.is_unrecognized) {
+                    // Collect unrecognized word
+                    var word = processed_word.word;
+                    logger.debug(`🔍 Unrecognized word found: ${word}`);
+                    
+                    // Add to global unrecognized words if not already there
+                    if (root.global_unrecognized_words.indexOf(word) === -1) {
+                        var temp_global = root.global_unrecognized_words.slice();
+                        temp_global.push(word);
+                        root.global_unrecognized_words = temp_global;
+                        logger.debug(`📝 Added to global unrecognized words: ${word}, total count: ${root.global_unrecognized_words.length}`);
+                    }
+                    
+                    // Add to paragraph unrecognized words if not already there
+                    if (paragraph_index !== undefined) {
+                        if (root.paragraph_unrecognized_words[paragraph_index].indexOf(word) === -1) {
+                            var temp_para = root.paragraph_unrecognized_words[paragraph_index].slice();
+                            temp_para.push(word);
+                            var temp_all_para = Object.assign({}, root.paragraph_unrecognized_words);
+                            temp_all_para[paragraph_index] = temp_para;
+                            root.paragraph_unrecognized_words = temp_all_para;
+                            logger.debug(`📝 Added to paragraph ${paragraph_index} unrecognized words: ${word}`);
+                        }
+                    }
+                } else {
+                    paragraph_item.words_data.push(processed_word);
+                }
             }
         }
     }
@@ -638,7 +678,11 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             );
 
             if (processed_word) {
-                glossed_words.push(processed_word);
+                if (processed_word.is_unrecognized) {
+                    // Handle unrecognized word - will be collected later
+                } else {
+                    glossed_words.push(processed_word);
+                }
             }
         }
 
@@ -696,6 +740,11 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         root.current_text = gloss_text_input.text;
         paragraph_model.clear();
         root.global_shown_stems = {};
+        
+        // Reset unrecognized words collections
+        root.global_unrecognized_words = [];
+        root.paragraph_unrecognized_words = {};
+        logger.debug("🧹 Reset unrecognized words collections");
 
         let translations_json = "[]";
 
@@ -740,6 +789,7 @@ And what, bhikkhus, is concentration?
                 paragraph_shown_stems,
                 root.global_shown_stems,
                 root.no_duplicates_globally,
+                i
             );
 
             // Convert words_data to JSON for storage in ListModel, as ListModel can't handle complex JS arrays
@@ -761,6 +811,9 @@ And what, bhikkhus, is concentration?
         if (!paragraph) return;
 
         var paragraph_shown_stems = {};
+        
+        // Reset unrecognized words for this paragraph
+        root.paragraph_unrecognized_words[index] = [];
 
         // If global deduplication, collect stems from previous paragraphs
         var previous_stems = root.no_duplicates_globally ? root.get_previous_paragraph_stems(index) : {};
@@ -772,7 +825,8 @@ And what, bhikkhus, is concentration?
             paragraph.text,
             paragraph_shown_stems,
             previous_stems,
-            root.no_duplicates_globally
+            root.no_duplicates_globally,
+            index
         );
 
         // Update the model with JSON
@@ -1283,6 +1337,19 @@ ${table_rows}
                                 onClicked: root.update_all_glosses()
                             }
                         }
+                    }
+                }
+
+                // Global unrecognized words list
+                UnrecognizedWordsList {
+                    Layout.fillWidth: true
+                    word_list: root.global_unrecognized_words
+                    prefix_text: "Click for deconstructor lookup:"
+                    bg_color_darker: root.bg_color_darker
+                    bg_color_lighter: root.bg_color_lighter
+                    text_color: root.text_color
+                    onWordClicked: function(word) {
+                        root.requestWordSummary(word)
                     }
                 }
 
