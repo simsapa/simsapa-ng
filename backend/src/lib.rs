@@ -27,7 +27,7 @@ use dotenvy::dotenv;
 use walkdir::WalkDir;
 use cfg_if::cfg_if;
 
-use crate::logger::{info, warn, error};
+use crate::logger::{info, warn, error, LOGGER};
 use crate::app_data::AppData;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
@@ -236,7 +236,16 @@ pub fn get_create_simsapa_internal_app_root() -> Result<PathBuf, Box<dyn Error>>
 }
 
 pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
-    info(&format!("get_create_simsapa_dir()"));
+    // NOTE: this function is also called in Logger::new(), so we use println!()
+    // when the logger is not yet available.
+    let logger_initialized = LOGGER.get().is_some();
+
+    let msg = "get_create_simsapa_dir()";
+    if logger_initialized {
+        info(msg);
+    } else {
+        println!("{}", msg);
+    }
     let simsapa_dir = match env::var("SIMSAPA_DIR") {
         // If SIMSAPA_DIR env variable was defined, use that.
         Ok(s) => Ok(PathBuf::from(s)),
@@ -259,13 +268,23 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
             let storage_config_path = internal_app_root.join("storage-path.txt");
             let mut file = match File::open(&storage_config_path) {
                 Ok(file) => {
-                    info(&format!("Found: {}", &storage_config_path.to_str().unwrap_or_default()));
+                    let msg = format!("Found: {}", &storage_config_path.to_str().unwrap_or_default());
+                    if logger_initialized {
+                        info(&msg);
+                    } else {
+                        println!("{}", msg);
+                    }
                     file
                 },
                 Err(e) => {
-                    warn(&format!("File not found: {}, Error: {}",
-                                  &storage_config_path.to_str().unwrap_or_default(),
-                                  e));
+                    let msg = format!("File not found: {}, Error: {}",
+                                      &storage_config_path.to_str().unwrap_or_default(),
+                                      e);
+                    if logger_initialized {
+                        warn(&msg);
+                    } else {
+                        eprintln!("{}", msg);
+                    }
                     return Ok(internal_app_root);
                 },
             };
@@ -274,12 +293,22 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
             match file.read_to_string(&mut contents) {
                 Ok(_) => (),
                 Err(e) => {
-                    error(&format!("Failed to read file: {}", e));
+                    let msg = format!("Failed to read file: {}", e);
+                    if logger_initialized {
+                        error(&msg);
+                    } else {
+                        eprintln!("{}", msg);
+                    }
                     return Ok(internal_app_root);
                 },
             }
 
-            info(&format!("Contents: {}", &contents));
+            let msg = format!("Contents: {}", &contents);
+            if logger_initialized {
+                info(&msg);
+            } else {
+                println!("{}", msg);
+            }
 
             // storage path
             let p = PathBuf::from(contents);
@@ -295,15 +324,30 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
 
 pub fn get_create_simsapa_app_assets_path() -> PathBuf {
     let p = get_create_simsapa_dir().unwrap_or(PathBuf::from(".")).join("app-assets/");
+    let logger_initialized = LOGGER.get().is_some();
 
     match p.try_exists() {
         Ok(r) => if !r {
             match create_dir_all(&p) {
                 Ok(_) => {},
-                Err(e) => error(&format!("{}", e)),
+                Err(e) => {
+                    let msg = format!("{}", e);
+                    if logger_initialized {
+                        error(&msg);
+                    } else {
+                        eprintln!("{}", msg);
+                    }
+                },
             };
         }
-        Err(e) => error(&format!("{}", e)),
+        Err(e) => {
+            let msg = format!("{}", e);
+            if logger_initialized {
+                error(&msg);
+            } else {
+                eprintln!("{}", msg);
+            }
+        },
     }
 
     p

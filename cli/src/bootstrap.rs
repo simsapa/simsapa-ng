@@ -5,7 +5,6 @@ use std::process::Command;
 use anyhow::{Result, Context};
 use chrono::{DateTime, Local};
 use simsapa_backend::{init_app_data, get_create_simsapa_dir, get_create_simsapa_app_assets_path};
-use simsapa_backend::logger::init_logger;
 
 use crate::import_stardict_dictionary;
 
@@ -67,9 +66,6 @@ RELEASE_CHANNEL=development
     }
 
     clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
-
-    init_logger()
-        .map_err(|e| anyhow::anyhow!("init_logger() failed: {}", e))?;
 
     appdata_migrate(&bootstrap_assets_dir, &assets_dir)?;
 

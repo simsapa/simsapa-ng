@@ -324,29 +324,8 @@ impl Logger {
 }
 
 // Global logger instance using OnceLock for thread-safe initialization
-static LOGGER: OnceLock<Logger> = OnceLock::new();
-
-pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
-    if LOGGER.get().is_none() {
-        Logger::init_tracing()?;
-        let logger = Logger::new()?;
-        LOGGER.set(logger).map_err(|_| "Logger already initialized")?;
-    }
-    Ok(())
-}
-
-/// C-compatible logger initialization function
-/// Returns 0 on success, 1 on error
-#[unsafe(no_mangle)]
-pub extern "C" fn init_logger_c() -> i32 {
-    match init_logger() {
-        Ok(()) => 0,
-        Err(e) => {
-            eprintln!("Logger initialization failed: {}", e);
-            1
-        }
-    }
-}
+pub static LOGGER: OnceLock<Logger> = OnceLock::new();
+static TRACING_INITIALIZED: OnceLock<()> = OnceLock::new();
 
 /// Check if logger is already initialized
 /// Returns 1 if initialized, 0 if not
@@ -358,15 +337,32 @@ pub extern "C" fn is_logger_initialized() -> i32 {
 fn with_logger<F, R>(f: F) -> R
 where
     F: FnOnce(&Logger) -> R,
-    R: Default,
 {
-    match LOGGER.get() {
-        Some(logger) => f(logger),
-        None => {
-            eprintln!("Logger not initialized! Call init_logger() first.");
-            R::default()
+    // Initialize tracing once, globally
+    TRACING_INITIALIZED.get_or_init(|| {
+        if let Err(e) = Logger::init_tracing() {
+            eprintln!("Failed to initialize tracing: {}", e);
         }
-    }
+    });
+    
+    let logger = LOGGER.get_or_init(|| {
+        // Create logger instance
+        match Logger::new() {
+            Ok(logger) => logger,
+            Err(e) => {
+                eprintln!("Failed to create logger: {}", e);
+                // Return a disabled logger that will silently do nothing
+                Logger {
+                    log_file: std::path::PathBuf::new(),
+                    time_log: None,
+                    disable_log: true,
+                    enable_print_log: false,
+                }
+            }
+        }
+    });
+
+    f(logger)
 }
 
 // Public API functions

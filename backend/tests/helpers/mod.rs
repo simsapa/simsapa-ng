@@ -2,7 +2,6 @@
 
 use dotenvy::dotenv;
 
-use simsapa_backend::logger::init_logger;
 use simsapa_backend::{init_app_data, get_app_data, get_app_globals};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
@@ -10,7 +9,6 @@ use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
 pub fn app_data_setup() {
     // unsafe { env::set_var("SIMSAPA_DIR", "../../assets-testing/"); }
     dotenv().ok();
-    let _ = init_logger();
     init_app_data();
 }
 
