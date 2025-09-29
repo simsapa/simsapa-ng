@@ -1076,6 +1076,10 @@ ${query_text}`;
                                 function update_item() {
                                     /* logger.log("update_item()"); */
                                     let result_data = fulltext_results.current_result_data();
+                                    // E.g. in the case when fulltext_list.currentIndex is set to -1 such as when update_page() shows a new page of results.
+                                    if (!result_data) {
+                                        return;
+                                    }
                                     let tab_data = root.new_tab_data(result_data);
                                     let tab_idx = root.add_results_tab(tab_data, true);
                                     // NOTE: It will not find the tab first time while window objects are still
