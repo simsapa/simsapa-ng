@@ -775,7 +775,8 @@ ${query_text}`;
                         color: SplitHandle.pressed ? panel_split.palette.dark : (SplitHandle.hovered ? panel_split.palette.midlight : panel_split.palette.mid)
                         containmentMask: Item {
                             x: (panel_split_handle.width - width) / 2
-                            width: root.is_desktop ? 20 : 40
+                            // NOTE: 20 : 40 or 15 : 30 is too wide, interferes with dragging the scroll bar
+                            width: root.is_desktop ? 10 : 20
                             height: panel_split_handle.height
                         }
                     }
@@ -967,7 +968,7 @@ ${query_text}`;
                                 color: SplitHandle.pressed ? sutta_split.palette.dark : (SplitHandle.hovered ? sutta_split.palette.midlight : sutta_split.palette.mid)
                                 containmentMask: Item {
                                     y: (sutta_split_handle.height - height) / 2
-                                    height: root.is_desktop ? 20 : 40
+                                    height: root.is_desktop ? 15 : 30
                                     width: sutta_split_handle.width
                                 }
                             }
