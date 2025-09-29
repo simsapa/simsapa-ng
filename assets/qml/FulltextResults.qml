@@ -137,7 +137,11 @@ ColumnLayout {
     }
 
     function update_page() {
+        // Remove existing item selection.
+        fulltext_list.currentIndex = -1;
+        // Remove current list of items.
         results_model.clear()
+        // Populate model with new items.
         root.total_pages = (root.total_hits > 0 ? Math.ceil(root.total_hits / root.page_len) : 1)
         for (var i = 0; i < root.current_results.length; i++) {
             var item = root.current_results[i];
