@@ -1143,6 +1143,13 @@ ${query_text}`;
                                 handle_open_dict_tab_fn: root.open_dict_tab
                             }
 
+                            Connections {
+                                target: gloss_tab
+                                function onRequestWordSummary(word) {
+                                    root.set_summary_query(word);
+                                }
+                            }
+
                             PromptsTab {
                                 id: prompts_tab
                                 window_id: root.window_id

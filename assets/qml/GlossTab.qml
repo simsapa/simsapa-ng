@@ -1516,6 +1516,19 @@ ${table_rows}
                     spacing: 10
                     Layout.margins: 10
 
+                    // Per-paragraph unrecognized words list
+                    UnrecognizedWordsList {
+                        Layout.fillWidth: true
+                        word_list: root.paragraph_unrecognized_words[paragraph_item.index] || []
+                        prefix_text: "Click for deconstructor lookup:"
+                        bg_color_darker: root.bg_color_darker
+                        bg_color_lighter: root.bg_color_lighter
+                        text_color: root.text_color
+                        onWordClicked: function(word) {
+                            root.requestWordSummary(word)
+                        }
+                    }
+
                     Text {
                         text: "Dictionary definitions from DPD:"
                         font.bold: true
