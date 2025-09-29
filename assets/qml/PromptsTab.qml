@@ -310,7 +310,7 @@ Item {
         let save_fn = function() {
             let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
             if (ok) {
-                msg_dialog_ok.text = "Export completed."
+                msg_dialog_ok.text = "Exported as: " + save_file_name;
                 msg_dialog_ok.open();
             } else {
                 msg_dialog_ok.text = "Export failed."
