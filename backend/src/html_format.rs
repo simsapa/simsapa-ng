@@ -297,16 +297,17 @@ pub fn extract_element_by_id_from_indented(html: &str, id: &str) -> Option<Strin
 /// Extracts multiple HTML elements by their IDs
 ///
 /// # Arguments
-/// * `html` - The indented HTML string to search in
+/// * `html` - The HTML string to search in (will run html_indent() on it)
 /// * `ids` - A slice of ID values to search for
 ///
 /// # Returns
 /// * `Vec<(String, String)>` - A vector of tuples containing (id, extracted_html)
-pub fn extract_elements_by_ids(html: &str, ids: &[&str]) -> Vec<(String, String)> {
+pub fn extract_elements_by_ids(un_indented_html: &str, ids: &[&str]) -> Vec<(String, String)> {
     let mut results = Vec::new();
+    let indented_html = html_indent(un_indented_html);
 
     for id in ids {
-        if let Some(element) = extract_element_by_id_from_indented(html, id) {
+        if let Some(element) = extract_element_by_id_from_indented(&indented_html, id) {
             results.push((id.to_string(), element));
         }
     }

@@ -2,7 +2,8 @@ import QtQuick
 
 Item {
     function prompt_request(paragraph_idx: int, translation_idx: int, provider_name: string, model_name: string, prompt: string) {
-        console.log("prompt_request():", paragraph_idx, translation_idx, provider_name, model_name, prompt.slice(0, 30));
+        // Silence for less output during qml tests.
+        // console.log("prompt_request():", paragraph_idx, translation_idx, provider_name, model_name, prompt.slice(0, 30));
     }
 
     function prompt_request_with_messages(sender_message_idx: int, provider_name: string, model_name: string, messages_json: string) {

@@ -18,6 +18,11 @@ count-code:
 simsapa.min.js:
 	npx webpack
 
+test: rust-test qml-test
+
+rust-test:
+	cd backend && cargo test && cd ../bridges && cargo test && cd ../cli && cargo test
+
 # qml-test-one:
 # 	env QT_QPA_PLATFORM=offscreen qmltestrunner -import ./assets/qml/ -input ./assets/qml/ -functions 'CommonWords::test_clean_stem'
 

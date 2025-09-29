@@ -1019,9 +1019,9 @@ mod tests {
 
     #[test]
     fn test_extract_words_nti() {
-        let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu”nti.";
+        let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu”nti. dhārayāmī’”ti";
         let words: String = extract_words(text).join(" ");
-        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti".to_string();
+        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti dhārayāmi ti".to_string();
         assert_eq!(words, expected_words);
     }
 

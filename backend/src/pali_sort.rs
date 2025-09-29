@@ -363,7 +363,7 @@ mod tests {
         let words = vec!["vā", "a", "ka"];
         let sorted = pali_list_sorter(words);
         // "a" (01) < "ka" (0901) < "vā" (3702)
-        assert_eq!(sorted, vec!["a", "ka", "va"]);
+        assert_eq!(sorted, vec!["a", "ka", "vā"]);
     }
 
     #[test]
