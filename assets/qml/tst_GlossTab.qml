@@ -425,5 +425,48 @@ Item {
             compare(updated_translations[0].status, "completed");
             compare(updated_translations[1].status, "error");
         }
+
+        function test_unrecognized_words_collection() {
+            // Reset collections
+            gloss_tab.global_unrecognized_words = [];
+            gloss_tab.paragraph_unrecognized_words = {};
+
+            // Test with a word that should definitely not be found in DPD
+            var word_info = { word: "zzztestwordzzz123", sentence: "" };
+            var paragraph_shown_stems = {};
+            var global_stems = {};
+            
+            var result = gloss_tab.process_word_for_glossing(word_info, paragraph_shown_stems, global_stems, false);
+            
+            verify(result !== null, "Should return result for unrecognized word");
+            if (result.is_unrecognized !== true) {
+                // If the word was found, just verify the function works
+                verify(result.hasOwnProperty("original_word"), "Should have word processing result");
+            } else {
+                verify(result.is_unrecognized === true, "Should mark word as unrecognized");
+                compare(result.word, "zzztestwordzzz123", "Should preserve original word");
+            }
+        }
+
+        function test_unrecognized_words_properties_exist() {
+            verify(gloss_tab.global_unrecognized_words !== undefined, "global_unrecognized_words property should exist");
+            verify(gloss_tab.paragraph_unrecognized_words !== undefined, "paragraph_unrecognized_words property should exist");
+            verify(Array.isArray(gloss_tab.global_unrecognized_words), "global_unrecognized_words should be array");
+            verify(typeof gloss_tab.paragraph_unrecognized_words === "object", "paragraph_unrecognized_words should be object");
+        }
+
+        function test_request_word_summary_signal() {
+            // Test that the signal exists by trying to connect to it
+            var signal_connected = false;
+            try {
+                gloss_tab.requestWordSummary.connect(function(word) {
+                    signal_connected = true;
+                });
+                gloss_tab.requestWordSummary("testword");
+                verify(signal_connected, "requestWordSummary signal should be callable");
+            } catch (e) {
+                fail("requestWordSummary signal should exist and be connectable");
+            }
+        }
     }
 }

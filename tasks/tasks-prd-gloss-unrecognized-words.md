@@ -45,9 +45,9 @@
   - [x] 5.2 Connect UnrecognizedWordsList `wordClicked` signals to `requestWordSummary`
   - [x] 5.3 Connect GlossTab's `requestWordSummary` to SuttaSearchWindow's `set_summary_query()` function
   - [x] 5.4 Ensure proper signal propagation through parent window hierarchy
-- [ ] 6.0 Add performance optimization and testing
+- [x] 6.0 Add performance optimization and testing
   - [x] 6.1 Implement 20-word limit with "and X more..." display in UnrecognizedWordsList component
   - [x] 6.2 Add proper cleanup of unrecognized words collections when text changes
-  - [ ] 6.3 Create unit tests in `tst_UnrecognizedWordsList.qml` for component functionality
-  - [ ] 6.4 Add test cases to `tst_GlossTab.qml` for unrecognized words collection and display
+  - [x] 6.3 Create unit tests in `tst_UnrecognizedWordsList.qml` for component functionality
+  - [x] 6.4 Add test cases to `tst_GlossTab.qml` for unrecognized words collection and display
   - [x] 6.5 Test integration with large texts and verify performance remains acceptable

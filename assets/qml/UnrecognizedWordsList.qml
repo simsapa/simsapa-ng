@@ -22,8 +22,8 @@ Item {
     signal wordClicked(string word)
     
     // Calculate visible words and overflow
-    readonly property var visible_words: word_list.length > max_words ? word_list.slice(0, max_words) : word_list
-    readonly property int overflow_count: Math.max(0, word_list.length - max_words)
+    readonly property var visible_words: (word_list && word_list.length > max_words) ? word_list.slice(0, max_words) : (word_list || [])
+    readonly property int overflow_count: Math.max(0, (word_list ? word_list.length : 0) - max_words)
     readonly property bool has_overflow: overflow_count > 0
     
     // Only show when there are words
@@ -83,7 +83,6 @@ Item {
                 color: root.text_color
                 font.pointSize: 9
                 font.italic: true
-                anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
