@@ -3,6 +3,7 @@
 use std::fs;
 use std::path::PathBuf;
 
+use serial_test::serial;
 use simsapa_backend::get_app_data;
 use simsapa_backend::html_format::{html_indent, extract_element_by_id_from_indented};
 
@@ -10,6 +11,7 @@ mod helpers;
 use helpers as h;
 
 #[test]
+#[serial]
 fn test_html_for_pali() {
     h::app_data_setup();
 
@@ -28,6 +30,7 @@ fn test_html_for_pali() {
 }
 
 #[test]
+#[serial]
 fn test_html_en() {
     h::app_data_setup();
 
@@ -45,6 +48,7 @@ fn test_html_en() {
 }
 
 #[test]
+#[serial]
 fn test_line_by_line_with_variants() {
     h::app_data_setup();
 
@@ -62,6 +66,7 @@ fn test_line_by_line_with_variants() {
 }
 
 #[test]
+#[serial]
 fn test_pali_only() {
     h::app_data_setup();
 
@@ -92,6 +97,7 @@ fn test_pali_only() {
 }
 
 #[test]
+#[serial]
 fn test_sn56_11_html_format_validation() {
     h::app_data_setup();
 
@@ -106,20 +112,24 @@ fn test_sn56_11_html_format_validation() {
     // Validate specific segment format with nested spans
     assert!(html.contains(r#"<span class="segment" id="sn56.11:0.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">Saṁyutta Nikāya 56.11 </span></span></span>"#));
 
+    let html_article = extract_element_by_id_from_indented(&html_indent(&html), "sn56.11").unwrap_or("None".to_string());
+
     // Validate ordering - these segments should appear in this order
-    let pos_0_1 = html.find(r#"id="sn56.11:0.1""#).expect("Should find segment 0.1");
-    let pos_0_2 = html.find(r#"id="sn56.11:0.2""#).expect("Should find segment 0.2");
-    let pos_0_3 = html.find(r#"id="sn56.11:0.3""#).expect("Should find segment 0.3");
-    let pos_1_1 = html.find(r#"id="sn56.11:1.1""#).expect("Should find segment 1.1");
+    let pos_0_1 = html_article.find(r#"id="sn56.11:0.1""#).expect("Should find segment 0.1");
+    let pos_0_2 = html_article.find(r#"id="sn56.11:0.2""#).expect("Should find segment 0.2");
+    let pos_0_3 = html_article.find(r#"id="sn56.11:0.3""#).expect("Should find segment 0.3");
+    let pos_1_1 = html_article.find(r#"id="sn56.11:1.1""#).expect("Should find segment 1.1");
 
     // Assert correct ordering
     assert!(pos_0_1 < pos_0_2, "Segment 0.1 should come before 0.2");
     assert!(pos_0_2 < pos_0_3, "Segment 0.2 should come before 0.3");
     assert!(pos_0_3 < pos_1_1, "Segment 0.3 should come before 1.1");
 
+    // fs::write(PathBuf::from("sn56.11_pli_ms.article.html"), html_article.clone()).expect("Unable to write file!");
+
     // Validate against reference file
-    let expected_html = fs::read_to_string(PathBuf::from("tests/data/sn56.11_pli_ms.html"))
+    let expected_html = fs::read_to_string(PathBuf::from("tests/data/sn56.11_pli_ms.article.html"))
         .expect("Failed to read reference file");
 
-    assert_eq!(html, expected_html);
+    assert_eq!(html_article, expected_html);
 }

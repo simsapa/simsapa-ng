@@ -2,6 +2,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::collections::{HashMap, BTreeMap};
 
+use serial_test::serial;
 use simsapa_backend::get_app_data;
 use simsapa_backend::helpers::{extract_words, normalize_query_text};
 use simsapa_backend::db::dpd::LookupResult;
@@ -10,6 +11,7 @@ mod helpers;
 use helpers as h;
 
 #[test]
+#[serial]
 fn test_dpd_lookup_list() {
     h::app_data_setup();
     let app_data = get_app_data();
@@ -50,6 +52,7 @@ fn test_dpd_lookup_list() {
 }
 
 #[test]
+#[serial]
 fn test_dpd_lookup_generate_json() {
     h::app_data_setup();
     let app_data = get_app_data();

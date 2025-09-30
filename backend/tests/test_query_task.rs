@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use serial_test::serial;
 use simsapa_backend::types::{SearchArea, SearchMode};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::get_app_data;
@@ -8,6 +9,7 @@ mod helpers;
 use helpers as h;
 
 #[test]
+#[serial]
 fn test_highlight_text_simple() {
     h::app_data_setup();
     let task = h::create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
@@ -17,6 +19,7 @@ fn test_highlight_text_simple() {
 }
 
 #[test]
+#[serial]
 fn test_highlight_text_uppercase() {
     h::app_data_setup();
     let task = h::create_test_task("SATIpaṭṭhā", SearchMode::ContainsMatch);
@@ -26,6 +29,7 @@ fn test_highlight_text_uppercase() {
 }
 
 #[test]
+#[serial]
 fn test_highlight_text_regex_special_chars() {
     h::app_data_setup();
     let task = h::create_test_task("test", SearchMode::ContainsMatch);
@@ -35,6 +39,7 @@ fn test_highlight_text_regex_special_chars() {
 }
 
 #[test]
+#[serial]
 fn test_fragment_around_text_middle() {
     h::app_data_setup();
     let task = h::create_test_task("satipaṭṭhā", SearchMode::ContainsMatch);
@@ -46,6 +51,7 @@ fn test_fragment_around_text_middle() {
 }
 
 #[test]
+#[serial]
 fn test_sutta_search_contains_match() {
     h::app_data_setup();
     let app_data = get_app_data();
@@ -75,6 +81,7 @@ fn test_sutta_search_contains_match() {
 }
 
 #[test]
+#[serial]
 fn test_sutta_search_contains_match_with_punctuation() {
     h::app_data_setup();
     let app_data = get_app_data();
@@ -120,6 +127,7 @@ fn test_sutta_search_contains_match_with_punctuation() {
 }
 
 #[test]
+#[serial]
 fn test_sutta_search_contains_match_exact_results() {
     h::app_data_setup();
     let app_data = get_app_data();
@@ -154,10 +162,11 @@ fn test_sutta_search_contains_match_exact_results() {
 }
 
 #[test]
+#[serial]
 fn test_dict_word_search_contains_match() {
     h::app_data_setup();
     let app_data = get_app_data();
-    let params = h::get_uid_params();
+    let params = h::get_contains_params();
 
     let query = "awakening factor of enlightenment";
 
@@ -183,6 +192,7 @@ fn test_dict_word_search_contains_match() {
 }
 
 #[test]
+#[serial]
 fn test_dict_word_uid_match() {
     h::app_data_setup();
     let app_data = get_app_data();

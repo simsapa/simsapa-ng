@@ -1,9 +1,11 @@
+use serial_test::serial;
 use simsapa_backend::get_app_data;
 
 mod helpers;
 use helpers as h;
 
 #[test]
+#[serial]
 fn test_dpd_deconstructor_list() {
     h::app_data_setup();
     let app_data = get_app_data();
