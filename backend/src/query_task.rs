@@ -184,7 +184,7 @@ impl<'a> SearchQueryTask<'a> {
 
     /// Creates a snippet around query terms (handles "AND").
     pub fn fragment_around_query(&self, query: &str, content: &str) -> String {
-        if query.starts_with("uid:") {
+        if query.starts_with("uid:") || query.ends_with("/dpd") {
             return self.fragment_around_text("", content, 20, 500);
         }
         // Simple approach: find the first term and fragment around it.
@@ -202,7 +202,7 @@ impl<'a> SearchQueryTask<'a> {
              }
         }
 
-        error(&format!("Can't create fragment, query not found: {}", query));
+        error(&format!("Can't create fragment, query terms not found in content: {}", query));
 
         // If no terms are found, return the beginning of the content
         self.fragment_around_text("", content, before, after)

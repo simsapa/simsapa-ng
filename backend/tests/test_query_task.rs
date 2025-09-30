@@ -215,7 +215,7 @@ fn test_dict_word_uid_match() {
         }
     };
 
-    // println!("{}", results[0].snippet);
+    println!("{}", results[0].snippet);
 
     assert_eq!(results[0].uid, "satipaṭṭhāna 1/dpd");
     assert!(results[0].snippet.starts_with("masc attending mindfully being present with mindfulness [sati + upaṭṭhāna]"));

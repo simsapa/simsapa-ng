@@ -8,6 +8,7 @@ license = "GPLv3"
 [lib]
 name = "simsapa_backend"
 path = "src/lib.rs"
+doctest = false
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
