@@ -1,0 +1,71 @@
+{
+  "dassanāya": [
+    {
+      "uid": "32126/dpd",
+      "word": "dassanāya 1",
+      "summary": "<i>(nt)</i> to see; to look at  <b>[dassa + ana + āya], [dassana + āya]</b>  <i>nt, dat sg of dassana</i>"
+    },
+    {
+      "uid": "32127/dpd",
+      "word": "dassanāya 2",
+      "summary": "<i>(nt)</i> in order to visit; for the purpose of seeing  <b>[dassa + ana + āya], [dassana + āya]</b>  <i>nt, dat sg of dassana</i>"
+    },
+    {
+      "uid": "32106/dpd",
+      "word": "dassana 1",
+      "summary": "<i>(nt)</i> sight (of); vision (of); appearance (of)  <b>[dassa + ana]</b>  <i>nt</i>"
+    },
+    {
+      "uid": "32107/dpd",
+      "word": "dassana 2",
+      "summary": "<i>(nt)</i> seeing; watching  <b>[dassa + ana]</b>  <i>nt, act</i>"
+    },
+    {
+      "uid": "32108/dpd",
+      "word": "dassana 3",
+      "summary": "<i>(nt)</i> insight; realization; spiritual vision  <b>[dassa + ana]</b>  <i>nt</i>"
+    },
+    {
+      "uid": "32109/dpd",
+      "word": "dassana 4",
+      "summary": "<i>(nt)</i> eye  <b>[dassa + ana]</b>  <i>nt</i>"
+    },
+    {
+      "uid": "32110/dpd",
+      "word": "dassana 5",
+      "summary": "<i>(nt)</i> showing; teaching  <b>[dassa + ana]</b>  <i>nt, act</i>"
+    },
+    {
+      "uid": "76117/dpd",
+      "word": "dassana 6",
+      "summary": "<i>(adj)</i> having vision; with insight  <b>[dassa + ana]</b>  <i>adj, in comps</i>"
+    },
+    {
+      "uid": "78294/dpd",
+      "word": "dassana 7",
+      "summary": "<i>(adj)</i> appearing; looking like; with a (certain kind of) appearance  <b>[dassa + ana]</b>  <i>adj, in comps</i>"
+    }
+  ],
+  "ti": [
+    {
+      "uid": "30430/dpd",
+      "word": "ti 1",
+      "summary": "<i>(card)</i> three (3)   <i>card, masc fem & nt pl</i>"
+    },
+    {
+      "uid": "30431/dpd",
+      "word": "ti 2",
+      "summary": "<i>(ind)</i> (end of direct speech) ' '  <b>[iti > ti]</b>  <i>ind, in comps, abbrev of iti</i>"
+    },
+    {
+      "uid": "30432/dpd",
+      "word": "ti 3",
+      "summary": "<i>(ve)</i> (gram) ti; verbal ending of the present tense 3rd person singular   <i>ve, masc</i>"
+    },
+    {
+      "uid": "28972/dpd",
+      "word": "ṭī",
+      "summary": "<i>(abbrev)</i> abbreviation of ṭīkā   <i>abbrev</i>"
+    }
+  ]
+}

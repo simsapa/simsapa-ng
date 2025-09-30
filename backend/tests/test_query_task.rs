@@ -89,6 +89,14 @@ fn test_sutta_search_contains_match_with_punctuation() {
                    "sn43.14/pli/cst4");
     queries.insert("katamañca, bhikkhave, nibbānaṁ…pe॰… abyāpajjhañca [abyāpajjhañca (sī॰ syā॰ kaṁ॰ pī॰)] vo, bhikkhave, desessāmi abyāpajjhagāmiñca maggaṁ.",
                    "sn43.14/pli/cst4");
+    queries.insert("na ca mayaṁ labhāma bhagavantaṁ dassanāyā’ti.",
+                   "pli-tv-kd7/pli/ms");
+    queries.insert("pañca kāladānānī’’ti.",
+                   "an5.36/pli/cst4");
+    queries.insert("pāṇina’’nti.. chaṭṭhaṁ.",
+                   "an5.36/pli/cst4");
+    queries.insert("yaṁ jaññā— ‘sakkomi ajjeva gantun’ti.",
+                   "pli-tv-kd4/pli/ms");
 
     for (query_text, first_result_uid) in queries.into_iter() {
         let mut query_task = SearchQueryTask::new(

@@ -1,0 +1,98 @@
+{
+  "addhānaṁ": [
+    {
+      "uid": "2986/dpd",
+      "word": "addha 1.1",
+      "summary": "<i>(adj)</i> soiled; dirty; moist   <i>adj</i>"
+    },
+    {
+      "uid": "2987/dpd",
+      "word": "addha 2.1",
+      "summary": "<i>(masc)</i> time; period; extent   <i>masc, atta group</i>"
+    },
+    {
+      "uid": "2988/dpd",
+      "word": "addha 2.2",
+      "summary": "<i>(masc)</i> path; journey; distance; duration   <i>masc, in comps, atta group</i>"
+    },
+    {
+      "uid": "2989/dpd",
+      "word": "addha 3.1",
+      "summary": "<i>(masc)</i> half; part   <i>masc, in comps</i>"
+    },
+    {
+      "uid": "2990/dpd",
+      "word": "addha 3.2",
+      "summary": "<i>(adj)</i> half   <i>adj, in comps</i>"
+    },
+    {
+      "uid": "3016/dpd",
+      "word": "addhāna 1",
+      "summary": "<i>(nt)</i> long road; highroad; journey  <b>[addha + āna]</b>  <i>nt, from addha</i>"
+    },
+    {
+      "uid": "3017/dpd",
+      "word": "addhāna 2",
+      "summary": "<i>(nt)</i> time; period; extent  <b>[addha + āna]</b>  <i>nt, from addha</i>"
+    },
+    {
+      "uid": "3018/dpd",
+      "word": "addhāna 3",
+      "summary": "<i>(nt)</i> course (of saṁsāra)  <b>[addha + āna]</b>  <i>nt, from addha</i>"
+    }
+  ],
+  "ti": [
+    {
+      "uid": "30430/dpd",
+      "word": "ti 1",
+      "summary": "<i>(card)</i> three (3)   <i>card, masc fem & nt pl</i>"
+    },
+    {
+      "uid": "30431/dpd",
+      "word": "ti 2",
+      "summary": "<i>(ind)</i> (end of direct speech) ' '  <b>[iti > ti]</b>  <i>ind, in comps, abbrev of iti</i>"
+    },
+    {
+      "uid": "30432/dpd",
+      "word": "ti 3",
+      "summary": "<i>(ve)</i> (gram) ti; verbal ending of the present tense 3rd person singular   <i>ve, masc</i>"
+    },
+    {
+      "uid": "28972/dpd",
+      "word": "ṭī",
+      "summary": "<i>(abbrev)</i> abbreviation of ṭīkā   <i>abbrev</i>"
+    }
+  ],
+  "āgata": [
+    {
+      "uid": "11154/dpd",
+      "word": "āgata 1",
+      "summary": "<i>(masc)</i> guest; visitor; arriver  <b>[ā + √gam + ta]</b>  <i>masc, agent, from āgacchati</i>"
+    },
+    {
+      "uid": "11155/dpd",
+      "word": "āgata 2",
+      "summary": "<i>(nt)</i> coming; arrival  <b>[ā + √gam + ta]</b>  <i>nt, pp of āgacchati</i>"
+    },
+    {
+      "uid": "11156/dpd",
+      "word": "āgata 3",
+      "summary": "<i>(pp)</i> come (from); arrived (from); returned (from)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+    },
+    {
+      "uid": "11157/dpd",
+      "word": "āgata 4",
+      "summary": "<i>(pp)</i> become; entered (into state or position)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+    },
+    {
+      "uid": "11158/dpd",
+      "word": "āgata 5",
+      "summary": "<i>(pp)</i> (of scriptures) come down (in); handed down (in)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+    },
+    {
+      "uid": "11159/dpd",
+      "word": "āgata 6",
+      "summary": "<i>(pp)</i> present; at hand; current  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+    }
+  ]
+}

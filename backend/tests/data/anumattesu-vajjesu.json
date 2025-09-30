@@ -47,7 +47,13 @@
       "summary": "<i>(aor)</i> learnt, trained oneself, practised  <b>[√sikkh + i]</b>  <i>aor of sikkhati</i>"
     }
   ],
-  "sikkhāpadesūṁ": [],
+  "sikkhāpadesu": [
+    {
+      "uid": "62746/dpd",
+      "word": "sikkhāpada",
+      "summary": "<i>(nt)</i> precept; instruction; training rule  <b>[sikkhā + pada]</b>  <i>nt, comp</i>"
+    }
+  ],
   "ti": [
     {
       "uid": "30430/dpd",

@@ -1,5 +1,26 @@
 {
-  "dhārayāmīṁ": [],
+  "dhārayāmi": [
+    {
+      "uid": "35104/dpd",
+      "word": "dhārayati 1",
+      "summary": "<i>(pr)</i> holds; keeps; carries  <b>[dhāraya + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "35105/dpd",
+      "word": "dhārayati 2",
+      "summary": "<i>(pr)</i> takes; considers; believes; keeps in mind  <b>[dhāraya + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "35106/dpd",
+      "word": "dhārayati 3",
+      "summary": "<i>(pr)</i> wears; dresses (in)  <b>[dhāraya + ti]</b>  <i>pr</i>"
+    },
+    {
+      "uid": "35107/dpd",
+      "word": "dhārayati 4",
+      "summary": "<i>(pr)</i> uses  <b>[dhāraya + ti]</b>  <i>pr</i>"
+    }
+  ],
   "evametaṁ": [
     {
       "uid": "18102/dpd",

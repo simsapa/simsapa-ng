@@ -327,9 +327,26 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
 }
 
 lazy_static! {
-    static ref RE_NTI: Regex =    Regex::new(r#"n*[’'"”]+n*ti"#).unwrap();
-    static ref RE_IITI: Regex =   Regex::new(r#"ī*[’'"”]+ī*ti"#).unwrap();
-    static ref RE_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'’"”…—–-]+"#).unwrap();
+    // Patterns for query lookup in DPD where we have to reverse Pāli n'ti sandhi.
+    // The quote mark may be before or after the n.
+    static ref RE_NTI_BEFORE: Regex =   Regex::new(r#"[’'"”]+nti"#).unwrap();
+    static ref RE_NTI_AFTER: Regex =   Regex::new(r#"n[’'"”]+ti"#).unwrap();
+    static ref RE_IITI_BEFORE: Regex =  Regex::new(r#"[’'"”]+īti"#).unwrap();
+    static ref RE_IITI_AFTER: Regex =  Regex::new(r#"ī[’'"”]+ti"#).unwrap();
+    static ref RE_AATI_BEFORE: Regex =  Regex::new(r#"[’'"”]+āti"#).unwrap();
+    static ref RE_AATI_AFTER: Regex =  Regex::new(r#"ā[’'"”]+ti"#).unwrap();
+    static ref RE_UUTI_BEFORE: Regex =  Regex::new(r#"[’'"”]+ūti"#).unwrap();
+    static ref RE_UUTI_AFTER: Regex =  Regex::new(r#"ū[’'"”]+ti"#).unwrap();
+
+    // Patterns for normalize_query_text that preserve preceding characters
+    // before the quote mark and not trying to reverse the Pāli sandhi, because
+    // the Sutta.content_plain field which we search in, is also created this
+    // way, i.e. in the n'ti endings simply the apostrophe is replaced with space: n ti.
+    static ref RE_TI_NORMALIZE: Regex = Regex::new(r#"(.)[’'"”]+ti"#).unwrap();
+
+    // Don't include parentheses (), interferes with 'contains match' in cst4 texts,
+    // see test_sutta_search_contains_match_with_punctuation()
+    static ref RE_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'‘’"“”…—–-]+"#).unwrap();
     static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
 }
 
@@ -345,10 +362,34 @@ pub fn extract_words(text: &str) -> Vec<String> {
     }
 
     let text = text.replace("\n", " ").to_string();
-    // gantun’ti gantu’nti -> gantuṁ ti
-    let text = RE_NTI.replace_all(&text, "ṁ ti").into_owned();
-    // dhārayāmī’”ti -> dhārayāmi ti
-    let text = RE_IITI.replace_all(&text, "i ti").into_owned();
+
+    // Pāli sandhi: dhārayāmi + ti becomes dhārayāmīti, sometimes with apostrophes: dhārayāmī’”ti
+    //
+    // We are reversing this as:
+    // dhārayāmī’ti dhārayāmī’”ti -> dhārayāmi ti
+    //
+    // Not handling the dhārayāmīti case for now.
+    let text = RE_IITI_BEFORE.replace_all(&text, "i ti").into_owned();
+    let text = RE_IITI_AFTER.replace_all(&text, "i ti").into_owned();
+
+    // dassanāyā’ti -> dassanāya ti
+    let text = RE_AATI_BEFORE.replace_all(&text, "a ti").into_owned();
+    let text = RE_AATI_AFTER.replace_all(&text, "a ti").into_owned();
+
+    // sikkhāpadesū’ti -> sikkhāpadesu ti
+    let text = RE_UUTI_BEFORE.replace_all(&text, "u ti").into_owned();
+    let text = RE_UUTI_AFTER.replace_all(&text, "u ti").into_owned();
+
+    // Pāli sandhi: gantuṁ + ti, the ṁ becomes n, and written as gantunti, gantun’ti or gantu’nti.
+    // One or more closing apostrophes may be added before or after the n.
+    //
+    // We are reversing this as:
+    // gantun’ti gantu’nti gantun’”ti gantu’”nti -> gantuṁ ti
+    //
+    // We are not trying to match the gantunti case because the -nti ending is
+    // ambiguous with the plural verb forms, e.g. gacchanti.
+    let text = RE_NTI_BEFORE.replace_all(&text, "ṁ ti").into_owned();
+    let text = RE_NTI_AFTER.replace_all(&text, "ṁ ti").into_owned();
     let text = re_nonword.replace_all(&text, " ").into_owned();
     let text = re_digits.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
@@ -381,8 +422,7 @@ pub fn normalize_query_text(text: Option<String>) -> String {
     }
 
     let text = clean_word(&text);
-    let text = RE_NTI.replace_all(&text, "ṁ ti").into_owned();
-    let text = RE_IITI.replace_all(&text, "i ti").into_owned();
+    let text = RE_TI_NORMALIZE.replace_all(&text, "${1} ti").into_owned();
     let text = text.replace("-", "");
     let text = RE_PUNCT.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
@@ -417,10 +457,11 @@ pub fn pali_to_ascii(text: Option<&str>) -> String {
 /// Sanitize a word to UID form: remove punctuation, replace spaces with hyphens.
 pub fn word_uid_sanitize(word: &str) -> String {
     lazy_static! {
-        static ref RE_PUNCT: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
+        // Not using the global RE_PUNCT which doesn't include parens.
+        static ref RE_PUNCT_PARENS: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
         static ref RE_DASH: Regex = Regex::new(r"--+").unwrap();
     }
-    let mut w = RE_PUNCT.replace_all(word, " ").to_string();
+    let mut w = RE_PUNCT_PARENS.replace_all(word, " ").to_string();
     w = w.replace("'", "")
          .replace("\"", "")
          .replace(' ', "-");
@@ -443,7 +484,6 @@ pub fn remove_punct(text: Option<&str>) -> String {
     };
 
     lazy_static! {
-        static ref RE_PUNCT: Regex = Regex::new(r"[\.,;\?\!“”‘’…—-]").unwrap();
         static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
     }
 
@@ -1019,9 +1059,9 @@ mod tests {
 
     #[test]
     fn test_extract_words_nti() {
-        let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu”nti. dhārayāmī’”ti";
+        let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu’nti gantun’”ti gantu’”nti. dhārayāmī’ti dhārayāmī’”ti dassanāyā’ti";
         let words: String = extract_words(text).join(" ");
-        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti dhārayāmi ti".to_string();
+        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti gantuṁ ti gantuṁ ti dhārayāmi ti dhārayāmi ti dassanāya ti".to_string();
         assert_eq!(words, expected_words);
     }
 
