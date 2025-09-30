@@ -13,6 +13,7 @@ Item {
     required property string bg_color_darker
     required property string bg_color_lighter
     required property string text_color
+    required property string border_color
     
     // Optional properties with defaults
     property int max_words: 20
@@ -54,14 +55,17 @@ Item {
             Repeater {
                 model: root.visible_words
                 delegate: Button {
+                    id: word_btn
                     required property string modelData
                     
                     text: modelData
                     flat: true
                     
                     background: Rectangle {
-                        color: parent.hovered ? root.bg_color_lighter : root.bg_color_darker
+                        color: word_btn.pressed ? Qt.darker(root.bg_color_darker, 1.3) : (word_btn.hovered ? root.bg_color_lighter : root.bg_color_darker)
                         radius: 4
+                        border.width: 1
+                        border.color: word_btn.pressed ? Qt.darker(root.border_color, 1.5) : root.border_color
                     }
                     
                     contentItem: Text {

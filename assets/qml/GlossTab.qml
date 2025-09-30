@@ -1350,6 +1350,7 @@ ${table_rows}
                     bg_color_darker: root.bg_color_darker
                     bg_color_lighter: root.bg_color_lighter
                     text_color: root.text_color
+                    border_color: root.border_color
                     onWordClicked: function(word) {
                         root.requestWordSummary(word)
                     }
@@ -1526,6 +1527,7 @@ ${table_rows}
                         bg_color_darker: root.bg_color_darker
                         bg_color_lighter: root.bg_color_lighter
                         text_color: root.text_color
+                        border_color: root.border_color
                         onWordClicked: function(word) {
                             root.requestWordSummary(word)
                         }
