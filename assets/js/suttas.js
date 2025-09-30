@@ -195,6 +195,20 @@ class HamburgerMenu {
     }
 }
 
+function toggle_variant (event) {
+    let el = event.target;
+    el.parentNode.querySelectorAll(".variant").forEach((i) => {
+        i.classList.toggle("hide");
+    })
+}
+
+function toggle_comment (event) {
+    let el = event.target;
+    el.parentNode.querySelectorAll(".comment").forEach((i) => {
+        i.classList.toggle("hide");
+    })
+}
+
 // TODO: Both Double click and selection event runs the summary search, lookup query is stated from the summary UI.
 // TODO: Allow the user to configure which action should run a lookup query.
 
@@ -215,4 +229,11 @@ document.addEventListener("DOMContentLoaded", function(_event) {
             summary_selection();
         });
     }
+
+    document.querySelectorAll(".variant-wrap .mark").forEach((i) => {
+        i.addEventListener("click", toggle_variant);
+    });
+    document.querySelectorAll(".comment-wrap .mark").forEach((i) => {
+        i.addEventListener("click", toggle_comment);
+    });
 });
