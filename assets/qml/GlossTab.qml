@@ -1343,6 +1343,8 @@ ${table_rows}
                 // Global unrecognized words list
                 UnrecognizedWordsList {
                     Layout.fillWidth: true
+                    Layout.leftMargin: 10
+                    Layout.rightMargin: 10
                     word_list: root.global_unrecognized_words
                     prefix_text: "Click for deconstructor lookup:"
                     bg_color_darker: root.bg_color_darker

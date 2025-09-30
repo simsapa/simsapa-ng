@@ -35,7 +35,7 @@ Item {
         id: column_layout
         anchors.fill: parent
         spacing: 5
-        
+
         // Prefix text
         Text {
             Layout.fillWidth: true
