@@ -40,13 +40,23 @@ pub fn markdown_to_html(markdown_text: &str) -> String {
     // The LLM response sometimes wraps tables in a code block.
     // Remove the code block fences from around tables with regex so that the table gets rendered to html.
     lazy_static! {
-        // Regex to match code blocks that contain markdown tables
-        // Looks for: ``` followed by optional language, then content with table syntax, then ```
-        static ref RE_TABLE_IN_CODE_BLOCK: Regex = Regex::new(r"(?s)```[^\n]*\n((?:[^\n]*\|[^\n]*\n)*(?:[^\n]*\|[^\n]*(?:\n|$))(?:[^\n]*\|[^\n]*\n)*)\s*```").unwrap();
+        // Regex to match beginning of code fence (with optional language) followed by table content
+        // Looks for: ``` followed by optional language, newline, then lines starting with |
+        static ref RE_CODE_FENCE_START_WITH_TABLE: Regex = Regex::new(r"```[^\n]*\n(\|[^\n]*\n)").unwrap();
+
+        // Regex to match end of table (line ending with |) followed by closing code fence
+        // Looks for: line ending with |, optional whitespace, newline, then closing ```
+        static ref RE_TABLE_END_WITH_CODE_FENCE: Regex = Regex::new(r"(\|[^\n]*)\s*\n```").unwrap();
     }
 
-    // Remove code block fences from around tables
-    let processed_text = RE_TABLE_IN_CODE_BLOCK.replace_all(markdown_text, "$1");
+    // Remove code block fences from around tables using two-step process
+    let mut processed_text = markdown_text.to_string();
+    
+    // First, remove opening code fence before tables
+    processed_text = RE_CODE_FENCE_START_WITH_TABLE.replace_all(&processed_text, "$1").to_string();
+    
+    // Then, remove closing code fence after tables  
+    processed_text = RE_TABLE_END_WITH_CODE_FENCE.replace_all(&processed_text, "$1").to_string();
 
     match to_html_with_options(processed_text.trim(), &Options::gfm()) {
         Ok(html) => {
