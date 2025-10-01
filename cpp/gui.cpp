@@ -87,6 +87,12 @@ void start(int argc, char* argv[]) {
   //   QtWebEngineQuick::initialize();
   // }
 
+  // Linux: Check if the .desktop file should be created or updated. When a
+  // user updates the .AppImage, the file name contains a different version
+  // number.
+
+  // TODO: create_or_update_linux_desktop_icon_file();
+
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);
 

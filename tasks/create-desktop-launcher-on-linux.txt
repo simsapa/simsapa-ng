@@ -1,0 +1,89 @@
+# Create desktop launcher on linux
+
+In APP_GLOBALS.paths (type AppGlobalPaths) add desktop_file_path, translating the Python to Rust:
+
+#+begin_src python
+# Determine the path for the .desktop file
+if IS_LINUX:
+    # ~/.local/share/applications/simsapa.desktop
+    DESKTOP_FILE_PATH = USER_HOME_DIR.joinpath(".local/share/applications/simsapa.desktop")
+#+end_src
+
+In gui.cpp, do the equivalent of the following Python, using the path from APP_GLOBALS initialized in Rust. This is after app.setWindowIcon()
+
+#+begin_src python
+if DESKTOP_FILE_PATH is not None:
+    # (The app is QApplication(sys.argv) in PyQt
+    app.setDesktopFileName(str(DESKTOP_FILE_PATH.with_suffix("")))
+#+end_src
+
+Create a helper function create_or_update_linux_desktop_icon_file() in the Rust backend, which should use APP_GLOBALS to get desktop_file_path. Call it from gui.cpp with an ffi function, a TODO marks the place.
+
+The helper should be the Rust equivalent of the following Python:
+
+#+begin_src python
+def create_or_update_linux_desktop_icon_file():
+    if not IS_LINUX or DESKTOP_FILE_PATH is None:
+        return
+
+    if 'APPIMAGE' not in os.environ:
+        return
+
+    appimage_path = Path(os.environ['APPIMAGE'])
+
+    if DESKTOP_FILE_PATH.exists():
+        with open(DESKTOP_FILE_PATH, mode='r', encoding='utf-8') as f:
+            s = f.read()
+
+        if str(appimage_path) not in s:
+            # Desktop file exists but the AppImage path is different.
+            # Update the Path and Exec lines.
+
+            with open(DESKTOP_FILE_PATH, 'r', encoding="utf-8") as f:
+                desktop_content = f.read()
+
+            # Path line
+            desktop_content = re.sub(r'\nPath=.*\n', f"\nPath={appimage_path.parent}\n", desktop_content)
+
+            # Exec line
+            # The user might have edited the .desktop file with env variables cli flags.
+            # Old path starts with / and contains the word 'AppImage'
+            desktop_content = re.sub(r'(/.*?/.*?\.AppImage)', str(appimage_path), desktop_content)
+
+            with open(DESKTOP_FILE_PATH, 'w', encoding="utf-8") as f:
+                f.write(desktop_content)
+
+        return
+
+    # Create a new .desktop file
+
+    user_icon_path = USER_HOME_DIR.joinpath(".local/share/icons/simsapa.png")
+
+    if not user_icon_path.exists():
+        if not user_icon_path.parent.exists():
+            user_icon_path.parent.mkdir(parents=True)
+
+        asset_icon_path = ICONS_DIR.joinpath("appicons/simsapa.png")
+        shutil.copy(str(asset_icon_path), user_icon_path)
+
+    if not DESKTOP_FILE_PATH.parent.exists():
+        DESKTOP_FILE_PATH.parent.mkdir(parents=True)
+
+    # Don't strip the blank line from the end. Otherwise the system doesn't
+    # start app with the .desktop file.
+    desktop_entry = """[Desktop Entry]
+Encoding=UTF-8
+Name=Simsapa
+Icon=simsapa
+Terminal=false
+Type=Application
+Path=%s
+Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 %s
+
+""" % (appimage_path.parent, appimage_path)
+
+    with open(DESKTOP_FILE_PATH, mode='w', encoding='utf-8') as f:
+        f.write(desktop_entry)
+#+end_src
+
+
