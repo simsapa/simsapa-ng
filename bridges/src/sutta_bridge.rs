@@ -15,9 +15,8 @@ use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile, save_to_f
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
+use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, error};
-
-use crate::markdown_to_html;
 
 static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
 static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");

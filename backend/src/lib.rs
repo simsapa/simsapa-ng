@@ -13,6 +13,7 @@ pub mod theme_colors;
 pub mod app_settings;
 pub mod lookup;
 pub mod html_format;
+pub mod prompt_utils;
 
 use std::env;
 use std::io::{self, Read, Write};

@@ -69,7 +69,7 @@ Item {
                     }
                     
                     contentItem: Text {
-                        text: parent.text
+                        text: word_btn.text
                         color: root.text_color
                         font.pointSize: 9
                         horizontalAlignment: Text.AlignHCenter

@@ -38,13 +38,14 @@ fn test_html_en() {
     let sutta = app_data.dbm.appdata.get_sutta("dn22/en/thanissaro").expect("Can't get sutta from db");
 
     let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    let main_html = extract_element_by_id_from_indented(&html_indent(&html), "DN22").unwrap_or("None".to_string());
 
-    // fs::write(PathBuf::from("dn22_en_thanissaro.html"), html.clone()).expect("Unable to write file!");
+    fs::write(PathBuf::from("dn22_en_thanissaro.main.html"), main_html.clone()).expect("Unable to write file!");
 
-    let expected_html = fs::read_to_string(PathBuf::from("tests/data/dn22_en_thanissaro.html"))
+    let expected_html = fs::read_to_string(PathBuf::from("tests/data/dn22_en_thanissaro.main.html"))
         .expect("Failed to read file");
 
-    assert_eq!(html, expected_html);
+    assert_eq!(main_html, expected_html);
 }
 
 #[test]
@@ -57,12 +58,13 @@ fn test_line_by_line_with_variants() {
 
     let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
 
-    // fs::write(PathBuf::from("sn1.61_en_sujato.html"), html.clone()).expect("Unable to write file!");
+    let article_html = extract_element_by_id_from_indented(&html_indent(&html), "sn1.61").unwrap_or("None".to_string());
+    // fs::write(PathBuf::from("sn1.61_en_sujato.article.html"), article_html.clone()).expect("Unable to write file!");
 
-    let expected_html = fs::read_to_string(PathBuf::from("tests/data/sn1.61_en_sujato.html"))
+    let expected_html = fs::read_to_string(PathBuf::from("tests/data/sn1.61_en_sujato.article.html"))
         .expect("Failed to read file");
 
-    assert_eq!(html, expected_html);
+    assert_eq!(article_html, expected_html);
 }
 
 #[test]

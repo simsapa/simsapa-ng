@@ -12,7 +12,7 @@ use tokio::runtime::Runtime;
 use simsapa_backend::logger::error;
 use simsapa_backend::get_app_data;
 use simsapa_backend::app_settings::ProviderName;
-use crate::{markdown_to_html, clean_prompt};
+use simsapa_backend::prompt_utils::{markdown_to_html, clean_prompt};
 
 #[cxx_qt::bridge]
 pub mod qobject {
