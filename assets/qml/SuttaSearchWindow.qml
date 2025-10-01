@@ -412,6 +412,7 @@ ${query_text}`;
     }
 
     function open_dict_tab(uid: string) {
+        show_sidebar_btn.checked = true;
         rightside_tabs.setCurrentIndex(1) // idx 1 = Dictionary
         dictionary_tab.word_uid = uid;
     }
