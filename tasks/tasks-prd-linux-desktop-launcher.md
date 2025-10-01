@@ -5,7 +5,7 @@ Tasks for implementing automatic Linux desktop launcher creation for Simsapa App
 
 ## Phase 1: Backend Implementation
 
-### Task 1.1: Extend AppGlobalPaths Structure
+### Task 1.1: Extend AppGlobalPaths Structure ✓
 **Priority:** High  
 **Estimated Time:** 30 minutes  
 **Dependencies:** None
@@ -13,15 +13,15 @@ Tasks for implementing automatic Linux desktop launcher creation for Simsapa App
 **Description:** Add desktop file and AppImage path tracking to the global paths structure.
 
 **Acceptance Criteria:**
-- [ ] Add `desktop_file_path: Option<PathBuf>` to `AppGlobalPaths` in `backend/src/lib.rs`
-- [ ] Add `appimage_path: Option<PathBuf>` to `AppGlobalPaths` in `backend/src/lib.rs`
-- [ ] Update `AppGlobalPaths::new()` to initialize these fields as `None`
-- [ ] Ensure compilation succeeds after changes
+- [x] Add `desktop_file_path: Option<PathBuf>` to `AppGlobalPaths` in `backend/src/lib.rs`
+- [x] Add `appimage_path: Option<PathBuf>` to `AppGlobalPaths` in `backend/src/lib.rs`
+- [x] Update `AppGlobalPaths::new()` to initialize these fields as `None`
+- [x] Ensure compilation succeeds after changes
 
 **Files to modify:**
 - `backend/src/lib.rs`
 
-### Task 1.2: Implement AppImage Detection Functions
+### Task 1.2: Implement AppImage Detection Functions ✓
 **Priority:** High  
 **Estimated Time:** 45 minutes  
 **Dependencies:** Task 1.1
@@ -29,20 +29,20 @@ Tasks for implementing automatic Linux desktop launcher creation for Simsapa App
 **Description:** Create utility functions to detect if running from AppImage and get the AppImage path.
 
 **Acceptance Criteria:**
-- [ ] Implement `is_running_from_appimage() -> bool` in `backend/src/helpers.rs`
-  - [ ] Check for `APPIMAGE` environment variable presence
-  - [ ] Validate that the path exists and is readable
-  - [ ] Return `false` for any error conditions
-- [ ] Implement `get_appimage_path() -> Option<PathBuf>` in `backend/src/helpers.rs`
-  - [ ] Return validated AppImage path from environment variable
-  - [ ] Return `None` if detection fails or path is invalid
-- [ ] Add appropriate imports and dependencies
-- [ ] Add proper error handling with silent failures
+- [x] Implement `is_running_from_appimage() -> bool` in `backend/src/helpers.rs`
+  - [x] Check for `APPIMAGE` environment variable presence
+  - [x] Validate that the path exists and is readable
+  - [x] Return `false` for any error conditions
+- [x] Implement `get_appimage_path() -> Option<PathBuf>` in `backend/src/helpers.rs`
+  - [x] Return validated AppImage path from environment variable
+  - [x] Return `None` if detection fails or path is invalid
+- [x] Add appropriate imports and dependencies
+- [x] Add proper error handling with silent failures
 
 **Files to modify:**
 - `backend/src/helpers.rs`
 
-### Task 1.3: Implement Desktop File Creation Logic
+### Task 1.3: Implement Desktop File Creation Logic ✓
 **Priority:** High  
 **Estimated Time:** 90 minutes  
 **Dependencies:** Task 1.2
@@ -50,31 +50,31 @@ Tasks for implementing automatic Linux desktop launcher creation for Simsapa App
 **Description:** Core function to create or update Linux desktop launcher files.
 
 **Acceptance Criteria:**
-- [ ] Implement `create_or_update_linux_desktop_icon_file() -> anyhow::Result<()>` in `backend/src/helpers.rs`, reference the code block in /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/tasks/create-desktop-launcher-on-linux.txt
-- [ ] Check if running from AppImage, exit early if not
-- [ ] Create necessary directories (`~/.local/share/applications/`, `~/.local/share/icons/`)
-- [ ] Generate desktop file content with correct template:
-  - [ ] `[Desktop Entry]` section
-  - [ ] `Encoding=UTF-8`
-  - [ ] `Name=Simsapa`
-  - [ ] `Icon=simsapa`
-  - [ ] `Terminal=false`
-  - [ ] `Type=Application`
-  - [ ] `Path=` (AppImage parent directory)
-  - [ ] `Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 /path/to/appimage`
-- [ ] Handle existing desktop file updates:
-  - [ ] Read existing file content
-  - [ ] Check if AppImage path matches current location
-  - [ ] Update only `Path` and `Exec` lines if changed
-  - [ ] Preserve other user modifications
-- [ ] Copy application icon from `assets/icons/appicons/simsapa.png` to `~/.local/share/icons/simsapa.png`
-- [ ] Implement robust error handling with silent failures
-- [ ] Add proper file I/O with appropriate permissions
+- [x] Implement `create_or_update_linux_desktop_icon_file() -> anyhow::Result<()>` in `backend/src/helpers.rs`, reference the code block in /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/tasks/create-desktop-launcher-on-linux.txt
+- [x] Check if running from AppImage, exit early if not
+- [x] Create necessary directories (`~/.local/share/applications/`, `~/.local/share/icons/`)
+- [x] Generate desktop file content with correct template:
+  - [x] `[Desktop Entry]` section
+  - [x] `Encoding=UTF-8`
+  - [x] `Name=Simsapa`
+  - [x] `Icon=simsapa`
+  - [x] `Terminal=false`
+  - [x] `Type=Application`
+  - [x] `Path=` (AppImage parent directory)
+  - [x] `Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 /path/to/appimage`
+- [x] Handle existing desktop file updates:
+  - [x] Read existing file content
+  - [x] Check if AppImage path matches current location
+  - [x] Update only `Path` and `Exec` lines if changed
+  - [x] Preserve other user modifications
+- [x] Copy application icon from `assets/icons/appicons/simsapa.png` to `~/.local/share/icons/simsapa.png`
+- [x] Implement robust error handling with silent failures
+- [x] Add proper file I/O with appropriate permissions
 
 **Files to modify:**
 - `backend/src/helpers.rs`
 
-### Task 1.4: Create FFI Bridge Function
+### Task 1.4: Create FFI Bridge Function ✓
 **Priority:** High  
 **Estimated Time:** 30 minutes  
 **Dependencies:** Task 1.3
@@ -82,10 +82,10 @@ Tasks for implementing automatic Linux desktop launcher creation for Simsapa App
 **Description:** Expose desktop launcher functionality to C++ layer through FFI.
 
 **Acceptance Criteria:**
-- [ ] Add FFI function declaration in appropriate bridge file
-- [ ] Ensure function is callable from C++ code
-- [ ] Handle any CXX-Qt specific requirements
-- [ ] Test compilation of bridge layer
+- [x] Add FFI function declaration in appropriate bridge file
+- [x] Ensure function is callable from C++ code
+- [x] Handle any CXX-Qt specific requirements
+- [x] Test compilation of bridge layer
 
 **Files to modify:**
 - `bridges/src/api.rs` or appropriate bridge file
@@ -256,3 +256,15 @@ Type=Application
 Path=/path/to/appimage/directory
 Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 /full/path/to/simsapa.AppImage
 ```
+
+## Relevant Files
+
+**Modified Files:**
+- `backend/src/lib.rs` - Extended AppGlobalPaths structure with desktop_file_path and appimage_path fields
+- `backend/src/helpers.rs` - Added AppImage detection functions and desktop file creation logic  
+- `bridges/src/api.rs` - Added FFI bridge function for desktop file creation
+
+**File Changes:**
+- `backend/src/lib.rs`: Added `desktop_file_path` and `appimage_path` Optional PathBuf fields to AppGlobalPaths
+- `backend/src/helpers.rs`: Implemented `is_running_from_appimage()`, `get_appimage_path()`, and `create_or_update_linux_desktop_icon_file()` functions
+- `bridges/src/api.rs`: Added `create_linux_desktop_icon_file()` FFI function for C++ integration

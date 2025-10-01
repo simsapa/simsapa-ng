@@ -1,4 +1,7 @@
 use std::collections::{HashSet, HashMap};
+use std::env;
+use std::path::PathBuf;
+use std::fs;
 use indexmap::IndexMap;
 
 use regex::Regex;
@@ -878,6 +881,127 @@ pub fn unique_search_results(mut results: Vec<SearchResult>) -> Vec<SearchResult
         }
     });
     results
+}
+
+/// Check if the application is running from an AppImage
+pub fn is_running_from_appimage() -> bool {
+    if let Ok(appimage_path) = env::var("APPIMAGE") {
+        if let Ok(path) = std::path::Path::new(&appimage_path).try_exists() {
+            return path;
+        }
+    }
+    false
+}
+
+/// Get the AppImage path if running from AppImage
+pub fn get_appimage_path() -> Option<PathBuf> {
+    if let Ok(appimage_path) = env::var("APPIMAGE") {
+        let path = PathBuf::from(&appimage_path);
+        if let Ok(exists) = path.try_exists() {
+            if exists {
+                return Some(path);
+            }
+        }
+    }
+    None
+}
+
+/// Create or update Linux desktop launcher file for AppImage
+pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
+    // Early exit if not running from AppImage
+    if !is_running_from_appimage() {
+        return Ok(());
+    }
+
+    let appimage_path = match get_appimage_path() {
+        Some(path) => path,
+        None => return Ok(()),
+    };
+
+    // Get home directory and construct paths
+    let home_dir = match env::var("HOME") {
+        Ok(home) => PathBuf::from(home),
+        Err(_) => return Ok(()), // Silent failure
+    };
+
+    let applications_dir = home_dir.join(".local/share/applications");
+    let desktop_file_path = applications_dir.join("simsapa.desktop");
+    let icons_dir = home_dir.join(".local/share/icons");
+    let user_icon_path = icons_dir.join("simsapa.png");
+
+    // Handle existing desktop file
+    if desktop_file_path.exists() {
+        let desktop_content = match fs::read_to_string(&desktop_file_path) {
+            Ok(content) => content,
+            Err(_) => return Ok(()), // Silent failure
+        };
+
+        let appimage_path_str = appimage_path.to_string_lossy();
+        if !desktop_content.contains(&*appimage_path_str) {
+            // Desktop file exists but AppImage path is different - update it
+            let mut updated_content = desktop_content;
+
+            // Update Path line
+            let path_dir = appimage_path.parent().unwrap_or(&appimage_path).to_string_lossy();
+            let path_pattern = regex::Regex::new(r"\nPath=.*\n").unwrap();
+            updated_content = path_pattern.replace(&updated_content, format!("\nPath={}\n", path_dir)).to_string();
+
+            // Update Exec line - replace old AppImage path
+            let exec_pattern = regex::Regex::new(r"/.*?\.AppImage").unwrap();
+            updated_content = exec_pattern.replace(&updated_content, &*appimage_path_str).to_string();
+
+            // Write updated content
+            if let Err(_) = fs::write(&desktop_file_path, updated_content) {
+                return Ok(()); // Silent failure
+            }
+        }
+        return Ok(());
+    }
+
+    // Create a new .desktop file
+
+    // First, copy the icon if it doesn't exist
+    if !user_icon_path.exists() {
+        if let Err(_) = fs::create_dir_all(&icons_dir) {
+            return Ok(()); // Silent failure
+        }
+
+        // Find the asset icon path - look for it relative to the executable
+        let asset_icon_path = PathBuf::from("assets/icons/appicons/simsapa.png");
+        if asset_icon_path.exists() {
+            let _ = fs::copy(&asset_icon_path, &user_icon_path); // Silent failure if copy fails
+        }
+    }
+
+    // Create applications directory if needed
+    if let Err(_) = fs::create_dir_all(&applications_dir) {
+        return Ok(()); // Silent failure
+    }
+
+    // Create desktop file content
+    let appimage_parent = appimage_path.parent().unwrap_or(&appimage_path).to_string_lossy();
+    let appimage_path_str = appimage_path.to_string_lossy();
+
+    let desktop_entry = format!(
+        r#"[Desktop Entry]
+Encoding=UTF-8
+Name=Simsapa
+Icon=simsapa
+Terminal=false
+Type=Application
+Path={}
+Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 {}
+
+"#,
+        appimage_parent, appimage_path_str
+    );
+
+    // Write desktop file
+    if let Err(_) = fs::write(&desktop_file_path, desktop_entry) {
+        return Ok(()); // Silent failure
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

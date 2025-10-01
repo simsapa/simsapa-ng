@@ -97,6 +97,10 @@ pub struct AppGlobalPaths {
     pub dpd_db_path: PathBuf,
     pub dpd_abs_path: PathBuf,
     pub dpd_database_url: String,
+
+    // Linux desktop integration paths
+    pub desktop_file_path: Option<PathBuf>,
+    pub appimage_path: Option<PathBuf>,
 }
 
 impl AppGlobals {
@@ -183,6 +187,9 @@ impl AppGlobalPaths {
             dpd_db_path,
             dpd_abs_path,
             dpd_database_url,
+
+            desktop_file_path: None,
+            appimage_path: None,
         }
     }
 }
