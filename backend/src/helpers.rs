@@ -11,6 +11,7 @@ use anyhow::{Context, Result};
 
 use crate::types::SearchResult;
 use crate::lookup::*;
+use crate::logger::error;
 
 lazy_static! {
     // MN44; MN 118; AN 4.10; Sn 4:2; Dhp 182; Thag 1207; Vism 152
@@ -906,82 +907,134 @@ pub fn get_appimage_path() -> Option<PathBuf> {
     None
 }
 
+/// Get the desktop file path for Linux systems
+pub fn get_desktop_file_path() -> Option<PathBuf> {
+    if cfg!(target_os = "linux") {
+        if let Ok(home) = env::var("HOME") {
+            let path = PathBuf::from(home)
+                .join(".local/share/applications/simsapa.desktop");
+            return Some(path);
+        }
+    }
+    None
+}
+
 /// Create or update Linux desktop launcher file for AppImage
 pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
-    // Early exit if not running from AppImage
+    // Only run on Linux systems
+    if !cfg!(target_os = "linux") {
+        return Ok(());
+    }
+
+    // Check if running from AppImage
     if !is_running_from_appimage() {
         return Ok(());
     }
 
     let appimage_path = match get_appimage_path() {
         Some(path) => path,
-        None => return Ok(()),
+        None => {
+            error("AppImage path not found despite APPIMAGE environment variable being set");
+            return Ok(());
+        }
     };
 
-    // Get home directory and construct paths
-    let home_dir = match env::var("HOME") {
-        Ok(home) => PathBuf::from(home),
-        Err(_) => return Ok(()), // Silent failure
+    let desktop_file_path = match get_desktop_file_path() {
+        Some(path) => path,
+        None => {
+            error("Could not determine desktop file path");
+            return Ok(());
+        }
     };
 
-    let applications_dir = home_dir.join(".local/share/applications");
-    let desktop_file_path = applications_dir.join("simsapa.desktop");
-    let icons_dir = home_dir.join(".local/share/icons");
-    let user_icon_path = icons_dir.join("simsapa.png");
-
-    // Handle existing desktop file
     if desktop_file_path.exists() {
-        let desktop_content = match fs::read_to_string(&desktop_file_path) {
+        // Desktop file exists, check if it needs updating
+        let content = match fs::read_to_string(&desktop_file_path) {
             Ok(content) => content,
-            Err(_) => return Ok(()), // Silent failure
+            Err(e) => {
+                error(&format!("Failed to read existing desktop file: {}", e));
+                return Ok(());
+            }
         };
 
         let appimage_path_str = appimage_path.to_string_lossy();
-        if !desktop_content.contains(&*appimage_path_str) {
-            // Desktop file exists but AppImage path is different - update it
-            let mut updated_content = desktop_content;
+        if content.contains(&*appimage_path_str) {
+            // Desktop file already contains the current AppImage path
+            return Ok(());
+        }
 
-            // Update Path line
-            let path_dir = appimage_path.parent().unwrap_or(&appimage_path).to_string_lossy();
-            let path_pattern = regex::Regex::new(r"\nPath=.*\n").unwrap();
-            updated_content = path_pattern.replace(&updated_content, format!("\nPath={}\n", path_dir)).to_string();
+        // Desktop file exists but the AppImage path is different.
+        // Update the Path and Exec lines.
+        let mut updated_content = content;
 
-            // Update Exec line - replace old AppImage path
-            let exec_pattern = regex::Regex::new(r"/.*?\.AppImage").unwrap();
-            updated_content = exec_pattern.replace(&updated_content, &*appimage_path_str).to_string();
+        // Update Path line
+        let path_regex = Regex::new(r"\nPath=.*\n").unwrap();
+        let parent_path = appimage_path.parent()
+            .unwrap_or_else(|| std::path::Path::new("/"))
+            .to_string_lossy();
+        updated_content = path_regex.replace(&updated_content, &format!("\nPath={}\n", parent_path)).to_string();
 
-            // Write updated content
-            if let Err(_) = fs::write(&desktop_file_path, updated_content) {
-                return Ok(()); // Silent failure
+        // Update Exec line
+        // The user might have edited the .desktop file with env variables and cli flags.
+        // Old path starts with / and contains the word 'AppImage'
+        let exec_regex = Regex::new(r"(/.*?/.*?\.AppImage)").unwrap();
+        updated_content = exec_regex.replace_all(&updated_content, appimage_path_str.as_ref()).to_string();
+
+        match fs::write(&desktop_file_path, updated_content) {
+            Ok(_) => {},
+            Err(e) => {
+                error(&format!("Failed to update desktop file: {}", e));
+                return Ok(());
             }
         }
+
         return Ok(());
     }
 
     // Create a new .desktop file
 
-    // First, copy the icon if it doesn't exist
+    // First, copy the icon asset is necessary
+    let user_icon_path = PathBuf::from(env::var("HOME").unwrap_or_default())
+        .join(".local/share/icons/simsapa.png");
+
     if !user_icon_path.exists() {
-        if let Err(_) = fs::create_dir_all(&icons_dir) {
-            return Ok(()); // Silent failure
+        // Create icon directory if it doesn't exist
+        if let Some(parent) = user_icon_path.parent() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                error(&format!("Failed to create icon directory: {}", e));
+                // Continue anyway, icon might not be critical
+            }
         }
 
-        // Find the asset icon path - look for it relative to the executable
-        let asset_icon_path = PathBuf::from("assets/icons/appicons/simsapa.png");
-        if asset_icon_path.exists() {
-            let _ = fs::copy(&asset_icon_path, &user_icon_path); // Silent failure if copy fails
+        // Try to copy icon from assets
+        // Note: In AppImage, assets are in APPDIR
+        if let Ok(appdir) = env::var("APPDIR") {
+            let asset_icon_path = PathBuf::from(appdir)
+                .join("usr/share/simsapa/icons/appicons/simsapa.png");
+            
+            if asset_icon_path.exists() {
+                if let Err(e) = fs::copy(&asset_icon_path, &user_icon_path) {
+                    error(&format!("Failed to copy icon from assets: {}", e));
+                    // Continue anyway, desktop file can work without custom icon
+                }
+            }
         }
     }
 
-    // Create applications directory if needed
-    if let Err(_) = fs::create_dir_all(&applications_dir) {
-        return Ok(()); // Silent failure
+    // Create desktop file directory if it doesn't exist
+    if let Some(parent) = desktop_file_path.parent() {
+        if let Err(e) = fs::create_dir_all(parent) {
+            error(&format!("Failed to create desktop file directory: {}", e));
+            return Ok(());
+        }
     }
 
-    // Create desktop file content
-    let appimage_parent = appimage_path.parent().unwrap_or(&appimage_path).to_string_lossy();
-    let appimage_path_str = appimage_path.to_string_lossy();
-
+    // Don't strip the blank line from the end. Otherwise the system doesn't
+    // start app with the .desktop file.
+    let parent_path = appimage_path.parent()
+        .unwrap_or_else(|| std::path::Path::new("/"))
+        .to_string_lossy();
+    
     let desktop_entry = format!(
         r#"[Desktop Entry]
 Encoding=UTF-8
@@ -993,12 +1046,16 @@ Path={}
 Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 {}
 
 "#,
-        appimage_parent, appimage_path_str
+        parent_path,
+        appimage_path.to_string_lossy()
     );
 
-    // Write desktop file
-    if let Err(_) = fs::write(&desktop_file_path, desktop_entry) {
-        return Ok(()); // Silent failure
+    match fs::write(&desktop_file_path, desktop_entry) {
+        Ok(_) => {},
+        Err(e) => {
+            error(&format!("Failed to create desktop file: {}", e));
+            return Ok(());
+        }
     }
 
     Ok(())
