@@ -586,3 +586,42 @@ fn is_port_available(port: u16) -> bool {
 pub extern "C" fn find_port_set_env_c() -> bool {
     find_port_set_env()
 }
+
+/// FFI function to create or update Linux desktop icon file
+/// Safe to call from C++ - handles all errors internally
+#[unsafe(no_mangle)]
+pub extern "C" fn create_or_update_linux_desktop_icon_file_ffi() {
+    use crate::helpers::create_or_update_linux_desktop_icon_file;
+    if let Err(e) = create_or_update_linux_desktop_icon_file() {
+        error(&format!("Failed to create or update Linux desktop icon file: {}", e));
+    }
+}
+
+/// FFI function to get desktop file path for Qt setDesktopFileName()
+/// Returns a C string that must be freed by the caller, or null if not available
+#[unsafe(no_mangle)]
+pub extern "C" fn get_desktop_file_path_ffi() -> *mut std::os::raw::c_char {
+    use std::ffi::CString;
+    use crate::helpers::get_desktop_file_path;
+
+    if let Some(path) = get_desktop_file_path() {
+        // Remove .desktop extension for Qt setDesktopFileName
+        let path_without_ext = path.with_extension("");
+        if let Some(path_str) = path_without_ext.to_str() {
+            if let Ok(c_string) = CString::new(path_str) {
+                return c_string.into_raw();
+            }
+        }
+    }
+    std::ptr::null_mut()
+}
+
+/// FFI function to free strings allocated by Rust
+#[unsafe(no_mangle)]
+pub extern "C" fn free_rust_string(s: *mut std::os::raw::c_char) {
+    if !s.is_null() {
+        unsafe {
+            let _ = std::ffi::CString::from_raw(s);
+        }
+    }
+}

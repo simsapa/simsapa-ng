@@ -29,6 +29,10 @@ extern "C" void ensure_no_empty_db_files();
 extern "C" void remove_download_temp_folder();
 extern "C" void init_app_globals();
 extern "C" void init_app_data();
+extern "C" void create_or_update_linux_desktop_icon_file_ffi();
+
+extern "C" char* get_desktop_file_path_ffi();
+extern "C" void free_rust_string(char* s);
 extern "C" void dotenv_c();
 extern "C" bool find_port_set_env_c();
 
@@ -87,6 +91,11 @@ void start(int argc, char* argv[]) {
   //   QtWebEngineQuick::initialize();
   // }
 
+  // Linux: Check if the .desktop file should be created or updated. When a
+  // user updates the .AppImage, the file name contains a different version
+  // number.
+  create_or_update_linux_desktop_icon_file_ffi();
+
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);
 
@@ -98,9 +107,13 @@ void start(int argc, char* argv[]) {
   // TODO :/icons/simsapa-appicon doesn't work, perhaps wrong size?
   app.setWindowIcon(QIcon(":/qt/qml/com/profoundlabs/simsapa/assets/qml/icons/32x32/simsapa-tray.png"));
 
-  // if DESKTOP_FILE_PATH is not None:
-  //     app.setDesktopFileName(str(DESKTOP_FILE_PATH.with_suffix("")))
-  //
+  // Set desktop file name for Linux desktop integration
+  char* desktop_file_path = get_desktop_file_path_ffi();
+  if (desktop_file_path != nullptr) {
+    app.setDesktopFileName(QString::fromUtf8(desktop_file_path));
+    free_rust_string(desktop_file_path);
+  }
+
   app.setApplicationVersion("v0.1.0");
 
   // app_windows = AppWindows(app, app_data, hotkeys_manager, enable_tray_icon)

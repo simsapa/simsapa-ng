@@ -194,6 +194,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - `src/stardict_parse.rs` - StarDict dictionary format parser
   - `src/theme_colors.rs` - Theme color management for dark/light modes
   - `src/app_settings.rs` - Application settings and configuration
+  - `src/helpers.rs` - Utility functions including Linux desktop launcher creation
 - `backend/tests/` - Rust backend unit tests
 
 #### `/bridges/` - Rust-C++ Bridge Layer
@@ -337,6 +338,11 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Mobile Detection:** `backend/src/lib.rs:427` - `is_mobile()`
 - **Storage Management:** `bridges/src/storage_manager.rs`
 - **Asset Management:** `bridges/src/asset_manager.rs`
+- **Linux Desktop Launcher:** `backend/src/helpers.rs:910` - Automatic .desktop file creation for AppImage integration
+  - **AppImage Detection:** `backend/src/helpers.rs:887` - `is_running_from_appimage()`
+  - **Desktop File Creation:** `backend/src/helpers.rs:943` - `create_or_update_linux_desktop_icon_file()`
+  - **Qt Integration:** `cpp/gui.cpp:93` - Calls desktop file creation during startup
+  - **Desktop Filename Setting:** `cpp/gui.cpp:111` - Sets Qt desktop filename for proper integration
 
 ### AI Integration
 - **Prompt Manager:** `bridges/src/prompt_manager.rs` - AI API communication and request handling

@@ -18,6 +18,7 @@ use simsapa_backend::{AppGlobals, get_create_simsapa_dir, get_create_simsapa_app
 use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
+use simsapa_backend::helpers::create_or_update_linux_desktop_icon_file;
 use simsapa_backend::logger::{info, warn, error, profile};
 
 pub static APP_GLOBALS_API: OnceLock<AppGlobals> = OnceLock::new();
@@ -238,6 +239,13 @@ pub extern "C" fn shutdown_webserver() {
             error(&format!("Error {}", code));
         }
         Err(_) => { error("Error response from webserver shutdown."); }
+    }
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn create_linux_desktop_icon_file() {
+    if let Err(e) = create_or_update_linux_desktop_icon_file() {
+        error(&format!("Failed to create desktop icon file: {}", e));
     }
 }
 
