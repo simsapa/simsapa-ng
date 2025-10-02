@@ -19,6 +19,7 @@ TestCase {
         bg_color_darker: "#1C2025"
         bg_color_lighter: "#2E333D" 
         text_color: "#F0F0F0"
+        border_color: "#0a0a0a"
         
         // Test properties
         max_words: 3  // Lower limit for testing overflow

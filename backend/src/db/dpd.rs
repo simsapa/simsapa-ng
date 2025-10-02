@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel::sql_types::{Text, Integer};
 use anyhow::Result;
 use serde_json;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
@@ -21,11 +21,11 @@ use crate::logger::{info, error};
 
 pub type DpdDbHandle = DatabaseHandle;
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LookupResult {
-    uid: String,
-    word: String,
-    summary: String,
+    pub uid: String,
+    pub word: String,
+    pub summary: String,
 }
 
 impl LookupResult {

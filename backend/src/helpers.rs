@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use html_escape::decode_html_entities;
 use anyhow::{Context, Result};
 
-use crate::types::SearchResult;
+use crate::types::{SearchResult, WordInfo, WordProcessingOptions, WordProcessingResult, ProcessedWord, UnrecognizedWord};
 use crate::lookup::*;
 use crate::logger::error;
 
@@ -919,6 +919,136 @@ pub fn get_desktop_file_path() -> Option<PathBuf> {
     None
 }
 
+/// Clean stem by removing disambiguating numbers
+/// (e.g., "ña 2.1" → "ña", "jhāyī 1" → "jhāyī")
+pub fn clean_stem(stem: &str) -> String {
+    lazy_static! {
+        static ref RE_DISAMBIGUATING_NUMBERS: Regex = Regex::new(r"\s+\d+(\.\d+)?$").unwrap();
+    }
+    RE_DISAMBIGUATING_NUMBERS.replace(stem, "").to_lowercase()
+}
+
+/// Check if a stem is a common word by comparing against a list of common words
+pub fn is_common_word(stem: &str, common_words: &[String]) -> bool {
+    let cleaned_stem = clean_stem(stem);
+    common_words.iter().any(|w| clean_stem(w) == cleaned_stem)
+}
+
+/// Clean word for Pāli text processing, including accented letters
+pub fn clean_word_pali(word: &str) -> String {
+    lazy_static! {
+        static ref RE_START_NON_WORD: Regex = Regex::new(r"^[^\w]+").unwrap();
+        static ref RE_END_NON_WORD: Regex = Regex::new(r"[^\w]+$").unwrap();
+    }
+
+    let lowercased = word.to_lowercase();
+    let without_start = RE_START_NON_WORD.replace(&lowercased, "");
+    let without_end = RE_END_NON_WORD.replace(&without_start, "");
+    without_end.into_owned()
+}
+
+/// Process a single word for glossing, equivalent to QML process_word_for_glossing function
+pub fn process_word_for_glossing(
+    word_info: &WordInfo,
+    paragraph_shown_stems: &mut std::collections::HashMap<String, bool>,
+    global_stems: &mut std::collections::HashMap<String, bool>,
+    check_global: bool,
+    options: &WordProcessingOptions,
+    dpd: &crate::db::dpd::DpdDbHandle,
+) -> Result<Option<WordProcessingResult>, String> {
+    // Call the DPD lookup function directly - much more efficient than JSON serialization
+    let search_results = match dpd.dpd_lookup(&word_info.word.to_lowercase(), false, true) {
+        Ok(results) => results,
+        Err(e) => return Err(format!("DPD lookup failed: {}", e)),
+    };
+
+    // Convert search results to lookup results
+    let results = crate::db::dpd::LookupResult::from_search_results(&search_results);
+
+    // Skip if no results - but return info about unrecognized word
+    if results.is_empty() {
+        return Ok(Some(WordProcessingResult::Unrecognized(UnrecognizedWord {
+            is_unrecognized: true,
+            word: word_info.word.clone(),
+        })));
+    }
+
+    // Get the stem from the first result
+    let stem = results[0].word.clone();
+    let stem_clean = clean_stem(&stem);
+
+    // Skip common words if option is enabled
+    if options.skip_common && is_common_word(&stem, &options.common_words) {
+        return Ok(Some(WordProcessingResult::Skipped));
+    }
+
+    // Skip if already shown in this paragraph
+    if paragraph_shown_stems.contains_key(&stem_clean) {
+        return Ok(Some(WordProcessingResult::Skipped));
+    }
+
+    // Skip if global deduplication is on and already shown
+    if check_global && global_stems.contains_key(&stem_clean) {
+        return Ok(Some(WordProcessingResult::Skipped));
+    }
+
+    // Mark as shown
+    paragraph_shown_stems.insert(stem_clean.clone(), true);
+    if check_global {
+        global_stems.insert(stem_clean, true);
+    }
+
+    // Create the processed word result
+    let processed_word = ProcessedWord {
+        original_word: clean_word_pali(&word_info.word),
+        results,
+        selected_index: 0,
+        stem,
+        example_sentence: word_info.sentence.clone(),
+    };
+
+    Ok(Some(WordProcessingResult::Recognized(processed_word)))
+}
+
+/// Collect unrecognized words and update global tracking
+pub fn collect_unrecognized_words(
+    processing_results: &[Option<WordProcessingResult>],
+    paragraph_idx: usize,
+    paragraph_unrecognized_words: &mut std::collections::HashMap<String, Vec<String>>,
+    global_unrecognized_words: &mut Vec<String>,
+) {
+    let mut paragraph_unrecognized = Vec::new();
+
+    for result in processing_results {
+        if let Some(WordProcessingResult::Unrecognized(unrecognized)) = result {
+            let word = unrecognized.word.clone();
+            paragraph_unrecognized.push(word.clone());
+
+            // Add to global list if not already present
+            if !global_unrecognized_words.contains(&word) {
+                global_unrecognized_words.push(word);
+            }
+        }
+    }
+
+    if !paragraph_unrecognized.is_empty() {
+        paragraph_unrecognized_words.insert(paragraph_idx.to_string(), paragraph_unrecognized);
+    }
+}
+
+/// Update global stem deduplication tracking
+pub fn update_global_stems_deduplication(
+    processing_results: &[Option<WordProcessingResult>],
+    global_stems: &mut std::collections::HashMap<String, bool>,
+) {
+    for result in processing_results {
+        if let Some(WordProcessingResult::Recognized(processed_word)) = result {
+            let stem_clean = clean_stem(&processed_word.stem);
+            global_stems.insert(stem_clean, true);
+        }
+    }
+}
+
 /// Create or update Linux desktop launcher file for AppImage
 pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
     // Only run on Linux systems
@@ -1011,7 +1141,7 @@ pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
         if let Ok(appdir) = env::var("APPDIR") {
             let asset_icon_path = PathBuf::from(appdir)
                 .join("usr/share/simsapa/icons/appicons/simsapa.png");
-            
+
             if asset_icon_path.exists() {
                 if let Err(e) = fs::copy(&asset_icon_path, &user_icon_path) {
                     error(&format!("Failed to copy icon from assets: {}", e));
@@ -1034,7 +1164,7 @@ pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
     let parent_path = appimage_path.parent()
         .unwrap_or_else(|| std::path::Path::new("/"))
         .to_string_lossy();
-    
+
     let desktop_entry = format!(
         r#"[Desktop Entry]
 Encoding=UTF-8

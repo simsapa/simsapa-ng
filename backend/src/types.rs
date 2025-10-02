@@ -239,3 +239,95 @@ pub struct SearchResultPage {
     pub page_num: usize,
     pub results: Vec<SearchResult>,
 }
+
+/// Options for word processing in gloss operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WordProcessingOptions {
+    pub no_duplicates_globally: bool,
+    pub skip_common: bool,
+    pub common_words: Vec<String>,
+    pub existing_global_stems: std::collections::HashMap<String, bool>,
+    pub existing_paragraph_unrecognized: std::collections::HashMap<String, Vec<String>>,
+    pub existing_global_unrecognized: Vec<String>,
+}
+
+/// Information about a word for processing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WordInfo {
+    pub word: String,
+    pub sentence: String,
+}
+
+/// Result of processing a single word for glossing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProcessedWord {
+    pub original_word: String,
+    pub results: Vec<crate::db::dpd::LookupResult>, // DPD lookup results
+    pub selected_index: i32,
+    pub stem: String,
+    pub example_sentence: String,
+}
+
+/// Result indicating an unrecognized word
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UnrecognizedWord {
+    pub is_unrecognized: bool,
+    pub word: String,
+}
+
+/// Result of processing a word (either recognized or unrecognized)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum WordProcessingResult {
+    Recognized(ProcessedWord),
+    Unrecognized(UnrecognizedWord),
+    Skipped, // For common words or duplicates
+}
+
+/// Input data for processing all paragraphs in background
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AllParagraphsProcessingInput {
+    pub paragraphs: Vec<String>,
+    pub options: WordProcessingOptions,
+}
+
+/// Input data for processing a single paragraph in background
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SingleParagraphProcessingInput {
+    pub paragraph_text: String,
+    pub options: WordProcessingOptions,
+}
+
+/// Result data for a single paragraph processing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParagraphProcessingResult {
+    pub paragraph_index: usize,
+    pub words_data: Vec<ProcessedWord>,
+    pub unrecognized_words: Vec<String>,
+}
+
+/// Result data for all paragraphs processing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AllParagraphsProcessingResult {
+    pub success: bool,
+    pub paragraphs: Vec<ParagraphProcessingResult>,
+    pub global_unrecognized_words: Vec<String>,
+    pub updated_global_stems: std::collections::HashMap<String, bool>,
+}
+
+/// Result data for single paragraph processing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SingleParagraphProcessingResult {
+    pub success: bool,
+    pub paragraph_index: usize,
+    pub words_data: Vec<ProcessedWord>,
+    pub unrecognized_words: Vec<String>,
+    pub updated_global_stems: std::collections::HashMap<String, bool>,
+}
+
+/// Error response for background processing operations
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackgroundProcessingError {
+    pub success: bool,
+    pub error: String,
+}

@@ -22,39 +22,39 @@
 
 ### Phase 1: Rust Backend Implementation
 
-- [ ] 1.0 Setup Background Processing Infrastructure
-  - [ ] 1.1 Add signal definitions to `sutta_bridge.rs` for `allParagraphsGlossReady` and `paragraphGlossReady`
-  - [ ] 1.2 Import required threading dependencies (`std::thread`, signal handling)
-  - [ ] 1.3 Create error handling structures for background processing failures
-  - [ ] 1.4 Add logging infrastructure for debugging background operations
+- [x] 1.0 Setup Background Processing Infrastructure
+  - [x] 1.1 Add signal definitions to `sutta_bridge.rs` for `allParagraphsGlossReady` and `paragraphGlossReady`
+  - [x] 1.2 Import required threading dependencies (`std::thread`, signal handling)
+  - [x] 1.3 Create error handling structures for background processing failures
+  - [x] 1.4 Add logging infrastructure for debugging background operations
 
-- [ ] 2.0 Port Word Processing Logic to Rust
-  - [ ] 2.1 Implement `clean_stem()` function in Rust (port from QML logic)
-  - [ ] 2.2 Implement `is_common_word()` function with common words list checking
-  - [ ] 2.3 Create `process_word_for_glossing()` equivalent that calls `dpd_lookup_json()`
-  - [ ] 2.4 Implement unrecognized word collection logic
-  - [ ] 2.5 Implement global stem deduplication logic
+- [x] 2.0 Port Word Processing Logic to Rust
+  - [x] 2.1 Implement `clean_stem()` function in Rust (port from QML logic)
+  - [x] 2.2 Implement `is_common_word()` function with common words list checking
+  - [x] 2.3 Create `process_word_for_glossing()` equivalent that calls `dpd_lookup_json()`
+  - [x] 2.4 Implement unrecognized word collection logic
+  - [x] 2.5 Implement global stem deduplication logic
 
-- [ ] 3.0 Implement Background Processing Functions
-  - [ ] 3.1 Create `process_all_paragraphs_background()` function with thread spawning
-  - [ ] 3.2 Create `process_paragraph_background()` function for single paragraph processing
-  - [ ] 3.3 Implement JSON input parsing for processing options and paragraph data
-  - [ ] 3.4 Implement JSON output formatting matching the specified data structure
-  - [ ] 3.5 Add proper error handling and signal emission for both success and failure cases
+- [x] 3.0 Implement Background Processing Functions
+  - [x] 3.1 Create `process_all_paragraphs_background()` function with thread spawning
+  - [x] 3.2 Create `process_paragraph_background()` function for single paragraph processing
+  - [x] 3.3 Implement JSON input parsing for processing options and paragraph data
+  - [x] 3.4 Implement JSON output formatting matching the specified data structure
+  - [x] 3.5 Add proper error handling and signal emission for both success and failure cases
 
-- [ ] 4.0 Add Comprehensive Error Handling
-  - [ ] 4.1 Handle individual word lookup failures gracefully (continue processing other words)
-  - [ ] 4.2 Add timeout handling for long-running operations
-  - [ ] 4.3 Implement proper thread cleanup on errors
-  - [ ] 4.4 Add error signal emission with detailed error messages
-  - [ ] 4.5 Add logging for debugging failed operations
+- [x] 4.0 Add Comprehensive Error Handling
+  - [x] 4.1 Handle individual word lookup failures gracefully (continue processing other words)
+  - [x] 4.2 Add timeout handling for long-running operations
+  - [x] 4.3 Implement proper thread cleanup on errors
+  - [x] 4.4 Add error signal emission with detailed error messages
+  - [x] 4.5 Add logging for debugging failed operations
 
 ### Phase 2: QML Integration
 
-- [ ] 5.0 Update QML Type Definitions
-  - [ ] 5.1 Add new function signatures to `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml`
-  - [ ] 5.2 Update `qmldir` file if needed for new type definitions
-  - [ ] 5.3 Update `bridges/build.rs` to include new QML files if created
+- [x] 5.0 Update QML Type Definitions
+  - [x] 5.1 Add new function signatures to `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml`
+  - [x] 5.2 Update `qmldir` file if needed for new type definitions
+  - [x] 5.3 Update `bridges/build.rs` to include new QML files if created
 
 - [ ] 6.0 Implement Signal Connections in GlossTab
   - [ ] 6.1 Add `Connections` block for `SuttaBridge` signals in `GlossTab.qml`
