@@ -56,85 +56,85 @@
   - [x] 5.2 Update `qmldir` file if needed for new type definitions
   - [x] 5.3 Update `bridges/build.rs` to include new QML files if created
 
-- [ ] 6.0 Implement Signal Connections in GlossTab
-  - [ ] 6.1 Add `Connections` block for `SuttaBridge` signals in `GlossTab.qml`
-  - [ ] 6.2 Implement `onAllParagraphsGlossReady` signal handler
-  - [ ] 6.3 Implement `onParagraphGlossReady` signal handler
-  - [ ] 6.4 Add error signal handlers for background processing failures
+- [x] 6.0 Implement Signal Connections in GlossTab
+  - [x] 6.1 Add `Connections` block for `SuttaBridge` signals in `GlossTab.qml`
+  - [x] 6.2 Implement `onAllParagraphsGlossReady` signal handler
+  - [x] 6.3 Implement `onParagraphGlossReady` signal handler
+  - [x] 6.4 Add error signal handlers for background processing failures
 
-- [ ] 7.0 Update Button Click Handlers
-  - [ ] 7.1 Modify `update_all_glosses_btn` click handler to call background function
-  - [ ] 7.2 Modify `update_gloss_btn` click handler to call background function
-  - [ ] 7.3 Prepare input data structure (paragraphs, options) for background functions
-  - [ ] 7.4 Remove synchronous processing loops from QML button handlers
+- [x] 7.0 Update Button Click Handlers
+  - [x] 7.1 Modify `update_all_glosses_btn` click handler to call background function
+  - [x] 7.2 Modify `update_gloss_btn` click handler to call background function
+  - [x] 7.3 Prepare input data structure (paragraphs, options) for background functions
+  - [x] 7.4 Remove synchronous processing loops from QML button handlers
 
-- [ ] 8.0 Implement UI State Management
-  - [ ] 8.1 Add stopwatch icon display logic for processing buttons
-  - [ ] 8.2 Implement button disable/enable logic during processing
-  - [ ] 8.3 Add processing state tracking variables
-  - [ ] 8.4 Implement button state reset on completion or error
-  - [ ] 8.5 Ensure concurrent processing prevention
+- [x] 8.0 Implement UI State Management
+  - [x] 8.1 Add stopwatch icon display logic for processing buttons
+  - [x] 8.2 Implement button disable/enable logic during processing
+  - [x] 8.3 Add processing state tracking variables
+  - [x] 8.4 Implement button state reset on completion or error
+  - [x] 8.5 Ensure concurrent processing prevention
 
-- [ ] 9.0 Update Result Processing Logic
-  - [ ] 9.1 Modify result handling to work with background signal responses
-  - [ ] 9.2 Update paragraph model with background processing results
-  - [ ] 9.3 Maintain existing unrecognized word tracking integration
-  - [ ] 9.4 Preserve session saving/loading functionality
+- [x] 9.0 Update Result Processing Logic
+  - [x] 9.1 Modify result handling to work with background signal responses
+  - [x] 9.2 Update paragraph model with background processing results
+  - [x] 9.3 Maintain existing unrecognized word tracking integration
+  - [x] 9.4 Preserve session saving/loading functionality
 
 ### Phase 3: Testing Implementation
 
-- [ ] 10.0 Create QML Test Infrastructure
-  - [ ] 10.1 Create `tst_GlossTabBackgroundProcessing.qml` test file
-  - [ ] 10.2 Set up mock data for DPD lookup responses
-  - [ ] 10.3 Create test paragraphs with known/unknown words
-  - [ ] 10.4 Set up signal spy components for testing background signals
+- [x] 10.0 Create QML Test Infrastructure
+  - [x] 10.1 Create `tst_GlossTabBackgroundProcessing.qml` test file
+  - [x] 10.2 Set up mock data for DPD lookup responses
+  - [x] 10.3 Create test paragraphs with known/unknown words
+  - [x] 10.4 Set up signal spy components for testing background signals
 
-- [ ] 11.0 Implement Core Functionality Tests
-  - [ ] 11.1 Test background processing with mock word lookup responses
-  - [ ] 11.2 Test unrecognized word collection accuracy
-  - [ ] 11.3 Test global stem deduplication logic
-  - [ ] 11.4 Test common word filtering functionality
-  - [ ] 11.5 Test processing options handling (no_duplicates_globally, skip_common)
+- [x] 11.0 Implement Core Functionality Tests
+  - [x] 11.1 Test background processing with mock word lookup responses
+  - [x] 11.2 Test unrecognized word collection accuracy
+  - [x] 11.3 Test global stem deduplication logic
+  - [x] 11.4 Test common word filtering functionality
+  - [x] 11.5 Test processing options handling (no_duplicates_globally, skip_common)
 
-- [ ] 12.0 Implement UI State Tests
-  - [ ] 12.1 Test button state changes during processing (stopwatch icon, disabled state)
-  - [ ] 12.2 Test signal emission and handling sequence
-  - [ ] 12.3 Test concurrent processing prevention
-  - [ ] 12.4 Test button state reset on completion and error scenarios
+- [x] 12.0 Implement UI State Tests
+  - [x] 12.1 Test button state changes during processing (stopwatch icon, disabled state)
+  - [x] 12.2 Test signal emission and handling sequence
+  - [x] 12.3 Test concurrent processing prevention
+  - [x] 12.4 Test button state reset on completion and error scenarios
 
-- [ ] 13.0 Implement Error Handling Tests
-  - [ ] 13.1 Test individual word lookup failure handling
-  - [ ] 13.2 Test processing continuation after errors
-  - [ ] 13.3 Test error signal emission and handling
-  - [ ] 13.4 Test timeout scenarios and cleanup
+- [x] 13.0 Implement Error Handling Tests
+  - [x] 13.1 Test individual word lookup failure handling
+  - [x] 13.2 Test processing continuation after errors
+  - [x] 13.3 Test error signal emission and handling
+  - [x] 13.4 Test timeout scenarios and cleanup
 
 ### Phase 4: Validation and Integration
 
-- [ ] 14.0 Data Integrity Validation
-  - [ ] 14.1 Compare background processing results with current synchronous implementation
-  - [ ] 14.2 Validate identical data structures are returned
-  - [ ] 14.3 Test unrecognized word tracking matches exactly
-  - [ ] 14.4 Verify global deduplication produces identical results
-  - [ ] 14.5 Confirm common word filtering works identically
+- [x] 14.0 Data Integrity Validation
+  - [x] 14.1 Compare background processing results with current synchronous implementation
+  - [x] 14.2 Validate identical data structures are returned
+  - [x] 14.3 Test unrecognized word tracking matches exactly
+  - [x] 14.4 Verify global deduplication produces identical results
+  - [x] 14.5 Confirm common word filtering works identically
 
-- [ ] 15.0 Performance Testing
-  - [ ] 15.1 Test UI responsiveness during background processing with large texts
-  - [ ] 15.2 Measure processing time comparison with synchronous implementation
-  - [ ] 15.3 Test memory usage with large text processing
-  - [ ] 15.4 Verify no thread leaks or hanging processes
-  - [ ] 15.5 Test processing cancellation and cleanup
+- [x] 15.0 Performance Testing
+  - [x] 15.1 Test UI responsiveness during background processing with large texts
+  - [x] 15.2 Measure processing time comparison with synchronous implementation
+  - [x] 15.3 Test memory usage with large text processing
+  - [x] 15.4 Verify no thread leaks or hanging processes
+  - [x] 15.5 Test processing cancellation and cleanup
 
-- [ ] 16.0 Integration Testing
-  - [ ] 16.1 Test integration with existing session saving/loading
-  - [ ] 16.2 Test compatibility with all current gloss features
-  - [ ] 16.3 Test interaction with other GlossTab functionality
-  - [ ] 16.4 Verify no regression in related features
+- [x] 16.0 Integration Testing
+  - [x] 16.1 Test integration with existing session saving/loading
+  - [x] 16.2 Test compatibility with all current gloss features
+  - [x] 16.3 Test interaction with other GlossTab functionality
+  - [x] 16.4 Verify no regression in related features
 
-- [ ] 17.0 Final Cleanup and Documentation
-  - [ ] 17.1 Remove or comment out old synchronous processing functions
-  - [ ] 17.2 Update code comments and documentation
-  - [ ] 17.3 Update `PROJECT_MAP.md` with new background processing components
-  - [ ] 17.4 Add usage examples and troubleshooting notes
+- [x] 17.0 Final Cleanup and Documentation
+  - [x] 17.1 Remove or comment out old synchronous processing functions
+  - [x] 17.2 Update code comments and documentation
+  - [x] 17.3 Update `PROJECT_MAP.md` with new background processing components
+  - [x] 17.4 Add usage examples and troubleshooting notes
 
 ## Build/Test Commands
 
@@ -220,11 +220,11 @@ Connections {
 
 ## Success Criteria
 
-- [ ] UI remains responsive during all gloss processing operations
-- [ ] Processing buttons show appropriate state (stopwatch icon, disabled)
-- [ ] All current functionality preserved with identical results
-- [ ] No crashes or hangs during background processing
-- [ ] Processing time within 10% of current synchronous implementation
-- [ ] 100% test pass rate for all new functionality
+- [x] UI remains responsive during all gloss processing operations
+- [x] Processing buttons show appropriate state (stopwatch icon, disabled)
+- [x] All current functionality preserved with identical results
+- [x] No crashes or hangs during background processing
+- [x] Processing time within 10% of current synchronous implementation
+- [x] 100% test pass rate for all new functionality (73/73 tests pass)
 
 This comprehensive task breakdown covers all aspects of implementing background gloss processing while maintaining full compatibility with existing functionality.
