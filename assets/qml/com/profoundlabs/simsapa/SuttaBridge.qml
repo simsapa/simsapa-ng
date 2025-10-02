@@ -16,6 +16,7 @@ Item {
     signal resultsPageReady(results_json: string);
     signal allParagraphsGlossReady(results_json: string);
     signal paragraphGlossReady(paragraph_index: int, results_json: string);
+    signal dpdLookupReady(results_json: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -131,6 +132,19 @@ Item {
             return JSON.stringify(root.dpd_lookup_test_data[query]);
         }
         return "[{}]";
+    }
+
+    function dpd_lookup_json_async(query: string) {
+        console.log("dpd_lookup_json_async():", query);
+        // Simulate async behavior
+        Qt.callLater(function() {
+            query = normalize_query_text(query);
+            let result = "[{}]";
+            if (root.dpd_lookup_test_data[query]) {
+                result = JSON.stringify(root.dpd_lookup_test_data[query]);
+            }
+            dpdLookupReady(result);
+        });
     }
 
     function get_api_key(key_name: string): string {

@@ -1433,7 +1433,7 @@ ${table_rows}
                             Button {
                                 id: update_all_glosses_btn
                                 text: "Update All Glosses"
-                                enabled: !root.is_processing_all && root.current_text.trim() !== ""
+                                enabled: !root.is_processing_all
                                 icon.source: root.is_processing_all ? "icons/32x32/fa_stopwatch-solid.png" : ""
                                 onClicked: root.start_background_all_glosses()
                             }
@@ -1571,7 +1571,7 @@ ${table_rows}
                                 id: update_gloss_btn
                                 text: "Update Gloss"
                                 Layout.alignment: Qt.AlignRight
-                                enabled: !root.is_processing_single && paragraph_item.text.trim() !== ""
+                                enabled: !root.is_processing_single
                                 icon.source: root.is_processing_single ? "icons/32x32/fa_stopwatch-solid.png" : ""
                                 onClicked: root.start_background_paragraph_gloss(paragraph_item.index)
                             }

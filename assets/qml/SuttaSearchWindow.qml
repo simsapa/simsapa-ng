@@ -1148,6 +1148,7 @@ ${query_text}`;
                                 target: gloss_tab
                                 function onRequestWordSummary(word) {
                                     root.set_summary_query(word);
+                                    word_summary.search_btn.click();
                                 }
                             }
 
