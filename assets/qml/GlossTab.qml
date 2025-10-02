@@ -784,105 +784,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         }
     }
 
-    function update_all_glosses() {
-        var paragraphs = gloss_text_input.text.split('\n\n').filter(p => p.trim() !== '');
-        root.current_text = gloss_text_input.text;
-        paragraph_model.clear();
-        root.global_shown_stems = {};
 
-        // Reset unrecognized words collections
-        root.global_unrecognized_words = [];
-        root.paragraph_unrecognized_words = {};
-        logger.debug("🧹 Reset unrecognized words collections");
 
-        let translations_json = "[]";
 
-        if (root.is_qml_preview) {
-            let translations = [
-                { model_name: "deepseek/deepseek-r1-0528:free",
-                  status: "completed",
-                  response: `
-And what, bhikkhus, is concentration?
 
-And what, bhikkhus, is concentration?
-
-And what, bhikkhus, is concentration?
-
-And what, bhikkhus, is concentration?
-
-And what, bhikkhus, is concentration?
-
-And what, bhikkhus, is concentration?
-
-And what, bhikkhus, is concentration?
-`,
-                },
-                { model_name: "google/gemini-2.0-flash-exp:free", status: "waiting", response: "" },
-                { model_name: "google/gemma-3-27b-it:free", status: "completed", response: "And what, bhikkhus, is collectedness?" },
-                { model_name: "meta-llama/llama-3.3-70b-instruct:free", status: "completed", response: "And what, bhikkhus, is the faculty of concentration?" },
-            ];
-            translations_json = JSON.stringify(translations);
-        }
-
-        for (var i = 0; i < paragraphs.length; i++) {
-            var paragraph_shown_stems = {};
-
-            // Create paragraph with words data array
-            var paragraph_item = root.create_paragraph_with_words_model(paragraphs[i]);
-            paragraph_item.translations_json = translations_json;
-
-            // Populate the words data
-            root.populate_paragraph_words_data(
-                paragraph_item,
-                paragraphs[i],
-                paragraph_shown_stems,
-                root.global_shown_stems,
-                root.no_duplicates_globally,
-                i
-            );
-
-            // Convert words_data to JSON for storage in ListModel, as ListModel can't handle complex JS arrays
-            var model_item = {
-                text: paragraph_item.text,
-                words_data_json: JSON.stringify(paragraph_item.words_data),
-                translations_json: paragraph_item.translations_json,
-                selected_ai_tab: 0
-            };
-
-            paragraph_model.append(model_item);
-        }
-
-        root.save_session();
-    }
-
-    function update_paragraph_gloss(index) {
-        var paragraph = paragraph_model.get(index);
-        if (!paragraph) return;
-
-        var paragraph_shown_stems = {};
-
-        // Reset unrecognized words for this paragraph
-        root.paragraph_unrecognized_words[index] = [];
-
-        // If global deduplication, collect stems from previous paragraphs
-        var previous_stems = root.no_duplicates_globally ? root.get_previous_paragraph_stems(index) : {};
-
-        // Create temporary paragraph item to populate words data
-        var temp_paragraph = { words_data: [] };
-        root.populate_paragraph_words_data(
-            temp_paragraph,
-            paragraph.text,
-            paragraph_shown_stems,
-            previous_stems,
-            root.no_duplicates_globally,
-            index
-        );
-
-        // Update the model with JSON
-        paragraph_model.setProperty(index, "words_data_json", JSON.stringify(temp_paragraph.words_data));
-
-        root.save_session();
-    }
 
     // Handle results from background processing of all paragraphs
     function handle_all_paragraphs_results(results) {
@@ -1490,7 +1395,7 @@ ${table_rows}
                                 onCheckedChanged: {
                                     root.no_duplicates_globally = globalDedupeCheckBox.checked;
                                     if (paragraph_model.count > 0) {
-                                        root.update_all_glosses();
+                                        root.start_background_all_glosses();
                                     }
                                 }
                             }
@@ -1502,7 +1407,7 @@ ${table_rows}
                                 onCheckedChanged: {
                                     root.skip_common = skip_common_check.checked;
                                     if (paragraph_model.count > 0) {
-                                        root.update_all_glosses();
+                                        root.start_background_all_glosses();
                                     }
                                 }
                             }
@@ -1794,7 +1699,11 @@ ${table_rows}
                                         id: word_select
                                         Layout.alignment: Qt.AlignTop
                                         Layout.preferredWidth: wordItem.width * 0.2
-                                        visible: wordItem.modelData.results && wordItem.modelData.results.length > 1
+                                        visible: {
+                                            // Show ComboBox only when there are multiple lookup results to choose from
+                                            return wordItem.modelData.results !== undefined && 
+                                                   wordItem.modelData.results.length > 1;
+                                        }
                                         model: wordItem.modelData.results
                                         textRole: "word"
                                         font.bold: true
@@ -1813,9 +1722,19 @@ ${table_rows}
                                         Layout.preferredWidth: wordItem.width * 0.2
                                         Layout.fillHeight: true
                                         verticalAlignment: Text.AlignTop
-                                        visible: !wordItem.modelData.results || wordItem.modelData.results.length <= 1
-                                        text: wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                    wordItem.modelData.results[0].word : wordItem.modelData.original_word
+                                        visible: {
+                                            // Show static text when there's no results or only one result available
+                                            return wordItem.modelData.results === undefined ||
+                                                   wordItem.modelData.results.length <= 1;
+                                        }
+                                        text: {
+                                            // Display the first result's word if available, otherwise show original word
+                                            if (wordItem.modelData.results !== undefined &&
+                                                wordItem.modelData.results.length > 0) {
+                                                return wordItem.modelData.results[0].word;
+                                            }
+                                            return wordItem.modelData.original_word;
+                                        }
                                         color: root.text_color
                                         font.bold: true
                                         font.pointSize: root.vocab_font_point_size
@@ -1850,8 +1769,14 @@ ${table_rows}
                                             Layout.alignment: Qt.AlignTop
                                             onClicked: {
                                                 var idx = word_select.currentIndex || 0;
-                                                let word = wordItem.modelData.results && wordItem.modelData.results.length > 0 ?
-                                                    wordItem.modelData.results[idx].word : wordItem.modelData.original_word;
+                                                let word;
+                                                // Get the selected word from results if available, otherwise use original word
+                                                if (wordItem.modelData.results !== undefined &&
+                                                    wordItem.modelData.results.length > 0) {
+                                                    word = wordItem.modelData.results[idx].word;
+                                                } else {
+                                                    word = wordItem.modelData.original_word;
+                                                }
                                                 root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
                                             }
                                         }
@@ -1909,7 +1834,7 @@ ${table_rows}
                         root.common_words = words;
                         SuttaBridge.save_common_words_json(JSON.stringify(root.common_words));
                         commonWordsDialog.close();
-                        root.update_all_glosses();
+                        root.start_background_all_glosses();
                     }
                 }
             }
