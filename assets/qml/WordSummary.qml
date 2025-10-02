@@ -26,6 +26,10 @@ Frame {
 
     required property bool search_as_you_type_checked
 
+    property alias search_btn: search_btn
+
+    property bool is_loading: false
+
     background: Rectangle {
         color: palette.window
         border.width: 1
@@ -45,6 +49,25 @@ Frame {
 
     ListModel { id: deconstructor_model }
     ListModel { id: summaries_model }
+
+    Connections {
+        target: SuttaBridge
+
+        function onDpdLookupReady(results_json: string) {
+            root.is_loading = false;
+            summaries_model.clear();
+            let sum_list = JSON.parse(results_json);
+            for (let i=0; i < sum_list.length; i++) {
+                summaries_model.append({
+                    uid: sum_list[i].uid,
+                    word: sum_list[i].word,
+                    summary: sum_list[i].summary,
+                });
+            }
+            // clear the previous selection highlight
+            summaries_list.currentIndex = -1;
+        }
+    }
 
     // For qml preview
     /* ListModel { */
@@ -72,29 +95,18 @@ Frame {
         if (query.length < min_length)
             return;
 
-        // root.is_loading = true; TODO
-        Qt.callLater(function() {
-            deconstructor_model.clear();
-            let dec_list = SuttaBridge.dpd_deconstructor_list(query);
-            for (let i=0; i < dec_list.length; i++) {
-                deconstructor_model.append({ words_joined: dec_list[i] });
-            }
-            deconstructor.currentIndex = 0;
+        root.is_loading = true;
 
-            summaries_model.clear();
-            let sum_list = JSON.parse(SuttaBridge.dpd_lookup_json(query));
-            for (let i=0; i < sum_list.length; i++) {
-                summaries_model.append({
-                    uid: sum_list[i].uid,
-                    word: sum_list[i].word,
-                    summary: sum_list[i].summary,
-                });
-            }
-            // clear the previous selection highlight
-            summaries_list.currentIndex = -1;
+        // Get deconstructor list synchronously (it's fast)
+        deconstructor_model.clear();
+        let dec_list = SuttaBridge.dpd_deconstructor_list(query);
+        for (let i=0; i < dec_list.length; i++) {
+            deconstructor_model.append({ words_joined: dec_list[i] });
+        }
+        deconstructor.currentIndex = 0;
 
-            // root.is_loading = false; TODO
-        });
+        // Start async lookup for summaries (this can be slow)
+        SuttaBridge.dpd_lookup_json_async(query);
     }
 
     ColumnLayout {
@@ -118,12 +130,13 @@ Frame {
             }
             Button {
                 id: search_btn
-                icon.source: "icons/32x32/bx_search_alt_2.png"
+                icon.source: root.is_loading ? "icons/32x32/fa_stopwatch-solid.png" : "icons/32x32/bx_search_alt_2.png"
+                enabled: !root.is_loading
                 onClicked: root.run_lookup(lookup_input.text)
                 Layout.preferredHeight: lookup_input.height
                 Layout.preferredWidth: lookup_input.height
                 ToolTip.visible: hovered
-                ToolTip.text: "Search"
+                ToolTip.text: root.is_loading ? "Processing..." : "Search"
             }
             Button {
                 id: close_btn
