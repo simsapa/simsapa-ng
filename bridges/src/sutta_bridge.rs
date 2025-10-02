@@ -56,6 +56,14 @@ pub mod qobject {
         #[cxx_name = "resultsPageReady"]
         fn results_page_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "allParagraphsGlossReady"]
+        fn all_paragraphs_gloss_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
+
+        #[qsignal]
+        #[cxx_name = "paragraphGlossReady"]
+        fn paragraph_gloss_ready(self: Pin<&mut SuttaBridge>, paragraph_index: i32, results_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -187,6 +195,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn save_anki_csv(self: &SuttaBridge, csv_content: &QString) -> QString;
+
+        #[qinvokable]
+        fn process_all_paragraphs_background(self: Pin<&mut SuttaBridge>, input_json: &QString);
+
+        #[qinvokable]
+        fn process_paragraph_background(self: Pin<&mut SuttaBridge>, paragraph_index: i32, input_json: &QString);
 
         #[qinvokable]
         fn save_file(self: &SuttaBridge, folder_url: &QUrl, filename: &QString, content: &QString) -> bool;
@@ -791,5 +805,244 @@ impl qobject::SuttaBridge {
     pub fn open_sutta_search_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_sutta_search_window();
+    }
+
+    /// Helper function to create error response JSON for background processing
+    fn create_error_response(error_message: &str) -> String {
+        let error_response = simsapa_backend::types::BackgroundProcessingError {
+            success: false,
+            error: error_message.to_string(),
+        };
+
+        match serde_json::to_string(&error_response) {
+            Ok(json) => json,
+            Err(_) => {
+                // Fallback to simple JSON if serialization fails
+                format!(r#"{{"success":false,"error":"{}"}}"#, error_message.replace('"', r#"\""#))
+            }
+        }
+    }
+
+    /// Process all paragraphs in background thread
+    pub fn process_all_paragraphs_background(self: Pin<&mut Self>, input_json: &QString) {
+        let input_json = input_json.to_string();
+        let self_ = self.qt_thread();
+
+        thread::spawn(move || {
+            // Parse input JSON directly into typed struct
+            let input_data: simsapa_backend::types::AllParagraphsProcessingInput = match serde_json::from_str(&input_json) {
+                Ok(data) => data,
+                Err(e) => {
+                    let error_response = Self::create_error_response(&format!("Failed to parse input JSON: {}", e));
+                    self_.queue(move |mut qo| {
+                        qo.as_mut().all_paragraphs_gloss_ready(QString::from(error_response));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            // Get app data for DPD database access
+            let app_data = simsapa_backend::get_app_data();
+
+            let mut paragraph_results: Vec<simsapa_backend::types::ParagraphProcessingResult> = Vec::new();
+            let mut global_unrecognized_words = input_data.options.existing_global_unrecognized.clone();
+            let mut global_stems = input_data.options.existing_global_stems.clone();
+            let mut paragraph_unrecognized_words = input_data.options.existing_paragraph_unrecognized.clone();
+
+            // Process each paragraph
+            for (paragraph_idx, paragraph_text) in input_data.paragraphs.iter().enumerate() {
+
+                // Extract words with context from paragraph
+                let words_with_context = simsapa_backend::helpers::extract_words(paragraph_text);
+                let mut paragraph_shown_stems = std::collections::HashMap::new();
+                let mut processed_words = Vec::new();
+
+                // Process each word
+                for word in words_with_context {
+                    let word_info = simsapa_backend::types::WordInfo {
+                        word: word.clone(),
+                        sentence: paragraph_text.to_string(), // Use full paragraph as sentence context
+                    };
+
+                    match simsapa_backend::helpers::process_word_for_glossing(
+                        &word_info,
+                        &mut paragraph_shown_stems,
+                        &mut global_stems,
+                        input_data.options.no_duplicates_globally,
+                        &input_data.options,
+                        &app_data.dbm.dpd,
+                    ) {
+                        Ok(result) => processed_words.push(result),
+                        Err(e) => {
+                            let error_response = Self::create_error_response(&format!("Word processing error: {}", e));
+                            self_.queue(move |mut qo| {
+                                qo.as_mut().all_paragraphs_gloss_ready(QString::from(error_response));
+                            }).unwrap();
+                            return;
+                        }
+                    }
+                }
+
+                // Collect unrecognized words for this paragraph
+                simsapa_backend::helpers::collect_unrecognized_words(
+                    &processed_words,
+                    paragraph_idx,
+                    &mut paragraph_unrecognized_words,
+                    &mut global_unrecognized_words,
+                );
+
+                // Collect recognized words data
+                let words_data: Vec<simsapa_backend::types::ProcessedWord> = processed_words
+                    .into_iter()
+                    .filter_map(|result| {
+                        if let Some(simsapa_backend::types::WordProcessingResult::Recognized(word)) = result {
+                            Some(word)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+                let paragraph_unrecognized = paragraph_unrecognized_words
+                    .get(&paragraph_idx.to_string())
+                    .cloned()
+                    .unwrap_or_default();
+
+                paragraph_results.push(simsapa_backend::types::ParagraphProcessingResult {
+                    paragraph_index: paragraph_idx,
+                    words_data,
+                    unrecognized_words: paragraph_unrecognized,
+                });
+            }
+
+            // Create success response
+            let response = simsapa_backend::types::AllParagraphsProcessingResult {
+                success: true,
+                paragraphs: paragraph_results,
+                global_unrecognized_words,
+                updated_global_stems: global_stems,
+            };
+
+            let response_json = match serde_json::to_string(&response) {
+                Ok(json) => json,
+                Err(e) => {
+                    let error_response = Self::create_error_response(&format!("Failed to serialize response: {}", e));
+                    self_.queue(move |mut qo| {
+                        qo.as_mut().all_paragraphs_gloss_ready(QString::from(error_response));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            self_.queue(move |mut qo| {
+                qo.as_mut().all_paragraphs_gloss_ready(QString::from(response_json));
+            }).unwrap();
+        });
+    }
+
+    /// Process a single paragraph in background thread
+    pub fn process_paragraph_background(self: Pin<&mut Self>, paragraph_index: i32, input_json: &QString) {
+        let input_json = input_json.to_string();
+        let self_ = self.qt_thread();
+
+        thread::spawn(move || {
+            // Parse input JSON directly into typed struct
+            let input_data: simsapa_backend::types::SingleParagraphProcessingInput = match serde_json::from_str(&input_json) {
+                Ok(data) => data,
+                Err(e) => {
+                    let error_response = Self::create_error_response(&format!("Failed to parse input JSON: {}", e));
+                    self_.queue(move |mut qo| {
+                        qo.as_mut().paragraph_gloss_ready(paragraph_index, QString::from(error_response));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            // Get app data for DPD database access
+            let app_data = simsapa_backend::get_app_data();
+
+            // Extract words with context from paragraph
+            let words_with_context = simsapa_backend::helpers::extract_words(&input_data.paragraph_text);
+            let mut paragraph_shown_stems = std::collections::HashMap::new();
+            let mut global_stems = input_data.options.existing_global_stems.clone();
+            let mut processed_words = Vec::new();
+
+            // Process each word
+            for word in words_with_context {
+                let word_info = simsapa_backend::types::WordInfo {
+                    word: word.clone(),
+                    sentence: input_data.paragraph_text.clone(),
+                };
+
+                match simsapa_backend::helpers::process_word_for_glossing(
+                    &word_info,
+                    &mut paragraph_shown_stems,
+                    &mut global_stems,
+                    input_data.options.no_duplicates_globally,
+                    &input_data.options,
+                    &app_data.dbm.dpd,
+                ) {
+                    Ok(result) => processed_words.push(result),
+                    Err(e) => {
+                        let error_response = Self::create_error_response(&format!("Word processing error: {}", e));
+                        self_.queue(move |mut qo| {
+                            qo.as_mut().paragraph_gloss_ready(paragraph_index, QString::from(error_response));
+                        }).unwrap();
+                        return;
+                    }
+                }
+            }
+
+            // Collect unrecognized words
+            let mut paragraph_unrecognized_words = std::collections::HashMap::new();
+            let mut global_unrecognized_words = input_data.options.existing_global_unrecognized.clone();
+            simsapa_backend::helpers::collect_unrecognized_words(
+                &processed_words,
+                paragraph_index as usize,
+                &mut paragraph_unrecognized_words,
+                &mut global_unrecognized_words,
+            );
+
+            // Collect recognized words data
+            let words_data: Vec<simsapa_backend::types::ProcessedWord> = processed_words
+                .into_iter()
+                .filter_map(|result| {
+                    if let Some(simsapa_backend::types::WordProcessingResult::Recognized(word)) = result {
+                        Some(word)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            let paragraph_unrecognized = paragraph_unrecognized_words
+                .get(&paragraph_index.to_string())
+                .cloned()
+                .unwrap_or_default();
+
+            // Create success response
+            let response = simsapa_backend::types::SingleParagraphProcessingResult {
+                success: true,
+                paragraph_index: paragraph_index as usize,
+                words_data,
+                unrecognized_words: paragraph_unrecognized,
+                updated_global_stems: global_stems,
+            };
+
+            let response_json = match serde_json::to_string(&response) {
+                Ok(json) => json,
+                Err(e) => {
+                    let error_response = Self::create_error_response(&format!("Failed to serialize response: {}", e));
+                    self_.queue(move |mut qo| {
+                        qo.as_mut().paragraph_gloss_ready(paragraph_index, QString::from(error_response));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            self_.queue(move |mut qo| {
+                qo.as_mut().paragraph_gloss_ready(paragraph_index, QString::from(response_json));
+            }).unwrap();
+        });
     }
 }

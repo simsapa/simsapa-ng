@@ -14,6 +14,8 @@ Item {
 
     signal updateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string);
     signal resultsPageReady(results_json: string);
+    signal allParagraphsGlossReady(results_json: string);
+    signal paragraphGlossReady(paragraph_index: int, results_json: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -247,6 +249,22 @@ Item {
 
     function open_sutta_search_window() {
         console.log("open_sutta_search_window()");
+    }
+
+    function process_all_paragraphs_background(input_json: string) {
+        console.log("process_all_paragraphs_background():", input_json);
+        // Simulate async behavior
+        Qt.callLater(function() {
+            allParagraphsGlossReady('{"success": true, "paragraphs": [], "global_unrecognized_words": [], "updated_global_stems": {}}');
+        });
+    }
+
+    function process_paragraph_background(paragraph_index: int, input_json: string) {
+        console.log("process_paragraph_background():", paragraph_index, input_json);
+        // Simulate async behavior
+        Qt.callLater(function() {
+            paragraphGlossReady(paragraph_index, '{"success": true, "paragraph_index": ' + paragraph_index + ', "words_data": [], "unrecognized_words": [], "updated_global_stems": {}}');
+        });
     }
 
     function get_common_words_json(): string {

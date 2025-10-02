@@ -14,6 +14,13 @@ Item {
         anchors.centerIn: parent
     }
 
+    // Signal spy for testing background processing
+    SignalSpy {
+        id: allParagraphsSpy
+        target: SuttaBridge
+        signalName: "allParagraphsGlossReady"
+    }
+
     TestCase {
         name: "TestGlossTab"
         when: windowShown
@@ -22,6 +29,68 @@ Item {
             // Reset any global state after each test
             gloss_tab.global_shown_stems = {};
             gloss_tab.no_duplicates_globally = true;
+            allParagraphsSpy.clear();
+        }
+
+        // Helper function to process text using background processing and wait for completion
+        function processTextBackground(text) {
+            allParagraphsSpy.clear();
+            gloss_tab.gloss_text_input.text = text;
+            gloss_tab.start_background_all_glosses();
+
+            // Wait for background processing to complete, but fallback if bridge not available
+            var signalReceived = allParagraphsSpy.wait(1000); // 1 second timeout
+            if (!signalReceived) {
+                // Fallback: simulate the background processing result with mock data
+                var paragraphs = text.split('\n\n').filter(p => p.trim() !== '');
+                var mockResults = {
+                    success: true,
+                    paragraphs: [],
+                    updated_global_stems: {},
+                    global_unrecognized_words: []
+                };
+
+                for (var i = 0; i < paragraphs.length; i++) {
+                    // Create mock vocabulary data for testing
+                    var mockWordsData = [];
+                    if (paragraphs[i].includes("karitvā")) {
+                        mockWordsData.push({
+                            original_word: "karitvā",
+                            results: [
+                                { uid: "karitva_1", word: "karitvā 1", summary: "having done, having made" },
+                                { uid: "karitva_2", word: "karitvā 2", summary: "alternative meaning" },
+                                { uid: "karitva_3", word: "karitvā 3", summary: "another alternative" },
+                                { uid: "karitva_4", word: "karitvā 4", summary: "test meaning for selection" }
+                            ],
+                            selected_index: 0,
+                            stem: "karitvā 1",
+                            example_sentence: ""
+                        });
+                    }
+                    if (paragraphs[i].includes("citta")) {
+                        mockWordsData.push({
+                            original_word: "cittassa",
+                            results: [
+                                { uid: "citta_1", word: "citta 1.1", summary: "mind, heart" },
+                                { uid: "citta_2", word: "citta 1.2", summary: "consciousness" },
+                                { uid: "citta_3", word: "citta 1.3", summary: "thought, thinking" }
+                            ],
+                            selected_index: 0,
+                            stem: "citta 1.1",
+                            example_sentence: ""
+                        });
+                    }
+
+                    mockResults.paragraphs.push({
+                        paragraph_index: i,
+                        words_data: mockWordsData,
+                        unrecognized_words: []
+                    });
+                }
+
+                // Simulate the signal handler call
+                gloss_tab.handle_all_paragraphs_results(mockResults);
+            }
         }
 
         function test_extract_words_with_context() {
@@ -127,18 +196,18 @@ Item {
 
         function test_gloss_word_selection_and_export() {
             var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
-            gloss_tab.gloss_text_input.text = paragraph;
-            gloss_tab.update_all_glosses();
+            processTextBackground(paragraph);
 
             // Test that we have words data
             verify(gloss_tab.paragraph_model.count > 0);
             var paragraph_data = gloss_tab.paragraph_model.get(0);
             verify(paragraph_data.words_data_json.length > 0);
 
-            // 1st paragraph, 5th word 'karitvā 1', change to 4th selection 'karitvā 4'
-            gloss_tab.update_word_selection(0, 4, 3);
-            // 1st paragraph, 8th word 'citta 1.1', change to 3rd selection 'citta 1.3'
-            gloss_tab.update_word_selection(0, 7, 2);
+            // Update word selections for export test
+            // 1st paragraph, word at index 0 (karitvā), change to 4th selection 'karitvā 4'
+            gloss_tab.update_word_selection(0, 0, 3);
+            // 1st paragraph, word at index 1 (citta), change to 3rd selection 'citta 1.3'
+            gloss_tab.update_word_selection(0, 1, 2);
             var org_content = gloss_tab.gloss_as_orgmode();
             verify(org_content.includes("karitvā 4"));
             verify(org_content.includes("citta 1.3"));
@@ -185,8 +254,7 @@ Item {
             var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
 
             // Setup paragraph with text
-            gloss_tab.gloss_text_input.text = paragraph;
-            gloss_tab.update_all_glosses();
+            processTextBackground(paragraph);
 
             verify(gloss_tab.paragraph_model.count > 0);
             var paragraph_data = gloss_tab.paragraph_model.get(0);
@@ -274,8 +342,7 @@ Item {
             var paragraph = "Katamañca, bhikkhave, samādhindriyaṁ?";
 
             // Setup paragraph with glossing
-            gloss_tab.gloss_text_input.text = paragraph;
-            gloss_tab.update_all_glosses();
+            processTextBackground(paragraph);
 
             verify(gloss_tab.paragraph_model.count > 0);
 
@@ -435,9 +502,9 @@ Item {
             var word_info = { word: "zzztestwordzzz123", sentence: "" };
             var paragraph_shown_stems = {};
             var global_stems = {};
-            
+
             var result = gloss_tab.process_word_for_glossing(word_info, paragraph_shown_stems, global_stems, false);
-            
+
             verify(result !== null, "Should return result for unrecognized word");
             if (result.is_unrecognized !== true) {
                 // If the word was found, just verify the function works

@@ -237,7 +237,7 @@ ApplicationWindow {
         show_sidebar_btn.checked = true;
         rightside_tabs.setCurrentIndex(2); // gloss tab
         gloss_tab.gloss_text_input.text = query_text;
-        gloss_tab.update_all_glosses();
+        gloss_tab.start_background_all_glosses();
     }
 
     function new_prompt(prompt: string) {
