@@ -18,10 +18,16 @@ count-code:
 simsapa.min.js:
 	npx webpack
 
-test: rust-test qml-test
+test: rust-test qml-test js-test
+
+# NOTE: Running 'cargo test' in 'bridges/' doesn't compile, but there are no tests there anyway.
+# error: linking with `cc` failed
 
 rust-test:
-	cd backend && cargo test && cd ../bridges && cargo test && cd ../cli && cargo test
+	cd backend && cargo test && cd ../cli && cargo test
+
+js-test:
+	npm test
 
 # qml-test-one:
 # 	env QT_QPA_PLATFORM=offscreen qmltestrunner -import ./assets/qml/ -input ./assets/qml/ -functions 'CommonWords::test_clean_stem'

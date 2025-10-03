@@ -85,8 +85,8 @@ describe('Find functionality', () => {
             
             // Test basic patterns
             expect(testFindManager.createAccentFoldedPattern('pre')).toBe('p[rṛ]e');
-            expect(testFindManager.createAccentFoldedPattern('pres')).toBe('p[rṛ]e[sś]');
-            expect(testFindManager.createAccentFoldedPattern('present')).toBe('p[rṛ]e[sś]e[nṇ][tṭ]');
+            expect(testFindManager.createAccentFoldedPattern('pres')).toBe('p[rṛ]e[sṣś]');
+            expect(testFindManager.createAccentFoldedPattern('present')).toBe('p[rṛ]e[sṣś]e[nṅñṇ][tṭ]');
         });
 
         test('should handle accented characters in input', () => {
@@ -161,6 +161,51 @@ describe('Find functionality', () => {
             
             const counter = document.getElementById('findCounter');
             expect(counter?.textContent).toBe('2/2');
+        });
+    });
+
+    describe('Double character accent folding', () => {
+        beforeEach(() => {
+            // Add content with Pali double characters
+            const content = document.getElementById('ssp_content');
+            if (content) {
+                content.innerHTML = `
+                    <p>viññāṇaṁ sapaññattiko jaññā añjanīva</p>
+                `;
+            }
+        });
+
+        test('should match vinnanam to viññāṇaṁ', () => {
+            findManager.search('vinnanam');
+            
+            const highlights = document.querySelectorAll('.ssp-find-highlight');
+            expect(highlights.length).toBeGreaterThan(0);
+            
+            const matchedText = Array.from(highlights)
+                .map(h => h.textContent)
+                .join('');
+            expect(matchedText.toLowerCase()).toContain('viññāṇaṁ'.toLowerCase());
+        });
+
+        test('should match sapan to sapaññattiko (partial match)', () => {
+            findManager.search('sapan');
+            
+            const highlights = document.querySelectorAll('.ssp-find-highlight');
+            expect(highlights.length).toBeGreaterThan(0);
+        });
+
+        test('should match janna to jaññā', () => {
+            findManager.search('janna');
+            
+            const highlights = document.querySelectorAll('.ssp-find-highlight');
+            expect(highlights.length).toBeGreaterThan(0);
+        });
+
+        test('should match njaniva to añjanīva (partial match)', () => {
+            findManager.search('njaniva');
+            
+            const highlights = document.querySelectorAll('.ssp-find-highlight');
+            expect(highlights.length).toBeGreaterThan(0);
         });
     });
 });

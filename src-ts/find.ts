@@ -381,17 +381,31 @@ class FindManager {
         const accented = ["ā","ī","ū","ṃ","ṁ","ṅ","ñ","ṭ","ḍ","ṇ","ḷ","ṛ","ṣ","ś"];
         const latin = ["a","i","u","m","m","n","n","t","d","n","l","r","s","s"];
 
-        // Create a mapping from each character to its folded character class
-        const foldMap = new Map<string, string>();
-        
+        // First, group all accented characters by their latin equivalent
+        const groups = new Map<string, Set<string>>();
         for (let i = 0; i < accented.length; i++) {
-            const accentedChar = accented[i];
             const latinChar = latin[i];
+            const accentedChar = accented[i];
             
-            // Both characters map to the same character class
-            const charClass = `[${latinChar}${accentedChar}]`;
+            if (!groups.has(latinChar)) {
+                groups.set(latinChar, new Set([latinChar]));
+            }
+            groups.get(latinChar)!.add(accentedChar);
+        }
+
+        // Create a mapping from each character to its complete folded character class
+        const foldMap = new Map<string, string>();
+        for (const [latinChar, charSet] of groups) {
+            const chars = Array.from(charSet).join('');
+            const charClass = `[${chars}]`;
+            
+            // Map both the latin char and all its accented variants to the same class
             foldMap.set(latinChar, charClass);
-            foldMap.set(accentedChar, charClass);
+            for (const accentedChar of charSet) {
+                if (accentedChar !== latinChar) {
+                    foldMap.set(accentedChar, charClass);
+                }
+            }
         }
 
         // Replace each character in the term with its folded version
