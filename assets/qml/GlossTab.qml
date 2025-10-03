@@ -1806,14 +1806,29 @@ ${table_rows}
                 text: "Enter common words (one per line):"
             }
 
-            ScrollView {
+            GroupBox {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                TextArea {
-                    id: commonWordsTextArea
-                    selectByMouse: true
-                    text: root.common_words.join('\n')
+                background: Rectangle {
+                    anchors.fill: parent
+                    color: "white"
+                    border.width: 1
+                    border.color: "#ccc"
+                    radius: 5
+                }
+
+                ScrollView {
+                    anchors.fill: parent
+
+                    TextArea {
+                        id: commonWordsTextArea
+                        selectByMouse: true
+                        text: root.common_words.join('\n')
+                        background: Rectangle {
+                            color: "transparent"
+                        }
+                    }
                 }
             }
 
