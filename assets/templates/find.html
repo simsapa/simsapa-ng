@@ -5,7 +5,7 @@
         <img src="{api_url}/assets/icons/32x32/bx_search_alt_2.png" alt="Search" class="search-icon">
     </button>
     
-    <!-- Find Bar (hidden by default, slides out from search button) -->
+    <!-- Find Bar (hidden by default, shown after clicking search button) -->
     <div class="find-bar" id="findBar">
         <!-- Search Input -->
         <input type="text" class="find-input" id="findInput" placeholder="Find in page..." autocomplete="off" spellcheck="false">
@@ -24,13 +24,13 @@
         
         <!-- Search Options -->
         <div class="find-options">
-            <label class="find-option">
+            <label class="find-option" title="Fold accents (vinnanam matches viññāṇaṁ)">
                 <input type="checkbox" id="findAccentFold" checked>
-                <span class="option-label">ā</span>
+                <span class="option-label">ñ</span>
             </label>
             
             <label class="find-option">
-                <input type="checkbox" id="findCaseSensitive">
+                <input type="checkbox" id="findCaseSensitive" title="Case sensitive match">
                 <span class="option-label">Aa</span>
             </label>
         </div>

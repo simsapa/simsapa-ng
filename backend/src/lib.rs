@@ -241,10 +241,22 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
     // when the logger is not yet available.
     let logger_initialized = LOGGER.get().is_some();
 
+    // When the logger is not yet available, determine whether to print info
+    // level log messages using the env variable.
+    cfg_if! {
+        if #[cfg(target_os = "android")] {
+            let enable_print_log = true;
+        } else {
+            let enable_print_log = std::env::var("ENABLE_PRINT_LOG")
+                .map(|v| v.to_lowercase() == "true")
+                .unwrap_or(false);
+        }
+    }
+
     let msg = "get_create_simsapa_dir()";
     if logger_initialized {
         info(msg);
-    } else {
+    } else if enable_print_log {
         println!("{}", msg);
     }
     let simsapa_dir = match env::var("SIMSAPA_DIR") {
@@ -272,7 +284,7 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
                     let msg = format!("Found: {}", &storage_config_path.to_str().unwrap_or_default());
                     if logger_initialized {
                         info(&msg);
-                    } else {
+                    } else if enable_print_log {
                         println!("{}", msg);
                     }
                     file
@@ -307,7 +319,7 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
             let msg = format!("Contents: {}", &contents);
             if logger_initialized {
                 info(&msg);
-            } else {
+            } else if enable_print_log {
                 println!("{}", msg);
             }
 
