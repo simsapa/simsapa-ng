@@ -219,13 +219,28 @@ document.addEventListener("DOMContentLoaded", function(_event) {
         // selection change (from a long press action).
         // FIXME: avoid lookup when selection is changed by dragging the boundaries
         document.addEventListener("selectionchange", function (_event) {
+            const selection = document.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const container = range.commonAncestorContainer;
+                const element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+
+                // Skip if selection is within find bar
+                if (element && element.closest('#findContainer')) {
+                    return;
+                }
+            }
             summary_selection();
         });
 
     } else {
         // On desktop, double click works to select a word and trigger a lookup.
         // Double click always triggers a lookup.
-        document.addEventListener("dblclick", function (_event) {
+        document.addEventListener("dblclick", function (event) {
+            // Skip if double click is within find bar
+            if (event.target.closest('#findContainer')) {
+                return;
+            }
             summary_selection();
         });
     }
