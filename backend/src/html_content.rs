@@ -5,6 +5,7 @@ use crate::{get_app_globals, is_mobile};
 
 static PAGE_HTML: &'static str = include_str!("../../assets/templates/page.html");
 static FIND_HTML: &'static str = include_str!("../../assets/templates/find.html");
+static TEXT_RESIZE_HTML: &'static str = include_str!("../../assets/templates/text_resize.html");
 static MENU_HTML: &'static str = include_str!("../../assets/templates/menu.html");
 static ICONS_HTML: &'static str = include_str!("../../assets/templates/icons.html");
 
@@ -18,6 +19,7 @@ struct TmplContext {
     js_head: String,
     js_body: String,
     find_html: String,
+    text_resize_html: String,
     menu_html: String,
     icons_html: String,
     content: String,
@@ -33,6 +35,7 @@ impl Default for TmplContext {
             js_head: "".to_string(),
             js_body: "".to_string(),
             find_html: FIND_HTML.replace("{api_url}", &g.api_url).to_string(),
+            text_resize_html: TEXT_RESIZE_HTML.to_string(),
             menu_html: MENU_HTML.to_string(),
             icons_html: ICONS_HTML.to_string(),
             content: "".to_string(),
@@ -113,6 +116,7 @@ pub fn blank_html_page(body_class: Option<String>) -> String {
 
     let mut ctx = TmplContext::default();
     ctx.find_html = "".to_string();
+    ctx.text_resize_html = "".to_string();
     ctx.menu_html = "".to_string();
     ctx.icons_html = "".to_string();
 

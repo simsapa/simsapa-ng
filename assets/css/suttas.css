@@ -848,7 +848,7 @@ body.dark .menu-overlay.show {
 .find-search-button {
   position: fixed;
   top: 10px;
-  right: 60px;
+  right: 160px;
   width: 40px;
   height: 40px;
   background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
@@ -884,7 +884,7 @@ body.dark .menu-overlay.show {
 .find-bar {
   position: fixed;
   top: 10px;
-  right: 108px;
+  right: 208px;
   height: 40px;
   width: 380px;
   background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
@@ -1062,6 +1062,27 @@ body.dark .find-error {
     min-width: 100px;
   }
 }
+#textSizeDecreaseButton {
+  position: fixed;
+  top: 10px;
+  right: 110px;
+  z-index: 1000;
+}
+
+#textSizeIncreaseButton {
+  position: fixed;
+  top: 10px;
+  right: 60px;
+  z-index: 1000;
+}
+
+.text-resize-button .resize-icon {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--btn-icon);
+  line-height: 1;
+}
+
 .lang-san {
   font-family: "DejaVu Serif", "Georgia", serif;
 }

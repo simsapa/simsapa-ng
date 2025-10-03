@@ -1,0 +1,32 @@
+// Text Resize Controls
+// Positioned between find button and menu button
+
+$button_size: 40px;
+$edge_margin: 10px;
+$border_radius: 2px;
+$button_spacing: 10px;
+
+// Decrease button (leftmost of the two resize buttons)
+#textSizeDecreaseButton {
+    position: fixed;
+    top: $edge_margin;
+    right: ($edge_margin + $button_size + $button_spacing + $button_size + $button_spacing);
+    z-index: 1000;
+}
+
+// Increase button (between decrease and menu)
+#textSizeIncreaseButton {
+    position: fixed;
+    top: $edge_margin;
+    right: ($edge_margin + $button_size + $button_spacing);
+    z-index: 1000;
+}
+
+.text-resize-button {
+    .resize-icon {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--btn-icon);
+        line-height: 1;
+    }
+}
