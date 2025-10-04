@@ -56,7 +56,6 @@ class HamburgerMenu {
     constructor() {
         this.menuButton = document.getElementById('menuButton');
         this.menuDropdown = document.getElementById('menuDropdown');
-        this.menuOverlay = document.getElementById('menuOverlay');
         this.groupHeaders = document.querySelectorAll('.group-header');
         this.menuItems = document.querySelectorAll('.menu-item');
         this.isOpen = false;
@@ -67,9 +66,6 @@ class HamburgerMenu {
     init() {
         // Menu button click
         this.menuButton.addEventListener('click', () => this.toggleMenu());
-
-        // Overlay click to close menu
-        this.menuOverlay.addEventListener('click', () => this.closeMenu());
 
         // Group header clicks
         this.groupHeaders.forEach(header => {
@@ -105,16 +101,12 @@ class HamburgerMenu {
         this.isOpen = true;
         this.menuButton.classList.add('active');
         this.menuDropdown.classList.add('show');
-        this.menuOverlay.classList.add('show');
-        document.body.style.overflow = 'hidden';
     }
 
     closeMenu() {
         this.isOpen = false;
         this.menuButton.classList.remove('active');
         this.menuDropdown.classList.remove('show');
-        this.menuOverlay.classList.remove('show');
-        document.body.style.overflow = '';
     }
 
     toggleGroup(e) {

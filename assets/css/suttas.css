@@ -657,12 +657,16 @@ body.dark {
   cursor: pointer;
   z-index: 1000;
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 4px;
   transition: all 0.15s ease;
   box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.menu-button .menu-icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
 }
 
 .menu-button:hover {
@@ -675,26 +679,6 @@ body.dark {
   border-color: var(--btn-border-active);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
   transform: translateY(1px);
-}
-
-.menu-button .hamburger-line {
-  width: 23px;
-  height: 2px;
-  background: var(--btn-icon);
-  transition: all 0.2s ease;
-  border-radius: 1px;
-}
-
-.menu-button.active .hamburger-line:nth-child(1) {
-  transform: rotate(45deg) translate(4px, 4px);
-}
-
-.menu-button.active .hamburger-line:nth-child(2) {
-  opacity: 0;
-}
-
-.menu-button.active .hamburger-line:nth-child(3) {
-  transform: rotate(-45deg) translate(4px, -4px);
 }
 
 .menu-dropdown {
@@ -814,28 +798,6 @@ body.dark {
   height: 4px;
   background: var(--item-bullet);
   border-radius: 50%;
-}
-
-.menu-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.1);
-  z-index: 998;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
-
-.menu-overlay.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-body.dark .menu-overlay.show {
-  background: rgba(0, 0, 0, 0.4);
 }
 
 .find-container * {
