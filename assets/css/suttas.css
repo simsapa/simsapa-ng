@@ -1077,10 +1077,9 @@ body.dark .find-error {
 }
 
 .text-resize-button .resize-icon {
-  font-size: 20px;
-  font-weight: bold;
-  color: var(--btn-icon);
-  line-height: 1;
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
 }
 
 .lang-san {
