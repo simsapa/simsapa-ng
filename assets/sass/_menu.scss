@@ -5,8 +5,9 @@ $active_mid: #B8B8B8;
 $active_shadow: #767676;
 $active_highlight: #308CC6;
 
+$button_size: 30px;
 $edge_margin: 10px;
-$button_size: 40px;
+$button_spacing: 5px;
 $border_radius: 2px;
 $font_size: 13px;
 $font_size_small: 13px;
@@ -207,7 +208,7 @@ body.dark {
 // Menu Dropdown - Qt Fusion Style
 .menu-dropdown {
     position: fixed;
-    top: ($edge_margin + $button_size + 10px);
+    top: ($edge_margin + $button_size + $button_spacing);
     right: $edge_margin;
     width: 280px;
     background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);

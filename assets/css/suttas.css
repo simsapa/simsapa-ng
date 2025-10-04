@@ -649,8 +649,8 @@ body.dark {
   position: fixed;
   top: 10px;
   right: 10px;
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
   border: 1px solid var(--btn-border);
   border-radius: 2px;
@@ -699,7 +699,7 @@ body.dark {
 
 .menu-dropdown {
   position: fixed;
-  top: 60px;
+  top: 45px;
   right: 10px;
   width: 280px;
   background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
@@ -848,9 +848,9 @@ body.dark .menu-overlay.show {
 .find-search-button {
   position: fixed;
   top: 10px;
-  right: 160px;
-  width: 40px;
-  height: 40px;
+  right: 115px;
+  width: 30px;
+  height: 30px;
   background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
   border: 1px solid var(--btn-border);
   border-radius: 2px;
@@ -864,8 +864,8 @@ body.dark .menu-overlay.show {
 }
 
 .find-search-button .search-icon {
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
   opacity: 0.8;
 }
 
@@ -884,7 +884,7 @@ body.dark .menu-overlay.show {
 .find-bar {
   position: fixed;
   top: 10px;
-  right: 208px;
+  right: 153px;
   height: 40px;
   width: 380px;
   background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
@@ -1055,7 +1055,7 @@ body.dark .find-error {
 
 @media (max-width: 768px) {
   .find-bar.show {
-    width: calc(100vw - 20px - 40px - 8px);
+    width: calc(100vw - 20px - 30px - 8px);
     min-width: 280px;
   }
   .find-input {
@@ -1065,14 +1065,14 @@ body.dark .find-error {
 #textSizeDecreaseButton {
   position: fixed;
   top: 10px;
-  right: 110px;
+  right: 80px;
   z-index: 1000;
 }
 
 #textSizeIncreaseButton {
   position: fixed;
   top: 10px;
-  right: 60px;
+  right: 45px;
   z-index: 1000;
 }
 
