@@ -1,9 +1,10 @@
 // Find Bar - Qt Fusion Style
 // Matches the existing menu design patterns
 
-$find_button_size: 40px;
+$find_button_size: 30px;
 $find_bar_height: 40px;
 $edge_margin: 10px;
+$button_spacing: 5px;
 $border_radius: 2px;
 $font_size: 13px;
 $animation_duration: 1s;
@@ -21,7 +22,7 @@ $animation_duration: 1s;
 .find-search-button {
     position: fixed;
     top: $edge_margin;  // Same height as menu button
-    right: ($edge_margin + $find_button_size + 10px);  // Position to the left of menu button
+    right: ($edge_margin + $find_button_size + $button_spacing + $find_button_size + $button_spacing + $find_button_size + $button_spacing);  // Position to the left of resize buttons
     width: $find_button_size;
     height: $find_button_size;
     background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
@@ -38,8 +39,8 @@ $animation_duration: 1s;
         0 1px 2px rgba(0, 0, 0, 0.15);
 
     .search-icon {
-        width: 20px;
-        height: 20px;
+        width: 15px;
+        height: 15px;
         opacity: 0.8;
     }
 
@@ -63,7 +64,7 @@ $animation_duration: 1s;
 .find-bar {
     position: fixed;
     top: $edge_margin;
-    right: ($edge_margin + $find_button_size + $find_button_size + 18px);  // Start from search button position
+    right: ($edge_margin + $find_button_size + $button_spacing + $find_button_size + $button_spacing + $find_button_size + $button_spacing + $find_button_size + 8px);  // Start from search button position
     height: $find_bar_height;
     width: 380px;
     background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);

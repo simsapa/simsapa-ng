@@ -65,6 +65,10 @@ fn test_line_by_line_with_variants() {
         .expect("Failed to read file");
 
     assert_eq!(article_html, expected_html);
+
+    // let sutta = app_data.dbm.appdata.get_sutta("sn56.11/en/sujato").expect("Can't get sutta from db");
+    // let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    // fs::write(PathBuf::from("tests/data/sn56.11_en_sujato.entire.html"), html.clone()).expect("Unable to write file!");
 }
 
 #[test]

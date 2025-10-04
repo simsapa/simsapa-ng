@@ -1,0 +1,1801 @@
+<!doctype html>
+<html class="system">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Crimson Pro SSP";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/crimson-pro/CrimsonPro-BoldItalic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 500;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 600;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-SemiBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abhaya Libre SSP";
+  font-style: normal;
+  font-weight: 800;
+  src: url("http://localhost:4848/assets/fonts/abhaya-libre/AbhayaLibreX-ExtraBold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-It.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Source Sans 3 SSP";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:4848/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
+}
+html, body {
+  height: 100%;
+  color: #1a1a1a;
+  background-color: #FAE6B2;
+}
+html.dark, body.dark {
+  color: #E0E3E9;
+  background-color: #23272E;
+}
+
+pre {
+  font-family: serif;
+  white-space: pre-wrap;
+}
+
+a {
+  color: black;
+}
+
+.ssp-toolbar {
+  position: fixed;
+  top: 1em;
+  right: 1em;
+  font-size: 0.7em;
+}
+
+.svg-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
+.hide {
+  display: none;
+}
+
+.highlight {
+  padding: 0.2em 0pt;
+  background: #027f55;
+  color: white;
+}
+
+.scrollto-highlight {
+  padding: 0.2em 0pt;
+  background: #027f85;
+  color: white;
+}
+
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  stroke-width: 0;
+  stroke: currentColor;
+  fill: currentColor;
+  vertical-align: middle;
+}
+
+div.btn, span.btn {
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+div.btn a, span.btn a {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.open-button {
+  font-size: 15px;
+}
+.open-button .icon {
+  color: #027f55;
+  opacity: 0.5;
+}
+
+.pull-left {
+  float: left;
+}
+
+.pull-right {
+  float: right;
+}
+
+.bookmark-comment {
+  border: 1px solid hsl(160, 65%, 35%);
+  border-radius: 5px;
+  background-color: hsl(160, 65%, 60%);
+}
+.bookmark-comment .bookmark-title {
+  background-color: hsl(160, 65%, 35%);
+  height: 30px;
+  font-size: 20px;
+}
+.bookmark-comment .bookmark-title .btn {
+  margin: 2.5px 5px;
+}
+.bookmark-comment .bookmark-title .btn a {
+  color: white;
+}
+.bookmark-comment .bookmark-content {
+  color: #1a1a1a;
+  font-size: 0.8em;
+  padding: 0.5em;
+}
+.bookmark-comment .bookmark-content p {
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-top: 0.625em;
+}
+.bookmark-comment .bookmark-content p:first-child {
+  padding-top: 0;
+}
+.bookmark-comment .bookmark-content a {
+  color: #700909;
+}
+
+#window-title-bar {
+  font-size: 18px;
+  line-height: 1;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  padding: 0.1em;
+  background-color: #FEF8E8;
+}
+#window-title-bar.dark {
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
+}
+#window-title-bar .flex-container {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+  align-items: center;
+  align-content: center;
+  gap: 0.2em;
+}
+#window-title-bar .flex-container #left-btn-box,
+#window-title-bar .flex-container #right-btn-box {
+  flex: 1;
+}
+#window-title-bar .flex-container #preview-title-text {
+  display: inline-block;
+  color: black;
+  text-align: center;
+}
+#window-title-bar .flex-container .icon {
+  font-size: 0.8em;
+  color: black;
+  padding-top: 0.1em;
+  margin: 0.1em 0.3em;
+}
+
+.suttacentral span.segment span.translated {
+  display: block;
+  padding-top: 0.5em;
+  font-size: 1em;
+}
+.suttacentral span.segment span.pali {
+  display: block;
+  padding-top: 0.5em;
+  font-family: "Source Sans 3 SSP";
+  font-size: 0.8em;
+}
+
+.suttacentral header {
+  text-align: center;
+}
+.suttacentral header ul {
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  padding-inline-start: 0pt;
+}
+.suttacentral header ul li {
+  font-family: "Source Sans 3 SSP";
+  font-weight: 400;
+  list-style-type: none;
+  text-transform: uppercase;
+  font-size: 0.65em;
+  letter-spacing: 1pt;
+  word-spacing: 1.5pt;
+  padding-top: 0.3em;
+}
+.suttacentral header ul li .segment .pali,
+.suttacentral header ul li .segment .translated {
+  font-family: "Source Sans 3 SSP";
+  font-weight: 400;
+  list-style-type: none;
+  text-transform: uppercase;
+  font-size: 0.65em;
+  letter-spacing: 1pt;
+  word-spacing: 1.5pt;
+  padding-top: 0.15em;
+}
+.suttacentral header h1 {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+  font-size: 1.4em;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 0.8em;
+  padding-bottom: 0.8em;
+}
+.suttacentral header h1 .segment .pali,
+.suttacentral header h1 .segment .translated {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+  font-size: 1.4em;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 0.2em;
+  padding-bottom: 0.2em;
+}
+.suttacentral h2 {
+  font-size: 1.1em;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 1em;
+}
+.suttacentral h3 {
+  font-size: 1.1em;
+  font-weight: bold;
+  word-spacing: 2pt;
+  padding-top: 1em;
+}
+.suttacentral .evam {
+  text-transform: lowercase;
+  font-variant: small-caps;
+  font-size: 1.15em;
+  letter-spacing: 0.8pt;
+  word-spacing: 1pt;
+}
+.suttacentral .speaker {
+  font-style: italic;
+  text-indent: 3em;
+  display: block;
+}
+.suttacentral blockquote.gatha {
+  font-style: normal;
+  margin-left: 2em;
+}
+.suttacentral blockquote.gatha .verse-line {
+  display: block;
+}
+.suttacentral .endsutta {
+  font-style: italic;
+}
+.suttacentral a.ref {
+  display: none;
+}
+.suttacentral footer {
+  margin-top: 4em;
+  border-top: 1px solid #aaa;
+  font-size: 0.8em;
+  line-height: 1.25em;
+}
+.suttacentral footer span.author {
+  font-style: italic;
+}
+.suttacentral footer span.publication-date {
+  font-style: italic;
+}
+.suttacentral .variant-wrap .mark, .suttacentral .comment-wrap .mark {
+  font-size: 0.6em;
+  position: relative;
+  top: -0.1em;
+  padding: 3px;
+}
+.suttacentral .variant-wrap .mark:hover, .suttacentral .comment-wrap .mark:hover {
+  border-bottom: 2px solid black;
+}
+.suttacentral .variant, .suttacentral .comment {
+  font-size: 0.8em;
+}
+
+.cst4 .note {
+  color: blue;
+}
+.cst4 .bld {
+  font-weight: bold;
+}
+.cst4 .paranum {
+  font-weight: bold;
+}
+.cst4 .indent {
+  font-size: 1em;
+  text-indent: 2em;
+  margin-left: 3em;
+}
+.cst4 .bodytext {
+  font-size: 1em;
+  text-indent: 2em;
+}
+.cst4 .hangnum {
+  font-size: 1em;
+  margin-bottom: -18pt;
+  text-indent: 2em;
+}
+.cst4 .centered {
+  font-size: 1em;
+  text-align: center;
+}
+.cst4 .unindented {
+  font-size: 1em;
+}
+.cst4 .nikaya {
+  text-align: center;
+  font-family: "Source Sans 3 SSP";
+  font-weight: 400;
+  list-style-type: none;
+  text-transform: uppercase;
+  font-size: 0.65em;
+  letter-spacing: 1pt;
+  word-spacing: 1.5pt;
+  padding-top: 0.3em;
+}
+.cst4 .book, .cst4 .title, .cst4 .subhead, .cst4 .subsubhead, .cst4 .chapter {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+  text-align: center;
+}
+.cst4 .book {
+  font-size: 1.6em;
+}
+.cst4 .title {
+  font-size: 1.4em;
+}
+.cst4 .subhead, .cst4 .subsubhead, .cst4 .chapter {
+  font-size: 1.2em;
+  text-align: left;
+  text-decoration: underline;
+  margin-top: 4em;
+}
+.cst4 .chapter + .subhead {
+  margin-top: 1em;
+}
+.cst4 .gatha1 {
+  font-size: 1em;
+  margin-bottom: 0em;
+  margin-left: 4em;
+}
+.cst4 .gatha2 {
+  font-size: 1em;
+  margin-bottom: 0em;
+  margin-left: 4em;
+}
+.cst4 .gatha3 {
+  font-size: 1em;
+  margin-bottom: 0em;
+  margin-left: 4em;
+}
+.cst4 .gathalast {
+  font-size: 1em;
+  margin-bottom: 0.5cm;
+  margin-left: 4em;
+}
+
+.dhammatalks_org .author {
+  font-style: italic;
+  font-size: 1em;
+}
+.dhammatalks_org .title {
+  font-weight: bold;
+  font-size: 1em;
+}
+.dhammatalks_org .fn {
+  vertical-align: 0.4em;
+  font-size: 0.8em;
+}
+.dhammatalks_org .verse {
+  margin: 0.8em 8%;
+  text-indent: 0;
+}
+.dhammatalks_org .verse p {
+  margin-top: 0;
+}
+.dhammatalks_org .verse p.v2 {
+  text-indent: -2%;
+  padding-left: 10%;
+}
+.dhammatalks_org .verse p.vspk {
+  margin-bottom: 0.1em;
+  text-indent: -2.6em;
+  font-style: italic;
+}
+.dhammatalks_org .verse p.seealso {
+  margin-top: 0.8em;
+  font-style: italic;
+  font-size: 0.9em;
+}
+.dhammatalks_org .suttaCite {
+  font-style: italic;
+  margin-left: 50%;
+  margin-top: 0.6em;
+}
+.dhammatalks_org .verse-add {
+  margin-top: 0.4em;
+  text-indent: 0;
+}
+.dhammatalks_org .note {
+  margin: 0.6em 4%;
+  font-size: 0.85em;
+}
+
+.tipitaka_net ul.toc li {
+  font-size: 0.8em;
+}
+
+html, body {
+  font-size: 22px;
+  line-height: 1.5;
+  font-family: "Crimson Pro SSP";
+  font-weight: 400;
+}
+
+#ssp_main {
+  padding-bottom: 4em;
+  font-size: 1em;
+}
+
+body {
+  padding: 0 1em;
+  max-width: 75ex;
+  margin: 0 auto;
+}
+
+p {
+  margin: 0.8em 0 0 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Abhaya Libre SSP";
+  font-weight: 800;
+}
+
+h1 {
+  font-size: 1.6em;
+}
+
+h2 {
+  font-size: 1.4em;
+}
+
+h3 {
+  font-size: 1.2em;
+}
+
+h4 {
+  font-size: 1em;
+}
+
+.transient-messages-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.transient-messages {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  padding: 1em 0;
+  text-align: center;
+}
+
+.message {
+  text-align: center;
+}
+.message .msg-content {
+  display: inline-block;
+  padding: 0.25em 0.7em;
+  margin: 0 auto 0.25em auto;
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
+  border-radius: 7px;
+}
+
+:root {
+  --bg-primary: #f5f5f5;
+  --bg-content: white;
+  --text-primary: $black_90;
+  --text-secondary: #666;
+  --text-muted: #999;
+  --btn-bg-start: #fefefe;
+  --btn-bg-end: #ededed;
+  --btn-bg-hover-start: #fefefe;
+  --btn-bg-hover-end: #fefefe;
+  --btn-bg-active-start: #d0d0d0;
+  --btn-bg-active-end: #f0f0f0;
+  --btn-border: #ababab;
+  --btn-border-hover: #909090;
+  --btn-border-active: #808080;
+  --btn-icon: #333;
+  --menu-bg-start: #f8f8f8;
+  --menu-bg-end: #eeeeee;
+  --menu-border: #a0a0a0;
+  --menu-separator: #c0c0c0;
+  --group-bg-start: #f0f0f0;
+  --group-bg-end: #e8e8e8;
+  --group-bg-hover-start: #f5f5f5;
+  --group-bg-hover-end: #ededed;
+  --group-bg-active-start: #e8e8e8;
+  --group-bg-active-end: #f0f0f0;
+  --group-border: #d0d0d0;
+  --group-arrow: #666;
+  --item-bg-start: #fafafa;
+  --item-bg-end: #f2f2f2;
+  --item-separator: rgba(192, 192, 192, 0.3);
+  --item-bg-hover-start: #e6f3ff;
+  --item-bg-hover-end: #cce7ff;
+  --item-bg-active-start: #cce7ff;
+  --item-bg-active-end: #b3d9ff;
+  --item-border-hover: #0078d4;
+  --item-bullet: #999;
+  --selection-bg: #0078d4;
+  --selection-shadow: rgba(0, 120, 212, 0.2);
+  --text-shadow-light: rgba(255, 255, 255, 0.8);
+  --text-shadow-dark: rgba(0, 0, 0, 0.5);
+}
+
+body.dark {
+  --bg-primary: #2b2b2b;
+  --bg-content: #3c3c3c;
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --text-muted: #999999;
+  --btn-bg-start: #464646;
+  --btn-bg-end: #3c3c3c;
+  --btn-bg-hover-start: #464646;
+  --btn-bg-hover-end: #464646;
+  --btn-bg-active-start: #363636;
+  --btn-bg-active-end: #4a4a4a;
+  --btn-border: #5d5d5d;
+  --btn-border-hover: #707070;
+  --btn-border-active: #505050;
+  --btn-icon: #ffffff;
+  --menu-bg-start: #404040;
+  --menu-bg-end: #363636;
+  --menu-border: #606060;
+  --menu-separator: #505050;
+  --group-bg-start: #464646;
+  --group-bg-end: #3c3c3c;
+  --group-bg-hover-start: #4c4c4c;
+  --group-bg-hover-end: #424242;
+  --group-bg-active-start: #3c3c3c;
+  --group-bg-active-end: #464646;
+  --group-border: #555555;
+  --group-arrow: #cccccc;
+  --item-bg-start: #424242;
+  --item-bg-end: #383838;
+  --item-separator: rgba(96, 96, 96, 0.3);
+  --item-bg-hover-start: #1e3a5f;
+  --item-bg-hover-end: #1a3352;
+  --item-bg-active-start: #1a3352;
+  --item-bg-active-end: #162d45;
+  --item-border-hover: #4a9eff;
+  --item-bullet: #888888;
+  --selection-bg: #4a9eff;
+  --selection-shadow: rgba(74, 158, 255, 0.2);
+  --text-shadow-light: rgba(0, 0, 0, 0.5);
+  --text-shadow-dark: rgba(0, 0, 0, 0.8);
+}
+
+.menu-button *, .menu-dropdown * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.menu-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.menu-button .menu-icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
+}
+
+.menu-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.menu-button:active, .menu-button.active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.menu-dropdown {
+  position: fixed;
+  top: 45px;
+  right: 10px;
+  width: 280px;
+  background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+  border: 1px solid var(--menu-border);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--text-shadow-light);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.menu-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.menu-group {
+  border-bottom: 1px solid var(--menu-separator);
+  background: transparent;
+}
+
+.menu-group:last-child {
+  border-bottom: none;
+}
+
+.menu-group .group-header {
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.15s ease;
+  background: linear-gradient(to bottom, var(--group-bg-start) 0%, var(--group-bg-end) 100%);
+  border-bottom: 1px solid var(--group-border);
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.menu-group .group-header:hover {
+  background: linear-gradient(to bottom, var(--group-bg-hover-start) 0%, var(--group-bg-hover-end) 100%);
+  color: var(--text-primary);
+}
+
+.menu-group .group-header:active {
+  background: linear-gradient(to bottom, var(--group-bg-active-start) 0%, var(--group-bg-active-end) 100%);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.menu-group .group-header .group-arrow {
+  font-size: 13px;
+  color: var(--group-arrow);
+  transition: transform 0.2s ease;
+}
+
+.menu-group .group-header.expanded .group-arrow {
+  transform: rotate(90deg);
+}
+
+.group-items {
+  overflow: hidden;
+  transition: all 0.2s ease;
+  opacity: 0;
+  max-height: 0;
+  background: linear-gradient(to bottom, var(--item-bg-start) 0%, var(--item-bg-end) 100%);
+}
+
+.group-items.show {
+  opacity: 1;
+  max-height: 200px;
+}
+
+.group-items .menu-item {
+  padding: 6px 16px 6px 32px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  border-bottom: 1px solid var(--item-separator);
+  position: relative;
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.group-items .menu-item:last-child {
+  border-bottom: none;
+}
+
+.group-items .menu-item:hover {
+  background: linear-gradient(to bottom, var(--item-bg-hover-start) 0%, var(--item-bg-hover-end) 100%);
+  color: var(--text-primary);
+  border-left: 2px solid var(--item-border-hover);
+}
+
+.group-items .menu-item:active {
+  background: linear-gradient(to bottom, var(--item-bg-active-start) 0%, var(--item-bg-active-end) 100%);
+  box-shadow: inset 0 1px 2px var(--selection-shadow);
+}
+
+.group-items .menu-item::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--item-bullet);
+  border-radius: 50%;
+}
+
+.find-container * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+.find-search-button {
+  position: fixed;
+  top: 10px;
+  right: 115px;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.find-search-button .search-icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
+}
+
+.find-search-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.find-search-button:active, .find-search-button.active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 0 5px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.find-bar {
+  position: fixed;
+  top: 10px;
+  right: 153px;
+  height: 40px;
+  width: 380px;
+  background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
+  border: 1px solid var(--menu-border);
+  border-radius: 2px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25), inset 0 1px 0 var(--text-shadow-light);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.find-bar.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.find-input {
+  flex: 1;
+  min-width: 150px;
+  height: 24px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-content);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.find-input:focus {
+  border-color: var(--item-border-hover);
+  box-shadow: 0 0 3px var(--selection-shadow);
+}
+
+.find-input::placeholder {
+  color: var(--text-muted);
+}
+
+.find-counter {
+  min-width: 40px;
+  padding: 2px 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--item-bg-start);
+  border: 1px solid var(--group-border);
+  border-radius: 2px;
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+}
+
+.find-nav-button {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border: 1px solid var(--btn-border);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.15s ease;
+  box-shadow: inset 0 1px 0 var(--text-shadow-light);
+}
+
+.find-nav-button .nav-arrow {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--btn-icon);
+  line-height: 1;
+}
+
+.find-nav-button:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
+  border-color: var(--btn-border-hover);
+}
+
+.find-nav-button:active {
+  background: linear-gradient(to bottom, var(--btn-bg-active-start) 0%, var(--btn-bg-active-end) 100%);
+  border-color: var(--btn-border-active);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  transform: translateY(1px);
+}
+
+.find-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.find-nav-button:disabled:hover {
+  background: linear-gradient(to bottom, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+  border-color: var(--btn-border);
+}
+
+.find-options {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.find-option {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.find-option input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.find-option .option-label {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--text-primary);
+  text-shadow: 0 1px 0 var(--text-shadow-light);
+  user-select: none;
+  cursor: pointer;
+}
+
+.find-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+  border-radius: 2px;
+  font-size: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+}
+
+.find-error.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+body.dark .find-error {
+  background: #3c1e1e;
+  color: #ff6b6b;
+  border-color: #5c2e2e;
+}
+
+.ssp-find-highlight {
+  background-color: #ffff00 !important;
+  color: inherit !important;
+  padding: 1px 0px;
+}
+
+.ssp-find-highlight.current {
+  background-color: #ff9632 !important;
+}
+
+@media (max-width: 768px) {
+  .find-bar.show {
+    width: calc(100vw - 20px - 30px - 8px);
+    min-width: 280px;
+  }
+  .find-input {
+    min-width: 100px;
+  }
+}
+#textSizeDecreaseButton {
+  position: fixed;
+  top: 10px;
+  right: 80px;
+  z-index: 1000;
+}
+
+#textSizeIncreaseButton {
+  position: fixed;
+  top: 10px;
+  right: 45px;
+  z-index: 1000;
+}
+
+.text-resize-button .resize-icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.8;
+}
+
+.lang-san {
+  font-family: "DejaVu Serif", "Georgia", serif;
+}
+
+.lang-san h1, .lang-san h2, .lang-san h3, .lang-san h4, .lang-san h5, .lang-san h6 {
+  font-family: "DejaVu Serif", "Georgia", serif;
+}
+
+.gretil {
+  font-size: 16px;
+  margin-left: -5ex;
+  margin-right: -5ex;
+}
+
+.gretil > footer {
+  padding-top: 4em;
+  font-size: 14px;
+}
+
+
+html { font-size: 22px; } body { max-width: 75ex; }</style>
+        <script>
+         const API_URL = 'http://localhost:4848';
+        </script>
+        <script> const SHOW_QUOTE = null; const IS_MOBILE = false;const SUTTA_UID = 'sn56.11/en/sujato'; const SHOW_BOOKMARKS = true;async function send_log(msg, log_level) {
+    const response = await fetch(`${API_URL}/logger/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            log_level: log_level,
+            msg: msg,
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+    }
+}
+
+async function log_info(msg) {
+    console.log(msg);
+    send_log(msg, 'info');
+}
+
+async function log_error(msg) {
+    console.error(msg);
+    send_log(msg, 'error');
+}
+
+function selection_text() {
+    const selection = document.getSelection();
+    let text = "";
+    if (selection) {
+        text = selection.toString().trim();
+    }
+    return text;
+}
+
+function lookup_selection() {
+    const selected_text = window.getSelection().toString().trim();
+
+    if (!selected_text) {
+        console.log('No text selected');
+        return;
+    }
+
+    fetch(`${API_URL}/lookup_window_query/${encodeURIComponent(selected_text)}`);
+}
+
+function summary_selection() {
+    const text = selection_text();
+    if (text !== "") {
+        fetch(`${API_URL}/summary_query/${WINDOW_ID}/${encodeURIComponent(text)}`);
+    }
+}
+
+class HamburgerMenu {
+    constructor() {
+        this.menuButton = document.getElementById('menuButton');
+        this.menuDropdown = document.getElementById('menuDropdown');
+        this.groupHeaders = document.querySelectorAll('.group-header');
+        this.menuItems = document.querySelectorAll('.menu-item');
+        this.isOpen = false;
+
+        this.init();
+    }
+
+    init() {
+        // Menu button click
+        this.menuButton.addEventListener('click', () => this.toggleMenu());
+
+        // Group header clicks
+        this.groupHeaders.forEach(header => {
+            header.addEventListener('click', (e) => this.toggleGroup(e));
+            // Prevent text selection clearing
+            header.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Menu item clicks
+        this.menuItems.forEach(item => {
+            item.addEventListener('click', (e) => this.handleMenuItemClick(e));
+            // Prevent text selection clearing
+            item.addEventListener('mousedown', (e) => e.preventDefault());
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) {
+                this.closeMenu();
+            }
+        });
+    }
+
+    toggleMenu() {
+        if (this.isOpen) {
+            this.closeMenu();
+        } else {
+            this.openMenu();
+        }
+    }
+
+    openMenu() {
+        this.isOpen = true;
+        this.menuButton.classList.add('active');
+        this.menuDropdown.classList.add('show');
+    }
+
+    closeMenu() {
+        this.isOpen = false;
+        this.menuButton.classList.remove('active');
+        this.menuDropdown.classList.remove('show');
+    }
+
+    toggleGroup(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const header = e.currentTarget;
+        const groupName = header.dataset.group;
+        const groupItems = document.getElementById(`${groupName}-items`);
+        const isExpanded = header.classList.contains('expanded');
+
+        if (isExpanded) {
+            // Collapse group
+            header.classList.remove('expanded');
+            groupItems.classList.remove('show');
+        } else {
+            // Expand group
+            header.classList.add('expanded');
+            groupItems.classList.add('show');
+        }
+    }
+
+    async handleMenuItemClick(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const action = e.currentTarget.dataset.action;
+        let query_text = "";
+        if (action === "summarize-sutta") {
+            query_text = this.getAllContentText();
+        } else {
+            query_text = this.getSelectedText();
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/sutta_menu_action/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    window_id: WINDOW_ID,
+                    action: action,
+                    text: query_text,
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status} ${response.statusText}`);
+            }
+
+            log_info(`Action '${action}' completed`);
+        } catch (error) {
+            log_error(`Action '${action}' error:` + error);
+        }
+
+        this.closeMenu();
+    }
+
+    getSelectedText() {
+        if (window.getSelection) {
+            return window.getSelection().toString();
+        } else if (document.selection && document.selection.type !== "Control") {
+            return document.selection.createRange().text;
+        }
+        return '';
+    }
+
+    getAllContentText() {
+        const content_div = document.getElementById('ssp_content');
+        if (!content_div) {
+            console.error('Element with id "ssp_content" not found');
+            return null;
+        }
+        // .textContent gets all text content, including text from hidden elements
+        // .innerText respects styling and won't include text from hidden elements
+        return content_div.innerText || '';
+    }
+}
+
+function toggle_variant (event) {
+    let el = event.target;
+    el.parentNode.querySelectorAll(".variant").forEach((i) => {
+        i.classList.toggle("hide");
+    })
+}
+
+function toggle_comment (event) {
+    let el = event.target;
+    el.parentNode.querySelectorAll(".comment").forEach((i) => {
+        i.classList.toggle("hide");
+    })
+}
+
+class TextResizeController {
+    constructor() {
+        this.increaseButton = document.getElementById('textSizeIncreaseButton');
+        this.decreaseButton = document.getElementById('textSizeDecreaseButton');
+        this.contentDiv = document.getElementById('ssp_content');
+        this.currentScale = 1.0;
+        this.minScale = 0.5;
+        this.maxScale = 2.0;
+        this.scaleStep = 0.1;
+
+        this.init();
+    }
+
+    init() {
+        if (!this.increaseButton || !this.decreaseButton || !this.contentDiv) {
+            return;
+        }
+
+        this.increaseButton.addEventListener('click', () => this.increaseTextSize());
+        this.decreaseButton.addEventListener('click', () => this.decreaseTextSize());
+    }
+
+    increaseTextSize() {
+        if (this.currentScale < this.maxScale) {
+            this.currentScale += this.scaleStep;
+            this.applyScale();
+        }
+    }
+
+    decreaseTextSize() {
+        if (this.currentScale > this.minScale) {
+            this.currentScale -= this.scaleStep;
+            this.applyScale();
+        }
+    }
+
+    applyScale() {
+        this.contentDiv.style.fontSize = `${this.currentScale}em`;
+    }
+}
+
+// TODO: Both Double click and selection event runs the summary search, lookup query is stated from the summary UI.
+// TODO: Allow the user to configure which action should run a lookup query.
+
+document.addEventListener("DOMContentLoaded", function(_event) {
+    new HamburgerMenu();
+    new TextResizeController();
+    if (IS_MOBILE) {
+        // On mobile in a WebView, there is no double click event, so listen to
+        // selection change (from a long press action).
+        // FIXME: avoid lookup when selection is changed by dragging the boundaries
+        document.addEventListener("selectionchange", function (_event) {
+            const selection = document.getSelection();
+            if (selection && selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const container = range.commonAncestorContainer;
+                const element = container.nodeType === Node.TEXT_NODE ? container.parentElement : container;
+
+                // Skip if selection is within find bar
+                if (element && element.closest('#findContainer')) {
+                    return;
+                }
+            }
+            summary_selection();
+        });
+
+    } else {
+        // On desktop, double click works to select a word and trigger a lookup.
+        // Double click always triggers a lookup.
+        document.addEventListener("dblclick", function (event) {
+            // Skip if double click is within find bar
+            if (event.target.closest('#findContainer')) {
+                return;
+            }
+            summary_selection();
+        });
+    }
+
+    document.querySelectorAll(".variant-wrap .mark").forEach((i) => {
+        i.addEventListener("click", toggle_variant);
+    });
+    document.querySelectorAll(".comment-wrap .mark").forEach((i) => {
+        i.addEventListener("click", toggle_comment);
+    });
+});
+</script>
+    </head>
+    <body class="system">
+        <div id="ssp_main">
+            <div class="transient-messages-wrap">
+                <div id="transient-messages-top" class="transient-messages">
+                </div>
+            </div>
+
+            <!-- Find Bar -->
+<div class="find-container" id="findContainer">
+    <!-- Search Icon Button (always visible) -->
+    <button class="find-search-button" id="findSearchButton">
+        <img src="http://localhost:4848/assets/icons/32x32/bx_search_alt_2.png" alt="Search" class="search-icon">
+    </button>
+    
+    <!-- Find Bar (hidden by default, shown after clicking search button) -->
+    <div class="find-bar" id="findBar">
+        <!-- Search Input -->
+        <input type="text" class="find-input" id="findInput" placeholder="Find in page..." autocomplete="off" spellcheck="false">
+        
+        <!-- Match Counter -->
+        <div class="find-counter" id="findCounter">0/0</div>
+        
+        <!-- Navigation Buttons -->
+        <button class="find-nav-button find-prev-button" id="findPrevButton" title="Previous match (Shift+Enter)">
+            <span class="nav-arrow">&lt;</span>
+        </button>
+        
+        <button class="find-nav-button find-next-button" id="findNextButton" title="Next match (Enter)">
+            <span class="nav-arrow">&gt;</span>
+        </button>
+        
+        <!-- Search Options -->
+        <div class="find-options">
+            <label class="find-option" title="Fold accents (vinnanam matches viññāṇaṁ)">
+                <input type="checkbox" id="findAccentFold" checked>
+                <span class="option-label">ñ</span>
+            </label>
+            
+            <label class="find-option">
+                <input type="checkbox" id="findCaseSensitive" title="Case sensitive match">
+                <span class="option-label">Aa</span>
+            </label>
+        </div>
+        
+        <!-- Error Message Area -->
+        <div class="find-error" id="findError"></div>
+    </div>
+</div>
+
+
+            <!-- Text Resize Controls -->
+<div class="text-resize-container">
+    <button class="find-search-button text-resize-button" id="textSizeDecreaseButton" title="Decrease text size">
+        <img src="http://localhost:4848/assets/icons/32x32/fa_minus-solid.png" alt="Decrease" class="resize-icon">
+    </button>
+    <button class="find-search-button text-resize-button" id="textSizeIncreaseButton" title="Increase text size">
+        <img src="http://localhost:4848/assets/icons/32x32/fa_plus-solid.png" alt="Increase" class="resize-icon">
+    </button>
+</div>
+
+
+            <!-- Menu Button -->
+<button class="menu-button" id="menuButton">
+    <img src="http://localhost:4848/assets/icons/32x32/mdi--hamburger-menu.png" alt="Menu" class="menu-icon">
+</button>
+
+<!-- Menu Dropdown -->
+<div class="menu-dropdown" id="menuDropdown">
+    <!-- Copy Group -->
+    <div class="menu-group">
+        <div class="group-header expanded" data-group="copy">
+            Copy
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items show" id="copy-items">
+            <div class="menu-item" data-action="copy-selection">Copy Selection</div>
+            <div class="menu-item" data-action="copy-link-sutta">Copy Link to Sutta and Selection</div>
+            <div class="menu-item" data-action="copy-sutta-url">Copy Sutta URL</div>
+        </div>
+    </div>
+
+    <!-- Dictionary Group -->
+    <div class="menu-group">
+        <div class="group-header expanded" data-group="dictionary">
+            Dictionary
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items show" id="dictionary-items">
+            <div class="menu-item" data-action="gloss-selection">Gloss Selection</div>
+            <div class="menu-item" data-action="lookup-selection">Lookup Selection</div>
+        </div>
+    </div>
+
+    <!-- Prompts Group -->
+    <div class="menu-group">
+        <div class="group-header expanded" data-group="prompts">
+            Prompts
+            <span class="group-arrow">▶</span>
+        </div>
+        <div class="group-items show" id="prompts-items">
+            <div class="menu-item" data-action="summarize-sutta">Summarize the current sutta</div>
+            <div class="menu-item" data-action="translate-selection">Translate the selection</div>
+            <div class="menu-item" data-action="analyse-selection">Analyse the selection</div>
+        </div>
+    </div>
+</div>
+
+
+            <div id="ssp_content">
+                <div class='suttacentral bilara-text'><article id='sn56.11'><header><ul><li class='division'><span class='segment'>
+                <span class='translated'>Linked Discourses 56.11 </span>
+                <span class='pali'>Saṁyutta Nikāya 56.11 </span>
+            </span></li>
+
+<li><span class='segment'>
+                <span class='translated'>2. Rolling Forth the Wheel of Dhamma </span>
+                <span class='pali'>2. Dhammacakkappavattanavagga </span>
+            </span></li></ul>
+
+<h1 class='sutta-title'><span class='segment'>
+                <span class='translated'>Rolling Forth the Wheel of Dhamma </span>
+                <span class='pali'>Dhammacakkappavattanasutta 
+                                    <span class='variant-wrap'>
+                                        <span class='mark'>⧫</span>
+                                        <span class='variant hide'>(Dhammacakkappavattanasutta → tathāgatena vutta 1 (pts1ed))</span>
+                                    </span></span>
+            </span></h1></header>
+
+<p><span class='segment'>
+                <span class='translated'>At one time the Buddha was staying near Varanasi, in the deer park at Isipatana. </span>
+                <span class='pali'>Ekaṁ samayaṁ bhagavā bārāṇasiyaṁ viharati isipatane migadāye. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>There the Buddha addressed the group of five mendicants: </span>
+                <span class='pali'>Tatra kho bhagavā pañcavaggiye bhikkhū āmantesi: </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>“Mendicants, these two extremes should not be cultivated by one who has gone forth. </span>
+                <span class='pali'>“Dveme, bhikkhave, antā pabbajitena na sevitabbā. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>What two? </span>
+                <span class='pali'>Katame dve? </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>Indulgence in sensual pleasures, which is low, crude, ordinary, ignoble, and pointless. And indulgence in self-mortification, which is painful, ignoble, and pointless. </span>
+                <span class='pali'>Yo cāyaṁ kāmesu kāmasukhallikānuyogo hīno gammo pothujjaniko anariyo anatthasaṁhito, yo cāyaṁ attakilamathānuyogo dukkho anariyo anatthasaṁhito. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>Avoiding these two extremes, the Realized One understood the middle way of practice, which gives vision and knowledge, and leads to peace, direct knowledge, awakening, and extinguishment. </span>
+                <span class='pali'>Ete kho, bhikkhave, ubho ante anupagamma majjhimā paṭipadā tathāgatena abhisambuddhā cakkhukaraṇī ñāṇakaraṇī upasamāya abhiññāya sambodhāya nibbānāya saṁvattati. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>And what is that middle way of practice? </span>
+                <span class='pali'>Katamā ca sā, bhikkhave, majjhimā paṭipadā tathāgatena abhisambuddhā cakkhukaraṇī ñāṇakaraṇī upasamāya abhiññāya sambodhāya nibbānāya saṁvattati? </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>It is simply this noble eightfold path, that is: </span>
+                <span class='pali'>Ayameva ariyo aṭṭhaṅgiko maggo, seyyathidaṁ—</span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>right view, right thought, right speech, right action, right livelihood, right effort, right mindfulness, and right immersion. </span>
+                <span class='pali'>sammādiṭṭhi sammāsaṅkappo sammāvācā sammākammanto sammāājīvo sammāvāyāmo sammāsati sammāsamādhi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>This is that middle way of practice, which gives vision and knowledge, and leads to peace, direct knowledge, awakening, and extinguishment. </span>
+                <span class='pali'>Ayaṁ kho sā, bhikkhave, majjhimā paṭipadā tathāgatena abhisambuddhā cakkhukaraṇī ñāṇakaraṇī upasamāya abhiññāya sambodhāya nibbānāya saṁvattati. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Now this is the noble truth of suffering. </span>
+                <span class='pali'>Idaṁ kho pana, bhikkhave, dukkhaṁ ariyasaccaṁ—</span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>Rebirth is suffering; old age is suffering; illness is suffering; death is suffering; association with the disliked is suffering; separation from the liked is suffering; not getting what you wish for is suffering. In brief, the five grasping aggregates are suffering. </span>
+                <span class='pali'>jātipi dukkhā, jarāpi dukkhā, byādhipi dukkho, maraṇampi dukkhaṁ, appiyehi sampayogo dukkho, piyehi vippayogo dukkho, yampicchaṁ na labhati tampi dukkhaṁ—saṅkhittena pañcupādānakkhandhā dukkhā. 
+                                    <span class='variant-wrap'>
+                                        <span class='mark'>⧫</span>
+                                        <span class='variant hide'>(pañcupādānakkhandhā → pañcupādānakkhandhāpi (pts1ed, mr))</span>
+                                    </span></span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Now this is the noble truth of the origin of suffering. </span>
+                <span class='pali'>Idaṁ kho pana, bhikkhave, dukkhasamudayaṁ ariyasaccaṁ—</span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>It’s the craving that leads to future lives, mixed up with relishing and greed, taking pleasure wherever it lands. That is, </span>
+                <span class='pali'>yāyaṁ taṇhā ponobbhavikā nandirāgasahagatā tatratatrābhinandinī, seyyathidaṁ—
+                                    <span class='variant-wrap'>
+                                        <span class='mark'>⧫</span>
+                                        <span class='variant hide'>(ponobbhavikā → ponobhavikā (bj) | seyyathidaṁ → seyyathīdaṁ (bj, sya-all, km, pts1ed))</span>
+                                    </span></span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>craving for sensual pleasures, craving to continue existence, and craving to end existence. </span>
+                <span class='pali'>kāmataṇhā, bhavataṇhā, vibhavataṇhā. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Now this is the noble truth of the cessation of suffering. </span>
+                <span class='pali'>Idaṁ kho pana, bhikkhave, dukkhanirodhaṁ ariyasaccaṁ—</span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>It’s the fading away and cessation of that very same craving with nothing left over; giving it away, letting it go, releasing it, and not clinging to it. </span>
+                <span class='pali'>yo tassāyeva taṇhāya asesavirāganirodho cāgo paṭinissaggo mutti anālayo. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Now this is the noble truth of the practice that leads to the cessation of suffering. </span>
+                <span class='pali'>Idaṁ kho pana, bhikkhave, dukkhanirodhagāminī paṭipadā ariyasaccaṁ—</span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>It is simply this noble eightfold path, that is: </span>
+                <span class='pali'>ayameva ariyo aṭṭhaṅgiko maggo, seyyathidaṁ—</span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>right view, right thought, right speech, right action, right livelihood, right effort, right mindfulness, and right immersion. </span>
+                <span class='pali'>sammādiṭṭhi …pe… sammāsamādhi. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>‘This is the noble truth of suffering.’ Such was the vision, knowledge, wisdom, realization, and light that arose in me regarding teachings not learned before from another. </span>
+                <span class='pali'>‘Idaṁ dukkhaṁ ariyasaccan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of suffering should be completely understood.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhaṁ ariyasaccaṁ pariññeyyan’ti me, bhikkhave, pubbe …pe… udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of suffering has been completely understood.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhaṁ ariyasaccaṁ pariññātan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>‘This is the noble truth of the origin of suffering.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Idaṁ dukkhasamudayaṁ ariyasaccan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of the origin of suffering should be given up.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhasamudayaṁ ariyasaccaṁ pahātabban’ti me, bhikkhave, pubbe …pe… udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of the origin of suffering has been given up.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhasamudayaṁ ariyasaccaṁ pahīnan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>‘This is the noble truth of the cessation of suffering.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Idaṁ dukkhanirodhaṁ ariyasaccan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of the cessation of suffering should be realized.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhanirodhaṁ ariyasaccaṁ sacchikātabban’ti me, bhikkhave, pubbe …pe… udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of the cessation of suffering has been realized.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhanirodhaṁ ariyasaccaṁ sacchikatan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>‘This is the noble truth of the practice that leads to the cessation of suffering.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Idaṁ dukkhanirodhagāminī paṭipadā ariyasaccan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of the practice that leads to the cessation of suffering should be developed.’ Such was the vision that arose in me … </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhanirodhagāminī paṭipadā ariyasaccaṁ bhāvetabban’ti me, bhikkhave, pubbe …pe… udapādi. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘This noble truth of the practice that leads to the cessation of suffering has been developed.’ Such was the vision, knowledge, wisdom, realization, and light that arose in me regarding teachings not learned before from another. </span>
+                <span class='pali'>‘Taṁ kho panidaṁ dukkhanirodhagāminī paṭipadā ariyasaccaṁ bhāvitan’ti me, bhikkhave, pubbe ananussutesu dhammesu cakkhuṁ udapādi, ñāṇaṁ udapādi, paññā udapādi, vijjā udapādi, āloko udapādi. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>As long as my true knowledge and vision about these four noble truths was not fully purified in these three rounds and twelve aspects, I didn’t announce my supreme perfect awakening in this world with its gods, Māras, and Divinities, this population with its ascetics and brahmins, its gods and humans. </span>
+                <span class='pali'>Yāvakīvañca me, bhikkhave, imesu catūsu ariyasaccesu evaṁ tiparivaṭṭaṁ dvādasākāraṁ yathābhūtaṁ ñāṇadassanaṁ na suvisuddhaṁ ahosi, neva tāvāhaṁ, bhikkhave, sadevake loke samārake sabrahmake sassamaṇabrāhmaṇiyā pajāya sadevamanussāya ‘anuttaraṁ sammāsambodhiṁ abhisambuddho’ti paccaññāsiṁ. 
+                                    <span class='variant-wrap'>
+                                        <span class='mark'>⧫</span>
+                                        <span class='variant hide'>(abhisambuddho’ti paccaññāsiṁ → abhisambuddho paccaññāsiṁ (bj, sya-all, km))</span>
+                                    </span></span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>But when my true knowledge and vision about these four noble truths was fully purified in these three rounds and twelve aspects, I announced my supreme perfect awakening in this world with its gods, Māras, and Divinities, this population with its ascetics and brahmins, its gods and humans. </span>
+                <span class='pali'>Yato ca kho me, bhikkhave, imesu catūsu ariyasaccesu evaṁ tiparivaṭṭaṁ dvādasākāraṁ yathābhūtaṁ ñāṇadassanaṁ suvisuddhaṁ ahosi, athāhaṁ, bhikkhave, sadevake loke samārake sabrahmake sassamaṇabrāhmaṇiyā pajāya sadevamanussāya ‘anuttaraṁ sammāsambodhiṁ abhisambuddho’ti paccaññāsiṁ. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Knowledge and vision arose in me: </span>
+                <span class='pali'>Ñāṇañca pana me dassanaṁ udapādi: </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>‘My freedom is unshakable; this is my last rebirth; now there’ll be no more future lives.’” </span>
+                <span class='pali'>‘akuppā me vimutti, ayamantimā jāti, natthi dāni punabbhavo’”ti. 
+                                    <span class='variant-wrap'>
+                                        <span class='mark'>⧫</span>
+                                        <span class='variant hide'>(vimutti → cetovimutti (bj, pts1ed))</span>
+                                    </span></span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>That is what the Buddha said. </span>
+                <span class='pali'>Idamavoca bhagavā. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>Satisfied, the group of five mendicants approved what the Buddha said. </span>
+                <span class='pali'>Attamanā pañcavaggiyā bhikkhū bhagavato bhāsitaṁ abhinandunti. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>And while this discourse was being spoken, the stainless, immaculate vision of the Dhamma arose in Venerable Koṇḍañña: </span>
+                <span class='pali'>Imasmiñca pana veyyākaraṇasmiṁ bhaññamāne āyasmato koṇḍaññassa virajaṁ vītamalaṁ dhammacakkhuṁ udapādi: </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>“Everything that has a beginning has an end.” </span>
+                <span class='pali'>“yaṁ kiñci samudayadhammaṁ sabbaṁ taṁ nirodhadhamman”ti. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>And when the Buddha rolled forth the Wheel of Dhamma, the earth gods raised the cry: </span>
+                <span class='pali'>Pavattite ca pana bhagavatā dhammacakke bhummā devā saddamanussāvesuṁ: </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>“Near Varanasi, in the deer park at Isipatana, the Buddha has rolled forth the supreme Wheel of Dhamma. And that wheel cannot be rolled back by any ascetic or brahmin or god or Māra or divinity or by anyone in the world.” </span>
+                <span class='pali'>“etaṁ bhagavatā bārāṇasiyaṁ isipatane migadāye anuttaraṁ dhammacakkaṁ pavattitaṁ appaṭivattiyaṁ samaṇena vā brāhmaṇena vā devena vā mārena vā brahmunā vā kenaci vā lokasmin”ti. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Hearing the cry of the earth gods, the gods of the four great kings … </span>
+                <span class='pali'>Bhummānaṁ devānaṁ saddaṁ sutvā cātumahārājikā devā saddamanussāvesuṁ: </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'></span>
+                <span class='pali'>“etaṁ bhagavatā bārāṇasiyaṁ isipatane migadāye anuttaraṁ dhammacakkaṁ pavattitaṁ, appaṭivattiyaṁ samaṇena vā brāhmaṇena vā devena vā mārena vā brahmunā vā kenaci vā lokasmin”ti. </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>the gods of the thirty-three … </span>
+                <span class='pali'>Cātumahārājikānaṁ devānaṁ saddaṁ sutvā tāvatiṁsā devā …pe… </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>the gods of Yama … </span>
+                <span class='pali'>yāmā devā …pe… </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>the joyful gods … </span>
+                <span class='pali'>tusitā devā …pe… </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>the gods who love to imagine … </span>
+                <span class='pali'>nimmānaratī devā …pe… </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>the gods who control what is imagined by others … </span>
+                <span class='pali'>paranimmitavasavattī devā …pe… </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>the gods of the Divinity’s host raised the cry: </span>
+                <span class='pali'>brahmakāyikā devā saddamanussāvesuṁ: </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>“Near Varanasi, in the deer park at Isipatana, the Buddha has rolled forth the supreme Wheel of Dhamma. And that wheel cannot be rolled back by any ascetic or brahmin or god or Māra or divinity or by anyone in the world.” </span>
+                <span class='pali'>“etaṁ bhagavatā bārāṇasiyaṁ isipatane migadāye anuttaraṁ dhammacakkaṁ pavattitaṁ appaṭivattiyaṁ samaṇena vā brāhmaṇena vā devena vā mārena vā brahmunā vā kenaci vā lokasmin”ti. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>And so at that moment, that second, that hour, the cry soared up to the realm of divinity. </span>
+                <span class='pali'>Itiha tena khaṇena tena layena tena muhuttena yāva brahmalokā saddo abbhuggacchi. 
+                                    <span class='variant-wrap'>
+                                        <span class='mark'>⧫</span>
+                                        <span class='variant hide'>(tena layena → etthantare pāṭho si, sya-all, km potthakesu)</span>
+                                    </span></span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>And this ten-thousandfold galaxy shook and rocked and trembled. And an immeasurable, magnificent light appeared in the world, surpassing the glory of the gods. </span>
+                <span class='pali'>Ayañca dasasahassilokadhātu saṅkampi sampakampi sampavedhi, appamāṇo ca uḷāro obhāso loke pāturahosi atikkamma devānaṁ devānubhāvanti. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>Then the Buddha expressed this heartfelt sentiment: </span>
+                <span class='pali'>Atha kho bhagavā imaṁ udānaṁ udānesi: </span>
+            </span>
+
+<span class='segment'>
+                <span class='translated'>“Koṇḍañña has really understood! Koṇḍañña has really understood!” </span>
+                <span class='pali'>“aññāsi vata bho, koṇḍañño, aññāsi vata bho, koṇḍañño”ti. </span>
+            </span></p>
+
+<p><span class='segment'>
+                <span class='translated'>And that’s how Venerable Koṇḍañña came to be known as “Koṇḍañña Who Understood”. </span>
+                <span class='pali'>Iti hidaṁ āyasmato koṇḍaññassa “aññāsikoṇḍañño” tveva nāmaṁ ahosīti. </span>
+            </span></p></div>
+            </div>
+        </div>
+        <script></script>
+
+        <script src="http://localhost:4848/assets/js/simsapa.min.js"></script>
+
+    </body>
+</html>

@@ -5,8 +5,9 @@ $active_mid: #B8B8B8;
 $active_shadow: #767676;
 $active_highlight: #308CC6;
 
+$button_size: 30px;
 $edge_margin: 10px;
-$button_size: 40px;
+$button_spacing: 5px;
 $border_radius: 2px;
 $font_size: 13px;
 $font_size_small: 13px;
@@ -151,21 +152,22 @@ body.dark {
     cursor: pointer;
     z-index: 1000;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 4px;
     transition: all 0.15s ease;
     box-shadow:
         inset 0 1px 0 var(--text-shadow-light),
         0 1px 2px rgba(0, 0, 0, 0.15);
 
+    .menu-icon {
+        width: 15px;
+        height: 15px;
+        opacity: 0.8;
+    }
+
     &:hover {
         background: linear-gradient(to bottom, var(--btn-bg-hover-start) 0%, var(--btn-bg-hover-end) 100%);
         border-color: var(--btn-border-hover);
-        // box-shadow:
-        //     inset 0 1px 0 var(--text-shadow-light),
-        //     0 2px 4px rgba(0, 0, 0, 0.2);
     }
 
     &:active,
@@ -177,37 +179,12 @@ body.dark {
             inset 0 0 5px rgba(0, 0, 0, 0.1);
         transform: translateY(1px);
     }
-
-    // Hamburger Icon - Qt Style
-    .hamburger-line {
-        width: 23px;
-        height: 2px;
-        background: var(--btn-icon);
-        transition: all 0.2s ease;
-        border-radius: 1px;
-    }
-
-    &.active {
-        .hamburger-line {
-            &:nth-child(1) {
-                transform: rotate(45deg) translate(4px, 4px);
-            }
-
-            &:nth-child(2) {
-                opacity: 0;
-            }
-
-            &:nth-child(3) {
-                transform: rotate(-45deg) translate(4px, -4px);
-            }
-        }
-    }
 }
 
 // Menu Dropdown - Qt Fusion Style
 .menu-dropdown {
     position: fixed;
-    top: ($edge_margin + $button_size + 10px);
+    top: ($edge_margin + $button_size + $button_spacing);
     right: $edge_margin;
     width: 280px;
     background: linear-gradient(to bottom, var(--menu-bg-start) 0%, var(--menu-bg-end) 100%);
@@ -326,27 +303,4 @@ body.dark {
             border-radius: 50%;
         }
     }
-}
-
-// Overlay
-.menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0,0,0,0.1);
-    z-index: 998;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-
-    &.show {
-        opacity: 1;
-        visibility: visible;
-    }
-}
-
-body.dark .menu-overlay.show {
-    background: rgba(0,0,0,0.4);
 }
