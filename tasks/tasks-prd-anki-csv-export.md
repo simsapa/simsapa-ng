@@ -1,0 +1,296 @@
+## Relevant Files
+
+- `assets/qml/GlossTab.qml` - Main component containing export/copy functionality, needs CSV functions and UI updates
+- `assets/qml/tst_GlossTab.qml` - QML test file for GlossTab component, needs new tests for CSV functions
+
+### Notes
+
+- Run QML tests with: `make qml-test`
+- All new functions should use snake_case naming convention
+- Existing helper functions to reuse: `gloss_export_data()`, `summary_strip_html()`, `clean_stem()`
+- No new Rust bridge functions needed - all implementation is QML-only
+- CSV format follows RFC 4180 standard with UTF-8 encoding for Pāli diacritics
+
+## Tasks
+
+- [ ] 1.0 Implement CSV helper functions for escaping and formatting
+  - [ ] 1.1 Add `escape_csv_field(field: string): string` function to handle quote escaping and field wrapping
+    - [ ] 1.1.1 Add function in GlossTab.qml after existing export helper functions (around line 700-800 where other format functions are)
+    - [ ] 1.1.2 Implement double-quote escaping: replace `"` with `""` using `field.replace(/"/g, '""')`
+    - [ ] 1.1.3 Check if field contains comma, newline, or quote using `field.includes()` checks
+    - [ ] 1.1.4 Wrap field in double quotes if special characters detected: `'"' + field + '"'`
+    - [ ] 1.1.5 Return escaped field (quoted if necessary, unchanged if simple text)
+  - [ ] 1.2 Add `format_csv_row(front: string, back: string): string` function to combine escaped fields with comma separator
+    - [ ] 1.2.1 Add function in GlossTab.qml immediately after `escape_csv_field()` function
+    - [ ] 1.2.2 Call `escape_csv_field(front)` to escape front field
+    - [ ] 1.2.3 Call `escape_csv_field(back)` to escape back field
+    - [ ] 1.2.4 Combine escaped fields with comma separator and return result
+  - [ ] 1.3 Write unit tests for `test_escape_csv_field()` covering normal text, commas, quotes, newlines, and combined special characters
+    - [ ] 1.3.1 Open `assets/qml/tst_GlossTab.qml` and locate test function section
+    - [ ] 1.3.2 Add test case for simple text without special characters (should return unchanged)
+    - [ ] 1.3.3 Add test case for text with comma (should be quoted)
+    - [ ] 1.3.4 Add test case for text with double quotes (should escape to `""` and be quoted)
+    - [ ] 1.3.5 Add test case for text with newline (should be quoted with newline preserved)
+    - [ ] 1.3.6 Add test case for text with combined special characters (comma + quotes + newline)
+    - [ ] 1.3.7 Use `compare()` assertion to verify expected output matches actual output
+  - [ ] 1.4 Write unit tests for `test_format_csv_row()` covering simple and complex field combinations
+    - [ ] 1.4.1 Add test case for simple text fields without special characters (should return "front,back")
+    - [ ] 1.4.2 Add test case for fields with commas (should return both quoted and comma-separated)
+    - [ ] 1.4.3 Add test case for fields with quotes (should return properly escaped)
+    - [ ] 1.4.4 Verify correct comma separation between front and back fields
+
+- [ ] 2.0 Implement per-paragraph Anki CSV export function
+  - [ ] 2.1 Add `paragraph_gloss_as_anki_csv(paragraph_index: int): string` function following existing paragraph export patterns
+    - [ ] 2.1.1 Locate existing paragraph export functions in GlossTab.qml (paragraph_gloss_as_html, paragraph_gloss_as_markdown, etc., around line 900-1200)
+    - [ ] 2.1.2 Add new function after existing paragraph export functions
+    - [ ] 2.1.3 Add function signature: `function paragraph_gloss_as_anki_csv(paragraph_index: int): string`
+    - [ ] 2.1.4 Add JSDoc-style comment describing function purpose and parameters
+  - [ ] 2.2 Validate paragraph_index bounds and return empty string for invalid indices
+    - [ ] 2.2.1 Check if paragraph_index < 0 and return "" with logger.error message
+    - [ ] 2.2.2 Check if paragraph_index >= paragraph_model.count and return "" with logger.error message
+    - [ ] 2.2.3 Get gloss_data using root.gloss_export_data() call
+    - [ ] 2.2.4 Check if paragraph_index >= gloss_data.paragraphs.length and return "" with logger.error message
+  - [ ] 2.3 Get gloss_export_data() for the specific paragraph and iterate through vocabulary
+    - [ ] 2.3.1 Access specific paragraph: `var paragraph = gloss_data.paragraphs[paragraph_index]`
+    - [ ] 2.3.2 Initialize csv_lines array with header: `let csv_lines = ["Front,Back"]`
+    - [ ] 2.3.3 Set up for loop to iterate through paragraph.vocabulary array
+    - [ ] 2.3.4 Access each vocabulary item: `var vocab = paragraph.vocabulary[j]`
+  - [ ] 2.4 For each vocabulary word, clean stem and strip HTML from summary
+    - [ ] 2.4.1 Extract word stem: `var front = root.clean_stem(vocab.word)`
+    - [ ] 2.4.2 Extract and clean summary: `var back = root.summary_strip_html(vocab.summary)`
+    - [ ] 2.4.3 Verify clean_stem() removes disambiguating numbers (e.g., "dhamma 1.01" → "dhamma")
+    - [ ] 2.4.4 Verify summary_strip_html() removes all HTML tags from vocabulary summary
+  - [ ] 2.5 Format each word as CSV row and combine with header "Front,Back"
+    - [ ] 2.5.1 Format CSV row using helper: `csv_lines.push(root.format_csv_row(front, back))`
+    - [ ] 2.5.2 After loop completes, join all lines with newline: `return csv_lines.join("\n")`
+    - [ ] 2.5.3 Verify header row is first line in output
+    - [ ] 2.5.4 Verify each vocabulary word creates exactly one CSV data row
+  - [ ] 2.6 Write unit test `test_paragraph_gloss_as_anki_csv()` verifying single paragraph export, invalid indices, and data isolation between paragraphs
+    - [ ] 2.6.1 Open tst_GlossTab.qml and add new test function
+    - [ ] 2.6.2 Create test data with two distinct paragraphs containing different vocabulary
+    - [ ] 2.6.3 Call processTextBackground() to process multi-paragraph text
+    - [ ] 2.6.4 Test first paragraph export and verify it contains expected vocabulary from paragraph 1
+    - [ ] 2.6.5 Verify first paragraph export does NOT contain vocabulary from paragraph 2
+    - [ ] 2.6.6 Test invalid negative index (-1) and verify returns empty string
+    - [ ] 2.6.7 Test invalid large index (999) and verify returns empty string
+    - [ ] 2.6.8 Verify CSV header "Front,Back" is present in valid export
+    - [ ] 2.6.9 Use verify() and compare() assertions to validate all conditions
+
+- [ ] 3.0 Implement global Anki CSV export function
+  - [ ] 3.1 Add `gloss_as_anki_csv(): string` function following existing global export patterns
+    - [ ] 3.1.1 Locate existing global export functions in GlossTab.qml (gloss_as_html, gloss_as_markdown, gloss_as_orgmode, around line 400-700)
+    - [ ] 3.1.2 Add new function after existing global export functions
+    - [ ] 3.1.3 Add function signature: `function gloss_as_anki_csv(): string`
+    - [ ] 3.1.4 Add JSDoc-style comment describing function purpose (exports all paragraphs' vocabulary as CSV)
+  - [ ] 3.2 Call gloss_export_data() to get all paragraphs and vocabulary data
+    - [ ] 3.2.1 Call root.gloss_export_data() and store result: `let gloss_data = root.gloss_export_data()`
+    - [ ] 3.2.2 Initialize csv_lines array with header row: `let csv_lines = ["Front,Back"]`
+    - [ ] 3.2.3 Verify gloss_data contains paragraphs array with vocabulary data
+  - [ ] 3.3 Iterate through all paragraphs and vocabulary words, formatting each as CSV row
+    - [ ] 3.3.1 Set up outer loop to iterate through gloss_data.paragraphs array
+    - [ ] 3.3.2 Access each paragraph: `var paragraph = gloss_data.paragraphs[i]`
+    - [ ] 3.3.3 Set up inner loop to iterate through paragraph.vocabulary array
+    - [ ] 3.3.4 Access each vocabulary item: `var vocab = paragraph.vocabulary[j]`
+    - [ ] 3.3.5 Clean stem: `var front = root.clean_stem(vocab.word)`
+    - [ ] 3.3.6 Strip HTML from summary: `var back = root.summary_strip_html(vocab.summary)`
+    - [ ] 3.3.7 Format and push CSV row: `csv_lines.push(root.format_csv_row(front, back))`
+  - [ ] 3.4 Combine all rows with header "Front,Back" and join with newlines
+    - [ ] 3.4.1 After loops complete, join csv_lines array with newline separator
+    - [ ] 3.4.2 Return joined string: `return csv_lines.join("\n")`
+    - [ ] 3.4.3 Verify header is first line, followed by all vocabulary rows
+  - [ ] 3.5 Write unit test `test_gloss_as_anki_csv()` verifying header, vocabulary presence, HTML stripping, and clean stems
+    - [ ] 3.5.1 Open tst_GlossTab.qml and add test_gloss_as_anki_csv() function
+    - [ ] 3.5.2 Create test paragraph with known Pāli vocabulary words
+    - [ ] 3.5.3 Call processTextBackground() to process test paragraph
+    - [ ] 3.5.4 Call gloss_tab.gloss_as_anki_csv() to generate CSV output
+    - [ ] 3.5.5 Verify CSV starts with "Front,Back\n" header using verify(csv.startsWith())
+    - [ ] 3.5.6 Verify CSV contains expected vocabulary words using verify(csv.includes())
+    - [ ] 3.5.7 Verify no HTML tags present in output (check for <b>, </b>, <i>, </i> tags)
+    - [ ] 3.5.8 Split CSV into lines and verify no disambiguating numbers in front field
+    - [ ] 3.5.9 Use regex to check front field doesn't match pattern /\s+\d+(\.\d+)?$/
+  - [ ] 3.6 Write unit test `test_anki_csv_format_integrity()` verifying CSV structure with exactly 2 fields per row
+    - [ ] 3.6.1 Add test_anki_csv_format_integrity() function in tst_GlossTab.qml
+    - [ ] 3.6.2 Create test paragraph and process with processTextBackground()
+    - [ ] 3.6.3 Generate CSV and split into lines: `var lines = csv.split("\n")`
+    - [ ] 3.6.4 Verify first line is exactly "Front,Back" using compare(lines[0], "Front,Back")
+    - [ ] 3.6.5 Implement CSV parser to handle quoted fields correctly in test
+    - [ ] 3.6.6 For each data line, parse fields considering quotes and commas
+    - [ ] 3.6.7 Count fields and verify exactly 2 fields per row using compare(fields.length, 2)
+    - [ ] 3.6.8 Skip empty lines when validating field count
+    - [ ] 3.6.9 Verify parser correctly handles escaped quotes within quoted fields
+
+- [ ] 4.0 Update UI components for Anki CSV export option
+  - [ ] 4.1 Update export_btn ComboBox model at line ~1472 to include "Anki CSV" as fourth option
+    - [ ] 4.1.1 Open assets/qml/GlossTab.qml and navigate to export_btn ComboBox definition
+    - [ ] 4.1.2 Locate the model property with current values: ["Export As...", "HTML", "Markdown", "Org-Mode"]
+    - [ ] 4.1.3 Add "Anki CSV" as fourth option after "Org-Mode" in the model array
+    - [ ] 4.1.4 Verify model array syntax is correct: `model: ["Export As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]`
+    - [ ] 4.1.5 Ensure ComboBox width is sufficient to display "Anki CSV" option text
+  - [ ] 4.2 Update copy_combobox ComboBox model at line ~1764 to include "Anki CSV" as fourth option
+    - [ ] 4.2.1 Navigate to copy_combobox ComboBox definition in paragraph delegate
+    - [ ] 4.2.2 Locate the model property with current values: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
+    - [ ] 4.2.3 Add "Anki CSV" as fourth option after "Org-Mode" in the model array
+    - [ ] 4.2.4 Verify model array syntax: `model: ["Copy As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]`
+  - [ ] 4.3 Update export_dialog_accepted() function at line ~232 to handle "Anki CSV" selection
+    - [ ] 4.3.1 Navigate to export_dialog_accepted() function implementation
+    - [ ] 4.3.2 Locate the if-else chain handling different export format selections
+    - [ ] 4.3.3 Add new else-if condition after Org-Mode: `else if (export_btn.currentValue === "Anki CSV")`
+    - [ ] 4.3.4 Verify condition checks export_btn.currentValue (not currentText or currentIndex)
+  - [ ] 4.4 Set save_file_name to "gloss_export.csv" and save_content to root.gloss_as_anki_csv() for Anki CSV export
+    - [ ] 4.4.1 Inside the "Anki CSV" condition block, set save_file_name: `save_file_name = "gloss_export.csv"`
+    - [ ] 4.4.2 Call global export function: `save_content = root.gloss_as_anki_csv()`
+    - [ ] 4.4.3 Verify variables are declared earlier in function (let save_file_name, let save_content)
+    - [ ] 4.4.4 Ensure condition follows same pattern as existing HTML/Markdown/Org-Mode conditions
+  - [ ] 4.5 Update copy_combobox.onCurrentIndexChanged handler at line ~1768 to handle index 4 (Anki CSV)
+    - [ ] 4.5.1 Navigate to copy_combobox.onCurrentIndexChanged handler in paragraph delegate
+    - [ ] 4.5.2 Locate the if-else chain handling different copy format selections (currentIndex checks)
+    - [ ] 4.5.3 Add new else-if condition: `else if (currentIndex === 4)` after currentIndex === 3 (Org-Mode)
+    - [ ] 4.5.4 Verify index numbering: 0=placeholder, 1=HTML, 2=Markdown, 3=Org-Mode, 4=Anki CSV
+  - [ ] 4.6 Call root.paragraph_gloss_as_anki_csv(paragraph_item.index) for index 4 and copy to clipboard
+    - [ ] 4.6.1 Inside currentIndex === 4 block, call: `content = root.paragraph_gloss_as_anki_csv(paragraph_item.index)`
+    - [ ] 4.6.2 Verify content variable is declared at beginning of handler
+    - [ ] 4.6.3 Ensure clipboard copy logic executes: check for `paragraph_clip.copy_text(content)` call
+    - [ ] 4.6.4 Verify copied message animation triggers: `copied_message_animation.start()`
+    - [ ] 4.6.5 Ensure ComboBox resets to index 0 after copy: `copy_combobox.currentIndex = 0`
+
+- [ ] 5.0 Run tests and verify implementation
+  - [ ] 5.1 Run `make qml-test` to execute all QML tests and verify new CSV tests pass
+    - [ ] 5.1.1 Open terminal and navigate to project root directory
+    - [ ] 5.1.2 Execute `make qml-test` command
+    - [ ] 5.1.3 Verify all existing tests still pass (no regressions)
+    - [ ] 5.1.4 Verify test_escape_csv_field() passes all test cases
+    - [ ] 5.1.5 Verify test_format_csv_row() passes all test cases
+    - [ ] 5.1.6 Verify test_gloss_as_anki_csv() passes (header, vocabulary, HTML stripping, clean stems)
+    - [ ] 5.1.7 Verify test_paragraph_gloss_as_anki_csv() passes (single paragraph, invalid indices)
+    - [ ] 5.1.8 Verify test_anki_csv_format_integrity() passes (CSV structure validation)
+    - [ ] 5.1.9 Review test output for any warnings or errors
+    - [ ] 5.1.10 If tests fail, debug and fix issues before proceeding
+  - [ ] 5.2 Run `make build -B` to verify successful compilation
+    - [ ] 5.2.1 Execute `make build -B` command in terminal
+    - [ ] 5.2.2 Monitor build output for compilation errors
+    - [ ] 5.2.3 Verify CMake configuration completes successfully
+    - [ ] 5.2.4 Verify Qt6 QML module compilation succeeds
+    - [ ] 5.2.5 Verify C++ and Rust bridge compilation succeeds
+    - [ ] 5.2.6 Check for any QML syntax errors or warnings
+    - [ ] 5.2.7 Verify build completes with executable created in build/ directory
+    - [ ] 5.2.8 If build fails, review error messages and fix syntax/logic issues
+  - [ ] 5.3 Manually test global export by processing multi-paragraph text and exporting as Anki CSV
+    - [ ] 5.3.1 Start application with `make run` (user should perform this step)
+    - [ ] 5.3.2 Navigate to Gloss tab
+    - [ ] 5.3.3 Input test text with multiple paragraphs containing Pāli vocabulary
+    - [ ] 5.3.4 Wait for background processing to complete and vocabulary to appear
+    - [ ] 5.3.5 Click export_btn ComboBox and verify "Anki CSV" option appears in list
+    - [ ] 5.3.6 Select "Anki CSV" option from dropdown
+    - [ ] 5.3.7 Verify file save dialog appears with default name "gloss_export.csv"
+    - [ ] 5.3.8 Save file and verify it exists in selected location
+    - [ ] 5.3.9 Open CSV file in text editor and verify header "Front,Back" is present
+    - [ ] 5.3.10 Verify vocabulary words from all paragraphs are included in CSV
+    - [ ] 5.3.11 Verify front field contains clean stems (no disambiguating numbers)
+    - [ ] 5.3.12 Verify back field contains plain text summaries (no HTML tags)
+    - [ ] 5.3.13 Verify special characters (commas, quotes) are properly escaped
+  - [ ] 5.4 Manually test per-paragraph copy by processing multi-paragraph text and copying individual paragraphs as Anki CSV
+    - [ ] 5.4.1 With multi-paragraph text still loaded in Gloss tab, locate first paragraph
+    - [ ] 5.4.2 Find copy_combobox for first paragraph (in paragraph toolbar)
+    - [ ] 5.4.3 Click copy_combobox and verify "Anki CSV" option appears
+    - [ ] 5.4.4 Select "Anki CSV" option
+    - [ ] 5.4.5 Verify "Copied!" message animation appears
+    - [ ] 5.4.6 Paste clipboard content into text editor
+    - [ ] 5.4.7 Verify pasted content has "Front,Back" header
+    - [ ] 5.4.8 Verify pasted content contains only vocabulary from selected paragraph
+    - [ ] 5.4.9 Verify vocabulary from other paragraphs is NOT included
+    - [ ] 5.4.10 Repeat test with second paragraph to verify isolation
+    - [ ] 5.4.11 Verify ComboBox resets to "Copy As..." after copy operation
+  - [ ] 5.5 Verify exported CSV file can be imported into Anki with correct field mapping (Front → Front, Back → Back)
+    - [ ] 5.5.1 Open Anki desktop application (user should perform this step)
+    - [ ] 5.5.2 Select or create a test deck for import testing
+    - [ ] 5.5.3 Go to File → Import menu
+    - [ ] 5.5.4 Select the exported "gloss_export.csv" file
+    - [ ] 5.5.5 In import dialog, verify Anki detects CSV format correctly
+    - [ ] 5.5.6 Configure field mapping: Field 1 → Front, Field 2 → Back
+    - [ ] 5.5.7 Set field separator to "Comma"
+    - [ ] 5.5.8 Verify "Allow HTML in fields" is unchecked (plain text content)
+    - [ ] 5.5.9 Click Import button and wait for import to complete
+    - [ ] 5.5.10 Review import summary showing number of cards added
+    - [ ] 5.5.11 Open Browse view and select imported cards
+    - [ ] 5.5.12 Verify Front field displays clean Pāli word stems correctly
+    - [ ] 5.5.13 Verify Back field displays dictionary definitions without HTML artifacts
+    - [ ] 5.5.14 Verify Pāli diacritics display correctly (UTF-8 encoding preserved)
+    - [ ] 5.5.15 Verify special characters (commas, quotes) display correctly in definitions
+    - [ ] 5.5.16 Test reviewing cards to ensure front/back content is appropriate for flashcard use
+    - [ ] 5.5.17 Verify no duplicate cards with identical front/back content (expected behavior: duplicates allowed per spec)
+
+- [ ] 6.0 Edge case testing and validation
+  - [ ] 6.1 Test empty vocabulary scenarios
+    - [ ] 6.1.1 Test exporting when no vocabulary has been processed (empty paragraph_model)
+    - [ ] 6.1.2 Verify gloss_as_anki_csv() returns only header "Front,Back" with no data rows
+    - [ ] 6.1.3 Verify paragraph_gloss_as_anki_csv() handles paragraph with no vocabulary words gracefully
+    - [ ] 6.1.4 Verify UI doesn't crash when exporting empty data
+  - [ ] 6.2 Test special character handling in vocabulary
+    - [ ] 6.2.1 Test vocabulary word containing comma in stem (e.g., compound words)
+    - [ ] 6.2.2 Test summary containing double quotes in definition text
+    - [ ] 6.2.3 Test summary containing newlines in multi-line definitions
+    - [ ] 6.2.4 Test vocabulary with combined special characters (comma + quote + newline in same field)
+    - [ ] 6.2.5 Verify all special characters are properly escaped in CSV output
+  - [ ] 6.3 Test UTF-8 and Pāli diacritics
+    - [ ] 6.3.1 Test vocabulary with all common Pāli diacritics (ā, ī, ū, ṁ, ṃ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ)
+    - [ ] 6.3.2 Verify diacritics are preserved in exported CSV file
+    - [ ] 6.3.3 Open exported CSV in text editor and verify UTF-8 encoding
+    - [ ] 6.3.4 Verify diacritics display correctly after Anki import
+  - [ ] 6.4 Test large dataset handling
+    - [ ] 6.4.1 Test exporting very long text with 20+ paragraphs
+    - [ ] 6.4.2 Verify all paragraphs are included in export without truncation
+    - [ ] 6.4.3 Monitor memory usage during large export (no memory leaks)
+    - [ ] 6.4.4 Verify export completes in reasonable time (< 5 seconds for 100+ words)
+  - [ ] 6.5 Test disambiguation number removal
+    - [ ] 6.5.1 Test word stems with various number formats (e.g., "dhamma 1", "dhamma 1.01", "kamma 2.3")
+    - [ ] 6.5.2 Verify clean_stem() removes all disambiguating number suffixes
+    - [ ] 6.5.3 Verify stem-only output in front field (no trailing spaces or numbers)
+    - [ ] 6.5.4 Test edge case where word naturally ends in number (verify not over-cleaned)
+  - [ ] 6.6 Test HTML stripping from summaries
+    - [ ] 6.6.1 Test summaries with bold tags (<b>, </b>)
+    - [ ] 6.6.2 Test summaries with italic tags (<i>, </i>)
+    - [ ] 6.6.3 Test summaries with nested HTML tags
+    - [ ] 6.6.4 Test summaries with HTML entities (e.g., &amp;, &quot;)
+    - [ ] 6.6.5 Verify summary_strip_html() removes all tags but preserves text content
+    - [ ] 6.6.6 Verify no HTML artifacts remain in back field of CSV
+  - [ ] 6.7 Verify no regression in existing export formats
+    - [ ] 6.7.1 Test HTML export still works correctly after changes
+    - [ ] 6.7.2 Test Markdown export still works correctly after changes
+    - [ ] 6.7.3 Test Org-Mode export still works correctly after changes
+    - [ ] 6.7.4 Test per-paragraph HTML copy still works correctly
+    - [ ] 6.7.5 Test per-paragraph Markdown copy still works correctly
+    - [ ] 6.7.6 Test per-paragraph Org-Mode copy still works correctly
+    - [ ] 6.7.7 Verify existing export file extensions remain unchanged (.html, .md, .org)
+
+## Implementation Notes
+
+### Function Placement in GlossTab.qml
+- CSV helper functions (escape_csv_field, format_csv_row): After existing format helper functions (~line 700-800)
+- Global export function (gloss_as_anki_csv): After gloss_as_orgmode() (~line 400-700)
+- Per-paragraph export function (paragraph_gloss_as_anki_csv): After paragraph_gloss_as_orgmode() (~line 900-1200)
+
+### Code Review Checklist
+- [ ] All function names use snake_case convention
+- [ ] All variable names use snake_case convention
+- [ ] No comments added unless requested (follow code style guideline)
+- [ ] Functions follow existing patterns from HTML/Markdown/Org-Mode exports
+- [ ] Error handling matches existing export functions (logger.error for invalid indices)
+- [ ] CSV format strictly follows RFC 4180 standard
+- [ ] UTF-8 encoding preserved throughout export pipeline
+
+### Testing Priority Order
+1. Unit tests (test_escape_csv_field, test_format_csv_row) - Fastest feedback
+2. Integration tests (test_gloss_as_anki_csv, test_paragraph_gloss_as_anki_csv) - Verify function integration
+3. Build verification (make build -B) - Ensure no syntax errors
+4. Manual UI testing - Verify user-facing functionality
+5. Anki import testing - Validate end-to-end workflow
+
+### Common Pitfalls to Avoid
+- Forgetting to add "Anki CSV" to both export_btn AND copy_combobox models
+- Incorrect index numbering in copy_combobox handler (remember index 0 is placeholder)
+- Not handling empty vocabulary arrays (causes crashes)
+- Over-escaping or under-escaping CSV fields (test with edge cases)
+- Forgetting to strip HTML from summaries (causes display issues in Anki)
+- Not removing disambiguating numbers from stems (inconsistent flashcards)
+- Using currentText instead of currentValue in export_btn handler
+- Forgetting to reset copy_combobox to index 0 after copy operation
