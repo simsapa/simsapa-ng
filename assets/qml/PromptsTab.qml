@@ -414,6 +414,79 @@ Item {
         return chat_data;
     }
 
+    function message_as_html(msg: var): string {
+        var out = "";
+
+        if (msg.role === "system") {
+            out += `\n<h2>System</h2>\n`;
+            out += `<blockquote>${msg.content.replace(/\n/g, "<br>\n")}</blockquote>\n`;
+        } else if (msg.role === "user") {
+            out += `\n<h2>User</h2>\n`;
+            out += `<blockquote>${msg.content.replace(/\n/g, "<br>\n")}</blockquote>\n`;
+        } else if (msg.role === "assistant") {
+            out += `\n<h2>Assistant</h2>\n`;
+
+            for (var j = 0; j < msg.responses.length; j++) {
+                var resp = msg.responses[j];
+                var resp_html = SuttaBridge.markdown_to_html(resp.response || "");
+                var selected_indicator = resp.is_selected ? " (selected)" : "";
+                out += `<h3>${resp.model_name}${selected_indicator}</h3>\n`;
+                out += `<blockquote>${resp_html}</blockquote>\n`;
+            }
+        }
+
+        return out;
+    }
+
+    function message_as_markdown(msg: var): string {
+        var out = "";
+
+        if (msg.role === "system") {
+            out += `\n## System\n\n`;
+            out += `> ${msg.content.replace(/\n/g, "\n> ")}\n`;
+        } else if (msg.role === "user") {
+            out += `\n## User\n\n`;
+            out += `> ${msg.content.replace(/\n/g, "\n> ")}\n`;
+        } else if (msg.role === "assistant") {
+            out += `\n## Assistant\n`;
+
+            for (var j = 0; j < msg.responses.length; j++) {
+                var resp = msg.responses[j];
+                var selected_indicator = resp.is_selected ? " (selected)" : "";
+                out += `\n### ${resp.model_name}${selected_indicator}\n\n`;
+                out += `> ${resp.response.replace(/\n/g, "\n> ")}\n`;
+            }
+        }
+
+        return out;
+    }
+
+    function message_as_orgmode(msg: var): string {
+        var out = "";
+
+        if (msg.role === "system") {
+            out += `\n** System\n\n`;
+            out += `#+begin_quote\n${msg.content}\n#+end_quote\n`;
+        } else if (msg.role === "user") {
+            out += `\n** User\n\n`;
+            out += `#+begin_quote\n${msg.content}\n#+end_quote\n`;
+        } else if (msg.role === "assistant") {
+            out += `\n** Assistant\n`;
+
+            for (var j = 0; j < msg.responses.length; j++) {
+                var resp = msg.responses[j];
+                var resp_md = resp.response.split('\n').map(function(line) {
+                    return line.replace(/^\* /, '- ');
+                }).join('\n');
+                var selected_indicator = resp.is_selected ? " (selected)" : "";
+                out += `\n*** ${resp.model_name}${selected_indicator}\n\n`;
+                out += `#+begin_src markdown\n${resp_md}\n#+end_src\n`;
+            }
+        }
+
+        return out;
+    }
+
     function chat_as_html(): string {
         let chat_data = root.chat_export_data();
 
@@ -431,25 +504,7 @@ Item {
 `;
 
         for (var i = 0; i < chat_data.messages.length; i++) {
-            var msg = chat_data.messages[i];
-            
-            if (msg.role === "system") {
-                out += `\n<h2>System</h2>\n`;
-                out += `<blockquote>${msg.content.replace(/\n/g, "<br>\n")}</blockquote>\n`;
-            } else if (msg.role === "user") {
-                out += `\n<h2>User</h2>\n`;
-                out += `<blockquote>${msg.content.replace(/\n/g, "<br>\n")}</blockquote>\n`;
-            } else if (msg.role === "assistant") {
-                out += `\n<h2>Assistant</h2>\n`;
-                
-                for (var j = 0; j < msg.responses.length; j++) {
-                    var resp = msg.responses[j];
-                    var resp_html = SuttaBridge.markdown_to_html(resp.response || "");
-                    var selected_indicator = resp.is_selected ? " (selected)" : "";
-                    out += `<h3>${resp.model_name}${selected_indicator}</h3>\n`;
-                    out += `<blockquote>${resp_html}</blockquote>\n`;
-                }
-            }
+            out += root.message_as_html(chat_data.messages[i]);
         }
 
         out += "\n</body>\n</html>";
@@ -462,24 +517,7 @@ Item {
         let out = `# Chat Export\n`;
 
         for (var i = 0; i < chat_data.messages.length; i++) {
-            var msg = chat_data.messages[i];
-            
-            if (msg.role === "system") {
-                out += `\n## System\n\n`;
-                out += `> ${msg.content.replace(/\n/g, "\n> ")}\n`;
-            } else if (msg.role === "user") {
-                out += `\n## User\n\n`;
-                out += `> ${msg.content.replace(/\n/g, "\n> ")}\n`;
-            } else if (msg.role === "assistant") {
-                out += `\n## Assistant\n`;
-                
-                for (var j = 0; j < msg.responses.length; j++) {
-                    var resp = msg.responses[j];
-                    var selected_indicator = resp.is_selected ? " (selected)" : "";
-                    out += `\n### ${resp.model_name}${selected_indicator}\n\n`;
-                    out += `> ${resp.response.replace(/\n/g, "\n> ")}\n`;
-                }
-            }
+            out += root.message_as_markdown(chat_data.messages[i]);
         }
 
         return out.trim().replace(/\n\n\n+/g, "\n\n");
@@ -491,28 +529,7 @@ Item {
         let out = `* Chat Export\n`;
 
         for (var i = 0; i < chat_data.messages.length; i++) {
-            var msg = chat_data.messages[i];
-            
-            if (msg.role === "system") {
-                out += `\n** System\n\n`;
-                out += `#+begin_quote\n${msg.content}\n#+end_quote\n`;
-            } else if (msg.role === "user") {
-                out += `\n** User\n\n`;
-                out += `#+begin_quote\n${msg.content}\n#+end_quote\n`;
-            } else if (msg.role === "assistant") {
-                out += `\n** Assistant\n`;
-                
-                for (var j = 0; j < msg.responses.length; j++) {
-                    var resp = msg.responses[j];
-                    // Convert asterisk lists to dash lists
-                    var resp_md = resp.response.split('\n').map(function(line) {
-                        return line.replace(/^\* /, '- ');
-                    }).join('\n');
-                    var selected_indicator = resp.is_selected ? " (selected)" : "";
-                    out += `\n*** ${resp.model_name}${selected_indicator}\n\n`;
-                    out += `#+begin_src markdown\n${resp_md}\n#+end_src\n`;
-                }
-            }
+            out += root.message_as_orgmode(chat_data.messages[i]);
         }
 
         return out.trim().replace(/\n\n\n+/g, "\n\n");
@@ -626,8 +643,19 @@ Item {
 
                 property alias send_btn: send_btn
 
+                TextEdit {
+                    id: message_clip
+                    visible: false
+                    function copy_text(text) {
+                        message_clip.text = text;
+                        message_clip.selectAll();
+                        message_clip.copy();
+                    }
+                }
+
                 RowLayout {
                     Layout.leftMargin: 10
+                    Layout.rightMargin: 10
 
                     Button {
                         id: collapse_btn
@@ -643,6 +671,120 @@ Item {
                         text: message_item.role
                         font.bold: true
                         font.pointSize: root.vocab_font_point_size
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    Text {
+                        id: copied_message
+                        text: "Copied!"
+                        font.pointSize: root.vocab_font_point_size
+                        color: "#4CAF50"
+                        visible: false
+                        opacity: 0
+                        Layout.leftMargin: 10
+                    }
+
+                    SequentialAnimation {
+                        id: copied_message_animation
+
+                        PropertyAction {
+                            target: copied_message
+                            property: "visible"
+                            value: true
+                        }
+
+                        NumberAnimation {
+                            target: copied_message
+                            property: "opacity"
+                            from: 0
+                            to: 1.0
+                            duration: 200
+                        }
+
+                        PauseAnimation {
+                            duration: 1500
+                        }
+
+                        NumberAnimation {
+                            target: copied_message
+                            property: "opacity"
+                            from: 1.0
+                            to: 0
+                            duration: 300
+                        }
+
+                        PropertyAction {
+                            target: copied_message
+                            property: "visible"
+                            value: false
+                        }
+                    }
+
+                    ComboBox {
+                        id: copy_combobox
+                        model: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
+                        currentIndex: 0
+                        visible: message_item.role === "assistant"
+                        Layout.alignment: Qt.AlignRight
+
+                        onCurrentIndexChanged: {
+                            if (currentIndex === 0) {
+                                return;
+                            }
+
+                            var message = root.messages_model.get(message_item.index);
+                            if (!message || !message.responses_json) {
+                                logger.error("No message or responses found for copy");
+                                copy_combobox.currentIndex = 0;
+                                return;
+                            }
+
+                            try {
+                                var responses = JSON.parse(message.responses_json);
+                                if (!responses || responses.length === 0) {
+                                    logger.error("No responses available to copy");
+                                    copy_combobox.currentIndex = 0;
+                                    return;
+                                }
+
+                                var selected_idx = message.selected_ai_tab || 0;
+                                if (selected_idx >= responses.length) {
+                                    selected_idx = 0;
+                                }
+
+                                var msg_data = {
+                                    role: message.role,
+                                    content: message.content,
+                                    responses: responses.map(function(resp, idx) {
+                                        return {
+                                            model_name: resp.model_name,
+                                            response: resp.response,
+                                            is_selected: idx === selected_idx
+                                        };
+                                    })
+                                };
+
+                                var content = "";
+                                if (currentIndex === 1) {
+                                    content = root.message_as_html(msg_data);
+                                } else if (currentIndex === 2) {
+                                    content = root.message_as_markdown(msg_data);
+                                } else if (currentIndex === 3) {
+                                    content = root.message_as_orgmode(msg_data);
+                                }
+
+                                if (content.length > 0) {
+                                    message_clip.copy_text(content);
+                                    copied_message_animation.start();
+                                }
+
+                            } catch (e) {
+                                logger.error("Error copying message:", e);
+                            }
+
+                            copy_combobox.currentIndex = 0;
+                        }
                     }
                 }
 
