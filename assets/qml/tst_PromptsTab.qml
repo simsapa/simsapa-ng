@@ -482,5 +482,285 @@ Item {
             compare(final_responses[2].status, "completed");
             compare(final_responses[2].response, "Model 3 different perspective");
         }
+
+        function setup_export_test_data() {
+            prompts_tab.messages_model.clear();
+
+            prompts_tab.messages_model.append({
+                role: "system",
+                content: "You are a helpful AI assistant specialized in Theravāda Buddhism.",
+                content_html: "",
+                responses_json: "[]",
+                selected_ai_tab: 0
+            });
+
+            prompts_tab.messages_model.append({
+                role: "user",
+                content: "What is meditation?",
+                content_html: "",
+                responses_json: "[]",
+                selected_ai_tab: 0
+            });
+
+            var assistant_responses_1 = [{
+                model_name: "deepseek/deepseek-r1:free",
+                status: "completed",
+                response: "Meditation is a **mental practice** that involves:\n\n* Focused attention\n* Mindfulness\n* Deep concentration",
+                request_id: "test_req_1",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: true
+            }, {
+                model_name: "google/gemma-2-9b-it:free",
+                status: "completed",
+                response: "Meditation helps calm the mind and develop awareness.",
+                request_id: "test_req_2",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: false
+            }];
+
+            prompts_tab.messages_model.append({
+                role: "assistant",
+                content: "",
+                content_html: "",
+                responses_json: JSON.stringify(assistant_responses_1),
+                selected_ai_tab: 0
+            });
+
+            prompts_tab.messages_model.append({
+                role: "user",
+                content: "Tell me more about mindfulness.",
+                content_html: "",
+                responses_json: "[]",
+                selected_ai_tab: 0
+            });
+
+            var assistant_responses_2 = [{
+                model_name: "deepseek/deepseek-r1:free",
+                status: "completed",
+                response: "Mindfulness is present-moment awareness without judgment.",
+                request_id: "test_req_3",
+                retry_count: 0,
+                last_updated: Date.now(),
+                user_selected: true
+            }];
+
+            prompts_tab.messages_model.append({
+                role: "assistant",
+                content: "",
+                content_html: "",
+                responses_json: JSON.stringify(assistant_responses_2),
+                selected_ai_tab: 0
+            });
+        }
+
+        function test_chat_as_html_export() {
+            setup_export_test_data();
+
+            var html_output = prompts_tab.chat_as_html();
+
+            var expected_html = `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Chat Export</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Chat Export</h1>
+
+<h2>System</h2>
+<blockquote>You are a helpful AI assistant specialized in Theravāda Buddhism.</blockquote>
+
+<h2>User</h2>
+<blockquote>What is meditation?</blockquote>
+
+<h2>Assistant</h2>
+<h3>deepseek/deepseek-r1:free (selected)</h3>
+<blockquote># Hello Markdown</blockquote>
+<h3>google/gemma-2-9b-it:free</h3>
+<blockquote># Hello Markdown</blockquote>
+
+<h2>User</h2>
+<blockquote>Tell me more about mindfulness.</blockquote>
+
+<h2>Assistant</h2>
+<h3>deepseek/deepseek-r1:free (selected)</h3>
+<blockquote># Hello Markdown</blockquote>
+
+</body>
+</html>`;
+
+            compare(html_output, expected_html);
+        }
+
+        function test_chat_as_markdown_export() {
+            setup_export_test_data();
+
+            var md_output = prompts_tab.chat_as_markdown();
+
+            var expected_markdown = `# Chat Export
+
+## System
+
+> You are a helpful AI assistant specialized in Theravāda Buddhism.
+
+## User
+
+> What is meditation?
+
+## Assistant
+
+### deepseek/deepseek-r1:free (selected)
+
+> Meditation is a **mental practice** that involves:
+> 
+> * Focused attention
+> * Mindfulness
+> * Deep concentration
+
+### google/gemma-2-9b-it:free
+
+> Meditation helps calm the mind and develop awareness.
+
+## User
+
+> Tell me more about mindfulness.
+
+## Assistant
+
+### deepseek/deepseek-r1:free (selected)
+
+> Mindfulness is present-moment awareness without judgment.`;
+
+            compare(md_output, expected_markdown);
+        }
+
+        function test_chat_as_orgmode_export() {
+            setup_export_test_data();
+
+            var org_output = prompts_tab.chat_as_orgmode();
+
+            var expected_orgmode = `* Chat Export
+
+** System
+
+#+begin_quote
+You are a helpful AI assistant specialized in Theravāda Buddhism.
+#+end_quote
+
+** User
+
+#+begin_quote
+What is meditation?
+#+end_quote
+
+** Assistant
+
+*** deepseek/deepseek-r1:free (selected)
+
+#+begin_src markdown
+Meditation is a **mental practice** that involves:
+
+- Focused attention
+- Mindfulness
+- Deep concentration
+#+end_src
+
+*** google/gemma-2-9b-it:free
+
+#+begin_src markdown
+Meditation helps calm the mind and develop awareness.
+#+end_src
+
+** User
+
+#+begin_quote
+Tell me more about mindfulness.
+#+end_quote
+
+** Assistant
+
+*** deepseek/deepseek-r1:free (selected)
+
+#+begin_src markdown
+Mindfulness is present-moment awareness without judgment.
+#+end_src`;
+
+            compare(org_output, expected_orgmode);
+        }
+
+        function test_export_selected_indicator() {
+            prompts_tab.messages_model.clear();
+
+            prompts_tab.messages_model.append({
+                role: "user",
+                content: "Test selection",
+                content_html: "",
+                responses_json: "[]",
+                selected_ai_tab: 0
+            });
+
+            var multi_responses = [{
+                model_name: "model1:free",
+                status: "completed",
+                response: "First response",
+                request_id: "req1",
+                user_selected: true
+            }, {
+                model_name: "model2:free",
+                status: "completed",
+                response: "Second response",
+                request_id: "req2",
+                user_selected: false
+            }];
+
+            prompts_tab.messages_model.append({
+                role: "assistant",
+                content: "",
+                content_html: "",
+                responses_json: JSON.stringify(multi_responses),
+                selected_ai_tab: 0
+            });
+
+            var html_output = prompts_tab.chat_as_html();
+            verify(html_output.includes("model1:free (selected)"));
+            verify(html_output.includes("model2:free</h3>"));
+            verify(!html_output.includes("model2:free (selected)"));
+
+            var md_output = prompts_tab.chat_as_markdown();
+            verify(md_output.includes("model1:free (selected)"));
+            verify(!md_output.includes("model2:free (selected)"));
+
+            var org_output = prompts_tab.chat_as_orgmode();
+            verify(org_output.includes("model1:free (selected)"));
+            verify(!org_output.includes("model2:free (selected)"));
+        }
+
+        function test_export_empty_responses() {
+            prompts_tab.messages_model.clear();
+
+            prompts_tab.messages_model.append({
+                role: "user",
+                content: "Test question",
+                content_html: "",
+                responses_json: "[]",
+                selected_ai_tab: 0
+            });
+
+            prompts_tab.messages_model.append({
+                role: "assistant",
+                content: "",
+                content_html: "",
+                responses_json: "[]",
+                selected_ai_tab: 0
+            });
+
+            var html_output = prompts_tab.chat_as_html();
+            verify(html_output.includes("<h2>User</h2>"));
+            verify(html_output.includes("Test question"));
+        }
     }
 }

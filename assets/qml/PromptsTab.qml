@@ -639,6 +639,7 @@ Item {
                     }
 
                     Label {
+                        id: msg_role
                         text: message_item.role
                         font.bold: true
                         font.pointSize: root.vocab_font_point_size
