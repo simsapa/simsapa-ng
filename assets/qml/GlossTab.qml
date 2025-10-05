@@ -1295,7 +1295,9 @@ ${main_text}
                 for (var k = 0; k < paragraph.ai_translations.length; k++) {
                     var ai_trans = paragraph.ai_translations[k];
                     // Convert asterisk lists to dash lists
-                    var ai_trans_md = ai_trans.response.replace(/^\* /, '- ');
+                    var ai_trans_md = ai_trans.response.split('\n').map(function(line) {
+                        return line.replace(/^\* /, '- ');
+                    }).join('\n');
                     var model_display = ai_trans.model_name;
                     var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
                     ai_translations_section += `\n**** ${model_display}${selected_indicator}\n\n`;

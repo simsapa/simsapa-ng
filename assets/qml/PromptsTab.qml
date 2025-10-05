@@ -367,6 +367,10 @@ Item {
                 responses: []
             };
 
+            if (message.role === "user" && (!msg_data.content || msg_data.content === "")) {
+                continue;
+            }
+
             if (message.role === "assistant" && message.responses_json) {
                 try {
                     var responses = JSON.parse(message.responses_json);
@@ -501,7 +505,9 @@ Item {
                 for (var j = 0; j < msg.responses.length; j++) {
                     var resp = msg.responses[j];
                     // Convert asterisk lists to dash lists
-                    var resp_md = resp.response.replace(/^\* /, '- ');;
+                    var resp_md = resp.response.split('\n').map(function(line) {
+                        return line.replace(/^\* /, '- ');
+                    }).join('\n');
                     var selected_indicator = resp.is_selected ? " (selected)" : "";
                     out += `\n*** ${resp.model_name}${selected_indicator}\n\n`;
                     out += `#+begin_src markdown\n${resp_md}\n#+end_src\n`;
