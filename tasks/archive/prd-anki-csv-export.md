@@ -29,7 +29,7 @@ As a user studying Pāli vocabulary, I want to export my vocabulary gloss data a
 
 #### CSV Structure
 - **Two columns:** Front, Back
-- **Header row:** `Front,Back`
+- **No header row** - First row contains data, not column names
 - **Field separator:** Comma (`,`)
 - **Text qualifier:** Double quotes (`"`)
 - **Line separator:** `\n`
@@ -40,21 +40,20 @@ As a user studying Pāli vocabulary, I want to export my vocabulary gloss data a
 - Example: `"dhamma"` (from `"dhamma 1.01"`)
 
 #### Back Field (Meaning/Gloss)
-- Contains the dictionary definition/summary
-- Strip HTML tags from summary
+- Contains the dictionary definition/summary **with HTML formatting preserved**
+- HTML tags (like `<b>`, `<i>`) are kept for rich formatting in Anki
 - Escape special CSV characters:
   - Double quotes → `""`
   - Preserve commas and newlines within quoted fields
 
 #### CSV Output Example
 ```csv
-Front,Back
-"ariyasāvaka","noble disciple; follower of the noble ones"
-"vossaggārammaṇa","object of letting go; support for relinquishment"
-"karitvā","having done, having made"
-"samādhi","concentration; unification of mind; mental focus"
-"citta","mind, heart, consciousness"
-"ekaggata","one-pointedness; unification"
+"ariyasāvaka","<b>ariyasāvaka</b> <i>(masc)</i> noble disciple; follower of the noble ones"
+"vossaggārammaṇa","<b>vossaggārammaṇa</b> <i>(nt)</i> object of letting go; support for relinquishment"
+"karitvā","<i>(ind)</i> having done, having made"
+"samādhi","<b>samādhi</b> <i>(masc)</i> concentration; unification of mind; mental focus"
+"citta","<b>citta</b> <i>(nt)</i> mind, heart, consciousness"
+"ekaggata","<b>ekaggata</b> <i>(fem)</i> one-pointedness; unification"
 ```
 
 ### Data Flow
@@ -104,7 +103,6 @@ function paragraph_gloss_as_anki_csv(paragraph_index: int): string
 
 #### Helper Functions (Reuse Existing)
 - `gloss_export_data()` - Extract vocabulary data from paragraph model
-- `summary_strip_html(text: string)` - Remove HTML tags from summaries
 - `clean_stem(stem: string)` - Remove disambiguating numbers from stems
 
 #### CSV Formatting Logic
@@ -136,7 +134,7 @@ function format_csv_row(front: string, back: string): string {
 function gloss_as_anki_csv(): string {
     let gloss_data = root.gloss_export_data();
     
-    let csv_lines = ["Front,Back"];
+    let csv_lines = [];
     
     for (var i = 0; i < gloss_data.paragraphs.length; i++) {
         var paragraph = gloss_data.paragraphs[i];
@@ -144,7 +142,7 @@ function gloss_as_anki_csv(): string {
         for (var j = 0; j < paragraph.vocabulary.length; j++) {
             var vocab = paragraph.vocabulary[j];
             var front = root.clean_stem(vocab.word);
-            var back = root.summary_strip_html(vocab.summary);
+            var back = vocab.summary;
             
             csv_lines.push(root.format_csv_row(front, back));
         }
@@ -169,12 +167,12 @@ function paragraph_gloss_as_anki_csv(paragraph_index: int): string {
     }
     
     var paragraph = gloss_data.paragraphs[paragraph_index];
-    let csv_lines = ["Front,Back"];
+    let csv_lines = [];
     
     for (var j = 0; j < paragraph.vocabulary.length; j++) {
         var vocab = paragraph.vocabulary[j];
         var front = root.clean_stem(vocab.word);
-        var back = root.summary_strip_html(vocab.summary);
+        var back = vocab.summary;
         
         csv_lines.push(root.format_csv_row(front, back));
     }
@@ -378,9 +376,9 @@ function test_anki_csv_format_integrity() {
 2. ✅ "Anki CSV" option appears in copy_combobox ComboBox
 3. ✅ Global export creates valid CSV file with all vocabulary words
 4. ✅ Per-paragraph copy creates valid CSV with single paragraph vocabulary
-5. ✅ CSV has correct header: "Front,Back"
+5. ✅ CSV has no header row (first row contains data)
 6. ✅ Front field contains clean stem (no disambiguating numbers)
-7. ✅ Back field contains HTML-stripped summary
+7. ✅ Back field contains summary with HTML formatting preserved
 8. ✅ Special CSV characters are properly escaped
 9. ✅ Multi-paragraph export includes all vocabulary without duplicates
 10. ✅ CSV can be successfully imported into Anki
@@ -403,7 +401,7 @@ function test_anki_csv_format_integrity() {
 
 ## Dependencies
 
-- Existing functions: `gloss_export_data()`, `summary_strip_html()`, `clean_stem()`
+- Existing functions: `gloss_export_data()`, `clean_stem()`
 - Qt/QML clipboard functionality via TextEdit component
 - No new Rust bridge functions required
 - No new external dependencies
