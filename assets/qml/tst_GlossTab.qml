@@ -57,10 +57,10 @@ Item {
                         mockWordsData.push({
                             original_word: "karitvā",
                             results: [
-                                { uid: "karitva_1", word: "karitvā 1", summary: "having done, having made" },
-                                { uid: "karitva_2", word: "karitvā 2", summary: "alternative meaning" },
-                                { uid: "karitva_3", word: "karitvā 3", summary: "another alternative" },
-                                { uid: "karitva_4", word: "karitvā 4", summary: "test meaning for selection" }
+                                { uid: "karitva_1", word: "karitvā 1", summary: "<i>(ind)</i> having done, having made" },
+                                { uid: "karitva_2", word: "karitvā 2", summary: "<i>(ind)</i> alternative meaning" },
+                                { uid: "karitva_3", word: "karitvā 3", summary: "<i>(ind)</i> another alternative" },
+                                { uid: "karitva_4", word: "karitvā 4", summary: "<i>(ind)</i> test meaning for selection" }
                             ],
                             selected_index: 0,
                             stem: "karitvā 1",
@@ -71,9 +71,9 @@ Item {
                         mockWordsData.push({
                             original_word: "cittassa",
                             results: [
-                                { uid: "citta_1", word: "citta 1.1", summary: "mind, heart" },
-                                { uid: "citta_2", word: "citta 1.2", summary: "consciousness" },
-                                { uid: "citta_3", word: "citta 1.3", summary: "thought, thinking" }
+                                { uid: "citta_1", word: "citta 1.1", summary: "<b>citta 1.1</b> <i>(nt)</i> mind, heart" },
+                                { uid: "citta_2", word: "citta 1.2", summary: "<b>citta 1.2</b> <i>(nt)</i> consciousness" },
+                                { uid: "citta_3", word: "citta 1.3", summary: "<b>citta 1.3</b> <i>(nt)</i> thought, thinking" }
                             ],
                             selected_index: 0,
                             stem: "citta 1.1",
@@ -575,8 +575,8 @@ Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ
 <p><b>Dictionary definitions from DPD:</b></p>
 
 <table><tbody>
-<tr><td> <b>karitvā 1</b> </td><td> having done, having made </td></tr>
-<tr><td> <b>citta 1.1</b> </td><td> mind, heart </td></tr>
+<tr><td> <b>karitvā 1</b> </td><td> <i>(ind)</i> having done, having made </td></tr>
+<tr><td> <b>citta 1.1</b> </td><td> <b>citta 1.1</b> <i>(nt)</i> mind, heart </td></tr>
 
 </tbody></table>
 
@@ -591,7 +591,7 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
 <p><b>Dictionary definitions from DPD:</b></p>
 
 <table><tbody>
-<tr><td> <b>karitvā 1</b> </td><td> having done, having made </td></tr>
+<tr><td> <b>karitvā 1</b> </td><td> <i>(ind)</i> having done, having made </td></tr>
 
 </tbody></table>
 
@@ -628,8 +628,8 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
 
 |    |    |
 |----|----|
-| **karitvā 1** | having done, having made |
-| **citta 1.1** | mind, heart |
+| **karitvā 1** | *(ind)* having done, having made |
+| **citta 1.1** | **citta 1.1** *(nt)* mind, heart |
 
 ## Paragraph 2
 
@@ -641,7 +641,7 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
 
 |    |    |
 |----|----|
-| **karitvā 1** | having done, having made |`;
+| **karitvā 1** | *(ind)* having done, having made |`;
 
             compare(markdown_output, expected_markdown);
         }
@@ -675,8 +675,8 @@ Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ
 
 *Dictionary definitions from DPD:*
 
-| *karitvā 1* | having done, having made |
-| *citta 1.1* | mind, heart |
+| *karitvā 1* | /(ind)/ having done, having made |
+| *citta 1.1* | *citta 1.1* /(nt)/ mind, heart |
 
 ** Paragraph 2
 
@@ -688,7 +688,7 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
 
 *Dictionary definitions from DPD:*
 
-| *karitvā 1* | having done, having made |`;
+| *karitvā 1* | /(ind)/ having done, having made |`;
 
             compare(orgmode_output, expected_orgmode);
         }
@@ -806,6 +806,74 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
             verify(!md_output.includes("# Gloss Export"));
 
             verify(!org_output.includes("* Gloss Export"));
+        }
+
+        function test_escape_csv_field() {
+            compare(gloss_tab.escape_csv_field("simple text"), "simple text");
+            compare(gloss_tab.escape_csv_field("text, with comma"), '"text, with comma"');
+            compare(gloss_tab.escape_csv_field('text with "quotes"'), '"text with ""quotes"""');
+            compare(gloss_tab.escape_csv_field("text\nwith newline"), '"text\nwith newline"');
+            compare(gloss_tab.escape_csv_field('text, with "quotes" and\nnewline'), '"text, with ""quotes"" and\nnewline"');
+        }
+
+        function test_format_csv_row() {
+            compare(gloss_tab.format_csv_row("front", "back"), "front,back");
+            compare(gloss_tab.format_csv_row("front, comma", "back"), '"front, comma",back');
+            compare(gloss_tab.format_csv_row("front", 'back "quoted"'), 'front,"back ""quoted"""');
+            compare(gloss_tab.format_csv_row("front, comma", 'back "quoted"'), '"front, comma","back ""quoted"""');
+        }
+
+        function test_paragraph_gloss_as_anki_csv() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            processTextBackground(paragraph1);
+
+            compare(gloss_tab.paragraph_model.count, 1);
+
+            var csv_output = gloss_tab.paragraph_gloss_as_anki_csv(0);
+            verify(csv_output.includes("karitvā"));
+            verify(csv_output.includes("having done, having made"));
+            verify(csv_output.includes("citta"));
+            verify(csv_output.includes("<b>"));
+            verify(csv_output.includes("</b>"));
+
+            compare(gloss_tab.paragraph_gloss_as_anki_csv(-1), "");
+            compare(gloss_tab.paragraph_gloss_as_anki_csv(999), "");
+        }
+
+        function test_gloss_as_anki_csv() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            processTextBackground(paragraph1);
+
+            var csv = gloss_tab.gloss_as_anki_csv();
+            verify(csv.includes("karitvā"));
+            verify(csv.includes("citta"));
+            verify(csv.includes("having done, having made"));
+            verify(csv.includes("<b>"));
+            verify(csv.includes("</b>"));
+            verify(csv.includes("<i>"));
+            verify(csv.includes("</i>"));
+
+            var lines = csv.split("\n");
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === "") continue;
+                var fields = lines[i].split(",");
+                if (fields.length > 0 && fields[0].trim() !== "") {
+                    verify(!fields[0].match(/\s+\d+(\.\d+)?$/));
+                }
+            }
+        }
+
+        function test_anki_csv_format_integrity() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            processTextBackground(paragraph1);
+
+            var csv = gloss_tab.gloss_as_anki_csv();
+            var lines = csv.split("\n");
+
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === "") continue;
+                verify(lines[i].includes(","));
+            }
         }
     }
 }

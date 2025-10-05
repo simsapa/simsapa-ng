@@ -245,6 +245,10 @@ Item {
         } else if (export_btn.currentValue === "Org-Mode") {
             save_file_name = "gloss_export.org";
             save_content = root.gloss_as_orgmode();
+
+        } else if (export_btn.currentValue === "Anki CSV") {
+            save_file_name = "gloss_export.csv";
+            save_content = root.gloss_as_anki_csv();
         }
 
         let save_fn = function() {
@@ -1022,6 +1026,18 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return text;
     }
 
+    function escape_csv_field(field: string): string {
+        var escaped = field.replace(/"/g, '""');
+        if (escaped.includes(',') || escaped.includes('\n') || escaped.includes('"')) {
+            return '"' + escaped + '"';
+        }
+        return escaped;
+    }
+
+    function format_csv_row(front: string, back: string): string {
+        return escape_csv_field(front) + ',' + escape_csv_field(back);
+    }
+
     function format_paragraph_html(paragraph: var, paragraph_number: int): string {
         let para_text = "\n<blockquote>\n" + paragraph.text.replace(/\n/g, "<br>\n") + "\n</blockquote>\n";
 
@@ -1325,6 +1341,23 @@ ${main_text}
         return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
+    function gloss_as_anki_csv(): string {
+        let gloss_data = root.gloss_export_data();
+        let csv_lines = [];
+
+        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
+            var paragraph = gloss_data.paragraphs[i];
+            for (var j = 0; j < paragraph.vocabulary.length; j++) {
+                var vocab = paragraph.vocabulary[j];
+                var front = root.clean_stem(vocab.word);
+                var back = vocab.summary;
+                csv_lines.push(root.format_csv_row(front, back));
+            }
+        }
+
+        return csv_lines.join("\n");
+    }
+
     function paragraph_gloss_as_html(paragraph_index: int): string {
         if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
             logger.error("Invalid paragraph index:", paragraph_index);
@@ -1371,6 +1404,31 @@ ${main_text}
 
         var paragraph = gloss_data.paragraphs[paragraph_index];
         return root.format_paragraph_orgmode(paragraph, paragraph_index + 1).trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function paragraph_gloss_as_anki_csv(paragraph_index: int): string {
+        if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
+            logger.error("Invalid paragraph index:", paragraph_index);
+            return "";
+        }
+
+        let gloss_data = root.gloss_export_data();
+        if (paragraph_index >= gloss_data.paragraphs.length) {
+            logger.error("Paragraph index out of range:", paragraph_index);
+            return "";
+        }
+
+        var paragraph = gloss_data.paragraphs[paragraph_index];
+        let csv_lines = [];
+
+        for (var j = 0; j < paragraph.vocabulary.length; j++) {
+            var vocab = paragraph.vocabulary[j];
+            var front = root.clean_stem(vocab.word);
+            var back = vocab.summary;
+            csv_lines.push(root.format_csv_row(front, back));
+        }
+
+        return csv_lines.join("\n");
     }
 
     TabBar {
@@ -1470,7 +1528,7 @@ ${main_text}
 
                             ComboBox {
                                 id: export_btn
-                                model: ["Export As...", "HTML", "Markdown", "Org-Mode"]
+                                model: ["Export As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]
                                 enabled: paragraph_model.count > 0
                                 onCurrentIndexChanged: {
                                     if (export_btn.currentIndex !== 0) {
@@ -1761,7 +1819,7 @@ ${main_text}
 
                         ComboBox {
                             id: copy_combobox
-                            model: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
+                            model: ["Copy As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]
                             currentIndex: 0
                             Layout.alignment: Qt.AlignRight
 
@@ -1777,6 +1835,8 @@ ${main_text}
                                     content = root.paragraph_gloss_as_markdown(paragraph_item.index);
                                 } else if (currentIndex === 3) {
                                     content = root.paragraph_gloss_as_orgmode(paragraph_item.index);
+                                } else if (currentIndex === 4) {
+                                    content = root.paragraph_gloss_as_anki_csv(paragraph_item.index);
                                 }
 
                                 if (content.length > 0) {
