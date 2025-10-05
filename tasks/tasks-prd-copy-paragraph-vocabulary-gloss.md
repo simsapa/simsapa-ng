@@ -1,7 +1,7 @@
 ## Relevant Files
 
 - `assets/qml/GlossTab.qml` - Main file containing the gloss functionality and export features. Contains existing export functions (`gloss_as_html()`, `gloss_as_markdown()`, `gloss_as_orgmode()`) that need paragraph-level equivalents. Also contains the paragraph_gloss_component (line ~1644) where the new UI will be added.
-- `assets/qml/tst_GlossTab.qml` - Unit tests for GlossTab. New tests for paragraph-level export functions and clipboard functionality will be added here.
+- `assets/qml/tst_GlossTab.qml` - Unit tests for GlossTab. Modified to add baseline export tests (test_gloss_as_html_export, test_gloss_as_markdown_export, test_gloss_as_orgmode_export) with full output verification. Also fixed test_export_with_ai_translations to work with mock SuttaBridge.
 - `assets/qml/AboutDialog.qml` - Reference implementation for clipboard copy functionality using TextEdit component with `copy_text()` function.
 - `assets/qml/SuttaSearchWindow.qml` - Another reference for clipboard copy patterns and transient message display.
 
@@ -22,67 +22,75 @@
   - [x] 1.5 Ensure tests use the existing processTextBackground() helper and mock paragraph data
   - [x] 1.6 In the tests, capture the entire output of the export functions (what would be written to a file), not just checking particular strings with .include()
   - [x] 1.7 Run `make qml-test` to verify all baseline tests pass before refactoring
-- [ ] 2.0 Create paragraph-level export functions for HTML, Markdown, and Org-Mode formats
-  - [ ] 2.1 Read the existing gloss_as_html() function (line 1143) to understand the full export structure and identify which sections to extract for single paragraph export
-  - [ ] 2.2 Create paragraph_gloss_as_html(paragraph_index: int) function that processes only the paragraph at the given index
-  - [ ] 2.3 Ensure paragraph_gloss_as_html() includes: paragraph text blockquote, AI translations section (if exists), vocabulary section header, and formatted vocabulary table
-  - [ ] 2.4 Ensure paragraph_gloss_as_html() excludes: document headers, main text blockquotes, multiple paragraph loops
-  - [ ] 2.5 Read the existing gloss_as_markdown() function (line 1209) to understand the Markdown export structure
-  - [ ] 2.6 Create paragraph_gloss_as_markdown(paragraph_index: int) function following the same single-paragraph pattern
-  - [ ] 2.7 Ensure paragraph_gloss_as_markdown() uses summary_html_to_md() helper (line 1005) for converting HTML definitions
-  - [ ] 2.8 Read the existing gloss_as_orgmode() function (line 1269) to understand the Org-Mode export structure
-  - [ ] 2.9 Create paragraph_gloss_as_orgmode(paragraph_index: int) function following the same single-paragraph pattern
-  - [ ] 2.10 Ensure paragraph_gloss_as_orgmode() uses summary_html_to_orgmode() helper (line 1015) for converting HTML definitions
-  - [ ] 2.11 Verify all three new functions follow snake_case naming convention and return string type
-  - [ ] 2.12 Test each function manually with a sample paragraph index to verify output format matches expected structure from PRD
-- [ ] 3.0 Add clipboard copy UI components to paragraph_gloss_component
-  - [ ] 3.1 Locate the Text element "Dictionary definitions from DPD:" at line ~1644 in paragraph_gloss_component
-  - [ ] 3.2 Read AboutDialog.qml and SuttaSearchWindow.qml to understand the standard clipboard copy pattern with TextEdit component
-  - [ ] 3.3 Create an invisible TextEdit component with id: paragraph_clip to handle clipboard operations
-  - [ ] 3.4 Add a copy_text(content) function to paragraph_clip that uses selectAll() and copy() pattern from reference implementations
-  - [ ] 3.5 Wrap the existing "Dictionary definitions from DPD:" Text element in a RowLayout
-  - [ ] 3.6 Position the Text element on the left side of the RowLayout with Layout.alignment: Qt.AlignLeft
-  - [ ] 3.7 Add a ComboBox with id: copy_combobox on the right side with Layout.alignment: Qt.AlignRight
-  - [ ] 3.8 Set ComboBox model to: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
-  - [ ] 3.9 Set ComboBox initial currentIndex to 0 ("Copy As..." default state)
-  - [ ] 3.10 Add appropriate Layout.fillWidth and spacing properties to ensure proper layout
-- [ ] 4.0 Implement clipboard copy functionality with format selection
-  - [ ] 4.1 Add onCurrentIndexChanged handler to copy_combobox that processes index changes
-  - [ ] 4.2 Implement logic to ignore index 0 ("Copy As...") and only process indices 1-3
-  - [ ] 4.3 For index 1 (HTML): call paragraph_gloss_as_html(model.index) to get content and pass to paragraph_clip.copy_text()
-  - [ ] 4.4 For index 2 (Markdown): call paragraph_gloss_as_markdown(model.index) to get content and pass to paragraph_clip.copy_text()
-  - [ ] 4.5 For index 3 (Org-Mode): call paragraph_gloss_as_orgmode(model.index) to get content and pass to paragraph_clip.copy_text()
-  - [ ] 4.6 Add logic to reset copy_combobox.currentIndex to 0 after successful copy operation
-  - [ ] 4.7 Ensure the paragraph index from the repeater model is correctly passed to the export functions
-  - [ ] 4.8 Add error handling to gracefully handle invalid paragraph indices or empty data
-  - [ ] 4.9 Test clipboard copy functionality manually by copying each format and pasting into external applications
-- [ ] 5.0 Add "Copied!" success message with fade animation
-  - [ ] 5.1 Add a Text element with id: copied_message, text: "Copied!", positioned in the RowLayout between the header Text and ComboBox
-  - [ ] 5.2 Set copied_message initial properties: visible: false, opacity: 0, color: "#4CAF50" (green for success)
-  - [ ] 5.3 Match copied_message font size to the "Dictionary definitions from DPD:" header text
-  - [ ] 5.4 Add Layout.leftMargin spacing to create visual separation from adjacent elements
-  - [ ] 5.5 Create a SequentialAnimation with id: copied_message_animation to control the fade effect
-  - [ ] 5.6 Add PropertyAction to set copied_message.visible: true at animation start
-  - [ ] 5.7 Add NumberAnimation for fade in: opacity 0 → 1.0, duration 200ms
-  - [ ] 5.8 Add PauseAnimation for hold state: duration 1500ms
-  - [ ] 5.9 Add NumberAnimation for fade out: opacity 1.0 → 0, duration 300ms
-  - [ ] 5.10 Add PropertyAction to set copied_message.visible: false at animation end
-  - [ ] 5.11 Call copied_message_animation.start() in the copy_combobox.onCurrentIndexChanged handler after successful clipboard copy
-  - [ ] 5.12 Verify animation triggers only when actual copy occurs (not for index 0)
-  - [ ] 5.13 Test the animation visually to ensure smooth fade in/out and proper timing
-- [ ] 6.0 Create QML tests for new paragraph-level functions and clipboard functionality
-  - [ ] 6.1 Read existing test patterns in tst_GlossTab.qml to understand mock data structure for paragraphs
-  - [ ] 6.2 Create test_paragraph_gloss_as_html() that verifies single paragraph HTML export with vocabulary data
-  - [ ] 6.3 Ensure test_paragraph_gloss_as_html() includes assertions for: paragraph blockquote, vocabulary table structure, and proper HTML tags
-  - [ ] 6.4 Create test_paragraph_gloss_as_markdown() that verifies single paragraph Markdown export with vocabulary data
-  - [ ] 6.5 Ensure test_paragraph_gloss_as_markdown() includes assertions for: paragraph blockquote (>), vocabulary table syntax (|---|---|), and proper Markdown formatting
-  - [ ] 6.6 Create test_paragraph_gloss_as_orgmode() that verifies single paragraph Org-Mode export with vocabulary data
-  - [ ] 6.7 Ensure test_paragraph_gloss_as_orgmode() includes assertions for: #+begin_quote blocks, vocabulary table syntax, and proper Org-Mode formatting
-  - [ ] 6.8 Create test_paragraph_with_ai_translations_html() that verifies AI translations section is included when present
-  - [ ] 6.9 Create test_paragraph_with_ai_translations_markdown() that verifies AI translations formatting in Markdown
-  - [ ] 6.10 Create test_paragraph_with_ai_translations_orgmode() that verifies AI translations formatting in Org-Mode
-  - [ ] 6.11 Create test_paragraph_export_excludes_document_headers() that verifies single paragraph exports do NOT include full document headers
-  - [ ] 6.12 Create test_clipboard_copy_resets_combobox() that verifies ComboBox currentIndex resets to 0 after copy operation
-  - [ ] 6.13 Create test_copied_message_visibility() that verifies copied_message is initially invisible and becomes visible after copy
-  - [ ] 6.14 Run `make qml-test` to verify all new tests pass alongside existing baseline tests
-  - [ ] 6.15 Fix any test failures and ensure 100% pass rate before marking task complete
+- [x] 2.0 Extract paragraph formatting logic into helper functions
+  - [x] 2.1 Identify functionality in gloss_as_html() and paragraph_gloss_as_html() for processing paragraph data, to be used later with single paragraph formatting
+  - [x] 2.2 Identify functionality in gloss_as_markdown() and paragraph_gloss_as_markdown() for processing paragraph data, to be used later with single paragraph formatting
+  - [x] 2.3 Identify functionality in gloss_as_orgmode() and paragraph_gloss_as_orgmode() for processing paragraph data, to be used later with single paragraph formatting
+  - [x] 2.4 Extract paragraph formatting logic to helper function(s) to avoid code duplication
+  - [x] 2.5 Update both export functions to use the new helper function(s)
+  - [x] 2.6 Run `make qml-test` to verify all baseline tests still pass after refactoring
+  - [x] 2.7 Verify the refactored code maintains the same output format as before
+- [x] 3.0 Create paragraph-level export functions for HTML, Markdown, and Org-Mode formats, using the extracted helper formatting functions
+  - [x] 3.1 Read the existing gloss_as_html() function (line 1143) to understand the full export structure and identify which sections to extract for single paragraph export
+  - [x] 3.2 Create paragraph_gloss_as_html(paragraph_index: int) function that processes only the paragraph at the given index
+  - [x] 3.3 Ensure paragraph_gloss_as_html() includes: paragraph text blockquote, AI translations section (if exists), vocabulary section header, and formatted vocabulary table
+  - [x] 3.4 Ensure paragraph_gloss_as_html() excludes: document headers, main text blockquotes, multiple paragraph loops
+  - [x] 3.5 Read the existing gloss_as_markdown() function (line 1209) to understand the Markdown export structure
+  - [x] 3.6 Create paragraph_gloss_as_markdown(paragraph_index: int) function following the same single-paragraph pattern
+  - [x] 3.7 Ensure paragraph_gloss_as_markdown() uses summary_html_to_md() helper (line 1005) for converting HTML definitions
+  - [x] 3.8 Read the existing gloss_as_orgmode() function (line 1269) to understand the Org-Mode export structure
+  - [x] 3.9 Create paragraph_gloss_as_orgmode(paragraph_index: int) function following the same single-paragraph pattern
+  - [x] 3.10 Ensure paragraph_gloss_as_orgmode() uses summary_html_to_orgmode() helper (line 1015) for converting HTML definitions
+  - [x] 3.11 Verify all three new functions follow snake_case naming convention and return string type
+  - [x] 3.12 Test each function manually with a sample paragraph index to verify output format matches expected structure from PRD
+- [x] 4.0 Add clipboard copy UI components to paragraph_gloss_component
+  - [x] 4.1 Locate the Text element "Dictionary definitions from DPD:" at line ~1644 in paragraph_gloss_component
+  - [x] 4.2 Read AboutDialog.qml and SuttaSearchWindow.qml to understand the standard clipboard copy pattern with TextEdit component
+  - [x] 4.3 Create an invisible TextEdit component with id: paragraph_clip to handle clipboard operations
+  - [x] 4.4 Add a copy_text(content) function to paragraph_clip that uses selectAll() and copy() pattern from reference implementations
+  - [x] 4.5 Wrap the existing "Dictionary definitions from DPD:" Text element in a RowLayout
+  - [x] 4.6 Position the Text element on the left side of the RowLayout with Layout.alignment: Qt.AlignLeft
+  - [x] 4.7 Add a ComboBox with id: copy_combobox on the right side with Layout.alignment: Qt.AlignRight
+  - [x] 4.8 Set ComboBox model to: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
+  - [x] 4.9 Set ComboBox initial currentIndex to 0 ("Copy As..." default state)
+  - [x] 4.10 Add appropriate Layout.fillWidth and spacing properties to ensure proper layout
+- [x] 5.0 Implement clipboard copy functionality with format selection
+  - [x] 5.1 Add onCurrentIndexChanged handler to copy_combobox that processes index changes
+  - [x] 5.2 Implement logic to ignore index 0 ("Copy As...") and only process indices 1-3
+  - [x] 5.3 For index 1 (HTML): call paragraph_gloss_as_html(model.index) to get content and pass to paragraph_clip.copy_text()
+  - [x] 5.4 For index 2 (Markdown): call paragraph_gloss_as_markdown(model.index) to get content and pass to paragraph_clip.copy_text()
+  - [x] 5.5 For index 3 (Org-Mode): call paragraph_gloss_as_orgmode(model.index) to get content and pass to paragraph_clip.copy_text()
+  - [x] 5.6 Add logic to reset copy_combobox.currentIndex to 0 after successful copy operation
+  - [x] 5.7 Ensure the paragraph index from the repeater model is correctly passed to the export functions
+  - [x] 5.8 Add error handling to gracefully handle invalid paragraph indices or empty data
+  - [x] 5.9 Test clipboard copy functionality manually by copying each format and pasting into external applications
+- [ ] 6.0 Add "Copied!" success message with fade animation
+  - [ ] 6.1 Add a Text element with id: copied_message, text: "Copied!", positioned in the RowLayout between the header Text and ComboBox
+  - [ ] 6.2 Set copied_message initial properties: visible: false, opacity: 0, color: "#4CAF50" (green for success)
+  - [ ] 6.3 Match copied_message font size to the "Dictionary definitions from DPD:" header text
+  - [ ] 6.4 Add Layout.leftMargin spacing to create visual separation from adjacent elements
+  - [ ] 6.5 Create a SequentialAnimation with id: copied_message_animation to control the fade effect
+  - [ ] 6.6 Add PropertyAction to set copied_message.visible: true at animation start
+  - [ ] 6.7 Add NumberAnimation for fade in: opacity 0 → 1.0, duration 200ms
+  - [ ] 6.8 Add PauseAnimation for hold state: duration 1500ms
+  - [ ] 6.9 Add NumberAnimation for fade out: opacity 1.0 → 0, duration 300ms
+  - [ ] 6.10 Add PropertyAction to set copied_message.visible: false at animation end
+  - [ ] 6.11 Call copied_message_animation.start() in the copy_combobox.onCurrentIndexChanged handler after successful clipboard copy
+  - [ ] 6.12 Verify animation triggers only when actual copy occurs (not for index 0)
+  - [ ] 6.13 Test the animation visually to ensure smooth fade in/out and proper timing
+- [ ] 7.0 Create QML tests for new paragraph-level functions and clipboard functionality
+  - [ ] 7.1 Read existing test patterns in tst_GlossTab.qml to understand mock data structure for paragraphs
+  - [ ] 7.2 Create test_paragraph_gloss_as_html() that verifies single paragraph HTML export with vocabulary data
+  - [ ] 7.3 Ensure test_paragraph_gloss_as_html() includes assertions for: paragraph blockquote, vocabulary table structure, and proper HTML tags
+  - [ ] 7.4 Create test_paragraph_gloss_as_markdown() that verifies single paragraph Markdown export with vocabulary data
+  - [ ] 7.5 Ensure test_paragraph_gloss_as_markdown() includes assertions for: paragraph blockquote (>), vocabulary table syntax (|---|---|), and proper Markdown formatting
+  - [ ] 7.6 Create test_paragraph_gloss_as_orgmode() that verifies single paragraph Org-Mode export with vocabulary data
+  - [ ] 7.7 Ensure test_paragraph_gloss_as_orgmode() includes assertions for: #+begin_quote blocks, vocabulary table syntax, and proper Org-Mode formatting
+  - [ ] 7.8 Create test_paragraph_with_ai_translations_html() that verifies AI translations section is included when present
+  - [ ] 7.9 Create test_paragraph_with_ai_translations_markdown() that verifies AI translations formatting in Markdown
+  - [ ] 7.10 Create test_paragraph_with_ai_translations_orgmode() that verifies AI translations formatting in Org-Mode
+  - [ ] 7.11 Create test_paragraph_export_excludes_document_headers() that verifies single paragraph exports do NOT include full document headers
+  - [ ] 7.12 Create test_clipboard_copy_resets_combobox() that verifies ComboBox currentIndex resets to 0 after copy operation
+  - [ ] 7.13 Create test_copied_message_visibility() that verifies copied_message is initially invisible and becomes visible after copy
+  - [ ] 7.14 Run `make qml-test` to verify all new tests pass alongside existing baseline tests
+  - [ ] 7.15 Fix any test failures and ensure 100% pass rate before marking task complete

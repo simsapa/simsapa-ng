@@ -374,7 +374,7 @@ Item {
             verify(html_content.includes("Katamañca"));
             verify(html_content.includes("AI Translations"));
             verify(html_content.includes("deepseek/deepseek-r1-0528:free"));
-            verify(html_content.includes("concentration faculty"));
+            verify(html_content.includes("Hello Markdown"));
             verify(html_content.includes("(selected)"));
 
             // Test Markdown export
@@ -691,6 +691,44 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
 | *karitvā 1* | having done, having made |`;
 
             compare(orgmode_output, expected_orgmode);
+        }
+
+        function test_paragraph_gloss_functions_basic() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var html_para0 = gloss_tab.paragraph_gloss_as_html(0);
+            var md_para0 = gloss_tab.paragraph_gloss_as_markdown(0);
+            var org_para0 = gloss_tab.paragraph_gloss_as_orgmode(0);
+
+            verify(html_para0.length > 0);
+            verify(md_para0.length > 0);
+            verify(org_para0.length > 0);
+
+            verify(html_para0.includes("<h2>Paragraph 1</h2>"));
+            verify(html_para0.includes(paragraph1));
+            verify(html_para0.includes("karitvā 1"));
+            verify(!html_para0.includes("<!doctype html>"));
+            verify(!html_para0.includes("<h1>Gloss Export</h1>"));
+            verify(!html_para0.includes("</html>"));
+
+            verify(md_para0.includes("## Paragraph 1"));
+            verify(md_para0.includes("**karitvā 1**"));
+            verify(!md_para0.includes("# Gloss Export"));
+
+            verify(org_para0.includes("** Paragraph 1"));
+            verify(org_para0.includes("*karitvā 1*"));
+            verify(!org_para0.includes("* Gloss Export"));
+
+            var html_para1 = gloss_tab.paragraph_gloss_as_html(1);
+            verify(html_para1.includes("<h2>Paragraph 2</h2>"));
+            verify(html_para1.includes(paragraph2));
+            verify(!html_para1.includes("<!doctype html>"));
         }
     }
 }
