@@ -1176,10 +1176,11 @@ ${main_text}
                 ai_translations_section = "\n<h3>AI Translations</h3>\n";
                 for (var k = 0; k < paragraph.ai_translations.length; k++) {
                     var ai_trans = paragraph.ai_translations[k];
+                    var ai_trans_html = SuttaBridge.markdown_to_html(ai_trans.response || "");
                     var model_display = ai_trans.model_name;
                     var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
                     ai_translations_section += `<h4>${model_display}${selected_indicator}</h4>\n`;
-                    ai_translations_section += `<blockquote>${ai_trans.response.replace(/\n/g, "<br>\n")}</blockquote>\n`;
+                    ai_translations_section += `<blockquote>${ai_trans_html}</blockquote>\n`;
                 }
             }
 
@@ -1293,10 +1294,12 @@ ${main_text}
                 ai_translations_section = "\n*** AI Translations\n";
                 for (var k = 0; k < paragraph.ai_translations.length; k++) {
                     var ai_trans = paragraph.ai_translations[k];
+                    // Convert asterisk lists to dash lists
+                    var ai_trans_md = ai_trans.response.replace(/^\* /, '- ');
                     var model_display = ai_trans.model_name;
                     var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
                     ai_translations_section += `\n**** ${model_display}${selected_indicator}\n\n`;
-                    ai_translations_section += `#+begin_quote\n${ai_trans.response}\n#+end_quote\n`;
+                    ai_translations_section += `#+begin_src markdown\n${ai_trans_md}\n#+end_src\n`;
                 }
             }
 
