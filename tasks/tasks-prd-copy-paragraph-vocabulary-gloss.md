@@ -14,13 +14,14 @@
 
 ## Tasks
 
-- [ ] 1.0 Create QML tests for existing export functions (baseline tests)
-  - [ ] 1.1 Read existing test patterns in tst_GlossTab.qml to understand test structure and mock data setup
-  - [ ] 1.2 Create test_gloss_as_html_export() that verifies the full HTML export output with multiple paragraphs
-  - [ ] 1.3 Create test_gloss_as_markdown_export() that verifies the full Markdown export output with multiple paragraphs
-  - [ ] 1.4 Create test_gloss_as_orgmode_export() that verifies the full Org-Mode export output with multiple paragraphs
-  - [ ] 1.5 Ensure tests use the existing processTextBackground() helper and mock paragraph data
-  - [ ] 1.6 Run `make qml-test` to verify all baseline tests pass before refactoring
+- [x] 1.0 Create QML tests for existing export functions (baseline tests)
+  - [x] 1.1 Read existing test patterns in tst_GlossTab.qml to understand test structure and mock data setup
+  - [x] 1.2 Create test_gloss_as_html_export() that verifies the full HTML export output with multiple paragraphs
+  - [x] 1.3 Create test_gloss_as_markdown_export() that verifies the full Markdown export output with multiple paragraphs
+  - [x] 1.4 Create test_gloss_as_orgmode_export() that verifies the full Org-Mode export output with multiple paragraphs
+  - [x] 1.5 Ensure tests use the existing processTextBackground() helper and mock paragraph data
+  - [x] 1.6 In the tests, capture the entire output of the export functions (what would be written to a file), not just checking particular strings with .include()
+  - [x] 1.7 Run `make qml-test` to verify all baseline tests pass before refactoring
 - [ ] 2.0 Create paragraph-level export functions for HTML, Markdown, and Org-Mode formats
   - [ ] 2.1 Read the existing gloss_as_html() function (line 1143) to understand the full export structure and identify which sections to extract for single paragraph export
   - [ ] 2.2 Create paragraph_gloss_as_html(paragraph_index: int) function that processes only the paragraph at the given index

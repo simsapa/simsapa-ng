@@ -535,5 +535,162 @@ Item {
                 fail("requestWordSummary signal should exist and be connectable");
             }
         }
+
+        function test_gloss_as_html_export() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var html_output = gloss_tab.gloss_as_html();
+
+            var expected_html = `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Gloss Export</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Gloss Export</h1>
+
+<blockquote>
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.<br>
+<br>
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+</blockquote>
+
+<h2>Paragraph 1</h2>
+
+<blockquote>
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+</blockquote>
+
+<h3>Vocabulary</h3>
+
+<p><b>Dictionary definitions from DPD:</b></p>
+
+<table><tbody>
+<tr><td> <b>karitvā 1</b> </td><td> having done, having made </td></tr>
+<tr><td> <b>citta 1.1</b> </td><td> mind, heart </td></tr>
+
+</tbody></table>
+
+<h2>Paragraph 2</h2>
+
+<blockquote>
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+</blockquote>
+
+<h3>Vocabulary</h3>
+
+<p><b>Dictionary definitions from DPD:</b></p>
+
+<table><tbody>
+<tr><td> <b>karitvā 1</b> </td><td> having done, having made </td></tr>
+
+</tbody></table>
+
+</body>
+</html>`;
+
+            compare(html_output, expected_html);
+        }
+
+        function test_gloss_as_markdown_export() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var markdown_output = gloss_tab.gloss_as_markdown();
+
+            var expected_markdown = `# Gloss Export
+
+> Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+> 
+> Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+
+## Paragraph 1
+
+> Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+
+### Vocabulary
+
+**Dictionary definitions from DPD:**
+
+|    |    |
+|----|----|
+| **karitvā 1** | having done, having made |
+| **citta 1.1** | mind, heart |
+
+## Paragraph 2
+
+> Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+
+### Vocabulary
+
+**Dictionary definitions from DPD:**
+
+|    |    |
+|----|----|
+| **karitvā 1** | having done, having made |`;
+
+            compare(markdown_output, expected_markdown);
+        }
+
+        function test_gloss_as_orgmode_export() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var orgmode_output = gloss_tab.gloss_as_orgmode();
+
+            var expected_orgmode = `* Gloss Export
+
+#+begin_quote
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+#+end_quote
+
+** Paragraph 1
+
+#+begin_quote
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+#+end_quote
+
+*** Vocabulary
+
+*Dictionary definitions from DPD:*
+
+| *karitvā 1* | having done, having made |
+| *citta 1.1* | mind, heart |
+
+** Paragraph 2
+
+#+begin_quote
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+#+end_quote
+
+*** Vocabulary
+
+*Dictionary definitions from DPD:*
+
+| *karitvā 1* | having done, having made |`;
+
+            compare(orgmode_output, expected_orgmode);
+        }
     }
 }
