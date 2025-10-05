@@ -339,25 +339,183 @@ Item {
     }
 
     MessageDialog {
+        id: msg_dialog_cancel_ok
+        buttons: MessageDialog.Cancel | MessageDialog.Ok
+        property var accept_fn: {}
+        onAccepted: accept_fn() // qmllint disable use-proper-function
+    }
+
+    MessageDialog {
         id: no_models_dialog
         title: "No AI Models"
         text: "There are no enabled models. See Prompts menu > AI Models"
         buttons: MessageDialog.Ok
     }
 
-    function prompt_as_html(): string {
-        // FIXME implement html export
-        return "<h1>Prompt Messages</h1>";
+    function chat_export_data(): var {
+        let chat_data = {
+            messages: []
+        };
+
+        for (var i = 0; i < messages_model.count; i++) {
+            var message = messages_model.get(i);
+            if (!message) continue;
+
+            var msg_data = {
+                role: message.role,
+                content: message.content ? message.content.trim() : "",
+                responses: []
+            };
+
+            if (message.role === "user" && (!msg_data.content || msg_data.content === "")) {
+                continue;
+            }
+
+            if (message.role === "assistant" && message.responses_json) {
+                try {
+                    var responses = JSON.parse(message.responses_json);
+                    var selected_tab_index = message.selected_ai_tab || 0;
+                    var selected_response = null;
+                    var other_responses = [];
+
+                    for (var j = 0; j < responses.length; j++) {
+                        var resp = responses[j];
+                        if (resp.status === "completed" && resp.response && resp.response.trim()) {
+                            var isSelected = (j === selected_tab_index);
+                            if (isSelected) {
+                                selected_response = {
+                                    model_name: resp.model_name,
+                                    response: resp.response,
+                                    is_selected: true
+                                };
+                            } else {
+                                other_responses.push({
+                                    model_name: resp.model_name,
+                                    response: resp.response,
+                                    is_selected: false
+                                });
+                            }
+                        }
+                    }
+
+                    if (selected_response) {
+                        msg_data.responses.push(selected_response);
+                    }
+                    msg_data.responses = msg_data.responses.concat(other_responses);
+
+                } catch (e) {
+                    logger.error("Failed to parse responses_json:", e);
+                }
+            }
+
+            chat_data.messages.push(msg_data);
+        }
+
+        return chat_data;
     }
 
-    function prompt_as_markdown(): string {
-        // FIXME implement markdown export
-        return "# Prompt Messages";
+    function chat_as_html(): string {
+        let chat_data = root.chat_export_data();
+
+        let out = `
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Chat Export</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Chat Export</h1>
+`;
+
+        for (var i = 0; i < chat_data.messages.length; i++) {
+            var msg = chat_data.messages[i];
+            
+            if (msg.role === "system") {
+                out += `\n<h2>System</h2>\n`;
+                out += `<blockquote>${msg.content.replace(/\n/g, "<br>\n")}</blockquote>\n`;
+            } else if (msg.role === "user") {
+                out += `\n<h2>User</h2>\n`;
+                out += `<blockquote>${msg.content.replace(/\n/g, "<br>\n")}</blockquote>\n`;
+            } else if (msg.role === "assistant") {
+                out += `\n<h2>Assistant</h2>\n`;
+                
+                for (var j = 0; j < msg.responses.length; j++) {
+                    var resp = msg.responses[j];
+                    var resp_html = SuttaBridge.markdown_to_html(resp.response || "");
+                    var selected_indicator = resp.is_selected ? " (selected)" : "";
+                    out += `<h3>${resp.model_name}${selected_indicator}</h3>\n`;
+                    out += `<blockquote>${resp_html}</blockquote>\n`;
+                }
+            }
+        }
+
+        out += "\n</body>\n</html>";
+        return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
-    function prompt_as_orgmode(): string {
-        // FIXME implement orgmode export
-        return "* Prompt Messages";
+    function chat_as_markdown(): string {
+        let chat_data = root.chat_export_data();
+
+        let out = `# Chat Export\n`;
+
+        for (var i = 0; i < chat_data.messages.length; i++) {
+            var msg = chat_data.messages[i];
+            
+            if (msg.role === "system") {
+                out += `\n## System\n\n`;
+                out += `> ${msg.content.replace(/\n/g, "\n> ")}\n`;
+            } else if (msg.role === "user") {
+                out += `\n## User\n\n`;
+                out += `> ${msg.content.replace(/\n/g, "\n> ")}\n`;
+            } else if (msg.role === "assistant") {
+                out += `\n## Assistant\n`;
+                
+                for (var j = 0; j < msg.responses.length; j++) {
+                    var resp = msg.responses[j];
+                    var selected_indicator = resp.is_selected ? " (selected)" : "";
+                    out += `\n### ${resp.model_name}${selected_indicator}\n\n`;
+                    out += `> ${resp.response.replace(/\n/g, "\n> ")}\n`;
+                }
+            }
+        }
+
+        return out.trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function chat_as_orgmode(): string {
+        let chat_data = root.chat_export_data();
+
+        let out = `* Chat Export\n`;
+
+        for (var i = 0; i < chat_data.messages.length; i++) {
+            var msg = chat_data.messages[i];
+            
+            if (msg.role === "system") {
+                out += `\n** System\n\n`;
+                out += `#+begin_quote\n${msg.content}\n#+end_quote\n`;
+            } else if (msg.role === "user") {
+                out += `\n** User\n\n`;
+                out += `#+begin_quote\n${msg.content}\n#+end_quote\n`;
+            } else if (msg.role === "assistant") {
+                out += `\n** Assistant\n`;
+                
+                for (var j = 0; j < msg.responses.length; j++) {
+                    var resp = msg.responses[j];
+                    // Convert asterisk lists to dash lists
+                    var resp_md = resp.response.split('\n').map(function(line) {
+                        return line.replace(/^\* /, '- ');
+                    }).join('\n');
+                    var selected_indicator = resp.is_selected ? " (selected)" : "";
+                    out += `\n*** ${resp.model_name}${selected_indicator}\n\n`;
+                    out += `#+begin_src markdown\n${resp_md}\n#+end_src\n`;
+                }
+            }
+        }
+
+        return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
     TabBar {
