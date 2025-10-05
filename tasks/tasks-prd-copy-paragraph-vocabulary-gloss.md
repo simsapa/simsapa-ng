@@ -78,19 +78,19 @@
   - [x] 6.11 Call copied_message_animation.start() in the copy_combobox.onCurrentIndexChanged handler after successful clipboard copy
   - [x] 6.12 Verify animation triggers only when actual copy occurs (not for index 0)
   - [x] 6.13 Test the animation visually to ensure smooth fade in/out and proper timing
-- [ ] 7.0 Create QML tests for new paragraph-level functions and clipboard functionality
-  - [ ] 7.1 Read existing test patterns in tst_GlossTab.qml to understand mock data structure for paragraphs
-  - [ ] 7.2 Create test_paragraph_gloss_as_html() that verifies single paragraph HTML export with vocabulary data
-  - [ ] 7.3 Ensure test_paragraph_gloss_as_html() includes assertions for: paragraph blockquote, vocabulary table structure, and proper HTML tags
-  - [ ] 7.4 Create test_paragraph_gloss_as_markdown() that verifies single paragraph Markdown export with vocabulary data
-  - [ ] 7.5 Ensure test_paragraph_gloss_as_markdown() includes assertions for: paragraph blockquote (>), vocabulary table syntax (|---|---|), and proper Markdown formatting
-  - [ ] 7.6 Create test_paragraph_gloss_as_orgmode() that verifies single paragraph Org-Mode export with vocabulary data
-  - [ ] 7.7 Ensure test_paragraph_gloss_as_orgmode() includes assertions for: #+begin_quote blocks, vocabulary table syntax, and proper Org-Mode formatting
-  - [ ] 7.8 Create test_paragraph_with_ai_translations_html() that verifies AI translations section is included when present
-  - [ ] 7.9 Create test_paragraph_with_ai_translations_markdown() that verifies AI translations formatting in Markdown
-  - [ ] 7.10 Create test_paragraph_with_ai_translations_orgmode() that verifies AI translations formatting in Org-Mode
-  - [ ] 7.11 Create test_paragraph_export_excludes_document_headers() that verifies single paragraph exports do NOT include full document headers
-  - [ ] 7.12 Create test_clipboard_copy_resets_combobox() that verifies ComboBox currentIndex resets to 0 after copy operation
-  - [ ] 7.13 Create test_copied_message_visibility() that verifies copied_message is initially invisible and becomes visible after copy
-  - [ ] 7.14 Run `make qml-test` to verify all new tests pass alongside existing baseline tests
-  - [ ] 7.15 Fix any test failures and ensure 100% pass rate before marking task complete
+- [x] 7.0 Create QML tests for new paragraph-level functions and clipboard functionality
+  - [x] 7.1 Read existing test patterns in tst_GlossTab.qml to understand mock data structure for paragraphs
+  - [x] 7.2 Create test_paragraph_gloss_as_html() that verifies single paragraph HTML export with vocabulary data
+  - [x] 7.3 Ensure test_paragraph_gloss_as_html() includes assertions for: paragraph blockquote, vocabulary table structure, and proper HTML tags
+  - [x] 7.4 Create test_paragraph_gloss_as_markdown() that verifies single paragraph Markdown export with vocabulary data
+  - [x] 7.5 Ensure test_paragraph_gloss_as_markdown() includes assertions for: paragraph blockquote (>), vocabulary table syntax (|---|---|), and proper Markdown formatting
+  - [x] 7.6 Create test_paragraph_gloss_as_orgmode() that verifies single paragraph Org-Mode export with vocabulary data
+  - [x] 7.7 Ensure test_paragraph_gloss_as_orgmode() includes assertions for: #+begin_quote blocks, vocabulary table syntax, and proper Org-Mode formatting
+  - [x] 7.8 Create test_paragraph_with_ai_translations_html() that verifies AI translations section is included when present
+  - [x] 7.9 Create test_paragraph_with_ai_translations_markdown() that verifies AI translations formatting in Markdown
+  - [x] 7.10 Create test_paragraph_with_ai_translations_orgmode() that verifies AI translations formatting in Org-Mode
+  - [x] 7.11 Create test_paragraph_export_excludes_document_headers() that verifies single paragraph exports do NOT include full document headers
+  - [x] 7.12 Create test_clipboard_copy_resets_combobox() that verifies ComboBox currentIndex resets to 0 after copy operation
+  - [x] 7.13 Create test_copied_message_visibility() that verifies copied_message is initially invisible and becomes visible after copy
+  - [x] 7.14 Run `make qml-test` to verify all new tests pass alongside existing baseline tests
+  - [x] 7.15 Fix any test failures and ensure 100% pass rate before marking task complete
