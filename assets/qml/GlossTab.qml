@@ -1713,6 +1713,52 @@ ${main_text}
 
                         Item { Layout.fillWidth: true }
 
+                        Text {
+                            id: copied_message
+                            text: "Copied!"
+                            font.pointSize: root.vocab_font_point_size
+                            color: "#4CAF50"
+                            visible: false
+                            opacity: 0
+                            Layout.leftMargin: 10
+                        }
+
+                        SequentialAnimation {
+                            id: copied_message_animation
+
+                            PropertyAction {
+                                target: copied_message
+                                property: "visible"
+                                value: true
+                            }
+
+                            NumberAnimation {
+                                target: copied_message
+                                property: "opacity"
+                                from: 0
+                                to: 1.0
+                                duration: 200
+                            }
+
+                            PauseAnimation {
+                                duration: 1500
+                            }
+
+                            NumberAnimation {
+                                target: copied_message
+                                property: "opacity"
+                                from: 1.0
+                                to: 0
+                                duration: 300
+                            }
+
+                            PropertyAction {
+                                target: copied_message
+                                property: "visible"
+                                value: false
+                            }
+                        }
+
                         ComboBox {
                             id: copy_combobox
                             model: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
@@ -1735,6 +1781,7 @@ ${main_text}
 
                                 if (content.length > 0) {
                                     paragraph_clip.copy_text(content);
+                                    copied_message_animation.start();
                                 }
 
                                 copy_combobox.currentIndex = 0;

@@ -64,20 +64,20 @@
   - [x] 5.7 Ensure the paragraph index from the repeater model is correctly passed to the export functions
   - [x] 5.8 Add error handling to gracefully handle invalid paragraph indices or empty data
   - [x] 5.9 Test clipboard copy functionality manually by copying each format and pasting into external applications
-- [ ] 6.0 Add "Copied!" success message with fade animation
-  - [ ] 6.1 Add a Text element with id: copied_message, text: "Copied!", positioned in the RowLayout between the header Text and ComboBox
-  - [ ] 6.2 Set copied_message initial properties: visible: false, opacity: 0, color: "#4CAF50" (green for success)
-  - [ ] 6.3 Match copied_message font size to the "Dictionary definitions from DPD:" header text
-  - [ ] 6.4 Add Layout.leftMargin spacing to create visual separation from adjacent elements
-  - [ ] 6.5 Create a SequentialAnimation with id: copied_message_animation to control the fade effect
-  - [ ] 6.6 Add PropertyAction to set copied_message.visible: true at animation start
-  - [ ] 6.7 Add NumberAnimation for fade in: opacity 0 → 1.0, duration 200ms
-  - [ ] 6.8 Add PauseAnimation for hold state: duration 1500ms
-  - [ ] 6.9 Add NumberAnimation for fade out: opacity 1.0 → 0, duration 300ms
-  - [ ] 6.10 Add PropertyAction to set copied_message.visible: false at animation end
-  - [ ] 6.11 Call copied_message_animation.start() in the copy_combobox.onCurrentIndexChanged handler after successful clipboard copy
-  - [ ] 6.12 Verify animation triggers only when actual copy occurs (not for index 0)
-  - [ ] 6.13 Test the animation visually to ensure smooth fade in/out and proper timing
+- [x] 6.0 Add "Copied!" success message with fade animation
+  - [x] 6.1 Add a Text element with id: copied_message, text: "Copied!", positioned in the RowLayout between the header Text and ComboBox
+  - [x] 6.2 Set copied_message initial properties: visible: false, opacity: 0, color: "#4CAF50" (green for success)
+  - [x] 6.3 Match copied_message font size to the "Dictionary definitions from DPD:" header text
+  - [x] 6.4 Add Layout.leftMargin spacing to create visual separation from adjacent elements
+  - [x] 6.5 Create a SequentialAnimation with id: copied_message_animation to control the fade effect
+  - [x] 6.6 Add PropertyAction to set copied_message.visible: true at animation start
+  - [x] 6.7 Add NumberAnimation for fade in: opacity 0 → 1.0, duration 200ms
+  - [x] 6.8 Add PauseAnimation for hold state: duration 1500ms
+  - [x] 6.9 Add NumberAnimation for fade out: opacity 1.0 → 0, duration 300ms
+  - [x] 6.10 Add PropertyAction to set copied_message.visible: false at animation end
+  - [x] 6.11 Call copied_message_animation.start() in the copy_combobox.onCurrentIndexChanged handler after successful clipboard copy
+  - [x] 6.12 Verify animation triggers only when actual copy occurs (not for index 0)
+  - [x] 6.13 Test the animation visually to ensure smooth fade in/out and proper timing
 - [ ] 7.0 Create QML tests for new paragraph-level functions and clipboard functionality
   - [ ] 7.1 Read existing test patterns in tst_GlossTab.qml to understand mock data structure for paragraphs
   - [ ] 7.2 Create test_paragraph_gloss_as_html() that verifies single paragraph HTML export with vocabulary data
