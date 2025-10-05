@@ -1022,6 +1022,124 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return text;
     }
 
+    function format_paragraph_html(paragraph: var, paragraph_number: int): string {
+        let para_text = "\n<blockquote>\n" + paragraph.text.replace(/\n/g, "<br>\n") + "\n</blockquote>\n";
+
+        var table_rows = "";
+        for (var j = 0; j < paragraph.vocabulary.length; j++) {
+            var res = paragraph.vocabulary[j];
+            table_rows += `<tr><td> <b>${res.word}</b> </td><td> ${res.summary} </td></tr>\n`;
+        }
+
+        var ai_translations_section = "";
+        if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
+            ai_translations_section = "\n<h3>AI Translations</h3>\n";
+            for (var k = 0; k < paragraph.ai_translations.length; k++) {
+                var ai_trans = paragraph.ai_translations[k];
+                var ai_trans_html = SuttaBridge.markdown_to_html(ai_trans.response || "");
+                var model_display = ai_trans.model_name;
+                var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
+                ai_translations_section += `<h4>${model_display}${selected_indicator}</h4>\n`;
+                ai_translations_section += `<blockquote>${ai_trans_html}</blockquote>\n`;
+            }
+        }
+
+        return `
+<h2>Paragraph ${paragraph_number}</h2>
+
+${para_text}
+
+${ai_translations_section}
+
+<h3>Vocabulary</h3>
+
+<p><b>Dictionary definitions from DPD:</b></p>
+
+<table><tbody>
+${table_rows}
+</tbody></table>
+`;
+    }
+
+    function format_paragraph_markdown(paragraph: var, paragraph_number: int): string {
+        var para_text = "\n> " + paragraph.text.replace(/\n/g, "\n> ");
+
+        var table_rows = "";
+        for (var j = 0; j < paragraph.vocabulary.length; j++) {
+            var res = paragraph.vocabulary[j];
+            var summary = root.summary_html_to_md(res.summary);
+            table_rows += `| **${res.word}** | ${summary} |\n`;
+        }
+
+        var ai_translations_section = "";
+        if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
+            ai_translations_section = "\n### AI Translations\n";
+            for (var k = 0; k < paragraph.ai_translations.length; k++) {
+                var ai_trans = paragraph.ai_translations[k];
+                var model_display = ai_trans.model_name;
+                var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
+                ai_translations_section += `\n#### ${model_display}${selected_indicator}\n\n`;
+                ai_translations_section += `> ${ai_trans.response.replace(/\n/g, "\n> ")}\n`;
+            }
+        }
+
+        return `
+## Paragraph ${paragraph_number}
+
+${para_text}
+
+${ai_translations_section}
+
+### Vocabulary
+
+**Dictionary definitions from DPD:**
+
+|    |    |
+|----|----|
+${table_rows}
+`;
+    }
+
+    function format_paragraph_orgmode(paragraph: var, paragraph_number: int): string {
+        let para_text = "\n#+begin_quote\n" + paragraph.text + "\n#+end_quote\n";
+
+        var table_rows = "";
+        for (var j = 0; j < paragraph.vocabulary.length; j++) {
+            var res = paragraph.vocabulary[j];
+            var summary = root.summary_html_to_orgmode(res.summary);
+            table_rows += `| *${res.word}* | ${summary} |\n`;
+        }
+
+        var ai_translations_section = "";
+        if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
+            ai_translations_section = "\n*** AI Translations\n";
+            for (var k = 0; k < paragraph.ai_translations.length; k++) {
+                var ai_trans = paragraph.ai_translations[k];
+                var ai_trans_md = ai_trans.response.split('\n').map(function(line) {
+                    return line.replace(/^\* /, '- ');
+                }).join('\n');
+                var model_display = ai_trans.model_name;
+                var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
+                ai_translations_section += `\n**** ${model_display}${selected_indicator}\n\n`;
+                ai_translations_section += `#+begin_src markdown\n${ai_trans_md}\n#+end_src\n`;
+            }
+        }
+
+        return `
+** Paragraph ${paragraph_number}
+
+${para_text}
+
+${ai_translations_section}
+
+*** Vocabulary
+
+*Dictionary definitions from DPD:*
+
+${table_rows}
+`;
+    }
+
     function gloss_export_data(): var {
         // paragraph_model_export:
         // {
@@ -1162,44 +1280,7 @@ ${main_text}
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
-            let para_text = "\n<blockquote>\n" + paragraph.text.replace(/\n/g, "<br>\n") + "\n</blockquote>\n";
-
-            var table_rows = "";
-            for (var j = 0; j < paragraph.vocabulary.length; j++) {
-                var res = paragraph.vocabulary[j];
-                table_rows += `<tr><td> <b>${res.word}</b> </td><td> ${res.summary} </td></tr>\n`;
-            }
-
-            // Add AI translations section if they exist
-            var ai_translations_section = "";
-            if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
-                ai_translations_section = "\n<h3>AI Translations</h3>\n";
-                for (var k = 0; k < paragraph.ai_translations.length; k++) {
-                    var ai_trans = paragraph.ai_translations[k];
-                    var ai_trans_html = SuttaBridge.markdown_to_html(ai_trans.response || "");
-                    var model_display = ai_trans.model_name;
-                    var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
-                    ai_translations_section += `<h4>${model_display}${selected_indicator}</h4>\n`;
-                    ai_translations_section += `<blockquote>${ai_trans_html}</blockquote>\n`;
-                }
-            }
-
-            out += `
-<h2>Paragraph ${i+1}</h2>
-
-${para_text}
-
-${ai_translations_section}
-
-<h3>Vocabulary</h3>
-
-<p><b>Dictionary definitions from DPD:</b></p>
-
-<table><tbody>
-${table_rows}
-</tbody></table>
-`;
-
+            out += root.format_paragraph_html(paragraph, i+1);
         }
 
         out += "\n</body>\n</html>";
@@ -1209,7 +1290,6 @@ ${table_rows}
     function gloss_as_markdown(): string {
         let gloss_data = root.gloss_export_data();
 
-        // The main gloss text in a quote
         let main_text = "\n> " + gloss_data.text.replace(/\n/g, "\n> ");
 
         let out = `
@@ -1220,49 +1300,9 @@ ${main_text}
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
-            // Add each paragraph text in a quote
-            var para_text = "\n> " + paragraph.text.replace(/\n/g, "\n> ");
-
-            var table_rows = "";
-            for (var j = 0; j < paragraph.vocabulary.length; j++) {
-                var res = paragraph.vocabulary[j];
-                var summary = root.summary_html_to_md(res.summary);
-                table_rows += `| **${res.word}** | ${summary} |\n`;
-            }
-
-            // Add AI translations section if they exist
-            var ai_translations_section = "";
-            if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
-                ai_translations_section = "\n### AI Translations\n";
-                for (var k = 0; k < paragraph.ai_translations.length; k++) {
-                    var ai_trans = paragraph.ai_translations[k];
-                    var model_display = ai_trans.model_name;
-                    var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
-                    ai_translations_section += `\n#### ${model_display}${selected_indicator}\n\n`;
-                    ai_translations_section += `> ${ai_trans.response.replace(/\n/g, "\n> ")}\n`;
-                }
-            }
-
-            // Add the table header for syntax recognition, but leave empty to save space when rendered.
-            out += `
-## Paragraph ${i+1}
-
-${para_text}
-
-${ai_translations_section}
-
-### Vocabulary
-
-**Dictionary definitions from DPD:**
-
-|    |    |
-|----|----|
-${table_rows}
-`;
-
+            out += root.format_paragraph_markdown(paragraph, i+1);
         }
 
-        // only two new lines for paragraph breaks
         return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
@@ -1279,49 +1319,58 @@ ${main_text}
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
-            let para_text = "\n#+begin_quote\n" + paragraph.text + "\n#+end_quote\n";
-
-            var table_rows = "";
-            for (var j = 0; j < paragraph.vocabulary.length; j++) {
-                var res = paragraph.vocabulary[j];
-                var summary = root.summary_html_to_orgmode(res.summary);
-                table_rows += `| *${res.word}* | ${summary} |\n`;
-            }
-
-            // Add AI translations section if they exist
-            var ai_translations_section = "";
-            if (paragraph.ai_translations && paragraph.ai_translations.length > 0) {
-                ai_translations_section = "\n*** AI Translations\n";
-                for (var k = 0; k < paragraph.ai_translations.length; k++) {
-                    var ai_trans = paragraph.ai_translations[k];
-                    // Convert asterisk lists to dash lists
-                    var ai_trans_md = ai_trans.response.split('\n').map(function(line) {
-                        return line.replace(/^\* /, '- ');
-                    }).join('\n');
-                    var model_display = ai_trans.model_name;
-                    var selected_indicator = ai_trans.is_selected ? " (selected)" : "";
-                    ai_translations_section += `\n**** ${model_display}${selected_indicator}\n\n`;
-                    ai_translations_section += `#+begin_src markdown\n${ai_trans_md}\n#+end_src\n`;
-                }
-            }
-
-            out += `
-** Paragraph ${i+1}
-
-${para_text}
-
-${ai_translations_section}
-
-*** Vocabulary
-
-*Dictionary definitions from DPD:*
-
-${table_rows}
-`;
-
+            out += root.format_paragraph_orgmode(paragraph, i+1);
         }
 
         return out.trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function paragraph_gloss_as_html(paragraph_index: int): string {
+        if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
+            logger.error("Invalid paragraph index:", paragraph_index);
+            return "";
+        }
+
+        let gloss_data = root.gloss_export_data();
+        if (paragraph_index >= gloss_data.paragraphs.length) {
+            logger.error("Paragraph index out of range:", paragraph_index);
+            return "";
+        }
+
+        var paragraph = gloss_data.paragraphs[paragraph_index];
+        return root.format_paragraph_html(paragraph, paragraph_index + 1).trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function paragraph_gloss_as_markdown(paragraph_index: int): string {
+        if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
+            logger.error("Invalid paragraph index:", paragraph_index);
+            return "";
+        }
+
+        let gloss_data = root.gloss_export_data();
+        if (paragraph_index >= gloss_data.paragraphs.length) {
+            logger.error("Paragraph index out of range:", paragraph_index);
+            return "";
+        }
+
+        var paragraph = gloss_data.paragraphs[paragraph_index];
+        return root.format_paragraph_markdown(paragraph, paragraph_index + 1).trim().replace(/\n\n\n+/g, "\n\n");
+    }
+
+    function paragraph_gloss_as_orgmode(paragraph_index: int): string {
+        if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
+            logger.error("Invalid paragraph index:", paragraph_index);
+            return "";
+        }
+
+        let gloss_data = root.gloss_export_data();
+        if (paragraph_index >= gloss_data.paragraphs.length) {
+            logger.error("Paragraph index out of range:", paragraph_index);
+            return "";
+        }
+
+        var paragraph = gloss_data.paragraphs[paragraph_index];
+        return root.format_paragraph_orgmode(paragraph, paragraph_index + 1).trim().replace(/\n\n\n+/g, "\n\n");
     }
 
     TabBar {
@@ -1641,10 +1690,103 @@ ${table_rows}
                         }
                     }
 
-                    Text {
-                        text: "Dictionary definitions from DPD:"
-                        font.bold: true
-                        font.pointSize: root.vocab_font_point_size
+                    TextEdit {
+                        id: paragraph_clip
+                        visible: false
+                        function copy_text(text) {
+                            paragraph_clip.text = text;
+                            paragraph_clip.selectAll();
+                            paragraph_clip.copy();
+                        }
+                    }
+
+                    RowLayout {
+                        spacing: 10
+                        Layout.fillWidth: true
+
+                        Text {
+                            text: "Dictionary definitions from DPD:"
+                            font.bold: true
+                            font.pointSize: root.vocab_font_point_size
+                            Layout.alignment: Qt.AlignLeft
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            id: copied_message
+                            text: "Copied!"
+                            font.pointSize: root.vocab_font_point_size
+                            color: "#4CAF50"
+                            visible: false
+                            opacity: 0
+                            Layout.leftMargin: 10
+                        }
+
+                        SequentialAnimation {
+                            id: copied_message_animation
+
+                            PropertyAction {
+                                target: copied_message
+                                property: "visible"
+                                value: true
+                            }
+
+                            NumberAnimation {
+                                target: copied_message
+                                property: "opacity"
+                                from: 0
+                                to: 1.0
+                                duration: 200
+                            }
+
+                            PauseAnimation {
+                                duration: 1500
+                            }
+
+                            NumberAnimation {
+                                target: copied_message
+                                property: "opacity"
+                                from: 1.0
+                                to: 0
+                                duration: 300
+                            }
+
+                            PropertyAction {
+                                target: copied_message
+                                property: "visible"
+                                value: false
+                            }
+                        }
+
+                        ComboBox {
+                            id: copy_combobox
+                            model: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
+                            currentIndex: 0
+                            Layout.alignment: Qt.AlignRight
+
+                            onCurrentIndexChanged: {
+                                if (currentIndex === 0) {
+                                    return;
+                                }
+
+                                var content = "";
+                                if (currentIndex === 1) {
+                                    content = root.paragraph_gloss_as_html(paragraph_item.index);
+                                } else if (currentIndex === 2) {
+                                    content = root.paragraph_gloss_as_markdown(paragraph_item.index);
+                                } else if (currentIndex === 3) {
+                                    content = root.paragraph_gloss_as_orgmode(paragraph_item.index);
+                                }
+
+                                if (content.length > 0) {
+                                    paragraph_clip.copy_text(content);
+                                    copied_message_animation.start();
+                                }
+
+                                copy_combobox.currentIndex = 0;
+                            }
+                        }
                     }
 
                     Item {

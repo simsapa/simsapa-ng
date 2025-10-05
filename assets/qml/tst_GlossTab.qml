@@ -374,7 +374,7 @@ Item {
             verify(html_content.includes("Katamañca"));
             verify(html_content.includes("AI Translations"));
             verify(html_content.includes("deepseek/deepseek-r1-0528:free"));
-            verify(html_content.includes("concentration faculty"));
+            verify(html_content.includes("Hello Markdown"));
             verify(html_content.includes("(selected)"));
 
             // Test Markdown export
@@ -534,6 +534,278 @@ Item {
             } catch (e) {
                 fail("requestWordSummary signal should exist and be connectable");
             }
+        }
+
+        function test_gloss_as_html_export() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var html_output = gloss_tab.gloss_as_html();
+
+            var expected_html = `<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Gloss Export</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<h1>Gloss Export</h1>
+
+<blockquote>
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.<br>
+<br>
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+</blockquote>
+
+<h2>Paragraph 1</h2>
+
+<blockquote>
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+</blockquote>
+
+<h3>Vocabulary</h3>
+
+<p><b>Dictionary definitions from DPD:</b></p>
+
+<table><tbody>
+<tr><td> <b>karitvā 1</b> </td><td> having done, having made </td></tr>
+<tr><td> <b>citta 1.1</b> </td><td> mind, heart </td></tr>
+
+</tbody></table>
+
+<h2>Paragraph 2</h2>
+
+<blockquote>
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+</blockquote>
+
+<h3>Vocabulary</h3>
+
+<p><b>Dictionary definitions from DPD:</b></p>
+
+<table><tbody>
+<tr><td> <b>karitvā 1</b> </td><td> having done, having made </td></tr>
+
+</tbody></table>
+
+</body>
+</html>`;
+
+            compare(html_output, expected_html);
+        }
+
+        function test_gloss_as_markdown_export() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var markdown_output = gloss_tab.gloss_as_markdown();
+
+            var expected_markdown = `# Gloss Export
+
+> Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+> 
+> Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+
+## Paragraph 1
+
+> Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+
+### Vocabulary
+
+**Dictionary definitions from DPD:**
+
+|    |    |
+|----|----|
+| **karitvā 1** | having done, having made |
+| **citta 1.1** | mind, heart |
+
+## Paragraph 2
+
+> Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+
+### Vocabulary
+
+**Dictionary definitions from DPD:**
+
+|    |    |
+|----|----|
+| **karitvā 1** | having done, having made |`;
+
+            compare(markdown_output, expected_markdown);
+        }
+
+        function test_gloss_as_orgmode_export() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var orgmode_output = gloss_tab.gloss_as_orgmode();
+
+            var expected_orgmode = `* Gloss Export
+
+#+begin_quote
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+#+end_quote
+
+** Paragraph 1
+
+#+begin_quote
+Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.
+#+end_quote
+
+*** Vocabulary
+
+*Dictionary definitions from DPD:*
+
+| *karitvā 1* | having done, having made |
+| *citta 1.1* | mind, heart |
+
+** Paragraph 2
+
+#+begin_quote
+Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.
+#+end_quote
+
+*** Vocabulary
+
+*Dictionary definitions from DPD:*
+
+| *karitvā 1* | having done, having made |`;
+
+            compare(orgmode_output, expected_orgmode);
+        }
+
+        function test_paragraph_gloss_functions_basic() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            var paragraph2 = "Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            var full_text = paragraph1 + "\n\n" + paragraph2;
+
+            processTextBackground(full_text);
+
+            verify(gloss_tab.paragraph_model.count === 2);
+
+            var html_para0 = gloss_tab.paragraph_gloss_as_html(0);
+            var md_para0 = gloss_tab.paragraph_gloss_as_markdown(0);
+            var org_para0 = gloss_tab.paragraph_gloss_as_orgmode(0);
+
+            verify(html_para0.length > 0);
+            verify(md_para0.length > 0);
+            verify(org_para0.length > 0);
+
+            verify(html_para0.includes("<h2>Paragraph 1</h2>"));
+            verify(html_para0.includes(paragraph1));
+            verify(html_para0.includes("karitvā 1"));
+            verify(!html_para0.includes("<!doctype html>"));
+            verify(!html_para0.includes("<h1>Gloss Export</h1>"));
+            verify(!html_para0.includes("</html>"));
+
+            verify(md_para0.includes("## Paragraph 1"));
+            verify(md_para0.includes("**karitvā 1**"));
+            verify(!md_para0.includes("# Gloss Export"));
+
+            verify(org_para0.includes("** Paragraph 1"));
+            verify(org_para0.includes("*karitvā 1*"));
+            verify(!org_para0.includes("* Gloss Export"));
+
+            var html_para1 = gloss_tab.paragraph_gloss_as_html(1);
+            verify(html_para1.includes("<h2>Paragraph 2</h2>"));
+            verify(html_para1.includes(paragraph2));
+            verify(!html_para1.includes("<!doctype html>"));
+        }
+
+        function test_paragraph_gloss_as_html() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            processTextBackground(paragraph1);
+
+            verify(gloss_tab.paragraph_model.count === 1);
+
+            var html_output = gloss_tab.paragraph_gloss_as_html(0);
+
+            verify(html_output.includes("<h2>Paragraph 1</h2>"));
+            verify(html_output.includes("<blockquote>"));
+            verify(html_output.includes("</blockquote>"));
+            verify(html_output.includes(paragraph1));
+            verify(html_output.includes("<h3>Vocabulary</h3>"));
+            verify(html_output.includes("<table><tbody>"));
+            verify(html_output.includes("</tbody></table>"));
+            verify(html_output.includes("<b>karitvā 1</b>"));
+            verify(html_output.includes("having done, having made"));
+            verify(!html_output.includes("<!doctype html>"));
+            verify(!html_output.includes("<html>"));
+            verify(!html_output.includes("</html>"));
+        }
+
+        function test_paragraph_gloss_as_markdown() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            processTextBackground(paragraph1);
+
+            verify(gloss_tab.paragraph_model.count === 1);
+
+            var md_output = gloss_tab.paragraph_gloss_as_markdown(0);
+
+            verify(md_output.includes("## Paragraph 1"));
+            verify(md_output.includes("> " + paragraph1.split('\n')[0]));
+            verify(md_output.includes("### Vocabulary"));
+            verify(md_output.includes("|----|----|"));
+            verify(md_output.includes("| **karitvā 1** |"));
+            verify(md_output.includes("having done, having made"));
+            verify(!md_output.includes("# Gloss Export"));
+        }
+
+        function test_paragraph_gloss_as_orgmode() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
+            processTextBackground(paragraph1);
+
+            verify(gloss_tab.paragraph_model.count === 1);
+
+            var org_output = gloss_tab.paragraph_gloss_as_orgmode(0);
+
+            verify(org_output.includes("** Paragraph 1"));
+            verify(org_output.includes("#+begin_quote"));
+            verify(org_output.includes("#+end_quote"));
+            verify(org_output.includes(paragraph1));
+            verify(org_output.includes("*** Vocabulary"));
+            verify(org_output.includes("| *karitvā 1* |"));
+            verify(org_output.includes("having done, having made"));
+            verify(!org_output.includes("* Gloss Export"));
+        }
+
+        function test_paragraph_export_excludes_document_headers() {
+            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
+            processTextBackground(paragraph1);
+
+            var html_output = gloss_tab.paragraph_gloss_as_html(0);
+            var md_output = gloss_tab.paragraph_gloss_as_markdown(0);
+            var org_output = gloss_tab.paragraph_gloss_as_orgmode(0);
+
+            verify(!html_output.includes("<!doctype html>"));
+            verify(!html_output.includes("<html>"));
+            verify(!html_output.includes("<head>"));
+            verify(!html_output.includes("<title>Gloss Export</title>"));
+            verify(!html_output.includes("<h1>Gloss Export</h1>"));
+            verify(!html_output.includes("</html>"));
+
+            verify(!md_output.includes("# Gloss Export"));
+
+            verify(!org_output.includes("* Gloss Export"));
         }
     }
 }
