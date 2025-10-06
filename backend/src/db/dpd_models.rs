@@ -282,7 +282,7 @@ pub struct BoldDefinition {
     pub commentary: String,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations, serde::Serialize)]
 #[diesel(table_name = dpd_headwords)]
 #[diesel(belongs_to(DpdRoot, foreign_key = root_key))]
 #[diesel(belongs_to(FamilyWord, foreign_key = family_word_fk))]

@@ -180,6 +180,36 @@ pub mod qobject {
         fn get_provider_for_model(self: &SuttaBridge, model_name: &QString) -> QString;
 
         #[qinvokable]
+        fn get_anki_template_front(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_front(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_template_back(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_back(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_export_format(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_export_format(self: Pin<&mut SuttaBridge>, format: &QString);
+
+        #[qinvokable]
+        fn get_anki_include_cloze(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_anki_include_cloze(self: Pin<&mut SuttaBridge>, include: bool);
+
+        #[qinvokable]
+        fn get_sample_vocabulary_data_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_dpd_headword_by_uid(self: &SuttaBridge, uid: &QString) -> QString;
+
+        #[qinvokable]
         fn get_saved_theme(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -1071,5 +1101,73 @@ impl qobject::SuttaBridge {
                 qo.as_mut().paragraph_gloss_ready(paragraph_index, QString::from(response_json));
             }).unwrap();
         });
+    }
+
+    /// Get Anki template for Front side
+    pub fn get_anki_template_front(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_front();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Front side
+    pub fn set_anki_template_front(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_front(&template_str.to_string());
+    }
+
+    /// Get Anki template for Back side
+    pub fn get_anki_template_back(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_back();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Back side
+    pub fn set_anki_template_back(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_back(&template_str.to_string());
+    }
+
+    /// Get Anki export format (Simple, Templated, DataCsv)
+    pub fn get_anki_export_format(&self) -> QString {
+        let app_data = get_app_data();
+        let format = app_data.get_anki_export_format();
+        QString::from(format)
+    }
+
+    /// Set Anki export format
+    pub fn set_anki_export_format(self: Pin<&mut Self>, format: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_export_format(&format.to_string());
+    }
+
+    /// Get whether to include cloze format in Anki export
+    pub fn get_anki_include_cloze(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_anki_include_cloze()
+    }
+
+    /// Set whether to include cloze format in Anki export
+    pub fn set_anki_include_cloze(self: Pin<&mut Self>, include: bool) {
+        let app_data = get_app_data();
+        app_data.set_anki_include_cloze(include);
+    }
+
+    /// Get sample vocabulary data for preview (hardcoded abhivādetvā)
+    pub fn get_sample_vocabulary_data_json(&self) -> QString {
+        let sample_json = simsapa_backend::anki_sample_data::get_sample_vocabulary_data_json();
+        QString::from(sample_json)
+    }
+
+    /// Get DPD headword data by UID
+    pub fn get_dpd_headword_by_uid(&self, uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid_str = uid.to_string();
+        
+        match app_data.get_dpd_headword_by_uid(&uid_str) {
+            Some(json) => QString::from(json),
+            None => QString::from("{}"),
+        }
     }
 }

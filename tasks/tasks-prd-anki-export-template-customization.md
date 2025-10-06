@@ -24,21 +24,21 @@
 
 ### Phase 1: Backend Settings and Data Model
 
-- [ ] 1.0 Backend Settings and Data Model
-  - [ ] 1.1 Add `AnkiExportFormat` enum to `backend/src/app_settings.rs`
+- [x] 1.0 Backend Settings and Data Model
+  - [x] 1.1 Add `AnkiExportFormat` enum to `backend/src/app_settings.rs`
     - Add enum with variants: Simple, Templated, DataCsv
     - Derive Debug, Clone, PartialEq, Eq, Serialize, Deserialize
-  - [ ] 1.2 Add new fields to `AppSettings` struct in `backend/src/app_settings.rs`
+  - [x] 1.2 Add new fields to `AppSettings` struct in `backend/src/app_settings.rs`
     - Add `anki_template_front: String`
     - Add `anki_template_back: String`
     - Add `anki_export_format: AnkiExportFormat`
     - Add `anki_include_cloze: bool`
-  - [ ] 1.3 Update `Default` impl for `AppSettings`
+  - [x] 1.3 Update `Default` impl for `AppSettings`
     - Set `anki_template_front` default: `"<div><p>${word_stem}</p><p>${context_snippet}</p></div>"`
     - Set `anki_template_back` default: `"<div><b>${dpd.pos}</b> ${vocab.summary}</div>"`
     - Set `anki_export_format` default: `AnkiExportFormat::Simple`
     - Set `anki_include_cloze` default: `true`
-  - [ ] 1.4 Test backend compilation with `cd backend && cargo build`
+  - [x] 1.4 Test backend compilation with `cd backend && cargo build`
 
 ### Phase 2: Bridge Methods for Settings and Sample Data
 

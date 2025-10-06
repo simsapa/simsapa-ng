@@ -281,6 +281,46 @@ Item {
         });
     }
 
+    function get_anki_template_front(): string {
+        return '<div><p>${word_stem}</p><p>${context_snippet}</p></div>';
+    }
+
+    function set_anki_template_front(template: string) {
+        console.log("set_anki_template_front():", template);
+    }
+
+    function get_anki_template_back(): string {
+        return '<div><b>${dpd.pos}</b> ${vocab.summary}</div>';
+    }
+
+    function set_anki_template_back(template: string) {
+        console.log("set_anki_template_back():", template);
+    }
+
+    function get_anki_export_format(): string {
+        return 'Simple';
+    }
+
+    function set_anki_export_format(format: string) {
+        console.log("set_anki_export_format():", format);
+    }
+
+    function get_anki_include_cloze(): bool {
+        return true;
+    }
+
+    function set_anki_include_cloze(include: bool) {
+        console.log("set_anki_include_cloze():", include);
+    }
+
+    function get_sample_vocabulary_data_json(): string {
+        return '{"word_stem":"abhivādeti","context_snippet":"...","vocab":{},"dpd":{}}';
+    }
+
+    function get_dpd_headword_by_uid(uid: string): string {
+        return '{}';
+    }
+
     function get_common_words_json(): string {
         return `
 [

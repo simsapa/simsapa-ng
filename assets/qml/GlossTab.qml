@@ -256,12 +256,39 @@ Item {
 
         let save_fn = function() {
             if (is_anki_csv) {
-                // Save both basic and cloze formats
-                let basic_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_basic.csv", root.gloss_as_anki_csv("basic"));
-                let cloze_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_cloze.csv", root.gloss_as_anki_csv("cloze"));
+                let export_format = SuttaBridge.get_anki_export_format();
+                let include_cloze = SuttaBridge.get_anki_include_cloze();
                 
-                if (basic_ok && cloze_ok) {
-                    msg_dialog_ok.text = "Exported as: gloss_export_anki_basic.csv, gloss_export_anki_cloze.csv";
+                let files_saved = [];
+                let basic_ok = false;
+                let cloze_ok = false;
+                let data_ok = false;
+                
+                if (export_format === "Simple") {
+                    basic_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_basic.csv", root.gloss_as_anki_csv("basic"));
+                    if (basic_ok) files_saved.push("gloss_export_anki_basic.csv");
+                    
+                    if (include_cloze) {
+                        cloze_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_cloze.csv", root.gloss_as_anki_csv("cloze"));
+                        if (cloze_ok) files_saved.push("gloss_export_anki_cloze.csv");
+                    }
+                    
+                } else if (export_format === "Templated") {
+                    basic_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_templated.csv", root.gloss_as_anki_csv("templated"));
+                    if (basic_ok) files_saved.push("gloss_export_anki_templated.csv");
+                    
+                    if (include_cloze) {
+                        cloze_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_templated_cloze.csv", root.gloss_as_anki_csv("templated_cloze"));
+                        if (cloze_ok) files_saved.push("gloss_export_anki_templated_cloze.csv");
+                    }
+                    
+                } else if (export_format === "DataCsv") {
+                    data_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_data.csv", root.gloss_as_anki_csv("data"));
+                    if (data_ok) files_saved.push("gloss_export_anki_data.csv");
+                }
+                
+                if (files_saved.length > 0) {
+                    msg_dialog_ok.text = "Exported as: " + files_saved.join(", ");
                     msg_dialog_ok.open();
                 } else {
                     msg_dialog_ok.text = "Export failed.";
@@ -565,6 +592,45 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
     function is_common_word(stem: string): bool {
         return root.common_words.includes(clean_stem(stem));
+    }
+
+    function render_template(template_str: string, context: var): string {
+        try {
+            let contextKeys = Object.keys(context);
+            let contextValues = Object.values(context);
+            
+            let funcBody = 'return `' + template_str + '`;';
+            let renderFunc = new Function(...contextKeys, funcBody);
+            
+            return renderFunc(...contextValues);
+        } catch (e) {
+            logger.error("Template rendering error:", e.toString());
+            return "Error: " + e.toString();
+        }
+    }
+
+    function build_template_context(vocab_item: var, dpd_data: var, context_snippet: string): var {
+        let word_stem_value = vocab_item.word ? clean_stem(vocab_item.word) : "";
+        let context = {
+            word_stem: word_stem_value,
+            context_snippet: context_snippet || "",
+            original_word: vocab_item.original_word || "",
+            clean_word: vocab_item.original_word || "",
+            vocab: {
+                uid: vocab_item.uid || "",
+                word: vocab_item.word || "",
+                summary: vocab_item.summary || ""
+            }
+        };
+        
+        // Add all dpd fields directly to context for easier access
+        if (dpd_data && typeof dpd_data === 'object') {
+            context.dpd = dpd_data;
+        } else {
+            context.dpd = {};
+        }
+        
+        return context;
     }
 
     function create_word_model_item(word: string, lookup_results, sentence: string): var {
@@ -1355,8 +1421,67 @@ ${main_text}
             var front = "";
             var back = "";
 
-            if (format_type === "cloze") {
-                // Cloze format: context with {{c1::word}} instead of <b>word</b>
+            if (format_type === "templated" || format_type === "templated_cloze") {
+                logger.info("Templated export - vocab.uid:", vocab.uid);
+                let dpd_json = SuttaBridge.get_dpd_headword_by_uid(vocab.uid);
+                logger.info("DPD JSON:", dpd_json.substring(0, 200));
+                let dpd_data = {};
+                try {
+                    dpd_data = JSON.parse(dpd_json);
+                } catch (e) {
+                    logger.error("Failed to parse DPD data:", e);
+                }
+                
+                let context = root.build_template_context(vocab, dpd_data, context_snippet);
+                logger.info("Template context word_stem:", context.word_stem);
+                logger.info("Template context vocab.summary:", context.vocab.summary);
+                
+                let front_template = SuttaBridge.get_anki_template_front();
+                let back_template = SuttaBridge.get_anki_template_back();
+                logger.info("Front template:", front_template);
+                logger.info("Back template:", back_template);
+                
+                if (format_type === "templated_cloze") {
+                    context.context_snippet = context_snippet.replace(/<b>/g, "{{c1::").replace(/<\/b>/g, "}}");
+                }
+                
+                front = root.render_template(front_template, context);
+                back = root.render_template(back_template, context);
+                logger.info("Rendered front:", front);
+                logger.info("Rendered back:", back);
+                
+            } else if (format_type === "data") {
+                let dpd_json = SuttaBridge.get_dpd_headword_by_uid(vocab.uid);
+                let dpd_data = {};
+                try {
+                    dpd_data = JSON.parse(dpd_json);
+                } catch (e) {
+                    logger.error("Failed to parse DPD data:", e);
+                }
+                
+                let row = [
+                    word_stem,
+                    context_snippet,
+                    vocab.word || "",
+                    vocab.uid || "",
+                    dpd_data.lemma_1 || "",
+                    dpd_data.lemma_2 || "",
+                    dpd_data.pos || "",
+                    dpd_data.grammar || "",
+                    dpd_data.derived_from || "",
+                    dpd_data.meaning_1 || "",
+                    dpd_data.construction || "",
+                    dpd_data.derivative || "",
+                    dpd_data.example_1 || "",
+                    dpd_data.synonym || "",
+                    dpd_data.antonym || "",
+                    vocab.summary || ""
+                ];
+                
+                csv_lines.push(row.map(f => root.escape_csv_field(f)).join(","));
+                continue;
+                
+            } else if (format_type === "cloze") {
                 if (context_snippet && context_snippet.trim() !== "") {
                     front = context_snippet.replace(/<b>/g, "{{c1::").replace(/<\/b>/g, "}}");
                 } else {
@@ -1364,7 +1489,6 @@ ${main_text}
                 }
                 back = `<div>${vocab.summary}</div>`;
             } else {
-                // Basic format: word + context on front, definition on back
                 front = word_stem;
                 if (context_snippet && context_snippet.trim() !== "") {
                     front = `<div><p>${word_stem}</p><p>${context_snippet}</p></div>`;
@@ -1381,6 +1505,28 @@ ${main_text}
     function gloss_as_anki_csv(format_type): string {
         let gloss_data = root.gloss_export_data();
         let csv_lines = [];
+        
+        if (format_type === "data") {
+            let header = [
+                "word_stem",
+                "context_snippet",
+                "word",
+                "uid",
+                "lemma_1",
+                "lemma_2",
+                "pos",
+                "grammar",
+                "derived_from",
+                "meaning_1",
+                "construction",
+                "derivative",
+                "example_1",
+                "synonym",
+                "antonym",
+                "summary"
+            ];
+            csv_lines.push(header.join(","));
+        }
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
