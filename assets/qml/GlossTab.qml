@@ -1362,12 +1362,12 @@ ${main_text}
                 } else {
                     front = "{{c1::" + word_stem + "}}";
                 }
-                back = vocab.summary;
+                back = `<div>${vocab.summary}</div>`;
             } else {
                 // Basic format: word + context on front, definition on back
                 front = word_stem;
                 if (context_snippet && context_snippet.trim() !== "") {
-                    front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
+                    front = `<div><p>${word_stem}</p><p>${context_snippet}</p></div>`;
                 }
                 back = vocab.summary;
             }
