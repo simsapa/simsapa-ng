@@ -23,6 +23,7 @@ Item {
 
     property alias gloss_text_input: gloss_text_input
     property alias paragraph_model: paragraph_model
+    property alias commonWordsDialog: commonWordsDialog
 
     property var handle_open_dict_tab_fn
 
