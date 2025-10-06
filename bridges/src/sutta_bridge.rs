@@ -880,15 +880,15 @@ impl qobject::SuttaBridge {
             for (paragraph_idx, paragraph_text) in input_data.paragraphs.iter().enumerate() {
 
                 // Extract words with context from paragraph
-                let words_with_context = simsapa_backend::helpers::extract_words(paragraph_text);
+                let words_with_context = simsapa_backend::helpers::extract_words_with_context(paragraph_text);
                 let mut paragraph_shown_stems = std::collections::HashMap::new();
                 let mut processed_words = Vec::new();
 
                 // Process each word
-                for word in words_with_context {
+                for word_context in words_with_context {
                     let word_info = simsapa_backend::types::WordInfo {
-                        word: word.clone(),
-                        sentence: paragraph_text.to_string(), // Use full paragraph as sentence context
+                        word: word_context.clean_word.clone(),
+                        sentence: word_context.context_snippet.clone(),
                     };
 
                     match simsapa_backend::helpers::process_word_for_glossing(
@@ -989,16 +989,16 @@ impl qobject::SuttaBridge {
             let app_data = simsapa_backend::get_app_data();
 
             // Extract words with context from paragraph
-            let words_with_context = simsapa_backend::helpers::extract_words(&input_data.paragraph_text);
+            let words_with_context = simsapa_backend::helpers::extract_words_with_context(&input_data.paragraph_text);
             let mut paragraph_shown_stems = std::collections::HashMap::new();
             let mut global_stems = input_data.options.existing_global_stems.clone();
             let mut processed_words = Vec::new();
 
             // Process each word
-            for word in words_with_context {
+            for word_context in words_with_context {
                 let word_info = simsapa_backend::types::WordInfo {
-                    word: word.clone(),
-                    sentence: input_data.paragraph_text.clone(),
+                    word: word_context.clean_word.clone(),
+                    sentence: word_context.context_snippet.clone(),
                 };
 
                 match simsapa_backend::helpers::process_word_for_glossing(

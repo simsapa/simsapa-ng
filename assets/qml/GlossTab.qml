@@ -1306,9 +1306,30 @@ ${main_text}
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
+
+            var paragraph_obj = paragraph_model.get(i);
+            var words_data_json = paragraph_obj ? paragraph_obj.words_data_json : "[]";
+            var words_data = [];
+            try {
+                words_data = JSON.parse(words_data_json);
+            } catch (e) {
+                logger.error("Failed to parse words_data_json in CSV export:", e);
+            }
+
             for (var j = 0; j < paragraph.vocabulary.length; j++) {
                 var vocab = paragraph.vocabulary[j];
-                var front = root.clean_stem(vocab.word);
+                var word_stem = root.clean_stem(vocab.word);
+
+                var context_snippet = "";
+                if (j < words_data.length && words_data[j].example_sentence) {
+                    context_snippet = words_data[j].example_sentence;
+                }
+
+                var front = word_stem;
+                if (context_snippet && context_snippet.trim() !== "") {
+                    front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
+                }
+
                 var back = vocab.summary;
                 csv_lines.push(root.format_csv_row(front, back));
             }
@@ -1378,11 +1399,32 @@ ${main_text}
         }
 
         var paragraph = gloss_data.paragraphs[paragraph_index];
+
+        var paragraph_obj = paragraph_model.get(paragraph_index);
+        var words_data_json = paragraph_obj ? paragraph_obj.words_data_json : "[]";
+        var words_data = [];
+        try {
+            words_data = JSON.parse(words_data_json);
+        } catch (e) {
+            logger.error("Failed to parse words_data_json in CSV export:", e);
+        }
+
         let csv_lines = [];
 
         for (var j = 0; j < paragraph.vocabulary.length; j++) {
             var vocab = paragraph.vocabulary[j];
-            var front = root.clean_stem(vocab.word);
+            var word_stem = root.clean_stem(vocab.word);
+
+            var context_snippet = "";
+            if (j < words_data.length && words_data[j].example_sentence) {
+                context_snippet = words_data[j].example_sentence;
+            }
+
+            var front = word_stem;
+            if (context_snippet && context_snippet.trim() !== "") {
+                front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
+            }
+
             var back = vocab.summary;
             csv_lines.push(root.format_csv_row(front, back));
         }
@@ -1867,7 +1909,7 @@ ${main_text}
                                         Layout.preferredWidth: wordItem.width * 0.2
                                         visible: {
                                             // Show ComboBox only when there are multiple lookup results to choose from
-                                            return wordItem.modelData.results !== undefined && 
+                                            return wordItem.modelData.results !== undefined &&
                                                    wordItem.modelData.results.length > 1;
                                         }
                                         model: wordItem.modelData.results

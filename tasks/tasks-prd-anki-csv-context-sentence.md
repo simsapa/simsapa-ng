@@ -18,11 +18,11 @@
 
 ## Tasks
 
-- [ ] 1.0 Extend GlossWordContext struct with new fields
-  - [ ] 1.1 Add `original_word: String` field to GlossWordContext in backend/src/helpers.rs:357
-  - [ ] 1.2 Add `context_snippet: String` field to GlossWordContext in backend/src/helpers.rs:357
-  - [ ] 1.3 Update all references to GlossWordContext constructor calls throughout codebase
-  - [ ] 1.4 Verify existing code compiles with new struct definition
+- [x] 1.0 Extend GlossWordContext struct with new fields
+  - [x] 1.1 Add `original_word: String` field to GlossWordContext in backend/src/helpers.rs:357
+  - [x] 1.2 Add `context_snippet: String` field to GlossWordContext in backend/src/helpers.rs:357
+  - [x] 1.3 Update all references to GlossWordContext constructor calls throughout codebase
+  - [x] 1.4 Verify existing code compiles with new struct definition
 
 - [ ] 2.0 Implement sentence boundary detection helper function
   - [ ] 2.1 Create `find_sentence_start()` helper function in backend/src/helpers.rs

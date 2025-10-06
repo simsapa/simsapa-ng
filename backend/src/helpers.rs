@@ -355,12 +355,58 @@ lazy_static! {
 }
 
 pub struct GlossWordContext {
-    clean_word: String,
+    pub clean_word: String,
+    pub original_word: String,
+    pub context_snippet: String,
+}
+
+pub fn find_sentence_start(text: &str, pos: usize) -> usize {
+    if pos == 0 || text.is_empty() {
+        return 0;
+    }
+
+    let bytes = text.as_bytes();
+    let search_start = pos.min(text.len());
+    
+    for i in (0..search_start).rev() {
+        let ch = bytes[i];
+        if ch == b'.' || ch == b'?' || ch == b'!' {
+            let mut boundary = i + 1;
+            while boundary < text.len() && bytes[boundary].is_ascii_whitespace() {
+                boundary += 1;
+            }
+            if let Ok(s) = std::str::from_utf8(&bytes[0..boundary]) {
+                return s.chars().count();
+            }
+        }
+    }
+    
+    0
+}
+
+pub fn find_sentence_end(text: &str, pos: usize) -> usize {
+    let bytes = text.as_bytes();
+    let len = text.len();
+    
+    if pos >= len {
+        return text.chars().count();
+    }
+    
+    for i in pos..len {
+        let ch = bytes[i];
+        if ch == b'.' || ch == b'?' || ch == b'!' {
+            if let Ok(s) = std::str::from_utf8(&bytes[0..i]) {
+                return s.chars().count();
+            }
+        }
+    }
+    
+    text.chars().count()
 }
 
 pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
-    let text = text.trim();
-    if text.is_empty() {
+    let original_text = text.trim();
+    if original_text.is_empty() {
         return Vec::new();
     }
 
@@ -369,33 +415,15 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
         static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
     }
 
-    let text = text.replace("\n", " ").to_string();
-
-    // Pāli sandhi: dhārayāmi + ti becomes dhārayāmīti, sometimes with apostrophes: dhārayāmī’”ti
-    //
-    // We are reversing this as:
-    // dhārayāmī’ti dhārayāmī’”ti -> dhārayāmi ti
-    //
-    // Not handling the dhārayāmīti case for now.
+    let original_normalized = original_text.replace("\n", " ");
+    
+    let text = original_text.replace("\n", " ").to_string();
     let text = RE_IITI_BEFORE.replace_all(&text, "i ti").into_owned();
     let text = RE_IITI_AFTER.replace_all(&text, "i ti").into_owned();
-
-    // dassanāyā’ti -> dassanāya ti
     let text = RE_AATI_BEFORE.replace_all(&text, "a ti").into_owned();
     let text = RE_AATI_AFTER.replace_all(&text, "a ti").into_owned();
-
-    // sikkhāpadesū’ti -> sikkhāpadesu ti
     let text = RE_UUTI_BEFORE.replace_all(&text, "u ti").into_owned();
     let text = RE_UUTI_AFTER.replace_all(&text, "u ti").into_owned();
-
-    // Pāli sandhi: gantuṁ + ti, the ṁ becomes n, and written as gantunti, gantun’ti or gantu’nti.
-    // One or more closing apostrophes may be added before or after the n.
-    //
-    // We are reversing this as:
-    // gantun’ti gantu’nti gantun’”ti gantu’”nti -> gantuṁ ti
-    //
-    // We are not trying to match the gantunti case because the -nti ending is
-    // ambiguous with the plural verb forms, e.g. gacchanti.
     let text = RE_NTI_BEFORE.replace_all(&text, "ṁ ti").into_owned();
     let text = RE_NTI_AFTER.replace_all(&text, "ṁ ti").into_owned();
     let text = re_nonword.replace_all(&text, " ").into_owned();
@@ -403,10 +431,57 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
     let text = text.trim();
 
-    text.split(" ")
-        .map(|i| GlossWordContext{ clean_word: i.to_string() })
+    let chars: Vec<char> = original_normalized.chars().collect();
+    let text_len = chars.len();
+    let original_lower = original_normalized.to_lowercase();
+
+    text.split_whitespace()
+        .map(|clean_word| {
+            let search_word = clean_word.to_lowercase();
+            
+            let (word_start_char, word_end_char, original_word) = if let Some(pos) = original_lower.find(&search_word) {
+                let start = original_normalized[..pos].chars().count();
+                let end = start + search_word.chars().count();
+                let orig = chars[start..end.min(text_len)].iter().collect();
+                (start, end, orig)
+            } else {
+                (0, 0, String::new())
+            };
+            
+            let (context_snippet, original_word) = if !original_word.is_empty() {
+                let context_start = if word_start_char >= 50 { word_start_char - 50 } else { 0 };
+                let context_end = (word_end_char + 50).min(text_len);
+                
+                let sentence_start = find_sentence_start(&original_normalized, context_start);
+                let sentence_end = find_sentence_end(&original_normalized, context_end);
+                
+                let final_start = sentence_start.max(context_start);
+                let final_end = sentence_end.min(context_end);
+                
+                let context_slice: String = chars[final_start..final_end].iter().collect();
+                
+                let snippet = if let Some(pos) = context_slice.find(&original_word) {
+                    let before = &context_slice[..pos];
+                    let after = &context_slice[pos + original_word.len()..];
+                    format!("{}<b>{}</b>{}", before, original_word, after)
+                } else {
+                    context_slice
+                };
+                
+                (snippet, original_word)
+            } else {
+                (String::new(), String::new())
+            };
+            
+            GlossWordContext {
+                clean_word: clean_word.to_string(),
+                original_word,
+                context_snippet,
+            }
+        })
         .collect()
 }
+
 
 pub fn extract_words(text: &str) -> Vec<String> {
     let words_with_context = extract_words_with_context(text);
