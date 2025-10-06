@@ -46,21 +46,21 @@ fn test_find_sentence_start_no_boundary() {
 fn test_find_sentence_end_at_period() {
     let text = "First sentence. Second sentence.";
     let end = helpers::find_sentence_end(text, 0);
-    assert_eq!(end, 14);
+    assert_eq!(end, 15);
 }
 
 #[test]
 fn test_find_sentence_end_at_question() {
     let text = "What is this? Another question.";
     let end = helpers::find_sentence_end(text, 0);
-    assert_eq!(end, 12);
+    assert_eq!(end, 13);
 }
 
 #[test]
 fn test_find_sentence_end_at_exclamation() {
     let text = "Watch out! Be careful.";
     let end = helpers::find_sentence_end(text, 0);
-    assert_eq!(end, 9);
+    assert_eq!(end, 10);
 }
 
 #[test]
@@ -88,5 +88,5 @@ fn test_pali_diacritics_sentence_start() {
 fn test_pali_diacritics_sentence_end() {
     let text = "Katamañca bhikkhave samādhindriyaṁ? Idha bhikkhave ariyasāvako.";
     let end = helpers::find_sentence_end(text, 0);
-    assert_eq!(end, 34);
+    assert_eq!(end, 35);
 }

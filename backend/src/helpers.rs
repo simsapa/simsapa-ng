@@ -360,17 +360,21 @@ pub struct GlossWordContext {
     pub context_snippet: String,
 }
 
-pub fn find_sentence_start(text: &str, pos: usize) -> usize {
-    if pos == 0 || text.is_empty() {
+
+pub fn find_sentence_start(text: &str, char_pos: usize) -> usize {
+    if char_pos == 0 || text.is_empty() {
         return 0;
     }
 
+    let chars: Vec<char> = text.chars().collect();
+    let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(text.len());
+    
     let bytes = text.as_bytes();
-    let search_start = pos.min(text.len());
+    let search_start = byte_pos.min(text.len());
     
     for i in (0..search_start).rev() {
         let ch = bytes[i];
-        if ch == b'.' || ch == b'?' || ch == b'!' {
+        if ch == b'.' || ch == b'?' || ch == b'!' || ch == b';' {
             let mut boundary = i + 1;
             while boundary < text.len() && bytes[boundary].is_ascii_whitespace() {
                 boundary += 1;
@@ -384,18 +388,19 @@ pub fn find_sentence_start(text: &str, pos: usize) -> usize {
     0
 }
 
-pub fn find_sentence_end(text: &str, pos: usize) -> usize {
+pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
     let bytes = text.as_bytes();
     let len = text.len();
+    let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(len);
     
-    if pos >= len {
+    if byte_pos >= len {
         return text.chars().count();
     }
     
-    for i in pos..len {
+    for i in byte_pos..len {
         let ch = bytes[i];
-        if ch == b'.' || ch == b'?' || ch == b'!' {
-            if let Ok(s) = std::str::from_utf8(&bytes[0..i]) {
+        if ch == b'.' || ch == b'?' || ch == b'!' || ch == b';' {
+            if let Ok(s) = std::str::from_utf8(&bytes[0..=i]) {
                 return s.chars().count();
             }
         }
@@ -403,6 +408,7 @@ pub fn find_sentence_end(text: &str, pos: usize) -> usize {
     
     text.chars().count()
 }
+
 
 pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let original_text = text.trim();
@@ -435,51 +441,61 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let text_len = chars.len();
     let original_lower = original_normalized.to_lowercase();
 
-    text.split_whitespace()
-        .map(|clean_word| {
-            let search_word = clean_word.to_lowercase();
+    let chars: Vec<char> = original_normalized.chars().collect();
+    let text_len = chars.len();
+    let original_lower = original_normalized.to_lowercase();
+
+    let mut results = Vec::new();
+    let mut current_search_pos = 0;
+    
+    for clean_word in text.split_whitespace() {
+        let search_word = clean_word.to_lowercase();
+        
+        let (word_start_char, word_end_char, original_word) = if let Some(rel_pos) = original_lower[current_search_pos..].find(&search_word) {
+            let byte_pos = current_search_pos + rel_pos;
+            let start = original_normalized[..byte_pos].chars().count();
+            let end = start + search_word.chars().count();
+            let orig = chars[start..end.min(text_len)].iter().collect();
+            current_search_pos = byte_pos + search_word.len();
+            (start, end, orig)
+        } else {
+            (0, 0, String::new())
+        };
+        
+        let (context_snippet, original_word) = if !original_word.is_empty() {
+            let context_start = if word_start_char >= 50 { word_start_char - 50 } else { 0 };
+            let context_end = (word_end_char + 50).min(text_len);
             
-            let (word_start_char, word_end_char, original_word) = if let Some(pos) = original_lower.find(&search_word) {
-                let start = original_normalized[..pos].chars().count();
-                let end = start + search_word.chars().count();
-                let orig = chars[start..end.min(text_len)].iter().collect();
-                (start, end, orig)
+            let sentence_start = find_sentence_start(&original_normalized, word_start_char);
+            let sentence_end = find_sentence_end(&original_normalized, word_end_char);
+            
+            let final_start = sentence_start.max(context_start);
+            let final_end = sentence_end.min(context_end);
+            
+            let context_slice: String = chars[final_start..final_end].iter().collect();
+            
+            let snippet = if let Some(pos) = context_slice.find(&original_word) {
+                let before = &context_slice[..pos];
+                let after = &context_slice[pos + original_word.len()..];
+                format!("{}<b>{}</b>{}", before, original_word, after)
             } else {
-                (0, 0, String::new())
+                context_slice
             };
             
-            let (context_snippet, original_word) = if !original_word.is_empty() {
-                let context_start = if word_start_char >= 50 { word_start_char - 50 } else { 0 };
-                let context_end = (word_end_char + 50).min(text_len);
-                
-                let sentence_start = find_sentence_start(&original_normalized, context_start);
-                let sentence_end = find_sentence_end(&original_normalized, context_end);
-                
-                let final_start = sentence_start.max(context_start);
-                let final_end = sentence_end.min(context_end);
-                
-                let context_slice: String = chars[final_start..final_end].iter().collect();
-                
-                let snippet = if let Some(pos) = context_slice.find(&original_word) {
-                    let before = &context_slice[..pos];
-                    let after = &context_slice[pos + original_word.len()..];
-                    format!("{}<b>{}</b>{}", before, original_word, after)
-                } else {
-                    context_slice
-                };
-                
-                (snippet, original_word)
-            } else {
-                (String::new(), String::new())
-            };
-            
-            GlossWordContext {
-                clean_word: clean_word.to_string(),
-                original_word,
-                context_snippet,
-            }
-        })
-        .collect()
+            (snippet, original_word)
+        } else {
+            (String::new(), String::new())
+        };
+        
+        results.push(GlossWordContext {
+            clean_word: clean_word.to_string(),
+            original_word,
+            context_snippet,
+        });
+    }
+    
+    results
+
 }
 
 

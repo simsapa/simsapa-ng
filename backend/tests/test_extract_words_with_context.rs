@@ -151,3 +151,52 @@ fn test_whitespace_only() {
     let words = helpers::extract_words_with_context(text);
     assert_eq!(words.len(), 0);
 }
+
+#[test]
+fn test_semicolon_sentence_boundary() {
+    let text = "abhivādetvā bhagavā tenupasaṅkami; upasaṅkamitvā bhagavantaṁ abhivādetvā ekamantaṁ nisīdi. Ekamantaṁ nisinno kho āyasmā";
+    let words = helpers::extract_words_with_context(text);
+    
+    // Find the word 'bhagavā'
+    let bhagava_word = words.iter().find(|w| w.clean_word == "bhagavā");
+    assert!(bhagava_word.is_some(), "Should find 'bhagavā'");
+    
+    let word = bhagava_word.unwrap();
+    assert_eq!(word.context_snippet, "abhivādetvā <b>bhagavā</b> tenupasaṅkami;", 
+        "Context for 'bhagavā' should end at semicolon");
+    
+    // Find the word 'bhagavantaṁ'
+    let bhagavantam_word = words.iter().find(|w| w.clean_word == "bhagavantaṁ");
+    assert!(bhagavantam_word.is_some(), "Should find 'bhagavantaṁ'");
+    
+    let word2 = bhagavantam_word.unwrap();
+    assert_eq!(word2.context_snippet, "upasaṅkamitvā <b>bhagavantaṁ</b> abhivādetvā ekamantaṁ nisīdi.",
+        "Context for 'bhagavantaṁ' should start after semicolon and end at period");
+}
+
+
+#[test]
+fn test_sentence_context_middle_of_sentence() {
+    let text = "agavantaṁ abhivādetvā ekamantaṁ nisīdi. Ekamantaṁ nisinno kho āyasmā ānando bhagavantaṁ etadavoca:";
+    let words = helpers::extract_words_with_context(text);
+    
+    let nisinno_word = words.iter().find(|w| w.original_word == "nisinno");
+    assert!(nisinno_word.is_some(), "Should find 'nisinno'");
+    
+    let word = nisinno_word.unwrap();
+    assert_eq!(word.context_snippet, "Ekamantaṁ <b>nisinno</b> kho āyasmā ānando bhagavantaṁ etadavoca:",
+        "Context for 'nisinno' should span from sentence start to colon");
+}
+
+#[test]
+fn test_sentence_context_after_semicolon() {
+    let text = "atha kho āyasmā ānando yena bhagavā tenupasaṅkami; upasaṅkamitvā bhagavantaṁ abhivādetvā ekamantaṁ nisīdi.";
+    let words = helpers::extract_words_with_context(text);
+    
+    let upasankamitva_word = words.iter().find(|w| w.original_word == "upasaṅkamitvā");
+    assert!(upasankamitva_word.is_some(), "Should find 'upasaṅkamitvā'");
+    
+    let word = upasankamitva_word.unwrap();
+    assert_eq!(word.context_snippet, "<b>upasaṅkamitvā</b> bhagavantaṁ abhivādetvā ekamantaṁ nisīdi.",
+        "Context for 'upasaṅkamitvā' should start after semicolon and end at period");
+}
