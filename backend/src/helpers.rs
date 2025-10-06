@@ -354,7 +354,11 @@ lazy_static! {
     static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
 }
 
-pub fn extract_words(text: &str) -> Vec<String> {
+pub struct GlossWordContext {
+    clean_word: String,
+}
+
+pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let text = text.trim();
     if text.is_empty() {
         return Vec::new();
@@ -400,8 +404,13 @@ pub fn extract_words(text: &str) -> Vec<String> {
     let text = text.trim();
 
     text.split(" ")
-        .map(|i| i.to_string())
+        .map(|i| GlossWordContext{ clean_word: i.to_string() })
         .collect()
+}
+
+pub fn extract_words(text: &str) -> Vec<String> {
+    let words_with_context = extract_words_with_context(text);
+    words_with_context.into_iter().map(|i| i.clean_word).collect()
 }
 
 pub fn clean_word(word: &str) -> String {

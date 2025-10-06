@@ -518,26 +518,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         root.load_history();
     }
 
-    function extract_words_with_context(text: string): list<var> {
-        var sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-        var words_with_context = [];
-
-        for (var i = 0; i < sentences.length; i++) {
-            var sentence = sentences[i].trim();
-            var words = SuttaBridge.extract_words(sentence);
-
-            for (var j = 0; j < words.length; j++) {
-                words_with_context.push({
-                    word: words[j],
-                    sentence: sentence,
-                    position: sentence.indexOf(words[j]),
-                });
-            }
-        }
-
-        return words_with_context;
-    }
-
     // Clean stem by removing disambiguating numbers
     // (e.g., "ña 2.1" → "ña", "jhāyī 1" → "jhāyī")
     function clean_stem(stem: string): string {
@@ -645,27 +625,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
 
         return create_word_model_item(word_info.word, results, word_info.sentence);
     }
-
-    // FIXME extract_words_with_context()
-    // function process_paragraph_for_glossing(paragraph_text, paragraph_shown_stems, global_stems, check_global) {
-    //     var words_with_context = root.extract_words_with_context(paragraph_text);
-    //     var glossed_words = [];
-
-    //     for (var i = 0; i < words_with_context.length; i++) {
-    //         var processed_word = root.process_word_for_glossing(
-    //             words_with_context[i],
-    //             paragraph_shown_stems,
-    //             global_stems,
-    //             check_global,
-    //         );
-
-    //         if (processed_word) {
-    //             glossed_words.push(processed_word);
-    //         }
-    //     }
-
-    //     return glossed_words;
-    // }
 
     function populate_paragraph_words_data(paragraph_item, paragraph_text, paragraph_shown_stems, global_stems, check_global, paragraph_index) {
         paragraph_item.words_data = [];

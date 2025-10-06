@@ -93,27 +93,6 @@ Item {
             }
         }
 
-        function test_extract_words_with_context() {
-            var text = "This is a test. Another sentence here!";
-            var result = gloss_tab.extract_words_with_context(text);
-
-            compare(result.length, 7);
-
-            // Check first word
-            compare(result[0].word, "This");
-            compare(result[0].sentence, "This is a test.");
-            compare(result[0].position, 0);
-
-            // Check word from second sentence
-            compare(result[4].word, "Another");
-            compare(result[4].sentence, "Another sentence here!");
-
-            // Test single sentence without punctuation
-            result = gloss_tab.extract_words_with_context("No punctuation here");
-            compare(result.length, 3);
-            compare(result[0].sentence, "No punctuation here");
-        }
-
         function test_clean_stem() {
             compare(gloss_tab.clean_stem("dhamma 1.01"), "dhamma");
             compare(gloss_tab.clean_stem("ña 2.1"), "ña");
