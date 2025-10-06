@@ -162,6 +162,38 @@ ApplicationWindow {
                 }
             }
 
+            RowLayout {
+                spacing: 10
+                Layout.fillWidth: true
+
+                Label {
+                    text: "Export Format:"
+                    font.pointSize: root.pointSize
+                }
+
+                ComboBox {
+                    id: format_combo_box
+                    model: ["Simple", "Templated", "DataCsv"]
+                    Layout.preferredWidth: 150
+
+                    onActivated: {
+                        root.current_export_format = currentText;
+                        SuttaBridge.set_anki_export_format(currentText);
+                    }
+                }
+
+                CheckBox {
+                    id: cloze_checkbox
+                    text: "Include cloze format CSV"
+                    font.pointSize: root.pointSize
+
+                    onCheckedChanged: {
+                        root.current_include_cloze = checked;
+                        SuttaBridge.set_anki_include_cloze(checked);
+                    }
+                }
+            }
+
             SplitView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -333,33 +365,6 @@ ApplicationWindow {
             RowLayout {
                 spacing: 10
                 Layout.fillWidth: true
-
-                Label {
-                    text: "Export Format:"
-                    font.pointSize: root.pointSize
-                }
-
-                ComboBox {
-                    id: format_combo_box
-                    model: ["Simple", "Templated", "DataCsv"]
-                    Layout.preferredWidth: 150
-
-                    onActivated: {
-                        root.current_export_format = currentText;
-                        SuttaBridge.set_anki_export_format(currentText);
-                    }
-                }
-
-                CheckBox {
-                    id: cloze_checkbox
-                    text: "Include cloze format CSV"
-                    font.pointSize: root.pointSize
-
-                    onCheckedChanged: {
-                        root.current_include_cloze = checked;
-                        SuttaBridge.set_anki_include_cloze(checked);
-                    }
-                }
 
                 Item { Layout.fillWidth: true }
 
