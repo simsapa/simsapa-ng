@@ -1300,38 +1300,48 @@ ${main_text}
         return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
+    function format_paragraph_anki_csv(paragraph, paragraph_index): string {
+        var paragraph_obj = paragraph_model.get(paragraph_index);
+        var words_data_json = paragraph_obj ? paragraph_obj.words_data_json : "[]";
+        var words_data = [];
+        try {
+            words_data = JSON.parse(words_data_json);
+        } catch (e) {
+            logger.error("Failed to parse words_data_json in CSV export:", e);
+        }
+
+        let csv_lines = [];
+
+        for (var j = 0; j < paragraph.vocabulary.length; j++) {
+            var vocab = paragraph.vocabulary[j];
+            var word_stem = root.clean_stem(vocab.word);
+
+            var context_snippet = "";
+            if (j < words_data.length && words_data[j].example_sentence) {
+                context_snippet = words_data[j].example_sentence;
+            }
+
+            var front = word_stem;
+            if (context_snippet && context_snippet.trim() !== "") {
+                front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
+            }
+
+            var back = vocab.summary;
+            csv_lines.push(root.format_csv_row(front, back));
+        }
+
+        return csv_lines.join("\n");
+    }
+
     function gloss_as_anki_csv(): string {
         let gloss_data = root.gloss_export_data();
         let csv_lines = [];
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
-
-            var paragraph_obj = paragraph_model.get(i);
-            var words_data_json = paragraph_obj ? paragraph_obj.words_data_json : "[]";
-            var words_data = [];
-            try {
-                words_data = JSON.parse(words_data_json);
-            } catch (e) {
-                logger.error("Failed to parse words_data_json in CSV export:", e);
-            }
-
-            for (var j = 0; j < paragraph.vocabulary.length; j++) {
-                var vocab = paragraph.vocabulary[j];
-                var word_stem = root.clean_stem(vocab.word);
-
-                var context_snippet = "";
-                if (j < words_data.length && words_data[j].example_sentence) {
-                    context_snippet = words_data[j].example_sentence;
-                }
-
-                var front = word_stem;
-                if (context_snippet && context_snippet.trim() !== "") {
-                    front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
-                }
-
-                var back = vocab.summary;
-                csv_lines.push(root.format_csv_row(front, back));
+            var paragraph_csv = root.format_paragraph_anki_csv(paragraph, i);
+            if (paragraph_csv) {
+                csv_lines.push(paragraph_csv);
             }
         }
 
@@ -1399,37 +1409,7 @@ ${main_text}
         }
 
         var paragraph = gloss_data.paragraphs[paragraph_index];
-
-        var paragraph_obj = paragraph_model.get(paragraph_index);
-        var words_data_json = paragraph_obj ? paragraph_obj.words_data_json : "[]";
-        var words_data = [];
-        try {
-            words_data = JSON.parse(words_data_json);
-        } catch (e) {
-            logger.error("Failed to parse words_data_json in CSV export:", e);
-        }
-
-        let csv_lines = [];
-
-        for (var j = 0; j < paragraph.vocabulary.length; j++) {
-            var vocab = paragraph.vocabulary[j];
-            var word_stem = root.clean_stem(vocab.word);
-
-            var context_snippet = "";
-            if (j < words_data.length && words_data[j].example_sentence) {
-                context_snippet = words_data[j].example_sentence;
-            }
-
-            var front = word_stem;
-            if (context_snippet && context_snippet.trim() !== "") {
-                front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
-            }
-
-            var back = vocab.summary;
-            csv_lines.push(root.format_csv_row(front, back));
-        }
-
-        return csv_lines.join("\n");
+        return root.format_paragraph_anki_csv(paragraph, paragraph_index);
     }
 
     TabBar {
