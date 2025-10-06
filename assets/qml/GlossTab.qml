@@ -233,6 +233,7 @@ Item {
         if (export_btn.currentIndex === 0) return;
         let save_file_name = null
         let save_content = null;
+        let is_anki_csv = false;
 
         if (export_btn.currentValue === "HTML") {
             save_file_name = "gloss_export.html";
@@ -247,29 +248,58 @@ Item {
             save_content = root.gloss_as_orgmode();
 
         } else if (export_btn.currentValue === "Anki CSV") {
-            save_file_name = "gloss_export.csv";
-            save_content = root.gloss_as_anki_csv();
+            is_anki_csv = true;
+            save_file_name = "gloss_export_anki_basic.csv";
+            save_content = root.gloss_as_anki_csv("basic");
         }
 
         let save_fn = function() {
-            let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
-            if (ok) {
-                msg_dialog_ok.text = "Exported as: " + save_file_name;
-                msg_dialog_ok.open();
+            if (is_anki_csv) {
+                // Save both basic and cloze formats
+                let basic_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_basic.csv", root.gloss_as_anki_csv("basic"));
+                let cloze_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_cloze.csv", root.gloss_as_anki_csv("cloze"));
+                
+                if (basic_ok && cloze_ok) {
+                    msg_dialog_ok.text = "Exported as: gloss_export_anki_basic.csv, gloss_export_anki_cloze.csv";
+                    msg_dialog_ok.open();
+                } else {
+                    msg_dialog_ok.text = "Export failed.";
+                    msg_dialog_ok.open();
+                }
             } else {
-                msg_dialog_ok.text = "Export failed."
-                msg_dialog_ok.open();
+                let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
+                if (ok) {
+                    msg_dialog_ok.text = "Exported as: " + save_file_name;
+                    msg_dialog_ok.open();
+                } else {
+                    msg_dialog_ok.text = "Export failed."
+                    msg_dialog_ok.open();
+                }
             }
         };
 
         if (save_file_name) {
-            let exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
-            if (exists) {
-                msg_dialog_cancel_ok.text = `${save_file_name} exists. Overwrite?`;
-                msg_dialog_cancel_ok.accept_fn = save_fn;
-                msg_dialog_cancel_ok.open();
+            if (is_anki_csv) {
+                // Check if either file exists
+                let basic_exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, "gloss_export_anki_basic.csv");
+                let cloze_exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, "gloss_export_anki_cloze.csv");
+                
+                if (basic_exists || cloze_exists) {
+                    msg_dialog_cancel_ok.text = "One or more Anki CSV files exist. Overwrite?";
+                    msg_dialog_cancel_ok.accept_fn = save_fn;
+                    msg_dialog_cancel_ok.open();
+                } else {
+                    save_fn();
+                }
             } else {
-                save_fn();
+                let exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
+                if (exists) {
+                    msg_dialog_cancel_ok.text = `${save_file_name} exists. Overwrite?`;
+                    msg_dialog_cancel_ok.accept_fn = save_fn;
+                    msg_dialog_cancel_ok.open();
+                } else {
+                    save_fn();
+                }
             }
         }
 
@@ -1300,7 +1330,7 @@ ${main_text}
         return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
-    function format_paragraph_anki_csv(paragraph, paragraph_index): string {
+    function format_paragraph_anki_csv(paragraph, paragraph_index, format_type): string {
         var paragraph_obj = paragraph_model.get(paragraph_index);
         var words_data_json = paragraph_obj ? paragraph_obj.words_data_json : "[]";
         var words_data = [];
@@ -1321,25 +1351,39 @@ ${main_text}
                 context_snippet = words_data[j].example_sentence;
             }
 
-            var front = word_stem;
-            if (context_snippet && context_snippet.trim() !== "") {
-                front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
+            var front = "";
+            var back = "";
+
+            if (format_type === "cloze") {
+                // Cloze format: context with {{c1::word}} instead of <b>word</b>
+                if (context_snippet && context_snippet.trim() !== "") {
+                    front = context_snippet.replace(/<b>/g, "{{c1::").replace(/<\/b>/g, "}}");
+                } else {
+                    front = "{{c1::" + word_stem + "}}";
+                }
+                back = vocab.summary;
+            } else {
+                // Basic format: word + context on front, definition on back
+                front = word_stem;
+                if (context_snippet && context_snippet.trim() !== "") {
+                    front = `<p>${word_stem}</p><p>${context_snippet}</p>`;
+                }
+                back = vocab.summary;
             }
 
-            var back = vocab.summary;
             csv_lines.push(root.format_csv_row(front, back));
         }
 
         return csv_lines.join("\n");
     }
 
-    function gloss_as_anki_csv(): string {
+    function gloss_as_anki_csv(format_type): string {
         let gloss_data = root.gloss_export_data();
         let csv_lines = [];
 
         for (var i = 0; i < gloss_data.paragraphs.length; i++) {
             var paragraph = gloss_data.paragraphs[i];
-            var paragraph_csv = root.format_paragraph_anki_csv(paragraph, i);
+            var paragraph_csv = root.format_paragraph_anki_csv(paragraph, i, format_type || "basic");
             if (paragraph_csv) {
                 csv_lines.push(paragraph_csv);
             }
@@ -1396,7 +1440,7 @@ ${main_text}
         return root.format_paragraph_orgmode(paragraph, paragraph_index + 1).trim().replace(/\n\n\n+/g, "\n\n");
     }
 
-    function paragraph_gloss_as_anki_csv(paragraph_index: int): string {
+    function paragraph_gloss_as_anki_csv(paragraph_index: int, format_type): string {
         if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
             logger.error("Invalid paragraph index:", paragraph_index);
             return "";
@@ -1409,7 +1453,7 @@ ${main_text}
         }
 
         var paragraph = gloss_data.paragraphs[paragraph_index];
-        return root.format_paragraph_anki_csv(paragraph, paragraph_index);
+        return root.format_paragraph_anki_csv(paragraph, paragraph_index, format_type || "basic");
     }
 
     TabBar {
