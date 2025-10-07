@@ -68,6 +68,10 @@ pub mod qobject {
         #[cxx_name = "dpdLookupReady"]
         fn dpd_lookup_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "ankiCsvExportReady"]
+        fn anki_csv_export_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -247,6 +251,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn markdown_to_html(self: &SuttaBridge, markdown_text: &QString) -> QString;
+
+        #[qinvokable]
+        fn export_anki_csv_background(self: Pin<&mut SuttaBridge>, input_json: &QString);
     }
 }
 
@@ -1169,5 +1176,58 @@ impl qobject::SuttaBridge {
             Some(json) => QString::from(json),
             None => QString::from("{}"),
         }
+    }
+
+    pub fn export_anki_csv_background(self: Pin<&mut Self>, input_json: &QString) {
+        info("SuttaBridge::export_anki_csv_background() start");
+        let qt_thread = self.qt_thread();
+        let input_json_str = input_json.to_string();
+
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            
+            let input: simsapa_backend::types::AnkiCsvExportInput = match serde_json::from_str(&input_json_str) {
+                Ok(data) => data,
+                Err(e) => {
+                    let error_response = simsapa_backend::types::AnkiCsvExportResult {
+                        success: false,
+                        files: vec![],
+                        error: Some(format!("Failed to parse input JSON: {}", e)),
+                    };
+                    let error_json = serde_json::to_string(&error_response).unwrap_or_default();
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().anki_csv_export_ready(QString::from(error_json));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            let result = match simsapa_backend::anki_export::export_anki_csv(input, &app_data) {
+                Ok(res) => res,
+                Err(e) => simsapa_backend::types::AnkiCsvExportResult {
+                    success: false,
+                    files: vec![],
+                    error: Some(format!("Export failed: {}", e)),
+                },
+            };
+
+            let result_json = match serde_json::to_string(&result) {
+                Ok(json) => json,
+                Err(e) => {
+                    let error_response = simsapa_backend::types::AnkiCsvExportResult {
+                        success: false,
+                        files: vec![],
+                        error: Some(format!("Failed to serialize result: {}", e)),
+                    };
+                    serde_json::to_string(&error_response).unwrap_or_default()
+                }
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().anki_csv_export_ready(QString::from(result_json));
+            }).unwrap();
+
+            info("SuttaBridge::export_anki_csv_background() end");
+        });
     }
 }

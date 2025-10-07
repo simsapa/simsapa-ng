@@ -366,7 +366,7 @@ pub fn find_sentence_start(text: &str, char_pos: usize) -> usize {
         return 0;
     }
 
-    let chars: Vec<char> = text.chars().collect();
+    // let chars: Vec<char> = text.chars().collect();
     let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(text.len());
     
     let bytes = text.as_bytes();
@@ -436,10 +436,6 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let text = re_digits.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
     let text = text.trim();
-
-    let chars: Vec<char> = original_normalized.chars().collect();
-    let text_len = chars.len();
-    let original_lower = original_normalized.to_lowercase();
 
     let chars: Vec<char> = original_normalized.chars().collect();
     let text_len = chars.len();

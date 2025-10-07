@@ -107,6 +107,8 @@ Item {
     // Background processing state tracking
     property bool is_processing_all: false
     property bool is_processing_single: false
+    property bool is_exporting_anki: false
+    property int exporting_note_count: 0
 
     // Signal connections for background gloss processing
     Connections {
@@ -149,6 +151,28 @@ Item {
             } catch (e) {
                 logger.error("Failed to parse background processing results:", e);
                 // TODO: Show user-friendly error message
+            }
+        }
+
+        function onAnkiCsvExportReady(results_json: string) {
+            logger.debug(`📥 onAnkiCsvExportReady received: ${results_json.substring(0, 100)}...`);
+
+            // Always reset exporting state
+            root.is_exporting_anki = false;
+
+            try {
+                let results = JSON.parse(results_json);
+                if (results.success && results.files && results.files.length > 0) {
+                    root.handle_anki_export_results(results);
+                } else {
+                    logger.error(`❌ Anki export failed: ${results.error || 'Unknown error'}`);
+                    msg_dialog_ok.text = `Export failed: ${results.error || 'Unknown error'}`;
+                    msg_dialog_ok.open();
+                }
+            } catch (e) {
+                logger.error("Failed to parse Anki export results:", e);
+                msg_dialog_ok.text = `Export failed: ${e}`;
+                msg_dialog_ok.open();
             }
         }
     }
@@ -251,49 +275,11 @@ Item {
         } else if (export_btn.currentValue === "Anki CSV") {
             is_anki_csv = true;
             save_file_name = "gloss_export_anki_basic.csv";
-            save_content = root.gloss_as_anki_csv("basic");
         }
 
         let save_fn = function() {
             if (is_anki_csv) {
-                let export_format = SuttaBridge.get_anki_export_format();
-                let include_cloze = SuttaBridge.get_anki_include_cloze();
-                
-                let files_saved = [];
-                let basic_ok = false;
-                let cloze_ok = false;
-                let data_ok = false;
-                
-                if (export_format === "Simple") {
-                    basic_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_basic.csv", root.gloss_as_anki_csv("basic"));
-                    if (basic_ok) files_saved.push("gloss_export_anki_basic.csv");
-                    
-                    if (include_cloze) {
-                        cloze_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_cloze.csv", root.gloss_as_anki_csv("cloze"));
-                        if (cloze_ok) files_saved.push("gloss_export_anki_cloze.csv");
-                    }
-                    
-                } else if (export_format === "Templated") {
-                    basic_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_templated.csv", root.gloss_as_anki_csv("templated"));
-                    if (basic_ok) files_saved.push("gloss_export_anki_templated.csv");
-                    
-                    if (include_cloze) {
-                        cloze_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_templated_cloze.csv", root.gloss_as_anki_csv("templated_cloze"));
-                        if (cloze_ok) files_saved.push("gloss_export_anki_templated_cloze.csv");
-                    }
-                    
-                } else if (export_format === "DataCsv") {
-                    data_ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, "gloss_export_anki_data.csv", root.gloss_as_anki_csv("data"));
-                    if (data_ok) files_saved.push("gloss_export_anki_data.csv");
-                }
-                
-                if (files_saved.length > 0) {
-                    msg_dialog_ok.text = "Exported as: " + files_saved.join(", ");
-                    msg_dialog_ok.open();
-                } else {
-                    msg_dialog_ok.text = "Export failed.";
-                    msg_dialog_ok.open();
-                }
+                root.start_anki_export_background(export_folder_dialog.selectedFolder);
             } else {
                 let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
                 if (ok) {
@@ -308,7 +294,6 @@ Item {
 
         if (save_file_name) {
             if (is_anki_csv) {
-                // Check if either file exists
                 let basic_exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, "gloss_export_anki_basic.csv");
                 let cloze_exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, "gloss_export_anki_cloze.csv");
                 
@@ -331,7 +316,6 @@ Item {
             }
         }
 
-        // set the button back to default
         export_btn.currentIndex = 0;
     }
 
@@ -1603,6 +1587,61 @@ ${main_text}
         return root.format_paragraph_anki_csv(paragraph, paragraph_index, format_type || "basic");
     }
 
+    function start_anki_export_background(folder_url) {
+        if (root.is_exporting_anki) {
+            logger.warn("Anki export already in progress");
+            return;
+        }
+
+        let gloss_data = root.gloss_export_data();
+        let note_count = 0;
+        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
+            note_count += gloss_data.paragraphs[i].vocabulary.length;
+        }
+
+        root.exporting_note_count = note_count;
+        root.is_exporting_anki = true;
+
+        let export_format = SuttaBridge.get_anki_export_format();
+        let include_cloze = SuttaBridge.get_anki_include_cloze();
+
+        let input_data = {
+            gloss_data_json: JSON.stringify(gloss_data),
+            export_format: export_format,
+            include_cloze: include_cloze,
+            templates: {
+                front: SuttaBridge.get_anki_template_front(),
+                back: SuttaBridge.get_anki_template_back()
+            },
+            folder_url: folder_url.toString()
+        };
+
+        SuttaBridge.export_anki_csv_background(JSON.stringify(input_data));
+    }
+
+    function handle_anki_export_results(results) {
+        logger.debug(`📦 Handling Anki export results: ${results.files.length} files`);
+
+        let folder_url = export_folder_dialog.selectedFolder;
+        let files_saved = [];
+
+        for (var i = 0; i < results.files.length; i++) {
+            let file = results.files[i];
+            let ok = SuttaBridge.save_file(folder_url, file.filename, file.content);
+            if (ok) {
+                files_saved.push(file.filename);
+            }
+        }
+
+        if (files_saved.length > 0) {
+            msg_dialog_ok.text = "Exported as: " + files_saved.join(", ");
+            msg_dialog_ok.open();
+        } else {
+            msg_dialog_ok.text = "Export failed: No files saved";
+            msg_dialog_ok.open();
+        }
+    }
+
     TabBar {
         id: tabBar
         anchors.top: parent.top
@@ -1698,10 +1737,19 @@ ${main_text}
 
                             Item { Layout.fillWidth: true }
 
+                            Text {
+                                id: exporting_message
+                                text: `Exporting ${root.exporting_note_count} notes...`
+                                font.pointSize: root.vocab_font_point_size
+                                color: "#4CAF50"
+                                visible: root.is_exporting_anki
+                                Layout.leftMargin: 10
+                            }
+
                             ComboBox {
                                 id: export_btn
                                 model: ["Export As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]
-                                enabled: paragraph_model.count > 0
+                                enabled: paragraph_model.count > 0 && !root.is_exporting_anki
                                 onCurrentIndexChanged: {
                                     if (export_btn.currentIndex !== 0) {
                                         export_folder_dialog.open();

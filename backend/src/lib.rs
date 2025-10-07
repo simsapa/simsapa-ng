@@ -17,6 +17,7 @@ pub mod lookup;
 pub mod html_format;
 pub mod prompt_utils;
 pub mod anki_sample_data;
+pub mod anki_export;
 
 use std::env;
 use std::io::{self, Read, Write};

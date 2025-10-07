@@ -17,6 +17,7 @@ Item {
     signal allParagraphsGlossReady(results_json: string);
     signal paragraphGlossReady(paragraph_index: int, results_json: string);
     signal dpdLookupReady(results_json: string);
+    signal ankiCsvExportReady(results_json: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -319,6 +320,14 @@ Item {
 
     function get_dpd_headword_by_uid(uid: string): string {
         return '{}';
+    }
+
+    function export_anki_csv_background(input_json: string) {
+        console.log("export_anki_csv_background():", input_json.substring(0, 100));
+        // Simulate async behavior
+        Qt.callLater(function() {
+            ankiCsvExportReady('{"success": true, "files": [], "error": null}');
+        });
     }
 
     function get_common_words_json(): string {
