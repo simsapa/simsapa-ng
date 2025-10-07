@@ -18,6 +18,7 @@ Item {
     signal paragraphGlossReady(paragraph_index: int, results_json: string);
     signal dpdLookupReady(results_json: string);
     signal ankiCsvExportReady(results_json: string);
+    signal ankiPreviewReady(preview_html: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -327,6 +328,16 @@ Item {
         // Simulate async behavior
         Qt.callLater(function() {
             ankiCsvExportReady('{"success": true, "files": [], "error": null}');
+        });
+    }
+
+    function render_anki_preview_background(front_template: string, back_template: string) {
+        console.log("render_anki_preview_background()");
+        // Simulate async behavior
+        Qt.callLater(function() {
+            let preview = "<h4>Front:</h4><div style='background: #fff; padding: 10px; border: 1px solid #ccc; margin-bottom: 10px;'>Preview Front</div>" +
+                         "<h4>Back:</h4><div style='background: #fff; padding: 10px; border: 1px solid #ccc;'>Preview Back</div>";
+            ankiPreviewReady(preview);
         });
     }
 

@@ -72,52 +72,15 @@ ApplicationWindow {
     }
 
     function render_preview() {
-        try {
-            let sample_json = SuttaBridge.get_sample_vocabulary_data_json();
-            let sample_data = JSON.parse(sample_json);
-            
-            let front_template = root.current_templates["Front"] || "";
-            let back_template = root.current_templates["Back"] || "";
-            
-            let front_rendered = "";
-            let back_rendered = "";
-            
-            try {
-                let contextKeys = Object.keys(sample_data);
-                let contextValues = Object.values(sample_data);
-                
-                let frontFuncBody = 'return `' + front_template + '`;';
-                let frontFunc = new Function(...contextKeys, frontFuncBody);
-                front_rendered = frontFunc(...contextValues);
-            } catch (e) {
-                front_rendered = "<span style='color: red;'>Error: " + e.toString() + "</span>";
-            }
-            
-            try {
-                let contextKeys = Object.keys(sample_data);
-                let contextValues = Object.values(sample_data);
-                
-                let backFuncBody = 'return `' + back_template + '`;';
-                let backFunc = new Function(...contextKeys, backFuncBody);
-                back_rendered = backFunc(...contextValues);
-            } catch (e) {
-                back_rendered = "<span style='color: red;'>Error: " + e.toString() + "</span>";
-            }
-            
-            let preview_html = "<h4>Front:</h4>" +
-                              "<div style='background: #fff; padding: 10px; border: 1px solid #ccc; margin-bottom: 10px;'>" +
-                              front_rendered +
-                              "</div>" +
-                              "<h4>Back:</h4>" +
-                              "<div style='background: #fff; padding: 10px; border: 1px solid #ccc;'>" +
-                              back_rendered +
-                              "</div>";
-            
+        let front_template = root.current_templates["Front"] || "";
+        let back_template = root.current_templates["Back"] || "";
+        SuttaBridge.render_anki_preview_background(front_template, back_template);
+    }
+
+    Connections {
+        target: SuttaBridge
+        function onAnkiPreviewReady(preview_html) {
             preview_text_area.text = preview_html;
-            
-        } catch (e) {
-            preview_text_area.text = "<span style='color: red;'>Preview error: " + e.toString() + "</span>";
-            logger.error("Preview render error:", e);
         }
     }
 

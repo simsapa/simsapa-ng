@@ -72,6 +72,10 @@ pub mod qobject {
         #[cxx_name = "ankiCsvExportReady"]
         fn anki_csv_export_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "ankiPreviewReady"]
+        fn anki_preview_ready(self: Pin<&mut SuttaBridge>, preview_html: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -254,6 +258,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn export_anki_csv_background(self: Pin<&mut SuttaBridge>, input_json: &QString);
+
+        #[qinvokable]
+        fn render_anki_preview_background(self: Pin<&mut SuttaBridge>, front_template: &QString, back_template: &QString);
     }
 }
 
@@ -1171,7 +1178,7 @@ impl qobject::SuttaBridge {
     pub fn get_dpd_headword_by_uid(&self, uid: &QString) -> QString {
         let app_data = get_app_data();
         let uid_str = uid.to_string();
-        
+
         match app_data.get_dpd_headword_by_uid(&uid_str) {
             Some(json) => QString::from(json),
             None => QString::from("{}"),
@@ -1185,7 +1192,7 @@ impl qobject::SuttaBridge {
 
         thread::spawn(move || {
             let app_data = get_app_data();
-            
+
             let input: simsapa_backend::types::AnkiCsvExportInput = match serde_json::from_str(&input_json_str) {
                 Ok(data) => data,
                 Err(e) => {
@@ -1228,6 +1235,34 @@ impl qobject::SuttaBridge {
             }).unwrap();
 
             info("SuttaBridge::export_anki_csv_background() end");
+        });
+    }
+
+    pub fn render_anki_preview_background(self: Pin<&mut Self>, front_template: &QString, back_template: &QString) {
+        info("SuttaBridge::render_anki_preview_background() start");
+        let qt_thread = self.qt_thread();
+        let front_template_str = front_template.to_string();
+        let back_template_str = back_template.to_string();
+
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            let sample_json = simsapa_backend::anki_sample_data::get_sample_vocabulary_data_json();
+
+            let preview_html = match simsapa_backend::anki_export::render_anki_preview(
+                &sample_json,
+                &front_template_str,
+                &back_template_str,
+                &app_data,
+            ) {
+                Ok(html) => html,
+                Err(e) => format!("<span style='color: red;'>Preview error: {}</span>", e),
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().anki_preview_ready(QString::from(preview_html));
+            }).unwrap();
+
+            info("SuttaBridge::render_anki_preview_background() end");
         });
     }
 }
