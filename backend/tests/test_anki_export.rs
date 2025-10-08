@@ -250,6 +250,33 @@ fn test_anki_csv_data_format() {
     assert!(header.contains("context_snippet"), "Header should have context_snippet");
     assert!(header.contains("uid"), "Header should have uid");
     assert!(header.contains("summary"), "Header should have summary");
+    
+    let dpd_fields = vec![
+        "id", "lemma_1", "lemma_2", "pos", "grammar", "derived_from",
+        "neg", "verb", "trans", "plus_case", "meaning_1", "meaning_lit",
+        "meaning_2", "non_ia", "sanskrit", "root_key", "root_sign", "root_base",
+        "family_root_fk", "family_word_fk", "family_compound_fk", "family_idioms_fk",
+        "family_set_fk", "construction", "derivative", "suffix", "phonetic",
+        "compound_type", "compound_construction", "non_root_in_comps",
+        "source_1", "sutta_1", "example_1", "source_2", "sutta_2", "example_2",
+        "antonym", "synonym", "variant", "var_phonetic", "var_text",
+        "commentary", "notes", "cognate", "link", "origin", "stem", "pattern",
+        "dictionary_id", "word_ascii", "lemma_clean",
+    ];
+    
+    for field in dpd_fields {
+        assert!(header.contains(field), "Header should have DPD field: {}", field);
+    }
+    
+    let excluded_fields = vec![
+        "inflections", "inflections_api_ca_eva_iti", "inflections_sinhala",
+        "inflections_devanagari", "inflections_thai", "inflections_html",
+        "freq_data", "freq_html", "ebt_count",
+    ];
+    
+    for field in excluded_fields {
+        assert!(!header.contains(field), "Header should NOT have excluded field: {}", field);
+    }
 }
 
 #[test]
@@ -399,6 +426,47 @@ fn test_context_snippet_in_data_csv() {
     
     let data_line = lines[1];
     assert!(data_line.contains("<b>karitvā</b>"), "Data should contain context snippet with bolded word");
+}
+
+#[test]
+#[serial]
+fn test_data_csv_all_dpd_fields() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "DataCsv".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{word_stem}".to_string(),
+            back: "{vocab.summary}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data).expect("Export should succeed");
+    
+    let csv = &result.files[0].content;
+    let lines: Vec<&str> = csv.lines().collect();
+    
+    assert!(lines.len() >= 2, "Should have header + data rows");
+    
+    let header = lines[0];
+    let header_fields: Vec<&str> = header.split(',').collect();
+    
+    assert_eq!(header_fields.len(), 56, "Should have 56 fields (4 vocab fields + 51 DPD fields + 1 summary), got {}", header_fields.len());
+    
+    assert!(!header.contains("inflections_html"), "Should NOT include inflections_html field");
+    assert!(!header.contains("freq_data"), "Should NOT include freq_data field");
+    assert!(!header.contains("ebt_count"), "Should NOT include ebt_count field");
+    assert!(header.contains("dictionary_id"), "Should include dictionary_id field");
+    assert!(header.contains("lemma_clean"), "Should include lemma_clean field");
+    assert!(header.contains("word_ascii"), "Should include word_ascii field");
+    
+    assert!(csv.contains("20502/dpd"), "Data should contain uid");
+    assert!(csv.contains("karitvā"), "Data should contain word stem");
 }
 
 #[test]

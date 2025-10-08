@@ -248,17 +248,57 @@ fn generate_data_csv(
         "context_snippet",
         "word",
         "uid",
+        "id",
         "lemma_1",
         "lemma_2",
         "pos",
         "grammar",
         "derived_from",
+        "neg",
+        "verb",
+        "trans",
+        "plus_case",
         "meaning_1",
+        "meaning_lit",
+        "meaning_2",
+        "non_ia",
+        "sanskrit",
+        "root_key",
+        "root_sign",
+        "root_base",
+        "family_root_fk",
+        "family_word_fk",
+        "family_compound_fk",
+        "family_idioms_fk",
+        "family_set_fk",
         "construction",
         "derivative",
+        "suffix",
+        "phonetic",
+        "compound_type",
+        "compound_construction",
+        "non_root_in_comps",
+        "source_1",
+        "sutta_1",
         "example_1",
-        "synonym",
+        "source_2",
+        "sutta_2",
+        "example_2",
         "antonym",
+        "synonym",
+        "variant",
+        "var_phonetic",
+        "var_text",
+        "commentary",
+        "notes",
+        "cognate",
+        "link",
+        "origin",
+        "stem",
+        "pattern",
+        "dictionary_id",
+        "word_ascii",
+        "lemma_clean",
         "summary",
     ];
     csv_lines.push(header.join(","));
@@ -272,9 +312,22 @@ fn generate_data_csv(
 
             let get_field = |key: &str| -> String {
                 dpd_data.get(key)
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string()
+                    .and_then(|v| {
+                        if v.is_string() {
+                            v.as_str().map(|s| s.to_string())
+                        } else if v.is_i64() {
+                            Some(v.as_i64().unwrap().to_string())
+                        } else if v.is_u64() {
+                            Some(v.as_u64().unwrap().to_string())
+                        } else if v.is_f64() {
+                            Some(v.as_f64().unwrap().to_string())
+                        } else if v.is_boolean() {
+                            Some(v.as_bool().unwrap().to_string())
+                        } else {
+                            None
+                        }
+                    })
+                    .unwrap_or_else(|| "".to_string())
             };
 
             let row = vec![
@@ -282,17 +335,57 @@ fn generate_data_csv(
                 vocab.context_snippet.clone(),
                 vocab.word.clone(),
                 vocab.uid.clone(),
+                get_field("id"),
                 get_field("lemma_1"),
                 get_field("lemma_2"),
                 get_field("pos"),
                 get_field("grammar"),
                 get_field("derived_from"),
+                get_field("neg"),
+                get_field("verb"),
+                get_field("trans"),
+                get_field("plus_case"),
                 get_field("meaning_1"),
+                get_field("meaning_lit"),
+                get_field("meaning_2"),
+                get_field("non_ia"),
+                get_field("sanskrit"),
+                get_field("root_key"),
+                get_field("root_sign"),
+                get_field("root_base"),
+                get_field("family_root_fk"),
+                get_field("family_word_fk"),
+                get_field("family_compound_fk"),
+                get_field("family_idioms_fk"),
+                get_field("family_set_fk"),
                 get_field("construction"),
                 get_field("derivative"),
+                get_field("suffix"),
+                get_field("phonetic"),
+                get_field("compound_type"),
+                get_field("compound_construction"),
+                get_field("non_root_in_comps"),
+                get_field("source_1"),
+                get_field("sutta_1"),
                 get_field("example_1"),
-                get_field("synonym"),
+                get_field("source_2"),
+                get_field("sutta_2"),
+                get_field("example_2"),
                 get_field("antonym"),
+                get_field("synonym"),
+                get_field("variant"),
+                get_field("var_phonetic"),
+                get_field("var_text"),
+                get_field("commentary"),
+                get_field("notes"),
+                get_field("cognate"),
+                get_field("link"),
+                get_field("origin"),
+                get_field("stem"),
+                get_field("pattern"),
+                get_field("dictionary_id"),
+                get_field("word_ascii"),
+                get_field("lemma_clean"),
                 vocab.summary.clone(),
             ];
 
