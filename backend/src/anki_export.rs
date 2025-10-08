@@ -96,18 +96,21 @@ pub fn export_anki_csv(
 
     let mut files = Vec::new();
 
+    let filename = format!("gloss_export_anki_{}.csv", &input.export_format.to_lowercase());
+    let filename_cloze = format!("gloss_export_anki_{}_cloze.csv", &input.export_format.to_lowercase());
+
     match input.export_format.as_str() {
         "Simple" => {
-            let basic_content = generate_basic_csv(&gloss_data, &input, app_data)?;
+            let simple_content = generate_simple_csv(&gloss_data, &input, app_data)?;
             files.push(AnkiCsvFile {
-                filename: "gloss_export_anki_basic.csv".to_string(),
-                content: basic_content,
+                filename,
+                content: simple_content,
             });
 
             if input.include_cloze {
-                let cloze_content = generate_cloze_csv(&gloss_data, &input, app_data)?;
+                let cloze_content = generate_simple_cloze_csv(&gloss_data, &input, app_data)?;
                 files.push(AnkiCsvFile {
-                    filename: "gloss_export_anki_cloze.csv".to_string(),
+                    filename: filename_cloze,
                     content: cloze_content,
                 });
             }
@@ -115,14 +118,14 @@ pub fn export_anki_csv(
         "Templated" => {
             let templated_content = generate_templated_csv(&gloss_data, &input, app_data, false)?;
             files.push(AnkiCsvFile {
-                filename: "gloss_export_anki_templated.csv".to_string(),
+                filename,
                 content: templated_content,
             });
 
             if input.include_cloze {
                 let templated_cloze_content = generate_templated_csv(&gloss_data, &input, app_data, true)?;
                 files.push(AnkiCsvFile {
-                    filename: "gloss_export_anki_templated_cloze.csv".to_string(),
+                    filename: filename_cloze,
                     content: templated_cloze_content,
                 });
             }
@@ -130,7 +133,7 @@ pub fn export_anki_csv(
         "DataCsv" => {
             let data_content = generate_data_csv(&gloss_data, &input, app_data)?;
             files.push(AnkiCsvFile {
-                filename: "gloss_export_anki_data.csv".to_string(),
+                filename,
                 content: data_content,
             });
         }
@@ -146,7 +149,7 @@ pub fn export_anki_csv(
     })
 }
 
-fn generate_basic_csv(
+fn generate_simple_csv(
     gloss_data: &GlossData,
     _input: &AnkiCsvExportInput,
     _app_data: &AppData,
@@ -165,7 +168,7 @@ fn generate_basic_csv(
     Ok(csv_lines.join("\n"))
 }
 
-fn generate_cloze_csv(
+fn generate_simple_cloze_csv(
     gloss_data: &GlossData,
     _input: &AnkiCsvExportInput,
     _app_data: &AppData,

@@ -81,11 +81,11 @@ Item {
             }
         }
 
-        function test_anki_csv_basic_format() {
+        function test_anki_csv_simple_format() {
             var paragraph = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
             processTextBackground(paragraph);
 
-            var csv = gloss_tab.gloss_as_anki_csv("basic");
+            var csv = gloss_tab.gloss_as_anki_csv("simple");
             
             verify(csv.length > 0, "CSV should not be empty");
             verify(csv.includes("karitvā"), "CSV should contain karitvā");
@@ -170,7 +170,7 @@ Item {
                 selected_ai_tab: 0
             });
 
-            var csv = gloss_tab.gloss_as_anki_csv("basic");
+            var csv = gloss_tab.gloss_as_anki_csv("simple");
             
             verify(csv.includes('""'), "Quotes should be escaped as double quotes");
             verify(csv.includes('"'), "Fields with special chars should be quoted");
@@ -182,7 +182,7 @@ Item {
 
             verify(gloss_tab.paragraph_model.count === 2, "Should have 2 paragraphs");
 
-            var csv = gloss_tab.gloss_as_anki_csv("basic");
+            var csv = gloss_tab.gloss_as_anki_csv("simple");
             
             verify(csv.includes("karitvā"), "Should include vocab from paragraph 1");
             verify(csv.includes("citta"), "Should include vocab from paragraph 2");
@@ -195,7 +195,7 @@ Item {
             var paragraph = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
             processTextBackground(paragraph);
 
-            var csv = gloss_tab.gloss_as_anki_csv("basic");
+            var csv = gloss_tab.gloss_as_anki_csv("simple");
             
             var lines = csv.split("\n");
             for (var i = 0; i < lines.length; i++) {
@@ -211,7 +211,7 @@ Item {
             var paragraph = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
             processTextBackground(paragraph);
 
-            var csv = gloss_tab.gloss_as_anki_csv("basic");
+            var csv = gloss_tab.gloss_as_anki_csv("simple");
             
             verify(csv.includes("<b>"), "Context snippet should contain bold markers for target word");
             verify(csv.includes("</b>"), "Context snippet should have closing bold tag");

@@ -136,6 +136,7 @@ ApplicationWindow {
 
                 ComboBox {
                     id: format_combo_box
+                    // AnkiExportFormat
                     model: ["Simple", "Templated", "DataCsv"]
                     Layout.preferredWidth: 150
 

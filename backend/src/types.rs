@@ -332,21 +332,6 @@ pub struct BackgroundProcessingError {
     pub error: String,
 }
 
-/// Anki CSV export format type
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum AnkiCsvFormat {
-    #[serde(rename = "basic")]
-    Basic,
-    #[serde(rename = "cloze")]
-    Cloze,
-    #[serde(rename = "templated")]
-    Templated,
-    #[serde(rename = "templated_cloze")]
-    TemplatedCloze,
-    #[serde(rename = "data")]
-    Data,
-}
-
 /// Input data for Anki CSV export in background
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnkiCsvExportInput {
