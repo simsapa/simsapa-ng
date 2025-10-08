@@ -11,6 +11,7 @@ struct VocabItem {
     uid: String,
     word: String,
     summary: String,
+    context_snippet: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -58,6 +59,11 @@ pub fn escape_csv_field(field: &str) -> String {
 
 pub fn format_csv_row(front: &str, back: &str) -> String {
     format!("{},{}", escape_csv_field(front), escape_csv_field(back))
+}
+
+pub fn convert_context_to_cloze(context_snippet: &str) -> String {
+    let re = regex::Regex::new(r"<b>(.*?)</b>").unwrap();
+    re.replace_all(context_snippet, "{{c1::$1}}").to_string()
 }
 
 fn render_template(template_str: &str, context: &TemplateContext) -> Result<String> {
@@ -116,14 +122,24 @@ pub fn export_anki_csv(
             }
         }
         "Templated" => {
-            let templated_content = generate_templated_csv(&gloss_data, &input, app_data, false)?;
+            let templated_content = generate_templated_csv(&gloss_data, &input.templates.front, &input.templates.back, app_data, false)?;
             files.push(AnkiCsvFile {
                 filename,
                 content: templated_content,
             });
 
             if input.include_cloze {
-                let templated_cloze_content = generate_templated_csv(&gloss_data, &input, app_data, true)?;
+                let cloze_front = if input.templates.cloze_front.is_empty() {
+                    &input.templates.front
+                } else {
+                    &input.templates.cloze_front
+                };
+                let cloze_back = if input.templates.cloze_back.is_empty() {
+                    &input.templates.back
+                } else {
+                    &input.templates.cloze_back
+                };
+                let templated_cloze_content = generate_templated_csv(&gloss_data, cloze_front, cloze_back, app_data, true)?;
                 files.push(AnkiCsvFile {
                     filename: filename_cloze,
                     content: templated_cloze_content,
@@ -189,7 +205,8 @@ fn generate_simple_cloze_csv(
 
 fn generate_templated_csv(
     gloss_data: &GlossData,
-    input: &AnkiCsvExportInput,
+    front_template: &str,
+    back_template: &str,
     app_data: &AppData,
     is_cloze: bool,
 ) -> Result<String> {
@@ -203,15 +220,15 @@ fn generate_templated_csv(
             };
 
             let context_snippet = if is_cloze {
-                "".to_string()
+                convert_context_to_cloze(&vocab.context_snippet)
             } else {
-                "".to_string()
+                vocab.context_snippet.clone()
             };
 
             let context = build_template_context(vocab, &dpd_data, &context_snippet);
 
-            let front = render_template(&input.templates.front, &context)?;
-            let back = render_template(&input.templates.back, &context)?;
+            let front = render_template(front_template, &context)?;
+            let back = render_template(back_template, &context)?;
 
             csv_lines.push(format_csv_row(&front, &back));
         }
@@ -263,7 +280,7 @@ fn generate_data_csv(
 
             let row = vec![
                 word_stem,
-                "".to_string(),
+                vocab.context_snippet.clone(),
                 vocab.word.clone(),
                 vocab.uid.clone(),
                 get_field("lemma_1"),
@@ -322,6 +339,7 @@ pub fn render_anki_preview(
         uid: uid.to_string(),
         word: word.to_string(),
         summary: summary.to_string(),
+        context_snippet: context_snippet.to_string(),
     };
 
     let context = build_template_context(&vocab, &dpd_data, context_snippet);

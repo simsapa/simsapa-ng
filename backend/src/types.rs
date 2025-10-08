@@ -346,6 +346,8 @@ pub struct AnkiCsvExportInput {
 pub struct AnkiCsvTemplates {
     pub front: String,
     pub back: String,
+    pub cloze_front: String,
+    pub cloze_back: String,
 }
 
 /// Result data for Anki CSV export

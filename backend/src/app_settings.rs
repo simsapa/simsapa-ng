@@ -53,6 +53,8 @@ pub struct AppSettings {
     pub ai_models_auto_retry: bool,
     pub anki_template_front: String,
     pub anki_template_back: String,
+    pub anki_template_cloze_front: String,
+    pub anki_template_cloze_back: String,
     pub anki_export_format: AnkiExportFormat,
     pub anki_include_cloze: bool,
 }
@@ -126,6 +128,8 @@ Respond with GFM-Markdown formatted text.
             ai_models_auto_retry: false,
             anki_template_front: "<div><p>{word_stem}</p><p>{context_snippet}</p></div>".to_string(),
             anki_template_back: "<div><b>{dpd.pos}</b> {vocab.summary}</div>".to_string(),
+            anki_template_cloze_front: "<div>{context_snippet}</div>".to_string(),
+            anki_template_cloze_back: "<div>{vocab.summary}</div>".to_string(),
             anki_export_format: AnkiExportFormat::Simple,
             anki_include_cloze: true,
         }

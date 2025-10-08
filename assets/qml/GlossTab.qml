@@ -1113,7 +1113,9 @@ ${table_rows}
 
                         // Add one line of word vocabulary info.
                         // For each word, export only the selected result.
-                        para_data.vocabulary.push(w_data.results[selected_index]);
+                        var vocab_item = Object.assign({}, w_data.results[selected_index]);
+                        vocab_item.context_snippet = w_data.example_sentence || "";
+                        para_data.vocabulary.push(vocab_item);
                     }
                 } catch (e) {
                     logger.error("Failed to parse words_data_json:", e);
@@ -1304,7 +1306,9 @@ ${main_text}
             include_cloze: include_cloze,
             templates: {
                 front: SuttaBridge.get_anki_template_front(),
-                back: SuttaBridge.get_anki_template_back()
+                back: SuttaBridge.get_anki_template_back(),
+                cloze_front: SuttaBridge.get_anki_template_cloze_front(),
+                cloze_back: SuttaBridge.get_anki_template_cloze_back()
             },
             folder_url: folder_url.toString()
         };

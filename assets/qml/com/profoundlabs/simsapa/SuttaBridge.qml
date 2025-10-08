@@ -299,6 +299,22 @@ Item {
         console.log("set_anki_template_back():", template);
     }
 
+    function get_anki_template_cloze_front(): string {
+        return '${context_snippet}';
+    }
+
+    function set_anki_template_cloze_front(template: string) {
+        console.log("set_anki_template_cloze_front():", template);
+    }
+
+    function get_anki_template_cloze_back(): string {
+        return '<div><b>${dpd.pos}</b> ${vocab.summary}</div>';
+    }
+
+    function set_anki_template_cloze_back(template: string) {
+        console.log("set_anki_template_cloze_back():", template);
+    }
+
     function get_anki_export_format(): string {
         return 'Simple';
     }

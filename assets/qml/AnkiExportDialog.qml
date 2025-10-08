@@ -25,7 +25,9 @@ ApplicationWindow {
 
     property var current_templates: ({
         "Front": "",
-        "Back": ""
+        "Back": "",
+        "Cloze Front": "",
+        "Cloze Back": ""
     })
     property string selected_template_key: "Front"
     property string current_export_format: "Simple"
@@ -36,10 +38,14 @@ ApplicationWindow {
     function load_templates() {
         let front = SuttaBridge.get_anki_template_front();
         let back = SuttaBridge.get_anki_template_back();
+        let cloze_front = SuttaBridge.get_anki_template_cloze_front();
+        let cloze_back = SuttaBridge.get_anki_template_cloze_back();
         
         root.current_templates = {
             "Front": front,
-            "Back": back
+            "Back": back,
+            "Cloze Front": cloze_front,
+            "Cloze Back": cloze_back
         };
         
         root.current_export_format = SuttaBridge.get_anki_export_format();
@@ -48,6 +54,8 @@ ApplicationWindow {
         template_names_model.clear();
         template_names_model.append({ template_key: "Front" });
         template_names_model.append({ template_key: "Back" });
+        template_names_model.append({ template_key: "Cloze Front" });
+        template_names_model.append({ template_key: "Cloze Back" });
         
         if (template_names_model.count > 0) {
             template_list_view.currentIndex = 0;
@@ -67,6 +75,10 @@ ApplicationWindow {
                 SuttaBridge.set_anki_template_front(template_text_area.text);
             } else if (root.selected_template_key === "Back") {
                 SuttaBridge.set_anki_template_back(template_text_area.text);
+            } else if (root.selected_template_key === "Cloze Front") {
+                SuttaBridge.set_anki_template_cloze_front(template_text_area.text);
+            } else if (root.selected_template_key === "Cloze Back") {
+                SuttaBridge.set_anki_template_cloze_back(template_text_area.text);
             }
         }
     }

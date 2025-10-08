@@ -200,6 +200,18 @@ pub mod qobject {
         fn set_anki_template_back(self: Pin<&mut SuttaBridge>, template_str: &QString);
 
         #[qinvokable]
+        fn get_anki_template_cloze_front(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_cloze_front(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_template_cloze_back(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_cloze_back(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
         fn get_anki_export_format(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -1141,6 +1153,32 @@ impl qobject::SuttaBridge {
     pub fn set_anki_template_back(self: Pin<&mut Self>, template_str: &QString) {
         let app_data = get_app_data();
         app_data.set_anki_template_back(&template_str.to_string());
+    }
+
+    /// Get Anki template for Cloze Front side
+    pub fn get_anki_template_cloze_front(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_cloze_front();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Cloze Front side
+    pub fn set_anki_template_cloze_front(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_cloze_front(&template_str.to_string());
+    }
+
+    /// Get Anki template for Cloze Back side
+    pub fn get_anki_template_cloze_back(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_cloze_back();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Cloze Back side
+    pub fn set_anki_template_cloze_back(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_cloze_back(&template_str.to_string());
     }
 
     /// Get Anki export format (Simple, Templated, DataCsv)
