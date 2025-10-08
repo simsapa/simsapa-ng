@@ -594,3 +594,103 @@ fn test_stem_number_removal() {
         assert_eq!(clean_stem(input), expected.to_lowercase());
     }
 }
+
+#[test]
+#[serial]
+fn test_simple_format_front_field() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Simple".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{word_stem}".to_string(),
+            back: "{vocab.summary}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data).expect("Export should succeed");
+    
+    assert_eq!(result.files.len(), 1, "Should have one file");
+    let csv = &result.files[0].content;
+    
+    let lines: Vec<&str> = csv.lines().collect();
+    assert!(lines.len() >= 2, "Should have at least 2 CSV rows");
+    
+    let first_line = lines[0];
+    let first_parts: Vec<&str> = first_line.splitn(2, ',').collect();
+    assert_eq!(first_parts.len(), 2, "CSV row should have two fields");
+    let first_front = first_parts[0];
+    let first_back = first_parts[1];
+    
+    assert!(first_front.contains("karitvā"), "Front should contain stem form 'karitvā'");
+    assert!(first_front.contains("<b>karitvā</b>"), "Front should contain context snippet with bold tags");
+    assert!(first_front.contains("vossaggārammaṇaṁ"), "Front should contain surrounding context");
+    assert!(first_back.contains("having done, having made"), "Back should contain gloss summary");
+    
+    let second_line = lines[1];
+    let second_parts: Vec<&str> = second_line.splitn(2, ',').collect();
+    assert_eq!(second_parts.len(), 2, "CSV row should have two fields");
+    let second_front = second_parts[0];
+    let second_back = second_parts[1];
+    
+    assert!(second_front.contains("citta"), "Front should contain stem form 'citta'");
+    assert!(second_front.contains("<b>cittassa</b>"), "Front should contain context snippet with bold tags");
+    assert!(second_front.contains("labhati"), "Front should contain surrounding context");
+    assert!(second_back.contains("mind, heart"), "Back should contain gloss summary");
+}
+
+#[test]
+#[serial]
+fn test_simple_cloze_format_fields() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Simple".to_string(),
+        include_cloze: true,
+        templates: AnkiCsvTemplates {
+            front: "{word_stem}".to_string(),
+            back: "{vocab.summary}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data).expect("Export should succeed");
+    
+    assert_eq!(result.files.len(), 2, "Should have two files (normal and cloze)");
+    let cloze_csv = &result.files[1].content;
+    
+    let lines: Vec<&str> = cloze_csv.lines().collect();
+    assert!(lines.len() >= 2, "Should have at least 2 CSV rows");
+    
+    // Check first row (karitvā)
+    let first_line = lines[0];
+    let first_parts: Vec<&str> = first_line.splitn(2, ',').collect();
+    assert_eq!(first_parts.len(), 2, "CSV row should have two fields");
+    let first_front = first_parts[0];
+    let first_back = first_parts[1];
+    
+    assert!(first_front.contains("{{c1::karitvā}}"), "Front should have cloze deletion for word");
+    assert!(first_front.contains("vossaggārammaṇaṁ"), "Front should contain surrounding context");
+    assert!(!first_front.contains("<b>"), "Front field should not have bold tags");
+    assert!(first_back.contains("having done, having made"), "Back should contain gloss summary");
+    
+    // Check second row (citta)
+    let second_line = lines[1];
+    let second_parts: Vec<&str> = second_line.splitn(2, ',').collect();
+    assert_eq!(second_parts.len(), 2, "CSV row should have two fields");
+    let second_front = second_parts[0];
+    let second_back = second_parts[1];
+    
+    assert!(second_front.contains("{{c1::cittassa}}"), "Front should have cloze deletion for word");
+    assert!(second_front.contains("labhati"), "Front should contain surrounding context");
+    assert!(!second_front.contains("<b>"), "Front field should not have bold tags");
+    assert!(second_back.contains("mind, heart"), "Back should contain gloss summary");
+}

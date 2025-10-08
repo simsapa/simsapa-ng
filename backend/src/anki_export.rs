@@ -175,7 +175,7 @@ fn generate_simple_csv(
     for paragraph in &gloss_data.paragraphs {
         for vocab in &paragraph.vocabulary {
             let word_stem = clean_stem(&vocab.word);
-            let front = format!("<div><p>{}</p></div>", word_stem);
+            let front = format!("<div><p>{}</p><p>{}</p></div>", word_stem, vocab.context_snippet);
             let back = vocab.summary.clone();
             csv_lines.push(format_csv_row(&front, &back));
         }
@@ -193,9 +193,8 @@ fn generate_simple_cloze_csv(
 
     for paragraph in &gloss_data.paragraphs {
         for vocab in &paragraph.vocabulary {
-            let word_stem = clean_stem(&vocab.word);
-            let front = format!("{{{{c1::{}}}}}", word_stem);
-            let back = format!("<div>{}</div>", vocab.summary);
+            let front = convert_context_to_cloze(&vocab.context_snippet);
+            let back = vocab.summary.clone();
             csv_lines.push(format_csv_row(&front, &back));
         }
     }
