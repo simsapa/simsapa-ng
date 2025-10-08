@@ -23,6 +23,7 @@ Item {
 
     property alias gloss_text_input: gloss_text_input
     property alias paragraph_model: paragraph_model
+    property alias commonWordsDialog: commonWordsDialog
 
     property var handle_open_dict_tab_fn
 
@@ -106,6 +107,8 @@ Item {
     // Background processing state tracking
     property bool is_processing_all: false
     property bool is_processing_single: false
+    property bool is_exporting_anki: false
+    property int exporting_note_count: 0
 
     // Signal connections for background gloss processing
     Connections {
@@ -148,6 +151,28 @@ Item {
             } catch (e) {
                 logger.error("Failed to parse background processing results:", e);
                 // TODO: Show user-friendly error message
+            }
+        }
+
+        function onAnkiCsvExportReady(results_json: string) {
+            logger.debug(`📥 onAnkiCsvExportReady received: ${results_json.substring(0, 100)}...`);
+
+            // Always reset exporting state
+            root.is_exporting_anki = false;
+
+            try {
+                let results = JSON.parse(results_json);
+                if (results.success && results.files && results.files.length > 0) {
+                    root.handle_anki_export_results(results);
+                } else {
+                    logger.error(`❌ Anki export failed: ${results.error || 'Unknown error'}`);
+                    msg_dialog_ok.text = `Export failed: ${results.error || 'Unknown error'}`;
+                    msg_dialog_ok.open();
+                }
+            } catch (e) {
+                logger.error("Failed to parse Anki export results:", e);
+                msg_dialog_ok.text = `Export failed: ${e}`;
+                msg_dialog_ok.open();
             }
         }
     }
@@ -231,8 +256,9 @@ Item {
 
     function export_dialog_accepted() {
         if (export_btn.currentIndex === 0) return;
-        let save_file_name = null
+        let save_file_name = null;
         let save_content = null;
+        let is_anki_csv = false;
 
         if (export_btn.currentValue === "HTML") {
             save_file_name = "gloss_export.html";
@@ -247,33 +273,68 @@ Item {
             save_content = root.gloss_as_orgmode();
 
         } else if (export_btn.currentValue === "Anki CSV") {
-            save_file_name = "gloss_export.csv";
-            save_content = root.gloss_as_anki_csv();
+            is_anki_csv = true;
         }
 
         let save_fn = function() {
-            let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
-            if (ok) {
-                msg_dialog_ok.text = "Exported as: " + save_file_name;
-                msg_dialog_ok.open();
+            if (is_anki_csv) {
+                root.start_anki_export_background(export_folder_dialog.selectedFolder);
             } else {
-                msg_dialog_ok.text = "Export failed."
-                msg_dialog_ok.open();
+                let ok = SuttaBridge.save_file(export_folder_dialog.selectedFolder, save_file_name, save_content);
+                if (ok) {
+                    msg_dialog_ok.text = "Exported as: " + save_file_name;
+                    msg_dialog_ok.open();
+                } else {
+                    msg_dialog_ok.text = "Export failed."
+                    msg_dialog_ok.open();
+                }
             }
         };
 
-        if (save_file_name) {
-            let exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
-            if (exists) {
-                msg_dialog_cancel_ok.text = `${save_file_name} exists. Overwrite?`;
+        if (is_anki_csv) {
+            // AnkiExportFormat
+            let export_format = SuttaBridge.get_anki_export_format().toLowerCase();
+            let include_cloze = SuttaBridge.get_anki_include_cloze();
+
+            let existing_save_files = [];
+
+            // AnkiExportFormat
+            if (export_format) {
+                var name = `gloss_export_anki_${export_format}.csv`;
+                var exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, name);
+                if (exists) {
+                    existing_save_files.push(name);
+                }
+                if (include_cloze) {
+                    var name = `gloss_export_anki_${export_format}_cloze.csv`;
+                    var exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, name);
+                    if (exists) {
+                        existing_save_files.push(name);
+                    }
+                }
+            }
+
+            if (existing_save_files.length > 0) {
+                let file_names = existing_save_files.join(", ");
+                msg_dialog_cancel_ok.text = `Already exists: ${file_names}. Overwrite?`;
                 msg_dialog_cancel_ok.accept_fn = save_fn;
                 msg_dialog_cancel_ok.open();
             } else {
                 save_fn();
             }
+        } else {
+            if (save_file_name) {
+                let exists = SuttaBridge.check_file_exists_in_folder(export_folder_dialog.selectedFolder, save_file_name);
+                if (exists) {
+                    msg_dialog_cancel_ok.text = `Already exists: ${save_file_name}. Overwrite?`;
+                    msg_dialog_cancel_ok.accept_fn = save_fn;
+                    msg_dialog_cancel_ok.open();
+                } else {
+                    save_fn();
+                }
+            }
         }
 
-        // set the button back to default
         export_btn.currentIndex = 0;
     }
 
@@ -518,26 +579,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         root.load_history();
     }
 
-    function extract_words_with_context(text: string): list<var> {
-        var sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-        var words_with_context = [];
-
-        for (var i = 0; i < sentences.length; i++) {
-            var sentence = sentences[i].trim();
-            var words = SuttaBridge.extract_words(sentence);
-
-            for (var j = 0; j < words.length; j++) {
-                words_with_context.push({
-                    word: words[j],
-                    sentence: sentence,
-                    position: sentence.indexOf(words[j]),
-                });
-            }
-        }
-
-        return words_with_context;
-    }
-
     // Clean stem by removing disambiguating numbers
     // (e.g., "ña 2.1" → "ña", "jhāyī 1" → "jhāyī")
     function clean_stem(stem: string): string {
@@ -564,43 +605,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             stem: lookup_results[0].word,
             example_sentence: sentence || "",
         };
-    }
-
-    function create_paragraph_with_words_model(text: string): var {
-        return {
-            text: text,
-            words_data: [],
-            translations_json: "[]"
-        };
-    }
-
-    function get_word_from_data(paragraph_idx: int, word_idx: int): var {
-        var paragraph = paragraph_model.get(paragraph_idx);
-        if (!paragraph || !paragraph.words_data_json) return null;
-
-        try {
-            var words_data = JSON.parse(paragraph.words_data_json);
-            if (word_idx >= words_data.length) return null;
-            return words_data[word_idx];
-        } catch (e) {
-            logger.error("Failed to parse words_data_json:", e);
-            return null;
-        }
-    }
-
-    function update_word_in_data(paragraph_idx: int, word_idx: int, property_name: string, value): void {
-        var paragraph = paragraph_model.get(paragraph_idx);
-        if (!paragraph || !paragraph.words_data_json) return;
-
-        try {
-            var words_data = JSON.parse(paragraph.words_data_json);
-            if (word_idx < words_data.length) {
-                words_data[word_idx][property_name] = value;
-                paragraph_model.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words_data));
-            }
-        } catch (e) {
-            logger.error("Failed to parse words_data_json:", e);
-        }
     }
 
     function process_word_for_glossing(word_info, paragraph_shown_stems, global_stems, check_global) {
@@ -644,102 +648,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         }
 
         return create_word_model_item(word_info.word, results, word_info.sentence);
-    }
-
-    // FIXME extract_words_with_context()
-    // function process_paragraph_for_glossing(paragraph_text, paragraph_shown_stems, global_stems, check_global) {
-    //     var words_with_context = root.extract_words_with_context(paragraph_text);
-    //     var glossed_words = [];
-
-    //     for (var i = 0; i < words_with_context.length; i++) {
-    //         var processed_word = root.process_word_for_glossing(
-    //             words_with_context[i],
-    //             paragraph_shown_stems,
-    //             global_stems,
-    //             check_global,
-    //         );
-
-    //         if (processed_word) {
-    //             glossed_words.push(processed_word);
-    //         }
-    //     }
-
-    //     return glossed_words;
-    // }
-
-    function populate_paragraph_words_data(paragraph_item, paragraph_text, paragraph_shown_stems, global_stems, check_global, paragraph_index) {
-        paragraph_item.words_data = [];
-        var words = SuttaBridge.extract_words(paragraph_text);
-
-        // Initialize paragraph unrecognized words array if it doesn't exist
-        if (paragraph_index !== undefined) {
-            if (!root.paragraph_unrecognized_words[paragraph_index]) {
-                root.paragraph_unrecognized_words[paragraph_index] = [];
-            }
-        }
-
-        for (var i = 0; i < words.length; i++) {
-            var processed_word = root.process_word_for_glossing(
-                { word: words[i], sentence: "" },
-                paragraph_shown_stems,
-                global_stems,
-                check_global,
-            );
-
-            if (processed_word) {
-                if (processed_word.is_unrecognized) {
-                    // Collect unrecognized word
-                    var word = processed_word.word;
-                    logger.debug(`🔍 Unrecognized word found: ${word}`);
-
-                    // Add to global unrecognized words if not already there
-                    if (root.global_unrecognized_words.indexOf(word) === -1) {
-                        var temp_global = root.global_unrecognized_words.slice();
-                        temp_global.push(word);
-                        root.global_unrecognized_words = temp_global;
-                        logger.debug(`📝 Added to global unrecognized words: ${word}, total count: ${root.global_unrecognized_words.length}`);
-                    }
-
-                    // Add to paragraph unrecognized words if not already there
-                    if (paragraph_index !== undefined) {
-                        if (root.paragraph_unrecognized_words[paragraph_index].indexOf(word) === -1) {
-                            var temp_para = root.paragraph_unrecognized_words[paragraph_index].slice();
-                            temp_para.push(word);
-                            var temp_all_para = Object.assign({}, root.paragraph_unrecognized_words);
-                            temp_all_para[paragraph_index] = temp_para;
-                            root.paragraph_unrecognized_words = temp_all_para;
-                            logger.debug(`📝 Added to paragraph ${paragraph_index} unrecognized words: ${word}`);
-                        }
-                    }
-                } else {
-                    paragraph_item.words_data.push(processed_word);
-                }
-            }
-        }
-    }
-
-    function process_paragraph_for_glossing(paragraph_text, paragraph_shown_stems, global_stems, check_global) {
-        var words = SuttaBridge.extract_words(paragraph_text);
-        var glossed_words = [];
-
-        for (var i = 0; i < words.length; i++) {
-            var processed_word = root.process_word_for_glossing(
-                { word: words[i], sentence: "" },
-                paragraph_shown_stems,
-                global_stems,
-                check_global,
-            );
-
-            if (processed_word) {
-                if (processed_word.is_unrecognized) {
-                    // Handle unrecognized word - will be collected later
-                } else {
-                    glossed_words.push(processed_word);
-                }
-            }
-        }
-
-        return glossed_words;
     }
 
     // Get previous paragraph stems for global deduplication
@@ -787,11 +695,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             return "";
         }
     }
-
-
-
-
-
 
     // Handle results from background processing of all paragraphs
     function handle_all_paragraphs_results(results) {
@@ -1026,18 +929,6 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return text;
     }
 
-    function escape_csv_field(field: string): string {
-        var escaped = field.replace(/"/g, '""');
-        if (escaped.includes(',') || escaped.includes('\n') || escaped.includes('"')) {
-            return '"' + escaped + '"';
-        }
-        return escaped;
-    }
-
-    function format_csv_row(front: string, back: string): string {
-        return escape_csv_field(front) + ',' + escape_csv_field(back);
-    }
-
     function format_paragraph_html(paragraph: var, paragraph_number: int): string {
         let para_text = "\n<blockquote>\n" + paragraph.text.replace(/\n/g, "<br>\n") + "\n</blockquote>\n";
 
@@ -1222,7 +1113,9 @@ ${table_rows}
 
                         // Add one line of word vocabulary info.
                         // For each word, export only the selected result.
-                        para_data.vocabulary.push(w_data.results[selected_index]);
+                        var vocab_item = Object.assign({}, w_data.results[selected_index]);
+                        vocab_item.context_snippet = w_data.example_sentence || "";
+                        para_data.vocabulary.push(vocab_item);
                     }
                 } catch (e) {
                     logger.error("Failed to parse words_data_json:", e);
@@ -1341,23 +1234,6 @@ ${main_text}
         return out.trim().replace(/\n\n\n+/g, "\n\n");
     }
 
-    function gloss_as_anki_csv(): string {
-        let gloss_data = root.gloss_export_data();
-        let csv_lines = [];
-
-        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
-            var paragraph = gloss_data.paragraphs[i];
-            for (var j = 0; j < paragraph.vocabulary.length; j++) {
-                var vocab = paragraph.vocabulary[j];
-                var front = root.clean_stem(vocab.word);
-                var back = vocab.summary;
-                csv_lines.push(root.format_csv_row(front, back));
-            }
-        }
-
-        return csv_lines.join("\n");
-    }
-
     function paragraph_gloss_as_html(paragraph_index: int): string {
         if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
             logger.error("Invalid paragraph index:", paragraph_index);
@@ -1406,29 +1282,61 @@ ${main_text}
         return root.format_paragraph_orgmode(paragraph, paragraph_index + 1).trim().replace(/\n\n\n+/g, "\n\n");
     }
 
-    function paragraph_gloss_as_anki_csv(paragraph_index: int): string {
-        if (paragraph_index < 0 || paragraph_index >= paragraph_model.count) {
-            logger.error("Invalid paragraph index:", paragraph_index);
-            return "";
+    function start_anki_export_background(folder_url) {
+        if (root.is_exporting_anki) {
+            logger.warn("Anki export already in progress");
+            return;
         }
 
         let gloss_data = root.gloss_export_data();
-        if (paragraph_index >= gloss_data.paragraphs.length) {
-            logger.error("Paragraph index out of range:", paragraph_index);
-            return "";
+        let note_count = 0;
+        for (var i = 0; i < gloss_data.paragraphs.length; i++) {
+            note_count += gloss_data.paragraphs[i].vocabulary.length;
         }
 
-        var paragraph = gloss_data.paragraphs[paragraph_index];
-        let csv_lines = [];
+        root.exporting_note_count = note_count;
+        root.is_exporting_anki = true;
 
-        for (var j = 0; j < paragraph.vocabulary.length; j++) {
-            var vocab = paragraph.vocabulary[j];
-            var front = root.clean_stem(vocab.word);
-            var back = vocab.summary;
-            csv_lines.push(root.format_csv_row(front, back));
+        let export_format = SuttaBridge.get_anki_export_format();
+        let include_cloze = SuttaBridge.get_anki_include_cloze();
+
+        let input_data = {
+            gloss_data_json: JSON.stringify(gloss_data),
+            export_format: export_format,
+            include_cloze: include_cloze,
+            templates: {
+                front: SuttaBridge.get_anki_template_front(),
+                back: SuttaBridge.get_anki_template_back(),
+                cloze_front: SuttaBridge.get_anki_template_cloze_front(),
+                cloze_back: SuttaBridge.get_anki_template_cloze_back()
+            },
+            folder_url: folder_url.toString()
+        };
+
+        SuttaBridge.export_anki_csv_background(JSON.stringify(input_data));
+    }
+
+    function handle_anki_export_results(results) {
+        logger.debug(`📦 Handling Anki export results: ${results.files.length} files`);
+
+        let folder_url = export_folder_dialog.selectedFolder;
+        let files_saved = [];
+
+        for (var i = 0; i < results.files.length; i++) {
+            let file = results.files[i];
+            let ok = SuttaBridge.save_file(folder_url, file.filename, file.content);
+            if (ok) {
+                files_saved.push(file.filename);
+            }
         }
 
-        return csv_lines.join("\n");
+        if (files_saved.length > 0) {
+            msg_dialog_ok.text = "Exported as: " + files_saved.join(", ");
+            msg_dialog_ok.open();
+        } else {
+            msg_dialog_ok.text = "Export failed: No files saved";
+            msg_dialog_ok.open();
+        }
     }
 
     TabBar {
@@ -1526,10 +1434,19 @@ ${main_text}
 
                             Item { Layout.fillWidth: true }
 
+                            Text {
+                                id: exporting_message
+                                text: `Exporting ${root.exporting_note_count} notes...`
+                                font.pointSize: root.vocab_font_point_size
+                                color: "#4CAF50"
+                                visible: root.is_exporting_anki
+                                Layout.leftMargin: 10
+                            }
+
                             ComboBox {
                                 id: export_btn
                                 model: ["Export As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]
-                                enabled: paragraph_model.count > 0
+                                enabled: paragraph_model.count > 0 && !root.is_exporting_anki
                                 onCurrentIndexChanged: {
                                     if (export_btn.currentIndex !== 0) {
                                         export_folder_dialog.open();
@@ -1819,7 +1736,7 @@ ${main_text}
 
                         ComboBox {
                             id: copy_combobox
-                            model: ["Copy As...", "HTML", "Markdown", "Org-Mode", "Anki CSV"]
+                            model: ["Copy As...", "HTML", "Markdown", "Org-Mode"]
                             currentIndex: 0
                             Layout.alignment: Qt.AlignRight
 
@@ -1835,8 +1752,6 @@ ${main_text}
                                     content = root.paragraph_gloss_as_markdown(paragraph_item.index);
                                 } else if (currentIndex === 3) {
                                     content = root.paragraph_gloss_as_orgmode(paragraph_item.index);
-                                } else if (currentIndex === 4) {
-                                    content = root.paragraph_gloss_as_anki_csv(paragraph_item.index);
                                 }
 
                                 if (content.length > 0) {
@@ -1908,7 +1823,7 @@ ${main_text}
                                         Layout.preferredWidth: wordItem.width * 0.2
                                         visible: {
                                             // Show ComboBox only when there are multiple lookup results to choose from
-                                            return wordItem.modelData.results !== undefined && 
+                                            return wordItem.modelData.results !== undefined &&
                                                    wordItem.modelData.results.length > 1;
                                         }
                                         model: wordItem.modelData.results

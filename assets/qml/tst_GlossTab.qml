@@ -93,27 +93,6 @@ Item {
             }
         }
 
-        function test_extract_words_with_context() {
-            var text = "This is a test. Another sentence here!";
-            var result = gloss_tab.extract_words_with_context(text);
-
-            compare(result.length, 7);
-
-            // Check first word
-            compare(result[0].word, "This");
-            compare(result[0].sentence, "This is a test.");
-            compare(result[0].position, 0);
-
-            // Check word from second sentence
-            compare(result[4].word, "Another");
-            compare(result[4].sentence, "Another sentence here!");
-
-            // Test single sentence without punctuation
-            result = gloss_tab.extract_words_with_context("No punctuation here");
-            compare(result.length, 3);
-            compare(result[0].sentence, "No punctuation here");
-        }
-
         function test_clean_stem() {
             compare(gloss_tab.clean_stem("dhamma 1.01"), "dhamma");
             compare(gloss_tab.clean_stem("ña 2.1"), "ña");
@@ -808,72 +787,6 @@ Katamañca, bhikkhave, samādhindriyaṁ? Idha, bhikkhave, ariyasāvako vossagg�
             verify(!org_output.includes("* Gloss Export"));
         }
 
-        function test_escape_csv_field() {
-            compare(gloss_tab.escape_csv_field("simple text"), "simple text");
-            compare(gloss_tab.escape_csv_field("text, with comma"), '"text, with comma"');
-            compare(gloss_tab.escape_csv_field('text with "quotes"'), '"text with ""quotes"""');
-            compare(gloss_tab.escape_csv_field("text\nwith newline"), '"text\nwith newline"');
-            compare(gloss_tab.escape_csv_field('text, with "quotes" and\nnewline'), '"text, with ""quotes"" and\nnewline"');
-        }
 
-        function test_format_csv_row() {
-            compare(gloss_tab.format_csv_row("front", "back"), "front,back");
-            compare(gloss_tab.format_csv_row("front, comma", "back"), '"front, comma",back');
-            compare(gloss_tab.format_csv_row("front", 'back "quoted"'), 'front,"back ""quoted"""');
-            compare(gloss_tab.format_csv_row("front, comma", 'back "quoted"'), '"front, comma","back ""quoted"""');
-        }
-
-        function test_paragraph_gloss_as_anki_csv() {
-            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
-            processTextBackground(paragraph1);
-
-            compare(gloss_tab.paragraph_model.count, 1);
-
-            var csv_output = gloss_tab.paragraph_gloss_as_anki_csv(0);
-            verify(csv_output.includes("karitvā"));
-            verify(csv_output.includes("having done, having made"));
-            verify(csv_output.includes("citta"));
-            verify(csv_output.includes("<b>"));
-            verify(csv_output.includes("</b>"));
-
-            compare(gloss_tab.paragraph_gloss_as_anki_csv(-1), "");
-            compare(gloss_tab.paragraph_gloss_as_anki_csv(999), "");
-        }
-
-        function test_gloss_as_anki_csv() {
-            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ, labhati cittassa ekaggataṁ.";
-            processTextBackground(paragraph1);
-
-            var csv = gloss_tab.gloss_as_anki_csv();
-            verify(csv.includes("karitvā"));
-            verify(csv.includes("citta"));
-            verify(csv.includes("having done, having made"));
-            verify(csv.includes("<b>"));
-            verify(csv.includes("</b>"));
-            verify(csv.includes("<i>"));
-            verify(csv.includes("</i>"));
-
-            var lines = csv.split("\n");
-            for (var i = 0; i < lines.length; i++) {
-                if (lines[i].trim() === "") continue;
-                var fields = lines[i].split(",");
-                if (fields.length > 0 && fields[0].trim() !== "") {
-                    verify(!fields[0].match(/\s+\d+(\.\d+)?$/));
-                }
-            }
-        }
-
-        function test_anki_csv_format_integrity() {
-            var paragraph1 = "Idha, bhikkhave, ariyasāvako vossaggārammaṇaṁ karitvā labhati samādhiṁ.";
-            processTextBackground(paragraph1);
-
-            var csv = gloss_tab.gloss_as_anki_csv();
-            var lines = csv.split("\n");
-
-            for (var i = 0; i < lines.length; i++) {
-                if (lines[i].trim() === "") continue;
-                verify(lines[i].includes(","));
-            }
-        }
     }
 }

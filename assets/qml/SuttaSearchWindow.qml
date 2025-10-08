@@ -31,7 +31,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible)
 
     Logger { id: logger }
 
@@ -653,10 +653,29 @@ ${query_text}`;
         }
 
         Menu {
+            id: gloss_menu
+            title: "&Gloss"
+
+            CMenuItem {
+                action: Action {
+                    id: action_common_words
+                    text: "&Common Words..."
+                    onTriggered: gloss_tab.commonWordsDialog.open()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_anki_export
+                    text: "&Anki Export..."
+                    onTriggered: anki_export_dialog.show()
+                }
+            }
+        }
+
+        Menu {
             id: prompts_menu
             title: "&Prompts"
-
-
 
             CMenuItem {
                 action: Action {
@@ -698,6 +717,7 @@ ${query_text}`;
 
     SystemPromptsDialog { id: system_prompts_dialog }
     ModelsDialog { id: models_dialog }
+    AnkiExportDialog { id: anki_export_dialog }
 
     ColorThemeDialog {
         id: color_theme_dialog

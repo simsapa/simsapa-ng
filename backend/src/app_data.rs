@@ -367,4 +367,208 @@ impl AppData {
             Err(e) => error(&format!("Failed to update app settings: {}", e)),
         }
     }
+
+    pub fn get_dpd_headword_by_uid(&self, uid_str: &str) -> Option<String> {
+        use diesel::prelude::*;
+        use crate::db::dpd_schema::dpd_headwords::dsl::*;
+        
+        let mut conn = match self.dbm.dpd.get_conn() {
+            Ok(c) => c,
+            Err(e) => {
+                error(&format!("Failed to get DPD connection: {}", e));
+                return None;
+            }
+        };
+        
+        let result = dpd_headwords
+            .filter(uid.eq(uid_str))
+            .first::<crate::db::dpd_models::DpdHeadword>(&mut conn);
+        
+        match result {
+            Ok(headword) => {
+                match serde_json::to_string(&headword) {
+                    Ok(json) => Some(json),
+                    Err(e) => {
+                        error(&format!("Failed to serialize DPD headword: {}", e));
+                        None
+                    }
+                }
+            }
+            Err(e) => {
+                error(&format!("Failed to query DPD headword for uid {}: {}", uid_str, e));
+                None
+            }
+        }
+    }
+
+    pub fn get_anki_template_front(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.anki_template_front.clone()
+    }
+
+    pub fn set_anki_template_front(&self, template: &str) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.anki_template_front = template.to_string();
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn get_anki_template_back(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.anki_template_back.clone()
+    }
+
+    pub fn set_anki_template_back(&self, template: &str) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.anki_template_back = template.to_string();
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn get_anki_template_cloze_front(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.anki_template_cloze_front.clone()
+    }
+
+    pub fn set_anki_template_cloze_front(&self, template: &str) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.anki_template_cloze_front = template.to_string();
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn get_anki_template_cloze_back(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.anki_template_cloze_back.clone()
+    }
+
+    pub fn set_anki_template_cloze_back(&self, template: &str) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.anki_template_cloze_back = template.to_string();
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn get_anki_export_format(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        match app_settings.anki_export_format {
+            crate::app_settings::AnkiExportFormat::Simple => "Simple".to_string(),
+            crate::app_settings::AnkiExportFormat::Templated => "Templated".to_string(),
+            crate::app_settings::AnkiExportFormat::DataCsv => "DataCsv".to_string(),
+        }
+    }
+
+    pub fn set_anki_export_format(&self, format: &str) {
+        use crate::db::appdata_schema::app_settings;
+        use crate::app_settings::AnkiExportFormat;
+
+        let export_format = match format {
+            "Simple" => AnkiExportFormat::Simple,
+            "Templated" => AnkiExportFormat::Templated,
+            "DataCsv" => AnkiExportFormat::DataCsv,
+            _ => {
+                error(&format!("Unknown Anki export format: {}", format));
+                return;
+            }
+        };
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.anki_export_format = export_format;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn get_anki_include_cloze(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.anki_include_cloze
+    }
+
+    pub fn set_anki_include_cloze(&self, include: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.anki_include_cloze = include;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
 }

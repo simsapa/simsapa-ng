@@ -331,3 +331,36 @@ pub struct BackgroundProcessingError {
     pub success: bool,
     pub error: String,
 }
+
+/// Input data for Anki CSV export in background
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnkiCsvExportInput {
+    pub gloss_data_json: String,
+    pub export_format: String,
+    pub include_cloze: bool,
+    pub templates: AnkiCsvTemplates,
+}
+
+/// Anki CSV templates
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnkiCsvTemplates {
+    pub front: String,
+    pub back: String,
+    pub cloze_front: String,
+    pub cloze_back: String,
+}
+
+/// Result data for Anki CSV export
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnkiCsvExportResult {
+    pub success: bool,
+    pub files: Vec<AnkiCsvFile>,
+    pub error: Option<String>,
+}
+
+/// A single Anki CSV file result
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnkiCsvFile {
+    pub filename: String,
+    pub content: String,
+}

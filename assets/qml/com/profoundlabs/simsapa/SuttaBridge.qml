@@ -17,6 +17,8 @@ Item {
     signal allParagraphsGlossReady(results_json: string);
     signal paragraphGlossReady(paragraph_index: int, results_json: string);
     signal dpdLookupReady(results_json: string);
+    signal ankiCsvExportReady(results_json: string);
+    signal ankiPreviewReady(preview_html: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -278,6 +280,80 @@ Item {
         // Simulate async behavior
         Qt.callLater(function() {
             paragraphGlossReady(paragraph_index, '{"success": true, "paragraph_index": ' + paragraph_index + ', "words_data": [], "unrecognized_words": [], "updated_global_stems": {}}');
+        });
+    }
+
+    function get_anki_template_front(): string {
+        return '<div><p>${word_stem}</p><p>${context_snippet}</p></div>';
+    }
+
+    function set_anki_template_front(template: string) {
+        console.log("set_anki_template_front():", template);
+    }
+
+    function get_anki_template_back(): string {
+        return '<div><b>${dpd.pos}</b> ${vocab.summary}</div>';
+    }
+
+    function set_anki_template_back(template: string) {
+        console.log("set_anki_template_back():", template);
+    }
+
+    function get_anki_template_cloze_front(): string {
+        return '${context_snippet}';
+    }
+
+    function set_anki_template_cloze_front(template: string) {
+        console.log("set_anki_template_cloze_front():", template);
+    }
+
+    function get_anki_template_cloze_back(): string {
+        return '<div><b>${dpd.pos}</b> ${vocab.summary}</div>';
+    }
+
+    function set_anki_template_cloze_back(template: string) {
+        console.log("set_anki_template_cloze_back():", template);
+    }
+
+    function get_anki_export_format(): string {
+        return 'Simple';
+    }
+
+    function set_anki_export_format(format: string) {
+        console.log("set_anki_export_format():", format);
+    }
+
+    function get_anki_include_cloze(): bool {
+        return true;
+    }
+
+    function set_anki_include_cloze(include: bool) {
+        console.log("set_anki_include_cloze():", include);
+    }
+
+    function get_sample_vocabulary_data_json(): string {
+        return '{"word_stem":"abhivādeti","context_snippet":"...","vocab":{},"dpd":{}}';
+    }
+
+    function get_dpd_headword_by_uid(uid: string): string {
+        return '{}';
+    }
+
+    function export_anki_csv_background(input_json: string) {
+        console.log("export_anki_csv_background():", input_json.substring(0, 100));
+        // Simulate async behavior
+        Qt.callLater(function() {
+            ankiCsvExportReady('{"success": true, "files": [], "error": null}');
+        });
+    }
+
+    function render_anki_preview_background(front_template: string, back_template: string) {
+        console.log("render_anki_preview_background()");
+        // Simulate async behavior
+        Qt.callLater(function() {
+            let preview = "<h4>Front:</h4><div style='background: #fff; padding: 10px; border: 1px solid #ccc; margin-bottom: 10px;'>Preview Front</div>" +
+                         "<h4>Back:</h4><div style='background: #fff; padding: 10px; border: 1px solid #ccc;'>Preview Back</div>";
+            ankiPreviewReady(preview);
         });
     }
 

@@ -68,6 +68,14 @@ pub mod qobject {
         #[cxx_name = "dpdLookupReady"]
         fn dpd_lookup_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "ankiCsvExportReady"]
+        fn anki_csv_export_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
+
+        #[qsignal]
+        #[cxx_name = "ankiPreviewReady"]
+        fn anki_preview_ready(self: Pin<&mut SuttaBridge>, preview_html: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -180,6 +188,48 @@ pub mod qobject {
         fn get_provider_for_model(self: &SuttaBridge, model_name: &QString) -> QString;
 
         #[qinvokable]
+        fn get_anki_template_front(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_front(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_template_back(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_back(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_template_cloze_front(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_cloze_front(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_template_cloze_back(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_template_cloze_back(self: Pin<&mut SuttaBridge>, template_str: &QString);
+
+        #[qinvokable]
+        fn get_anki_export_format(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_anki_export_format(self: Pin<&mut SuttaBridge>, format: &QString);
+
+        #[qinvokable]
+        fn get_anki_include_cloze(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_anki_include_cloze(self: Pin<&mut SuttaBridge>, include: bool);
+
+        #[qinvokable]
+        fn get_sample_vocabulary_data_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_dpd_headword_by_uid(self: &SuttaBridge, uid: &QString) -> QString;
+
+        #[qinvokable]
         fn get_saved_theme(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -217,6 +267,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn markdown_to_html(self: &SuttaBridge, markdown_text: &QString) -> QString;
+
+        #[qinvokable]
+        fn export_anki_csv_background(self: Pin<&mut SuttaBridge>, input_json: &QString);
+
+        #[qinvokable]
+        fn render_anki_preview_background(self: Pin<&mut SuttaBridge>, front_template: &QString, back_template: &QString);
     }
 }
 
@@ -880,15 +936,15 @@ impl qobject::SuttaBridge {
             for (paragraph_idx, paragraph_text) in input_data.paragraphs.iter().enumerate() {
 
                 // Extract words with context from paragraph
-                let words_with_context = simsapa_backend::helpers::extract_words(paragraph_text);
+                let words_with_context = simsapa_backend::helpers::extract_words_with_context(paragraph_text);
                 let mut paragraph_shown_stems = std::collections::HashMap::new();
                 let mut processed_words = Vec::new();
 
                 // Process each word
-                for word in words_with_context {
+                for word_context in words_with_context {
                     let word_info = simsapa_backend::types::WordInfo {
-                        word: word.clone(),
-                        sentence: paragraph_text.to_string(), // Use full paragraph as sentence context
+                        word: word_context.clean_word.clone(),
+                        sentence: word_context.context_snippet.clone(),
                     };
 
                     match simsapa_backend::helpers::process_word_for_glossing(
@@ -989,16 +1045,16 @@ impl qobject::SuttaBridge {
             let app_data = simsapa_backend::get_app_data();
 
             // Extract words with context from paragraph
-            let words_with_context = simsapa_backend::helpers::extract_words(&input_data.paragraph_text);
+            let words_with_context = simsapa_backend::helpers::extract_words_with_context(&input_data.paragraph_text);
             let mut paragraph_shown_stems = std::collections::HashMap::new();
             let mut global_stems = input_data.options.existing_global_stems.clone();
             let mut processed_words = Vec::new();
 
             // Process each word
-            for word in words_with_context {
+            for word_context in words_with_context {
                 let word_info = simsapa_backend::types::WordInfo {
-                    word: word.clone(),
-                    sentence: input_data.paragraph_text.clone(),
+                    word: word_context.clean_word.clone(),
+                    sentence: word_context.context_snippet.clone(),
                 };
 
                 match simsapa_backend::helpers::process_word_for_glossing(
@@ -1070,6 +1126,181 @@ impl qobject::SuttaBridge {
             self_.queue(move |mut qo| {
                 qo.as_mut().paragraph_gloss_ready(paragraph_index, QString::from(response_json));
             }).unwrap();
+        });
+    }
+
+    /// Get Anki template for Front side
+    pub fn get_anki_template_front(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_front();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Front side
+    pub fn set_anki_template_front(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_front(&template_str.to_string());
+    }
+
+    /// Get Anki template for Back side
+    pub fn get_anki_template_back(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_back();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Back side
+    pub fn set_anki_template_back(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_back(&template_str.to_string());
+    }
+
+    /// Get Anki template for Cloze Front side
+    pub fn get_anki_template_cloze_front(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_cloze_front();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Cloze Front side
+    pub fn set_anki_template_cloze_front(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_cloze_front(&template_str.to_string());
+    }
+
+    /// Get Anki template for Cloze Back side
+    pub fn get_anki_template_cloze_back(&self) -> QString {
+        let app_data = get_app_data();
+        let template = app_data.get_anki_template_cloze_back();
+        QString::from(template)
+    }
+
+    /// Set Anki template for Cloze Back side
+    pub fn set_anki_template_cloze_back(self: Pin<&mut Self>, template_str: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_template_cloze_back(&template_str.to_string());
+    }
+
+    /// Get Anki export format (Simple, Templated, DataCsv)
+    pub fn get_anki_export_format(&self) -> QString {
+        let app_data = get_app_data();
+        let format = app_data.get_anki_export_format();
+        QString::from(format)
+    }
+
+    /// Set Anki export format
+    pub fn set_anki_export_format(self: Pin<&mut Self>, format: &QString) {
+        let app_data = get_app_data();
+        app_data.set_anki_export_format(&format.to_string());
+    }
+
+    /// Get whether to include cloze format in Anki export
+    pub fn get_anki_include_cloze(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_anki_include_cloze()
+    }
+
+    /// Set whether to include cloze format in Anki export
+    pub fn set_anki_include_cloze(self: Pin<&mut Self>, include: bool) {
+        let app_data = get_app_data();
+        app_data.set_anki_include_cloze(include);
+    }
+
+    /// Get sample vocabulary data for preview (hardcoded abhivādetvā)
+    pub fn get_sample_vocabulary_data_json(&self) -> QString {
+        let sample_json = simsapa_backend::anki_sample_data::get_sample_vocabulary_data_json();
+        QString::from(sample_json)
+    }
+
+    /// Get DPD headword data by UID
+    pub fn get_dpd_headword_by_uid(&self, uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid_str = uid.to_string();
+
+        match app_data.get_dpd_headword_by_uid(&uid_str) {
+            Some(json) => QString::from(json),
+            None => QString::from("{}"),
+        }
+    }
+
+    pub fn export_anki_csv_background(self: Pin<&mut Self>, input_json: &QString) {
+        info("SuttaBridge::export_anki_csv_background() start");
+        let qt_thread = self.qt_thread();
+        let input_json_str = input_json.to_string();
+
+        thread::spawn(move || {
+            let app_data = get_app_data();
+
+            let input: simsapa_backend::types::AnkiCsvExportInput = match serde_json::from_str(&input_json_str) {
+                Ok(data) => data,
+                Err(e) => {
+                    let error_response = simsapa_backend::types::AnkiCsvExportResult {
+                        success: false,
+                        files: vec![],
+                        error: Some(format!("Failed to parse input JSON: {}", e)),
+                    };
+                    let error_json = serde_json::to_string(&error_response).unwrap_or_default();
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().anki_csv_export_ready(QString::from(error_json));
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            let result = match simsapa_backend::anki_export::export_anki_csv(input, &app_data) {
+                Ok(res) => res,
+                Err(e) => simsapa_backend::types::AnkiCsvExportResult {
+                    success: false,
+                    files: vec![],
+                    error: Some(format!("Export failed: {}", e)),
+                },
+            };
+
+            let result_json = match serde_json::to_string(&result) {
+                Ok(json) => json,
+                Err(e) => {
+                    let error_response = simsapa_backend::types::AnkiCsvExportResult {
+                        success: false,
+                        files: vec![],
+                        error: Some(format!("Failed to serialize result: {}", e)),
+                    };
+                    serde_json::to_string(&error_response).unwrap_or_default()
+                }
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().anki_csv_export_ready(QString::from(result_json));
+            }).unwrap();
+
+            info("SuttaBridge::export_anki_csv_background() end");
+        });
+    }
+
+    pub fn render_anki_preview_background(self: Pin<&mut Self>, front_template: &QString, back_template: &QString) {
+        info("SuttaBridge::render_anki_preview_background() start");
+        let qt_thread = self.qt_thread();
+        let front_template_str = front_template.to_string();
+        let back_template_str = back_template.to_string();
+
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            let sample_json = simsapa_backend::anki_sample_data::get_sample_vocabulary_data_json();
+
+            let preview_html = match simsapa_backend::anki_export::render_anki_preview(
+                &sample_json,
+                &front_template_str,
+                &back_template_str,
+                &app_data,
+            ) {
+                Ok(html) => html,
+                Err(e) => format!("<span style='color: red;'>Preview error: {}</span>", e),
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().anki_preview_ready(QString::from(preview_html));
+            }).unwrap();
+
+            info("SuttaBridge::render_anki_preview_background() end");
         });
     }
 }
