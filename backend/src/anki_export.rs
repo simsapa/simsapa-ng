@@ -34,6 +34,7 @@ struct TemplateContext {
     clean_word: String,
     vocab: VocabContextData,
     dpd: serde_json::Map<String, Value>,
+    root: serde_json::Map<String, Value>,
 }
 
 #[derive(Serialize, Debug)]
@@ -76,6 +77,7 @@ fn render_template(template_str: &str, context: &TemplateContext) -> Result<Stri
 fn build_template_context(
     vocab: &VocabItem,
     dpd_data: &serde_json::Map<String, Value>,
+    root_data: &serde_json::Map<String, Value>,
     context_snippet: &str,
 ) -> TemplateContext {
     let word_stem_value = clean_stem(&vocab.word);
@@ -91,6 +93,11 @@ fn build_template_context(
     filtered_dpd.remove("freq_html");
     filtered_dpd.remove("ebt_count");
 
+    let mut filtered_root = root_data.clone();
+    filtered_root.remove("matrix_test");
+    filtered_root.remove("root_info");
+    filtered_root.remove("root_matrix");
+
     TemplateContext {
         word_stem: word_stem_value.clone(),
         context_snippet: context_snippet.to_string(),
@@ -102,6 +109,7 @@ fn build_template_context(
             summary: vocab.summary.clone(),
         },
         dpd: filtered_dpd,
+        root: filtered_root,
     }
 }
 
@@ -229,13 +237,26 @@ fn generate_templated_csv(
                 None => serde_json::Map::new(),
             };
 
+            let root_key = dpd_data.get("root_key")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
+
+            let root_data = if !root_key.is_empty() {
+                match app_data.get_dpd_root_by_root_key(root_key) {
+                    Some(json) => serde_json::from_str::<serde_json::Map<String, Value>>(&json).unwrap_or_default(),
+                    None => serde_json::Map::new(),
+                }
+            } else {
+                serde_json::Map::new()
+            };
+
             let context_snippet = if is_cloze {
                 convert_context_to_cloze(&vocab.context_snippet)
             } else {
                 vocab.context_snippet.clone()
             };
 
-            let context = build_template_context(vocab, &dpd_data, &context_snippet);
+            let context = build_template_context(vocab, &dpd_data, &root_data, &context_snippet);
 
             let front = render_template(front_template, &context)?;
             let back = render_template(back_template, &context)?;
@@ -425,6 +446,11 @@ pub fn render_anki_preview(
         .cloned()
         .unwrap_or_default();
 
+    let root_data = sample_data.get("root")
+        .and_then(|v| v.as_object())
+        .cloned()
+        .unwrap_or_default();
+
     let uid = vocab_obj.get("uid")
         .and_then(|v| v.as_str())
         .unwrap_or("");
@@ -445,7 +471,7 @@ pub fn render_anki_preview(
         context_snippet: context_snippet.to_string(),
     };
 
-    let context = build_template_context(&vocab, &dpd_data, context_snippet);
+    let context = build_template_context(&vocab, &dpd_data, &root_data, context_snippet);
 
     let front_rendered = render_template(front_template, &context)
         .unwrap_or_else(|e| format!("<span style='color: red;'>Error: {}</span>", e));
