@@ -83,6 +83,7 @@ list(APPEND cpp_files
     cpp/main.cpp
     cpp/errors.cpp
     cpp/utils.cpp
+    cpp/wake_lock.cpp
     cpp/system_palette.cpp
     cpp/gui.cpp
     cpp/window_manager.cpp

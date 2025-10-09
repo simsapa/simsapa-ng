@@ -26,6 +26,10 @@ pub mod qobject {
 
         include!("cxx-qt-lib/qurl.h");
         type QUrl = cxx_qt_lib::QUrl;
+
+        include!("wake_lock.h");
+        fn acquire_wake_lock();
+        fn release_wake_lock();
     }
 
     extern "RustQt" {
@@ -40,6 +44,12 @@ pub mod qobject {
     extern "RustQt" {
         #[qinvokable]
         fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList);
+
+        #[qinvokable]
+        fn acquire_wake_lock_rust(self: Pin<&mut AssetManager>);
+
+        #[qinvokable]
+        fn release_wake_lock_rust(self: Pin<&mut AssetManager>);
 
         #[qsignal]
         #[cxx_name = "downloadProgressChanged"]
@@ -62,6 +72,14 @@ pub mod qobject {
 pub struct AssetManagerRust;
 
 impl qobject::AssetManager {
+    fn acquire_wake_lock_rust(self: Pin<&mut Self>) {
+        qobject::acquire_wake_lock();
+    }
+
+    fn release_wake_lock_rust(self: Pin<&mut Self>) {
+        qobject::release_wake_lock();
+    }
+
     fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList) {
         info(&format!("download_urls_and_extract(): {} urls", urls.len()));
 

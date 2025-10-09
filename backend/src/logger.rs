@@ -433,3 +433,14 @@ pub extern "C" fn log_info_with_options_c(msg: *const c_char, start_new: bool) {
         info_with_options(rust_str, start_new);
     }
 }
+
+#[unsafe(no_mangle)]
+pub extern "C" fn log_error_c(msg: *const c_char) {
+    if msg.is_null() {
+        return;
+    }
+    let c_str = unsafe { CStr::from_ptr(msg) };
+    if let Ok(rust_str) = c_str.to_str() {
+        error(rust_str);
+    }
+}

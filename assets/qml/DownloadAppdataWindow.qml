@@ -26,12 +26,22 @@ ApplicationWindow {
     Logger { id: logger }
 
     Component.onCompleted: {
+        if (root.is_mobile) {
+            manager.acquire_wake_lock_rust();
+        }
+
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
         // Assuming there is a network connection, show the download selection screen.
         views_stack.currentIndex = 1;
 
         if (root.is_mobile) {
             storage_dialog.open();
+        }
+    }
+
+    Component.onDestruction: {
+        if (root.is_mobile) {
+            manager.release_wake_lock_rust();
         }
     }
 

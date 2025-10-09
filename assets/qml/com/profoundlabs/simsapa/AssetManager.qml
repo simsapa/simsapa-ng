@@ -8,6 +8,14 @@ Item {
         }
     }
 
+    function acquire_wake_lock_rust() {
+        console.log("acquire_wake_lock_rust()");
+    }
+
+    function release_wake_lock_rust() {
+        console.log("release_wake_lock_rust()");
+    }
+
     signal downloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int);
     signal downloadShowMsg(message: string);
     signal downloadsCompleted(message: string);

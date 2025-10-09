@@ -710,7 +710,7 @@ ${query_text}`;
         id: mobile_menu
         window_width: root.width
         window_height: root.height
-        menu_list: [file_menu, edit_menu, view_menu, find_menu, windows_menu, help_menu]
+        menu_list: [file_menu, edit_menu, view_menu, find_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
     }
 
     AboutDialog { id: about_dialog }
