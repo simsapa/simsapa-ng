@@ -762,3 +762,58 @@ fn test_simple_cloze_format_fields() {
     assert!(!second_front.contains("<b>"), "Front field should not have bold tags");
     assert!(second_back.contains("mind, heart"), "Back should contain gloss summary");
 }
+
+#[test]
+#[serial]
+fn test_excluded_dpd_fields_not_in_template() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Templated".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{dpd.pos} - {dpd.meaning_1}".to_string(),
+            back: "{dpd.inflections}{dpd.inflections_html}{dpd.freq_data}{dpd.freq_html}{dpd.ebt_count}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data);
+    
+    assert!(result.is_err(), "Export should fail when trying to access excluded fields");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("inflections") || err_msg.contains("freq_data") || err_msg.contains("ebt_count"), 
+            "Error message should mention excluded fields");
+    
+    let input_with_allowed_fields = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Templated".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{dpd.pos} - {dpd.meaning_1}".to_string(),
+            back: "{dpd.lemma_1} - {dpd.grammar}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result_allowed = export_anki_csv(input_with_allowed_fields, &app_data).expect("Export with allowed fields should succeed");
+    
+    let csv_content = &result_allowed.files[0].content;
+    let lines: Vec<&str> = csv_content.lines().collect();
+    assert!(lines.len() >= 1, "Should have at least one CSV row");
+    
+    let first_line = lines[0];
+    let parts: Vec<&str> = first_line.splitn(2, ',').collect();
+    assert_eq!(parts.len(), 2, "CSV row should have two fields");
+    
+    let front = parts[0];
+    let back = parts[1];
+    
+    assert!(front.contains("abs") || front.contains("noun"), "Front should contain POS field");
+    assert!(front.contains("having done") || front.contains("mind"), "Front should contain meaning");
+    assert!(back.contains("karitvā") || back.contains("citta"), "Back should contain lemma");
+}

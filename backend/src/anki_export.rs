@@ -80,6 +80,17 @@ fn build_template_context(
 ) -> TemplateContext {
     let word_stem_value = clean_stem(&vocab.word);
 
+    let mut filtered_dpd = dpd_data.clone();
+    filtered_dpd.remove("inflections");
+    filtered_dpd.remove("inflections_api_ca_eva_iti");
+    filtered_dpd.remove("inflections_sinhala");
+    filtered_dpd.remove("inflections_devanagari");
+    filtered_dpd.remove("inflections_thai");
+    filtered_dpd.remove("inflections_html");
+    filtered_dpd.remove("freq_data");
+    filtered_dpd.remove("freq_html");
+    filtered_dpd.remove("ebt_count");
+
     TemplateContext {
         word_stem: word_stem_value.clone(),
         context_snippet: context_snippet.to_string(),
@@ -90,7 +101,7 @@ fn build_template_context(
             word: vocab.word.clone(),
             summary: vocab.summary.clone(),
         },
-        dpd: dpd_data.clone(),
+        dpd: filtered_dpd,
     }
 }
 
