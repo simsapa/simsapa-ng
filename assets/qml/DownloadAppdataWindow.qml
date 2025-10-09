@@ -225,6 +225,8 @@ ApplicationWindow {
                 Item { Layout.fillHeight: true }
 
                 RowLayout {
+                    id: horizontal_buttons
+                    visible: root.is_desktop
                     Layout.margins: 20
 
                     Item { Layout.fillWidth: true }
@@ -256,6 +258,34 @@ ApplicationWindow {
                     }
 
                     Item { Layout.fillWidth: true }
+                }
+
+                ColumnLayout {
+                    id: vertical_buttons
+                    visible: root.is_mobile
+                    Layout.margins: 20
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: Qt.quit()
+                    }
+
+                    Button {
+                        text: "Select Storage"
+                        visible: root.is_mobile
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: storage_dialog.open()
+                    }
+
+                    Button {
+                        text: "Download"
+                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                        onClicked: {
+                            views_stack.currentIndex = 2;
+                            root.validate_and_run_download();
+                        }
+                    }
                 }
 
                 Item {
