@@ -424,12 +424,32 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let original_normalized = original_text.replace("\n", " ");
     
     let text = original_text.replace("\n", " ").to_string();
+
+    // Pāli sandhi: dhārayāmi + ti becomes dhārayāmīti, sometimes with apostrophes: dhārayāmī’”ti
+    //
+    // We are reversing this as:
+    // dhārayāmī’ti dhārayāmī’”ti -> dhārayāmi ti
+    //
+    // Not handling the dhārayāmīti case for now.
     let text = RE_IITI_BEFORE.replace_all(&text, "i ti").into_owned();
     let text = RE_IITI_AFTER.replace_all(&text, "i ti").into_owned();
+
+    // dassanāyā’ti -> dassanāya ti
     let text = RE_AATI_BEFORE.replace_all(&text, "a ti").into_owned();
     let text = RE_AATI_AFTER.replace_all(&text, "a ti").into_owned();
+
+    // sikkhāpadesū’ti -> sikkhāpadesu ti
     let text = RE_UUTI_BEFORE.replace_all(&text, "u ti").into_owned();
     let text = RE_UUTI_AFTER.replace_all(&text, "u ti").into_owned();
+
+    // Pāli sandhi: gantuṁ + ti, the ṁ becomes n, and written as gantunti, gantun’ti or gantu’nti.
+    // One or more closing apostrophes may be added before or after the n.
+    //
+    // We are reversing this as:
+    // gantun’ti gantu’nti gantun’”ti gantu’”nti -> gantuṁ ti
+    //
+    // We are not trying to match the gantunti case because the -nti ending is
+    // ambiguous with the plural verb forms, e.g. gacchanti.
     let text = RE_NTI_BEFORE.replace_all(&text, "ṁ ti").into_owned();
     let text = RE_NTI_AFTER.replace_all(&text, "ṁ ti").into_owned();
     let text = re_nonword.replace_all(&text, " ").into_owned();
