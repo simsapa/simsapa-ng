@@ -926,3 +926,58 @@ fn test_dpd_and_root_fields_together() {
     
     assert!(back.contains("<div>") && back.contains("</div>"), "Back should contain div HTML");
 }
+
+#[test]
+#[serial]
+fn test_word_without_root_uses_empty_values() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let gloss_data = r#"{
+        "text": "atha kho bhagavā",
+        "paragraphs": [{
+            "text": "atha kho bhagavā",
+            "vocabulary": [
+                {
+                    "uid": "2794/dpd",
+                    "word": "atha 1",
+                    "summary": "<i>(ind)</i> then; now; and then",
+                    "context_snippet": "<b>atha</b> kho bhagavā"
+                }
+            ]
+        }]
+    }"#.to_string();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: gloss_data,
+        export_format: "Templated".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{vocab.word}".to_string(),
+            back: "POS: {dpd.pos} | Root: {root.root} | Root Meaning: {root.root_meaning}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data).expect("Export should succeed even when word has no root");
+    
+    let csv_content = &result.files[0].content;
+    let lines: Vec<&str> = csv_content.lines().collect();
+    assert!(lines.len() >= 1, "Should have at least one CSV row");
+    
+    let first_line = lines[0];
+    let parts: Vec<&str> = first_line.splitn(2, ',').collect();
+    assert_eq!(parts.len(), 2, "CSV row should have two fields");
+    
+    let front = parts[0];
+    let back = parts[1];
+    
+    assert!(front.contains("atha"), "Front should contain the word");
+    
+    assert!(back.contains("POS:"), "Back should contain POS label");
+    assert!(back.contains("Root:"), "Back should contain Root label");
+    assert!(back.contains("Root Meaning:"), "Back should contain Root Meaning label");
+    
+    assert!(!back.contains("√"), "Back should not contain root sign when no root exists");
+}

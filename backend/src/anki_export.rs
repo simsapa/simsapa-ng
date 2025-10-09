@@ -67,6 +67,41 @@ pub fn convert_context_to_cloze(context_snippet: &str) -> String {
     re.replace_all(context_snippet, "{{c1::$1}}").to_string()
 }
 
+fn create_empty_root_data() -> serde_json::Map<String, Value> {
+    serde_json::json!({
+        "root": "",
+        "root_in_comps": "",
+        "root_has_verb": "",
+        "root_group": 0,
+        "root_sign": "",
+        "root_meaning": "",
+        "sanskrit_root": "",
+        "sanskrit_root_meaning": "",
+        "sanskrit_root_class": "",
+        "root_example": "",
+        "dhatupatha_num": "",
+        "dhatupatha_root": "",
+        "dhatupatha_pali": "",
+        "dhatupatha_english": "",
+        "dhatumanjusa_num": 0,
+        "dhatumanjusa_root": "",
+        "dhatumanjusa_pali": "",
+        "dhatumanjusa_english": "",
+        "dhatumala_root": "",
+        "dhatumala_pali": "",
+        "dhatumala_english": "",
+        "panini_root": "",
+        "panini_sanskrit": "",
+        "panini_english": "",
+        "note": "",
+        "dictionary_id": 0,
+        "uid": "",
+        "word_ascii": "",
+        "root_clean": "",
+        "root_no_sign": ""
+    }).as_object().unwrap().clone()
+}
+
 fn render_template(template_str: &str, context: &TemplateContext) -> Result<String> {
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
@@ -243,11 +278,11 @@ fn generate_templated_csv(
 
             let root_data = if !root_key.is_empty() {
                 match app_data.get_dpd_root_by_root_key(root_key) {
-                    Some(json) => serde_json::from_str::<serde_json::Map<String, Value>>(&json).unwrap_or_default(),
-                    None => serde_json::Map::new(),
+                    Some(json) => serde_json::from_str::<serde_json::Map<String, Value>>(&json).unwrap_or_else(|_| create_empty_root_data()),
+                    None => create_empty_root_data(),
                 }
             } else {
-                serde_json::Map::new()
+                create_empty_root_data()
             };
 
             let context_snippet = if is_cloze {
@@ -449,7 +484,7 @@ pub fn render_anki_preview(
     let root_data = sample_data.get("root")
         .and_then(|v| v.as_object())
         .cloned()
-        .unwrap_or_default();
+        .unwrap_or_else(|| create_empty_root_data());
 
     let uid = vocab_obj.get("uid")
         .and_then(|v| v.as_str())

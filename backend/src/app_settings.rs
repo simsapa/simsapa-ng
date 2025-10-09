@@ -143,6 +143,9 @@ font-size: 1.2em;
 .gram \{ color: #BA9903; font-weight: bold; }
 .constr \{ color: #890339; font-weight: bold; }
 .constr-desc \{ color: #6E505E; }
+table \{ text-align: left; }
+table tr \{ text-align: left; }
+table tr td \{ text-align: left; padding: 0.1em 0.5em; }
 </style>
 <div>
 <p>{vocab.summary}</p>
@@ -162,7 +165,9 @@ font-size: 1.2em;
 <tr>
     <td class="constr">Root:</td>
     <td class="constr-desc">
-        {root.root_clean}･{root.root_group} {root.root_sign} ({root.root_meaning})
+        {{ if dpd.root_key }}
+            {root.root_clean}･{root.root_group} {root.root_sign} ({root.root_meaning})
+        {{ endif }}
     </td>
 </tr>
 <tr>
@@ -174,7 +179,7 @@ font-size: 1.2em;
 
             anki_template_cloze_front: "<div>{context_snippet}</div>".to_string(),
             anki_template_cloze_back: "<div>{vocab.summary}</div>".to_string(),
-            anki_export_format: AnkiExportFormat::Simple,
+            anki_export_format: AnkiExportFormat::Templated,
             anki_include_cloze: true,
         }
     }
