@@ -817,3 +817,112 @@ fn test_excluded_dpd_fields_not_in_template() {
     assert!(front.contains("having done") || front.contains("mind"), "Front should contain meaning");
     assert!(back.contains("karitvā") || back.contains("citta"), "Back should contain lemma");
 }
+
+#[test]
+#[serial]
+fn test_root_data_available_in_template() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Templated".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{dpd.pos} - {dpd.meaning_1}".to_string(),
+            back: "Root: {root.root_meaning} | Sign: {root.root_sign}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data).expect("Export should succeed with root fields");
+    
+    let csv_content = &result.files[0].content;
+    let lines: Vec<&str> = csv_content.lines().collect();
+    assert!(lines.len() >= 1, "Should have at least one CSV row");
+    
+    let first_line = lines[0];
+    let parts: Vec<&str> = first_line.splitn(2, ',').collect();
+    assert_eq!(parts.len(), 2, "CSV row should have two fields");
+    
+    let front = parts[0];
+    let back = parts[1];
+    
+    assert!(front.contains("abs") || front.contains("noun"), "Front should contain POS field");
+    assert!(front.contains("having done") || front.contains("mind"), "Front should contain meaning");
+    
+    assert!(back.contains("Root:"), "Back should contain root data label");
+    assert!(back.contains("Sign:"), "Back should contain root sign label");
+}
+
+#[test]
+#[serial]
+fn test_excluded_root_fields_not_in_template() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Templated".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "{dpd.pos}".to_string(),
+            back: "{root.matrix_test}{root.root_info}{root.root_matrix}".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data);
+    
+    assert!(result.is_err(), "Export should fail when trying to access excluded root fields");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("matrix_test") || err_msg.contains("root_info") || err_msg.contains("root_matrix"), 
+            "Error message should mention excluded root fields");
+}
+
+#[test]
+#[serial]
+fn test_dpd_and_root_fields_together() {
+    helpers::app_data_setup();
+    let app_data = simsapa_backend::get_app_data();
+
+    let input = AnkiCsvExportInput {
+        gloss_data_json: create_test_gloss_data(),
+        export_format: "Templated".to_string(),
+        include_cloze: false,
+        templates: AnkiCsvTemplates {
+            front: "<h3>{vocab.word}</h3><p>{context_snippet}</p>".to_string(),
+            back: "<div><b>POS:</b> {dpd.pos}</div>\
+                   <div><b>Meaning:</b> {dpd.meaning_1}</div>\
+                   <div><b>Root:</b> {root.root} ({root.root_meaning})</div>\
+                   <div><b>Root Sign:</b> {root.root_sign}</div>".to_string(),
+            cloze_front: "".to_string(),
+            cloze_back: "".to_string(),
+        },
+    };
+
+    let result = export_anki_csv(input, &app_data).expect("Export with both DPD and root fields should succeed");
+    
+    let csv_content = &result.files[0].content;
+    let lines: Vec<&str> = csv_content.lines().collect();
+    assert!(lines.len() >= 1, "Should have at least one CSV row");
+    
+    let first_line = lines[0];
+    let parts: Vec<&str> = first_line.splitn(2, ',').collect();
+    assert_eq!(parts.len(), 2, "CSV row should have two fields");
+    
+    let front = parts[0];
+    let back = parts[1];
+    
+    assert!(front.contains("<h3>") && front.contains("</h3>"), "Front should contain heading HTML");
+    assert!(front.contains("karitvā") || front.contains("citta"), "Front should contain vocab word");
+    
+    assert!(back.contains("POS:"), "Back should contain POS label");
+    assert!(back.contains("Meaning:"), "Back should contain meaning label");
+    assert!(back.contains("Root:"), "Back should contain root label");
+    assert!(back.contains("Root Sign:"), "Back should contain root sign label");
+    
+    assert!(back.contains("<div>") && back.contains("</div>"), "Back should contain div HTML");
+}

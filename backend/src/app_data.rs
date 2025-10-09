@@ -401,6 +401,39 @@ impl AppData {
         }
     }
 
+    pub fn get_dpd_root_by_root_key(&self, root_key_str: &str) -> Option<String> {
+        use diesel::prelude::*;
+        use crate::db::dpd_schema::dpd_roots::dsl::*;
+        
+        let mut conn = match self.dbm.dpd.get_conn() {
+            Ok(c) => c,
+            Err(e) => {
+                error(&format!("Failed to get DPD connection: {}", e));
+                return None;
+            }
+        };
+        
+        let result = dpd_roots
+            .filter(root.eq(root_key_str))
+            .first::<crate::db::dpd_models::DpdRoot>(&mut conn);
+        
+        match result {
+            Ok(dpd_root) => {
+                match serde_json::to_string(&dpd_root) {
+                    Ok(json) => Some(json),
+                    Err(e) => {
+                        error(&format!("Failed to serialize DPD root: {}", e));
+                        None
+                    }
+                }
+            }
+            Err(e) => {
+                error(&format!("Failed to query DPD root for root_key {}: {}", root_key_str, e));
+                None
+            }
+        }
+    }
+
     pub fn get_anki_template_front(&self) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         app_settings.anki_template_front.clone()

@@ -41,7 +41,7 @@ pub struct InflectionTemplate {
     pub data: String,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Eq, Hash, serde::Serialize)]
 #[diesel(table_name = dpd_roots)]
 #[diesel(primary_key(root))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

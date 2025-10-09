@@ -126,8 +126,52 @@ Respond with GFM-Markdown formatted text.
                 }
             },
             ai_models_auto_retry: false,
-            anki_template_front: "<div><p>{word_stem}</p><p>{context_snippet}</p></div>".to_string(),
-            anki_template_back: "<div><b>{dpd.pos}</b> {vocab.summary}</div>".to_string(),
+
+            anki_template_front: r#"<style>
+.word \{
+color: #CF6303;
+font-size: 1.2em;
+}
+.snippet \{ color: #857879; }
+</style>
+<div>
+<p class="word">{word_stem}</p>
+<p class="snippet">{context_snippet}</p>
+</div>"#.to_string(),
+
+            anki_template_back: r#"<style>
+.gram \{ color: #BA9903; font-weight: bold; }
+.constr \{ color: #890339; font-weight: bold; }
+.constr-desc \{ color: #6E505E; }
+</style>
+<div>
+<p>{vocab.summary}</p>
+<table style="padding-top: 0.5em;">
+<tr>
+    <td class="gram">Meaning:</td>
+    <td>{dpd.meaning_1}</td>
+</tr>
+<tr>
+    <td class="gram">Grammar:</td>
+    <td>{dpd.grammar}</td>
+</tr>
+<tr>
+    <td class="gram">Pos:</td>
+    <td>{dpd.pos}</td>
+</tr>
+<tr>
+    <td class="constr">Root:</td>
+    <td class="constr-desc">
+        {root.root_clean}･{root.root_group} {root.root_sign} ({root.root_meaning})
+    </td>
+</tr>
+<tr>
+    <td class="constr">Construction:</td>
+    <td class="constr-desc">{dpd.construction}</td>
+</tr>
+</table>
+</div>"#.to_string(),
+
             anki_template_cloze_front: "<div>{context_snippet}</div>".to_string(),
             anki_template_cloze_back: "<div>{vocab.summary}</div>".to_string(),
             anki_export_format: AnkiExportFormat::Simple,
