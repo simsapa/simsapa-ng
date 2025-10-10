@@ -31,7 +31,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.activeFocus && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible)
 
     Logger { id: logger }
 
@@ -778,7 +778,6 @@ ${query_text}`;
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            // Left side layout
             ColumnLayout {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -1149,9 +1148,11 @@ ${query_text}`;
                                 window_id: root.window_id
                                 is_dark: root.is_dark
                                 word_uid: ""
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                                visible: root.webview_visible
+                                Layout.fillWidth: rightside_tabs.currentIndex === 1
+                                Layout.fillHeight: rightside_tabs.currentIndex === 1
+                                Layout.preferredWidth: rightside_tabs.currentIndex === 1 ? parent.width : 0
+                                Layout.preferredHeight: rightside_tabs.currentIndex === 1 ? parent.height : 0
+                                visible: root.webview_visible && rightside_tabs.currentIndex === 1
                             }
 
                             GlossTab {

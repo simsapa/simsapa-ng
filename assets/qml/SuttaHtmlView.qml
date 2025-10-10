@@ -6,6 +6,8 @@ Loader {
     required property bool is_dark
     required property string item_key
 
+    property bool should_be_visible: true
+
     // Passing on tab_data properties as json to avoid the UI reacting to one
     // property (e.g. item_uid) while the other has not yet been set (e.g.
     // table_name).
@@ -63,6 +65,8 @@ Loader {
         loader.item.window_id = Qt.binding(() => window_id);
         loader.item.is_dark = Qt.binding(() => is_dark);
         loader.item.data_json = Qt.binding(() => data_json);
+        loader.item.visible = Qt.binding(() => loader.should_be_visible && loader.visible);
     }
 
 }
+

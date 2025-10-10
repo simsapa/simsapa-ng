@@ -20,6 +20,7 @@ Loader {
         loader.item.window_id = Qt.binding(() => window_id);
         loader.item.word_uid = Qt.binding(() => word_uid);
         loader.item.is_dark = Qt.binding(() => is_dark);
+        loader.item.visible = Qt.binding(() => loader.visible);
         /* loader.item.loadingChanged.connect(loader.loadingChanged); */
     }
 

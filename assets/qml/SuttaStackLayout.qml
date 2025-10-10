@@ -51,6 +51,11 @@ StackLayout {
         };
         let data_json = JSON.stringify(data);
         let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json });
+
+        let is_current = Qt.binding(() => root.current_key === key);
+        comp.should_be_visible = is_current;
+        comp.width = Qt.binding(() => (root.current_key === key) ? comp.parent.width : 0);
+        comp.height = Qt.binding(() => (root.current_key === key) ? comp.parent.height : 0);
         root.items_map[key] = comp;
         if (show_item) {
             root.current_key = key;
@@ -89,7 +94,7 @@ StackLayout {
     onCurrentIndexChanged: update_current_key()
 
     function update_currentIndex() {
-        if (!root.items_map[root.current_key]) {
+        if (!root.items_map[root.current_key] || root.current_key === "") {
             root.currentIndex = -1;
             return;
         }
@@ -101,11 +106,16 @@ StackLayout {
             SuttaBridge.emit_update_window_title(item_data.item_uid, item_data.sutta_ref, item_data.sutta_title);
         }
 
+        let found = false;
         for (let i = 0; i < root.children.length; i++) {
             if (root.children[i].item_key === root.current_key) {
                 root.currentIndex = i;
+                found = true;
                 break;
             }
+        }
+        if (!found) {
+            root.currentIndex = -1;
         }
     }
 

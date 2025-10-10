@@ -3,31 +3,44 @@ import QtWebView
 
 import com.profoundlabs.simsapa
 
-WebView {
-    id: web
+/*
+ * Mobile Dictionary WebView Visibility Management
+ * 
+ * Similar to SuttaHtmlView_Mobile, this wraps the dictionary WebView in an Item container
+ * to ensure proper visibility control on mobile platforms where native WebViews don't
+ * respect QML's visibility hierarchy.
+ * 
+ * See SuttaHtmlView_Mobile.qml and docs/mobile-webview-visibility-management.md for details.
+ */
+
+Item {
+    id: root
     anchors.fill: parent
 
     property string window_id
     property string word_uid
     property bool is_dark
 
-    Component.onCompleted: {
-        web.load_word_uid(web.word_uid);
+    function load_word_uid(uid) {
+        if (uid == "Word") {
+            // Initial blank page
+            uid = "";
+        }
+        var html = SuttaBridge.get_word_html(root.window_id, uid);
+        web.loadHtml(html);
     }
 
-    onLoadingChanged: {
-        if (web.is_dark) {
-            runJavaScript("document.documentElement.style.colorScheme = 'dark';");
-        }
+    Component.onCompleted: {
+        root.load_word_uid(root.word_uid);
     }
 
     onWord_uidChanged: function() {
-        load_word_uid(web.word_uid);
+        root.load_word_uid(root.word_uid);
     }
 
     onIs_darkChanged: function() {
         let js = "";
-        if (web.is_dark) {
+        if (root.is_dark) {
             js = `
 document.body.classList.add('dark');
 document.documentElement.classList.add('dark');
@@ -40,16 +53,19 @@ document.documentElement.classList.remove('dark');
 document.documentElement.style.colorScheme = 'light';
 `;
         }
-        runJavaScript(js);
+        web.runJavaScript(js);
     }
 
-    function load_word_uid(uid) {
-        if (uid == "Word") {
-            // Initial blank page
-            uid = "";
+    WebView {
+        id: web
+        anchors.fill: parent
+        visible: root.visible
+        enabled: root.visible
+
+        onLoadingChanged: {
+            if (root.is_dark) {
+                web.runJavaScript("document.documentElement.style.colorScheme = 'dark';");
+            }
         }
-        var html = SuttaBridge.get_word_html(web.window_id, uid);
-        web.loadHtml(html);
     }
-
 }
