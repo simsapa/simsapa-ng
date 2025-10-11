@@ -8,6 +8,7 @@ use regex::Regex;
 use lazy_static::lazy_static;
 use html_escape::decode_html_entities;
 use anyhow::{Context, Result};
+use serde::{Serialize, Deserialize};
 
 use crate::types::{SearchResult, WordInfo, WordProcessingOptions, WordProcessingResult, ProcessedWord, UnrecognizedWord};
 use crate::lookup::*;
@@ -354,6 +355,7 @@ lazy_static! {
     static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct GlossWordContext {
     pub clean_word: String,
     pub original_word: String,

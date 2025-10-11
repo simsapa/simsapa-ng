@@ -1,0 +1,202 @@
+[
+  {
+    "clean_word": "Yo",
+    "original_word": "Yo",
+    "context_snippet": "<b>Yo</b> pana bhikkhu anabhijānaṁ uttarimanussadhammaṁ att"
+  },
+  {
+    "clean_word": "pana",
+    "original_word": "pana",
+    "context_snippet": "Yo <b>pana</b> bhikkhu anabhijānaṁ uttarimanussadhammaṁ attupanā"
+  },
+  {
+    "clean_word": "bhikkhu",
+    "original_word": "bhikkhu",
+    "context_snippet": "Yo pana <b>bhikkhu</b> anabhijānaṁ uttarimanussadhammaṁ attupanāyikaṁ al"
+  },
+  {
+    "clean_word": "anabhijānaṁ",
+    "original_word": "anabhijānaṁ",
+    "context_snippet": "Yo pana bhikkhu <b>anabhijānaṁ</b> uttarimanussadhammaṁ attupanāyikaṁ alamariyañāṇad"
+  },
+  {
+    "clean_word": "uttarimanussadhammaṁ",
+    "original_word": "uttarimanussadhammaṁ",
+    "context_snippet": "Yo pana bhikkhu anabhijānaṁ <b>uttarimanussadhammaṁ</b> attupanāyikaṁ alamariyañāṇadassanaṁ samudācareyya"
+  },
+  {
+    "clean_word": "attupanāyikaṁ",
+    "original_word": "attupanāyikaṁ",
+    "context_snippet": "Yo pana bhikkhu anabhijānaṁ uttarimanussadhammaṁ <b>attupanāyikaṁ</b> alamariyañāṇadassanaṁ samudācareyya “iti jānāmi, "
+  },
+  {
+    "clean_word": "alamariyañāṇadassanaṁ",
+    "original_word": "alamariyañāṇadassanaṁ",
+    "context_snippet": "hu anabhijānaṁ uttarimanussadhammaṁ attupanāyikaṁ <b>alamariyañāṇadassanaṁ</b> samudācareyya “iti jānāmi, iti passāmī”ti, tato a"
+  },
+  {
+    "clean_word": "samudācareyya",
+    "original_word": "samudācareyya",
+    "context_snippet": "anussadhammaṁ attupanāyikaṁ alamariyañāṇadassanaṁ <b>samudācareyya</b> “iti jānāmi, iti passāmī”ti, tato aparena samayen"
+  },
+  {
+    "clean_word": "iti",
+    "original_word": "iti",
+    "context_snippet": "ttupanāyikaṁ alamariyañāṇadassanaṁ samudācareyya “<b>iti</b> jānāmi, iti passāmī”ti, tato aparena samayena sam"
+  },
+  {
+    "clean_word": "jānāmi",
+    "original_word": "jānāmi",
+    "context_snippet": "anāyikaṁ alamariyañāṇadassanaṁ samudācareyya “iti <b>jānāmi</b>, iti passāmī”ti, tato aparena samayena samanuggāh"
+  },
+  {
+    "clean_word": "iti",
+    "original_word": "iti",
+    "context_snippet": " alamariyañāṇadassanaṁ samudācareyya “<b>iti</b> jānāmi, iti passāmī”ti, tato aparena samayena samanuggāhīyamā"
+  },
+  {
+    "clean_word": "passāmi",
+    "original_word": "passāmi",
+    "context_snippet": " vadeyya “ajānamevaṁ āvuso avacaṁ jānāmi, apassaṁ <b>passāmi</b>, tucchaṁ musā vilapi”nti, aññatra adhimānā, ayamp"
+  },
+  {
+    "clean_word": "ti",
+    "original_word": "ti",
+    "context_snippet": "caṁ jānāmi, apassaṁ passāmi, tucchaṁ musā vilapi”n<b>ti</b>, aññatra adhimānā, ayampi pārājiko hoti asaṁvāso."
+  },
+  {
+    "clean_word": "tato",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "aparena",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "samayena",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "samanuggāhīyamāno",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "vā",
+    "original_word": "vā",
+    "context_snippet": "i”nti, aññatra adhimānā, ayampi pārājiko hoti asaṁ<b>vā</b>so."
+  },
+  {
+    "clean_word": "asamanuggāhīyamāno",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "vā",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "āpanno",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "visuddhāpekkho",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "evaṁ",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "vadeyya",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "ajānamevaṁ",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "āvuso",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "avacaṁ",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "jānāmi",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "apassaṁ",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "passāmi",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "tucchaṁ",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "musā",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "vilapiṁ",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "ti",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "aññatra",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "adhimānā",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "ayampi",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "pārājiko",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "hoti",
+    "original_word": "",
+    "context_snippet": ""
+  },
+  {
+    "clean_word": "asaṁvāso",
+    "original_word": "",
+    "context_snippet": ""
+  }
+]

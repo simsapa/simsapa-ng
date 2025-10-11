@@ -132,7 +132,7 @@ Respond with GFM-Markdown formatted text.
 color: #CF6303;
 font-size: 1.2em;
 }
-.snippet \{ color: #857879; }
+.snippet \{ color: #504949; }
 </style>
 <div>
 <p class="word">{word_stem}</p>
