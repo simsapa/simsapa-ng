@@ -279,11 +279,8 @@ fn test_repeated_words_no_skipping() {
     assert_ne!(first_iti.context_snippet, second_iti.context_snippet,
         "BUG: Second 'iti' has same context as first, meaning it jumped back to same position");
 
-    // Second 'iti' context should contain "jānāmi" (before it) and "passām" (after it)
-    assert!(second_iti.context_snippet.contains("jānāmi") &&
-            (second_iti.context_snippet.contains("passām") || second_iti.context_snippet.contains("passāmī")),
-        "Second 'iti' context should be 'iti jānāmi, <b>iti</b> passāmī', got: '{}'",
-        second_iti.context_snippet);
+    assert!(first_iti.context_snippet.contains("<b>iti</b> jānāmi, iti passāmī"));
+    assert!(second_iti.context_snippet.contains("iti jānāmi, <b>iti</b> passāmī"));
 
     // Critical test: All words must have non-empty original_word and context_snippet
     let mut empty_original_positions = Vec::new();
