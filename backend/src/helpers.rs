@@ -386,10 +386,10 @@ pub fn find_sentence_start(text: &str, char_pos: usize) -> usize {
 
     // let chars: Vec<char> = text.chars().collect();
     let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(text.len());
-    
+
     let bytes = text.as_bytes();
     let search_start = byte_pos.min(text.len());
-    
+
     for i in (0..search_start).rev() {
         let ch = bytes[i];
         if ch == b'.' || ch == b'?' || ch == b'!' || ch == b';' {
@@ -402,7 +402,7 @@ pub fn find_sentence_start(text: &str, char_pos: usize) -> usize {
             }
         }
     }
-    
+
     0
 }
 
@@ -410,11 +410,11 @@ pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
     let bytes = text.as_bytes();
     let len = text.len();
     let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(len);
-    
+
     if byte_pos >= len {
         return text.chars().count();
     }
-    
+
     for i in byte_pos..len {
         let ch = bytes[i];
         if ch == b'.' || ch == b'?' || ch == b'!' || ch == b';' {
@@ -423,7 +423,7 @@ pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
             }
         }
     }
-    
+
     text.chars().count()
 }
 
@@ -477,7 +477,7 @@ pub fn extract_clean_words(preprocessed_text: &str) -> Vec<String> {
 }
 
 fn is_word_char(c: char) -> bool {
-    c.is_alphanumeric() || c == 'ā' || c == 'ī' || c == 'ū' || c == 'ṁ' || c == 'ṃ' 
+    c.is_alphanumeric() || c == 'ā' || c == 'ī' || c == 'ū' || c == 'ṁ' || c == 'ṃ'
         || c == 'ṅ' || c == 'ñ' || c == 'ṭ' || c == 'ḍ' || c == 'ṇ' || c == 'ḷ'
 }
 
@@ -507,14 +507,232 @@ fn slice_matches_with_sandhi(original_slice: &[char], search_chars: &[char]) -> 
     if original_slice.len() != search_chars.len() {
         return false;
     }
-    
+
     for (orig_char, search_char) in original_slice.iter().zip(search_chars.iter()) {
         if !chars_match_with_sandhi(*orig_char, *search_char) {
             return false;
         }
     }
-    
+
     true
+}
+
+fn find_word_start_before(original_chars: &[char], pos: usize) -> usize {
+    if pos == 0 {
+        return 0;
+    }
+
+    let mut start = pos;
+    while start > 0 && is_word_char(original_chars[start - 1]) {
+        start -= 1;
+    }
+    start
+}
+
+fn detect_sandhi_unit(original_chars: &[char], search_word: &str, match_start: usize, match_end: usize) -> Option<(usize, usize)> {
+    let len = original_chars.len();
+    let search_chars: Vec<char> = search_word.chars().collect();
+
+    let word_start = find_word_start_before(original_chars, match_start);
+
+    let ends_with_niggahita = search_chars.last() == Some(&'ṁ') || search_chars.last() == Some(&'ṃ');
+
+    if ends_with_niggahita && match_end < len {
+        let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+
+        if quote_chars.contains(&original_chars[match_end]) {
+            let mut end = match_end + 1;
+
+            if end < len && (original_chars[end] == 'n' || original_chars[end] == 'N') {
+                end += 1;
+                if end < len && original_chars[end] == 't' {
+                    end += 1;
+                    if end < len && original_chars[end] == 'i' {
+                        end += 1;
+                        return Some((word_start, end));
+                    }
+                }
+            }
+        }
+    }
+
+    let mut end = match_end;
+    while end < len && is_word_char(original_chars[end]) {
+        end += 1;
+    }
+
+    if end >= len {
+        return None;
+    }
+
+    let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+
+    if quote_chars.contains(&original_chars[end]) {
+        let quote_pos = end;
+        end += 1;
+
+        if end < len && (original_chars[end] == 'n' || original_chars[end] == 'N') {
+            end += 1;
+            if end < len && original_chars[end] == 't' {
+                end += 1;
+                if end < len && original_chars[end] == 'i' {
+                    end += 1;
+                    return Some((word_start, end));
+                }
+            }
+        }
+
+        end = quote_pos + 1;
+        if end < len && original_chars[end] == 't' {
+            end += 1;
+            if end < len && original_chars[end] == 'i' {
+                end += 1;
+                return Some((word_start, end));
+            }
+        }
+    }
+
+    None
+}
+
+fn try_match_with_vowel_ti_expansion(
+    original_chars: &[char],
+    original_lower_chars: &[char],
+    search_chars: &[char],
+    char_pos: usize,
+    text_len: usize,
+) -> Option<(usize, usize, String)> {
+    if search_chars.is_empty() || char_pos >= text_len {
+        return None;
+    }
+
+    let last_char = search_chars.last()?;
+    let ends_with_short_vowel = matches!(last_char, 'a' | 'i' | 'u');
+
+    if !ends_with_short_vowel {
+        return None;
+    }
+
+    if char_pos + search_chars.len() > text_len {
+        return None;
+    }
+
+    let slice = &original_lower_chars[char_pos..char_pos + search_chars.len()];
+    let matches = if slice == search_chars {
+        true
+    } else {
+        slice_matches_with_sandhi(slice, search_chars)
+    };
+
+    if !matches {
+        return None;
+    }
+
+    let after_match = char_pos + search_chars.len();
+    if after_match >= text_len {
+        return None;
+    }
+
+    let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+    let mut pos = after_match;
+
+    if quote_chars.contains(&original_chars[pos]) {
+        pos += 1;
+        if pos < text_len && original_chars[pos] == 't' {
+            pos += 1;
+            if pos < text_len && original_chars[pos] == 'i' {
+                pos += 1;
+                let is_word_boundary_end = pos >= text_len || !is_word_char(original_chars[pos]);
+                if is_word_boundary_end {
+                    let original_word: String = original_chars[char_pos..pos].iter().collect();
+                    return Some((char_pos, pos, original_word));
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn try_match_with_niggahita_expansion(
+    original_chars: &[char],
+    original_lower_chars: &[char],
+    search_chars: &[char],
+    char_pos: usize,
+    text_len: usize,
+) -> Option<(usize, usize, String)> {
+    if search_chars.is_empty() {
+        return None;
+    }
+
+    let ends_with_niggahita = search_chars.last() == Some(&'ṁ') || search_chars.last() == Some(&'ṃ');
+
+    if !ends_with_niggahita {
+        return None;
+    }
+
+    let prefix_len = search_chars.len() - 1;
+    if char_pos + prefix_len > text_len {
+        return None;
+    }
+
+    let prefix_slice = &original_lower_chars[char_pos..char_pos + prefix_len];
+    let search_prefix = &search_chars[..prefix_len];
+
+    let prefix_matches = if prefix_slice == search_prefix {
+        true
+    } else {
+        slice_matches_with_sandhi(prefix_slice, search_prefix)
+    };
+
+    if !prefix_matches {
+        return None;
+    }
+
+    let after_prefix = char_pos + prefix_len;
+    if after_prefix >= text_len {
+        return None;
+    }
+
+    let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+    let mut pos = after_prefix;
+
+    if quote_chars.contains(&original_chars[pos]) {
+        let quote_pos = pos;
+        pos += 1;
+
+        if pos < text_len && (original_chars[pos] == 'n' || original_chars[pos] == 'N') {
+            pos += 1;
+            if pos < text_len && original_chars[pos] == 't' {
+                pos += 1;
+                if pos < text_len && original_chars[pos] == 'i' {
+                    pos += 1;
+
+                    let is_word_boundary_end = pos >= text_len || !is_word_char(original_chars[pos]);
+                    if is_word_boundary_end {
+                        let original_word: String = original_chars[char_pos..pos].iter().collect();
+                        return Some((char_pos, pos, original_word));
+                    }
+                }
+            }
+        }
+
+        pos = quote_pos + 1;
+        if pos < text_len && original_chars[pos] == 't' {
+            pos += 1;
+            if pos < text_len && original_chars[pos] == 'i' {
+                pos += 1;
+
+                let is_word_boundary_end = pos >= text_len || !is_word_char(original_chars[pos]);
+                if is_word_boundary_end {
+                    let original_word: String = original_chars[char_pos..pos].iter().collect();
+                    return Some((char_pos, pos, original_word));
+                }
+            }
+        }
+    }
+
+    None
 }
 
 pub fn find_word_position_char_based(
@@ -534,34 +752,84 @@ pub fn find_word_position_char_based(
 
     let start_pos = skip_non_word_chars(original_lower_chars, current_search_pos);
 
-    for char_pos in start_pos..=(text_len.saturating_sub(search_len)) {
-        if char_pos + search_len > text_len {
+    for char_pos in start_pos..text_len {
+        if char_pos + search_len > text_len + 10 {
             break;
         }
 
+        if let Some((start, end, original_word)) = try_match_with_vowel_ti_expansion(
+            original_chars,
+            original_lower_chars,
+            &search_chars,
+            char_pos,
+            text_len,
+        ) {
+            let is_word_boundary_start = char_pos == 0 || !is_word_char(original_chars[char_pos - 1]);
+            if is_word_boundary_start {
+                return Some(WordPosition {
+                    clean_word: search_word.to_string(),
+                    char_start: start,
+                    char_end: end,
+                    original_word,
+                });
+            }
+        }
+
+        if let Some((start, end, original_word)) = try_match_with_niggahita_expansion(
+            original_chars,
+            original_lower_chars,
+            &search_chars,
+            char_pos,
+            text_len,
+        ) {
+            let is_word_boundary_start = char_pos == 0 || !is_word_char(original_chars[char_pos - 1]);
+            if is_word_boundary_start {
+                return Some(WordPosition {
+                    clean_word: search_word.to_string(),
+                    char_start: start,
+                    char_end: end,
+                    original_word,
+                });
+            }
+        }
+
+        if char_pos + search_len > text_len {
+            continue;
+        }
+
         let slice = &original_lower_chars[char_pos..char_pos + search_len];
-        
+
         let matches = if slice == search_chars.as_slice() {
             true
         } else {
             slice_matches_with_sandhi(slice, &search_chars)
         };
-        
+
         if matches {
-            let is_word_boundary_start = char_pos == 0 
+            let is_word_boundary_start = char_pos == 0
                 || !is_word_char(original_chars[char_pos - 1]);
             let is_word_boundary_end = char_pos + search_len >= text_len
                 || !is_word_char(original_chars[char_pos + search_len]);
 
             if is_word_boundary_start && is_word_boundary_end {
-                let original_word: String = original_chars[char_pos..char_pos + search_len]
+                let mut word_start_pos = char_pos;
+                let mut word_end_pos = char_pos + search_len;
+                let mut original_word: String = original_chars[char_pos..char_pos + search_len]
                     .iter()
                     .collect();
 
+                if let Some((sandhi_start, sandhi_end)) = detect_sandhi_unit(original_chars, search_word, char_pos, char_pos + search_len) {
+                    word_start_pos = sandhi_start;
+                    word_end_pos = sandhi_end;
+                    original_word = original_chars[sandhi_start..sandhi_end]
+                        .iter()
+                        .collect();
+                }
+
                 return Some(WordPosition {
                     clean_word: search_word.to_string(),
-                    char_start: char_pos,
-                    char_end: char_pos + search_len,
+                    char_start: word_start_pos,
+                    char_end: word_end_pos,
                     original_word,
                 });
             }

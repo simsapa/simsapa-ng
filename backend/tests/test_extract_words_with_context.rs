@@ -224,7 +224,7 @@ fn test_repeated_words_no_skipping() {
     // Impact: When generating glosses or exporting to Anki CSV, many words are skipped,
     // resulting in incomplete vocabulary lists.
 
-    let text = "Yo pana bhikkhu anabhijānaṁ uttarimanussadhammaṁ attupanāyikaṁ alamariyañāṇadassanaṁ samudācareyya “iti jānāmi, iti passāmī”ti, tato aparena samayena samanuggāhīyamāno vā asamanuggāhīyamāno vā āpanno visuddhāpekkho evaṁ vadeyya “ajānamevaṁ āvuso avacaṁ jānāmi, apassaṁ passāmi, tucchaṁ musā vilapi”nti, aññatra adhimānā, ayampi pārājiko hoti asaṁvāso.";
+    let text = r#"Yo pana bhikkhu anabhijānaṁ uttarimanussadhammaṁ attupanāyikaṁ alamariyañāṇadassanaṁ samudācareyya “iti jānāmi, iti passāmī”ti, tato aparena samayena samanuggāhīyamāno vā asamanuggāhīyamāno vā āpanno visuddhāpekkho evaṁ vadeyya “ajānamevaṁ āvuso avacaṁ jānāmi, apassaṁ passāmi, tucchaṁ musā vilapi”nti, aññatra adhimānā, ayampi pārājiko hoti asaṁvāso."#;
     let words = helpers::extract_words_with_context(text);
 
     let path = PathBuf::from("tests/data/anabhijanam-words-with-context.json".to_string());
@@ -342,4 +342,8 @@ fn test_repeated_words_no_skipping() {
     // Contexts should be different (they appear in different parts of the sentence)
     assert_ne!(first_janami.context_snippet, second_janami.context_snippet,
         "The two 'jānāmi' occurrences should have different contexts");
+
+    // Test vilapi”nti
+    let vilapim_item = words.get(32).unwrap();
+    assert!(vilapim_item.context_snippet.contains("<b>vilapi”nti</b>"));
 }
