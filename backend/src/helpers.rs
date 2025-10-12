@@ -538,7 +538,7 @@ fn detect_sandhi_unit(original_chars: &[char], search_word: &str, match_start: u
     let ends_with_niggahita = search_chars.last() == Some(&'ṁ') || search_chars.last() == Some(&'ṃ');
 
     if ends_with_niggahita && match_end < len {
-        let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+        let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
 
         if quote_chars.contains(&original_chars[match_end]) {
             let mut end = match_end + 1;
@@ -565,7 +565,7 @@ fn detect_sandhi_unit(original_chars: &[char], search_word: &str, match_start: u
         return None;
     }
 
-    let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+    let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
 
     if quote_chars.contains(&original_chars[end]) {
         let quote_pos = end;
@@ -633,7 +633,7 @@ fn try_match_with_vowel_ti_expansion(
         return None;
     }
 
-    let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+    let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
     let mut pos = after_match;
 
     if quote_chars.contains(&original_chars[pos]) {
@@ -694,7 +694,7 @@ fn try_match_with_niggahita_expansion(
         return None;
     }
 
-    let quote_chars = ['"', '"', '"', '\'', '\u{2018}', '\u{2019}'];
+    let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
     let mut pos = after_prefix;
 
     if quote_chars.contains(&original_chars[pos]) {
