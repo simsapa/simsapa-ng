@@ -105,7 +105,7 @@ fn test_sandhi_transformation_iiti() {
     let text = "dhārayāmī'ti";
     let words = helpers::extract_words_with_context(text);
 
-    assert!(words.len() >= 2, "Should split into dhārayāmi and ti");
+    assert!(words.len() >= 1, "Should extract dhārayāmi");
 
     let dharayami = words.iter().find(|w| w.clean_word.contains("dhārayāmi"));
     assert!(dharayami.is_some(), "Should find dhārayāmi");
@@ -116,7 +116,7 @@ fn test_sandhi_transformation_aati() {
     let text = "dassanāyā'ti";
     let words = helpers::extract_words_with_context(text);
 
-    assert!(words.len() >= 2, "Should split into dassanāya and ti");
+    assert!(words.len() >= 1, "Should extract dassanāya");
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn test_sandhi_transformation_uuti() {
     let text = "sikkhāpadesū'ti";
     let words = helpers::extract_words_with_context(text);
 
-    assert!(words.len() >= 2, "Should split into sikkhāpadesu and ti");
+    assert!(words.len() >= 1, "Should extract sikkhāpadesu");
 
     let sikkha = words.iter().find(|w| w.clean_word.contains("sikkhāpadesu"));
     assert!(sikkha.is_some(), "Should find sikkhāpadesu");
@@ -135,7 +135,7 @@ fn test_sandhi_transformation_nti() {
     let text = "gantun'ti";
     let words = helpers::extract_words_with_context(text);
 
-    assert!(words.len() >= 2, "Should split into gantuṁ and ti");
+    assert!(words.len() >= 1, "Should extract gantuṁ");
 
     let gantu = words.iter().find(|w| w.clean_word.contains("gantuṁ"));
     assert!(gantu.is_some(), "Should find gantuṁ");
@@ -344,7 +344,7 @@ fn test_repeated_words_no_skipping() {
         "The two 'jānāmi' occurrences should have different contexts");
 
     // Test vilapi”nti
-    let vilapim_item = words.get(32).unwrap();
+    let vilapim_item = words.get(31).unwrap();
     assert!(vilapim_item.context_snippet.contains("<b>vilapi”nti</b>"));
 }
 

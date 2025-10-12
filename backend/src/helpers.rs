@@ -715,7 +715,7 @@ fn try_match_with_niggahita_expansion(
 
         // Skip one or more consecutive quote characters
         let after_quotes = skip_quote_chars(original_chars, pos, text_len);
-        
+
         if after_quotes > pos {  // Found at least one quote
             pos = after_quotes;
             if pos < text_len && original_chars[pos] == 't' {
@@ -946,8 +946,16 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
 
     let mut results = Vec::new();
     let mut current_search_pos = 0;
+    let mut skip_next_ti = false;
 
     for clean_word in clean_words {
+        if skip_next_ti && clean_word == "ti" {
+            skip_next_ti = false;
+            continue;
+        }
+
+        skip_next_ti = false;
+
         if let Some(word_position) = find_word_position_char_based(
             &original_chars,
             &original_lower_chars,
@@ -967,6 +975,20 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
                 original_word: word_position.original_word.clone(),
                 context_snippet,
             });
+
+            let orig_lower = word_position.original_word.to_lowercase();
+            let has_quote_ti = orig_lower.ends_with("'ti")
+                || orig_lower.ends_with("\"ti")
+                || orig_lower.ends_with("\u{2019}ti")
+                || orig_lower.ends_with("\u{201D}ti")
+                || orig_lower.ends_with("'nti")
+                || orig_lower.ends_with("\"nti")
+                || orig_lower.ends_with("\u{2019}nti")
+                || orig_lower.ends_with("\u{201D}nti");
+
+            if has_quote_ti {
+                skip_next_ti = true;
+            }
 
             current_search_pos = word_position.char_end;
         } else {
@@ -1963,7 +1985,7 @@ mod tests {
     fn test_extract_words_nti() {
         let text = "yaṁ jaññā — ‘sakkomi ajjeva gantun’ti gantu’nti gantun’”ti gantu’”nti. dhārayāmī’ti dhārayāmī’”ti dassanāyā’ti";
         let words: String = extract_words(text).join(" ");
-        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ ti gantuṁ ti gantuṁ ti gantuṁ ti dhārayāmi ti dhārayāmi ti dassanāya ti".to_string();
+        let expected_words = "yaṁ jaññā sakkomi ajjeva gantuṁ gantuṁ gantuṁ gantuṁ dhārayāmi dhārayāmi dassanāya".to_string();
         assert_eq!(words, expected_words);
     }
 

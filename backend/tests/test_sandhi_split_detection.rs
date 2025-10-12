@@ -76,7 +76,6 @@ fn test_passami_ti_sandhi_split() {
 }
 
 #[test]
-#[ignore] // Edge case: multiple consecutive sandhi splits - fallback 'ti' words interfere with position tracking
 fn test_multiple_sandhi_splits_in_sequence() {
     let text = r#"dhārayāmī'ti sikkhāpadesū'ti gantun'ti"#;
     let words = helpers::extract_words_with_context(text);
