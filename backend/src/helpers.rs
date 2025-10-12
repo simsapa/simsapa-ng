@@ -633,11 +633,12 @@ fn try_match_with_vowel_ti_expansion(
         return None;
     }
 
-    let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
     let mut pos = after_match;
 
-    if quote_chars.contains(&original_chars[pos]) {
-        pos += 1;
+    // Check for quote(s) + ti pattern (e.g., dhārayāmī'ti, dhārayāmī'"ti)
+    if is_quote_char(original_chars[pos]) {
+        pos = skip_quote_chars(original_chars, pos, text_len);
+
         if pos < text_len && original_chars[pos] == 't' {
             pos += 1;
             if pos < text_len && original_chars[pos] == 'i' {
@@ -652,6 +653,17 @@ fn try_match_with_vowel_ti_expansion(
     }
 
     None
+}
+
+fn is_quote_char(c: char) -> bool {
+    matches!(c, '"' | '\u{201C}' | '\u{201D}' | '\'' | '\u{2018}' | '\u{2019}')
+}
+
+fn skip_quote_chars(original_chars: &[char], mut pos: usize, text_len: usize) -> usize {
+    while pos < text_len && is_quote_char(original_chars[pos]) {
+        pos += 1;
+    }
+    pos
 }
 
 fn try_match_with_niggahita_expansion(
@@ -694,15 +706,18 @@ fn try_match_with_niggahita_expansion(
         return None;
     }
 
-    let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
     let mut pos = after_prefix;
 
-    // Check for n + quote + ti pattern (e.g., gantun'ti)
+    // Check for n + quote(s) + ti pattern (e.g., gantun'ti, gantun'"ti)
     if pos < text_len && (original_chars[pos] == 'n' || original_chars[pos] == 'N') {
         let n_pos = pos;
         pos += 1;
-        if pos < text_len && quote_chars.contains(&original_chars[pos]) {
-            pos += 1;
+
+        // Skip one or more consecutive quote characters
+        let after_quotes = skip_quote_chars(original_chars, pos, text_len);
+        
+        if after_quotes > pos {  // Found at least one quote
+            pos = after_quotes;
             if pos < text_len && original_chars[pos] == 't' {
                 pos += 1;
                 if pos < text_len && original_chars[pos] == 'i' {
@@ -718,10 +733,10 @@ fn try_match_with_niggahita_expansion(
         pos = n_pos; // Reset if pattern didn't match
     }
 
-    // Check for quote + nti pattern (e.g., vilapi"nti)
-    if quote_chars.contains(&original_chars[pos]) {
-        let quote_pos = pos;
-        pos += 1;
+    // Check for quote(s) + nti pattern (e.g., vilapi"nti, vilapi'"nti)
+    if is_quote_char(original_chars[pos]) {
+        let quote_start = pos;
+        pos = skip_quote_chars(original_chars, pos, text_len);
 
         if pos < text_len && (original_chars[pos] == 'n' || original_chars[pos] == 'N') {
             pos += 1;
@@ -739,8 +754,8 @@ fn try_match_with_niggahita_expansion(
             }
         }
 
-        // Check for quote + ti pattern (e.g., passāmī"ti)
-        pos = quote_pos + 1;
+        // Check for quote(s) + ti pattern (e.g., passāmī"ti, passāmī'"ti)
+        pos = skip_quote_chars(original_chars, quote_start, text_len);
         if pos < text_len && original_chars[pos] == 't' {
             pos += 1;
             if pos < text_len && original_chars[pos] == 'i' {
