@@ -697,6 +697,28 @@ fn try_match_with_niggahita_expansion(
     let quote_chars = ['"', '\u{201C}', '\u{201D}', '\'', '\u{2018}', '\u{2019}'];
     let mut pos = after_prefix;
 
+    // Check for n + quote + ti pattern (e.g., gantun'ti)
+    if pos < text_len && (original_chars[pos] == 'n' || original_chars[pos] == 'N') {
+        let n_pos = pos;
+        pos += 1;
+        if pos < text_len && quote_chars.contains(&original_chars[pos]) {
+            pos += 1;
+            if pos < text_len && original_chars[pos] == 't' {
+                pos += 1;
+                if pos < text_len && original_chars[pos] == 'i' {
+                    pos += 1;
+                    let is_word_boundary_end = pos >= text_len || !is_word_char(original_chars[pos]);
+                    if is_word_boundary_end {
+                        let original_word: String = original_chars[char_pos..pos].iter().collect();
+                        return Some((char_pos, pos, original_word));
+                    }
+                }
+            }
+        }
+        pos = n_pos; // Reset if pattern didn't match
+    }
+
+    // Check for quote + nti pattern (e.g., vilapi"nti)
     if quote_chars.contains(&original_chars[pos]) {
         let quote_pos = pos;
         pos += 1;
@@ -717,6 +739,7 @@ fn try_match_with_niggahita_expansion(
             }
         }
 
+        // Check for quote + ti pattern (e.g., passāmī"ti)
         pos = quote_pos + 1;
         if pos < text_len && original_chars[pos] == 't' {
             pos += 1;

@@ -347,3 +347,64 @@ fn test_repeated_words_no_skipping() {
     let vilapim_item = words.get(32).unwrap();
     assert!(vilapim_item.context_snippet.contains("<b>vilapi”nti</b>"));
 }
+
+#[test]
+fn test_nti_sandhi_cases() {
+    // Test various sandhi patterns with different quote combinations
+    // Index 4 in the result should be the sandhi word we're testing
+    let texts: Vec<(&str, &str)> = vec![
+        // Niggahita + n + quote + ti patterns
+        ("yaṁ jaññā — ‘sakkomi ajjeva gantun’ti. Gantabbo, bhikkhave", "<b>gantun’ti</b>"),
+        ("yaṁ jaññā — ‘sakkomi ajjeva gantu’nti. Gantabbo, bhikkhave", "<b>gantu’nti</b>"),
+
+        // Multiple consecutive quotes
+        ("yaṁ jaññā — ‘sakkomi ajjeva gantun’”ti. Gantabbo, bhikkhave", "<b>gantun’”ti</b>"),
+        ("yaṁ jaññā — ‘sakkomi ajjeva gantu’”nti. Gantabbo, bhikkhave", "<b>gantu’”nti</b>"),
+
+        // Vowel + quote + ti patterns
+        ("yaṁ jaññā — ‘sakkomi ajjeva dhārayāmī’ti. Gantabbo, bhikkhave", "<b>dhārayāmī’ti</b>"),
+        ("yaṁ jaññā — ‘sakkomi ajjeva dhārayāmī’”ti. Gantabbo, bhikkhave", "<b>dhārayāmī’”ti</b>"),
+        ("yaṁ jaññā — ‘sakkomi ajjeva dassanāyā’ti. Gantabbo, bhikkhave", "<b>dassanāyā’ti</b>"),
+    ];
+
+    for (i, (text, expected_bold)) in texts.iter().enumerate() {
+        let words = helpers::extract_words_with_context(text);
+
+        // Get word at index 4 (should be the sandhi word we're testing)
+        let word = words.get(4).expect(&format!("Test case {}: Should have word at index 4", i));
+
+        // Check that the context contains the expected bold pattern
+        assert!(
+            word.context_snippet.contains(expected_bold),
+            "Test case {}: Expected context to contain '{}' but got: '{}'",
+            i,
+            expected_bold,
+            word.context_snippet
+        );
+
+        // Verify the original_word preserves the full sandhi unit (not just the clean form)
+        assert!(
+            !word.original_word.is_empty(),
+            "Test case {}: original_word should not be empty",
+            i
+        );
+
+        // The original_word should contain a quote character (indicating it's a sandhi unit)
+        let has_quote = word.original_word.contains('\'')
+            || word.original_word.contains('"')
+            || word.original_word.contains('\u{2018}')  // '
+            || word.original_word.contains('\u{2019}')  // '
+            || word.original_word.contains('\u{201C}')  // "
+            || word.original_word.contains('\u{201D}'); // "
+
+        assert!(
+            has_quote,
+            "Test case {}: original_word '{}' should contain a quote character (sandhi pattern)",
+            i,
+            word.original_word
+        );
+
+        println!("✓ Test case {}: clean='{}' original='{}' context contains '{}'",
+            i, word.clean_word, word.original_word, expected_bold);
+    }
+}
