@@ -529,19 +529,6 @@ fn find_word_start_before(original_chars: &[char], pos: usize) -> usize {
     start
 }
 
-fn find_word_end_after(original_chars: &[char], pos: usize) -> usize {
-    let len = original_chars.len();
-    if pos >= len {
-        return len;
-    }
-
-    let mut end = pos;
-    while end < len && is_word_char(original_chars[end]) {
-        end += 1;
-    }
-    end
-}
-
 fn detect_sandhi_unit(original_chars: &[char], search_word: &str, match_start: usize, match_end: usize) -> Option<(usize, usize)> {
     let len = original_chars.len();
     let search_chars: Vec<char> = search_word.chars().collect();
