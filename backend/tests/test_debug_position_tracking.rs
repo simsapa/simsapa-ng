@@ -104,7 +104,7 @@ fn test_full_problematic_sequence() {
     println!("\nFound {} occurrences of 'jānāmi':", janami_positions.len());
     for (idx, word) in janami_positions {
         let has_bold = word.context_snippet.contains("<b>");
-        println!("  [{}] has_bold={} context='{}'", idx, has_bold, 
-            &word.context_snippet[..60.min(word.context_snippet.len())]);
+        let context_preview: String = word.context_snippet.chars().take(60).collect();
+        println!("  [{}] has_bold={} context='{}'", idx, has_bold, context_preview);
     }
 }

@@ -529,6 +529,19 @@ fn find_word_start_before(original_chars: &[char], pos: usize) -> usize {
     start
 }
 
+fn find_word_end_after(original_chars: &[char], pos: usize) -> usize {
+    let len = original_chars.len();
+    if pos >= len {
+        return len;
+    }
+
+    let mut end = pos;
+    while end < len && is_word_char(original_chars[end]) {
+        end += 1;
+    }
+    end
+}
+
 fn detect_sandhi_unit(original_chars: &[char], search_word: &str, match_start: usize, match_end: usize) -> Option<(usize, usize)> {
     let len = original_chars.len();
     let search_chars: Vec<char> = search_word.chars().collect();
@@ -891,8 +904,28 @@ pub fn calculate_context_boundaries(
     let context_start_candidate = if word_start >= 50 { word_start - 50 } else { 0 };
     let context_end_candidate = (word_end + 50).min(text_len);
 
-    let context_start = sentence_start.max(context_start_candidate);
-    let context_end = sentence_end.min(context_end_candidate);
+    let mut context_start = sentence_start.max(context_start_candidate);
+    let mut context_end = sentence_end.min(context_end_candidate);
+
+    // Adjust boundaries to not truncate words
+    // Convert to char array for word boundary detection
+    let chars: Vec<char> = original_text.chars().collect();
+    
+    // If context_start is in the middle of a word, move backward to include the whole word
+    if context_start > 0 && context_start < chars.len() {
+        if is_word_char(chars[context_start]) {
+            // We're starting mid-word, move back to include the complete word
+            context_start = find_word_start_before(&chars, context_start);
+        }
+    }
+    
+    // If context_end is in the middle of a word, move backward to previous word boundary
+    if context_end > 0 && context_end < chars.len() {
+        if is_word_char(chars[context_end]) {
+            // We're ending mid-word, move back to the start of this word
+            context_end = find_word_start_before(&chars, context_end);
+        }
+    }
 
     ContextBoundaries {
         context_start,
@@ -913,7 +946,7 @@ pub fn build_context_snippet(
     let relative_word_start = boundaries.word_start - boundaries.context_start;
     let relative_word_end = boundaries.word_end - boundaries.context_start;
 
-    if relative_word_start < context_slice.chars().count()
+    let snippet = if relative_word_start < context_slice.chars().count()
         && relative_word_end <= context_slice.chars().count()
     {
         let context_chars: Vec<char> = context_slice.chars().collect();
@@ -926,7 +959,9 @@ pub fn build_context_snippet(
         format!("{}<b>{}</b>{}", before, word, after)
     } else {
         context_slice
-    }
+    };
+
+    snippet.trim().to_string()
 }
 
 pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
