@@ -40,7 +40,7 @@ fn test_html_en() {
     let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
     let main_html = extract_element_by_id_from_indented(&html_indent(&html), "DN22").unwrap_or("None".to_string());
 
-    fs::write(PathBuf::from("dn22_en_thanissaro.main.html"), main_html.clone()).expect("Unable to write file!");
+    // fs::write(PathBuf::from("dn22_en_thanissaro.main.html"), main_html.clone()).expect("Unable to write file!");
 
     let expected_html = fs::read_to_string(PathBuf::from("tests/data/dn22_en_thanissaro.main.html"))
         .expect("Failed to read file");

@@ -355,11 +355,27 @@ lazy_static! {
     static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct GlossWordContext {
     pub clean_word: String,
     pub original_word: String,
     pub context_snippet: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct WordPosition {
+    pub clean_word: String,
+    pub char_start: usize,
+    pub char_end: usize,
+    pub original_word: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ContextBoundaries {
+    pub context_start: usize,
+    pub context_end: usize,
+    pub word_start: usize,
+    pub word_end: usize,
 }
 
 
@@ -412,20 +428,13 @@ pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
 }
 
 
-pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
-    let original_text = text.trim();
-    if original_text.is_empty() {
-        return Vec::new();
-    }
-
+pub fn preprocess_text_for_word_extraction(text: &str) -> String {
     lazy_static! {
         static ref re_nonword: Regex = Regex::new(r"[^\w]+").unwrap();
         static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
     }
 
-    let original_normalized = original_text.replace("\n", " ");
-    
-    let text = original_text.replace("\n", " ").to_string();
+    let text = text.replace("\n", " ");
 
     // Pāli sandhi: dhārayāmi + ti becomes dhārayāmīti, sometimes with apostrophes: dhārayāmī’”ti
     //
@@ -457,65 +466,223 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
     let text = re_nonword.replace_all(&text, " ").into_owned();
     let text = re_digits.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
-    let text = text.trim();
+    text.trim().to_string()
+}
 
-    let chars: Vec<char> = original_normalized.chars().collect();
-    let text_len = chars.len();
+pub fn extract_clean_words(preprocessed_text: &str) -> Vec<String> {
+    preprocessed_text
+        .split_whitespace()
+        .map(|s| s.to_string())
+        .collect()
+}
+
+fn is_word_char(c: char) -> bool {
+    c.is_alphanumeric() || c == 'ā' || c == 'ī' || c == 'ū' || c == 'ṁ' || c == 'ṃ' 
+        || c == 'ṅ' || c == 'ñ' || c == 'ṭ' || c == 'ḍ' || c == 'ṇ' || c == 'ḷ'
+}
+
+fn skip_non_word_chars(chars: &[char], mut pos: usize) -> usize {
+    while pos < chars.len() && !is_word_char(chars[pos]) {
+        pos += 1;
+    }
+    pos
+}
+
+fn normalize_sandhi_vowel(c: char) -> char {
+    match c {
+        'ā' => 'a',
+        'ī' => 'i',
+        'ū' => 'u',
+        _ => c,
+    }
+}
+
+fn chars_match_with_sandhi(original_char: char, search_char: char) -> bool {
+    let orig_normalized = normalize_sandhi_vowel(original_char.to_lowercase().next().unwrap_or(original_char));
+    let search_normalized = normalize_sandhi_vowel(search_char.to_lowercase().next().unwrap_or(search_char));
+    orig_normalized == search_normalized
+}
+
+fn slice_matches_with_sandhi(original_slice: &[char], search_chars: &[char]) -> bool {
+    if original_slice.len() != search_chars.len() {
+        return false;
+    }
+    
+    for (orig_char, search_char) in original_slice.iter().zip(search_chars.iter()) {
+        if !chars_match_with_sandhi(*orig_char, *search_char) {
+            return false;
+        }
+    }
+    
+    true
+}
+
+pub fn find_word_position_char_based(
+    original_chars: &[char],
+    original_lower_chars: &[char],
+    search_word: &str,
+    current_search_pos: usize,
+) -> Option<WordPosition> {
+    let search_word_lower = search_word.to_lowercase();
+    let search_chars: Vec<char> = search_word_lower.chars().collect();
+    let search_len = search_chars.len();
+    let text_len = original_lower_chars.len();
+
+    if search_len == 0 || current_search_pos >= text_len {
+        return None;
+    }
+
+    let start_pos = skip_non_word_chars(original_lower_chars, current_search_pos);
+
+    for char_pos in start_pos..=(text_len.saturating_sub(search_len)) {
+        if char_pos + search_len > text_len {
+            break;
+        }
+
+        let slice = &original_lower_chars[char_pos..char_pos + search_len];
+        
+        let matches = if slice == search_chars.as_slice() {
+            true
+        } else {
+            slice_matches_with_sandhi(slice, &search_chars)
+        };
+        
+        if matches {
+            let is_word_boundary_start = char_pos == 0 
+                || !is_word_char(original_chars[char_pos - 1]);
+            let is_word_boundary_end = char_pos + search_len >= text_len
+                || !is_word_char(original_chars[char_pos + search_len]);
+
+            if is_word_boundary_start && is_word_boundary_end {
+                let original_word: String = original_chars[char_pos..char_pos + search_len]
+                    .iter()
+                    .collect();
+
+                return Some(WordPosition {
+                    clean_word: search_word.to_string(),
+                    char_start: char_pos,
+                    char_end: char_pos + search_len,
+                    original_word,
+                });
+            }
+        }
+    }
+
+    None
+}
+
+pub fn calculate_context_boundaries(
+    word_position: &WordPosition,
+    original_text: &str,
+    text_len: usize,
+) -> ContextBoundaries {
+    let word_start = word_position.char_start;
+    let word_end = word_position.char_end;
+
+    let sentence_start = find_sentence_start(original_text, word_start);
+    let sentence_end = find_sentence_end(original_text, word_end);
+
+    let context_start_candidate = if word_start >= 50 { word_start - 50 } else { 0 };
+    let context_end_candidate = (word_end + 50).min(text_len);
+
+    let context_start = sentence_start.max(context_start_candidate);
+    let context_end = sentence_end.min(context_end_candidate);
+
+    ContextBoundaries {
+        context_start,
+        context_end,
+        word_start,
+        word_end,
+    }
+}
+
+pub fn build_context_snippet(
+    chars: &[char],
+    boundaries: &ContextBoundaries,
+) -> String {
+    let context_slice: String = chars[boundaries.context_start..boundaries.context_end]
+        .iter()
+        .collect();
+
+    let relative_word_start = boundaries.word_start - boundaries.context_start;
+    let relative_word_end = boundaries.word_end - boundaries.context_start;
+
+    if relative_word_start < context_slice.chars().count()
+        && relative_word_end <= context_slice.chars().count()
+    {
+        let context_chars: Vec<char> = context_slice.chars().collect();
+        let before: String = context_chars[..relative_word_start].iter().collect();
+        let word: String = context_chars[relative_word_start..relative_word_end]
+            .iter()
+            .collect();
+        let after: String = context_chars[relative_word_end..].iter().collect();
+
+        format!("{}<b>{}</b>{}", before, word, after)
+    } else {
+        context_slice
+    }
+}
+
+pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
+    let original_text = text.trim();
+    if original_text.is_empty() {
+        return Vec::new();
+    }
+
+    let original_normalized = original_text.replace("\n", " ");
+    let preprocessed_text = preprocess_text_for_word_extraction(&original_normalized);
+    let clean_words = extract_clean_words(&preprocessed_text);
+
+    let original_chars: Vec<char> = original_normalized.chars().collect();
     let original_lower = original_normalized.to_lowercase();
+    let original_lower_chars: Vec<char> = original_lower.chars().collect();
+    let text_len = original_chars.len();
 
     let mut results = Vec::new();
     let mut current_search_pos = 0;
-    
-    for clean_word in text.split_whitespace() {
-        let search_word = clean_word.to_lowercase();
-        
-        let (word_start_char, word_end_char, original_word) = if let Some(rel_pos) = original_lower[current_search_pos..].find(&search_word) {
-            let byte_pos = current_search_pos + rel_pos;
-            let start = original_normalized[..byte_pos].chars().count();
-            let end = start + search_word.chars().count();
-            let orig = chars[start..end.min(text_len)].iter().collect();
-            current_search_pos = byte_pos + search_word.len();
-            (start, end, orig)
+
+    for clean_word in clean_words {
+        if let Some(word_position) = find_word_position_char_based(
+            &original_chars,
+            &original_lower_chars,
+            &clean_word,
+            current_search_pos,
+        ) {
+            let boundaries = calculate_context_boundaries(
+                &word_position,
+                &original_normalized,
+                text_len,
+            );
+
+            let context_snippet = build_context_snippet(&original_chars, &boundaries);
+
+            results.push(GlossWordContext {
+                clean_word: word_position.clean_word.clone(),
+                original_word: word_position.original_word.clone(),
+                context_snippet,
+            });
+
+            current_search_pos = word_position.char_end;
         } else {
-            (0, 0, String::new())
-        };
-        
-        let (context_snippet, original_word) = if !original_word.is_empty() {
-            let context_start = if word_start_char >= 50 { word_start_char - 50 } else { 0 };
-            let context_end = (word_end_char + 50).min(text_len);
-            
-            let sentence_start = find_sentence_start(&original_normalized, word_start_char);
-            let sentence_end = find_sentence_end(&original_normalized, word_end_char);
-            
-            let final_start = sentence_start.max(context_start);
-            let final_end = sentence_end.min(context_end);
-            
-            let context_slice: String = chars[final_start..final_end].iter().collect();
-            
-            let snippet = if let Some(pos) = context_slice.find(&original_word) {
-                let before = &context_slice[..pos];
-                let after = &context_slice[pos + original_word.len()..];
-                format!("{}<b>{}</b>{}", before, original_word, after)
-            } else {
+            let snippet = if current_search_pos < text_len {
+                let context_start = if current_search_pos >= 30 { current_search_pos - 30 } else { 0 };
+                let context_end = (current_search_pos + 70).min(text_len);
+                let context_slice: String = original_chars[context_start..context_end].iter().collect();
                 context_slice
+            } else {
+                String::new()
             };
-            
-            (snippet, original_word)
-        } else {
-            (String::new(), String::new())
-        };
-        
-        results.push(GlossWordContext {
-            clean_word: clean_word.to_string(),
-            original_word,
-            context_snippet,
-        });
+
+            results.push(GlossWordContext {
+                clean_word: clean_word.clone(),
+                original_word: clean_word.clone(),
+                context_snippet: snippet,
+            });
+        }
     }
-    
+
     results
-
 }
-
 
 pub fn extract_words(text: &str) -> Vec<String> {
     let words_with_context = extract_words_with_context(text);
