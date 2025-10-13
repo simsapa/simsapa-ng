@@ -51,6 +51,8 @@ Loader {
         loader.item.find_previous(); // qmllint disable missing-property
     }
 
+    signal page_loaded()
+
     /* signal loadingChanged(var loadRequest) */
 
     source: {
@@ -66,6 +68,7 @@ Loader {
         loader.item.is_dark = Qt.binding(() => is_dark);
         loader.item.data_json = Qt.binding(() => data_json);
         loader.item.visible = Qt.binding(() => loader.should_be_visible && loader.visible);
+        loader.item.page_loaded.connect(function() { loader.page_loaded(); });
     }
 
 }

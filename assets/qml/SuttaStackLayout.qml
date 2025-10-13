@@ -13,6 +13,8 @@ StackLayout {
     property string current_key: ""
     property var items_map: ({})
 
+    signal page_loaded()
+
     function show_transient_message(msg) {
         root.items_map[root.current_key].show_transient_message(msg);
     }
@@ -51,6 +53,8 @@ StackLayout {
         };
         let data_json = JSON.stringify(data);
         let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json });
+
+        comp.page_loaded.connect(function() { root.page_loaded(); });
 
         let is_current = Qt.binding(() => root.current_key === key);
         comp.should_be_visible = is_current;

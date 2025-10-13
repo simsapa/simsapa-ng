@@ -35,6 +35,7 @@ ApplicationWindow {
 
     property string last_query_text: ""
     property string last_search_area: ""
+    property string pending_find_query: ""
 
     Logger { id: logger }
 
@@ -428,15 +429,7 @@ ${query_text}`;
         let html_view = sutta_html_view_layout.get_current_item();
         if (html_view) {
             let escaped_query = query.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            let js = `
-                if (document.readyState === 'complete') {
-                    document.SSP.find.setSearchTerm(\`${escaped_query}\`);
-                } else {
-                    window.addEventListener('load', function() {
-                        document.SSP.find.setSearchTerm(\`${escaped_query}\`);
-                    });
-                }
-            `;
+            let js = `document.SSP.find.setSearchTerm(\`${escaped_query}\`);`;
             html_view.item.web.runJavaScript(js);
         }
     }
@@ -1037,6 +1030,13 @@ ${query_text}`;
                                     // Hide the webview when the drawer menu or a dialog is open. The mobile webview
                                     // is always on top, obscuring other items.
                                     visible: root.webview_visible
+
+                                    onPage_loaded: {
+                                        if (root.pending_find_query.length > 0) {
+                                            root.open_find_in_sutta_with_query(root.pending_find_query);
+                                            root.pending_find_query = "";
+                                        }
+                                    }
                                 }
                             }
 
@@ -1162,7 +1162,7 @@ ${query_text}`;
                                             root.last_query_text.length > 0) {
                                             let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
                                             if (!query_as_uid.startsWith('uid:')) {
-                                                root.open_find_in_sutta_with_query(root.last_query_text);
+                                                root.pending_find_query = root.last_query_text;
                                             }
                                         }
                                     } else {

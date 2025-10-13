@@ -40,6 +40,8 @@ Item {
 
     property alias web: web
 
+    signal page_loaded()
+
     function set_properties_from_data_json() {
         let data = JSON.parse(root.data_json);
         root.item_uid = data.item_uid;
@@ -126,9 +128,12 @@ document.documentElement.style.colorScheme = 'light';
         visible: root.visible
         enabled: root.visible
 
-        onLoadingChanged: {
+        onLoadingChanged: function(loadRequest) {
             if (root.is_dark) {
                 web.runJavaScript("document.documentElement.style.colorScheme = 'dark';");
+            }
+            if (loadRequest.loadProgress === 100) {
+                root.page_loaded();
             }
         }
     }
