@@ -428,7 +428,15 @@ ${query_text}`;
         let html_view = sutta_html_view_layout.get_current_item();
         if (html_view) {
             let escaped_query = query.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            let js = `document.SSP.find.setSearchTerm(\`${escaped_query}\`);`;
+            let js = `
+                if (document.readyState === 'complete') {
+                    document.SSP.find.setSearchTerm(\`${escaped_query}\`);
+                } else {
+                    window.addEventListener('load', function() {
+                        document.SSP.find.setSearchTerm(\`${escaped_query}\`);
+                    });
+                }
+            `;
             html_view.item.web.runJavaScript(js);
         }
     }
