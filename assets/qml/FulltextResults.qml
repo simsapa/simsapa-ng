@@ -76,6 +76,7 @@ ColumnLayout {
             ToolTip.text: "Previous page of results"
             enabled: root.page_num > 0
             onClicked: {
+                fulltext_list.positionViewAtBeginning();
                 root.page_num--;
                 root.new_results_page_fn(root.page_num); // qmllint disable use-proper-function
             }
@@ -88,6 +89,7 @@ ColumnLayout {
             ToolTip.text: "Next page of results"
             enabled: root.page_num < root.total_pages
             onClicked: {
+                fulltext_list.positionViewAtBeginning();
                 root.page_num++;
                 root.new_results_page_fn(root.page_num); // qmllint disable use-proper-function
             }
