@@ -533,6 +533,21 @@ class FindManager {
     isShown(): boolean {
         return this.isVisible;
     }
+
+    /**
+     * Set search term and show find bar with immediate search
+     */
+    setSearchTerm(term: string): void {
+        if (!this.findInput) return;
+
+        this.findInput.value = term;
+        this.show();
+
+        if (term && term.length >= 2) {
+            this.search(term);
+            this.savePreferences();
+        }
+    }
 }
 
 // Export instance for use in simsapa.ts

@@ -33,6 +33,10 @@ ApplicationWindow {
 
     property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible)
 
+    property string last_query_text: ""
+    property string last_search_area: ""
+    property string pending_find_query: ""
+
     Logger { id: logger }
 
     Connections {
@@ -148,6 +152,7 @@ ApplicationWindow {
         let params = root.get_search_params_from_ui();
         let search_area = search_bar_input.search_area_dropdown.currentText;
 
+        // Determine if query_text_orig is a sutta reference
         let query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
 
         if (query_text.startsWith('uid:')) {
@@ -180,6 +185,9 @@ ApplicationWindow {
         search_area: string,
         params: var,
     ) {
+        root.last_query_text = query_text;
+        root.last_search_area = search_area;
+
         // FIXME: page number
         root.results_page(query_text, 0, search_area, params);
 
@@ -417,6 +425,16 @@ ${query_text}`;
         dictionary_tab.word_uid = uid;
     }
 
+    function open_find_in_sutta_with_query(query: string) {
+        let html_view = sutta_html_view_layout.get_current_item();
+        if (html_view) {
+            html_view.active_focus();
+            let escaped_query = query.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+            let js = `document.SSP.find.setSearchTerm(\`${escaped_query}\`);`;
+            html_view.item.web.runJavaScript(js);
+        }
+    }
+
     StorageDialog { id: storage_dialog }
 
     menuBar: MenuBar {
@@ -507,6 +525,15 @@ ${query_text}`;
                 action: Action {
                     id: search_as_you_type
                     text: "Search As You Type"
+                    checkable: true
+                    checked: true
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_open_find_in_sutta_results
+                    text: "Open Find in Sutta Results"
                     checkable: true
                     checked: true
                 }
@@ -1004,6 +1031,13 @@ ${query_text}`;
                                     // Hide the webview when the drawer menu or a dialog is open. The mobile webview
                                     // is always on top, obscuring other items.
                                     visible: root.webview_visible
+
+                                    onPage_loaded: {
+                                        if (root.pending_find_query.length > 0) {
+                                            root.open_find_in_sutta_with_query(root.pending_find_query);
+                                            root.pending_find_query = "";
+                                        }
+                                    }
                                 }
                             }
 
@@ -1122,6 +1156,15 @@ ${query_text}`;
                                         for (let i=0; i < translations_data.length; i++) {
                                             let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
                                             tabs_translations_model.append(tr_tab_data);
+                                        }
+
+                                        if (action_open_find_in_sutta_results.checked &&
+                                            root.last_search_area === "Suttas" &&
+                                            root.last_query_text.length > 0) {
+                                            let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
+                                            if (!query_as_uid.startsWith('uid:')) {
+                                                root.pending_find_query = root.last_query_text;
+                                            }
                                         }
                                     } else {
                                         // For dictionary results, clear translation tabs
