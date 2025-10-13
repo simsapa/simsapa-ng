@@ -38,6 +38,8 @@ Item {
     property string sutta_ref
     property string sutta_title
 
+    property alias web: web
+
     function set_properties_from_data_json() {
         let data = JSON.parse(root.data_json);
         root.item_uid = data.item_uid;
@@ -52,6 +54,7 @@ Item {
     }
 
     function show_find_bar() {
+        web.forceActiveFocus();
         web.runJavaScript(`document.SSP.find.show();`);
     }
 

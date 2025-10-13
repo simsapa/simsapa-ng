@@ -549,7 +549,6 @@ ${query_text}`;
                     }
                     onTriggered: {
                         let html_view = sutta_html_view_layout.get_current_item();
-                        html_view.active_focus();
                         html_view.show_find_bar();
                     }
                 }

@@ -32,7 +32,7 @@ Loader {
     }
 
     function active_focus() {
-        loader.item.forceActiveFocus(); // qmllint disable missing-property
+        loader.item.web.forceActiveFocus(); // qmllint disable missing-property
     }
 
     function show_transient_message(msg) {

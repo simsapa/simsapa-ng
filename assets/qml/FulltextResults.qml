@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import com.profoundlabs.simsapa
+/* import com.profoundlabs.simsapa */
 /* import data // for qml preview */
 
 ColumnLayout {
