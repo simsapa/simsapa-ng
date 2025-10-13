@@ -428,6 +428,7 @@ ${query_text}`;
     function open_find_in_sutta_with_query(query: string) {
         let html_view = sutta_html_view_layout.get_current_item();
         if (html_view) {
+            html_view.active_focus();
             let escaped_query = query.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
             let js = `document.SSP.find.setSearchTerm(\`${escaped_query}\`);`;
             html_view.item.web.runJavaScript(js);
