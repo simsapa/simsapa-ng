@@ -357,6 +357,22 @@ Item {
         });
     }
 
+    function get_search_as_you_type(): bool {
+        return true;
+    }
+
+    function set_search_as_you_type(enabled: bool) {
+        console.log("set_search_as_you_type():", enabled);
+    }
+
+    function get_open_find_in_sutta_results(): bool {
+        return true;
+    }
+
+    function set_open_find_in_sutta_results(enabled: bool) {
+        console.log("set_open_find_in_sutta_results():", enabled);
+    }
+
     function get_common_words_json(): string {
         return `
 [

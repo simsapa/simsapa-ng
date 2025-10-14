@@ -604,4 +604,56 @@ impl AppData {
             Err(e) => error(&format!("Failed to update app settings: {}", e)),
         }
     }
+
+    pub fn get_search_as_you_type(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.search_as_you_type
+    }
+
+    pub fn set_search_as_you_type(&self, enabled: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.search_as_you_type = enabled;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn get_open_find_in_sutta_results(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.open_find_in_sutta_results
+    }
+
+    pub fn set_open_find_in_sutta_results(&self, enabled: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.open_find_in_sutta_results = enabled;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
 }

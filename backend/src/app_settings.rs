@@ -57,6 +57,8 @@ pub struct AppSettings {
     pub anki_template_cloze_back: String,
     pub anki_export_format: AnkiExportFormat,
     pub anki_include_cloze: bool,
+    pub search_as_you_type: bool,
+    pub open_find_in_sutta_results: bool,
 }
 
 impl Default for AppSettings {
@@ -181,6 +183,8 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             anki_template_cloze_back: "<div>{vocab.summary}</div>".to_string(),
             anki_export_format: AnkiExportFormat::Templated,
             anki_include_cloze: true,
+            search_as_you_type: true,
+            open_find_in_sutta_results: true,
         }
     }
 }

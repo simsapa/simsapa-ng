@@ -376,6 +376,9 @@ ${query_text}`;
             SuttaBridge.load_db();
             SuttaBridge.appdata_first_query();
             SuttaBridge.dpd_first_query();
+
+            search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
+            action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
         }
 
         // Add the default blank tab. The corresponding webview is created when it is focused.
@@ -527,6 +530,7 @@ ${query_text}`;
                     text: "Search As You Type"
                     checkable: true
                     checked: true
+                    onToggled: SuttaBridge.set_search_as_you_type(checked)
                 }
             }
 
@@ -536,6 +540,7 @@ ${query_text}`;
                     text: "Open Find in Sutta Results"
                     checkable: true
                     checked: true
+                    onToggled: SuttaBridge.set_open_find_in_sutta_results(checked)
                 }
             }
 

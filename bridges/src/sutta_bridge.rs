@@ -273,6 +273,18 @@ pub mod qobject {
 
         #[qinvokable]
         fn render_anki_preview_background(self: Pin<&mut SuttaBridge>, front_template: &QString, back_template: &QString);
+
+        #[qinvokable]
+        fn get_search_as_you_type(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_search_as_you_type(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn get_open_find_in_sutta_results(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_open_find_in_sutta_results(self: Pin<&mut SuttaBridge>, enabled: bool);
     }
 }
 
@@ -1302,5 +1314,25 @@ impl qobject::SuttaBridge {
 
             info("SuttaBridge::render_anki_preview_background() end");
         });
+    }
+
+    pub fn get_search_as_you_type(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_search_as_you_type()
+    }
+
+    pub fn set_search_as_you_type(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_search_as_you_type(enabled);
+    }
+
+    pub fn get_open_find_in_sutta_results(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_open_find_in_sutta_results()
+    }
+
+    pub fn set_open_find_in_sutta_results(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_open_find_in_sutta_results(enabled);
     }
 }
