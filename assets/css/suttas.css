@@ -528,6 +528,9 @@ body * {
   body {
     max-width: 100vw;
   }
+  #ssp_content {
+    font-size: 0.8em;
+  }
 }
 p {
   margin: 0.8em 0 0 0;

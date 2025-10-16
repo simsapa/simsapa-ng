@@ -206,13 +206,18 @@ class TextResizeController {
         this.increaseButton = document.getElementById('textSizeIncreaseButton');
         this.decreaseButton = document.getElementById('textSizeDecreaseButton');
         this.contentDiv = document.getElementById('ssp_content');
-        this.currentScale = 1.0;
-        this.minScale = 0.5;
+        this.currentScale = this.getInitialScale();
+        this.minScale = 0.3;
         this.maxScale = 2.0;
         this.scaleStep = 0.1;
         this.baseMaxWidth = 75;
 
         this.init();
+    }
+
+    getInitialScale() {
+        const mediaQuery = window.matchMedia('(max-width: 768px)');
+        return mediaQuery.matches ? 0.8 : 1.0;
     }
 
     init() {
@@ -222,6 +227,7 @@ class TextResizeController {
 
         this.increaseButton.addEventListener('click', () => this.increaseTextSize());
         this.decreaseButton.addEventListener('click', () => this.decreaseTextSize());
+        this.applyScale();
     }
 
     increaseTextSize() {
