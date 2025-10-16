@@ -1395,9 +1395,11 @@ ${main_text}
                         ScrollView {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 200
+                            contentWidth: availableWidth
 
                             TextArea {
                                 id: gloss_text_input
+                                width: parent.width
                                 font.pointSize: 12
                                 placeholderText: "Enter paragraphs to gloss ..."
                                 selectByMouse: true
@@ -1405,8 +1407,9 @@ ${main_text}
                             }
                         }
 
-                        RowLayout {
+                        Flow {
                             Layout.fillWidth: true
+                            spacing: 10
 
                             CheckBox {
                                 id: globalDedupeCheckBox
@@ -1432,15 +1435,13 @@ ${main_text}
                                 }
                             }
 
-                            Item { Layout.fillWidth: true }
-
                             Text {
                                 id: exporting_message
                                 text: `Exporting ${root.exporting_note_count} notes...`
                                 font.pointSize: root.vocab_font_point_size
                                 color: "#4CAF50"
                                 visible: root.is_exporting_anki
-                                Layout.leftMargin: 10
+                                /* anchors.verticalCenter: parent.verticalCenter */
                             }
 
                             ComboBox {
@@ -1565,8 +1566,10 @@ ${main_text}
                         ScrollView {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 100
+                            contentWidth: availableWidth
 
                             TextArea {
+                                width: parent.width
                                 text: paragraph_item.text
                                 font.pointSize: 12
                                 selectByMouse: true
@@ -1579,27 +1582,25 @@ ${main_text}
                             }
                         }
 
-                        RowLayout {
-                            Layout.alignment: Qt.AlignRight
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 10
 
                             Button {
                                 id: ai_translate_btn
                                 text: "AI Translate w/ Vocab"
-                                Layout.alignment: Qt.AlignRight
                                 onClicked: root.handle_ai_translate_request(paragraph_item.index, true)
                             }
 
                             Button {
                                 id: ai_translate_no_vocab_btn
                                 text: "w/o Vocab"
-                                Layout.alignment: Qt.AlignRight
                                 onClicked: root.handle_ai_translate_request(paragraph_item.index, false)
                             }
 
                             Button {
                                 id: update_gloss_btn
                                 text: "Update Gloss"
-                                Layout.alignment: Qt.AlignRight
                                 enabled: !root.is_processing_single
                                 icon.source: root.is_processing_single ? "icons/32x32/fa_stopwatch-solid.png" : ""
                                 onClicked: root.start_background_paragraph_gloss(paragraph_item.index)
