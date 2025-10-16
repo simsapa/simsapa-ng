@@ -11,7 +11,7 @@ extern "C" void log_info_c(const char* msg);
 extern "C" void log_error_c(const char* msg);
 
 void acquire_wake_lock() {
-    log_info_c("acquire_wake_lock() called");
+    log_info_c("acquire_wake_lock()");
 #ifdef Q_OS_ANDROID
     QJniEnvironment env;
     
@@ -79,7 +79,7 @@ void acquire_wake_lock() {
 }
 
 void release_wake_lock() {
-    log_info_c("release_wake_lock() called");
+    log_info_c("release_wake_lock()");
 #ifdef Q_OS_ANDROID
     QJniEnvironment env;
     
