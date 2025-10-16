@@ -130,6 +130,7 @@ ApplicationWindow {
                 Text {
                     textFormat: Text.RichText
                     font.pointSize: root.pointSize
+                    color: palette.text
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignCenter
@@ -183,6 +184,7 @@ ApplicationWindow {
                 Text {
                     textFormat: Text.RichText
                     font.pointSize: root.pointSize
+                    color: palette.text
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     Layout.alignment: Qt.AlignCenter
@@ -397,6 +399,7 @@ ApplicationWindow {
 <p>Quit and start the application again.</p>`
                         textFormat: Text.RichText
                         font.pointSize: root.pointSize
+                        color: palette.text
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                         Layout.alignment: Qt.AlignCenter
