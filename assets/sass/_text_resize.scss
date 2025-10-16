@@ -12,6 +12,7 @@ $button_spacing: 5px;
     top: $edge_margin;
     right: ($edge_margin + $button_size + $button_spacing + $button_size + $button_spacing);
     z-index: 1000;
+    transform: translateZ(0);
 }
 
 // Increase button (between decrease and menu)
@@ -20,6 +21,7 @@ $button_spacing: 5px;
     top: $edge_margin;
     right: ($edge_margin + $button_size + $button_spacing);
     z-index: 1000;
+    transform: translateZ(0);
 }
 
 .text-resize-button {

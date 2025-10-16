@@ -10,20 +10,43 @@
 
 $solarized_light_bg: #FAE6B2
 
-html, body
+html
+  overflow-x: hidden
+  overflow-wrap: break-word
+  word-wrap: break-word
   font-size: 22px
   line-height: 1.5
+
+body
   font-family: "Crimson Pro SSP"
   font-weight: 400
+
+*
+  overflow-wrap: break-word
+  word-wrap: break-word
+  min-width: 0
 
 #ssp_main
   padding-bottom: 4em
   font-size: 1em
+  box-sizing: border-box
+
+  *
+    max-width: 100%
 
 body
   padding: 0 1em
   max-width: 75ex
   margin: 0 auto
+  box-sizing: border-box
+
+  *
+    max-width: 100%
+    box-sizing: border-box
+
+@media (max-width: 768px)
+  body
+    max-width: 100vw
 
 p
   margin: 0.8em 0 0 0
@@ -31,6 +54,9 @@ p
 h1, h2, h3, h4, h5, h6
   font-family: "Abhaya Libre SSP"
   font-weight: 800
+  overflow-wrap: break-word
+  word-wrap: break-word
+  word-break: break-word
 
 h1
   font-size: 1.6em

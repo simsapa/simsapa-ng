@@ -485,24 +485,50 @@ div.btn a, span.btn a {
   font-size: 0.8em;
 }
 
-html, body {
+html {
+  overflow-x: hidden;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
   font-size: 22px;
   line-height: 1.5;
+}
+
+body {
   font-family: "Crimson Pro SSP";
   font-weight: 400;
+}
+
+* {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  min-width: 0;
 }
 
 #ssp_main {
   padding-bottom: 4em;
   font-size: 1em;
+  box-sizing: border-box;
+}
+#ssp_main * {
+  max-width: 100%;
 }
 
 body {
   padding: 0 1em;
   max-width: 75ex;
   margin: 0 auto;
+  box-sizing: border-box;
+}
+body * {
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
+@media (max-width: 768px) {
+  body {
+    max-width: 100vw;
+  }
+}
 p {
   margin: 0.8em 0 0 0;
 }
@@ -510,6 +536,9 @@ p {
 h1, h2, h3, h4, h5, h6 {
   font-family: "Abhaya Libre SSP";
   font-weight: 800;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 h1 {
@@ -661,6 +690,7 @@ body.dark {
   align-items: center;
   transition: all 0.15s ease;
   box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+  transform: translateZ(0);
 }
 
 .menu-button .menu-icon {
@@ -693,7 +723,7 @@ body.dark {
   z-index: 999;
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-5px);
+  transform: translateY(-5px) translateZ(0);
   transition: all 0.2s ease;
   max-height: 80vh;
   overflow-y: auto;
@@ -702,7 +732,7 @@ body.dark {
 .menu-dropdown.show {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
+  transform: translateY(0) translateZ(0);
 }
 
 .menu-group {
@@ -823,6 +853,7 @@ body.dark {
   align-items: center;
   transition: all 0.15s ease;
   box-shadow: inset 0 1px 0 var(--text-shadow-light), 0 1px 2px rgba(0, 0, 0, 0.15);
+  transform: translateZ(0);
 }
 
 .find-search-button .search-icon {
@@ -858,6 +889,7 @@ body.dark {
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
+  transform: translateZ(0);
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
@@ -1029,6 +1061,7 @@ body.dark .find-error {
   top: 10px;
   right: 80px;
   z-index: 1000;
+  transform: translateZ(0);
 }
 
 #textSizeIncreaseButton {
@@ -1036,6 +1069,7 @@ body.dark .find-error {
   top: 10px;
   right: 45px;
   z-index: 1000;
+  transform: translateZ(0);
 }
 
 .text-resize-button .resize-icon {
