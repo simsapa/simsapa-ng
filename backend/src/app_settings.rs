@@ -70,7 +70,7 @@ impl Default for AppSettings {
             show_translation_and_pali_line_by_line: true,
             show_all_variant_readings: false,
             show_glosses: false,
-            theme_name: ThemeName::System,
+            theme_name: ThemeName::Light,
             api_keys: IndexMap::new(),
             system_prompts: {
                 let mut prompts = IndexMap::new();
