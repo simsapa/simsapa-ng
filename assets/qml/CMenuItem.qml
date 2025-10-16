@@ -15,6 +15,9 @@ import QtQuick.Controls.Fusion.impl
 T.MenuItem {
     id: control
 
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !control.is_mobile
+
     signal action_triggered()
 
     function connect_action() {
@@ -65,6 +68,7 @@ T.MenuItem {
         }
 
         Text {
+            visible: control.is_desktop
             text: control.action_seq_to_str(control.action)
             anchors.right: parent.right
         }
