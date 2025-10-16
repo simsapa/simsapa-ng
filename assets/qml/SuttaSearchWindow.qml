@@ -225,7 +225,7 @@ ApplicationWindow {
         //     fuzzy_distance: int
 
         return {
-            mode: search_bar_options.search_mode_dropdown.currentText,
+            mode: search_bar_input.search_mode_dropdown.currentText,
             page_len: 10,
             lang: null,
             lang_include: false,
@@ -782,13 +782,6 @@ ${query_text}`;
                 search_timer: search_timer
                 search_as_you_type: search_as_you_type
                 is_loading: root.is_loading
-            }
-
-            // FIXME combine SearchBarOptions with SearchBarInput
-            SearchBarOptions {
-                id: search_bar_options
-                search_area_text: search_bar_input.search_area_dropdown.currentText
-                visible: (root.width - 550) > 550 // FIXME: make search bar optionally visible in a second row on small screens
             }
 
             Button {

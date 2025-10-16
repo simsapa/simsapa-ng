@@ -94,7 +94,6 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 │   │   ├── ListBackground.qml
 │   │   ├── PromptsTab.qml
 │   │   ├── SearchBarInput.qml
-│   │   ├── SearchBarOptions.qml
 │   │   ├── StorageDialog.qml
 │   │   ├── SuttaHtmlView_Desktop.qml
 │   │   ├── SuttaHtmlView_Mobile.qml
@@ -113,7 +112,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - `DictionaryTab.qml`, `GlossTab.qml`, `PromptsTab.qml` - Tab interfaces
   - `DictionaryHtmlView.qml`, `SuttaHtmlView.qml` - Content display views
   - `DrawerMenu.qml` - Navigation drawer menu
-  - `SearchBarInput.qml`, `SearchBarOptions.qml` - Search interface components
+  - `SearchBarInput.qml`, - Search interface component
   - `AboutDialog.qml`, `StorageDialog.qml`, `ColorThemeDialog.qml` - Dialog windows
 
 - `assets/qml/tst_*.qml` - QML component tests
