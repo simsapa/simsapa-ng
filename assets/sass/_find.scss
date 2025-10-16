@@ -199,6 +199,7 @@ $animation_duration: 1s;
         text-shadow: 0 1px 0 var(--text-shadow-light);
         user-select: none;
         cursor: pointer;
+        white-space: nowrap;
     }
 }
 
@@ -250,9 +251,15 @@ body.dark .find-error {
 
 // Mobile Responsiveness
 @media (max-width: 768px) {
-    .find-bar.show {
-        width: calc(100vw - #{$edge_margin * 2} - #{$find_button_size} - 8px);
-        min-width: 280px;
+    .find-bar {
+        top: ($edge_margin + $find_button_size + $button_spacing);
+        right: $edge_margin;
+        left: auto;
+        
+        &.show {
+            width: calc(100vw - #{$edge_margin * 2});
+            min-width: 280px;
+        }
     }
     
     .find-input {

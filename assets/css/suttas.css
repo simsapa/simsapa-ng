@@ -1007,6 +1007,7 @@ body.dark {
   text-shadow: 0 1px 0 var(--text-shadow-light);
   user-select: none;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .find-error {
@@ -1051,8 +1052,13 @@ body.dark .find-error {
 }
 
 @media (max-width: 768px) {
+  .find-bar {
+    top: 45px;
+    right: 10px;
+    left: auto;
+  }
   .find-bar.show {
-    width: calc(100vw - 20px - 30px - 8px);
+    width: calc(100vw - 20px);
     min-width: 280px;
   }
   .find-input {
