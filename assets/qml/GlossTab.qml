@@ -1768,7 +1768,7 @@ ${main_text}
                     Item {
                         id: vocabulary_gloss
                         Layout.fillWidth: true
-                        Layout.preferredHeight: Math.min(600, wordListView.contentHeight + 40)
+                        Layout.preferredHeight: wordListView.contentHeight + 40
 
                         ListView {
                             id: wordListView
