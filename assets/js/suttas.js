@@ -210,6 +210,7 @@ class TextResizeController {
         this.minScale = 0.5;
         this.maxScale = 2.0;
         this.scaleStep = 0.1;
+        this.baseMaxWidth = 75;
 
         this.init();
     }
@@ -239,6 +240,8 @@ class TextResizeController {
 
     applyScale() {
         this.contentDiv.style.fontSize = `${this.currentScale}em`;
+        const adjustedMaxWidth = this.baseMaxWidth * this.currentScale;
+        document.body.style.maxWidth = `${adjustedMaxWidth}ex`;
     }
 }
 
