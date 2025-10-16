@@ -2,14 +2,15 @@
 #include "sutta_search_window.h"
 #include "download_appdata_window.h"
 #include "word_lookup_window.h"
+#include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
 
 WindowManager& WindowManager::instance(QApplication* app) {
     if (!m_instance) {
         m_instance = new WindowManager(app);
+        m_instance->m_window_id_count = 0;
     }
-    m_instance->m_window_id_count = 0;
     return *m_instance;
 }
 
@@ -71,14 +72,40 @@ void WindowManager::run_summary_query(const QString& window_id, const QString& q
     if (this->sutta_search_windows.length() == 0) {
         return;
     }
-    auto w = this->sutta_search_windows[0];
-    QMetaObject::invokeMethod(w->m_root, "set_summary_query", Q_ARG(QString, query_text));
+
+    SuttaSearchWindow* target_window = nullptr;
+    for (auto w : this->sutta_search_windows) {
+        QVariant prop = w->m_root->property("window_id");
+        if (prop.isValid() && prop.toString() == window_id) {
+            target_window = w;
+            break;
+        }
+    }
+
+    if (target_window == nullptr) {
+        return;
+    }
+
+    QMetaObject::invokeMethod(target_window->m_root, "set_summary_query", Q_ARG(QString, query_text));
 }
 
 void WindowManager::run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text) {
     if (this->sutta_search_windows.length() == 0) {
         return;
     }
-    auto w = this->sutta_search_windows[0];
-    QMetaObject::invokeMethod(w->m_root, "run_sutta_menu_action", Q_ARG(QString, action), Q_ARG(QString, query_text));
+
+    SuttaSearchWindow* target_window = nullptr;
+    for (auto w : this->sutta_search_windows) {
+        QVariant prop = w->m_root->property("window_id");
+        if (prop.isValid() && prop.toString() == window_id) {
+            target_window = w;
+            break;
+        }
+    }
+
+    if (target_window == nullptr) {
+        return;
+    }
+
+    QMetaObject::invokeMethod(target_window->m_root, "run_sutta_menu_action", Q_ARG(QString, action), Q_ARG(QString, query_text));
 }
