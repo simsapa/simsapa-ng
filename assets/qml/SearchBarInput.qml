@@ -32,13 +32,17 @@ Frame {
         if (root.search_as_you_type.checked) root.search_timer.restart();
     }
 
-    RowLayout {
+    Flow {
         id: search_bar_layout
-        Layout.fillWidth: true
+        width: parent.width
+        spacing: 5
 
         RowLayout {
             id: search_input_layout
-            Layout.fillWidth: true
+            /* On wide screens, constrain the search input to 600px width so the
+             * options can sit beside it. On narrow screens, let it take full
+             * width, which will push the options to wrap below. */
+            width: root.is_wide ? 600 : parent.width
 
             // === Search Input ====
             TextField {
@@ -69,8 +73,6 @@ Frame {
 
         RowLayout {
             id: search_options_layout
-            Layout.fillWidth: true
-            visible: (root.width - 550) > 550 // FIXME
 
             ComboBox {
                 id: search_area_dropdown
