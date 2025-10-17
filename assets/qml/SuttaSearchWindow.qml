@@ -1057,6 +1057,10 @@ ${query_text}`;
 
                                 function handle_summary_close() {
                                     word_summary_wrap.visible = false;
+                                    let html_view = sutta_html_view_layout.get_current_item();
+                                    if (html_view) {
+                                        html_view.item.web.runJavaScript("if (typeof window.word_summary_closed === 'function') { window.word_summary_closed(); }");
+                                    }
                                 }
 
                                 WordSummary {

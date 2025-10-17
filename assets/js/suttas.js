@@ -251,16 +251,19 @@ class TextResizeController {
     }
 }
 
-// TODO: Both Double click and selection event runs the summary search, lookup query is stated from the summary UI.
-// TODO: Allow the user to configure which action should run a lookup query.
-
 document.addEventListener("DOMContentLoaded", function(_event) {
     new HamburgerMenu();
     new TextResizeController();
     if (IS_MOBILE) {
         // On mobile in a WebView, there is no double click event, so listen to
         // selection change (from a long press action).
-        // FIXME: avoid lookup when selection is changed by dragging the boundaries
+        let previous_selection_text = "";
+        let word_summary_was_closed = false;
+
+        window.word_summary_closed = function() {
+            word_summary_was_closed = true;
+        };
+
         document.addEventListener("selectionchange", function (_event) {
             const selection = document.getSelection();
             if (selection && selection.rangeCount > 0) {
@@ -273,6 +276,30 @@ document.addEventListener("DOMContentLoaded", function(_event) {
                     return;
                 }
             }
+
+            const current_text = selection_text();
+
+            if (current_text === "") {
+                previous_selection_text = "";
+                word_summary_was_closed = false;
+                return;
+            }
+
+            if (word_summary_was_closed) {
+                const is_boundary_drag = current_text.startsWith(previous_selection_text) ||
+                                         current_text.endsWith(previous_selection_text) ||
+                                         previous_selection_text.startsWith(current_text) ||
+                                         previous_selection_text.endsWith(current_text);
+
+                if (is_boundary_drag) {
+                    previous_selection_text = current_text;
+                    return;
+                }
+
+                word_summary_was_closed = false;
+            }
+
+            previous_selection_text = current_text;
             summary_selection();
         });
 
