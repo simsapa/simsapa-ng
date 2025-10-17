@@ -16,7 +16,7 @@ Item {
     signal resultsPageReady(results_json: string);
     signal allParagraphsGlossReady(results_json: string);
     signal paragraphGlossReady(paragraph_index: int, results_json: string);
-    signal dpdLookupReady(results_json: string);
+    signal dpdLookupReady(query_id: string, results_json: string);
     signal ankiCsvExportReady(results_json: string);
     signal ankiPreviewReady(preview_html: string);
 
@@ -136,8 +136,8 @@ Item {
         return "[{}]";
     }
 
-    function dpd_lookup_json_async(query: string) {
-        console.log("dpd_lookup_json_async():", query);
+    function dpd_lookup_json_async(query_id: string, query: string) {
+        console.log("dpd_lookup_json_async():", query_id, query);
         // Simulate async behavior
         Qt.callLater(function() {
             query = normalize_query_text(query);
@@ -145,7 +145,7 @@ Item {
             if (root.dpd_lookup_test_data[query]) {
                 result = JSON.stringify(root.dpd_lookup_test_data[query]);
             }
-            dpdLookupReady(result);
+            dpdLookupReady(query_id, result);
         });
     }
 

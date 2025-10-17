@@ -66,7 +66,7 @@ pub mod qobject {
 
         #[qsignal]
         #[cxx_name = "dpdLookupReady"]
-        fn dpd_lookup_ready(self: Pin<&mut SuttaBridge>, results_json: QString);
+        fn dpd_lookup_ready(self: Pin<&mut SuttaBridge>, query_id: QString, results_json: QString);
 
         #[qsignal]
         #[cxx_name = "ankiCsvExportReady"]
@@ -107,7 +107,7 @@ pub mod qobject {
         fn dpd_lookup_json(self: &SuttaBridge, query: &QString) -> QString;
 
         #[qinvokable]
-        fn dpd_lookup_json_async(self: Pin<&mut SuttaBridge>, query: &QString);
+        fn dpd_lookup_json_async(self: Pin<&mut SuttaBridge>, query_id: &QString, query: &QString);
 
         #[qinvokable]
         fn get_sutta_html(self: &SuttaBridge, window_id: &QString, uid: &QString) -> QString;
@@ -462,9 +462,10 @@ impl qobject::SuttaBridge {
         QString::from(s)
     }
 
-    pub fn dpd_lookup_json_async(self: Pin<&mut Self>, query: &QString) {
+    pub fn dpd_lookup_json_async(self: Pin<&mut Self>, query_id: &QString, query: &QString) {
         info("SuttaBridge::dpd_lookup_json_async() start");
         let qt_thread = self.qt_thread();
+        let query_id_string = query_id.to_string();
         let query_text = query.to_string();
 
         // Spawn a thread so Qt event loop is not blocked
@@ -472,10 +473,11 @@ impl qobject::SuttaBridge {
             let app_data = get_app_data();
             let s = app_data.dbm.dpd.dpd_lookup_json(&query_text);
             let results_json = QString::from(s);
+            let query_id_qstring = QString::from(query_id_string);
 
-            // Emit signal with the results
+            // Emit signal with the query_id and results
             qt_thread.queue(move |mut qo| {
-                qo.as_mut().dpd_lookup_ready(results_json);
+                qo.as_mut().dpd_lookup_ready(query_id_qstring, results_json);
             }).unwrap();
 
             info("SuttaBridge::dpd_lookup_json_async() end");

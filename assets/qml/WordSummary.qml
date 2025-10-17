@@ -29,6 +29,9 @@ Frame {
     property alias search_btn: search_btn
 
     property bool is_loading: false
+    property string current_query_id: ""
+
+    Logger { id: logger }
 
     background: Rectangle {
         color: palette.window
@@ -53,7 +56,13 @@ Frame {
     Connections {
         target: SuttaBridge
 
-        function onDpdLookupReady(results_json: string) {
+        function onDpdLookupReady(query_id: string, results_json: string) {
+            // Ignore results from stale queries
+            if (query_id !== root.current_query_id) {
+                logger.log(`Discarding stale query results: ${query_id}, current: ${root.current_query_id}`);
+                return;
+            }
+
             root.is_loading = false;
             summaries_model.clear();
             let sum_list = JSON.parse(results_json);
@@ -95,6 +104,9 @@ Frame {
         if (query.length < min_length)
             return;
 
+        // Generate a unique query ID using timestamp
+        root.current_query_id = new Date().toISOString() + "_" + Math.random().toString(36).substring(2, 9);
+
         root.is_loading = true;
 
         // Get deconstructor list synchronously (it's fast)
@@ -106,7 +118,7 @@ Frame {
         deconstructor.currentIndex = 0;
 
         // Start async lookup for summaries (this can be slow)
-        SuttaBridge.dpd_lookup_json_async(query);
+        SuttaBridge.dpd_lookup_json_async(root.current_query_id, query);
     }
 
     ColumnLayout {
