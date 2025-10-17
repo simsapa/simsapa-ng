@@ -264,6 +264,15 @@ document.addEventListener("DOMContentLoaded", function(_event) {
             word_summary_was_closed = true;
         };
 
+        // The selectionchange logic should be as follows:
+        //
+        // - When the user starts the first selection with press and hold, trigger summary_selection() which opens WordSummary
+        // - If the user drags the selection boundaries, the updated selection should keep calling summary_selection() which updates the query in WordSummary
+        // - But if the user closes WordSummary with the close_btn, further changes in selection by dragging the selection boundaries should not trigger summary_selection()
+        // - However if the user does press and hold on another word, that should trigger summary_selection(), because it is a new selection text
+        // - a new selection can be recognized by the selected text not starting with or ending with the previous selection text (i.e. the user is not dragging the boundaries)
+        // - or it is also a new selection when the selection was cancelled (no selection), and another selection started
+
         document.addEventListener("selectionchange", function (_event) {
             const selection = document.getSelection();
             if (selection && selection.rangeCount > 0) {
