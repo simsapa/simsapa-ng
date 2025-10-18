@@ -1765,17 +1765,14 @@ ${main_text}
                         }
                     }
 
-                    Item {
+                    ColumnLayout {
                         id: vocabulary_gloss
                         Layout.fillWidth: true
-                        Layout.preferredHeight: wordListView.contentHeight + 40
+                        spacing: 5
 
-                        ListView {
-                            id: wordListView
-                            anchors.fill: parent
-                            clip: true
-                            spacing: 5
+                        property int paragraph_index: paragraph_item.index
 
+                        Repeater {
                             model: {
                                 try {
                                     return JSON.parse(paragraph_item.words_data_json);
@@ -1785,8 +1782,6 @@ ${main_text}
                             }
 
                             delegate: wordItemDelegate
-
-                            property int paragraph_index: paragraph_item.index
                         }
                     }
 
@@ -1795,18 +1790,18 @@ ${main_text}
 
                         ItemDelegate {
                             id: wordItem
-                            width: parent ? parent.width : 0
-                            height: root.vocab_tm1.height * 3
+                            Layout.fillWidth: true
+                            implicitHeight: mainContent.implicitHeight
 
                             required property int index
                             required property var modelData
 
-                            property int paragraph_index: wordListView.paragraph_index
+                            property int paragraph_index: vocabulary_gloss.paragraph_index
 
 
                             Frame {
                                 id: mainContent
-                                anchors.fill: parent
+                                width: parent.width
                                 padding: 4
 
                                 background: Rectangle {
@@ -1815,7 +1810,7 @@ ${main_text}
                                 }
 
                                 RowLayout {
-                                    anchors.fill: parent
+                                    width: parent.width
                                     spacing: 10
 
                                     ComboBox {
