@@ -2142,6 +2142,8 @@ dependencies = [
  "dotenvy",
  "html5ever",
  "indicatif",
+ "lazy_static",
+ "regex",
  "reqwest",
  "scraper",
  "serde",

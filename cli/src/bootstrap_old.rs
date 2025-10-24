@@ -7,6 +7,7 @@ use chrono::{DateTime, Local};
 use simsapa_backend::{init_app_data, get_create_simsapa_dir, get_create_simsapa_app_assets_path};
 
 use crate::import_stardict_dictionary;
+use crate::bootstrap::{clean_and_create_folders, dpd_migrate};
 
 pub fn bootstrap(write_new_dotenv: bool) -> Result<()> {
     let start_time: DateTime<Local> = Local::now();
@@ -82,66 +83,6 @@ RELEASE_CHANNEL=development
     Ok(())
 }
 
-fn clean_and_create_folders(
-    simsapa_dir: &Path,
-    assets_dir: &Path,
-    release_dir: &Path,
-    dist_dir: &Path
-) -> Result<()> {
-    println!("=== clean_and_create_folders() ===");
-
-    // Clean and create directories
-    for dir in [
-        dist_dir, // remove and re-create dist/ first
-        assets_dir, // app-assets is in dist/ during bootstrap
-        release_dir,
-    ] {
-        if dir.exists() {
-            fs::remove_dir_all(dir)
-                .with_context(|| format!("Failed to remove directory: {}", dir.display()))?;
-        }
-        fs::create_dir_all(dir)
-            .with_context(|| format!("Failed to create directory: {}", dir.display()))?;
-    }
-
-    // create_app_dirs(); // Not needed yet, we only need simsapa_dir and assets_dir at the moment.
-
-    // Remove unzipped_stardict directory if it exists
-    let unzipped_stardict_dir = simsapa_dir.join("unzipped_stardict");
-    if unzipped_stardict_dir.exists() {
-        fs::remove_dir_all(&unzipped_stardict_dir)
-            .with_context(|| format!("Failed to remove unzipped_stardict directory: {}", unzipped_stardict_dir.display()))?;
-    }
-
-    // Remove .tar.bz2 files in simsapa_dir
-    if simsapa_dir.exists() {
-        let entries = fs::read_dir(simsapa_dir)
-            .with_context(|| format!("Failed to read simsapa directory: {}", simsapa_dir.display()))?;
-
-        for entry in entries {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    if extension == "bz2" && path.to_string_lossy().ends_with(".tar.bz2") {
-                        fs::remove_file(&path)
-                            .with_context(|| format!("Failed to remove file: {}", path.display()))?;
-                        println!("Removed: {}", path.display());
-                    }
-                }
-            }
-        }
-    }
-
-    // Clear log.txt
-    let log_path = simsapa_dir.join("log.txt");
-    fs::write(&log_path, "")
-        .with_context(|| format!("Failed to clear log file: {}", log_path.display()))?;
-
-    println!("Bootstrap cleanup and folder creation completed");
-    Ok(())
-}
-
 fn appdata_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()> {
     println!("=== appdata_migrate() ===");
 
@@ -167,6 +108,7 @@ fn appdata_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
 
     println!("Copied appdata.sqlite3 to assets directory");
 
+    // Create FTS5 indexes
     // NOTE: Running the SQL script with the sqlite3 cli, it creates the fts5 index data.
     // But executing it with a Diesel db connection from Rust, the fts5 tables are created but there is no index data in them.
     // Perhaps the trigram tokenizer is missing from Diesel SQLite?
@@ -225,38 +167,3 @@ fn appdata_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
     Ok(())
 }
 
-fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()> {
-    println!("=== dpd_migrate() ===");
-
-    let source_db_path = bootstrap_assets_dir
-        .join("dpd-db-for-bootstrap/current/dpd.db");
-    let dest_db_path = assets_dir.join("dpd.db");
-
-    // Check if source database exists
-    if !source_db_path.exists() {
-        return Err(anyhow::anyhow!(
-            "Source DPD database not found at: {}",
-            source_db_path.display()
-        ));
-    }
-
-    // Copy the database file
-    fs::copy(&source_db_path, &dest_db_path)
-        .with_context(|| format!(
-            "Failed to copy DPD database from {} to {}",
-            source_db_path.display(),
-            dest_db_path.display()
-        ))?;
-
-    println!("Copied dpd.db to assets directory");
-
-    // Call the import_migrate_dpd function
-    let dpd_input_path = dest_db_path;
-    let dpd_output_path = assets_dir.join("dpd.sqlite3");
-
-    simsapa_backend::db::dpd::import_migrate_dpd(&dpd_input_path, Some(dpd_output_path))
-        .map_err(|e| anyhow::anyhow!("Failed to migrate DPD database: {}", e))?;
-
-    println!("Successfully migrated DPD database");
-    Ok(())
-}

@@ -159,8 +159,15 @@ enum Commands {
         dpd_output_path: Option<PathBuf>,
     },
 
-    /// Rebuild the application database from local assets and create asset release archives.
+    /// Rebuild the application database from local assets and create asset release archives (new modular implementation).
     Bootstrap {
+        /// Write a new .env file even if one already exists
+        #[arg(long, default_value_t = false)]
+        write_new_dotenv: bool,
+    },
+
+    /// Rebuild the application database using the legacy bootstrap implementation.
+    BootstrapOld {
         /// Write a new .env file even if one already exists
         #[arg(long, default_value_t = false)]
         write_new_dotenv: bool,
@@ -183,9 +190,9 @@ fn main() {
 
     let cli = Cli::parse();
 
-    // Don't initialize app data for bootstrap command since it needs to create directories first
+    // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } => {
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } => {
             // Skip app data initialization for bootstrap
         }
         _ => {
@@ -251,6 +258,11 @@ fn main() {
         }
 
         Commands::Bootstrap { write_new_dotenv } => {
+            bootstrap::bootstrap(write_new_dotenv)
+                .map_err(|e| e.to_string())
+        }
+
+        Commands::BootstrapOld { write_new_dotenv } => {
             bootstrap_old::bootstrap(write_new_dotenv)
                 .map_err(|e| e.to_string())
         }
