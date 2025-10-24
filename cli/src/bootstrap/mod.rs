@@ -11,10 +11,10 @@ use anyhow::Result;
 use diesel::prelude::*;
 use diesel_migrations::MigrationHarness;
 use std::path::Path;
-use simsapa_backend::db::{APPDATA_MIGRATIONS, DICTIONARIES_MIGRATIONS};
+use simsapa_backend::db::APPDATA_MIGRATIONS;
 
+pub use appdata::AppdataBootstrap;
 // TODO: Uncomment these as the modules are implemented
-// pub use appdata::AppdataBootstrap;
 // pub use suttacentral::SuttaCentralImporter;
 // pub use dhammatalks_org::DhammatalksSuttaImporter;
 // pub use dhammapada_munindo::DhammapadaMunindoImporter;

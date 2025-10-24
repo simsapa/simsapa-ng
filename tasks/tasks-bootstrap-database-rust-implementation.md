@@ -27,7 +27,7 @@
 
 ## Tasks
 
-- [ ] 1.0 Set up modular bootstrap infrastructure and helper functions
+- [x] 1.0 Set up modular bootstrap infrastructure and helper functions
   - [x] 1.1 Create `cli/src/bootstrap/mod.rs` module file
     - [x] 1.1.1 Define module structure with public exports
     - [x] 1.1.2 Add sub-modules: appdata, suttacentral, dhammatalks_org, dhammapada_munindo, dhammapada_tipitaka, nyanadipa, buddha_ujja, completions
@@ -50,37 +50,37 @@
     - [x] 1.4.5 Add serde_json for JSON parsing
     - [x] 1.4.6 Add indicatif for progress bars
 
-- [ ] 2.0 Implement appdata.sqlite3 database creation from scratch
-  - [ ] 2.1 Create `cli/src/bootstrap/appdata.rs` file
-    - [ ] 2.1.1 Add imports for diesel, appdata models, and schema
-    - [ ] 2.1.2 Define `AppdataBootstrap` struct to coordinate database creation
-    - [ ] 2.1.3 Add constructor `new(output_path: PathBuf) -> Self`
-  - [ ] 2.2 Implement database initialization
-    - [ ] 2.2.1 Add `create_database(&self) -> Result<()>` method
-    - [ ] 2.2.2 Delete existing database file if present
-    - [ ] 2.2.3 Create new SQLite database file
-    - [ ] 2.2.4 Run diesel migrations to create schema
-    - [ ] 2.2.5 Add tracing logs for each step
-  - [ ] 2.3 Implement app settings initialization
-    - [ ] 2.3.1 Add `initialize_app_settings(&self, conn: &mut SqliteConnection) -> Result<()>` method
-    - [ ] 2.3.2 Insert default application settings (app_version, db_version, etc.)
-    - [ ] 2.3.3 Set initial feature flags
-    - [ ] 2.3.4 Add default user preferences
-  - [ ] 2.4 Implement provider data initialization
-    - [ ] 2.4.1 Add `initialize_providers(&self, conn: &mut SqliteConnection) -> Result<()>` method
-    - [ ] 2.4.2 Read provider data from `assets/providers.json`
-    - [ ] 2.4.3 Parse JSON and insert into providers table
-    - [ ] 2.4.4 Handle provider metadata and configurations
-  - [ ] 2.5 Add orchestration method
-    - [ ] 2.5.1 Add `run(&mut self) -> Result<()>` method to coordinate all steps
-    - [ ] 2.5.2 Call create_database, initialize_app_settings, initialize_providers in sequence
-    - [ ] 2.5.3 Add progress reporting
-    - [ ] 2.5.4 Handle errors and rollback if needed
-  - [ ] 2.6 Write tests
-    - [ ] 2.6.1 Add test for database creation
-    - [ ] 2.6.2 Add test for app settings initialization
-    - [ ] 2.6.3 Add test for provider initialization
-    - [ ] 2.6.4 Add integration test for complete appdata creation
+- [x] 2.0 Implement appdata.sqlite3 database creation from scratch
+  - [x] 2.1 Create `cli/src/bootstrap/appdata.rs` file
+    - [x] 2.1.1 Add imports for diesel, appdata models, and schema
+    - [x] 2.1.2 Define `AppdataBootstrap` struct to coordinate database creation
+    - [x] 2.1.3 Add constructor `new(output_path: PathBuf) -> Self`
+  - [x] 2.2 Implement database initialization
+    - [x] 2.2.1 Add `create_database(&self) -> Result<()>` method
+    - [x] 2.2.2 Delete existing database file if present
+    - [x] 2.2.3 Create new SQLite database file
+    - [x] 2.2.4 Run diesel migrations to create schema
+    - [x] 2.2.5 Add tracing logs for each step
+  - [x] 2.3 Implement app settings initialization
+    - [x] 2.3.1 Add `initialize_app_settings(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [x] 2.3.2 Insert default application settings (app_version, db_version, etc.)
+    - [x] 2.3.3 Set initial feature flags
+    - [x] 2.3.4 Add default user preferences
+  - [x] 2.4 Implement provider data initialization
+    - [x] 2.4.1 Add `initialize_providers(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [x] 2.4.2 Read provider data from `assets/providers.json`
+    - [x] 2.4.3 Parse JSON and insert into providers table
+    - [x] 2.4.4 Handle provider metadata and configurations
+  - [x] 2.5 Add orchestration method
+    - [x] 2.5.1 Add `run(&mut self) -> Result<()>` method to coordinate all steps
+    - [x] 2.5.2 Call create_database, initialize_app_settings, initialize_providers in sequence
+    - [x] 2.5.3 Add progress reporting
+    - [x] 2.5.4 Handle errors and rollback if needed
+  - [x] 2.6 Write tests
+    - [x] 2.6.1 Add test for database creation
+    - [x] 2.6.2 Add test for app settings initialization
+    - [x] 2.6.3 Add test for provider initialization
+    - [x] 2.6.4 Add integration test for complete appdata creation
 
 - [ ] 3.0 Implement Dhammatalks.org sutta import
   - [ ] 3.1 Create `cli/src/bootstrap/dhammatalks_org.rs` file
