@@ -43,6 +43,7 @@ Item {
 
     Logger { id: logger }
     PromptManager { id: pm }
+    ClipboardManager { id: clipboard_manager }
 
     Connections {
         target: pm
@@ -1666,15 +1667,7 @@ ${main_text}
                         }
                     }
 
-                    TextEdit {
-                        id: paragraph_clip
-                        visible: false
-                        function copy_text(text) {
-                            paragraph_clip.text = text;
-                            paragraph_clip.selectAll();
-                            paragraph_clip.copy();
-                        }
-                    }
+
 
                     RowLayout {
                         spacing: 10
@@ -1747,16 +1740,21 @@ ${main_text}
                                 }
 
                                 var content = "";
+                                var mimeType = "text/plain";
+
                                 if (currentIndex === 1) {
                                     content = root.paragraph_gloss_as_html(paragraph_item.index);
+                                    mimeType = "text/html";
                                 } else if (currentIndex === 2) {
                                     content = root.paragraph_gloss_as_markdown(paragraph_item.index);
+                                    mimeType = "text/markdown";
                                 } else if (currentIndex === 3) {
                                     content = root.paragraph_gloss_as_orgmode(paragraph_item.index);
+                                    mimeType = "text/plain";
                                 }
 
                                 if (content.length > 0) {
-                                    paragraph_clip.copy_text(content);
+                                    clipboard_manager.copyWithMimeType(content, mimeType);
                                     copied_message_animation.start();
                                 }
 
@@ -1797,7 +1795,6 @@ ${main_text}
                             required property var modelData
 
                             property int paragraph_index: vocabulary_gloss.paragraph_index
-
 
                             Frame {
                                 id: mainContent

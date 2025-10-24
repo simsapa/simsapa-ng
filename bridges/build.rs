@@ -61,6 +61,7 @@ fn main() {
                         "src/asset_manager.rs",
                         "src/storage_manager.rs",
                         "src/prompt_manager.rs",
+                        "src/clipboard_manager.rs",
                 ],
                 qml_files: &qml_files,
                 ..Default::default()

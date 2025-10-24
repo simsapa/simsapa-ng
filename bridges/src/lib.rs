@@ -3,3 +3,4 @@ pub mod sutta_bridge;
 pub mod asset_manager;
 pub mod storage_manager;
 pub mod prompt_manager;
+pub mod clipboard_manager;
