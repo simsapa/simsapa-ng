@@ -27,6 +27,7 @@ Item {
 
     Logger { id: logger }
     PromptManager { id: pm }
+    ClipboardManager { id: clipboard_manager }
 
     property alias prompt_connections: prompt_connections
 
@@ -643,15 +644,7 @@ Item {
 
                 property alias send_btn: send_btn
 
-                TextEdit {
-                    id: message_clip
-                    visible: false
-                    function copy_text(text) {
-                        message_clip.text = text;
-                        message_clip.selectAll();
-                        message_clip.copy();
-                    }
-                }
+
 
                 RowLayout {
                     Layout.leftMargin: 10
@@ -766,16 +759,21 @@ Item {
                                 };
 
                                 var content = "";
+                                var mimeType = "text/plain";
+
                                 if (currentIndex === 1) {
                                     content = root.message_as_html(msg_data);
+                                    mimeType = "text/html";
                                 } else if (currentIndex === 2) {
                                     content = root.message_as_markdown(msg_data);
+                                    mimeType = "text/markdown";
                                 } else if (currentIndex === 3) {
                                     content = root.message_as_orgmode(msg_data);
+                                    mimeType = "text/plain";
                                 }
 
                                 if (content.length > 0) {
-                                    message_clip.copy_text(content);
+                                    clipboard_manager.copyWithMimeType(content, mimeType);
                                     copied_message_animation.start();
                                 }
 
