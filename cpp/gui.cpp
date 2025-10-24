@@ -29,6 +29,7 @@ extern "C" void ensure_no_empty_db_files();
 extern "C" void remove_download_temp_folder();
 extern "C" void init_app_globals();
 extern "C" void init_app_data();
+extern "C" void check_and_configure_for_first_start();
 extern "C" void create_or_update_linux_desktop_icon_file_ffi();
 
 extern "C" char* get_desktop_file_path_ffi();
@@ -162,6 +163,9 @@ void start(int argc, char* argv[]) {
   // init_app_data() would create the userdata db, and we can't use it to test in
   // DownloadAppdataWindow() if this is the first ever start.
   init_app_data();
+
+  // Check if this is the first start and configure settings based on system memory
+  check_and_configure_for_first_start();
 
   // The port is determined in start_webserver().
   std::thread daemon_server_thread(start_webserver);

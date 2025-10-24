@@ -59,6 +59,7 @@ pub struct AppSettings {
     pub anki_include_cloze: bool,
     pub search_as_you_type: bool,
     pub open_find_in_sutta_results: bool,
+    pub first_time_start: bool,
 }
 
 impl Default for AppSettings {
@@ -185,6 +186,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             anki_include_cloze: true,
             search_as_you_type: true,
             open_find_in_sutta_results: true,
+            first_time_start: true,
         }
     }
 }

@@ -656,4 +656,54 @@ impl AppData {
             Err(e) => error(&format!("Failed to update app settings: {}", e)),
         }
     }
+
+    pub fn get_first_time_start(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.first_time_start
+    }
+
+    pub fn set_first_time_start(&self, is_first_time: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.first_time_start = is_first_time;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    pub fn check_and_configure_for_first_start(&self) {
+        if !self.get_first_time_start() {
+            return;
+        }
+
+        if let Some(total_memory_gb) = self.get_system_memory_gb() {
+            if total_memory_gb <= 8 {
+                self.set_search_as_you_type(false);
+            }
+        }
+
+        self.set_first_time_start(false);
+    }
+
+    fn get_system_memory_gb(&self) -> Option<u64> {
+        use sysinfo::System;
+
+        let mut sys = System::new_all();
+        sys.refresh_memory();
+
+        let total_memory_bytes = sys.total_memory();
+        Some(total_memory_bytes / 1024 / 1024 / 1024)
+    }
 }

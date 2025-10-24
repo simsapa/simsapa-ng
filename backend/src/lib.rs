@@ -70,6 +70,11 @@ pub fn get_app_data() -> &'static AppData {
     APP_DATA.get().expect("AppData is not initialized")
 }
 
+#[unsafe(no_mangle)]
+pub extern "C" fn check_and_configure_for_first_start() {
+    get_app_data().check_and_configure_for_first_start();
+}
+
 #[derive(Debug)]
 pub struct AppGlobals {
     pub page_len: usize,
