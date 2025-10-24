@@ -1,0 +1,437 @@
+# Tasks: Database Bootstrap Procedure - Rust Implementation
+
+## Relevant Files
+
+- `cli/src/bootstrap.rs` - Main bootstrap orchestration, currently copies pre-built appdata.sqlite3
+- `cli/src/bootstrap/mod.rs` - New module for bootstrap utilities and helper functions
+- `cli/src/bootstrap/appdata.rs` - Main appdata database creation and coordination
+- `cli/src/bootstrap/suttacentral.rs` - SuttaCentral import (Bilara JSON + ArangoDB)
+- `cli/src/bootstrap/dhammatalks_org.rs` - Dhammatalks.org sutta import
+- `cli/src/bootstrap/dhammapada_munindo.rs` - Dhammapada Munindo import
+- `cli/src/bootstrap/dhammapada_tipitaka.rs` - Dhammapada Tipitaka.net import
+- `cli/src/bootstrap/nyanadipa.rs` - Nyanadipa translations import
+- `cli/src/bootstrap/buddha_ujja.rs` - Hungarian Buddha Ujja import
+- `cli/src/bootstrap/completions.rs` - Autocomplete data generation
+- `cli/Cargo.toml` - Add new dependencies (arangors, scraper, html5ever, etc.)
+- `backend/src/db/appdata_models.rs` - Existing appdata models (Sutta, AppSetting, etc.)
+- `backend/src/db/appdata_schema.rs` - Database schema definitions
+- `backend/src/lib.rs` - Backend library exports
+
+### Notes
+
+- The bootstrap process generates databases in `bootstrap-assets-resources/dist/simsapa-ng/app-assets/`
+- Available resource folders: `sc-data/`, `dhammatalks-org/`, `dhammapada-munindo/`, `dhammapada-tipitaka-net/`, `nyanadipa-translations/`, `buddha-ujja-sql/`
+- DPD dictionary import and migration already implemented in current `cli/src/bootstrap.rs`
+- Use `cd cli && cargo run --bin simsapa_cli -- bootstrap` to run the bootstrap process
+- Use `cd backend && cargo test` to run backend tests
+
+## Tasks
+
+- [ ] 1.0 Set up modular bootstrap infrastructure and helper functions
+  - [ ] 1.1 Create `cli/src/bootstrap/mod.rs` module file
+    - [ ] 1.1.1 Define module structure with public exports
+    - [ ] 1.1.2 Add sub-modules: appdata, suttacentral, dhammatalks_org, dhammapada_munindo, dhammapada_tipitaka, nyanadipa, buddha_ujja, completions
+    - [ ] 1.1.3 Export common types and traits
+  - [ ] 1.2 Implement common helper functions in mod.rs
+    - [ ] 1.2.1 Add `create_database_connection(db_path: &Path) -> Result<SqliteConnection>` helper
+    - [ ] 1.2.2 Add `run_migrations(conn: &mut SqliteConnection) -> Result<()>` helper
+    - [ ] 1.2.3 Add `ensure_directory_exists(path: &Path) -> Result<()>` helper
+    - [ ] 1.2.4 Add `read_json_file<T: DeserializeOwned>(path: &Path) -> Result<T>` helper
+    - [ ] 1.2.5 Add `batch_insert<T>(conn: &mut SqliteConnection, items: Vec<T>, batch_size: usize) -> Result<()>` helper
+  - [ ] 1.3 Define common traits and types
+    - [ ] 1.3.1 Define `SuttaImporter` trait with `import()` method
+    - [ ] 1.3.2 Define `ProgressCallback` type alias for progress reporting
+    - [ ] 1.3.3 Define common error types using anyhow
+  - [ ] 1.4 Update `cli/Cargo.toml` with new dependencies
+    - [ ] 1.4.1 Add arangors for ArangoDB integration
+    - [ ] 1.4.2 Add scraper for HTML parsing
+    - [ ] 1.4.3 Add html5ever for HTML5 parsing
+    - [ ] 1.4.4 Add reqwest for HTTP requests (if needed)
+    - [ ] 1.4.5 Add serde_json for JSON parsing
+    - [ ] 1.4.6 Add indicatif for progress bars
+
+- [ ] 2.0 Implement appdata.sqlite3 database creation from scratch
+  - [ ] 2.1 Create `cli/src/bootstrap/appdata.rs` file
+    - [ ] 2.1.1 Add imports for diesel, appdata models, and schema
+    - [ ] 2.1.2 Define `AppdataBootstrap` struct to coordinate database creation
+    - [ ] 2.1.3 Add constructor `new(output_path: PathBuf) -> Self`
+  - [ ] 2.2 Implement database initialization
+    - [ ] 2.2.1 Add `create_database(&self) -> Result<()>` method
+    - [ ] 2.2.2 Delete existing database file if present
+    - [ ] 2.2.3 Create new SQLite database file
+    - [ ] 2.2.4 Run diesel migrations to create schema
+    - [ ] 2.2.5 Add tracing logs for each step
+  - [ ] 2.3 Implement app settings initialization
+    - [ ] 2.3.1 Add `initialize_app_settings(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 2.3.2 Insert default application settings (app_version, db_version, etc.)
+    - [ ] 2.3.3 Set initial feature flags
+    - [ ] 2.3.4 Add default user preferences
+  - [ ] 2.4 Implement provider data initialization
+    - [ ] 2.4.1 Add `initialize_providers(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 2.4.2 Read provider data from `assets/providers.json`
+    - [ ] 2.4.3 Parse JSON and insert into providers table
+    - [ ] 2.4.4 Handle provider metadata and configurations
+  - [ ] 2.5 Add orchestration method
+    - [ ] 2.5.1 Add `run(&mut self) -> Result<()>` method to coordinate all steps
+    - [ ] 2.5.2 Call create_database, initialize_app_settings, initialize_providers in sequence
+    - [ ] 2.5.3 Add progress reporting
+    - [ ] 2.5.4 Handle errors and rollback if needed
+  - [ ] 2.6 Write tests
+    - [ ] 2.6.1 Add test for database creation
+    - [ ] 2.6.2 Add test for app settings initialization
+    - [ ] 2.6.3 Add test for provider initialization
+    - [ ] 2.6.4 Add integration test for complete appdata creation
+
+- [ ] 3.0 Implement Dhammatalks.org sutta import
+  - [ ] 3.1 Create `cli/src/bootstrap/dhammatalks_org.rs` file
+    - [ ] 3.1.1 Add imports for scraper, diesel, and appdata models
+    - [ ] 3.1.2 Define `DhammatalksSuttaImporter` struct with resource path
+    - [ ] 3.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
+  - [ ] 3.2 Implement HTML parsing utilities
+    - [ ] 3.2.1 Add `parse_html_file(&self, file_path: &Path) -> Result<Html>` helper
+    - [ ] 3.2.2 Add `extract_sutta_metadata(html: &Html) -> Result<SuttaMetadata>` helper
+    - [ ] 3.2.3 Add `extract_sutta_content(html: &Html) -> Result<String>` helper
+    - [ ] 3.2.4 Add `clean_html_content(html: &str) -> String` helper to remove scripts/styles
+  - [ ] 3.3 Implement file discovery and filtering
+    - [ ] 3.3.1 Add `discover_sutta_files(&self) -> Result<Vec<PathBuf>>` method
+    - [ ] 3.3.2 Recursively scan resource directory for HTML files
+    - [ ] 3.3.3 Filter for valid sutta files based on naming convention
+    - [ ] 3.3.4 Sort files for consistent ordering
+  - [ ] 3.4 Implement sutta conversion and insertion
+    - [ ] 3.4.1 Add `convert_to_sutta_model(&self, file_path: &Path) -> Result<Sutta>` method
+    - [ ] 3.4.2 Parse HTML and extract all metadata fields
+    - [ ] 3.4.3 Generate unique UID for each sutta
+    - [ ] 3.4.4 Set provider ID to dhammatalks_org
+    - [ ] 3.4.5 Handle language detection (primarily English)
+  - [ ] 3.5 Implement batch import
+    - [ ] 3.5.1 Add `import_suttas(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 3.5.2 Process files in batches for performance
+    - [ ] 3.5.3 Use batch_insert helper for database operations
+    - [ ] 3.5.4 Add progress reporting with indicatif
+    - [ ] 3.5.5 Handle errors gracefully, continue on individual failures
+  - [ ] 3.6 Implement SuttaImporter trait
+    - [ ] 3.6.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+    - [ ] 3.6.2 Call import_suttas internally
+  - [ ] 3.7 Write tests
+    - [ ] 3.7.1 Add test for HTML parsing with sample file
+    - [ ] 3.7.2 Add test for metadata extraction
+    - [ ] 3.7.3 Add test for file discovery
+    - [ ] 3.7.4 Add integration test for complete import process
+
+- [ ] 4.0 Implement Dhammapada Munindo sutta import
+  - [ ] 4.1 Create `cli/src/bootstrap/dhammapada_munindo.rs` file
+    - [ ] 4.1.1 Add imports for scraper, diesel, and appdata models
+    - [ ] 4.1.2 Define `DhammapadaMunindoImporter` struct with resource path
+    - [ ] 4.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
+  - [ ] 4.2 Implement verse parsing
+    - [ ] 4.2.1 Add `parse_verse_file(&self, file_path: &Path) -> Result<Vec<Verse>>` method
+    - [ ] 4.2.2 Parse HTML structure specific to Munindo translations
+    - [ ] 4.2.3 Extract verse number, Pali text, and English translation
+    - [ ] 4.2.4 Extract chapter information and metadata
+  - [ ] 4.3 Implement chapter organization
+    - [ ] 4.3.1 Add `organize_by_chapters(&self, verses: Vec<Verse>) -> Result<Vec<Sutta>>` method
+    - [ ] 4.3.2 Group verses by chapter (vagga)
+    - [ ] 4.3.3 Create one Sutta entry per chapter
+    - [ ] 4.3.4 Format content with proper verse numbering
+  - [ ] 4.4 Implement sutta model conversion
+    - [ ] 4.4.1 Add `convert_to_sutta(&self, chapter: Chapter) -> Result<Sutta>` method
+    - [ ] 4.4.2 Generate UID in format: dhp-munindo-{chapter_num}
+    - [ ] 4.4.3 Set provider ID and language (English)
+    - [ ] 4.4.4 Add chapter title and verse range metadata
+  - [ ] 4.5 Implement import orchestration
+    - [ ] 4.5.1 Add `import_dhammapada(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 4.5.2 Discover and parse all verse files
+    - [ ] 4.5.3 Organize verses into chapters
+    - [ ] 4.5.4 Insert into database with batch operations
+    - [ ] 4.5.5 Add progress reporting
+  - [ ] 4.6 Implement SuttaImporter trait
+    - [ ] 4.6.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+  - [ ] 4.7 Write tests
+    - [ ] 4.7.1 Add test for verse parsing with sample data
+    - [ ] 4.7.2 Add test for chapter organization
+    - [ ] 4.7.3 Add test for UID generation
+    - [ ] 4.7.4 Add integration test for complete import
+
+- [ ] 5.0 Implement Dhammapada Tipitaka.net sutta import
+  - [ ] 5.1 Create `cli/src/bootstrap/dhammapada_tipitaka.rs` file
+    - [ ] 5.1.1 Add imports for scraper, diesel, and appdata models
+    - [ ] 5.1.2 Define `DhammapadaTipitakaImporter` struct with resource path
+    - [ ] 5.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
+  - [ ] 5.2 Implement multi-language parsing
+    - [ ] 5.2.1 Add `detect_language(&self, file_path: &Path) -> Result<Language>` helper
+    - [ ] 5.2.2 Add `parse_verse_html(&self, html: &Html, lang: Language) -> Result<Verse>` method
+    - [ ] 5.2.3 Handle different HTML structures for Pali, English, and other translations
+    - [ ] 5.2.4 Extract parallel verse numbers across languages
+  - [ ] 5.3 Implement verse alignment
+    - [ ] 5.3.1 Add `align_parallel_verses(&self, verses: HashMap<Language, Vec<Verse>>) -> Result<Vec<AlignedVerse>>` method
+    - [ ] 5.3.2 Match verses across languages by verse number
+    - [ ] 5.3.3 Handle missing translations gracefully
+    - [ ] 5.3.4 Validate verse alignment consistency
+  - [ ] 5.4 Implement sutta model conversion
+    - [ ] 5.4.1 Add `convert_verses_to_suttas(&self, aligned: Vec<AlignedVerse>) -> Result<Vec<Sutta>>` method
+    - [ ] 5.4.2 Create separate Sutta entries for each language
+    - [ ] 5.4.3 Generate UID format: dhp-tipitaka-{lang}-{chapter_num}
+    - [ ] 5.4.4 Link related suttas via metadata
+  - [ ] 5.5 Implement chapter metadata
+    - [ ] 5.5.1 Add `extract_chapter_metadata(&self) -> Result<Vec<ChapterMeta>>` method
+    - [ ] 5.5.2 Parse chapter titles in multiple languages
+    - [ ] 5.5.3 Extract verse ranges for each chapter
+    - [ ] 5.5.4 Store chapter descriptions
+  - [ ] 5.6 Implement import orchestration
+    - [ ] 5.6.1 Add `import_tipitaka_dhammapada(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 5.6.2 Parse verses for all available languages
+    - [ ] 5.6.3 Align verses across languages
+    - [ ] 5.6.4 Convert and insert into database
+    - [ ] 5.6.5 Add progress reporting per language
+  - [ ] 5.7 Implement SuttaImporter trait
+    - [ ] 5.7.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+  - [ ] 5.8 Write tests
+    - [ ] 5.8.1 Add test for language detection
+    - [ ] 5.8.2 Add test for verse alignment
+    - [ ] 5.8.3 Add test for multi-language UID generation
+    - [ ] 5.8.4 Add integration test for complete import
+
+- [ ] 6.0 Implement Nyanadipa translations sutta import
+  - [ ] 6.1 Create `cli/src/bootstrap/nyanadipa.rs` file
+    - [ ] 6.1.1 Add imports for scraper, diesel, and appdata models
+    - [ ] 6.1.2 Define `NyanadipaImporter` struct with resource path
+    - [ ] 6.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
+  - [ ] 6.2 Implement translation file discovery
+    - [ ] 6.2.1 Add `discover_translation_files(&self) -> Result<Vec<PathBuf>>` method
+    - [ ] 6.2.2 Scan resource directory for translation files
+    - [ ] 6.2.3 Identify file format (HTML, markdown, or plain text)
+    - [ ] 6.2.4 Extract language information from file names or metadata
+  - [ ] 6.3 Implement multi-format parsing
+    - [ ] 6.3.1 Add `parse_file(&self, path: &Path, format: FileFormat) -> Result<ParsedSutta>` method
+    - [ ] 6.3.2 Implement HTML parser for HTML files
+    - [ ] 6.3.3 Implement markdown parser for markdown files
+    - [ ] 6.3.4 Implement plain text parser with structure detection
+  - [ ] 6.4 Implement metadata extraction
+    - [ ] 6.4.1 Add `extract_sutta_reference(&self, content: &str) -> Result<SuttaRef>` helper
+    - [ ] 6.4.2 Parse canonical reference (e.g., MN 1, DN 2)
+    - [ ] 6.4.3 Extract translator name (likely Nyanadipa)
+    - [ ] 6.4.4 Extract translation date if available
+  - [ ] 6.5 Implement sutta model conversion
+    - [ ] 6.5.1 Add `convert_to_sutta(&self, parsed: ParsedSutta) -> Result<Sutta>` method
+    - [ ] 6.5.2 Generate UID format: nyanadipa-{canonical_ref}
+    - [ ] 6.5.3 Set provider ID and language
+    - [ ] 6.5.4 Add translator and date metadata
+  - [ ] 6.6 Implement import orchestration
+    - [ ] 6.6.1 Add `import_translations(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 6.6.2 Discover all translation files
+    - [ ] 6.6.3 Parse each file according to its format
+    - [ ] 6.6.4 Convert and insert into database
+    - [ ] 6.6.5 Add progress reporting
+  - [ ] 6.7 Implement SuttaImporter trait
+    - [ ] 6.7.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+  - [ ] 6.8 Write tests
+    - [ ] 6.8.1 Add test for file format detection
+    - [ ] 6.8.2 Add test for sutta reference parsing
+    - [ ] 6.8.3 Add test for each file format parser
+    - [ ] 6.8.4 Add integration test for complete import
+
+- [ ] 7.0 Implement SuttaCentral import with ArangoDB integration
+  - [ ] 7.1 Create `cli/src/bootstrap/suttacentral.rs` file
+    - [ ] 7.1.1 Add imports for arangors, serde_json, diesel, and appdata models
+    - [ ] 7.1.2 Define `SuttaCentralImporter` struct with bilara_path and arango_config
+    - [ ] 7.1.3 Add constructor `new(bilara_path: PathBuf, arango_url: String) -> Self`
+  - [ ] 7.2 Implement ArangoDB connection
+    - [ ] 7.2.1 Add `connect_arango(&self) -> Result<Database>` method
+    - [ ] 7.2.2 Initialize arangors client with connection parameters
+    - [ ] 7.2.3 Authenticate if credentials provided
+    - [ ] 7.2.4 Handle connection errors with retry logic
+  - [ ] 7.3 Implement Bilara JSON parsing
+    - [ ] 7.3.1 Add `discover_bilara_files(&self) -> Result<Vec<PathBuf>>` method
+    - [ ] 7.3.2 Scan bilara directory structure (translation/, root/, comment/, etc.)
+    - [ ] 7.3.3 Group related files by UID (root, translation, comment variants)
+    - [ ] 7.3.4 Parse JSON structure for segment-based texts
+  - [ ] 7.4 Implement segment merging
+    - [ ] 7.4.1 Add `merge_bilara_segments(&self, files: BilaraFileGroup) -> Result<MergedSutta>` method
+    - [ ] 7.4.2 Load root text (Pali) segments
+    - [ ] 7.4.3 Load translation segments for matching UID
+    - [ ] 7.4.4 Merge segments in order, maintaining structure
+    - [ ] 7.4.5 Handle variant readings and notes
+  - [ ] 7.5 Implement ArangoDB metadata query
+    - [ ] 7.5.1 Add `query_sutta_metadata(&self, db: &Database, uid: &str) -> Result<SuttaMetadata>` method
+    - [ ] 7.5.2 Query super_nav_details collection for navigation metadata
+    - [ ] 7.5.3 Query sutta_metadata collection for additional information
+    - [ ] 7.5.4 Extract nikaya, book, chapter hierarchy
+    - [ ] 7.5.5 Extract canonical names and alternative titles
+  - [ ] 7.6 Implement parallel text handling
+    - [ ] 7.6.1 Add `process_parallel_suttas(&self, uid: &str, db: &Database) -> Result<Vec<Sutta>>` method
+    - [ ] 7.6.2 Query parallels collection for related suttas
+    - [ ] 7.6.3 Load parallel texts in different traditions (Chinese, Sanskrit, Tibetan)
+    - [ ] 7.6.4 Create separate Sutta entries for each parallel
+    - [ ] 7.6.5 Link parallels via metadata
+  - [ ] 7.7 Implement language filtering
+    - [ ] 7.7.1 Add `filter_languages(&self, available: Vec<Language>) -> Vec<Language>` method
+    - [ ] 7.7.2 Define priority languages (Pali, English, etc.)
+    - [ ] 7.7.3 Allow configuration of which languages to import
+    - [ ] 7.7.4 Log skipped languages
+  - [ ] 7.8 Implement sutta model conversion
+    - [ ] 7.8.1 Add `convert_to_sutta(&self, merged: MergedSutta, metadata: SuttaMetadata) -> Result<Sutta>` method
+    - [ ] 7.8.2 Use SuttaCentral UID as primary identifier
+    - [ ] 7.8.3 Set provider ID to suttacentral
+    - [ ] 7.8.4 Populate all metadata fields from ArangoDB
+    - [ ] 7.8.5 Format content with proper HTML structure
+  - [ ] 7.9 Implement batch import orchestration
+    - [ ] 7.9.1 Add `import_suttacentral(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 7.9.2 Connect to ArangoDB
+    - [ ] 7.9.3 Discover all Bilara files
+    - [ ] 7.9.4 Process each sutta: parse, merge, query metadata, convert
+    - [ ] 7.9.5 Insert in batches for performance
+    - [ ] 7.9.6 Add progress reporting with ETA
+    - [ ] 7.9.7 Handle errors gracefully, log failures but continue
+  - [ ] 7.10 Implement SuttaImporter trait
+    - [ ] 7.10.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+  - [ ] 7.11 Write tests
+    - [ ] 7.11.1 Add test for Bilara JSON parsing with sample file
+    - [ ] 7.11.2 Add test for segment merging
+    - [ ] 7.11.3 Add mock ArangoDB test for metadata queries
+    - [ ] 7.11.4 Add test for parallel text processing
+    - [ ] 7.11.5 Add integration test with test database
+
+- [ ] 8.0 Implement Hungarian Buddha Ujja import
+  - [ ] 8.1 Create `cli/src/bootstrap/buddha_ujja.rs` file
+    - [ ] 8.1.1 Add imports for diesel and appdata models
+    - [ ] 8.1.2 Define `BuddhUjjaImporter` struct with resource path
+    - [ ] 8.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
+  - [ ] 8.2 Implement SQL file parsing
+    - [ ] 8.2.1 Add `read_sql_file(&self) -> Result<String>` method
+    - [ ] 8.2.2 Read SQL dump file from resource directory
+    - [ ] 8.2.3 Handle large file reading efficiently
+  - [ ] 8.3 Implement SQL parsing and extraction
+    - [ ] 8.3.1 Add `parse_insert_statements(&self, sql: &str) -> Result<Vec<SqlInsert>>` method
+    - [ ] 8.3.2 Use regex to extract INSERT statements
+    - [ ] 8.3.3 Parse column names and values
+    - [ ] 8.3.4 Handle escaped characters and special Hungarian characters
+  - [ ] 8.4 Implement data conversion
+    - [ ] 8.4.1 Add `convert_sql_to_sutta(&self, insert: SqlInsert) -> Result<Sutta>` method
+    - [ ] 8.4.2 Map SQL columns to Sutta model fields
+    - [ ] 8.4.3 Generate UID format: buddha-ujja-{original_id}
+    - [ ] 8.4.4 Set provider ID and language (Hungarian)
+    - [ ] 8.4.5 Handle HTML encoding in content
+  - [ ] 8.5 Implement table identification
+    - [ ] 8.5.1 Add `identify_table(&self, insert: &SqlInsert) -> Result<TableType>` helper
+    - [ ] 8.5.2 Detect if INSERT is for suttas, books, or metadata
+    - [ ] 8.5.3 Route to appropriate conversion function
+  - [ ] 8.6 Implement import orchestration
+    - [ ] 8.6.1 Add `import_buddha_ujja(&self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [ ] 8.6.2 Read and parse SQL file
+    - [ ] 8.6.3 Filter for relevant INSERT statements
+    - [ ] 8.6.4 Convert to Sutta models
+    - [ ] 8.6.5 Insert into database in batches
+    - [ ] 8.6.6 Add progress reporting
+  - [ ] 8.7 Implement SuttaImporter trait
+    - [ ] 8.7.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+  - [ ] 8.8 Write tests
+    - [ ] 8.8.1 Add test for SQL parsing with sample statements
+    - [ ] 8.8.2 Add test for Hungarian character handling
+    - [ ] 8.8.3 Add test for data conversion
+    - [ ] 8.8.4 Add integration test for complete import
+
+- [ ] 9.0 Implement completions data generation
+  - [ ] 9.1 Create `cli/src/bootstrap/completions.rs` file
+    - [ ] 9.1.1 Add imports for diesel, serde, and appdata models
+    - [ ] 9.1.2 Define `CompletionsGenerator` struct
+    - [ ] 9.1.3 Add constructor `new() -> Self`
+  - [ ] 9.2 Implement sutta title extraction
+    - [ ] 9.2.1 Add `extract_sutta_titles(&self, conn: &mut SqliteConnection) -> Result<Vec<TitleEntry>>` method
+    - [ ] 9.2.2 Query all suttas from database
+    - [ ] 9.2.3 Extract title field from each sutta
+    - [ ] 9.2.4 Include UID and language for context
+  - [ ] 9.3 Implement Pali word extraction
+    - [ ] 9.3.1 Add `extract_pali_words(&self, conn: &mut SqliteConnection) -> Result<Vec<String>>` method
+    - [ ] 9.3.2 Query Pali suttas and dictionary entries
+    - [ ] 9.3.3 Tokenize content to extract unique words
+    - [ ] 9.3.4 Filter out common words and particles
+    - [ ] 9.3.5 Sort by frequency
+  - [ ] 9.4 Implement author extraction
+    - [ ] 9.4.1 Add `extract_authors(&self, conn: &mut SqliteConnection) -> Result<Vec<String>>` method
+    - [ ] 9.4.2 Query suttas for author/translator metadata
+    - [ ] 9.4.3 Extract unique author names
+    - [ ] 9.4.4 Sort alphabetically
+  - [ ] 9.5 Implement nikaya/collection extraction
+    - [ ] 9.5.1 Add `extract_collections(&self, conn: &mut SqliteConnection) -> Result<Vec<Collection>>` method
+    - [ ] 9.5.2 Query suttas for nikaya/collection metadata
+    - [ ] 9.5.3 Build hierarchical structure (nikaya > book > sutta)
+    - [ ] 9.5.4 Include counts for each level
+  - [ ] 9.6 Implement UID extraction
+    - [ ] 9.6.1 Add `extract_uids(&self, conn: &mut SqliteConnection) -> Result<Vec<String>>` method
+    - [ ] 9.6.2 Query all unique sutta UIDs
+    - [ ] 9.6.3 Sort alphabetically
+  - [ ] 9.7 Implement completion data aggregation
+    - [ ] 9.7.1 Add `generate_completions(&self, conn: &mut SqliteConnection) -> Result<CompletionData>` method
+    - [ ] 9.7.2 Call all extraction methods
+    - [ ] 9.7.3 Combine into single CompletionData struct
+    - [ ] 9.7.4 Add metadata (generation date, version, counts)
+  - [ ] 9.8 Implement JSON output
+    - [ ] 9.8.1 Add `write_completions_json(&self, data: CompletionData, output_path: &Path) -> Result<()>` method
+    - [ ] 9.8.2 Serialize CompletionData to JSON
+    - [ ] 9.8.3 Write to file with pretty formatting
+    - [ ] 9.8.4 Validate JSON structure
+  - [ ] 9.9 Implement database insertion
+    - [ ] 9.9.1 Add `insert_completions(&self, conn: &mut SqliteConnection, data: CompletionData) -> Result<()>` method
+    - [ ] 9.9.2 Insert completion data into app_completions table (if exists)
+    - [ ] 9.9.3 Handle updates for existing entries
+  - [ ] 9.10 Implement generation orchestration
+    - [ ] 9.10.1 Add `run(&self, conn: &mut SqliteConnection, output_dir: &Path) -> Result<()>` method
+    - [ ] 9.10.2 Generate completion data
+    - [ ] 9.10.3 Write to JSON file
+    - [ ] 9.10.4 Insert into database
+    - [ ] 9.10.5 Add progress reporting
+  - [ ] 9.11 Write tests
+    - [ ] 9.11.1 Add test for title extraction with sample data
+    - [ ] 9.11.2 Add test for Pali word extraction and filtering
+    - [ ] 9.11.3 Add test for JSON serialization
+    - [ ] 9.11.4 Add integration test for complete generation
+
+- [ ] 10.0 Update main bootstrap orchestration and add TODO comments
+  - [ ] 10.1 Refactor `cli/src/bootstrap.rs`
+    - [ ] 10.1.1 Add imports for all new bootstrap modules
+    - [ ] 10.1.2 Update `bootstrap()` function to use new modular structure
+    - [ ] 10.1.3 Remove old copy-database code
+    - [ ] 10.1.4 Add configuration options for selective import
+  - [ ] 10.2 Implement orchestrated import flow
+    - [ ] 10.2.1 Add `run_bootstrap_process(config: BootstrapConfig) -> Result<()>` function
+    - [ ] 10.2.2 Step 1: Create appdata database from scratch
+    - [ ] 10.2.3 Step 2: Import DPD dictionary (already implemented)
+    - [ ] 10.2.4 Step 3: Import Dhammatalks.org suttas
+    - [ ] 10.2.5 Step 4: Import Dhammapada Munindo
+    - [ ] 10.2.6 Step 5: Import Dhammapada Tipitaka.net
+    - [ ] 10.2.7 Step 6: Import Nyanadipa translations
+    - [ ] 10.2.8 Step 7: Import SuttaCentral with ArangoDB
+    - [ ] 10.2.9 Step 8: Import Buddha Ujja Hungarian translations
+    - [ ] 10.2.10 Step 9: Generate completions data
+    - [ ] 10.2.11 Add error handling and logging for each step
+    - [ ] 10.2.12 Add overall progress reporting
+  - [ ] 10.3 Add configuration structure
+    - [ ] 10.3.1 Define `BootstrapConfig` struct with options for each importer
+    - [ ] 10.3.2 Add `enable_suttacentral: bool` flag
+    - [ ] 10.3.3 Add `enable_dhammatalks: bool` flag
+    - [ ] 10.3.4 Add `enable_buddha_ujja: bool` flag
+    - [ ] 10.3.5 Add `languages: Vec<Language>` filter
+    - [ ] 10.3.6 Add `output_path: PathBuf` for database location
+    - [ ] 10.3.7 Add `resource_path: PathBuf` for source data
+  - [ ] 10.4 Add CLI argument parsing
+    - [ ] 10.4.1 Update main.rs to accept bootstrap flags
+    - [ ] 10.4.2 Add `--skip-suttacentral` flag
+    - [ ] 10.4.3 Add `--skip-dhammatalks` flag
+    - [ ] 10.4.4 Add `--only <provider>` flag to import single provider
+    - [ ] 10.4.5 Add `--languages <lang1,lang2>` flag
+  - [ ] 10.5 Add TODO comments for future enhancements
+    - [ ] 10.5.1 Add TODO for incremental updates
+    - [ ] 10.5.2 Add TODO for parallel import processing
+    - [ ] 10.5.3 Add TODO for remote resource fetching
+    - [ ] 10.5.4 Add TODO for import validation and integrity checks
+    - [ ] 10.5.5 Add TODO for import resume after failure
+  - [ ] 10.6 Update documentation
+    - [ ] 10.6.1 Update README.md with new bootstrap instructions
+    - [ ] 10.6.2 Add examples for common bootstrap scenarios
+    - [ ] 10.6.3 Document configuration options
+    - [ ] 10.6.4 Add troubleshooting section
+  - [ ] 10.7 Write integration tests
+    - [ ] 10.7.1 Add test for complete bootstrap process with minimal data
+    - [ ] 10.7.2 Add test for selective import
+    - [ ] 10.7.3 Add test for error recovery
+    - [ ] 10.7.4 Add test for configuration parsing
