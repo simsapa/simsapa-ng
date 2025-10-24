@@ -184,11 +184,13 @@ impl AppdataBootstrap {
 
         self.create_database()?;
 
-        let mut conn = create_database_connection(&self.output_path)?;
-
-        self.initialize_app_settings(&mut conn)?;
-        self.initialize_providers(&mut conn)?;
-        // FIXME: close db connections
+        {
+            let mut conn = create_database_connection(&self.output_path)?;
+            self.initialize_app_settings(&mut conn)?;
+            self.initialize_providers(&mut conn)?;
+            // Connection will be automatically dropped and closed at the end of this scope
+        }
+        // NOTE: Db connection to appdata must be closed before create_fts5_indexes()
         self.create_fts5_indexes()?;
 
         info!("Appdata database bootstrap completed successfully");
