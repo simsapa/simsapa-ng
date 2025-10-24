@@ -1,4 +1,5 @@
 mod bootstrap;
+mod bootstrap_old;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -250,7 +251,7 @@ fn main() {
         }
 
         Commands::Bootstrap { write_new_dotenv } => {
-            bootstrap::bootstrap(write_new_dotenv)
+            bootstrap_old::bootstrap(write_new_dotenv)
                 .map_err(|e| e.to_string())
         }
     };

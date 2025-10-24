@@ -2,8 +2,8 @@
 
 ## Relevant Files
 
-- `cli/src/bootstrap.rs` - Main bootstrap orchestration, currently copies pre-built appdata.sqlite3
-- `cli/src/bootstrap/mod.rs` - New module for bootstrap utilities and helper functions
+- `cli/src/bootstrap_old.rs` - Old bootstrap orchestration (renamed from bootstrap.rs), currently copies pre-built appdata.sqlite3
+- `cli/src/bootstrap/mod.rs` - New module for bootstrap utilities and helper functions, defines SuttaImporter trait and common helpers
 - `cli/src/bootstrap/appdata.rs` - Main appdata database creation and coordination
 - `cli/src/bootstrap/suttacentral.rs` - SuttaCentral import (Bilara JSON + ArangoDB)
 - `cli/src/bootstrap/dhammatalks_org.rs` - Dhammatalks.org sutta import
@@ -11,8 +11,8 @@
 - `cli/src/bootstrap/dhammapada_tipitaka.rs` - Dhammapada Tipitaka.net import
 - `cli/src/bootstrap/nyanadipa.rs` - Nyanadipa translations import
 - `cli/src/bootstrap/buddha_ujja.rs` - Hungarian Buddha Ujja import
-- `cli/src/bootstrap/completions.rs` - Autocomplete data generation
-- `cli/Cargo.toml` - Add new dependencies (arangors, scraper, html5ever, etc.)
+- `cli/src/bootstrap/completions.rs` - Autocomplete data generation (placeholder)
+- `cli/Cargo.toml` - Updated with new dependencies (arangors, scraper, html5ever, diesel, serde_json, indicatif, etc.)
 - `backend/src/db/appdata_models.rs` - Existing appdata models (Sutta, AppSetting, etc.)
 - `backend/src/db/appdata_schema.rs` - Database schema definitions
 - `backend/src/lib.rs` - Backend library exports
@@ -28,27 +28,27 @@
 ## Tasks
 
 - [ ] 1.0 Set up modular bootstrap infrastructure and helper functions
-  - [ ] 1.1 Create `cli/src/bootstrap/mod.rs` module file
-    - [ ] 1.1.1 Define module structure with public exports
-    - [ ] 1.1.2 Add sub-modules: appdata, suttacentral, dhammatalks_org, dhammapada_munindo, dhammapada_tipitaka, nyanadipa, buddha_ujja, completions
-    - [ ] 1.1.3 Export common types and traits
-  - [ ] 1.2 Implement common helper functions in mod.rs
-    - [ ] 1.2.1 Add `create_database_connection(db_path: &Path) -> Result<SqliteConnection>` helper
-    - [ ] 1.2.2 Add `run_migrations(conn: &mut SqliteConnection) -> Result<()>` helper
-    - [ ] 1.2.3 Add `ensure_directory_exists(path: &Path) -> Result<()>` helper
-    - [ ] 1.2.4 Add `read_json_file<T: DeserializeOwned>(path: &Path) -> Result<T>` helper
-    - [ ] 1.2.5 Add `batch_insert<T>(conn: &mut SqliteConnection, items: Vec<T>, batch_size: usize) -> Result<()>` helper
-  - [ ] 1.3 Define common traits and types
-    - [ ] 1.3.1 Define `SuttaImporter` trait with `import()` method
-    - [ ] 1.3.2 Define `ProgressCallback` type alias for progress reporting
-    - [ ] 1.3.3 Define common error types using anyhow
-  - [ ] 1.4 Update `cli/Cargo.toml` with new dependencies
-    - [ ] 1.4.1 Add arangors for ArangoDB integration
-    - [ ] 1.4.2 Add scraper for HTML parsing
-    - [ ] 1.4.3 Add html5ever for HTML5 parsing
-    - [ ] 1.4.4 Add reqwest for HTTP requests (if needed)
-    - [ ] 1.4.5 Add serde_json for JSON parsing
-    - [ ] 1.4.6 Add indicatif for progress bars
+  - [x] 1.1 Create `cli/src/bootstrap/mod.rs` module file
+    - [x] 1.1.1 Define module structure with public exports
+    - [x] 1.1.2 Add sub-modules: appdata, suttacentral, dhammatalks_org, dhammapada_munindo, dhammapada_tipitaka, nyanadipa, buddha_ujja, completions
+    - [x] 1.1.3 Export common types and traits
+  - [x] 1.2 Implement common helper functions in mod.rs
+    - [x] 1.2.1 Add `create_database_connection(db_path: &Path) -> Result<SqliteConnection>` helper
+    - [x] 1.2.2 Add `run_migrations(conn: &mut SqliteConnection) -> Result<()>` helper
+    - [x] 1.2.3 Add `ensure_directory_exists(path: &Path) -> Result<()>` helper
+    - [x] 1.2.4 Add `read_json_file<T: DeserializeOwned>(path: &Path) -> Result<T>` helper
+    - [x] 1.2.5 Add `batch_insert<T>(conn: &mut SqliteConnection, items: Vec<T>, batch_size: usize) -> Result<()>` helper
+  - [x] 1.3 Define common traits and types
+    - [x] 1.3.1 Define `SuttaImporter` trait with `import()` method
+    - [x] 1.3.2 Define `ProgressCallback` type alias for progress reporting
+    - [x] 1.3.3 Define common error types using anyhow
+  - [x] 1.4 Update `cli/Cargo.toml` with new dependencies
+    - [x] 1.4.1 Add arangors for ArangoDB integration
+    - [x] 1.4.2 Add scraper for HTML parsing
+    - [x] 1.4.3 Add html5ever for HTML5 parsing
+    - [x] 1.4.4 Add reqwest for HTTP requests (if needed)
+    - [x] 1.4.5 Add serde_json for JSON parsing
+    - [x] 1.4.6 Add indicatif for progress bars
 
 - [ ] 2.0 Implement appdata.sqlite3 database creation from scratch
   - [ ] 2.1 Create `cli/src/bootstrap/appdata.rs` file
