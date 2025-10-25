@@ -87,71 +87,76 @@ impl DhammatalksSuttaImporter {
     }
 
     fn extract_title_info(&self, html_text: &str, file_path: &Path) -> Result<(String, String)> {
+        let path_str = file_path.to_string_lossy();
+
         // <title>DN 1 &nbsp;Brahmajāla Sutta | The Brahmā Net</title>
         // <title>DN 33 Saṅgīti Sutta | The Discourse for Reciting Together</title>
         // <title>AN 6:20 &nbsp;Maraṇassati Sutta | Mindfulness of Death (2)</title>
-        let title_re = Regex::new(r"<title>(.+)</title>").unwrap();
+        let title_capture = Regex::new(r"<title>(.+)</title>").unwrap()
+            .captures(html_text)
+            .ok_or_else(|| anyhow::anyhow!("No <title> found in HTML"))?;
+        let title_text = title_capture[1].trim();
 
-        let title_match = title_re.captures(html_text)
-            .ok_or_else(|| anyhow::anyhow!("No title found"))?;
+        // Extract title - try different patterns based on path
+        let title = {
+            // First, try path-specific patterns
+            let m = if path_str.contains("/Ud/") {
+                // 2 Appāyuka Sutta | Short-lived
+                let re = Regex::new(r"^.*\|(.+)").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            } else if path_str.contains("/KN/") {
+                // Sn 5:4 &#160;Mettagū’s Questions
+                // Khp 6 &#160;Ratana Sutta — Treasures
+                let re = Regex::new(r"^.*&#160;(.+)").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            } else {
+                // AN 6:20
+                let re = Regex::new(r"^\w+ +[\d:]+[\W](.+)\|").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            };
 
-        let title_text = &title_match[1];
-
-        let path_str = file_path.to_string_lossy();
-
-        let title = if path_str.contains("/Ud/") {
-            // 2 Appāyuka Sutta | Short-lived
-            let re = Regex::new(r"^.*\|(.+)").unwrap();
-            re.captures(title_text)
-                .map(|c| c[1].trim().to_string())
-                .unwrap_or_else(|| title_text.to_string())
-
-        } else if path_str.contains("/KN/") {
-            // Sn 5:4 &#160;Mettagū’s Questions
-            // Khp 6 &#160;Ratana Sutta — Treasures
-            let re = Regex::new(r"^.*&#160;(.+)").unwrap();
-            re.captures(title_text)
-                .map(|c| c[1].trim().to_string())
-                .unwrap_or_else(|| title_text.to_string())
-
-        } else {
-            // AN 6:20
-            let re = Regex::new(r"^\w+ +[\d:]+[\W](.+)\|").unwrap();
-            re.captures(title_text)
-                .map(|c| c[1].trim().to_string())
-                .or_else(|| {
-                    let re = Regex::new(r"^[^:]+:(.+)").unwrap();
-                    re.captures(title_text).map(|c| c[1].trim().to_string())
-                })
-                .or_else(|| {
-                    let re = Regex::new(r"^.*&nbsp;(.+)").unwrap();
-                    re.captures(title_text).map(|c| c[1].trim().to_string())
-                })
-                .or_else(|| {
-                    let re = Regex::new(r"^.*&#160;(.+)").unwrap();
-                    re.captures(title_text).map(|c| c[1].trim().to_string())
-                })
-                .or_else(|| {
-                    let re = Regex::new(r"^\d+ *(.+)").unwrap();
-                    re.captures(title_text).map(|c| c[1].trim().to_string())
-                })
-                .unwrap_or_else(|| title_text.to_string())
+            // If path-specific pattern didn't match, try fallback patterns
+            m.or_else(|| {
+                // Dhp XVII : Anger
+                let re = Regex::new(r"^[^:]+:(.+)").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            })
+            .or_else(|| {
+                // Dhp I &nbsp; Pairs
+                let re = Regex::new(r"^.*&nbsp;(.+)").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            })
+            .or_else(|| {
+                let re = Regex::new(r"^.*&#160;(.+)").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            })
+            .or_else(|| {
+                // 82 Itivuttaka
+                let re = Regex::new(r"^\d+ *(.+)").unwrap();
+                re.captures(title_text).map(|c| c[1].trim().to_string())
+            })
+            .unwrap_or_else(|| title_text.to_string())
         };
 
+        // Apply string substitutions to clean up the title
         let title = title.replace("&nbsp;", "").replace("&amp;", "and");
         let title = consistent_niggahita(Some(title));
 
+        // Extract Pali title
         let title_pali = if path_str.contains("/Ud/") {
+            // 2 Appāyuka Sutta | Short-lived
             let re = Regex::new(r"\d+ +(.+)\|").unwrap();
             re.captures(title_text)
-                .map(|c| consistent_niggahita(Some(c[1].trim().to_string())))
+                .map(|c| c[1].to_string())
                 .unwrap_or_default()
         } else {
             let re = Regex::new(r"\| *(.+)$").unwrap();
             re.captures(title_text)
-                .map(|c| consistent_niggahita(Some(c[1].trim().to_string())))
+                .map(|c| c[1].to_string())
                 .unwrap_or_default()
         };
+
+        let title_pali = consistent_niggahita(Some(title_pali.trim().to_string()));
 
         Ok((title, title_pali))
     }
