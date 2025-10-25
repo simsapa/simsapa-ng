@@ -17,6 +17,8 @@ Simsapa-*.AppImage
 appimage-tools/
 Simsapa.AppDir/
 
+simsapa-legacy/
+
 # Emacs temp files
 *~
 \#*\#
