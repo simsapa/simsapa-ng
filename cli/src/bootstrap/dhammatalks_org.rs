@@ -9,6 +9,10 @@ use regex::Regex;
 use tracing::{info, warn};
 use indicatif::{ProgressBar, ProgressStyle};
 
+use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
+use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
+use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
+
 use super::SuttaImporter;
 
 #[derive(Debug, Clone)]
@@ -27,36 +31,6 @@ struct SuttaData {
 
 lazy_static::lazy_static! {
     static ref RE_SUTTA_HTML_NAME: Regex = Regex::new(r"(DN|MN|SN|AN|Ch|iti|khp|StNp|thag|thig|ud)[\d_]+\.html").unwrap();
-    static ref DHP_CHAPTERS_TO_RANGE: HashMap<u32, (u32, u32)> = {
-        let mut m = HashMap::new();
-        m.insert(1, (1, 20));
-        m.insert(2, (21, 32));
-        m.insert(3, (33, 43));
-        m.insert(4, (44, 59));
-        m.insert(5, (60, 75));
-        m.insert(6, (76, 89));
-        m.insert(7, (90, 99));
-        m.insert(8, (100, 115));
-        m.insert(9, (116, 128));
-        m.insert(10, (129, 145));
-        m.insert(11, (146, 156));
-        m.insert(12, (157, 166));
-        m.insert(13, (167, 178));
-        m.insert(14, (179, 196));
-        m.insert(15, (197, 208));
-        m.insert(16, (209, 220));
-        m.insert(17, (221, 234));
-        m.insert(18, (235, 255));
-        m.insert(19, (256, 272));
-        m.insert(20, (273, 289));
-        m.insert(21, (290, 305));
-        m.insert(22, (306, 319));
-        m.insert(23, (320, 333));
-        m.insert(24, (334, 359));
-        m.insert(25, (360, 382));
-        m.insert(26, (383, 423));
-        m
-    };
 }
 
 pub struct DhammatalksSuttaImporter {
@@ -76,6 +50,7 @@ impl DhammatalksSuttaImporter {
         let khp_re = Regex::new(r"khp(\d)").unwrap();
         ref_str = khp_re.replace_all(&ref_str, "kp$1").to_string();
 
+        // remove leading zeros, dn02
         let leading_zeros_re = Regex::new(r"([a-z.])0+").unwrap();
         ref_str = leading_zeros_re.replace_all(&ref_str, "$1").to_string();
 
@@ -93,49 +68,6 @@ impl DhammatalksSuttaImporter {
         ref_str
     }
 
-    fn uid_to_ref(&self, uid: &str) -> String {
-        let re = Regex::new(r"^([a-z]+)([0-9])").unwrap();
-        let mut ref_str = re.replace(uid, "$1 $2").to_string();
-
-        let replacements = [
-            ("dn ", "DN "),
-            ("mn ", "MN "),
-            ("sn ", "SN "),
-            ("an ", "AN "),
-        ];
-
-        for (from, to) in &replacements {
-            ref_str = ref_str.replace(from, to);
-        }
-
-        if !ref_str.is_empty() {
-            let first_char = ref_str.chars().next().unwrap().to_uppercase().to_string();
-            ref_str = first_char + &ref_str[1..];
-        }
-
-        ref_str
-    }
-
-    fn uid_to_nikaya(&self, uid: &str) -> String {
-        let re = Regex::new(r"^([a-z]+).*").unwrap();
-        if let Some(caps) = re.captures(uid) {
-            caps[1].to_string()
-        } else {
-            "unknown".to_string()
-        }
-    }
-
-    fn consistent_niggahita(&self, text: &str) -> String {
-        text.replace("ṁ", "ṃ")
-    }
-
-    fn compact_rich_text(&self, html: &str) -> String {
-        let fragment = Html::parse_fragment(html);
-        let text = fragment.root_element().text().collect::<Vec<_>>().join(" ");
-        let whitespace_re = Regex::new(r"\s+").unwrap();
-        whitespace_re.replace_all(&text, " ").trim().to_string()
-    }
-
     fn parse_html_file(&self, file_path: &Path) -> Result<Html> {
         let html_text = fs::read_to_string(file_path)
             .with_context(|| format!("Failed to read HTML file: {}", file_path.display()))?;
@@ -147,6 +79,7 @@ impl DhammatalksSuttaImporter {
 
         if let Some(element) = html.select(&selector).next() {
             let content_html = element.inner_html();
+            // FIXME Replace sutta links with internal ssp://
             Ok(content_html)
         } else {
             Err(anyhow::anyhow!("No #sutta element found in HTML"))
@@ -154,6 +87,9 @@ impl DhammatalksSuttaImporter {
     }
 
     fn extract_title_info(&self, html_text: &str, file_path: &Path) -> Result<(String, String)> {
+        // <title>DN 1 &nbsp;Brahmajāla Sutta | The Brahmā Net</title>
+        // <title>DN 33 Saṅgīti Sutta | The Discourse for Reciting Together</title>
+        // <title>AN 6:20 &nbsp;Maraṇassati Sutta | Mindfulness of Death (2)</title>
         let title_re = Regex::new(r"<title>(.+)</title>").unwrap();
 
         let title_match = title_re.captures(html_text)
@@ -164,16 +100,22 @@ impl DhammatalksSuttaImporter {
         let path_str = file_path.to_string_lossy();
 
         let title = if path_str.contains("/Ud/") {
+            // 2 Appāyuka Sutta | Short-lived
             let re = Regex::new(r"^.*\|(.+)").unwrap();
             re.captures(title_text)
                 .map(|c| c[1].trim().to_string())
                 .unwrap_or_else(|| title_text.to_string())
+
         } else if path_str.contains("/KN/") {
+            // Sn 5:4 &#160;Mettagū’s Questions
+            // Khp 6 &#160;Ratana Sutta — Treasures
             let re = Regex::new(r"^.*&#160;(.+)").unwrap();
             re.captures(title_text)
                 .map(|c| c[1].trim().to_string())
                 .unwrap_or_else(|| title_text.to_string())
+
         } else {
+            // AN 6:20
             let re = Regex::new(r"^\w+ +[\d:]+[\W](.+)\|").unwrap();
             re.captures(title_text)
                 .map(|c| c[1].trim().to_string())
@@ -197,17 +139,17 @@ impl DhammatalksSuttaImporter {
         };
 
         let title = title.replace("&nbsp;", "").replace("&amp;", "and");
-        let title = self.consistent_niggahita(&title);
+        let title = consistent_niggahita(Some(title));
 
         let title_pali = if path_str.contains("/Ud/") {
             let re = Regex::new(r"\d+ +(.+)\|").unwrap();
             re.captures(title_text)
-                .map(|c| self.consistent_niggahita(c[1].trim()))
+                .map(|c| consistent_niggahita(Some(c[1].trim().to_string())))
                 .unwrap_or_default()
         } else {
             let re = Regex::new(r"\| *(.+)$").unwrap();
             re.captures(title_text)
-                .map(|c| self.consistent_niggahita(c[1].trim()))
+                .map(|c| consistent_niggahita(Some(c[1].trim().to_string())))
                 .unwrap_or_default()
         };
 
@@ -217,12 +159,6 @@ impl DhammatalksSuttaImporter {
     fn parse_sutta(&self, file_path: &Path) -> Result<SuttaData> {
         let html_text = fs::read_to_string(file_path)
             .with_context(|| format!("Failed to read file: {}", file_path.display()))?;
-
-        let html = Html::parse_document(&html_text);
-
-        let content_html = self.extract_sutta_content(&html)?;
-        let content_html = self.consistent_niggahita(&content_html);
-        let content_html = format!("<div class=\"dhammatalks_org\">{}</div>", content_html);
 
         let (title, title_pali) = self.extract_title_info(&html_text, file_path)?;
 
@@ -240,10 +176,15 @@ impl DhammatalksSuttaImporter {
         let author = "thanissaro";
         let uid = format!("{}/{}/{}", ref_str, lang, author);
 
-        let sutta_ref = self.uid_to_ref(&ref_str);
-        let nikaya = self.uid_to_nikaya(&ref_str);
+        let sutta_ref = uid_to_ref(&ref_str);
+        let nikaya = uid_to_nikaya(&ref_str);
 
-        let content_plain = self.compact_rich_text(&content_html);
+        let html = Html::parse_document(&html_text);
+        let content_html = self.extract_sutta_content(&html)?;
+        let content_html = consistent_niggahita(Some(content_html));
+        let content_html = format!("<div class=\"dhammatalks_org\">{}</div>", content_html);
+
+        let content_plain = compact_rich_text(&content_html);
 
         Ok(SuttaData {
             uid,
@@ -404,25 +345,5 @@ mod tests {
         assert_eq!(importer.ref_notation_convert("MN_02"), "mn.2");
         assert_eq!(importer.ref_notation_convert("stnp1_1"), "snp1.1");
         assert_eq!(importer.ref_notation_convert("khp1"), "kp1");
-    }
-
-    #[test]
-    fn test_uid_to_ref() {
-        let importer = DhammatalksSuttaImporter::new(PathBuf::new());
-
-        assert_eq!(importer.uid_to_ref("dn1"), "DN 1");
-        assert_eq!(importer.uid_to_ref("mn2"), "MN 2");
-        assert_eq!(importer.uid_to_ref("sn12.23"), "SN 12.23");
-        assert_eq!(importer.uid_to_ref("an4.10"), "AN 4.10");
-    }
-
-    #[test]
-    fn test_uid_to_nikaya() {
-        let importer = DhammatalksSuttaImporter::new(PathBuf::new());
-
-        assert_eq!(importer.uid_to_nikaya("dn1"), "dn");
-        assert_eq!(importer.uid_to_nikaya("mn2"), "mn");
-        assert_eq!(importer.uid_to_nikaya("sn12.23"), "sn");
-        assert_eq!(importer.uid_to_nikaya("an4.10"), "an");
     }
 }

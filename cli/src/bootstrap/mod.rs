@@ -1,3 +1,4 @@
+pub mod helpers;
 pub mod appdata;
 pub mod suttacentral;
 pub mod dhammatalks_org;
