@@ -102,12 +102,6 @@ impl DhammatalksSuttaImporter {
         ref_str
     }
 
-    fn parse_html_file(&self, file_path: &Path) -> Result<Html> {
-        let html_text = fs::read_to_string(file_path)
-            .with_context(|| format!("Failed to read HTML file: {}", file_path.display()))?;
-        Ok(Html::parse_document(&html_text))
-    }
-
     fn href_sutta_html_to_ssp(&self, href: &str) -> String {
         // Extract anchor if present
         let anchor_re = Regex::new(r"#.+").unwrap();

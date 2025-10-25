@@ -1,33 +1,15 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 use anyhow::{Result, Context};
 use diesel::prelude::*;
-use serde::{Deserialize, Serialize};
-use tracing::{info, warn};
+use tracing::{info};
 
 use simsapa_backend::db::appdata_models::NewAppSetting;
 use simsapa_backend::db::appdata_schema::app_settings;
 
-use crate::bootstrap::{create_database_connection, run_migrations, ensure_directory_exists, read_json_file};
-
-#[derive(Debug, Deserialize, Serialize)]
-struct ProviderModel {
-    model_name: String,
-    enabled: bool,
-    removable: bool,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct Provider {
-    name: String,
-    description: String,
-    enabled: bool,
-    api_key_env_var_name: String,
-    api_key_value: Option<String>,
-    models: Vec<ProviderModel>,
-}
+use crate::bootstrap::{create_database_connection, run_migrations, ensure_directory_exists};
 
 pub struct AppdataBootstrap {
     output_path: PathBuf,
@@ -63,20 +45,13 @@ impl AppdataBootstrap {
     }
 
     pub fn initialize_app_settings(&self, conn: &mut SqliteConnection) -> Result<()> {
-        info!("Initializing app settings");
+        info!("Initializing app settings with default values");
 
+        // NOTE: Not writing AppSettings to appdata.sqlite3. It will be written to userdata.sqlite3 on the first run.
         let settings = vec![
-            NewAppSetting {
-                key: "app_version",
-                value: Some("0.1.0"),
-            },
             NewAppSetting {
                 key: "db_version",
                 value: Some("1"),
-            },
-            NewAppSetting {
-                key: "first_run",
-                value: Some("true"),
             },
         ];
 
@@ -84,35 +59,7 @@ impl AppdataBootstrap {
             .values(&settings)
             .execute(conn)?;
 
-        info!("App settings initialized with {} entries", settings.len());
-        Ok(())
-    }
-
-    pub fn initialize_providers(&self, conn: &mut SqliteConnection) -> Result<()> {
-        info!("Initializing providers from providers.json");
-
-        let providers_json_path = Path::new("assets/providers.json");
-        
-        if !providers_json_path.exists() {
-            warn!("providers.json not found at {:?}, skipping provider initialization", providers_json_path);
-            return Ok(());
-        }
-
-        let providers: Vec<Provider> = read_json_file(providers_json_path)?;
-        
-        for provider in &providers {
-            let provider_json = serde_json::to_string(provider)?;
-            let setting = NewAppSetting {
-                key: &format!("provider_{}", provider.name.to_lowercase().replace(" ", "_")),
-                value: Some(&provider_json),
-            };
-
-            diesel::insert_into(app_settings::table)
-                .values(&setting)
-                .execute(conn)?;
-        }
-
-        info!("Providers initialized with {} entries", providers.len());
+        info!("App settings initialized with default values");
         Ok(())
     }
 
@@ -187,7 +134,6 @@ impl AppdataBootstrap {
         {
             let mut conn = create_database_connection(&self.output_path)?;
             self.initialize_app_settings(&mut conn)?;
-            self.initialize_providers(&mut conn)?;
             // Connection will be automatically dropped and closed at the end of this scope
         }
         // NOTE: Db connection to appdata must be closed before create_fts5_indexes()

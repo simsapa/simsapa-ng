@@ -7,7 +7,8 @@ use chrono::{DateTime, Local};
 use simsapa_backend::{init_app_data, get_create_simsapa_dir, get_create_simsapa_app_assets_path};
 
 use crate::import_stardict_dictionary;
-use crate::bootstrap::{clean_and_create_folders, dpd_migrate};
+use crate::bootstrap::clean_and_create_folders;
+use crate::bootstrap::dpd::dpd_migrate;
 
 pub fn bootstrap(write_new_dotenv: bool) -> Result<()> {
     let start_time: DateTime<Local> = Local::now();
