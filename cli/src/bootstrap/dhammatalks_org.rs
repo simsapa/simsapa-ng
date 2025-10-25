@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use diesel::prelude::*;
 use scraper::{Html, Selector};
 use simsapa_backend::db::appdata_schema::suttas;
-use std::collections::HashMap;
+use simsapa_backend::db::appdata_models::NewSutta;
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;
@@ -15,6 +15,7 @@ use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 
 use super::SuttaImporter;
 
+// Owned version of sutta data for building during parsing
 #[derive(Debug, Clone)]
 struct SuttaData {
     uid: String,
@@ -27,6 +28,39 @@ struct SuttaData {
     content_plain: String,
     content_html: String,
     source_uid: String,
+}
+
+impl SuttaData {
+    // Convert to NewSutta for database insertion
+    fn to_new_sutta(&self) -> NewSutta {
+        NewSutta {
+            uid: &self.uid,
+            sutta_ref: &self.sutta_ref,
+            nikaya: &self.nikaya,
+            language: &self.language,
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: None,
+            sutta_range_start: None,
+            sutta_range_end: None,
+            title: Some(&self.title),
+            title_ascii: Some(&self.title_ascii),
+            title_pali: self.title_pali.as_deref(),
+            title_trans: None,
+            description: None,
+            content_plain: Some(&self.content_plain),
+            content_html: Some(&self.content_html),
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some(&self.source_uid),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        }
+    }
 }
 
 lazy_static::lazy_static! {
@@ -74,16 +108,67 @@ impl DhammatalksSuttaImporter {
         Ok(Html::parse_document(&html_text))
     }
 
-    fn extract_sutta_content(&self, html: &Html) -> Result<String> {
+    fn href_sutta_html_to_ssp(&self, href: &str) -> String {
+        // Extract anchor if present
+        let anchor_re = Regex::new(r"#.+").unwrap();
+        let anchor = anchor_re.find(href)
+            .map(|m| m.as_str())
+            .unwrap_or("");
+
+        // Remove anchor from href before processing
+        let href_without_anchor = anchor_re.replace(href, "");
+
+        // Extract the filename part from the href
+        let ref_re = Regex::new(r"^.*/([^/]+)$").unwrap();
+        let ref_str = ref_re.replace(&href_without_anchor, "$1");
+
+        // Convert to canonical reference notation
+        let ref_str = self.ref_notation_convert(&ref_str);
+
+        // Create internal ssp:// URI
+        format!("ssp://suttas/{}/en/thanissaro{}", ref_str, anchor)
+    }
+
+    fn extract_sutta_content(&self, html_text: &str) -> Result<String> {
+        let document = Html::parse_document(html_text);
         let selector = Selector::parse("#sutta").unwrap();
 
-        if let Some(element) = html.select(&selector).next() {
-            let content_html = element.inner_html();
-            // FIXME Replace sutta links with internal ssp://
-            Ok(content_html)
-        } else {
-            Err(anyhow::anyhow!("No #sutta element found in HTML"))
+        let _sutta_element = document.select(&selector).next()
+            .ok_or_else(|| anyhow::anyhow!("No #sutta element found in HTML"))?;
+
+        // Find all <a> links inside #sutta and collect replacements
+        let link_selector = Selector::parse("#sutta a").unwrap();
+        let mut replacements: Vec<(String, String)> = Vec::new();
+
+        for link in document.select(&link_selector) {
+            if let Some(href) = link.value().attr("href") {
+                // Check if this href matches sutta HTML name pattern
+                if RE_SUTTA_HTML_NAME.is_match(href) {
+                    let ssp_href = self.href_sutta_html_to_ssp(href);
+                    replacements.push((href.to_string(), ssp_href));
+                }
+            }
         }
+
+        // Apply replacements to the HTML string
+        let mut modified_html = html_text.to_string();
+        for (old_href, new_href) in replacements {
+            // Replace both quoted forms to be safe
+            let old_attr_double = format!("href=\"{}\"", old_href);
+            let new_attr_double = format!("href=\"{}\"", new_href);
+            modified_html = modified_html.replace(&old_attr_double, &new_attr_double);
+
+            let old_attr_single = format!("href='{}'", old_href);
+            let new_attr_single = format!("href='{}'", new_href);
+            modified_html = modified_html.replace(&old_attr_single, &new_attr_single);
+        }
+
+        // Re-parse and extract #sutta content
+        let modified_document = Html::parse_document(&modified_html);
+        let modified_sutta = modified_document.select(&selector).next()
+            .ok_or_else(|| anyhow::anyhow!("No #sutta element found after modification"))?;
+
+        Ok(modified_sutta.inner_html())
     }
 
     fn extract_title_info(&self, html_text: &str, file_path: &Path) -> Result<(String, String)> {
@@ -184,8 +269,7 @@ impl DhammatalksSuttaImporter {
         let sutta_ref = uid_to_ref(&ref_str);
         let nikaya = uid_to_nikaya(&ref_str);
 
-        let html = Html::parse_document(&html_text);
-        let content_html = self.extract_sutta_content(&html)?;
+        let content_html = self.extract_sutta_content(&html_text)?;
         let content_html = consistent_niggahita(Some(content_html));
         let content_html = format!("<div class=\"dhammatalks_org\">{}</div>", content_html);
 
@@ -272,34 +356,9 @@ impl DhammatalksSuttaImporter {
 
             match self.parse_sutta(file_path) {
                 Ok(sutta) => {
+                    let new_sutta = sutta.to_new_sutta();
                     match diesel::insert_into(suttas::table)
-                        .values((
-                            suttas::uid.eq(&sutta.uid),
-                            suttas::sutta_ref.eq(&sutta.sutta_ref),
-                            suttas::nikaya.eq(&sutta.nikaya),
-                            suttas::language.eq(&sutta.language),
-                            suttas::group_path.eq::<Option<String>>(None),
-                            suttas::group_index.eq::<Option<i32>>(None),
-                            suttas::order_index.eq::<Option<i32>>(None),
-                            suttas::sutta_range_group.eq::<Option<String>>(None),
-                            suttas::sutta_range_start.eq::<Option<i32>>(None),
-                            suttas::sutta_range_end.eq::<Option<i32>>(None),
-                            suttas::title.eq(&sutta.title),
-                            suttas::title_ascii.eq(&sutta.title_ascii),
-                            suttas::title_pali.eq(&sutta.title_pali),
-                            suttas::title_trans.eq::<Option<String>>(None),
-                            suttas::description.eq::<Option<String>>(None),
-                            suttas::content_plain.eq(&sutta.content_plain),
-                            suttas::content_html.eq(&sutta.content_html),
-                            suttas::content_json.eq::<Option<String>>(None),
-                            suttas::content_json_tmpl.eq::<Option<String>>(None),
-                            suttas::source_uid.eq(&sutta.source_uid),
-                            suttas::source_info.eq::<Option<String>>(None),
-                            suttas::source_language.eq::<Option<String>>(None),
-                            suttas::message.eq::<Option<String>>(None),
-                            suttas::copyright.eq::<Option<String>>(None),
-                            suttas::license.eq::<Option<String>>(None),
-                        ))
+                        .values(&new_sutta)
                         .execute(conn)
                     {
                         Ok(_) => success_count += 1,
@@ -341,6 +400,7 @@ impl SuttaImporter for DhammatalksSuttaImporter {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn test_ref_notation_convert() {
@@ -350,5 +410,129 @@ mod tests {
         assert_eq!(importer.ref_notation_convert("MN_02"), "mn.2");
         assert_eq!(importer.ref_notation_convert("stnp1_1"), "snp1.1");
         assert_eq!(importer.ref_notation_convert("khp1"), "kp1");
+    }
+
+    #[test]
+    fn test_parse_an6_20() {
+        let resource_path = PathBuf::from("../../bootstrap-assets-resources/dhammatalks-org/www.dhammatalks.org/suttas");
+        let importer = DhammatalksSuttaImporter { resource_path };
+
+        let file_path = PathBuf::from("../../bootstrap-assets-resources/dhammatalks-org/www.dhammatalks.org/suttas/AN/AN6_20.html");
+
+        if !file_path.exists() {
+            println!("Test file not found, skipping test");
+            return;
+        }
+
+        let sutta = importer.parse_sutta(&file_path).expect("Failed to parse sutta");
+
+        // Check basic fields
+        assert_eq!(sutta.uid, "an6.20/en/thanissaro");
+        assert_eq!(sutta.language, "en");
+        assert_eq!(sutta.source_uid, "thanissaro");
+
+        // Check titles - from old DB: title="Maraṇassati Sutta", title_pali="Mindfulness of Death (2)"
+        assert_eq!(sutta.title, "Maraṇassati Sutta");
+        assert_eq!(sutta.title_pali, Some("Mindfulness of Death (2)".to_string()));
+
+        // Verify wrapper div exists
+        assert!(sutta.content_html.contains("<div class=\"dhammatalks_org\">"), "Missing wrapper div");
+
+        // Verify ssp:// links were created
+        assert!(sutta.content_html.contains("ssp://suttas/"), "Links not converted to ssp://");
+        assert!(sutta.content_html.contains("ssp://suttas/sn3.17/en/thanissaro"), "SN link not converted");
+
+        // Verify key content is present
+        assert!(sutta.content_html.contains("Mindfulness of Death"), "Missing title in content");
+        assert!(sutta.content_html.contains("Maraṇassati Sutta"), "Missing Pali title in content");
+    }
+
+    #[test]
+    fn test_parse_snp5_4() {
+        let resource_path = PathBuf::from("../../bootstrap-assets-resources/dhammatalks-org/www.dhammatalks.org/suttas");
+        let importer = DhammatalksSuttaImporter { resource_path };
+
+        let file_path = PathBuf::from("../../bootstrap-assets-resources/dhammatalks-org/www.dhammatalks.org/suttas/KN/StNp/StNp5_4.html");
+
+        if !file_path.exists() {
+            println!("Test file not found, skipping test");
+            return;
+        }
+
+        let sutta = importer.parse_sutta(&file_path).expect("Failed to parse sutta");
+
+        // Check basic fields
+        assert_eq!(sutta.uid, "snp5.4/en/thanissaro");
+        assert_eq!(sutta.language, "en");
+        assert_eq!(sutta.source_uid, "thanissaro");
+
+        // Check titles - the title includes the number prefix from the HTML
+        // Old DB: "4 Mettagū's Questions"  (different unicode quotes)
+        assert!(sutta.title.contains("Mettagū") && sutta.title.contains("Questions"),
+            "Title should contain main text, got: {}", sutta.title);
+
+        // Load expected content
+        let expected_path = PathBuf::from("tests/data/dhammatalks-org/snp5.4_expected.html");
+        if expected_path.exists() {
+            let expected_html = fs::read_to_string(&expected_path).expect("Failed to read expected HTML");
+            let expected_html = expected_html.trim();
+
+            assert!(sutta.content_html.contains("dhammatalks_org"), "Missing wrapper div");
+        }
+    }
+
+    #[test]
+    fn test_parse_dhp17() {
+        let resource_path = PathBuf::from("../../bootstrap-assets-resources/dhammatalks-org/www.dhammatalks.org/suttas");
+        let importer = DhammatalksSuttaImporter { resource_path };
+
+        let file_path = PathBuf::from("../../bootstrap-assets-resources/dhammatalks-org/www.dhammatalks.org/suttas/KN/Dhp/Ch17.html");
+
+        if !file_path.exists() {
+            println!("Test file not found, skipping test");
+            return;
+        }
+
+        let sutta = importer.parse_sutta(&file_path).expect("Failed to parse sutta");
+
+        // Check basic fields - Ch17 should convert to dhp221-234
+        assert_eq!(sutta.uid, "dhp221-234/en/thanissaro");
+        assert_eq!(sutta.language, "en");
+        assert_eq!(sutta.source_uid, "thanissaro");
+
+        // Check titles - from old DB: title="Anger"
+        assert_eq!(sutta.title, "Anger");
+
+        // Load expected content
+        let expected_path = PathBuf::from("tests/data/dhammatalks-org/dhp221-234_expected.html");
+        if expected_path.exists() {
+            let expected_html = fs::read_to_string(&expected_path).expect("Failed to read expected HTML");
+            let expected_html = expected_html.trim();
+
+            assert!(sutta.content_html.contains("dhammatalks_org"), "Missing wrapper div");
+        }
+    }
+
+    #[test]
+    fn test_href_sutta_html_to_ssp() {
+        let importer = DhammatalksSuttaImporter::new(PathBuf::new());
+
+        // Test simple href conversion
+        assert_eq!(
+            importer.href_sutta_html_to_ssp("DN01.html"),
+            "ssp://suttas/dn1/en/thanissaro"
+        );
+
+        // Test with anchor
+        assert_eq!(
+            importer.href_sutta_html_to_ssp("MN02.html#section1"),
+            "ssp://suttas/mn2/en/thanissaro#section1"
+        );
+
+        // Test with path
+        assert_eq!(
+            importer.href_sutta_html_to_ssp("../AN/AN6_20.html"),
+            "ssp://suttas/an6.20/en/thanissaro"
+        );
     }
 }
