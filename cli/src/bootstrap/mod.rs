@@ -24,9 +24,10 @@ use simsapa_backend::{get_create_simsapa_dir, get_create_simsapa_app_assets_path
 pub use appdata::AppdataBootstrap;
 pub use dhammatalks_org::DhammatalksSuttaImporter;
 pub use dhammapada_munindo::DhammapadaMunindoImporter;
+pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
+pub use helpers::SuttaData;
 // TODO: Uncomment these as the modules are implemented
 // pub use suttacentral::SuttaCentralImporter;
-// pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
 // pub use nyanadipa::NyanadipaImporter;
 // pub use buddha_ujja::BuddhaUjjaImporter;
 // pub use completions::CompletionsGenerator;
@@ -186,7 +187,18 @@ RELEASE_CHANNEL=development
         }
     }
 
-    tracing::info!("TODO: Import suttas from dhammapada-tipitaka-net");
+    // Import Dhammapada from Tipitaka.net (Daw Mya Tin translation)
+    {
+        let dhammapada_tipitaka_path = bootstrap_assets_dir.join("dhammapada-tipitaka-net");
+        if dhammapada_tipitaka_path.exists() {
+            tracing::info!("Importing suttas from dhammapada-tipitaka-net");
+            let mut importer = DhammapadaTipitakaImporter::new(dhammapada_tipitaka_path);
+            importer.import(&mut conn)?;
+        } else {
+            tracing::warn!("Dhammapada Tipitaka.net resource path not found, skipping");
+        }
+    }
+
     tracing::info!("TODO: Import suttas from nyanadipa");
     tracing::info!("TODO: Import suttas from SuttaCentral");
     tracing::info!("TODO: Import suttas from Buddha Ujja (Hungarian)");

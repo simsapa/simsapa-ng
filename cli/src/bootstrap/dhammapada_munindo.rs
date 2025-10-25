@@ -2,64 +2,18 @@ use anyhow::{Context, Result};
 use diesel::prelude::*;
 use scraper::{Html, Selector};
 use simsapa_backend::db::appdata_schema::suttas;
-use simsapa_backend::db::appdata_models::NewSutta;
+use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
+use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text, pali_to_ascii};
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;
 use tracing::{info, warn};
 use indicatif::{ProgressBar, ProgressStyle};
 
-use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
-use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text, pali_to_ascii};
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
+use crate::bootstrap::SuttaData;
 
 use super::SuttaImporter;
-
-#[derive(Debug, Clone)]
-struct SuttaData {
-    uid: String,
-    sutta_ref: String,
-    nikaya: String,
-    language: String,
-    title: String,
-    title_ascii: String,
-    title_pali: String,
-    content_plain: String,
-    content_html: String,
-    source_uid: String,
-}
-
-impl SuttaData {
-    fn to_new_sutta(&self) -> NewSutta {
-        NewSutta {
-            uid: &self.uid,
-            sutta_ref: &self.sutta_ref,
-            nikaya: &self.nikaya,
-            language: &self.language,
-            group_path: None,
-            group_index: None,
-            order_index: None,
-            sutta_range_group: None,
-            sutta_range_start: None,
-            sutta_range_end: None,
-            title: Some(&self.title),
-            title_ascii: Some(&self.title_ascii),
-            title_pali: if self.title_pali.is_empty() { None } else { Some(&self.title_pali) },
-            title_trans: None,
-            description: None,
-            content_plain: Some(&self.content_plain),
-            content_html: Some(&self.content_html),
-            content_json: None,
-            content_json_tmpl: None,
-            source_uid: Some(&self.source_uid),
-            source_info: None,
-            source_language: None,
-            message: None,
-            copyright: None,
-            license: None,
-        }
-    }
-}
 
 pub struct DhammapadaMunindoImporter {
     resource_path: PathBuf,
@@ -152,7 +106,7 @@ impl DhammapadaMunindoImporter {
             language: lang.to_string(),
             title: title_clean,
             title_ascii,
-            title_pali: String::new(),
+            title_pali: None,  // Dhammapada Munindo doesn't have Pali titles
             content_plain,
             content_html,
             source_uid,

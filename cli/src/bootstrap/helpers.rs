@@ -1,4 +1,55 @@
 use regex::Regex;
+use simsapa_backend::db::appdata_models::NewSutta;
+
+/// Owned version of sutta data for building during parsing.
+/// This allows us to build sutta data with owned strings during parsing,
+/// then convert to borrowed NewSutta for database insertion.
+#[derive(Debug, Clone)]
+pub struct SuttaData {
+    pub uid: String,
+    pub sutta_ref: String,
+    pub nikaya: String,
+    pub language: String,
+    pub title: String,
+    pub title_ascii: String,
+    pub title_pali: Option<String>,
+    pub content_plain: String,
+    pub content_html: String,
+    pub source_uid: String,
+}
+
+impl SuttaData {
+    /// Convert to NewSutta for database insertion
+    pub fn to_new_sutta(&self) -> NewSutta {
+        NewSutta {
+            uid: &self.uid,
+            sutta_ref: &self.sutta_ref,
+            nikaya: &self.nikaya,
+            language: &self.language,
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: None,
+            sutta_range_start: None,
+            sutta_range_end: None,
+            title: Some(&self.title),
+            title_ascii: Some(&self.title_ascii),
+            title_pali: self.title_pali.as_deref(),
+            title_trans: None,
+            description: None,
+            content_plain: Some(&self.content_plain),
+            content_html: Some(&self.content_html),
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some(&self.source_uid),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        }
+    }
+}
 
 /// sn12.23 to SN 12.23
 pub fn uid_to_ref(uid: &str) -> String {

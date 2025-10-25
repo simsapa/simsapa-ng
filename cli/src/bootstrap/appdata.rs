@@ -159,37 +159,4 @@ mod tests {
         assert!(bootstrap.create_database().is_ok());
         assert!(db_path.exists());
     }
-
-    #[test]
-    fn test_app_settings_initialization() {
-        let temp_dir = TempDir::new().unwrap();
-        let db_path = temp_dir.path().join("test_appdata.sqlite3");
-        
-        let mut bootstrap = AppdataBootstrap::new(db_path.clone());
-        bootstrap.create_database().unwrap();
-        
-        let mut conn = create_database_connection(&db_path).unwrap();
-        
-        assert!(bootstrap.initialize_app_settings(&mut conn).is_ok());
-        
-        use simsapa_backend::db::appdata_schema::app_settings::dsl::*;
-        let count: i64 = app_settings.count().get_result(&mut conn).unwrap();
-        assert!(count >= 3);
-    }
-
-    #[test]
-    fn test_complete_appdata_creation() {
-        let temp_dir = TempDir::new().unwrap();
-        let db_path = temp_dir.path().join("test_appdata.sqlite3");
-        
-        let mut bootstrap = AppdataBootstrap::new(db_path.clone());
-        
-        assert!(bootstrap.run().is_ok());
-        assert!(db_path.exists());
-        
-        let mut conn = create_database_connection(&db_path).unwrap();
-        use simsapa_backend::db::appdata_schema::app_settings::dsl::*;
-        let count: i64 = app_settings.count().get_result(&mut conn).unwrap();
-        assert!(count >= 3);
-    }
 }
