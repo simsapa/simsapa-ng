@@ -136,8 +136,14 @@ Note: No `dictionaries.rs` module needed - DPD import already implemented in mai
 
 **2.3.4 Dhammapada Tipitaka.net** ✅
 - Location: `bootstrap/dhammapada_tipitaka.rs`
-- Resource: `bootstrap-assets-resources/dhammapada-tipitaka-net/`
-- Based on: `simsapa-legacy/scripts/dhammapada_tipitaka_net.py`
+- Resource: Exported database file `dhammapada-tipitaka-net.sqlite3`
+- Based on: Export from legacy database (`appdata-db-for-bootstrap/current/appdata.sqlite3`)
+- Approach:
+  1. Export command: `dhammapada_tipitaka_net_export <legacy_db> <output_db>`
+     - Extracts all suttas where `uid LIKE '%/daw'` (exactly 26 rows)
+     - Creates standalone SQLite database with exported suttas
+  2. Bootstrap importer: Reads exported database and inserts into appdata
+- Benefits: Preserves exact HTML from Python implementation, avoids parsing complexity
 
 **2.3.5 Nyanadipa Translations** ✅
 - Location: `bootstrap/nyanadipa.rs`

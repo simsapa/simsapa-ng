@@ -188,14 +188,16 @@ RELEASE_CHANNEL=development
     }
 
     // Import Dhammapada from Tipitaka.net (Daw Mya Tin translation)
+    // Uses exported database from dhammapada_tipitaka_net_export command
     {
-        let dhammapada_tipitaka_path = bootstrap_assets_dir.join("dhammapada-tipitaka-net");
-        if dhammapada_tipitaka_path.exists() {
-            tracing::info!("Importing suttas from dhammapada-tipitaka-net");
-            let mut importer = DhammapadaTipitakaImporter::new(dhammapada_tipitaka_path);
+        let exported_db_path = bootstrap_assets_dir.join("dhammapada-tipitaka-net/dhammapada-tipitaka-net.sqlite3");
+        if exported_db_path.exists() {
+            tracing::info!("Importing suttas from dhammapada-tipitaka-net (exported DB)");
+            let mut importer = DhammapadaTipitakaImporter::new(exported_db_path);
             importer.import(&mut conn)?;
         } else {
-            tracing::warn!("Dhammapada Tipitaka.net resource path not found, skipping");
+            tracing::warn!("Dhammapada Tipitaka.net exported database not found: {:?}", exported_db_path);
+            tracing::warn!("Run: simsapa_cli dhammapada-tipitaka-net-export <legacy_db> <output_db>");
         }
     }
 

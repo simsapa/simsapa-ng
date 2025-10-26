@@ -12,6 +12,10 @@ use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir};
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
+use simsapa_backend::db::appdata_models::Sutta;
+
+use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     let app_data = get_app_data();
@@ -93,6 +97,100 @@ fn import_stardict_dictionary(new_dict_label: &str,
     Ok(())
 }
 
+/// Export Dhammapada Tipitaka.net suttas from legacy database
+fn export_dhammapada_tipitaka_net(legacy_db_path: &Path, output_db_path: &Path) -> Result<(), String> {
+    use simsapa_backend::db::appdata_schema::suttas;
+
+    println!("Exporting Dhammapada Tipitaka.net suttas from legacy database...");
+    println!("Legacy DB: {:?}", legacy_db_path);
+    println!("Output DB: {:?}", output_db_path);
+
+    // Check if legacy database exists
+    if !legacy_db_path.exists() {
+        return Err(format!("Legacy database not found: {:?}", legacy_db_path));
+    }
+
+    // Connect to legacy database
+    let mut legacy_conn = SqliteConnection::establish(legacy_db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to connect to legacy database: {}", e))?;
+
+    // Query suttas with uid LIKE '%/daw'
+    let daw_suttas: Vec<Sutta> = suttas::table
+        .filter(suttas::uid.like("%/daw"))
+        .order(suttas::uid.asc())
+        .load(&mut legacy_conn)
+        .map_err(|e| format!("Failed to query suttas: {}", e))?;
+
+    println!("Found {} suttas with uid ending in '/daw'", daw_suttas.len());
+
+    // Verify exactly 26 rows
+    if daw_suttas.len() != 26 {
+        return Err(format!("Expected exactly 26 suttas, found {}", daw_suttas.len()));
+    }
+
+    // Delete output database if it exists
+    if output_db_path.exists() {
+        std::fs::remove_file(output_db_path)
+            .map_err(|e| format!("Failed to delete existing output database: {}", e))?;
+    }
+
+    // Create output database
+    let mut output_conn = SqliteConnection::establish(output_db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to create output database: {}", e))?;
+
+    // Run migrations on output database
+    println!("Creating database schema...");
+    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata");
+    output_conn.run_pending_migrations(MIGRATIONS)
+        .map_err(|e| format!("Failed to run migrations: {}", e))?;
+
+    // Insert suttas into output database (excluding id field)
+    println!("Inserting suttas into output database...");
+    for sutta in &daw_suttas {
+        diesel::insert_into(suttas::table)
+            .values((
+                suttas::uid.eq(&sutta.uid),
+                suttas::sutta_ref.eq(&sutta.sutta_ref),
+                suttas::nikaya.eq(&sutta.nikaya),
+                suttas::language.eq(&sutta.language),
+                suttas::group_path.eq(&sutta.group_path),
+                suttas::group_index.eq(&sutta.group_index),
+                suttas::order_index.eq(&sutta.order_index),
+                suttas::sutta_range_group.eq(&sutta.sutta_range_group),
+                suttas::sutta_range_start.eq(&sutta.sutta_range_start),
+                suttas::sutta_range_end.eq(&sutta.sutta_range_end),
+                suttas::title.eq(&sutta.title),
+                suttas::title_ascii.eq(&sutta.title_ascii),
+                suttas::title_pali.eq(&sutta.title_pali),
+                suttas::title_trans.eq(&sutta.title_trans),
+                suttas::description.eq(&sutta.description),
+                suttas::content_plain.eq(&sutta.content_plain),
+                suttas::content_html.eq(&sutta.content_html),
+                suttas::content_json.eq(&sutta.content_json),
+                suttas::content_json_tmpl.eq(&sutta.content_json_tmpl),
+                suttas::source_uid.eq(&sutta.source_uid),
+                suttas::source_info.eq(&sutta.source_info),
+                suttas::source_language.eq(&sutta.source_language),
+                suttas::message.eq(&sutta.message),
+                suttas::copyright.eq(&sutta.copyright),
+                suttas::license.eq(&sutta.license),
+            ))
+            .execute(&mut output_conn)
+            .map_err(|e| format!("Failed to insert sutta {}: {}", sutta.uid, e))?;
+    }
+
+    println!("✓ Successfully exported {} suttas to {:?}", daw_suttas.len(), output_db_path);
+
+    // Print UIDs for verification
+    println!("\nExported suttas:");
+    for sutta in &daw_suttas {
+        println!("  - {}", sutta.uid);
+    }
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -171,6 +269,17 @@ enum Commands {
         /// Write a new .env file even if one already exists
         #[arg(long, default_value_t = false)]
         write_new_dotenv: bool,
+    },
+
+    /// Export Dhammapada Tipitaka.net suttas from legacy database
+    DhammapadaTipitakaNetExport {
+        /// Path to the legacy appdata.sqlite3 database
+        #[arg(value_name = "LEGACY_DB_PATH")]
+        legacy_db_path: PathBuf,
+
+        /// Path to the output SQLite database file
+        #[arg(value_name = "OUTPUT_DB_PATH")]
+        output_db_path: PathBuf,
     }
 }
 
@@ -192,8 +301,8 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } => {
-            // Skip app data initialization for bootstrap
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } => {
+            // Skip app data initialization for bootstrap and export commands
         }
         _ => {
             init_app_data();
@@ -264,6 +373,11 @@ fn main() {
 
         Commands::BootstrapOld { write_new_dotenv } => {
             bootstrap_old::bootstrap(write_new_dotenv)
+                .map_err(|e| e.to_string())
+        }
+
+        Commands::DhammapadaTipitakaNetExport { legacy_db_path, output_db_path } => {
+            export_dhammapada_tipitaka_net(&legacy_db_path, &output_db_path)
                 .map_err(|e| e.to_string())
         }
     };
