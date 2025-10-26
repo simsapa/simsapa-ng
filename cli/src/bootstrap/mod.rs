@@ -21,16 +21,13 @@ use diesel_migrations::MigrationHarness;
 use simsapa_backend::db::APPDATA_MIGRATIONS;
 use simsapa_backend::{get_create_simsapa_dir, get_create_simsapa_app_assets_path};
 
+pub use helpers::SuttaData;
 pub use appdata::AppdataBootstrap;
 pub use dhammatalks_org::DhammatalksSuttaImporter;
 pub use dhammapada_munindo::DhammapadaMunindoImporter;
 pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
-pub use helpers::SuttaData;
 pub use nyanadipa::NyanadipaImporter;
-// TODO: Uncomment these as the modules are implemented
-// pub use suttacentral::SuttaCentralImporter;
-// pub use buddha_ujja::BuddhaUjjaImporter;
-// pub use completions::CompletionsGenerator;
+// TODO pub use suttacentral::SuttaCentralImporter;
 
 pub trait SuttaImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()>;
@@ -151,17 +148,16 @@ RELEASE_CHANNEL=development
     let appdata_db_path = assets_dir.join("appdata.sqlite3");
     let mut appdata_bootstrap = AppdataBootstrap::new(appdata_db_path.clone());
 
-    // Run the appdata bootstrap process
+    // Create the appdata database, populated later.
     appdata_bootstrap.run()?;
-
-    // Initialize APP_DATA global so further steps can use get_app_data()
-    // init_app_data();
 
     // Import suttas from various sources
     tracing::info!("=== Importing suttas from various sources ===");
 
     // Get database connection for sutta imports
     let mut conn = create_database_connection(&appdata_db_path)?;
+
+    tracing::info!("TODO: Import suttas from SuttaCentral for lang 'en' and 'pli'");
 
     // Import from Dhammatalks.org
     {
@@ -213,14 +209,8 @@ RELEASE_CHANNEL=development
         }
     }
 
-    tracing::info!("TODO: Import suttas from SuttaCentral");
-    tracing::info!("TODO: Import suttas from Buddha Ujja (Hungarian)");
-
     // Drop connection to close database before further operations
     drop(conn);
-
-    // TODO: Generate completions
-    tracing::info!("TODO: Generate autocomplete data");
 
     dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
 
