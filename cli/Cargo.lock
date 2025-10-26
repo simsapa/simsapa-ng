@@ -2171,6 +2171,7 @@ dependencies = [
  "simsapa_backend",
  "tempfile",
  "thiserror 2.0.16",
+ "tokio",
  "tracing",
  "tracing-subscriber",
 ]

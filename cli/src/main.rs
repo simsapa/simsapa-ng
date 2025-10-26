@@ -7,6 +7,7 @@ use std::process::exit;
 use clap::{Parser, Subcommand, ValueEnum};
 use dotenvy::dotenv;
 use anyhow::Result;
+use tracing_subscriber;
 
 use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir};
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
@@ -297,6 +298,7 @@ fn main() {
         println!("Info: No .env file found or failed to load.");
     }
 
+    tracing_subscriber::fmt::init();
     let cli = Cli::parse();
 
     // Don't initialize app data for bootstrap commands since they need to create directories first

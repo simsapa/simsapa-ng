@@ -27,7 +27,7 @@ pub use dhammatalks_org::DhammatalksSuttaImporter;
 pub use dhammapada_munindo::DhammapadaMunindoImporter;
 pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
 pub use nyanadipa::NyanadipaImporter;
-// TODO pub use suttacentral::SuttaCentralImporter;
+pub use suttacentral::SuttaCentralImporter;
 
 pub trait SuttaImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()>;
@@ -157,7 +157,19 @@ RELEASE_CHANNEL=development
     // Get database connection for sutta imports
     let mut conn = create_database_connection(&appdata_db_path)?;
 
-    tracing::info!("TODO: Import suttas from SuttaCentral for lang 'en' and 'pli'");
+    // Import suttas from SuttaCentral
+    {
+        let sc_data_dir = bootstrap_assets_dir.join("sc-data");
+        if sc_data_dir.exists() {
+            tracing::info!("Importing suttas from SuttaCentral");
+            for lang in ["en", "pli"] {
+                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
+                importer.import(&mut conn)?;
+            }
+        } else {
+            tracing::warn!("SuttaCentral data directory not found, skipping");
+        }
+    }
 
     // Import from Dhammatalks.org
     {

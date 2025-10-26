@@ -185,9 +185,8 @@ mod tests {
         let resource_path = PathBuf::from("../../bootstrap-assets-resources/nyanadipa-translations/");
         let importer = NyanadipaImporter::new(resource_path);
 
-        let base_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let md_path = base_dir.join("../../bootstrap-assets-resources/nyanadipa-translations/texts-sc-numbering/snp4.10.md");
-        let expected_path = base_dir.join("tests/data/nyanadipa/snp4.10.html");
+        let md_path = PathBuf::from("../../bootstrap-assets-resources/nyanadipa-translations/texts-sc-numbering/snp4.10.md");
+        let expected_path = PathBuf::from("tests/data/nyanadipa/snp4.10.html");
 
         if !md_path.exists() {
             eprintln!("Skipping test: Markdown file not found at {:?}", md_path);
