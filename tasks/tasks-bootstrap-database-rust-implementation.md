@@ -11,10 +11,10 @@
 - `cli/src/bootstrap/dhammapada_tipitaka.rs` - Dhammapada Tipitaka.net import (reads from exported database file) ✅
 - `cli/src/main.rs` - CLI entry point with `dhammapada_tipitaka_net_export` command (implemented as DhammapadaTipitakaNetExport) ✅
 - `cli/src/bootstrap/dhammapada_tipitaka.rs.old` - Old HTML parsing implementation (backed up)
-- `cli/src/bootstrap/nyanadipa.rs` - Nyanadipa translations import
+- `cli/src/bootstrap/nyanadipa.rs` - Nyanadipa translations import (Sutta Nipata selections, 36 markdown files) ✅
 - `cli/src/bootstrap/buddha_ujja.rs` - Hungarian Buddha Ujja import
 - `cli/src/bootstrap/completions.rs` - Autocomplete data generation (placeholder)
-- `cli/Cargo.toml` - Updated with new dependencies (arangors, scraper, html5ever, diesel, serde_json, indicatif, etc.)
+- `cli/Cargo.toml` - Updated with new dependencies (arangors, scraper, html5ever, diesel, serde_json, indicatif, pulldown-cmark, etc.)
 - `backend/src/db/appdata_models.rs` - Existing appdata models (Sutta, AppSetting, etc.)
 - `backend/src/db/appdata_schema.rs` - Database schema definitions
 - `backend/src/lib.rs` - Backend library exports
@@ -198,44 +198,44 @@
     - [x] 5.7.2 Add test for import from exported DB (manual testing successful)
     - [x] 5.7.3 Add integration test: export → import → verify 26 suttas (manual testing successful, all 26 suttas imported)
 
-- [ ] 6.0 Implement Nyanadipa translations sutta import
-  - [ ] 6.1 Create `cli/src/bootstrap/nyanadipa.rs` file
-    - [ ] 6.1.1 Add imports for scraper, diesel, and appdata models
-    - [ ] 6.1.2 Define `NyanadipaImporter` struct with resource path
-    - [ ] 6.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
-  - [ ] 6.2 Implement translation file discovery
-    - [ ] 6.2.1 Add `discover_translation_files(&self) -> Result<Vec<PathBuf>>` method
-    - [ ] 6.2.2 Scan resource directory for translation files
-    - [ ] 6.2.3 Identify file format (HTML, markdown, or plain text)
-    - [ ] 6.2.4 Extract language information from file names or metadata
-  - [ ] 6.3 Implement multi-format parsing
-    - [ ] 6.3.1 Add `parse_file(&self, path: &Path, format: FileFormat) -> Result<ParsedSutta>` method
-    - [ ] 6.3.2 Implement HTML parser for HTML files
-    - [ ] 6.3.3 Implement markdown parser for markdown files
-    - [ ] 6.3.4 Implement plain text parser with structure detection
-  - [ ] 6.4 Implement metadata extraction
-    - [ ] 6.4.1 Add `extract_sutta_reference(&self, content: &str) -> Result<SuttaRef>` helper
-    - [ ] 6.4.2 Parse canonical reference (e.g., MN 1, DN 2)
-    - [ ] 6.4.3 Extract translator name (likely Nyanadipa)
-    - [ ] 6.4.4 Extract translation date if available
-  - [ ] 6.5 Implement sutta model conversion
-    - [ ] 6.5.1 Add `convert_to_sutta(&self, parsed: ParsedSutta) -> Result<Sutta>` method
-    - [ ] 6.5.2 Generate UID format: nyanadipa-{canonical_ref}
-    - [ ] 6.5.3 Set provider ID and language
-    - [ ] 6.5.4 Add translator and date metadata
-  - [ ] 6.6 Implement import orchestration
-    - [ ] 6.6.1 Add `import_translations(&self, conn: &mut SqliteConnection) -> Result<()>` method
-    - [ ] 6.6.2 Discover all translation files
-    - [ ] 6.6.3 Parse each file according to its format
-    - [ ] 6.6.4 Convert and insert into database
-    - [ ] 6.6.5 Add progress reporting
-  - [ ] 6.7 Implement SuttaImporter trait
-    - [ ] 6.7.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
-  - [ ] 6.8 Write tests
-    - [ ] 6.8.1 Add test for file format detection
-    - [ ] 6.8.2 Add test for sutta reference parsing
-    - [ ] 6.8.3 Add test for each file format parser
-    - [ ] 6.8.4 Add integration test for complete import
+- [x] 6.0 Implement Nyanadipa translations sutta import
+  - [x] 6.1 Create `cli/src/bootstrap/nyanadipa.rs` file
+    - [x] 6.1.1 Add imports for pulldown_cmark, diesel, and appdata models
+    - [x] 6.1.2 Define `NyanadipaImporter` struct with resource_path
+    - [x] 6.1.3 Add constructor `new(resource_path: PathBuf) -> Self`
+  - [x] 6.2 Implement translation file discovery
+    - [x] 6.2.1 Add `discover_markdown_files(&self) -> Result<Vec<PathBuf>>` method
+    - [x] 6.2.2 Scan texts/ subdirectory for *.md files
+    - [x] 6.2.3 All files are markdown format (no need to detect)
+    - [x] 6.2.4 Language is always "en" (hardcoded)
+  - [x] 6.3 Implement markdown parsing
+    - [x] 6.3.1 Add `parse_sutta(&self, path: &PathBuf) -> Result<SuttaData>` method
+    - [x] 6.3.2 Use pulldown-cmark with footnotes and smart punctuation
+    - [x] 6.3.3 Convert markdown to HTML
+    - [x] 6.3.4 Extract h1 as title using scraper
+  - [x] 6.4 Implement metadata extraction
+    - [x] 6.4.1 Extract reference from filename stem (e.g., snp1.12.md → snp1.12)
+    - [x] 6.4.2 Use uid_to_ref helper for canonical reference
+    - [x] 6.4.3 Translator: "nyanadipa" (hardcoded)
+    - [x] 6.4.4 UID format: {ref}/en/nyanadipa
+  - [x] 6.5 Implement sutta model conversion
+    - [x] 6.5.1 Create SuttaData with all fields
+    - [x] 6.5.2 UID format: snp{book}.{sutta}/en/nyanadipa
+    - [x] 6.5.3 source_uid: "nyanadipa", language: "en"
+    - [x] 6.5.4 Use consistent_niggahita and pali_to_ascii from backend helpers
+  - [x] 6.6 Implement import orchestration
+    - [x] 6.6.1 Add `import_suttas(&mut self, conn: &mut SqliteConnection) -> Result<()>` method
+    - [x] 6.6.2 Discover all markdown files (36 files)
+    - [x] 6.6.3 Parse each markdown file to SuttaData
+    - [x] 6.6.4 Insert into database with diesel
+    - [x] 6.6.5 Add progress bar with indicatif
+  - [x] 6.7 Implement SuttaImporter trait
+    - [x] 6.7.1 Implement `import(&mut self, conn: &mut SqliteConnection) -> Result<()>` trait method
+  - [x] 6.8 Write tests
+    - [x] 6.8.1 Add test for importer creation
+    - [x] 6.8.2 Add test for UID extraction from filename
+    - [x] 6.8.3 Add test for markdown to HTML conversion
+    - [x] 6.8.4 All tests pass ✓
 
 - [ ] 7.0 Implement SuttaCentral import with ArangoDB integration
   - [ ] 7.1 Create `cli/src/bootstrap/suttacentral.rs` file

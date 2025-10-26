@@ -26,9 +26,9 @@ pub use dhammatalks_org::DhammatalksSuttaImporter;
 pub use dhammapada_munindo::DhammapadaMunindoImporter;
 pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
 pub use helpers::SuttaData;
+pub use nyanadipa::NyanadipaImporter;
 // TODO: Uncomment these as the modules are implemented
 // pub use suttacentral::SuttaCentralImporter;
-// pub use nyanadipa::NyanadipaImporter;
 // pub use buddha_ujja::BuddhaUjjaImporter;
 // pub use completions::CompletionsGenerator;
 
@@ -201,7 +201,18 @@ RELEASE_CHANNEL=development
         }
     }
 
-    tracing::info!("TODO: Import suttas from nyanadipa");
+    // Import Nyanadipa translations (Sutta Nipata selections)
+    {
+        let nyanadipa_path = bootstrap_assets_dir.join("nyanadipa-translations");
+        if nyanadipa_path.exists() {
+            tracing::info!("Importing suttas from nyanadipa-translations");
+            let mut importer = NyanadipaImporter::new(nyanadipa_path);
+            importer.import(&mut conn)?;
+        } else {
+            tracing::warn!("Nyanadipa translations resource path not found, skipping");
+        }
+    }
+
     tracing::info!("TODO: Import suttas from SuttaCentral");
     tracing::info!("TODO: Import suttas from Buddha Ujja (Hungarian)");
 
