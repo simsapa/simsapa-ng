@@ -4,7 +4,6 @@ use std::path::PathBuf;
 use std::fs;
 use indicatif::{ProgressBar, ProgressStyle};
 use pulldown_cmark::{Parser, html, Options};
-use regex::Regex;
 
 use simsapa_backend::db::appdata_schema::suttas;
 use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, compact_rich_text};
@@ -179,5 +178,29 @@ mod tests {
 
         assert!(html_output.contains("<h1>"));
         assert!(html_output.contains("Test Title"));
+    }
+
+    #[test]
+    fn test_snp4_10() {
+        let resource_path = PathBuf::from("../../bootstrap-assets-resources/nyanadipa-translations/");
+        let importer = NyanadipaImporter::new(resource_path);
+
+        let base_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        let md_path = base_dir.join("../../bootstrap-assets-resources/nyanadipa-translations/texts-sc-numbering/snp4.10.md");
+        let expected_path = base_dir.join("tests/data/nyanadipa/snp4.10.html");
+
+        if !md_path.exists() {
+            eprintln!("Skipping test: Markdown file not found at {:?}", md_path);
+            return;
+        }
+
+        let sutta = importer.parse_sutta(&md_path).expect("Failed to parse sutta");
+
+        // fs::write(&expected_path, sutta.content_html.clone()).expect("Unable to write file!");
+
+        let expected_html = fs::read_to_string(&expected_path)
+            .expect("Expected HTML fixture file should exist");
+
+        assert_eq!(expected_html, sutta.content_html);
     }
 }
