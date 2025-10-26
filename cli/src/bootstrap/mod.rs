@@ -19,7 +19,7 @@ use diesel::prelude::*;
 use diesel_migrations::MigrationHarness;
 
 use simsapa_backend::db::APPDATA_MIGRATIONS;
-use simsapa_backend::{get_create_simsapa_dir, get_create_simsapa_app_assets_path};
+use simsapa_backend::{init_app_data, get_create_simsapa_dir, get_create_simsapa_app_assets_path, logger};
 
 pub use helpers::SuttaData;
 pub use appdata::AppdataBootstrap;
@@ -74,7 +74,7 @@ where
 
 /// Main bootstrap function - orchestrates the entire bootstrap process
 pub fn bootstrap(write_new_dotenv: bool) -> Result<()> {
-    tracing::info!("=== Starting new modular bootstrap process ===");
+    logger::info("=== Starting new modular bootstrap process ===");
 
     let start_time: DateTime<Local> = Local::now();
     let iso_date = start_time.format("%Y-%m-%d").to_string();
@@ -108,7 +108,7 @@ pub fn bootstrap(write_new_dotenv: bool) -> Result<()> {
         .map_err(|e| anyhow::anyhow!("Failed to get simsapa directory: {}", e))?;
     let assets_dir = get_create_simsapa_app_assets_path();
 
-    tracing::info!("Bootstrap simsapa_dir: {:?}", simsapa_dir);
+    logger::info(&format!("Bootstrap simsapa_dir: {:?}", simsapa_dir));
 
     let bootstrap_limit_str = match bootstrap_limit {
         Some(n) => n.to_string(),
@@ -152,7 +152,7 @@ RELEASE_CHANNEL=development
     appdata_bootstrap.run()?;
 
     // Import suttas from various sources
-    tracing::info!("=== Importing suttas from various sources ===");
+    logger::info("=== Importing suttas from various sources ===");
 
     // Get database connection for sutta imports
     let mut conn = create_database_connection(&appdata_db_path)?;
@@ -161,13 +161,13 @@ RELEASE_CHANNEL=development
     {
         let sc_data_dir = bootstrap_assets_dir.join("sc-data");
         if sc_data_dir.exists() {
-            tracing::info!("Importing suttas from SuttaCentral");
+            logger::info("Importing suttas from SuttaCentral");
             for lang in ["en", "pli"] {
                 let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
                 importer.import(&mut conn)?;
             }
         } else {
-            tracing::warn!("SuttaCentral data directory not found, skipping");
+            logger::warn("SuttaCentral data directory not found, skipping");
         }
     }
 
@@ -175,11 +175,11 @@ RELEASE_CHANNEL=development
     {
         let dhammatalks_path = bootstrap_assets_dir.join("dhammatalks-org/www.dhammatalks.org/suttas");
         if dhammatalks_path.exists() {
-            tracing::info!("Importing suttas from dhammatalks.org");
+            logger::info("Importing suttas from dhammatalks.org");
             let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path);
             importer.import(&mut conn)?;
         } else {
-            tracing::warn!("Dhammatalks.org resource path not found, skipping");
+            logger::warn("Dhammatalks.org resource path not found, skipping");
         }
     }
 
@@ -187,11 +187,11 @@ RELEASE_CHANNEL=development
     {
         let dhammapada_munindo_path = bootstrap_assets_dir.join("dhammapada-munindo");
         if dhammapada_munindo_path.exists() {
-            tracing::info!("Importing suttas from dhammapada-munindo");
+            logger::info("Importing suttas from dhammapada-munindo");
             let mut importer = DhammapadaMunindoImporter::new(dhammapada_munindo_path);
             importer.import(&mut conn)?;
         } else {
-            tracing::warn!("Dhammapada Munindo resource path not found, skipping");
+            logger::warn("Dhammapada Munindo resource path not found, skipping");
         }
     }
 
@@ -200,12 +200,12 @@ RELEASE_CHANNEL=development
     {
         let exported_db_path = bootstrap_assets_dir.join("dhammapada-tipitaka-net/dhammapada-tipitaka-net.sqlite3");
         if exported_db_path.exists() {
-            tracing::info!("Importing suttas from dhammapada-tipitaka-net (exported DB)");
+            logger::info("Importing suttas from dhammapada-tipitaka-net (exported DB)");
             let mut importer = DhammapadaTipitakaImporter::new(exported_db_path);
             importer.import(&mut conn)?;
         } else {
-            tracing::warn!("Dhammapada Tipitaka.net exported database not found: {:?}", exported_db_path);
-            tracing::warn!("Run: simsapa_cli dhammapada-tipitaka-net-export <legacy_db> <output_db>");
+            logger::warn(&format!("Dhammapada Tipitaka.net exported database not found: {:?}", exported_db_path));
+            logger::warn("Run: simsapa_cli dhammapada-tipitaka-net-export <legacy_db> <output_db>");
         }
     }
 
@@ -213,21 +213,22 @@ RELEASE_CHANNEL=development
     {
         let nyanadipa_path = bootstrap_assets_dir.join("nyanadipa-translations");
         if nyanadipa_path.exists() {
-            tracing::info!("Importing suttas from nyanadipa-translations");
+            logger::info("Importing suttas from nyanadipa-translations");
             let mut importer = NyanadipaImporter::new(nyanadipa_path);
             importer.import(&mut conn)?;
         } else {
-            tracing::warn!("Nyanadipa translations resource path not found, skipping");
+            logger::warn("Nyanadipa translations resource path not found, skipping");
         }
     }
 
     // Drop connection to close database before further operations
     drop(conn);
 
+    init_app_data();
     dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
 
-    tracing::info!("=== Bootstrap process completed successfully ===");
-    tracing::info!("Output database: {:?}", appdata_db_path);
+    logger::info("=== Bootstrap process completed successfully ===");
+    logger::info(&format!("Output database: {:?}", appdata_db_path));
 
     Ok(())
 }

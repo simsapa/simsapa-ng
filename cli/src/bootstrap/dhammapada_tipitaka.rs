@@ -5,6 +5,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 
 use simsapa_backend::db::appdata_models::Sutta;
 use simsapa_backend::db::appdata_schema::suttas;
+use simsapa_backend::logger;
 
 use crate::bootstrap::SuttaImporter;
 
@@ -18,7 +19,7 @@ impl DhammapadaTipitakaImporter {
     }
 
     fn import_from_exported_db(&self, target_conn: &mut SqliteConnection) -> Result<()> {
-        tracing::info!("Importing Dhammapada Tipitaka.net suttas from exported database");
+        logger::info("Importing Dhammapada Tipitaka.net suttas from exported database");
 
         // Check if exported database exists
         if !self.exported_db_path.exists() {
@@ -37,7 +38,7 @@ impl DhammapadaTipitakaImporter {
             .load(&mut source_conn)
             .context("Failed to load suttas from exported database")?;
 
-        tracing::info!("Found {} suttas in exported database", exported_suttas.len());
+        logger::info(&format!("Found {} suttas in exported database", exported_suttas.len()));
 
         // Create progress bar
         let pb = ProgressBar::new(exported_suttas.len() as u64);
@@ -86,7 +87,7 @@ impl DhammapadaTipitakaImporter {
         }
 
         pb.finish_with_message("Done");
-        tracing::info!("Successfully imported {} Dhammapada Tipitaka.net suttas", exported_suttas.len());
+        logger::info(&format!("Successfully imported {} Dhammapada Tipitaka.net suttas", exported_suttas.len()));
 
         Ok(())
     }

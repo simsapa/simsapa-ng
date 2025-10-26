@@ -7,6 +7,7 @@ use pulldown_cmark::{Parser, html, Options};
 
 use simsapa_backend::db::appdata_schema::suttas;
 use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, compact_rich_text};
+use simsapa_backend::logger;
 
 use crate::bootstrap::SuttaImporter;
 use crate::bootstrap::helpers::{SuttaData, uid_to_ref, uid_to_nikaya};
@@ -99,11 +100,11 @@ impl NyanadipaImporter {
     }
 
     fn import_suttas(&mut self, conn: &mut SqliteConnection) -> Result<()> {
-        tracing::info!("Importing Nyanadipa translations");
+        logger::info("Importing Nyanadipa translations");
 
         let markdown_files = self.discover_markdown_files()?;
         let file_count = markdown_files.len();
-        tracing::info!("Found {} markdown files", file_count);
+        logger::info(&format!("Found {} markdown files", file_count));
 
         let pb = ProgressBar::new(file_count as u64);
         pb.set_style(
@@ -139,7 +140,7 @@ impl NyanadipaImporter {
         }
 
         pb.finish_with_message("Done");
-        tracing::info!("Successfully imported {} Nyanadipa translations", file_count);
+        logger::info(&format!("Successfully imported {} Nyanadipa translations", file_count));
 
         Ok(())
     }

@@ -5,8 +5,8 @@ use simsapa_backend::db::appdata_schema::suttas;
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;
-use tracing::{info, warn};
 use indicatif::{ProgressBar, ProgressStyle};
+use simsapa_backend::logger;
 
 use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
 use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
@@ -285,7 +285,7 @@ impl DhammatalksSuttaImporter {
     fn import_suttas(&self, conn: &mut SqliteConnection) -> Result<()> {
         let files = self.discover_sutta_files()?;
 
-        info!("Found {} sutta files from Dhammatalks.org", files.len());
+        logger::info(&format!("Found {} sutta files from Dhammatalks.org", files.len()));
 
         let pb = ProgressBar::new(files.len() as u64);
         pb.set_style(
@@ -310,13 +310,13 @@ impl DhammatalksSuttaImporter {
                         Ok(_) => success_count += 1,
                         Err(e) => {
                             error_count += 1;
-                            warn!("Failed to insert sutta {}: {}", file_path.display(), e);
+                            logger::warn(&format!("Failed to insert sutta {}: {}", file_path.display(), e));
                         }
                     }
                 }
                 Err(e) => {
                     error_count += 1;
-                    warn!("Failed to parse sutta {}: {}", file_path.display(), e);
+                    logger::warn(&format!("Failed to parse sutta {}: {}", file_path.display(), e));
                 }
             }
 
@@ -328,9 +328,9 @@ impl DhammatalksSuttaImporter {
             success_count, error_count
         ));
 
-        info!("Successfully imported {} Dhammatalks.org suttas", success_count);
+        logger::info(&format!("Successfully imported {} Dhammatalks.org suttas", success_count));
         if error_count > 0 {
-            warn!("{} suttas failed to import", error_count);
+            logger::warn(&format!("{} suttas failed to import", error_count));
         }
 
         Ok(())

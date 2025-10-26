@@ -7,8 +7,8 @@ use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text, pali_to_
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;
-use tracing::{info, warn};
 use indicatif::{ProgressBar, ProgressStyle};
+use simsapa_backend::logger;
 
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 use crate::bootstrap::SuttaData;
@@ -114,15 +114,15 @@ impl DhammapadaMunindoImporter {
     }
 
     fn import_suttas(&self, conn: &mut SqliteConnection) -> Result<()> {
-        info!("Discovering Dhammapada Munindo HTML files...");
+        logger::info("Discovering Dhammapada Munindo HTML files...");
         let files = self.discover_html_files()?;
 
         if files.is_empty() {
-            warn!("No Dhammapada Munindo HTML files found");
+            logger::warn("No Dhammapada Munindo HTML files found");
             return Ok(());
         }
 
-        info!("Found {} Dhammapada Munindo files", files.len());
+        logger::info(&format!("Found {} Dhammapada Munindo files", files.len()));
 
         let pb = ProgressBar::new(files.len() as u64);
         pb.set_style(
@@ -152,13 +152,13 @@ impl DhammapadaMunindoImporter {
                     {
                         Ok(_) => success_count += 1,
                         Err(e) => {
-                            warn!("Failed to insert sutta from {}: {}", file_name, e);
+                            logger::warn(&format!("Failed to insert sutta from {}: {}", file_name, e));
                             error_count += 1;
                         }
                     }
                 }
                 Err(e) => {
-                    warn!("Failed to parse {}: {}", file_name, e);
+                    logger::warn(&format!("Failed to parse {}: {}", file_name, e));
                     error_count += 1;
                 }
             }
@@ -171,8 +171,8 @@ impl DhammapadaMunindoImporter {
             success_count, error_count
         ));
 
-        info!("Dhammapada Munindo import completed: {} suttas inserted, {} errors",
-              success_count, error_count);
+        logger::info(&format!("Dhammapada Munindo import completed: {} suttas inserted, {} errors",
+              success_count, error_count));
 
         Ok(())
     }

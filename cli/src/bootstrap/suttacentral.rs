@@ -14,6 +14,7 @@ use simsapa_backend::helpers::{
 };
 use simsapa_backend::db::appdata_models::{NewSutta, NewSuttaVariant, NewSuttaComment};
 use simsapa_backend::db::appdata_schema::{suttas, sutta_variants, sutta_comments};
+use simsapa_backend::logger;
 use diesel::prelude::*;
 
 /// Sutta data structure for SuttaCentral imports
@@ -325,11 +326,11 @@ fn convert_paths_to_content(doc: &mut Value, sc_data_dir: &Path) -> Result<()> {
                                     }
                                 }
                                 Err(e) => {
-                                    tracing::warn!(
+                                    logger::warn(&format!(
                                         "Failed to parse JSON from {}: {}",
                                         adjusted_path,
                                         e
-                                    );
+                                    ));
                                 }
                             }
                         } else {
@@ -340,11 +341,11 @@ fn convert_paths_to_content(doc: &mut Value, sc_data_dir: &Path) -> Result<()> {
                         }
                     }
                     Err(e) => {
-                        tracing::warn!(
+                        logger::warn(&format!(
                             "Failed to read file at {}: {}. Continuing...",
                             adjusted_path,
                             e
-                        );
+                        ));
                     }
                 }
             }
@@ -395,7 +396,7 @@ fn get_bilara_templates(db: &Database<ReqwestClient>, sc_data_dir: &Path) -> Res
             
             // Read template content from disk
             if let Err(e) = convert_paths_to_content(&mut doc, sc_data_dir) {
-                tracing::warn!("Failed to read template content: {}", e);
+                logger::warn(&format!("Failed to read template content: {}", e));
                 continue;
             }
             
@@ -508,7 +509,7 @@ fn bilara_text_to_sutta(
         (html_wrapped, plain)
     } else {
         // No template available - parse JSON and join values
-        tracing::warn!("No template available for {}, using plain text fallback", full_uid);
+        logger::warn(&format!("No template available for {}, using plain text fallback", full_uid));
         match serde_json::from_str::<HashMap<String, String>>(&json_text) {
             Ok(segments) => {
                 let text = segments.values()
@@ -519,7 +520,7 @@ fn bilara_text_to_sutta(
                 (String::new(), text)
             }
             Err(e) => {
-                tracing::error!("Failed to parse Bilara JSON for {}: {}", full_uid, e);
+                logger::error(&format!("Failed to parse Bilara JSON for {}: {}", full_uid, e));
                 (String::new(), String::new())
             }
         }
@@ -574,7 +575,7 @@ fn get_suttas(
         let mut unknown_dup = 0;
 
         // Query 1: html_text collection
-        tracing::info!("Querying html_text collection for language: {}", lang);
+        logger::info(&format!("Querying html_text collection for language: {}", lang));
         let html_aql = "FOR x IN html_text FILTER x.lang == @language RETURN x";
         let mut html_bind_vars = HashMap::new();
         html_bind_vars.insert("language", Value::String(lang.to_string()));
@@ -590,13 +591,13 @@ fn get_suttas(
         };
         
         total_results += html_results.len();
-        tracing::info!("Found {} html_text results", html_results.len());
+        logger::info(&format!("Found {} html_text results", html_results.len()));
 
         // Process html_text results
         for mut doc in html_results {
             // Read file content
             if let Err(e) = convert_paths_to_content(&mut doc, sc_data_dir) {
-                tracing::warn!("Failed to read content: {}", e);
+                logger::warn(&format!("Failed to read content: {}", e));
                 continue;
             }
 
@@ -610,7 +611,7 @@ fn get_suttas(
             let uid = match html_text_uid(&doc) {
                 Ok(u) => u,
                 Err(e) => {
-                    tracing::warn!("Failed to generate UID: {}", e);
+                    logger::warn(&format!("Failed to generate UID: {}", e));
                     ignored += 1;
                     continue;
                 }
@@ -630,19 +631,19 @@ fn get_suttas(
                 Ok(sutta) => {
                     if suttas_map.contains_key(&uid) {
                         known_dup += 1;
-                        tracing::debug!("Duplicate UID {}, keeping existing", uid);
+                        logger::info(&format!("Duplicate UID {}, keeping existing", uid));
                     } else {
                         suttas_map.insert(uid, sutta);
                     }
                 }
                 Err(e) => {
-                    tracing::warn!("Failed to convert html_text to sutta: {}", e);
+                    logger::warn(&format!("Failed to convert html_text to sutta: {}", e));
                 }
             }
         }
 
         // Query 2: sc_bilara_texts collection
-        tracing::info!("Querying sc_bilara_texts collection for language: {}", lang);
+        logger::info(&format!("Querying sc_bilara_texts collection for language: {}", lang));
         let bilara_aql = "FOR x IN sc_bilara_texts FILTER x.lang == @language RETURN x";
         let mut bilara_bind_vars = HashMap::new();
         bilara_bind_vars.insert("language", Value::String(lang.to_string()));
@@ -658,13 +659,13 @@ fn get_suttas(
         };
         
         total_results += bilara_results.len();
-        tracing::info!("Found {} bilara_texts results", bilara_results.len());
+        logger::info(&format!("Found {} bilara_texts results", bilara_results.len()));
 
         // Process bilara_texts results
         for mut doc in bilara_results {
             // Read file content
             if let Err(e) = convert_paths_to_content(&mut doc, sc_data_dir) {
-                tracing::warn!("Failed to read content: {}", e);
+                logger::warn(&format!("Failed to read content: {}", e));
                 continue;
             }
 
@@ -678,7 +679,7 @@ fn get_suttas(
             let uid = match bilara_text_uid(&doc) {
                 Ok(u) => u,
                 Err(e) => {
-                    tracing::warn!("Failed to generate UID: {}", e);
+                    logger::warn(&format!("Failed to generate UID: {}", e));
                     ignored += 1;
                     continue;
                 }
@@ -711,22 +712,22 @@ fn get_suttas(
                 // Skip if this is a reference or variant (keep existing)
                 if muids.contains(&"reference") || muids.contains(&"variant") {
                     known_dup += 1;
-                    tracing::debug!("Skipping reference/variant duplicate: {}", uid);
+                    logger::info(&format!("Skipping reference/variant duplicate: {}", uid));
                     false
                 } else if muids.contains(&"root") {
                     // Prefer root version - replace existing
                     known_dup += 1;
-                    tracing::debug!("Replacing with root version: {}", uid);
+                    logger::info(&format!("Replacing with root version: {}", uid));
                     true
                 } else if existing.content_html.is_some() {
                     // Existing is html_text, new is bilara - prefer bilara
                     known_dup += 1;
-                    tracing::debug!("Replacing html_text with bilara: {}", uid);
+                    logger::info(&format!("Replacing html_text with bilara: {}", uid));
                     true
                 } else {
                     // Unknown duplicate case
                     unknown_dup += 1;
-                    tracing::warn!("Unknown duplicate case for {}, keeping existing", uid);
+                    logger::warn(&format!("Unknown duplicate case for {}, keeping existing", uid));
                     false
                 }
             } else {
@@ -740,16 +741,16 @@ fn get_suttas(
                         suttas_map.insert(uid, sutta);
                     }
                     Err(e) => {
-                        tracing::warn!("Failed to convert bilara_text to sutta: {}", e);
+                        logger::warn(&format!("Failed to convert bilara_text to sutta: {}", e));
                     }
                 }
             }
         }
 
-        tracing::info!(
+        logger::info(&format!(
             "Sutta retrieval complete: {} total results, {} ignored, {} known duplicates, {} unknown duplicates, {} suttas collected",
             total_results, ignored, known_dup, unknown_dup, suttas_map.len()
-        );
+        ));
 
         Ok::<HashMap<String, SuttaCentralData>, anyhow::Error>(suttas_map)
     })?;
@@ -773,7 +774,7 @@ fn import_sutta_variants(
 
     let count = rt.block_on(async {
         // Query for variant records
-        tracing::info!("Querying for sutta variants in language: {}", lang);
+        logger::info(&format!("Querying for sutta variants in language: {}", lang));
         let aql = "FOR x IN sc_bilara_texts FILTER x.lang == @language && POSITION(x.muids, 'variant') RETURN x";
         let mut bind_vars = HashMap::new();
         bind_vars.insert("language", Value::String(lang.to_string()));
@@ -788,14 +789,14 @@ fn import_sutta_variants(
             results
         };
         
-        tracing::info!("Found {} variant records", results.len());
+        logger::info(&format!("Found {} variant records", results.len()));
         
         let mut inserted_count = 0;
 
         for mut doc in results {
             // Read content from disk
             if let Err(e) = convert_paths_to_content(&mut doc, sc_data_dir) {
-                tracing::warn!("Failed to read variant content: {}", e);
+                logger::warn(&format!("Failed to read variant content: {}", e));
                 continue;
             }
 
@@ -808,7 +809,7 @@ fn import_sutta_variants(
             let sutta_uid = match bilara_text_uid(&doc) {
                 Ok(u) => u,
                 Err(e) => {
-                    tracing::warn!("Failed to generate variant UID: {}", e);
+                    logger::warn(&format!("Failed to generate variant UID: {}", e));
                     continue;
                 }
             };
@@ -828,7 +829,7 @@ fn import_sutta_variants(
             let sutta_id = match sutta_id {
                 Some(id) => id,
                 None => {
-                    tracing::error!("Parent sutta not found for variant: {}", sutta_uid);
+                    logger::error(&format!("Parent sutta not found for variant: {}", sutta_uid));
                     continue;
                 }
             };
@@ -865,7 +866,7 @@ fn import_sutta_variants(
         Ok::<usize, anyhow::Error>(inserted_count)
     })?;
 
-    tracing::info!("{} sutta variants imported", count);
+    logger::info(&format!("{} sutta variants imported", count));
     Ok(())
 }
 
@@ -885,7 +886,7 @@ fn import_sutta_comments(
 
     let count = rt.block_on(async {
         // Query for comment records
-        tracing::info!("Querying for sutta comments in language: {}", lang);
+        logger::info(&format!("Querying for sutta comments in language: {}", lang));
         let aql = "FOR x IN sc_bilara_texts FILTER x.lang == @language && POSITION(x.muids, 'comment') RETURN x";
         let mut bind_vars = HashMap::new();
         bind_vars.insert("language", Value::String(lang.to_string()));
@@ -900,14 +901,14 @@ fn import_sutta_comments(
             results
         };
         
-        tracing::info!("Found {} comment records", results.len());
+        logger::info(&format!("Found {} comment records", results.len()));
         
         let mut inserted_count = 0;
 
         for mut doc in results {
             // Read content from disk
             if let Err(e) = convert_paths_to_content(&mut doc, sc_data_dir) {
-                tracing::warn!("Failed to read comment content: {}", e);
+                logger::warn(&format!("Failed to read comment content: {}", e));
                 continue;
             }
 
@@ -918,7 +919,7 @@ fn import_sutta_comments(
             let sutta_uid = match bilara_text_uid(&doc) {
                 Ok(u) => u,
                 Err(e) => {
-                    tracing::warn!("Failed to generate comment UID: {}", e);
+                    logger::warn(&format!("Failed to generate comment UID: {}", e));
                     continue;
                 }
             };
@@ -938,7 +939,7 @@ fn import_sutta_comments(
             let sutta_id = match sutta_id {
                 Some(id) => id,
                 None => {
-                    tracing::error!("Parent sutta not found for comment: {}", sutta_uid);
+                    logger::error(&format!("Parent sutta not found for comment: {}", sutta_uid));
                     continue;
                 }
             };
@@ -975,7 +976,7 @@ fn import_sutta_comments(
         Ok::<usize, anyhow::Error>(inserted_count)
     })?;
 
-    tracing::info!("{} sutta comments imported", count);
+    logger::info(&format!("{} sutta comments imported", count));
     Ok(())
 }
 
@@ -1005,25 +1006,25 @@ impl SuttaCentralImporter {
         lang: &str,
         limit: Option<i32>,
     ) -> Result<()> {
-        tracing::info!("Importing SuttaCentral suttas for language: {}", lang);
+        logger::info(&format!("Importing SuttaCentral suttas for language: {}", lang));
 
         // Step 1: Get titles
-        tracing::info!("Step 1: Getting titles for {}", lang);
+        logger::info(&format!("Step 1: Getting titles for {}", lang));
         let titles = get_titles(db, lang)?;
-        tracing::info!("Retrieved {} titles", titles.len());
+        logger::info(&format!("Retrieved {} titles", titles.len()));
 
         // Step 2: Get templates (only needed once, for all languages)
-        tracing::info!("Step 2: Getting Bilara templates");
+        logger::info(&format!("Step 2: Getting Bilara templates"));
         let templates = get_bilara_templates(db, &self.sc_data_dir)?;
-        tracing::info!("Retrieved {} templates", templates.len());
+        logger::info(&format!("Retrieved {} templates", templates.len()));
 
         // Step 3: Get suttas
-        tracing::info!("Step 3: Getting suttas for {}", lang);
+        logger::info(&format!("Step 3: Getting suttas for {}", lang));
         let suttas = get_suttas(db, &titles, &templates, &self.sc_data_dir, lang, limit)?;
-        tracing::info!("Retrieved {} suttas", suttas.len());
+        logger::info(&format!("Retrieved {} suttas", suttas.len()));
 
         // Step 4: Insert suttas into database
-        tracing::info!("Step 4: Inserting {} suttas into database", suttas.len());
+        logger::info(&format!("Step 4: Inserting {} suttas into database", suttas.len()));
         let mut inserted_count = 0;
         for (uid, sutta_data) in suttas.iter() {
             let new_sutta = sutta_data.to_new_sutta();
@@ -1033,28 +1034,28 @@ impl SuttaCentralImporter {
             {
                 Ok(_) => inserted_count += 1,
                 Err(e) => {
-                    tracing::error!("Failed to insert sutta {}: {}", uid, e);
+                    logger::error(&format!("Failed to insert sutta {}: {}", uid, e));
                 }
             }
         }
-        tracing::info!("Inserted {} suttas for language {}", inserted_count, lang);
+        logger::info(&format!("Inserted {} suttas for language {}", inserted_count, lang));
 
         // Step 5: Import variants
-        tracing::info!("Step 5: Importing variants for {}", lang);
+        logger::info(&format!("Step 5: Importing variants for {}", lang));
         import_sutta_variants(conn, db, &self.sc_data_dir, lang, limit)?;
 
         // Step 6: Import comments
-        tracing::info!("Step 6: Importing comments for {}", lang);
+        logger::info(&format!("Step 6: Importing comments for {}", lang));
         import_sutta_comments(conn, db, &self.sc_data_dir, lang, limit)?;
 
-        tracing::info!("DONE: {}", lang);
+        logger::info(&format!("DONE: {}", lang));
         Ok(())
     }
 }
 
 impl SuttaImporter for SuttaCentralImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()> {
-        tracing::info!("Starting SuttaCentral import");
+        logger::info(&format!("Starting SuttaCentral import"));
 
         // Connect to ArangoDB
         let db = connect_to_arangodb()
@@ -1066,12 +1067,12 @@ impl SuttaImporter for SuttaCentralImporter {
             .and_then(|s| s.parse::<i32>().ok());
 
         if let Some(lim) = limit {
-            tracing::info!("BOOTSTRAP_LIMIT set to {}", lim);
+            logger::info(&format!("BOOTSTRAP_LIMIT set to {}", lim));
         }
 
         self.import_for_language(conn, &db, &self.lang.clone(), limit)?;
 
-        tracing::info!("SuttaCentral import completed for lang '{}'", &self.lang);
+        logger::info(&format!("SuttaCentral import completed for lang '{}'", &self.lang));
         Ok(())
     }
 }

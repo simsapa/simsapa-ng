@@ -4,7 +4,7 @@ use std::process::Command;
 
 use anyhow::{Result, Context};
 use diesel::prelude::*;
-use tracing::{info};
+use simsapa_backend::logger;
 
 use simsapa_backend::db::appdata_models::NewAppSetting;
 use simsapa_backend::db::appdata_schema::app_settings;
@@ -21,10 +21,10 @@ impl AppdataBootstrap {
     }
 
     pub fn create_database(&self) -> Result<()> {
-        info!("Creating appdata database at: {:?}", self.output_path);
+        logger::info(&format!("Creating appdata database at: {:?}", self.output_path));
 
         if self.output_path.exists() {
-            info!("Deleting existing database file");
+            logger::info("Deleting existing database file");
             std::fs::remove_file(&self.output_path)?;
         }
 
@@ -34,18 +34,18 @@ impl AppdataBootstrap {
                 .ok_or_else(|| anyhow::anyhow!("Invalid database path"))?
         )?;
 
-        info!("Creating new SQLite database file");
+        logger::info("Creating new SQLite database file");
         let mut conn = create_database_connection(&self.output_path)?;
 
-        info!("Running diesel migrations to create schema");
+        logger::info("Running diesel migrations to create schema");
         run_migrations(&mut conn)?;
 
-        info!("Database created successfully");
+        logger::info("Database created successfully");
         Ok(())
     }
 
     pub fn initialize_app_settings(&self, conn: &mut SqliteConnection) -> Result<()> {
-        info!("Initializing app settings with default values");
+        logger::info("Initializing app settings with default values");
 
         // NOTE: Not writing AppSettings to appdata.sqlite3. It will be written to userdata.sqlite3 on the first run.
         let settings = vec![
@@ -59,7 +59,7 @@ impl AppdataBootstrap {
             .values(&settings)
             .execute(conn)?;
 
-        info!("App settings initialized with default values");
+        logger::info("App settings initialized with default values");
         Ok(())
     }
 
@@ -127,7 +127,7 @@ impl AppdataBootstrap {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        info!("Starting appdata database bootstrap");
+        logger::info("Starting appdata database bootstrap");
 
         self.create_database()?;
 
@@ -139,7 +139,7 @@ impl AppdataBootstrap {
         // NOTE: Db connection to appdata must be closed before create_fts5_indexes()
         self.create_fts5_indexes()?;
 
-        info!("Appdata database bootstrap completed successfully");
+        logger::info("Appdata database bootstrap completed successfully");
         Ok(())
     }
 }
