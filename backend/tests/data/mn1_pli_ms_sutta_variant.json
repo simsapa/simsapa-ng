@@ -1,0 +1,8 @@
+{
+  "id": 370,
+  "sutta_id": 9828,
+  "sutta_uid": "mn1/pli/ms",
+  "language": "pli",
+  "source_uid": "ms",
+  "content_json": "{\n  \"mn1:3.2\": \"pathaviṁ → paṭhaviṁ (bj, sya-all, km, pts1ed) \",\n  \"mn1:27.1\": \"sekkho → sekho (bj, sya-all, km, pts1ed) \",\n  \"mn1:27.2\": \"maññi → vā maññati (si); māmaññī (cck) | abhiññāya → abhiññatvā (si, mr) | mābhinandi → vā abhinandati (si); mābhinandī (cck) \",\n  \"mn1:171.4\": \"Nandī → nandi (bj, sya-all) \"\n}"
+}
