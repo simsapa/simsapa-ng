@@ -33,8 +33,6 @@ pub trait SuttaImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()>;
 }
 
-pub type ProgressCallback = Box<dyn Fn(usize, usize, &str)>;
-
 pub fn create_database_connection(db_path: &Path) -> Result<SqliteConnection> {
     let db_url = db_path.to_str()
         .ok_or_else(|| anyhow::anyhow!("Invalid database path"))?;
@@ -52,22 +50,6 @@ pub fn run_migrations(conn: &mut SqliteConnection) -> Result<()> {
 pub fn ensure_directory_exists(path: &Path) -> Result<()> {
     if !path.exists() {
         fs::create_dir_all(path)?;
-    }
-    Ok(())
-}
-
-pub fn batch_insert<T, F>(
-    conn: &mut SqliteConnection,
-    items: Vec<T>,
-    batch_size: usize,
-    insert_fn: F,
-) -> Result<()>
-where
-    T: Clone,
-    F: Fn(&mut SqliteConnection, Vec<T>) -> Result<(), diesel::result::Error>,
-{
-    for chunk in items.chunks(batch_size) {
-        insert_fn(conn, chunk.to_vec())?;
     }
     Ok(())
 }
@@ -183,18 +165,6 @@ RELEASE_CHANNEL=development
         }
     }
 
-    // Import Ajahn Munindo's Dhammapada
-    {
-        let dhammapada_munindo_path = bootstrap_assets_dir.join("dhammapada-munindo");
-        if dhammapada_munindo_path.exists() {
-            logger::info("Importing suttas from dhammapada-munindo");
-            let mut importer = DhammapadaMunindoImporter::new(dhammapada_munindo_path);
-            importer.import(&mut conn)?;
-        } else {
-            logger::warn("Dhammapada Munindo resource path not found, skipping");
-        }
-    }
-
     // Import Dhammapada from Tipitaka.net (Daw Mya Tin translation)
     // Uses exported database from dhammapada_tipitaka_net_export command
     {
@@ -218,6 +188,18 @@ RELEASE_CHANNEL=development
             importer.import(&mut conn)?;
         } else {
             logger::warn("Nyanadipa translations resource path not found, skipping");
+        }
+    }
+
+    // Import Ajahn Munindo's Dhammapada
+    {
+        let dhammapada_munindo_path = bootstrap_assets_dir.join("dhammapada-munindo");
+        if dhammapada_munindo_path.exists() {
+            logger::info("Importing suttas from dhammapada-munindo");
+            let mut importer = DhammapadaMunindoImporter::new(dhammapada_munindo_path);
+            importer.import(&mut conn)?;
+        } else {
+            logger::warn("Dhammapada Munindo resource path not found, skipping");
         }
     }
 

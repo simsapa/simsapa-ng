@@ -14,6 +14,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 diesel = { version = "2.2.10", features = ["sqlite"] }
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
+indexmap = { version = "2.0", features = ["serde"] }
 arangors = "0.6.0"
 scraper = "0.21.0"
 html5ever = "0.29.0"

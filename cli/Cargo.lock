@@ -2160,6 +2160,7 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "html5ever",
+ "indexmap",
  "indicatif",
  "lazy_static",
  "pulldown-cmark",
