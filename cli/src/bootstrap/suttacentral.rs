@@ -5,6 +5,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs;
+use indicatif::{ProgressBar, ProgressStyle};
 
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 use crate::bootstrap::SuttaImporter;
@@ -18,7 +19,7 @@ use simsapa_backend::logger;
 use diesel::prelude::*;
 
 /// Sutta data structure for SuttaCentral imports
-/// 
+///
 /// This extends the basic SuttaData with support for Bilara JSON content
 #[derive(Debug, Clone)]
 pub struct SuttaCentralData {
@@ -125,7 +126,7 @@ fn get_titles(db: &Database<ReqwestClient>, lang: &str) -> Result<HashMap<String
             use std::collections::HashMap as AqlMap;
             let mut bind_vars = AqlMap::new();
             bind_vars.insert("language", Value::String(lang.to_string()));
-            
+
             db.aql_bind_vars(aql, bind_vars)
                 .await
                 .context("Failed to execute AQL query for titles")?
@@ -133,7 +134,7 @@ fn get_titles(db: &Database<ReqwestClient>, lang: &str) -> Result<HashMap<String
 
         // Parse results
         let mut result_map = HashMap::new();
-        
+
         for doc in results {
             if let (Some(uid), Some(name)) = (
                 doc.get("uid").and_then(|v| v.as_str()),
@@ -160,15 +161,15 @@ fn html_text_uid(doc: &Value) -> Result<String> {
     let uid = doc.get("uid")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'uid' field in html_text document")?;
-    
+
     let lang = doc.get("lang")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'lang' field in html_text document")?;
-    
+
     let author_uid = doc.get("author_uid")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'author_uid' field in html_text document")?;
-    
+
     Ok(format!("{}/{}/{}", uid, lang, author_uid))
 }
 
@@ -184,34 +185,34 @@ fn bilara_text_uid(doc: &Value) -> Result<String> {
     let uid = doc.get("uid")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'uid' field in bilara_text document")?;
-    
+
     let lang = doc.get("lang")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'lang' field in bilara_text document")?;
-    
+
     let file_path = doc.get("file_path")
         .and_then(|v| v.as_str())
         .unwrap_or("");
-    
+
     // Extract muids array
     let muids_array = doc.get("muids")
         .and_then(|v| v.as_array())
         .context("Missing or invalid 'muids' field in bilara_text document")?;
-    
+
     // Convert muids to strings and filter out known metadata values
     let mut author_candidates: Vec<String> = muids_array
         .iter()
         .filter_map(|v| v.as_str())
         .map(|s| s.to_string())
         .collect();
-    
+
     // Remove metadata values
     let metadata_values = vec![
         "translation", "root", "reference", "variant", "comment", "html", lang
     ];
-    
+
     author_candidates.retain(|item| !metadata_values.contains(&item.as_str()));
-    
+
     // Determine author
     let author = if author_candidates.len() == 1 {
         // Single author remaining
@@ -229,7 +230,7 @@ fn bilara_text_uid(doc: &Value) -> Result<String> {
         // Multiple authors, join with "-"
         author_candidates.join("-")
     };
-    
+
     Ok(format!("{}/{}/{}", uid, lang, author))
 }
 
@@ -255,7 +256,7 @@ fn res_is_ignored(doc: &Value) -> bool {
             return true;
         }
     }
-    
+
     // Check muids
     if let Some(muids_array) = doc.get("muids").and_then(|v| v.as_array()) {
         for muid in muids_array {
@@ -266,7 +267,7 @@ fn res_is_ignored(doc: &Value) -> bool {
             }
         }
     }
-    
+
     false
 }
 
@@ -299,20 +300,20 @@ fn convert_paths_to_content(doc: &mut Value, sc_data_dir: &Path) -> Result<()> {
         ("markup_path", "markup", false),
         ("strings_path", "strings", true),
     ];
-    
+
     for (path_field, content_field, is_json) in conversions {
         if let Some(path_value) = doc.get(path_field) {
             if path_value.is_null() {
                 continue;
             }
-            
+
             if let Some(path_str) = path_value.as_str() {
                 // Replace the ArangoDB path with sc_data_dir
                 let adjusted_path = path_str.replace(
                     "/opt/sc/sc-flask/sc-data",
                     sc_data_dir.to_str().unwrap()
                 );
-                
+
                 // Try to read the file
                 match fs::read_to_string(&adjusted_path) {
                     Ok(content) => {
@@ -351,7 +352,7 @@ fn convert_paths_to_content(doc: &mut Value, sc_data_dir: &Path) -> Result<()> {
             }
         }
     }
-    
+
     Ok(())
 }
 
@@ -370,36 +371,36 @@ fn get_bilara_templates(db: &Database<ReqwestClient>, sc_data_dir: &Path) -> Res
     let templates = rt.block_on(async {
         // Query for HTML templates - all records with _key ending in '_html'
         let aql = "FOR x IN sc_bilara_texts FILTER x._key LIKE '%_html' RETURN x";
-        
+
         let results: Vec<Value> = db.aql_str(aql)
             .await
             .context("Failed to execute AQL query for Bilara templates")?;
 
         let mut template_map = HashMap::new();
-        
+
         for mut doc in results {
             // Verify this is an HTML template
             let file_path = doc.get("file_path").and_then(|v| v.as_str()).unwrap_or("");
             let muids_array = doc.get("muids").and_then(|v| v.as_array());
-            
+
             // Check if file_path contains 'html' and muids contains 'html'
             let is_html_path = file_path.contains("/html/") || file_path.contains("_html.json");
-            
+
             let has_html_muid = muids_array
                 .map(|arr| arr.iter().any(|v| v.as_str() == Some("html")))
                 .unwrap_or(false);
-            
+
             // Only process if both conditions are met
             if !is_html_path || !has_html_muid {
                 continue;
             }
-            
+
             // Read template content from disk
             if let Err(e) = convert_paths_to_content(&mut doc, sc_data_dir) {
                 logger::warn(&format!("Failed to read template content: {}", e));
                 continue;
             }
-            
+
             // Extract uid and template text
             if let (Some(uid), Some(text)) = (
                 doc.get("uid").and_then(|v| v.as_str()),
@@ -426,31 +427,31 @@ fn html_text_to_sutta(doc: &Value, title: &str) -> Result<SuttaCentralData> {
     let uid_base = parts.get(0).context("Missing UID base")?.to_string();
     let lang = parts.get(1).context("Missing language")?.to_string();
     let author = parts.get(2).context("Missing author")?.to_string();
-    
+
     // Extract HTML content
     let html_page = doc.get("text")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'text' field in html_text document")?;
-    
+
     // Parse HTML to extract body
     let mut body = html_get_sutta_page_body(html_page)
         .context("Failed to extract sutta body from HTML page")?;
-    
+
     // Apply post-processing
     body = bilara_html_post_process(&body);
     body = consistent_niggahita(Some(body));
-    
+
     // Wrap in container div
     let content_html = format!(r#"<div class="suttacentral html-text">{}</div>"#, body);
-    
+
     // Generate plain text for indexing
     let content_plain = compact_rich_text(&content_html);
-    
+
     // Calculate metadata
     let sutta_ref = uid_to_ref(&uid_base);
     let nikaya = uid_to_nikaya(&uid_base);
     let title_ascii = pali_to_ascii(Some(title));
-    
+
     Ok(SuttaCentralData {
         uid: full_uid,
         sutta_ref,
@@ -481,15 +482,15 @@ fn bilara_text_to_sutta(
     let uid_base = parts.get(0).context("Missing UID base")?.to_string();
     let lang = parts.get(1).context("Missing language")?.to_string();
     let author = parts.get(2).context("Missing author")?.to_string();
-    
+
     // Extract JSON content
     let json_text = doc.get("text")
         .and_then(|v| v.as_str())
         .context("Missing or invalid 'text' field in bilara_text document")?;
-    
+
     // Apply niggahita normalization to JSON content
     let json_text = consistent_niggahita(Some(json_text.to_string()));
-    
+
     // Generate HTML and plain text
     let (_content_html, content_plain) = if let Some(template) = tmpl_json {
         // Use template to convert JSON → HTML (no variants/comments/glosses for now)
@@ -525,12 +526,12 @@ fn bilara_text_to_sutta(
             }
         }
     };
-    
+
     // Calculate metadata
     let sutta_ref = uid_to_ref(&uid_base);
     let nikaya = uid_to_nikaya(&uid_base);
     let title_ascii = pali_to_ascii(Some(title));
-    
+
     Ok(SuttaCentralData {
         uid: full_uid,
         sutta_ref,
@@ -579,17 +580,17 @@ fn get_suttas(
         let html_aql = "FOR x IN html_text FILTER x.lang == @language RETURN x";
         let mut html_bind_vars = HashMap::new();
         html_bind_vars.insert("language", Value::String(lang.to_string()));
-        
+
         let html_results: Vec<Value> = db.aql_bind_vars(html_aql, html_bind_vars)
             .await
             .context("Failed to query html_text collection")?;
-        
+
         let html_results = if let Some(lim) = limit {
             html_results.into_iter().take(lim as usize).collect()
         } else {
             html_results
         };
-        
+
         total_results += html_results.len();
         logger::info(&format!("Found {} html_text results", html_results.len()));
 
@@ -647,17 +648,17 @@ fn get_suttas(
         let bilara_aql = "FOR x IN sc_bilara_texts FILTER x.lang == @language RETURN x";
         let mut bilara_bind_vars = HashMap::new();
         bilara_bind_vars.insert("language", Value::String(lang.to_string()));
-        
+
         let bilara_results: Vec<Value> = db.aql_bind_vars(bilara_aql, bilara_bind_vars)
             .await
             .context("Failed to query sc_bilara_texts collection")?;
-        
+
         let bilara_results = if let Some(lim) = limit {
             bilara_results.into_iter().take(lim as usize).collect()
         } else {
             bilara_results
         };
-        
+
         total_results += bilara_results.len();
         logger::info(&format!("Found {} bilara_texts results", bilara_results.len()));
 
@@ -778,19 +779,19 @@ fn import_sutta_variants(
         let aql = "FOR x IN sc_bilara_texts FILTER x.lang == @language && POSITION(x.muids, 'variant') RETURN x";
         let mut bind_vars = HashMap::new();
         bind_vars.insert("language", Value::String(lang.to_string()));
-        
+
         let results: Vec<Value> = db.aql_bind_vars(aql, bind_vars)
             .await
             .context("Failed to query for sutta variants")?;
-        
+
         let results = if let Some(lim) = limit {
             results.into_iter().take(lim as usize).collect()
         } else {
             results
         };
-        
+
         logger::info(&format!("Found {} variant records", results.len()));
-        
+
         let mut inserted_count = 0;
 
         for mut doc in results {
@@ -890,19 +891,19 @@ fn import_sutta_comments(
         let aql = "FOR x IN sc_bilara_texts FILTER x.lang == @language && POSITION(x.muids, 'comment') RETURN x";
         let mut bind_vars = HashMap::new();
         bind_vars.insert("language", Value::String(lang.to_string()));
-        
+
         let results: Vec<Value> = db.aql_bind_vars(aql, bind_vars)
             .await
             .context("Failed to query for sutta comments")?;
-        
+
         let results = if let Some(lim) = limit {
             results.into_iter().take(lim as usize).collect()
         } else {
             results
         };
-        
+
         logger::info(&format!("Found {} comment records", results.len()));
-        
+
         let mut inserted_count = 0;
 
         for mut doc in results {
@@ -1025,8 +1026,20 @@ impl SuttaCentralImporter {
 
         // Step 4: Insert suttas into database
         logger::info(&format!("Step 4: Inserting {} suttas into database", suttas.len()));
+
+        let pb = ProgressBar::new(suttas.len() as u64);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")?
+                .progress_chars("=>-"),
+        );
+
         let mut inserted_count = 0;
+        let mut error_count = 0;
+
         for (uid, sutta_data) in suttas.iter() {
+            pb.set_message(uid.clone());
+
             let new_sutta = sutta_data.to_new_sutta();
             match diesel::insert_into(suttas::table)
                 .values(&new_sutta)
@@ -1034,10 +1047,19 @@ impl SuttaCentralImporter {
             {
                 Ok(_) => inserted_count += 1,
                 Err(e) => {
+                    error_count += 1;
                     logger::error(&format!("Failed to insert sutta {}: {}", uid, e));
                 }
             }
+
+            pb.inc(1);
         }
+
+        pb.finish_with_message(format!(
+            "Inserted {} suttas ({} errors)",
+            inserted_count, error_count
+        ));
+
         logger::info(&format!("Inserted {} suttas for language {}", inserted_count, lang));
 
         // Step 5: Import variants
@@ -1105,20 +1127,20 @@ mod tests {
     fn test_get_titles_english() {
         let db = connect_to_arangodb()
             .expect("Failed to connect to ArangoDB for testing");
-        
+
         let titles = get_titles(&db, "en")
             .expect("Failed to get English titles");
-        
+
         // Verify we got some titles
         assert!(!titles.is_empty(), "Expected non-empty titles HashMap");
-        
+
         // Verify expected format - each key should be a UID, each value a title string
         for (uid, title) in titles.iter().take(5) {
             println!("Sample title: {} -> {}", uid, title);
             assert!(!uid.is_empty(), "UID should not be empty");
             assert!(!title.is_empty(), "Title should not be empty");
         }
-        
+
         // Check for some common suttas (if they exist in the dataset)
         println!("Total English titles: {}", titles.len());
     }
@@ -1128,23 +1150,23 @@ mod tests {
     fn test_get_titles_pali() {
         let db = connect_to_arangodb()
             .expect("Failed to connect to ArangoDB for testing");
-        
+
         let titles = get_titles(&db, "pli")
             .expect("Failed to get Pāli titles");
-        
+
         // Verify we got some titles
         assert!(!titles.is_empty(), "Expected non-empty titles HashMap for Pāli");
-        
+
         // Verify expected format
         for (uid, title) in titles.iter().take(5) {
             println!("Sample Pāli title: {} -> {}", uid, title);
             assert!(!uid.is_empty(), "UID should not be empty");
             assert!(!title.is_empty(), "Title should not be empty");
         }
-        
+
         // Verify we have some common sutta UIDs
         println!("Total Pāli titles: {}", titles.len());
-        
+
         // Check for some expected suttas if available
         if titles.contains_key("dn1") {
             println!("Found DN1: {}", titles.get("dn1").unwrap());
@@ -1157,13 +1179,13 @@ mod tests {
     #[test]
     fn test_html_text_uid() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "lang": "en",
             "author_uid": "bodhi"
         });
-        
+
         let result = html_text_uid(&doc).expect("Should generate UID");
         assert_eq!(result, "dn1/en/bodhi");
     }
@@ -1171,13 +1193,13 @@ mod tests {
     #[test]
     fn test_html_text_uid_missing_field() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "lang": "en"
             // Missing author_uid
         });
-        
+
         let result = html_text_uid(&doc);
         assert!(result.is_err(), "Should fail with missing field");
     }
@@ -1185,14 +1207,14 @@ mod tests {
     #[test]
     fn test_bilara_text_uid_single_author() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "lang": "pli",
             "muids": ["root", "ms"],
             "file_path": "/some/path"
         });
-        
+
         let result = bilara_text_uid(&doc).expect("Should generate UID");
         assert_eq!(result, "dn1/pli/ms");
     }
@@ -1200,14 +1222,14 @@ mod tests {
     #[test]
     fn test_bilara_text_uid_multiple_authors() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "an1.1",
             "lang": "pt",
             "muids": ["translation", "laera", "quaresma"],
             "file_path": "/some/path"
         });
-        
+
         let result = bilara_text_uid(&doc).expect("Should generate UID");
         assert_eq!(result, "an1.1/pt/laera-quaresma");
     }
@@ -1215,14 +1237,14 @@ mod tests {
     #[test]
     fn test_bilara_text_uid_pli_ms_path() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "lang": "pli",
             "muids": ["root"],
             "file_path": "/opt/sc/sc-data/bilara-data/root/pli/ms/sutta/dn/dn1_root-pli-ms.json"
         });
-        
+
         let result = bilara_text_uid(&doc).expect("Should generate UID");
         assert_eq!(result, "dn1/pli/ms");
     }
@@ -1230,14 +1252,14 @@ mod tests {
     #[test]
     fn test_bilara_text_uid_pli_vri_path() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "an1.1",
             "lang": "pli",
             "muids": ["root"],
             "file_path": "/opt/sc/sc-data/bilara-data/root/pli/vri/sutta/an/an1/an1.1_root-pli-vri.json"
         });
-        
+
         let result = bilara_text_uid(&doc).expect("Should generate UID");
         assert_eq!(result, "an1.1/pli/vri");
     }
@@ -1245,14 +1267,14 @@ mod tests {
     #[test]
     fn test_bilara_text_uid_filter_metadata() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "mn1",
             "lang": "en",
             "muids": ["translation", "en", "sujato"],
             "file_path": "/some/path"
         });
-        
+
         let result = bilara_text_uid(&doc).expect("Should generate UID");
         // Should filter out "translation" and "en" (same as lang), keeping only "sujato"
         assert_eq!(result, "mn1/en/sujato");
@@ -1261,45 +1283,45 @@ mod tests {
     #[test]
     fn test_res_is_ignored_site_pages() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "some-page",
             "file_path": "/opt/sc/sc-data/site/pages/about.json",
             "muids": []
         });
-        
+
         assert!(res_is_ignored(&doc), "Should ignore site pages");
     }
 
     #[test]
     fn test_res_is_ignored_playground() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "test",
             "file_path": "/opt/sc/sc-data/xplayground/test.json",
             "muids": []
         });
-        
+
         assert!(res_is_ignored(&doc), "Should ignore playground content");
     }
 
     #[test]
     fn test_res_is_ignored_sa_ma_collections() {
         use serde_json::json;
-        
+
         let doc1 = json!({
             "uid": "sa123",
             "file_path": "/opt/sc/sc-data/sutta/sa/sa123.json",
             "muids": []
         });
-        
+
         let doc2 = json!({
             "uid": "ma456",
             "file_path": "/opt/sc/sc-data/sutta/ma/ma456.json",
             "muids": []
         });
-        
+
         assert!(res_is_ignored(&doc1), "Should ignore SA collection");
         assert!(res_is_ignored(&doc2), "Should ignore MA collection");
     }
@@ -1307,19 +1329,19 @@ mod tests {
     #[test]
     fn test_res_is_ignored_blurbs_and_names() {
         use serde_json::json;
-        
+
         let doc1 = json!({
             "uid": "dn1-blurbs",
             "file_path": "/opt/sc/sc-data/dn1-blurbs_en.json",
             "muids": []
         });
-        
+
         let doc2 = json!({
             "uid": "dn1-name",
             "file_path": "/opt/sc/sc-data/dn1-name_translation.json",
             "muids": []
         });
-        
+
         assert!(res_is_ignored(&doc1), "Should ignore blurbs");
         assert!(res_is_ignored(&doc2), "Should ignore name translations");
     }
@@ -1327,39 +1349,39 @@ mod tests {
     #[test]
     fn test_res_is_ignored_comments() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "file_path": "/opt/sc/sc-data/dn1.json",
             "muids": ["translation", "comment", "sujato"]
         });
-        
+
         assert!(res_is_ignored(&doc), "Should ignore comments");
     }
 
     #[test]
     fn test_res_is_ignored_html_templates() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "file_path": "/opt/sc/sc-data/html/dn1.json",
             "muids": ["html", "pli"]
         });
-        
+
         assert!(res_is_ignored(&doc), "Should ignore HTML templates");
     }
 
     #[test]
     fn test_res_is_ignored_valid_sutta() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "file_path": "/opt/sc/sc-data/translation/en/sujato/dn/dn1.json",
             "muids": ["translation", "en", "sujato"]
         });
-        
+
         assert!(!res_is_ignored(&doc), "Should NOT ignore valid sutta");
     }
 
@@ -1394,19 +1416,19 @@ mod tests {
     #[test]
     fn test_html_text_to_sutta() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "dn1",
             "lang": "en",
             "author_uid": "bodhi",
             "text": r#"<!DOCTYPE html><html><head><title>Test</title></head><body><p>This is a test sutta.</p></body></html>"#
         });
-        
+
         let title = "The All-embracing Net of Views";
-        
+
         let result = html_text_to_sutta(&doc, title);
         assert!(result.is_ok(), "Should successfully convert html_text to sutta");
-        
+
         let sutta = result.unwrap();
         assert_eq!(sutta.uid, "dn1/en/bodhi");
         assert_eq!(sutta.language, "en");
@@ -1424,7 +1446,7 @@ mod tests {
     #[test]
     fn test_bilara_text_to_sutta_without_template() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "mn1",
             "lang": "pli",
@@ -1432,12 +1454,12 @@ mod tests {
             "file_path": "/opt/sc/sc-data/bilara-data/root/pli/ms/sutta/mn/mn1_root-pli-ms.json",
             "text": r#"{"mn1:0.1": "Mūlapariyāyasutta", "mn1:1.1": "Evaṃ me sutaṃ..."}"#
         });
-        
+
         let title = "Mūlapariyāyasutta";
-        
+
         let result = bilara_text_to_sutta(&doc, title, None);
         assert!(result.is_ok(), "Should successfully convert bilara_text to sutta");
-        
+
         let sutta = result.unwrap();
         assert_eq!(sutta.uid, "mn1/pli/ms");
         assert_eq!(sutta.language, "pli");
@@ -1454,7 +1476,7 @@ mod tests {
     #[test]
     fn test_bilara_text_to_sutta_with_template() {
         use serde_json::json;
-        
+
         let doc = json!({
             "uid": "mn1",
             "lang": "en",
@@ -1462,13 +1484,13 @@ mod tests {
             "file_path": "/opt/sc/sc-data/bilara-data/translation/en/sujato/sutta/mn/mn1_translation-en-sujato.json",
             "text": r#"{"mn1:0.1": "The Root of All Things", "mn1:1.1": "So I have heard..."}"#
         });
-        
+
         let template = r#"{"mn1:0.1": "<h1>{}</h1>", "mn1:1.1": "<p>{}</p>"}"#;
         let title = "The Root of All Things";
-        
+
         let result = bilara_text_to_sutta(&doc, title, Some(template));
         assert!(result.is_ok(), "Should successfully convert bilara_text with template");
-        
+
         let sutta = result.unwrap();
         assert_eq!(sutta.uid, "mn1/en/sujato");
         assert_eq!(sutta.language, "en");
@@ -1482,25 +1504,25 @@ mod tests {
     #[ignore] // Only run when ArangoDB is available
     fn test_get_bilara_templates() {
         use std::path::PathBuf;
-        
+
         let db = connect_to_arangodb()
             .expect("Failed to connect to ArangoDB for testing");
-        
+
         // Use the sc-data directory (correct path)
         let sc_data_dir = PathBuf::from("../../bootstrap-assets-resources/sc-data");
-        
+
         let templates = get_bilara_templates(&db, &sc_data_dir)
             .expect("Failed to get Bilara templates");
-        
+
         // Verify we got some templates
         println!("Total Bilara templates: {}", templates.len());
-        
+
         // Should have at least some templates if the data is available
         if templates.is_empty() {
             println!("WARNING: No templates found - sc-data may not be available");
         } else {
             println!("Successfully loaded {} templates", templates.len());
-            
+
             // Display some sample templates
             for (uid, template) in templates.iter().take(3) {
                 println!("\nTemplate UID: {}", uid);
@@ -1508,7 +1530,7 @@ mod tests {
                 let preview_len = template.len().min(100);
                 println!("Template preview: {}...", &template[..preview_len]);
             }
-            
+
             // Verify templates are properly keyed by uid (not full path)
             for uid in templates.keys() {
                 assert!(!uid.contains("/"), "Template key should be simple UID, not path: {}", uid);

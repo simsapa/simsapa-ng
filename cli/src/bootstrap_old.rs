@@ -10,9 +10,13 @@ use crate::import_stardict_dictionary;
 use crate::bootstrap::clean_and_create_folders;
 use crate::bootstrap::dpd::dpd_migrate;
 
-pub fn bootstrap(write_new_dotenv: bool) -> Result<()> {
+pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
     let start_time: DateTime<Local> = Local::now();
     let iso_date = start_time.format("%Y-%m-%d").to_string();
+
+    if skip_dpd {
+        println!("--skip-dpd flag set: DPD initialization and bootstrap will be skipped");
+    }
 
     let bootstrap_limit: Option<i32> = match env::var("BOOTSTRAP_LIMIT") {
         Ok(s) if !s.is_empty() => s.parse().ok(),
@@ -71,15 +75,19 @@ RELEASE_CHANNEL=development
 
     appdata_migrate(&bootstrap_assets_dir, &assets_dir)?;
 
-    init_app_data();
+    if !skip_dpd {
+        init_app_data();
 
-    // Import DPD stardict
-    let dpd_stardict_path = bootstrap_assets_dir.join("dpd-db-for-bootstrap/current/dpd/");
-    import_stardict_dictionary("dpd", &dpd_stardict_path, None)
-        .map_err(|e| anyhow::anyhow!("Failed to import DPD Stardict: {}", e))?;
+        // Import DPD stardict
+        let dpd_stardict_path = bootstrap_assets_dir.join("dpd-db-for-bootstrap/current/dpd/");
+        import_stardict_dictionary("dpd", &dpd_stardict_path, None)
+            .map_err(|e| anyhow::anyhow!("Failed to import DPD Stardict: {}", e))?;
 
-    // This requires the DPD dictionary ID already present in dictionaries.sqlite3
-    dpd_migrate(&bootstrap_assets_dir, &assets_dir)?;
+        // This requires the DPD dictionary ID already present in dictionaries.sqlite3
+        dpd_migrate(&bootstrap_assets_dir, &assets_dir)?;
+    } else {
+        println!("Skipping DPD initialization and bootstrap");
+    }
 
     Ok(())
 }

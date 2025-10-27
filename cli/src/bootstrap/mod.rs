@@ -55,8 +55,12 @@ pub fn ensure_directory_exists(path: &Path) -> Result<()> {
 }
 
 /// Main bootstrap function - orchestrates the entire bootstrap process
-pub fn bootstrap(write_new_dotenv: bool) -> Result<()> {
+pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
     logger::info("=== Starting new modular bootstrap process ===");
+
+    if skip_dpd {
+        logger::info("--skip-dpd flag set: DPD initialization and bootstrap will be skipped");
+    }
 
     let start_time: DateTime<Local> = Local::now();
     let iso_date = start_time.format("%Y-%m-%d").to_string();
@@ -206,8 +210,12 @@ RELEASE_CHANNEL=development
     // Drop connection to close database before further operations
     drop(conn);
 
-    init_app_data();
-    dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
+    if !skip_dpd {
+        init_app_data();
+        dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
+    } else {
+        logger::info("Skipping DPD initialization and bootstrap");
+    }
 
     logger::info("=== Bootstrap process completed successfully ===");
     logger::info(&format!("Output database: {:?}", appdata_db_path));

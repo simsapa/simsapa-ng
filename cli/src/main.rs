@@ -475,6 +475,10 @@ enum Commands {
         /// Write a new .env file even if one already exists
         #[arg(long, default_value_t = false)]
         write_new_dotenv: bool,
+
+        /// Skip DPD database initialization and bootstrap
+        #[arg(long, default_value_t = false)]
+        skip_dpd: bool,
     },
 
     /// Rebuild the application database using the legacy bootstrap implementation.
@@ -482,6 +486,10 @@ enum Commands {
         /// Write a new .env file even if one already exists
         #[arg(long, default_value_t = false)]
         write_new_dotenv: bool,
+
+        /// Skip DPD database initialization and bootstrap
+        #[arg(long, default_value_t = false)]
+        skip_dpd: bool,
     },
 
     /// Export Dhammapada Tipitaka.net suttas from legacy database
@@ -595,13 +603,13 @@ fn main() {
              }
         }
 
-        Commands::Bootstrap { write_new_dotenv } => {
-            bootstrap::bootstrap(write_new_dotenv)
+        Commands::Bootstrap { write_new_dotenv, skip_dpd } => {
+            bootstrap::bootstrap(write_new_dotenv, skip_dpd)
                 .map_err(|e| e.to_string())
         }
 
-        Commands::BootstrapOld { write_new_dotenv } => {
-            bootstrap_old::bootstrap(write_new_dotenv)
+        Commands::BootstrapOld { write_new_dotenv, skip_dpd } => {
+            bootstrap_old::bootstrap(write_new_dotenv, skip_dpd)
                 .map_err(|e| e.to_string())
         }
 
