@@ -897,7 +897,7 @@ pub fn calculate_context_boundaries(
     // Adjust boundaries to not truncate words
     // Convert to char array for word boundary detection
     let chars: Vec<char> = original_text.chars().collect();
-    
+
     // If context_start is in the middle of a word, move backward to include the whole word
     if context_start > 0 && context_start < chars.len() {
         if is_word_char(chars[context_start]) {
@@ -905,7 +905,7 @@ pub fn calculate_context_boundaries(
             context_start = find_word_start_before(&chars, context_start);
         }
     }
-    
+
     // If context_end is in the middle of a word, move backward to previous word boundary
     if context_end > 0 && context_end < chars.len() {
         if is_word_char(chars[context_end]) {
@@ -1260,9 +1260,14 @@ pub fn latinize(text: &str) -> String {
 pub fn html_get_sutta_page_body(html_page: &str) -> Result<String> {
     // Only parse if it looks like a full HTML document
     if html_page.contains("<html") || html_page.contains("<HTML") {
-        // Find the start of the body tag
-        let body_start_pos = html_page.to_lowercase().find("<body");
-        let body_end_pos = html_page.to_lowercase().find("</body>");
+        // Find the start of the body tag (try both lowercase and uppercase)
+        let body_start_pos = html_page.find("<body")
+            .or_else(|| html_page.find("<BODY"))
+            .or_else(|| html_page.find("<Body"));
+
+        let body_end_pos = html_page.find("</body>")
+            .or_else(|| html_page.find("</BODY>"))
+            .or_else(|| html_page.find("</Body>"));
 
         if let Some(start_index_tag) = body_start_pos {
             // Find the closing '>' of the start tag
@@ -1274,7 +1279,7 @@ pub fn html_get_sutta_page_body(html_page: &str) -> Result<String> {
                         // Extract the content between the tags
                         Ok(html_page[content_start..end_index].to_string())
                     } else {
-                        // log::warn!("HTML document is missing a closing </body> tag");
+                        error("HTML document is missing a closing </body> tag");
                         // Return content from start tag to end of string as fallback
                         Ok(html_page[content_start..].to_string())
                     }
@@ -1282,11 +1287,11 @@ pub fn html_get_sutta_page_body(html_page: &str) -> Result<String> {
                     Ok(html_page[content_start..].to_string())
                 }
             } else {
-                // log::error!("Could not find closing '>' for <body> tag");
+                error("Could not find closing '>' for <body> tag");
                 Ok(html_page.to_string())
             }
         } else {
-            // log::error!("HTML document is missing a <body> tag");
+            error("HTML document is missing a <body> tag");
             // Return the original string if body is not found
             Ok(html_page.to_string())
         }
@@ -2117,5 +2122,56 @@ mod tests {
     fn test_is_complete_word_uid() {
         assert!(is_complete_word_uid("dhammacakkhu/dpd"));
         assert!(!is_complete_word_uid("dhammacakkhu"));
+    }
+
+    #[test]
+    fn test_html_get_sutta_page_body_with_turkish_chars() {
+        // Test with Turkish characters that can cause UTF-8 boundary issues
+        let html = r#"<!DOCTYPE html>
+<html>
+<head>
+<meta charset='UTF-8'>
+<meta name='author' content='Ufuk Çakmakçı'>
+<title></title>
+</head>
+<body>
+<article id='an2.21–31' lang='tr'>
+<header>
+<h1>2.21–31 Aptallar Üzerine</h1>
+</header>
+<h2>21</h2>
+<p>"İzdeşler! İki çeşit aptal vardır. İki çeşit aptal nedir? Görünen şeyleri görünmemiş olarak algılayan ve görünmeyen şeyleri görünmüş olarak algılayan kişiler. Bunlar, izdeşler, iki çeşit aptaldır."</p>
+</body>
+</html>"#;
+
+        let result = html_get_sutta_page_body(html);
+        assert!(result.is_ok(), "Should successfully extract body with Turkish characters");
+
+        let body = result.unwrap();
+        assert!(body.contains("İzdeşler"), "Should contain Turkish character İ");
+        assert!(body.contains("Üzerine"), "Should contain Turkish character Ü");
+        assert!(body.contains("algılayan"), "Should contain Turkish text from body");
+        assert!(!body.contains("<body"), "Should not contain body tag");
+        assert!(!body.contains("</body>"), "Should not contain closing body tag");
+        assert!(!body.contains("Çakmakçı"), "Should not contain head content");
+    }
+
+    #[test]
+    fn test_html_get_sutta_page_body_basic() {
+        let html = r#"<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+<p>This is test content.</p>
+</body>
+</html>"#;
+
+        let result = html_get_sutta_page_body(html);
+        assert!(result.is_ok(), "Should successfully extract body");
+
+        let body = result.unwrap();
+        assert!(body.contains("This is test content."));
+        assert!(!body.contains("<body"));
+        assert!(!body.contains("</body>"));
     }
 }
