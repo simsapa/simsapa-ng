@@ -318,8 +318,10 @@ RELEASE_CHANNEL=development
 
     logger::info("=== Copy log.txt ===");
 
-    fs::copy(&simsapa_dir.join("log.txt"), &release_dir)
-        .with_context(|| "Failed to copy log.txt to release_dir".to_string())?;
+    let log_src = simsapa_dir.join("log.txt");
+    let log_dst = release_dir.join("log.txt");
+    fs::copy(&log_src, &log_dst)
+        .with_context(|| format!("Failed to copy log.txt from {:?} to {:?}", log_src, log_dst))?;
 
     logger::info("=== Release Info ===");
 
