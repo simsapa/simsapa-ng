@@ -316,8 +316,33 @@ RELEASE_CHANNEL=development
         }
     }
 
-    logger::info("=== Bootstrap process completed successfully ===");
-    logger::info(&format!("Output database: {:?}", appdata_db_path));
+    logger::info("=== Copy log.txt ===");
+
+    fs::copy(&simsapa_dir.join("log.txt"), &release_dir)
+        .with_context(|| "Failed to copy log.txt to release_dir".to_string())?;
+
+    logger::info("=== Release Info ===");
+
+    write_release_info(&assets_dir, &release_dir)?;
+
+    logger::info("=== Bootstrap completed ===");
+
+    let end_time = Local::now();
+    let duration = end_time - start_time;
+
+    let msg = format!(
+r#"
+======
+Bootstrap started: {}
+Bootstrap ended:   {}
+Duration:          {}
+"#,
+        start_time.format("%Y-%m-%d %H:%M:%S"),
+        end_time.format("%Y-%m-%d %H:%M:%S"),
+        format_duration(duration)
+    );
+
+    logger::info(&msg);
 
     Ok(())
 }
@@ -421,4 +446,84 @@ pub fn create_database_archive(db_path: &Path, release_dir: &Path) -> Result<()>
     logger::info(&format!("Created and moved {} to {:?}", tar_name, release_dir));
 
     Ok(())
+}
+
+/// Write release info TOML file
+///
+/// Collects language database information and writes release metadata to release_info.toml
+/// in the release directory. The TOML contains version, date, and available languages.
+pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
+    // Find all suttas_lang_*.sqlite3 files in assets_dir
+    let entries = fs::read_dir(assets_dir)
+        .with_context(|| format!("Failed to read assets directory: {}", assets_dir.display()))?;
+
+    let mut suttas_lang_list: Vec<String> = Vec::new();
+
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+
+        if path.is_file() {
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                if file_name.starts_with("suttas_lang_") && file_name.ends_with(".sqlite3") {
+                    // Extract language code from filename
+                    // 'suttas_lang_hu.sqlite3' -> 'hu'
+                    let lang = file_name
+                        .strip_prefix("suttas_lang_")
+                        .and_then(|s| s.strip_suffix(".sqlite3"))
+                        .unwrap_or("");
+
+                    if !lang.is_empty() {
+                        suttas_lang_list.push(format!("\"{}\"", lang));
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort the language list for consistent output
+    suttas_lang_list.sort();
+
+    let suttas_lang = suttas_lang_list.join(", ");
+
+    // Get version from backend Cargo.toml
+    let version = env!("CARGO_PKG_VERSION");
+
+    // Format datetime in ISO 8601 format
+    let now = Local::now();
+    let date = now.format("%Y-%m-%dT%H:%M:%S").to_string();
+
+    let release_info = format!(
+r#"
+[[assets.releases]]
+date = "{}"
+version_tag = "v{}"
+github_repo = "simsapa/simsapa-ng-assets"
+suttas_lang = [{}]
+title = "Updates"
+description = ""
+"#,
+        date,
+        version,
+        suttas_lang
+    );
+
+    logger::info(&release_info);
+
+    let release_info_path = release_dir.join("release_info.toml");
+    fs::write(&release_info_path, release_info)
+        .with_context(|| format!("Failed to write release_info.toml to {}", release_info_path.display()))?;
+
+    logger::info(&format!("Wrote release info to {:?}", release_info_path));
+
+    Ok(())
+}
+
+fn format_duration(duration: chrono::Duration) -> String {
+    let total_seconds = duration.num_seconds();
+    let hours = total_seconds / 3600;
+    let minutes = (total_seconds % 3600) / 60;
+    let seconds = total_seconds % 60;
+
+    format!("{}:{:02}:{:02}", hours, minutes, seconds)
 }
