@@ -56,8 +56,7 @@ pub fn ensure_directory_exists(path: &Path) -> Result<()> {
 
 /// Main bootstrap function - orchestrates the entire bootstrap process
 pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
-    logger::info("=== Starting new modular bootstrap process ===");
-
+    logger::info("=== bootstrap() ===");
     if skip_dpd {
         logger::info("--skip-dpd flag set: DPD initialization and bootstrap will be skipped");
     }
@@ -83,7 +82,6 @@ pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
 
     let release_dir = PathBuf::from(format!("../../releases/{}-dev", iso_date));
     let dist_dir = bootstrap_assets_dir.join("dist");
-    let _sc_data_dir = bootstrap_assets_dir.join("sc-data");
 
     // During bootstrap, don't touch the user's Simsapa dir (~/.local/share/simsapa-ng)
     // Create files in the dist/ folder instead.
@@ -130,6 +128,8 @@ RELEASE_CHANNEL=development
 
     clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
 
+    logger::info("=== Create appdata.sqlite3 ===");
+
     // Create appdata.sqlite3 in the app-assets directory
     let appdata_db_path = assets_dir.join("appdata.sqlite3");
     let mut appdata_bootstrap = AppdataBootstrap::new(appdata_db_path.clone());
@@ -137,7 +137,6 @@ RELEASE_CHANNEL=development
     // Create the appdata database, populated later.
     appdata_bootstrap.run()?;
 
-    // Import suttas from various sources
     logger::info("=== Importing suttas from various sources ===");
 
     // Get database connection for sutta imports
@@ -210,12 +209,59 @@ RELEASE_CHANNEL=development
     // Drop connection to close database before further operations
     drop(conn);
 
+    logger::info("=== Create appdata.tar.bz2 ===");
+
+    // Create tar archive for appdata.sqlite3
+    let tar_result = std::process::Command::new("tar")
+        .arg("cjf")
+        .arg("appdata.tar.bz2")
+        .arg("appdata.sqlite3")
+        .current_dir(&assets_dir)
+        .status()
+        .context("Failed to execute tar command for appdata")?;
+
+    if !tar_result.success() {
+        anyhow::bail!("tar command failed for appdata.tar.bz2");
+    }
+
+    // Move appdata.tar.bz2 to release directory
+    let appdata_tar_src = assets_dir.join("appdata.tar.bz2");
+    let appdata_tar_dst = release_dir.join("appdata.tar.bz2");
+    fs::rename(&appdata_tar_src, &appdata_tar_dst)
+        .context("Failed to move appdata.tar.bz2 to release directory")?;
+
+    logger::info(&format!("Created and moved appdata.tar.bz2 to {:?}", release_dir));
+
+    // Digital Pāli Dictionary
     if !skip_dpd {
         init_app_data();
         dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
     } else {
         logger::info("Skipping DPD initialization and bootstrap");
     }
+
+    logger::info("=== Create dpd.tar.bz2 ===");
+
+    // Create tar archive for dpd.sqlite3
+    let tar_result = std::process::Command::new("tar")
+        .arg("cjf")
+        .arg("dpd.tar.bz2")
+        .arg("dpd.sqlite3")
+        .current_dir(&assets_dir)
+        .status()
+        .context("Failed to execute tar command for dpd")?;
+
+    if !tar_result.success() {
+        anyhow::bail!("tar command failed for dpd.tar.bz2");
+    }
+
+    // Move dpd.tar.bz2 to release directory
+    let dpd_tar_src = assets_dir.join("dpd.tar.bz2");
+    let dpd_tar_dst = release_dir.join("dpd.tar.bz2");
+    fs::rename(&dpd_tar_src, &dpd_tar_dst)
+        .context("Failed to move dpd.tar.bz2 to release directory")?;
+
+    logger::info(&format!("Created and moved dpd.tar.bz2 to {:?}", release_dir));
 
     logger::info("=== Bootstrap process completed successfully ===");
     logger::info(&format!("Output database: {:?}", appdata_db_path));
