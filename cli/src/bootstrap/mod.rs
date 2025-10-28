@@ -83,6 +83,7 @@ pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
 
     let release_dir = PathBuf::from(format!("../../releases/{}-dev/databases/", iso_date));
     let dist_dir = bootstrap_assets_dir.join("dist");
+    let sc_data_dir = bootstrap_assets_dir.join("sc-data");
 
     // During bootstrap, don't touch the user's Simsapa dir (~/.local/share/simsapa-ng)
     // Create files in the dist/ folder instead.
@@ -145,7 +146,6 @@ RELEASE_CHANNEL=development
 
     // Import suttas from SuttaCentral
     {
-        let sc_data_dir = bootstrap_assets_dir.join("sc-data");
         if sc_data_dir.exists() {
             logger::info("Importing suttas from SuttaCentral");
             for lang in ["en", "pli"] {
@@ -223,6 +223,67 @@ RELEASE_CHANNEL=development
         create_database_archive(&dpd_db_path, &release_dir)?;
     } else {
         logger::info("Skipping DPD initialization and bootstrap");
+    }
+
+    logger::info("=== Bootstrap Languages from SuttaCentral ===");
+
+    // Import suttas for each language from SuttaCentral ArangoDB
+    {
+        if sc_data_dir.exists() {
+            // Connect to ArangoDB to get the languages list
+            match suttacentral::connect_to_arangodb() {
+                Ok(db) => {
+                    match suttacentral::get_sorted_languages_list(&db) {
+                        Ok(languages) => {
+                            logger::info(&format!("Found {} languages to import from SuttaCentral", languages.len()));
+
+                            for lang in languages {
+                                logger::info(&format!("=== Importing language: {} ===", lang));
+
+                                let lang_db_path = assets_dir.join(format!("suttas_lang_{}.sqlite3", lang));
+
+                                // Create the language-specific database with appdata schema
+                                let mut lang_conn = create_database_connection(&lang_db_path)?;
+                                run_migrations(&mut lang_conn)?;
+
+                                // Import suttas for this language
+                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), &lang);
+                                match importer.import(&mut lang_conn) {
+                                    Ok(_) => {
+                                        drop(lang_conn);
+
+                                        // Create archive and move to release directory
+                                        match create_database_archive(&lang_db_path, &release_dir) {
+                                            Ok(_) => {
+                                                logger::info(&format!("Successfully created archive for language: {}", lang));
+                                            }
+                                            Err(e) => {
+                                                logger::error(&format!("Failed to create archive for language {}: {}", lang, e));
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        logger::error(&format!("Failed to import language {}: {}", lang, e));
+                                        drop(lang_conn);
+                                        // Continue with next language
+                                    }
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            logger::error(&format!("Failed to get languages list from ArangoDB: {}", e));
+                            logger::warn("Skipping SuttaCentral language imports");
+                        }
+                    }
+                }
+                Err(e) => {
+                    logger::error(&format!("Failed to connect to ArangoDB: {}", e));
+                    logger::warn("Skipping SuttaCentral language imports");
+                }
+            }
+        } else {
+            logger::warn("SuttaCentral data directory not found, skipping language imports");
+        }
     }
 
     logger::info("=== Bootstrap Hungarian from Buddha Ujja ===");

@@ -75,7 +75,7 @@ impl SuttaCentralData {
 /// - username: "root"
 /// - password: "test"
 /// - database: "suttacentral"
-fn connect_to_arangodb() -> Result<Database<ReqwestClient>> {
+pub fn connect_to_arangodb() -> Result<Database<ReqwestClient>> {
     // Create a tokio runtime for blocking async operations
     let rt = tokio::runtime::Runtime::new()
         .context("Failed to create tokio runtime")?;
@@ -93,6 +93,52 @@ fn connect_to_arangodb() -> Result<Database<ReqwestClient>> {
     })?;
 
     Ok(db)
+}
+
+/// Get sorted list of languages from ArangoDB
+///
+/// Queries the 'language' collection and returns a sorted list of language codes,
+/// excluding: 'en', 'pli', 'san', 'hu'
+pub fn get_sorted_languages_list(db: &Database<ReqwestClient>) -> Result<Vec<String>> {
+    let rt = tokio::runtime::Runtime::new()
+        .context("Failed to create tokio runtime")?;
+
+    let mut languages = rt.block_on(async {
+        // Execute AQL query
+        let aql = r#"
+LET docs = (FOR x IN language
+FILTER x._key != 'en'
+&& x._key != 'pli'
+&& x._key != 'san'
+&& x._key != 'hu'
+RETURN x._key)
+RETURN docs
+        "#;
+
+        let results: Vec<Value> = db.aql_str(aql)
+            .await
+            .context("Failed to execute AQL query for languages list")?;
+
+        // Extract the languages array from the first result
+        let languages: Vec<String> = if let Some(first) = results.first() {
+            if let Some(arr) = first.as_array() {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(|s| s.to_string()))
+                    .collect()
+            } else {
+                vec![]
+            }
+        } else {
+            vec![]
+        };
+
+        Ok::<Vec<String>, anyhow::Error>(languages)
+    })?;
+
+    // Sort the languages alphabetically
+    languages.sort();
+
+    Ok(languages)
 }
 
 /// Retrieve titles from ArangoDB 'names' collection
@@ -1536,5 +1582,34 @@ mod tests {
                 assert!(!uid.contains("/"), "Template key should be simple UID, not path: {}", uid);
             }
         }
+    }
+
+    #[test]
+    #[ignore] // Only run when ArangoDB is available
+    fn test_get_sorted_languages_list() {
+        let db = connect_to_arangodb()
+            .expect("Failed to connect to ArangoDB for testing");
+
+        let languages = get_sorted_languages_list(&db)
+            .expect("Failed to get sorted languages list");
+
+        // Verify we got some languages
+        assert!(!languages.is_empty(), "Expected non-empty languages list");
+
+        println!("Total languages: {}", languages.len());
+
+        // Verify the list is sorted
+        let mut sorted_check = languages.clone();
+        sorted_check.sort();
+        assert_eq!(languages, sorted_check, "Languages should be sorted alphabetically");
+
+        // Verify excluded languages are not in the list
+        for excluded in &["en", "pli", "san", "hu"] {
+            assert!(!languages.contains(&excluded.to_string()),
+                "Language '{}' should be excluded", excluded);
+        }
+
+        // Display sample languages
+        println!("Sample languages: {:?}", languages.iter().take(10).collect::<Vec<_>>());
     }
 }

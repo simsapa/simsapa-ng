@@ -192,6 +192,29 @@ fn export_dhammapada_tipitaka_net(legacy_db_path: &Path, output_db_path: &Path) 
     Ok(())
 }
 
+/// List available languages in SuttaCentral ArangoDB
+fn suttacentral_import_languages_list() -> Result<(), String> {
+    use bootstrap::suttacentral::{connect_to_arangodb, get_sorted_languages_list};
+
+    // Connect to ArangoDB
+    let db = connect_to_arangodb()
+        .map_err(|e| format!("Failed to connect to ArangoDB: {}", e))?;
+
+    // Get sorted languages list
+    let languages = get_sorted_languages_list(&db)
+        .map_err(|e| format!("Failed to get languages list: {}", e))?;
+
+    // Print the languages
+    println!("Available languages in SuttaCentral ArangoDB:");
+    println!("(excluding: en, pli, san, hu)\n");
+    for lang in &languages {
+        println!("  {}", lang);
+    }
+    println!("\nTotal: {} languages", languages.len());
+
+    Ok(())
+}
+
 /// Generate statistics for an appdata.sqlite3 database
 fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool) -> Result<(), String> {
     use std::fs;
@@ -517,7 +540,10 @@ enum Commands {
         /// Write stats to files (uses output_folder if specified, otherwise database folder)
         #[arg(long, default_value_t = false)]
         write_stats: bool,
-    }
+    },
+
+    /// List available languages in SuttaCentral ArangoDB
+    SuttacentralImportLanguagesList,
 }
 
 /// Enum for the different types of queries available.
@@ -538,8 +564,8 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } => {
-            // Skip app data initialization for bootstrap, export, and stats commands
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList => {
+            // Skip app data initialization for bootstrap, export, stats, and suttacentral commands
         }
         _ => {
             init_app_data();
@@ -620,6 +646,10 @@ fn main() {
 
         Commands::AppdataStats { db_path, output_folder, write_stats } => {
             appdata_stats(&db_path, output_folder.as_deref(), write_stats)
+        }
+
+        Commands::SuttacentralImportLanguagesList => {
+            suttacentral_import_languages_list()
         }
     };
 
