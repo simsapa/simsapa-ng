@@ -235,10 +235,12 @@ RELEASE_CHANNEL=development
                 Ok(db) => {
                     match suttacentral::get_sorted_languages_list(&db) {
                         Ok(languages) => {
-                            logger::info(&format!("Found {} languages to import from SuttaCentral", languages.len()));
+                            let total_languages = languages.len();
+                            logger::info(&format!("Found {} languages to import from SuttaCentral", total_languages));
 
-                            for lang in languages {
-                                logger::info(&format!("=== Importing language: {} ===", lang));
+                            for (idx, lang) in languages.iter().enumerate() {
+                                let lang_num = idx + 1;
+                                logger::info(&format!("=== Importing language: {} ({}/{}) ===", lang, lang_num, total_languages));
 
                                 let lang_db_path = assets_dir.join(format!("suttas_lang_{}.sqlite3", lang));
 
