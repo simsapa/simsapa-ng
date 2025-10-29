@@ -14,26 +14,27 @@ Implement VRI CST Tipitaka XML parser to import Pāli suttas from the romn/ fold
 **Priority:** P0 (Blocking)  
 **Estimated Effort:** 30 minutes
 
-Create the module structure for the Tipitaka XML parser.
+Create the module structure for the Tipitaka XML parser in the CLI crate.
+
+**Note:** The parser is in CLI (not backend) because it's only needed for database bootstrapping.
 
 **Files to Create:**
-- `backend/src/tipitaka_xml_parser.rs` (main module file)
-- `backend/src/tipitaka_xml_parser/mod.rs` (re-exports)
-- `backend/src/tipitaka_xml_parser/types.rs` (data structures)
-- `backend/src/tipitaka_xml_parser/encoding.rs` (UTF-16 handling)
-- `backend/src/tipitaka_xml_parser/xml_parser.rs` (XML parsing)
-- `backend/src/tipitaka_xml_parser/html_transformer.rs` (XML to HTML)
-- `backend/src/tipitaka_xml_parser/database_inserter.rs` (DB insertion)
-- `backend/src/tipitaka_xml_parser/uid_generator.rs` (UID generation)
+- `cli/src/tipitaka_xml_parser/mod.rs` (re-exports)
+- `cli/src/tipitaka_xml_parser/types.rs` (data structures)
+- `cli/src/tipitaka_xml_parser/encoding.rs` (UTF-16 handling)
+- `cli/src/tipitaka_xml_parser/xml_parser.rs` (XML parsing)
+- `cli/src/tipitaka_xml_parser/html_transformer.rs` (XML to HTML)
+- `cli/src/tipitaka_xml_parser/database_inserter.rs` (DB insertion)
+- `cli/src/tipitaka_xml_parser/uid_generator.rs` (UID generation)
 
 **Files to Modify:**
-- `backend/src/lib.rs` - Add `pub mod tipitaka_xml_parser;`
-- `backend/Cargo.toml` - Add dependencies (see Task 1.2)
+- `cli/src/main.rs` - Add `mod tipitaka_xml_parser;`
+- `cli/Cargo.toml` - Add dependencies (see Task 1.2)
 
 **Acceptance Criteria:**
-- [ ] Module structure exists and compiles
-- [ ] Empty module files with appropriate module declarations
-- [ ] Module is accessible from backend crate
+- [x] Module structure exists and compiles
+- [x] Empty module files with appropriate module declarations
+- [x] Module is accessible from CLI crate
 
 **Dependencies:** None
 
@@ -43,10 +44,10 @@ Create the module structure for the Tipitaka XML parser.
 **Priority:** P0 (Blocking)  
 **Estimated Effort:** 15 minutes
 
-Add required crate dependencies to backend/Cargo.toml.
+Add required crate dependencies to cli/Cargo.toml.
 
 **Files to Modify:**
-- `backend/Cargo.toml`
+- `cli/Cargo.toml`
 
 **Changes:**
 ```toml
@@ -57,17 +58,19 @@ quick-xml = "0.31"
 # Character encoding detection and conversion
 encoding_rs = "0.8"
 
-# Pattern matching for text extraction
-regex = "1.10"
-
 # HTML entity handling
 html-escape = "0.2"
+
+# Logging
+tracing = "0.1"
+
+# Note: regex already present in cli dependencies
 ```
 
 **Acceptance Criteria:**
-- [ ] Dependencies added to Cargo.toml
-- [ ] `cargo build` in backend/ succeeds
-- [ ] No version conflicts with existing dependencies
+- [x] Dependencies added to Cargo.toml
+- [x] `cargo build` in cli/ succeeds
+- [x] No version conflicts with existing dependencies
 
 **Dependencies:** None
 
@@ -82,7 +85,7 @@ html-escape = "0.2"
 Implement the hierarchical data structures for representing Tipitaka XML content.
 
 **Files to Modify:**
-- `backend/src/tipitaka_xml_parser/types.rs`
+- `cli/src/tipitaka_xml_parser/types.rs`
 
 **Implementation:**
 ```rust
@@ -157,10 +160,10 @@ pub enum ContentNode {
 ```
 
 **Acceptance Criteria:**
-- [ ] All structs defined with proper derives
-- [ ] Structures match PRD specification
-- [ ] Code compiles without warnings
-- [ ] Proper documentation comments added
+- [x] All structs defined with proper derives
+- [x] Structures match PRD specification
+- [x] Code compiles without warnings
+- [x] Proper documentation comments added
 
 **Dependencies:** Task 1.1
 
@@ -253,12 +256,12 @@ fn detect_encoding(bytes: &[u8]) -> (&'static Encoding, bool) {
 ```
 
 **Acceptance Criteria:**
-- [ ] `read_xml_file()` correctly reads UTF-16LE files with BOM
-- [ ] Function converts to UTF-8 successfully
-- [ ] CRLF line endings converted to LF
-- [ ] Pāli diacritics preserved (ā, ī, ū, ṃ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ)
-- [ ] Proper error handling with context
-- [ ] Logging for encoding detection
+- [x] `read_xml_file()` correctly reads UTF-16LE files with BOM
+- [x] Function converts to UTF-8 successfully
+- [x] CRLF line endings converted to LF
+- [x] Pāli diacritics preserved (ā, ī, ū, ṃ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ)
+- [x] Proper error handling with context
+- [x] Logging for encoding detection
 
 **Dependencies:** Task 1.2
 
@@ -284,10 +287,10 @@ Write comprehensive unit tests for encoding detection and conversion.
 **Reference:** PRD lines 330-356 (test examples)
 
 **Acceptance Criteria:**
-- [ ] All test cases pass
-- [ ] Edge cases covered (empty files, corrupted BOM)
-- [ ] Pāli diacritics test verifies: ā, ī, ū, ṃ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ
-- [ ] `cargo test` in backend/ passes
+- [x] All test cases pass
+- [x] Edge cases covered (empty files, corrupted BOM)
+- [x] Pāli diacritics test verifies: ā, ī, ū, ṃ, ṅ, ñ, ṭ, ḍ, ṇ, ḷ
+- [x] `cargo test` in cli/ passes
 
 **Dependencies:** Task 3.1
 
@@ -338,13 +341,13 @@ fn parse_paragraph(reader: &mut Reader<&[u8]>, start_tag: &BytesStart) -> Result
 ```
 
 **Acceptance Criteria:**
-- [ ] Correctly extracts nikaya name from `<p rend="nikaya">`
-- [ ] Extracts book name from `<head rend="book">` and id from `<div type="book">`
-- [ ] Extracts vagga name from `<head rend="chapter">` and id from `<div type="vagga">`
-- [ ] Identifies sutta boundaries using `<p rend="subhead">`
-- [ ] Preserves paragraph numbers in `n` attribute
-- [ ] Handles nested elements: `<hi>`, `<note>`, `<pb>`
-- [ ] Returns complete `TipitakaCollection` structure
+- [x] Correctly extracts nikaya name from `<p rend="nikaya">`
+- [x] Extracts book name from `<head rend="book">` and id from `<div type="book">`
+- [x] Extracts vagga name from `<head rend="chapter">` and id from `<div type="vagga">`
+- [x] Identifies sutta boundaries using `<p rend="subhead">`
+- [x] Preserves paragraph numbers in `n` attribute
+- [x] Handles nested elements: `<hi>`, `<note>`, `<pb>`
+- [x] Returns complete `TipitakaCollection` structure
 
 **Dependencies:** Task 2.1, Task 3.1
 
@@ -373,10 +376,10 @@ Write unit tests for XML parsing using sample XML snippets.
 - `test_parse_pagebreak_element()` - Handles `<pb ed="M" n="1.0001">`
 
 **Acceptance Criteria:**
-- [ ] All test cases pass
-- [ ] Sample XML covers all rend types
-- [ ] Tests verify hierarchical structure correctness
-- [ ] `cargo test xml_parser` passes
+- [x] All test cases pass
+- [x] Sample XML covers all rend types
+- [x] Tests verify hierarchical structure correctness
+- [x] `cargo test xml_parser` passes
 
 **Dependencies:** Task 4.1
 
@@ -842,6 +845,29 @@ Write integration tests for database insertion.
 ---
 
 ### Phase 8: CLI Command Implementation
+
+#### Task 8.1: Implement parse-tipitaka-xml Command
+**Priority:** P0 (Blocking)  
+**Estimated Effort:** 2 hours
+
+**Status:** ✅ COMPLETE
+
+Implement the CLI command to parse Tipitaka XML files.
+
+**Files Modified:**
+- `cli/src/main.rs`
+
+**Acceptance Criteria:**
+- [x] Command accepts file or folder path
+- [x] Command accepts output database path
+- [x] Supports --verbose flag for detailed output
+- [x] Supports --dry-run flag for testing without database
+- [x] Shows encoding detection and conversion
+- [x] Displays parsed structure (books, vaggas, suttas)
+- [x] Shows summary statistics
+- [x] Works with single file and entire folder
+
+### Phase 8 (Original Tasks)
 
 #### Task 8.1: Create TipitakaXmlImporter Struct
 **Priority:** P0 (Blocking)  

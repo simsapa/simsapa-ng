@@ -227,8 +227,8 @@ simsapa-cli parse-tipitaka-xml
 ### File Organization
 
 ```
-backend/src/
-  tipitaka_xml_parser.rs        # Main parser module
+cli/src/
+  main.rs                        # Add ParseTipitakaXml command
   tipitaka_xml_parser/
     mod.rs                       # Module exports
     types.rs                     # Data structures
@@ -237,10 +237,9 @@ backend/src/
     html_transformer.rs          # XML → HTML transformation
     database_inserter.rs         # Database insertion
     uid_generator.rs             # UID generation logic
-
-cli/src/
-  main.rs                        # Add ParseTipitakaXml command
 ```
+
+**Note:** The parser is in the CLI module because it's only needed for database bootstrapping, not for runtime application functionality.
 
 ### Character Encoding Handling
 
