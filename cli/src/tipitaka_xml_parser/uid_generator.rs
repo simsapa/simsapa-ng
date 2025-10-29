@@ -8,12 +8,27 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
 
+/// Sutta boundary information from TSV
+#[derive(Debug, Clone)]
+pub struct SuttaBoundary {
+    pub cst_code: String,
+    pub title: String,
+    pub sc_code: String,
+    pub start_paranum: i32,
+    pub book: String,       // e.g., "Mūlapaṇṇāsapāḷi"
+    pub vagga: String,      // e.g., "5. Cūḷayamakavaggo"
+}
+
 /// Mapping from CST identifiers to SuttaCentral codes
 #[derive(Debug, Clone)]
 pub struct CstMapping {
     /// Map from (cst_file, cst_code) -> code
-    /// Example: ("s0201m.mul.xml", "mn1.1") -> "mn1"
+    /// Example: ("s0201m.mul.xml", "mn1.1.1") -> "mn1"
     file_code_map: HashMap<(String, String), String>,
+    
+    /// Map from filename -> list of sutta boundaries (sorted by paranum)
+    /// Example: "s0201m.mul.xml" -> [(1, "1. Mūlapariyāyasuttaṃ", "mn1"), (14, "2. Sabbāsavasuttaṃ", "mn2"), ...]
+    file_boundaries: HashMap<String, Vec<SuttaBoundary>>,
 }
 
 impl CstMapping {
@@ -23,6 +38,7 @@ impl CstMapping {
             .context(format!("Failed to read TSV file: {:?}", tsv_path))?;
         
         let mut file_code_map = HashMap::new();
+        let mut file_boundaries: HashMap<String, Vec<SuttaBoundary>> = HashMap::new();
         
         for (line_num, line) in content.lines().enumerate().skip(1) { // Skip header
             let fields: Vec<&str> = line.split('\t').collect();
@@ -33,6 +49,10 @@ impl CstMapping {
             }
             
             let cst_code = fields[0].to_string();
+            let cst_book = fields[2].to_string();
+            let cst_vagga = fields[4].to_string();
+            let cst_sutta = fields[5].to_string();
+            let cst_paranum_str = fields[6];
             let cst_file = fields[11].to_string();
             let code = fields[12].to_string();
             
@@ -43,12 +63,35 @@ impl CstMapping {
                 .unwrap_or(&cst_file)
                 .to_string();
             
-            file_code_map.insert((filename, cst_code), code);
+            file_code_map.insert((filename.clone(), cst_code.clone()), code.clone());
+            
+            // Parse paranum and add sutta boundary
+            if let Ok(paranum) = cst_paranum_str.parse::<i32>() {
+                let boundary = SuttaBoundary {
+                    cst_code: cst_code.clone(),
+                    title: cst_sutta,
+                    sc_code: code,
+                    start_paranum: paranum,
+                    book: cst_book,
+                    vagga: cst_vagga,
+                };
+                
+                file_boundaries
+                    .entry(filename)
+                    .or_insert_with(Vec::new)
+                    .push(boundary);
+            }
+        }
+        
+        // Sort boundaries by paranum for each file
+        for boundaries in file_boundaries.values_mut() {
+            boundaries.sort_by_key(|b| b.start_paranum);
         }
         
         tracing::info!("Loaded {} CST mappings from TSV", file_code_map.len());
+        tracing::info!("Loaded sutta boundaries for {} files", file_boundaries.len());
         
-        Ok(Self { file_code_map })
+        Ok(Self { file_code_map, file_boundaries })
     }
     
     /// Generate UID for a sutta
@@ -77,6 +120,21 @@ impl CstMapping {
             .trim_end_matches(".tik.xml");
         
         format!("{}/{}/pli/cst4", filename_stem, sutta_index)
+    }
+    
+    /// Get sutta boundaries for a file
+    pub fn get_sutta_boundaries(&self, xml_filename: &str) -> Option<&Vec<SuttaBoundary>> {
+        self.file_boundaries.get(xml_filename)
+    }
+    
+    /// Determine which sutta a paragraph belongs to based on its number
+    pub fn find_sutta_for_paranum(&self, xml_filename: &str, paranum: i32) -> Option<&SuttaBoundary> {
+        let boundaries = self.file_boundaries.get(xml_filename)?;
+        
+        // Find the sutta that starts at or before this paranum
+        boundaries.iter()
+            .rev() // Search from end
+            .find(|b| b.start_paranum <= paranum)
     }
 }
 

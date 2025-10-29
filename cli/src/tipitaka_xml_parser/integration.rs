@@ -78,43 +78,142 @@ impl TipitakaImporter {
             println!("  → Generating UIDs and transforming to HTML...");
         }
         
-        // Step 3: Process each sutta
-        let mut suttas_to_insert = Vec::new();
-        let mut sutta_index = 0;
+        // Step 3: Get sutta boundaries from TSV
+        let boundaries = self.cst_mapping.get_sutta_boundaries(&filename);
         
-        for book in &collection.books {
-            for vagga in &book.vaggas {
-                for sutta in &vagga.suttas {
-                    sutta_index += 1;
-                    
-                    // Generate UID
-                    let uid = self.generate_sutta_uid(&filename, &book.id, sutta_index);
-                    
-                    // Build group path
-                    let group_path = format!("{}/{}/{}", 
-                        collection.nikaya, 
-                        book.title, 
-                        vagga.title
-                    );
-                    
-                    // Transform to HTML
-                    let html = transform_to_html(&sutta.content_xml)
-                        .context("Failed to transform to HTML")?;
-                    
-                    // Extract plain text
-                    let plain = extract_plain_text(&sutta.content_xml);
-                    
-                    // Create sutta with metadata
-                    let mut sutta_with_metadata = sutta.clone();
-                    sutta_with_metadata.metadata.uid = uid;
-                    sutta_with_metadata.metadata.sutta_ref = format!("{} {}", 
-                        book.id.to_uppercase(), 
-                        sutta_index
-                    );
-                    sutta_with_metadata.metadata.group_path = group_path;
-                    sutta_with_metadata.metadata.order_index = Some(sutta_index as i32);
-                    
-                    suttas_to_insert.push((sutta_with_metadata, html, plain));
+        if boundaries.is_none() {
+            tracing::warn!("No sutta boundaries found for {}, using parsed structure", filename);
+        }
+        
+        // Step 4: Process each sutta using TSV boundaries if available
+        let mut suttas_to_insert = Vec::new();
+        
+        if let Some(boundaries) = boundaries {
+            // Use TSV boundaries to correctly identify suttas
+            tracing::info!("Using TSV boundaries: {} suttas found", boundaries.len());
+            for (sutta_idx, boundary) in boundaries.iter().enumerate() {
+                // Collect all paragraphs for this sutta
+                let mut sutta_content = Vec::new();
+                let sutta_title = boundary.title.clone();
+                
+                if self.verbose {
+                    println!("  → Processing sutta {}: {} (paranum {})", 
+                        boundary.sc_code, sutta_title, boundary.start_paranum);
+                }
+                
+                // Determine the range of paranums for this sutta
+                let start_paranum = boundary.start_paranum;
+                let end_paranum = if sutta_idx + 1 < boundaries.len() {
+                    boundaries[sutta_idx + 1].start_paranum - 1
+                } else {
+                    i32::MAX
+                };
+                
+                // Collect all paragraphs in this paranum range from all books/vaggas
+                for book in &collection.books {
+                    for vagga in &book.vaggas {
+                        for parsed_sutta in &vagga.suttas {
+                            for element in &parsed_sutta.content_xml {
+                                if let super::types::XmlElement::Paragraph { n, .. } = element {
+                                    if let Some(n_str) = n {
+                                        if let Ok(paranum) = n_str.parse::<i32>() {
+                                            if paranum >= start_paranum && paranum <= end_paranum {
+                                                sutta_content.push(element.clone());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if sutta_content.is_empty() {
+                    tracing::warn!("No content found for sutta: {}", sutta_title);
+                    continue;
+                }
+                
+                if self.verbose {
+                    println!("    ✓ Collected {} paragraphs (paranums {}-{})", 
+                        sutta_content.len(), start_paranum, end_paranum);
+                }
+                
+                // Build group path from TSV boundary data
+                let group_path = format!("{}/{}/{}", 
+                    collection.nikaya, 
+                    boundary.book, 
+                    boundary.vagga
+                );
+                
+                // Extract vagga number from vagga title (e.g., "5. Cūḷayamakavaggo" -> 5)
+                let group_index = boundary.vagga
+                    .split('.')
+                    .next()
+                    .and_then(|s| s.trim().parse::<i32>().ok());
+                
+                // Transform to HTML
+                let html = transform_to_html(&sutta_content)
+                    .context("Failed to transform to HTML")?;
+                
+                // Extract plain text
+                let plain = extract_plain_text(&sutta_content);
+                
+                // Create sutta with proper metadata
+                let uid = format!("{}/pli/cst4", boundary.sc_code);
+                let sutta_ref = boundary.sc_code.to_uppercase();
+                
+                let sutta = super::types::Sutta {
+                    title: sutta_title,
+                    content_xml: sutta_content,
+                    metadata: super::types::SuttaMetadata {
+                        uid: uid.clone(),
+                        sutta_ref,
+                        nikaya: collection.nikaya.clone(),
+                        group_path,
+                        group_index,
+                        order_index: Some((sutta_idx + 1) as i32),
+                    },
+                };
+                
+                suttas_to_insert.push((sutta, html, plain));
+            }
+        } else {
+            // Fallback: use parsed structure (original behavior)
+            let mut sutta_index = 0;
+            for book in &collection.books {
+                for vagga in &book.vaggas {
+                    for sutta in &vagga.suttas {
+                        sutta_index += 1;
+                        
+                        // Generate UID
+                        let uid = self.generate_sutta_uid(&filename, &book.id, sutta_index);
+                        
+                        // Build group path
+                        let group_path = format!("{}/{}/{}", 
+                            collection.nikaya, 
+                            book.title, 
+                            vagga.title
+                        );
+                        
+                        // Transform to HTML
+                        let html = transform_to_html(&sutta.content_xml)
+                            .context("Failed to transform to HTML")?;
+                        
+                        // Extract plain text
+                        let plain = extract_plain_text(&sutta.content_xml);
+                        
+                        // Create sutta with metadata
+                        let mut sutta_with_metadata = sutta.clone();
+                        sutta_with_metadata.metadata.uid = uid;
+                        sutta_with_metadata.metadata.sutta_ref = format!("{} {}", 
+                            book.id.to_uppercase(), 
+                            sutta_index
+                        );
+                        sutta_with_metadata.metadata.group_path = group_path;
+                        sutta_with_metadata.metadata.order_index = Some(sutta_index as i32);
+                        
+                        suttas_to_insert.push((sutta_with_metadata, html, plain));
+                    }
                 }
             }
         }

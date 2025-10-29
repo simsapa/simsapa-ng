@@ -45,7 +45,9 @@ pub fn insert_sutta(
     diesel::insert_into(suttas::table)
         .values(&new_sutta)
         .execute(conn)
-        .context(format!("Failed to insert sutta: {}", sutta.metadata.uid))?;
+        .map_err(|e| {
+            anyhow::anyhow!("Failed to insert sutta {}: Diesel error: {}", sutta.metadata.uid, e)
+        })?;
 
     Ok(())
 }
@@ -62,7 +64,7 @@ pub fn insert_suttas_batch(
             match insert_sutta(conn, sutta, html, plain) {
                 Ok(_) => inserted += 1,
                 Err(e) => {
-                    tracing::warn!("Failed to insert sutta {}: {}", sutta.metadata.uid, e);
+                    tracing::warn!("Failed to insert sutta {}: {:?}", sutta.metadata.uid, e);
                 }
             }
         }
