@@ -37,13 +37,13 @@ impl TipitakaImporter {
     pub fn new(tsv_path: &Path, verbose: bool) -> Result<Self> {
         let cst_mapping = CstMapping::load_from_tsv(tsv_path)
             .context("Failed to load CST mapping")?;
-        
+
         Ok(Self {
             cst_mapping,
             verbose,
         })
     }
-    
+
     /// Process a single XML file and import into database
     pub fn process_file(
         &self,
@@ -55,39 +55,43 @@ impl TipitakaImporter {
             .and_then(|n| n.to_str())
             .unwrap_or("unknown")
             .to_string();
-        
+
+        // Normalize for mapping and detect commentary type
+        let mapping_filename = normalize_filename_for_mapping(&filename);
+        let commentary_suffix = detect_commentary_suffix(&filename);
+
         if self.verbose {
             println!("  → Reading and converting encoding...");
         }
-        
+
         // Step 1: Read and convert encoding
         let xml_content = read_xml_file(xml_path)
             .context("Failed to read XML file")?;
-        
+
         if self.verbose {
             println!("  ✓ Encoding conversion successful");
             println!("  → Parsing XML structure...");
         }
-        
+
         // Step 2: Parse XML
         let collection = parse_xml(&xml_content)
             .context("Failed to parse XML")?;
-        
+
         if self.verbose {
             println!("  ✓ XML parsed successfully");
             println!("  → Generating UIDs and transforming to HTML...");
         }
-        
+
         // Step 3: Get sutta boundaries from TSV
-        let boundaries = self.cst_mapping.get_sutta_boundaries(&filename);
-        
+        let boundaries = self.cst_mapping.get_sutta_boundaries(&mapping_filename);
+
         if boundaries.is_none() {
             tracing::warn!("No sutta boundaries found for {}, using parsed structure", filename);
         }
-        
+
         // Step 4: Process each sutta using TSV boundaries if available
         let mut suttas_to_insert = Vec::new();
-        
+
         if let Some(boundaries) = boundaries {
             // Use TSV boundaries to correctly identify suttas
             tracing::info!("Using TSV boundaries: {} suttas found", boundaries.len());
@@ -95,12 +99,12 @@ impl TipitakaImporter {
                 // Collect all paragraphs for this sutta
                 let mut sutta_content = Vec::new();
                 let sutta_title = boundary.title.clone();
-                
+
                 if self.verbose {
-                    println!("  → Processing sutta {}: {} (paranum {})", 
+                    println!("  → Processing sutta {}: {} (paranum {})",
                         boundary.sc_code, sutta_title, boundary.start_paranum);
                 }
-                
+
                 // Determine the range of paranums for this sutta
                 let start_paranum = boundary.start_paranum;
                 let end_paranum = if sutta_idx + 1 < boundaries.len() {
@@ -108,7 +112,7 @@ impl TipitakaImporter {
                 } else {
                     i32::MAX
                 };
-                
+
                 // Collect all paragraphs in this paranum range from all books/vaggas
                 for book in &collection.books {
                     for vagga in &book.vaggas {
@@ -127,41 +131,46 @@ impl TipitakaImporter {
                         }
                     }
                 }
-                
+
                 if sutta_content.is_empty() {
                     tracing::warn!("No content found for sutta: {}", sutta_title);
                     continue;
                 }
-                
+
                 if self.verbose {
-                    println!("    ✓ Collected {} paragraphs (paranums {}-{})", 
+                    println!("    ✓ Collected {} paragraphs (paranums {}-{})",
                         sutta_content.len(), start_paranum, end_paranum);
                 }
-                
+
                 // Build group path from TSV boundary data
-                let group_path = format!("{}/{}/{}", 
-                    collection.nikaya, 
-                    boundary.book, 
+                let group_path = format!("{}/{}/{}",
+                    collection.nikaya,
+                    boundary.book,
                     boundary.vagga
                 );
-                
+
                 // Extract vagga number from vagga title (e.g., "5. Cūḷayamakavaggo" -> 5)
                 let group_index = boundary.vagga
                     .split('.')
                     .next()
                     .and_then(|s| s.trim().parse::<i32>().ok());
-                
+
                 // Transform to HTML
                 let html = transform_to_html(&sutta_content)
                     .context("Failed to transform to HTML")?;
-                
+
                 // Extract plain text
                 let plain = extract_plain_text(&sutta_content);
-                
+
                 // Create sutta with proper metadata
-                let uid = format!("{}/pli/cst4", boundary.sc_code);
+                let uid_code = match commentary_suffix.as_deref() {
+                    Some(".att") => format!("{}.att", boundary.sc_code),
+                    Some(".tik") => format!("{}.tik", boundary.sc_code),
+                    _ => boundary.sc_code.clone(),
+                };
+                let uid = format!("{}/pli/cst4", uid_code);
                 let sutta_ref = boundary.sc_code.to_uppercase();
-                
+
                 let sutta = super::types::Sutta {
                     title: sutta_title,
                     content_xml: sutta_content,
@@ -174,7 +183,7 @@ impl TipitakaImporter {
                         order_index: Some((sutta_idx + 1) as i32),
                     },
                 };
-                
+
                 suttas_to_insert.push((sutta, html, plain));
             }
         } else {
@@ -184,53 +193,53 @@ impl TipitakaImporter {
                 for vagga in &book.vaggas {
                     for sutta in &vagga.suttas {
                         sutta_index += 1;
-                        
-                        // Generate UID
-                        let uid = self.generate_sutta_uid(&filename, &book.id, sutta_index);
-                        
+
+                        // Generate UID with optional commentary suffix, using mapping filename for code lookup
+                        let uid = self.generate_sutta_uid_with_suffix(&mapping_filename, &filename, &book.id, sutta_index, commentary_suffix.as_deref());
+
                         // Build group path
-                        let group_path = format!("{}/{}/{}", 
-                            collection.nikaya, 
-                            book.title, 
+                        let group_path = format!("{}/{}/{}",
+                            collection.nikaya,
+                            book.title,
                             vagga.title
                         );
-                        
+
                         // Transform to HTML
                         let html = transform_to_html(&sutta.content_xml)
                             .context("Failed to transform to HTML")?;
-                        
+
                         // Extract plain text
                         let plain = extract_plain_text(&sutta.content_xml);
-                        
+
                         // Create sutta with metadata
                         let mut sutta_with_metadata = sutta.clone();
                         sutta_with_metadata.metadata.uid = uid;
-                        sutta_with_metadata.metadata.sutta_ref = format!("{} {}", 
-                            book.id.to_uppercase(), 
+                        sutta_with_metadata.metadata.sutta_ref = format!("{} {}",
+                            book.id.to_uppercase(),
                             sutta_index
                         );
                         sutta_with_metadata.metadata.group_path = group_path;
                         sutta_with_metadata.metadata.order_index = Some(sutta_index as i32);
-                        
+
                         suttas_to_insert.push((sutta_with_metadata, html, plain));
                     }
                 }
             }
         }
-        
+
         if self.verbose {
             println!("  ✓ Prepared {} suttas for insertion", suttas_to_insert.len());
             println!("  → Inserting into database...");
         }
-        
+
         // Step 4: Insert into database
         let inserted = insert_suttas_batch(conn, &suttas_to_insert)
             .context("Failed to insert suttas")?;
-        
+
         if self.verbose {
             println!("  ✓ Inserted {} suttas", inserted);
         }
-        
+
         // Calculate statistics
         let book_count = collection.books.len();
         let vagga_count: usize = collection.books.iter()
@@ -238,7 +247,7 @@ impl TipitakaImporter {
             .sum();
         let sutta_count = suttas_to_insert.len();
         let failed = sutta_count - inserted;
-        
+
         Ok(FileImportStats {
             filename,
             nikaya: collection.nikaya,
@@ -249,22 +258,44 @@ impl TipitakaImporter {
             suttas_failed: failed,
         })
     }
-    
+
     /// Generate UID for a sutta using CST mapping
     fn generate_sutta_uid(&self, filename: &str, book_id: &str, sutta_index: usize) -> String {
         // Try to build CST code from book_id and sutta index
         // Example: book_id="mn1", sutta_index=1 -> cst_code="mn1.1.1"
         let cst_code = format!("{}.1.{}", book_id, sutta_index);
-        
+
         // Try to get mapped UID
         if let Some(uid) = self.cst_mapping.generate_uid(filename, &cst_code) {
             return uid;
         }
-        
+
         // Fallback to filename-based UID
         CstMapping::generate_fallback_uid(filename, sutta_index)
     }
-    
+
+    /// Generate UID with optional commentary suffix, using mapping filename for code lookup
+    fn generate_sutta_uid_with_suffix(
+        &self,
+        mapping_filename: &str,
+        original_filename: &str,
+        book_id: &str,
+        sutta_index: usize,
+        commentary_suffix: Option<&str>,
+    ) -> String {
+        let cst_code = format!("{}.1.{}", book_id, sutta_index);
+        if let Some(base_code) = self.cst_mapping.generate_code(mapping_filename, &cst_code) {
+            let code_with_suffix = match commentary_suffix {
+                Some(".att") => format!("{}.att", base_code),
+                Some(".tik") => format!("{}.tik", base_code),
+                _ => base_code,
+            };
+            return format!("{}/pli/cst4", code_with_suffix);
+        }
+        // Fallback retains original filename behavior
+        CstMapping::generate_fallback_uid(original_filename, sutta_index)
+    }
+
     /// Process a single file in dry-run mode (no database insertion)
     pub fn process_file_dry_run(&self, xml_path: &Path) -> Result<FileImportStats> {
         let filename = xml_path
@@ -272,13 +303,13 @@ impl TipitakaImporter {
             .and_then(|n| n.to_str())
             .unwrap_or("unknown")
             .to_string();
-        
+
         // Step 1: Read and convert encoding
         let xml_content = read_xml_file(xml_path)?;
-        
+
         // Step 2: Parse XML
         let collection = parse_xml(&xml_content)?;
-        
+
         // Calculate statistics
         let book_count = collection.books.len();
         let vagga_count: usize = collection.books.iter()
@@ -288,7 +319,7 @@ impl TipitakaImporter {
             .flat_map(|b| &b.vaggas)
             .map(|v| v.suttas.len())
             .sum();
-        
+
         Ok(FileImportStats {
             filename,
             nikaya: collection.nikaya,
@@ -301,29 +332,51 @@ impl TipitakaImporter {
     }
 }
 
+/// Detect commentary suffix based on filename extension
+fn detect_commentary_suffix(filename: &str) -> Option<String> {
+    if filename.ends_with(".att.xml") {
+        Some(".att".to_string())
+    } else if filename.ends_with(".tik.xml") {
+        Some(".tik".to_string())
+    } else {
+        None
+    }
+}
+
+/// Normalize filename for CST mapping: map commentary/sub-commentary to corresponding .mul file
+fn normalize_filename_for_mapping(filename: &str) -> String {
+    if filename.ends_with("a.att.xml") {
+        return filename.replace("a.att.xml", "m.mul.xml");
+    }
+    if filename.ends_with("t.tik.xml") {
+        return filename.replace("t.tik.xml", "m.mul.xml");
+    }
+    filename.to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::path::PathBuf;
-    
+
     #[test]
     fn test_dry_run_process() {
         // This test requires the actual XML file to exist
         let xml_path = PathBuf::from("../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/s0201m.mul.xml");
-        
+
         if !xml_path.exists() {
             // Skip test if file doesn't exist
             return;
         }
-        
+
         let tsv_path = PathBuf::from("assets/cst-vs-sc.tsv");
         if !tsv_path.exists() {
             return;
         }
-        
+
         let importer = TipitakaImporter::new(&tsv_path, false).unwrap();
         let stats = importer.process_file_dry_run(&xml_path).unwrap();
-        
+
         assert_eq!(stats.nikaya, "Majjhimanikāyo");
         assert!(stats.suttas_total > 0);
     }

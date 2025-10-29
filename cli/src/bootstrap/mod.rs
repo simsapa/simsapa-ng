@@ -6,6 +6,7 @@ pub mod dhammapada_munindo;
 pub mod dhammapada_tipitaka;
 pub mod nyanadipa;
 pub mod buddha_ujja;
+pub mod tipitaka_xml;
 pub mod dpd;
 pub mod completions;
 
@@ -29,6 +30,7 @@ pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
 pub use nyanadipa::NyanadipaImporter;
 pub use suttacentral::SuttaCentralImporter;
 pub use buddha_ujja::BuddhaUjjaImporter;
+pub use tipitaka_xml::TipitakaXmlImporter;
 
 pub trait SuttaImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()>;
@@ -155,6 +157,13 @@ RELEASE_CHANNEL=development
         } else {
             logger::warn("SuttaCentral data directory not found, skipping");
         }
+    }
+
+    // Import suttas from tipitaka.org (CST4)
+    {
+        let tipitaka_xml_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/");
+        let mut importer = TipitakaXmlImporter::new(tipitaka_xml_path);
+        importer.import(&mut conn)?;
     }
 
     // Import from Dhammatalks.org
@@ -316,13 +325,6 @@ RELEASE_CHANNEL=development
         }
     }
 
-    logger::info("=== Copy log.txt ===");
-
-    let log_src = simsapa_dir.join("log.txt");
-    let log_dst = release_dir.join("log.txt");
-    fs::copy(&log_src, &log_dst)
-        .with_context(|| format!("Failed to copy log.txt from {:?} to {:?}", log_src, log_dst))?;
-
     logger::info("=== Release Info ===");
 
     write_release_info(&assets_dir, &release_dir)?;
@@ -345,6 +347,13 @@ Duration:          {}
     );
 
     logger::info(&msg);
+
+    logger::info("=== Copy log.txt ===");
+
+    let log_src = simsapa_dir.join("log.txt");
+    let log_dst = release_dir.join("log.txt");
+    fs::copy(&log_src, &log_dst)
+        .with_context(|| format!("Failed to copy log.txt from {:?} to {:?}", log_src, log_dst))?;
 
     Ok(())
 }

@@ -110,6 +110,14 @@ impl CstMapping {
         })
     }
     
+    /// Generate the base SC code for a sutta without suffixes or language/source
+    ///
+    /// Returns the mapped SuttaCentral code (e.g., "mn1") if found.
+    pub fn generate_code(&self, xml_filename: &str, cst_code: &str) -> Option<String> {
+        let key = (xml_filename.to_string(), cst_code.to_string());
+        self.file_code_map.get(&key).cloned()
+    }
+
     /// Generate fallback UID when no mapping is found
     ///
     /// Format: {filename_without_ext}/{sutta_index}/pli/cst4
