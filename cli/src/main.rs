@@ -1,4 +1,5 @@
 mod bootstrap;
+mod bootstrap_old;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -7,10 +8,15 @@ use clap::{Parser, Subcommand, ValueEnum};
 use dotenvy::dotenv;
 use anyhow::Result;
 
-use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir};
+use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir, logger};
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
+use simsapa_backend::db::appdata_models::Sutta;
+
+use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
+use indexmap::IndexMap;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     let app_data = get_app_data();
@@ -92,6 +98,335 @@ fn import_stardict_dictionary(new_dict_label: &str,
     Ok(())
 }
 
+/// Export Dhammapada Tipitaka.net suttas from legacy database
+fn export_dhammapada_tipitaka_net(legacy_db_path: &Path, output_db_path: &Path) -> Result<(), String> {
+    use simsapa_backend::db::appdata_schema::suttas;
+
+    println!("Exporting Dhammapada Tipitaka.net suttas from legacy database...");
+    println!("Legacy DB: {:?}", legacy_db_path);
+    println!("Output DB: {:?}", output_db_path);
+
+    // Check if legacy database exists
+    if !legacy_db_path.exists() {
+        return Err(format!("Legacy database not found: {:?}", legacy_db_path));
+    }
+
+    // Connect to legacy database
+    let mut legacy_conn = SqliteConnection::establish(legacy_db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to connect to legacy database: {}", e))?;
+
+    // Query suttas with uid LIKE '%/daw'
+    let daw_suttas: Vec<Sutta> = suttas::table
+        .filter(suttas::uid.like("%/daw"))
+        .order(suttas::uid.asc())
+        .load(&mut legacy_conn)
+        .map_err(|e| format!("Failed to query suttas: {}", e))?;
+
+    println!("Found {} suttas with uid ending in '/daw'", daw_suttas.len());
+
+    // Verify exactly 26 rows
+    if daw_suttas.len() != 26 {
+        return Err(format!("Expected exactly 26 suttas, found {}", daw_suttas.len()));
+    }
+
+    // Delete output database if it exists
+    if output_db_path.exists() {
+        std::fs::remove_file(output_db_path)
+            .map_err(|e| format!("Failed to delete existing output database: {}", e))?;
+    }
+
+    // Create output database
+    let mut output_conn = SqliteConnection::establish(output_db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to create output database: {}", e))?;
+
+    // Run migrations on output database
+    println!("Creating database schema...");
+    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata");
+    output_conn.run_pending_migrations(MIGRATIONS)
+        .map_err(|e| format!("Failed to run migrations: {}", e))?;
+
+    // Insert suttas into output database (excluding id field)
+    println!("Inserting suttas into output database...");
+    for sutta in &daw_suttas {
+        diesel::insert_into(suttas::table)
+            .values((
+                suttas::uid.eq(&sutta.uid),
+                suttas::sutta_ref.eq(&sutta.sutta_ref),
+                suttas::nikaya.eq(&sutta.nikaya),
+                suttas::language.eq(&sutta.language),
+                suttas::group_path.eq(&sutta.group_path),
+                suttas::group_index.eq(&sutta.group_index),
+                suttas::order_index.eq(&sutta.order_index),
+                suttas::sutta_range_group.eq(&sutta.sutta_range_group),
+                suttas::sutta_range_start.eq(&sutta.sutta_range_start),
+                suttas::sutta_range_end.eq(&sutta.sutta_range_end),
+                suttas::title.eq(&sutta.title),
+                suttas::title_ascii.eq(&sutta.title_ascii),
+                suttas::title_pali.eq(&sutta.title_pali),
+                suttas::title_trans.eq(&sutta.title_trans),
+                suttas::description.eq(&sutta.description),
+                suttas::content_plain.eq(&sutta.content_plain),
+                suttas::content_html.eq(&sutta.content_html),
+                suttas::content_json.eq(&sutta.content_json),
+                suttas::content_json_tmpl.eq(&sutta.content_json_tmpl),
+                suttas::source_uid.eq(&sutta.source_uid),
+                suttas::source_info.eq(&sutta.source_info),
+                suttas::source_language.eq(&sutta.source_language),
+                suttas::message.eq(&sutta.message),
+                suttas::copyright.eq(&sutta.copyright),
+                suttas::license.eq(&sutta.license),
+            ))
+            .execute(&mut output_conn)
+            .map_err(|e| format!("Failed to insert sutta {}: {}", sutta.uid, e))?;
+    }
+
+    println!("✓ Successfully exported {} suttas to {:?}", daw_suttas.len(), output_db_path);
+
+    // Print UIDs for verification
+    println!("\nExported suttas:");
+    for sutta in &daw_suttas {
+        println!("  - {}", sutta.uid);
+    }
+
+    Ok(())
+}
+
+/// List available languages in SuttaCentral ArangoDB
+fn suttacentral_import_languages_list() -> Result<(), String> {
+    use bootstrap::suttacentral::{connect_to_arangodb, get_sorted_languages_list};
+
+    // Connect to ArangoDB
+    let db = connect_to_arangodb()
+        .map_err(|e| format!("Failed to connect to ArangoDB: {}", e))?;
+
+    // Get sorted languages list
+    let languages = get_sorted_languages_list(&db)
+        .map_err(|e| format!("Failed to get languages list: {}", e))?;
+
+    // Print the languages
+    println!("Available languages in SuttaCentral ArangoDB:");
+    println!("(excluding: en, pli, san, hu)\n");
+    for lang in &languages {
+        println!("  {}", lang);
+    }
+    println!("\nTotal: {} languages", languages.len());
+
+    Ok(())
+}
+
+/// Generate statistics for an appdata.sqlite3 database
+fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool) -> Result<(), String> {
+    use std::fs;
+
+    // Define helper structs for raw SQL queries
+    #[derive(Debug, QueryableByName)]
+    struct CountResult {
+        #[diesel(sql_type = diesel::sql_types::BigInt)]
+        count: i64,
+    }
+
+    #[derive(Debug, QueryableByName)]
+    struct LanguageCount {
+        #[diesel(sql_type = diesel::sql_types::Text)]
+        language: String,
+        #[diesel(sql_type = diesel::sql_types::BigInt)]
+        count: i64,
+    }
+
+    // Check if database exists
+    if !db_path.exists() {
+        return Err(format!("Database file not found: {:?}", db_path));
+    }
+
+    // Connect to the database
+    let mut conn = SqliteConnection::establish(db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to connect to database: {}", e))?;
+
+    let mut stats: IndexMap<String, String> = IndexMap::new();
+
+    // Helper function to check if a table exists
+    let table_exists = |conn: &mut SqliteConnection, table_name: &str| -> bool {
+        let query = format!(
+            "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='{}'",
+            table_name
+        );
+        diesel::sql_query(&query)
+            .get_result::<CountResult>(conn)
+            .map(|r| r.count > 0)
+            .unwrap_or(false)
+    };
+
+    // Helper function to get row count for a table
+    let get_row_count = |conn: &mut SqliteConnection, table_name: &str| -> Result<i64, String> {
+        if !table_exists(conn, table_name) {
+            return Ok(0);
+        }
+
+        let query = format!("SELECT COUNT(*) as count FROM {}", table_name);
+        let result: Result<i64, diesel::result::Error> = diesel::sql_query(&query)
+            .get_result::<CountResult>(conn)
+            .map(|r| r.count);
+
+        result.map_err(|e| format!("Failed to query {}: {}", table_name, e))
+    };
+
+    // Total rows in main tables
+    for table in &["suttas", "sutta_variants", "sutta_glosses", "sutta_comments"] {
+        let count = get_row_count(&mut conn, table)?;
+        stats.insert(format!("Total rows in {}", table), count.to_string());
+    }
+
+    // Total rows in suttas_fts
+    let fts_count = get_row_count(&mut conn, "suttas_fts")?;
+    stats.insert("Total rows in suttas_fts".to_string(), fts_count.to_string());
+
+    // Count distinct source_uid values
+    if table_exists(&mut conn, "suttas") {
+        let query = "SELECT COUNT(DISTINCT source_uid) as count FROM suttas WHERE source_uid IS NOT NULL";
+        let source_uid_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Number of source_uid variants".to_string(), source_uid_count.to_string());
+
+        // Count distinct nikaya values
+        let query = "SELECT COUNT(DISTINCT nikaya) as count FROM suttas WHERE nikaya IS NOT NULL";
+        let nikaya_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Number of nikaya variants".to_string(), nikaya_count.to_string());
+
+        // Count distinct language values
+        let query = "SELECT COUNT(DISTINCT language) as count FROM suttas WHERE language IS NOT NULL";
+        let lang_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Number of language variants".to_string(), lang_count.to_string());
+
+        // Count suttas with source_uid 'ms'
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE source_uid = 'ms'";
+        let ms_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas with source_uid 'ms'".to_string(), ms_count.to_string());
+
+        // Count suttas with source_uid 'cst4'
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE source_uid = 'cst4'";
+        let cst4_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas with source_uid 'cst4'".to_string(), cst4_count.to_string());
+
+        // Count rows per language
+        let query = "SELECT language, COUNT(*) as count FROM suttas GROUP BY language ORDER BY count DESC";
+
+        let lang_counts: Vec<LanguageCount> = diesel::sql_query(query)
+            .load(&mut conn)
+            .unwrap_or_default();
+
+        for lc in lang_counts {
+            stats.insert(format!("Rows for language '{}'", lc.language), lc.count.to_string());
+        }
+
+        // Count suttas from dhammatalks.org
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE content_html LIKE '%<div class=\"dhammatalks_org\">%'";
+        let dhammatalks_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas from dhammatalks.org".to_string(), dhammatalks_count.to_string());
+
+        // Count suttas from tipitaka.net
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE content_html LIKE '%<div class=\"tipitaka_net\">%'";
+        let tipitaka_net_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas from tipitaka.net".to_string(), tipitaka_net_count.to_string());
+
+        // Count suttas from Nyanadipa
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE source_uid = 'nyanadipa'";
+        let nyanadipa_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas from Nyanadipa".to_string(), nyanadipa_count.to_string());
+
+        // Count suttas from Ajahn Munindo
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE source_uid = 'munindo'";
+        let munindo_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas from Ajahn Munindo".to_string(), munindo_count.to_string());
+
+        // Count suttas from a-buddha-ujja.hu (Hungarian)
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE language = 'hu'";
+        let buddha_ujja_count: i64 = diesel::sql_query(query)
+            .get_result::<CountResult>(&mut conn)
+            .map(|r| r.count)
+            .unwrap_or(0);
+        stats.insert("Suttas from a-buddha-ujja.hu".to_string(), buddha_ujja_count.to_string());
+    }
+
+    // Print as Markdown table
+    println!("\n## Appdata Statistics\n");
+    println!("| Statistic | Value |");
+    println!("|-----------|-------|");
+    for (key, value) in &stats {
+        println!("| {} | {} |", key, value);
+    }
+
+    // Write to files if --write-stats is enabled
+    if write_stats {
+        // Determine the output folder
+        let target_folder = match output_folder {
+            Some(folder) => folder.to_path_buf(),
+            None => {
+                // Use the database file's parent directory
+                db_path.parent()
+                    .ok_or_else(|| format!("Could not determine parent directory of database: {:?}", db_path))?
+                    .to_path_buf()
+            }
+        };
+
+        // Create folder if it doesn't exist
+        if !target_folder.exists() {
+            fs::create_dir_all(&target_folder)
+                .map_err(|e| format!("Failed to create output folder: {}", e))?;
+        }
+
+        // Write Markdown file
+        let md_path = target_folder.join("appdata_stats.md");
+        let mut md_content = String::from("# Appdata Statistics\n\n");
+        md_content.push_str("| Statistic | Value |\n");
+        md_content.push_str("|-----------|-------|\n");
+        for (key, value) in &stats {
+            md_content.push_str(&format!("| {} | {} |\n", key, value));
+        }
+
+        fs::write(&md_path, md_content)
+            .map_err(|e| format!("Failed to write Markdown file: {}", e))?;
+        logger::info(&format!("Wrote Markdown file: {:?}", md_path));
+
+        // Write JSON file
+        let json_path = target_folder.join("appdata_stats.json");
+        let json_content = serde_json::to_string_pretty(&stats)
+            .map_err(|e| format!("Failed to serialize JSON: {}", e))?;
+
+        fs::write(&json_path, json_content)
+            .map_err(|e| format!("Failed to write JSON file: {}", e))?;
+        logger::info(&format!("Wrote JSON file: {:?}", json_path));
+    }
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -158,12 +493,57 @@ enum Commands {
         dpd_output_path: Option<PathBuf>,
     },
 
-    /// Rebuild the application database from local assets and create asset release archives.
+    /// Rebuild the application database from local assets and create asset release archives (new modular implementation).
     Bootstrap {
         /// Write a new .env file even if one already exists
         #[arg(long, default_value_t = false)]
         write_new_dotenv: bool,
-    }
+
+        /// Skip DPD database initialization and bootstrap
+        #[arg(long, default_value_t = false)]
+        skip_dpd: bool,
+    },
+
+    /// Rebuild the application database using the legacy bootstrap implementation.
+    BootstrapOld {
+        /// Write a new .env file even if one already exists
+        #[arg(long, default_value_t = false)]
+        write_new_dotenv: bool,
+
+        /// Skip DPD database initialization and bootstrap
+        #[arg(long, default_value_t = false)]
+        skip_dpd: bool,
+    },
+
+    /// Export Dhammapada Tipitaka.net suttas from legacy database
+    DhammapadaTipitakaNetExport {
+        /// Path to the legacy appdata.sqlite3 database
+        #[arg(value_name = "LEGACY_DB_PATH")]
+        legacy_db_path: PathBuf,
+
+        /// Path to the output SQLite database file
+        #[arg(value_name = "OUTPUT_DB_PATH")]
+        output_db_path: PathBuf,
+    },
+
+    /// Generate statistics for an appdata.sqlite3 database
+    #[command(arg_required_else_help = true)]
+    AppdataStats {
+        /// Path to the appdata.sqlite3 database file
+        #[arg(value_name = "DB_PATH")]
+        db_path: PathBuf,
+
+        /// Optional folder path to write the stats as Markdown and JSON files
+        #[arg(value_name = "OUTPUT_FOLDER")]
+        output_folder: Option<PathBuf>,
+
+        /// Write stats to files (uses output_folder if specified, otherwise database folder)
+        #[arg(long, default_value_t = false)]
+        write_stats: bool,
+    },
+
+    /// List available languages in SuttaCentral ArangoDB
+    SuttacentralImportLanguagesList,
 }
 
 /// Enum for the different types of queries available.
@@ -182,10 +562,10 @@ fn main() {
 
     let cli = Cli::parse();
 
-    // Don't initialize app data for bootstrap command since it needs to create directories first
+    // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } => {
-            // Skip app data initialization for bootstrap
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList => {
+            // Skip app data initialization for bootstrap, export, stats, and suttacentral commands
         }
         _ => {
             init_app_data();
@@ -249,9 +629,27 @@ fn main() {
              }
         }
 
-        Commands::Bootstrap { write_new_dotenv } => {
-            bootstrap::bootstrap(write_new_dotenv)
+        Commands::Bootstrap { write_new_dotenv, skip_dpd } => {
+            bootstrap::bootstrap(write_new_dotenv, skip_dpd)
                 .map_err(|e| e.to_string())
+        }
+
+        Commands::BootstrapOld { write_new_dotenv, skip_dpd } => {
+            bootstrap_old::bootstrap(write_new_dotenv, skip_dpd)
+                .map_err(|e| e.to_string())
+        }
+
+        Commands::DhammapadaTipitakaNetExport { legacy_db_path, output_db_path } => {
+            export_dhammapada_tipitaka_net(&legacy_db_path, &output_db_path)
+                .map_err(|e| e.to_string())
+        }
+
+        Commands::AppdataStats { db_path, output_folder, write_stats } => {
+            appdata_stats(&db_path, output_folder.as_deref(), write_stats)
+        }
+
+        Commands::SuttacentralImportLanguagesList => {
+            suttacentral_import_languages_list()
         }
     };
 
