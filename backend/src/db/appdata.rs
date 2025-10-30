@@ -49,10 +49,15 @@ impl AppdataDbHandle {
 
         let mut res: Vec<Sutta> = Vec::new();
 
+        // Find suttas with the same reference code, including atthakatha (.att) and tika (.tik).
         if let Ok(a) = suttas
             .select(Sutta::as_select())
             .filter(uid.ne(sutta_uid))
-            .filter(uid.like(format!("{}/%", uid_ref)))
+            .filter(
+                uid.like(format!("{}/%", uid_ref))
+                   .or(uid.like(format!("{}.att/%", uid_ref)))
+                   .or(uid.like(format!("{}.tik/%", uid_ref)))
+            )
             .load(&mut db_conn) {
                 res.extend(a);
             }
