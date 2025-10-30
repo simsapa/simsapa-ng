@@ -23,6 +23,18 @@ impl TipitakaXmlImporter {
     pub fn import(&mut self, conn: &mut SqliteConnection) -> Result<()> {
         // Limit to explicit list of files for initial bootstrap
         let files = [
+            // Dīgha Nikāya
+            "s0101m.mul.xml",
+            "s0102m.mul.xml",
+            "s0103m.mul.xml",
+            "s0101a.att.xml",
+            "s0102a.att.xml",
+            "s0103a.att.xml",
+            "s0101t.tik.xml",
+            "s0102t.tik.xml",
+            "s0103t.tik.xml",
+
+            // Majjhima Nikāya
             "s0201m.mul.xml",
             "s0202m.mul.xml",
             "s0203m.mul.xml",
