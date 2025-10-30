@@ -14,6 +14,8 @@ use super::database_inserter::{insert_sutta, insert_suttas_batch};
 use super::uid_generator::CstMapping;
 use super::types::{TipitakaCollection, Sutta};
 
+use crate::bootstrap::helpers::uid_to_ref;
+use simsapa_backend::helpers::consistent_niggahita;
 use simsapa_backend::logger;
 
 /// Statistics for a single file import
@@ -67,8 +69,8 @@ impl TipitakaImporter {
         }
 
         // Step 1: Read and convert encoding
-        let xml_content = read_xml_file(xml_path)
-            .context("Failed to read XML file")?;
+        let s = read_xml_file(xml_path).context("Failed to read XML file")?;
+        let xml_content = consistent_niggahita(Some(s));
 
         if self.verbose {
             logger::info(&format!("  ✓ Encoding conversion successful"));
@@ -171,7 +173,7 @@ impl TipitakaImporter {
                     _ => boundary.sc_code.clone(),
                 };
                 let uid = format!("{}/pli/cst4", uid_code);
-                let sutta_ref = boundary.sc_code.to_uppercase();
+                let sutta_ref = uid_to_ref(&boundary.sc_code);
 
                 let sutta = super::types::Sutta {
                     title: sutta_title,
