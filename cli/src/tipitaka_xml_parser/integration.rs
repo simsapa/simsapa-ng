@@ -187,44 +187,19 @@ impl TipitakaImporter {
                 suttas_to_insert.push((sutta, html, plain));
             }
         } else {
-            // Fallback: use parsed structure (original behavior)
-            let mut sutta_index = 0;
-            for book in &collection.books {
-                for vagga in &book.vaggas {
-                    for sutta in &vagga.suttas {
-                        sutta_index += 1;
-
-                        // Generate UID with optional commentary suffix, using mapping filename for code lookup
-                        let uid = self.generate_sutta_uid_with_suffix(&mapping_filename, &filename, &book.id, sutta_index, commentary_suffix.as_deref());
-
-                        // Build group path
-                        let group_path = format!("{}/{}/{}",
-                            collection.nikaya,
-                            book.title,
-                            vagga.title
-                        );
-
-                        // Transform to HTML
-                        let html = transform_to_html(&sutta.content_xml)
-                            .context("Failed to transform to HTML")?;
-
-                        // Extract plain text
-                        let plain = extract_plain_text(&sutta.content_xml);
-
-                        // Create sutta with metadata
-                        let mut sutta_with_metadata = sutta.clone();
-                        sutta_with_metadata.metadata.uid = uid;
-                        sutta_with_metadata.metadata.sutta_ref = format!("{} {}",
-                            book.id.to_uppercase(),
-                            sutta_index
-                        );
-                        sutta_with_metadata.metadata.group_path = group_path;
-                        sutta_with_metadata.metadata.order_index = Some(sutta_index as i32);
-
-                        suttas_to_insert.push((sutta_with_metadata, html, plain));
-                    }
-                }
-            }
+            // Instead of fallback import, emit an error and continue
+            tracing::error!("No valid TSV boundaries for file {filename}, skipping import of this file");
+            // No suttas_to_insert pushed; produce empty import
+            // Early return for this file
+            return Ok(FileImportStats {
+                filename,
+                nikaya: collection.nikaya,
+                books: collection.books.len(),
+                vaggas: collection.books.iter().map(|b| b.vaggas.len()).sum(),
+                suttas_total: 0,
+                suttas_inserted: 0,
+                suttas_failed: 0,
+            });
         }
 
         if self.verbose {

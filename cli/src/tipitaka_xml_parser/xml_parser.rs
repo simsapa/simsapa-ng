@@ -117,12 +117,52 @@ pub fn parse_xml(content: &str) -> Result<TipitakaCollection> {
                             match rend.as_str() {
                                 "book" => {
                                     if let Some(ref mut book) = current_book {
-                                        book.title = text;
+                                        book.title = text.clone();
                                     }
+                                    // For collections like Dīgha, there may be no explicit vagga divs.
+                                    // We'll lazily create a default vagga when the first sutta appears.
                                 }
                                 "chapter" => {
-                                    if let Some(ref mut vagga) = current_vagga {
-                                        vagga.title = text;
+                                    // Two possibilities depending on collection:
+                                    // 1) Majjhima: chapter is a vagga title (current_vagga exists)
+                                    // 2) Dīgha: chapter is a sutta title (no current_vagga)
+                                    if current_vagga.is_some() {
+                                        if let Some(ref mut vagga) = current_vagga {
+                                            vagga.title = text;
+                                        }
+                                    } else {
+                                        // Treat as sutta title under an implicit vagga for this book
+                                        // Ensure we have a vagga to hold suttas
+                                        if current_vagga.is_none() {
+                                            if let Some(ref book) = current_book {
+                                                current_vagga = Some(Vagga {
+                                                    id: format!("{}_1", book.id),
+                                                    title: book.title.clone(),
+                                                    suttas: Vec::new(),
+                                                });
+                                            }
+                                        }
+
+                                        // Save previous sutta if exists
+                                        if let Some(sutta) = current_sutta.take() {
+                                            if let Some(ref mut vagga) = current_vagga {
+                                                vagga.suttas.push(sutta);
+                                            }
+                                        }
+
+                                        // Start new sutta with this chapter title
+                                        current_sutta = Some(Sutta {
+                                            title: text,
+                                            content_xml: Vec::new(),
+                                            metadata: SuttaMetadata {
+                                                uid: String::new(),
+                                                sutta_ref: String::new(),
+                                                nikaya: nikaya.clone(),
+                                                group_path: String::new(),
+                                                group_index: None,
+                                                order_index: None,
+                                            },
+                                        });
                                     }
                                 }
                                 _ => {}

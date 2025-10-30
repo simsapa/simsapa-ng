@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use diesel::sqlite::SqliteConnection;
 use std::path::{Path, PathBuf};
 
-use crate::tipitaka_xml_parser::TipitakaImporter as ParserImporter;
+use crate::tipitaka_xml_parser::TipitakaImporter;
 use crate::logger;
 
 pub struct TipitakaXmlImporter {
@@ -61,7 +61,7 @@ impl TipitakaXmlImporter {
             anyhow::bail!("CST mapping TSV not found: {:?}", tsv_path);
         }
 
-        let importer = ParserImporter::new(tsv_path, self.verbose)
+        let importer = TipitakaImporter::new(tsv_path, self.verbose)
             .context("Failed to initialize TipitakaImporter")?;
 
         for fname in files.iter() {
