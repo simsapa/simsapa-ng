@@ -8,6 +8,8 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::fs;
 
+use simsapa_backend::logger;
+
 /// Sutta boundary information from TSV
 #[derive(Debug, Clone)]
 pub struct SuttaBoundary {
@@ -44,7 +46,7 @@ impl CstMapping {
             let fields: Vec<&str> = line.split('\t').collect();
             
             if fields.len() < 13 {
-                tracing::warn!("Line {}: Not enough fields, skipping", line_num + 1);
+                logger::warn(&format!("Line {}: Not enough fields, skipping", line_num + 1));
                 continue;
             }
             
@@ -88,8 +90,8 @@ impl CstMapping {
             boundaries.sort_by_key(|b| b.start_paranum);
         }
         
-        tracing::info!("Loaded {} CST mappings from TSV", file_code_map.len());
-        tracing::info!("Loaded sutta boundaries for {} files", file_boundaries.len());
+        logger::info(&format!("Loaded {} CST mappings from TSV", file_code_map.len()));
+        logger::info(&format!("Loaded sutta boundaries for {} files", file_boundaries.len()));
         
         Ok(Self { file_code_map, file_boundaries })
     }

@@ -2,6 +2,8 @@ use std::fs;
 use std::path::Path;
 use anyhow::{Result, Context};
 
+use simsapa_backend::logger;
+
 use crate::import_stardict_dictionary;
 
 pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()> {
@@ -17,7 +19,7 @@ pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<(
 }
 
 pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()> {
-    println!("=== dpd_migrate() ===");
+    logger::info("=== dpd_migrate() ===");
 
     let source_db_path = bootstrap_assets_dir
         .join("dpd-db-for-bootstrap/current/dpd.db");
@@ -39,7 +41,7 @@ pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
             dest_db_path.display()
         ))?;
 
-    println!("Copied dpd.db to assets directory");
+    logger::info("Copied dpd.db to assets directory");
 
     // Call the import_migrate_dpd function
     let dpd_input_path = dest_db_path;
@@ -48,6 +50,6 @@ pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
     simsapa_backend::db::dpd::import_migrate_dpd(&dpd_input_path, Some(dpd_output_path))
         .map_err(|e| anyhow::anyhow!("Failed to migrate DPD database: {}", e))?;
 
-    println!("Successfully migrated DPD database");
+    logger::info("Successfully migrated DPD database");
     Ok(())
 }

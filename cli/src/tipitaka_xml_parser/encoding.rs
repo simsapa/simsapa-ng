@@ -7,6 +7,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 
+use simsapa_backend::logger;
+
 /// Reads an XML file, detects encoding, and converts to UTF-8 with Unix line endings
 pub fn read_xml_file(path: &Path) -> Result<String> {
     // Read file as raw bytes
@@ -20,12 +22,12 @@ pub fn read_xml_file(path: &Path) -> Result<String> {
     // Detect encoding by checking BOM
     let (encoding, has_bom) = detect_encoding(&bytes);
     
-    tracing::debug!(
+    logger::info(&format!(
         "File: {:?}, Encoding: {}, BOM: {}",
         path.file_name().unwrap_or_default(),
         encoding.name(),
         has_bom
-    );
+    ));
     
     // Skip BOM bytes if present
     let bytes_without_bom = if has_bom {
@@ -41,7 +43,7 @@ pub fn read_xml_file(path: &Path) -> Result<String> {
     let (decoded, _encoding_used, had_errors) = encoding.decode(bytes_without_bom);
     
     if had_errors {
-        tracing::warn!("Encoding errors detected while decoding {:?}", path);
+        logger::warn(&format!("Encoding errors detected while decoding {:?}", path));
     }
     
     // Convert CRLF to LF (Windows to Unix line endings)

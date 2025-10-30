@@ -125,9 +125,9 @@ RELEASE_CHANNEL=development
     if write_new_dotenv || !dot_env_path.exists() {
         fs::write(dot_env_path, dot_env_content)
             .context("Failed to write .env file")?;
-        println!("Created .env file");
+        logger::info("Created .env file");
     } else {
-        println!("Skipping .env file creation (already exists). Use --write-new-dotenv to overwrite.");
+        logger::warn("Skipping .env file creation (already exists). Use --write-new-dotenv to overwrite.");
     }
 
     clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
@@ -364,7 +364,7 @@ pub fn clean_and_create_folders(
     release_dir: &Path,
     dist_dir: &Path
 ) -> Result<()> {
-    println!("=== clean_and_create_folders() ===");
+    logger::info("=== clean_and_create_folders() ===");
 
     // Clean and create directories
     for dir in [
@@ -402,7 +402,7 @@ pub fn clean_and_create_folders(
                     if extension == "bz2" && path.to_string_lossy().ends_with(".tar.bz2") {
                         fs::remove_file(&path)
                             .with_context(|| format!("Failed to remove file: {}", path.display()))?;
-                        println!("Removed: {}", path.display());
+                        logger::info(&format!("Removed: {}", path.display()));
                     }
                 }
             }
@@ -414,7 +414,7 @@ pub fn clean_and_create_folders(
     fs::write(&log_path, "")
         .with_context(|| format!("Failed to clear log file: {}", log_path.display()))?;
 
-    println!("Bootstrap cleanup and folder creation completed");
+    logger::info("Bootstrap cleanup and folder creation completed");
     Ok(())
 }
 

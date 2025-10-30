@@ -5,6 +5,7 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use simsapa_backend::db::appdata_models::NewSutta;
 use simsapa_backend::db::appdata_schema::suttas;
+use simsapa_backend::logger;
 use crate::tipitaka_xml_parser::types::*;
 
 /// Insert a sutta into the database
@@ -64,7 +65,7 @@ pub fn insert_suttas_batch(
             match insert_sutta(conn, sutta, html, plain) {
                 Ok(_) => inserted += 1,
                 Err(e) => {
-                    tracing::warn!("Failed to insert sutta {}: {:?}", sutta.metadata.uid, e);
+                    logger::warn(&format!("Failed to insert sutta {}: {:?}", sutta.metadata.uid, e));
                 }
             }
         }

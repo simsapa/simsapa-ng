@@ -1157,12 +1157,12 @@ mod tests {
         match result {
             Ok(_db) => {
                 // Connection successful
-                println!("Successfully connected to ArangoDB");
+                logger::info("Successfully connected to ArangoDB");
             }
             Err(e) => {
-                eprintln!("Failed to connect to ArangoDB: {}", e);
-                eprintln!("Make sure ArangoDB is running on localhost:8529");
-                eprintln!("with username='root', password='test', database='suttacentral'");
+                logger::error(&format("Failed to connect to ArangoDB: {}", e));
+                logger::error("Make sure ArangoDB is running on localhost:8529");
+                logger::error("with username='root', password='test', database='suttacentral'");
                 panic!("ArangoDB connection test failed");
             }
         }

@@ -14,6 +14,8 @@ use super::database_inserter::{insert_sutta, insert_suttas_batch};
 use super::uid_generator::CstMapping;
 use super::types::{TipitakaCollection, Sutta};
 
+use simsapa_backend::logger;
+
 /// Statistics for a single file import
 #[derive(Debug, Default)]
 pub struct FileImportStats {
@@ -61,7 +63,7 @@ impl TipitakaImporter {
         let commentary_suffix = detect_commentary_suffix(&filename);
 
         if self.verbose {
-            println!("  → Reading and converting encoding...");
+            logger::info(&format!("  → Reading and converting encoding..."));
         }
 
         // Step 1: Read and convert encoding
@@ -69,8 +71,8 @@ impl TipitakaImporter {
             .context("Failed to read XML file")?;
 
         if self.verbose {
-            println!("  ✓ Encoding conversion successful");
-            println!("  → Parsing XML structure...");
+            logger::info(&format!("  ✓ Encoding conversion successful"));
+            logger::info(&format!("  → Parsing XML structure..."));
         }
 
         // Step 2: Parse XML
@@ -78,15 +80,15 @@ impl TipitakaImporter {
             .context("Failed to parse XML")?;
 
         if self.verbose {
-            println!("  ✓ XML parsed successfully");
-            println!("  → Generating UIDs and transforming to HTML...");
+            logger::info(&format!("  ✓ XML parsed successfully"));
+            logger::info(&format!("  → Generating UIDs and transforming to HTML..."));
         }
 
         // Step 3: Get sutta boundaries from TSV
         let boundaries = self.cst_mapping.get_sutta_boundaries(&mapping_filename);
 
         if boundaries.is_none() {
-            tracing::warn!("No sutta boundaries found for {}, using parsed structure", filename);
+            logger::warn(&format!("No sutta boundaries found for {}, using parsed structure", filename));
         }
 
         // Step 4: Process each sutta using TSV boundaries if available
@@ -94,15 +96,15 @@ impl TipitakaImporter {
 
         if let Some(boundaries) = boundaries {
             // Use TSV boundaries to correctly identify suttas
-            tracing::info!("Using TSV boundaries: {} suttas found", boundaries.len());
+            logger::info(&format!("Using TSV boundaries: {} suttas found", boundaries.len()));
             for (sutta_idx, boundary) in boundaries.iter().enumerate() {
                 // Collect all paragraphs for this sutta
                 let mut sutta_content = Vec::new();
                 let sutta_title = boundary.title.clone();
 
                 if self.verbose {
-                    println!("  → Processing sutta {}: {} (paranum {})",
-                        boundary.sc_code, sutta_title, boundary.start_paranum);
+                    logger::info(&format!("  → Processing sutta {}: {} (paranum {})",
+                        boundary.sc_code, sutta_title, boundary.start_paranum));
                 }
 
                 // Determine the range of paranums for this sutta
@@ -133,13 +135,13 @@ impl TipitakaImporter {
                 }
 
                 if sutta_content.is_empty() {
-                    tracing::warn!("No content found for sutta: {}", sutta_title);
+                    logger::warn(&format!("No content found for sutta: {}", sutta_title));
                     continue;
                 }
 
                 if self.verbose {
-                    println!("    ✓ Collected {} paragraphs (paranums {}-{})",
-                        sutta_content.len(), start_paranum, end_paranum);
+                    logger::info(&format!("    ✓ Collected {} paragraphs (paranums {}-{})",
+                        sutta_content.len(), start_paranum, end_paranum));
                 }
 
                 // Build group path from TSV boundary data
@@ -188,7 +190,7 @@ impl TipitakaImporter {
             }
         } else {
             // Instead of fallback import, emit an error and continue
-            tracing::error!("No valid TSV boundaries for file {filename}, skipping import of this file");
+            logger::error(&format!("No valid TSV boundaries for file {filename}, skipping import of this file"));
             // No suttas_to_insert pushed; produce empty import
             // Early return for this file
             return Ok(FileImportStats {
@@ -203,8 +205,8 @@ impl TipitakaImporter {
         }
 
         if self.verbose {
-            println!("  ✓ Prepared {} suttas for insertion", suttas_to_insert.len());
-            println!("  → Inserting into database...");
+            logger::info(&format!("  ✓ Prepared {} suttas for insertion", suttas_to_insert.len()));
+            logger::info(&format!("  → Inserting into database..."));
         }
 
         // Step 4: Insert into database
@@ -212,7 +214,7 @@ impl TipitakaImporter {
             .context("Failed to insert suttas")?;
 
         if self.verbose {
-            println!("  ✓ Inserted {} suttas", inserted);
+            logger::info(&format!("  ✓ Inserted {} suttas", inserted));
         }
 
         // Calculate statistics
