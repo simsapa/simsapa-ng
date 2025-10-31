@@ -599,11 +599,19 @@ fn parse_tipitaka_xml_new(
         export_fragments_to_db,
         build_suttas,
         insert_suttas,
+        initialize_database,
     };
     use std::fs;
 
     println!("Tipitaka XML Parser (Fragment-Based)");
     println!("====================================\n");
+    
+    // Initialize output database if needed
+    if !dry_run {
+        if let Err(e) = initialize_database(output_db_path) {
+            return Err(format!("Failed to initialize database: {}", e));
+        }
+    }
 
     // Collect XML files to process
     let xml_files: Vec<PathBuf> = if input_path.is_file() {

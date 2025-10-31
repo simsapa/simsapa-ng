@@ -265,7 +265,14 @@ pub fn parse_into_fragments(
     current_fragment_type = Some(FragmentType::Header);
     
     loop {
+        // Capture position BEFORE reading the event (this is the start of the tag)
+        let event_start_pos = reader.buffer_position();
+        let event_start_line = reader.current_line();
+        let event_start_char = reader.current_char();
+        
         let event = reader.read_event()?;
+        
+        // Capture position AFTER reading the event (this is the end of the tag)
         let current_line = reader.current_line();
         let current_char = reader.current_char();
         let current_pos = reader.buffer_position();
@@ -310,8 +317,8 @@ pub fn parse_into_fragments(
                 if is_potential_sutta_marker && 
                    (nikaya_structure.nikaya == "majjhima" || nikaya_structure.nikaya == "samyutta") &&
                    tag_name == "p" && attributes.get("rend") == Some(&"subhead".to_string()) {
-                    // Store position for later text check
-                    pending_subhead_check = Some((current_pos, current_line, current_char));
+                    // Store START position of the tag for later text check
+                    pending_subhead_check = Some((event_start_pos, event_start_line, event_start_char));
                 } else if is_potential_sutta_marker {
                     // DN style: immediate sutta marker (div type="sutta")
                     if in_sutta_content {

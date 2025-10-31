@@ -2178,6 +2178,7 @@ dependencies = [
  "quick-xml",
  "regex",
  "reqwest",
+ "rusqlite",
  "scraper",
  "serde",
  "serde_json",

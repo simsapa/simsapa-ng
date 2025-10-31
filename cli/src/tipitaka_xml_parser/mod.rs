@@ -24,5 +24,5 @@ pub use fragment_parser::parse_into_fragments;
 pub use fragment_exporter::export_fragments_to_db;
 pub use fragment_reconstructor::reconstruct_xml_from_db;
 pub use sutta_builder::build_suttas;
-pub use database_inserter::insert_suttas;
+pub use database_inserter::{insert_suttas, initialize_database};
 pub use integration::{process_xml_file, process_directory, ProcessingStats};
