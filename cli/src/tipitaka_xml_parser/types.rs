@@ -49,10 +49,14 @@ pub struct XmlFragment {
     pub fragment_type: FragmentType,
     /// Raw XML content of this fragment
     pub content: String,
-    /// Starting line number in source file
+    /// Starting line number in source file (1-indexed)
     pub start_line: usize,
-    /// Ending line number in source file
+    /// Ending line number in source file (1-indexed)
     pub end_line: usize,
+    /// Starting character position within start_line (0-indexed)
+    pub start_char: usize,
+    /// Ending character position within end_line (0-indexed, exclusive)
+    pub end_char: usize,
     /// Hierarchy levels at the time this fragment was created
     pub group_levels: Vec<GroupLevel>,
 }

@@ -10,14 +10,15 @@ use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType, Gr
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 use std::collections::HashMap;
 
-/// Line-tracking XML reader wrapper
+/// Line and character position tracking for XML reader
 ///
-/// Wraps quick_xml::Reader and tracks the current line number by counting
-/// newlines in the processed content.
+/// Tracks both line numbers (1-indexed) and character positions within lines (0-indexed).
+/// This allows precise location tracking even when multiple elements are on the same line.
 struct LineTrackingReader<'a> {
     reader: Reader<&'a [u8]>,
     current_line: usize,
-    last_position: usize,
+    current_char: usize,  // Character position within current line (0-indexed)
+    last_position: usize, // Byte position in content
     content: &'a str,
 }
 
@@ -31,33 +32,46 @@ impl<'a> LineTrackingReader<'a> {
         Self {
             reader,
             current_line: 1,
+            current_char: 0,
             last_position: 0,
             content,
         }
     }
     
-    /// Get the current line number
+    /// Get the current line number (1-indexed)
     fn current_line(&self) -> usize {
         self.current_line
     }
     
-    /// Update line count based on position
-    fn update_line_count(&mut self, position: usize) {
+    /// Get the current character position within the line (0-indexed)
+    fn current_char(&self) -> usize {
+        self.current_char
+    }
+    
+    /// Update line and character position based on byte position
+    fn update_position(&mut self, position: usize) {
         if position <= self.last_position {
             return;
         }
         
-        // Count newlines between last_position and current position
         let slice = &self.content.as_bytes()[self.last_position..position.min(self.content.len())];
-        let newlines = slice.iter().filter(|&&b| b == b'\n').count();
-        self.current_line += newlines;
+        
+        for &byte in slice {
+            if byte == b'\n' {
+                self.current_line += 1;
+                self.current_char = 0;
+            } else {
+                self.current_char += 1;
+            }
+        }
+        
         self.last_position = position;
     }
     
-    /// Read the next event and update line tracking
+    /// Read the next event and update position tracking
     fn read_event(&mut self) -> Result<Event<'a>> {
         let position = self.reader.buffer_position();
-        self.update_line_count(position);
+        self.update_position(position);
         
         self.reader
             .read_event()
@@ -227,7 +241,8 @@ pub fn parse_into_fragments(
     let detector = FragmentBoundaryDetector::new(nikaya_structure);
     
     let mut fragments: Vec<XmlFragment> = Vec::new();
-    let mut current_fragment_start: Option<(usize, usize)> = None; // (byte_pos, line_num)
+    // Track: (byte_pos, line_num, char_pos)
+    let mut current_fragment_start: Option<(usize, usize, usize)> = None;
     let mut current_fragment_type: Option<FragmentType> = None;
     let mut pending_title: Option<(GroupType, String)> = None;
     let mut in_sutta_content = false;
@@ -235,6 +250,7 @@ pub fn parse_into_fragments(
     loop {
         let event = reader.read_event()?;
         let current_line = reader.current_line();
+        let current_char = reader.current_char();
         let current_pos = reader.buffer_position();
         
         match event {
@@ -264,7 +280,7 @@ pub fn parse_into_fragments(
                 // Check for sutta content start
                 if !in_sutta_content && detector.is_sutta_start(&tag_name, &attributes) {
                     // Close any existing fragment
-                    if let (Some((start_pos, start_line)), Some(frag_type)) = 
+                    if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
                         let content = xml_content[start_pos..current_pos].to_string();
@@ -273,12 +289,14 @@ pub fn parse_into_fragments(
                             content,
                             start_line,
                             end_line: current_line,
+                            start_char,
+                            end_char: current_char,
                             group_levels: hierarchy.get_current_levels(),
                         });
                     }
                     
                     // Start new sutta fragment
-                    current_fragment_start = Some((current_pos, current_line));
+                    current_fragment_start = Some((current_pos, current_line, current_char));
                     current_fragment_type = Some(FragmentType::Sutta);
                     in_sutta_content = true;
                 }
@@ -307,7 +325,7 @@ pub fn parse_into_fragments(
                 // Check if this closes a sutta div
                 if tag_name == "div" && in_sutta_content {
                     // Close current fragment
-                    if let (Some((start_pos, start_line)), Some(frag_type)) = 
+                    if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
                         let content = xml_content[start_pos..current_pos].to_string();
@@ -316,6 +334,8 @@ pub fn parse_into_fragments(
                             content,
                             start_line,
                             end_line: current_line,
+                            start_char,
+                            end_char: current_char,
                             group_levels: hierarchy.get_current_levels(),
                         });
                         
@@ -333,7 +353,7 @@ pub fn parse_into_fragments(
     }
     
     // Close any remaining fragment
-    if let (Some((start_pos, start_line)), Some(frag_type)) = 
+    if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
         (current_fragment_start, current_fragment_type) {
         
         let content = xml_content[start_pos..].to_string();
@@ -342,6 +362,8 @@ pub fn parse_into_fragments(
             content,
             start_line,
             end_line: reader.current_line(),
+            start_char,
+            end_char: reader.current_char(),
             group_levels: hierarchy.get_current_levels(),
         });
     }
@@ -464,6 +486,62 @@ mod tests {
             // Each fragment should have non-empty content
             assert!(!fragment.content.trim().is_empty(), 
                     "Fragment content should not be empty");
+        }
+    }
+
+    #[test]
+    fn test_character_position_tracking() {
+        let xml = create_dn_sample_xml();
+        let structure = detect_nikaya_structure(&xml).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure).unwrap();
+        
+        for fragment in &fragments {
+            // Character positions should be valid
+            assert!(fragment.start_char <= fragment.end_char || fragment.start_line < fragment.end_line,
+                    "Character positions should be valid: start_line={}, start_char={}, end_line={}, end_char={}",
+                    fragment.start_line, fragment.start_char, fragment.end_line, fragment.end_char);
+            
+            // If on same line, start_char should be < end_char
+            if fragment.start_line == fragment.end_line {
+                assert!(fragment.start_char < fragment.end_char,
+                        "On same line, start_char ({}) should be < end_char ({})",
+                        fragment.start_char, fragment.end_char);
+            }
+        }
+    }
+
+    #[test]
+    fn test_same_line_multiple_elements() {
+        // Create XML with multiple short elements on the same line
+        let xml = r#"<?xml version="1.0"?>
+<text><body><p rend="nikaya">Dīghanikāyo</p><div type="book"><head rend="book">Book1</head><div type="sutta"><head rend="chapter">Sutta1</head><p n="1">Text1</p></div></div></body></text>"#;
+        
+        let structure = detect_nikaya_structure(xml).unwrap();
+        let fragments = parse_into_fragments(xml, &structure).unwrap();
+        
+        // Check that we can distinguish elements on the same line
+        // by their character positions
+        for i in 0..fragments.len() {
+            for j in (i+1)..fragments.len() {
+                let frag_i = &fragments[i];
+                let frag_j = &fragments[j];
+                
+                // If both fragments are on the same line
+                if frag_i.start_line == frag_j.start_line && 
+                   frag_i.end_line == frag_j.end_line &&
+                   frag_i.start_line == frag_i.end_line {
+                    // They should have non-overlapping character ranges
+                    let no_overlap = frag_i.end_char <= frag_j.start_char || 
+                                    frag_j.end_char <= frag_i.start_char;
+                    assert!(no_overlap,
+                            "Fragments on same line should not overlap: \
+                             frag[{}]: {}:{}-{}:{}, frag[{}]: {}:{}-{}:{}",
+                            i, frag_i.start_line, frag_i.start_char, 
+                            frag_i.end_line, frag_i.end_char,
+                            j, frag_j.start_line, frag_j.start_char,
+                            frag_j.end_line, frag_j.end_char);
+                }
+            }
         }
     }
 }
