@@ -291,7 +291,16 @@ pub fn parse_into_fragments(
                 // Check for boundary
                 if let Some((group_type, _, _id, _number)) = detector.check_boundary(&tag_name, &attributes) {
                     // We'll get the title from the text content, so store it as pending
-                    pending_title = Some((group_type.clone(), String::new()));
+                    // EXCEPT for MN/SN subheads which need text content validation
+                    let is_mn_sn_subhead = (nikaya_structure.nikaya == "majjhima" || 
+                                           nikaya_structure.nikaya == "samyutta") &&
+                                          matches!(group_type, GroupType::Sutta) &&
+                                          tag_name == "p" && 
+                                          attributes.get("rend") == Some(&"subhead".to_string());
+                    
+                    if !is_mn_sn_subhead {
+                        pending_title = Some((group_type.clone(), String::new()));
+                    }
                 }
                 
                 // Handle sutta boundaries based on nikaya structure
@@ -393,6 +402,9 @@ pub fn parse_into_fragments(
                                 }
                             }
                             
+                            // Update hierarchy with new sutta title
+                            hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
+                            
                             // Start new sutta fragment
                             current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));
                             current_fragment_type = Some(FragmentType::Sutta);
@@ -414,6 +426,9 @@ pub fn parse_into_fragments(
                                     });
                                 }
                             }
+                            
+                            // Update hierarchy with sutta title
+                            hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
                             
                             // Start new sutta fragment
                             current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));

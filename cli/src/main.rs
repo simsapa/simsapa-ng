@@ -587,13 +587,19 @@ fn parse_tipitaka_xml(
 /// Parse Tipitaka XML files with fragment-based parser
 fn parse_tipitaka_xml_new(
     input_path: &Path,
-    _output_db_path: &Path,
+    output_db_path: &Path,
     fragments_db: Option<&Path>,
     verbose: bool,
     dry_run: bool,
 ) -> Result<(), String> {
     use tipitaka_xml_parser_tsv::encoding::read_xml_file;
-    use tipitaka_xml_parser::{detect_nikaya_structure, parse_into_fragments, export_fragments_to_db};
+    use tipitaka_xml_parser::{
+        detect_nikaya_structure, 
+        parse_into_fragments, 
+        export_fragments_to_db,
+        build_suttas,
+        insert_suttas,
+    };
     use std::fs;
 
     println!("Tipitaka XML Parser (Fragment-Based)");
@@ -631,8 +637,16 @@ fn parse_tipitaka_xml_new(
         println!("DRY RUN MODE - No database operations will be performed\n");
     }
 
+    // TSV mapping file path (relative to cli directory)
+    let tsv_path = Path::new("assets/cst-vs-sc.tsv");
+    if !tsv_path.exists() {
+        return Err(format!("TSV mapping file not found: {:?}", tsv_path));
+    }
+    
     // Process each XML file
     let mut total_fragments = 0;
+    let mut total_suttas_built = 0;
+    let mut total_suttas_inserted = 0;
     let mut total_files_processed = 0;
     let mut errors = 0;
 
@@ -713,10 +727,38 @@ fn parse_tipitaka_xml_new(
             }
         }
 
-        // TODO: Phase 3: Build suttas and insert into output_db_path
-        // This is a stub - database_inserter.rs not yet implemented
-        if verbose {
-            println!("  (Sutta database insertion not yet implemented)");
+        // Phase 3: Build suttas from fragments
+        let suttas = match build_suttas(fragments.clone(), &nikaya_structure, tsv_path) {
+            Ok(suttas) => {
+                if verbose {
+                    println!("  Built {} sutta records", suttas.len());
+                }
+                suttas
+            }
+            Err(e) => {
+                eprintln!("  ✗ Error building suttas: {}", e);
+                errors += 1;
+                continue;
+            }
+        };
+        
+        total_suttas_built += suttas.len();
+        
+        // Phase 4: Insert suttas into database
+        if !dry_run {
+            match insert_suttas(suttas, output_db_path) {
+                Ok(count) => {
+                    println!("  ✓ Inserted {} suttas into database", count);
+                    total_suttas_inserted += count;
+                }
+                Err(e) => {
+                    eprintln!("  ✗ Error inserting suttas: {}", e);
+                    errors += 1;
+                    continue;
+                }
+            }
+        } else {
+            println!("  (Dry run: would insert {} suttas)", suttas.len());
         }
 
         total_fragments += fragments.len();
@@ -730,6 +772,8 @@ fn parse_tipitaka_xml_new(
     println!("===================");
     println!("Files processed: {}", total_files_processed);
     println!("Total fragments: {}", total_fragments);
+    println!("Total suttas built: {}", total_suttas_built);
+    println!("Total suttas inserted: {}", total_suttas_inserted);
     println!("Errors: {}", errors);
 
     if let Some(frag_db_path) = fragments_db {

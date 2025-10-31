@@ -11,6 +11,9 @@ fi
 cargo run -- parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/s0101m.mul.xml suttas.sqlite3 --fragments-db fragments.sqlite3
 cargo run -- parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/s0201m.mul.xml suttas.sqlite3 --fragments-db fragments.sqlite3
 
+cargo run -- parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/s0101a.att.xml suttas.sqlite3 --fragments-db fragments.sqlite3
+cargo run -- parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/s0101t.tik.xml suttas.sqlite3 --fragments-db fragments.sqlite3
+
 cargo run -- reconstruct-xml-from-fragments ./fragments.sqlite3 s0101m.mul.xml ./s0101m.mul.xml
 cargo run -- reconstruct-xml-from-fragments ./fragments.sqlite3 s0201m.mul.xml ./s0201m.mul.xml
 
