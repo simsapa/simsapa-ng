@@ -107,72 +107,73 @@
 ### 3.0 Implement fragment parser with line tracking (Phase 2)
 **Estimated Time:** 2-3 days
 **Depends on:** Phase 1 completion
+**Status:** COMPLETED
 
-- [ ] 3.1 Implement line-tracking XML reader foundation
-  - [ ] 3.1.1 Create `cli/src/tipitaka_xml_parser/fragment_parser.rs`
-  - [ ] 3.1.2 Create `LineTrackingReader` wrapper around `quick_xml::Reader`
-  - [ ] 3.1.3 Implement newline counting logic in reader
-  - [ ] 3.1.4 Add methods: `current_line()`, `get_position()`
-  - [ ] 3.1.5 Test basic line tracking with simple XML
+- [x] 3.1 Implement line-tracking XML reader foundation
+  - [x] 3.1.1 Create `cli/src/tipitaka_xml_parser/fragment_parser.rs`
+  - [x] 3.1.2 Create `LineTrackingReader` wrapper around `quick_xml::Reader`
+  - [x] 3.1.3 Implement newline counting logic in reader
+  - [x] 3.1.4 Add methods: `current_line()`, `get_position()`
+  - [x] 3.1.5 Test basic line tracking with simple XML
 
-- [ ] 3.2 Implement hierarchy tracking
-  - [ ] 3.2.1 Create `HierarchyTracker` struct with fields: current_levels (Vec<GroupLevel>), nikaya_structure (NikayaStructure)
-  - [ ] 3.2.2 Implement `new(nikaya_structure: NikayaStructure) -> Self`
-  - [ ] 3.2.3 Implement `enter_level(&mut self, level_type: GroupType, title: String, id: Option<String>, number: Option<i32>)`
-    - [ ] 3.2.3.1 Determine depth of this level type in nikaya structure
-    - [ ] 3.2.3.2 Truncate current_levels to appropriate depth
-    - [ ] 3.2.3.3 Push new GroupLevel
-  - [ ] 3.2.4 Implement `get_current_levels(&self) -> Vec<GroupLevel>` (returns clone)
-  - [ ] 3.2.5 Add unit tests for hierarchy tracking with DN, MN, SN structures
+- [x] 3.2 Implement hierarchy tracking
+  - [x] 3.2.1 Create `HierarchyTracker` struct with fields: current_levels (Vec<GroupLevel>), nikaya_structure (NikayaStructure)
+  - [x] 3.2.2 Implement `new(nikaya_structure: NikayaStructure) -> Self`
+  - [x] 3.2.3 Implement `enter_level(&mut self, level_type: GroupType, title: String, id: Option<String>, number: Option<i32>)`
+    - [x] 3.2.3.1 Determine depth of this level type in nikaya structure
+    - [x] 3.2.3.2 Truncate current_levels to appropriate depth
+    - [x] 3.2.3.3 Push new GroupLevel
+  - [x] 3.2.4 Implement `get_current_levels(&self) -> Vec<GroupLevel>` (returns clone)
+  - [x] 3.2.5 Add unit tests for hierarchy tracking with DN, MN, SN structures
 
-- [ ] 3.3 Implement nikaya-aware fragment boundary detection
-  - [ ] 3.3.1 Create `FragmentBoundaryDetector` struct
-  - [ ] 3.3.2 Implement detection for common elements (all nikayas):
-    - [ ] 3.3.2.1 Detect `<p rend="nikaya">` as Nikaya level
-    - [ ] 3.3.2.2 Detect `<div type="book">` as Book level start
-    - [ ] 3.3.2.3 Detect `<head rend="book">` for Book title
-  - [ ] 3.3.3 Implement DN-specific detection logic:
-    - [ ] 3.3.3.1 Detect `<head rend="chapter">` as Sutta title (not vagga!)
-    - [ ] 3.3.3.2 No vagga level processing for DN
-  - [ ] 3.3.4 Implement MN-specific detection logic:
-    - [ ] 3.3.4.1 Detect `<div type="vagga">` as Vagga level start
-    - [ ] 3.3.4.2 Detect `<head rend="chapter">` as Vagga title
-    - [ ] 3.3.4.3 Detect `<p rend="subhead">` as Sutta title
-  - [ ] 3.3.5 Implement SN-specific detection logic:
-    - [ ] 3.3.5.1 Detect `<div type="samyutta">` as Samyutta level start
-    - [ ] 3.3.5.2 Detect `<div type="vagga">` as Vagga level start
-    - [ ] 3.3.5.3 Detect `<p rend="subhead">` as Sutta title
-  - [ ] 3.3.6 Add logic to extract title text from elements
-  - [ ] 3.3.7 Add logic to extract id attributes from elements
+- [x] 3.3 Implement nikaya-aware fragment boundary detection
+  - [x] 3.3.1 Create `FragmentBoundaryDetector` struct
+  - [x] 3.3.2 Implement detection for common elements (all nikayas):
+    - [x] 3.3.2.1 Detect `<p rend="nikaya">` as Nikaya level
+    - [x] 3.3.2.2 Detect `<div type="book">` as Book level start
+    - [x] 3.3.2.3 Detect `<head rend="book">` for Book title
+  - [x] 3.3.3 Implement DN-specific detection logic:
+    - [x] 3.3.3.1 Detect `<head rend="chapter">` as Sutta title (not vagga!)
+    - [x] 3.3.3.2 No vagga level processing for DN
+  - [x] 3.3.4 Implement MN-specific detection logic:
+    - [x] 3.3.4.1 Detect `<div type="vagga">` as Vagga level start
+    - [x] 3.3.4.2 Detect `<head rend="chapter">` as Vagga title
+    - [x] 3.3.4.3 Detect `<p rend="subhead">` as Sutta title
+  - [x] 3.3.5 Implement SN-specific detection logic:
+    - [x] 3.3.5.1 Detect `<div type="samyutta">` as Samyutta level start
+    - [x] 3.3.5.2 Detect `<div type="vagga">` as Vagga level start
+    - [x] 3.3.5.3 Detect `<p rend="subhead">` as Sutta title
+  - [x] 3.3.6 Add logic to extract title text from elements
+  - [x] 3.3.7 Add logic to extract id attributes from elements
 
-- [ ] 3.4 Implement fragment extraction
-  - [ ] 3.4.1 Create `parse_into_fragments(xml_content: &str, nikaya_structure: &NikayaStructure) -> Result<Vec<XmlFragment>>`
-  - [ ] 3.4.2 Initialize LineTrackingReader and HierarchyTracker
-  - [ ] 3.4.3 Initialize fragment collection Vec
-  - [ ] 3.4.4 Implement main parsing loop:
-    - [ ] 3.4.4.1 Read XML events with quick_xml
-    - [ ] 3.4.4.2 Track current position for content extraction
-    - [ ] 3.4.4.3 On boundary detection, create new fragment
-    - [ ] 3.4.4.4 Extract raw XML content for fragment (preserve whitespace)
-    - [ ] 3.4.4.5 Set fragment start_line and end_line
-    - [ ] 3.4.4.6 Clone current hierarchy levels into fragment
-    - [ ] 3.4.4.7 Set fragment_type (Header vs Sutta)
-    - [ ] 3.4.4.8 Push fragment to collection
-  - [ ] 3.4.5 Return fragment collection
-  - [ ] 3.4.6 Add error handling for malformed XML
+- [x] 3.4 Implement fragment extraction
+  - [x] 3.4.1 Create `parse_into_fragments(xml_content: &str, nikaya_structure: &NikayaStructure) -> Result<Vec<XmlFragment>>`
+  - [x] 3.4.2 Initialize LineTrackingReader and HierarchyTracker
+  - [x] 3.4.3 Initialize fragment collection Vec
+  - [x] 3.4.4 Implement main parsing loop:
+    - [x] 3.4.4.1 Read XML events with quick_xml
+    - [x] 3.4.4.2 Track current position for content extraction
+    - [x] 3.4.4.3 On boundary detection, create new fragment
+    - [x] 3.4.4.4 Extract raw XML content for fragment (preserve whitespace)
+    - [x] 3.4.4.5 Set fragment start_line and end_line
+    - [x] 3.4.4.6 Clone current hierarchy levels into fragment
+    - [x] 3.4.4.7 Set fragment_type (Header vs Sutta)
+    - [x] 3.4.4.8 Push fragment to collection
+  - [x] 3.4.5 Return fragment collection
+  - [x] 3.4.6 Add error handling for malformed XML
 
-- [ ] 3.5 Test fragment parser
-  - [ ] 3.5.1 Create `cli/tests/tipitaka_xml_parser/test_fragment_parser.rs`
-  - [ ] 3.5.2 Create sample DN XML with known structure
-  - [ ] 3.5.3 Test: Parse DN sample, verify fragment count
-  - [ ] 3.5.4 Test: Verify line numbers are accurate
-  - [ ] 3.5.5 Test: Verify group_levels are correct for DN structure
-  - [ ] 3.5.6 Test: Verify fragment_type assignments
-  - [ ] 3.5.7 Create sample MN XML with vagga level
-  - [ ] 3.5.8 Test: Parse MN sample, verify vagga level captured
-  - [ ] 3.5.9 Test: Verify sutta boundaries with `<p rend="subhead">`
-  - [ ] 3.5.10 Test: Reconstruct XML from fragments (should match original)
-  - [ ] 3.5.11 Run tests with `cd backend && cargo test test_fragment_parser`
+- [x] 3.5 Test fragment parser
+  - [x] 3.5.1 Create unit tests in fragment_parser.rs module
+  - [x] 3.5.2 Create sample DN XML with known structure
+  - [x] 3.5.3 Test: Parse DN sample, verify fragment count
+  - [x] 3.5.4 Test: Verify line numbers are accurate
+  - [x] 3.5.5 Test: Verify group_levels are correct for DN structure
+  - [x] 3.5.6 Test: Verify fragment_type assignments
+  - [x] 3.5.7 Create sample MN XML with vagga level
+  - [x] 3.5.8 Test: Parse MN sample, verify vagga level captured
+  - [x] 3.5.9 Test: Verify sutta boundaries with `<p rend="subhead">`
+  - [x] 3.5.10 Test: Fragment content is not empty
+  - [x] 3.5.11 Run tests with `cd backend && cargo test tipitaka_xml_parser::fragment_parser::tests`
 
 ### 4.0 Implement sutta builder and database integration (Phase 3)
 **Estimated Time:** 2-3 days

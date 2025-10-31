@@ -353,7 +353,7 @@ mod tests {
             return;
         }
 
-        let importer = TipitakaImporter::new(&tsv_path, false).unwrap();
+        let importer = TipitakaImporterUsingTSV::new(&tsv_path, false).unwrap();
         let stats = importer.process_file_dry_run(&xml_path).unwrap();
 
         assert_eq!(stats.nikaya, "Majjhimanikāyo");

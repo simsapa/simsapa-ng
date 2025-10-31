@@ -1,6 +1,7 @@
 mod bootstrap;
 mod bootstrap_old;
 mod tipitaka_xml_parser_tsv;
+mod tipitaka_xml_parser;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
