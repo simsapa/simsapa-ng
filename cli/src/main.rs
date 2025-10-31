@@ -584,6 +584,167 @@ fn parse_tipitaka_xml(
     Ok(())
 }
 
+/// Parse Tipitaka XML files with fragment-based parser
+fn parse_tipitaka_xml_new(
+    input_path: &Path,
+    _output_db_path: &Path,
+    fragments_db: Option<&Path>,
+    verbose: bool,
+    dry_run: bool,
+) -> Result<(), String> {
+    use tipitaka_xml_parser_tsv::encoding::read_xml_file;
+    use tipitaka_xml_parser::{detect_nikaya_structure, parse_into_fragments, export_fragments_to_db};
+    use std::fs;
+
+    println!("Tipitaka XML Parser (Fragment-Based)");
+    println!("====================================\n");
+
+    // Collect XML files to process
+    let xml_files: Vec<PathBuf> = if input_path.is_file() {
+        println!("Processing single file: {:?}\n", input_path);
+        vec![input_path.to_path_buf()]
+    } else if input_path.is_dir() {
+        println!("Processing folder: {:?}", input_path);
+        let files: Vec<PathBuf> = fs::read_dir(input_path)
+            .map_err(|e| format!("Failed to read directory: {}", e))?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.extension()
+                    .and_then(|ext| ext.to_str())
+                    .map(|ext| ext == "xml")
+                    .unwrap_or(false)
+            })
+            .collect();
+
+        println!("Found {} XML files\n", files.len());
+        files
+    } else {
+        return Err(format!("Input path does not exist: {:?}", input_path));
+    };
+
+    if xml_files.is_empty() {
+        return Err("No XML files found to process".to_string());
+    }
+
+    if dry_run {
+        println!("DRY RUN MODE - No database operations will be performed\n");
+    }
+
+    // Process each XML file
+    let mut total_fragments = 0;
+    let mut total_files_processed = 0;
+    let mut errors = 0;
+
+    for (idx, xml_file) in xml_files.iter().enumerate() {
+        println!("[{}/{}] Processing: {:?}", idx + 1, xml_files.len(), 
+                 xml_file.file_name().unwrap_or_default());
+
+        // Read XML file
+        let xml_content = match read_xml_file(xml_file) {
+            Ok(content) => content,
+            Err(e) => {
+                eprintln!("  ✗ Error reading file: {}", e);
+                errors += 1;
+                continue;
+            }
+        };
+
+        // Phase 1: Detect nikaya structure
+        let mut nikaya_structure = match detect_nikaya_structure(&xml_content) {
+            Ok(structure) => structure,
+            Err(e) => {
+                eprintln!("  ✗ Error detecting nikaya: {}", e);
+                errors += 1;
+                continue;
+            }
+        };
+
+        // Set the XML filename
+        if let Some(filename) = xml_file.file_name().and_then(|n| n.to_str()) {
+            nikaya_structure = nikaya_structure.with_xml_filename(filename.to_string());
+        }
+
+        if verbose {
+            println!("  Detected nikaya: {} ({} levels)", 
+                     nikaya_structure.nikaya, nikaya_structure.levels.len());
+        }
+
+        // Phase 2: Parse into fragments
+        let fragments = match parse_into_fragments(&xml_content, &nikaya_structure) {
+            Ok(frags) => frags,
+            Err(e) => {
+                eprintln!("  ✗ Error parsing fragments: {}", e);
+                errors += 1;
+                continue;
+            }
+        };
+
+        println!("  Parsed {} fragments", fragments.len());
+        
+        // Count fragment types
+        let header_count = fragments.iter()
+            .filter(|f| matches!(f.fragment_type, tipitaka_xml_parser::FragmentType::Header))
+            .count();
+        let sutta_count = fragments.iter()
+            .filter(|f| matches!(f.fragment_type, tipitaka_xml_parser::FragmentType::Sutta))
+            .count();
+        
+        println!("    Headers: {}, Suttas: {}", header_count, sutta_count);
+
+        // Export to fragments database if specified
+        if let Some(frag_db_path) = fragments_db {
+            if !dry_run {
+                match export_fragments_to_db(&fragments, &nikaya_structure, frag_db_path) {
+                    Ok(count) => {
+                        if verbose {
+                            println!("  ✓ Exported {} fragments to {:?}", count, frag_db_path);
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("  ✗ Error exporting fragments: {}", e);
+                        errors += 1;
+                        continue;
+                    }
+                }
+            } else {
+                println!("  (Dry run: would export {} fragments to {:?})", 
+                         fragments.len(), frag_db_path);
+            }
+        }
+
+        // TODO: Phase 3: Build suttas and insert into output_db_path
+        // This is a stub - database_inserter.rs not yet implemented
+        if verbose {
+            println!("  (Sutta database insertion not yet implemented)");
+        }
+
+        total_fragments += fragments.len();
+        total_files_processed += 1;
+        println!("  ✓ Processing complete\n");
+    }
+
+    // Summary
+    println!("\n===================");
+    println!("Summary");
+    println!("===================");
+    println!("Files processed: {}", total_files_processed);
+    println!("Total fragments: {}", total_fragments);
+    println!("Errors: {}", errors);
+
+    if let Some(frag_db_path) = fragments_db {
+        if !dry_run {
+            println!("\n✓ Fragments exported to: {:?}", frag_db_path);
+        }
+    }
+
+    if dry_run {
+        println!("\nDRY RUN - No database operations performed");
+    }
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -722,6 +883,30 @@ enum Commands {
         dry_run: bool,
     },
 
+    /// Parse VRI CST Tipitaka XML files with fragment-based parser
+    #[command(arg_required_else_help = true)]
+    ParseTipitakaXml {
+        /// Path to a single XML file or folder containing XML files
+        #[arg(value_name = "INPUT_PATH")]
+        input_path: PathBuf,
+
+        /// Path to the output SQLite database file for sutta import (stub - not yet implemented)
+        #[arg(value_name = "OUTPUT_DB_PATH")]
+        output_db_path: PathBuf,
+
+        /// Optional path to SQLite database for exporting fragments
+        #[arg(long, value_name = "FRAGMENTS_DB_PATH")]
+        fragments_db: Option<PathBuf>,
+
+        /// Show verbose output during parsing
+        #[arg(long, default_value_t = false)]
+        verbose: bool,
+
+        /// Parse without inserting into database (dry run)
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+    },
+
     /// Convert Tipitaka XML file to UTF-8 (normalizes line endings to LF)
     #[command(arg_required_else_help = true)]
     TipitakaXmlToUtf8 {
@@ -843,6 +1028,10 @@ fn main() {
 
         Commands::ParseTipitakaXmlUsingTSV { input_path, output_db_path, verbose, dry_run } => {
             parse_tipitaka_xml(&input_path, &output_db_path, verbose, dry_run)
+        }
+
+        Commands::ParseTipitakaXml { input_path, output_db_path, fragments_db, verbose, dry_run } => {
+            parse_tipitaka_xml_new(&input_path, &output_db_path, fragments_db.as_deref(), verbose, dry_run)
         }
 
         Commands::TipitakaXmlToUtf8 { input_xml_path, output_path } => {
