@@ -1,4 +1,4 @@
-# PRD: Tipitaka XML Import Feature
+# PRD: Tipitaka XML Import Feature Using TSV Data
 
 ## Overview
 
@@ -85,7 +85,7 @@ As a developer, I want XML tags transformed to proper HTML so that sutta content
 ```
 CLI Command (parse-tipitaka-xml)
     ↓
-TipitakaXmlParser Module (backend/src/tipitaka_xml_parser.rs)
+TipitakaXmlParser Module (backend/src/tipitaka_xml_parser_tsv.rs)
     ↓
 Parsed Structs (TipitakaCollection → Book → Vagga → Sutta)
     ↓
@@ -229,7 +229,7 @@ simsapa-cli parse-tipitaka-xml
 ```
 cli/src/
   main.rs                        # Add ParseTipitakaXml command
-  tipitaka_xml_parser/
+  tipitaka_xml_parser_tsv/
     mod.rs                       # Module exports
     types.rs                     # Data structures
     encoding.rs                  # Character encoding detection & conversion
@@ -454,7 +454,7 @@ fn detect_nikaya_structure(xml: &str) -> anyhow::Result<NikayaStructure> {
 ## Implementation Plan
 
 ### Phase 1: XML Parsing Core (Initial PR)
-1. Create `tipitaka_xml_parser` module structure
+1. Create `tipitaka_xml_parser_tsv` module structure
 2. Implement data structures in `types.rs`
 3. Implement character encoding detection and conversion (UTF-16LE to UTF-8, CRLF to LF)
 4. Implement XML parsing for Majjhima Nikāya structure

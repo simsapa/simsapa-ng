@@ -6,7 +6,7 @@ use diesel::sqlite::SqliteConnection;
 use simsapa_backend::db::appdata_models::NewSutta;
 use simsapa_backend::db::appdata_schema::suttas;
 use simsapa_backend::logger;
-use crate::tipitaka_xml_parser::types::*;
+use crate::tipitaka_xml_parser_tsv::types::*;
 
 /// Insert a sutta into the database
 pub fn insert_sutta(

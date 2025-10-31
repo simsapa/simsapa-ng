@@ -4,7 +4,7 @@
 use anyhow::{Context, Result};
 use quick_xml::events::Event;
 use quick_xml::Reader;
-use crate::tipitaka_xml_parser::types::*;
+use crate::tipitaka_xml_parser_tsv::types::*;
 
 /// Parse a Tipitaka XML file into hierarchical structure
 ///

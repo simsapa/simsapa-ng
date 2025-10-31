@@ -1,7 +1,7 @@
 //! XML to HTML transformation following tipitaka.org XSL patterns
 
 use anyhow::Result;
-use crate::tipitaka_xml_parser::types::*;
+use crate::tipitaka_xml_parser_tsv::types::*;
 
 /// Transform XML elements to HTML
 pub fn transform_to_html(xml_elements: &[XmlElement]) -> Result<String> {

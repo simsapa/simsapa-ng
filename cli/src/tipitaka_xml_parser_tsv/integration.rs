@@ -31,12 +31,12 @@ pub struct FileImportStats {
 }
 
 /// Complete import process for a single XML file
-pub struct TipitakaImporter {
+pub struct TipitakaImporterUsingTSV {
     cst_mapping: CstMapping,
     verbose: bool,
 }
 
-impl TipitakaImporter {
+impl TipitakaImporterUsingTSV {
     /// Create a new importer with CST mapping
     pub fn new(tsv_path: &Path, verbose: bool) -> Result<Self> {
         let cst_mapping = CstMapping::load_from_tsv(tsv_path)

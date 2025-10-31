@@ -9,4 +9,4 @@ pub mod uid_generator;
 pub mod integration;
 
 // Re-export the main integration API
-pub use integration::{TipitakaImporter, FileImportStats};
+pub use integration::{TipitakaImporterUsingTSV, FileImportStats};

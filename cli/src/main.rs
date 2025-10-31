@@ -1,6 +1,6 @@
 mod bootstrap;
 mod bootstrap_old;
-mod tipitaka_xml_parser;
+mod tipitaka_xml_parser_tsv;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -435,8 +435,8 @@ fn parse_tipitaka_xml(
     verbose: bool,
     dry_run: bool,
 ) -> Result<(), String> {
-    use tipitaka_xml_parser::encoding::read_xml_file;
-    use tipitaka_xml_parser::xml_parser::parse_xml;
+    use tipitaka_xml_parser_tsv::encoding::read_xml_file;
+    use tipitaka_xml_parser_tsv::xml_parser::parse_xml;
     use std::fs;
     use diesel::sqlite::SqliteConnection;
     use diesel::Connection;
@@ -501,8 +501,8 @@ fn parse_tipitaka_xml(
         return Err(format!("CST mapping file not found: {:?}. Current dir: {:?}", tsv_path, std::env::current_dir()));
     }
 
-    use tipitaka_xml_parser::TipitakaImporter;
-    let importer = TipitakaImporter::new(tsv_path, verbose)
+    use tipitaka_xml_parser_tsv::TipitakaImporterUsingTSV;
+    let importer = TipitakaImporterUsingTSV::new(tsv_path, verbose)
         .map_err(|e| format!("Failed to create importer: {}", e))?;
 
     // Get database connection if not dry run
@@ -701,9 +701,9 @@ enum Commands {
     /// List available languages in SuttaCentral ArangoDB
     SuttacentralImportLanguagesList,
 
-    /// Parse VRI CST Tipitaka XML files and import into SQLite database
+    /// Parse VRI CST Tipitaka XML files using TSV data and import into SQLite database
     #[command(arg_required_else_help = true)]
-    ParseTipitakaXml {
+    ParseTipitakaXmlUsingTSV {
         /// Path to a single XML file or folder containing XML files
         #[arg(value_name = "INPUT_PATH")]
         input_path: PathBuf,
@@ -828,7 +828,7 @@ fn main() {
             suttacentral_import_languages_list()
         }
 
-        Commands::ParseTipitakaXml { input_path, output_db_path, verbose, dry_run } => {
+        Commands::ParseTipitakaXmlUsingTSV { input_path, output_db_path, verbose, dry_run } => {
             parse_tipitaka_xml(&input_path, &output_db_path, verbose, dry_run)
         }
     };
