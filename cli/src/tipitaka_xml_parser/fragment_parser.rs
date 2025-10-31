@@ -247,6 +247,10 @@ pub fn parse_into_fragments(
     let mut pending_title: Option<(GroupType, String)> = None;
     let mut in_sutta_content = false;
     
+    // Start with a Header fragment at the beginning of the file
+    current_fragment_start = Some((0, 1, 0));
+    current_fragment_type = Some(FragmentType::Header);
+    
     loop {
         let event = reader.read_event()?;
         let current_line = reader.current_line();
@@ -279,20 +283,22 @@ pub fn parse_into_fragments(
                 
                 // Check for sutta content start
                 if !in_sutta_content && detector.is_sutta_start(&tag_name, &attributes) {
-                    // Close any existing fragment
+                    // Close the current Header fragment
                     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
                         let content = xml_content[start_pos..current_pos].to_string();
-                        fragments.push(XmlFragment {
-                            fragment_type: frag_type.clone(),
-                            content,
-                            start_line,
-                            end_line: current_line,
-                            start_char,
-                            end_char: current_char,
-                            group_levels: hierarchy.get_current_levels(),
-                        });
+                        if !content.trim().is_empty() {
+                            fragments.push(XmlFragment {
+                                fragment_type: frag_type.clone(),
+                                content,
+                                start_line,
+                                end_line: current_line,
+                                start_char,
+                                end_char: current_char,
+                                group_levels: hierarchy.get_current_levels(),
+                            });
+                        }
                     }
                     
                     // Start new sutta fragment
@@ -324,23 +330,26 @@ pub fn parse_into_fragments(
                 
                 // Check if this closes a sutta div
                 if tag_name == "div" && in_sutta_content {
-                    // Close current fragment
+                    // Close current sutta fragment
                     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
                         let content = xml_content[start_pos..current_pos].to_string();
-                        fragments.push(XmlFragment {
-                            fragment_type: frag_type.clone(),
-                            content,
-                            start_line,
-                            end_line: current_line,
-                            start_char,
-                            end_char: current_char,
-                            group_levels: hierarchy.get_current_levels(),
-                        });
+                        if !content.trim().is_empty() {
+                            fragments.push(XmlFragment {
+                                fragment_type: frag_type.clone(),
+                                content,
+                                start_line,
+                                end_line: current_line,
+                                start_char,
+                                end_char: current_char,
+                                group_levels: hierarchy.get_current_levels(),
+                            });
+                        }
                         
-                        current_fragment_start = None;
-                        current_fragment_type = None;
+                        // Start a new Header fragment after the sutta
+                        current_fragment_start = Some((current_pos, current_line, current_char));
+                        current_fragment_type = Some(FragmentType::Header);
                         in_sutta_content = false;
                     }
                 }
@@ -352,20 +361,22 @@ pub fn parse_into_fragments(
         }
     }
     
-    // Close any remaining fragment
+    // Close any remaining fragment (usually the final Header fragment)
     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
         (current_fragment_start, current_fragment_type) {
         
         let content = xml_content[start_pos..].to_string();
-        fragments.push(XmlFragment {
-            fragment_type: frag_type,
-            content,
-            start_line,
-            end_line: reader.current_line(),
-            start_char,
-            end_char: reader.current_char(),
-            group_levels: hierarchy.get_current_levels(),
-        });
+        if !content.trim().is_empty() {
+            fragments.push(XmlFragment {
+                fragment_type: frag_type,
+                content,
+                start_line,
+                end_line: reader.current_line(),
+                start_char,
+                end_char: reader.current_char(),
+                group_levels: hierarchy.get_current_levels(),
+            });
+        }
     }
     
     Ok(fragments)

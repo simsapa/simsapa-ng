@@ -745,6 +745,41 @@ fn parse_tipitaka_xml_new(
     Ok(())
 }
 
+/// Reconstruct XML file from fragments database
+fn reconstruct_xml_from_fragments(
+    fragments_db_path: &Path,
+    xml_filename: &str,
+    output_path: &Path,
+) -> Result<(), String> {
+    use tipitaka_xml_parser::reconstruct_xml_from_db;
+    use std::fs;
+
+    println!("Reconstructing XML from Fragments Database");
+    println!("==========================================\n");
+
+    if !fragments_db_path.exists() {
+        return Err(format!("Fragments database not found: {:?}", fragments_db_path));
+    }
+
+    println!("Fragments DB: {:?}", fragments_db_path);
+    println!("XML Filename: {}", xml_filename);
+    println!("Output Path: {:?}\n", output_path);
+
+    // Reconstruct XML
+    let xml_content = reconstruct_xml_from_db(fragments_db_path, xml_filename)
+        .map_err(|e| format!("Failed to reconstruct XML: {}", e))?;
+
+    println!("✓ Reconstructed {} bytes of XML content", xml_content.len());
+
+    // Write to output file
+    fs::write(output_path, &xml_content)
+        .map_err(|e| format!("Failed to write output file: {}", e))?;
+
+    println!("✓ Written to: {:?}", output_path);
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -907,6 +942,22 @@ enum Commands {
         dry_run: bool,
     },
 
+    /// Reconstruct XML file from fragments database
+    #[command(arg_required_else_help = true)]
+    ReconstructXmlFromFragments {
+        /// Path to the fragments SQLite database
+        #[arg(value_name = "FRAGMENTS_DB_PATH")]
+        fragments_db_path: PathBuf,
+
+        /// XML filename to reconstruct (as stored in nikaya table)
+        #[arg(value_name = "XML_FILENAME")]
+        xml_filename: String,
+
+        /// Path to write the reconstructed XML output
+        #[arg(value_name = "OUTPUT_PATH")]
+        output_path: PathBuf,
+    },
+
     /// Convert Tipitaka XML file to UTF-8 (normalizes line endings to LF)
     #[command(arg_required_else_help = true)]
     TipitakaXmlToUtf8 {
@@ -1032,6 +1083,10 @@ fn main() {
 
         Commands::ParseTipitakaXml { input_path, output_db_path, fragments_db, verbose, dry_run } => {
             parse_tipitaka_xml_new(&input_path, &output_db_path, fragments_db.as_deref(), verbose, dry_run)
+        }
+
+        Commands::ReconstructXmlFromFragments { fragments_db_path, xml_filename, output_path } => {
+            reconstruct_xml_from_fragments(&fragments_db_path, &xml_filename, &output_path)
         }
 
         Commands::TipitakaXmlToUtf8 { input_xml_path, output_path } => {
