@@ -212,14 +212,25 @@ impl<'a> FragmentBoundaryDetector<'a> {
     
     /// Check if this is a sutta boundary (start of actual sutta content)
     fn is_sutta_start(&self, tag_name: &str, attributes: &HashMap<String, String>) -> bool {
-        // Sutta content starts with first content paragraph or sutta div
-        match tag_name {
-            "div" if attributes.get("type") == Some(&"sutta".to_string()) => true,
-            "p" if attributes.get("rend") == Some(&"bodytext".to_string()) => true,
-            "p" if attributes.get("rend") == Some(&"gatha1".to_string()) => true,
-            "p" if attributes.get("rend") == Some(&"gatha2".to_string()) => true,
-            "p" if attributes.get("rend") == Some(&"gatha3".to_string()) => true,
-            _ => false,
+        match self.nikaya_structure.nikaya.as_str() {
+            "digha" => {
+                // DN: Suttas are wrapped in <div type="sutta">
+                tag_name == "div" && attributes.get("type") == Some(&"sutta".to_string())
+            },
+            "majjhima" | "samyutta" => {
+                // MN/SN: Suttas are delimited by <p rend="subhead">
+                // Each subhead starts a new sutta
+                tag_name == "p" && attributes.get("rend") == Some(&"subhead".to_string())
+            },
+            "anguttara" => {
+                // AN: Similar to MN/SN
+                tag_name == "p" && attributes.get("rend") == Some(&"subhead".to_string())
+            },
+            _ => {
+                // Default: look for div or subhead
+                (tag_name == "div" && attributes.get("type") == Some(&"sutta".to_string())) ||
+                (tag_name == "p" && attributes.get("rend") == Some(&"subhead".to_string()))
+            }
         }
     }
 }
@@ -246,6 +257,8 @@ pub fn parse_into_fragments(
     let mut current_fragment_type: Option<FragmentType> = None;
     let mut pending_title: Option<(GroupType, String)> = None;
     let mut in_sutta_content = false;
+    // For MN/SN: track if we just saw a subhead element (will check text to see if numbered)
+    let mut pending_subhead_check: Option<(usize, usize, usize)> = None; // (pos, line, char) of the subhead tag
     
     // Start with a Header fragment at the beginning of the file
     current_fragment_start = Some((0, 1, 0));
@@ -281,30 +294,66 @@ pub fn parse_into_fragments(
                     pending_title = Some((group_type.clone(), String::new()));
                 }
                 
-                // Check for sutta content start
-                if !in_sutta_content && detector.is_sutta_start(&tag_name, &attributes) {
-                    // Close the current Header fragment
-                    if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
-                        (current_fragment_start, current_fragment_type.as_ref()) {
-                        
-                        let content = xml_content[start_pos..current_pos].to_string();
-                        if !content.trim().is_empty() {
-                            fragments.push(XmlFragment {
-                                fragment_type: frag_type.clone(),
-                                content,
-                                start_line,
-                                end_line: current_line,
-                                start_char,
-                                end_char: current_char,
-                                group_levels: hierarchy.get_current_levels(),
-                            });
+                // Handle sutta boundaries based on nikaya structure
+                let is_potential_sutta_marker = detector.is_sutta_start(&tag_name, &attributes);
+                
+                // For MN/SN, we need to check the text content to see if it's a numbered subhead
+                if is_potential_sutta_marker && 
+                   (nikaya_structure.nikaya == "majjhima" || nikaya_structure.nikaya == "samyutta") &&
+                   tag_name == "p" && attributes.get("rend") == Some(&"subhead".to_string()) {
+                    // Store position for later text check
+                    pending_subhead_check = Some((current_pos, current_line, current_char));
+                } else if is_potential_sutta_marker {
+                    // DN style: immediate sutta marker (div type="sutta")
+                    if in_sutta_content {
+                        // Already in a sutta - this is a new sutta starting
+                        // This happens in MN/SN where <p rend="subhead"> delimits suttas
+                        // Close current sutta fragment
+                        if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                            (current_fragment_start, current_fragment_type.as_ref()) {
+                            
+                            let content = xml_content[start_pos..current_pos].to_string();
+                            if !content.trim().is_empty() {
+                                fragments.push(XmlFragment {
+                                    fragment_type: frag_type.clone(),
+                                    content,
+                                    start_line,
+                                    end_line: current_line,
+                                    start_char,
+                                    end_char: current_char,
+                                    group_levels: hierarchy.get_current_levels(),
+                                });
+                            }
                         }
+                        
+                        // Start new sutta fragment
+                        current_fragment_start = Some((current_pos, current_line, current_char));
+                        current_fragment_type = Some(FragmentType::Sutta);
+                        // Stay in_sutta_content = true
+                    } else {
+                        // Not in sutta yet - close Header and start Sutta
+                        if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                            (current_fragment_start, current_fragment_type.as_ref()) {
+                            
+                            let content = xml_content[start_pos..current_pos].to_string();
+                            if !content.trim().is_empty() {
+                                fragments.push(XmlFragment {
+                                    fragment_type: frag_type.clone(),
+                                    content,
+                                    start_line,
+                                    end_line: current_line,
+                                    start_char,
+                                    end_char: current_char,
+                                    group_levels: hierarchy.get_current_levels(),
+                                });
+                            }
+                        }
+                        
+                        // Start new sutta fragment
+                        current_fragment_start = Some((current_pos, current_line, current_char));
+                        current_fragment_type = Some(FragmentType::Sutta);
+                        in_sutta_content = true;
                     }
-                    
-                    // Start new sutta fragment
-                    current_fragment_start = Some((current_pos, current_line, current_char));
-                    current_fragment_type = Some(FragmentType::Sutta);
-                    in_sutta_content = true;
                 }
             },
             
@@ -313,6 +362,67 @@ pub fn parse_into_fragments(
                     .context("Failed to unescape text content")?
                     .trim()
                     .to_string();
+                
+                // Check if this text is for a pending subhead (MN/SN style)
+                if let Some((subhead_pos, subhead_line, subhead_char)) = pending_subhead_check.take() {
+                    // Check if text starts with a number followed by a dot (e.g., "1. ", "10. ")
+                    // Pattern: one or more digits, followed by a dot and space
+                    let is_numbered_sutta = text.split_whitespace()
+                        .next()
+                        .and_then(|first_word| first_word.strip_suffix('.'))
+                        .map_or(false, |num_part| num_part.chars().all(|c| c.is_numeric()));
+                    
+                    if is_numbered_sutta {
+                        // This is a sutta boundary!
+                        if in_sutta_content {
+                            // Already in a sutta - close current and start new
+                            if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                                (current_fragment_start, current_fragment_type.as_ref()) {
+                                
+                                let content = xml_content[start_pos..subhead_pos].to_string();
+                                if !content.trim().is_empty() {
+                                    fragments.push(XmlFragment {
+                                        fragment_type: frag_type.clone(),
+                                        content,
+                                        start_line,
+                                        end_line: subhead_line,
+                                        start_char,
+                                        end_char: subhead_char,
+                                        group_levels: hierarchy.get_current_levels(),
+                                    });
+                                }
+                            }
+                            
+                            // Start new sutta fragment
+                            current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));
+                            current_fragment_type = Some(FragmentType::Sutta);
+                        } else {
+                            // Not in sutta yet - close Header and start Sutta
+                            if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                                (current_fragment_start, current_fragment_type.as_ref()) {
+                                
+                                let content = xml_content[start_pos..subhead_pos].to_string();
+                                if !content.trim().is_empty() {
+                                    fragments.push(XmlFragment {
+                                        fragment_type: frag_type.clone(),
+                                        content,
+                                        start_line,
+                                        end_line: subhead_line,
+                                        start_char,
+                                        end_char: subhead_char,
+                                        group_levels: hierarchy.get_current_levels(),
+                                    });
+                                }
+                            }
+                            
+                            // Start new sutta fragment
+                            current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));
+                            current_fragment_type = Some(FragmentType::Sutta);
+                            in_sutta_content = true;
+                        }
+                    }
+                    // If not numbered, it's just a section heading within a sutta - ignore
+                }
                 
                 // If we have a pending title, update it with this text
                 if let Some((group_type, _)) = pending_title.take() {
@@ -328,7 +438,7 @@ pub fn parse_into_fragments(
                     .context("Invalid UTF-8 in tag name")?
                     .to_string();
                 
-                // Check if this closes a sutta div
+                // Check if this closes a sutta div (DN style)
                 if tag_name == "div" && in_sutta_content {
                     // Close current sutta fragment
                     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
