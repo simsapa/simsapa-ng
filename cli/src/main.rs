@@ -721,6 +721,18 @@ enum Commands {
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },
+
+    /// Convert Tipitaka XML file to UTF-8 (normalizes line endings to LF)
+    #[command(arg_required_else_help = true)]
+    TipitakaXmlToUtf8 {
+        /// Path to the input XML file
+        #[arg(value_name = "INPUT_XML_PATH")]
+        input_xml_path: PathBuf,
+
+        /// Path to write the UTF-8 encoded output
+        #[arg(value_name = "OUTPUT_PATH")]
+        output_path: PathBuf,
+    },
 }
 
 /// Enum for the different types of queries available.
@@ -741,7 +753,7 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList => {
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::TipitakaXmlToUtf8 { .. } => {
             // Skip app data initialization for bootstrap, export, stats, and suttacentral commands
         }
         _ => {
@@ -831,6 +843,31 @@ fn main() {
 
         Commands::ParseTipitakaXmlUsingTSV { input_path, output_db_path, verbose, dry_run } => {
             parse_tipitaka_xml(&input_path, &output_db_path, verbose, dry_run)
+        }
+
+        Commands::TipitakaXmlToUtf8 { input_xml_path, output_path } => {
+            use std::fs;
+            use tipitaka_xml_parser_tsv::encoding::read_xml_file;
+
+            if !input_xml_path.exists() {
+                Err(format!("Input XML file does not exist: {:?}", input_xml_path))
+            } else if !input_xml_path.is_file() {
+                Err(format!("Input path is not a file: {:?}", input_xml_path))
+            } else {
+                match read_xml_file(&input_xml_path) {
+                    Ok(input_text) => {
+                        let output_text = input_text.replace(r#"encoding="UTF-16""#, r#"encoding="UTF-8""#);
+                        match fs::write(&output_path, output_text) {
+                            Ok(()) => {
+                                println!("✓ Wrote UTF-8 file to {:?}", output_path);
+                                Ok(())
+                            }
+                            Err(e) => Err(format!("Failed to write output file {:?}: {}", output_path, e)),
+                        }
+                    }
+                    Err(e) => Err(format!("Failed to read XML file: {}", e)),
+                }
+            }
         }
     };
 
