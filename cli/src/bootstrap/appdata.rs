@@ -122,7 +122,7 @@ impl AppdataBootstrap {
             ));
         }
 
-        println!("Successfully created FTS5 indexes and triggers using sqlite3 CLI");
+        logger::info("Successfully created FTS5 indexes and triggers using sqlite3 CLI");
         Ok(())
     }
 

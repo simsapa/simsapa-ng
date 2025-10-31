@@ -1,5 +1,6 @@
 mod bootstrap;
 mod bootstrap_old;
+mod tipitaka_xml_parser_tsv;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -427,6 +428,161 @@ fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool
     Ok(())
 }
 
+/// Parse Tipitaka XML files and import into database
+fn parse_tipitaka_xml(
+    input_path: &Path,
+    output_db_path: &Path,
+    verbose: bool,
+    dry_run: bool,
+) -> Result<(), String> {
+    use tipitaka_xml_parser_tsv::encoding::read_xml_file;
+    use tipitaka_xml_parser_tsv::xml_parser::parse_xml;
+    use std::fs;
+    use diesel::sqlite::SqliteConnection;
+    use diesel::Connection;
+
+    println!("Tipitaka XML Parser");
+    println!("==================\n");
+
+    // Collect XML files to process
+    let xml_files: Vec<PathBuf> = if input_path.is_file() {
+        println!("Processing single file: {:?}\n", input_path);
+        vec![input_path.to_path_buf()]
+    } else if input_path.is_dir() {
+        println!("Processing folder: {:?}", input_path);
+        let files: Vec<PathBuf> = fs::read_dir(input_path)
+            .map_err(|e| format!("Failed to read directory: {}", e))?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| {
+                path.extension()
+                    .and_then(|ext| ext.to_str())
+                    .map(|ext| ext == "xml")
+                    .unwrap_or(false)
+            })
+            .collect();
+
+        println!("Found {} XML files\n", files.len());
+        files
+    } else {
+        return Err(format!("Input path does not exist: {:?}", input_path));
+    };
+
+    if xml_files.is_empty() {
+        return Err("No XML files found to process".to_string());
+    }
+
+    // Initialize database if not dry run
+    if !dry_run {
+        if output_db_path.exists() {
+            println!("Output database already exists: {:?}", output_db_path);
+            println!("WARNING: This will add to existing database\n");
+        } else {
+            println!("Creating new database: {:?}", output_db_path);
+
+            // Create database and run migrations
+            let mut conn = SqliteConnection::establish(output_db_path.to_str().unwrap())
+                .map_err(|e| format!("Failed to create database: {}", e))?;
+
+            use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+            const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata");
+            conn.run_pending_migrations(MIGRATIONS)
+                .map_err(|e| format!("Failed to run migrations: {}", e))?;
+
+            println!("✓ Database created and initialized\n");
+        }
+    } else {
+        println!("DRY RUN MODE - No database will be created\n");
+    }
+
+    // Load CST mapping
+    let tsv_path = Path::new("assets/cst-vs-sc.tsv");
+    if !tsv_path.exists() {
+        return Err(format!("CST mapping file not found: {:?}. Current dir: {:?}", tsv_path, std::env::current_dir()));
+    }
+
+    use tipitaka_xml_parser_tsv::TipitakaImporterUsingTSV;
+    let importer = TipitakaImporterUsingTSV::new(tsv_path, verbose)
+        .map_err(|e| format!("Failed to create importer: {}", e))?;
+
+    // Get database connection if not dry run
+    let mut conn_opt = if !dry_run {
+        Some(SqliteConnection::establish(output_db_path.to_str().unwrap())
+            .map_err(|e| format!("Failed to connect to database: {}", e))?)
+    } else {
+        None
+    };
+
+    // Process each XML file
+    let mut total_suttas = 0;
+    let mut total_inserted = 0;
+    let mut total_books = 0;
+    let mut total_vaggas = 0;
+    let mut errors = 0;
+
+    for (idx, xml_file) in xml_files.iter().enumerate() {
+        println!("[{}/{}] Processing: {:?}", idx + 1, xml_files.len(), xml_file.file_name().unwrap_or_default());
+
+        let stats = if let Some(ref mut conn) = conn_opt {
+            // Full processing with database insertion
+            match importer.process_file(xml_file, conn) {
+                Ok(stats) => stats,
+                Err(e) => {
+                    eprintln!("  ✗ Error processing file: {}", e);
+                    errors += 1;
+                    continue;
+                }
+            }
+        } else {
+            // Dry run mode
+            match importer.process_file_dry_run(xml_file) {
+                Ok(stats) => stats,
+                Err(e) => {
+                    eprintln!("  ✗ Error processing file: {}", e);
+                    errors += 1;
+                    continue;
+                }
+            }
+        };
+
+        // Display results
+        println!("  Nikaya: {}", stats.nikaya);
+        println!("  Books: {}, Vaggas: {}, Suttas: {}", stats.books, stats.vaggas, stats.suttas_total);
+
+        if !dry_run {
+            println!("  Inserted: {}, Failed: {}", stats.suttas_inserted, stats.suttas_failed);
+        }
+
+        total_suttas += stats.suttas_total;
+        total_inserted += stats.suttas_inserted;
+        total_books += stats.books;
+        total_vaggas += stats.vaggas;
+
+        println!("  ✓ Processing complete\n");
+    }
+
+    // Summary
+    println!("\n===================");
+    println!("Summary");
+    println!("===================");
+    println!("Files processed: {}", xml_files.len());
+    println!("Total books: {}", total_books);
+    println!("Total vaggas: {}", total_vaggas);
+    println!("Total suttas: {}", total_suttas);
+
+    if !dry_run {
+        println!("Successfully inserted: {}", total_inserted);
+        println!("Failed: {}", total_suttas - total_inserted);
+        println!("\n✓ Import complete! Database: {:?}", output_db_path);
+    } else {
+        println!("\nDRY RUN - No database operations performed");
+    }
+
+    println!("Errors: {}", errors);
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -544,6 +700,26 @@ enum Commands {
 
     /// List available languages in SuttaCentral ArangoDB
     SuttacentralImportLanguagesList,
+
+    /// Parse VRI CST Tipitaka XML files using TSV data and import into SQLite database
+    #[command(arg_required_else_help = true)]
+    ParseTipitakaXmlUsingTSV {
+        /// Path to a single XML file or folder containing XML files
+        #[arg(value_name = "INPUT_PATH")]
+        input_path: PathBuf,
+
+        /// Path to the output SQLite database file
+        #[arg(value_name = "OUTPUT_DB_PATH")]
+        output_db_path: PathBuf,
+
+        /// Show verbose output during parsing
+        #[arg(long, default_value_t = false)]
+        verbose: bool,
+
+        /// Parse without inserting into database (dry run)
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+    },
 }
 
 /// Enum for the different types of queries available.
@@ -650,6 +826,10 @@ fn main() {
 
         Commands::SuttacentralImportLanguagesList => {
             suttacentral_import_languages_list()
+        }
+
+        Commands::ParseTipitakaXmlUsingTSV { input_path, output_db_path, verbose, dry_run } => {
+            parse_tipitaka_xml(&input_path, &output_db_path, verbose, dry_run)
         }
     };
 

@@ -6,6 +6,7 @@ pub mod dhammapada_munindo;
 pub mod dhammapada_tipitaka;
 pub mod nyanadipa;
 pub mod buddha_ujja;
+pub mod tipitaka_xml_tsv;
 pub mod dpd;
 pub mod completions;
 
@@ -29,6 +30,7 @@ pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
 pub use nyanadipa::NyanadipaImporter;
 pub use suttacentral::SuttaCentralImporter;
 pub use buddha_ujja::BuddhaUjjaImporter;
+pub use tipitaka_xml_tsv::TipitakaXmlImporterUsingTSV;
 
 pub trait SuttaImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()>;
@@ -123,9 +125,9 @@ RELEASE_CHANNEL=development
     if write_new_dotenv || !dot_env_path.exists() {
         fs::write(dot_env_path, dot_env_content)
             .context("Failed to write .env file")?;
-        println!("Created .env file");
+        logger::info("Created .env file");
     } else {
-        println!("Skipping .env file creation (already exists). Use --write-new-dotenv to overwrite.");
+        logger::warn("Skipping .env file creation (already exists). Use --write-new-dotenv to overwrite.");
     }
 
     clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
@@ -155,6 +157,13 @@ RELEASE_CHANNEL=development
         } else {
             logger::warn("SuttaCentral data directory not found, skipping");
         }
+    }
+
+    // Import suttas from tipitaka.org (CST4)
+    {
+        let tipitaka_xml_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/");
+        let mut importer = TipitakaXmlImporterUsingTSV::new(tipitaka_xml_path);
+        importer.import(&mut conn)?;
     }
 
     // Import from Dhammatalks.org
@@ -316,13 +325,6 @@ RELEASE_CHANNEL=development
         }
     }
 
-    logger::info("=== Copy log.txt ===");
-
-    let log_src = simsapa_dir.join("log.txt");
-    let log_dst = release_dir.join("log.txt");
-    fs::copy(&log_src, &log_dst)
-        .with_context(|| format!("Failed to copy log.txt from {:?} to {:?}", log_src, log_dst))?;
-
     logger::info("=== Release Info ===");
 
     write_release_info(&assets_dir, &release_dir)?;
@@ -346,6 +348,13 @@ Duration:          {}
 
     logger::info(&msg);
 
+    logger::info("=== Copy log.txt ===");
+
+    let log_src = simsapa_dir.join("log.txt");
+    let log_dst = release_dir.join("log.txt");
+    fs::copy(&log_src, &log_dst)
+        .with_context(|| format!("Failed to copy log.txt from {:?} to {:?}", log_src, log_dst))?;
+
     Ok(())
 }
 
@@ -355,7 +364,7 @@ pub fn clean_and_create_folders(
     release_dir: &Path,
     dist_dir: &Path
 ) -> Result<()> {
-    println!("=== clean_and_create_folders() ===");
+    logger::info("=== clean_and_create_folders() ===");
 
     // Clean and create directories
     for dir in [
@@ -393,7 +402,7 @@ pub fn clean_and_create_folders(
                     if extension == "bz2" && path.to_string_lossy().ends_with(".tar.bz2") {
                         fs::remove_file(&path)
                             .with_context(|| format!("Failed to remove file: {}", path.display()))?;
-                        println!("Removed: {}", path.display());
+                        logger::info(&format!("Removed: {}", path.display()));
                     }
                 }
             }
@@ -405,7 +414,7 @@ pub fn clean_and_create_folders(
     fs::write(&log_path, "")
         .with_context(|| format!("Failed to clear log file: {}", log_path.display()))?;
 
-    println!("Bootstrap cleanup and folder creation completed");
+    logger::info("Bootstrap cleanup and folder creation completed");
     Ok(())
 }
 
