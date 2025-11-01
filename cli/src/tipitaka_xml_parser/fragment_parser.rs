@@ -394,12 +394,26 @@ pub fn parse_into_fragments(
                 if let Some((subhead_pos, subhead_line, subhead_char)) = pending_subhead_check.take() {
                     // Check if text starts with a number followed by a dot (e.g., "1. ", "10. ")
                     // Pattern: one or more digits, followed by a dot and space
-                    let is_numbered_sutta = text.split_whitespace()
+                    let is_numbered = text.split_whitespace()
                         .next()
                         .and_then(|first_word| first_word.strip_suffix('.'))
                         .map_or(false, |num_part| num_part.chars().all(|c| c.is_numeric()));
                     
-                    if is_numbered_sutta {
+                    // For commentary/sub-commentary files, also check if it ends with "suttavaṇṇanā"
+                    // to distinguish actual sutta commentaries from subsections
+                    let is_commentary = nikaya_structure.xml_filename.as_ref()
+                        .map(|f| f.ends_with(".att.xml") || f.ends_with(".tik.xml"))
+                        .unwrap_or(false);
+                    
+                    let is_sutta_commentary = if is_commentary {
+                        // In commentary files, only treat it as a sutta if it ends with "suttavaṇṇanā"
+                        text.ends_with("suttavaṇṇanā")
+                    } else {
+                        // In base text files, any numbered subhead is a sutta
+                        is_numbered
+                    };
+                    
+                    if is_sutta_commentary {
                         // This is a sutta boundary!
                         if in_sutta_content {
                             // Already in a sutta - close current and start new
