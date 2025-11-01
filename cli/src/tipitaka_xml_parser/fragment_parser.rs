@@ -212,10 +212,21 @@ impl<'a> FragmentBoundaryDetector<'a> {
     
     /// Check if this is a sutta boundary (start of actual sutta content)
     fn is_sutta_start(&self, tag_name: &str, attributes: &HashMap<String, String>) -> bool {
+        // Check if this is a commentary or sub-commentary file
+        let is_commentary = self.nikaya_structure.xml_filename.as_ref()
+            .map(|f| f.ends_with(".att.xml") || f.ends_with(".tik.xml"))
+            .unwrap_or(false);
+        
         match self.nikaya_structure.nikaya.as_str() {
             "digha" => {
-                // DN: Suttas are wrapped in <div type="sutta">
-                tag_name == "div" && attributes.get("type") == Some(&"sutta".to_string())
+                if is_commentary {
+                    // DN commentary: Use <head rend="chapter"> for sutta boundaries
+                    // NOT <div type="sutta"> which marks introduction sections
+                    tag_name == "head" && attributes.get("rend") == Some(&"chapter".to_string())
+                } else {
+                    // DN base text: Suttas are wrapped in <div type="sutta">
+                    tag_name == "div" && attributes.get("type") == Some(&"sutta".to_string())
+                }
             },
             "majjhima" | "samyutta" => {
                 // MN/SN: Suttas are delimited by <p rend="subhead">

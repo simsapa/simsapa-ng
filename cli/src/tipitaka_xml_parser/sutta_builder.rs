@@ -74,15 +74,78 @@ fn find_code_for_sutta(
     tsv_records: &[TsvRecord],
     xml_filename: &str,
     sutta_title: &str,
+    is_commentary: bool,
 ) -> Option<String> {
     // Normalize the xml filename (remove path prefix if present)
     let normalized_filename = xml_filename
         .trim_start_matches("romn/")
         .trim_start_matches("mula/");
     
-    // Normalize sutta title for comparison (consistent niggahita)
-    let normalized_title = consistent_niggahita(Some(sutta_title.to_string()));
+    // For commentaries (.att.xml or .tik.xml), convert the filename to the base .mul.xml format
+    // e.g., "s0201a.att.xml" -> "s0201m.mul.xml"
+    // e.g., "s0201t.tik.xml" -> "s0201m.mul.xml"
+    let base_filename = if is_commentary {
+        if normalized_filename.ends_with(".att.xml") {
+            // Replace "a.att.xml" with "m.mul.xml"
+            normalized_filename.replace("a.att.xml", "m.mul.xml")
+        } else if normalized_filename.ends_with(".tik.xml") {
+            // Replace "t.tik.xml" with "m.mul.xml"
+            normalized_filename.replace("t.tik.xml", "m.mul.xml")
+        } else {
+            normalized_filename.to_string()
+        }
+    } else {
+        normalized_filename.to_string()
+    };
     
+    // For commentary titles, strip the "-vaṇṇanā" suffix and try to match with the base sutta
+    let search_title = if is_commentary && sutta_title.ends_with("vaṇṇanā") {
+        // Strip "vaṇṇanā" - the base should already end with "sutta"
+        let base = sutta_title.trim_end_matches("vaṇṇanā");
+        // The base already ends with "sutta", so we just need to try both "sutta" and "suttaṃ"
+        let mut candidates = if base.ends_with("sutta") {
+            vec![
+                base.to_string(),  // Keep "sutta" as-is
+                format!("{}ṃ", base),  // Add anusvara to make "suttaṃ"
+            ]
+        } else {
+            // Fallback: assume we need to add "sutta"
+            vec![
+                format!("{}sutta", base),
+                format!("{}suttaṃ", base),
+            ]
+        };
+        
+        // Also try with "Mahā" prefix for certain suttas (e.g., Satipaṭṭhānasutta -> Mahāsatipaṭṭhānasutta)
+        // Extract just the sutta name without numbering
+        if let Some((num, sutta_part)) = base.split_once('.') {
+            let sutta_part = sutta_part.trim();
+            if sutta_part.ends_with("sutta") {
+                // Add "Mahā" prefix - lowercase the first letter of the original sutta name
+                let sutta_with_maha = if let Some(first_char) = sutta_part.chars().next() {
+                    let rest = &sutta_part[first_char.len_utf8()..];
+                    format!("Mahā{}{}", first_char.to_lowercase(), rest)
+                } else {
+                    format!("Mahā{}", sutta_part)
+                };
+                candidates.push(format!("{}. {}", num, sutta_with_maha));
+                candidates.push(format!("{}. {}ṃ", num, sutta_with_maha));
+            }
+        }
+        
+        candidates
+    } else {
+        vec![sutta_title.to_string()]
+    };
+    
+    // Normalize all search titles with consistent niggahita
+    let normalized_search_titles: Vec<String> = search_title.iter()
+        .map(|t| consistent_niggahita(Some(t.clone())))
+        .collect();
+    
+
+    
+    let mut match_attempts = 0;
     for record in tsv_records {
         let record_filename = record.cst_file
             .trim_start_matches("romn/")
@@ -90,8 +153,15 @@ fn find_code_for_sutta(
         
         let record_title = consistent_niggahita(Some(record.cst_sutta.clone()));
         
-        if record_filename == normalized_filename && record_title == normalized_title {
-            return Some(record.code.clone());
+        // Check if filename matches (using base filename for commentaries)
+        if record_filename == base_filename {
+            match_attempts += 1;
+            // Check if any of the search titles match
+            for search_title in &normalized_search_titles {
+                if &record_title == search_title {
+                    return Some(record.code.clone());
+                }
+            }
         }
     }
     
@@ -127,11 +197,14 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
     let mut html = String::new();
     let mut reader = Reader::from_str(xml_content);
     reader.trim_text(false); // Preserve whitespace
+    reader.check_end_names(false); // Don't validate end tag names strictly
     
     let mut buf = Vec::new();
     let mut in_paragraph = false;
     let mut current_para_class = String::new();
     let mut pending_paranum: Option<String> = None;
+    let mut unknown_tags = std::collections::HashSet::new();
+    let mut tag_stack: Vec<String> = Vec::new(); // Track opened tags to close them properly
     
     loop {
         match reader.read_event_into(&mut buf) {
@@ -214,8 +287,90 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
                         
                         html.push_str(&format!("<span class=\"pagebreak\" data-ed=\"{}\" data-n=\"{}\"></span>", ed, n));
                     }
+                    "head" => {
+                        // Head tags - convert to appropriate HTML heading based on rend attribute
+                        let mut rend = String::new();
+                        for attr in e.attributes() {
+                            if let Ok(attr) = attr {
+                                let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                                if key == "rend" {
+                                    rend = attr.unescape_value().unwrap_or_default().to_string();
+                                }
+                            }
+                        }
+                        
+                        let html_tag = match rend.as_str() {
+                            "chapter" => {
+                                html.push_str("<h2 class=\"chapter\">");
+                                "h2"
+                            },
+                            "book" => {
+                                html.push_str("<h2 class=\"book\">");
+                                "h2"
+                            },
+                            "subhead" => {
+                                html.push_str("<h3 class=\"subhead\">");
+                                "h3"
+                            },
+                            "subsubhead" => {
+                                html.push_str("<h4 class=\"subsubhead\">");
+                                "h4"
+                            },
+                            _ => {
+                                html.push_str(&format!("<h3 class=\"{}\">", rend));
+                                "h3"
+                            }
+                        };
+                        tag_stack.push(html_tag.to_string());
+                    }
+                    "div" => {
+                        // Div tags - convert to HTML div with appropriate class
+                        let mut div_type = String::new();
+                        let mut id = String::new();
+                        
+                        for attr in e.attributes() {
+                            if let Ok(attr) = attr {
+                                let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                                let value = attr.unescape_value().unwrap_or_default();
+                                
+                                match key {
+                                    "type" => div_type = value.to_string(),
+                                    "id" => id = value.to_string(),
+                                    _ => {}
+                                }
+                            }
+                        }
+                        
+                        if !div_type.is_empty() {
+                            if !id.is_empty() {
+                                html.push_str(&format!("<div class=\"{}\" id=\"{}\">", div_type, id));
+                            } else {
+                                html.push_str(&format!("<div class=\"{}\">", div_type));
+                            }
+                        } else {
+                            html.push_str("<div>");
+                        }
+                        tag_stack.push("div".to_string());
+                    }
+                    "trailer" => {
+                        // Trailer - typically end markers like "Suttavaṇṇanā niṭṭhitā"
+                        let mut rend = String::from("trailer");
+                        for attr in e.attributes() {
+                            if let Ok(attr) = attr {
+                                let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                                if key == "rend" {
+                                    rend = attr.unescape_value().unwrap_or_default().to_string();
+                                }
+                            }
+                        }
+                        html.push_str(&format!("<p class=\"{}\">", rend));
+                        tag_stack.push("p".to_string());
+                    }
                     _ => {
-                        // Ignore unknown tags but preserve their content
+                        // Log unknown tags for future handling
+                        if unknown_tags.insert(name.to_string()) {
+                            eprintln!("Warning: Unknown XML tag in content: <{}>", name);
+                        }
                     }
                 }
             }
@@ -237,7 +392,23 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
                     "note" => {
                         html.push_str("]</span>");
                     }
-                    _ => {}
+                    "head" | "div" | "trailer" => {
+                        // Close the tag using the tag stack
+                        if let Some(tag) = tag_stack.pop() {
+                            html.push_str(&format!("</{}>\n", tag));
+                        } else {
+                            // Fallback if stack is empty (shouldn't happen with well-formed XML)
+                            match name {
+                                "head" => html.push_str("</h3>\n"),
+                                "div" => html.push_str("</div>\n"),
+                                "trailer" => html.push_str("</p>\n"),
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {
+                        // Unknown closing tags - skip silently (already logged on open)
+                    }
                 }
             }
             Ok(Event::Text(e)) => {
@@ -296,6 +467,7 @@ fn xml_to_plain_text(xml_content: &str) -> Result<String> {
     let mut text = String::new();
     let mut reader = Reader::from_str(xml_content);
     reader.trim_text(false);
+    reader.check_end_names(false); // Don't validate end tag names strictly
     
     let mut buf = Vec::new();
     let mut skip_note = false;
@@ -404,13 +576,18 @@ pub fn build_suttas(
         // Determine if this is a commentary or subcommentary
         let is_commentary = xml_filename.ends_with(".att.xml");
         let is_subcommentary = xml_filename.ends_with(".tik.xml");
+        let is_commentary_or_sub = is_commentary || is_subcommentary;
         
         // Find code from TSV
-        let code = find_code_for_sutta(&tsv_records, &xml_filename, &title)
-            .context(format!(
-                "Failed to find code for sutta '{}' in file '{}'", 
-                title, xml_filename
-            ))?;
+        let code = match find_code_for_sutta(&tsv_records, &xml_filename, &title, is_commentary_or_sub) {
+            Some(c) => c,
+            None => {
+                // Log warning but continue - some commentary titles don't match exactly
+                eprintln!("Warning: Could not find code for sutta '{}' in file '{}', skipping", 
+                         title, xml_filename);
+                continue;
+            }
+        };
         
         // Add commentary/subcommentary suffix to code
         let uid_code = if is_commentary {
