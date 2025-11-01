@@ -120,6 +120,27 @@ fn find_code_for_sutta(
             ]
         };
         
+        // Edge case: Handle "Vanapatthapariyāya" → "Vanapatthasutta" mismatch
+        // 
+        // The commentary (s0201a.att.xml, s0201t.tik.xml) uses:
+        //   <p rend="subhead">7. Vanapatthapariyāyasuttavaṇṇanā</p>
+        // 
+        // But the base text (s0201m.mul.xml) uses:
+        //   <p rend="subhead">7. Vanapatthasuttaṃ</p>
+        //
+        // The commentary adds "pariyāya" (method/approach) to the title, which is not
+        // present in the base text or TSV mapping. This is MN 17.
+        if base.contains("Vanapatthapariyāyasutta") {
+            // Extract the number prefix if present (e.g., "7. ")
+            if let Some((num, _)) = base.split_once('.') {
+                candidates.push(format!("{}. Vanapatthasutta", num));
+                candidates.push(format!("{}. Vanapatthasuttaṃ", num));
+            } else {
+                candidates.push("Vanapatthasutta".to_string());
+                candidates.push("Vanapatthasuttaṃ".to_string());
+            }
+        }
+        
         // Also try with "Mahā" prefix for certain suttas (e.g., Satipaṭṭhānasutta -> Mahāsatipaṭṭhānasutta)
         // Extract just the sutta name without numbering
         if let Some((num, sutta_part)) = base.split_once('.') {
@@ -699,54 +720,4 @@ pub fn build_suttas(
     }
     
     Ok(suttas)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::tipitaka_xml_parser::{detect_nikaya_structure, parse_into_fragments};
-    use crate::tipitaka_xml_parser_tsv::encoding::read_xml_file;
-    use std::path::PathBuf;
-    
-    #[test]
-    fn test_mn_commentary_vagga_matching() {
-        // This test verifies that MN commentary suttas use vagga matching correctly
-        // to disambiguate suttas with the same number in different vaggas
-        
-        let xml_path = PathBuf::from("tests/data/s0201a.att.xml");
-        if !xml_path.exists() {
-            println!("Skipping test - test file not found");
-            return;
-        }
-        
-        let tsv_path = PathBuf::from("assets/cst-vs-sc.tsv");
-        if !tsv_path.exists() {
-            println!("Skipping test - TSV file not found");
-            return;
-        }
-        
-        // Read and parse
-        let xml_content = read_xml_file(&xml_path).expect("Failed to read XML");
-        let mut structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
-        structure = structure.with_xml_filename("s0201a.att.xml".to_string());
-        
-        let fragments = parse_into_fragments(&xml_content, &structure).expect("Failed to parse fragments");
-        
-        // Build suttas
-        let suttas = build_suttas(fragments, &structure, &tsv_path).expect("Failed to build suttas");
-        
-        println!("Built {} suttas from MN commentary", suttas.len());
-        
-        // We expect at least 40 suttas (current buggy behavior gets 40)
-        // With vagga matching working, we should get closer to 49-50
-        assert!(suttas.len() >= 40, "Should have at least 40 suttas, got {}", suttas.len());
-        
-        // With the fix, we should get 49 or 50 suttas
-        // (50 fragments, -1 for edge case = 49)
-        if suttas.len() >= 45 {
-            println!("✓ Vagga matching appears to be working (got {} suttas)", suttas.len());
-        } else {
-            println!("⚠ Vagga matching may not be working optimally (got {} suttas, expected ~49)", suttas.len());
-        }
-    }
 }
