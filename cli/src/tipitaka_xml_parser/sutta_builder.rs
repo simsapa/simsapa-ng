@@ -626,9 +626,8 @@ pub fn build_suttas(
             Some(group_path)
         };
         
-        // Get XML filename (with proper extension handling)
-        let xml_filename = nikaya_structure.xml_filename.clone()
-            .unwrap_or_else(|| "unknown.xml".to_string());
+        // Get XML filename from fragment
+        let xml_filename = &fragment.xml_filename;
         
         // Determine if this is a commentary or subcommentary
         let is_commentary = xml_filename.ends_with(".att.xml");

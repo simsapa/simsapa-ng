@@ -42,10 +42,9 @@ fn test_dn_s0101m_sutta_count() {
     let xml_path = PathBuf::from("tests/data/s0101m.mul.xml");
     let xml_content = read_xml_file(&xml_path).expect("Failed to read XML");
     
-    let mut structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
-    structure = structure.with_xml_filename("s0101m.mul.xml".to_string());
+    let structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
     
-    let fragments = parse_into_fragments(&xml_content, &structure).expect("Failed to parse fragments");
+    let fragments = parse_into_fragments(&xml_content, &structure, "s0101m.mul.xml").expect("Failed to parse fragments");
     
     // Count sutta fragments
     let sutta_fragments: Vec<_> = fragments.iter()
@@ -83,10 +82,9 @@ fn test_mn_s0201m_sutta_count() {
     let xml_path = PathBuf::from("tests/data/s0201m.mul.xml");
     let xml_content = read_xml_file(&xml_path).expect("Failed to read XML");
     
-    let mut structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
-    structure = structure.with_xml_filename("s0201m.mul.xml".to_string());
+    let structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
     
-    let fragments = parse_into_fragments(&xml_content, &structure).expect("Failed to parse fragments");
+    let fragments = parse_into_fragments(&xml_content, &structure, "s0201m.mul.xml").expect("Failed to parse fragments");
     
     // Count sutta fragments
     let sutta_fragments: Vec<_> = fragments.iter()

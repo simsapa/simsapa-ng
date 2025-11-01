@@ -13,9 +13,6 @@ pub struct NikayaStructure {
     pub nikaya: String,
     /// Ordered list of group types in this nikaya's hierarchy
     pub levels: Vec<GroupType>,
-    /// Source XML filename (optional, for tracking)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub xml_filename: Option<String>,
 }
 
 impl NikayaStructure {
@@ -75,7 +72,6 @@ impl NikayaStructure {
                     GroupType::Book,
                     GroupType::Sutta,
                 ],
-                xml_filename: None,
             }),
             "majjhima" => Some(NikayaStructure {
                 nikaya: "majjhima".to_string(),
@@ -85,7 +81,6 @@ impl NikayaStructure {
                     GroupType::Vagga,
                     GroupType::Sutta,
                 ],
-                xml_filename: None,
             }),
             "samyutta" => Some(NikayaStructure {
                 nikaya: "samyutta".to_string(),
@@ -96,7 +91,6 @@ impl NikayaStructure {
                     GroupType::Vagga,
                     GroupType::Sutta,
                 ],
-                xml_filename: None,
             }),
             "anguttara" => Some(NikayaStructure {
                 nikaya: "anguttara".to_string(),
@@ -105,7 +99,6 @@ impl NikayaStructure {
                     GroupType::Book,
                     GroupType::Sutta,
                 ],
-                xml_filename: None,
             }),
             "khuddaka" => Some(NikayaStructure {
                 nikaya: "khuddaka".to_string(),
@@ -114,16 +107,9 @@ impl NikayaStructure {
                     GroupType::Book,
                     GroupType::Sutta,
                 ],
-                xml_filename: None,
             }),
             _ => None,
         }
-    }
-    
-    /// Set the XML filename for this structure
-    pub fn with_xml_filename(mut self, filename: String) -> Self {
-        self.xml_filename = Some(filename);
-        self
     }
 }
 

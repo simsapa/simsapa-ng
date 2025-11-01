@@ -150,11 +150,12 @@ impl HierarchyTracker {
 /// and extracts relevant metadata.
 struct FragmentBoundaryDetector<'a> {
     nikaya_structure: &'a NikayaStructure,
+    xml_filename: &'a str,
 }
 
 impl<'a> FragmentBoundaryDetector<'a> {
-    fn new(nikaya_structure: &'a NikayaStructure) -> Self {
-        Self { nikaya_structure }
+    fn new(nikaya_structure: &'a NikayaStructure, xml_filename: &'a str) -> Self {
+        Self { nikaya_structure, xml_filename }
     }
     
     /// Check if an element marks a level boundary and extract metadata
@@ -219,9 +220,7 @@ impl<'a> FragmentBoundaryDetector<'a> {
     /// Check if this is a sutta boundary (start of actual sutta content)
     fn is_sutta_start(&self, tag_name: &str, attributes: &HashMap<String, String>) -> bool {
         // Check if this is a commentary or sub-commentary file
-        let is_commentary = self.nikaya_structure.xml_filename.as_ref()
-            .map(|f| f.ends_with(".att.xml") || f.ends_with(".tik.xml"))
-            .unwrap_or(false);
+        let is_commentary = self.xml_filename.ends_with(".att.xml") || self.xml_filename.ends_with(".tik.xml");
         
         match self.nikaya_structure.nikaya.as_str() {
             "digha" => {
@@ -263,10 +262,11 @@ impl<'a> FragmentBoundaryDetector<'a> {
 pub fn parse_into_fragments(
     xml_content: &str,
     nikaya_structure: &NikayaStructure,
+    xml_filename: &str,
 ) -> Result<Vec<XmlFragment>> {
     let mut reader = LineTrackingReader::new(xml_content);
     let mut hierarchy = HierarchyTracker::new(nikaya_structure.clone());
-    let detector = FragmentBoundaryDetector::new(nikaya_structure);
+    let detector = FragmentBoundaryDetector::new(nikaya_structure, xml_filename);
     
     let mut fragments: Vec<XmlFragment> = Vec::new();
     // Track: (byte_pos, line_num, char_pos)
@@ -337,53 +337,70 @@ pub fn parse_into_fragments(
                     // Store START position of the tag for later text check
                     pending_subhead_check = Some((event_start_pos, event_start_line, event_start_char));
                 } else if is_potential_sutta_marker {
-                    // DN style: immediate sutta marker (div type="sutta")
+                    // Determine if we should include the boundary tag in the new fragment
+                    // For <head rend="chapter"> (commentary), include it in Sutta fragment
+                    // For <div type="sutta"> (base text), keep it after to preserve whitespace
+                    let is_head_chapter = tag_name == "head" && 
+                                         attributes.get("rend") == Some(&"chapter".to_string());
+                    
+                    let (close_pos, close_line, close_char, start_pos, start_line, start_char) = 
+                        if is_head_chapter {
+                            // Include <head> in new fragment: close before tag, start at tag
+                            (event_start_pos, event_start_line, event_start_char,
+                             event_start_pos, event_start_line, event_start_char)
+                        } else {
+                            // Keep <div> after boundary: close after tag, start after tag
+                            (current_pos, current_line, current_char,
+                             current_pos, current_line, current_char)
+                        };
+                    
                     if in_sutta_content {
                         // Already in a sutta - this is a new sutta starting
-                        // This happens in MN/SN where <p rend="subhead"> delimits suttas
                         // Close current sutta fragment
-                        if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                        if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                             (current_fragment_start, current_fragment_type.as_ref()) {
                             
-                            let content = xml_content[start_pos..current_pos].to_string();
+                            let content = xml_content[frag_start_pos..close_pos].to_string();
                             if !content.trim().is_empty() {
                                 fragments.push(XmlFragment {
                                     fragment_type: frag_type.clone(),
                                     content,
-                                    start_line,
-                                    end_line: current_line,
-                                    start_char,
-                                    end_char: current_char,
+                                    start_line: frag_start_line,
+                                    end_line: close_line,
+                                    start_char: frag_start_char,
+                                    end_char: close_char,
                                     group_levels: hierarchy.get_current_levels(),
+                                    xml_filename: xml_filename.to_string(),
                                 });
                             }
                         }
                         
                         // Start new sutta fragment
-                        current_fragment_start = Some((current_pos, current_line, current_char));
+                        current_fragment_start = Some((start_pos, start_line, start_char));
                         current_fragment_type = Some(FragmentType::Sutta);
                         // Stay in_sutta_content = true
                     } else {
                         // Not in sutta yet - close Header and start Sutta
-                        if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                        if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                             (current_fragment_start, current_fragment_type.as_ref()) {
                             
-                            let content = xml_content[start_pos..current_pos].to_string();
+                            let content = xml_content[frag_start_pos..close_pos].to_string();
                             if !content.trim().is_empty() {
                                 fragments.push(XmlFragment {
                                     fragment_type: frag_type.clone(),
                                     content,
-                                    start_line,
-                                    end_line: current_line,
-                                    start_char,
-                                    end_char: current_char,
+                                    start_line: frag_start_line,
+                                    end_line: close_line,
+                                    start_char: frag_start_char,
+                                    end_char: close_char,
                                     group_levels: hierarchy.get_current_levels(),
+                                    xml_filename: xml_filename.to_string(),
                                 });
                             }
                         }
                         
                         // Start new sutta fragment
-                        current_fragment_start = Some((current_pos, current_line, current_char));
+                        current_fragment_start = Some((start_pos, start_line, start_char));
                         current_fragment_type = Some(FragmentType::Sutta);
                         in_sutta_content = true;
                     }
@@ -407,9 +424,7 @@ pub fn parse_into_fragments(
                     
                     // For commentary/sub-commentary files, also check if it ends with "suttavaṇṇanā"
                     // to distinguish actual sutta commentaries from subsections
-                    let is_commentary = nikaya_structure.xml_filename.as_ref()
-                        .map(|f| f.ends_with(".att.xml") || f.ends_with(".tik.xml"))
-                        .unwrap_or(false);
+                    let is_commentary = xml_filename.ends_with(".att.xml") || xml_filename.ends_with(".tik.xml");
                     
                     let is_sutta_commentary = if is_commentary {
                         // In commentary files, only treat it as a sutta if it ends with "suttavaṇṇanā"
@@ -436,6 +451,7 @@ pub fn parse_into_fragments(
                                         start_char,
                                         end_char: subhead_char,
                                         group_levels: hierarchy.get_current_levels(),
+                                        xml_filename: xml_filename.to_string(),
                                     });
                                 }
                             }
@@ -461,6 +477,7 @@ pub fn parse_into_fragments(
                                         start_char,
                                         end_char: subhead_char,
                                         group_levels: hierarchy.get_current_levels(),
+                                        xml_filename: xml_filename.to_string(),
                                     });
                                 }
                             }
@@ -507,6 +524,7 @@ pub fn parse_into_fragments(
                                 start_char,
                                 end_char: current_char,
                                 group_levels: hierarchy.get_current_levels(),
+                                xml_filename: xml_filename.to_string(),
                             });
                         }
                         
@@ -538,6 +556,7 @@ pub fn parse_into_fragments(
                 start_char,
                 end_char: reader.current_char(),
                 group_levels: hierarchy.get_current_levels(),
+                xml_filename: xml_filename.to_string(),
             });
         }
     }
@@ -603,7 +622,7 @@ mod tests {
         
         assert_eq!(structure.nikaya, "digha");
         
-        let fragments = parse_into_fragments(&xml, &structure).expect("Should parse fragments");
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml").expect("Should parse fragments");
         
         // Should have at least one fragment
         assert!(!fragments.is_empty(), "Should have at least one fragment");
@@ -613,7 +632,7 @@ mod tests {
     fn test_parse_dn_fragment_count() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
         
         // Count sutta fragments
         let sutta_fragments: Vec<_> = fragments.iter()
@@ -628,7 +647,7 @@ mod tests {
     fn test_parse_dn_line_tracking() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
         
         for fragment in &fragments {
             // Line numbers should be valid (start > 0, end >= start)
@@ -645,7 +664,7 @@ mod tests {
         
         assert_eq!(structure.nikaya, "majjhima");
         
-        let fragments = parse_into_fragments(&xml, &structure).expect("Should parse fragments");
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml").expect("Should parse fragments");
         
         assert!(!fragments.is_empty(), "Should have at least one fragment");
     }
@@ -654,7 +673,7 @@ mod tests {
     fn test_fragment_content_not_empty() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
         
         for fragment in &fragments {
             // Each fragment should have non-empty content
@@ -667,7 +686,7 @@ mod tests {
     fn test_character_position_tracking() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
         
         for fragment in &fragments {
             // Character positions should be valid
@@ -691,7 +710,7 @@ mod tests {
 <text><body><p rend="nikaya">Dīghanikāyo</p><div type="book"><head rend="book">Book1</head><div type="sutta"><head rend="chapter">Sutta1</head><p n="1">Text1</p></div></div></body></text>"#;
         
         let structure = detect_nikaya_structure(xml).unwrap();
-        let fragments = parse_into_fragments(xml, &structure).unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "test.xml").unwrap();
         
         // Check that we can distinguish elements on the same line
         // by their character positions

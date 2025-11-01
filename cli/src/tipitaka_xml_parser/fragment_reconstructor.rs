@@ -26,41 +26,41 @@ pub fn reconstruct_xml_from_db(
     let mut conn = SqliteConnection::establish(db_path.to_str().unwrap())
         .context("Failed to connect to fragments database")?;
     
-    // Get nikaya ID for this filename
-    let nikaya_id = get_nikaya_id_by_filename(&mut conn, xml_filename)?;
+    // Get nikaya name for this filename
+    let _nikaya = get_nikaya_by_filename(&mut conn, xml_filename)?;
     
-    // Get all fragments for this nikaya, ordered by line and char position
-    let fragments = get_fragments_for_nikaya(&mut conn, nikaya_id)?;
+    // Get all fragments for this filename, ordered by line and char position
+    let fragments = get_fragments_for_filename(&mut conn, xml_filename)?;
     
     // Reconstruct XML from fragments
     reconstruct_xml_from_fragments(&fragments)
 }
 
-/// Get nikaya ID by xml_filename
-fn get_nikaya_id_by_filename(
+/// Get nikaya name by xml_filename
+fn get_nikaya_by_filename(
     conn: &mut SqliteConnection,
     xml_filename: &str,
-) -> Result<i64> {
+) -> Result<String> {
     #[derive(QueryableByName)]
-    struct NikayaIdResult {
-        #[diesel(sql_type = diesel::sql_types::BigInt)]
-        id: i64,
+    struct NikayaResult {
+        #[diesel(sql_type = diesel::sql_types::Text)]
+        nikaya: String,
     }
     
-    let result: NikayaIdResult = diesel::sql_query(
-        "SELECT id FROM nikaya WHERE xml_filename = ? LIMIT 1"
+    let result: NikayaResult = diesel::sql_query(
+        "SELECT DISTINCT nikaya FROM xml_fragments WHERE xml_filename = ? LIMIT 1"
     )
     .bind::<diesel::sql_types::Text, _>(xml_filename)
     .get_result(conn)
     .context(format!("No nikaya found with filename: {}", xml_filename))?;
     
-    Ok(result.id)
+    Ok(result.nikaya)
 }
 
-/// Get all fragments for a nikaya, ordered by position
-fn get_fragments_for_nikaya(
+/// Get all fragments for a filename, ordered by position
+fn get_fragments_for_filename(
     conn: &mut SqliteConnection,
-    nikaya_id: i64,
+    xml_filename: &str,
 ) -> Result<Vec<XmlFragment>> {
     #[derive(QueryableByName)]
     struct FragmentRow {
@@ -78,17 +78,19 @@ fn get_fragments_for_nikaya(
         end_char: i32,
         #[diesel(sql_type = diesel::sql_types::Text)]
         group_levels: String,
+        #[diesel(sql_type = diesel::sql_types::Text)]
+        xml_filename: String,
     }
     
     let rows: Vec<FragmentRow> = diesel::sql_query(
         r#"
-        SELECT fragment_type, content, start_line, end_line, start_char, end_char, group_levels
+        SELECT fragment_type, content, start_line, end_line, start_char, end_char, group_levels, xml_filename
         FROM xml_fragments
-        WHERE nikaya_id = ?
+        WHERE xml_filename = ?
         ORDER BY start_line ASC, start_char ASC
         "#
     )
-    .bind::<diesel::sql_types::BigInt, _>(nikaya_id)
+    .bind::<diesel::sql_types::Text, _>(xml_filename)
     .load(conn)
     .context("Failed to query fragments")?;
     
@@ -112,6 +114,7 @@ fn get_fragments_for_nikaya(
             start_char: row.start_char as usize,
             end_char: row.end_char as usize,
             group_levels,
+            xml_filename: row.xml_filename,
         });
     }
     
@@ -165,10 +168,9 @@ mod tests {
         let db_path = temp_db.path();
         
         // Parse and export
-        let mut structure = detect_nikaya_structure(original_xml).unwrap();
-        structure = structure.with_xml_filename("test.xml".to_string());
+        let structure = detect_nikaya_structure(original_xml).unwrap();
         
-        let fragments = parse_into_fragments(original_xml, &structure).unwrap();
+        let fragments = parse_into_fragments(original_xml, &structure, "test.xml").unwrap();
         export_fragments_to_db(&fragments, &structure, db_path).unwrap();
         
         // Reconstruct
@@ -176,5 +178,51 @@ mod tests {
         
         // Verify - should be identical (whitespace may differ)
         assert_eq!(original_xml.trim(), reconstructed_xml.trim());
+    }
+    
+    #[test]
+    fn test_roundtrip_commentary_style() {
+        // Test reconstruction with commentary-style XML (DN .att.xml)
+        let original_xml = r#"<?xml version="1.0"?>
+<TEI.2>
+<teiHeader></teiHeader>
+<text>
+<body>
+<p rend="nikaya">Dīghanikāyo</p>
+<div type="book">
+<head rend="book">Sīlakkhandhavaggapāḷi</head>
+<p>Header content before suttas.</p>
+<head rend="chapter">1. Brahmajālasuttavaṇṇanā</head>
+<p>First sutta commentary.</p>
+<head rend="chapter">2. Sāmaññaphalasuttavaṇṇanā</head>
+<p>Second sutta commentary.</p>
+</div>
+</body>
+</text>
+</TEI.2>"#;
+        
+        let temp_db = NamedTempFile::new().unwrap();
+        let db_path = temp_db.path();
+        
+        // Parse as commentary file
+        let structure = detect_nikaya_structure(original_xml).unwrap();
+        let fragments = parse_into_fragments(original_xml, &structure, "test.att.xml").unwrap();
+        
+        // Verify head tags are together
+        for frag in &fragments {
+            if frag.content.contains("<head rend=\"chapter\">") {
+                assert!(frag.content.contains("</head>"),
+                    "Fragment with <head rend=\"chapter\"> must also contain </head>");
+            }
+        }
+        
+        export_fragments_to_db(&fragments, &structure, db_path).unwrap();
+        
+        // Reconstruct
+        let reconstructed_xml = reconstruct_xml_from_db(db_path, "test.att.xml").unwrap();
+        
+        // Verify - should be identical
+        assert_eq!(original_xml.trim(), reconstructed_xml.trim(),
+            "Reconstructed commentary XML should match original");
     }
 }

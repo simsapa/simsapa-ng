@@ -1,7 +1,7 @@
-mod bootstrap;
-mod bootstrap_old;
-mod tipitaka_xml_parser_tsv;
-mod tipitaka_xml_parser;
+pub mod bootstrap;
+pub mod bootstrap_old;
+pub mod tipitaka_xml_parser_tsv;
+pub mod tipitaka_xml_parser;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -682,10 +682,10 @@ fn parse_tipitaka_xml_new(
             }
         };
 
-        // Set the XML filename
-        if let Some(filename) = xml_file.file_name().and_then(|n| n.to_str()) {
-            nikaya_structure = nikaya_structure.with_xml_filename(filename.to_string());
-        }
+        // Get the XML filename
+        let xml_filename = xml_file.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("unknown.xml");
 
         if verbose {
             println!("  Detected nikaya: {} ({} levels)", 
@@ -693,7 +693,7 @@ fn parse_tipitaka_xml_new(
         }
 
         // Phase 2: Parse into fragments
-        let fragments = match parse_into_fragments(&xml_content, &nikaya_structure) {
+        let fragments = match parse_into_fragments(&xml_content, &nikaya_structure, xml_filename) {
             Ok(frags) => frags,
             Err(e) => {
                 eprintln!("  ✗ Error parsing fragments: {}", e);

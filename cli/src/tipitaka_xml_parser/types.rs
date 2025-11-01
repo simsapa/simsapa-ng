@@ -59,4 +59,6 @@ pub struct XmlFragment {
     pub end_char: usize,
     /// Hierarchy levels at the time this fragment was created
     pub group_levels: Vec<GroupLevel>,
+    /// Source XML filename (for tracking which file this fragment came from)
+    pub xml_filename: String,
 }

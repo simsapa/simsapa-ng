@@ -14,8 +14,8 @@ use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 /// Export fragments and nikaya structure to SQLite database
 ///
 /// Creates two tables:
-/// - `nikaya`: Stores the NikayaStructure as JSON
-/// - `xml_fragments`: Stores each XmlFragment with position tracking
+/// - `nikaya_structures`: Stores the NikayaStructure with unique nikaya field
+/// - `xml_fragments`: Stores each XmlFragment with xml_filename and nikaya foreign key
 ///
 /// # Arguments
 /// * `fragments` - Vector of parsed XML fragments
@@ -36,38 +36,38 @@ pub fn export_fragments_to_db(
     // Create tables
     create_tables(&mut conn)?;
     
-    // Insert nikaya structure and get the ID
-    let nikaya_id = insert_nikaya_structure(&mut conn, nikaya_structure)?;
+    // Insert or get nikaya structure
+    insert_nikaya_structure(&mut conn, nikaya_structure)?;
     
-    // Insert fragments with nikaya_id
-    let count = insert_fragments(&mut conn, fragments, nikaya_id)?;
+    // Insert fragments with nikaya foreign key
+    let count = insert_fragments(&mut conn, fragments, &nikaya_structure.nikaya)?;
     
     Ok(count)
 }
 
 /// Create database tables for fragments and nikaya
 fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
-    // Create nikaya table
+    // Create nikaya_structures table with unique nikaya field
     diesel::sql_query(
         r#"
-        CREATE TABLE IF NOT EXISTS nikaya (
+        CREATE TABLE IF NOT EXISTS nikaya_structures (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nikaya TEXT NOT NULL,
+            nikaya TEXT NOT NULL UNIQUE,
             levels TEXT NOT NULL,
-            xml_filename TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         "#
     )
     .execute(conn)
-    .context("Failed to create nikaya table")?;
+    .context("Failed to create nikaya_structures table")?;
     
-    // Create xml_fragments table with foreign key to nikaya
+    // Create xml_fragments table with xml_filename and nikaya foreign key
     diesel::sql_query(
         r#"
         CREATE TABLE IF NOT EXISTS xml_fragments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nikaya_id INTEGER NOT NULL,
+            nikaya TEXT NOT NULL,
+            xml_filename TEXT NOT NULL,
             fragment_type TEXT NOT NULL,
             content TEXT NOT NULL,
             start_line INTEGER NOT NULL,
@@ -76,7 +76,7 @@ fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
             end_char INTEGER NOT NULL,
             group_levels TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (nikaya_id) REFERENCES nikaya(id)
+            FOREIGN KEY (nikaya) REFERENCES nikaya_structures(nikaya)
         )
         "#
     )
@@ -86,48 +86,34 @@ fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
     Ok(())
 }
 
-/// Insert nikaya structure into database and return the ID
+/// Insert nikaya structure into database (or ignore if exists due to UNIQUE constraint)
 fn insert_nikaya_structure(
     conn: &mut SqliteConnection,
     structure: &NikayaStructure,
-) -> Result<i64> {
+) -> Result<()> {
     // Serialize levels as JSON
     let levels_json = serde_json::to_string(&structure.levels)
         .context("Failed to serialize nikaya levels")?;
     
-    let xml_filename = structure.xml_filename.as_deref().unwrap_or("");
-    
     diesel::sql_query(
         r#"
-        INSERT INTO nikaya (nikaya, levels, xml_filename)
-        VALUES (?, ?, ?)
+        INSERT OR IGNORE INTO nikaya_structures (nikaya, levels)
+        VALUES (?, ?)
         "#
     )
     .bind::<diesel::sql_types::Text, _>(&structure.nikaya)
     .bind::<diesel::sql_types::Text, _>(&levels_json)
-    .bind::<diesel::sql_types::Text, _>(xml_filename)
     .execute(conn)
     .context("Failed to insert nikaya structure")?;
     
-    // Get the last inserted row ID
-    #[derive(QueryableByName)]
-    struct LastInsertId {
-        #[diesel(sql_type = diesel::sql_types::BigInt)]
-        id: i64,
-    }
-    
-    let result: LastInsertId = diesel::sql_query("SELECT last_insert_rowid() as id")
-        .get_result(conn)
-        .context("Failed to get nikaya ID")?;
-    
-    Ok(result.id)
+    Ok(())
 }
 
-/// Insert fragments into database with foreign key to nikaya
+/// Insert fragments into database with nikaya foreign key
 fn insert_fragments(
     conn: &mut SqliteConnection,
     fragments: &[XmlFragment],
-    nikaya_id: i64,
+    nikaya: &str,
 ) -> Result<usize> {
     let mut count = 0;
     
@@ -143,11 +129,12 @@ fn insert_fragments(
         diesel::sql_query(
             r#"
             INSERT INTO xml_fragments 
-            (nikaya_id, fragment_type, content, start_line, end_line, start_char, end_char, group_levels)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            (nikaya, xml_filename, fragment_type, content, start_line, end_line, start_char, end_char, group_levels)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
-        .bind::<diesel::sql_types::BigInt, _>(nikaya_id)
+        .bind::<diesel::sql_types::Text, _>(nikaya)
+        .bind::<diesel::sql_types::Text, _>(&fragment.xml_filename)
         .bind::<diesel::sql_types::Text, _>(fragment_type)
         .bind::<diesel::sql_types::Text, _>(&fragment.content)
         .bind::<diesel::sql_types::Integer, _>(fragment.start_line as i32)
@@ -179,7 +166,6 @@ mod tests {
         let structure = NikayaStructure {
             nikaya: "digha".to_string(),
             levels: vec![GroupType::Nikaya, GroupType::Book, GroupType::Sutta],
-            xml_filename: Some("test.xml".to_string()),
         };
         
         let fragments = vec![
@@ -191,6 +177,7 @@ mod tests {
                 start_char: 0,
                 end_char: 34,
                 group_levels: vec![],
+                xml_filename: "test.xml".to_string(),
             },
             XmlFragment {
                 fragment_type: FragmentType::Sutta,
@@ -207,6 +194,7 @@ mod tests {
                         id: None,
                     },
                 ],
+                xml_filename: "test.xml".to_string(),
             },
         ];
         
@@ -223,8 +211,8 @@ mod tests {
             count: i64,
         }
         
-        // Check nikaya table
-        let nikaya_result: CountResult = diesel::sql_query("SELECT COUNT(*) as count FROM nikaya")
+        // Check nikaya_structures table
+        let nikaya_result: CountResult = diesel::sql_query("SELECT COUNT(*) as count FROM nikaya_structures")
             .get_result(&mut conn)
             .unwrap();
         assert_eq!(nikaya_result.count, 1);
@@ -245,13 +233,11 @@ mod tests {
         let structure1 = NikayaStructure {
             nikaya: "digha".to_string(),
             levels: vec![GroupType::Nikaya, GroupType::Book, GroupType::Sutta],
-            xml_filename: Some("dn1.xml".to_string()),
         };
         
         let structure2 = NikayaStructure {
             nikaya: "majjhima".to_string(),
             levels: vec![GroupType::Nikaya, GroupType::Book, GroupType::Vagga, GroupType::Sutta],
-            xml_filename: Some("mn1.xml".to_string()),
         };
         
         let fragments1 = vec![
@@ -263,6 +249,7 @@ mod tests {
                 start_char: 0,
                 end_char: 34,
                 group_levels: vec![],
+                xml_filename: "dn1.xml".to_string(),
             },
         ];
         
@@ -275,6 +262,7 @@ mod tests {
                 start_char: 0,
                 end_char: 35,
                 group_levels: vec![],
+                xml_filename: "mn1.xml".to_string(),
             },
         ];
         
@@ -300,7 +288,7 @@ mod tests {
         }
         
         // Check we have 2 nikayas
-        let nikaya_count: CountResult = diesel::sql_query("SELECT COUNT(*) as count FROM nikaya")
+        let nikaya_count: CountResult = diesel::sql_query("SELECT COUNT(*) as count FROM nikaya_structures")
             .get_result(&mut conn)
             .unwrap();
         assert_eq!(nikaya_count.count, 2);
@@ -311,27 +299,33 @@ mod tests {
             .unwrap();
         assert_eq!(fragment_count.count, 2);
         
-        // Verify each fragment has a valid nikaya_id
-        let nikaya_ids: Vec<NikayaIdResult> = diesel::sql_query(
-            "SELECT DISTINCT nikaya_id FROM xml_fragments ORDER BY nikaya_id"
+        // Verify each fragment has a valid nikaya
+        #[derive(QueryableByName)]
+        struct NikayaResult {
+            #[diesel(sql_type = diesel::sql_types::Text)]
+            nikaya: String,
+        }
+        
+        let nikaya_ids: Vec<NikayaResult> = diesel::sql_query(
+            "SELECT DISTINCT nikaya FROM xml_fragments ORDER BY nikaya"
         )
         .load(&mut conn)
         .unwrap();
         
         assert_eq!(nikaya_ids.len(), 2, "Should have fragments for 2 different nikayas");
-        assert_eq!(nikaya_ids[0].nikaya_id, 1, "First nikaya should have ID 1");
-        assert_eq!(nikaya_ids[1].nikaya_id, 2, "Second nikaya should have ID 2");
+        assert_eq!(nikaya_ids[0].nikaya, "digha", "First nikaya should be digha");
+        assert_eq!(nikaya_ids[1].nikaya, "majjhima", "Second nikaya should be majjhima");
         
         // Verify we can query fragments by nikaya
         let digha_fragments: CountResult = diesel::sql_query(
-            "SELECT COUNT(*) as count FROM xml_fragments WHERE nikaya_id = 1"
+            "SELECT COUNT(*) as count FROM xml_fragments WHERE nikaya = 'digha'"
         )
         .get_result(&mut conn)
         .unwrap();
         assert_eq!(digha_fragments.count, 1, "Digha nikaya should have 1 fragment");
         
         let majjhima_fragments: CountResult = diesel::sql_query(
-            "SELECT COUNT(*) as count FROM xml_fragments WHERE nikaya_id = 2"
+            "SELECT COUNT(*) as count FROM xml_fragments WHERE nikaya = 'majjhima'"
         )
         .get_result(&mut conn)
         .unwrap();
