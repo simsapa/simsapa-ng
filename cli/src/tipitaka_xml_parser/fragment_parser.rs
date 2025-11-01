@@ -169,6 +169,9 @@ impl<'a> FragmentBoundaryDetector<'a> {
             "p" if attributes.get("rend") == Some(&"nikaya".to_string()) => {
                 Some((GroupType::Nikaya, String::new(), None, None))
             },
+            "p" if attributes.get("rend") == Some(&"book".to_string()) => {
+                Some((GroupType::Book, String::new(), None, None))
+            },
             "div" if attributes.get("type") == Some(&"book".to_string()) => {
                 let id = attributes.get("id").cloned();
                 Some((GroupType::Book, String::new(), id, None))
@@ -187,6 +190,9 @@ impl<'a> FragmentBoundaryDetector<'a> {
             },
             "head" if attributes.get("rend") == Some(&"book".to_string()) => {
                 Some((GroupType::Book, String::new(), None, None))
+            },
+            "head" if attributes.get("rend") == Some(&"nikaya".to_string()) => {
+                Some((GroupType::Nikaya, String::new(), None, None))
             },
             "head" if attributes.get("rend") == Some(&"chapter".to_string()) => {
                 // In DN, chapter = Sutta
