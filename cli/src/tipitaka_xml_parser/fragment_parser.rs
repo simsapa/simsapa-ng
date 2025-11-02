@@ -276,6 +276,12 @@ pub fn parse_into_fragments(
     let mut in_sutta_content = false;
     // For MN/SN: track if we just saw a subhead element (will check text to see if numbered)
     let mut pending_subhead_check: Option<(usize, usize, usize)> = None; // (pos, line, char) of the subhead tag
+    let mut seen_body_tag = false; // Track if we've seen the <body> opening tag
+    let mut seen_first_sutta = false; // Track if we've encountered the first sutta marker
+    let mut div_depth = 0; // Track div nesting depth to know when a sutta closes
+    let mut sutta_div_depth: Option<usize> = None; // Track the depth of the current sutta div
+    // For DN commentary: track the position of <div type="sutta"> that precedes <head rend="chapter">
+    let mut pending_sutta_div_pos: Option<(usize, usize, usize)> = None;
     
     // Start with a Header fragment at the beginning of the file
     current_fragment_start = Some((0, 1, 0));
@@ -312,6 +318,37 @@ pub fn parse_into_fragments(
                     attributes.insert(key.to_string(), value.to_string());
                 }
                 
+                // Special handling for <body> tag - close Header fragment after it
+                // Content after <body> will be included in the first Sutta fragment
+                if tag_name == "body" && !seen_body_tag {
+                    seen_body_tag = true;
+                    
+                    // Close the Header fragment right after the <body> tag
+                    if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
+                        (current_fragment_start, current_fragment_type.as_ref()) {
+                        
+                        let content = xml_content[frag_start_pos..current_pos].to_string();
+                        if !content.trim().is_empty() {
+                            fragments.push(XmlFragment {
+                                fragment_type: frag_type.clone(),
+                                content,
+                                start_line: frag_start_line,
+                                end_line: current_line,
+                                start_char: frag_start_char,
+                                end_char: current_char,
+                                group_levels: hierarchy.get_current_levels(),
+                                xml_filename: xml_filename.to_string(),
+                            });
+                        }
+                    }
+                    
+                    // Start a Sutta fragment immediately after <body>
+                    // Content between <body> and the first sutta marker will be included
+                    current_fragment_start = Some((current_pos, current_line, current_char));
+                    current_fragment_type = Some(FragmentType::Sutta);
+                    in_sutta_content = true;
+                }
+                
                 // Check for boundary
                 if let Some((group_type, _, _id, _number)) = detector.check_boundary(&tag_name, &attributes) {
                     // We'll get the title from the text content, so store it as pending
@@ -327,6 +364,20 @@ pub fn parse_into_fragments(
                     }
                 }
                 
+                // Track div depth for nested div elements
+                if tag_name == "div" {
+                    div_depth += 1;
+                    
+                    // For DN commentary: <div type="sutta"> precedes <head rend="chapter">
+                    // Store its position to use when we encounter the <head> tag
+                    let is_commentary = xml_filename.ends_with(".att.xml") || xml_filename.ends_with(".tik.xml");
+                    if is_commentary && 
+                       nikaya_structure.nikaya == "digha" &&
+                       attributes.get("type") == Some(&"sutta".to_string()) {
+                        pending_sutta_div_pos = Some((event_start_pos, event_start_line, event_start_char));
+                    }
+                }
+                
                 // Handle sutta boundaries based on nikaya structure
                 let is_potential_sutta_marker = detector.is_sutta_start(&tag_name, &attributes);
                 
@@ -337,26 +388,40 @@ pub fn parse_into_fragments(
                     // Store START position of the tag for later text check
                     pending_subhead_check = Some((event_start_pos, event_start_line, event_start_char));
                 } else if is_potential_sutta_marker {
-                    // Determine if we should include the boundary tag in the new fragment
-                    // For <head rend="chapter"> (commentary), include it in Sutta fragment
-                    // For <div type="sutta"> (base text), keep it after to preserve whitespace
-                    let is_head_chapter = tag_name == "head" && 
-                                         attributes.get("rend") == Some(&"chapter".to_string());
+                    // Check if this sutta marker is a div that should track depth
+                    // For DN base text: <div type="sutta"> IS the sutta marker, so track depth
+                    // For DN commentary: <head rend="chapter"> is the sutta marker, <div type="sutta"> is NOT
+                    let is_commentary = xml_filename.ends_with(".att.xml") || xml_filename.ends_with(".tik.xml");
+                    let should_track_div_depth = tag_name == "div" && 
+                                                 attributes.get("type") == Some(&"sutta".to_string()) &&
+                                                 !is_commentary;
                     
-                    let (close_pos, close_line, close_char, start_pos, start_line, start_char) = 
-                        if is_head_chapter {
-                            // Include <head> in new fragment: close before tag, start at tag
-                            (event_start_pos, event_start_line, event_start_char,
-                             event_start_pos, event_start_line, event_start_char)
-                        } else {
-                            // Keep <div> after boundary: close after tag, start after tag
-                            (current_pos, current_line, current_char,
-                             current_pos, current_line, current_char)
-                        };
-                    
-                    if in_sutta_content {
-                        // Already in a sutta - this is a new sutta starting
-                        // Close current sutta fragment
+                    // Check if this is the first sutta marker after <body>
+                    if !seen_first_sutta && in_sutta_content {
+                        // This is the FIRST sutta marker - don't close current fragment
+                        // Just mark that we've seen it
+                        seen_first_sutta = true;
+                        
+                        // Only track div depth if this is a div-based sutta marker
+                        if should_track_div_depth {
+                            sutta_div_depth = Some(div_depth);
+                        }
+                        // Continue with the current fragment
+                    } else if seen_first_sutta {
+                        // This is a SUBSEQUENT sutta marker - start a new fragment
+                        // For DN commentary, check if there's a pending <div type="sutta"> position
+                        // If so, use that as the start position (and close position for previous fragment)
+                        let (start_pos, start_line, start_char, close_pos, close_line, close_char) = 
+                            if let Some((div_pos, div_line, div_char)) = pending_sutta_div_pos.take() {
+                                // Use the <div> position
+                                (div_pos, div_line, div_char, div_pos, div_line, div_char)
+                            } else {
+                                // Use the current tag position (normal case)
+                                (event_start_pos, event_start_line, event_start_char,
+                                 event_start_pos, event_start_line, event_start_char)
+                            };
+                        
+                        // Close current sutta fragment (excluding this tag)
                         if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                             (current_fragment_start, current_fragment_type.as_ref()) {
                             
@@ -375,34 +440,15 @@ pub fn parse_into_fragments(
                             }
                         }
                         
-                        // Start new sutta fragment
+                        // Start new sutta fragment (including this tag)
                         current_fragment_start = Some((start_pos, start_line, start_char));
                         current_fragment_type = Some(FragmentType::Sutta);
+                        
+                        // Only track div depth if this is a div-based sutta marker
+                        if should_track_div_depth {
+                            sutta_div_depth = Some(div_depth);
+                        }
                         // Stay in_sutta_content = true
-                    } else {
-                        // Not in sutta yet - close Header and start Sutta
-                        if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
-                            (current_fragment_start, current_fragment_type.as_ref()) {
-                            
-                            let content = xml_content[frag_start_pos..close_pos].to_string();
-                            if !content.trim().is_empty() {
-                                fragments.push(XmlFragment {
-                                    fragment_type: frag_type.clone(),
-                                    content,
-                                    start_line: frag_start_line,
-                                    end_line: close_line,
-                                    start_char: frag_start_char,
-                                    end_char: close_char,
-                                    group_levels: hierarchy.get_current_levels(),
-                                    xml_filename: xml_filename.to_string(),
-                                });
-                            }
-                        }
-                        
-                        // Start new sutta fragment
-                        current_fragment_start = Some((start_pos, start_line, start_char));
-                        current_fragment_type = Some(FragmentType::Sutta);
-                        in_sutta_content = true;
                     }
                 }
             },
@@ -436,7 +482,15 @@ pub fn parse_into_fragments(
                     
                     if is_sutta_commentary {
                         // This is a sutta boundary!
-                        if in_sutta_content {
+                        // Check if this is the first sutta marker after <body>
+                        if !seen_first_sutta && in_sutta_content {
+                            // This is the FIRST sutta marker - don't close current fragment
+                            seen_first_sutta = true;
+                            // Update hierarchy with sutta title
+                            hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
+                            // Continue with the current fragment
+                        } else if seen_first_sutta {
+                            // This is a SUBSEQUENT sutta marker - start a new fragment
                             // Already in a sutta - close current and start new
                             if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                                 (current_fragment_start, current_fragment_type.as_ref()) {
@@ -462,33 +516,6 @@ pub fn parse_into_fragments(
                             // Start new sutta fragment
                             current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));
                             current_fragment_type = Some(FragmentType::Sutta);
-                        } else {
-                            // Not in sutta yet - close Header and start Sutta
-                            if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
-                                (current_fragment_start, current_fragment_type.as_ref()) {
-                                
-                                let content = xml_content[start_pos..subhead_pos].to_string();
-                                if !content.trim().is_empty() {
-                                    fragments.push(XmlFragment {
-                                        fragment_type: frag_type.clone(),
-                                        content,
-                                        start_line,
-                                        end_line: subhead_line,
-                                        start_char,
-                                        end_char: subhead_char,
-                                        group_levels: hierarchy.get_current_levels(),
-                                        xml_filename: xml_filename.to_string(),
-                                    });
-                                }
-                            }
-                            
-                            // Update hierarchy with sutta title
-                            hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
-                            
-                            // Start new sutta fragment
-                            current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));
-                            current_fragment_type = Some(FragmentType::Sutta);
-                            in_sutta_content = true;
                         }
                     }
                     // If not numbered, it's just a section heading within a sutta - ignore
@@ -508,31 +535,51 @@ pub fn parse_into_fragments(
                     .context("Invalid UTF-8 in tag name")?
                     .to_string();
                 
-                // Check if this closes a sutta div (DN style)
-                if tag_name == "div" && in_sutta_content {
-                    // Close current sutta fragment
+                // Track div depth - decrement when seeing closing div tags
+                if tag_name == "div" {
+                    // Check if this is closing the current sutta div
+                    if in_sutta_content {
+                        if let Some(sutta_depth) = sutta_div_depth {
+                            if div_depth == sutta_depth {
+                                // This closes the current sutta div
+                                // DON'T close the fragment here - let the next sutta or </body> do it
+                                // This allows the last sutta to include content after its </div>
+                                sutta_div_depth = None;
+                            }
+                        }
+                    }
+                    
+                    // Decrement div depth after processing
+                    div_depth = div_depth.saturating_sub(1);
+                }
+                
+                // Check if this closes the body tag - now we exit sutta content
+                if tag_name == "body" && seen_body_tag {
+                    // Close any pending sutta fragment first
+                    // The sutta fragment should include ALL content up to (but not including) </body>
                     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
-                        let content = xml_content[start_pos..current_pos].to_string();
+                        // Include everything from start up to the beginning of </body>
+                        let content = xml_content[start_pos..event_start_pos].to_string();
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
                                 fragment_type: frag_type.clone(),
                                 content,
                                 start_line,
-                                end_line: current_line,
+                                end_line: event_start_line,
                                 start_char,
-                                end_char: current_char,
+                                end_char: event_start_char,
                                 group_levels: hierarchy.get_current_levels(),
                                 xml_filename: xml_filename.to_string(),
                             });
                         }
-                        
-                        // Start a new Header fragment after the sutta
-                        current_fragment_start = Some((current_pos, current_line, current_char));
-                        current_fragment_type = Some(FragmentType::Header);
-                        in_sutta_content = false;
                     }
+                    
+                    // Start the final Header fragment at the beginning of </body>
+                    current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
+                    current_fragment_type = Some(FragmentType::Header);
+                    in_sutta_content = false;
                 }
             },
             

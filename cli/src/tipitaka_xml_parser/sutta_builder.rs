@@ -602,7 +602,11 @@ pub fn build_suttas(
         let title = if let Some(level) = sutta_level {
             level.title.clone()
         } else {
-            format!("Sutta {}", idx + 1)
+            // No sutta title in group_levels - this fragment is a subsection heading
+            // (e.g., "<p rend="subhead">Uddeso</p>" meaning "Summary") that was treated
+            // as a fragment boundary during parsing but is not actually a separate sutta.
+            // The content is preserved in the previous sutta fragment, so we skip this.
+            continue;
         };
         
         // Normalize title
