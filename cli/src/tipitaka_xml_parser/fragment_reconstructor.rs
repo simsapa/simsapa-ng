@@ -80,11 +80,13 @@ fn get_fragments_for_filename(
         group_levels: String,
         #[diesel(sql_type = diesel::sql_types::Text)]
         xml_filename: String,
+        #[diesel(sql_type = diesel::sql_types::Integer)]
+        frag_idx: i32,
     }
     
     let rows: Vec<FragmentRow> = diesel::sql_query(
         r#"
-        SELECT fragment_type, content, start_line, end_line, start_char, end_char, group_levels, xml_filename
+        SELECT fragment_type, content, start_line, end_line, start_char, end_char, group_levels, xml_filename, frag_idx
         FROM xml_fragments
         WHERE xml_filename = ?
         ORDER BY start_line ASC, start_char ASC
@@ -115,6 +117,7 @@ fn get_fragments_for_filename(
             end_char: row.end_char as usize,
             group_levels,
             xml_filename: row.xml_filename,
+            frag_idx: row.frag_idx as usize,
         });
     }
     

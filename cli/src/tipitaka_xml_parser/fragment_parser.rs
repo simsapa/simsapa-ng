@@ -338,6 +338,7 @@ pub fn parse_into_fragments(
                                 end_char: current_char,
                                 group_levels: hierarchy.get_current_levels(),
                                 xml_filename: xml_filename.to_string(),
+                                frag_idx: fragments.len(),
                             });
                         }
                     }
@@ -436,6 +437,7 @@ pub fn parse_into_fragments(
                                     end_char: close_char,
                                     group_levels: hierarchy.get_current_levels(),
                                     xml_filename: xml_filename.to_string(),
+                                    frag_idx: fragments.len(),
                                 });
                             }
                         }
@@ -506,6 +508,7 @@ pub fn parse_into_fragments(
                                         end_char: subhead_char,
                                         group_levels: hierarchy.get_current_levels(),
                                         xml_filename: xml_filename.to_string(),
+                                        frag_idx: fragments.len(),
                                     });
                                 }
                             }
@@ -572,6 +575,7 @@ pub fn parse_into_fragments(
                                 end_char: event_start_char,
                                 group_levels: hierarchy.get_current_levels(),
                                 xml_filename: xml_filename.to_string(),
+                                frag_idx: fragments.len(),
                             });
                         }
                     }
@@ -604,6 +608,7 @@ pub fn parse_into_fragments(
                 end_char: reader.current_char(),
                 group_levels: hierarchy.get_current_levels(),
                 xml_filename: xml_filename.to_string(),
+                frag_idx: fragments.len(),
             });
         }
     }

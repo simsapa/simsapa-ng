@@ -68,6 +68,7 @@ fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nikaya TEXT NOT NULL,
             xml_filename TEXT NOT NULL,
+            frag_idx INTEGER NOT NULL,
             fragment_type TEXT NOT NULL,
             content TEXT NOT NULL,
             start_line INTEGER NOT NULL,
@@ -129,12 +130,13 @@ fn insert_fragments(
         diesel::sql_query(
             r#"
             INSERT INTO xml_fragments 
-            (nikaya, xml_filename, fragment_type, content, start_line, end_line, start_char, end_char, group_levels)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (nikaya, xml_filename, frag_idx, fragment_type, content, start_line, end_line, start_char, end_char, group_levels)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind::<diesel::sql_types::Text, _>(nikaya)
         .bind::<diesel::sql_types::Text, _>(&fragment.xml_filename)
+        .bind::<diesel::sql_types::Integer, _>(fragment.frag_idx as i32)
         .bind::<diesel::sql_types::Text, _>(fragment_type)
         .bind::<diesel::sql_types::Text, _>(&fragment.content)
         .bind::<diesel::sql_types::Integer, _>(fragment.start_line as i32)
@@ -178,6 +180,7 @@ mod tests {
                 end_char: 34,
                 group_levels: vec![],
                 xml_filename: "test.xml".to_string(),
+                frag_idx: 0,
             },
             XmlFragment {
                 fragment_type: FragmentType::Sutta,
@@ -195,6 +198,7 @@ mod tests {
                     },
                 ],
                 xml_filename: "test.xml".to_string(),
+                frag_idx: 1,
             },
         ];
         
@@ -250,6 +254,7 @@ mod tests {
                 end_char: 34,
                 group_levels: vec![],
                 xml_filename: "dn1.xml".to_string(),
+                frag_idx: 0,
             },
         ];
         
@@ -263,6 +268,7 @@ mod tests {
                 end_char: 35,
                 group_levels: vec![],
                 xml_filename: "mn1.xml".to_string(),
+                frag_idx: 0,
             },
         ];
         

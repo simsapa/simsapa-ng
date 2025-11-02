@@ -61,4 +61,6 @@ pub struct XmlFragment {
     pub group_levels: Vec<GroupLevel>,
     /// Source XML filename (for tracking which file this fragment came from)
     pub xml_filename: String,
+    /// Index of this fragment in the list of fragments parsed from the XML file (0-indexed)
+    pub frag_idx: usize,
 }
