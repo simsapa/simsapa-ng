@@ -70,12 +70,16 @@ impl<'a> LineTrackingReader<'a> {
     
     /// Read the next event and update position tracking
     fn read_event(&mut self) -> Result<Event<'a>> {
+        let event = self.reader
+            .read_event()
+            .context("Failed to read XML event")?;
+        
+        // Update position AFTER reading the event so line/char tracking
+        // points to the end of the event, matching the byte position
         let position = self.reader.buffer_position();
         self.update_position(position);
         
-        self.reader
-            .read_event()
-            .context("Failed to read XML event")
+        Ok(event)
     }
     
     /// Get the current buffer position
