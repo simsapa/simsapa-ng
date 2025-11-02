@@ -33,9 +33,11 @@ pub struct SuttaRecord {
 #[derive(Debug, Clone)]
 struct TsvRecord {
     cst_file: String,
+    cst_code: String,
     cst_vagga: String,
     cst_sutta: String,
-    code: String,
+    sc_code: String,
+    sc_sutta: String,
 }
 
 /// Load TSV mapping file into memory for lookups
@@ -57,12 +59,14 @@ fn load_tsv_mapping(tsv_path: &Path) -> Result<Vec<TsvRecord>> {
             let line = line.context("Failed to read TSV line")?;
             let fields: Vec<&str> = line.split('\t').collect();
             
-            if fields.len() >= 13 {
+            if fields.len() >= 16 {
                 records.push(TsvRecord {
                     cst_file: fields[11].to_string(),      // cst_file column
+                    cst_code: fields[0].to_string(),       // cst_code column
                     cst_vagga: fields[4].to_string(),      // cst_vagga column
                     cst_sutta: fields[5].to_string(),      // cst_sutta column
-                    code: fields[12].to_string(),          // code column
+                    sc_code: fields[12].to_string(),       // code column (SuttaCentral uid)
+                    sc_sutta: fields[15].to_string(),      // sutta column (SuttaCentral sutta name)
                 });
             }
         }
@@ -194,25 +198,25 @@ fn find_code_for_sutta(
                         let vaggas_match = &record_vagga == expected_vagga;
                         if vaggas_match {
                             // Perfect match: title + vagga - only return if code unused
-                            if !used_codes.contains(&record.code) {
-                                return Some(record.code.clone());
+                            if !used_codes.contains(&record.sc_code) {
+                                return Some(record.sc_code.clone());
                             }
                         } else {
                             // Title matches but vagga doesn't
                             // Save as fallback if code not yet used
-                            if fallback_match.is_none() && !used_codes.contains(&record.code) {
-                                fallback_match = Some(record.code.clone());
+                            if fallback_match.is_none() && !used_codes.contains(&record.sc_code) {
+                                fallback_match = Some(record.sc_code.clone());
                             }
                         }
                     } else {
                         // No vagga filter - return first unused match
-                        if !used_codes.contains(&record.code) {
-                            return Some(record.code.clone());
+                        if !used_codes.contains(&record.sc_code) {
+                            return Some(record.sc_code.clone());
                         }
                         // If code is already used, save as fallback to continue searching
                         // (This shouldn't happen often but handles edge cases)
                         if fallback_match.is_none() {
-                            fallback_match = Some(record.code.clone());
+                            fallback_match = Some(record.sc_code.clone());
                         }
                     }
                 }
