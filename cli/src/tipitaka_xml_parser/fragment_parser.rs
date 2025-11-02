@@ -6,7 +6,7 @@
 use anyhow::{Result, Context};
 use quick_xml::Reader;
 use quick_xml::events::{Event, BytesStart};
-use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType, GroupLevel};
+use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType, GroupLevel, FragmentAdjustments, FragmentKey};
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 use std::collections::HashMap;
 
@@ -255,11 +255,79 @@ impl<'a> FragmentBoundaryDetector<'a> {
     }
 }
 
+/// Convert line/char coordinates to byte position in XML content
+///
+/// # Arguments
+/// * `xml_content` - The XML content string
+/// * `target_line` - Target line number (1-indexed)
+/// * `target_char` - Target character position (0-indexed byte offset within line)
+///
+/// # Returns
+/// Byte position in the XML content
+fn line_char_to_byte_pos(xml_content: &str, target_line: usize, target_char: usize) -> usize {
+    let mut current_line = 1;
+    let mut current_char = 0;
+    
+    for (byte_idx, byte) in xml_content.bytes().enumerate() {
+        // Check if we've reached the target position BEFORE processing this byte
+        if current_line == target_line && current_char == target_char {
+            return byte_idx;
+        }
+        
+        // Update position tracking
+        if byte == b'\n' {
+            current_line += 1;
+            current_char = 0;
+        } else {
+            current_char += 1;
+        }
+    }
+    
+    // If we didn't find the position, return the end
+    xml_content.len()
+}
+
+/// Apply fragment adjustments to override end position
+///
+/// If adjustments are provided for this fragment, use the adjusted end_line and end_char.
+/// Returns (end_byte_pos, end_line, end_char)
+fn apply_fragment_adjustment(
+    xml_content: &str,
+    default_end_pos: usize,
+    default_end_line: usize,
+    default_end_char: usize,
+    xml_filename: &str,
+    frag_idx: usize,
+    adjustments: Option<&FragmentAdjustments>,
+) -> (usize, usize, usize) {
+    // Check if there's an adjustment for this fragment
+    if let Some(adjustments_map) = adjustments {
+        let key = FragmentKey {
+            xml_filename: xml_filename.to_string(),
+            frag_idx,
+        };
+        
+        if let Some(adjustment) = adjustments_map.get(&key) {
+            // Apply adjustments if both end_line and end_char are provided
+            if let (Some(adj_end_line), Some(adj_end_char)) = (adjustment.end_line, adjustment.end_char) {
+                // Convert adjusted line/char to byte position
+                let adj_end_pos = line_char_to_byte_pos(xml_content, adj_end_line, adj_end_char);
+                return (adj_end_pos, adj_end_line, adj_end_char);
+            }
+        }
+    }
+    
+    // No adjustment - use default detection
+    (default_end_pos, default_end_line, default_end_char)
+}
+
 /// Parse XML content into fragments with line tracking
 ///
 /// # Arguments
 /// * `xml_content` - The complete XML file content
 /// * `nikaya_structure` - The structure configuration for this nikaya
+/// * `xml_filename` - Name of the XML file being parsed
+/// * `adjustments` - Optional fragment adjustments to apply
 ///
 /// # Returns
 /// Vector of fragments or error if parsing fails
@@ -267,6 +335,7 @@ pub fn parse_into_fragments(
     xml_content: &str,
     nikaya_structure: &NikayaStructure,
     xml_filename: &str,
+    adjustments: Option<&FragmentAdjustments>,
 ) -> Result<Vec<XmlFragment>> {
     let mut reader = LineTrackingReader::new(xml_content);
     let mut hierarchy = HierarchyTracker::new(nikaya_structure.clone());
@@ -331,15 +400,26 @@ pub fn parse_into_fragments(
                     if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
-                        let content = xml_content[frag_start_pos..current_pos].to_string();
+                        // Apply adjustments if any
+                        let (end_pos, end_line, end_char) = apply_fragment_adjustment(
+                            xml_content,
+                            current_pos,
+                            current_line,
+                            current_char,
+                            xml_filename,
+                            fragments.len(),
+                            adjustments,
+                        );
+                        
+                        let content = xml_content[frag_start_pos..end_pos].to_string();
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
                                 fragment_type: frag_type.clone(),
                                 content,
                                 start_line: frag_start_line,
-                                end_line: current_line,
+                                end_line,
                                 start_char: frag_start_char,
-                                end_char: current_char,
+                                end_char,
                                 group_levels: hierarchy.get_current_levels(),
                                 xml_filename: xml_filename.to_string(),
                                 frag_idx: fragments.len(),
@@ -430,15 +510,26 @@ pub fn parse_into_fragments(
                         if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                             (current_fragment_start, current_fragment_type.as_ref()) {
                             
-                            let content = xml_content[frag_start_pos..close_pos].to_string();
+                            // Apply adjustments if any
+                            let (end_pos, end_line, end_char) = apply_fragment_adjustment(
+                                xml_content,
+                                close_pos,
+                                close_line,
+                                close_char,
+                                xml_filename,
+                                fragments.len(),
+                                adjustments,
+                            );
+                            
+                            let content = xml_content[frag_start_pos..end_pos].to_string();
                             if !content.trim().is_empty() {
                                 fragments.push(XmlFragment {
                                     fragment_type: frag_type.clone(),
                                     content,
                                     start_line: frag_start_line,
-                                    end_line: close_line,
+                                    end_line,
                                     start_char: frag_start_char,
-                                    end_char: close_char,
+                                    end_char,
                                     group_levels: hierarchy.get_current_levels(),
                                     xml_filename: xml_filename.to_string(),
                                     frag_idx: fragments.len(),
@@ -501,15 +592,26 @@ pub fn parse_into_fragments(
                             if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                                 (current_fragment_start, current_fragment_type.as_ref()) {
                                 
-                                let content = xml_content[start_pos..subhead_pos].to_string();
+                                // Apply adjustments if any
+                                let (end_pos, end_line, end_char) = apply_fragment_adjustment(
+                                    xml_content,
+                                    subhead_pos,
+                                    subhead_line,
+                                    subhead_char,
+                                    xml_filename,
+                                    fragments.len(),
+                                    adjustments,
+                                );
+                                
+                                let content = xml_content[start_pos..end_pos].to_string();
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
                                         fragment_type: frag_type.clone(),
                                         content,
                                         start_line,
-                                        end_line: subhead_line,
+                                        end_line,
                                         start_char,
-                                        end_char: subhead_char,
+                                        end_char,
                                         group_levels: hierarchy.get_current_levels(),
                                         xml_filename: xml_filename.to_string(),
                                         frag_idx: fragments.len(),
@@ -567,16 +669,27 @@ pub fn parse_into_fragments(
                     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
                         (current_fragment_start, current_fragment_type.as_ref()) {
                         
-                        // Include everything from start up to the beginning of </body>
-                        let content = xml_content[start_pos..event_start_pos].to_string();
+                        // Apply adjustments if any
+                        let (end_pos, end_line, end_char) = apply_fragment_adjustment(
+                            xml_content,
+                            event_start_pos,
+                            event_start_line,
+                            event_start_char,
+                            xml_filename,
+                            fragments.len(),
+                            adjustments,
+                        );
+                        
+                        // Include everything from start up to the adjusted end position
+                        let content = xml_content[start_pos..end_pos].to_string();
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
                                 fragment_type: frag_type.clone(),
                                 content,
                                 start_line,
-                                end_line: event_start_line,
+                                end_line,
                                 start_char,
-                                end_char: event_start_char,
+                                end_char,
                                 group_levels: hierarchy.get_current_levels(),
                                 xml_filename: xml_filename.to_string(),
                                 frag_idx: fragments.len(),
@@ -601,15 +714,26 @@ pub fn parse_into_fragments(
     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
         (current_fragment_start, current_fragment_type) {
         
-        let content = xml_content[start_pos..].to_string();
+        // Apply adjustments if any
+        let (end_pos, end_line, end_char) = apply_fragment_adjustment(
+            xml_content,
+            xml_content.len(),
+            reader.current_line(),
+            reader.current_char(),
+            xml_filename,
+            fragments.len(),
+            adjustments,
+        );
+        
+        let content = xml_content[start_pos..end_pos].to_string();
         if !content.trim().is_empty() {
             fragments.push(XmlFragment {
                 fragment_type: frag_type,
                 content,
                 start_line,
-                end_line: reader.current_line(),
+                end_line,
                 start_char,
-                end_char: reader.current_char(),
+                end_char,
                 group_levels: hierarchy.get_current_levels(),
                 xml_filename: xml_filename.to_string(),
                 frag_idx: fragments.len(),
@@ -678,7 +802,7 @@ mod tests {
         
         assert_eq!(structure.nikaya, "digha");
         
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml").expect("Should parse fragments");
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).expect("Should parse fragments");
         
         // Should have at least one fragment
         assert!(!fragments.is_empty(), "Should have at least one fragment");
@@ -688,7 +812,7 @@ mod tests {
     fn test_parse_dn_fragment_count() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
         
         // Count sutta fragments
         let sutta_fragments: Vec<_> = fragments.iter()
@@ -703,7 +827,7 @@ mod tests {
     fn test_parse_dn_line_tracking() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
         
         for fragment in &fragments {
             // Line numbers should be valid (start > 0, end >= start)
@@ -720,7 +844,7 @@ mod tests {
         
         assert_eq!(structure.nikaya, "majjhima");
         
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml").expect("Should parse fragments");
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).expect("Should parse fragments");
         
         assert!(!fragments.is_empty(), "Should have at least one fragment");
     }
@@ -729,7 +853,7 @@ mod tests {
     fn test_fragment_content_not_empty() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
         
         for fragment in &fragments {
             // Each fragment should have non-empty content
@@ -742,7 +866,7 @@ mod tests {
     fn test_character_position_tracking() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml").unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
         
         for fragment in &fragments {
             // Character positions should be valid
@@ -766,7 +890,7 @@ mod tests {
 <text><body><p rend="nikaya">Dīghanikāyo</p><div type="book"><head rend="book">Book1</head><div type="sutta"><head rend="chapter">Sutta1</head><p n="1">Text1</p></div></div></body></text>"#;
         
         let structure = detect_nikaya_structure(xml).unwrap();
-        let fragments = parse_into_fragments(xml, &structure, "test.xml").unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "test.xml", None).unwrap();
         
         // Check that we can distinguish elements on the same line
         // by their character positions

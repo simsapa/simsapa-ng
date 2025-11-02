@@ -589,6 +589,7 @@ fn parse_tipitaka_xml_new(
     input_path: &Path,
     output_db_path: &Path,
     fragments_db: Option<&Path>,
+    adjust_fragments_tsv: Option<&Path>,
     verbose: bool,
     dry_run: bool,
 ) -> Result<(), String> {
@@ -600,11 +601,28 @@ fn parse_tipitaka_xml_new(
         build_suttas,
         insert_suttas,
         initialize_database,
+        load_fragment_adjustments,
     };
     use std::fs;
 
     println!("Tipitaka XML Parser (Fragment-Based)");
     println!("====================================\n");
+    
+    // Load fragment adjustments if provided
+    let adjustments = if let Some(tsv_path) = adjust_fragments_tsv {
+        println!("Loading fragment adjustments from: {:?}", tsv_path);
+        match load_fragment_adjustments(tsv_path) {
+            Ok(adj) => {
+                println!("✓ Loaded {} fragment adjustments\n", adj.len());
+                Some(adj)
+            }
+            Err(e) => {
+                return Err(format!("Failed to load fragment adjustments: {}", e));
+            }
+        }
+    } else {
+        None
+    };
     
     // Initialize output database if needed
     if !dry_run {
@@ -693,7 +711,7 @@ fn parse_tipitaka_xml_new(
         }
 
         // Phase 2: Parse into fragments
-        let fragments = match parse_into_fragments(&xml_content, &nikaya_structure, xml_filename) {
+        let fragments = match parse_into_fragments(&xml_content, &nikaya_structure, xml_filename, adjustments.as_ref()) {
             Ok(frags) => frags,
             Err(e) => {
                 eprintln!("  ✗ Error parsing fragments: {}", e);
@@ -985,6 +1003,10 @@ enum Commands {
         #[arg(long, value_name = "FRAGMENTS_DB_PATH")]
         fragments_db: Option<PathBuf>,
 
+        /// Optional path to TSV file containing manual fragment adjustments
+        #[arg(long, value_name = "ADJUST_FRAGMENTS_TSV")]
+        adjust_fragments_tsv: Option<PathBuf>,
+
         /// Show verbose output during parsing
         #[arg(long, default_value_t = false)]
         verbose: bool,
@@ -1133,8 +1155,8 @@ fn main() {
             parse_tipitaka_xml(&input_path, &output_db_path, verbose, dry_run)
         }
 
-        Commands::ParseTipitakaXml { input_path, output_db_path, fragments_db, verbose, dry_run } => {
-            parse_tipitaka_xml_new(&input_path, &output_db_path, fragments_db.as_deref(), verbose, dry_run)
+        Commands::ParseTipitakaXml { input_path, output_db_path, fragments_db, adjust_fragments_tsv, verbose, dry_run } => {
+            parse_tipitaka_xml_new(&input_path, &output_db_path, fragments_db.as_deref(), adjust_fragments_tsv.as_deref(), verbose, dry_run)
         }
 
         Commands::ReconstructXmlFromFragments { fragments_db_path, xml_filename, output_path } => {

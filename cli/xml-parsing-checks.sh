@@ -12,6 +12,8 @@ fi
 
 cargo build
 
+# cargo run -- parse-tipitaka-xml tests/data/s0201m.mul.xml suttas.sqlite3 --fragments-db fragments.sqlite3 --adjust-fragments-tsv assets/adjust-fragments.tsv
+
 for i in "s0101" "s0201"; do
     ./target/debug/simsapa_cli parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/"$i"m.mul.xml suttas.sqlite3 --fragments-db fragments.sqlite3
     ./target/debug/simsapa_cli parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/"$i"a.att.xml suttas.sqlite3 --fragments-db fragments.sqlite3

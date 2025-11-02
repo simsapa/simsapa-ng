@@ -134,7 +134,7 @@ fn test_position_tracking_for_file(xml_path: &str, xml_filename: &str) {
     
     let structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
     
-    let fragments = parse_into_fragments(&xml_content, &structure, xml_filename)
+    let fragments = parse_into_fragments(&xml_content, &structure, xml_filename, None)
         .expect("Failed to parse fragments");
     
     println!("\n=== Testing {} ===", xml_filename);

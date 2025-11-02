@@ -44,7 +44,7 @@ fn test_dn_s0101m_sutta_count() {
     
     let structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
     
-    let fragments = parse_into_fragments(&xml_content, &structure, "s0101m.mul.xml").expect("Failed to parse fragments");
+    let fragments = parse_into_fragments(&xml_content, &structure, "s0101m.mul.xml", None).expect("Failed to parse fragments");
     
     // Count sutta fragments
     let sutta_fragments: Vec<_> = fragments.iter()
@@ -84,7 +84,7 @@ fn test_mn_s0201m_sutta_count() {
     
     let structure = detect_nikaya_structure(&xml_content).expect("Failed to detect nikaya");
     
-    let fragments = parse_into_fragments(&xml_content, &structure, "s0201m.mul.xml").expect("Failed to parse fragments");
+    let fragments = parse_into_fragments(&xml_content, &structure, "s0201m.mul.xml", None).expect("Failed to parse fragments");
     
     // Count sutta fragments
     let sutta_fragments: Vec<_> = fragments.iter()

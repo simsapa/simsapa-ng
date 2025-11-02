@@ -17,7 +17,7 @@ pub mod database_inserter;
 pub mod integration;
 
 // Re-export main types for convenience
-pub use types::{FragmentType, GroupType, GroupLevel, XmlFragment};
+pub use types::{FragmentType, GroupType, GroupLevel, XmlFragment, FragmentAdjustment, FragmentKey, FragmentAdjustments, load_fragment_adjustments};
 pub use nikaya_structure::NikayaStructure;
 pub use nikaya_detector::detect_nikaya_structure;
 pub use fragment_parser::parse_into_fragments;
