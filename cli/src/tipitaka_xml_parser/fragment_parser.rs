@@ -485,14 +485,25 @@ fn derive_cst_code(fragment: &XmlFragment, _nikaya_structure: &NikayaStructure, 
     
     // Get vagga number from title (e.g., "1" from "1. Mūlapariyāyavaggo")
     // This is more reliable than using the vagga ID since the ID may be inherited from the next vagga
+    // However, for vagga 0 (introduction/preamble) in commentary files, the title is often empty,
+    // so we fallback to extracting from the ID (e.g., "mn1_0" -> "0")
     let vagga_number = fragment.group_levels.iter()
         .find_map(|level| {
             if matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Vagga) {
-                // Extract number from title like "1. Vagga Name"
+                // First try: Extract number from title like "1. Vagga Name"
                 level.title.split_whitespace()
                     .next()
                     .and_then(|first| first.strip_suffix('.'))
                     .filter(|num| num.chars().all(|c| c.is_numeric()))
+                    .or_else(|| {
+                        // Fallback: Extract from ID like "mn1_0" or "mn1_1"
+                        // Split by underscore and take the last part
+                        level.id.as_ref().and_then(|id| {
+                            id.rsplit('_')
+                                .next()
+                                .filter(|num| num.chars().all(|c| c.is_numeric()))
+                        })
+                    })
             } else {
                 None
             }
@@ -527,6 +538,11 @@ fn derive_cst_code(fragment: &XmlFragment, _nikaya_structure: &NikayaStructure, 
         (Some(book), Some(vagga), Some(sutta)) => {
             // MN/SN style: mn1.1.10
             Some(format!("{}.{}.{}", book, vagga, sutta))
+        }
+        (Some(book), Some(vagga), None) => {
+            // MN/SN vagga 0 (introduction/preamble) in commentary files: mn1.0.0
+            // These fragments don't have a sutta number, so we use "0" as placeholder
+            Some(format!("{}.{}.0", book, vagga))
         }
         (Some(book), None, Some(sutta)) => {
             // DN style: dn1.10
@@ -634,6 +650,7 @@ pub fn parse_into_fragments(
     let mut pending_subhead_check: Option<(usize, usize, usize)> = None; // (pos, line, char) of the subhead tag
     let mut seen_body_tag = false; // Track if we've seen the <body> opening tag
     let mut seen_first_sutta = false; // Track if we've encountered the first sutta marker
+    let mut seen_first_vagga_or_sutta = false; // Track if we've seen the first vagga or sutta div
     let mut div_depth = 0; // Track div nesting depth to know when a sutta closes
     let mut sutta_div_depth: Option<usize> = None; // Track the depth of the current sutta div
     // For DN commentary: track the position of <div type="sutta"> that precedes <head rend="chapter">
@@ -735,12 +752,19 @@ pub fn parse_into_fragments(
                     if tag_name == "div" && id.is_some() {
                         // Before entering a new Vagga or Sutta level, close any open sutta fragment
                         // This ensures the fragment uses the CURRENT level, not the next one
-                        if (matches!(group_type, GroupType::Vagga) || matches!(group_type, GroupType::Sutta)) && in_sutta_content {
+                        // BUT: Don't close for the FIRST vagga/sutta - that should include the preamble content
+                        let is_vagga_or_sutta_level = matches!(group_type, GroupType::Vagga) || matches!(group_type, GroupType::Sutta);
+                        let is_first_vagga_or_sutta = !seen_first_vagga_or_sutta && is_vagga_or_sutta_level;
+                        
+                        if is_first_vagga_or_sutta {
+                            // Mark that we've seen the first vagga/sutta, but don't close the fragment
+                            // The preamble content will be included with the first sutta
+                            seen_first_vagga_or_sutta = true;
+                        } else if is_vagga_or_sutta_level && in_sutta_content {
                             if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                                 (current_fragment_start, current_fragment_type.as_ref()) {
                                 
                                 // Only close if this is a Sutta fragment and has actual sutta content
-                                // Skip if this is just the initial fragment after <body> with no real content yet
                                 if matches!(frag_type, FragmentType::Sutta) {
                                     let content = xml_content[frag_start_pos..event_start_pos].to_string();
                                     let has_sutta_content = content.contains("rend=\"subhead\"") || 
@@ -892,26 +916,26 @@ pub fn parse_into_fragments(
                             );
                             
                             let content = xml_content[frag_start_pos..end_pos].to_string();
-                            if !content.trim().is_empty() {
-                                fragments.push(XmlFragment {
-                                    fragment_type: frag_type.clone(),
-                                    content,
-                                    start_line: frag_start_line,
-                                    end_line,
-                                    start_char: frag_start_char,
-                                    end_char,
-                                    group_levels: current_fragment_group_levels.clone(),
-                                    xml_filename: xml_filename.to_string(),
-                                    frag_idx: fragments.len(),
-                                    cst_file: None,
-                                    cst_code: None,
-                                    cst_vagga: None,
-                                    cst_sutta: None,
-                                    cst_paranum: None,
-                                    sc_code: None,
-                                    sc_sutta: None,
-                                });
-                            }
+                                 if !content.trim().is_empty() {
+                                    fragments.push(XmlFragment {
+                                        fragment_type: frag_type.clone(),
+                                        content,
+                                        start_line: frag_start_line,
+                                        end_line,
+                                        start_char: frag_start_char,
+                                        end_char,
+                                        group_levels: current_fragment_group_levels.clone(),
+                                        xml_filename: xml_filename.to_string(),
+                                        frag_idx: fragments.len(),
+                                        cst_file: None,
+                                        cst_code: None,
+                                        cst_vagga: None,
+                                        cst_sutta: None,
+                                        cst_paranum: None,
+                                        sc_code: None,
+                                        sc_sutta: None,
+                                    });
+                                }
                         }
                         
                         // Start new sutta fragment (including this tag)
@@ -961,8 +985,13 @@ pub fn parse_into_fragments(
                         if !seen_first_sutta && in_sutta_content {
                             // This is the FIRST sutta marker - don't close current fragment
                             seen_first_sutta = true;
+                            // Clear pending_vagga_div_pos so it's not used for the next sutta
+                            // The first sutta should include the preamble, so we don't split at the vagga div
+                            pending_vagga_div_pos = None;
                             // Update hierarchy with sutta title
                             hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
+                            // Update group_levels to include the new Sutta level
+                            current_fragment_group_levels = hierarchy.get_current_levels();
                             // Continue with the current fragment
                         } else if seen_first_sutta {
                             // This is a SUBSEQUENT sutta marker - start a new fragment
@@ -1002,7 +1031,7 @@ pub fn parse_into_fragments(
                                         end_line,
                                         start_char: frag_start_char,
                                         end_char,
-                                        group_levels: hierarchy.get_current_levels(),
+                                        group_levels: current_fragment_group_levels.clone(),
                                         xml_filename: xml_filename.to_string(),
                                         frag_idx: fragments.len(),
                                         cst_file: None,

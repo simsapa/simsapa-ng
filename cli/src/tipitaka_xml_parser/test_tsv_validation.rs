@@ -243,3 +243,114 @@ fn test_parse_matches_tsv_s0201m() {
                errors.len(), errors.join("\n"));
     }
 }
+
+#[test]
+fn test_s0201m_first_sutta_fragment() {
+    // This test specifically verifies that fragment index 1 (the first sutta fragment)
+    // from s0201m.mul.xml has the correct cst_code and cst_sutta values.
+    // This ensures the preamble is correctly included with the first sutta.
+    
+    let xml_path = Path::new("tests/data/s0201m.mul.xml");
+    let tsv_path = Path::new("assets/cst-vs-sc.tsv");
+    
+    // Parse XML file
+    let xml_content = read_xml_file(xml_path)
+        .expect("Failed to read XML file");
+    
+    let nikaya_structure = detect_nikaya_structure(&xml_content)
+        .expect("Failed to detect nikaya structure");
+    
+    let mut fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201m.mul.xml", None)
+        .expect("Failed to parse fragments");
+    
+    populate_sc_fields_from_tsv(&mut fragments, tsv_path)
+        .expect("Failed to populate SC fields");
+    
+    // Fragment 0 should be Header, fragment 1 should be the first Sutta
+    assert!(fragments.len() > 1, "Expected at least 2 fragments");
+    
+    let first_sutta_fragment = &fragments[1];
+    
+    // Verify fragment type
+    assert!(
+        matches!(first_sutta_fragment.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta),
+        "Fragment 1 should be a Sutta fragment, got: {:?}", first_sutta_fragment.fragment_type
+    );
+    
+    // Verify cst_code
+    assert_eq!(
+        first_sutta_fragment.cst_code.as_deref(),
+        Some("mn1.1.1"),
+        "Fragment 1 should have cst_code 'mn1.1.1', got: {:?}",
+        first_sutta_fragment.cst_code
+    );
+    
+    // Verify cst_sutta
+    assert_eq!(
+        first_sutta_fragment.cst_sutta.as_deref(),
+        Some("1. Mūlapariyāyasuttaṃ"),
+        "Fragment 1 should have cst_sutta '1. Mūlapariyāyasuttaṃ', got: {:?}",
+        first_sutta_fragment.cst_sutta
+    );
+    
+    // Verify frag_idx
+    assert_eq!(
+        first_sutta_fragment.frag_idx,
+        1,
+        "Fragment should have frag_idx 1, got: {}",
+        first_sutta_fragment.frag_idx
+    );
+}
+
+#[test]
+fn test_s0201a_att_vagga_zero_fragment() {
+    // This test specifically verifies that fragment index 1 from s0201a.att.xml
+    // (the commentary file) correctly gets cst_code "mn1.0.0" for the introduction
+    // section (vagga 0) which includes <div id="mn1_0" n="mn1_0" type="vagga">
+    
+    let xml_path = Path::new("tests/data/s0201a.att.xml");
+    let xml_content = read_xml_file(xml_path)
+        .expect("Failed to read XML file");
+    
+    let nikaya_structure = detect_nikaya_structure(&xml_content)
+        .expect("Failed to detect nikaya structure");
+    
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201a.att.xml", None)
+        .expect("Failed to parse fragments");
+    
+    // Fragment 0 should be Header, fragment 1 should be the introduction (vagga 0)
+    assert!(fragments.len() > 2, "Expected at least 3 fragments");
+    
+    let intro_fragment = &fragments[1];
+    
+    // Verify fragment type
+    assert!(
+        matches!(intro_fragment.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta),
+        "Fragment 1 should be a Sutta fragment, got: {:?}", intro_fragment.fragment_type
+    );
+    
+    // Verify cst_code for vagga 0 (introduction)
+    assert_eq!(
+        intro_fragment.cst_code.as_deref(),
+        Some("mn1.0.0"),
+        "Fragment 1 should have cst_code 'mn1.0.0' for vagga 0, got: {:?}",
+        intro_fragment.cst_code
+    );
+    
+    // Verify frag_idx
+    assert_eq!(
+        intro_fragment.frag_idx,
+        1,
+        "Fragment should have frag_idx 1, got: {}",
+        intro_fragment.frag_idx
+    );
+    
+    // Verify that fragment 2 has the correct cst_code for the first real sutta
+    let first_sutta_fragment = &fragments[2];
+    assert_eq!(
+        first_sutta_fragment.cst_code.as_deref(),
+        Some("mn1.1.1"),
+        "Fragment 2 should have cst_code 'mn1.1.1', got: {:?}",
+        first_sutta_fragment.cst_code
+    );
+}
