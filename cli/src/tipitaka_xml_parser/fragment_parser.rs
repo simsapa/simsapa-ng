@@ -355,6 +355,8 @@ pub fn parse_into_fragments(
     let mut sutta_div_depth: Option<usize> = None; // Track the depth of the current sutta div
     // For DN commentary: track the position of <div type="sutta"> that precedes <head rend="chapter">
     let mut pending_sutta_div_pos: Option<(usize, usize, usize)> = None;
+    // For MN/SN: track the position of <div type="vagga"> that precedes <p rend="subhead">
+    let mut pending_vagga_div_pos: Option<(usize, usize, usize)> = None;
     
     // Start with a Header fragment at the beginning of the file
     current_fragment_start = Some((0, 1, 0));
@@ -460,6 +462,13 @@ pub fn parse_into_fragments(
                        nikaya_structure.nikaya == "digha" &&
                        attributes.get("type") == Some(&"sutta".to_string()) {
                         pending_sutta_div_pos = Some((event_start_pos, event_start_line, event_start_char));
+                    }
+                    
+                    // For MN/SN: <div type="vagga"> precedes <p rend="subhead">
+                    // Store its position to use when we encounter the subhead
+                    if (nikaya_structure.nikaya == "majjhima" || nikaya_structure.nikaya == "samyutta") &&
+                       attributes.get("type") == Some(&"vagga".to_string()) {
+                        pending_vagga_div_pos = Some((event_start_pos, event_start_line, event_start_char));
                     }
                 }
                 
@@ -588,29 +597,41 @@ pub fn parse_into_fragments(
                             // Continue with the current fragment
                         } else if seen_first_sutta {
                             // This is a SUBSEQUENT sutta marker - start a new fragment
+                            // For MN/SN, check if there's a pending <div type="vagga"> position
+                            // If so, use that as the start position (and close position for previous fragment)
+                            let (start_pos, start_line, start_char, close_pos, close_line, close_char) = 
+                                if let Some((div_pos, div_line, div_char)) = pending_vagga_div_pos.take() {
+                                    // Use the vagga <div> position
+                                    (div_pos, div_line, div_char, div_pos, div_line, div_char)
+                                } else {
+                                    // Use the subhead position (normal case)
+                                    (subhead_pos, subhead_line, subhead_char,
+                                     subhead_pos, subhead_line, subhead_char)
+                                };
+                            
                             // Already in a sutta - close current and start new
-                            if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
+                            if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
                                 (current_fragment_start, current_fragment_type.as_ref()) {
                                 
                                 // Apply adjustments if any
                                 let (end_pos, end_line, end_char) = apply_fragment_adjustment(
                                     xml_content,
-                                    subhead_pos,
-                                    subhead_line,
-                                    subhead_char,
+                                    close_pos,
+                                    close_line,
+                                    close_char,
                                     xml_filename,
                                     fragments.len(),
                                     adjustments,
                                 );
                                 
-                                let content = xml_content[start_pos..end_pos].to_string();
+                                let content = xml_content[frag_start_pos..end_pos].to_string();
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
                                         fragment_type: frag_type.clone(),
                                         content,
-                                        start_line,
+                                        start_line: frag_start_line,
                                         end_line,
-                                        start_char,
+                                        start_char: frag_start_char,
                                         end_char,
                                         group_levels: hierarchy.get_current_levels(),
                                         xml_filename: xml_filename.to_string(),
@@ -623,7 +644,7 @@ pub fn parse_into_fragments(
                             hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
                             
                             // Start new sutta fragment
-                            current_fragment_start = Some((subhead_pos, subhead_line, subhead_char));
+                            current_fragment_start = Some((start_pos, start_line, start_char));
                             current_fragment_type = Some(FragmentType::Sutta);
                         }
                     }
