@@ -711,7 +711,7 @@ fn parse_tipitaka_xml_new(
         }
 
         // Phase 2: Parse into fragments
-        let fragments = match parse_into_fragments(&xml_content, &nikaya_structure, xml_filename, adjustments.as_ref()) {
+        let mut fragments = match parse_into_fragments(&xml_content, &nikaya_structure, xml_filename, adjustments.as_ref()) {
             Ok(frags) => frags,
             Err(e) => {
                 eprintln!("  ✗ Error parsing fragments: {}", e);
@@ -731,6 +731,24 @@ fn parse_tipitaka_xml_new(
             .count();
         
         println!("    Headers: {}, Suttas: {}", header_count, sutta_count);
+
+        // Phase 2.5: Populate SC fields from TSV mapping
+        use tipitaka_xml_parser::fragment_parser::populate_sc_fields_from_tsv;
+        match populate_sc_fields_from_tsv(&mut fragments, tsv_path) {
+            Ok(()) => {
+                if verbose {
+                    let sc_count = fragments.iter()
+                        .filter(|f| f.sc_code.is_some())
+                        .count();
+                    println!("  ✓ Populated SC fields for {} fragments", sc_count);
+                }
+            }
+            Err(e) => {
+                eprintln!("  ✗ Error populating SC fields: {}", e);
+                errors += 1;
+                continue;
+            }
+        }
 
         // Export to fragments database if specified
         if let Some(frag_db_path) = fragments_db {

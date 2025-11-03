@@ -110,6 +110,7 @@ impl HierarchyTracker {
     ///
     /// Determines the depth of the level type in the nikaya structure,
     /// truncates current_levels to the appropriate depth, and adds the new level.
+    /// If a level of the same type exists at that depth, it updates the title but preserves the ID.
     fn enter_level(
         &mut self,
         level_type: GroupType,
@@ -117,6 +118,7 @@ impl HierarchyTracker {
         id: Option<String>,
         number: Option<i32>,
     ) {
+
         // Find the depth of this level type in the nikaya structure
         let depth = self.nikaya_structure.levels
             .iter()
@@ -129,6 +131,39 @@ impl HierarchyTracker {
             ));
         
         if let Some(depth) = depth {
+            // Check if we already have a level at this depth with the same type
+            if self.current_levels.len() > depth {
+                let existing = &self.current_levels[depth];
+                // Check if same type
+                let same_type = match (&existing.group_type, &level_type) {
+                    (GroupType::Nikaya, GroupType::Nikaya) |
+                    (GroupType::Book, GroupType::Book) |
+                    (GroupType::Vagga, GroupType::Vagga) |
+                    (GroupType::Samyutta, GroupType::Samyutta) |
+                    (GroupType::Sutta, GroupType::Sutta) => true,
+                    _ => false,
+                };
+                
+                if same_type {
+                    // Update the existing level, but preserve ID if new ID is None
+                    let preserved_id = if id.is_none() {
+                        existing.id.clone()
+                    } else {
+                        id
+                    };
+                    
+                    // Truncate levels after this one and update
+                    self.current_levels.truncate(depth + 1);
+                    self.current_levels[depth] = GroupLevel {
+                        group_type: level_type,
+                        group_number: number,
+                        title,
+                        id: preserved_id,
+                    };
+                    return;
+                }
+            }
+            
             // Truncate to the appropriate depth (remove levels at this depth and below)
             self.current_levels.truncate(depth);
             
@@ -255,6 +290,252 @@ impl<'a> FragmentBoundaryDetector<'a> {
     }
 }
 
+/// Extract CST fields from fragment content
+///
+/// Derives cst_file, cst_code, cst_vagga, cst_sutta, and cst_paranum from the fragment.
+///
+/// # Arguments
+/// * `fragment` - The fragment to process
+/// * `nikaya_structure` - The nikaya structure for context
+///
+/// # Returns
+/// Tuple of (cst_file, cst_code, cst_vagga, cst_sutta, cst_paranum)
+fn derive_cst_fields(
+    fragment: &XmlFragment,
+    nikaya_structure: &NikayaStructure,
+) -> (Option<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
+    // cst_file is xml_filename
+    let cst_file = Some(fragment.xml_filename.clone());
+    
+    // Only process Sutta fragments
+    if !matches!(fragment.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta) {
+        return (cst_file, None, None, None, None);
+    }
+    
+    // Extract vagga from group_levels
+    let cst_vagga = fragment.group_levels.iter()
+        .find(|level| matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Vagga))
+        .map(|level| level.title.clone());
+    
+    // Extract sutta title from group_levels (filter out empty titles)
+    let cst_sutta = fragment.group_levels.iter()
+        .find(|level| matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Sutta))
+        .and_then(|level| {
+            if level.title.trim().is_empty() {
+                None
+            } else {
+                Some(level.title.clone())
+            }
+        })
+        .or_else(|| {
+            // Fallback: Extract title from <head> or <p rend="subhead"> tag in fragment content
+            extract_sutta_title_from_content(&fragment.content)
+        });
+    
+    // Extract cst_paranum from first <p rend="bodytext" n="...">
+    let cst_paranum = extract_first_paranum(&fragment.content);
+    
+    // Derive cst_code from div id attributes and sutta number
+    // Pass the cst_sutta as a parameter so it can be used for deriving the code
+    let cst_code = derive_cst_code(fragment, nikaya_structure, cst_sutta.as_deref());
+    
+    (cst_file, cst_code, cst_vagga, cst_sutta, cst_paranum)
+}
+
+/// Extract sutta title from <head> or <p rend="subhead"> tag in fragment content
+fn extract_sutta_title_from_content(content: &str) -> Option<String> {
+    use quick_xml::Reader;
+    use quick_xml::events::Event;
+    
+    let mut reader = Reader::from_str(content);
+    reader.trim_text(false);
+    let mut buf = Vec::new();
+    
+    loop {
+        match reader.read_event_into(&mut buf) {
+            Ok(Event::Start(ref e)) => {
+                let name_bytes = e.name();
+                let name = std::str::from_utf8(name_bytes.as_ref()).unwrap_or("");
+                
+                // Check both <head> and <p> tags
+                if name == "head" || name == "p" {
+                    // Check if this has rend="chapter" or rend="subhead"
+                    let mut is_title = false;
+                    
+                    for attr in e.attributes() {
+                        if let Ok(attr) = attr {
+                            let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                            let value = attr.unescape_value().unwrap_or_default();
+                            
+                            if key == "rend" && (value == "chapter" || value == "subhead") {
+                                is_title = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if is_title {
+                        // Read the text content
+                        if let Ok(Event::Text(ref text)) = reader.read_event_into(&mut buf) {
+                            let title_text = text.unescape().unwrap_or_default().trim().to_string();
+                            
+                            // Keep the full title including number prefix (e.g., "2. Brahmajālasuttaṃ")
+                            // But skip if it's a subsection (like "Uddeso" which doesn't start with a number)
+                            let looks_like_sutta_title = title_text.chars().next()
+                                .map(|c| c.is_numeric())
+                                .unwrap_or(false);
+                            
+                            if !title_text.is_empty() && looks_like_sutta_title {
+                                return Some(title_text);
+                            }
+                        }
+                    }
+                }
+            },
+            Ok(Event::Eof) => break,
+            Err(_) => break,
+            _ => {},
+        }
+        buf.clear();
+    }
+    
+    None
+}
+
+/// Extract the first paragraph number from bodytext
+fn extract_first_paranum(content: &str) -> Option<String> {
+    use quick_xml::Reader;
+    use quick_xml::events::Event;
+    
+    let mut reader = Reader::from_str(content);
+    reader.trim_text(false);
+    let mut buf = Vec::new();
+    
+    loop {
+        match reader.read_event_into(&mut buf) {
+            Ok(Event::Start(ref e)) | Ok(Event::Empty(ref e)) => {
+                let name_bytes = e.name();
+                let name = std::str::from_utf8(name_bytes.as_ref()).unwrap_or("");
+                if name == "p" {
+                    // Check if this is a bodytext paragraph
+                    let mut is_bodytext = false;
+                    let mut paranum = None;
+                    
+                    for attr in e.attributes() {
+                        if let Ok(attr) = attr {
+                            let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                            let value = attr.unescape_value().unwrap_or_default();
+                            
+                            if key == "rend" && value == "bodytext" {
+                                is_bodytext = true;
+                            } else if key == "n" {
+                                paranum = Some(value.to_string());
+                            }
+                        }
+                    }
+                    
+                    if is_bodytext && paranum.is_some() {
+                        return paranum;
+                    }
+                }
+            },
+            Ok(Event::Eof) => break,
+            Err(_) => break,
+            _ => {},
+        }
+        buf.clear();
+    }
+    
+    None
+}
+
+/// Derive CST code from fragment metadata
+///
+/// For DN: code is like "dn1.1" from div id="dn1_1" or div id="dn1" + sutta number "1."
+/// For MN: code is like "mn1.5.1" from div id="mn1_5_1" or div id="mn1_5" + sutta number "1."
+fn derive_cst_code(fragment: &XmlFragment, _nikaya_structure: &NikayaStructure, cst_sutta_title: Option<&str>) -> Option<String> {
+    // First check if the Sutta level itself has an ID (like "dn1_12")
+    // This is the most direct and reliable source
+    if let Some(sutta_id) = fragment.group_levels.iter()
+        .find_map(|level| {
+            if matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Sutta) {
+                level.id.as_ref()
+            } else {
+                None
+            }
+        }) {
+        // Convert id format: "dn1_12" or "mn1_5_3" -> "dn1.12" or "mn1.5.3"
+        let code = sutta_id.replace('_', ".");
+        return Some(code);
+    }
+    
+    // Fallback: Try to construct from book ID + vagga number + sutta number
+    // For MN/SN: code format is "mn{book}.{vagga}.{sutta}" e.g., "mn1.1.10"
+    // For DN: code format is "dn{book}.{sutta}" e.g., "dn1.10"
+    
+    // Get book ID (e.g., "dn1" or "mn1")
+    let book_id = fragment.group_levels.iter()
+        .find_map(|level| {
+            if matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Book) {
+                level.id.as_ref()
+            } else {
+                None
+            }
+        });
+    
+    // Get vagga number from title (e.g., "1" from "1. Mūlapariyāyavaggo")
+    // This is more reliable than using the vagga ID since the ID may be inherited from the next vagga
+    let vagga_number = fragment.group_levels.iter()
+        .find_map(|level| {
+            if matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Vagga) {
+                // Extract number from title like "1. Vagga Name"
+                level.title.split_whitespace()
+                    .next()
+                    .and_then(|first| first.strip_suffix('.'))
+                    .filter(|num| num.chars().all(|c| c.is_numeric()))
+            } else {
+                None
+            }
+        });
+    
+    // Extract sutta number from title (e.g., "1. Brahmajālasuttaṃ" -> "1")
+    // First try from Sutta GroupLevel
+    let sutta_number = fragment.group_levels.iter()
+        .find_map(|level| {
+            if matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Sutta) {
+                // Extract number from title like "1. Title" or "10. Title"
+                level.title.split_whitespace()
+                    .next()
+                    .and_then(|first| first.strip_suffix('.'))
+                    .filter(|num| num.chars().all(|c| c.is_numeric()))
+            } else {
+                None
+            }
+        })
+        .or_else(|| {
+            // Fallback: Extract from cst_sutta_title parameter (from fragment content)
+            cst_sutta_title.and_then(|title| {
+                title.split_whitespace()
+                    .next()
+                    .and_then(|first| first.strip_suffix('.'))
+                    .filter(|num| num.chars().all(|c| c.is_numeric()))
+            })
+        });
+    
+    // Build the code based on what we have
+    match (book_id, vagga_number, sutta_number) {
+        (Some(book), Some(vagga), Some(sutta)) => {
+            // MN/SN style: mn1.1.10
+            Some(format!("{}.{}.{}", book, vagga, sutta))
+        }
+        (Some(book), None, Some(sutta)) => {
+            // DN style: dn1.10
+            Some(format!("{}.{}", book, sutta))
+        }
+        _ => None,
+    }
+}
+
 /// Convert line/char coordinates to byte position in XML content
 ///
 /// # Arguments
@@ -345,7 +626,9 @@ pub fn parse_into_fragments(
     // Track: (byte_pos, line_num, char_pos)
     let mut current_fragment_start: Option<(usize, usize, usize)> = None;
     let mut current_fragment_type: Option<FragmentType> = None;
-    let mut pending_title: Option<(GroupType, String)> = None;
+    // Store hierarchy levels at the time fragment starts
+    let mut current_fragment_group_levels: Vec<GroupLevel> = Vec::new();
+    let mut pending_title: Option<(GroupType, String, Option<String>, Option<i32>)> = None; // (type, title, id, number)
     let mut in_sutta_content = false;
     // For MN/SN: track if we just saw a subhead element (will check text to see if numbered)
     let mut pending_subhead_check: Option<(usize, usize, usize)> = None; // (pos, line, char) of the subhead tag
@@ -361,6 +644,7 @@ pub fn parse_into_fragments(
     // Start with a Header fragment at the beginning of the file
     current_fragment_start = Some((0, 1, 0));
     current_fragment_type = Some(FragmentType::Header);
+    current_fragment_group_levels = hierarchy.get_current_levels();
     
     loop {
         // Capture position BEFORE reading the event (this is the start of the tag)
@@ -416,15 +700,22 @@ pub fn parse_into_fragments(
                         let content = xml_content[frag_start_pos..end_pos].to_string();
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
-                                fragment_type: frag_type.clone(),
+                                fragment_type: FragmentType::Header,
                                 content,
                                 start_line: frag_start_line,
                                 end_line,
                                 start_char: frag_start_char,
                                 end_char,
-                                group_levels: hierarchy.get_current_levels(),
+                                group_levels: current_fragment_group_levels.clone(),
                                 xml_filename: xml_filename.to_string(),
                                 frag_idx: fragments.len(),
+                                cst_file: None,
+                                cst_code: None,
+                                cst_vagga: None,
+                                cst_sutta: None,
+                                cst_paranum: None,
+                                sc_code: None,
+                                sc_sutta: None,
                             });
                         }
                     }
@@ -433,21 +724,91 @@ pub fn parse_into_fragments(
                     // Content between <body> and the first sutta marker will be included
                     current_fragment_start = Some((current_pos, current_line, current_char));
                     current_fragment_type = Some(FragmentType::Sutta);
+                    current_fragment_group_levels = hierarchy.get_current_levels();
                     in_sutta_content = true;
                 }
                 
                 // Check for boundary
-                if let Some((group_type, _, _id, _number)) = detector.check_boundary(&tag_name, &attributes) {
-                    // We'll get the title from the text content, so store it as pending
-                    // EXCEPT for MN/SN subheads which need text content validation
-                    let is_mn_sn_subhead = (nikaya_structure.nikaya == "majjhima" || 
-                                           nikaya_structure.nikaya == "samyutta") &&
-                                          matches!(group_type, GroupType::Sutta) &&
-                                          tag_name == "p" && 
-                                          attributes.get("rend") == Some(&"subhead".to_string());
-                    
-                    if !is_mn_sn_subhead {
-                        pending_title = Some((group_type.clone(), String::new()));
+                if let Some((group_type, _, id, number)) = detector.check_boundary(&tag_name, &attributes) {
+                    // For <div> elements with an ID, enter the level immediately to preserve the ID
+                    // The title will be updated later from a child <head> element
+                    if tag_name == "div" && id.is_some() {
+                        // Before entering a new Vagga or Sutta level, close any open sutta fragment
+                        // This ensures the fragment uses the CURRENT level, not the next one
+                        if (matches!(group_type, GroupType::Vagga) || matches!(group_type, GroupType::Sutta)) && in_sutta_content {
+                            if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
+                                (current_fragment_start, current_fragment_type.as_ref()) {
+                                
+                                // Only close if this is a Sutta fragment and has actual sutta content
+                                // Skip if this is just the initial fragment after <body> with no real content yet
+                                if matches!(frag_type, FragmentType::Sutta) {
+                                    let content = xml_content[frag_start_pos..event_start_pos].to_string();
+                                    let has_sutta_content = content.contains("rend=\"subhead\"") || 
+                                                           content.contains("rend=\"chapter\"") ||
+                                                           content.contains("rend=\"bodytext\"");
+                                    
+                                    if has_sutta_content {
+                                        // Close at the current position (before the new vagga/sutta div)
+                                        let (end_pos, end_line, end_char) = apply_fragment_adjustment(
+                                            xml_content,
+                                            event_start_pos,
+                                            event_start_line,
+                                            event_start_char,
+                                            xml_filename,
+                                            fragments.len(),
+                                            adjustments,
+                                        );
+                                        
+                                if !content.trim().is_empty() {
+                                    fragments.push(XmlFragment {
+                                        fragment_type: frag_type.clone(),
+                                        content,
+                                        start_line: frag_start_line,
+                                        end_line,
+                                        start_char: frag_start_char,
+                                        end_char,
+                                        group_levels: current_fragment_group_levels.clone(),
+                                        xml_filename: xml_filename.to_string(),
+                                        frag_idx: fragments.len(),
+                                        cst_file: None,
+                                        cst_code: None,
+                                        cst_vagga: None,
+                                        cst_sutta: None,
+                                        cst_paranum: None,
+                                        sc_code: None,
+                                        sc_sutta: None,
+                                    });
+                                }
+                                
+                                        // Start new fragment after closing the previous one
+                                        current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
+                                        current_fragment_type = Some(FragmentType::Sutta);
+                                        // Note: we'll update group_levels AFTER entering the new level
+                                    }
+                                }
+                            }
+                        }
+                        
+                        hierarchy.enter_level(group_type.clone(), String::new(), id, number);
+                        
+                        // Update group_levels after entering any new level while a fragment is open
+                        if current_fragment_start.is_some() {
+                            current_fragment_group_levels = hierarchy.get_current_levels();
+                        }
+                        
+                        // Don't set pending_title - the next <head> will update the title
+                    } else {
+                        // For other elements, we'll get the title from the text content, so store it as pending
+                        // EXCEPT for MN/SN subheads which need text content validation
+                        let is_mn_sn_subhead = (nikaya_structure.nikaya == "majjhima" || 
+                                               nikaya_structure.nikaya == "samyutta") &&
+                                              matches!(group_type, GroupType::Sutta) &&
+                                              tag_name == "p" && 
+                                              attributes.get("rend") == Some(&"subhead".to_string());
+                        
+                        if !is_mn_sn_subhead {
+                            pending_title = Some((group_type.clone(), String::new(), id, number));
+                        }
                     }
                 }
                 
@@ -539,9 +900,16 @@ pub fn parse_into_fragments(
                                     end_line,
                                     start_char: frag_start_char,
                                     end_char,
-                                    group_levels: hierarchy.get_current_levels(),
+                                    group_levels: current_fragment_group_levels.clone(),
                                     xml_filename: xml_filename.to_string(),
                                     frag_idx: fragments.len(),
+                                    cst_file: None,
+                                    cst_code: None,
+                                    cst_vagga: None,
+                                    cst_sutta: None,
+                                    cst_paranum: None,
+                                    sc_code: None,
+                                    sc_sutta: None,
                                 });
                             }
                         }
@@ -549,6 +917,7 @@ pub fn parse_into_fragments(
                         // Start new sutta fragment (including this tag)
                         current_fragment_start = Some((start_pos, start_line, start_char));
                         current_fragment_type = Some(FragmentType::Sutta);
+                        current_fragment_group_levels = hierarchy.get_current_levels();
                         
                         // Only track div depth if this is a div-based sutta marker
                         if should_track_div_depth {
@@ -636,6 +1005,13 @@ pub fn parse_into_fragments(
                                         group_levels: hierarchy.get_current_levels(),
                                         xml_filename: xml_filename.to_string(),
                                         frag_idx: fragments.len(),
+                                        cst_file: None,
+                                        cst_code: None,
+                                        cst_vagga: None,
+                                        cst_sutta: None,
+                                        cst_paranum: None,
+                                        sc_code: None,
+                                        sc_sutta: None,
                                     });
                                 }
                             }
@@ -646,15 +1022,16 @@ pub fn parse_into_fragments(
                             // Start new sutta fragment
                             current_fragment_start = Some((start_pos, start_line, start_char));
                             current_fragment_type = Some(FragmentType::Sutta);
+                            current_fragment_group_levels = hierarchy.get_current_levels();
                         }
                     }
                     // If not numbered, it's just a section heading within a sutta - ignore
                 }
                 
                 // If we have a pending title, update it with this text
-                if let Some((group_type, _)) = pending_title.take() {
+                if let Some((group_type, _, id, number)) = pending_title.take() {
                     if !text.is_empty() {
-                        hierarchy.enter_level(group_type, text, None, None);
+                        hierarchy.enter_level(group_type, text, id, number);
                     }
                 }
             },
@@ -702,25 +1079,33 @@ pub fn parse_into_fragments(
                         );
                         
                         // Include everything from start up to the adjusted end position
-                        let content = xml_content[start_pos..end_pos].to_string();
-                        if !content.trim().is_empty() {
-                            fragments.push(XmlFragment {
-                                fragment_type: frag_type.clone(),
-                                content,
-                                start_line,
-                                end_line,
-                                start_char,
-                                end_char,
-                                group_levels: hierarchy.get_current_levels(),
-                                xml_filename: xml_filename.to_string(),
-                                frag_idx: fragments.len(),
-                            });
+        let content = xml_content[start_pos..end_pos].to_string();
+        if !content.trim().is_empty() {
+            fragments.push(XmlFragment {
+                fragment_type: frag_type.clone(),
+                content,
+                start_line,
+                end_line,
+                start_char,
+                end_char,
+                group_levels: current_fragment_group_levels.clone(),
+                xml_filename: xml_filename.to_string(),
+                frag_idx: fragments.len(),
+                cst_file: None,
+                cst_code: None,
+                cst_vagga: None,
+                cst_sutta: None,
+                cst_paranum: None,
+                sc_code: None,
+                sc_sutta: None,
+            });
                         }
                     }
                     
                     // Start the final Header fragment at the beginning of </body>
                     current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
                     current_fragment_type = Some(FragmentType::Header);
+                    current_fragment_group_levels = hierarchy.get_current_levels();
                     in_sutta_content = false;
                 }
             },
@@ -748,21 +1133,111 @@ pub fn parse_into_fragments(
         
         let content = xml_content[start_pos..end_pos].to_string();
         if !content.trim().is_empty() {
-            fragments.push(XmlFragment {
-                fragment_type: frag_type,
-                content,
-                start_line,
-                end_line,
-                start_char,
-                end_char,
-                group_levels: hierarchy.get_current_levels(),
-                xml_filename: xml_filename.to_string(),
-                frag_idx: fragments.len(),
-            });
+                            fragments.push(XmlFragment {
+                                fragment_type: frag_type.clone(),
+                                content,
+                                start_line,
+                                end_line,
+                                start_char,
+                                end_char,
+                                group_levels: current_fragment_group_levels.clone(),
+                                xml_filename: xml_filename.to_string(),
+                                frag_idx: fragments.len(),
+                                cst_file: None,
+                                cst_code: None,
+                                cst_vagga: None,
+                                cst_sutta: None,
+                                cst_paranum: None,
+                                sc_code: None,
+                                sc_sutta: None,
+                            });
         }
     }
     
+    // Post-process fragments to derive CST fields
+    for fragment in &mut fragments {
+        let (cst_file, cst_code, cst_vagga, cst_sutta, cst_paranum) = 
+            derive_cst_fields(fragment, nikaya_structure);
+        
+        fragment.cst_file = cst_file;
+        fragment.cst_code = cst_code;
+        fragment.cst_vagga = cst_vagga;
+        fragment.cst_sutta = cst_sutta;
+        fragment.cst_paranum = cst_paranum;
+        // sc_code and sc_sutta will be populated from TSV if available
+    }
+    
     Ok(fragments)
+}
+
+/// Populate SC fields from TSV mapping
+///
+/// Looks up sc_code and sc_sutta from cst-vs-sc.tsv based on cst_code
+///
+/// # Arguments
+/// * `fragments` - Mutable vector of fragments to populate
+/// * `tsv_path` - Path to cst-vs-sc.tsv mapping file
+///
+/// # Returns
+/// Result indicating success or error
+pub fn populate_sc_fields_from_tsv(
+    fragments: &mut Vec<XmlFragment>,
+    tsv_path: &std::path::Path,
+) -> anyhow::Result<()> {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader};
+    
+    // Load TSV file
+    let file = File::open(tsv_path)
+        .with_context(|| format!("Failed to open TSV file: {:?}", tsv_path))?;
+    
+    let reader = BufReader::new(file);
+    let mut lines = reader.lines();
+    
+    // Read header
+    let header = lines.next()
+        .ok_or_else(|| anyhow::anyhow!("TSV file is empty"))?
+        .context("Failed to read header")?;
+    
+    // Parse header to find column indices
+    let columns: Vec<&str> = header.split('\t').collect();
+    let cst_code_idx = columns.iter().position(|&c| c == "cst_code")
+        .ok_or_else(|| anyhow::anyhow!("Missing 'cst_code' column"))?;
+    let sc_code_idx = columns.iter().position(|&c| c == "code")
+        .ok_or_else(|| anyhow::anyhow!("Missing 'code' column"))?;
+    let sc_sutta_idx = columns.iter().position(|&c| c == "sutta")
+        .ok_or_else(|| anyhow::anyhow!("Missing 'sutta' column"))?;
+    
+    // Build a map from cst_code to (sc_code, sc_sutta)
+    let mut tsv_map: std::collections::HashMap<String, (String, String)> = std::collections::HashMap::new();
+    
+    for line_result in lines {
+        let line = line_result.context("Failed to read TSV line")?;
+        if line.trim().is_empty() {
+            continue;
+        }
+        
+        let fields: Vec<&str> = line.split('\t').collect();
+        
+        if let (Some(&cst_code), Some(&sc_code), Some(&sc_sutta)) = 
+            (fields.get(cst_code_idx), fields.get(sc_code_idx), fields.get(sc_sutta_idx)) {
+            if !cst_code.is_empty() && !sc_code.is_empty() {
+                tsv_map.insert(cst_code.to_string(), (sc_code.to_string(), sc_sutta.to_string()));
+            }
+        }
+    }
+    
+    // Populate fragments
+    for fragment in fragments.iter_mut() {
+        if let Some(ref cst_code) = fragment.cst_code {
+            if let Some((sc_code, sc_sutta)) = tsv_map.get(cst_code) {
+                fragment.sc_code = Some(sc_code.clone());
+                fragment.sc_sutta = Some(sc_sutta.clone());
+            }
+        }
+    }
+    
+    Ok(())
 }
 
 #[cfg(test)]
@@ -937,5 +1412,77 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_cst_fields_dn() {
+        // Test CST field derivation for DN
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<TEI.2>
+<text>
+<body>
+<p rend="nikaya">Dīghanikāyo</p>
+<div id="dn1" n="dn1" type="book">
+<head rend="book">Sīlakkhandhavaggapāḷi</head>
+<div id="dn1_1" n="dn1_1" type="sutta">
+<head rend="chapter">1. Brahmajālasuttaṃ</head>
+<p rend="subhead">Paribbājakakathā</p>
+<p rend="bodytext" n="1">Evaṃ me sutaṃ</p>
+</div>
+</div>
+</body>
+</text>
+</TEI.2>"#;
+        
+        let structure = detect_nikaya_structure(xml).unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "s0101m.mul.xml", None).unwrap();
+        
+        // Find the sutta fragment
+        let sutta_frag = fragments.iter()
+            .find(|f| matches!(f.fragment_type, FragmentType::Sutta))
+            .expect("Should have a sutta fragment");
+        
+        // Check CST fields
+        assert_eq!(sutta_frag.cst_file.as_deref(), Some("s0101m.mul.xml"));
+        assert_eq!(sutta_frag.cst_code.as_deref(), Some("dn1.1"));
+        assert_eq!(sutta_frag.cst_vagga.as_deref(), None); // DN doesn't have vaggas
+        assert_eq!(sutta_frag.cst_sutta.as_deref(), Some("1. Brahmajālasuttaṃ"));
+        assert_eq!(sutta_frag.cst_paranum.as_deref(), Some("1"));
+    }
+
+    #[test]
+    fn test_cst_fields_mn() {
+        // Test CST field derivation for MN
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<TEI.2>
+<text>
+<body>
+<p rend="nikaya">Majjhimanikāyo</p>
+<div id="mn1" type="book">
+<head rend="book">Mūlapaṇṇāsapāḷi</head>
+<div id="mn1_5" n="mn1_5" type="vagga">
+<head rend="chapter">5. Cūḷayamakavaggo</head>
+<p rend="subhead">1. Sāleyyakasuttaṃ</p>
+<p rend="bodytext" n="439">Evaṃ me sutaṃ</p>
+</div>
+</div>
+</body>
+</text>
+</TEI.2>"#;
+        
+        let structure = detect_nikaya_structure(xml).unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "s0201m.mul.xml", None).unwrap();
+        
+        // Find the sutta fragment
+        let sutta_frag = fragments.iter()
+            .find(|f| matches!(f.fragment_type, FragmentType::Sutta))
+            .expect("Should have a sutta fragment");
+        
+        // Check CST fields
+        assert_eq!(sutta_frag.cst_file.as_deref(), Some("s0201m.mul.xml"));
+        assert_eq!(sutta_frag.cst_code.as_deref(), Some("mn1.5.1"));
+        assert_eq!(sutta_frag.cst_vagga.as_deref(), Some("5. Cūḷayamakavaggo"));
+        assert_eq!(sutta_frag.cst_sutta.as_deref(), Some("1. Sāleyyakasuttaṃ"));
+        assert_eq!(sutta_frag.cst_paranum.as_deref(), Some("439"));
     }
 }

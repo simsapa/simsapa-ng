@@ -76,6 +76,13 @@ fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
             start_char INTEGER NOT NULL,
             end_char INTEGER NOT NULL,
             group_levels TEXT NOT NULL,
+            cst_file TEXT,
+            cst_code TEXT,
+            cst_vagga TEXT,
+            cst_sutta TEXT,
+            cst_paranum TEXT,
+            sc_code TEXT,
+            sc_sutta TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (nikaya) REFERENCES nikaya_structures(nikaya)
         )
@@ -130,8 +137,9 @@ fn insert_fragments(
         diesel::sql_query(
             r#"
             INSERT INTO xml_fragments 
-            (nikaya, xml_filename, frag_idx, fragment_type, content, start_line, end_line, start_char, end_char, group_levels)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (nikaya, xml_filename, frag_idx, fragment_type, content, start_line, end_line, start_char, end_char, group_levels,
+             cst_file, cst_code, cst_vagga, cst_sutta, cst_paranum, sc_code, sc_sutta)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind::<diesel::sql_types::Text, _>(nikaya)
@@ -144,6 +152,13 @@ fn insert_fragments(
         .bind::<diesel::sql_types::Integer, _>(fragment.start_char as i32)
         .bind::<diesel::sql_types::Integer, _>(fragment.end_char as i32)
         .bind::<diesel::sql_types::Text, _>(&group_levels_json)
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_file.as_deref())
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_code.as_deref())
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_vagga.as_deref())
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_sutta.as_deref())
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_paranum.as_deref())
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.sc_code.as_deref())
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.sc_sutta.as_deref())
         .execute(conn)
         .context("Failed to insert fragment")?;
         
@@ -181,6 +196,13 @@ mod tests {
                 group_levels: vec![],
                 xml_filename: "test.xml".to_string(),
                 frag_idx: 0,
+                cst_file: None,
+                cst_code: None,
+                cst_vagga: None,
+                cst_sutta: None,
+                cst_paranum: None,
+                sc_code: None,
+                sc_sutta: None,
             },
             XmlFragment {
                 fragment_type: FragmentType::Sutta,
@@ -199,6 +221,13 @@ mod tests {
                 ],
                 xml_filename: "test.xml".to_string(),
                 frag_idx: 1,
+                cst_file: None,
+                cst_code: None,
+                cst_vagga: None,
+                cst_sutta: None,
+                cst_paranum: None,
+                sc_code: None,
+                sc_sutta: None,
             },
         ];
         
@@ -255,6 +284,13 @@ mod tests {
                 group_levels: vec![],
                 xml_filename: "dn1.xml".to_string(),
                 frag_idx: 0,
+                cst_file: None,
+                cst_code: None,
+                cst_vagga: None,
+                cst_sutta: None,
+                cst_paranum: None,
+                sc_code: None,
+                sc_sutta: None,
             },
         ];
         
@@ -269,6 +305,13 @@ mod tests {
                 group_levels: vec![],
                 xml_filename: "mn1.xml".to_string(),
                 frag_idx: 0,
+                cst_file: None,
+                cst_code: None,
+                cst_vagga: None,
+                cst_sutta: None,
+                cst_paranum: None,
+                sc_code: None,
+                sc_sutta: None,
             },
         ];
         

@@ -118,6 +118,13 @@ fn get_fragments_for_filename(
             group_levels,
             xml_filename: row.xml_filename,
             frag_idx: row.frag_idx as usize,
+            cst_file: None,
+            cst_code: None,
+            cst_vagga: None,
+            cst_sutta: None,
+            cst_paranum: None,
+            sc_code: None,
+            sc_sutta: None,
         });
     }
     

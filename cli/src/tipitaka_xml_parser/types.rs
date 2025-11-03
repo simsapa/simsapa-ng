@@ -60,10 +60,24 @@ pub struct XmlFragment {
     pub end_char: usize,
     /// Hierarchy levels at the time this fragment was created
     pub group_levels: Vec<GroupLevel>,
-    /// Source XML filename (for tracking which file this fragment came from)
+    /// Source XML filename for tracking which file this fragment came from. Corresponds to cst_file in TsvRecord.
     pub xml_filename: String,
     /// Index of this fragment in the list of fragments parsed from the XML file (0-indexed)
     pub frag_idx: usize,
+    /// CST file identifier (derived from xml_filename)
+    pub cst_file: Option<String>,
+    /// CST code (e.g., "dn1.1", "mn1.5.1")
+    pub cst_code: Option<String>,
+    /// CST vagga title (e.g., "5. Cūḷayamakavaggo")
+    pub cst_vagga: Option<String>,
+    /// CST sutta title (e.g., "1. Brahmajālasuttaṃ")
+    pub cst_sutta: Option<String>,
+    /// CST paragraph number (from first <p rend="bodytext" n="...">)
+    pub cst_paranum: Option<String>,
+    /// SuttaCentral code (e.g., "dn1", "mn41")
+    pub sc_code: Option<String>,
+    /// SuttaCentral sutta title (e.g., "Brahmajālasutta")
+    pub sc_sutta: Option<String>,
 }
 
 /// Manual adjustment for a specific fragment

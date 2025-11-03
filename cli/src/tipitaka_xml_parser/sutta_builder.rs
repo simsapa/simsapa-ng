@@ -37,6 +37,7 @@ struct TsvRecord {
     cst_code: String,
     cst_vagga: String,
     cst_sutta: String,
+    cst_paranum: String,
     #[serde(rename = "code")]
     sc_code: String,
     #[serde(rename = "sutta")]
@@ -560,10 +561,13 @@ fn xml_to_plain_text(xml_content: &str) -> Result<String> {
 
 /// Build sutta database records from fragments
 ///
+/// Uses derived CST fields (cst_code, cst_sutta, etc.) from fragments when available.
+/// Falls back to TSV lookup for legacy compatibility if derived fields are not present.
+///
 /// # Arguments
-/// * `fragments` - Vector of parsed fragments
+/// * `fragments` - Vector of parsed fragments with derived CST metadata
 /// * `nikaya_structure` - The structure configuration for this nikaya
-/// * `tsv_path` - Path to cst-vs-sc.tsv mapping file
+/// * `tsv_path` - Path to cst-vs-sc.tsv mapping file (used for legacy fallback)
 ///
 /// # Returns
 /// Vector of sutta records or error if assembly fails
@@ -585,18 +589,23 @@ pub fn build_suttas(
         .collect();
     
     for (idx, fragment) in sutta_fragments.iter().enumerate() {
-        // Extract sutta title from group_levels
-        let sutta_level = fragment.group_levels.iter()
-            .find(|level| matches!(level.group_type, GroupType::Sutta));
-        
-        let title = if let Some(level) = sutta_level {
-            level.title.clone()
+        // Get sutta title - prefer cst_sutta from fragment if available
+        let title = if let Some(ref cst_sutta) = fragment.cst_sutta {
+            cst_sutta.clone()
         } else {
-            // No sutta title in group_levels - this fragment is a subsection heading
-            // (e.g., "<p rend="subhead">Uddeso</p>" meaning "Summary") that was treated
-            // as a fragment boundary during parsing but is not actually a separate sutta.
-            // The content is preserved in the previous sutta fragment, so we skip this.
-            continue;
+            // Fall back to extracting from group_levels
+            let sutta_level = fragment.group_levels.iter()
+                .find(|level| matches!(level.group_type, GroupType::Sutta));
+            
+            if let Some(level) = sutta_level {
+                level.title.clone()
+            } else {
+                // No sutta title in group_levels - this fragment is a subsection heading
+                // (e.g., "<p rend="subhead">Uddeso</p>" meaning "Summary") that was treated
+                // as a fragment boundary during parsing but is not actually a separate sutta.
+                // The content is preserved in the previous sutta fragment, so we skip this.
+                continue;
+            }
         };
         
         // Normalize title
@@ -635,26 +644,44 @@ pub fn build_suttas(
             .find(|level| matches!(level.group_type, GroupType::Vagga))
             .map(|level| level.title.as_str());
         
-        // Find code from TSV
-        let code = match find_code_for_sutta(&tsv_records, &xml_filename, &title, vagga_title, is_commentary_or_sub, &used_codes) {
-            Some(c) => {
-                // Check if we've already used this code (this should not happen since find_code checks used_codes)
-                if used_codes.contains(&c) {
-                    eprintln!("ERROR: Code '{}' already used for a previous sutta, skipping duplicate for '{}' (file: {})", 
-                             c, title, xml_filename);
-                    eprintln!("  This indicates a bug in find_code_for_sutta logic");
+        // Get SC code - this is the primary identifier for suttas
+        // Priority: sc_code > cst_code > TSV lookup
+        let code = if let Some(ref sc_code) = fragment.sc_code {
+            // Use the sc_code from TSV mapping (preferred)
+            sc_code.clone()
+        } else if let Some(ref cst_code) = fragment.cst_code {
+            // Fall back to derived cst_code
+            // Try to look it up in TSV to get the sc_code
+            let sc_code_from_tsv = tsv_records.iter()
+                .find(|r| r.cst_code == *cst_code)
+                .map(|r| r.sc_code.clone());
+            
+            if let Some(sc) = sc_code_from_tsv {
+                sc
+            } else {
+                // Use cst_code as fallback
+                cst_code.clone()
+            }
+        } else {
+            // Fall back to TSV lookup (legacy path)
+            match find_code_for_sutta(&tsv_records, &xml_filename, &title, vagga_title, is_commentary_or_sub, &used_codes) {
+                Some(c) => c,
+                None => {
+                    // Log warning - could not find matching code
+                    eprintln!("Warning: Could not find code for sutta '{}' in file '{}', skipping", 
+                             title, xml_filename);
                     continue;
                 }
-                used_codes.insert(c.clone());
-                c
-            },
-            None => {
-                // Log warning - could not find matching code
-                eprintln!("Warning: Could not find code for sutta '{}' in file '{}', skipping", 
-                         title, xml_filename);
-                continue;
             }
         };
+        
+        // Check if we've already used this code
+        if used_codes.contains(&code) {
+            eprintln!("ERROR: Code '{}' already used for a previous sutta, skipping duplicate for '{}' (file: {})", 
+                     code, title, xml_filename);
+            continue;
+        }
+        used_codes.insert(code.clone());
         
         // Add commentary/subcommentary suffix to code
         let uid_code = if is_commentary {
