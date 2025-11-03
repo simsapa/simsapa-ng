@@ -33,6 +33,7 @@ quick-xml = "0.31"
 # Character encoding detection and conversion for UTF-16LE files
 encoding_rs = "0.8"
 html-escape = "0.2"
+csv = "1.3"
 # SQLite for database initialization (must match version used by stardict in backend)
 rusqlite = "0.31"
 

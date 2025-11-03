@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use quick_xml::{Reader, events::Event};
 use html_escape;
+use serde::Deserialize;
 
 /// Sutta record matching appdata schema
 #[derive(Debug, Clone)]
@@ -30,49 +31,34 @@ pub struct SuttaRecord {
 }
 
 /// TSV record for CST code lookup
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 struct TsvRecord {
     cst_file: String,
     cst_code: String,
     cst_vagga: String,
     cst_sutta: String,
+    #[serde(rename = "code")]
     sc_code: String,
+    #[serde(rename = "sutta")]
     sc_sutta: String,
 }
 
 /// Load TSV mapping file into memory for lookups
 fn load_tsv_mapping(tsv_path: &Path) -> Result<Vec<TsvRecord>> {
     use std::fs::File;
-    use std::io::{BufRead, BufReader};
     
     let file = File::open(tsv_path)
         .context("Failed to open TSV mapping file")?;
-    let reader = BufReader::new(file);
     
-    let mut records = Vec::new();
-    let mut lines = reader.lines();
+    let mut reader = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .from_reader(file);
     
-    // Skip header line
-    if let Some(Ok(_header)) = lines.next() {
-        // Process data lines
-        for line in lines {
-            let line = line.context("Failed to read TSV line")?;
-            let fields: Vec<&str> = line.split('\t').collect();
-            
-            if fields.len() >= 16 {
-                records.push(TsvRecord {
-                    cst_file: fields[11].to_string(),      // cst_file column
-                    cst_code: fields[0].to_string(),       // cst_code column
-                    cst_vagga: fields[4].to_string(),      // cst_vagga column
-                    cst_sutta: fields[5].to_string(),      // cst_sutta column
-                    sc_code: fields[12].to_string(),       // code column (SuttaCentral uid)
-                    sc_sutta: fields[15].to_string(),      // sutta column (SuttaCentral sutta name)
-                });
-            }
-        }
-    }
+    let records: Result<Vec<TsvRecord>, csv::Error> = reader
+        .deserialize()
+        .collect();
     
-    Ok(records)
+    records.context("Failed to deserialize TSV records")
 }
 
 /// Find code for a given filename, sutta title, and vagga
@@ -727,4 +713,44 @@ pub fn build_suttas(
     }
     
     Ok(suttas)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::PathBuf;
+
+    #[test]
+    fn test_load_tsv_mapping() {
+        // Test that the TSV file can be loaded and deserialized correctly
+        let tsv_path = PathBuf::from("assets/cst-vs-sc.tsv");
+        
+        // Skip test if file doesn't exist (e.g., in CI environments)
+        if !tsv_path.exists() {
+            eprintln!("Skipping test_load_tsv_mapping: TSV file not found at {:?}", tsv_path);
+            return;
+        }
+        
+        let result = load_tsv_mapping(&tsv_path);
+        assert!(result.is_ok(), "Failed to load TSV mapping: {:?}", result.err());
+        
+        let records = result.unwrap();
+        assert!(!records.is_empty(), "TSV mapping should contain records");
+        
+        // Verify first record has expected fields populated
+        let first = &records[0];
+        assert!(!first.cst_file.is_empty(), "cst_file should not be empty");
+        assert!(!first.cst_code.is_empty(), "cst_code should not be empty");
+        assert!(!first.sc_code.is_empty(), "sc_code should not be empty");
+        
+        // Verify known record (DN1) exists with correct mapping
+        let dn1 = records.iter().find(|r| r.sc_code == "dn1");
+        assert!(dn1.is_some(), "Should find DN1 record");
+        
+        if let Some(dn1) = dn1 {
+            assert_eq!(dn1.cst_file.trim_start_matches("romn/").trim_start_matches("mula/"), "s0101m.mul.xml");
+            assert_eq!(dn1.cst_sutta, "1. Brahmajālasuttaṃ");
+            assert_eq!(dn1.cst_vagga, "");
+        }
+    }
 }
