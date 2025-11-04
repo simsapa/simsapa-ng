@@ -12,27 +12,18 @@ fi
 
 cargo build
 
-for i in "s0101" "s0201"; do
-    ./target/debug/simsapa_cli parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/"$i"m.mul.xml suttas.sqlite3 --fragments-db fragments.sqlite3 --adjust-fragments-tsv assets/adjust-fragments.tsv
-    ./target/debug/simsapa_cli parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/"$i"a.att.xml suttas.sqlite3 --fragments-db fragments.sqlite3 --adjust-fragments-tsv assets/adjust-fragments.tsv
-    ./target/debug/simsapa_cli parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/"$i"t.tik.xml suttas.sqlite3 --fragments-db fragments.sqlite3 --adjust-fragments-tsv assets/adjust-fragments.tsv
+for i in s0101m.mul.xml s0101a.att.xml s0101t.tik.xml s0201m.mul.xml s0201a.att.xml s0201t.tik.xml s0301m.mul.xml s0301a.att.xml s0301t.tik.xml s0402m2.mul.xml s0402a.att.xml s0402t.tik.xml; do
+    ./target/debug/simsapa_cli parse-tipitaka-xml ../../bootstrap-assets-resources/tipitaka-org-vri-cst/tipitaka-xml/romn/"$i" suttas.sqlite3 --fragments-db fragments.sqlite3 --adjust-fragments-tsv assets/adjust-fragments.tsv
 
-    ./target/debug/simsapa_cli reconstruct-xml-from-fragments ./fragments.sqlite3 "$i"m.mul.xml ./"$i"m.mul.xml
-    ./target/debug/simsapa_cli reconstruct-xml-from-fragments ./fragments.sqlite3 "$i"a.att.xml ./"$i"a.att.xml
-    ./target/debug/simsapa_cli reconstruct-xml-from-fragments ./fragments.sqlite3 "$i"t.tik.xml ./"$i"t.tik.xml
+    ./target/debug/simsapa_cli reconstruct-xml-from-fragments ./fragments.sqlite3 "$i" ./"$i"
 done
 
 sed -i 's/UTF-16/UTF-8/' ./*.xml
 
-for i in "s0101" "s0201"; do
+for i in s0101m.mul.xml s0101a.att.xml s0101t.tik.xml s0201m.mul.xml s0201a.att.xml s0201t.tik.xml s0301m.mul.xml s0301a.att.xml s0301t.tik.xml s0402m2.mul.xml s0402a.att.xml s0402t.tik.xml; do
     echo "Diff files $i"
-    diff ./tests/data/"$i"m.mul.xml ./"$i"m.mul.xml
-    diff ./tests/data/"$i"a.att.xml ./"$i"a.att.xml
-    diff ./tests/data/"$i"t.tik.xml ./"$i"t.tik.xml
-
-    rm ./"$i"m.mul.xml
-    rm ./"$i"a.att.xml
-    rm ./"$i"t.tik.xml
+    diff ./tests/data/"$i" ./"$i"
+    rm ./"$i"
 done
 
 echo "Done"
