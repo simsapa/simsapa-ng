@@ -724,10 +724,10 @@ fn parse_tipitaka_xml_new(
         
         // Count fragment types
         let header_count = fragments.iter()
-            .filter(|f| matches!(f.fragment_type, tipitaka_xml_parser::FragmentType::Header))
+            .filter(|f| matches!(f.frag_type, tipitaka_xml_parser::FragmentType::Header))
             .count();
         let sutta_count = fragments.iter()
-            .filter(|f| matches!(f.fragment_type, tipitaka_xml_parser::FragmentType::Sutta))
+            .filter(|f| matches!(f.frag_type, tipitaka_xml_parser::FragmentType::Sutta))
             .count();
         
         println!("    Headers: {}, Suttas: {}", header_count, sutta_count);

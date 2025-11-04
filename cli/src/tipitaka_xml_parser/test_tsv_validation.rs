@@ -25,7 +25,7 @@ struct TsvExpectation {
 }
 
 /// Load TSV expectations for a given XML file
-fn load_tsv_expectations(tsv_path: &Path, xml_filename: &str) -> Result<Vec<TsvExpectation>> {
+fn load_tsv_expectations(tsv_path: &Path, cst_file: &str) -> Result<Vec<TsvExpectation>> {
     let file = File::open(tsv_path)
         .with_context(|| format!("Failed to open TSV file: {:?}", tsv_path))?;
     
@@ -48,7 +48,7 @@ fn load_tsv_expectations(tsv_path: &Path, xml_filename: &str) -> Result<Vec<TsvE
         .ok_or_else(|| anyhow::anyhow!("Missing 'code' column"))?;
     
     // Normalize filename for comparison (handle both with and without "romn/" prefix)
-    let normalized_filename = xml_filename.trim_start_matches("romn/");
+    let normalized_filename = cst_file.trim_start_matches("romn/");
     
     // Collect matching rows
     let mut expectations = Vec::new();
@@ -108,7 +108,7 @@ fn test_parse_matches_tsv_s0101m() {
     
     // Filter to Sutta fragments only
     let sutta_fragments: Vec<_> = fragments.iter()
-        .filter(|f| matches!(f.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta))
+        .filter(|f| matches!(f.frag_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta))
         .collect();
     
     // Build a map of expected data by cst_sutta for easier lookup
@@ -131,7 +131,7 @@ fn test_parse_matches_tsv_s0101m() {
                 }
                 
                 // Check cst_file
-                let fragment_file = fragment.xml_filename.trim_start_matches("romn/");
+                let fragment_file = fragment.cst_file.trim_start_matches("romn/");
                 let expected_file = expected.cst_file.trim_start_matches("romn/");
                 if fragment_file != expected_file {
                     errors.push(format!(
@@ -189,7 +189,7 @@ fn test_parse_matches_tsv_s0201m() {
     
     // Filter to Sutta fragments only
     let sutta_fragments: Vec<_> = fragments.iter()
-        .filter(|f| matches!(f.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta))
+        .filter(|f| matches!(f.frag_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta))
         .collect();
     
     // Build a map of expected data by cst_sutta for easier lookup
@@ -212,7 +212,7 @@ fn test_parse_matches_tsv_s0201m() {
                 }
                 
                 // Check cst_file
-                let fragment_file = fragment.xml_filename.trim_start_matches("romn/");
+                let fragment_file = fragment.cst_file.trim_start_matches("romn/");
                 let expected_file = expected.cst_file.trim_start_matches("romn/");
                 if fragment_file != expected_file {
                     errors.push(format!(
@@ -273,8 +273,8 @@ fn test_s0201m_first_sutta_fragment() {
     
     // Verify fragment type
     assert!(
-        matches!(first_sutta_fragment.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta),
-        "Fragment 1 should be a Sutta fragment, got: {:?}", first_sutta_fragment.fragment_type
+        matches!(first_sutta_fragment.frag_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta),
+        "Fragment 1 should be a Sutta fragment, got: {:?}", first_sutta_fragment.frag_type
     );
     
     // Verify cst_code
@@ -325,8 +325,8 @@ fn test_s0201a_att_vagga_zero_fragment() {
     
     // Verify fragment type
     assert!(
-        matches!(intro_fragment.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta),
-        "Fragment 1 should be a Sutta fragment, got: {:?}", intro_fragment.fragment_type
+        matches!(intro_fragment.frag_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta),
+        "Fragment 1 should be a Sutta fragment, got: {:?}", intro_fragment.frag_type
     );
     
     // Verify cst_code for vagga 0 (introduction)

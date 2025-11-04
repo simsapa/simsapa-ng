@@ -46,26 +46,24 @@ pub struct GroupLevel {
 /// Represents a fragment of XML with associated metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct XmlFragment {
+    /// Source XML filename for tracking which file this fragment came from.
+    pub cst_file: String,
+    /// Index of this fragment in the list of fragments parsed from the XML file (0-indexed)
+    pub frag_idx: usize,
     /// Type of this fragment
-    pub fragment_type: FragmentType,
+    pub frag_type: FragmentType,
+    /// Comments on the review status of this fragment
+    pub frag_review: Option<String>,
     /// Raw XML content of this fragment
     pub content: String,
     /// Starting line number in source file (1-indexed)
     pub start_line: usize,
-    /// Ending line number in source file (1-indexed)
-    pub end_line: usize,
     /// Starting character position within start_line (0-indexed)
     pub start_char: usize,
+    /// Ending line number in source file (1-indexed)
+    pub end_line: usize,
     /// Ending character position within end_line (0-indexed, exclusive)
     pub end_char: usize,
-    /// Hierarchy levels at the time this fragment was created
-    pub group_levels: Vec<GroupLevel>,
-    /// Source XML filename for tracking which file this fragment came from. Corresponds to cst_file in TsvRecord.
-    pub xml_filename: String,
-    /// Index of this fragment in the list of fragments parsed from the XML file (0-indexed)
-    pub frag_idx: usize,
-    /// CST file identifier (derived from xml_filename)
-    pub cst_file: Option<String>,
     /// CST code (e.g., "dn1.1", "mn1.5.1")
     pub cst_code: Option<String>,
     /// CST vagga title (e.g., "5. Cūḷayamakavaggo")
@@ -78,13 +76,14 @@ pub struct XmlFragment {
     pub sc_code: Option<String>,
     /// SuttaCentral sutta title (e.g., "Brahmajālasutta")
     pub sc_sutta: Option<String>,
+    /// Hierarchy levels at the time this fragment was created
+    pub group_levels: Vec<GroupLevel>,
 }
 
 /// Manual adjustment for a specific fragment
 #[derive(Debug, Clone)]
 pub struct FragmentAdjustment {
-    /// XML filename
-    pub xml_filename: String,
+    pub cst_file: String,
     /// Fragment index (0-indexed)
     pub frag_idx: usize,
     /// Override end line (1-indexed)
@@ -96,7 +95,7 @@ pub struct FragmentAdjustment {
 /// Key for looking up fragment adjustments
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct FragmentKey {
-    pub xml_filename: String,
+    pub cst_file: String,
     pub frag_idx: usize,
 }
 
@@ -111,7 +110,7 @@ use std::path::Path;
 /// Load fragment adjustments from a TSV file
 ///
 /// The TSV file should have a header line with at least these fields:
-/// - xml_filename: Name of the XML file
+/// - cst_file: Name of the XML file
 /// - frag_idx: Fragment index (0-indexed)
 /// - end_line: (Optional) Override end line number (1-indexed)
 /// - end_char: (Optional) Override end character position (0-indexed)
@@ -120,7 +119,7 @@ use std::path::Path;
 /// * `tsv_path` - Path to the TSV file
 ///
 /// # Returns
-/// HashMap mapping (xml_filename, frag_idx) to FragmentAdjustment
+/// HashMap mapping (cst_file, frag_idx) to FragmentAdjustment
 pub fn load_fragment_adjustments(tsv_path: &Path) -> Result<FragmentAdjustments> {
     let file = File::open(tsv_path)
         .with_context(|| format!("Failed to open adjustments TSV file: {:?}", tsv_path))?;
@@ -135,8 +134,8 @@ pub fn load_fragment_adjustments(tsv_path: &Path) -> Result<FragmentAdjustments>
     
     // Parse header to find column indices
     let columns: Vec<&str> = header.split('\t').collect();
-    let xml_filename_idx = columns.iter().position(|&c| c == "xml_filename")
-        .ok_or_else(|| anyhow::anyhow!("Missing 'xml_filename' column in TSV header"))?;
+    let cst_file_idx = columns.iter().position(|&c| c == "cst_file")
+        .ok_or_else(|| anyhow::anyhow!("Missing 'cst_file' column in TSV header"))?;
     let frag_idx_col = columns.iter().position(|&c| c == "frag_idx")
         .ok_or_else(|| anyhow::anyhow!("Missing 'frag_idx' column in TSV header"))?;
     let end_line_idx = columns.iter().position(|&c| c == "end_line");
@@ -156,9 +155,9 @@ pub fn load_fragment_adjustments(tsv_path: &Path) -> Result<FragmentAdjustments>
         
         let fields: Vec<&str> = line.split('\t').collect();
         
-        // Extract xml_filename
-        let xml_filename = fields.get(xml_filename_idx)
-            .ok_or_else(|| anyhow::anyhow!("Missing xml_filename field on line {}", line_num + 2))?
+        // Extract cst_file
+        let cst_file = fields.get(cst_file_idx)
+            .ok_or_else(|| anyhow::anyhow!("Missing cst_file field on line {}", line_num + 2))?
             .trim()
             .to_string();
         
@@ -201,14 +200,14 @@ pub fn load_fragment_adjustments(tsv_path: &Path) -> Result<FragmentAdjustments>
         
         // Create adjustment
         let adjustment = FragmentAdjustment {
-            xml_filename: xml_filename.clone(),
+            cst_file: cst_file.clone(),
             frag_idx,
             end_line,
             end_char,
         };
         
         let key = FragmentKey {
-            xml_filename,
+            cst_file,
             frag_idx,
         };
         

@@ -15,7 +15,7 @@ use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 ///
 /// Creates two tables:
 /// - `nikaya_structures`: Stores the NikayaStructure with unique nikaya field
-/// - `xml_fragments`: Stores each XmlFragment with xml_filename and nikaya foreign key
+/// - `xml_fragments`: Stores each XmlFragment with cst_file and nikaya foreign key
 ///
 /// # Arguments
 /// * `fragments` - Vector of parsed XML fragments
@@ -61,28 +61,28 @@ fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
     .execute(conn)
     .context("Failed to create nikaya_structures table")?;
     
-    // Create xml_fragments table with xml_filename and nikaya foreign key
+    // Create xml_fragments table with cst_file and nikaya foreign key
     diesel::sql_query(
         r#"
         CREATE TABLE IF NOT EXISTS xml_fragments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nikaya TEXT NOT NULL,
-            xml_filename TEXT NOT NULL,
+            cst_file TEXT NOT NULL,
             frag_idx INTEGER NOT NULL,
-            fragment_type TEXT NOT NULL,
-            content TEXT NOT NULL,
-            start_line INTEGER NOT NULL,
-            end_line INTEGER NOT NULL,
-            start_char INTEGER NOT NULL,
-            end_char INTEGER NOT NULL,
-            group_levels TEXT NOT NULL,
-            cst_file TEXT,
+            frag_type TEXT NOT NULL,
+            frag_review TEXT,
+            nikaya TEXT NOT NULL,
             cst_code TEXT,
+            sc_code TEXT,
+            content TEXT NOT NULL,
             cst_vagga TEXT,
             cst_sutta TEXT,
             cst_paranum TEXT,
-            sc_code TEXT,
             sc_sutta TEXT,
+            start_line INTEGER NOT NULL,
+            start_char INTEGER NOT NULL,
+            end_line INTEGER NOT NULL,
+            end_char INTEGER NOT NULL,
+            group_levels TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (nikaya) REFERENCES nikaya_structures(nikaya)
         )
@@ -126,7 +126,7 @@ fn insert_fragments(
     let mut count = 0;
     
     for fragment in fragments {
-        let fragment_type = match fragment.fragment_type {
+        let frag_type = match fragment.frag_type {
             crate::tipitaka_xml_parser::types::FragmentType::Header => "Header",
             crate::tipitaka_xml_parser::types::FragmentType::Sutta => "Sutta",
         };
@@ -137,22 +137,22 @@ fn insert_fragments(
         diesel::sql_query(
             r#"
             INSERT INTO xml_fragments 
-            (nikaya, xml_filename, frag_idx, fragment_type, content, start_line, end_line, start_char, end_char, group_levels,
-             cst_file, cst_code, cst_vagga, cst_sutta, cst_paranum, sc_code, sc_sutta)
+            (nikaya, cst_file, frag_idx, frag_type, frag_review, content, start_line, end_line, start_char, end_char, group_levels,
+             cst_code, cst_vagga, cst_sutta, cst_paranum, sc_code, sc_sutta)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
         .bind::<diesel::sql_types::Text, _>(nikaya)
-        .bind::<diesel::sql_types::Text, _>(&fragment.xml_filename)
+        .bind::<diesel::sql_types::Text, _>(&fragment.cst_file)
         .bind::<diesel::sql_types::Integer, _>(fragment.frag_idx as i32)
-        .bind::<diesel::sql_types::Text, _>(fragment_type)
+        .bind::<diesel::sql_types::Text, _>(frag_type)
+        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.frag_review.as_deref())
         .bind::<diesel::sql_types::Text, _>(&fragment.content)
         .bind::<diesel::sql_types::Integer, _>(fragment.start_line as i32)
         .bind::<diesel::sql_types::Integer, _>(fragment.end_line as i32)
         .bind::<diesel::sql_types::Integer, _>(fragment.start_char as i32)
         .bind::<diesel::sql_types::Integer, _>(fragment.end_char as i32)
         .bind::<diesel::sql_types::Text, _>(&group_levels_json)
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_file.as_deref())
         .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_code.as_deref())
         .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_vagga.as_deref())
         .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_sutta.as_deref())
@@ -187,16 +187,15 @@ mod tests {
         
         let fragments = vec![
             XmlFragment {
-                fragment_type: FragmentType::Header,
+                frag_type: FragmentType::Header,
                 content: "<p rend=\"nikaya\">Dīghanikāyo</p>".to_string(),
                 start_line: 1,
                 end_line: 1,
                 start_char: 0,
                 end_char: 34,
                 group_levels: vec![],
-                xml_filename: "test.xml".to_string(),
+                cst_file: "test.xml".to_string(),
                 frag_idx: 0,
-                cst_file: None,
                 cst_code: None,
                 cst_vagga: None,
                 cst_sutta: None,
@@ -205,7 +204,7 @@ mod tests {
                 sc_sutta: None,
             },
             XmlFragment {
-                fragment_type: FragmentType::Sutta,
+                frag_type: FragmentType::Sutta,
                 content: "<p>Test content</p>".to_string(),
                 start_line: 2,
                 end_line: 2,
@@ -219,9 +218,8 @@ mod tests {
                         id: None,
                     },
                 ],
-                xml_filename: "test.xml".to_string(),
+                cst_file: "test.xml".to_string(),
                 frag_idx: 1,
-                cst_file: None,
                 cst_code: None,
                 cst_vagga: None,
                 cst_sutta: None,
@@ -275,16 +273,15 @@ mod tests {
         
         let fragments1 = vec![
             XmlFragment {
-                fragment_type: FragmentType::Header,
+                frag_type: FragmentType::Header,
                 content: "<p rend=\"nikaya\">Dīghanikāyo</p>".to_string(),
                 start_line: 1,
                 end_line: 1,
                 start_char: 0,
                 end_char: 34,
                 group_levels: vec![],
-                xml_filename: "dn1.xml".to_string(),
+                cst_file: "dn1.xml".to_string(),
                 frag_idx: 0,
-                cst_file: None,
                 cst_code: None,
                 cst_vagga: None,
                 cst_sutta: None,
@@ -296,16 +293,15 @@ mod tests {
         
         let fragments2 = vec![
             XmlFragment {
-                fragment_type: FragmentType::Header,
+                frag_type: FragmentType::Header,
                 content: "<p rend=\"nikaya\">Majjhimanikāyo</p>".to_string(),
                 start_line: 1,
                 end_line: 1,
                 start_char: 0,
                 end_char: 35,
                 group_levels: vec![],
-                xml_filename: "mn1.xml".to_string(),
+                cst_file: "mn1.xml".to_string(),
                 frag_idx: 0,
-                cst_file: None,
                 cst_code: None,
                 cst_vagga: None,
                 cst_sutta: None,

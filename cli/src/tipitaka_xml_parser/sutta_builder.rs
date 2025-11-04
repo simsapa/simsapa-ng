@@ -65,14 +65,14 @@ fn load_tsv_mapping(tsv_path: &Path) -> Result<Vec<TsvRecord>> {
 /// Find code for a given filename, sutta title, and vagga
 fn find_code_for_sutta(
     tsv_records: &[TsvRecord],
-    xml_filename: &str,
+    cst_file: &str,
     sutta_title: &str,
     vagga_title: Option<&str>,
     is_commentary: bool,
     used_codes: &std::collections::HashSet<String>,
 ) -> Option<String> {
     // Normalize the xml filename (remove path prefix if present)
-    let normalized_filename = xml_filename
+    let normalized_filename = cst_file
         .trim_start_matches("romn/")
         .trim_start_matches("mula/");
     
@@ -585,7 +585,7 @@ pub fn build_suttas(
     
     // Group sutta fragments
     let sutta_fragments: Vec<&XmlFragment> = fragments.iter()
-        .filter(|f| matches!(f.fragment_type, FragmentType::Sutta))
+        .filter(|f| matches!(f.frag_type, FragmentType::Sutta))
         .collect();
     
     for (idx, fragment) in sutta_fragments.iter().enumerate() {
@@ -630,11 +630,11 @@ pub fn build_suttas(
         };
         
         // Get XML filename from fragment
-        let xml_filename = &fragment.xml_filename;
+        let cst_file = &fragment.cst_file;
         
         // Determine if this is a commentary or subcommentary
-        let is_commentary = xml_filename.ends_with(".att.xml");
-        let is_subcommentary = xml_filename.ends_with(".tik.xml");
+        let is_commentary = cst_file.ends_with(".att.xml");
+        let is_subcommentary = cst_file.ends_with(".tik.xml");
         let is_commentary_or_sub = is_commentary || is_subcommentary;
         
         // Extract vagga from group_levels (if present)
@@ -664,12 +664,12 @@ pub fn build_suttas(
             }
         } else {
             // Fall back to TSV lookup (legacy path)
-            match find_code_for_sutta(&tsv_records, &xml_filename, &title, vagga_title, is_commentary_or_sub, &used_codes) {
+            match find_code_for_sutta(&tsv_records, &cst_file, &title, vagga_title, is_commentary_or_sub, &used_codes) {
                 Some(c) => c,
                 None => {
                     // Log warning - could not find matching code
                     eprintln!("Warning: Could not find code for sutta '{}' in file '{}', skipping", 
-                             title, xml_filename);
+                             title, cst_file);
                     continue;
                 }
             }
@@ -678,7 +678,7 @@ pub fn build_suttas(
         // Check if we've already used this code
         if used_codes.contains(&code) {
             eprintln!("ERROR: Code '{}' already used for a previous sutta, skipping duplicate for '{}' (file: {})", 
-                     code, title, xml_filename);
+                     code, title, cst_file);
             continue;
         }
         used_codes.insert(code.clone());

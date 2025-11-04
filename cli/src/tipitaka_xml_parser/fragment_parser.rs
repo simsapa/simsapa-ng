@@ -196,12 +196,12 @@ impl HierarchyTracker {
 /// and extracts relevant metadata.
 struct FragmentBoundaryDetector<'a> {
     nikaya_structure: &'a NikayaStructure,
-    xml_filename: &'a str,
+    cst_file: &'a str,
 }
 
 impl<'a> FragmentBoundaryDetector<'a> {
-    fn new(nikaya_structure: &'a NikayaStructure, xml_filename: &'a str) -> Self {
-        Self { nikaya_structure, xml_filename }
+    fn new(nikaya_structure: &'a NikayaStructure, cst_file: &'a str) -> Self {
+        Self { nikaya_structure, cst_file }
     }
     
     /// Check if an element marks a level boundary and extract metadata
@@ -266,7 +266,7 @@ impl<'a> FragmentBoundaryDetector<'a> {
     /// Check if this is a sutta boundary (start of actual sutta content)
     fn is_sutta_start(&self, tag_name: &str, attributes: &HashMap<String, String>) -> bool {
         // Check if this is a commentary or sub-commentary file
-        let is_commentary = self.xml_filename.ends_with(".att.xml") || self.xml_filename.ends_with(".tik.xml");
+        let is_commentary = self.cst_file.ends_with(".att.xml") || self.cst_file.ends_with(".tik.xml");
         
         match self.nikaya_structure.nikaya.as_str() {
             "digha" => {
@@ -310,12 +310,11 @@ impl<'a> FragmentBoundaryDetector<'a> {
 fn derive_cst_fields(
     fragment: &XmlFragment,
     nikaya_structure: &NikayaStructure,
-) -> (Option<String>, Option<String>, Option<String>, Option<String>, Option<String>) {
-    // cst_file is xml_filename
-    let cst_file = Some(fragment.xml_filename.clone());
+) -> (String, Option<String>, Option<String>, Option<String>, Option<String>) {
+    let cst_file = fragment.cst_file.clone();
     
     // Only process Sutta fragments
-    if !matches!(fragment.fragment_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta) {
+    if !matches!(fragment.frag_type, crate::tipitaka_xml_parser::types::FragmentType::Sutta) {
         return (cst_file, None, None, None, None);
     }
     
@@ -600,14 +599,14 @@ fn apply_fragment_adjustment(
     default_end_pos: usize,
     default_end_line: usize,
     default_end_char: usize,
-    xml_filename: &str,
+    cst_file: &str,
     frag_idx: usize,
     adjustments: Option<&FragmentAdjustments>,
 ) -> (usize, usize, usize) {
     // Check if there's an adjustment for this fragment
     if let Some(adjustments_map) = adjustments {
         let key = FragmentKey {
-            xml_filename: xml_filename.to_string(),
+            cst_file: cst_file.to_string(),
             frag_idx,
         };
         
@@ -630,7 +629,7 @@ fn apply_fragment_adjustment(
 /// # Arguments
 /// * `xml_content` - The complete XML file content
 /// * `nikaya_structure` - The structure configuration for this nikaya
-/// * `xml_filename` - Name of the XML file being parsed
+/// * `cst_file` - Name of the XML file being parsed
 /// * `adjustments` - Optional fragment adjustments to apply
 ///
 /// # Returns
@@ -638,17 +637,17 @@ fn apply_fragment_adjustment(
 pub fn parse_into_fragments(
     xml_content: &str,
     nikaya_structure: &NikayaStructure,
-    xml_filename: &str,
+    cst_file: &str,
     adjustments: Option<&FragmentAdjustments>,
 ) -> Result<Vec<XmlFragment>> {
     let mut reader = LineTrackingReader::new(xml_content);
     let mut hierarchy = HierarchyTracker::new(nikaya_structure.clone());
-    let detector = FragmentBoundaryDetector::new(nikaya_structure, xml_filename);
+    let detector = FragmentBoundaryDetector::new(nikaya_structure, cst_file);
     
     let mut fragments: Vec<XmlFragment> = Vec::new();
     // Track: (byte_pos, line_num, char_pos)
     let mut current_fragment_start: Option<(usize, usize, usize)> = None;
-    let mut current_fragment_type: Option<FragmentType> = None;
+    let mut current_frag_type: Option<FragmentType> = None;
     // Store hierarchy levels at the time fragment starts
     let mut current_fragment_group_levels: Vec<GroupLevel> = Vec::new();
     let mut pending_title: Option<(GroupType, String, Option<String>, Option<i32>)> = None; // (type, title, id, number)
@@ -667,7 +666,7 @@ pub fn parse_into_fragments(
     
     // Start with a Header fragment at the beginning of the file
     current_fragment_start = Some((0, 1, 0));
-    current_fragment_type = Some(FragmentType::Header);
+    current_frag_type = Some(FragmentType::Header);
     current_fragment_group_levels = hierarchy.get_current_levels();
     
     loop {
@@ -708,7 +707,7 @@ pub fn parse_into_fragments(
                     
                     // Close the Header fragment right after the <body> tag
                     if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
-                        (current_fragment_start, current_fragment_type.as_ref()) {
+                        (current_fragment_start, current_frag_type.as_ref()) {
                         
                         // Apply adjustments if any
                         let (end_pos, end_line, end_char) = apply_fragment_adjustment(
@@ -716,7 +715,7 @@ pub fn parse_into_fragments(
                             current_pos,
                             current_line,
                             current_char,
-                            xml_filename,
+                            cst_file,
                             fragments.len(),
                             adjustments,
                         );
@@ -724,16 +723,16 @@ pub fn parse_into_fragments(
                         let content = xml_content[frag_start_pos..end_pos].to_string();
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
-                                fragment_type: FragmentType::Header,
+                                frag_type: FragmentType::Header,
                                 content,
                                 start_line: frag_start_line,
                                 end_line,
                                 start_char: frag_start_char,
                                 end_char,
                                 group_levels: current_fragment_group_levels.clone(),
-                                xml_filename: xml_filename.to_string(),
+                                cst_file: cst_file.to_string(),
                                 frag_idx: fragments.len(),
-                                cst_file: None,
+                                frag_review: None,
                                 cst_code: None,
                                 cst_vagga: None,
                                 cst_sutta: None,
@@ -747,7 +746,7 @@ pub fn parse_into_fragments(
                     // Start a Sutta fragment immediately after <body>
                     // Content between <body> and the first sutta marker will be included
                     current_fragment_start = Some((current_pos, current_line, current_char));
-                    current_fragment_type = Some(FragmentType::Sutta);
+                    current_frag_type = Some(FragmentType::Sutta);
                     current_fragment_group_levels = hierarchy.get_current_levels();
                     in_sutta_content = true;
                 }
@@ -769,7 +768,7 @@ pub fn parse_into_fragments(
                             seen_first_vagga_or_sutta = true;
                         } else if is_vagga_or_sutta_level && in_sutta_content {
                             if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
-                                (current_fragment_start, current_fragment_type.as_ref()) {
+                                (current_fragment_start, current_frag_type.as_ref()) {
                                 
                                 // Only close if this is a Sutta fragment and has actual sutta content
                                 if matches!(frag_type, FragmentType::Sutta) {
@@ -785,23 +784,23 @@ pub fn parse_into_fragments(
                                             event_start_pos,
                                             event_start_line,
                                             event_start_char,
-                                            xml_filename,
+                                            cst_file,
                                             fragments.len(),
                                             adjustments,
                                         );
                                         
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
-                                        fragment_type: frag_type.clone(),
+                                        frag_type: frag_type.clone(),
                                         content,
                                         start_line: frag_start_line,
                                         end_line,
                                         start_char: frag_start_char,
                                         end_char,
                                         group_levels: current_fragment_group_levels.clone(),
-                                        xml_filename: xml_filename.to_string(),
+                                        cst_file: cst_file.to_string(),
                                         frag_idx: fragments.len(),
-                                        cst_file: None,
+                                        frag_review: None,
                                         cst_code: None,
                                         cst_vagga: None,
                                         cst_sutta: None,
@@ -813,7 +812,7 @@ pub fn parse_into_fragments(
                                 
                                         // Start new fragment after closing the previous one
                                         current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
-                                        current_fragment_type = Some(FragmentType::Sutta);
+                                        current_frag_type = Some(FragmentType::Sutta);
                                         // Note: we'll update group_levels AFTER entering the new level
                                     }
                                 }
@@ -849,7 +848,7 @@ pub fn parse_into_fragments(
                     
                     // For DN commentary: <div type="sutta"> precedes <head rend="chapter">
                     // Store its position to use when we encounter the <head> tag
-                    let is_commentary = xml_filename.ends_with(".att.xml") || xml_filename.ends_with(".tik.xml");
+                    let is_commentary = cst_file.ends_with(".att.xml") || cst_file.ends_with(".tik.xml");
                     if is_commentary && 
                        nikaya_structure.nikaya == "digha" &&
                        attributes.get("type") == Some(&"sutta".to_string()) {
@@ -877,7 +876,7 @@ pub fn parse_into_fragments(
                     // Check if this sutta marker is a div that should track depth
                     // For DN base text: <div type="sutta"> IS the sutta marker, so track depth
                     // For DN commentary: <head rend="chapter"> is the sutta marker, <div type="sutta"> is NOT
-                    let is_commentary = xml_filename.ends_with(".att.xml") || xml_filename.ends_with(".tik.xml");
+                    let is_commentary = cst_file.ends_with(".att.xml") || cst_file.ends_with(".tik.xml");
                     let should_track_div_depth = tag_name == "div" && 
                                                  attributes.get("type") == Some(&"sutta".to_string()) &&
                                                  !is_commentary;
@@ -909,7 +908,7 @@ pub fn parse_into_fragments(
                         
                         // Close current sutta fragment (excluding this tag)
                         if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
-                            (current_fragment_start, current_fragment_type.as_ref()) {
+                            (current_fragment_start, current_frag_type.as_ref()) {
                             
                             // Apply adjustments if any
                             let (end_pos, end_line, end_char) = apply_fragment_adjustment(
@@ -917,7 +916,7 @@ pub fn parse_into_fragments(
                                 close_pos,
                                 close_line,
                                 close_char,
-                                xml_filename,
+                                cst_file,
                                 fragments.len(),
                                 adjustments,
                             );
@@ -925,16 +924,16 @@ pub fn parse_into_fragments(
                             let content = xml_content[frag_start_pos..end_pos].to_string();
                                  if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
-                                        fragment_type: frag_type.clone(),
+                                        frag_type: frag_type.clone(),
                                         content,
                                         start_line: frag_start_line,
                                         end_line,
                                         start_char: frag_start_char,
                                         end_char,
                                         group_levels: current_fragment_group_levels.clone(),
-                                        xml_filename: xml_filename.to_string(),
+                                        cst_file: cst_file.to_string(),
                                         frag_idx: fragments.len(),
-                                        cst_file: None,
+                                        frag_review: None,
                                         cst_code: None,
                                         cst_vagga: None,
                                         cst_sutta: None,
@@ -947,7 +946,7 @@ pub fn parse_into_fragments(
                         
                         // Start new sutta fragment (including this tag)
                         current_fragment_start = Some((start_pos, start_line, start_char));
-                        current_fragment_type = Some(FragmentType::Sutta);
+                        current_frag_type = Some(FragmentType::Sutta);
                         current_fragment_group_levels = hierarchy.get_current_levels();
                         
                         // Only track div depth if this is a div-based sutta marker
@@ -976,7 +975,7 @@ pub fn parse_into_fragments(
                     
                     // For commentary/sub-commentary files, also check if it ends with "suttavaṇṇanā"
                     // to distinguish actual sutta commentaries from subsections
-                    let is_commentary = xml_filename.ends_with(".att.xml") || xml_filename.ends_with(".tik.xml");
+                    let is_commentary = cst_file.ends_with(".att.xml") || cst_file.ends_with(".tik.xml");
                     
                     let is_sutta_commentary = if is_commentary {
                         // In commentary files, only treat it as a sutta if it ends with "suttavaṇṇanā"
@@ -1016,7 +1015,7 @@ pub fn parse_into_fragments(
                             
                             // Already in a sutta - close current and start new
                             if let (Some((frag_start_pos, frag_start_line, frag_start_char)), Some(frag_type)) = 
-                                (current_fragment_start, current_fragment_type.as_ref()) {
+                                (current_fragment_start, current_frag_type.as_ref()) {
                                 
                                 // Apply adjustments if any
                                 let (end_pos, end_line, end_char) = apply_fragment_adjustment(
@@ -1024,7 +1023,7 @@ pub fn parse_into_fragments(
                                     close_pos,
                                     close_line,
                                     close_char,
-                                    xml_filename,
+                                    cst_file,
                                     fragments.len(),
                                     adjustments,
                                 );
@@ -1032,16 +1031,16 @@ pub fn parse_into_fragments(
                                 let content = xml_content[frag_start_pos..end_pos].to_string();
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
-                                        fragment_type: frag_type.clone(),
+                                        frag_type: frag_type.clone(),
                                         content,
                                         start_line: frag_start_line,
                                         end_line,
                                         start_char: frag_start_char,
                                         end_char,
                                         group_levels: current_fragment_group_levels.clone(),
-                                        xml_filename: xml_filename.to_string(),
+                                        cst_file: cst_file.to_string(),
                                         frag_idx: fragments.len(),
-                                        cst_file: None,
+                                        frag_review: None,
                                         cst_code: None,
                                         cst_vagga: None,
                                         cst_sutta: None,
@@ -1057,7 +1056,7 @@ pub fn parse_into_fragments(
                             
                             // Start new sutta fragment
                             current_fragment_start = Some((start_pos, start_line, start_char));
-                            current_fragment_type = Some(FragmentType::Sutta);
+                            current_frag_type = Some(FragmentType::Sutta);
                             current_fragment_group_levels = hierarchy.get_current_levels();
                         }
                     }
@@ -1101,7 +1100,7 @@ pub fn parse_into_fragments(
                     // Close any pending sutta fragment first
                     // The sutta fragment should include ALL content up to (but not including) </body>
                     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
-                        (current_fragment_start, current_fragment_type.as_ref()) {
+                        (current_fragment_start, current_frag_type.as_ref()) {
                         
                         // Apply adjustments if any
                         let (end_pos, end_line, end_char) = apply_fragment_adjustment(
@@ -1109,7 +1108,7 @@ pub fn parse_into_fragments(
                             event_start_pos,
                             event_start_line,
                             event_start_char,
-                            xml_filename,
+                            cst_file,
                             fragments.len(),
                             adjustments,
                         );
@@ -1118,16 +1117,16 @@ pub fn parse_into_fragments(
         let content = xml_content[start_pos..end_pos].to_string();
         if !content.trim().is_empty() {
             fragments.push(XmlFragment {
-                fragment_type: frag_type.clone(),
+                frag_type: frag_type.clone(),
                 content,
                 start_line,
                 end_line,
                 start_char,
                 end_char,
                 group_levels: current_fragment_group_levels.clone(),
-                xml_filename: xml_filename.to_string(),
+                cst_file: cst_file.to_string(),
                 frag_idx: fragments.len(),
-                cst_file: None,
+                frag_review: None,
                 cst_code: None,
                 cst_vagga: None,
                 cst_sutta: None,
@@ -1140,7 +1139,7 @@ pub fn parse_into_fragments(
                     
                     // Start the final Header fragment at the beginning of </body>
                     current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
-                    current_fragment_type = Some(FragmentType::Header);
+                    current_frag_type = Some(FragmentType::Header);
                     current_fragment_group_levels = hierarchy.get_current_levels();
                     in_sutta_content = false;
                 }
@@ -1154,7 +1153,7 @@ pub fn parse_into_fragments(
     
     // Close any remaining fragment (usually the final Header fragment)
     if let (Some((start_pos, start_line, start_char)), Some(frag_type)) = 
-        (current_fragment_start, current_fragment_type) {
+        (current_fragment_start, current_frag_type) {
         
         // Apply adjustments if any
         let (end_pos, end_line, end_char) = apply_fragment_adjustment(
@@ -1162,7 +1161,7 @@ pub fn parse_into_fragments(
             xml_content.len(),
             reader.current_line(),
             reader.current_char(),
-            xml_filename,
+            cst_file,
             fragments.len(),
             adjustments,
         );
@@ -1170,16 +1169,16 @@ pub fn parse_into_fragments(
         let content = xml_content[start_pos..end_pos].to_string();
         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
-                                fragment_type: frag_type.clone(),
+                                frag_type: frag_type.clone(),
                                 content,
                                 start_line,
                                 end_line,
                                 start_char,
                                 end_char,
                                 group_levels: current_fragment_group_levels.clone(),
-                                xml_filename: xml_filename.to_string(),
+                                cst_file: cst_file.to_string(),
                                 frag_idx: fragments.len(),
-                                cst_file: None,
+                                frag_review: None,
                                 cst_code: None,
                                 cst_vagga: None,
                                 cst_sutta: None,
@@ -1348,7 +1347,7 @@ mod tests {
         
         // Count sutta fragments
         let sutta_fragments: Vec<_> = fragments.iter()
-            .filter(|f| matches!(f.fragment_type, FragmentType::Sutta))
+            .filter(|f| matches!(f.frag_type, FragmentType::Sutta))
             .collect();
         
         // Should have one sutta fragment
@@ -1475,7 +1474,7 @@ mod tests {
         
         // Find the sutta fragment
         let sutta_frag = fragments.iter()
-            .find(|f| matches!(f.fragment_type, FragmentType::Sutta))
+            .find(|f| matches!(f.frag_type, FragmentType::Sutta))
             .expect("Should have a sutta fragment");
         
         // Check CST fields
@@ -1511,7 +1510,7 @@ mod tests {
         
         // Find the sutta fragment
         let sutta_frag = fragments.iter()
-            .find(|f| matches!(f.fragment_type, FragmentType::Sutta))
+            .find(|f| matches!(f.frag_type, FragmentType::Sutta))
             .expect("Should have a sutta fragment");
         
         // Check CST fields

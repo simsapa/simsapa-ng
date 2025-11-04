@@ -15,31 +15,31 @@ use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 ///
 /// # Arguments
 /// * `db_path` - Path to the fragments SQLite database
-/// * `xml_filename` - The xml_filename to look up in the nikaya table
+/// * `cst_file` - The cst_file to look up in the nikaya table
 ///
 /// # Returns
 /// The reconstructed XML content as a string
 pub fn reconstruct_xml_from_db(
     db_path: &Path,
-    xml_filename: &str,
+    cst_file: &str,
 ) -> Result<String> {
     let mut conn = SqliteConnection::establish(db_path.to_str().unwrap())
         .context("Failed to connect to fragments database")?;
     
     // Get nikaya name for this filename
-    let _nikaya = get_nikaya_by_filename(&mut conn, xml_filename)?;
+    let _nikaya = get_nikaya_by_filename(&mut conn, cst_file)?;
     
     // Get all fragments for this filename, ordered by line and char position
-    let fragments = get_fragments_for_filename(&mut conn, xml_filename)?;
+    let fragments = get_fragments_for_filename(&mut conn, cst_file)?;
     
     // Reconstruct XML from fragments
     reconstruct_xml_from_fragments(&fragments)
 }
 
-/// Get nikaya name by xml_filename
+/// Get nikaya name by cst_file
 fn get_nikaya_by_filename(
     conn: &mut SqliteConnection,
-    xml_filename: &str,
+    cst_file: &str,
 ) -> Result<String> {
     #[derive(QueryableByName)]
     struct NikayaResult {
@@ -48,11 +48,11 @@ fn get_nikaya_by_filename(
     }
     
     let result: NikayaResult = diesel::sql_query(
-        "SELECT DISTINCT nikaya FROM xml_fragments WHERE xml_filename = ? LIMIT 1"
+        "SELECT DISTINCT nikaya FROM xml_fragments WHERE cst_file = ? LIMIT 1"
     )
-    .bind::<diesel::sql_types::Text, _>(xml_filename)
+    .bind::<diesel::sql_types::Text, _>(cst_file)
     .get_result(conn)
-    .context(format!("No nikaya found with filename: {}", xml_filename))?;
+    .context(format!("No nikaya found with filename: {}", cst_file))?;
     
     Ok(result.nikaya)
 }
@@ -60,12 +60,12 @@ fn get_nikaya_by_filename(
 /// Get all fragments for a filename, ordered by position
 fn get_fragments_for_filename(
     conn: &mut SqliteConnection,
-    xml_filename: &str,
+    cst_file: &str,
 ) -> Result<Vec<XmlFragment>> {
     #[derive(QueryableByName)]
     struct FragmentRow {
         #[diesel(sql_type = diesel::sql_types::Text)]
-        fragment_type: String,
+        frag_type: String,
         #[diesel(sql_type = diesel::sql_types::Text)]
         content: String,
         #[diesel(sql_type = diesel::sql_types::Integer)]
@@ -79,27 +79,27 @@ fn get_fragments_for_filename(
         #[diesel(sql_type = diesel::sql_types::Text)]
         group_levels: String,
         #[diesel(sql_type = diesel::sql_types::Text)]
-        xml_filename: String,
+        cst_file: String,
         #[diesel(sql_type = diesel::sql_types::Integer)]
         frag_idx: i32,
     }
     
     let rows: Vec<FragmentRow> = diesel::sql_query(
         r#"
-        SELECT fragment_type, content, start_line, end_line, start_char, end_char, group_levels, xml_filename, frag_idx
+        SELECT frag_type, content, start_line, end_line, start_char, end_char, group_levels, cst_file, frag_idx
         FROM xml_fragments
-        WHERE xml_filename = ?
+        WHERE cst_file = ?
         ORDER BY start_line ASC, start_char ASC
         "#
     )
-    .bind::<diesel::sql_types::Text, _>(xml_filename)
+    .bind::<diesel::sql_types::Text, _>(cst_file)
     .load(conn)
     .context("Failed to query fragments")?;
     
     // Convert to XmlFragment
     let mut fragments = Vec::new();
     for row in rows {
-        let fragment_type = match row.fragment_type.as_str() {
+        let frag_type = match row.frag_type.as_str() {
             "Header" => FragmentType::Header,
             "Sutta" => FragmentType::Sutta,
             _ => continue,
@@ -109,16 +109,16 @@ fn get_fragments_for_filename(
             .context("Failed to deserialize group levels")?;
         
         fragments.push(XmlFragment {
-            fragment_type,
+            frag_type,
             content: row.content,
             start_line: row.start_line as usize,
             end_line: row.end_line as usize,
             start_char: row.start_char as usize,
             end_char: row.end_char as usize,
             group_levels,
-            xml_filename: row.xml_filename,
+            cst_file: row.cst_file,
             frag_idx: row.frag_idx as usize,
-            cst_file: None,
+            frag_review: None,
             cst_code: None,
             cst_vagga: None,
             cst_sutta: None,
