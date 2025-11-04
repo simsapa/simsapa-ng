@@ -149,11 +149,18 @@ impl HierarchyTracker {
                     let preserved_id = if id.is_none() {
                         existing.id.clone()
                     } else {
-                        id
+                        id.clone()
                     };
                     
-                    // Truncate levels after this one and update
-                    self.current_levels.truncate(depth + 1);
+                    // Only truncate child levels if we're providing a new ID
+                    // If id is None, we're just updating the title, so keep child levels intact
+                    let should_truncate = id.is_some();
+                    
+                    if should_truncate {
+                        // Truncate levels after this one before updating
+                        self.current_levels.truncate(depth + 1);
+                    }
+                    
                     self.current_levels[depth] = GroupLevel {
                         group_type: level_type,
                         group_number: number,

@@ -354,3 +354,62 @@ fn test_s0201a_att_vagga_zero_fragment() {
         first_sutta_fragment.cst_code
     );
 }
+
+
+#[test]
+fn test_s0201a_att_kakacupama_sutta() {
+    // This test verifies that "1. Kakacūpamasuttavaṇṇanā" in s0201a.att.xml
+    // correctly gets cst_code "mn1.3.1" derived from vagga id "mn1_3" and sutta title "1. ..."
+    
+    let xml_path = Path::new("tests/data/s0201a.att.xml");
+    let xml_content = read_xml_file(xml_path)
+        .expect("Failed to read XML file");
+    
+    let nikaya_structure = detect_nikaya_structure(&xml_content)
+        .expect("Failed to detect nikaya structure");
+    
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201a.att.xml", None)
+        .expect("Failed to parse fragments");
+    
+    // Find the fragment containing Kakacūpamasuttavaṇṇanā
+    let kakacupama_fragment = fragments.iter()
+        .find(|f| f.content.contains("Kakacūpamasuttavaṇṇanā"))
+        .expect("Should find Kakacūpamasuttavaṇṇanā fragment");
+    
+    // Verify cst_code
+    assert_eq!(
+        kakacupama_fragment.cst_code.as_deref(),
+        Some("mn1.3.1"),
+        "Kakacūpamasuttavaṇṇanā should have cst_code 'mn1.3.1', got: {:?}",
+        kakacupama_fragment.cst_code
+    );
+}
+
+#[test]
+fn test_s0201t_tik_culasihanada_sutta() {
+    // This test verifies that "1. Cūḷasīhanādasuttavaṇṇanā" in s0201t.tik.xml
+    // correctly gets cst_code "mn1.2.1" derived from vagga id "mn1_2" and sutta title "1. ..."
+    
+    let xml_path = Path::new("tests/data/s0201t.tik.xml");
+    let xml_content = read_xml_file(xml_path)
+        .expect("Failed to read XML file");
+    
+    let nikaya_structure = detect_nikaya_structure(&xml_content)
+        .expect("Failed to detect nikaya structure");
+    
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201t.tik.xml", None)
+        .expect("Failed to parse fragments");
+    
+    // Find the fragment containing Cūḷasīhanādasuttavaṇṇanā
+    let culasihanada_fragment = fragments.iter()
+        .find(|f| f.content.contains("Cūḷasīhanādasuttavaṇṇanā"))
+        .expect("Should find Cūḷasīhanādasuttavaṇṇanā fragment");
+    
+    // Verify cst_code
+    assert_eq!(
+        culasihanada_fragment.cst_code.as_deref(),
+        Some("mn1.2.1"),
+        "Cūḷasīhanādasuttavaṇṇanā should have cst_code 'mn1.2.1', got: {:?}",
+        culasihanada_fragment.cst_code
+    );
+}
