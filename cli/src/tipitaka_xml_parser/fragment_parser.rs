@@ -321,7 +321,17 @@ fn derive_cst_fields(
     // Extract vagga from group_levels
     let cst_vagga = fragment.group_levels.iter()
         .find(|level| matches!(level.group_type, crate::tipitaka_xml_parser::types::GroupType::Vagga))
-        .map(|level| level.title.clone());
+        .and_then(|level| {
+            if level.title.trim().is_empty() {
+                None
+            } else {
+                Some(level.title.clone())
+            }
+        })
+        .or_else(|| {
+            // Fallback: Extract vagga title from <head rend="chapter"> tag in fragment content
+            extract_vagga_title_from_content(&fragment.content)
+        });
     
     // Extract sutta title from group_levels (filter out empty titles)
     let cst_sutta = fragment.group_levels.iter()
@@ -349,7 +359,82 @@ fn derive_cst_fields(
 }
 
 /// Extract sutta title from <head> or <p rend="subhead"> tag in fragment content
+/// Prefers <p rend="subhead"> over <head rend="chapter"> to avoid extracting vagga titles
 fn extract_sutta_title_from_content(content: &str) -> Option<String> {
+    use quick_xml::Reader;
+    use quick_xml::events::Event;
+    
+    let mut reader = Reader::from_str(content);
+    reader.trim_text(false);
+    let mut buf = Vec::new();
+    
+    let mut first_chapter_title: Option<String> = None;
+    let mut first_subhead_title: Option<String> = None;
+    
+    loop {
+        match reader.read_event_into(&mut buf) {
+            Ok(Event::Start(ref e)) => {
+                let name_bytes = e.name();
+                let name = std::str::from_utf8(name_bytes.as_ref()).unwrap_or("");
+                
+                // Check both <head> and <p> tags
+                if name == "head" || name == "p" {
+                    // Check if this has rend="chapter" or rend="subhead"
+                    let mut rend_value: Option<String> = None;
+                    
+                    for attr in e.attributes() {
+                        if let Ok(attr) = attr {
+                            let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
+                            let value = attr.unescape_value().unwrap_or_default();
+                            
+                            if key == "rend" && (value == "chapter" || value == "subhead") {
+                                rend_value = Some(value.to_string());
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if let Some(rend) = rend_value {
+                        // Read the text content
+                        if let Ok(Event::Text(ref text)) = reader.read_event_into(&mut buf) {
+                            let title_text = text.unescape().unwrap_or_default().trim().to_string();
+                            
+                            // Keep the full title including number prefix (e.g., "2. Brahmajālasuttaṃ")
+                            // But skip if it's a subsection (like "Uddeso" which doesn't start with a number)
+                            let looks_like_sutta_title = title_text.chars().next()
+                                .map(|c| c.is_numeric())
+                                .unwrap_or(false);
+                            
+                            if !title_text.is_empty() && looks_like_sutta_title {
+                                if rend == "subhead" && first_subhead_title.is_none() {
+                                    first_subhead_title = Some(title_text.clone());
+                                } else if rend == "chapter" && first_chapter_title.is_none() {
+                                    first_chapter_title = Some(title_text.clone());
+                                }
+                                
+                                // If we found a subhead title, we can return immediately
+                                // since subheads are sutta titles and take priority over chapter titles (vagga titles)
+                                if rend == "subhead" {
+                                    return Some(title_text);
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            Ok(Event::Eof) => break,
+            Err(_) => break,
+            _ => {},
+        }
+        buf.clear();
+    }
+    
+    // Prefer subhead title over chapter title
+    first_subhead_title.or(first_chapter_title)
+}
+
+/// Extract vagga title from <head rend="chapter"> tag in fragment content
+fn extract_vagga_title_from_content(content: &str) -> Option<String> {
     use quick_xml::Reader;
     use quick_xml::events::Event;
     
@@ -363,35 +448,34 @@ fn extract_sutta_title_from_content(content: &str) -> Option<String> {
                 let name_bytes = e.name();
                 let name = std::str::from_utf8(name_bytes.as_ref()).unwrap_or("");
                 
-                // Check both <head> and <p> tags
-                if name == "head" || name == "p" {
-                    // Check if this has rend="chapter" or rend="subhead"
-                    let mut is_title = false;
+                // Look for <head> tags
+                if name == "head" {
+                    // Check if this has rend="chapter"
+                    let mut is_chapter = false;
                     
                     for attr in e.attributes() {
                         if let Ok(attr) = attr {
                             let key = std::str::from_utf8(attr.key.as_ref()).unwrap_or("");
                             let value = attr.unescape_value().unwrap_or_default();
                             
-                            if key == "rend" && (value == "chapter" || value == "subhead") {
-                                is_title = true;
+                            if key == "rend" && value == "chapter" {
+                                is_chapter = true;
                                 break;
                             }
                         }
                     }
                     
-                    if is_title {
+                    if is_chapter {
                         // Read the text content
                         if let Ok(Event::Text(ref text)) = reader.read_event_into(&mut buf) {
                             let title_text = text.unescape().unwrap_or_default().trim().to_string();
                             
-                            // Keep the full title including number prefix (e.g., "2. Brahmajālasuttaṃ")
-                            // But skip if it's a subsection (like "Uddeso" which doesn't start with a number)
-                            let looks_like_sutta_title = title_text.chars().next()
+                            // Keep the full title including number prefix (e.g., "2. Sīhanādavaggo")
+                            let looks_like_vagga_title = title_text.chars().next()
                                 .map(|c| c.is_numeric())
                                 .unwrap_or(false);
                             
-                            if !title_text.is_empty() && looks_like_sutta_title {
+                            if !title_text.is_empty() && looks_like_vagga_title {
                                 return Some(title_text);
                             }
                         }
@@ -611,8 +695,10 @@ fn apply_fragment_adjustment(
         };
         
         if let Some(adjustment) = adjustments_map.get(&key) {
-            // Apply adjustments if both end_line and end_char are provided
-            if let (Some(adj_end_line), Some(adj_end_char)) = (adjustment.end_line, adjustment.end_char) {
+            // Apply adjustments if end_line is provided
+            // If end_char is not provided, default to 0 (start of line)
+            if let Some(adj_end_line) = adjustment.end_line {
+                let adj_end_char = adjustment.end_char.unwrap_or(0);
                 // Convert adjusted line/char to byte position
                 let adj_end_pos = line_char_to_byte_pos(xml_content, adj_end_line, adj_end_char);
                 return (adj_end_pos, adj_end_line, adj_end_char);
@@ -772,10 +858,10 @@ pub fn parse_into_fragments(
                                 
                                 // Only close if this is a Sutta fragment and has actual sutta content
                                 if matches!(frag_type, FragmentType::Sutta) {
-                                    let content = xml_content[frag_start_pos..event_start_pos].to_string();
-                                    let has_sutta_content = content.contains("rend=\"subhead\"") || 
-                                                           content.contains("rend=\"chapter\"") ||
-                                                           content.contains("rend=\"bodytext\"");
+                                    let tentative_content = xml_content[frag_start_pos..event_start_pos].to_string();
+                                    let has_sutta_content = tentative_content.contains("rend=\"subhead\"") || 
+                                                           tentative_content.contains("rend=\"chapter\"") ||
+                                                           tentative_content.contains("rend=\"bodytext\"");
                                     
                                     if has_sutta_content {
                                         // Close at the current position (before the new vagga/sutta div)
@@ -788,6 +874,9 @@ pub fn parse_into_fragments(
                                             fragments.len(),
                                             adjustments,
                                         );
+                                        
+                                        // Create content with adjusted end position
+                                        let content = xml_content[frag_start_pos..end_pos].to_string();
                                         
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
@@ -810,8 +899,9 @@ pub fn parse_into_fragments(
                                     });
                                 }
                                 
-                                        // Start new fragment after closing the previous one
-                                        current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
+                                        // Start new fragment at the adjusted end position of the previous fragment
+                                        // This ensures no gap in XML reconstruction when adjustments are used
+                                        current_fragment_start = Some((end_pos, end_line, end_char));
                                         current_frag_type = Some(FragmentType::Sutta);
                                         // Note: we'll update group_levels AFTER entering the new level
                                     }
@@ -941,11 +1031,19 @@ pub fn parse_into_fragments(
                                         sc_code: None,
                                         sc_sutta: None,
                                     });
+                                    
+                                    // If we adjusted the end position, start the next fragment there
+                                    // to avoid gaps in XML reconstruction
+                                    current_fragment_start = Some((end_pos, end_line, end_char));
+                                } else {
+                                    // No content was written, start from the original position
+                                    current_fragment_start = Some((start_pos, start_line, start_char));
                                 }
+                        } else {
+                            // No previous fragment to close, start from the original position
+                            current_fragment_start = Some((start_pos, start_line, start_char));
                         }
                         
-                        // Start new sutta fragment (including this tag)
-                        current_fragment_start = Some((start_pos, start_line, start_char));
                         current_frag_type = Some(FragmentType::Sutta);
                         current_fragment_group_levels = hierarchy.get_current_levels();
                         
@@ -1048,14 +1146,22 @@ pub fn parse_into_fragments(
                                         sc_code: None,
                                         sc_sutta: None,
                                     });
+                                    
+                                    // If we adjusted the end position, start the next fragment there
+                                    // to avoid gaps in XML reconstruction
+                                    current_fragment_start = Some((end_pos, end_line, end_char));
+                                } else {
+                                    // No content was written, start from the original position
+                                    current_fragment_start = Some((start_pos, start_line, start_char));
                                 }
+                            } else {
+                                // No previous fragment to close, start from the original position
+                                current_fragment_start = Some((start_pos, start_line, start_char));
                             }
                             
                             // Update hierarchy with new sutta title
                             hierarchy.enter_level(GroupType::Sutta, text.clone(), None, None);
                             
-                            // Start new sutta fragment
-                            current_fragment_start = Some((start_pos, start_line, start_char));
                             current_frag_type = Some(FragmentType::Sutta);
                             current_fragment_group_levels = hierarchy.get_current_levels();
                         }
@@ -1134,11 +1240,19 @@ pub fn parse_into_fragments(
                 sc_code: None,
                 sc_sutta: None,
             });
-                        }
+            
+            // Start the final Header fragment at the adjusted end position
+            // to avoid gaps in XML reconstruction
+            current_fragment_start = Some((end_pos, end_line, end_char));
+        } else {
+            // No content was written, start from the original position
+            current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
+        }
+                    } else {
+                        // No previous fragment, start from the original position
+                        current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
                     }
                     
-                    // Start the final Header fragment at the beginning of </body>
-                    current_fragment_start = Some((event_start_pos, event_start_line, event_start_char));
                     current_frag_type = Some(FragmentType::Header);
                     current_fragment_group_levels = hierarchy.get_current_levels();
                     in_sutta_content = false;
