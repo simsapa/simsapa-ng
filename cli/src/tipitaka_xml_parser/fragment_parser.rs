@@ -814,6 +814,7 @@ pub fn parse_into_fragments(
                         let content = xml_content[frag_start_pos..end_pos].to_string();
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
+                                nikaya: nikaya_structure.nikaya.clone(),
                                 frag_type: FragmentType::Header,
                                 content,
                                 start_line: frag_start_line,
@@ -885,6 +886,7 @@ pub fn parse_into_fragments(
                                         
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
+                                        nikaya: nikaya_structure.nikaya.clone(),
                                         frag_type: frag_type.clone(),
                                         content,
                                         start_line: frag_start_line,
@@ -1019,6 +1021,7 @@ pub fn parse_into_fragments(
                             let content = xml_content[frag_start_pos..end_pos].to_string();
                                  if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
+                                        nikaya: nikaya_structure.nikaya.clone(),
                                         frag_type: frag_type.clone(),
                                         content,
                                         start_line: frag_start_line,
@@ -1134,6 +1137,7 @@ pub fn parse_into_fragments(
                                 let content = xml_content[frag_start_pos..end_pos].to_string();
                                 if !content.trim().is_empty() {
                                     fragments.push(XmlFragment {
+                                        nikaya: nikaya_structure.nikaya.clone(),
                                         frag_type: frag_type.clone(),
                                         content,
                                         start_line: frag_start_line,
@@ -1228,6 +1232,7 @@ pub fn parse_into_fragments(
         let content = xml_content[start_pos..end_pos].to_string();
         if !content.trim().is_empty() {
             fragments.push(XmlFragment {
+                nikaya: nikaya_structure.nikaya.clone(),
                 frag_type: frag_type.clone(),
                 content,
                 start_line,
@@ -1288,6 +1293,7 @@ pub fn parse_into_fragments(
         let content = xml_content[start_pos..end_pos].to_string();
         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
+                                nikaya: nikaya_structure.nikaya.clone(),
                                 frag_type: frag_type.clone(),
                                 content,
                                 start_line,

@@ -40,7 +40,7 @@ pub fn export_fragments_to_db(
     insert_nikaya_structure(&mut conn, nikaya_structure)?;
     
     // Insert fragments with nikaya foreign key
-    let count = insert_fragments(&mut conn, fragments, &nikaya_structure.nikaya)?;
+    let count = insert_fragments(&mut conn, fragments)?;
     
     Ok(count)
 }
@@ -121,7 +121,6 @@ fn insert_nikaya_structure(
 fn insert_fragments(
     conn: &mut SqliteConnection,
     fragments: &[XmlFragment],
-    nikaya: &str,
 ) -> Result<usize> {
     let mut count = 0;
     
@@ -142,7 +141,7 @@ fn insert_fragments(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#
         )
-        .bind::<diesel::sql_types::Text, _>(nikaya)
+        .bind::<diesel::sql_types::Text, _>(&fragment.nikaya)
         .bind::<diesel::sql_types::Text, _>(&fragment.cst_file)
         .bind::<diesel::sql_types::Integer, _>(fragment.frag_idx as i32)
         .bind::<diesel::sql_types::Text, _>(frag_type)
@@ -187,6 +186,7 @@ mod tests {
         
         let fragments = vec![
             XmlFragment {
+                nikaya: "digha".to_string(),
                 frag_type: FragmentType::Header,
                 content: "<p rend=\"nikaya\">Dīghanikāyo</p>".to_string(),
                 start_line: 1,
@@ -205,6 +205,7 @@ mod tests {
                 sc_sutta: None,
             },
             XmlFragment {
+                nikaya: "digha".to_string(),
                 frag_type: FragmentType::Sutta,
                 content: "<p>Test content</p>".to_string(),
                 start_line: 2,
@@ -275,6 +276,7 @@ mod tests {
         
         let fragments1 = vec![
             XmlFragment {
+                nikaya: "digha".to_string(),
                 frag_type: FragmentType::Header,
                 content: "<p rend=\"nikaya\">Dīghanikāyo</p>".to_string(),
                 start_line: 1,
@@ -296,6 +298,7 @@ mod tests {
         
         let fragments2 = vec![
             XmlFragment {
+                nikaya: "majjhima".to_string(),
                 frag_type: FragmentType::Header,
                 content: "<p rend=\"nikaya\">Majjhimanikāyo</p>".to_string(),
                 start_line: 1,

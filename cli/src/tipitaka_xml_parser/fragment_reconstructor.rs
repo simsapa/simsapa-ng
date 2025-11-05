@@ -65,6 +65,8 @@ fn get_fragments_for_filename(
     #[derive(QueryableByName)]
     struct FragmentRow {
         #[diesel(sql_type = diesel::sql_types::Text)]
+        nikaya: String,
+        #[diesel(sql_type = diesel::sql_types::Text)]
         frag_type: String,
         #[diesel(sql_type = diesel::sql_types::Text)]
         content: String,
@@ -86,7 +88,7 @@ fn get_fragments_for_filename(
     
     let rows: Vec<FragmentRow> = diesel::sql_query(
         r#"
-        SELECT frag_type, content, start_line, end_line, start_char, end_char, group_levels, cst_file, frag_idx
+        SELECT nikaya, frag_type, content, start_line, end_line, start_char, end_char, group_levels, cst_file, frag_idx
         FROM xml_fragments
         WHERE cst_file = ?
         ORDER BY start_line ASC, start_char ASC
@@ -109,6 +111,7 @@ fn get_fragments_for_filename(
             .context("Failed to deserialize group levels")?;
         
         fragments.push(XmlFragment {
+            nikaya: row.nikaya,
             frag_type,
             content: row.content,
             start_line: row.start_line as usize,
