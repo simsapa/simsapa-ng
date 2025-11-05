@@ -7,39 +7,29 @@ use std::path::Path;
 use anyhow::{Result, Context};
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
-use simsapa_backend::db::appdata_schema::suttas;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use simsapa_backend::db::appdata_models::NewSutta;
 use crate::tipitaka_xml_parser::sutta_builder::SuttaRecord;
+
+// Embed the appdata migrations
+pub const APPDATA_MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata/");
 
 /// Initialize database with schema if it doesn't exist
 pub fn initialize_database(db_path: &Path) -> Result<()> {
     use std::fs;
     
-    // Check if database exists
-    let db_exists = db_path.exists();
-    
-    if !db_exists {
-        // Create parent directory if needed
-        if let Some(parent) = db_path.parent() {
-            fs::create_dir_all(parent)
-                .with_context(|| format!("Failed to create directory: {:?}", parent))?;
-        }
-        
-        // Connect to database (this creates the file)
-        let mut conn = establish_connection(db_path)?;
-        
-        // Run migration SQL manually using rusqlite since diesel doesn't support batch_execute
-        use rusqlite::Connection;
-        
-        let migration_sql = include_str!("../../../backend/migrations/appdata/2025-03-18-165332_create_tables/up.sql");
-        
-        // Use rusqlite to execute the migration
-        let rusqlite_conn = Connection::open(db_path)
-            .context("Failed to open database with rusqlite")?;
-        
-        rusqlite_conn.execute_batch(migration_sql)
-            .context("Failed to run database migrations")?;
+    // Create parent directory if needed
+    if let Some(parent) = db_path.parent() {
+        fs::create_dir_all(parent)
+            .with_context(|| format!("Failed to create directory: {:?}", parent))?;
     }
+    
+    // Connect to database (this creates the file if it doesn't exist)
+    let mut conn = establish_connection(db_path)?;
+    
+    // Run pending migrations using diesel
+    conn.run_pending_migrations(APPDATA_MIGRATIONS)
+        .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
     
     Ok(())
 }
@@ -98,6 +88,7 @@ pub fn insert_suttas(sutta_records: Vec<SuttaRecord>, db_path: &Path) -> Result<
             };
             
             // Check if UID already exists
+            use simsapa_backend::db::appdata_schema::suttas;
             use simsapa_backend::db::appdata_schema::suttas::dsl::*;
             let existing: Option<i32> = suttas
                 .filter(uid.eq(&record.uid))

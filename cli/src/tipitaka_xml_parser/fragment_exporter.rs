@@ -6,14 +6,20 @@
 use anyhow::{Result, Context};
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::path::Path;
 
 use crate::tipitaka_xml_parser::types::XmlFragment;
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
+use crate::tipitaka_xml_parser::fragments_models::{NewNikayaStructure, NewXmlFragment};
+use crate::tipitaka_xml_parser::fragments_schema::{nikaya_structures, xml_fragments};
+
+// Embed the fragments migrations
+pub const FRAGMENTS_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations/fragments/");
 
 /// Export fragments and nikaya structure to SQLite database
 ///
-/// Creates two tables:
+/// Creates two tables via diesel migrations:
 /// - `nikaya_structures`: Stores the NikayaStructure with unique nikaya field
 /// - `xml_fragments`: Stores each XmlFragment with cst_file and nikaya foreign key
 ///
@@ -33,8 +39,8 @@ pub fn export_fragments_to_db(
     let mut conn = SqliteConnection::establish(db_path.to_str().unwrap())
         .context("Failed to connect to fragments database")?;
     
-    // Create tables
-    create_tables(&mut conn)?;
+    // Run migrations
+    run_migrations(&mut conn)?;
     
     // Insert or get nikaya structure
     insert_nikaya_structure(&mut conn, nikaya_structure)?;
@@ -45,56 +51,14 @@ pub fn export_fragments_to_db(
     Ok(count)
 }
 
-/// Create database tables for fragments and nikaya
-fn create_tables(conn: &mut SqliteConnection) -> Result<()> {
-    // Create nikaya_structures table with unique nikaya field
-    diesel::sql_query(
-        r#"
-        CREATE TABLE IF NOT EXISTS nikaya_structures (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nikaya TEXT NOT NULL UNIQUE,
-            levels TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        "#
-    )
-    .execute(conn)
-    .context("Failed to create nikaya_structures table")?;
-    
-    // Create xml_fragments table with cst_file and nikaya foreign key
-    diesel::sql_query(
-        r#"
-        CREATE TABLE IF NOT EXISTS xml_fragments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            cst_file TEXT NOT NULL,
-            frag_idx INTEGER NOT NULL,
-            frag_type TEXT NOT NULL,
-            frag_review TEXT,
-            nikaya TEXT NOT NULL,
-            cst_code TEXT,
-            sc_code TEXT,
-            content TEXT NOT NULL,
-            cst_vagga TEXT,
-            cst_sutta TEXT,
-            cst_paranum TEXT,
-            sc_sutta TEXT,
-            start_line INTEGER NOT NULL,
-            start_char INTEGER NOT NULL,
-            end_line INTEGER NOT NULL,
-            end_char INTEGER NOT NULL,
-            group_levels TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (nikaya) REFERENCES nikaya_structures(nikaya)
-        )
-        "#
-    )
-    .execute(conn)
-    .context("Failed to create xml_fragments table")?;
-    
+/// Run pending migrations for fragments database
+fn run_migrations(conn: &mut SqliteConnection) -> Result<()> {
+    conn.run_pending_migrations(FRAGMENTS_MIGRATIONS)
+        .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
     Ok(())
 }
 
-/// Insert nikaya structure into database (or ignore if exists due to UNIQUE constraint)
+/// Insert nikaya structure into database using diesel model
 fn insert_nikaya_structure(
     conn: &mut SqliteConnection,
     structure: &NikayaStructure,
@@ -103,21 +67,21 @@ fn insert_nikaya_structure(
     let levels_json = serde_json::to_string(&structure.levels)
         .context("Failed to serialize nikaya levels")?;
     
-    diesel::sql_query(
-        r#"
-        INSERT OR IGNORE INTO nikaya_structures (nikaya, levels)
-        VALUES (?, ?)
-        "#
-    )
-    .bind::<diesel::sql_types::Text, _>(&structure.nikaya)
-    .bind::<diesel::sql_types::Text, _>(&levels_json)
-    .execute(conn)
-    .context("Failed to insert nikaya structure")?;
+    let new_nikaya = NewNikayaStructure {
+        nikaya: &structure.nikaya,
+        levels: &levels_json,
+    };
+    
+    // Use INSERT OR IGNORE to handle duplicate nikayas
+    diesel::insert_or_ignore_into(nikaya_structures::table)
+        .values(&new_nikaya)
+        .execute(conn)
+        .context("Failed to insert nikaya structure")?;
     
     Ok(())
 }
 
-/// Insert fragments into database with nikaya foreign key
+/// Insert fragments into database using diesel models
 fn insert_fragments(
     conn: &mut SqliteConnection,
     fragments: &[XmlFragment],
@@ -133,33 +97,30 @@ fn insert_fragments(
         let group_levels_json = serde_json::to_string(&fragment.group_levels)
             .context("Failed to serialize group levels")?;
         
-        diesel::sql_query(
-            r#"
-            INSERT INTO xml_fragments 
-            (nikaya, cst_file, frag_idx, frag_type, frag_review, content, start_line, end_line, start_char, end_char, group_levels,
-             cst_code, cst_vagga, cst_sutta, cst_paranum, sc_code, sc_sutta)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            "#
-        )
-        .bind::<diesel::sql_types::Text, _>(&fragment.nikaya)
-        .bind::<diesel::sql_types::Text, _>(&fragment.cst_file)
-        .bind::<diesel::sql_types::Integer, _>(fragment.frag_idx as i32)
-        .bind::<diesel::sql_types::Text, _>(frag_type)
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.frag_review.as_deref())
-        .bind::<diesel::sql_types::Text, _>(&fragment.content)
-        .bind::<diesel::sql_types::Integer, _>(fragment.start_line as i32)
-        .bind::<diesel::sql_types::Integer, _>(fragment.end_line as i32)
-        .bind::<diesel::sql_types::Integer, _>(fragment.start_char as i32)
-        .bind::<diesel::sql_types::Integer, _>(fragment.end_char as i32)
-        .bind::<diesel::sql_types::Text, _>(&group_levels_json)
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_code.as_deref())
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_vagga.as_deref())
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_sutta.as_deref())
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.cst_paranum.as_deref())
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.sc_code.as_deref())
-        .bind::<diesel::sql_types::Nullable<diesel::sql_types::Text>, _>(fragment.sc_sutta.as_deref())
-        .execute(conn)
-        .context("Failed to insert fragment")?;
+        let new_fragment = NewXmlFragment {
+            cst_file: &fragment.cst_file,
+            frag_idx: fragment.frag_idx as i32,
+            frag_type,
+            frag_review: fragment.frag_review.as_deref(),
+            nikaya: &fragment.nikaya,
+            cst_code: fragment.cst_code.as_deref(),
+            sc_code: fragment.sc_code.as_deref(),
+            content: &fragment.content,
+            cst_vagga: fragment.cst_vagga.as_deref(),
+            cst_sutta: fragment.cst_sutta.as_deref(),
+            cst_paranum: fragment.cst_paranum.as_deref(),
+            sc_sutta: fragment.sc_sutta.as_deref(),
+            start_line: fragment.start_line as i32,
+            start_char: fragment.start_char as i32,
+            end_line: fragment.end_line as i32,
+            end_char: fragment.end_char as i32,
+            group_levels: &group_levels_json,
+        };
+        
+        diesel::insert_into(xml_fragments::table)
+            .values(&new_fragment)
+            .execute(conn)
+            .context("Failed to insert fragment")?;
         
         count += 1;
     }

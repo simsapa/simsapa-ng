@@ -16,6 +16,8 @@ pub mod sutta_builder;
 pub mod database_inserter;
 pub mod integration;
 pub mod encoding;
+pub mod fragments_schema;
+pub mod fragments_models;
 
 #[cfg(test)]
 mod test_tsv_validation;

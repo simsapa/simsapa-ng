@@ -8,8 +8,9 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use std::path::Path;
 
-use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupLevel, GroupType};
-use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
+use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupLevel};
+use crate::tipitaka_xml_parser::fragments_models::XmlFragmentRecord;
+use crate::tipitaka_xml_parser::fragments_schema::xml_fragments;
 
 /// Reconstruct XML content from fragments database by filename
 ///
@@ -36,69 +37,37 @@ pub fn reconstruct_xml_from_db(
     reconstruct_xml_from_fragments(&fragments)
 }
 
-/// Get nikaya name by cst_file
+/// Get nikaya name by cst_file using diesel
 fn get_nikaya_by_filename(
     conn: &mut SqliteConnection,
     cst_file: &str,
 ) -> Result<String> {
-    #[derive(QueryableByName)]
-    struct NikayaResult {
-        #[diesel(sql_type = diesel::sql_types::Text)]
-        nikaya: String,
-    }
+    use crate::tipitaka_xml_parser::fragments_schema::xml_fragments::dsl;
     
-    let result: NikayaResult = diesel::sql_query(
-        "SELECT DISTINCT nikaya FROM xml_fragments WHERE cst_file = ? LIMIT 1"
-    )
-    .bind::<diesel::sql_types::Text, _>(cst_file)
-    .get_result(conn)
-    .context(format!("No nikaya found with filename: {}", cst_file))?;
+    let nikaya: String = dsl::xml_fragments
+        .filter(dsl::cst_file.eq(cst_file))
+        .select(dsl::nikaya)
+        .first(conn)
+        .context(format!("No nikaya found with filename: {}", cst_file))?;
     
-    Ok(result.nikaya)
+    Ok(nikaya)
 }
 
-/// Get all fragments for a filename, ordered by position
+/// Get all fragments for a filename using diesel models, ordered by position
 fn get_fragments_for_filename(
     conn: &mut SqliteConnection,
     cst_file: &str,
 ) -> Result<Vec<XmlFragment>> {
-    #[derive(QueryableByName)]
-    struct FragmentRow {
-        #[diesel(sql_type = diesel::sql_types::Text)]
-        nikaya: String,
-        #[diesel(sql_type = diesel::sql_types::Text)]
-        frag_type: String,
-        #[diesel(sql_type = diesel::sql_types::Text)]
-        content: String,
-        #[diesel(sql_type = diesel::sql_types::Integer)]
-        start_line: i32,
-        #[diesel(sql_type = diesel::sql_types::Integer)]
-        end_line: i32,
-        #[diesel(sql_type = diesel::sql_types::Integer)]
-        start_char: i32,
-        #[diesel(sql_type = diesel::sql_types::Integer)]
-        end_char: i32,
-        #[diesel(sql_type = diesel::sql_types::Text)]
-        group_levels: String,
-        #[diesel(sql_type = diesel::sql_types::Text)]
-        cst_file: String,
-        #[diesel(sql_type = diesel::sql_types::Integer)]
-        frag_idx: i32,
-    }
+    use crate::tipitaka_xml_parser::fragments_schema::xml_fragments::dsl;
     
-    let rows: Vec<FragmentRow> = diesel::sql_query(
-        r#"
-        SELECT nikaya, frag_type, content, start_line, end_line, start_char, end_char, group_levels, cst_file, frag_idx
-        FROM xml_fragments
-        WHERE cst_file = ?
-        ORDER BY start_line ASC, start_char ASC
-        "#
-    )
-    .bind::<diesel::sql_types::Text, _>(cst_file)
-    .load(conn)
-    .context("Failed to query fragments")?;
+    // Query using diesel models
+    let rows: Vec<XmlFragmentRecord> = dsl::xml_fragments
+        .filter(dsl::cst_file.eq(cst_file))
+        .order((dsl::start_line.asc(), dsl::start_char.asc()))
+        .load::<XmlFragmentRecord>(conn)
+        .context("Failed to query fragments")?;
     
-    // Convert to XmlFragment
+    // Convert XmlFragmentRecord to XmlFragment
     let mut fragments = Vec::new();
     for row in rows {
         let frag_type = match row.frag_type.as_str() {
@@ -121,13 +90,13 @@ fn get_fragments_for_filename(
             group_levels,
             cst_file: row.cst_file,
             frag_idx: row.frag_idx as usize,
-            frag_review: None,
-            cst_code: None,
-            cst_vagga: None,
-            cst_sutta: None,
-            cst_paranum: None,
-            sc_code: None,
-            sc_sutta: None,
+            frag_review: row.frag_review,
+            cst_code: row.cst_code,
+            cst_vagga: row.cst_vagga,
+            cst_sutta: row.cst_sutta,
+            cst_paranum: row.cst_paranum,
+            sc_code: row.sc_code,
+            sc_sutta: row.sc_sutta,
         });
     }
     
