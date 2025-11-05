@@ -11,8 +11,7 @@ use anyhow::{Result, Context};
 
 use crate::tipitaka_xml_parser::{
     detect_nikaya_structure, 
-    parse_into_fragments, 
-    populate_sc_fields_from_tsv,
+    parse_into_fragments,
 };
 use crate::tipitaka_xml_parser::encoding::read_xml_file;
 
@@ -100,11 +99,8 @@ fn test_parse_matches_tsv_s0101m() {
     let nikaya_structure = detect_nikaya_structure(&xml_content)
         .expect("Failed to detect nikaya structure");
     
-    let mut fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0101m.mul.xml", None)
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0101m.mul.xml", None, true)
         .expect("Failed to parse fragments");
-    
-    populate_sc_fields_from_tsv(&mut fragments, tsv_path)
-        .expect("Failed to populate SC fields");
     
     // Filter to Sutta fragments only
     let sutta_fragments: Vec<_> = fragments.iter()
@@ -181,11 +177,8 @@ fn test_parse_matches_tsv_s0201m() {
     let nikaya_structure = detect_nikaya_structure(&xml_content)
         .expect("Failed to detect nikaya structure");
     
-    let mut fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201m.mul.xml", None)
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201m.mul.xml", None, true)
         .expect("Failed to parse fragments");
-    
-    populate_sc_fields_from_tsv(&mut fragments, tsv_path)
-        .expect("Failed to populate SC fields");
     
     // Filter to Sutta fragments only
     let sutta_fragments: Vec<_> = fragments.iter()
@@ -260,11 +253,8 @@ fn test_s0201m_first_sutta_fragment() {
     let nikaya_structure = detect_nikaya_structure(&xml_content)
         .expect("Failed to detect nikaya structure");
     
-    let mut fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201m.mul.xml", None)
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201m.mul.xml", None, true)
         .expect("Failed to parse fragments");
-    
-    populate_sc_fields_from_tsv(&mut fragments, tsv_path)
-        .expect("Failed to populate SC fields");
     
     // Fragment 0 should be Header, fragment 1 should be the first Sutta
     assert!(fragments.len() > 1, "Expected at least 2 fragments");
@@ -315,7 +305,7 @@ fn test_s0201a_att_vagga_zero_fragment() {
     let nikaya_structure = detect_nikaya_structure(&xml_content)
         .expect("Failed to detect nikaya structure");
     
-    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201a.att.xml", None)
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201a.att.xml", None, false)
         .expect("Failed to parse fragments");
     
     // Fragment 0 should be Header, fragment 1 should be the introduction (vagga 0)
@@ -368,7 +358,7 @@ fn test_s0201a_att_kakacupama_sutta() {
     let nikaya_structure = detect_nikaya_structure(&xml_content)
         .expect("Failed to detect nikaya structure");
     
-    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201a.att.xml", None)
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201a.att.xml", None, false)
         .expect("Failed to parse fragments");
     
     // Find the fragment containing Kakacūpamasuttavaṇṇanā
@@ -397,7 +387,7 @@ fn test_s0201t_tik_culasihanada_sutta() {
     let nikaya_structure = detect_nikaya_structure(&xml_content)
         .expect("Failed to detect nikaya structure");
     
-    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201t.tik.xml", None)
+    let fragments = parse_into_fragments(&xml_content, &nikaya_structure, "s0201t.tik.xml", None, false)
         .expect("Failed to parse fragments");
     
     // Find the fragment containing Cūḷasīhanādasuttavaṇṇanā

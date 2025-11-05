@@ -13,6 +13,8 @@ use quick_xml::{Reader, events::Event};
 use html_escape;
 use serde::Deserialize;
 
+use crate::tipitaka_xml_parser::fragment_parser::CST_VS_SC_TSV;
+
 /// Sutta record matching appdata schema
 #[derive(Debug, Clone)]
 pub struct SuttaRecord {
@@ -44,16 +46,11 @@ struct TsvRecord {
     sc_sutta: String,
 }
 
-/// Load TSV mapping file into memory for lookups
-fn load_tsv_mapping(tsv_path: &Path) -> Result<Vec<TsvRecord>> {
-    use std::fs::File;
-    
-    let file = File::open(tsv_path)
-        .context("Failed to open TSV mapping file")?;
-    
+/// Load TSV mapping from embedded string
+fn load_tsv_mapping() -> Result<Vec<TsvRecord>> {
     let mut reader = csv::ReaderBuilder::new()
         .delimiter(b'\t')
-        .from_reader(file);
+        .from_reader(CST_VS_SC_TSV.as_bytes());
     
     let records: Result<Vec<TsvRecord>, csv::Error> = reader
         .deserialize()
@@ -524,11 +521,10 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
 pub fn build_suttas(
     fragments: Vec<XmlFragment>,
     nikaya_structure: &NikayaStructure,
-    tsv_path: &Path,
 ) -> Result<Vec<SuttaRecord>> {
-    // Load TSV mapping
-    let tsv_records = load_tsv_mapping(tsv_path)
-        .context("Failed to load TSV mapping file")?;
+    // Load TSV mapping from embedded data
+    let tsv_records = load_tsv_mapping()
+        .context("Failed to load TSV mapping")?;
     
     let mut suttas = Vec::new();
     let mut used_codes = std::collections::HashSet::new();
@@ -698,16 +694,8 @@ mod tests {
 
     #[test]
     fn test_load_tsv_mapping() {
-        // Test that the TSV file can be loaded and deserialized correctly
-        let tsv_path = PathBuf::from("assets/cst-vs-sc.tsv");
-        
-        // Skip test if file doesn't exist (e.g., in CI environments)
-        if !tsv_path.exists() {
-            eprintln!("Skipping test_load_tsv_mapping: TSV file not found at {:?}", tsv_path);
-            return;
-        }
-        
-        let result = load_tsv_mapping(&tsv_path);
+        // Test that the embedded TSV can be loaded and deserialized correctly
+        let result = load_tsv_mapping();
         assert!(result.is_ok(), "Failed to load TSV mapping: {:?}", result.err());
         
         let records = result.unwrap();

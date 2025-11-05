@@ -14,7 +14,6 @@ use super::{
     build_suttas,
     insert_suttas,
 };
-use super::fragment_parser::populate_sc_fields_from_tsv;
 use super::types::FragmentAdjustments;
 
 /// Statistics for a single file import
@@ -41,27 +40,20 @@ pub struct ProcessingStats {
 
 /// Complete import process for Tipitaka XML files using fragment-based parser
 pub struct TipitakaImporter {
-    tsv_path: std::path::PathBuf,
     adjustments: Option<FragmentAdjustments>,
     verbose: bool,
 }
 
 impl TipitakaImporter {
-    /// Create a new importer with TSV mapping for SC code lookup
+    /// Create a new importer
     ///
     /// # Arguments
-    /// * `tsv_path` - Path to the cst-vs-sc.tsv mapping file
     /// * `verbose` - Whether to output verbose logging
     ///
     /// # Returns
-    /// New TipitakaImporter instance or error if TSV file cannot be loaded
-    pub fn new(tsv_path: &Path, verbose: bool) -> Result<Self> {
-        if !tsv_path.exists() {
-            anyhow::bail!("TSV mapping file not found: {:?}", tsv_path);
-        }
-
+    /// New TipitakaImporter instance
+    pub fn new(verbose: bool) -> Result<Self> {
         Ok(Self {
-            tsv_path: tsv_path.to_path_buf(),
             adjustments: None,
             verbose,
         })
@@ -73,24 +65,26 @@ impl TipitakaImporter {
         self
     }
 
-    /// Process a single XML file and import into database
+    /// Process a single XML file
     ///
     /// # Arguments
     /// * `xml_path` - Path to the XML file to process
-    /// * `conn` - Database connection for inserting suttas
+    /// * `conn` - Optional database connection for inserting suttas (None for dry-run)
     ///
     /// # Returns
     /// Import statistics or error if processing fails
     pub fn process_file(
         &self,
         xml_path: &Path,
-        conn: &mut SqliteConnection,
+        conn: Option<&mut SqliteConnection>,
     ) -> Result<FileImportStats> {
         let filename = xml_path
             .file_name()
             .and_then(|n| n.to_str())
             .unwrap_or("unknown")
             .to_string();
+
+        let dry_run = conn.is_none();
 
         if self.verbose {
             eprintln!("  → Reading XML file...");
@@ -115,55 +109,52 @@ impl TipitakaImporter {
             eprintln!("  → Parsing into fragments...");
         }
 
-        // Step 3: Parse into fragments
-        let mut fragments = parse_into_fragments(
+        // Step 3: Parse into fragments (with SC field population from embedded TSV)
+        let fragments = parse_into_fragments(
             &xml_content,
             &nikaya_structure,
             &filename,
-            self.adjustments.as_ref()
+            self.adjustments.as_ref(),
+            true  // Populate SC fields from embedded TSV
         ).context("Failed to parse fragments")?;
-
-        if self.verbose {
-            eprintln!("  ✓ Parsed {} fragments", fragments.len());
-            eprintln!("  → Populating SC fields from TSV...");
-        }
-
-        // Step 4: Populate SC fields from TSV mapping
-        populate_sc_fields_from_tsv(&mut fragments, &self.tsv_path)
-            .context("Failed to populate SC fields")?;
 
         if self.verbose {
             let sc_count = fragments.iter()
                 .filter(|f| f.sc_code.is_some())
                 .count();
-            eprintln!("  ✓ Populated SC fields for {} fragments", sc_count);
+            eprintln!("  ✓ Parsed {} fragments ({} with SC fields)", fragments.len(), sc_count);
             eprintln!("  → Building sutta records...");
         }
 
-        // Step 5: Build suttas from fragments
-        let suttas = build_suttas(fragments.clone(), &nikaya_structure, &self.tsv_path)
+        // Step 4: Build suttas from fragments
+        let suttas = build_suttas(fragments.clone(), &nikaya_structure)
             .context("Failed to build suttas")?;
 
         if self.verbose {
             eprintln!("  ✓ Built {} sutta records", suttas.len());
-            eprintln!("  → Inserting into database...");
+            if !dry_run {
+                eprintln!("  → Inserting into database...");
+            }
         }
 
         let fragments_parsed = fragments.len();
         let suttas_total = suttas.len();
 
-        // Step 6: Insert suttas into database
-        // We need to get the database path from the connection
-        // Since we can't extract it from SqliteConnection, we'll need to modify insert_suttas
-        // to accept a connection instead of a path
-        let inserted = self.insert_suttas_with_conn(suttas, conn)
-            .context("Failed to insert suttas")?;
+        // Step 5: Insert suttas into database (if not dry-run)
+        let inserted = if let Some(conn) = conn {
+            let count = self.insert_suttas_with_conn(suttas, conn)
+                .context("Failed to insert suttas")?;
+            
+            if self.verbose {
+                eprintln!("  ✓ Inserted {} suttas", count);
+            }
+            
+            count
+        } else {
+            0
+        };
 
-        if self.verbose {
-            eprintln!("  ✓ Inserted {} suttas", inserted);
-        }
-
-        let failed = suttas_total - inserted;
+        let failed = if dry_run { 0 } else { suttas_total - inserted };
 
         Ok(FileImportStats {
             filename,
@@ -172,50 +163,6 @@ impl TipitakaImporter {
             suttas_total,
             suttas_inserted: inserted,
             suttas_failed: failed,
-        })
-    }
-
-    /// Process a single file in dry-run mode (no database insertion)
-    ///
-    /// # Arguments
-    /// * `xml_path` - Path to the XML file to process
-    ///
-    /// # Returns
-    /// Import statistics (with zero inserted) or error if processing fails
-    pub fn process_file_dry_run(&self, xml_path: &Path) -> Result<FileImportStats> {
-        let filename = xml_path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown")
-            .to_string();
-
-        // Step 1: Read XML file
-        let xml_content = read_xml_file(xml_path)?;
-
-        // Step 2: Detect nikaya structure
-        let nikaya_structure = detect_nikaya_structure(&xml_content)?;
-
-        // Step 3: Parse into fragments
-        let mut fragments = parse_into_fragments(
-            &xml_content,
-            &nikaya_structure,
-            &filename,
-            self.adjustments.as_ref()
-        )?;
-
-        // Step 4: Populate SC fields from TSV mapping
-        populate_sc_fields_from_tsv(&mut fragments, &self.tsv_path)?;
-
-        // Step 5: Build suttas from fragments
-        let suttas = build_suttas(fragments.clone(), &nikaya_structure, &self.tsv_path)?;
-
-        Ok(FileImportStats {
-            filename,
-            nikaya: nikaya_structure.nikaya,
-            fragments_parsed: fragments.len(),
-            suttas_total: suttas.len(),
-            suttas_inserted: 0,
-            suttas_failed: 0,
         })
     }
 
@@ -245,7 +192,8 @@ impl TipitakaImporter {
             &xml_content,
             &nikaya_structure,
             &filename,
-            self.adjustments.as_ref()
+            self.adjustments.as_ref(),
+            true
         )?;
 
         // Export to fragments database

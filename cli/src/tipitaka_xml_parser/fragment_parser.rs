@@ -10,6 +10,9 @@ use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType, Gr
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 use std::collections::HashMap;
 
+/// Embedded cst-vs-sc.tsv mapping file
+pub static CST_VS_SC_TSV: &str = include_str!("../../assets/cst-vs-sc.tsv");
+
 /// Line and character position tracking for XML reader
 ///
 /// Tracks both line numbers (1-indexed) and character positions within lines (0-indexed).
@@ -717,6 +720,7 @@ fn apply_fragment_adjustment(
 /// * `nikaya_structure` - The structure configuration for this nikaya
 /// * `cst_file` - Name of the XML file being parsed
 /// * `adjustments` - Optional fragment adjustments to apply
+/// * `populate_sc_fields` - Whether to populate SC fields from embedded TSV
 ///
 /// # Returns
 /// Vector of fragments or error if parsing fails
@@ -725,6 +729,7 @@ pub fn parse_into_fragments(
     nikaya_structure: &NikayaStructure,
     cst_file: &str,
     adjustments: Option<&FragmentAdjustments>,
+    populate_sc_fields: bool,
 ) -> Result<Vec<XmlFragment>> {
     let mut reader = LineTrackingReader::new(xml_content);
     let mut hierarchy = HierarchyTracker::new(nikaya_structure.clone());
@@ -1313,40 +1318,34 @@ pub fn parse_into_fragments(
         fragment.cst_vagga = cst_vagga;
         fragment.cst_sutta = cst_sutta;
         fragment.cst_paranum = cst_paranum;
-        // sc_code and sc_sutta will be populated from TSV if available
+    }
+    
+    // Populate SC fields from embedded TSV if requested
+    if populate_sc_fields {
+        populate_sc_fields_from_tsv(&mut fragments)?;
     }
     
     Ok(fragments)
 }
 
-/// Populate SC fields from TSV mapping
+/// Populate SC fields from embedded TSV mapping
 ///
-/// Looks up sc_code and sc_sutta from cst-vs-sc.tsv based on cst_code
+/// Looks up sc_code and sc_sutta from the embedded cst-vs-sc.tsv based on cst_code
 ///
 /// # Arguments
 /// * `fragments` - Mutable vector of fragments to populate
-/// * `tsv_path` - Path to cst-vs-sc.tsv mapping file
 ///
 /// # Returns
 /// Result indicating success or error
-pub fn populate_sc_fields_from_tsv(
+fn populate_sc_fields_from_tsv(
     fragments: &mut Vec<XmlFragment>,
-    tsv_path: &std::path::Path,
 ) -> anyhow::Result<()> {
-    use std::fs::File;
-    use std::io::{BufRead, BufReader};
-    
-    // Load TSV file
-    let file = File::open(tsv_path)
-        .with_context(|| format!("Failed to open TSV file: {:?}", tsv_path))?;
-    
-    let reader = BufReader::new(file);
-    let mut lines = reader.lines();
+    // Parse embedded TSV content
+    let mut lines = CST_VS_SC_TSV.lines();
     
     // Read header
     let header = lines.next()
-        .ok_or_else(|| anyhow::anyhow!("TSV file is empty"))?
-        .context("Failed to read header")?;
+        .ok_or_else(|| anyhow::anyhow!("TSV file is empty"))?;
     
     // Parse header to find column indices
     let columns: Vec<&str> = header.split('\t').collect();
@@ -1358,10 +1357,9 @@ pub fn populate_sc_fields_from_tsv(
         .ok_or_else(|| anyhow::anyhow!("Missing 'sutta' column"))?;
     
     // Build a map from cst_code to (sc_code, sc_sutta)
-    let mut tsv_map: std::collections::HashMap<String, (String, String)> = std::collections::HashMap::new();
+    let mut tsv_map: HashMap<String, (String, String)> = HashMap::new();
     
-    for line_result in lines {
-        let line = line_result.context("Failed to read TSV line")?;
+    for line in lines {
         if line.trim().is_empty() {
             continue;
         }
@@ -1447,7 +1445,7 @@ mod tests {
         
         assert_eq!(structure.nikaya, "digha");
         
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).expect("Should parse fragments");
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None, false).expect("Should parse fragments");
         
         // Should have at least one fragment
         assert!(!fragments.is_empty(), "Should have at least one fragment");
@@ -1457,7 +1455,7 @@ mod tests {
     fn test_parse_dn_fragment_count() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None, false).unwrap();
         
         // Count sutta fragments
         let sutta_fragments: Vec<_> = fragments.iter()
@@ -1472,7 +1470,7 @@ mod tests {
     fn test_parse_dn_line_tracking() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None, false).unwrap();
         
         for fragment in &fragments {
             // Line numbers should be valid (start > 0, end >= start)
@@ -1489,7 +1487,7 @@ mod tests {
         
         assert_eq!(structure.nikaya, "majjhima");
         
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).expect("Should parse fragments");
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None, false).expect("Should parse fragments");
         
         assert!(!fragments.is_empty(), "Should have at least one fragment");
     }
@@ -1498,7 +1496,7 @@ mod tests {
     fn test_fragment_content_not_empty() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None, false).unwrap();
         
         for fragment in &fragments {
             // Each fragment should have non-empty content
@@ -1511,7 +1509,7 @@ mod tests {
     fn test_character_position_tracking() {
         let xml = create_dn_sample_xml();
         let structure = detect_nikaya_structure(&xml).unwrap();
-        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None).unwrap();
+        let fragments = parse_into_fragments(&xml, &structure, "test.xml", None, false).unwrap();
         
         for fragment in &fragments {
             // Character positions should be valid
@@ -1535,7 +1533,7 @@ mod tests {
 <text><body><p rend="nikaya">Dīghanikāyo</p><div type="book"><head rend="book">Book1</head><div type="sutta"><head rend="chapter">Sutta1</head><p n="1">Text1</p></div></div></body></text>"#;
         
         let structure = detect_nikaya_structure(xml).unwrap();
-        let fragments = parse_into_fragments(xml, &structure, "test.xml", None).unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "test.xml", None, false).unwrap();
         
         // Check that we can distinguish elements on the same line
         // by their character positions
@@ -1584,7 +1582,7 @@ mod tests {
 </TEI.2>"#;
         
         let structure = detect_nikaya_structure(xml).unwrap();
-        let fragments = parse_into_fragments(xml, &structure, "s0101m.mul.xml", None).unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "s0101m.mul.xml", None, false).unwrap();
         
         // Find the sutta fragment
         let sutta_frag = fragments.iter()
@@ -1592,7 +1590,7 @@ mod tests {
             .expect("Should have a sutta fragment");
         
         // Check CST fields
-        assert_eq!(sutta_frag.cst_file.as_deref(), Some("s0101m.mul.xml"));
+        assert_eq!(sutta_frag.cst_file.as_str(), "s0101m.mul.xml");
         assert_eq!(sutta_frag.cst_code.as_deref(), Some("dn1.1"));
         assert_eq!(sutta_frag.cst_vagga.as_deref(), None); // DN doesn't have vaggas
         assert_eq!(sutta_frag.cst_sutta.as_deref(), Some("1. Brahmajālasuttaṃ"));
@@ -1620,7 +1618,7 @@ mod tests {
 </TEI.2>"#;
         
         let structure = detect_nikaya_structure(xml).unwrap();
-        let fragments = parse_into_fragments(xml, &structure, "s0201m.mul.xml", None).unwrap();
+        let fragments = parse_into_fragments(xml, &structure, "s0201m.mul.xml", None, false).unwrap();
         
         // Find the sutta fragment
         let sutta_frag = fragments.iter()
@@ -1628,7 +1626,7 @@ mod tests {
             .expect("Should have a sutta fragment");
         
         // Check CST fields
-        assert_eq!(sutta_frag.cst_file.as_deref(), Some("s0201m.mul.xml"));
+        assert_eq!(sutta_frag.cst_file.as_str(), "s0201m.mul.xml");
         assert_eq!(sutta_frag.cst_code.as_deref(), Some("mn1.5.1"));
         assert_eq!(sutta_frag.cst_vagga.as_deref(), Some("5. Cūḷayamakavaggo"));
         assert_eq!(sutta_frag.cst_sutta.as_deref(), Some("1. Sāleyyakasuttaṃ"));

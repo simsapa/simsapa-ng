@@ -108,12 +108,7 @@ impl TipitakaXmlImporter {
         }
 
         // Mapping TSV lives in repo assets/
-        let tsv_path = Path::new("assets/cst-vs-sc.tsv");
-        if !tsv_path.exists() {
-            anyhow::bail!("CST mapping TSV not found: {:?}", tsv_path);
-        }
-
-        let importer = TipitakaImporter::new(tsv_path, self.verbose)
+        let importer = TipitakaImporter::new(self.verbose)
             .context("Failed to initialize TipitakaImporter")?;
 
         for fname in files.iter() {
@@ -124,7 +119,7 @@ impl TipitakaXmlImporter {
             }
 
             logger::info(&format!("Importing tipitaka.org XML: {}", fname));
-            match importer.process_file(&xml_path, conn) {
+            match importer.process_file(&xml_path, Some(conn)) {
                 Ok(stats) => {
                     logger::info(&format!(
                         "Imported {} (suttas: {}, inserted: {}, failed: {})",

@@ -24,7 +24,7 @@ mod test_tsv_validation;
 pub use types::{FragmentType, GroupType, GroupLevel, XmlFragment, FragmentAdjustment, FragmentKey, FragmentAdjustments, load_fragment_adjustments};
 pub use nikaya_structure::NikayaStructure;
 pub use nikaya_detector::detect_nikaya_structure;
-pub use fragment_parser::{parse_into_fragments, populate_sc_fields_from_tsv};
+pub use fragment_parser::parse_into_fragments;
 pub use fragment_exporter::export_fragments_to_db;
 pub use fragment_reconstructor::reconstruct_xml_from_db;
 pub use sutta_builder::build_suttas;

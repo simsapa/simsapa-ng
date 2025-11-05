@@ -506,12 +506,8 @@ fn parse_tipitaka_xml_new(
 
     // TSV mapping file path (relative to cli directory)
     let tsv_path = Path::new("assets/cst-vs-sc.tsv");
-    if !tsv_path.exists() {
-        return Err(format!("TSV mapping file not found: {:?}", tsv_path));
-    }
-
-    // Create importer
-    let mut importer = TipitakaImporter::new(tsv_path, verbose)
+    // Create importer (TSV is now embedded)
+    let mut importer = TipitakaImporter::new(verbose)
         .map_err(|e| format!("Failed to create importer: {}", e))?;
 
     // Add fragment adjustments if provided
@@ -556,23 +552,12 @@ fn parse_tipitaka_xml_new(
         }
 
         // Process file with importer
-        let stats = if let Some(ref mut conn) = conn_opt {
-            match importer.process_file(xml_file, conn) {
-                Ok(stats) => stats,
-                Err(e) => {
-                    eprintln!("  ✗ Error processing file: {}", e);
-                    errors += 1;
-                    continue;
-                }
-            }
-        } else {
-            match importer.process_file_dry_run(xml_file) {
-                Ok(stats) => stats,
-                Err(e) => {
-                    eprintln!("  ✗ Error processing file: {}", e);
-                    errors += 1;
-                    continue;
-                }
+        let stats = match importer.process_file(xml_file, conn_opt.as_mut()) {
+            Ok(stats) => stats,
+            Err(e) => {
+                eprintln!("  ✗ Error processing file: {}", e);
+                errors += 1;
+                continue;
             }
         };
 

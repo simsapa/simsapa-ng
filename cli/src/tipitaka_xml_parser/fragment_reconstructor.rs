@@ -180,7 +180,7 @@ mod tests {
         // Parse and export
         let structure = detect_nikaya_structure(original_xml).unwrap();
         
-        let fragments = parse_into_fragments(original_xml, &structure, "test.xml", None).unwrap();
+        let fragments = parse_into_fragments(original_xml, &structure, "test.xml", None, false).unwrap();
         export_fragments_to_db(&fragments, &structure, db_path).unwrap();
         
         // Reconstruct
@@ -216,7 +216,7 @@ mod tests {
         
         // Parse as commentary file
         let structure = detect_nikaya_structure(original_xml).unwrap();
-        let fragments = parse_into_fragments(original_xml, &structure, "test.att.xml", None).unwrap();
+        let fragments = parse_into_fragments(original_xml, &structure, "test.att.xml", None, false).unwrap();
         
         // Verify head tags are together
         for frag in &fragments {
