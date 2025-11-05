@@ -2,15 +2,15 @@ use anyhow::{Context, Result};
 use diesel::sqlite::SqliteConnection;
 use std::path::{Path, PathBuf};
 
-use crate::tipitaka_xml_parser_tsv::TipitakaImporterUsingTSV;
-use crate::logger;
+use crate::tipitaka_xml_parser::TipitakaImporter;
+use simsapa_backend::logger;
 
-pub struct TipitakaXmlImporterUsingTSV {
+pub struct TipitakaXmlImporter {
     root_dir: PathBuf,
     verbose: bool,
 }
 
-impl TipitakaXmlImporterUsingTSV {
+impl TipitakaXmlImporter {
     pub fn new(root_dir: PathBuf) -> Self {
         Self { root_dir, verbose: false }
     }
@@ -113,7 +113,7 @@ impl TipitakaXmlImporterUsingTSV {
             anyhow::bail!("CST mapping TSV not found: {:?}", tsv_path);
         }
 
-        let importer = TipitakaImporterUsingTSV::new(tsv_path, self.verbose)
+        let importer = TipitakaImporter::new(tsv_path, self.verbose)
             .context("Failed to initialize TipitakaImporter")?;
 
         for fname in files.iter() {
@@ -127,8 +127,8 @@ impl TipitakaXmlImporterUsingTSV {
             match importer.process_file(&xml_path, conn) {
                 Ok(stats) => {
                     logger::info(&format!(
-                        "Imported {} (books: {}, vaggas: {}, suttas: {}, inserted: {}, failed: {})",
-                        stats.filename, stats.books, stats.vaggas, stats.suttas_total, stats.suttas_inserted, stats.suttas_failed
+                        "Imported {} (suttas: {}, inserted: {}, failed: {})",
+                        stats.filename, stats.suttas_total, stats.suttas_inserted, stats.suttas_failed
                     ));
                 }
                 Err(e) => {

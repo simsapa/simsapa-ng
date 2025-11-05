@@ -6,7 +6,7 @@
 use anyhow::{Result, Context, bail};
 use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType};
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
-use simsapa_backend::helpers::consistent_niggahita;
+use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
 use std::collections::HashMap;
 use std::path::Path;
 use quick_xml::{Reader, events::Event};
@@ -509,56 +509,6 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
     Ok(html)
 }
 
-/// Extract plain text from XML content (strip all tags)
-fn xml_to_plain_text(xml_content: &str) -> Result<String> {
-    let mut text = String::new();
-    let mut reader = Reader::from_str(xml_content);
-    reader.trim_text(false);
-    reader.check_end_names(false); // Don't validate end tag names strictly
-    
-    let mut buf = Vec::new();
-    let mut skip_note = false;
-    
-    loop {
-        match reader.read_event_into(&mut buf) {
-            Ok(Event::Start(ref e)) => {
-                let name_bytes = e.name();
-                let name = std::str::from_utf8(name_bytes.as_ref()).unwrap_or("");
-                if name == "note" || name == "pb" {
-                    skip_note = true;
-                }
-            }
-            Ok(Event::End(ref e)) => {
-                let name_bytes = e.name();
-                let name = std::str::from_utf8(name_bytes.as_ref()).unwrap_or("");
-                if name == "note" || name == "pb" {
-                    skip_note = false;
-                } else if name == "p" {
-                    text.push('\n');
-                }
-            }
-            Ok(Event::Text(e)) => {
-                if !skip_note {
-                    let content = e.unescape().unwrap_or_default();
-                    text.push_str(&content);
-                }
-            }
-            Ok(Event::Eof) => break,
-            _ => {}
-        }
-        
-        buf.clear();
-    }
-    
-    // Normalize whitespace and apply consistent niggahita
-    let normalized = text
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ");
-    
-    Ok(consistent_niggahita(Some(normalized)))
-}
-
 /// Build sutta database records from fragments
 ///
 /// Uses derived CST fields (cst_code, cst_sutta, etc.) from fragments when available.
@@ -619,7 +569,7 @@ pub fn build_suttas(
         // Build group path from hierarchy (excluding nikaya and sutta levels)
         let group_path = fragment.group_levels.iter()
             .filter(|level| !matches!(level.group_type, GroupType::Nikaya | GroupType::Sutta))
-            .map(|level| consistent_niggahita(Some(level.title.clone())))
+            .map(|level| level.title.clone())
             .collect::<Vec<_>>()
             .join(" / ");
         
@@ -706,33 +656,32 @@ pub fn build_suttas(
         // Transform XML content to HTML
         let content_html = xml_to_html(&fragment.content)
             .context("Failed to transform XML to HTML")?;
-        
+
         // Build HTML with header
-        let full_html = format!(
+        let normalized_full_html = consistent_niggahita(Some(format!(
             "<div class=\"cst4\">\n<header>\n<h3>{} {}</h3>\n<h1>{}</h1>\n</header>\n{}</div>",
             nikaya_name,
             sutta_number,
             html_escape::encode_text(&normalized_title),
             content_html
-        );
+        )));
         
         // Extract plain text
-        let content_plain = xml_to_plain_text(&fragment.content)
-            .context("Failed to extract plain text")?;
-        
+        let normalized_content_plain = compact_rich_text(&content_html);
+
         // Build sutta record
         let sutta = SuttaRecord {
             uid,
             sutta_ref,
             nikaya: nikaya_structure.nikaya.clone(),
             language: "pli".to_string(),
-            group_path: group_path_opt,
+            group_path: Some(consistent_niggahita(group_path_opt)),
             group_index: Some(idx as i32),
             order_index: Some(idx as i32),
             title: Some(normalized_title.clone()),
             title_pali: Some(normalized_title),
-            content_plain: Some(content_plain),
-            content_html: Some(full_html),
+            content_plain: Some(normalized_content_plain),
+            content_html: Some(normalized_full_html),
             source_uid: Some("cst4".to_string()),
         };
         

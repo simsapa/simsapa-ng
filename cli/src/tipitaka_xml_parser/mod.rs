@@ -15,6 +15,7 @@ pub mod fragment_reconstructor;
 pub mod sutta_builder;
 pub mod database_inserter;
 pub mod integration;
+pub mod encoding;
 
 #[cfg(test)]
 mod test_tsv_validation;
@@ -28,4 +29,4 @@ pub use fragment_exporter::export_fragments_to_db;
 pub use fragment_reconstructor::reconstruct_xml_from_db;
 pub use sutta_builder::build_suttas;
 pub use database_inserter::{insert_suttas, initialize_database};
-pub use integration::{process_xml_file, process_directory, ProcessingStats};
+pub use integration::{TipitakaImporter, FileImportStats, process_xml_file, process_directory, ProcessingStats};

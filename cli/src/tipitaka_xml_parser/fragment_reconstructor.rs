@@ -151,7 +151,7 @@ mod tests {
     use super::*;
     use tempfile::NamedTempFile;
     use crate::tipitaka_xml_parser::{detect_nikaya_structure, parse_into_fragments, export_fragments_to_db};
-    use crate::tipitaka_xml_parser_tsv::encoding::read_xml_file;
+    use crate::tipitaka_xml_parser::encoding::read_xml_file;
     use std::path::PathBuf;
     
     #[test]

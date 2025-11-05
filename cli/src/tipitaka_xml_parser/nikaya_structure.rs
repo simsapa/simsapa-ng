@@ -97,6 +97,8 @@ impl NikayaStructure {
                 levels: vec![
                     GroupType::Nikaya,
                     GroupType::Book,
+                    GroupType::Pannasaka,
+                    GroupType::Vagga,
                     GroupType::Sutta,
                 ],
             }),

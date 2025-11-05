@@ -1,6 +1,5 @@
 pub mod bootstrap;
 pub mod bootstrap_old;
-pub mod tipitaka_xml_parser_tsv;
 pub mod tipitaka_xml_parser;
 
 use std::path::{Path, PathBuf};
@@ -429,161 +428,6 @@ fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool
     Ok(())
 }
 
-/// Parse Tipitaka XML files and import into database
-fn parse_tipitaka_xml(
-    input_path: &Path,
-    output_db_path: &Path,
-    verbose: bool,
-    dry_run: bool,
-) -> Result<(), String> {
-    use tipitaka_xml_parser_tsv::encoding::read_xml_file;
-    use tipitaka_xml_parser_tsv::xml_parser::parse_xml;
-    use std::fs;
-    use diesel::sqlite::SqliteConnection;
-    use diesel::Connection;
-
-    println!("Tipitaka XML Parser");
-    println!("==================\n");
-
-    // Collect XML files to process
-    let xml_files: Vec<PathBuf> = if input_path.is_file() {
-        println!("Processing single file: {:?}\n", input_path);
-        vec![input_path.to_path_buf()]
-    } else if input_path.is_dir() {
-        println!("Processing folder: {:?}", input_path);
-        let files: Vec<PathBuf> = fs::read_dir(input_path)
-            .map_err(|e| format!("Failed to read directory: {}", e))?
-            .filter_map(|entry| entry.ok())
-            .map(|entry| entry.path())
-            .filter(|path| {
-                path.extension()
-                    .and_then(|ext| ext.to_str())
-                    .map(|ext| ext == "xml")
-                    .unwrap_or(false)
-            })
-            .collect();
-
-        println!("Found {} XML files\n", files.len());
-        files
-    } else {
-        return Err(format!("Input path does not exist: {:?}", input_path));
-    };
-
-    if xml_files.is_empty() {
-        return Err("No XML files found to process".to_string());
-    }
-
-    // Initialize database if not dry run
-    if !dry_run {
-        if output_db_path.exists() {
-            println!("Output database already exists: {:?}", output_db_path);
-            println!("WARNING: This will add to existing database\n");
-        } else {
-            println!("Creating new database: {:?}", output_db_path);
-
-            // Create database and run migrations
-            let mut conn = SqliteConnection::establish(output_db_path.to_str().unwrap())
-                .map_err(|e| format!("Failed to create database: {}", e))?;
-
-            use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-            const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata");
-            conn.run_pending_migrations(MIGRATIONS)
-                .map_err(|e| format!("Failed to run migrations: {}", e))?;
-
-            println!("✓ Database created and initialized\n");
-        }
-    } else {
-        println!("DRY RUN MODE - No database will be created\n");
-    }
-
-    // Load CST mapping
-    let tsv_path = Path::new("assets/cst-vs-sc.tsv");
-    if !tsv_path.exists() {
-        return Err(format!("CST mapping file not found: {:?}. Current dir: {:?}", tsv_path, std::env::current_dir()));
-    }
-
-    use tipitaka_xml_parser_tsv::TipitakaImporterUsingTSV;
-    let importer = TipitakaImporterUsingTSV::new(tsv_path, verbose)
-        .map_err(|e| format!("Failed to create importer: {}", e))?;
-
-    // Get database connection if not dry run
-    let mut conn_opt = if !dry_run {
-        Some(SqliteConnection::establish(output_db_path.to_str().unwrap())
-            .map_err(|e| format!("Failed to connect to database: {}", e))?)
-    } else {
-        None
-    };
-
-    // Process each XML file
-    let mut total_suttas = 0;
-    let mut total_inserted = 0;
-    let mut total_books = 0;
-    let mut total_vaggas = 0;
-    let mut errors = 0;
-
-    for (idx, xml_file) in xml_files.iter().enumerate() {
-        println!("[{}/{}] Processing: {:?}", idx + 1, xml_files.len(), xml_file.file_name().unwrap_or_default());
-
-        let stats = if let Some(ref mut conn) = conn_opt {
-            // Full processing with database insertion
-            match importer.process_file(xml_file, conn) {
-                Ok(stats) => stats,
-                Err(e) => {
-                    eprintln!("  ✗ Error processing file: {}", e);
-                    errors += 1;
-                    continue;
-                }
-            }
-        } else {
-            // Dry run mode
-            match importer.process_file_dry_run(xml_file) {
-                Ok(stats) => stats,
-                Err(e) => {
-                    eprintln!("  ✗ Error processing file: {}", e);
-                    errors += 1;
-                    continue;
-                }
-            }
-        };
-
-        // Display results
-        println!("  Nikaya: {}", stats.nikaya);
-        println!("  Books: {}, Vaggas: {}, Suttas: {}", stats.books, stats.vaggas, stats.suttas_total);
-
-        if !dry_run {
-            println!("  Inserted: {}, Failed: {}", stats.suttas_inserted, stats.suttas_failed);
-        }
-
-        total_suttas += stats.suttas_total;
-        total_inserted += stats.suttas_inserted;
-        total_books += stats.books;
-        total_vaggas += stats.vaggas;
-
-        println!("  ✓ Processing complete\n");
-    }
-
-    // Summary
-    println!("\n===================");
-    println!("Summary");
-    println!("===================");
-    println!("Files processed: {}", xml_files.len());
-    println!("Total books: {}", total_books);
-    println!("Total vaggas: {}", total_vaggas);
-    println!("Total suttas: {}", total_suttas);
-
-    if !dry_run {
-        println!("Successfully inserted: {}", total_inserted);
-        println!("Failed: {}", total_suttas - total_inserted);
-        println!("\n✓ Import complete! Database: {:?}", output_db_path);
-    } else {
-        println!("\nDRY RUN - No database operations performed");
-    }
-
-    println!("Errors: {}", errors);
-
-    Ok(())
-}
-
 /// Parse Tipitaka XML files with fragment-based parser
 fn parse_tipitaka_xml_new(
     input_path: &Path,
@@ -593,16 +437,13 @@ fn parse_tipitaka_xml_new(
     verbose: bool,
     dry_run: bool,
 ) -> Result<(), String> {
-    use tipitaka_xml_parser_tsv::encoding::read_xml_file;
     use tipitaka_xml_parser::{
-        detect_nikaya_structure, 
-        parse_into_fragments, 
-        export_fragments_to_db,
-        build_suttas,
-        insert_suttas,
-        initialize_database,
+        TipitakaImporter,
         load_fragment_adjustments,
+        initialize_database,
     };
+    use diesel::sqlite::SqliteConnection;
+    use diesel::Connection;
     use std::fs;
 
     println!("Tipitaka XML Parser (Fragment-Based)");
@@ -668,92 +509,38 @@ fn parse_tipitaka_xml_new(
     if !tsv_path.exists() {
         return Err(format!("TSV mapping file not found: {:?}", tsv_path));
     }
+
+    // Create importer
+    let mut importer = TipitakaImporter::new(tsv_path, verbose)
+        .map_err(|e| format!("Failed to create importer: {}", e))?;
+
+    // Add fragment adjustments if provided
+    if let Some(adj) = adjustments {
+        importer = importer.with_adjustments(adj);
+    }
+
+    // Get database connection if not dry run
+    let mut conn_opt = if !dry_run {
+        Some(SqliteConnection::establish(output_db_path.to_str().unwrap())
+            .map_err(|e| format!("Failed to connect to database: {}", e))?)
+    } else {
+        None
+    };
     
     // Process each XML file
     let mut total_fragments = 0;
-    let mut total_suttas_built = 0;
-    let mut total_suttas_inserted = 0;
-    let mut total_files_processed = 0;
+    let mut total_suttas = 0;
+    let mut total_inserted = 0;
     let mut errors = 0;
 
     for (idx, xml_file) in xml_files.iter().enumerate() {
         println!("[{}/{}] Processing: {:?}", idx + 1, xml_files.len(), 
                  xml_file.file_name().unwrap_or_default());
 
-        // Read XML file
-        let xml_content = match read_xml_file(xml_file) {
-            Ok(content) => content,
-            Err(e) => {
-                eprintln!("  ✗ Error reading file: {}", e);
-                errors += 1;
-                continue;
-            }
-        };
-
-        // Phase 1: Detect nikaya structure
-        let mut nikaya_structure = match detect_nikaya_structure(&xml_content) {
-            Ok(structure) => structure,
-            Err(e) => {
-                eprintln!("  ✗ Error detecting nikaya: {}", e);
-                errors += 1;
-                continue;
-            }
-        };
-
-        // Get the XML filename
-        let xml_filename = xml_file.file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown.xml");
-
-        if verbose {
-            println!("  Detected nikaya: {} ({} levels)", 
-                     nikaya_structure.nikaya, nikaya_structure.levels.len());
-        }
-
-        // Phase 2: Parse into fragments
-        let mut fragments = match parse_into_fragments(&xml_content, &nikaya_structure, xml_filename, adjustments.as_ref()) {
-            Ok(frags) => frags,
-            Err(e) => {
-                eprintln!("  ✗ Error parsing fragments: {}", e);
-                errors += 1;
-                continue;
-            }
-        };
-
-        println!("  Parsed {} fragments", fragments.len());
-        
-        // Count fragment types
-        let header_count = fragments.iter()
-            .filter(|f| matches!(f.frag_type, tipitaka_xml_parser::FragmentType::Header))
-            .count();
-        let sutta_count = fragments.iter()
-            .filter(|f| matches!(f.frag_type, tipitaka_xml_parser::FragmentType::Sutta))
-            .count();
-        
-        println!("    Headers: {}, Suttas: {}", header_count, sutta_count);
-
-        // Phase 2.5: Populate SC fields from TSV mapping
-        use tipitaka_xml_parser::fragment_parser::populate_sc_fields_from_tsv;
-        match populate_sc_fields_from_tsv(&mut fragments, tsv_path) {
-            Ok(()) => {
-                if verbose {
-                    let sc_count = fragments.iter()
-                        .filter(|f| f.sc_code.is_some())
-                        .count();
-                    println!("  ✓ Populated SC fields for {} fragments", sc_count);
-                }
-            }
-            Err(e) => {
-                eprintln!("  ✗ Error populating SC fields: {}", e);
-                errors += 1;
-                continue;
-            }
-        }
-
-        // Export to fragments database if specified
+        // Handle fragments export if specified (unique feature of new parser)
         if let Some(frag_db_path) = fragments_db {
             if !dry_run {
-                match export_fragments_to_db(&fragments, &nikaya_structure, frag_db_path) {
+                match importer.export_fragments(xml_file, frag_db_path) {
                     Ok(count) => {
                         if verbose {
                             println!("  ✓ Exported {} fragments to {:?}", count, frag_db_path);
@@ -765,48 +552,42 @@ fn parse_tipitaka_xml_new(
                         continue;
                     }
                 }
-            } else {
-                println!("  (Dry run: would export {} fragments to {:?})", 
-                         fragments.len(), frag_db_path);
             }
         }
 
-        // Phase 3: Build suttas from fragments
-        let suttas = match build_suttas(fragments.clone(), &nikaya_structure, tsv_path) {
-            Ok(suttas) => {
-                if verbose {
-                    println!("  Built {} sutta records", suttas.len());
-                }
-                suttas
-            }
-            Err(e) => {
-                eprintln!("  ✗ Error building suttas: {}", e);
-                errors += 1;
-                continue;
-            }
-        };
-        
-        total_suttas_built += suttas.len();
-        
-        // Phase 4: Insert suttas into database
-        if !dry_run {
-            match insert_suttas(suttas, output_db_path) {
-                Ok(count) => {
-                    println!("  ✓ Inserted {} suttas into database", count);
-                    total_suttas_inserted += count;
-                }
+        // Process file with importer
+        let stats = if let Some(ref mut conn) = conn_opt {
+            match importer.process_file(xml_file, conn) {
+                Ok(stats) => stats,
                 Err(e) => {
-                    eprintln!("  ✗ Error inserting suttas: {}", e);
+                    eprintln!("  ✗ Error processing file: {}", e);
                     errors += 1;
                     continue;
                 }
             }
         } else {
-            println!("  (Dry run: would insert {} suttas)", suttas.len());
+            match importer.process_file_dry_run(xml_file) {
+                Ok(stats) => stats,
+                Err(e) => {
+                    eprintln!("  ✗ Error processing file: {}", e);
+                    errors += 1;
+                    continue;
+                }
+            }
+        };
+
+        // Display results
+        println!("  Nikaya: {}", stats.nikaya);
+        println!("  Fragments: {}, Suttas: {}", stats.fragments_parsed, stats.suttas_total);
+
+        if !dry_run {
+            println!("  Inserted: {}, Failed: {}", stats.suttas_inserted, stats.suttas_failed);
         }
 
-        total_fragments += fragments.len();
-        total_files_processed += 1;
+        total_fragments += stats.fragments_parsed;
+        total_suttas += stats.suttas_total;
+        total_inserted += stats.suttas_inserted;
+
         println!("  ✓ Processing complete\n");
     }
 
@@ -814,11 +595,17 @@ fn parse_tipitaka_xml_new(
     println!("\n===================");
     println!("Summary");
     println!("===================");
-    println!("Files processed: {}", total_files_processed);
+    println!("Files processed: {}", xml_files.len());
     println!("Total fragments: {}", total_fragments);
-    println!("Total suttas built: {}", total_suttas_built);
-    println!("Total suttas inserted: {}", total_suttas_inserted);
-    println!("Errors: {}", errors);
+    println!("Total suttas: {}", total_suttas);
+
+    if !dry_run {
+        println!("Successfully inserted: {}", total_inserted);
+        println!("Failed: {}", total_suttas - total_inserted);
+        println!("\n✓ Import complete! Database: {:?}", output_db_path);
+    } else {
+        println!("\nDRY RUN - No database operations performed");
+    }
 
     if let Some(frag_db_path) = fragments_db {
         if !dry_run {
@@ -826,9 +613,7 @@ fn parse_tipitaka_xml_new(
         }
     }
 
-    if dry_run {
-        println!("\nDRY RUN - No database operations performed");
-    }
+    println!("Errors: {}", errors);
 
     Ok(())
 }
@@ -985,26 +770,6 @@ enum Commands {
 
     /// List available languages in SuttaCentral ArangoDB
     SuttacentralImportLanguagesList,
-
-    /// Parse VRI CST Tipitaka XML files using TSV data and import into SQLite database
-    #[command(arg_required_else_help = true)]
-    ParseTipitakaXmlUsingTSV {
-        /// Path to a single XML file or folder containing XML files
-        #[arg(value_name = "INPUT_PATH")]
-        input_path: PathBuf,
-
-        /// Path to the output SQLite database file
-        #[arg(value_name = "OUTPUT_DB_PATH")]
-        output_db_path: PathBuf,
-
-        /// Show verbose output during parsing
-        #[arg(long, default_value_t = false)]
-        verbose: bool,
-
-        /// Parse without inserting into database (dry run)
-        #[arg(long, default_value_t = false)]
-        dry_run: bool,
-    },
 
     /// Parse VRI CST Tipitaka XML files with fragment-based parser
     #[command(arg_required_else_help = true)]
@@ -1169,10 +934,6 @@ fn main() {
             suttacentral_import_languages_list()
         }
 
-        Commands::ParseTipitakaXmlUsingTSV { input_path, output_db_path, verbose, dry_run } => {
-            parse_tipitaka_xml(&input_path, &output_db_path, verbose, dry_run)
-        }
-
         Commands::ParseTipitakaXml { input_path, output_db_path, fragments_db, adjust_fragments_tsv, verbose, dry_run } => {
             parse_tipitaka_xml_new(&input_path, &output_db_path, fragments_db.as_deref(), adjust_fragments_tsv.as_deref(), verbose, dry_run)
         }
@@ -1183,7 +944,7 @@ fn main() {
 
         Commands::TipitakaXmlToUtf8 { input_xml_path, output_path } => {
             use std::fs;
-            use tipitaka_xml_parser_tsv::encoding::read_xml_file;
+            use tipitaka_xml_parser::encoding::read_xml_file;
 
             if !input_xml_path.exists() {
                 Err(format!("Input XML file does not exist: {:?}", input_xml_path))

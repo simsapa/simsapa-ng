@@ -22,6 +22,8 @@ pub enum GroupType {
     Nikaya,
     /// Book level (e.g., Sīlakkhandhavaggo)
     Book,
+    /// Pannasaka level (e.g. Paṭhamapaṇṇāsakaṃ)
+    Pannasaka,
     /// Vagga level (e.g., Mūlapariyāyavaggo)
     Vagga,
     /// Samyutta level (e.g., Devatāsaṃyutta)

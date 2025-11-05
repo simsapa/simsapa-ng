@@ -14,7 +14,7 @@ use crate::tipitaka_xml_parser::{
     parse_into_fragments, 
     populate_sc_fields_from_tsv,
 };
-use crate::tipitaka_xml_parser_tsv::encoding::read_xml_file;
+use crate::tipitaka_xml_parser::encoding::read_xml_file;
 
 #[derive(Debug, Clone)]
 struct TsvExpectation {
