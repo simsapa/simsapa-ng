@@ -158,7 +158,6 @@ fn find_code_for_sutta(
     // Normalize vagga title if provided
     let normalized_vagga = vagga_title.map(|v| consistent_niggahita(Some(v.to_string())));
     
-    let mut match_attempts = 0;
     let mut fallback_match: Option<String> = None;
     
     for record in tsv_records {
@@ -171,7 +170,6 @@ fn find_code_for_sutta(
         
         // Check if filename matches (using base filename for commentaries)
         if record_filename == base_filename {
-            match_attempts += 1;
             
             // Check if any of the search titles match
             for search_title in &normalized_search_titles {
@@ -243,8 +241,6 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
     reader.check_end_names(false); // Don't validate end tag names strictly
     
     let mut buf = Vec::new();
-    let mut in_paragraph = false;
-    let mut current_para_class = String::new();
     let mut pending_paranum: Option<String> = None;
     let mut unknown_tags = std::collections::HashSet::new();
     let mut tag_stack: Vec<String> = Vec::new(); // Track opened tags to close them properly
@@ -283,8 +279,6 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
                         };
                         
                         html.push_str(&format!("<p class=\"{}\">", class));
-                        current_para_class = class.to_string();
-                        in_paragraph = true;
                         pending_paranum = paranum;
                     }
                     "hi" => {
@@ -425,8 +419,6 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
                 match name {
                     "p" => {
                         html.push_str("</p>\n");
-                        in_paragraph = false;
-                        current_para_class.clear();
                         pending_paranum = None;
                     }
                     "hi" => {

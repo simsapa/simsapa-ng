@@ -284,9 +284,9 @@ impl TipitakaImporter {
 /// # Returns
 /// Processing statistics or error if processing fails
 pub fn process_xml_file(
-    xml_path: &Path,
-    db_path: &Path,
-    verbose: bool,
+    _xml_path: &Path,
+    _db_path: &Path,
+    _verbose: bool,
 ) -> Result<ProcessingStats> {
     // TODO: Implement convenience wrapper
     Ok(ProcessingStats::default())
@@ -302,9 +302,9 @@ pub fn process_xml_file(
 /// # Returns
 /// Aggregated processing statistics or error if processing fails
 pub fn process_directory(
-    dir_path: &Path,
-    db_path: &Path,
-    verbose: bool,
+    _dir_path: &Path,
+    _db_path: &Path,
+    _verbose: bool,
 ) -> Result<ProcessingStats> {
     // TODO: Implement convenience wrapper
     Ok(ProcessingStats::default())

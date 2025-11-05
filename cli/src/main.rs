@@ -503,9 +503,7 @@ fn parse_tipitaka_xml_new(
         println!("DRY RUN MODE - No database operations will be performed\n");
     }
 
-    // TSV mapping file path (relative to cli directory)
-    let tsv_path = Path::new("assets/cst-vs-sc.tsv");
-    // Create importer (TSV is now embedded)
+    // Create importer (TSV is now embedded in the binary)
     let mut importer = TipitakaImporter::new(verbose)
         .map_err(|e| format!("Failed to create importer: {}", e))?;
 

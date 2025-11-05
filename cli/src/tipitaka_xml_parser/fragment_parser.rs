@@ -737,10 +737,10 @@ pub fn parse_into_fragments(
     
     let mut fragments: Vec<XmlFragment> = Vec::new();
     // Track: (byte_pos, line_num, char_pos)
-    let mut current_fragment_start: Option<(usize, usize, usize)> = None;
-    let mut current_frag_type: Option<FragmentType> = None;
+    let mut current_fragment_start: Option<(usize, usize, usize)>;
+    let mut current_frag_type: Option<FragmentType>;
     // Store hierarchy levels at the time fragment starts
-    let mut current_fragment_group_levels: Vec<GroupLevel> = Vec::new();
+    let mut current_fragment_group_levels: Vec<GroupLevel>;
     let mut pending_title: Option<(GroupType, String, Option<String>, Option<i32>)> = None; // (type, title, id, number)
     let mut in_sutta_content = false;
     // For MN/SN: track if we just saw a subhead element (will check text to see if numbered)
@@ -815,7 +815,7 @@ pub fn parse_into_fragments(
                         if !content.trim().is_empty() {
                             fragments.push(XmlFragment {
                                 nikaya: nikaya_structure.nikaya.clone(),
-                                frag_type: FragmentType::Header,
+                                frag_type: frag_type.clone(),
                                 content,
                                 start_line: frag_start_line,
                                 end_line,
