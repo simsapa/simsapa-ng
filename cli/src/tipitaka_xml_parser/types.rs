@@ -48,6 +48,8 @@ pub struct GroupLevel {
 /// Represents a fragment of XML with associated metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct XmlFragment {
+    /// Nikaya name (e.g., "digha", "majjhima", "samyutta", "anguttara")
+    pub nikaya: String,
     /// Source XML filename for tracking which file this fragment came from.
     pub cst_file: String,
     /// Index of this fragment in the list of fragments parsed from the XML file (0-indexed)
