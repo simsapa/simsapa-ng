@@ -7,6 +7,7 @@ use anyhow::{Result, Context, bail};
 use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType};
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
+use simsapa_backend::logger;
 use std::collections::HashMap;
 use std::path::Path;
 use quick_xml::{Reader, events::Event};
@@ -413,7 +414,7 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
                     _ => {
                         // Log unknown tags for future handling
                         if unknown_tags.insert(name.to_string()) {
-                            eprintln!("Warning: Unknown XML tag in content: <{}>", name);
+                            logger::warn(&format!("Unknown XML tag in content: <{}>", name));
                         }
                     }
                 }
@@ -495,7 +496,7 @@ fn xml_to_html(xml_content: &str) -> Result<String> {
             Ok(Event::Eof) => break,
             Err(e) => {
                 // Log error but continue
-                eprintln!("XML parsing error at position {}: {}", reader.buffer_position(), e);
+                logger::error(&format!("XML parsing error at position {}: {}", reader.buffer_position(), e));
             }
             _ => {}
         }
@@ -614,8 +615,8 @@ pub fn build_suttas(
                 Some(c) => c,
                 None => {
                     // Log warning - could not find matching code
-                    eprintln!("Warning: Could not find code for sutta '{}' in file '{}', skipping", 
-                             title, cst_file);
+                    logger::warn(&format!("Could not find code for sutta '{}' in file '{}', skipping",
+                             title, cst_file));
                     continue;
                 }
             }
@@ -623,8 +624,8 @@ pub fn build_suttas(
         
         // Check if we've already used this code
         if used_codes.contains(&code) {
-            eprintln!("ERROR: Code '{}' already used for a previous sutta, skipping duplicate for '{}' (file: {})", 
-                     code, title, cst_file);
+            logger::error(&format!("Code '{}' already used for a previous sutta, skipping duplicate for '{}' (file: {})",
+                     code, title, cst_file));
             continue;
         }
         used_codes.insert(code.clone());

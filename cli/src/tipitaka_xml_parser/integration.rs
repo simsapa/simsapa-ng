@@ -7,6 +7,8 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use diesel::sqlite::SqliteConnection;
 
+use simsapa_backend::logger;
+
 use super::encoding::read_xml_file;
 use super::{
     detect_nikaya_structure,
@@ -87,7 +89,7 @@ impl TipitakaImporter {
         let dry_run = conn.is_none();
 
         if self.verbose {
-            eprintln!("  → Reading XML file...");
+            logger::info("  → Reading XML file...");
         }
 
         // Step 1: Read XML file
@@ -95,8 +97,8 @@ impl TipitakaImporter {
             .context("Failed to read XML file")?;
 
         if self.verbose {
-            eprintln!("  ✓ File read successfully");
-            eprintln!("  → Detecting nikaya structure...");
+            logger::info("  ✓ File read successfully");
+            logger::info("  → Detecting nikaya structure...");
         }
 
         // Step 2: Detect nikaya structure
@@ -104,9 +106,9 @@ impl TipitakaImporter {
             .context("Failed to detect nikaya structure")?;
 
         if self.verbose {
-            eprintln!("  ✓ Detected nikaya: {} ({} levels)", 
-                     nikaya_structure.nikaya, nikaya_structure.levels.len());
-            eprintln!("  → Parsing into fragments...");
+            logger::info(&format!("  ✓ Detected nikaya: {} ({} levels)",
+                     nikaya_structure.nikaya, nikaya_structure.levels.len()));
+            logger::info("  → Parsing into fragments...");
         }
 
         // Step 3: Parse into fragments (with SC field population from embedded TSV)
@@ -122,8 +124,8 @@ impl TipitakaImporter {
             let sc_count = fragments.iter()
                 .filter(|f| f.sc_code.is_some())
                 .count();
-            eprintln!("  ✓ Parsed {} fragments ({} with SC fields)", fragments.len(), sc_count);
-            eprintln!("  → Building sutta records...");
+            logger::info(&format!("  ✓ Parsed {} fragments ({} with SC fields)", fragments.len(), sc_count));
+            logger::info("  → Building sutta records...");
         }
 
         // Step 4: Build suttas from fragments
@@ -131,9 +133,9 @@ impl TipitakaImporter {
             .context("Failed to build suttas")?;
 
         if self.verbose {
-            eprintln!("  ✓ Built {} sutta records", suttas.len());
+            logger::info(&format!("  ✓ Built {} sutta records", suttas.len()));
             if !dry_run {
-                eprintln!("  → Inserting into database...");
+                logger::info("  → Inserting into database...");
             }
         }
 
@@ -146,7 +148,7 @@ impl TipitakaImporter {
                 .context("Failed to insert suttas")?;
             
             if self.verbose {
-                eprintln!("  ✓ Inserted {} suttas", count);
+                logger::info(&format!("  ✓ Inserted {} suttas", count));
             }
             
             count
@@ -254,7 +256,7 @@ impl TipitakaImporter {
 
                 if exists {
                     if self.verbose {
-                        eprintln!("    Skipping duplicate UID: {}", record.uid);
+                        logger::error(&format!("    Skipping duplicate UID: {}", record.uid));
                     }
                     continue;
                 }
