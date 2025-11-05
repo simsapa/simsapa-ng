@@ -10,7 +10,6 @@ use std::path::Path;
 
 use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupLevel};
 use crate::tipitaka_xml_parser::fragments_models::XmlFragmentRecord;
-use crate::tipitaka_xml_parser::fragments_schema::xml_fragments;
 
 /// Reconstruct XML content from fragments database by filename
 ///

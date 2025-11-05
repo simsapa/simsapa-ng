@@ -5,7 +5,7 @@
 
 use anyhow::{Result, Context};
 use quick_xml::Reader;
-use quick_xml::events::{Event, BytesStart};
+use quick_xml::events::Event;
 use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType, GroupLevel, FragmentAdjustments, FragmentKey};
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 use std::collections::HashMap;
@@ -1346,37 +1346,20 @@ pub fn parse_into_fragments(
 fn populate_sc_fields_from_tsv(
     fragments: &mut Vec<XmlFragment>,
 ) -> anyhow::Result<()> {
-    // Parse embedded TSV content
-    let mut lines = CST_VS_SC_TSV.lines();
-    
-    // Read header
-    let header = lines.next()
-        .ok_or_else(|| anyhow::anyhow!("TSV file is empty"))?;
-    
-    // Parse header to find column indices
-    let columns: Vec<&str> = header.split('\t').collect();
-    let cst_code_idx = columns.iter().position(|&c| c == "cst_code")
-        .ok_or_else(|| anyhow::anyhow!("Missing 'cst_code' column"))?;
-    let sc_code_idx = columns.iter().position(|&c| c == "code")
-        .ok_or_else(|| anyhow::anyhow!("Missing 'code' column"))?;
-    let sc_sutta_idx = columns.iter().position(|&c| c == "sutta")
-        .ok_or_else(|| anyhow::anyhow!("Missing 'sutta' column"))?;
+    // Load TSV mapping using the sutta_builder function
+    use crate::tipitaka_xml_parser::sutta_builder::load_tsv_mapping;
+    let tsv_records = load_tsv_mapping()
+        .context("Failed to load TSV mapping")?;
     
     // Build a map from cst_code to (sc_code, sc_sutta)
     let mut tsv_map: HashMap<String, (String, String)> = HashMap::new();
     
-    for line in lines {
-        if line.trim().is_empty() {
-            continue;
-        }
-        
-        let fields: Vec<&str> = line.split('\t').collect();
-        
-        if let (Some(&cst_code), Some(&sc_code), Some(&sc_sutta)) = 
-            (fields.get(cst_code_idx), fields.get(sc_code_idx), fields.get(sc_sutta_idx)) {
-            if !cst_code.is_empty() && !sc_code.is_empty() {
-                tsv_map.insert(cst_code.to_string(), (sc_code.to_string(), sc_sutta.to_string()));
-            }
+    for record in tsv_records {
+        if !record.cst_code.is_empty() && !record.sc_code.is_empty() {
+            tsv_map.insert(
+                record.cst_code.clone(),
+                (record.sc_code.clone(), record.sc_sutta.clone())
+            );
         }
     }
     

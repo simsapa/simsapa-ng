@@ -3,13 +3,11 @@
 //! This module provides functionality to assemble database records
 //! from parsed XML fragments.
 
-use anyhow::{Result, Context, bail};
+use anyhow::{Result, Context};
 use crate::tipitaka_xml_parser::types::{XmlFragment, FragmentType, GroupType};
 use crate::tipitaka_xml_parser::nikaya_structure::NikayaStructure;
 use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
 use simsapa_backend::logger;
-use std::collections::HashMap;
-use std::path::Path;
 use quick_xml::{Reader, events::Event};
 use html_escape;
 use serde::Deserialize;
@@ -35,20 +33,20 @@ pub struct SuttaRecord {
 
 /// TSV record for CST code lookup
 #[derive(Debug, Clone, Deserialize)]
-struct TsvRecord {
-    cst_file: String,
-    cst_code: String,
-    cst_vagga: String,
-    cst_sutta: String,
-    cst_paranum: String,
+pub struct TsvRecord {
+    pub cst_file: String,
+    pub cst_code: String,
+    pub cst_vagga: String,
+    pub cst_sutta: String,
+    pub cst_paranum: String,
     #[serde(rename = "code")]
-    sc_code: String,
+    pub sc_code: String,
     #[serde(rename = "sutta")]
-    sc_sutta: String,
+    pub sc_sutta: String,
 }
 
 /// Load TSV mapping from embedded string
-fn load_tsv_mapping() -> Result<Vec<TsvRecord>> {
+pub fn load_tsv_mapping() -> Result<Vec<TsvRecord>> {
     let mut reader = csv::ReaderBuilder::new()
         .delimiter(b'\t')
         .from_reader(CST_VS_SC_TSV.as_bytes());

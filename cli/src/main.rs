@@ -8,16 +8,15 @@ use std::process::exit;
 use clap::{Parser, Subcommand, ValueEnum};
 use dotenvy::dotenv;
 use anyhow::Result;
+use diesel::prelude::*;
+use diesel::sqlite::SqliteConnection;
+use indexmap::IndexMap;
 
 use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir, logger};
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
 use simsapa_backend::db::appdata_models::Sutta;
-
-use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
-use indexmap::IndexMap;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     let app_data = get_app_data();

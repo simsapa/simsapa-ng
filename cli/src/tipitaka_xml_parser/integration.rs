@@ -14,7 +14,6 @@ use super::{
     detect_nikaya_structure,
     parse_into_fragments,
     build_suttas,
-    insert_suttas,
 };
 use super::types::FragmentAdjustments;
 

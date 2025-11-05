@@ -88,7 +88,6 @@ pub fn insert_suttas(sutta_records: Vec<SuttaRecord>, db_path: &Path) -> Result<
             };
             
             // Check if UID already exists
-            use simsapa_backend::db::appdata_schema::suttas;
             use simsapa_backend::db::appdata_schema::suttas::dsl::*;
             let existing: Option<i32> = suttas
                 .filter(uid.eq(&record.uid))

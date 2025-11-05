@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use diesel::sqlite::SqliteConnection;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::tipitaka_xml_parser::TipitakaImporter;
 use simsapa_backend::logger;
