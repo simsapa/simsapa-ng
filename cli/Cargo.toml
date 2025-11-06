@@ -3,6 +3,10 @@ name = "simsapa_cli"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "simsapa_cli"
+path = "src/main.rs"
+
 [dependencies]
 simsapa_backend = { path = "../backend" }
 clap = { version = "4.5.37", features = ["derive", "env"] }
@@ -29,6 +33,7 @@ quick-xml = "0.31"
 # Character encoding detection and conversion for UTF-16LE files
 encoding_rs = "0.8"
 html-escape = "0.2"
+csv = "1.3"
 
 [dev-dependencies]
 tempfile = "3.8"

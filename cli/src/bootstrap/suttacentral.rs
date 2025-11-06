@@ -1160,7 +1160,7 @@ mod tests {
                 logger::info("Successfully connected to ArangoDB");
             }
             Err(e) => {
-                logger::error(&format("Failed to connect to ArangoDB: {}", e));
+                logger::error(&format!("Failed to connect to ArangoDB: {}", e));
                 logger::error("Make sure ArangoDB is running on localhost:8529");
                 logger::error("with username='root', password='test', database='suttacentral'");
                 panic!("ArangoDB connection test failed");

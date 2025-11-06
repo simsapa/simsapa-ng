@@ -2,6 +2,12 @@ appdata.sqlite3
 *.log
 .env
 
+suttas.sqlite3
+fragments.sqlite3
+
+cli/*.xml
+cli/*.xml
+
 # build folders
 build/
 target/
