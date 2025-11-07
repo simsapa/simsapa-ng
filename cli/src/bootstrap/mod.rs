@@ -162,7 +162,8 @@ RELEASE_CHANNEL=development
     // Import suttas from tipitaka.org (CST4)
     {
         let tipitaka_xml_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/");
-        let mut importer = TipitakaXmlImporter::new(tipitaka_xml_path);
+        let adjust_fragments_tsv_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/adjust_fragments.tsv");
+        let mut importer = TipitakaXmlImporter::new(tipitaka_xml_path, adjust_fragments_tsv_path);
         importer.import(&mut conn)?;
     }
 
