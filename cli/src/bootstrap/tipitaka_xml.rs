@@ -445,8 +445,8 @@ pub fn build_suttas(
             // Fall back to derived cst_code
             // Try to look it up in TSV to get the sc_code
             let sc_code_from_tsv = tsv_records.iter()
-                .find(|r| r.cst_code == *cst_code)
-                .map(|r| r.sc_code.clone());
+                .find(|r| r.tsv_cst_code == *cst_code)
+                .map(|r| r.tsv_sc_code.clone());
 
             if let Some(sc) = sc_code_from_tsv {
                 sc
