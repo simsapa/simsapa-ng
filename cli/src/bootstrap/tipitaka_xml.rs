@@ -37,15 +37,13 @@ pub struct SuttaRecord {
 
 pub struct TipitakaXmlImporter {
     root_dir: PathBuf,
-    adjust_fragments_tsv_path: PathBuf,
     verbose: bool,
 }
 
 impl TipitakaXmlImporter {
-    pub fn new(root_dir: PathBuf, adjust_fragments_tsv_path: PathBuf) -> Self {
+    pub fn new(root_dir: PathBuf) -> Self {
         Self {
             root_dir,
-            adjust_fragments_tsv_path,
             verbose: false,
         }
     }
@@ -142,9 +140,9 @@ impl TipitakaXmlImporter {
             return Ok(());
         }
 
-        let adjustments = match load_fragment_adjustments(&self.adjust_fragments_tsv_path) {
+        let adjustments = match load_fragment_adjustments() {
             Ok(adj) => {
-                println!("✓ Loaded {} fragment adjustments\n", adj.len());
+                logger::info(&format!("Loaded {} fragment adjustments\n", adj.len()));
                 Some(adj)
             }
             Err(e) => {
@@ -200,7 +198,7 @@ impl TipitakaXmlImporter {
         let dry_run = conn.is_none();
 
         if self.verbose {
-            logger::info("  → Reading XML file...");
+            logger::info("Reading XML file...");
         }
 
         // Step 1: Read XML file
@@ -208,8 +206,8 @@ impl TipitakaXmlImporter {
             .context("Failed to read XML file")?;
 
         if self.verbose {
-            logger::info("  ✓ File read successfully");
-            logger::info("  → Detecting nikaya structure...");
+            logger::info("File read successfully");
+            logger::info("Detecting nikaya structure...");
         }
 
         // Step 2: Detect nikaya structure
@@ -217,9 +215,9 @@ impl TipitakaXmlImporter {
             .context("Failed to detect nikaya structure")?;
 
         if self.verbose {
-            logger::info(&format!("  ✓ Detected nikaya: {} ({} levels)",
+            logger::info(&format!("Detected nikaya: {} ({} levels)",
                      nikaya_structure.nikaya, nikaya_structure.levels.len()));
-            logger::info("  → Parsing into fragments...");
+            logger::info("Parsing into fragments...");
         }
 
         // Step 3: Parse into fragments (with SC field population from embedded TSV)
@@ -235,8 +233,8 @@ impl TipitakaXmlImporter {
             let sc_count = fragments.iter()
                 .filter(|f| f.sc_code.is_some())
                 .count();
-            logger::info(&format!("  ✓ Parsed {} fragments ({} with SC fields)", fragments.len(), sc_count));
-            logger::info("  → Building sutta records...");
+            logger::info(&format!("Parsed {} fragments ({} with SC fields)", fragments.len(), sc_count));
+            logger::info("Building sutta records...");
         }
 
         // Step 4: Build suttas from fragments
@@ -244,9 +242,9 @@ impl TipitakaXmlImporter {
             .context("Failed to build suttas")?;
 
         if self.verbose {
-            logger::info(&format!("  ✓ Built {} sutta records", suttas.len()));
+            logger::info(&format!("Built {} sutta records", suttas.len()));
             if !dry_run {
-                logger::info("  → Inserting into database...");
+                logger::info("Inserting into database...");
             }
         }
 
@@ -259,7 +257,7 @@ impl TipitakaXmlImporter {
                 .context("Failed to insert suttas")?;
 
             if self.verbose {
-                logger::info(&format!("  ✓ Inserted {} suttas", count));
+                logger::info(&format!("Inserted {} suttas", count));
             }
 
             count
@@ -334,7 +332,7 @@ impl TipitakaXmlImporter {
 
                 if exists {
                     if self.verbose {
-                        logger::error(&format!("    Skipping duplicate UID: {}", record.uid));
+                        logger::error(&format!("Skipping duplicate UID: {}", record.uid));
                     }
                     continue;
                 }

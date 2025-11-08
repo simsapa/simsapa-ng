@@ -17,6 +17,12 @@ For detailed information about the codebase organization, folder structure, and 
 
 Keep [PROJECT_MAP.md](./PROJECT_MAP.md) updated as changes are made.
 
+When working on features, the PRD (Product Requirements Document) files are in
+the `tasks/` folder. They often contain the reasoning and logic for existing
+features.
+
+Documentation is in the `docs/` folder. Keep it updated for relevant features.
+
 ## Specific coding procedures
 
 ### New QML components
