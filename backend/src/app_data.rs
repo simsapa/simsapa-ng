@@ -698,12 +698,112 @@ impl AppData {
     }
 
     fn get_system_memory_gb(&self) -> Option<u64> {
-        use sysinfo::System;
+        // NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+        // Hence, we use system specific implementations.
+        #[cfg(target_os = "android")]
+        {
+            get_android_memory_gb()
+        }
 
-        let mut sys = System::new_all();
-        sys.refresh_memory();
+        #[cfg(target_os = "linux")]
+        {
+            get_linux_memory_gb()
+        }
 
-        let total_memory_bytes = sys.total_memory();
-        Some(total_memory_bytes / 1024 / 1024 / 1024)
+        #[cfg(target_os = "macos")]
+        {
+            get_macos_memory_gb()
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            get_windows_memory_gb()
+        }
+    }
+}
+
+#[cfg(target_os = "android")]
+fn get_android_memory_gb() -> Option<u64> {
+    use std::fs;
+
+    // Read /proc/meminfo which is available on Android
+    let meminfo = fs::read_to_string("/proc/meminfo").ok()?;
+
+    for line in meminfo.lines() {
+        if line.starts_with("MemTotal:") {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let kb = parts[1].parse::<u64>().ok()?;
+                return Some(kb / 1024 / 1024); // Convert KB to GB
+            }
+        }
+    }
+    None
+}
+
+#[cfg(target_os = "linux")]
+fn get_linux_memory_gb() -> Option<u64> {
+    use std::fs;
+
+    let meminfo = fs::read_to_string("/proc/meminfo").ok()?;
+
+    for line in meminfo.lines() {
+        if line.starts_with("MemTotal:") {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                let kb = parts[1].parse::<u64>().ok()?;
+                return Some(kb / 1024 / 1024);
+            }
+        }
+    }
+    None
+}
+
+#[cfg(target_os = "macos")]
+fn get_macos_memory_gb() -> Option<u64> {
+    use std::process::Command;
+
+    let output = Command::new("sysctl")
+        .arg("-n")
+        .arg("hw.memsize")
+        .output()
+        .ok()?;
+
+    let bytes_str = String::from_utf8(output.stdout).ok()?;
+    let bytes = bytes_str.trim().parse::<u64>().ok()?;
+    Some(bytes / 1024 / 1024 / 1024)
+}
+
+#[cfg(target_os = "windows")]
+fn get_windows_memory_gb() -> Option<u64> {
+    use std::mem;
+
+    #[repr(C)]
+    struct MEMORYSTATUSEX {
+        dw_length: u32,
+        dw_memory_load: u32,
+        ull_total_phys: u64,
+        ull_avail_phys: u64,
+        ull_total_page_file: u64,
+        ull_avail_page_file: u64,
+        ull_total_virtual: u64,
+        ull_avail_virtual: u64,
+        ull_avail_extended_virtual: u64,
+    }
+
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GlobalMemoryStatusEx(lpbuffer: *mut MEMORYSTATUSEX) -> i32;
+    }
+
+    unsafe {
+        let mut status: MEMORYSTATUSEX = mem::zeroed();
+        status.dw_length = mem::size_of::<MEMORYSTATUSEX>() as u32;
+
+        if GlobalMemoryStatusEx(&mut status) != 0 {
+            Some(status.ull_total_phys / 1024 / 1024 / 1024)
+        } else {
+            None
+        }
     }
 }

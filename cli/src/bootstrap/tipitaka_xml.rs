@@ -496,7 +496,7 @@ pub fn build_suttas(
             .collect::<String>();
 
         // Transform XML content to HTML
-        let content_html = xml_to_html(&fragment.content)
+        let content_html = xml_to_html(&fragment.content_xml)
             .context("Failed to transform XML to HTML")?;
 
         // Build HTML with header
