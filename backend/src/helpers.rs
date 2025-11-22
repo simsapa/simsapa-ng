@@ -61,8 +61,20 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
     // Or it could be a partial uid, e.g. sn56.11/pli
     lazy_static! {
         static ref re_partial_uid: Regex = Regex::new(r"/[a-z0-9-]+$").unwrap();
+        // Match direct uid formats with dots or hyphens in the number part
+        // e.g. dhp320-333, sn56.11, thag20.1
+        // but NOT simple numbers like dhp322, thag50 (those need verse conversion)
+        static ref re_direct_uid: Regex = Regex::new(r"^(dn|mn|sn|an|pv|vv|vism|iti|kp|khp|snp|th|ud|uda|dhp)(\d+[\.-]\d+[\d\.-]*)$").unwrap();
+        // Special case for thag/thig with dots (e.g. thag20.1, thig1.10)
+        static ref re_thag_thig_uid: Regex = Regex::new(r"^(thag|thig)(\d+\.\d+)$").unwrap();
     }
     if re_partial_uid.is_match(&query_text) {
+        return format!("uid:{}", query_text);
+    }
+
+    // Detect direct uid formats like dhp320-333, sn56.11
+    // This should match formats with dots or hyphens (structural separators in UIDs)
+    if re_direct_uid.is_match(&query_text) || re_thag_thig_uid.is_match(&query_text) {
         return format!("uid:{}", query_text);
     }
 
@@ -73,7 +85,52 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
         let full_match = cap.get(0).unwrap().as_str();
         let nikaya = cap.get(1).unwrap().as_str().to_lowercase();
         let number = cap.get(2).unwrap().as_str();
-        let replacement = format!("uid:{}{}", nikaya, number);
+
+        // Handle special cases for Dhp, Thag, and Thig verse numbers
+        let replacement = if nikaya == "dhp" {
+            // Parse the number as a verse number
+            if let Ok(verse_num) = number.parse::<u32>() {
+                if let Some(chapter_uid) = dhp_verse_to_chapter(verse_num) {
+                    format!("uid:{}", chapter_uid)
+                } else {
+                    // If no chapter found, use the number as-is (fallback)
+                    format!("uid:{}{}", nikaya, number)
+                }
+            } else {
+                // If parsing fails, use the number as-is
+                format!("uid:{}{}", nikaya, number)
+            }
+        } else if nikaya == "thag" {
+            // Parse the number as a verse number
+            if let Ok(verse_num) = number.parse::<u32>() {
+                if let Some(sutta_uid) = thag_verse_to_uid(verse_num) {
+                    format!("uid:{}", sutta_uid)
+                } else {
+                    // If no sutta found, use the number as-is (fallback)
+                    format!("uid:{}{}", nikaya, number)
+                }
+            } else {
+                // If parsing fails, use the number as-is
+                format!("uid:{}{}", nikaya, number)
+            }
+        } else if nikaya == "thig" {
+            // Parse the number as a verse number
+            if let Ok(verse_num) = number.parse::<u32>() {
+                if let Some(sutta_uid) = thig_verse_to_uid(verse_num) {
+                    format!("uid:{}", sutta_uid)
+                } else {
+                    // If no sutta found, use the number as-is (fallback)
+                    format!("uid:{}{}", nikaya, number)
+                }
+            } else {
+                // If parsing fails, use the number as-is
+                format!("uid:{}{}", nikaya, number)
+            }
+        } else {
+            // For all other nikayas, use the standard format
+            format!("uid:{}{}", nikaya, number)
+        };
+
         result = result.replace(full_match, &replacement);
     }
 
@@ -2057,6 +2114,40 @@ mod tests {
         let query_text = "SN 44.22";
         let uid = query_text_to_uid_field_query(query_text);
         assert_eq!(uid, "uid:sn44.22");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_dhp_verse() {
+        // Test Dhp verse number conversion to chapter uid
+        assert_eq!(query_text_to_uid_field_query("dhp322"), "uid:dhp320-333");
+        assert_eq!(query_text_to_uid_field_query("Dhp 182"), "uid:dhp179-196");
+        assert_eq!(query_text_to_uid_field_query("dhp15"), "uid:dhp1-20");
+        assert_eq!(query_text_to_uid_field_query("Dhp 25"), "uid:dhp21-32");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_thag_verse() {
+        // Test Thag verse number conversion to uid
+        assert_eq!(query_text_to_uid_field_query("Thag 1207"), "uid:thag20.1");
+        assert_eq!(query_text_to_uid_field_query("thag50"), "uid:thag1.50");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_thig_verse() {
+        // Test Thig verse number conversion to uid
+        assert_eq!(query_text_to_uid_field_query("thig10"), "uid:thig1.10");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_direct_uid_formats() {
+        // Test that direct uid formats are recognized and preserved
+        assert_eq!(query_text_to_uid_field_query("dhp320-333"), "uid:dhp320-333");
+        assert_eq!(query_text_to_uid_field_query("dhp1-20"), "uid:dhp1-20");
+        assert_eq!(query_text_to_uid_field_query("mn1"), "uid:mn1");
+        assert_eq!(query_text_to_uid_field_query("sn56.11"), "uid:sn56.11");
+        assert_eq!(query_text_to_uid_field_query("thag20.1"), "uid:thag20.1");
+        assert_eq!(query_text_to_uid_field_query("an4.10"), "uid:an4.10");
+        assert_eq!(query_text_to_uid_field_query("dn1"), "uid:dn1");
     }
 
     // #[test]
