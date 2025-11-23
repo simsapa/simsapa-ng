@@ -11,8 +11,8 @@ ApplicationWindow {
     id: root
 
     title: "Download Application Assets"
-    width: is_mobile ? Screen.desktopAvailableWidth : 500
-    height: is_mobile ? Screen.desktopAvailableHeight : 700
+    width: is_mobile ? Screen.desktopAvailableWidth : 600
+    height: is_mobile ? Screen.desktopAvailableHeight : 900
     visible: true
     color: palette.window
     flags: Qt.Dialog
@@ -34,6 +34,12 @@ ApplicationWindow {
         init_add_languages = manager.get_init_languages();
         available_languages = manager.get_available_languages();
 
+        // Parse init languages and set selected_languages
+        if (init_add_languages !== "") {
+            add_languages_input.text = init_add_languages;
+            sync_selection_from_input();
+        }
+
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
         // Assuming there is a network connection, show the download selection screen.
         views_stack.currentIndex = 1;
@@ -52,8 +58,41 @@ ApplicationWindow {
     property bool include_appdata_downloads: true
     property string init_add_languages: ""
     property var available_languages: []
+    property var selected_languages: []
 
     AssetManager { id: manager }
+
+    function toggle_language_selection(lang_code) {
+        let selected = root.selected_languages.slice();
+        let index = selected.indexOf(lang_code);
+
+        if (index > -1) {
+            // Remove from selection
+            selected.splice(index, 1);
+        } else {
+            // Add to selection
+            selected.push(lang_code);
+        }
+
+        root.selected_languages = selected;
+        update_language_input();
+    }
+
+    function update_language_input() {
+        add_languages_input.text = root.selected_languages.join(", ");
+    }
+
+    function parse_language_input() {
+        const text = add_languages_input.text.toLowerCase().trim();
+        if (text === "" || text === "*") {
+            return [];
+        }
+        return text.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
+    }
+
+    function sync_selection_from_input() {
+        root.selected_languages = parse_language_input();
+    }
 
     StorageDialog { id: storage_dialog }
 
@@ -196,10 +235,10 @@ ApplicationWindow {
                     }
                     text: `
 <style>p { text-align: center; }</style>
-<p>The application database<br>was not found on this system.</p>
+<p>The application database was not found on this system.</p>
 <p>Checking for available sources to download...<p>
 <p></p>
-<p>If you need to remove the database, such as after a failed or partial download,<br>read the instructions at:</p>
+<p>If you need to remove the database, such as after a failed or partial download, read the instructions at:</p>
 <p><a href="https://simsapa.github.io/install/uninstall/">https://simsapa.github.io/install/uninstall/</a></p>
 `
 
@@ -226,63 +265,69 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ColumnLayout {
-                spacing: 10
+            ScrollView {
                 anchors.fill: parent
+                contentWidth: availableWidth
+                clip: true
 
-                Image {
-                    source: "icons/appicons/simsapa.png"
-                    Layout.preferredWidth: 100
-                    Layout.preferredHeight: 100
-                    Layout.alignment: Qt.AlignCenter
-                }
+                ColumnLayout {
+                    spacing: 10
+                    width: parent.width
 
-                Text {
-                    textFormat: Text.RichText
-                    font.pointSize: root.pointSize
-                    color: palette.text
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignCenter
-                    onLinkActivated: function(link) { Qt.openUrlExternally(link); }
-                    text: `
+                    Image {
+                        source: "icons/appicons/simsapa.png"
+                        Layout.preferredWidth: 100
+                        Layout.preferredHeight: 100
+                        Layout.alignment: Qt.AlignCenter
+                    }
+
+                    Text {
+                        textFormat: Text.RichText
+                        font.pointSize: root.pointSize
+                        color: palette.text
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignCenter
+                        onLinkActivated: function(link) { Qt.openUrlExternally(link); }
+                        text: `
 <style>p { text-align: center; }</style>
-<p>The application database<br>was not found on this system.</p>
+<p>The application database was not found on this system.</p>
 <p>Please select the sources to download.<p>
 <p></p>
-<p>If you need to remove the database, such as after a failed or partial download,<br>read the instructions at:</p>
+<p>If you need to remove the database, such as after a failed or partial download, read the instructions at:</p>
 <p><a href="https://simsapa.github.io/install/uninstall/">https://simsapa.github.io/install/uninstall/</a></p>
 `
 
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.NoButton
-                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
-                    }
-                }
-
-                ColumnLayout {
-                    Layout.margins: 20
-
-                    RadioButton {
-                        text: "General bundle"
-                        font.pointSize: root.pointSize
-                        checked: true
-                        enabled: false
-                        onClicked: {} // _toggled_general_bundle
+                        MouseArea {
+                            anchors.fill: parent
+                            acceptedButtons: Qt.NoButton
+                            cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                        }
                     }
 
-                    Label {
-                        text: "Pāli and English + pre-generated search index"
-                        font.pointSize: root.pointSize
-                    }
+                    ColumnLayout {
+                        Layout.margins: 20
+                        Layout.fillWidth: true
 
-                    // RadioButton {
-                    //     text: "Include additional texts"
-                    //     checked: false
-                    //     enabled: false
-                    // }
-                }
+                        RadioButton {
+                            text: "General bundle (always included)"
+                            font.pointSize: root.pointSize
+                            checked: true
+                            enabled: false
+                            onClicked: {} // _toggled_general_bundle
+                        }
+
+                        Label {
+                            text: "Pāli and English + pre-generated search index"
+                            font.pointSize: root.pointSize
+                        }
+
+                        // RadioButton {
+                        //     text: "Include additional texts"
+                        //     checked: false
+                        //     enabled: false
+                        // }
+                    }
 
                 // Language selection section
                 ColumnLayout {
@@ -291,12 +336,12 @@ ApplicationWindow {
 
                     Label {
                         text: "Include Languages"
-                        font.pointSize: root.pointSize + 2
+                        font.pointSize: root.pointSize
                         font.bold: true
                     }
 
                     Label {
-                        text: "Select from the list below, or type in the short codes of sutta languages to download, or type * to download all."
+                        text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
                         font.pointSize: root.pointSize
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
@@ -308,10 +353,14 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         text: root.init_add_languages
                         Layout.fillWidth: true
+                        onTextChanged: {
+                            // Update selection when user manually edits the input
+                            root.sync_selection_from_input();
+                        }
                     }
 
                     Label {
-                        text: "Available languages:"
+                        text: "Available languages (click to select):"
                         font.pointSize: root.pointSize
                     }
 
@@ -323,35 +372,59 @@ ApplicationWindow {
                         ListView {
                             id: languages_listview
                             model: root.available_languages
-                            spacing: 2
+                            spacing: 0
 
-                            delegate: Item {
-                                id: languages_item
+                            delegate: Rectangle {
+                                id: delegate_item
+                                required property string modelData
+                                required property int index
+
                                 width: languages_listview.width
-                                height: 25
-                                required property var modelData
+                                height: 30
+
+                                property string lang_code: {
+                                    if (!modelData) return "";
+                                    const parts = modelData.split('|');
+                                    return parts.length === 2 ? parts[0] : "";
+                                }
+
+                                property string lang_name: {
+                                    if (!modelData) return "";
+                                    const parts = modelData.split('|');
+                                    return parts.length === 2 ? parts[1] : "";
+                                }
+
+                                property bool is_selected: root.selected_languages.indexOf(lang_code) > -1
+
+                                color: is_selected ? palette.highlight : (index % 2 === 0 ? palette.alternateBase : palette.base)
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.toggle_language_selection(delegate_item.lang_code);
+                                    }
+                                }
 
                                 Row {
                                     spacing: 10
                                     anchors.verticalCenter: parent.verticalCenter
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 10
 
                                     Text {
-                                        text: {
-                                            const parts = languages_item.modelData.split('|');
-                                            return parts.length === 2 ? parts[0] : languages_item.modelData;
-                                        }
+                                        text: delegate_item.lang_code
                                         font.pointSize: root.pointSize
-                                        color: palette.text
+                                        font.bold: delegate_item.is_selected
+                                        color: delegate_item.is_selected ? palette.highlightedText : palette.text
                                         width: 50
                                     }
 
                                     Text {
-                                        text: {
-                                            const parts = languages_item.modelData.split('|');
-                                            return parts.length === 2 ? parts[1] : "";
-                                        }
+                                        text: delegate_item.lang_name
                                         font.pointSize: root.pointSize
-                                        color: palette.text
+                                        font.bold: delegate_item.is_selected
+                                        color: delegate_item.is_selected ? palette.highlightedText : palette.text
                                     }
                                 }
                             }
@@ -359,75 +432,78 @@ ApplicationWindow {
                     }
                 }
 
-                Item { Layout.fillHeight: true }
+                    Item { Layout.preferredHeight: 20 }
 
-                RowLayout {
-                    id: horizontal_buttons
-                    visible: root.is_desktop
-                    Layout.margins: 20
+                    RowLayout {
+                        id: horizontal_buttons
+                        visible: root.is_desktop
+                        Layout.margins: 20
+                        Layout.fillWidth: true
 
-                    Item { Layout.fillWidth: true }
+                        Item { Layout.fillWidth: true }
 
-                    Button {
-                        text: "Quit"
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: Qt.quit()
+                        Button {
+                            text: "Quit"
+                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                            onClicked: Qt.quit()
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Button {
+                            text: "Select Storage"
+                            visible: root.is_mobile
+                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                            onClicked: storage_dialog.open()
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Button {
+                            text: "Download"
+                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                            onClicked: {
+                                views_stack.currentIndex = 2;
+                                root.validate_and_run_download();
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
                     }
 
-                    Item { Layout.fillWidth: true }
-
-                    Button {
-                        text: "Select Storage"
+                    ColumnLayout {
+                        id: vertical_buttons
                         visible: root.is_mobile
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: storage_dialog.open()
-                    }
+                        Layout.margins: 20
+                        Layout.fillWidth: true
 
-                    Item { Layout.fillWidth: true }
+                        Button {
+                            text: "Quit"
+                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                            onClicked: Qt.quit()
+                        }
 
-                    Button {
-                        text: "Download"
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: {
-                            views_stack.currentIndex = 2;
-                            root.validate_and_run_download();
+                        Button {
+                            text: "Select Storage"
+                            visible: root.is_mobile
+                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                            onClicked: storage_dialog.open()
+                        }
+
+                        Button {
+                            text: "Download"
+                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
+                            onClicked: {
+                                views_stack.currentIndex = 2;
+                                root.validate_and_run_download();
+                            }
                         }
                     }
 
-                    Item { Layout.fillWidth: true }
-                }
-
-                ColumnLayout {
-                    id: vertical_buttons
-                    visible: root.is_mobile
-                    Layout.margins: 20
-
-                    Button {
-                        text: "Quit"
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: Qt.quit()
-                    }
-
-                    Button {
-                        text: "Select Storage"
+                    Item {
                         visible: root.is_mobile
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: storage_dialog.open()
+                        Layout.fillHeight: true
                     }
-
-                    Button {
-                        text: "Download"
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        onClicked: {
-                            views_stack.currentIndex = 2;
-                            root.validate_and_run_download();
-                        }
-                    }
-                }
-
-                Item {
-                    visible: root.is_mobile
-                    Layout.fillHeight: true
                 }
             }
         }
