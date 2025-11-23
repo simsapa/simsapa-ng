@@ -561,18 +561,15 @@ ApplicationWindow {
                 spacing: 0
                 anchors.fill: parent
 
-                // Scrollable content area
-                ScrollView {
+                // Centered content area
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    contentWidth: availableWidth
-                    clip: true
 
                     ColumnLayout {
-                        width: parent.width
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
                         spacing: 10
-
-                        Item { Layout.fillHeight: true }
 
                         AnimatedImage {
                             id: simsapa_loading_gif
@@ -586,12 +583,15 @@ ApplicationWindow {
                             Layout.alignment: Qt.AlignCenter
                             text: "Downloading ..."
                             font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.fillWidth: true
                         }
 
                         ProgressBar {
                             id: progress_bar
                             Layout.alignment: Qt.AlignCenter
-                            Layout.preferredWidth: parent.width * 0.9
+                            Layout.fillWidth: true
                             visible: true
                             from: 0
                             to: 1
@@ -606,8 +606,6 @@ ApplicationWindow {
                         //     font.pointSize: root.pointSize
                         //     Layout.alignment: Qt.AlignCenter
                         // }
-
-                        Item { Layout.fillHeight: true }
                     }
                 }
 
