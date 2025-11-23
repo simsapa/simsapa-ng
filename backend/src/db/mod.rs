@@ -141,23 +141,10 @@ impl DbManager {
         app_settings.theme_name_as_string()
     }
 
-    /// Get distinct sutta languages from both appdata and userdata databases
+    /// Get distinct sutta languages from appdata database.
+    /// Language downloads are imported into appdata.
     pub fn get_sutta_languages(&self) -> Vec<String> {
-        use std::collections::HashSet;
-
-        // Get languages from appdata
-        let mut languages_set: HashSet<String> = self.appdata.get_sutta_languages()
-            .into_iter()
-            .collect();
-
-        // Get languages from userdata and merge
-        let userdata_languages = self.userdata.get_sutta_languages();
-        languages_set.extend(userdata_languages);
-
-        // Convert back to sorted vector
-        let mut languages: Vec<String> = languages_set.into_iter().collect();
-        languages.sort();
-        languages
+        self.appdata.get_sutta_languages()
     }
 }
 

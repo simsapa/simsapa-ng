@@ -5,59 +5,14 @@ use diesel::prelude::*;
 use diesel::RunQueryDsl;
 
 use crate::logger::{info, error};
-use crate::db::initialize_userdata;
 use crate::db::appdata_models::Sutta;
 use crate::db::appdata_schema::suttas;
 
-/// Ensures that the userdata database is initialized and ready for imports
+/// Import suttas from language database files into appdata
 ///
-/// Checks if userdata database file exists and has tables. If not, initializes it.
-fn ensure_userdata_initialized(userdata_database_url: &str) -> Result<(), Box<dyn Error>> {
-    info(&format!("ensure_userdata_initialized(): {}", userdata_database_url));
-
-    // Try to connect to the database
-    let db_check = SqliteConnection::establish(userdata_database_url);
-
-    match db_check {
-        Ok(mut conn) => {
-            // Check if the suttas table exists by attempting a simple query
-            use diesel::dsl::sql;
-            use diesel::sql_types::Integer;
-
-            let table_check: Result<i32, _> = sql::<Integer>("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='suttas'")
-                .get_result(&mut conn);
-
-            match table_check {
-                Ok(count) if count > 0 => {
-                    info("userdata database is already initialized");
-                    Ok(())
-                }
-                _ => {
-                    info("userdata database exists but needs initialization");
-                    initialize_userdata(userdata_database_url)
-                        .map_err(|e| format!("Failed to initialize userdata: {}", e).into())
-                }
-            }
-        }
-        Err(_) => {
-            info("userdata database does not exist, initializing");
-            initialize_userdata(userdata_database_url)
-                .map_err(|e| format!("Failed to initialize userdata: {}", e).into())
-        }
-    }
-}
-
-/// Import suttas from language database files into userdata
-///
-/// Finds all suttas_lang_*.sqlite3 files in extract_temp_dir and imports them to userdata.
-pub fn import_suttas_lang_to_userdata(extract_temp_dir: &Path, userdata_database_url: &str) -> Result<(), Box<dyn Error>> {
-    info("import_suttas_lang_to_userdata()");
-
-    // Ensure userdata database is initialized before attempting import
-    if let Err(e) = ensure_userdata_initialized(userdata_database_url) {
-        error(&format!("Failed to initialize userdata database: {}", e));
-        return Err(format!("Failed to initialize userdata database: {}", e).into());
-    }
+/// Finds all suttas_lang_*.sqlite3 files in extract_temp_dir and imports them to appdata.
+pub fn import_suttas_lang_to_appdata(extract_temp_dir: &Path, target_database_url: &str) -> Result<(), Box<dyn Error>> {
+    info(&format!("import_suttas_lang_to_appdata() to: {}", target_database_url));
 
     // Find all suttas_lang_*.sqlite3 files in extract_temp_dir
     let entries = match std::fs::read_dir(extract_temp_dir) {
@@ -90,7 +45,7 @@ pub fn import_suttas_lang_to_userdata(extract_temp_dir: &Path, userdata_database
         if file_name.starts_with("suttas_lang_") && file_name.ends_with(".sqlite3") {
             info(&format!("Importing suttas from: {}", file_name));
 
-            match import_suttas_from_db(&path, userdata_database_url) {
+            match import_suttas_from_db(&path, target_database_url) {
                 Ok(_) => {
                     info(&format!("Successfully imported {}", file_name));
                     // Remove the language db file after successful import
@@ -106,12 +61,12 @@ pub fn import_suttas_lang_to_userdata(extract_temp_dir: &Path, userdata_database
     Ok(())
 }
 
-/// Import suttas from a language database into userdata
+/// Import suttas from a language database into target database (appdata)
 ///
-/// Reads suttas from import_db_path and inserts them into userdata database,
+/// Reads suttas from import_db_path and inserts them into target database,
 /// replacing any existing suttas with the same uid.
-pub fn import_suttas_from_db(import_db_path: &PathBuf, userdata_database_url: &str) -> Result<(), Box<dyn Error>> {
-    info(&format!("import_suttas_from_db(): {:?} -> {}", import_db_path, userdata_database_url));
+pub fn import_suttas_from_db(import_db_path: &PathBuf, target_database_url: &str) -> Result<(), Box<dyn Error>> {
+    info(&format!("import_suttas_from_db(): {:?} -> {}", import_db_path, target_database_url));
 
     // Establish connection to import database
     let import_abs_path = std::fs::canonicalize(import_db_path)?;
@@ -120,9 +75,9 @@ pub fn import_suttas_from_db(import_db_path: &PathBuf, userdata_database_url: &s
     let mut import_conn = SqliteConnection::establish(&import_database_url)
         .map_err(|e| format!("Failed to connect to import database: {}", e))?;
 
-    // Establish connection to userdata database
-    let mut userdata_conn = SqliteConnection::establish(userdata_database_url)
-        .map_err(|e| format!("Failed to connect to userdata database: {}", e))?;
+    // Establish connection to target database
+    let mut target_conn = SqliteConnection::establish(target_database_url)
+        .map_err(|e| format!("Failed to connect to target database: {}", e))?;
 
     // Read all suttas from import database
     let suttas_to_import: Vec<Sutta> = suttas::table
@@ -132,11 +87,11 @@ pub fn import_suttas_from_db(import_db_path: &PathBuf, userdata_database_url: &s
     let count = suttas_to_import.len();
     info(&format!("Importing {} suttas", count));
 
-    // Import each sutta into userdata
+    // Import each sutta into target database
     for sutta in suttas_to_import {
         // Delete any existing sutta with the same uid
         diesel::delete(suttas::table.filter(suttas::uid.eq(&sutta.uid)))
-            .execute(&mut userdata_conn)
+            .execute(&mut target_conn)
             .map_err(|e| format!("Failed to delete existing sutta: {}", e))?;
 
         // Insert the new sutta
@@ -169,7 +124,7 @@ pub fn import_suttas_from_db(import_db_path: &PathBuf, userdata_database_url: &s
                 suttas::copyright.eq(&sutta.copyright),
                 suttas::license.eq(&sutta.license),
             ))
-            .execute(&mut userdata_conn)
+            .execute(&mut target_conn)
             .map_err(|e| format!("Failed to insert sutta {}: {}", sutta.uid, e))?;
     }
 

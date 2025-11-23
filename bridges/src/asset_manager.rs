@@ -12,7 +12,7 @@ use bzip2::read::BzDecoder;
 use tar::Archive;
 
 use simsapa_backend::{move_folder_contents, AppGlobalPaths};
-use simsapa_backend::asset_helpers::import_suttas_lang_to_userdata;
+use simsapa_backend::asset_helpers::import_suttas_lang_to_appdata;
 use simsapa_backend::logger::{info, error};
 use simsapa_backend::lookup::{LANGUAGES_AVAILABLE, LANG_CODE_TO_NAME};
 
@@ -266,7 +266,7 @@ impl qobject::AssetManager {
                         qo.as_mut().download_show_msg(import_msg);
                     }).unwrap();
 
-                    match import_suttas_lang_to_userdata(&extract_temp_folder, &paths.userdata_database_url) {
+                    match import_suttas_lang_to_appdata(&extract_temp_folder, &paths.appdata_database_url) {
                         Ok(_) => {
                             info(&format!("Successfully imported {}", &download_file_name));
                             let success_msg = QString::from(format!("Successfully imported {}", &download_file_name));
