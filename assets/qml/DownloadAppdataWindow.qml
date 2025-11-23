@@ -220,43 +220,78 @@ ApplicationWindow {
             Layout.fillHeight: true
 
             ColumnLayout {
-                spacing: 10
+                spacing: 0
                 anchors.fill: parent
 
-                Text {
-                    textFormat: Text.RichText
-                    font.pointSize: root.pointSize
-                    color: palette.text
-                    wrapMode: Text.WordWrap
+                // Scrollable content area
+                ScrollView {
                     Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignCenter
-                    onLinkActivated: function(link) {
-                        /* logger.log(link + " link activated"); */
-                        Qt.openUrlExternally(link);
-                    }
-                    text: `
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 5
+
+                        Text {
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+                            text: `
 <style>p { text-align: center; }</style>
 <p>The application database was not found on this system.</p>
 <p>Checking for available sources to download...<p>
-<p></p>
+`
+                        }
+
+                        Text {
+                            visible: root.is_desktop
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+                            onLinkActivated: function(link) {
+                                /* logger.log(link + " link activated"); */
+                                Qt.openUrlExternally(link);
+                            }
+                            text: `
+<style>p { text-align: center; }</style>
 <p>If you need to remove the database, such as after a failed or partial download, read the instructions at:</p>
 <p><a href="https://simsapa.github.io/install/uninstall/">https://simsapa.github.io/install/uninstall/</a></p>
 `
 
-                    // https://blog.shantanu.io/2015/02/15/creating-working-hyperlinks-in-qtquick-text/
-                    MouseArea {
-                        anchors.fill: parent
-                        acceptedButtons: Qt.NoButton // we don't want to eat clicks on the Text
-                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            // https://blog.shantanu.io/2015/02/15/creating-working-hyperlinks-in-qtquick-text/
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.NoButton // we don't want to eat clicks on the Text
+                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            }
+                        }
+
+                        Item { Layout.fillHeight: true }
                     }
                 }
 
-                Item { Layout.fillHeight: true }
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 20
 
-                Button {
-                    Layout.alignment: Qt.AlignCenter
-                    text: "Quit"
-                    onClicked: Qt.quit()
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.pointSize
+                        onClicked: Qt.quit()
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
@@ -266,166 +301,186 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            ScrollView {
+            ColumnLayout {
+                spacing: 0
                 anchors.fill: parent
-                contentWidth: availableWidth
-                clip: true
 
-                ColumnLayout {
-                    spacing: 10
-                    width: parent.width
+                // Scrollable content area
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
 
-                    Image {
-                        source: "icons/appicons/simsapa.png"
-                        Layout.preferredWidth: 100
-                        Layout.preferredHeight: 100
-                        Layout.alignment: Qt.AlignCenter
-                    }
+                    ColumnLayout {
+                        spacing: 5
+                        width: parent.width
 
-                    Text {
-                        textFormat: Text.RichText
-                        font.pointSize: root.pointSize
-                        color: palette.text
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignCenter
-                        onLinkActivated: function(link) { Qt.openUrlExternally(link); }
-                        text: `
+                        Image {
+                            source: "icons/appicons/simsapa.png"
+                            Layout.preferredWidth: 100
+                            Layout.preferredHeight: 100
+                            Layout.alignment: Qt.AlignCenter
+                        }
+
+                        Text {
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+                            text: `
 <style>p { text-align: center; }</style>
 <p>The application database was not found on this system.</p>
 <p>Please select the sources to download.<p>
-<p></p>
+`
+                        }
+
+                        Text {
+                            visible: root.is_desktop
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+                            onLinkActivated: function(link) { Qt.openUrlExternally(link); }
+                            text: `
+<style>p { text-align: center; }</style>
 <p>If you need to remove the database, such as after a failed or partial download, read the instructions at:</p>
 <p><a href="https://simsapa.github.io/install/uninstall/">https://simsapa.github.io/install/uninstall/</a></p>
 `
 
-                        MouseArea {
-                            anchors.fill: parent
-                            acceptedButtons: Qt.NoButton
-                            cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.margins: 20
-                        Layout.fillWidth: true
-
-                        RadioButton {
-                            text: "General bundle (always included)"
-                            font.pointSize: root.pointSize
-                            checked: true
-                            enabled: false
-                            onClicked: {} // _toggled_general_bundle
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.NoButton
+                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            }
                         }
 
-                        Label {
-                            text: "Pāli and English + pre-generated search index"
-                            font.pointSize: root.pointSize
+                        ColumnLayout {
+                            Layout.margins: 10
+                            Layout.fillWidth: true
+
+                            RadioButton {
+                                text: "General bundle (always included)"
+                                font.pointSize: root.pointSize
+                                checked: true
+                                enabled: false
+                                onClicked: {} // _toggled_general_bundle
+                            }
+
+                            Label {
+                                text: "Pāli and English + pre-generated search index"
+                                font.pointSize: root.pointSize
+                            }
+
+                            // RadioButton {
+                            //     text: "Include additional texts"
+                            //     checked: false
+                            //     enabled: false
+                            // }
                         }
 
-                        // RadioButton {
-                        //     text: "Include additional texts"
-                        //     checked: false
-                        //     enabled: false
-                        // }
-                    }
+                        // Language selection section
+                        ColumnLayout {
+                            Layout.margins: 10
+                            spacing: 10
 
-                // Language selection section
-                ColumnLayout {
-                    Layout.margins: 20
-                    spacing: 10
+                            Label {
+                                text: "Include Languages"
+                                font.pointSize: root.pointSize
+                                font.bold: true
+                            }
 
-                    Label {
-                        text: "Include Languages"
-                        font.pointSize: root.pointSize
-                        font.bold: true
-                    }
+                            Label {
+                                text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
+                                font.pointSize: root.pointSize
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
 
-                    Label {
-                        text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
-                        font.pointSize: root.pointSize
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                    }
-
-                    TextField {
-                        id: add_languages_input
-                        placeholderText: "E.g.: it, fr, pt, th"
-                        font.pointSize: root.pointSize
-                        text: root.init_add_languages
-                        Layout.fillWidth: true
-                        onTextChanged: {
-                            // Update selection when user manually edits the input
-                            root.sync_selection_from_input();
-                        }
-                    }
-
-                    Label {
-                        text: "Available languages (click to select):"
-                        font.pointSize: root.pointSize
-                    }
-
-                    ScrollView {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 150
-                        clip: true
-
-                        ListView {
-                            id: languages_listview
-                            model: root.available_languages
-                            spacing: 0
-
-                            delegate: Rectangle {
-                                id: delegate_item
-                                required property string modelData
-                                required property int index
-
-                                width: languages_listview.width
-                                height: 30
-
-                                property string lang_code: {
-                                    if (!modelData) return "";
-                                    const parts = modelData.split('|');
-                                    return parts.length === 2 ? parts[0] : "";
+                            TextField {
+                                id: add_languages_input
+                                placeholderText: "E.g.: it, fr, pt, th"
+                                font.pointSize: root.pointSize
+                                text: root.init_add_languages
+                                Layout.fillWidth: true
+                                onTextChanged: {
+                                    // Update selection when user manually edits the input
+                                    root.sync_selection_from_input();
                                 }
+                            }
 
-                                property string lang_name: {
-                                    if (!modelData) return "";
-                                    const parts = modelData.split('|');
-                                    return parts.length === 2 ? parts[1] : "";
-                                }
+                            Label {
+                                text: "Available languages (click to select):"
+                                font.pointSize: root.pointSize
+                            }
 
-                                property bool is_selected: root.selected_languages.indexOf(lang_code) > -1
+                            ScrollView {
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 150
+                                clip: true
 
-                                color: is_selected ? palette.highlight : (index % 2 === 0 ? palette.alternateBase : palette.base)
+                                ListView {
+                                    id: languages_listview
+                                    model: root.available_languages
+                                    spacing: 0
 
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.toggle_language_selection(delegate_item.lang_code);
-                                    }
-                                }
+                                    delegate: Rectangle {
+                                        id: delegate_item
+                                        required property string modelData
+                                        required property int index
 
-                                Row {
-                                    spacing: 10
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 10
+                                        width: languages_listview.width
+                                        height: 30
 
-                                    Text {
-                                        text: delegate_item.lang_code
-                                        font.pointSize: root.pointSize
-                                        font.bold: delegate_item.is_selected
-                                        color: delegate_item.is_selected ? palette.highlightedText : palette.text
-                                        width: 50
-                                    }
+                                        property string lang_code: {
+                                            if (!modelData) return "";
+                                            const parts = modelData.split('|');
+                                            return parts.length === 2 ? parts[0] : "";
+                                        }
 
-                                    Text {
-                                        text: delegate_item.lang_name
-                                        font.pointSize: root.pointSize
-                                        font.bold: delegate_item.is_selected
-                                        color: delegate_item.is_selected ? palette.highlightedText : palette.text
+                                        property string lang_name: {
+                                            if (!modelData) return "";
+                                            const parts = modelData.split('|');
+                                            return parts.length === 2 ? parts[1] : "";
+                                        }
+
+                                        property bool is_selected: root.selected_languages.indexOf(lang_code) > -1
+
+                                        color: is_selected ? palette.highlight : (index % 2 === 0 ? palette.alternateBase : palette.base)
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                root.toggle_language_selection(delegate_item.lang_code);
+                                            }
+                                        }
+
+                                        Row {
+                                            spacing: 10
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 10
+
+                                            Text {
+                                                text: delegate_item.lang_code
+                                                font.pointSize: root.pointSize
+                                                font.bold: delegate_item.is_selected
+                                                color: delegate_item.is_selected ? palette.highlightedText : palette.text
+                                                width: 50
+                                            }
+
+                                            Text {
+                                                text: delegate_item.lang_name
+                                                font.pointSize: root.pointSize
+                                                font.bold: delegate_item.is_selected
+                                                color: delegate_item.is_selected ? palette.highlightedText : palette.text
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -433,77 +488,64 @@ ApplicationWindow {
                     }
                 }
 
-                    Item { Layout.preferredHeight: 20 }
+                // Fixed button area at the bottom
+                RowLayout {
+                    id: horizontal_buttons
+                    visible: root.is_desktop
+                    Layout.fillWidth: true
+                    Layout.margins: 20
 
-                    RowLayout {
-                        id: horizontal_buttons
-                        visible: root.is_desktop
-                        Layout.margins: 20
-                        Layout.fillWidth: true
+                    Item { Layout.fillWidth: true }
 
-                        Item { Layout.fillWidth: true }
-
-                        Button {
-                            text: "Quit"
-                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                            onClicked: Qt.quit()
-                        }
-
-                        Item { Layout.fillWidth: true }
-
-                        Button {
-                            text: "Select Storage"
-                            visible: root.is_mobile
-                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                            onClicked: storage_dialog.open()
-                        }
-
-                        Item { Layout.fillWidth: true }
-
-                        Button {
-                            text: "Download"
-                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                            onClicked: {
-                                views_stack.currentIndex = 2;
-                                root.validate_and_run_download();
-                            }
-                        }
-
-                        Item { Layout.fillWidth: true }
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.pointSize
+                        onClicked: Qt.quit()
                     }
 
-                    ColumnLayout {
-                        id: vertical_buttons
-                        visible: root.is_mobile
-                        Layout.margins: 20
-                        Layout.fillWidth: true
+                    Item { Layout.fillWidth: true }
 
-                        Button {
-                            text: "Quit"
-                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                            onClicked: Qt.quit()
-                        }
-
-                        Button {
-                            text: "Select Storage"
-                            visible: root.is_mobile
-                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                            onClicked: storage_dialog.open()
-                        }
-
-                        Button {
-                            text: "Download"
-                            font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                            onClicked: {
-                                views_stack.currentIndex = 2;
-                                root.validate_and_run_download();
-                            }
+                    Button {
+                        text: "Download"
+                        font.pointSize: root.pointSize
+                        onClicked: {
+                            views_stack.currentIndex = 2;
+                            root.validate_and_run_download();
                         }
                     }
 
-                    Item {
-                        visible: root.is_mobile
-                        Layout.fillHeight: true
+                    Item { Layout.fillWidth: true }
+                }
+
+                ColumnLayout {
+                    id: vertical_buttons
+                    visible: root.is_mobile
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    spacing: 10
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: Qt.quit()
+                    }
+
+                    Button {
+                        text: "Select Storage"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: storage_dialog.open()
+                    }
+
+                    Button {
+                        text: "Download"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: {
+                            views_stack.currentIndex = 2;
+                            root.validate_and_run_download();
+                        }
                     }
                 }
             }
@@ -515,45 +557,62 @@ ApplicationWindow {
             Layout.fillHeight: true
 
             ColumnLayout {
-                spacing: 10
+                spacing: 0
                 anchors.fill: parent
 
-                Item { Layout.fillHeight: true }
+                // Scrollable content area
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
 
-                AnimatedImage {
-                    id: simsapa_loading_gif
-                    source: "icons/gif/simsapa-loading.gif"
-                    playing: true
-                    Layout.alignment: Qt.AlignCenter
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 10
+
+                        Item { Layout.fillHeight: true }
+
+                        AnimatedImage {
+                            id: simsapa_loading_gif
+                            source: "icons/gif/simsapa-loading.gif"
+                            playing: true
+                            Layout.alignment: Qt.AlignCenter
+                        }
+
+                        Label {
+                            id: download_status
+                            Layout.alignment: Qt.AlignCenter
+                            text: "Downloading ..."
+                            font.pointSize: root.pointSize
+                        }
+
+                        ProgressBar {
+                            id: progress_bar
+                            Layout.alignment: Qt.AlignCenter
+                            Layout.preferredWidth: parent.width * 0.9
+                            visible: true
+                            from: 0
+                            to: 1
+                            value: 0
+                            font.pointSize: root.pointSize
+                        }
+
+                        // Text {
+                        //     id: download_msg
+                        //     text: ""
+                        //     textFormat: Text.RichText
+                        //     font.pointSize: root.pointSize
+                        //     Layout.alignment: Qt.AlignCenter
+                        // }
+
+                        Item { Layout.fillHeight: true }
+                    }
                 }
 
-                Label {
-                    id: download_status
-                    Layout.alignment: Qt.AlignCenter
-                    text: "Downloading ..."
-                    font.pointSize: root.pointSize
-                }
-
-                ProgressBar {
-                    id: progress_bar
-                    Layout.alignment: Qt.AlignCenter
-                    Layout.preferredWidth: parent.width * 0.9
-                    visible: true
-                    from: 0
-                    to: 1
-                    value: 0
-                    font.pointSize: root.pointSize
-                }
-
-                // Text {
-                //     id: download_msg
-                //     text: ""
-                //     textFormat: Text.RichText
-                //     font.pointSize: root.pointSize
-                //     Layout.alignment: Qt.AlignCenter
-                // }
-
+                // Fixed button area at the bottom
                 RowLayout {
+                    Layout.fillWidth: true
                     Layout.margins: 20
 
                     Item { Layout.fillWidth: true }
@@ -561,15 +620,12 @@ ApplicationWindow {
                     Button {
                         id: download_quit_button
                         text: "Quit"
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        Layout.alignment: Qt.AlignCenter
+                        font.pointSize: root.pointSize
                         onClicked: Qt.quit()
                     }
 
                     Item { Layout.fillWidth: true }
                 }
-
-                Item { Layout.fillHeight: true }
             }
         }
 
@@ -579,48 +635,61 @@ ApplicationWindow {
             Layout.fillHeight: true
 
             ColumnLayout {
-                spacing: 10
+                spacing: 0
                 anchors.fill: parent
 
-                Image {
-                    source: "icons/appicons/simsapa.png"
-                    Layout.preferredWidth: 100
-                    Layout.preferredHeight: 100
-                    Layout.alignment: Qt.AlignCenter
-                }
+                // Scrollable content area
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
 
-                ColumnLayout {
-                    Layout.margins: 20
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 10
 
-                    Item { Layout.fillHeight: true }
+                        Item { Layout.fillHeight: true }
 
-                    Text {
-                        text: `
+                        Image {
+                            source: "icons/appicons/simsapa.png"
+                            Layout.preferredWidth: 100
+                            Layout.preferredHeight: 100
+                            Layout.alignment: Qt.AlignCenter
+                        }
+
+                        Text {
+                            text: `
 <style>p { text-align: center; }</style>
 <p>Completed.</p>
 <p>Quit and start the application again.</p>`
-                        textFormat: Text.RichText
-                        font.pointSize: root.pointSize
-                        color: palette.text
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignCenter
-                    }
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+                        }
 
-                    Item { Layout.fillHeight: true }
+                        Item { Layout.fillHeight: true }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 20
+
+                    Item { Layout.fillWidth: true }
 
                     Button {
                         id: completed_quit_button
                         text: "Quit"
-                        font.pointSize: root.is_mobile ? root.largePointSize : root.pointSize
-                        Layout.alignment: Qt.AlignCenter
+                        font.pointSize: root.pointSize
                         onClicked: Qt.quit()
                     }
-                }
 
-                Item {
-                    visible: root.is_mobile
-                    Layout.fillHeight: true
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
