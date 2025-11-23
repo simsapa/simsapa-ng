@@ -12,7 +12,8 @@ ApplicationWindow {
 
     title: "Download Application Assets"
     width: is_mobile ? Screen.desktopAvailableWidth : 600
-    height: is_mobile ? Screen.desktopAvailableHeight : 900
+    // Height must not be greater than the screen
+    height: is_mobile ? Screen.desktopAvailableHeight : Math.min(900, Screen.desktopAvailableHeight)
     visible: true
     color: palette.window
     flags: Qt.Dialog
