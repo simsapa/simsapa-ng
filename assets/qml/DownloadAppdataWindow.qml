@@ -30,6 +30,10 @@ ApplicationWindow {
             manager.acquire_wake_lock_rust();
         }
 
+        // Initialize language selection
+        init_add_languages = manager.get_init_languages();
+        available_languages = manager.get_available_languages();
+
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
         // Assuming there is a network connection, show the download selection screen.
         views_stack.currentIndex = 1;
@@ -46,6 +50,8 @@ ApplicationWindow {
     }
 
     property bool include_appdata_downloads: true
+    property string init_add_languages: ""
+    property var available_languages: []
 
     AssetManager { id: manager }
 
@@ -78,7 +84,34 @@ ApplicationWindow {
     }
 
     function validate_and_run_download() {
-        // TODO Check that all entered language codes are available.
+        // Check that all entered language codes are available.
+        const lang_input = add_languages_input.text.toLowerCase().trim();
+
+        if (lang_input !== "" && lang_input !== "*") {
+            const selected_langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
+
+            // Build available languages map
+            const available_map = {};
+            for (let i = 0; i < root.available_languages.length; i++) {
+                const parts = root.available_languages[i].split('|');
+                if (parts.length === 2) {
+                    available_map[parts[0]] = parts[1];
+                }
+            }
+
+            for (let i = 0; i < selected_langs.length; i++) {
+                const lang = selected_langs[i];
+                // Skip base languages
+                if (lang === 'en' || lang === 'pli' || lang === 'san') {
+                    continue;
+                }
+                if (!available_map[lang]) {
+                    download_status.text = `Language not available: ${lang}`;
+                    return;
+                }
+            }
+        }
+
         root.run_download()
     }
 
@@ -104,13 +137,36 @@ ApplicationWindow {
             urls.push(appdata_tar_url);
             urls.push(dictionaries_tar_url);
             urls.push(dpd_tar_url);
-
-            /* logger.log("Show progress bar"); */
-            progress_bar.visible = true;
-
-            manager.download_urls_and_extract(urls);
         }
 
+        // Add language databases
+        const lang_input = add_languages_input.text.toLowerCase().trim();
+        let selected_langs = [];
+
+        if (lang_input !== "" && lang_input !== "*") {
+            const langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
+            selected_langs = langs.filter(lang => !['en', 'pli', 'san'].includes(lang));
+        } else if (lang_input === "*") {
+            // Get all available language codes
+            for (let i = 0; i < root.available_languages.length; i++) {
+                const parts = root.available_languages[i].split('|');
+                if (parts.length === 2) {
+                    selected_langs.push(parts[0]);
+                }
+            }
+        }
+
+        // Add URLs for selected languages
+        for (let i = 0; i < selected_langs.length; i++) {
+            const lang = selected_langs[i];
+            const lang_url = `https://github.com/${github_repo}/releases/download/${version}/suttas_lang_${lang}.tar.bz2`;
+            urls.push(lang_url);
+        }
+
+        /* logger.log("Show progress bar"); */
+        progress_bar.visible = true;
+
+        manager.download_urls_and_extract(urls);
     }
 
     StackLayout {
@@ -220,18 +276,87 @@ ApplicationWindow {
                         text: "Pāli and English + pre-generated search index"
                         font.pointSize: root.pointSize
                     }
-                    Label { text: ""; font.pointSize: root.pointSize }
-
-                    Label {
-                        text: "(Note: Choices for sutta translations are coming later.)"
-                        font.pointSize: root.pointSize
-                    }
 
                     // RadioButton {
                     //     text: "Include additional texts"
                     //     checked: false
                     //     enabled: false
                     // }
+                }
+
+                // Language selection section
+                ColumnLayout {
+                    Layout.margins: 20
+                    spacing: 10
+
+                    Label {
+                        text: "Include Languages"
+                        font.pointSize: root.pointSize + 2
+                        font.bold: true
+                    }
+
+                    Label {
+                        text: "Select from the list below, or type in the short codes of sutta languages to download, or type * to download all."
+                        font.pointSize: root.pointSize
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+
+                    TextField {
+                        id: add_languages_input
+                        placeholderText: "E.g.: it, fr, pt, th"
+                        font.pointSize: root.pointSize
+                        text: root.init_add_languages
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: "Available languages:"
+                        font.pointSize: root.pointSize
+                    }
+
+                    ScrollView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 150
+                        clip: true
+
+                        ListView {
+                            id: languages_listview
+                            model: root.available_languages
+                            spacing: 2
+
+                            delegate: Item {
+                                id: languages_item
+                                width: languages_listview.width
+                                height: 25
+                                required property var modelData
+
+                                Row {
+                                    spacing: 10
+                                    anchors.verticalCenter: parent.verticalCenter
+
+                                    Text {
+                                        text: {
+                                            const parts = languages_item.modelData.split('|');
+                                            return parts.length === 2 ? parts[0] : languages_item.modelData;
+                                        }
+                                        font.pointSize: root.pointSize
+                                        color: palette.text
+                                        width: 50
+                                    }
+
+                                    Text {
+                                        text: {
+                                            const parts = languages_item.modelData.split('|');
+                                            return parts.length === 2 ? parts[1] : "";
+                                        }
+                                        font.pointSize: root.pointSize
+                                        color: palette.text
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Item { Layout.fillHeight: true }

@@ -3,6 +3,7 @@
 pub mod db;
 pub mod types;
 pub mod helpers;
+pub mod asset_helpers;
 pub mod query_task;
 pub mod html_content;
 pub mod dir_list;

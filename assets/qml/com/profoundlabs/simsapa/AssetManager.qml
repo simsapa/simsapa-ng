@@ -8,6 +8,16 @@ Item {
         }
     }
 
+    function get_available_languages(): list<string> {
+        console.log("get_available_languages()");
+        return [];
+    }
+
+    function get_init_languages(): string {
+        console.log("get_init_languages()");
+        return "";
+    }
+
     function acquire_wake_lock_rust() {
         console.log("acquire_wake_lock_rust()");
     }

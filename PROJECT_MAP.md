@@ -328,6 +328,11 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Main Windows:** `cpp/window_manager.cpp`, QML window components
 - **Search Interface:** `cpp/sutta_search_window.cpp`, `assets/qml/SuttaSearchWindow.qml`
 - **Dictionary Interface:** `cpp/word_lookup_window.cpp`, `assets/qml/WordLookupWindow.qml`
+- **Download Interface:** `cpp/download_appdata_window.cpp`, `assets/qml/DownloadAppdataWindow.qml`
+  - **Language Selection:** User can enter comma-separated language codes (e.g., "hu, pt, it") or "*" for all
+  - **Language Validation:** Validates entered codes against available languages from LANG_CODE_TO_NAME
+  - **Language Downloads:** Downloads suttas_lang_{lang}.tar.bz2 files and imports into userdata.sqlite3
+  - **Auto-initialization:** Reads download_languages.txt from app_assets_dir if present
 - **Gloss Tab:** `assets/qml/GlossTab.qml` - Pali text analysis with vocabulary and AI translations
   - **AI Translation Interface:** `assets/qml/AssistantResponses.qml` - Tabbed interface for multiple AI model responses
   - **Response Tab Buttons:** `assets/qml/ResponseTabButton.qml` - Individual tabs with status indicators
@@ -337,6 +342,10 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Mobile Detection:** `backend/src/lib.rs:427` - `is_mobile()`
 - **Storage Management:** `bridges/src/storage_manager.rs`
 - **Asset Management:** `bridges/src/asset_manager.rs`
+  - **Download & Extract:** `download_urls_and_extract()` - Downloads tar.bz2 files and extracts to app-assets
+  - **Language Support:** `get_available_languages()` - Returns list of downloadable language codes from LANG_CODE_TO_NAME
+  - **Language Initialization:** `get_init_languages()` - Reads download_languages.txt for pre-configured languages
+  - **Language Import:** `import_suttas_lang_to_userdata()` - Imports suttas from language databases into userdata
 - **Linux Desktop Launcher:** `backend/src/helpers.rs:910` - Automatic .desktop file creation for AppImage integration
   - **AppImage Detection:** `backend/src/helpers.rs:887` - `is_running_from_appimage()`
   - **Desktop File Creation:** `backend/src/helpers.rs:943` - `create_or_update_linux_desktop_icon_file()`

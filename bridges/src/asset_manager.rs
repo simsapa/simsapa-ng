@@ -12,7 +12,9 @@ use bzip2::read::BzDecoder;
 use tar::Archive;
 
 use simsapa_backend::{move_folder_contents, AppGlobalPaths};
+use simsapa_backend::asset_helpers::import_suttas_lang_to_userdata;
 use simsapa_backend::logger::{info, error};
+use simsapa_backend::lookup::LANG_CODE_TO_NAME;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -44,6 +46,12 @@ pub mod qobject {
     extern "RustQt" {
         #[qinvokable]
         fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList);
+
+        #[qinvokable]
+        fn get_available_languages(self: Pin<&mut AssetManager>) -> QStringList;
+
+        #[qinvokable]
+        fn get_init_languages(self: Pin<&mut AssetManager>) -> QString;
 
         #[qinvokable]
         fn acquire_wake_lock_rust(self: Pin<&mut AssetManager>);
@@ -78,6 +86,43 @@ impl qobject::AssetManager {
 
     fn release_wake_lock_rust(self: Pin<&mut Self>) {
         qobject::release_wake_lock();
+    }
+
+    /// Get list of available language codes that can be downloaded
+    /// Returns format: "code1|Name1,code2|Name2,..."
+    fn get_available_languages(self: Pin<&mut Self>) -> QStringList {
+        let mut langs = QStringList::default();
+
+        // Filter out base languages (en, pli, san) which are always included
+        let mut lang_list: Vec<_> = LANG_CODE_TO_NAME.iter()
+            .filter(|(code, _)| !["en", "pli", "san"].contains(code))
+            .map(|(code, name)| format!("{}|{}", code, name))
+            .collect();
+
+        lang_list.sort();
+
+        for lang in lang_list {
+            langs.append(QString::from(&lang));
+        }
+
+        langs
+    }
+
+    /// Read download_languages.txt if it exists in app_assets_dir
+    /// Returns comma-separated language codes (e.g. "hu, pt, it")
+    fn get_init_languages(self: Pin<&mut Self>) -> QString {
+        let paths = AppGlobalPaths::new();
+        let download_languages_path = paths.app_assets_dir.join("download_languages.txt");
+
+        if download_languages_path.exists() {
+            if let Ok(contents) = std::fs::read_to_string(&download_languages_path) {
+                // Remove the file after reading
+                let _ = std::fs::remove_file(&download_languages_path);
+                return QString::from(contents.trim());
+            }
+        }
+
+        QString::from("")
     }
 
     fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList) {
@@ -194,6 +239,23 @@ impl qobject::AssetManager {
 
                 // Remove the downloaded tar.bz2 whether the extraction was successful or not.
                 let _ = remove_file(download_temp_file_path);
+
+                // Import language databases before moving files
+                if download_file_name.starts_with("suttas_lang_") && download_file_name.ends_with(".tar.bz2") {
+                    let import_msg = QString::from(format!("Importing {}", &download_file_name));
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().download_show_msg(import_msg);
+                    }).unwrap();
+
+                    match import_suttas_lang_to_userdata(&extract_temp_folder, &paths.userdata_database_url) {
+                        Ok(_) => {
+                            info(&format!("Successfully imported {}", &download_file_name));
+                        }
+                        Err(e) => {
+                            error(&format!("Failed to import {}: {}", &download_file_name, e));
+                        }
+                    }
+                }
 
                 // Move extracted contents to assets
                 match move_folder_contents(&extract_temp_folder, &app_assets_folder) {
