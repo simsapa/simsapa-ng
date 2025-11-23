@@ -207,9 +207,29 @@ fn suttacentral_import_languages_list() -> Result<(), String> {
     println!("Available languages in SuttaCentral ArangoDB:");
     println!("(excluding: en, pli, san, hu)\n");
     for lang in &languages {
-        println!("  {}", lang);
+        println!("{}", lang);
     }
     println!("\nTotal: {} languages", languages.len());
+
+    Ok(())
+}
+
+/// List all language codes and their names in SuttaCentral ArangoDB
+fn suttacentral_lang_code_to_name() -> Result<(), String> {
+    use bootstrap::suttacentral::{connect_to_arangodb, get_lang_code_to_name_list};
+
+    // Connect to ArangoDB
+    let db = connect_to_arangodb()
+        .map_err(|e| format!("Failed to connect to ArangoDB: {}", e))?;
+
+    let lang_code_to_name = get_lang_code_to_name_list(&db)
+        .map_err(|e| format!("Failed to get list: {}", e))?;
+
+    println!("All language codes and their names in SuttaCentral ArangoDB:");
+    for (lang_code, lang_name) in &lang_code_to_name {
+        println!(r#""{}", "{}""#, lang_code, lang_name);
+    }
+    println!("\nTotal: {}", lang_code_to_name.len());
 
     Ok(())
 }
@@ -543,6 +563,9 @@ enum Commands {
 
     /// List available languages in SuttaCentral ArangoDB
     SuttacentralImportLanguagesList,
+
+    /// List all language codes and their names in SuttaCentral ArangoDB
+    SuttacentralLangCodeToName,
 }
 
 /// Enum for the different types of queries available.
@@ -563,7 +586,7 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList => {
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName => {
             // Skip app data initialization for bootstrap, export, stats, and suttacentral commands
         }
         _ => {
@@ -649,6 +672,10 @@ fn main() {
 
         Commands::SuttacentralImportLanguagesList => {
             suttacentral_import_languages_list()
+        }
+
+        Commands::SuttacentralLangCodeToName => {
+            suttacentral_lang_code_to_name()
         }
     };
 

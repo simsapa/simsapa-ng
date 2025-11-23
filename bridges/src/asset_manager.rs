@@ -14,7 +14,7 @@ use tar::Archive;
 use simsapa_backend::{move_folder_contents, AppGlobalPaths};
 use simsapa_backend::asset_helpers::import_suttas_lang_to_userdata;
 use simsapa_backend::logger::{info, error};
-use simsapa_backend::lookup::LANG_CODE_TO_NAME;
+use simsapa_backend::lookup::{LANGUAGES_AVAILABLE, LANG_CODE_TO_NAME};
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -93,10 +93,14 @@ impl qobject::AssetManager {
     fn get_available_languages(self: Pin<&mut Self>) -> QStringList {
         let mut langs = QStringList::default();
 
+        // Use LANGUAGES_AVAILABLE for the list of language codes
         // Filter out base languages (en, pli, san) which are always included
-        let mut lang_list: Vec<_> = LANG_CODE_TO_NAME.iter()
-            .filter(|(code, _)| !["en", "pli", "san"].contains(code))
-            .map(|(code, name)| format!("{}|{}", code, name))
+        let mut lang_list: Vec<String> = LANGUAGES_AVAILABLE.iter()
+            .filter(|code| !["en", "pli", "san"].contains(code))
+            .filter_map(|code| {
+                // Use LANG_CODE_TO_NAME to retrieve the name for each code
+                LANG_CODE_TO_NAME.get(code).map(|name| format!("{}|{}", code, name))
+            })
             .collect();
 
         lang_list.sort();
@@ -230,18 +234,33 @@ impl qobject::AssetManager {
                 }).unwrap();
 
                 // Extract contents to a temp folder and move contents on success
-                let msg = match extract_tar_bz2_with_progress(&download_temp_file_path,
-                                                              &extract_temp_folder,
-                                                              &qt_thread) {
-                    Ok(_) => QString::from(format!("Completed extracting {}", &download_file_name)),
-                    Err(e) => QString::from(format!("{}", e)),
-                };
+                let extraction_result = extract_tar_bz2_with_progress(&download_temp_file_path,
+                                                                       &extract_temp_folder,
+                                                                       &qt_thread);
 
                 // Remove the downloaded tar.bz2 whether the extraction was successful or not.
                 let _ = remove_file(download_temp_file_path);
 
+                let extraction_success = match extraction_result {
+                    Ok(_) => {
+                        let msg = QString::from(format!("Completed extracting {}", &download_file_name));
+                        qt_thread.queue(move |mut qo| {
+                            qo.as_mut().download_show_msg(msg);
+                        }).unwrap();
+                        true
+                    }
+                    Err(e) => {
+                        let msg = QString::from(format!("Extraction failed: {}", e));
+                        error(&format!("Failed to extract {}: {}", &download_file_name, e));
+                        qt_thread.queue(move |mut qo| {
+                            qo.as_mut().download_show_msg(msg);
+                        }).unwrap();
+                        false
+                    }
+                };
+
                 // Import language databases before moving files
-                if download_file_name.starts_with("suttas_lang_") && download_file_name.ends_with(".tar.bz2") {
+                if extraction_success && download_file_name.starts_with("suttas_lang_") && download_file_name.ends_with(".tar.bz2") {
                     let import_msg = QString::from(format!("Importing {}", &download_file_name));
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().download_show_msg(import_msg);
@@ -250,22 +269,34 @@ impl qobject::AssetManager {
                     match import_suttas_lang_to_userdata(&extract_temp_folder, &paths.userdata_database_url) {
                         Ok(_) => {
                             info(&format!("Successfully imported {}", &download_file_name));
+                            let success_msg = QString::from(format!("Successfully imported {}", &download_file_name));
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().download_show_msg(success_msg);
+                            }).unwrap();
                         }
                         Err(e) => {
                             error(&format!("Failed to import {}: {}", &download_file_name, e));
+                            let error_msg = QString::from(format!("Import failed for {}: {}", &download_file_name, e));
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().download_show_msg(error_msg);
+                            }).unwrap();
                         }
                     }
                 }
 
-                // Move extracted contents to assets
-                match move_folder_contents(&extract_temp_folder, &app_assets_folder) {
-                    Ok(_) => {}
-                    Err(e) => error(&format!("{}", e))
+                // Move extracted contents to assets only if extraction was successful
+                if extraction_success {
+                    match move_folder_contents(&extract_temp_folder, &app_assets_folder) {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error(&format!("Failed to move files: {}", e));
+                            let msg = QString::from(format!("Failed to move files: {}", e));
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().download_show_msg(msg);
+                            }).unwrap();
+                        }
+                    }
                 }
-
-                qt_thread.queue(move |mut qo| {
-                    qo.as_mut().download_show_msg(msg);
-                }).unwrap();
             } // end of for loop
 
             // Clean-up. All downloads are completed and extracted, remove the

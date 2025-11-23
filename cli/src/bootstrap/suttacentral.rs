@@ -141,6 +141,51 @@ RETURN docs
     Ok(languages)
 }
 
+/// Get language code to name mapping from ArangoDB
+///
+/// Queries the 'language' collection and returns a list of (code, name) tuples
+/// for all languages in the database.
+pub fn get_lang_code_to_name_list(db: &Database<ReqwestClient>) -> Result<Vec<(String, String)>> {
+    let rt = tokio::runtime::Runtime::new()
+        .context("Failed to create tokio runtime")?;
+
+    let lang_list = rt.block_on(async {
+        // Execute AQL query
+        let aql = r#"
+LET docs = (FOR x IN language RETURN [x._key, x.name])
+RETURN docs
+        "#;
+
+        let results: Vec<Value> = db.aql_str(aql)
+            .await
+            .context("Failed to execute AQL query for language code to name list")?;
+
+        // Extract the language pairs from the first result
+        let mut lang_pairs: Vec<(String, String)> = vec![];
+
+        if let Some(first) = results.first() {
+            if let Some(arr) = first.as_array() {
+                for pair in arr {
+                    if let Some(pair_arr) = pair.as_array() {
+                        if pair_arr.len() == 2 {
+                            if let (Some(code), Some(name)) = (
+                                pair_arr[0].as_str(),
+                                pair_arr[1].as_str()
+                            ) {
+                                lang_pairs.push((code.to_string(), name.to_string()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok::<Vec<(String, String)>, anyhow::Error>(lang_pairs)
+    })?;
+
+    Ok(lang_list)
+}
+
 /// Retrieve titles from ArangoDB 'names' collection
 ///
 /// For Pāli language (lang="pli"), queries WHERE is_root == true

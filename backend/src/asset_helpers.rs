@@ -5,15 +5,59 @@ use diesel::prelude::*;
 use diesel::RunQueryDsl;
 
 use crate::logger::{info, error};
-
+use crate::db::initialize_userdata;
 use crate::db::appdata_models::Sutta;
 use crate::db::appdata_schema::suttas;
+
+/// Ensures that the userdata database is initialized and ready for imports
+///
+/// Checks if userdata database file exists and has tables. If not, initializes it.
+fn ensure_userdata_initialized(userdata_database_url: &str) -> Result<(), Box<dyn Error>> {
+    info(&format!("ensure_userdata_initialized(): {}", userdata_database_url));
+
+    // Try to connect to the database
+    let db_check = SqliteConnection::establish(userdata_database_url);
+
+    match db_check {
+        Ok(mut conn) => {
+            // Check if the suttas table exists by attempting a simple query
+            use diesel::dsl::sql;
+            use diesel::sql_types::Integer;
+
+            let table_check: Result<i32, _> = sql::<Integer>("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='suttas'")
+                .get_result(&mut conn);
+
+            match table_check {
+                Ok(count) if count > 0 => {
+                    info("userdata database is already initialized");
+                    Ok(())
+                }
+                _ => {
+                    info("userdata database exists but needs initialization");
+                    initialize_userdata(userdata_database_url)
+                        .map_err(|e| format!("Failed to initialize userdata: {}", e).into())
+                }
+            }
+        }
+        Err(_) => {
+            info("userdata database does not exist, initializing");
+            initialize_userdata(userdata_database_url)
+                .map_err(|e| format!("Failed to initialize userdata: {}", e).into())
+        }
+    }
+}
 
 /// Import suttas from language database files into userdata
 ///
 /// Finds all suttas_lang_*.sqlite3 files in extract_temp_dir and imports them to userdata.
 pub fn import_suttas_lang_to_userdata(extract_temp_dir: &Path, userdata_database_url: &str) -> Result<(), Box<dyn Error>> {
     info("import_suttas_lang_to_userdata()");
+
+    // Ensure userdata database is initialized before attempting import
+    if let Err(e) = ensure_userdata_initialized(userdata_database_url) {
+        error(&format!("Failed to initialize userdata database: {}", e));
+        return Err(format!("Failed to initialize userdata database: {}", e).into());
+    }
 
     // Find all suttas_lang_*.sqlite3 files in extract_temp_dir
     let entries = match std::fs::read_dir(extract_temp_dir) {

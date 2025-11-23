@@ -113,6 +113,7 @@ ApplicationWindow {
         }
 
         function onDownloadShowMsg (message) {
+            logger.log("onDownloadShowMsg(): " + message);
             download_status.text = message;
         }
 

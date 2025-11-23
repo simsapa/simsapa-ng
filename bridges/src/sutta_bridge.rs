@@ -1349,7 +1349,7 @@ impl qobject::SuttaBridge {
 
     pub fn get_sutta_language_labels(&self) -> QStringList {
         let app_data = get_app_data();
-        let languages = app_data.dbm.appdata.get_sutta_languages();
+        let languages = app_data.dbm.get_sutta_languages();
 
         let mut res = QStringList::default();
         for lang in languages {
