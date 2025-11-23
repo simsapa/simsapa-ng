@@ -429,6 +429,18 @@ Item {
 `;
     }
 
+    function get_sutta_language_labels(): list<string> {
+        return ["en", "pli", "de"];
+    }
+
+    function get_sutta_language_filter_index(): int {
+        return 0;
+    }
+
+    function set_sutta_language_filter_index(index: int) {
+        console.log("set_sutta_language_filter_index():", index);
+    }
+
     Item {
         id: dpd_lookup_data
         visible: false

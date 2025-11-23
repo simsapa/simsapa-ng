@@ -60,6 +60,7 @@ pub struct AppSettings {
     pub search_as_you_type: bool,
     pub open_find_in_sutta_results: bool,
     pub first_time_start: bool,
+    pub sutta_language_filter_index: i32,
 }
 
 impl Default for AppSettings {
@@ -187,6 +188,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             search_as_you_type: true,
             open_find_in_sutta_results: true,
             first_time_start: true,
+            sutta_language_filter_index: 0,
         }
     }
 }

@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
+import com.profoundlabs.simsapa
+
 Frame {
     id: root
     Layout.fillWidth: true
@@ -20,11 +22,26 @@ Frame {
     property alias search_input: search_input
     property alias search_area_dropdown: search_area_dropdown
     property alias search_mode_dropdown: search_mode_dropdown
+    property alias language_filter_dropdown: language_filter_dropdown
 
     background: Rectangle {
         color: "transparent"
         border.color: "transparent"
         border.width: 0
+    }
+
+    Component.onCompleted: {
+        // Load language labels from database for Suttas
+        const lang_labels = SuttaBridge.get_sutta_language_labels();
+        language_filter_dropdown.model = ["Language"].concat(lang_labels);
+
+        // Load saved language filter index
+        const saved_index = SuttaBridge.get_sutta_language_filter_index();
+        if (saved_index < language_filter_dropdown.model.length) {
+            language_filter_dropdown.currentIndex = saved_index;
+        } else {
+            language_filter_dropdown.currentIndex = 0;
+        }
     }
 
     function user_typed() {
@@ -116,15 +133,20 @@ Frame {
             //     ToolTip.text: "+ means 'must include', - means 'must exclude'"
             // }
 
-            // ComboBox {
-            //     id: language_filter_dropdown
-            //     Layout.preferredHeight: 40
-            //     model: [
-            //         "Language",
-            //         "en",
-            //         "pli",
-            //     ]
-            // }
+            ComboBox {
+                id: language_filter_dropdown
+                Layout.preferredHeight: 40
+                model: ["Language",]
+                enabled: search_area_dropdown.currentText === "Suttas"
+                onCurrentIndexChanged: {
+                    // Save the language filter selection (only for Suttas)
+                    if (search_area_dropdown.currentText === "Suttas" && enabled) {
+                        SuttaBridge.set_sutta_language_filter_index(currentIndex);
+                        // Re-run search (handle_query will check text min length)
+                        root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
+                    }
+                }
+            }
 
             // Button {
             //     id: source_include_btn

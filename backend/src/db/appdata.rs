@@ -14,6 +14,37 @@ static COMMON_WORDS_JSON: &'static str = include_str!("../../../assets/common-wo
 pub type AppdataDbHandle = DatabaseHandle;
 
 impl AppdataDbHandle {
+    /// Get distinct sutta languages from the database
+    pub fn get_sutta_languages(&self) -> Vec<String> {
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        let result = self.do_read(|db_conn| {
+            suttas
+                .select(language)
+                .distinct()
+                .load::<String>(db_conn)
+        });
+
+        match result {
+            Ok(mut langs) => {
+                // Sort and filter out empty strings
+                langs.sort();
+                langs.into_iter()
+                    .filter(|l| !l.is_empty())
+                    .map(|l| l.to_lowercase())
+                    .collect::<std::collections::HashSet<_>>()
+                    .into_iter()
+                    .collect::<Vec<_>>()
+                    .into_iter()
+                    .collect()
+            },
+            Err(e) => {
+                error(&format!("get_sutta_languages(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+
     pub fn get_sutta(&self, sutta_uid: &str) -> Option<Sutta> {
         use crate::db::appdata_schema::suttas::dsl::*;
 

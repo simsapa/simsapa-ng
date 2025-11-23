@@ -285,6 +285,15 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_open_find_in_sutta_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn get_sutta_language_labels(self: &SuttaBridge) -> QStringList;
+
+        #[qinvokable]
+        fn get_sutta_language_filter_index(self: &SuttaBridge) -> i32;
+
+        #[qinvokable]
+        fn set_sutta_language_filter_index(self: Pin<&mut SuttaBridge>, index: i32);
     }
 }
 
@@ -1336,5 +1345,27 @@ impl qobject::SuttaBridge {
     pub fn set_open_find_in_sutta_results(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_open_find_in_sutta_results(enabled);
+    }
+
+    pub fn get_sutta_language_labels(&self) -> QStringList {
+        let app_data = get_app_data();
+        let languages = app_data.dbm.appdata.get_sutta_languages();
+
+        let mut res = QStringList::default();
+        for lang in languages {
+            res.append(QString::from(lang));
+        }
+        res
+    }
+
+    pub fn get_sutta_language_filter_index(&self) -> i32 {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.sutta_language_filter_index
+    }
+
+    pub fn set_sutta_language_filter_index(self: Pin<&mut Self>, index: i32) {
+        let app_data = get_app_data();
+        app_data.set_sutta_language_filter_index(index);
     }
 }
