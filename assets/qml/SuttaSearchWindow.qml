@@ -228,10 +228,11 @@ ApplicationWindow {
         return {
             mode: search_bar_input.search_mode_dropdown.currentText,
             page_len: 10,
+            /* FIXME lang: search_bar_input.language_filter_dropdown.currentText, */
             lang: null,
-            lang_include: false,
+            lang_include: true,
             source: null,
-            source_include: false,
+            source_include: true,
             enable_regex: false,
             fuzzy_distance: 0,
         };

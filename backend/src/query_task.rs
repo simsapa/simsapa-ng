@@ -46,13 +46,15 @@ impl<'a> SearchQueryTask<'a> {
         area: SearchArea,
     ) -> Self {
         let g = get_app_globals();
+        // Use params.lang if provided, otherwise fall back to the lang parameter
+        let lang_filter = params.lang.clone().unwrap_or(lang);
         SearchQueryTask {
             dbm,
             query_text: normalize_query_text(Some(query_text_orig)),
             search_mode: params.mode,
             search_area: area,
             page_len: params.page_len.unwrap_or(g.page_len),
-            lang,
+            lang: lang_filter,
             lang_include: params.lang_include,
             source: params.source,
             source_include: params.source_include,

@@ -27,16 +27,23 @@ impl AppdataDbHandle {
 
         match result {
             Ok(mut langs) => {
-                // Sort and filter out empty strings
+                // Filter out empty strings, convert to lowercase, and deduplicate
                 langs.sort();
-                langs.into_iter()
-                    .filter(|l| !l.is_empty())
-                    .map(|l| l.to_lowercase())
-                    .collect::<std::collections::HashSet<_>>()
-                    .into_iter()
-                    .collect::<Vec<_>>()
-                    .into_iter()
-                    .collect()
+                let mut seen = std::collections::HashSet::new();
+                let mut unique_langs: Vec<String> = Vec::new();
+
+                for lang in langs {
+                    if !lang.is_empty() {
+                        let lowercase_lang = lang.to_lowercase();
+                        if seen.insert(lowercase_lang.clone()) {
+                            unique_langs.push(lowercase_lang);
+                        }
+                    }
+                }
+
+                // Sort again to ensure consistent alphabetical order
+                unique_langs.sort();
+                unique_langs
             },
             Err(e) => {
                 error(&format!("get_sutta_languages(): {}", e));

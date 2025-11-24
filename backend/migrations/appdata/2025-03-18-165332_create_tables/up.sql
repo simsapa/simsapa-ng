@@ -86,6 +86,7 @@ CREATE TABLE sutta_glosses (
 -- detail='none' reduces index size by not storing term positions
 CREATE VIRTUAL TABLE IF NOT EXISTS suttas_fts USING fts5(
     sutta_id UNINDEXED,
+    language UNINDEXED,
     content_plain,
     tokenize='trigram',
     detail='none'
@@ -96,8 +97,8 @@ CREATE TRIGGER IF NOT EXISTS suttas_fts_insert
 AFTER INSERT ON suttas
 WHEN NEW.content_plain IS NOT NULL
 BEGIN
-    INSERT INTO suttas_fts (sutta_id, content_plain)
-    VALUES (NEW.id, NEW.content_plain);
+    INSERT INTO suttas_fts (sutta_id, language, content_plain)
+    VALUES (NEW.id, NEW.language, NEW.content_plain);
 END;
 
 -- Trigger for UPDATE operations
@@ -108,8 +109,8 @@ BEGIN
     DELETE FROM suttas_fts WHERE sutta_id = OLD.id;
 
     -- Insert new entry if content_plain is not NULL
-    INSERT INTO suttas_fts (sutta_id, content_plain)
-    SELECT NEW.id, NEW.content_plain
+    INSERT INTO suttas_fts (sutta_id, language, content_plain)
+    SELECT NEW.id, NEW.language, NEW.content_plain
     WHERE NEW.content_plain IS NOT NULL;
 END;
 

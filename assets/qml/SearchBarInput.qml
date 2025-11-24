@@ -135,6 +135,7 @@ Frame {
 
             ComboBox {
                 id: language_filter_dropdown
+                visible: false // FIXME language filtering is not working at the moment
                 Layout.preferredHeight: 40
                 model: ["Language",]
                 enabled: search_area_dropdown.currentText === "Suttas"

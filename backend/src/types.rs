@@ -91,7 +91,7 @@ impl Default for SearchParams {
         SearchParams {
             mode: SearchMode::ContainsMatch,
             page_len: None,
-            lang: Some("en".to_string()),
+            lang: None,
             lang_include: true,
             source: None,
             source_include: true,
@@ -113,6 +113,8 @@ pub struct SearchResult {
     pub sutta_ref: Option<String>,
     pub nikaya: Option<String>,
     pub author: Option<String>,
+    // language code (e.g., "pli", "en")
+    pub lang: Option<String>,
     // highlighted snippet
     pub snippet: String,
     // page number in a document
@@ -150,6 +152,7 @@ impl SearchResult {
             sutta_ref: Some(sutta.sutta_ref.clone()),
             nikaya: Some(sutta.nikaya.clone()),
             author: None,
+            lang: Some(sutta.language.clone()),
             snippet,
             page_number: None,
             score: None,
@@ -157,17 +160,18 @@ impl SearchResult {
         }
     }
 
-    pub fn from_dict_word(x: &DictWord, snippet: String) -> SearchResult {
+    pub fn from_dict_word(word: &DictWord, snippet: String) -> SearchResult {
         // From dict_word_to_search_result()
         SearchResult {
-            uid: x.uid.to_string(),
+            uid: word.uid.to_string(),
             schema_name: "appdata".to_string(), // FIXME: implement later
             table_name: "dict_words".to_string(), // TODO: can we get the table name from diesel?
-            source_uid: x.source_uid.clone(),
-            title: x.word.clone(),
+            source_uid: word.source_uid.clone(),
+            title: word.word.clone(),
             sutta_ref: None,
             nikaya: None,
             author: None,
+            lang: word.language.clone(),
             snippet,
             page_number: None,
             score: None,
@@ -185,6 +189,7 @@ impl SearchResult {
             sutta_ref: None,
             nikaya: None,
             author: None,
+            lang: None,
             snippet: "".to_string(),
             page_number: None,
             score: None,
@@ -192,18 +197,19 @@ impl SearchResult {
         }
     }
 
-    pub fn from_dpd_headword(x: &DpdHeadword, snippet: String) -> SearchResult {
+    pub fn from_dpd_headword(word: &DpdHeadword, snippet: String) -> SearchResult {
         // FIXME: use UDpdWord enum
         // From dict_word_to_search_result()
         SearchResult {
-            uid: x.uid.to_string(),
+            uid: word.uid.to_string(),
             schema_name: "dpd".to_string(), // FIXME: implement later
             table_name: "dpd_headwords".to_string(), // TODO: can we get the table name from diesel?
             source_uid: Some("dpd".to_string()), // TODO implement .source_uid()
-            title: x.word(),
+            title: word.word(),
             sutta_ref: None,
             nikaya: None,
             author: None,
+            lang: Some("en".to_string()),
             snippet,
             page_number: None,
             score: None,
@@ -211,18 +217,19 @@ impl SearchResult {
         }
     }
 
-    pub fn from_dpd_root(x: &DpdRoot, snippet: String) -> SearchResult {
+    pub fn from_dpd_root(root: &DpdRoot, snippet: String) -> SearchResult {
         // FIXME: use UDpdWord enum
         // From dict_word_to_search_result()
         SearchResult {
-            uid: x.uid.to_string(),
+            uid: root.uid.to_string(),
             schema_name: "dpd".to_string(), // FIXME: implement later
             table_name: "dpd_roots".to_string(), // TODO: can we get the table name from diesel?
             source_uid: Some("dpd".to_string()), // TODO implement .source_uid()
-            title: x.word(),
+            title: root.word(),
             sutta_ref: None,
             nikaya: None,
             author: None,
+            lang: Some("en".to_string()),
             snippet,
             page_number: None,
             score: None,

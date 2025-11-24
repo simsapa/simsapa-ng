@@ -227,6 +227,11 @@ RELEASE_CHANNEL=development
     if !skip_dpd {
         init_app_data();
         dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
+
+        logger::info("=== Create dictionaries.tar.bz2 ===");
+        let dict_db_path = assets_dir.join("dictionaries.sqlite3");
+        create_database_archive(&dict_db_path, &release_dir)?;
+
         logger::info("=== Create dpd.tar.bz2 ===");
         let dpd_db_path = assets_dir.join("dpd.sqlite3");
         create_database_archive(&dpd_db_path, &release_dir)?;
