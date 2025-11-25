@@ -637,18 +637,15 @@ ApplicationWindow {
                 spacing: 0
                 anchors.fill: parent
 
-                // Scrollable content area
-                ScrollView {
+                // Centered content area
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    contentWidth: availableWidth
-                    clip: true
 
                     ColumnLayout {
-                        width: parent.width
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
                         spacing: 10
-
-                        Item { Layout.fillHeight: true }
 
                         Image {
                             source: "icons/appicons/simsapa.png"
@@ -669,8 +666,6 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignCenter
                         }
-
-                        Item { Layout.fillHeight: true }
                     }
                 }
 
