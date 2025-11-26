@@ -14,7 +14,7 @@ use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
 use crate::db::DbManager;
-use crate::logger::{info, error};
+use crate::logger::{info, warn, error};
 
 #[derive(QueryableByName)]
 struct CountResult {
@@ -40,14 +40,13 @@ pub struct SearchQueryTask<'a> {
 impl<'a> SearchQueryTask<'a> {
     pub fn new(
         dbm: &'a DbManager,
-        lang: String,
         query_text_orig: String,
         params: SearchParams,
         area: SearchArea,
     ) -> Self {
         let g = get_app_globals();
-        // Use params.lang if provided, otherwise fall back to the lang parameter
-        let lang_filter = params.lang.clone().unwrap_or(lang);
+        // Use params.lang if provided and not empty, otherwise use empty string for no filter
+        let lang_filter = params.lang.clone().unwrap_or_else(|| String::new());
         SearchQueryTask {
             dbm,
             query_text: normalize_query_text(Some(query_text_orig)),
@@ -204,7 +203,7 @@ impl<'a> SearchQueryTask<'a> {
              }
         }
 
-        error(&format!("Can't create fragment, query terms not found in content: {}", query));
+        warn(&format!("Can't create fragment, query terms not found in content: {}", query));
 
         // If no terms are found, return the beginning of the content
         self.fragment_around_text("", content, before, after)
@@ -243,8 +242,15 @@ impl<'a> SearchQueryTask<'a> {
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
         // First, try exact match
-        let exact_match_result = suttas
-            .filter(uid.eq(query_uid.clone()))
+        let mut exact_match_query = suttas.into_boxed();
+        exact_match_query = exact_match_query.filter(uid.eq(query_uid.clone()));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            exact_match_query = exact_match_query.filter(language.eq(&self.lang));
+        }
+
+        let exact_match_result = exact_match_query
             .select(Sutta::as_select())
             .first(db_conn);
 
@@ -279,9 +285,17 @@ impl<'a> SearchQueryTask<'a> {
 
         let like_pattern = format!("{}%", query_uid);
 
+        // Build query with language filter
+        let mut count_query = suttas.into_boxed();
+        count_query = count_query.filter(uid.like(&like_pattern));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            count_query = count_query.filter(language.eq(&self.lang));
+        }
+
         // Count total hits for pagination
-        let count = suttas
-            .filter(uid.like(&like_pattern))
+        let count = count_query
             .count()
             .get_result::<i64>(db_conn)?;
 
@@ -296,9 +310,17 @@ impl<'a> SearchQueryTask<'a> {
         let offset = (page_num * self.page_len) as i64;
         let limit = self.page_len as i64;
 
+        // Build main query with same filters
+        let mut query = suttas.into_boxed();
+        query = query.filter(uid.like(&like_pattern));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            query = query.filter(language.eq(&self.lang));
+        }
+
         // Execute paginated query
-        let results = suttas
-            .filter(uid.like(&like_pattern))
+        let results = query
             .order(uid.asc()) // Order by uid for consistent pagination
             .limit(limit)
             .offset(offset)
@@ -356,6 +378,12 @@ impl<'a> SearchQueryTask<'a> {
         let mut query = suttas.into_boxed();
         // A separate query for the total count. Can't clone the query before the offset limit.
         let mut count_query = suttas.into_boxed();
+
+        // --- Language Filtering ---
+        if !self.lang.is_empty() && self.lang != "Language" {
+            query = query.filter(language.eq(&self.lang));
+            count_query = count_query.filter(language.eq(&self.lang));
+        }
 
         // --- Source Filtering ---
         if let Some(ref source_val) = self.source {
@@ -423,7 +451,7 @@ impl<'a> SearchQueryTask<'a> {
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         info(&format!("suttas_contains_match_fts5(): page_num: {}", page_num));
-        info(&format!("query_text: {}", &self.query_text));
+        info(&format!("query_text: {}, lang filter: {}", &self.query_text, &self.lang));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -434,17 +462,34 @@ impl<'a> SearchQueryTask<'a> {
 
         let like_pattern = format!("%{}%", self.query_text);
 
+        // Determine if we need language filtering
+        let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
         // --- Count Total Hits ---
-        let count_result: CountResult = sql_query(
-            r#"
-            SELECT COUNT(*) as count
-            FROM suttas_fts f
-            JOIN suttas s ON f.sutta_id = s.id
-            WHERE f.content_plain LIKE ?
-            "#
-        )
-        .bind::<Text, _>(&like_pattern)
-        .get_result(db_conn)?;
+        let count_result: CountResult = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ? AND f.language = ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .get_result(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .get_result(db_conn)?
+        };
 
         self.db_query_hits_count = count_result.count;
         info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
@@ -458,20 +503,38 @@ impl<'a> SearchQueryTask<'a> {
         // Without specifying the ordering, FTS5 results are not ordered and fluctuate.
 
         // --- Execute Query with Pagination ---
-        let db_results: Vec<Sutta> = sql_query(
-            r#"
-            SELECT *
-            FROM suttas_fts f
-            JOIN suttas s ON f.sutta_id = s.id
-            WHERE f.content_plain LIKE ?
-            ORDER BY id
-            LIMIT ? OFFSET ?
-            "#
-        )
-        .bind::<Text, _>(&like_pattern)
-        .bind::<BigInt, _>(limit)
-        .bind::<BigInt, _>(offset)
-        .load(db_conn)?;
+        let db_results: Vec<Sutta> = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT s.*
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ? AND f.language = ?
+                ORDER BY s.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT s.*
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ?
+                ORDER BY s.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load(db_conn)?
+        };
 
         // --- Map to SearchResult ---
         let search_results = db_results
