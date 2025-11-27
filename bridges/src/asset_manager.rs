@@ -12,7 +12,7 @@ use reqwest::blocking::Client;
 use bzip2::read::BzDecoder;
 use tar::Archive;
 
-use simsapa_backend::{move_folder_contents, AppGlobalPaths};
+use simsapa_backend::{move_folder_contents, AppGlobalPaths, get_create_simsapa_appdata_db_path};
 use simsapa_backend::asset_helpers::import_suttas_lang_to_appdata;
 use simsapa_backend::logger::{info, error};
 use simsapa_backend::lookup::{LANGUAGES_AVAILABLE, LANG_CODE_TO_NAME};
@@ -46,7 +46,7 @@ pub mod qobject {
 
     extern "RustQt" {
         #[qinvokable]
-        fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList);
+        fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList, is_initial_setup: bool);
 
         #[qinvokable]
         fn get_available_languages(self: Pin<&mut AssetManager>) -> QStringList;
@@ -81,8 +81,9 @@ pub mod qobject {
 pub struct AssetManagerRust;
 
 /// Cleanup download and extract folders when download process fails
-fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, qt_thread: &CxxQtThread<qobject::AssetManager>) {
-    info("Cleaning up temporary folders due to download failure");
+/// If is_initial_setup is true, also removes app_assets_folder to ensure clean state
+fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, app_assets_folder: &Path, is_initial_setup: bool, qt_thread: &CxxQtThread<qobject::AssetManager>) {
+    info(&format!("Cleaning up due to download failure (initial_setup: {})", is_initial_setup));
     let cleanup_msg = QString::from("Removing partially downloaded files due to network error...");
     qt_thread.queue(move |mut qo| {
         qo.as_mut().download_show_msg(cleanup_msg);
@@ -103,6 +104,24 @@ fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, q
             error(&format!("Failed to remove extract temp folder: {}", e));
         } else {
             info("Removed extract temp folder");
+        }
+    }
+
+    // If this is initial setup, also remove app_assets_folder to ensure clean state
+    // This prevents the app from launching with incomplete databases
+    if is_initial_setup {
+        info("Initial setup detected - removing app_assets_folder for clean state");
+        let complete_cleanup_msg = QString::from("Removing incomplete initial setup...");
+        qt_thread.queue(move |mut qo| {
+            qo.as_mut().download_show_msg(complete_cleanup_msg);
+        }).unwrap();
+
+        if app_assets_folder.exists() {
+            if let Err(e) = remove_dir_all(app_assets_folder) {
+                error(&format!("Failed to remove app_assets folder: {}", e));
+            } else {
+                info("Removed app_assets folder - app will restart download on next launch");
+            }
         }
     }
 }
@@ -157,7 +176,7 @@ impl qobject::AssetManager {
         QString::from("")
     }
 
-    fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList) {
+    fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList, is_initial_setup: bool) {
         info(&format!("download_urls_and_extract(): {} urls", urls.len()));
 
         // AppGlobals was initialized before the storage path selection.
@@ -192,7 +211,7 @@ impl qobject::AssetManager {
                             Ok(_) => {},
                             Err(e) => {
                                 error(&format!("{}", e));
-                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
+                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                                 return;
                             },
                         };
@@ -200,7 +219,7 @@ impl qobject::AssetManager {
 
                     Err(e) => {
                         error(&format!("{}", e));
-                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                         return;
                     }
                 }
@@ -242,7 +261,7 @@ impl qobject::AssetManager {
                                 qt_thread.queue(move |mut qo| {
                                     qo.as_mut().download_show_msg(fail_msg);
                                 }).unwrap();
-                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
+                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                                 return;
                             }
                         }
@@ -257,7 +276,7 @@ impl qobject::AssetManager {
                         qt_thread.queue(move |mut qo| {
                             qo.as_mut().download_show_msg(msg);
                         }).unwrap();
-                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                         return;
                     }
                 };
@@ -382,27 +401,6 @@ impl qobject::AssetManager {
             }).unwrap();
 
         }); // end of thread
-    }
-}
-
-/// Cleanup all downloaded files when download process fails
-fn cleanup_downloaded_files(downloaded_files: &[std::path::PathBuf], qt_thread: &CxxQtThread<qobject::AssetManager>) {
-    if !downloaded_files.is_empty() {
-        info(&format!("Cleaning up {} downloaded files due to failure", downloaded_files.len()));
-        let cleanup_msg = QString::from("Removing partially downloaded files...");
-        qt_thread.queue(move |mut qo| {
-            qo.as_mut().download_show_msg(cleanup_msg);
-        }).unwrap();
-
-        for file_path in downloaded_files {
-            if file_path.exists() {
-                if let Err(e) = remove_file(file_path) {
-                    error(&format!("Failed to remove file {}: {}", file_path.display(), e));
-                } else {
-                    info(&format!("Removed file: {}", file_path.display()));
-                }
-            }
-        }
     }
 }
 

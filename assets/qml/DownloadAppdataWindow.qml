@@ -56,7 +56,7 @@ ApplicationWindow {
         }
     }
 
-    property bool include_appdata_downloads: true
+    property bool is_initial_setup: true
     property string init_add_languages: ""
     property var available_languages: []
     property var selected_languages: []
@@ -164,7 +164,8 @@ ApplicationWindow {
 
         let urls = [];
 
-        if (root.include_appdata_downloads) {
+        if (root.is_initial_setup) {
+            // Include appdata and other database downloads when the app is launched the first time.
             // ensure 'v' prefix
             if (version[0] !== "v") {
                 version = "v" + version
@@ -207,7 +208,7 @@ ApplicationWindow {
         /* logger.log("Show progress bar"); */
         progress_bar.visible = true;
 
-        manager.download_urls_and_extract(urls);
+        manager.download_urls_and_extract(urls, root.is_initial_setup);
     }
 
     StackLayout {
