@@ -173,6 +173,9 @@ pub mod qobject {
         fn open_sutta_search_window(self: &SuttaBridge);
 
         #[qinvokable]
+        fn open_sutta_languages_window(self: &SuttaBridge);
+
+        #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
 
         #[qinvokable]
@@ -294,6 +297,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
+
+        #[qinvokable]
+        fn get_sutta_language_labels_with_counts(self: &SuttaBridge) -> QStringList;
     }
 }
 
@@ -911,6 +917,11 @@ impl qobject::SuttaBridge {
         ffi::callback_open_sutta_search_window();
     }
 
+    pub fn open_sutta_languages_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_sutta_languages_window();
+    }
+
     /// Helper function to create error response JSON for background processing
     fn create_error_response(error_message: &str) -> String {
         let error_response = simsapa_backend::types::BackgroundProcessingError {
@@ -1352,6 +1363,18 @@ impl qobject::SuttaBridge {
         let mut res = QStringList::default();
         for lang in languages {
             res.append(QString::from(lang));
+        }
+        res
+    }
+
+    /// Get sutta languages with their counts in format "code|Name|Count"
+    pub fn get_sutta_language_labels_with_counts(&self) -> QStringList {
+        let app_data = get_app_data();
+        let labels = app_data.dbm.get_sutta_language_labels_with_counts();
+
+        let mut res = QStringList::default();
+        for label in labels {
+            res.append(QString::from(label));
         }
         res
     }

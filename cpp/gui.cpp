@@ -62,6 +62,10 @@ void callback_open_sutta_search_window() {
   AppGlobals::manager->create_sutta_search_window();
 }
 
+void callback_open_sutta_languages_window() {
+  AppGlobals::manager->create_sutta_languages_window();
+}
+
 void start(int argc, char* argv[]) {
   dotenv_c();
   log_info_with_options_c("gui::start()", true);

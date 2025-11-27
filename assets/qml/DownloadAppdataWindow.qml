@@ -37,8 +37,8 @@ ApplicationWindow {
 
         // Parse init languages and set selected_languages
         if (init_add_languages !== "") {
-            add_languages_input.text = init_add_languages;
-            sync_selection_from_input();
+            language_list_selector.language_input.text = init_add_languages;
+            language_list_selector.sync_selection_from_input();
         }
 
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
@@ -80,11 +80,11 @@ ApplicationWindow {
     }
 
     function update_language_input() {
-        add_languages_input.text = root.selected_languages.join(", ");
+        language_list_selector.language_input.text = root.selected_languages.join(", ");
     }
 
     function parse_language_input() {
-        const text = add_languages_input.text.toLowerCase().trim();
+        const text = language_list_selector.language_input.text.toLowerCase().trim();
         if (text === "" || text === "*") {
             return [];
         }
@@ -126,7 +126,7 @@ ApplicationWindow {
 
     function validate_and_run_download() {
         // Check that all entered language codes are available.
-        const lang_input = add_languages_input.text.toLowerCase().trim();
+        const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
 
         if (lang_input !== "" && lang_input !== "*") {
             const selected_langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
@@ -182,7 +182,7 @@ ApplicationWindow {
         }
 
         // Add language databases
-        const lang_input = add_languages_input.text.toLowerCase().trim();
+        const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
         let selected_langs = [];
 
         if (lang_input !== "" && lang_input !== "*") {
@@ -388,105 +388,26 @@ ApplicationWindow {
                         }
 
                         // Language selection section
-                        ColumnLayout {
+                        LanguageListSelector {
                             id: language_list_selector
                             Layout.margins: 10
-                            spacing: 10
+                            model: root.available_languages
+                            selected_languages: root.selected_languages
+                            section_title: "Include Languages"
+                            instruction_text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
+                            placeholder_text: "E.g.: it, fr, pt, th"
+                            available_label: "Available languages (click to select):"
+                            show_count_column: false
+                            font_point_size: root.pointSize
 
-                            Label {
-                                text: "Include Languages"
-                                font.pointSize: root.pointSize
-                                font.bold: true
+                            onLanguageSelectionChanged: function(selected_codes) {
+                                root.selected_languages = selected_codes;
                             }
 
-                            Label {
-                                text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
-                                font.pointSize: root.pointSize
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                            }
-
-                            TextField {
-                                id: add_languages_input
-                                placeholderText: "E.g.: it, fr, pt, th"
-                                font.pointSize: root.pointSize
-                                text: root.init_add_languages
-                                Layout.fillWidth: true
-                                onTextChanged: {
-                                    // Update selection when user manually edits the input
-                                    root.sync_selection_from_input();
-                                }
-                            }
-
-                            Label {
-                                text: "Available languages (click to select):"
-                                font.pointSize: root.pointSize
-                            }
-
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 150
-                                clip: true
-
-                                ListView {
-                                    id: languages_listview
-                                    model: root.available_languages
-                                    spacing: 0
-
-                                    delegate: Rectangle {
-                                        id: delegate_item
-                                        required property string modelData
-                                        required property int index
-
-                                        width: languages_listview.width
-                                        height: 30
-
-                                        property string lang_code: {
-                                            if (!modelData) return "";
-                                            const parts = modelData.split('|');
-                                            return parts.length === 2 ? parts[0] : "";
-                                        }
-
-                                        property string lang_name: {
-                                            if (!modelData) return "";
-                                            const parts = modelData.split('|');
-                                            return parts.length === 2 ? parts[1] : "";
-                                        }
-
-                                        property bool is_selected: root.selected_languages.indexOf(lang_code) > -1
-
-                                        color: is_selected ? palette.highlight : (index % 2 === 0 ? palette.alternateBase : palette.base)
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                root.toggle_language_selection(delegate_item.lang_code);
-                                            }
-                                        }
-
-                                        Row {
-                                            spacing: 10
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            anchors.left: parent.left
-                                            anchors.leftMargin: 10
-
-                                            Text {
-                                                text: delegate_item.lang_code
-                                                font.pointSize: root.pointSize
-                                                font.bold: delegate_item.is_selected
-                                                color: delegate_item.is_selected ? palette.highlightedText : palette.text
-                                                width: 50
-                                            }
-
-                                            Text {
-                                                text: delegate_item.lang_name
-                                                font.pointSize: root.pointSize
-                                                font.bold: delegate_item.is_selected
-                                                color: delegate_item.is_selected ? palette.highlightedText : palette.text
-                                            }
-                                        }
-                                    }
+                            Component.onCompleted: {
+                                // Initialize with existing selection
+                                if (root.init_add_languages !== "") {
+                                    sync_selection_from_input();
                                 }
                             }
                         }

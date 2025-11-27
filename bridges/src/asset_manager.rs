@@ -12,7 +12,7 @@ use reqwest::blocking::Client;
 use bzip2::read::BzDecoder;
 use tar::Archive;
 
-use simsapa_backend::{move_folder_contents, AppGlobalPaths, get_create_simsapa_appdata_db_path};
+use simsapa_backend::{move_folder_contents, AppGlobalPaths};
 use simsapa_backend::asset_helpers::import_suttas_lang_to_appdata;
 use simsapa_backend::logger::{info, error};
 use simsapa_backend::lookup::{LANGUAGES_AVAILABLE, LANG_CODE_TO_NAME};
@@ -60,6 +60,9 @@ pub mod qobject {
         #[qinvokable]
         fn release_wake_lock_rust(self: Pin<&mut AssetManager>);
 
+        #[qinvokable]
+        fn remove_sutta_languages(self: Pin<&mut AssetManager>, language_codes: QStringList);
+
         #[qsignal]
         #[cxx_name = "downloadProgressChanged"]
         fn download_progress_changed(self: Pin<&mut AssetManager>,
@@ -74,6 +77,14 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "downloadsCompleted"]
         fn downloads_completed(self: Pin<&mut AssetManager>, value: bool);
+
+        #[qsignal]
+        #[cxx_name = "removalShowMsg"]
+        fn removal_show_msg(self: Pin<&mut AssetManager>, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "removalCompleted"]
+        fn removal_completed(self: Pin<&mut AssetManager>, success: bool, error_msg: QString);
     }
 }
 
@@ -174,6 +185,59 @@ impl qobject::AssetManager {
         }
 
         QString::from("")
+    }
+
+    /// Remove suttas and related data for specific language codes
+    /// Runs in background thread and emits signals for progress and completion
+    fn remove_sutta_languages(self: Pin<&mut Self>, language_codes: QStringList) {
+        use simsapa_backend::get_app_data;
+
+        info(&format!("remove_sutta_languages(): Removing {} languages", language_codes.len()));
+
+        // Convert QStringList to Vec<String>
+        let codes: Vec<String> = language_codes.iter()
+            .map(|qs| qs.to_string())
+            .collect();
+
+        if codes.is_empty() {
+            info("remove_sutta_languages(): No language codes provided");
+            let qt_thread = self.qt_thread();
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().removal_completed(true, QString::from(""));
+            }).unwrap();
+            return;
+        }
+
+        info(&format!("Removing language codes: {:?}", codes));
+
+        let qt_thread = self.qt_thread();
+
+        // Show initial message
+        let msg = QString::from("Removing languages...");
+        qt_thread.queue(move |mut qo| {
+            qo.as_mut().removal_show_msg(msg);
+        }).unwrap();
+
+        // Spawn a thread so Qt event loop is not blocked
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            match app_data.dbm.remove_sutta_languages(codes) {
+                Ok(success) => {
+                    info(&format!("remove_sutta_languages(): Completed with success={}", success));
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().removal_completed(success, QString::from(""));
+                    }).unwrap();
+                },
+                Err(e) => {
+                    let error_msg = format!("Failed to remove languages: {}", e);
+                    error(&format!("remove_sutta_languages(): {}", error_msg));
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().removal_completed(false, error_qstr);
+                    }).unwrap();
+                }
+            }
+        });
     }
 
     fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList, is_initial_setup: bool) {

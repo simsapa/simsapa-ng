@@ -4,3 +4,5 @@ AssetManager 1.0 AssetManager.qml
 StorageManager 1.0 StorageManager.qml
 PromptManager 1.0 PromptManager.qml
 ClipboardManager 1.0 ClipboardManager.qml
+LanguageListSelector 1.0 LanguageListSelector.qml
+SuttaLanguagesWindow 1.0 SuttaLanguagesWindow.qml

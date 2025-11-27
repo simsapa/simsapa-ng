@@ -146,6 +146,16 @@ impl DbManager {
     pub fn get_sutta_languages(&self) -> Vec<String> {
         self.appdata.get_sutta_languages()
     }
+
+    /// Remove suttas and related data for specific language codes
+    pub fn remove_sutta_languages(&self, language_codes: Vec<String>) -> Result<bool> {
+        self.appdata.remove_sutta_languages(language_codes)
+    }
+
+    /// Get sutta languages with their counts in format "code|Name|Count"
+    pub fn get_sutta_language_labels_with_counts(&self) -> Vec<String> {
+        self.appdata.get_sutta_language_labels_with_counts()
+    }
 }
 
 pub fn initialize_userdata(database_url: &str) -> Result<()> {

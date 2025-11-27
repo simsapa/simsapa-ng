@@ -243,3 +243,106 @@ fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
     results
 }
 
+impl AppdataDbHandle {
+    /// Remove suttas and related data for specific language codes
+    /// Returns true if deletion was successful
+    pub fn remove_sutta_languages(&self, language_codes: Vec<String>) -> Result<bool> {
+        use crate::db::appdata_schema;
+
+        if language_codes.is_empty() {
+            return Ok(true);
+        }
+
+        info(&format!("remove_sutta_languages(): Removing languages: {:?}", language_codes));
+
+        let result = self.do_write(|db_conn| {
+            // First, get the IDs of suttas we're about to delete
+            let sutta_ids: Vec<i32> = appdata_schema::suttas::table
+                .filter(appdata_schema::suttas::language.eq_any(&language_codes))
+                .select(appdata_schema::suttas::id)
+                .load(db_conn)?;
+
+            info(&format!("Found {} suttas to delete", sutta_ids.len()));
+
+            // Delete related sutta_variants
+            let variants_deleted = diesel::delete(
+                appdata_schema::sutta_variants::table
+                    .filter(appdata_schema::sutta_variants::sutta_id.eq_any(&sutta_ids))
+            ).execute(db_conn)?;
+            info(&format!("Deleted {} sutta_variants", variants_deleted));
+
+            // Delete related sutta_comments
+            let comments_deleted = diesel::delete(
+                appdata_schema::sutta_comments::table
+                    .filter(appdata_schema::sutta_comments::sutta_id.eq_any(&sutta_ids))
+            ).execute(db_conn)?;
+            info(&format!("Deleted {} sutta_comments", comments_deleted));
+
+            // Delete related sutta_glosses
+            let glosses_deleted = diesel::delete(
+                appdata_schema::sutta_glosses::table
+                    .filter(appdata_schema::sutta_glosses::sutta_id.eq_any(&sutta_ids))
+            ).execute(db_conn)?;
+            info(&format!("Deleted {} sutta_glosses", glosses_deleted));
+
+            // Finally, delete the suttas themselves
+            let suttas_deleted = diesel::delete(
+                appdata_schema::suttas::table
+                    .filter(appdata_schema::suttas::language.eq_any(&language_codes))
+            ).execute(db_conn)?;
+            info(&format!("Deleted {} suttas", suttas_deleted));
+
+            Ok(suttas_deleted > 0)
+        });
+
+        match result {
+            Ok(deleted) => {
+                info("remove_sutta_languages(): Success");
+                Ok(deleted)
+            },
+            Err(e) => {
+                error(&format!("remove_sutta_languages(): Failed - {}", e));
+                Err(e)
+            }
+        }
+    }
+
+    /// Get sutta languages with their counts in format "code|Name|Count"
+    /// Returns a vector of strings sorted alphabetically by language code
+    pub fn get_sutta_language_labels_with_counts(&self) -> Vec<String> {
+        use crate::db::appdata_schema;
+        use crate::lookup::LANG_CODE_TO_NAME;
+
+        let result = self.do_read(|db_conn| {
+            appdata_schema::suttas::table
+                .group_by(appdata_schema::suttas::language)
+                .select((appdata_schema::suttas::language, diesel::dsl::count(appdata_schema::suttas::id)))
+                .load::<(String, i64)>(db_conn)
+        });
+
+        match result {
+            Ok(lang_counts) => {
+                let mut labels: Vec<String> = lang_counts
+                    .into_iter()
+                    .filter(|(lang, _)| !lang.is_empty())
+                    .map(|(lang_code, count)| {
+                        let lang_name = LANG_CODE_TO_NAME
+                            .get(lang_code.as_str())
+                            .copied()
+                            .unwrap_or(&lang_code);
+                        format!("{}|{}|{}", lang_code, lang_name, count)
+                    })
+                    .collect();
+
+                // Sort alphabetically by language code
+                labels.sort();
+                labels
+            },
+            Err(e) => {
+                error(&format!("get_sutta_language_labels_with_counts(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+}
+

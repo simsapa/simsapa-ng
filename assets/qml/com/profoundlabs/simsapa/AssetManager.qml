@@ -26,7 +26,13 @@ Item {
         console.log("release_wake_lock_rust()");
     }
 
+    function remove_sutta_languages(language_codes: list<string>) {
+        console.log("remove_sutta_languages():", language_codes);
+    }
+
     signal downloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int);
     signal downloadShowMsg(message: string);
     signal downloadsCompleted(message: string);
+    signal removalShowMsg(message: string);
+    signal removalCompleted(success: bool, error_msg: string);
 }

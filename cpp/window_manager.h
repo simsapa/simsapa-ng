@@ -9,6 +9,7 @@
 class SuttaSearchWindow;
 class DownloadAppdataWindow;
 class WordLookupWindow;
+class SuttaLanguagesWindow;
 
 class WindowManager : public QObject {
         Q_OBJECT
@@ -20,6 +21,7 @@ class WindowManager : public QObject {
         SuttaSearchWindow* create_sutta_search_window();
         DownloadAppdataWindow* create_download_appdata_window();
         WordLookupWindow* create_word_lookup_window(const QString& word);
+        SuttaLanguagesWindow* create_sutta_languages_window();
 
         static WindowManager *m_instance;
         QApplication* m_app;
@@ -27,6 +29,7 @@ class WindowManager : public QObject {
         QList<SuttaSearchWindow*> sutta_search_windows;
         QList<DownloadAppdataWindow*> download_appdata_windows;
         QList<WordLookupWindow*> word_lookup_windows;
+        QList<SuttaLanguagesWindow*> sutta_languages_windows;
 
     private:
         WindowManager(QApplication* app, QObject *parent = nullptr);
