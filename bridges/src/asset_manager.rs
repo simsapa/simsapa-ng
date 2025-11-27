@@ -3,6 +3,7 @@ use std::fs::{File, create_dir_all, remove_file, remove_dir_all};
 use std::io::{self, Read, Write, BufReader};
 use std::path::Path;
 use std::error::Error;
+use std::time::Duration;
 
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList, QUrl};
@@ -78,6 +79,33 @@ pub mod qobject {
 
 #[derive(Default, Copy, Clone)]
 pub struct AssetManagerRust;
+
+/// Cleanup download and extract folders when download process fails
+fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, qt_thread: &CxxQtThread<qobject::AssetManager>) {
+    info("Cleaning up temporary folders due to download failure");
+    let cleanup_msg = QString::from("Removing partially downloaded files due to network error...");
+    qt_thread.queue(move |mut qo| {
+        qo.as_mut().download_show_msg(cleanup_msg);
+    }).unwrap();
+
+    // Remove download temp folder
+    if download_temp_folder.exists() {
+        if let Err(e) = remove_dir_all(download_temp_folder) {
+            error(&format!("Failed to remove download temp folder: {}", e));
+        } else {
+            info("Removed download temp folder");
+        }
+    }
+
+    // Remove extract temp folder
+    if extract_temp_folder.exists() {
+        if let Err(e) = remove_dir_all(extract_temp_folder) {
+            error(&format!("Failed to remove extract temp folder: {}", e));
+        } else {
+            info("Removed extract temp folder");
+        }
+    }
+}
 
 impl qobject::AssetManager {
     fn acquire_wake_lock_rust(self: Pin<&mut Self>) {
@@ -164,6 +192,7 @@ impl qobject::AssetManager {
                             Ok(_) => {},
                             Err(e) => {
                                 error(&format!("{}", e));
+                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
                                 return;
                             },
                         };
@@ -171,20 +200,64 @@ impl qobject::AssetManager {
 
                     Err(e) => {
                         error(&format!("{}", e));
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
                         return;
                     }
                 }
 
                 let client = Client::new();
-                // Start blocking GET
-                let resp = match client.get(&url_str).send() {
-                    Ok(r) => r,
-                    Err(e) => {
-                        // Emit finished signal with the error message
+
+                // Retry logic: try up to 5 times with exponential backoff
+                const MAX_RETRIES: u32 = 5;
+                let mut retry_count = 0;
+                let mut resp = None;
+
+                while retry_count < MAX_RETRIES {
+                    match client.get(&url_str).send() {
+                        Ok(r) => {
+                            resp = Some(r);
+                            break;
+                        }
+                        Err(e) => {
+                            retry_count += 1;
+                            if retry_count < MAX_RETRIES {
+                                // Calculate wait time: 2^retry_count seconds (2, 4, 8, 16, 32)
+                                let wait_seconds = 2_u64.pow(retry_count);
+                                let retry_msg = QString::from(&format!(
+                                    "Download failed for {}: {}. Retrying in {} seconds... (Attempt {}/{})",
+                                    &download_file_name, e, wait_seconds, retry_count + 1, MAX_RETRIES
+                                ));
+                                qt_thread.queue(move |mut qo| {
+                                    qo.as_mut().download_show_msg(retry_msg);
+                                }).unwrap();
+                                error(&format!("Download attempt {} failed: {}", retry_count, e));
+                                thread::sleep(Duration::from_secs(wait_seconds));
+                            } else {
+                                // Max retries reached
+                                error(&format!("Failed to download {} after {} attempts: {}", &download_file_name, MAX_RETRIES, e));
+                                let fail_msg = QString::from(&format!(
+                                    "Network error: Failed to download {} after {} attempts. Please check your internet connection and try again later.",
+                                    &download_file_name, MAX_RETRIES
+                                ));
+                                qt_thread.queue(move |mut qo| {
+                                    qo.as_mut().download_show_msg(fail_msg);
+                                }).unwrap();
+                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                let resp = match resp {
+                    Some(r) => r,
+                    None => {
+                        // This shouldn't happen, but handle it just in case
+                        let msg = QString::from("Unexpected error: failed to initiate download.");
                         qt_thread.queue(move |mut qo| {
-                            let msg = QString::from(&format!("Error: {}", e));
                             qo.as_mut().download_show_msg(msg);
                         }).unwrap();
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &qt_thread);
                         return;
                     }
                 };
@@ -309,6 +382,27 @@ impl qobject::AssetManager {
             }).unwrap();
 
         }); // end of thread
+    }
+}
+
+/// Cleanup all downloaded files when download process fails
+fn cleanup_downloaded_files(downloaded_files: &[std::path::PathBuf], qt_thread: &CxxQtThread<qobject::AssetManager>) {
+    if !downloaded_files.is_empty() {
+        info(&format!("Cleaning up {} downloaded files due to failure", downloaded_files.len()));
+        let cleanup_msg = QString::from("Removing partially downloaded files...");
+        qt_thread.queue(move |mut qo| {
+            qo.as_mut().download_show_msg(cleanup_msg);
+        }).unwrap();
+
+        for file_path in downloaded_files {
+            if file_path.exists() {
+                if let Err(e) = remove_file(file_path) {
+                    error(&format!("Failed to remove file {}: {}", file_path.display(), e));
+                } else {
+                    info(&format!("Removed file: {}", file_path.display()));
+                }
+            }
+        }
     }
 }
 
