@@ -283,6 +283,8 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.margins: 20
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
 
                     Item { Layout.fillWidth: true }
 
@@ -523,6 +525,8 @@ ApplicationWindow {
                     visible: root.is_mobile
                     Layout.fillWidth: true
                     Layout.margins: 10
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: 60
                     spacing: 10
 
                     Button {
@@ -613,6 +617,8 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.margins: 20
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
 
                     Item { Layout.fillWidth: true }
 
@@ -673,6 +679,8 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.margins: 20
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
 
                     Item { Layout.fillWidth: true }
 
