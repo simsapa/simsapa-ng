@@ -290,10 +290,10 @@ pub mod qobject {
         fn get_sutta_language_labels(self: &SuttaBridge) -> QStringList;
 
         #[qinvokable]
-        fn get_sutta_language_filter_index(self: &SuttaBridge) -> i32;
+        fn get_sutta_language_filter_key(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
-        fn set_sutta_language_filter_index(self: Pin<&mut SuttaBridge>, index: i32);
+        fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
     }
 }
 
@@ -350,7 +350,6 @@ impl qobject::SuttaBridge {
 
             let mut query_task = SearchQueryTask::new(
                 &app_data.dbm,
-                "en".to_string(),
                 "dhamma".to_string(),
                 params,
                 SearchArea::Suttas,
@@ -406,7 +405,6 @@ impl qobject::SuttaBridge {
             // can store it on SuttaBridgeRust.
             let mut query_task = SearchQueryTask::new(
                 &app_data.dbm,
-                "en".to_string(),
                 query_text,
                 params,
                 search_area_enum,
@@ -1358,14 +1356,14 @@ impl qobject::SuttaBridge {
         res
     }
 
-    pub fn get_sutta_language_filter_index(&self) -> i32 {
+    pub fn get_sutta_language_filter_key(&self) -> QString {
         let app_data = get_app_data();
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
-        app_settings.sutta_language_filter_index
+        QString::from(&app_settings.sutta_language_filter_key)
     }
 
-    pub fn set_sutta_language_filter_index(self: Pin<&mut Self>, index: i32) {
+    pub fn set_sutta_language_filter_key(self: Pin<&mut Self>, key: QString) {
         let app_data = get_app_data();
-        app_data.set_sutta_language_filter_index(index);
+        app_data.set_sutta_language_filter_key(key.to_string());
     }
 }

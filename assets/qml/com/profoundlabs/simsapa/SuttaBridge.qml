@@ -433,12 +433,12 @@ Item {
         return ["en", "pli", "de"];
     }
 
-    function get_sutta_language_filter_index(): int {
-        return 0;
+    function get_sutta_language_filter_key(): string {
+        return "Language";
     }
 
-    function set_sutta_language_filter_index(index: int) {
-        console.log("set_sutta_language_filter_index():", index);
+    function set_sutta_language_filter_key(key: string) {
+        console.log("set_sutta_language_filter_key():", key);
     }
 
     Item {

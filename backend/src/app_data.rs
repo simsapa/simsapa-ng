@@ -657,11 +657,11 @@ impl AppData {
         }
     }
 
-    pub fn set_sutta_language_filter_index(&self, index: i32) {
+    pub fn set_sutta_language_filter_key(&self, key: String) {
         use crate::db::appdata_schema::app_settings;
 
         let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.sutta_language_filter_index = index;
+        app_settings.sutta_language_filter_key = key;
 
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
