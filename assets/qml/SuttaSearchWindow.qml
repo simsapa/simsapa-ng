@@ -648,6 +648,16 @@ ${query_text}`;
                 }
             }
 
+            CMenuItem {
+                action: Action {
+                    id: action_sutta_languages
+                    text: "Sutta Languages..."
+                    onTriggered: {
+                        SuttaBridge.open_sutta_languages_window()
+                    }
+                }
+            }
+
             // CMenuItem {
             //     action: Action {
             //         id: action_sutta_study

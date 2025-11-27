@@ -389,6 +389,7 @@ ApplicationWindow {
 
                         // Language selection section
                         ColumnLayout {
+                            id: language_list_selector
                             Layout.margins: 10
                             spacing: 10
 
