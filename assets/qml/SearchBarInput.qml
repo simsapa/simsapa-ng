@@ -105,6 +105,16 @@ Frame {
                     "Suttas",
                     "Dictionary",
                 ]
+
+                // NOTE: Don't use onCurrentIndexChanged to re-run the query.
+                // When the search area is changed from Suttas with Contains Match to Dictionary,
+                // the default search mode hasn't yet changed to DPD Lookup, and will send a Dictionary Contains Match
+                // query which can take a long time to process.
+
+                function get_text(): string {
+                    // Read from the model list because currentText doesn't update immediately on currentIndexChanged
+                    return model[currentIndex];
+                }
             }
 
             ComboBox {
@@ -125,6 +135,12 @@ Frame {
                                 "Contains Match",
                         ];
                     }
+                }
+
+                onCurrentIndexChanged: root.handle_query_fn(search_input.text) // qmllint disable use-proper-function
+
+                function get_text(): string {
+                    return model[currentIndex];
                 }
             }
 
@@ -155,6 +171,10 @@ Frame {
                         // Re-run search (handle_query will check text min length)
                         root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                     }
+                }
+
+                function get_text(): string {
+                    return model[currentIndex];
                 }
             }
 

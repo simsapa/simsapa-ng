@@ -724,11 +724,8 @@ impl<'a> SearchQueryTask<'a> {
     }
 
     pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        // DPD is English.
-        if self.lang != "en" {
-            return Ok(Vec::new());
-        }
-
+        // DPD is only English, so ignore checking self.lang (which may be "pli", "Language", or empty "").
+        // Assume that if the DPD Lookup was selected then stale language settings can be ignored.
         let app_data = get_app_data();
         let all_results = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
 
