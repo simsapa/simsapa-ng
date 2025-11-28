@@ -266,15 +266,41 @@ RELEASE_CHANNEL=development
                                 let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), &lang);
                                 match importer.import(&mut lang_conn) {
                                     Ok(_) => {
+                                        // Check if any suttas were actually imported
+                                        use diesel::prelude::*;
+
+                                        #[derive(QueryableByName)]
+                                        struct CountResult {
+                                            #[diesel(sql_type = diesel::sql_types::BigInt)]
+                                            count: i64,
+                                        }
+
+                                        let count_query = "SELECT COUNT(*) as count FROM suttas";
+                                        let count_result: Result<CountResult, _> = diesel::sql_query(count_query)
+                                            .get_result(&mut lang_conn);
+
+                                        let sutta_count = count_result.map(|r| r.count).unwrap_or(0);
+
                                         drop(lang_conn);
 
-                                        // Create archive and move to release directory
-                                        match create_database_archive(&lang_db_path, &release_dir) {
-                                            Ok(_) => {
-                                                logger::info(&format!("Successfully created archive for language: {}", lang));
+                                        if sutta_count == 0 {
+                                            logger::warn(&format!("Language {} has 0 suttas, skipping archive creation and removing database", lang));
+                                            // Remove the database file
+                                            if lang_db_path.exists() {
+                                                if let Err(e) = fs::remove_file(&lang_db_path) {
+                                                    logger::error(&format!("Failed to remove empty database for {}: {}", lang, e));
+                                                }
                                             }
-                                            Err(e) => {
-                                                logger::error(&format!("Failed to create archive for language {}: {}", lang, e));
+                                        } else {
+                                            logger::info(&format!("Language {} has {} suttas", lang, sutta_count));
+                                            // Create archive and move to release directory
+                                            match create_database_archive(&lang_db_path, &release_dir) {
+                                                Ok(_) => {
+                                                    logger::info(&format!("Successfully created archive for language: {}", lang));
+                                                }
+                                                Err(e) => {
+                                                    logger::error(&format!("Failed to create archive for language {}: {}", lang, e));
+                                                }
                                             }
                                         }
                                     }
@@ -333,6 +359,21 @@ RELEASE_CHANNEL=development
     logger::info("=== Release Info ===");
 
     write_release_info(&assets_dir, &release_dir)?;
+
+    logger::info("=== Copy languages.json to assets/ ===");
+
+    // Copy languages.json from release_dir to the project's assets/ folder
+    let languages_json_src = release_dir.join("languages.json");
+    let project_assets_dir = simsapa_dir.parent()
+        .context("Failed to get project root directory")?
+        .join("assets");
+    let languages_json_dst = project_assets_dir.join("languages.json");
+
+    fs::copy(&languages_json_src, &languages_json_dst)
+        .with_context(|| format!("Failed to copy languages.json from {:?} to {:?}",
+            languages_json_src, languages_json_dst))?;
+
+    logger::info(&format!("Copied languages.json to {:?}", languages_json_dst));
 
     logger::info("=== Bootstrap completed ===");
 
@@ -464,16 +505,35 @@ pub fn create_database_archive(db_path: &Path, release_dir: &Path) -> Result<()>
     Ok(())
 }
 
-/// Write release info TOML file
+/// Language information with sutta count
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+struct LanguageInfo {
+    pub code: String,
+    pub name: String,
+    pub sutta_count: usize,
+}
+
+/// Write release info TOML file and languages.json
 ///
-/// Collects language database information and writes release metadata to release_info.toml
-/// in the release directory. The TOML contains version, date, and available languages.
+/// Collects language database information and writes:
+/// 1. release_info.toml with version, date, and available languages
+/// 2. languages.json with language code, name, and sutta count
 pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
+    use simsapa_backend::lookup::LANG_CODE_TO_NAME;
+
+    // Helper struct for raw SQL count query
+    #[derive(Debug, QueryableByName)]
+    struct CountResult {
+        #[diesel(sql_type = diesel::sql_types::BigInt)]
+        count: i64,
+    }
+
     // Find all suttas_lang_*.sqlite3 files in assets_dir
     let entries = fs::read_dir(assets_dir)
         .with_context(|| format!("Failed to read assets directory: {}", assets_dir.display()))?;
 
     let mut suttas_lang_list: Vec<String> = Vec::new();
+    let mut language_infos: Vec<LanguageInfo> = Vec::new();
 
     for entry in entries {
         let entry = entry?;
@@ -484,13 +544,32 @@ pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
                 if file_name.starts_with("suttas_lang_") && file_name.ends_with(".sqlite3") {
                     // Extract language code from filename
                     // 'suttas_lang_hu.sqlite3' -> 'hu'
-                    let lang = file_name
+                    let lang_code = file_name
                         .strip_prefix("suttas_lang_")
                         .and_then(|s| s.strip_suffix(".sqlite3"))
                         .unwrap_or("");
 
-                    if !lang.is_empty() {
-                        suttas_lang_list.push(format!("\"{}\"", lang));
+                    if !lang_code.is_empty() {
+                        suttas_lang_list.push(format!("\"{}\"", lang_code));
+
+                        // Get sutta count from the database
+                        let mut conn = SqliteConnection::establish(path.to_str().unwrap())
+                            .with_context(|| format!("Failed to connect to database: {:?}", path))?;
+
+                        let count_query = "SELECT COUNT(*) as count FROM suttas";
+                        let count_result: CountResult = diesel::sql_query(count_query)
+                            .get_result(&mut conn)
+                            .with_context(|| format!("Failed to query sutta count for {}", lang_code))?;
+
+                        let lang_name = LANG_CODE_TO_NAME.get(lang_code as &str)
+                            .copied()
+                            .unwrap_or(lang_code);
+
+                        language_infos.push(LanguageInfo {
+                            code: lang_code.to_string(),
+                            name: lang_name.to_string(),
+                            sutta_count: count_result.count as usize,
+                        });
                     }
                 }
             }
@@ -499,6 +578,7 @@ pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
 
     // Sort the language list for consistent output
     suttas_lang_list.sort();
+    language_infos.sort_by(|a, b| a.code.cmp(&b.code));
 
     let suttas_lang = suttas_lang_list.join(", ");
 
@@ -531,6 +611,16 @@ description = ""
         .with_context(|| format!("Failed to write release_info.toml to {}", release_info_path.display()))?;
 
     logger::info(&format!("Wrote release info to {:?}", release_info_path));
+
+    // Write languages.json
+    let languages_json = serde_json::to_string_pretty(&language_infos)
+        .context("Failed to serialize language infos to JSON")?;
+
+    let languages_json_path = release_dir.join("languages.json");
+    fs::write(&languages_json_path, languages_json)
+        .with_context(|| format!("Failed to write languages.json to {}", languages_json_path.display()))?;
+
+    logger::info(&format!("Wrote languages.json to {:?}", languages_json_path));
 
     Ok(())
 }

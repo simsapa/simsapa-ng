@@ -135,7 +135,7 @@ ApplicationWindow {
             const available_map = {};
             for (let i = 0; i < root.available_languages.length; i++) {
                 const parts = root.available_languages[i].split('|');
-                if (parts.length === 2) {
+                if (parts.length >= 2) {
                     available_map[parts[0]] = parts[1];
                 }
             }
@@ -397,7 +397,7 @@ ApplicationWindow {
                             instruction_text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
                             placeholder_text: "E.g.: it, fr, pt, th"
                             available_label: "Available languages (click to select):"
-                            show_count_column: false
+                            show_count_column: true
                             font_point_size: root.pointSize
 
                             onLanguageSelectionChanged: function(selected_codes) {

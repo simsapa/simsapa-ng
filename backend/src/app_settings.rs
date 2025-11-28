@@ -4,6 +4,7 @@ use serde::{Serialize, Deserialize};
 use crate::logger::error;
 
 static PROVIDERS_JSON: &str = include_str!("../../assets/providers.json");
+pub static LANGUAGES_JSON: &str = include_str!("../../assets/languages.json");
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModelEntry {

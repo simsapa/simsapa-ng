@@ -15,7 +15,7 @@ use tar::Archive;
 use simsapa_backend::{move_folder_contents, AppGlobalPaths};
 use simsapa_backend::asset_helpers::import_suttas_lang_to_appdata;
 use simsapa_backend::logger::{info, error};
-use simsapa_backend::lookup::{LANGUAGES_AVAILABLE, LANG_CODE_TO_NAME};
+use simsapa_backend::app_settings::LANGUAGES_JSON;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -154,24 +154,39 @@ impl qobject::AssetManager {
     }
 
     /// Get list of available language codes that can be downloaded
-    /// Returns format: "code1|Name1,code2|Name2,..."
+    /// Returns format: "code1|Name1|Count1,code2|Name2|Count2,..."
     fn get_available_languages(self: Pin<&mut Self>) -> QStringList {
+        use serde_json::Value;
+
         let mut langs = QStringList::default();
 
-        // Use LANGUAGES_AVAILABLE for the list of language codes
-        // Filter out base languages (en, pli, san) which are always included
-        let mut lang_list: Vec<String> = LANGUAGES_AVAILABLE.iter()
-            .filter(|code| !["en", "pli", "san"].contains(code))
-            .filter_map(|code| {
-                // Use LANG_CODE_TO_NAME to retrieve the name for each code
-                LANG_CODE_TO_NAME.get(code).map(|name| format!("{}|{}", code, name))
-            })
-            .collect();
+        // Parse languages.json to get language info with counts
+        match serde_json::from_str::<Vec<Value>>(LANGUAGES_JSON) {
+            Ok(language_list) => {
+                let mut lang_strings: Vec<String> = language_list.iter()
+                    .filter_map(|lang_obj| {
+                        let code = lang_obj.get("code")?.as_str()?;
+                        let name = lang_obj.get("name")?.as_str()?;
+                        let count = lang_obj.get("sutta_count")?.as_u64()?;
 
-        lang_list.sort();
+                        // Filter out base languages (en, pli, san) which are always included
+                        if ["en", "pli", "san"].contains(&code) {
+                            return None;
+                        }
 
-        for lang in lang_list {
-            langs.append(QString::from(&lang));
+                        Some(format!("{}|{}|{}", code, name, count))
+                    })
+                    .collect();
+
+                lang_strings.sort();
+
+                for lang in lang_strings {
+                    langs.append(QString::from(&lang));
+                }
+            }
+            Err(e) => {
+                error(&format!("Failed to parse languages.json: {}", e));
+            }
         }
 
         langs

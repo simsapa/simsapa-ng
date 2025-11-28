@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use anyhow::{Result, Context};
+use anyhow::Result;
 use diesel::prelude::*;
 use simsapa_backend::logger;
 

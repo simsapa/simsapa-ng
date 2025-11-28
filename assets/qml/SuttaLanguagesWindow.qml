@@ -214,7 +214,7 @@ ApplicationWindow {
                                 instruction_text: "Type language codes below, or click languages to select/unselect them."
                                 placeholder_text: "E.g.: de, fr, es"
                                 available_label: "Available languages (click to select):"
-                                show_count_column: false
+                                show_count_column: true
                                 font_point_size: root.pointSize
                             }
 
