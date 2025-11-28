@@ -121,3 +121,15 @@ BEGIN
     DELETE FROM suttas_fts WHERE sutta_id = OLD.id;
 END;
 
+-- Performance indexes for efficient queries and deletions
+-- Index on suttas.language for fast filtering by language (used in removal operations)
+CREATE INDEX IF NOT EXISTS idx_suttas_language ON suttas(language);
+
+-- Indexes on foreign key columns in child tables for fast CASCADE deletes
+CREATE INDEX IF NOT EXISTS idx_sutta_variants_sutta_id ON sutta_variants(sutta_id);
+CREATE INDEX IF NOT EXISTS idx_sutta_comments_sutta_id ON sutta_comments(sutta_id);
+CREATE INDEX IF NOT EXISTS idx_sutta_glosses_sutta_id ON sutta_glosses(sutta_id);
+
+-- Composite index for common query patterns (language + uid lookups)
+CREATE INDEX IF NOT EXISTS idx_suttas_language_uid ON suttas(language, uid);
+

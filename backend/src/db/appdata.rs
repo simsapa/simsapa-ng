@@ -271,45 +271,18 @@ impl AppdataDbHandle {
             progress_callback(current_index, total_count, lang_code);
 
             let result = self.do_write(|db_conn| {
-                // First, get the IDs of suttas we're about to delete for this language
-                let sutta_ids: Vec<i32> = appdata_schema::suttas::table
-                    .filter(appdata_schema::suttas::language.eq(lang_code))
-                    .select(appdata_schema::suttas::id)
-                    .load(db_conn)?;
-
-                info(&format!("Found {} suttas to delete for language {}", sutta_ids.len(), lang_code));
-
-                if sutta_ids.is_empty() {
-                    return Ok(false);
-                }
-
-                // Delete related sutta_variants
-                let variants_deleted = diesel::delete(
-                    appdata_schema::sutta_variants::table
-                        .filter(appdata_schema::sutta_variants::sutta_id.eq_any(&sutta_ids))
-                ).execute(db_conn)?;
-                info(&format!("Deleted {} sutta_variants for {}", variants_deleted, lang_code));
-
-                // Delete related sutta_comments
-                let comments_deleted = diesel::delete(
-                    appdata_schema::sutta_comments::table
-                        .filter(appdata_schema::sutta_comments::sutta_id.eq_any(&sutta_ids))
-                ).execute(db_conn)?;
-                info(&format!("Deleted {} sutta_comments for {}", comments_deleted, lang_code));
-
-                // Delete related sutta_glosses
-                let glosses_deleted = diesel::delete(
-                    appdata_schema::sutta_glosses::table
-                        .filter(appdata_schema::sutta_glosses::sutta_id.eq_any(&sutta_ids))
-                ).execute(db_conn)?;
-                info(&format!("Deleted {} sutta_glosses for {}", glosses_deleted, lang_code));
-
-                // Finally, delete the suttas themselves
+                // Delete suttas for this language
+                // SQLite automatically handles CASCADE DELETE for child tables
+                // (sutta_variants, sutta_comments, sutta_glosses) because:
+                // 1. Foreign keys have ON DELETE CASCADE in the schema
+                // 2. Foreign keys are enabled via PRAGMA foreign_keys = ON (see ConnectionCustomizer)
+                // 3. Diesel's delete() executes standard SQL DELETE which respects CASCADE
                 let suttas_deleted = diesel::delete(
                     appdata_schema::suttas::table
                         .filter(appdata_schema::suttas::language.eq(lang_code))
                 ).execute(db_conn)?;
-                info(&format!("Deleted {} suttas for {}", suttas_deleted, lang_code));
+
+                info(&format!("Deleted {} suttas for language {} (child records deleted via CASCADE)", suttas_deleted, lang_code));
 
                 Ok(suttas_deleted > 0)
             });
