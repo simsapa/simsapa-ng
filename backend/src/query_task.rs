@@ -571,178 +571,178 @@ impl<'a> SearchQueryTask<'a> {
             vec![self.query_text.as_str()]
         };
 
-                // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
+        // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
 
-                let mut all_results: Vec<DictWord> = Vec::new();
-                let mut result_uids: HashSet<String> = HashSet::new();
+        let mut all_results: Vec<DictWord> = Vec::new();
+        let mut result_uids: HashSet<String> = HashSet::new();
 
-                // Phase 1: Exact matches on DpdHeadword.lemma_clean
-                // dpd.lemma_clean has btree index and dpd.lemma_1 has unique constraint and so implicitly indexed.
-                for term in &terms {
-                    let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                        .filter(dpd_dsl::lemma_clean.eq(term))
-                        .load::<DpdHeadword>(dpd_conn)?;
+        // Phase 1: Exact matches on DpdHeadword.lemma_clean
+        // dpd.lemma_clean has btree index and dpd.lemma_1 has unique constraint and so implicitly indexed.
+        for term in &terms {
+            let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                .filter(dpd_dsl::lemma_clean.eq(term))
+                .load::<DpdHeadword>(dpd_conn)?;
 
-                    // Convert DpdHeadword results to DictWord using their UIDs
-                    for headword in exact_matches {
-                        // Use the lemma_1 as the key for deduplication
-                        let headword_key = headword.lemma_1.clone();
+            // Convert DpdHeadword results to DictWord using their UIDs
+            for headword in exact_matches {
+                // Use the lemma_1 as the key for deduplication
+                let headword_key = headword.lemma_1.clone();
 
-                        if !result_uids.contains(&headword_key) {
-                            // Find corresponding DictWord by matching the word field to headword.lemma_1
-                            let mut dict_query = dict_dsl::dict_words.into_boxed();
+                if !result_uids.contains(&headword_key) {
+                    // Find corresponding DictWord by matching the word field to headword.lemma_1
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
 
-                            // Apply source filtering
-                            // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-                            // FIXME: use dict_label field instead of LIKE
-                            if let Some(ref source_val) = self.source {
-                                let source_pattern = format!("%/{}", source_val);
-                                if self.source_include {
-                                    dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
-                                } else {
-                                    dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
-                                }
-                            }
-
-                            // Match DictWord.word with DpdHeadword.lemma_1
-                            let dict_word_result: Result<DictWord, _> = dict_query
-                                .filter(dict_dsl::word.eq(&headword.lemma_1))
-                                .first::<DictWord>(db_conn);
-
-                            if let Ok(dict_word) = dict_word_result {
-                                result_uids.insert(headword_key);
-                                all_results.push(dict_word);
-                            }
-                        }
-                    }
-                }
-
-                // Phase 2: Contains matches on DpdHeadword.lemma_1
-                // dpd.lemma_1 has fts5 trigram index
-                for term in &terms {
-                    let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                        .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
-                        .load::<DpdHeadword>(dpd_conn)?;
-
-                    // Sort by lemma_1 length in ascending order (shorter lemmas first)
-                    contains_matches.sort_by_key(|h| h.lemma_1.len());
-
-                    // Convert DpdHeadword results to DictWord by matching lemma_1 to word
-                    for headword in contains_matches {
-                        // Use the lemma_1 as the key for deduplication
-                        let headword_key = headword.lemma_1.clone();
-
-                        if !result_uids.contains(&headword_key) {
-                            // Find corresponding DictWord by matching the word field to headword.lemma_1
-                            let mut dict_query = dict_dsl::dict_words.into_boxed();
-
-                            // Apply source filtering
-                            // FIXME: use dict_label field instead of LIKE
-                            if let Some(ref source_val) = self.source {
-                                let source_pattern = format!("%/{}", source_val);
-                                if self.source_include {
-                                    dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
-                                } else {
-                                    dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
-                                }
-                            }
-
-                            // Match DictWord.word with DpdHeadword.lemma_1
-                            let dict_word_result: Result<DictWord, _> = dict_query
-                                .filter(dict_dsl::word.eq(&headword.lemma_1))
-                                .first::<DictWord>(db_conn);
-
-                            if let Ok(dict_word) = dict_word_result {
-                                result_uids.insert(headword_key);
-                                all_results.push(dict_word);
-                            }
-                        }
-                    }
-                }
-
-                // Phase 3: FTS5 search on DictWord.definition_plain
-                for term in &terms {
-                    let like_pattern = format!("%{}%", term);
-
-                    // Build the FTS5 query with source filtering
-                    let fts_query = if self.source.is_some() {
-                        // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-                        // FIXME Filter on dict_label like in suttas_contains_match_fts5() with language on suttas instead of LIKE "%/{}" on uid
-                        // FIXME Order by id for predictable results on the same query.
-                        // FIXME Apply pagination in the query to have less items to add to the results Vec.
-                        if self.source_include {
-                            format!(
-                                r#"
-                                SELECT d.*
-                                FROM dict_words_fts f
-                                JOIN dict_words d ON f.dict_word_id = d.id
-                                WHERE f.definition_plain LIKE ? AND d.uid LIKE ?
-                                "#,
-                            )
-                        } else {
-                            format!(
-                                r#"
-                                SELECT d.*
-                                FROM dict_words_fts f
-                                JOIN dict_words d ON f.dict_word_id = d.id
-                                WHERE f.definition_plain LIKE ? AND d.uid NOT LIKE ?
-                                "#,
-                            )
-                        }
-                    } else {
-                        String::from(
-                            r#"
-                            SELECT d.*
-                            FROM dict_words_fts f
-                            JOIN dict_words d ON f.dict_word_id = d.id
-                            WHERE f.definition_plain LIKE ?
-                            "#
-                        )
-                    };
-
+                    // Apply source filtering
+                    // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
                     // FIXME: use dict_label field instead of LIKE
-                    let def_results: Vec<DictWord> = if let Some(ref source_val) = self.source {
+                    if let Some(ref source_val) = self.source {
                         let source_pattern = format!("%/{}", source_val);
-                        sql_query(&fts_query)
-                            .bind::<Text, _>(&like_pattern)
-                            .bind::<Text, _>(&source_pattern)
-                            .load(db_conn)?
-                    } else {
-                        sql_query(&fts_query)
-                            .bind::<Text, _>(&like_pattern)
-                            .load(db_conn)?
-                    };
-
-                    // Add definition results that aren't already included
-                    for result in def_results {
-                        if !result_uids.contains(&result.word) {
-                            result_uids.insert(result.word.clone());
-                            all_results.push(result);
+                        if self.source_include {
+                            dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
+                        } else {
+                            dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
                         }
                     }
+
+                    // Match DictWord.word with DpdHeadword.lemma_1
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .first::<DictWord>(db_conn);
+
+                    if let Ok(dict_word) = dict_word_result {
+                        result_uids.insert(headword_key);
+                        all_results.push(dict_word);
+                    }
                 }
+            }
+        }
 
-                // Set total hits count
-                self.db_query_hits_count = all_results.len() as i64;
+        // Phase 2: Contains matches on DpdHeadword.lemma_1
+        // dpd.lemma_1 has fts5 trigram index
+        for term in &terms {
+            let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
+                .load::<DpdHeadword>(dpd_conn)?;
 
-                // Apply array-based pagination which affects all collected results
-                let offset = page_num * self.page_len;
-                let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
+            // Sort by lemma_1 length in ascending order (shorter lemmas first)
+            contains_matches.sort_by_key(|h| h.lemma_1.len());
 
-                let paginated_results = if offset >= all_results.len() {
-                    Vec::new()
+            // Convert DpdHeadword results to DictWord by matching lemma_1 to word
+            for headword in contains_matches {
+                // Use the lemma_1 as the key for deduplication
+                let headword_key = headword.lemma_1.clone();
+
+                if !result_uids.contains(&headword_key) {
+                    // Find corresponding DictWord by matching the word field to headword.lemma_1
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                    // Apply source filtering
+                    // FIXME: use dict_label field instead of LIKE
+                    if let Some(ref source_val) = self.source {
+                        let source_pattern = format!("%/{}", source_val);
+                        if self.source_include {
+                            dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
+                        } else {
+                            dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
+                        }
+                    }
+
+                    // Match DictWord.word with DpdHeadword.lemma_1
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .first::<DictWord>(db_conn);
+
+                    if let Ok(dict_word) = dict_word_result {
+                        result_uids.insert(headword_key);
+                        all_results.push(dict_word);
+                    }
+                }
+            }
+        }
+
+        // Phase 3: FTS5 search on DictWord.definition_plain
+        for term in &terms {
+            let like_pattern = format!("%{}%", term);
+
+            // Build the FTS5 query with source filtering
+            let fts_query = if self.source.is_some() {
+                // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
+                // FIXME Filter on dict_label like in suttas_contains_match_fts5() with language on suttas instead of LIKE "%/{}" on uid
+                // FIXME Order by id for predictable results on the same query.
+                // FIXME Apply pagination in the query to have less items to add to the results Vec.
+                if self.source_include {
+                    format!(
+                        r#"
+                        SELECT d.*
+                        FROM dict_words_fts f
+                        JOIN dict_words d ON f.dict_word_id = d.id
+                        WHERE f.definition_plain LIKE ? AND d.uid LIKE ?
+                        "#,
+                    )
                 } else {
-                    all_results[offset..end_idx].to_vec()
-                };
+                    format!(
+                        r#"
+                        SELECT d.*
+                        FROM dict_words_fts f
+                        JOIN dict_words d ON f.dict_word_id = d.id
+                        WHERE f.definition_plain LIKE ? AND d.uid NOT LIKE ?
+                        "#,
+                    )
+                }
+            } else {
+                String::from(
+                    r#"
+                    SELECT d.*
+                    FROM dict_words_fts f
+                    JOIN dict_words d ON f.dict_word_id = d.id
+                    WHERE f.definition_plain LIKE ?
+                    "#
+                )
+            };
 
-                // Map to SearchResult
-                let search_results = paginated_results
-                    .iter()
-                    .map(|dict_word| self.db_word_to_result(dict_word))
-                    .collect();
+            // FIXME: use dict_label field instead of LIKE
+            let def_results: Vec<DictWord> = if let Some(ref source_val) = self.source {
+                let source_pattern = format!("%/{}", source_val);
+                sql_query(&fts_query)
+                    .bind::<Text, _>(&like_pattern)
+                    .bind::<Text, _>(&source_pattern)
+                    .load(db_conn)?
+            } else {
+                sql_query(&fts_query)
+                    .bind::<Text, _>(&like_pattern)
+                    .load(db_conn)?
+            };
 
-                info(&format!("Query took: {:?}", timer.elapsed()));
-                Ok(search_results)
+            // Add definition results that aren't already included
+            for result in def_results {
+                if !result_uids.contains(&result.word) {
+                    result_uids.insert(result.word.clone());
+                    all_results.push(result);
+                }
+            }
+        }
+
+        // Set total hits count
+        self.db_query_hits_count = all_results.len() as i64;
+
+        // Apply array-based pagination which affects all collected results
+        let offset = page_num * self.page_len;
+        let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
+
+        let paginated_results = if offset >= all_results.len() {
+            Vec::new()
+        } else {
+            all_results[offset..end_idx].to_vec()
+        };
+
+        // Map to SearchResult
+        let search_results = paginated_results
+            .iter()
+            .map(|dict_word| self.db_word_to_result(dict_word))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(search_results)
     }
 
     pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
