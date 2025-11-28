@@ -47,7 +47,7 @@ impl Default for NewDictionary<'_> {
     }
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, Associations)]
 #[diesel(table_name = dict_words)]
 #[diesel(belongs_to(Dictionary, foreign_key = dictionary_id))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

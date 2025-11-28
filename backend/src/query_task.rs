@@ -546,37 +546,39 @@ impl<'a> SearchQueryTask<'a> {
         Ok(search_results)
     }
 
-    fn dict_words_contains_or_regex_match_page(
+    fn dict_words_contains_match_fts5(
         &mut self,
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("dict_words_contains_match_fts5(): page_num: {}", page_num));
+        info(&format!("query_text: {}", &self.query_text));
+        let timer = Instant::now();
+
         // TODO: review details in query_task.py
 
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
+        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
 
-        // --- Term Filtering and Query Execution ---
+        use crate::db::dpd_models::DpdHeadword;
+        use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
+        use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
+
+        // --- Term Filtering ---
         let terms: Vec<&str> = if self.query_text.contains(" AND ") {
             self.query_text.split(" AND ").map(|s| s.trim()).collect()
         } else {
             vec![self.query_text.as_str()]
         };
 
-        match self.search_mode {
-            SearchMode::ContainsMatch => {
                 // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
-
-                use crate::db::dpd_models::DpdHeadword;
 
                 let mut all_results: Vec<DictWord> = Vec::new();
                 let mut result_uids: HashSet<String> = HashSet::new();
 
-                let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
-
                 // Phase 1: Exact matches on DpdHeadword.lemma_clean
+                // dpd.lemma_clean has btree index and dpd.lemma_1 has unique constraint and so implicitly indexed.
                 for term in &terms {
-                    use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
-
                     let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
                         .filter(dpd_dsl::lemma_clean.eq(term))
                         .load::<DpdHeadword>(dpd_conn)?;
@@ -588,10 +590,11 @@ impl<'a> SearchQueryTask<'a> {
 
                         if !result_uids.contains(&headword_key) {
                             // Find corresponding DictWord by matching the word field to headword.lemma_1
-                            use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
                             let mut dict_query = dict_dsl::dict_words.into_boxed();
 
                             // Apply source filtering
+                            // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
+                            // FIXME: use dict_label field instead of LIKE
                             if let Some(ref source_val) = self.source {
                                 let source_pattern = format!("%/{}", source_val);
                                 if self.source_include {
@@ -615,9 +618,8 @@ impl<'a> SearchQueryTask<'a> {
                 }
 
                 // Phase 2: Contains matches on DpdHeadword.lemma_1
+                // dpd.lemma_1 has fts5 trigram index
                 for term in &terms {
-                    use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
-
                     let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
                         .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
                         .load::<DpdHeadword>(dpd_conn)?;
@@ -632,10 +634,10 @@ impl<'a> SearchQueryTask<'a> {
 
                         if !result_uids.contains(&headword_key) {
                             // Find corresponding DictWord by matching the word field to headword.lemma_1
-                            use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
                             let mut dict_query = dict_dsl::dict_words.into_boxed();
 
                             // Apply source filtering
+                            // FIXME: use dict_label field instead of LIKE
                             if let Some(ref source_val) = self.source {
                                 let source_pattern = format!("%/{}", source_val);
                                 if self.source_include {
@@ -658,24 +660,58 @@ impl<'a> SearchQueryTask<'a> {
                     }
                 }
 
-                // Phase 3: Contains matches on DictWord.definition_plain
+                // Phase 3: FTS5 search on DictWord.definition_plain
                 for term in &terms {
-                    use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
-                    let mut def_query = dict_dsl::dict_words.into_boxed();
+                    let like_pattern = format!("%{}%", term);
 
-                    // Apply source filtering to definition query
-                    if let Some(ref source_val) = self.source {
-                        let source_pattern = format!("%/{}", source_val);
+                    // Build the FTS5 query with source filtering
+                    let fts_query = if self.source.is_some() {
+                        // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
+                        // FIXME Filter on dict_label like in suttas_contains_match_fts5() with language on suttas instead of LIKE "%/{}" on uid
+                        // FIXME Order by id for predictable results on the same query.
+                        // FIXME Apply pagination in the query to have less items to add to the results Vec.
                         if self.source_include {
-                            def_query = def_query.filter(dict_dsl::uid.like(source_pattern));
+                            format!(
+                                r#"
+                                SELECT d.*
+                                FROM dict_words_fts f
+                                JOIN dict_words d ON f.dict_word_id = d.id
+                                WHERE f.definition_plain LIKE ? AND d.uid LIKE ?
+                                "#,
+                            )
                         } else {
-                            def_query = def_query.filter(dict_dsl::uid.not_like(source_pattern));
+                            format!(
+                                r#"
+                                SELECT d.*
+                                FROM dict_words_fts f
+                                JOIN dict_words d ON f.dict_word_id = d.id
+                                WHERE f.definition_plain LIKE ? AND d.uid NOT LIKE ?
+                                "#,
+                            )
                         }
-                    }
+                    } else {
+                        String::from(
+                            r#"
+                            SELECT d.*
+                            FROM dict_words_fts f
+                            JOIN dict_words d ON f.dict_word_id = d.id
+                            WHERE f.definition_plain LIKE ?
+                            "#
+                        )
+                    };
 
-                    def_query = def_query.filter(dict_dsl::definition_plain.like(format!("%{}%", term)));
-
-                    let def_results: Vec<DictWord> = def_query.load::<DictWord>(db_conn)?;
+                    // FIXME: use dict_label field instead of LIKE
+                    let def_results: Vec<DictWord> = if let Some(ref source_val) = self.source {
+                        let source_pattern = format!("%/{}", source_val);
+                        sql_query(&fts_query)
+                            .bind::<Text, _>(&like_pattern)
+                            .bind::<Text, _>(&source_pattern)
+                            .load(db_conn)?
+                    } else {
+                        sql_query(&fts_query)
+                            .bind::<Text, _>(&like_pattern)
+                            .load(db_conn)?
+                    };
 
                     // Add definition results that aren't already included
                     for result in def_results {
@@ -689,7 +725,7 @@ impl<'a> SearchQueryTask<'a> {
                 // Set total hits count
                 self.db_query_hits_count = all_results.len() as i64;
 
-                // Apply array-based pagination
+                // Apply array-based pagination which affects all collected results
                 let offset = page_num * self.page_len;
                 let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
 
@@ -705,22 +741,8 @@ impl<'a> SearchQueryTask<'a> {
                     .map(|dict_word| self.db_word_to_result(dict_word))
                     .collect();
 
+                info(&format!("Query took: {:?}", timer.elapsed()));
                 Ok(search_results)
-            }
-
-            SearchMode::RegExMatch => {
-                // Implement later with diesel regex match.
-                Ok(Vec::new())
-            }
-
-            _ => {
-                Err(format!(
-                    "Invalid search mode in dict_words_contains_or_regex_match_page: {:?}",
-                    self.search_mode
-                ).into())
-            }
-        }
-
     }
 
     pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
@@ -819,7 +841,7 @@ impl<'a> SearchQueryTask<'a> {
                         self.suttas_contains_match_fts5(page_num)
                     }
                     SearchArea::Dictionary => {
-                        self.dict_words_contains_or_regex_match_page(page_num)
+                        self.dict_words_contains_match_fts5(page_num)
                     }
                 }
             }

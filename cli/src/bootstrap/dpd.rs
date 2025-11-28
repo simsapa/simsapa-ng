@@ -1,8 +1,9 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use anyhow::{Result, Context};
 
 use simsapa_backend::logger;
+use simsapa_backend::helpers::run_fts5_indexes_sql_script;
 
 use crate::import_stardict_dictionary;
 
@@ -11,6 +12,9 @@ pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<(
     let dpd_stardict_path = bootstrap_assets_dir.join("dpd-db-for-bootstrap/current/dpd/");
     import_stardict_dictionary("dpd", &dpd_stardict_path, None)
         .map_err(|e| anyhow::anyhow!("Failed to import DPD Stardict: {}", e))?;
+
+    // Create FTS5 indexes for dictionaries database
+    create_dictionaries_fts5_indexes(assets_dir)?;
 
     // This requires the DPD dictionary ID already present in dictionaries.sqlite3
     dpd_migrate(bootstrap_assets_dir, assets_dir)?;
@@ -52,4 +56,11 @@ pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
 
     logger::info("Successfully migrated DPD database");
     Ok(())
+}
+
+pub fn create_dictionaries_fts5_indexes(assets_dir: &Path) -> Result<()> {
+    logger::info("=== create_dictionaries_fts5_indexes() ===");
+    let dict_db_path = assets_dir.join("dictionaries.sqlite3");
+    let sql_script_path = PathBuf::from("../scripts/dictionaries-fts5-indexes.sql");
+    run_fts5_indexes_sql_script(&dict_db_path, &sql_script_path)
 }
