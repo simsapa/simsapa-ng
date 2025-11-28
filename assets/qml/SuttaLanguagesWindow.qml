@@ -29,21 +29,48 @@ ApplicationWindow {
 
     AssetManager { id: manager }
 
+    property bool is_downloading: false
+
     Connections {
         target: manager
 
+        function onDownloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int) {
+            let downloaded_bytes_mb_str = (downloaded_bytes / 1024 / 1024).toFixed(2);
+            let total_bytes_mb_str = (total_bytes / 1024 / 1024).toFixed(2);
+            var frac = total_bytes > 0 ? downloaded_bytes / total_bytes : 0;
+            download_progress_frame.progress_value = frac;
+            if (downloaded_bytes == total_bytes) {
+                download_progress_frame.status_text = op_msg;
+            } else {
+                download_progress_frame.status_text = `${op_msg}: ${downloaded_bytes_mb_str} / ${total_bytes_mb_str} MB`;
+            }
+        }
+
+        function onDownloadShowMsg(message: string) {
+            download_progress_frame.status_text = message;
+        }
+
+        function onDownloadsCompleted(success: bool) {
+            root.is_downloading = false;
+            if (success) {
+                completion_message.text = "Language downloads have completed successfully.\n\nThe application will need to restart to use the new languages.";
+                views_stack.currentIndex = 2;
+            }
+        }
+
         function onRemovalShowMsg(message: string) {
-            processing_label.text = message;
+            download_progress_frame.status_text = message;
         }
 
         function onRemovalCompleted(success: bool, error_msg: string) {
-            busy_indicator.running = false;
-
             if (success) {
-                completion_dialog.open();
+                completion_message.text = "Languages have been successfully removed from the database.\n\nThe application will now quit. Please restart to apply changes.";
+                views_stack.currentIndex = 2;
             } else {
                 error_dialog.error_message = error_msg || "Failed to remove languages. Please check the application logs for details.";
                 error_dialog.open();
+                // Return to main frame
+                views_stack.currentIndex = 0;
             }
         }
     }
@@ -97,77 +124,7 @@ ApplicationWindow {
         }
     }
 
-    // Completion dialog after successful removal
-    Dialog {
-        id: completion_dialog
-        title: "Languages Removed"
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.NoButton
 
-        ColumnLayout {
-            spacing: 10
-            width: parent.width
-
-            Label {
-                text: "Languages have been successfully removed from the database."
-                font.pointSize: root.pointSize
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
-
-            Label {
-                text: "The application will now quit. Please restart to apply changes."
-                font.pointSize: root.pointSize
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-                font.bold: true
-            }
-
-            Button {
-                text: "Quit Application"
-                Layout.alignment: Qt.AlignHCenter
-                onClicked: {
-                    Qt.quit();
-                }
-            }
-        }
-    }
-
-    // Download started dialog
-    Dialog {
-        id: download_started_dialog
-        title: "Download Started"
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok
-
-        ColumnLayout {
-            spacing: 10
-
-            Label {
-                text: "Language downloads have been started in the background."
-                font.pointSize: root.pointSize
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
-
-            Label {
-                text: "You can close this window and continue using the application. Downloads will continue in the background."
-                font.pointSize: root.pointSize
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-            }
-
-            Label {
-                text: "The application will need to restart after downloads complete to use the new languages."
-                font.pointSize: root.pointSize
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-                color: palette.mid
-            }
-        }
-    }
 
     // Error dialog
     Dialog {
@@ -192,179 +149,255 @@ ApplicationWindow {
         }
     }
 
-    // Processing indicator
-    BusyIndicator {
-        id: busy_indicator
-        anchors.centerIn: parent
-        running: false
-        visible: running
-        z: 100
-    }
-
-    Label {
-        id: processing_label
-        anchors.top: busy_indicator.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.topMargin: 10
-        text: "Removing languages..."
-        font.pointSize: root.pointSize
-        visible: busy_indicator.running
-        z: 100
-    }
-
-    ScrollView {
-        id: scroll_view
+    StackLayout {
+        id: views_stack
         anchors.fill: parent
-        anchors.margins: 10
-        contentWidth: availableWidth
-        clip: true
+        currentIndex: 0
 
-        ColumnLayout {
-            width: scroll_view.availableWidth
-            spacing: 20
+        // Idx 0: Main language selection frame
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
 
-            // Download Languages Section
             ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 10
+                spacing: 0
+                anchors.fill: parent
 
-                Label {
-                    text: "Download Languages"
-                    font.pointSize: root.largePointSize
-                    font.bold: true
-                }
-
-                Label {
-                    text: "Select additional language translations to download. You can download the same language again to update to the latest version."
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
+                // Scrollable content area
+                ScrollView {
+                    id: scroll_view
                     Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        width: scroll_view.availableWidth
+                        spacing: 20
+
+                        // Download Languages Section
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            Label {
+                                text: "Download Languages"
+                                font.pointSize: root.largePointSize
+                                font.bold: true
+                            }
+
+                            Label {
+                                text: "Select additional language translations to download. You can download the same language again to update to the latest version."
+                                font.pointSize: root.pointSize
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "Note: Each language database is approximately 10-50 MB compressed."
+                                font.pointSize: root.pointSize
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                                color: palette.mid
+                            }
+
+                            LanguageListSelector {
+                                id: download_selector
+                                Layout.fillWidth: true
+                                model: root.available_languages
+                                section_title: "Select Languages to Download"
+                                instruction_text: "Type language codes below, or click languages to select/unselect them."
+                                placeholder_text: "E.g.: de, fr, es"
+                                available_label: "Available languages (click to select):"
+                                show_count_column: false
+                                font_point_size: root.pointSize
+                            }
+
+                            Button {
+                                text: "Download Selected Languages"
+                                enabled: download_selector.get_selected_languages().length > 0
+                                Layout.alignment: Qt.AlignRight
+                                onClicked: {
+                                    root.start_download();
+                                }
+                            }
+                        }
+
+                        // Remove Languages Section
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            Label {
+                                text: "Remove Languages"
+                                font.pointSize: root.largePointSize
+                                font.bold: true
+                            }
+
+                            Label {
+                                text: "Remove language databases you no longer need to free disk space."
+                                font.pointSize: root.pointSize
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                text: "Note: English and Pāli cannot be removed as they are core languages required by the application."
+                                font.pointSize: root.pointSize
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                                color: palette.mid
+                            }
+
+                            LanguageListSelector {
+                                id: removal_selector
+                                Layout.fillWidth: true
+                                model: {
+                                    // Filter out "en" and "pli" from installed languages
+                                    return root.installed_languages_with_counts.filter(function(lang) {
+                                        return !lang.startsWith("en|") && !lang.startsWith("pli|");
+                                    });
+                                }
+                                section_title: "Select Languages to Remove"
+                                instruction_text: "Type language codes below, or click languages to select/unselect them."
+                                placeholder_text: "E.g.: de, fr, es"
+                                available_label: "Installed languages (click to select):"
+                                show_count_column: true
+                                font_point_size: root.pointSize
+                            }
+
+                            // Filler to push button up
+                            Item {
+                                Layout.fillHeight: true
+                            }
+
+                            Button {
+                                text: "Remove Selected Languages"
+                                enabled: removal_selector.get_selected_languages().length > 0
+                                Layout.alignment: Qt.AlignRight
+                                onClicked: {
+                                    root.show_removal_confirmation();
+                                }
+                            }
+                        }
+                    }
                 }
 
-                Label {
-                    text: "Note: Each language database is approximately 10-50 MB compressed."
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
+                // Fixed button area at the bottom
+                RowLayout {
+                    visible: root.is_desktop
                     Layout.fillWidth: true
-                    color: palette.mid
+                    Layout.margins: 20
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Close"
+                        onClicked: {
+                            root.close();
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
 
-                LanguageListSelector {
-                    id: download_selector
+                ColumnLayout {
+                    visible: root.is_mobile
                     Layout.fillWidth: true
-                    model: root.available_languages
-                    section_title: "Select Languages to Download"
-                    instruction_text: "Type language codes below, or click languages to select/unselect them."
-                    placeholder_text: "E.g.: de, fr, es"
-                    available_label: "Available languages (click to select):"
-                    show_count_column: false
-                    font_point_size: root.pointSize
-                }
+                    Layout.margins: 10
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: 60
+                    spacing: 10
 
-                Button {
-                    text: "Download Selected Languages"
-                    enabled: download_selector.get_selected_languages().length > 0
-                    Layout.alignment: Qt.AlignRight
-                    onClicked: {
-                        root.start_download();
+                    Button {
+                        text: "Close"
+                        Layout.fillWidth: true
+                        onClicked: {
+                            root.close();
+                        }
                     }
                 }
             }
+        }
 
-            // Separator
-            /* Rectangle { */
-            /*     Layout.fillWidth: true */
-            /*     Layout.preferredHeight: 1 */
-            /*     color: palette.mid */
-            /* } */
+        // Idx 1: Download/Removal progress frame
+        DownloadProgressFrame {
+            id: download_progress_frame
+            pointSize: root.pointSize
+            is_mobile: root.is_mobile
+            status_text: "Processing..."
+            show_cancel_button: root.is_downloading
+            quit_button_text: root.is_downloading ? "Close" : "Quit"
 
-            // Remove Languages Section
+            onQuit_clicked: {
+                if (root.is_downloading) {
+                    root.close();
+                } else {
+                    Qt.quit();
+                }
+            }
+
+            onCancel_clicked: {
+                root.cancel_downloads();
+            }
+        }
+
+        // Idx 2: Completion frame
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
             ColumnLayout {
-                Layout.fillWidth: true
-                spacing: 10
+                spacing: 0
+                anchors.fill: parent
 
-                Label {
-                    text: "Remove Languages"
-                    font.pointSize: root.largePointSize
-                    font.bold: true
-                }
-
-                Label {
-                    text: "Remove language databases you no longer need to free disk space."
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-
-                Label {
-                    text: "Note: English and Pāli cannot be removed as they are core languages required by the application."
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    color: palette.mid
-                }
-
-                LanguageListSelector {
-                    id: removal_selector
-                    Layout.fillWidth: true
-                    model: {
-                        // Filter out "en" and "pli" from installed languages
-                        return root.installed_languages_with_counts.filter(function(lang) {
-                            return !lang.startsWith("en|") && !lang.startsWith("pli|");
-                        });
-                    }
-                    section_title: "Select Languages to Remove"
-                    instruction_text: "Type language codes below, or click languages to select/unselect them."
-                    placeholder_text: "E.g.: de, fr, es"
-                    available_label: "Installed languages (click to select):"
-                    show_count_column: true
-                    font_point_size: root.pointSize
-                }
-
-                Button {
-                    text: "Remove Selected Languages"
-                    enabled: removal_selector.get_selected_languages().length > 0
-                    Layout.alignment: Qt.AlignRight
-                    onClicked: {
-                        root.show_removal_confirmation();
-                    }
-                }
-            }
-
-            // Bottom spacer
-            Item {
-                Layout.fillHeight: true
-            }
-
-            // Button layout
-            RowLayout {
-                visible: root.is_desktop
-                Layout.fillWidth: true
-                spacing: 10
-
-                Button {
-                    text: "Close"
-                    onClicked: {
-                        root.close();
-                    }
-                }
-
+                // Centered content area
                 Item {
                     Layout.fillWidth: true
-                }
-            }
+                    Layout.fillHeight: true
 
-            ColumnLayout {
-                visible: root.is_mobile
-                Layout.fillWidth: true
-                spacing: 10
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        spacing: 10
 
-                Button {
-                    text: "Close"
-                    Layout.fillWidth: true
-                    onClicked: {
-                        root.close();
+                        Image {
+                            source: "icons/appicons/simsapa.png"
+                            Layout.preferredWidth: 100
+                            Layout.preferredHeight: 100
+                            Layout.alignment: Qt.AlignCenter
+                        }
+
+                        Label {
+                            id: completion_message
+                            text: "Operation completed successfully."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignCenter
+                        }
                     }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 20
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Quit Application"
+                        font.pointSize: root.pointSize
+                        onClicked: {
+                            Qt.quit();
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
@@ -387,12 +420,29 @@ ApplicationWindow {
 
         console.log("Starting download for:", urls);
 
+        // Show progress frame
+        root.is_downloading = true;
+        download_progress_frame.status_text = "Starting download...";
+        download_progress_frame.progress_value = 0;
+        views_stack.currentIndex = 1;
+
         // Start download directly using AssetManager
         // is_initial_setup = false, so it won't download base files
         manager.download_urls_and_extract(urls, false);
+    }
 
-        // Show completion message
-        download_started_dialog.open();
+    function cancel_downloads() {
+        // TODO: Implement proper download cancellation in AssetManager
+        // For now, we'll just inform the user that downloads continue in background
+        root.is_downloading = false;
+        download_progress_frame.status_text = "Cleaning up partially downloaded files...";
+        
+        // Return to main view
+        views_stack.currentIndex = 0;
+        
+        // Show info dialog
+        error_dialog.error_message = "Downloads have been canceled. Partially downloaded files will be cleaned up automatically.\n\nYou can close this window. Any in-progress downloads will continue in the background but incomplete language imports will not be applied.";
+        error_dialog.open();
     }
 
     function show_removal_confirmation() {
@@ -431,8 +481,8 @@ ApplicationWindow {
             return;
         }
 
-        busy_indicator.running = true;
-        processing_label.text = "Removing languages...";
+        download_progress_frame.status_text = "Removing languages...";
+        views_stack.currentIndex = 1;
 
         // Call the backend to remove languages (runs in background thread)
         // The Connections handler above will receive onRemovalCompleted signal

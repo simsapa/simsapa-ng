@@ -104,17 +104,17 @@ ApplicationWindow {
             let downloaded_bytes_mb_str = (downloaded_bytes / 1024 / 1024).toFixed(2);
             let total_bytes_mb_str = (total_bytes / 1024 / 1024).toFixed(2);
             var frac = total_bytes > 0 ? downloaded_bytes / total_bytes : 0;
-                                         progress_bar.value = frac;
+                                         download_progress_frame.progress_value = frac;
             if (downloaded_bytes == total_bytes) {
-                download_status.text = op_msg;
+                download_progress_frame.status_text = op_msg;
             } else {
-                download_status.text = `${op_msg}: ${downloaded_bytes_mb_str} / ${total_bytes_mb_str} MB`;
+                download_progress_frame.status_text = `${op_msg}: ${downloaded_bytes_mb_str} / ${total_bytes_mb_str} MB`;
             }
         }
 
         function onDownloadShowMsg (message) {
             logger.log("onDownloadShowMsg(): " + message);
-            download_status.text = message;
+            download_progress_frame.status_text = message;
         }
 
         function onDownloadsCompleted (value: bool) {
@@ -480,80 +480,14 @@ ApplicationWindow {
         }
 
         // Idx 2: Download progress
-        Frame {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+        DownloadProgressFrame {
+            id: download_progress_frame
+            pointSize: root.pointSize
+            is_mobile: root.is_mobile
+            status_text: "Downloading ..."
 
-            ColumnLayout {
-                spacing: 0
-                anchors.fill: parent
-
-                // Centered content area
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        width: parent.width * 0.9
-                        spacing: 10
-
-                        AnimatedImage {
-                            id: simsapa_loading_gif
-                            source: "icons/gif/simsapa-loading.gif"
-                            playing: true
-                            Layout.alignment: Qt.AlignCenter
-                        }
-
-                        Label {
-                            id: download_status
-                            Layout.alignment: Qt.AlignCenter
-                            text: "Downloading ..."
-                            font.pointSize: root.pointSize
-                            wrapMode: Text.WordWrap
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                        }
-
-                        ProgressBar {
-                            id: progress_bar
-                            Layout.alignment: Qt.AlignCenter
-                            Layout.fillWidth: true
-                            visible: true
-                            from: 0
-                            to: 1
-                            value: 0
-                            font.pointSize: root.pointSize
-                        }
-
-                        // Text {
-                        //     id: download_msg
-                        //     text: ""
-                        //     textFormat: Text.RichText
-                        //     font.pointSize: root.pointSize
-                        //     Layout.alignment: Qt.AlignCenter
-                        // }
-                    }
-                }
-
-                // Fixed button area at the bottom
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 20
-                    // Extra space on mobile to avoid the bottom bar covering the button.
-                    Layout.bottomMargin: root.is_mobile ? 60 : 20
-
-                    Item { Layout.fillWidth: true }
-
-                    Button {
-                        id: download_quit_button
-                        text: "Quit"
-                        font.pointSize: root.pointSize
-                        onClicked: Qt.quit()
-                    }
-
-                    Item { Layout.fillWidth: true }
-                }
+            onQuit_clicked: {
+                Qt.quit();
             }
         }
 
