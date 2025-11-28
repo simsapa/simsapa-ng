@@ -148,8 +148,11 @@ impl DbManager {
     }
 
     /// Remove suttas and related data for specific language codes
-    pub fn remove_sutta_languages(&self, language_codes: Vec<String>) -> Result<bool> {
-        self.appdata.remove_sutta_languages(language_codes)
+    pub fn remove_sutta_languages<F>(&self, language_codes: Vec<String>, progress_callback: F) -> Result<bool>
+    where
+        F: FnMut(usize, usize, &str),
+    {
+        self.appdata.remove_sutta_languages(language_codes, progress_callback)
     }
 
     /// Get sutta languages with their counts in format "code|Name|Count"

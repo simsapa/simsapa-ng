@@ -83,6 +83,13 @@ pub mod qobject {
         fn removal_show_msg(self: Pin<&mut AssetManager>, message: QString);
 
         #[qsignal]
+        #[cxx_name = "removalProgressChanged"]
+        fn removal_progress_changed(self: Pin<&mut AssetManager>,
+                                    current_index: usize,
+                                    total_count: usize,
+                                    language_name: QString);
+
+        #[qsignal]
         #[cxx_name = "removalCompleted"]
         fn removal_completed(self: Pin<&mut AssetManager>, success: bool, error_msg: QString);
     }
@@ -191,6 +198,7 @@ impl qobject::AssetManager {
     /// Runs in background thread and emits signals for progress and completion
     fn remove_sutta_languages(self: Pin<&mut Self>, language_codes: QStringList) {
         use simsapa_backend::get_app_data;
+        use simsapa_backend::lookup::LANG_CODE_TO_NAME;
 
         info(&format!("remove_sutta_languages(): Removing {} languages", language_codes.len()));
 
@@ -213,7 +221,7 @@ impl qobject::AssetManager {
         let qt_thread = self.qt_thread();
 
         // Show initial message
-        let msg = QString::from("Removing languages...");
+        let msg = QString::from("Preparing to remove languages...");
         qt_thread.queue(move |mut qo| {
             qo.as_mut().removal_show_msg(msg);
         }).unwrap();
@@ -221,7 +229,18 @@ impl qobject::AssetManager {
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
             let app_data = get_app_data();
-            match app_data.dbm.remove_sutta_languages(codes) {
+
+            // Create a progress callback that sends messages to Qt
+            let progress_callback = |current_index: usize, total: usize, lang_code: &str| {
+                let lang_name = LANG_CODE_TO_NAME.get(lang_code).copied().unwrap_or(lang_code);
+                let lang_name_qstr = QString::from(lang_name);
+                let qt_thread_clone = qt_thread.clone();
+                qt_thread_clone.queue(move |mut qo| {
+                    qo.as_mut().removal_progress_changed(current_index, total, lang_name_qstr);
+                }).unwrap();
+            };
+
+            match app_data.dbm.remove_sutta_languages(codes, progress_callback) {
                 Ok(success) => {
                     info(&format!("remove_sutta_languages(): Completed with success={}", success));
                     qt_thread.queue(move |mut qo| {

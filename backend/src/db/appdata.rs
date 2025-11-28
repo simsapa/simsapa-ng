@@ -246,7 +246,11 @@ fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
 impl AppdataDbHandle {
     /// Remove suttas and related data for specific language codes
     /// Returns true if deletion was successful
-    pub fn remove_sutta_languages(&self, language_codes: Vec<String>) -> Result<bool> {
+    /// The progress_callback is called after each language is removed with (current_index, total_count, language_code)
+    pub fn remove_sutta_languages<F>(&self, language_codes: Vec<String>, mut progress_callback: F) -> Result<bool>
+    where
+        F: FnMut(usize, usize, &str),
+    {
         use crate::db::appdata_schema;
 
         if language_codes.is_empty() {
@@ -255,56 +259,77 @@ impl AppdataDbHandle {
 
         info(&format!("remove_sutta_languages(): Removing languages: {:?}", language_codes));
 
-        let result = self.do_write(|db_conn| {
-            // First, get the IDs of suttas we're about to delete
-            let sutta_ids: Vec<i32> = appdata_schema::suttas::table
-                .filter(appdata_schema::suttas::language.eq_any(&language_codes))
-                .select(appdata_schema::suttas::id)
-                .load(db_conn)?;
+        let total_count = language_codes.len();
+        let mut any_deleted = false;
 
-            info(&format!("Found {} suttas to delete", sutta_ids.len()));
+        // Process each language one by one to provide progress updates
+        for (index, lang_code) in language_codes.iter().enumerate() {
+            let current_index = index + 1;
+            info(&format!("Removing language {}/{}: {}", current_index, total_count, lang_code));
 
-            // Delete related sutta_variants
-            let variants_deleted = diesel::delete(
-                appdata_schema::sutta_variants::table
-                    .filter(appdata_schema::sutta_variants::sutta_id.eq_any(&sutta_ids))
-            ).execute(db_conn)?;
-            info(&format!("Deleted {} sutta_variants", variants_deleted));
+            // Call progress callback BEFORE starting to remove this language
+            progress_callback(current_index, total_count, lang_code);
 
-            // Delete related sutta_comments
-            let comments_deleted = diesel::delete(
-                appdata_schema::sutta_comments::table
-                    .filter(appdata_schema::sutta_comments::sutta_id.eq_any(&sutta_ids))
-            ).execute(db_conn)?;
-            info(&format!("Deleted {} sutta_comments", comments_deleted));
+            let result = self.do_write(|db_conn| {
+                // First, get the IDs of suttas we're about to delete for this language
+                let sutta_ids: Vec<i32> = appdata_schema::suttas::table
+                    .filter(appdata_schema::suttas::language.eq(lang_code))
+                    .select(appdata_schema::suttas::id)
+                    .load(db_conn)?;
 
-            // Delete related sutta_glosses
-            let glosses_deleted = diesel::delete(
-                appdata_schema::sutta_glosses::table
-                    .filter(appdata_schema::sutta_glosses::sutta_id.eq_any(&sutta_ids))
-            ).execute(db_conn)?;
-            info(&format!("Deleted {} sutta_glosses", glosses_deleted));
+                info(&format!("Found {} suttas to delete for language {}", sutta_ids.len(), lang_code));
 
-            // Finally, delete the suttas themselves
-            let suttas_deleted = diesel::delete(
-                appdata_schema::suttas::table
-                    .filter(appdata_schema::suttas::language.eq_any(&language_codes))
-            ).execute(db_conn)?;
-            info(&format!("Deleted {} suttas", suttas_deleted));
+                if sutta_ids.is_empty() {
+                    return Ok(false);
+                }
 
-            Ok(suttas_deleted > 0)
-        });
+                // Delete related sutta_variants
+                let variants_deleted = diesel::delete(
+                    appdata_schema::sutta_variants::table
+                        .filter(appdata_schema::sutta_variants::sutta_id.eq_any(&sutta_ids))
+                ).execute(db_conn)?;
+                info(&format!("Deleted {} sutta_variants for {}", variants_deleted, lang_code));
 
-        match result {
-            Ok(deleted) => {
-                info("remove_sutta_languages(): Success");
-                Ok(deleted)
-            },
-            Err(e) => {
-                error(&format!("remove_sutta_languages(): Failed - {}", e));
-                Err(e)
+                // Delete related sutta_comments
+                let comments_deleted = diesel::delete(
+                    appdata_schema::sutta_comments::table
+                        .filter(appdata_schema::sutta_comments::sutta_id.eq_any(&sutta_ids))
+                ).execute(db_conn)?;
+                info(&format!("Deleted {} sutta_comments for {}", comments_deleted, lang_code));
+
+                // Delete related sutta_glosses
+                let glosses_deleted = diesel::delete(
+                    appdata_schema::sutta_glosses::table
+                        .filter(appdata_schema::sutta_glosses::sutta_id.eq_any(&sutta_ids))
+                ).execute(db_conn)?;
+                info(&format!("Deleted {} sutta_glosses for {}", glosses_deleted, lang_code));
+
+                // Finally, delete the suttas themselves
+                let suttas_deleted = diesel::delete(
+                    appdata_schema::suttas::table
+                        .filter(appdata_schema::suttas::language.eq(lang_code))
+                ).execute(db_conn)?;
+                info(&format!("Deleted {} suttas for {}", suttas_deleted, lang_code));
+
+                Ok(suttas_deleted > 0)
+            });
+
+            match result {
+                Ok(deleted) => {
+                    if deleted {
+                        any_deleted = true;
+                    }
+                    info(&format!("Successfully removed language {}", lang_code));
+                },
+                Err(e) => {
+                    error(&format!("Failed to remove language {}: {}", lang_code, e));
+                    return Err(e);
+                }
             }
         }
+
+        info("remove_sutta_languages(): All languages removed successfully");
+        Ok(any_deleted)
     }
 
     /// Get sutta languages with their counts in format "code|Name|Count"

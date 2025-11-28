@@ -58,6 +58,11 @@ ApplicationWindow {
             }
         }
 
+        function onRemovalProgressChanged(current_index: int, total_count: int, language_name: string) {
+            download_progress_frame.status_text = `Removing ${language_name} (${current_index}/${total_count})...`;
+            download_progress_frame.progress_value = current_index / total_count;
+        }
+
         function onRemovalShowMsg(message: string) {
             download_progress_frame.status_text = message;
         }
@@ -481,11 +486,12 @@ ApplicationWindow {
             return;
         }
 
-        download_progress_frame.status_text = "Removing languages...";
+        download_progress_frame.status_text = "Preparing to remove languages...";
+        download_progress_frame.progress_value = 0;
         views_stack.currentIndex = 1;
 
         // Call the backend to remove languages (runs in background thread)
-        // The Connections handler above will receive onRemovalCompleted signal
+        // The Connections handler above will receive onRemovalProgressChanged and onRemovalCompleted signals
         manager.remove_sutta_languages(codes_to_remove);
     }
 }
