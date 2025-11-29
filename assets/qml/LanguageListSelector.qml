@@ -57,7 +57,16 @@ ColumnLayout {
 
     ScrollView {
         Layout.fillWidth: true
-        Layout.preferredHeight: 150
+        Layout.preferredHeight: {
+            // Calculate height based on number of items
+            // Each item is 30px high, max 5 items visible (150px), min 1 item (30px)
+            const item_height = 30;
+            const item_count = root.model.length;
+            const max_visible_items = 5;
+            const visible_items = Math.min(item_count, max_visible_items);
+            const min_items = item_count > 0 ? 1 : 0;
+            return Math.max(visible_items * item_height, min_items * item_height);
+        }
         clip: true
 
         ListView {
