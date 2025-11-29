@@ -594,13 +594,11 @@ impl<'a> SearchQueryTask<'a> {
 
                     // Apply source filtering
                     // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-                    // FIXME: use dict_label field instead of LIKE
                     if let Some(ref source_val) = self.source {
-                        let source_pattern = format!("%/{}", source_val);
                         if self.source_include {
-                            dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
                         } else {
-                            dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
                         }
                     }
 
@@ -637,13 +635,11 @@ impl<'a> SearchQueryTask<'a> {
                     let mut dict_query = dict_dsl::dict_words.into_boxed();
 
                     // Apply source filtering
-                    // FIXME: use dict_label field instead of LIKE
                     if let Some(ref source_val) = self.source {
-                        let source_pattern = format!("%/{}", source_val);
                         if self.source_include {
-                            dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
                         } else {
-                            dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
                         }
                     }
 
@@ -667,26 +663,27 @@ impl<'a> SearchQueryTask<'a> {
             // Build the FTS5 query with source filtering
             let fts_query = if self.source.is_some() {
                 // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-                // FIXME Filter on dict_label like in suttas_contains_match_fts5() with language on suttas instead of LIKE "%/{}" on uid
-                // FIXME Order by id for predictable results on the same query.
+                // dict_label is available in the FTS table for filtering
                 // FIXME Apply pagination in the query to have less items to add to the results Vec.
                 if self.source_include {
-                    format!(
+                    String::from(
                         r#"
                         SELECT d.*
                         FROM dict_words_fts f
                         JOIN dict_words d ON f.dict_word_id = d.id
-                        WHERE f.definition_plain LIKE ? AND d.uid LIKE ?
-                        "#,
+                        WHERE f.definition_plain LIKE ? AND f.dict_label = ?
+                        ORDER BY d.id
+                        "#
                     )
                 } else {
-                    format!(
+                    String::from(
                         r#"
                         SELECT d.*
                         FROM dict_words_fts f
                         JOIN dict_words d ON f.dict_word_id = d.id
-                        WHERE f.definition_plain LIKE ? AND d.uid NOT LIKE ?
-                        "#,
+                        WHERE f.definition_plain LIKE ? AND f.dict_label != ?
+                        ORDER BY d.id
+                        "#
                     )
                 }
             } else {
@@ -696,16 +693,15 @@ impl<'a> SearchQueryTask<'a> {
                     FROM dict_words_fts f
                     JOIN dict_words d ON f.dict_word_id = d.id
                     WHERE f.definition_plain LIKE ?
+                    ORDER BY d.id
                     "#
                 )
             };
 
-            // FIXME: use dict_label field instead of LIKE
             let def_results: Vec<DictWord> = if let Some(ref source_val) = self.source {
-                let source_pattern = format!("%/{}", source_val);
                 sql_query(&fts_query)
                     .bind::<Text, _>(&like_pattern)
-                    .bind::<Text, _>(&source_pattern)
+                    .bind::<Text, _>(source_val)
                     .load(db_conn)?
             } else {
                 sql_query(&fts_query)
