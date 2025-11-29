@@ -172,7 +172,13 @@ ApplicationWindow {
         // self._last_query_time = datetime.now()
 
         // When the user continues searching, show the results panel
-        show_sidebar_btn.checked = true;
+        // Force the checked state to update by toggling if needed
+        if (!show_sidebar_btn.checked) {
+            show_sidebar_btn.checked = true;
+        }
+
+        // Activate the Results tab
+        rightside_tabs.setCurrentIndex(0);
 
         // self._queries.start_search_query_workers()
         root.start_search_query_workers(
