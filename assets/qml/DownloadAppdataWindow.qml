@@ -97,6 +97,28 @@ ApplicationWindow {
 
     StorageDialog { id: storage_dialog }
 
+    Dialog {
+        id: error_dialog
+        title: "Error"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+
+        property string error_message: ""
+
+        ColumnLayout {
+            spacing: 10
+            width: 400
+
+            Label {
+                text: error_dialog.error_message
+                font.pointSize: root.pointSize
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+    }
+
     Connections {
         target: manager
 
@@ -124,36 +146,49 @@ ApplicationWindow {
         }
     }
 
-    function validate_and_run_download() {
+    function validate_language_codes(selected_codes, available_list) {
+        // Extract just the language codes from the available list
+        let available_codes = [];
+        for (let i = 0; i < available_list.length; i++) {
+            const parts = available_list[i].split('|');
+            if (parts.length >= 1) {
+                available_codes.push(parts[0]);
+            }
+        }
+
+        // Find invalid codes (excluding base languages)
+        let invalid_codes = [];
+        for (let i = 0; i < selected_codes.length; i++) {
+            const code = selected_codes[i];
+            // Skip base languages - they are always available
+            if (code === 'en' || code === 'pli' || code === 'san') {
+                continue;
+            }
+            if (available_codes.indexOf(code) === -1) {
+                invalid_codes.push(code);
+            }
+        }
+
+        return invalid_codes;
+    }
+
+    function validate_download() {
         // Check that all entered language codes are available.
         const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
 
         if (lang_input !== "") {
             const selected_langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
 
-            // Build available languages map
-            const available_map = {};
-            for (let i = 0; i < root.available_languages.length; i++) {
-                const parts = root.available_languages[i].split('|');
-                if (parts.length >= 2) {
-                    available_map[parts[0]] = parts[1];
-                }
-            }
-
-            for (let i = 0; i < selected_langs.length; i++) {
-                const lang = selected_langs[i];
-                // Skip base languages
-                if (lang === 'en' || lang === 'pli' || lang === 'san') {
-                    continue;
-                }
-                if (!available_map[lang]) {
-                    download_status.text = `Language not available: ${lang}`;
-                    return;
-                }
+            // Validate language codes
+            const invalid_codes = validate_language_codes(selected_langs, root.available_languages);
+            if (invalid_codes.length > 0) {
+                error_dialog.error_message = "Not available for download:\n\n" + invalid_codes.join(", ");
+                error_dialog.open();
+                return false;
             }
         }
 
-        root.run_download()
+        return true;
     }
 
     function run_download() {
@@ -427,8 +462,11 @@ ApplicationWindow {
                         text: "Download"
                         font.pointSize: root.pointSize
                         onClicked: {
-                            views_stack.currentIndex = 2;
-                            root.validate_and_run_download();
+                            // Validate first, only proceed if validation passes
+                            if (root.validate_download()) {
+                                views_stack.currentIndex = 2;
+                                root.run_download();
+                            }
                         }
                     }
 
@@ -463,8 +501,11 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         Layout.fillWidth: true
                         onClicked: {
-                            views_stack.currentIndex = 2;
-                            root.validate_and_run_download();
+                            // Validate first, only proceed if validation passes
+                            if (root.validate_download()) {
+                                views_stack.currentIndex = 2;
+                                root.run_download();
+                            }
                         }
                     }
                 }

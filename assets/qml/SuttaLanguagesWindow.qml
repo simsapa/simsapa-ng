@@ -198,14 +198,6 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                             }
 
-                            Label {
-                                text: "Note: Each language database is approximately 10-50 MB compressed."
-                                font.pointSize: root.pointSize
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                                color: palette.mid
-                            }
-
                             LanguageListSelector {
                                 id: download_selector
                                 Layout.fillWidth: true
@@ -393,10 +385,40 @@ ApplicationWindow {
         }
     }
 
+    function validate_language_codes(selected_codes, available_list) {
+        // Extract just the language codes from the available list
+        let available_codes = [];
+        for (let i = 0; i < available_list.length; i++) {
+            const parts = available_list[i].split('|');
+            if (parts.length >= 1) {
+                available_codes.push(parts[0]);
+            }
+        }
+
+        // Find invalid codes
+        let invalid_codes = [];
+        for (let i = 0; i < selected_codes.length; i++) {
+            const code = selected_codes[i];
+            if (available_codes.indexOf(code) === -1) {
+                invalid_codes.push(code);
+            }
+        }
+
+        return invalid_codes;
+    }
+
     function start_download() {
         const selected_codes = download_selector.get_selected_languages();
 
         if (selected_codes.length === 0) {
+            return;
+        }
+
+        // Validate that selected codes exist in available languages
+        const invalid_codes = validate_language_codes(selected_codes, root.available_languages);
+        if (invalid_codes.length > 0) {
+            error_dialog.error_message = "Not available for download:\n\n" + invalid_codes.join(", ");
+            error_dialog.open();
             return;
         }
 
@@ -431,7 +453,7 @@ ApplicationWindow {
         views_stack.currentIndex = 0;
         
         // Show info dialog
-        error_dialog.error_message = "Downloads have been canceled. Partially downloaded files will be cleaned up automatically.\n\nYou can close this window. Any in-progress downloads will continue in the background but incomplete language imports will not be applied.";
+        error_dialog.error_message = "Downloads canceled.";
         error_dialog.open();
     }
 
@@ -439,6 +461,19 @@ ApplicationWindow {
         const selected_codes = removal_selector.get_selected_languages();
 
         if (selected_codes.length === 0) {
+            return;
+        }
+
+        // Get installed languages (filtered to exclude en and pli)
+        const installed_languages = root.installed_languages_with_counts.filter(function(lang) {
+            return !lang.startsWith("en|") && !lang.startsWith("pli|");
+        });
+
+        // Validate that selected codes exist in installed languages
+        const invalid_codes = validate_language_codes(selected_codes, installed_languages);
+        if (invalid_codes.length > 0) {
+            error_dialog.error_message = "Not installed or cannot be removed:\n\n" + invalid_codes.join(", ");
+            error_dialog.open();
             return;
         }
 
