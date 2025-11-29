@@ -868,11 +868,16 @@ ${query_text}`;
                         visible: show_sidebar_btn.checked ? (root.is_wide ? true : false) : true
                         /* Layout.alignment: Qt.AlignTop */
 
-                        TabBar {
-                            id: suttas_tab_bar
+                        RowLayout {
+                            id: suttas_tab_bar_container
                             anchors.top: parent.top
                             anchors.left: parent.left
                             anchors.right: parent.right
+                            spacing: 0
+
+                        TabBar {
+                            id: suttas_tab_bar
+                            Layout.fillWidth: true
 
                             function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
                                 /* logger.log("tab_focus_changed()", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key); */
@@ -895,6 +900,9 @@ ${query_text}`;
                                 }
                                 // show the sutta tab
                                 sutta_html_view_layout.current_key = tab.web_item_key;
+
+                                // Scroll the focused tab into view
+                                suttas_tab_bar.scroll_tab_into_view(tab);
                             }
 
                             function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
@@ -940,9 +948,40 @@ ${query_text}`;
                                 tab_model.remove(tab.index);
                             }
 
-                            contentItem: RowLayout {
+                            function scroll_tab_into_view(tab: SuttaTabButton) {
+                                if (!tab) return;
+
+                                // Get tab position relative to the flickable
+                                let tab_x = tab.x;
+                                let tab_width = tab.width;
+
+                                // Calculate the visible area in the flickable
+                                let visible_left = tabs_flickable.contentX;
+                                let visible_right = visible_left + tabs_flickable.width;
+
+                                // Check if tab is fully visible
+                                if (tab_x < visible_left) {
+                                    // Tab is to the left of visible area, scroll left
+                                    tabs_flickable.contentX = tab_x;
+                                } else if (tab_x + tab_width > visible_right) {
+                                    // Tab is to the right of visible area, scroll right
+                                    tabs_flickable.contentX = tab_x + tab_width - tabs_flickable.width;
+                                }
+                            }
+
+                            contentItem: Flickable {
+                                id: tabs_flickable
+                                clip: true
+                                contentWidth: tabs_row.implicitWidth
+                                contentHeight: tabs_row.implicitHeight
+
+                                flickableDirection: Flickable.HorizontalFlick
+                                boundsBehavior: Flickable.StopAtBounds
+
+                            RowLayout {
                                 id: tabs_row
                                 spacing: 0
+                                height: parent.height
 
                                 Repeater {
                                     id: tabs_pinned
@@ -1031,13 +1070,44 @@ ${query_text}`;
 
                                 Item { Layout.fillWidth: true }
                             }
+                            }
+                        }
+
+                            Button {
+                                id: tab_overflow_btn
+                                icon.source: "icons/32x32/mdi--menu.png"
+                                Layout.preferredWidth: 32
+                                Layout.preferredHeight: 32
+                                flat: true
+                                visible: tabs_flickable.contentWidth > tabs_flickable.width
+                                onClicked: tab_list_dialog.open()
+
+                                background: Rectangle {
+                                    color: "transparent"
+                                    border.color: tab_overflow_btn.palette.mid
+                                    border.width: 1
+                                    radius: 2
+                                }
+                            }
+                        }
+
+                        TabListDialog {
+                            id: tab_list_dialog
+
+                            tabs_pinned_model: tabs_pinned_model
+                            tabs_results_model: tabs_results_model
+                            tabs_translations_model: tabs_translations_model
+
+                            onTabSelected: function(id_key) {
+                                root.focus_on_tab_with_id_key(id_key);
+                            }
                         }
 
                         SplitView {
                             id: sutta_split
                             orientation: Qt.Vertical
 
-                            anchors.top: suttas_tab_bar.bottom
+                            anchors.top: suttas_tab_bar_container.bottom
                             anchors.bottom: suttas_tab_container.bottom
                             anchors.left: suttas_tab_container.left
                             anchors.right: suttas_tab_container.right
