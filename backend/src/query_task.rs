@@ -571,6 +571,11 @@ impl<'a> SearchQueryTask<'a> {
             vec![self.query_text.as_str()]
         };
 
+        // --- Calculate Pagination ---
+        // Apply pagination in each phase to reduce the number of items fetched
+        let query_offset = (page_num * self.page_len) as i64;
+        let query_limit = self.page_len as i64;
+
         // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
 
         let mut all_results: Vec<DictWord> = Vec::new();
@@ -581,6 +586,9 @@ impl<'a> SearchQueryTask<'a> {
         for term in &terms {
             let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
                 .filter(dpd_dsl::lemma_clean.eq(term))
+                .order(dpd_dsl::id)
+                .limit(query_limit)
+                .offset(query_offset)
                 .load::<DpdHeadword>(dpd_conn)?;
 
             // Convert DpdHeadword results to DictWord using their UIDs
@@ -620,6 +628,9 @@ impl<'a> SearchQueryTask<'a> {
         for term in &terms {
             let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
                 .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
+                .order(dpd_dsl::id)
+                .limit(query_limit)
+                .offset(query_offset)
                 .load::<DpdHeadword>(dpd_conn)?;
 
             // Sort by lemma_1 length in ascending order (shorter lemmas first)
@@ -661,10 +672,9 @@ impl<'a> SearchQueryTask<'a> {
             let like_pattern = format!("%{}%", term);
 
             // Build the FTS5 query with source filtering
+            // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
+            // dict_label is available in the FTS table for filtering
             let fts_query = if self.source.is_some() {
-                // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-                // dict_label is available in the FTS table for filtering
-                // FIXME Apply pagination in the query to have less items to add to the results Vec.
                 if self.source_include {
                     String::from(
                         r#"
@@ -673,6 +683,7 @@ impl<'a> SearchQueryTask<'a> {
                         JOIN dict_words d ON f.dict_word_id = d.id
                         WHERE f.definition_plain LIKE ? AND f.dict_label = ?
                         ORDER BY d.id
+                        LIMIT ? OFFSET ?
                         "#
                     )
                 } else {
@@ -683,6 +694,7 @@ impl<'a> SearchQueryTask<'a> {
                         JOIN dict_words d ON f.dict_word_id = d.id
                         WHERE f.definition_plain LIKE ? AND f.dict_label != ?
                         ORDER BY d.id
+                        LIMIT ? OFFSET ?
                         "#
                     )
                 }
@@ -694,6 +706,7 @@ impl<'a> SearchQueryTask<'a> {
                     JOIN dict_words d ON f.dict_word_id = d.id
                     WHERE f.definition_plain LIKE ?
                     ORDER BY d.id
+                    LIMIT ? OFFSET ?
                     "#
                 )
             };
@@ -702,10 +715,14 @@ impl<'a> SearchQueryTask<'a> {
                 sql_query(&fts_query)
                     .bind::<Text, _>(&like_pattern)
                     .bind::<Text, _>(source_val)
+                    .bind::<BigInt, _>(query_limit)
+                    .bind::<BigInt, _>(query_offset)
                     .load(db_conn)?
             } else {
                 sql_query(&fts_query)
                     .bind::<Text, _>(&like_pattern)
+                    .bind::<BigInt, _>(query_limit)
+                    .bind::<BigInt, _>(query_offset)
                     .load(db_conn)?
             };
 
