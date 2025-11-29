@@ -173,7 +173,7 @@ impl SearchResult {
             uid: word.uid.to_string(),
             schema_name: "appdata".to_string(), // FIXME: implement later
             table_name: "dict_words".to_string(), // TODO: can we get the table name from diesel?
-            source_uid: word.source_uid.clone(),
+            source_uid: Some(word.dict_label.clone()),
             title: word.word.clone(),
             sutta_ref: None,
             nikaya: None,

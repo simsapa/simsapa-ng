@@ -9,7 +9,6 @@ diesel::table! {
         word -> Text,
         word_ascii -> Text,
         language -> Nullable<Text>,
-        source_uid -> Nullable<Text>,
         word_nom_sg -> Nullable<Text>,
         inflections -> Nullable<Text>,
         phonetic -> Nullable<Text>,

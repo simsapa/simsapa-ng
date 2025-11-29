@@ -22,7 +22,6 @@ CREATE TABLE dict_words (
     word VARCHAR NOT NULL,
     word_ascii VARCHAR NOT NULL,
     language VARCHAR,
-    source_uid VARCHAR,
     word_nom_sg VARCHAR,
     inflections VARCHAR,
     phonetic VARCHAR,
