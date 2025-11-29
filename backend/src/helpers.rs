@@ -1263,6 +1263,15 @@ pub fn compact_rich_text(text: &str) -> String {
     compact_plain_text(&s)
 }
 
+pub fn sutta_html_to_plain_text(html: &str) -> String {
+    // Remove <header> element so that nikāya names etc. are not included in the fulltext index.
+    lazy_static! {
+        static ref RE_HEADER: Regex = Regex::new(r"<header(.*?)</header>").unwrap();
+    }
+    let s = RE_HEADER.replace(html, "").to_string();
+    compact_rich_text(&s)
+}
+
 /// Strip HTML tags, scripts, styles, comments, and decode entities.
 pub fn strip_html(text: &str) -> String {
     lazy_static! {

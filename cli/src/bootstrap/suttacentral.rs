@@ -10,7 +10,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 use crate::bootstrap::SuttaImporter;
 use simsapa_backend::helpers::{
-    consistent_niggahita, pali_to_ascii, compact_rich_text,
+    consistent_niggahita, pali_to_ascii, sutta_html_to_plain_text,
     html_get_sutta_page_body, bilara_html_post_process, bilara_text_to_html,
 };
 use simsapa_backend::db::appdata_models::{NewSutta, NewSuttaVariant, NewSuttaComment};
@@ -536,7 +536,7 @@ fn html_text_to_sutta(doc: &Value, title: &str) -> Result<SuttaCentralData> {
     let content_html = format!(r#"<div class="suttacentral html-text">{}</div>"#, body);
 
     // Generate plain text for indexing
-    let content_plain = compact_rich_text(&content_html);
+    let content_plain = sutta_html_to_plain_text(&content_html);
 
     // Calculate metadata
     let sutta_ref = uid_to_ref(&uid_base);
@@ -597,7 +597,7 @@ fn bilara_text_to_sutta(
         let html = bilara_html_post_process(&html);
         let html = consistent_niggahita(Some(html));
         let html_wrapped = format!(r#"<div class="suttacentral bilara-text">{}</div>"#, html);
-        let plain = compact_rich_text(&html_wrapped);
+        let plain = sutta_html_to_plain_text(&html_wrapped);
         (html_wrapped, plain)
     } else {
         // No template available - parse JSON and join values

@@ -5,7 +5,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use regex::Regex;
 
 use simsapa_backend::db::appdata_schema::suttas;
-use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, compact_rich_text, dhp_chapter_ref_for_verse_num, thig_verse_to_uid};
+use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, sutta_html_to_plain_text, dhp_chapter_ref_for_verse_num, thig_verse_to_uid};
 use simsapa_backend::logger;
 
 use crate::bootstrap::SuttaImporter;
@@ -201,7 +201,7 @@ impl BuddhaUjjaImporter {
             sutta_ref, title, content_main, copyright_html, license_html
         );
 
-        let content_plain = compact_rich_text(&content_html);
+        let content_plain = sutta_html_to_plain_text(&content_html);
 
         // Apply consistent niggahita to titles
         let title = consistent_niggahita(Some(title));

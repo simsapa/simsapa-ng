@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use scraper::{Html, Selector};
 use simsapa_backend::db::appdata_schema::suttas;
 use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
-use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text, pali_to_ascii};
+use simsapa_backend::helpers::{consistent_niggahita, sutta_html_to_plain_text, pali_to_ascii};
 use std::path::{Path, PathBuf};
 use std::fs;
 use regex::Regex;
@@ -94,7 +94,7 @@ impl DhammapadaMunindoImporter {
 
         let title_clean = consistent_niggahita(Some(title.clone()));
         let title_ascii = pali_to_ascii(Some(&title_clean));
-        let content_plain = compact_rich_text(&content_html);
+        let content_plain = sutta_html_to_plain_text(&content_html);
 
         let sutta_ref = uid_to_ref(&ref_str);
         let nikaya = uid_to_nikaya(&ref_str);

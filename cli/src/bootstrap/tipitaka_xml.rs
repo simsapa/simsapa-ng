@@ -3,7 +3,7 @@ use diesel::sqlite::SqliteConnection;
 use std::path::{Path, PathBuf};
 
 use crate::bootstrap::helpers::uid_to_ref;
-use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
+use simsapa_backend::helpers::{consistent_niggahita, sutta_html_to_plain_text};
 use simsapa_backend::logger;
 use html_escape;
 
@@ -509,7 +509,7 @@ pub fn build_suttas(
         )));
 
         // Extract plain text
-        let normalized_content_plain = compact_rich_text(&content_html);
+        let normalized_content_plain = sutta_html_to_plain_text(&content_html);
 
         // Build sutta record
         let sutta = SuttaRecord {

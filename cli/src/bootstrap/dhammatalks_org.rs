@@ -9,7 +9,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use simsapa_backend::logger;
 
 use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
-use simsapa_backend::helpers::{consistent_niggahita, compact_rich_text};
+use simsapa_backend::helpers::{consistent_niggahita, sutta_html_to_plain_text};
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 use crate::bootstrap::SuttaData;
 
@@ -219,7 +219,7 @@ impl DhammatalksSuttaImporter {
         let content_html = consistent_niggahita(Some(content_html));
         let content_html = format!("<div class=\"dhammatalks_org\">{}</div>", content_html);
 
-        let content_plain = compact_rich_text(&content_html);
+        let content_plain = sutta_html_to_plain_text(&content_html);
 
         Ok(SuttaData {
             uid,

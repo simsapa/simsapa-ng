@@ -6,7 +6,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use pulldown_cmark::{Parser, html, Options};
 
 use simsapa_backend::db::appdata_schema::suttas;
-use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, compact_rich_text};
+use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, sutta_html_to_plain_text};
 use simsapa_backend::logger;
 
 use crate::bootstrap::SuttaImporter;
@@ -83,7 +83,7 @@ impl NyanadipaImporter {
         let title = consistent_niggahita(Some(title));
         let title_ascii = pali_to_ascii(Some(&title));
         let content_html = consistent_niggahita(Some(html_output));
-        let content_plain = compact_rich_text(&content_html);
+        let content_plain = sutta_html_to_plain_text(&content_html);
 
         Ok(SuttaData {
             source_uid: source_uid.to_string(),
