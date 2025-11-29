@@ -103,7 +103,7 @@ ColumnLayout {
                     }
                 }
 
-                Row {
+                RowLayout {
                     spacing: 10
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
@@ -116,7 +116,7 @@ ColumnLayout {
                         font.pointSize: root.font_point_size
                         font.bold: delegate_item.is_selected
                         color: delegate_item.is_selected ? palette.highlightedText : palette.text
-                        width: 50
+                        Layout.preferredWidth: 50
                     }
 
                     Text {
@@ -133,7 +133,7 @@ ColumnLayout {
                         font.bold: delegate_item.is_selected
                         color: delegate_item.is_selected ? palette.highlightedText : palette.text
                         horizontalAlignment: Text.AlignRight
-                        width: 80
+                        Layout.preferredWidth: 80
                         visible: root.show_count_column && delegate_item.lang_count !== ""
                     }
                 }
@@ -172,7 +172,7 @@ ColumnLayout {
     // Internal function to parse language input text
     function parse_language_input() {
         const text = language_input.text.toLowerCase().trim();
-        if (text === "" || text === "*") {
+        if (text === "") {
             return [];
         }
         return text.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');

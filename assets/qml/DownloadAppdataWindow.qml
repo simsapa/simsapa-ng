@@ -38,7 +38,7 @@ ApplicationWindow {
         // Parse init languages and set selected_languages
         if (init_add_languages !== "") {
             language_list_selector.language_input.text = init_add_languages;
-            language_list_selector.sync_selection_from_input();
+            root.sync_selection_from_input();
         }
 
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
@@ -85,7 +85,7 @@ ApplicationWindow {
 
     function parse_language_input() {
         const text = language_list_selector.language_input.text.toLowerCase().trim();
-        if (text === "" || text === "*") {
+        if (text === "") {
             return [];
         }
         return text.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
@@ -128,7 +128,7 @@ ApplicationWindow {
         // Check that all entered language codes are available.
         const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
 
-        if (lang_input !== "" && lang_input !== "*") {
+        if (lang_input !== "") {
             const selected_langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
 
             // Build available languages map
@@ -185,17 +185,9 @@ ApplicationWindow {
         const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
         let selected_langs = [];
 
-        if (lang_input !== "" && lang_input !== "*") {
+        if (lang_input !== "") {
             const langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
             selected_langs = langs.filter(lang => !['en', 'pli', 'san'].includes(lang));
-        } else if (lang_input === "*") {
-            // Get all available language codes
-            for (let i = 0; i < root.available_languages.length; i++) {
-                const parts = root.available_languages[i].split('|');
-                if (parts.length === 2) {
-                    selected_langs.push(parts[0]);
-                }
-            }
         }
 
         // Add URLs for selected languages
@@ -206,7 +198,7 @@ ApplicationWindow {
         }
 
         /* logger.log("Show progress bar"); */
-        progress_bar.visible = true;
+        download_progress_frame.visible = true;
 
         manager.download_urls_and_extract(urls, root.is_initial_setup);
     }
@@ -264,8 +256,8 @@ ApplicationWindow {
                             }
                             text: `
 <style>p { text-align: center; }</style>
-<p>If you need to remove the database, such as after a failed or partial download, read the instructions at:</p>
-<p><a href="https://simsapa.github.io/install/uninstall/">https://simsapa.github.io/install/uninstall/</a></p>
+<p>See the feature demos for getting started:</p>
+<p><a href="https://simsapa.github.io/">https://simsapa.github.io/</a></p>
 `
 
                             // https://blog.shantanu.io/2015/02/15/creating-working-hyperlinks-in-qtquick-text/
@@ -352,8 +344,8 @@ ApplicationWindow {
                             onLinkActivated: function(link) { Qt.openUrlExternally(link); }
                             text: `
 <style>p { text-align: center; }</style>
-<p>If you need to remove the database, such as after a failed or partial download, read the instructions at:</p>
-<p><a href="https://simsapa.github.io/install/uninstall/">https://simsapa.github.io/install/uninstall/</a></p>
+<p>See the feature demos for getting started:</p>
+<p><a href="https://simsapa.github.io/">https://simsapa.github.io/</a></p>
 `
 
                             MouseArea {
@@ -394,7 +386,7 @@ ApplicationWindow {
                             model: root.available_languages
                             selected_languages: root.selected_languages
                             section_title: "Include Languages"
-                            instruction_text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
+                            instruction_text: "Type language codes below, or click to select/unselect."
                             placeholder_text: "E.g.: it, fr, pt, th"
                             available_label: "Available languages (click to select):"
                             show_count_column: true
@@ -407,7 +399,7 @@ ApplicationWindow {
                             Component.onCompleted: {
                                 // Initialize with existing selection
                                 if (root.init_add_languages !== "") {
-                                    sync_selection_from_input();
+                                    root.sync_selection_from_input();
                                 }
                             }
                         }

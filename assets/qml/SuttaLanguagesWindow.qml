@@ -53,7 +53,7 @@ ApplicationWindow {
         function onDownloadsCompleted(success: bool) {
             root.is_downloading = false;
             if (success) {
-                completion_message.text = "Language downloads have completed successfully.\n\nThe application will need to restart to use the new languages.";
+                completion_message.text = "Languages have been successfully imported.\n\nQuit and start the application again.";
                 views_stack.currentIndex = 2;
             }
         }
@@ -69,7 +69,7 @@ ApplicationWindow {
 
         function onRemovalCompleted(success: bool, error_msg: string) {
             if (success) {
-                completion_message.text = "Languages have been successfully removed from the database.\n\nThe application will now quit. Please restart to apply changes.";
+                completion_message.text = "Languages have been successfully removed.\n\nQuit and start the application again.";
                 views_stack.currentIndex = 2;
             } else {
                 error_dialog.error_message = error_msg || "Failed to remove languages. Please check the application logs for details.";
@@ -192,7 +192,7 @@ ApplicationWindow {
                             }
 
                             Label {
-                                text: "Select additional language translations to download. You can download the same language again to update to the latest version."
+                                text: "Select additional language translations to download."
                                 font.pointSize: root.pointSize
                                 wrapMode: Text.WordWrap
                                 Layout.fillWidth: true
@@ -211,8 +211,8 @@ ApplicationWindow {
                                 Layout.fillWidth: true
                                 model: root.available_languages
                                 section_title: "Select Languages to Download"
-                                instruction_text: "Type language codes below, or click languages to select/unselect them."
-                                placeholder_text: "E.g.: de, fr, es"
+                                instruction_text: "Type language codes below, or click to select/unselect."
+                                placeholder_text: "E.g.: it, fr, pt, th"
                                 available_label: "Available languages (click to select):"
                                 show_count_column: true
                                 font_point_size: root.pointSize
@@ -239,21 +239,6 @@ ApplicationWindow {
                                 font.bold: true
                             }
 
-                            Label {
-                                text: "Remove language databases you no longer need to free disk space."
-                                font.pointSize: root.pointSize
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                            }
-
-                            Label {
-                                text: "Note: English and Pāli cannot be removed as they are core languages required by the application."
-                                font.pointSize: root.pointSize
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                                color: palette.mid
-                            }
-
                             LanguageListSelector {
                                 id: removal_selector
                                 Layout.fillWidth: true
@@ -264,8 +249,8 @@ ApplicationWindow {
                                     });
                                 }
                                 section_title: "Select Languages to Remove"
-                                instruction_text: "Type language codes below, or click languages to select/unselect them."
-                                placeholder_text: "E.g.: de, fr, es"
+                                instruction_text: "Type language codes below, or click to select/unselect."
+                                placeholder_text: "E.g.: it, fr, pt, th"
                                 available_label: "Installed languages (click to select):"
                                 show_count_column: true
                                 font_point_size: root.pointSize
@@ -395,7 +380,7 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
 
                     Button {
-                        text: "Quit Application"
+                        text: "Quit"
                         font.pointSize: root.pointSize
                         onClicked: {
                             Qt.quit();
