@@ -745,7 +745,8 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
     // Execute DPD FTS5 indexes SQL script using sqlite3 CLI
     // FIXME: This is OK during the boostrap procedure but we can't rely on sqlite3 when the user migrates a newly downloaded DPD db.
     info("Executing DPD FTS5 indexes script using sqlite3 CLI...");
-    let fts5_script_path = std::path::PathBuf::from("scripts/dpd-fts5-indexes.sql");
+    // Path is relative to cli/ module folder
+    let fts5_script_path = std::path::PathBuf::from("../scripts/dpd-fts5-indexes.sql");
 
     if let Err(e) = crate::helpers::run_fts5_indexes_sql_script(dpd_db_path, &fts5_script_path) {
         return Err(diesel::result::Error::DatabaseError(

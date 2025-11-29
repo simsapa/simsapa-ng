@@ -362,10 +362,15 @@ RELEASE_CHANNEL=development
 
     logger::info("=== Copy languages.json to assets/ ===");
 
-    // Copy languages.json from release_dir to the project's assets/ folder
+    // Copy languages.json from release_dir to the Simsapa project's assets/ folder
     let languages_json_src = release_dir.join("languages.json");
-    let project_assets_dir = simsapa_dir.parent()
-        .context("Failed to get project root directory")?
+
+    // Use CARGO_MANIFEST_DIR to get the cli/ directory, then go up one level to project root
+    let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR")
+        .context("CARGO_MANIFEST_DIR environment variable not set")?;
+    let project_assets_dir = PathBuf::from(cargo_manifest_dir)
+        .parent()
+        .context("Failed to get project root directory from CARGO_MANIFEST_DIR")?
         .join("assets");
     let languages_json_dst = project_assets_dir.join("languages.json");
 

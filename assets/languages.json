@@ -1,1 +1,247 @@
-[]
+[
+  {
+    "code": "af",
+    "name": "Afrikaans",
+    "sutta_count": 76
+  },
+  {
+    "code": "ar",
+    "name": "اَلْعَرَبِيَّةُ",
+    "sutta_count": 4
+  },
+  {
+    "code": "bn",
+    "name": "বাংলা",
+    "sutta_count": 4066
+  },
+  {
+    "code": "ca",
+    "name": "Català",
+    "sutta_count": 554
+  },
+  {
+    "code": "cs",
+    "name": "Čeština",
+    "sutta_count": 333
+  },
+  {
+    "code": "de",
+    "name": "Deutsch",
+    "sutta_count": 9043
+  },
+  {
+    "code": "es",
+    "name": "Español",
+    "sutta_count": 2373
+  },
+  {
+    "code": "et",
+    "name": "Eesti keel",
+    "sutta_count": 26
+  },
+  {
+    "code": "fa",
+    "name": "فارسی",
+    "sutta_count": 1
+  },
+  {
+    "code": "fi",
+    "name": "Suomi",
+    "sutta_count": 12
+  },
+  {
+    "code": "fr",
+    "name": "Français",
+    "sutta_count": 1768
+  },
+  {
+    "code": "gsw",
+    "name": "Züridütsch",
+    "sutta_count": 2
+  },
+  {
+    "code": "gu",
+    "name": "ગુજરાતી",
+    "sutta_count": 9
+  },
+  {
+    "code": "haw",
+    "name": "ʻŌlelo Hawaiʻi",
+    "sutta_count": 2
+  },
+  {
+    "code": "he",
+    "name": "עִבְֿרִיתּ",
+    "sutta_count": 90
+  },
+  {
+    "code": "hi",
+    "name": "हिन्दी",
+    "sutta_count": 194
+  },
+  {
+    "code": "hr",
+    "name": "Hrvatski",
+    "sutta_count": 11
+  },
+  {
+    "code": "hu",
+    "name": "Magyar",
+    "sutta_count": 473
+  },
+  {
+    "code": "id",
+    "name": "Bahasa Indonesia",
+    "sutta_count": 4296
+  },
+  {
+    "code": "it",
+    "name": "Italiano",
+    "sutta_count": 1379
+  },
+  {
+    "code": "jpn",
+    "name": "日本語",
+    "sutta_count": 5461
+  },
+  {
+    "code": "kan",
+    "name": "ಕನ್ನಡ",
+    "sutta_count": 134
+  },
+  {
+    "code": "ko",
+    "name": "한국어/조선말",
+    "sutta_count": 29
+  },
+  {
+    "code": "la",
+    "name": "Latine",
+    "sutta_count": 27
+  },
+  {
+    "code": "lo",
+    "name": "ລາວ",
+    "sutta_count": 2
+  },
+  {
+    "code": "lt",
+    "name": "Lietuvių Kalba",
+    "sutta_count": 313
+  },
+  {
+    "code": "lzh",
+    "name": "Chinese",
+    "sutta_count": 3038
+  },
+  {
+    "code": "mr",
+    "name": "मराठी",
+    "sutta_count": 26
+  },
+  {
+    "code": "my",
+    "name": "မြန်မာဘာသာ",
+    "sutta_count": 3698
+  },
+  {
+    "code": "nl",
+    "name": "Nederlands",
+    "sutta_count": 518
+  },
+  {
+    "code": "no",
+    "name": "Norsk",
+    "sutta_count": 2717
+  },
+  {
+    "code": "pgd",
+    "name": "Gāndhārī",
+    "sutta_count": 34
+  },
+  {
+    "code": "pl",
+    "name": "Polski",
+    "sutta_count": 135
+  },
+  {
+    "code": "pra",
+    "name": "Prākrit",
+    "sutta_count": 22
+  },
+  {
+    "code": "pt",
+    "name": "Português",
+    "sutta_count": 1917
+  },
+  {
+    "code": "ro",
+    "name": "Română",
+    "sutta_count": 26
+  },
+  {
+    "code": "ru",
+    "name": "Русский",
+    "sutta_count": 4210
+  },
+  {
+    "code": "si",
+    "name": "සිංහල",
+    "sutta_count": 5459
+  },
+  {
+    "code": "sk",
+    "name": "Slovenčina",
+    "sutta_count": 1
+  },
+  {
+    "code": "sl",
+    "name": "Slovenščina",
+    "sutta_count": 258
+  },
+  {
+    "code": "sld",
+    "name": "Saarländisch",
+    "sutta_count": 2
+  },
+  {
+    "code": "sr",
+    "name": "Srpski",
+    "sutta_count": 605
+  },
+  {
+    "code": "sv",
+    "name": "Svenska",
+    "sutta_count": 78
+  },
+  {
+    "code": "ta",
+    "name": "தமிழ்",
+    "sutta_count": 112
+  },
+  {
+    "code": "th",
+    "name": "ไทย",
+    "sutta_count": 3238
+  },
+  {
+    "code": "tr",
+    "name": "Türkçe",
+    "sutta_count": 128
+  },
+  {
+    "code": "vi",
+    "name": "Tiếng Việt",
+    "sutta_count": 6665
+  },
+  {
+    "code": "xct",
+    "name": "Tibetan",
+    "sutta_count": 51
+  },
+  {
+    "code": "zh",
+    "name": "汉语",
+    "sutta_count": 3464
+  }
+]

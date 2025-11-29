@@ -119,7 +119,7 @@ void start(int argc, char* argv[]) {
     free_rust_string(desktop_file_path);
   }
 
-  app.setApplicationVersion("v0.1.5");
+  app.setApplicationVersion("v0.1.6");
 
   // app_windows = AppWindows(app, app_data, hotkeys_manager, enable_tray_icon)
 
