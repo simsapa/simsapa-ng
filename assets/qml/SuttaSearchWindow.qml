@@ -873,11 +873,14 @@ ${query_text}`;
                             anchors.top: parent.top
                             anchors.left: parent.left
                             anchors.right: parent.right
+                            height: suttas_tab_bar.height
                             spacing: 0
 
                             TabBar {
                                 id: suttas_tab_bar
                                 Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                Layout.alignment: Qt.AlignBottom
 
                                 function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
                                     /* logger.log("tab_focus_changed()", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key); */
@@ -1076,8 +1079,8 @@ ${query_text}`;
                             Button {
                                 id: tab_overflow_btn
                                 icon.source: "icons/32x32/mdi--menu.png"
-                                Layout.preferredWidth: 32
-                                Layout.preferredHeight: 32
+                                Layout.preferredWidth: 28
+                                Layout.preferredHeight: 28 // 32 x 32 creates a gap under the tabs
                                 flat: true
                                 visible: tabs_flickable.contentWidth > tabs_flickable.width
                                 onClicked: tab_list_dialog.open()
