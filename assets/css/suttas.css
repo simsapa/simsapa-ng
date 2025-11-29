@@ -76,6 +76,36 @@
   font-weight: 700;
   src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Ezra SIL";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/ezra-sil/SILEOT.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-BoldItalic.ttf") format("truetype");
+}
 html, body {
   height: 100%;
   color: #1a1a1a;
@@ -1104,4 +1134,18 @@ body.dark .find-error {
 .gretil > footer {
   padding-top: 4em;
   font-size: 14px;
+}
+
+body.lang-he {
+  font-family: "Ezra SIL", serif;
+}
+body.lang-he h1, body.lang-he h2, body.lang-he h3, body.lang-he h4, body.lang-he h5, body.lang-he h6 {
+  font-family: "Ezra SIL", serif;
+}
+
+body.lang-th {
+  font-family: "Sarabun", sans-serif;
+}
+body.lang-th h1, body.lang-th h2, body.lang-th h3, body.lang-th h4, body.lang-th h5, body.lang-th h6 {
+  font-family: "Sarabun", sans-serif;
 }

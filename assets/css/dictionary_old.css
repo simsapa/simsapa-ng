@@ -76,6 +76,36 @@
   font-weight: 700;
   src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Ezra SIL";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/ezra-sil/SILEOT.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-BoldItalic.ttf") format("truetype");
+}
 html, body {
   height: 100%;
   color: #1a1a1a;
@@ -594,6 +624,36 @@ div.btn a, span.btn a {
   font-style: italic;
   font-weight: 700;
   src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Ezra SIL";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/ezra-sil/SILEOT.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Italic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Sarabun";
+  font-style: italic;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-BoldItalic.ttf") format("truetype");
 }
 .pali-word html, .pali-word body {
   height: 100%;

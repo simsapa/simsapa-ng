@@ -201,13 +201,21 @@ impl AppData {
             js_extra.push_str(&format!(r#" document.addEventListener("DOMContentLoaded", function(event) {{ highlight_and_scroll_to("{}"); }}); const SHOW_QUOTE = "{}";"#, escaped_text, escaped_text));
         }
 
+        // Build body_class with theme and language
+        let mut body_class = self.get_theme_name();
+
+        // Add language-specific class (e.g., lang-he for Hebrew, lang-th for Thai)
+        if !sutta.language.is_empty() {
+            body_class.push_str(&format!(" lang-{}", sutta.language));
+        }
+
         // Wrap content in the full HTML page structure
         let final_html = sutta_html_page(
             &content_html_body,
             Some(self.api_url.to_string()),
             Some(css_extra.to_string()),
             Some(js_extra.to_string()),
-            Some(self.get_theme_name()),
+            Some(body_class),
         );
 
         Ok(final_html)
