@@ -171,6 +171,9 @@ ApplicationWindow {
 
         // self._last_query_time = datetime.now()
 
+        // When the user continues searching, show the results panel
+        show_sidebar_btn.checked = true;
+
         // self._queries.start_search_query_workers()
         root.start_search_query_workers(
             query_text,
