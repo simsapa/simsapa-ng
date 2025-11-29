@@ -623,14 +623,38 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
+        // Query the FTS table to get headword IDs efficiently
+        #[derive(QueryableByName)]
+        struct HeadwordId {
+            #[diesel(sql_type = diesel::sql_types::Integer)]
+            headword_id: i32,
+        }
+
         // Phase 2: Contains matches on DpdHeadword.lemma_1
-        // dpd.lemma_1 has fts5 trigram index
+        // Use dpd_headwords_fts with trigram tokenizer for efficient substring matching
         for term in &terms {
+            let like_pattern = format!("%{}%", term);
+
+            let fts_query = String::from(
+                r#"
+                SELECT headword_id
+                FROM dpd_headwords_fts
+                WHERE lemma_1 LIKE ?
+                ORDER BY headword_id
+                LIMIT ? OFFSET ?
+                "#
+            );
+
+            let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<BigInt, _>(query_limit)
+                .bind::<BigInt, _>(query_offset)
+                .load::<HeadwordId>(dpd_conn)?;
+
+            // Fetch full DpdHeadword records using the IDs
+            let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
             let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
-                .order(dpd_dsl::id)
-                .limit(query_limit)
-                .offset(query_offset)
+                .filter(dpd_dsl::id.eq_any(&ids))
                 .load::<DpdHeadword>(dpd_conn)?;
 
             // Sort by lemma_1 length in ascending order (shorter lemmas first)
