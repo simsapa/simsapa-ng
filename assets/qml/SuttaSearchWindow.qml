@@ -875,203 +875,203 @@ ${query_text}`;
                             anchors.right: parent.right
                             spacing: 0
 
-                        TabBar {
-                            id: suttas_tab_bar
-                            Layout.fillWidth: true
+                            TabBar {
+                                id: suttas_tab_bar
+                                Layout.fillWidth: true
 
-                            function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
-                                /* logger.log("tab_focus_changed()", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key); */
-                                if (!tab.focus) return;
-                                // If this tab doesn't have a webview associated yet, create it.
-                                if (tab.web_item_key == "") {
-                                    let key = root.generate_key();
-                                    tab.web_item_key = key;
-
-                                    // Update the key in both the model and the tab's property
-                                    if (tab_model.count > tab.index) {
-                                        let tab_data = tab_model.get(tab.index);
-                                        tab_data.web_item_key = key;
-                                        tab_model.set(tab.index, tab_data);
+                                function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
+                                    /* logger.log("tab_focus_changed()", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key); */
+                                    if (!tab.focus) return;
+                                    // If this tab doesn't have a webview associated yet, create it.
+                                    if (tab.web_item_key == "") {
+                                        let key = root.generate_key();
                                         tab.web_item_key = key;
-                                        sutta_html_view_layout.add_item(tab_data);
-                                    } else {
-                                        logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
-                                    }
-                                }
-                                // show the sutta tab
-                                sutta_html_view_layout.current_key = tab.web_item_key;
 
-                                // Scroll the focused tab into view
-                                suttas_tab_bar.scroll_tab_into_view(tab);
-                            }
-
-                            function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
-                                /* logger.log("remove_tab_and_webview()", tab.index, tab.item_uid, tab.web_item_key); */
-                                // Remove the tab and webview, focus the next or the previous
-                                let old_idx = tab.index;
-                                let old_web_item_key = tab_model.get(old_idx).web_item_key;
-
-                                var focus_tab_data = null;
-
-                                if (tab_model.count == 1) {
-                                    // If this is the last item in the model, focus back on the 0 idx item of results
-                                    focus_tab_data = tabs_results_model.get(0);
-                                } else if (tab.activeFocusOnTab) {
-                                    // FIXME: This check doesn't work. The tab gains focus because of the click on the close button?
-
-                                    // If tab being removed has focus, move on to the next tab, or the previous.
-                                    // If the tab is not focused, the user is closing another (unfocused) tab, and we don't need to manipulate tab focus.
-                                    let focus_idx;
-                                    if (tab_model.count-1 > old_idx) {
-                                        // If there is a next one
-                                        focus_idx = old_idx+1;
-                                    } else {
-                                        focus_idx = old_idx-1;
-                                    }
-                                    focus_tab_data = tab_model.get(focus_idx);
-                                }
-
-                                // Focus on the other tab, change the html view, delete this webview
-                                if (focus_tab_data) {
-                                    root.focus_on_tab_with_id_key(focus_tab_data.id_key);
-                                    // Show the other tab's webview
-                                    sutta_html_view_layout.current_key = focus_tab_data.web_item_key;
-                                }
-
-                                // If the tab has never been focused, its web_item_key is "" and there is no associated webview.
-                                if (old_web_item_key !== "") {
-                                    // Remove the webview of this tab
-                                    sutta_html_view_layout.delete_item(old_web_item_key);
-                                }
-
-                                // Remove this tab item
-                                tab_model.remove(tab.index);
-                            }
-
-                            function scroll_tab_into_view(tab: SuttaTabButton) {
-                                if (!tab) return;
-
-                                // Get tab position relative to the flickable
-                                let tab_x = tab.x;
-                                let tab_width = tab.width;
-
-                                // Calculate the visible area in the flickable
-                                let visible_left = tabs_flickable.contentX;
-                                let visible_right = visible_left + tabs_flickable.width;
-
-                                // Check if tab is fully visible
-                                if (tab_x < visible_left) {
-                                    // Tab is to the left of visible area, scroll left
-                                    tabs_flickable.contentX = tab_x;
-                                } else if (tab_x + tab_width > visible_right) {
-                                    // Tab is to the right of visible area, scroll right
-                                    tabs_flickable.contentX = tab_x + tab_width - tabs_flickable.width;
-                                }
-                            }
-
-                            contentItem: Flickable {
-                                id: tabs_flickable
-                                clip: true
-                                contentWidth: tabs_row.implicitWidth
-                                contentHeight: tabs_row.implicitHeight
-
-                                flickableDirection: Flickable.HorizontalFlick
-                                boundsBehavior: Flickable.StopAtBounds
-
-                            RowLayout {
-                                id: tabs_row
-                                spacing: 0
-                                height: parent.height
-
-                                Repeater {
-                                    id: tabs_pinned
-                                    model: tabs_pinned_model
-                                    delegate: SuttaTabButton {
-                                        id: pinned_tab_btn
-                                        onPinToggled: function (pinned) {
-                                            // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
-                                            if (pinned) return;
-                                            // Unpin and move back to results group
-                                            let old_tab_data = tabs_pinned_model.get(pinned_tab_btn.index);
-                                            let new_tab_data = root.new_tab_data(old_tab_data, false, true, root.generate_key(), old_tab_data.web_item_key);
-                                            tabs_results_model.append(new_tab_data);
-                                            tabs_pinned_model.remove(pinned_tab_btn.index)
-                                            root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                        // Update the key in both the model and the tab's property
+                                        if (tab_model.count > tab.index) {
+                                            let tab_data = tab_model.get(tab.index);
+                                            tab_data.web_item_key = key;
+                                            tab_model.set(tab.index, tab_data);
+                                            tab.web_item_key = key;
+                                            sutta_html_view_layout.add_item(tab_data);
+                                        } else {
+                                            logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
                                         }
-                                        onCloseClicked: suttas_tab_bar.remove_tab_and_webview(pinned_tab_btn, tabs_pinned_model)
-                                        onFocusChanged: suttas_tab_bar.tab_focus_changed(pinned_tab_btn, tabs_pinned_model)
+                                    }
+                                    // show the sutta tab
+                                    sutta_html_view_layout.current_key = tab.web_item_key;
+
+                                    // Scroll the focused tab into view
+                                    suttas_tab_bar.scroll_tab_into_view(tab);
+                                }
+
+                                function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
+                                    /* logger.log("remove_tab_and_webview()", tab.index, tab.item_uid, tab.web_item_key); */
+                                    // Remove the tab and webview, focus the next or the previous
+                                    let old_idx = tab.index;
+                                    let old_web_item_key = tab_model.get(old_idx).web_item_key;
+
+                                    var focus_tab_data = null;
+
+                                    if (tab_model.count == 1) {
+                                        // If this is the last item in the model, focus back on the 0 idx item of results
+                                        focus_tab_data = tabs_results_model.get(0);
+                                    } else if (tab.activeFocusOnTab) {
+                                        // FIXME: This check doesn't work. The tab gains focus because of the click on the close button?
+
+                                        // If tab being removed has focus, move on to the next tab, or the previous.
+                                        // If the tab is not focused, the user is closing another (unfocused) tab, and we don't need to manipulate tab focus.
+                                        let focus_idx;
+                                        if (tab_model.count-1 > old_idx) {
+                                            // If there is a next one
+                                            focus_idx = old_idx+1;
+                                        } else {
+                                            focus_idx = old_idx-1;
+                                        }
+                                        focus_tab_data = tab_model.get(focus_idx);
+                                    }
+
+                                    // Focus on the other tab, change the html view, delete this webview
+                                    if (focus_tab_data) {
+                                        root.focus_on_tab_with_id_key(focus_tab_data.id_key);
+                                        // Show the other tab's webview
+                                        sutta_html_view_layout.current_key = focus_tab_data.web_item_key;
+                                    }
+
+                                    // If the tab has never been focused, its web_item_key is "" and there is no associated webview.
+                                    if (old_web_item_key !== "") {
+                                        // Remove the webview of this tab
+                                        sutta_html_view_layout.delete_item(old_web_item_key);
+                                    }
+
+                                    // Remove this tab item
+                                    tab_model.remove(tab.index);
+                                }
+
+                                function scroll_tab_into_view(tab: SuttaTabButton) {
+                                    if (!tab) return;
+
+                                    // Get tab position relative to the flickable
+                                    let tab_x = tab.x;
+                                    let tab_width = tab.width;
+
+                                    // Calculate the visible area in the flickable
+                                    let visible_left = tabs_flickable.contentX;
+                                    let visible_right = visible_left + tabs_flickable.width;
+
+                                    // Check if tab is fully visible
+                                    if (tab_x < visible_left) {
+                                        // Tab is to the left of visible area, scroll left
+                                        tabs_flickable.contentX = tab_x;
+                                    } else if (tab_x + tab_width > visible_right) {
+                                        // Tab is to the right of visible area, scroll right
+                                        tabs_flickable.contentX = tab_x + tab_width - tabs_flickable.width;
                                     }
                                 }
 
-                                Item { Layout.preferredWidth: 5 }
+                                contentItem: Flickable {
+                                    id: tabs_flickable
+                                    clip: true
+                                    contentWidth: tabs_row.implicitWidth
+                                    contentHeight: tabs_row.implicitHeight
 
-                                Repeater {
-                                    id: tabs_results
-                                    model: tabs_results_model
-                                    delegate: SuttaTabButton {
-                                        id: results_tab_btn
-                                        onPinToggled: function (pinned) {
-                                            // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
-                                            if (!pinned) return;
-                                            // Pin and move to pinned group
-                                            let old_tab_data = tabs_results_model.get(results_tab_btn.index);
-                                            // New pinned tab will get focus.
-                                            let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
-                                            tabs_pinned_model.append(new_tab_data);
-                                            // Remove the tab data, but webview remains associated with the pinned item.
-                                            tabs_results_model.remove(results_tab_btn.index);
-                                            root.add_results_tab(root.blank_sutta_tab_data(), false);
-                                            // TODO: If this is before add_results_tab(), the new results tab gets focus, despite of focus_on_new = false.
-                                            root.focus_on_tab_with_id_key(new_tab_data.id_key);
-                                        }
-                                        onCloseClicked: {
-                                            if (tabs_results_model.count == 1) {
-                                                // If this is the only tab, don't remove it, just set it to blank
-                                                results_tab_btn.item_uid = "Sutta";
-                                                tabs_results_model.set(0, root.blank_sutta_tab_data());
-                                            } else {
-                                                suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
+                                    flickableDirection: Flickable.HorizontalFlick
+                                    boundsBehavior: Flickable.StopAtBounds
+
+                                    RowLayout {
+                                        id: tabs_row
+                                        spacing: 0
+                                        height: parent.height
+
+                                        Repeater {
+                                            id: tabs_pinned
+                                            model: tabs_pinned_model
+                                            delegate: SuttaTabButton {
+                                                id: pinned_tab_btn
+                                                onPinToggled: function (pinned) {
+                                                    // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
+                                                    if (pinned) return;
+                                                    // Unpin and move back to results group
+                                                    let old_tab_data = tabs_pinned_model.get(pinned_tab_btn.index);
+                                                    let new_tab_data = root.new_tab_data(old_tab_data, false, true, root.generate_key(), old_tab_data.web_item_key);
+                                                    tabs_results_model.append(new_tab_data);
+                                                    tabs_pinned_model.remove(pinned_tab_btn.index)
+                                                    root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                                }
+                                                onCloseClicked: suttas_tab_bar.remove_tab_and_webview(pinned_tab_btn, tabs_pinned_model)
+                                                onFocusChanged: suttas_tab_bar.tab_focus_changed(pinned_tab_btn, tabs_pinned_model)
                                             }
                                         }
-                                        onFocusChanged: suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model)
-                                        onItem_uidChanged: {
-                                            if (results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
-                                                let i = sutta_html_view_layout.get_item(results_tab_btn.web_item_key);
-                                                i.set_data_value('item_uid', results_tab_btn.item_uid);
-                                                // The title changes when an item in FulltextResults is selected,
-                                                // so focus on this tab.
-                                                results_tab_btn.click();
+
+                                        Item { Layout.preferredWidth: 5 }
+
+                                        Repeater {
+                                            id: tabs_results
+                                            model: tabs_results_model
+                                            delegate: SuttaTabButton {
+                                                id: results_tab_btn
+                                                onPinToggled: function (pinned) {
+                                                    // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
+                                                    if (!pinned) return;
+                                                    // Pin and move to pinned group
+                                                    let old_tab_data = tabs_results_model.get(results_tab_btn.index);
+                                                    // New pinned tab will get focus.
+                                                    let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
+                                                    tabs_pinned_model.append(new_tab_data);
+                                                    // Remove the tab data, but webview remains associated with the pinned item.
+                                                    tabs_results_model.remove(results_tab_btn.index);
+                                                    root.add_results_tab(root.blank_sutta_tab_data(), false);
+                                                    // TODO: If this is before add_results_tab(), the new results tab gets focus, despite of focus_on_new = false.
+                                                    root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                                }
+                                                onCloseClicked: {
+                                                    if (tabs_results_model.count == 1) {
+                                                        // If this is the only tab, don't remove it, just set it to blank
+                                                        results_tab_btn.item_uid = "Sutta";
+                                                        tabs_results_model.set(0, root.blank_sutta_tab_data());
+                                                    } else {
+                                                        suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
+                                                    }
+                                                }
+                                                onFocusChanged: suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model)
+                                                onItem_uidChanged: {
+                                                    if (results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
+                                                        let i = sutta_html_view_layout.get_item(results_tab_btn.web_item_key);
+                                                        i.set_data_value('item_uid', results_tab_btn.item_uid);
+                                                        // The title changes when an item in FulltextResults is selected,
+                                                        // so focus on this tab.
+                                                        results_tab_btn.click();
+                                                    }
+                                                }
                                             }
                                         }
-                                    }
-                                }
 
-                                Item { Layout.preferredWidth: 5 }
+                                        Item { Layout.preferredWidth: 5 }
 
-                                Repeater {
-                                    id: tabs_translations
-                                    model: tabs_translations_model
-                                    delegate: SuttaTabButton {
-                                        id: translations_tab_btn
-                                        onPinToggled: function (pinned) {
-                                            // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
-                                            if (!pinned) return;
-                                            // Pin and move to pinned group
-                                            let old_tab_data = tabs_translations_model.get(translations_tab_btn.index);
-                                            let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
-                                            tabs_pinned_model.append(new_tab_data);
-                                            tabs_translations_model.remove(translations_tab_btn.index);
-                                            root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                        Repeater {
+                                            id: tabs_translations
+                                            model: tabs_translations_model
+                                            delegate: SuttaTabButton {
+                                                id: translations_tab_btn
+                                                onPinToggled: function (pinned) {
+                                                    // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
+                                                    if (!pinned) return;
+                                                    // Pin and move to pinned group
+                                                    let old_tab_data = tabs_translations_model.get(translations_tab_btn.index);
+                                                    let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
+                                                    tabs_pinned_model.append(new_tab_data);
+                                                    tabs_translations_model.remove(translations_tab_btn.index);
+                                                    root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                                }
+                                                onCloseClicked: suttas_tab_bar.remove_tab_and_webview(translations_tab_btn, tabs_translations_model)
+                                                onFocusChanged: suttas_tab_bar.tab_focus_changed(translations_tab_btn, tabs_translations_model)
+                                            }
                                         }
-                                        onCloseClicked: suttas_tab_bar.remove_tab_and_webview(translations_tab_btn, tabs_translations_model)
-                                        onFocusChanged: suttas_tab_bar.tab_focus_changed(translations_tab_btn, tabs_translations_model)
+
+                                        Item { Layout.fillWidth: true }
                                     }
                                 }
-
-                                Item { Layout.fillWidth: true }
                             }
-                            }
-                        }
 
                             Button {
                                 id: tab_overflow_btn
