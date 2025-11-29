@@ -433,12 +433,20 @@ Item {
         return ["en", "pli", "de"];
     }
 
-    function get_sutta_language_filter_index(): int {
-        return 0;
+    function get_sutta_language_labels_with_counts(): list<string> {
+        return ["en|English|1000", "pli|Pāli|1500", "de|Deutsch|500"];
     }
 
-    function set_sutta_language_filter_index(index: int) {
-        console.log("set_sutta_language_filter_index():", index);
+    function get_sutta_language_filter_key(): string {
+        return "Language";
+    }
+
+    function set_sutta_language_filter_key(key: string) {
+        console.log("set_sutta_language_filter_key():", key);
+    }
+
+    function open_sutta_languages_window() {
+        console.log("open_sutta_languages_window()");
     }
 
     Item {

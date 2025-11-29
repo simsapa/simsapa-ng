@@ -151,13 +151,13 @@ ApplicationWindow {
             return;
 
         let params = root.get_search_params_from_ui();
-        let search_area = search_bar_input.search_area_dropdown.currentText;
+        let search_area = search_bar_input.search_area_dropdown.get_text();
 
         // Determine if query_text_orig is a sutta reference
         let query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
 
         if (query_text.startsWith('uid:')) {
-            params['mode'] = 'UidMatch';
+            params['mode'] = 'Uid Match';
             min_length = 7; // e.g. uid:mn8
         }
 
@@ -207,7 +207,7 @@ ApplicationWindow {
 
     function new_results_page(page_num) {
         let query = search_bar_input.search_input.text;
-        let search_area = search_bar_input.search_area_dropdown.currentText;
+        let search_area = search_bar_input.search_area_dropdown.get_text();
         let params = root.get_search_params_from_ui();
         root.results_page(query, page_num, search_area, params);
     }
@@ -225,11 +225,18 @@ ApplicationWindow {
         //     enable_regex: bool
         //     fuzzy_distance: int
 
+        const mode = search_bar_input.search_mode_dropdown.get_text();
+        const search_area = search_bar_input.search_area_dropdown.get_text();
+        let lang = search_bar_input.language_filter_dropdown.get_text();
+        // Dictionary currently only uses English language from DPD.
+        if (search_area === "Dictionary") {
+            lang = null;
+        }
+
         return {
-            mode: search_bar_input.search_mode_dropdown.currentText,
+            mode: mode,
             page_len: 10,
-            /* FIXME lang: search_bar_input.language_filter_dropdown.currentText, */
-            lang: null,
+            lang: lang,
             lang_include: true,
             source: null,
             source_include: true,
@@ -637,6 +644,16 @@ ${query_text}`;
                     }
                     onTriggered: {
                         SuttaBridge.open_sutta_search_window()
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_sutta_languages
+                    text: "Sutta Languages..."
+                    onTriggered: {
+                        SuttaBridge.open_sutta_languages_window()
                     }
                 }
             }

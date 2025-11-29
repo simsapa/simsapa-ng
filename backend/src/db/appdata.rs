@@ -243,3 +243,104 @@ fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
     results
 }
 
+impl AppdataDbHandle {
+    /// Remove suttas and related data for specific language codes
+    /// Returns true if deletion was successful
+    /// The progress_callback is called after each language is removed with (current_index, total_count, language_code)
+    pub fn remove_sutta_languages<F>(&self, language_codes: Vec<String>, mut progress_callback: F) -> Result<bool>
+    where
+        F: FnMut(usize, usize, &str),
+    {
+        use crate::db::appdata_schema;
+
+        if language_codes.is_empty() {
+            return Ok(true);
+        }
+
+        info(&format!("remove_sutta_languages(): Removing languages: {:?}", language_codes));
+
+        let total_count = language_codes.len();
+        let mut any_deleted = false;
+
+        // Process each language one by one to provide progress updates
+        for (index, lang_code) in language_codes.iter().enumerate() {
+            let current_index = index + 1;
+            info(&format!("Removing language {}/{}: {}", current_index, total_count, lang_code));
+
+            // Call progress callback BEFORE starting to remove this language
+            progress_callback(current_index, total_count, lang_code);
+
+            let result = self.do_write(|db_conn| {
+                // Delete suttas for this language
+                // SQLite automatically handles CASCADE DELETE for child tables
+                // (sutta_variants, sutta_comments, sutta_glosses) because:
+                // 1. Foreign keys have ON DELETE CASCADE in the schema
+                // 2. Foreign keys are enabled via PRAGMA foreign_keys = ON (see ConnectionCustomizer)
+                // 3. Diesel's delete() executes standard SQL DELETE which respects CASCADE
+                let suttas_deleted = diesel::delete(
+                    appdata_schema::suttas::table
+                        .filter(appdata_schema::suttas::language.eq(lang_code))
+                ).execute(db_conn)?;
+
+                info(&format!("Deleted {} suttas for language {} (child records deleted via CASCADE)", suttas_deleted, lang_code));
+
+                Ok(suttas_deleted > 0)
+            });
+
+            match result {
+                Ok(deleted) => {
+                    if deleted {
+                        any_deleted = true;
+                    }
+                    info(&format!("Successfully removed language {}", lang_code));
+                },
+                Err(e) => {
+                    error(&format!("Failed to remove language {}: {}", lang_code, e));
+                    return Err(e);
+                }
+            }
+        }
+
+        info("remove_sutta_languages(): All languages removed successfully");
+        Ok(any_deleted)
+    }
+
+    /// Get sutta languages with their counts in format "code|Name|Count"
+    /// Returns a vector of strings sorted alphabetically by language code
+    pub fn get_sutta_language_labels_with_counts(&self) -> Vec<String> {
+        use crate::db::appdata_schema;
+        use crate::lookup::LANG_CODE_TO_NAME;
+
+        let result = self.do_read(|db_conn| {
+            appdata_schema::suttas::table
+                .group_by(appdata_schema::suttas::language)
+                .select((appdata_schema::suttas::language, diesel::dsl::count(appdata_schema::suttas::id)))
+                .load::<(String, i64)>(db_conn)
+        });
+
+        match result {
+            Ok(lang_counts) => {
+                let mut labels: Vec<String> = lang_counts
+                    .into_iter()
+                    .filter(|(lang, _)| !lang.is_empty())
+                    .map(|(lang_code, count)| {
+                        let lang_name = LANG_CODE_TO_NAME
+                            .get(lang_code.as_str())
+                            .copied()
+                            .unwrap_or(&lang_code);
+                        format!("{}|{}|{}", lang_code, lang_name, count)
+                    })
+                    .collect();
+
+                // Sort alphabetically by language code
+                labels.sort();
+                labels
+            },
+            Err(e) => {
+                error(&format!("get_sutta_language_labels_with_counts(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+}
+

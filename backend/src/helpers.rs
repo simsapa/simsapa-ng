@@ -1,7 +1,8 @@
 use std::collections::{HashSet, HashMap};
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::fs;
+use std::process::Command;
 use indexmap::IndexMap;
 
 use regex::Regex;
@@ -12,7 +13,7 @@ use serde::{Serialize, Deserialize};
 
 use crate::types::{SearchResult, WordInfo, WordProcessingOptions, WordProcessingResult, ProcessedWord, UnrecognizedWord};
 use crate::lookup::*;
-use crate::logger::error;
+use crate::logger::{error, info};
 
 lazy_static! {
     // MN44; MN 118; AN 4.10; Sn 4:2; Dhp 182; Thag 1207; Vism 152
@@ -1887,6 +1888,76 @@ Exec=env QTWEBENGINE_DISABLE_SANDBOX=1 {}
 
     Ok(())
 }
+
+/// Executes FTS5 indexes SQL script using sqlite3 CLI
+///
+/// This function runs the provided SQL script against the specified database using sqlite3 CLI.
+/// We use the CLI instead of Diesel because the trigram tokenizer may not be available in Diesel SQLite.
+///
+/// This function runs the SQL script with the sqlite3 cli, it creates the fts5 index data.
+/// But executing it with a Diesel db connection from Rust, the fts5 tables are created but there is no index data in them.
+/// Perhaps the trigram tokenizer is missing from Diesel SQLite?
+///
+/// # Arguments
+/// * `db_path` - Path to the SQLite database file
+/// * `sql_script_path` - Path to the SQL script containing FTS5 index creation commands
+///
+/// # Note
+/// Make sure all database connections are closed before calling this function.
+pub fn run_fts5_indexes_sql_script(db_path: &Path, sql_script_path: &Path) -> Result<()> {
+    info(&format!("Running FTS5 indexes SQL script: {}", sql_script_path.display()));
+
+    // Check if the SQL script exists
+    if !sql_script_path.exists() {
+        return Err(anyhow::anyhow!(
+            "SQL script not found at: {}",
+            sql_script_path.display()
+        ));
+    }
+
+    // Get absolute path to the destination database
+    let db_abs_path = fs::canonicalize(db_path)
+        .with_context(|| format!("Failed to get absolute path for database: {}", db_path.display()))?;
+
+    // Execute sqlite3 CLI command with input redirection
+    let mut child = Command::new("sqlite3")
+        .arg(&db_abs_path)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .with_context(|| "Failed to spawn sqlite3 command")?;
+
+    // Read the SQL script content and write it to sqlite3's stdin
+    let sql_content = fs::read_to_string(sql_script_path)
+        .with_context(|| format!("Failed to read SQL script: {}", sql_script_path.display()))?;
+
+    if let Some(stdin) = child.stdin.take() {
+        use std::io::Write;
+        let mut stdin = stdin;
+        stdin.write_all(sql_content.as_bytes())
+            .with_context(|| "Failed to write SQL content to sqlite3 stdin")?;
+        // Close stdin to signal end of input
+        drop(stdin);
+    }
+
+    // Wait for the command to complete
+    let output = child.wait_with_output()
+        .with_context(|| "Failed to execute sqlite3 command")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow::anyhow!(
+            "sqlite3 command failed with exit code {}: {}",
+            output.status.code().unwrap_or(-1),
+            stderr
+        ));
+    }
+
+    info("Successfully created FTS5 indexes and triggers using sqlite3 CLI");
+    Ok(())
+}
+
 
 #[cfg(test)]
 mod tests {

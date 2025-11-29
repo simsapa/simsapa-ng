@@ -35,10 +35,15 @@ Frame {
         const lang_labels = SuttaBridge.get_sutta_language_labels();
         language_filter_dropdown.model = ["Language"].concat(lang_labels);
 
-        // Load saved language filter index
-        const saved_index = SuttaBridge.get_sutta_language_filter_index();
-        if (saved_index < language_filter_dropdown.model.length) {
-            language_filter_dropdown.currentIndex = saved_index;
+        // Load saved language filter key and find its index
+        const saved_key = SuttaBridge.get_sutta_language_filter_key();
+        if (saved_key) {
+            const saved_index = language_filter_dropdown.model.indexOf(saved_key);
+            if (saved_index !== -1) {
+                language_filter_dropdown.currentIndex = saved_index;
+            } else {
+                language_filter_dropdown.currentIndex = 0;
+            }
         } else {
             language_filter_dropdown.currentIndex = 0;
         }
@@ -100,6 +105,16 @@ Frame {
                     "Suttas",
                     "Dictionary",
                 ]
+
+                // NOTE: Don't use onCurrentIndexChanged to re-run the query.
+                // When the search area is changed from Suttas with Contains Match to Dictionary,
+                // the default search mode hasn't yet changed to DPD Lookup, and will send a Dictionary Contains Match
+                // query which can take a long time to process.
+
+                function get_text(): string {
+                    // Read from the model list because currentText doesn't update immediately on currentIndexChanged
+                    return model[currentIndex];
+                }
             }
 
             ComboBox {
@@ -121,6 +136,12 @@ Frame {
                         ];
                     }
                 }
+
+                onCurrentIndexChanged: root.handle_query_fn(search_input.text) // qmllint disable use-proper-function
+
+                function get_text(): string {
+                    return model[currentIndex];
+                }
             }
 
             // Button {
@@ -135,17 +156,25 @@ Frame {
 
             ComboBox {
                 id: language_filter_dropdown
-                visible: false // FIXME language filtering is not working at the moment
                 Layout.preferredHeight: 40
                 model: ["Language",]
                 enabled: search_area_dropdown.currentText === "Suttas"
                 onCurrentIndexChanged: {
                     // Save the language filter selection (only for Suttas)
                     if (search_area_dropdown.currentText === "Suttas" && enabled) {
-                        SuttaBridge.set_sutta_language_filter_index(currentIndex);
+                        // currentIndex changed but currentText have not yet updated.
+                        // Have to get the text manually from the model list.
+                        const lang_key = language_filter_dropdown.model[currentIndex];
+                        if (lang_key) {
+                            SuttaBridge.set_sutta_language_filter_key(lang_key);
+                        }
                         // Re-run search (handle_query will check text min length)
                         root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                     }
+                }
+
+                function get_text(): string {
+                    return model[currentIndex];
                 }
             }
 

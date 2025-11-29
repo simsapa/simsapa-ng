@@ -49,6 +49,7 @@ pub mod ffi {
         fn callback_run_summary_query(window_id: QString, query_text: QString);
         fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
         fn callback_open_sutta_search_window();
+        fn callback_open_sutta_languages_window();
     }
 }
 

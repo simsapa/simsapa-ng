@@ -13,11 +13,25 @@ pub fn app_data_setup() {
 }
 
 #[allow(dead_code)]
-pub fn get_contains_params() -> SearchParams {
+pub fn get_contains_params_with_lang(lang: Option<String>) -> SearchParams {
     SearchParams {
         mode: SearchMode::ContainsMatch,
         page_len: None,
-        lang: Some("en".to_string()),
+        lang,
+        lang_include: true,
+        source: None,
+        source_include: true,
+        enable_regex: false,
+        fuzzy_distance: 0,
+    }
+}
+
+#[allow(dead_code)]
+pub fn get_uid_params_with_lang(lang: Option<String>) -> SearchParams {
+    SearchParams {
+        mode: SearchMode::UidMatch,
+        page_len: None,
+        lang,
         lang_include: true,
         source: None,
         source_include: true,
@@ -58,7 +72,6 @@ pub fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQuer
 
     SearchQueryTask::new(
         &app_data.dbm,
-        "en".to_string(),
         query_text.to_string(),
         params,
         SearchArea::Suttas,

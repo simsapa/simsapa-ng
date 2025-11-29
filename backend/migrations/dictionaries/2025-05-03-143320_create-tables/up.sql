@@ -22,7 +22,6 @@ CREATE TABLE dict_words (
     word VARCHAR NOT NULL,
     word_ascii VARCHAR NOT NULL,
     language VARCHAR,
-    source_uid VARCHAR,
     word_nom_sg VARCHAR,
     inflections VARCHAR,
     phonetic VARCHAR,
@@ -44,4 +43,12 @@ CREATE TABLE dict_words (
     UNIQUE (uid)
 );
 
+-- B-tree indexes for efficient queries and deletions:
+
+-- Index on dict_words.dict_label for fast filtering by dict_label (used in removal operations)
+CREATE INDEX dict_words_dict_label_idx ON dict_words(dict_label);
+
+-- Composite index for dict_label + word filtering
 CREATE INDEX dict_words_idx ON dict_words(dict_label, word);
+
+-- FTS5 trigram indexes will be added with sql script.

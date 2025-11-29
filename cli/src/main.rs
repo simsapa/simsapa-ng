@@ -33,7 +33,6 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
 
     let mut query_task = SearchQueryTask::new(
         &app_data.dbm,
-        "en".to_string(),
         query.to_string(),
         params,
         area,

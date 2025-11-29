@@ -13,6 +13,9 @@ fn main() {
     qml_files.push("../assets/qml/SuttaSearchWindow.qml");
     qml_files.push("../assets/qml/WordLookupWindow.qml");
     qml_files.push("../assets/qml/DownloadAppdataWindow.qml");
+    qml_files.push("../assets/qml/SuttaLanguagesWindow.qml");
+    qml_files.push("../assets/qml/LanguageListSelector.qml");
+    qml_files.push("../assets/qml/DownloadProgressFrame.qml");
 
     qml_files.push("../assets/qml/SearchBarInput.qml");
     qml_files.push("../assets/qml/FulltextResults.qml");

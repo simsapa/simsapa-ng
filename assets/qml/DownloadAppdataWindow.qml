@@ -37,8 +37,8 @@ ApplicationWindow {
 
         // Parse init languages and set selected_languages
         if (init_add_languages !== "") {
-            add_languages_input.text = init_add_languages;
-            sync_selection_from_input();
+            language_list_selector.language_input.text = init_add_languages;
+            language_list_selector.sync_selection_from_input();
         }
 
         // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
@@ -56,7 +56,7 @@ ApplicationWindow {
         }
     }
 
-    property bool include_appdata_downloads: true
+    property bool is_initial_setup: true
     property string init_add_languages: ""
     property var available_languages: []
     property var selected_languages: []
@@ -80,11 +80,11 @@ ApplicationWindow {
     }
 
     function update_language_input() {
-        add_languages_input.text = root.selected_languages.join(", ");
+        language_list_selector.language_input.text = root.selected_languages.join(", ");
     }
 
     function parse_language_input() {
-        const text = add_languages_input.text.toLowerCase().trim();
+        const text = language_list_selector.language_input.text.toLowerCase().trim();
         if (text === "" || text === "*") {
             return [];
         }
@@ -104,17 +104,17 @@ ApplicationWindow {
             let downloaded_bytes_mb_str = (downloaded_bytes / 1024 / 1024).toFixed(2);
             let total_bytes_mb_str = (total_bytes / 1024 / 1024).toFixed(2);
             var frac = total_bytes > 0 ? downloaded_bytes / total_bytes : 0;
-                                         progress_bar.value = frac;
+                                         download_progress_frame.progress_value = frac;
             if (downloaded_bytes == total_bytes) {
-                download_status.text = op_msg;
+                download_progress_frame.status_text = op_msg;
             } else {
-                download_status.text = `${op_msg}: ${downloaded_bytes_mb_str} / ${total_bytes_mb_str} MB`;
+                download_progress_frame.status_text = `${op_msg}: ${downloaded_bytes_mb_str} / ${total_bytes_mb_str} MB`;
             }
         }
 
         function onDownloadShowMsg (message) {
             logger.log("onDownloadShowMsg(): " + message);
-            download_status.text = message;
+            download_progress_frame.status_text = message;
         }
 
         function onDownloadsCompleted (value: bool) {
@@ -126,7 +126,7 @@ ApplicationWindow {
 
     function validate_and_run_download() {
         // Check that all entered language codes are available.
-        const lang_input = add_languages_input.text.toLowerCase().trim();
+        const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
 
         if (lang_input !== "" && lang_input !== "*") {
             const selected_langs = lang_input.replace(/,/g, ' ').replace(/  +/g, ' ').split(' ');
@@ -135,7 +135,7 @@ ApplicationWindow {
             const available_map = {};
             for (let i = 0; i < root.available_languages.length; i++) {
                 const parts = root.available_languages[i].split('|');
-                if (parts.length === 2) {
+                if (parts.length >= 2) {
                     available_map[parts[0]] = parts[1];
                 }
             }
@@ -164,7 +164,8 @@ ApplicationWindow {
 
         let urls = [];
 
-        if (root.include_appdata_downloads) {
+        if (root.is_initial_setup) {
+            // Include appdata and other database downloads when the app is launched the first time.
             // ensure 'v' prefix
             if (version[0] !== "v") {
                 version = "v" + version
@@ -181,7 +182,7 @@ ApplicationWindow {
         }
 
         // Add language databases
-        const lang_input = add_languages_input.text.toLowerCase().trim();
+        const lang_input = language_list_selector.language_input.text.toLowerCase().trim();
         let selected_langs = [];
 
         if (lang_input !== "" && lang_input !== "*") {
@@ -207,7 +208,7 @@ ApplicationWindow {
         /* logger.log("Show progress bar"); */
         progress_bar.visible = true;
 
-        manager.download_urls_and_extract(urls);
+        manager.download_urls_and_extract(urls, root.is_initial_setup);
     }
 
     StackLayout {
@@ -283,6 +284,8 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.margins: 20
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
 
                     Item { Layout.fillWidth: true }
 
@@ -385,104 +388,26 @@ ApplicationWindow {
                         }
 
                         // Language selection section
-                        ColumnLayout {
+                        LanguageListSelector {
+                            id: language_list_selector
                             Layout.margins: 10
-                            spacing: 10
+                            model: root.available_languages
+                            selected_languages: root.selected_languages
+                            section_title: "Include Languages"
+                            instruction_text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
+                            placeholder_text: "E.g.: it, fr, pt, th"
+                            available_label: "Available languages (click to select):"
+                            show_count_column: true
+                            font_point_size: root.pointSize
 
-                            Label {
-                                text: "Include Languages"
-                                font.pointSize: root.pointSize
-                                font.bold: true
+                            onLanguageSelectionChanged: function(selected_codes) {
+                                root.selected_languages = selected_codes;
                             }
 
-                            Label {
-                                text: "Type language codes below, or click languages to select/unselect them. Type * to download all."
-                                font.pointSize: root.pointSize
-                                wrapMode: Text.WordWrap
-                                Layout.fillWidth: true
-                            }
-
-                            TextField {
-                                id: add_languages_input
-                                placeholderText: "E.g.: it, fr, pt, th"
-                                font.pointSize: root.pointSize
-                                text: root.init_add_languages
-                                Layout.fillWidth: true
-                                onTextChanged: {
-                                    // Update selection when user manually edits the input
-                                    root.sync_selection_from_input();
-                                }
-                            }
-
-                            Label {
-                                text: "Available languages (click to select):"
-                                font.pointSize: root.pointSize
-                            }
-
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 150
-                                clip: true
-
-                                ListView {
-                                    id: languages_listview
-                                    model: root.available_languages
-                                    spacing: 0
-
-                                    delegate: Rectangle {
-                                        id: delegate_item
-                                        required property string modelData
-                                        required property int index
-
-                                        width: languages_listview.width
-                                        height: 30
-
-                                        property string lang_code: {
-                                            if (!modelData) return "";
-                                            const parts = modelData.split('|');
-                                            return parts.length === 2 ? parts[0] : "";
-                                        }
-
-                                        property string lang_name: {
-                                            if (!modelData) return "";
-                                            const parts = modelData.split('|');
-                                            return parts.length === 2 ? parts[1] : "";
-                                        }
-
-                                        property bool is_selected: root.selected_languages.indexOf(lang_code) > -1
-
-                                        color: is_selected ? palette.highlight : (index % 2 === 0 ? palette.alternateBase : palette.base)
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                root.toggle_language_selection(delegate_item.lang_code);
-                                            }
-                                        }
-
-                                        Row {
-                                            spacing: 10
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            anchors.left: parent.left
-                                            anchors.leftMargin: 10
-
-                                            Text {
-                                                text: delegate_item.lang_code
-                                                font.pointSize: root.pointSize
-                                                font.bold: delegate_item.is_selected
-                                                color: delegate_item.is_selected ? palette.highlightedText : palette.text
-                                                width: 50
-                                            }
-
-                                            Text {
-                                                text: delegate_item.lang_name
-                                                font.pointSize: root.pointSize
-                                                font.bold: delegate_item.is_selected
-                                                color: delegate_item.is_selected ? palette.highlightedText : palette.text
-                                            }
-                                        }
-                                    }
+                            Component.onCompleted: {
+                                // Initialize with existing selection
+                                if (root.init_add_languages !== "") {
+                                    sync_selection_from_input();
                                 }
                             }
                         }
@@ -523,6 +448,8 @@ ApplicationWindow {
                     visible: root.is_mobile
                     Layout.fillWidth: true
                     Layout.margins: 10
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: 60
                     spacing: 10
 
                     Button {
@@ -553,78 +480,14 @@ ApplicationWindow {
         }
 
         // Idx 2: Download progress
-        Frame {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
+        DownloadProgressFrame {
+            id: download_progress_frame
+            pointSize: root.pointSize
+            is_mobile: root.is_mobile
+            status_text: "Downloading ..."
 
-            ColumnLayout {
-                spacing: 0
-                anchors.fill: parent
-
-                // Centered content area
-                Item {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        width: parent.width * 0.9
-                        spacing: 10
-
-                        AnimatedImage {
-                            id: simsapa_loading_gif
-                            source: "icons/gif/simsapa-loading.gif"
-                            playing: true
-                            Layout.alignment: Qt.AlignCenter
-                        }
-
-                        Label {
-                            id: download_status
-                            Layout.alignment: Qt.AlignCenter
-                            text: "Downloading ..."
-                            font.pointSize: root.pointSize
-                            wrapMode: Text.WordWrap
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                        }
-
-                        ProgressBar {
-                            id: progress_bar
-                            Layout.alignment: Qt.AlignCenter
-                            Layout.fillWidth: true
-                            visible: true
-                            from: 0
-                            to: 1
-                            value: 0
-                            font.pointSize: root.pointSize
-                        }
-
-                        // Text {
-                        //     id: download_msg
-                        //     text: ""
-                        //     textFormat: Text.RichText
-                        //     font.pointSize: root.pointSize
-                        //     Layout.alignment: Qt.AlignCenter
-                        // }
-                    }
-                }
-
-                // Fixed button area at the bottom
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 20
-
-                    Item { Layout.fillWidth: true }
-
-                    Button {
-                        id: download_quit_button
-                        text: "Quit"
-                        font.pointSize: root.pointSize
-                        onClicked: Qt.quit()
-                    }
-
-                    Item { Layout.fillWidth: true }
-                }
+            onQuit_clicked: {
+                Qt.quit();
             }
         }
 
@@ -673,6 +536,8 @@ ApplicationWindow {
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.margins: 20
+                    // Extra space on mobile to avoid the bottom bar covering the button.
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
 
                     Item { Layout.fillWidth: true }
 

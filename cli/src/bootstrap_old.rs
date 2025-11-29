@@ -123,7 +123,7 @@ fn appdata_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
     // Perhaps the trigram tokenizer is missing from Diesel SQLite?
 
     // Get the absolute path to the SQL script
-    let sql_script_path = PathBuf::from("../scripts/appdata-fts5-index-for-suttas-content_plain.sql");
+    let sql_script_path = PathBuf::from("../scripts/appdata-fts5-indexes.sql");
 
     // Check if the SQL script exists
     if !sql_script_path.exists() {

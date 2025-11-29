@@ -173,6 +173,9 @@ pub mod qobject {
         fn open_sutta_search_window(self: &SuttaBridge);
 
         #[qinvokable]
+        fn open_sutta_languages_window(self: &SuttaBridge);
+
+        #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
 
         #[qinvokable]
@@ -290,10 +293,13 @@ pub mod qobject {
         fn get_sutta_language_labels(self: &SuttaBridge) -> QStringList;
 
         #[qinvokable]
-        fn get_sutta_language_filter_index(self: &SuttaBridge) -> i32;
+        fn get_sutta_language_filter_key(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
-        fn set_sutta_language_filter_index(self: Pin<&mut SuttaBridge>, index: i32);
+        fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
+
+        #[qinvokable]
+        fn get_sutta_language_labels_with_counts(self: &SuttaBridge) -> QStringList;
     }
 }
 
@@ -350,7 +356,6 @@ impl qobject::SuttaBridge {
 
             let mut query_task = SearchQueryTask::new(
                 &app_data.dbm,
-                "en".to_string(),
                 "dhamma".to_string(),
                 params,
                 SearchArea::Suttas,
@@ -406,7 +411,6 @@ impl qobject::SuttaBridge {
             // can store it on SuttaBridgeRust.
             let mut query_task = SearchQueryTask::new(
                 &app_data.dbm,
-                "en".to_string(),
                 query_text,
                 params,
                 search_area_enum,
@@ -913,6 +917,11 @@ impl qobject::SuttaBridge {
         ffi::callback_open_sutta_search_window();
     }
 
+    pub fn open_sutta_languages_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_sutta_languages_window();
+    }
+
     /// Helper function to create error response JSON for background processing
     fn create_error_response(error_message: &str) -> String {
         let error_response = simsapa_backend::types::BackgroundProcessingError {
@@ -1358,14 +1367,26 @@ impl qobject::SuttaBridge {
         res
     }
 
-    pub fn get_sutta_language_filter_index(&self) -> i32 {
+    /// Get sutta languages with their counts in format "code|Name|Count"
+    pub fn get_sutta_language_labels_with_counts(&self) -> QStringList {
         let app_data = get_app_data();
-        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
-        app_settings.sutta_language_filter_index
+        let labels = app_data.dbm.get_sutta_language_labels_with_counts();
+
+        let mut res = QStringList::default();
+        for label in labels {
+            res.append(QString::from(label));
+        }
+        res
     }
 
-    pub fn set_sutta_language_filter_index(self: Pin<&mut Self>, index: i32) {
+    pub fn get_sutta_language_filter_key(&self) -> QString {
         let app_data = get_app_data();
-        app_data.set_sutta_language_filter_index(index);
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        QString::from(&app_settings.sutta_language_filter_key)
+    }
+
+    pub fn set_sutta_language_filter_key(self: Pin<&mut Self>, key: QString) {
+        let app_data = get_app_data();
+        app_data.set_sutta_language_filter_key(key.to_string());
     }
 }

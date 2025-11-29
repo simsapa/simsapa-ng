@@ -13,7 +13,8 @@ use std::fs;
 use std::sync::OnceLock;
 
 use diesel::prelude::*;
-use diesel::r2d2::{Pool, ConnectionManager, PooledConnection};
+use diesel::connection::SimpleConnection;
+use diesel::r2d2::{Pool, ConnectionManager, PooledConnection, CustomizeConnection};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 // use diesel::sqlite::Sqlite;
 
@@ -37,6 +38,17 @@ pub const DICTIONARIES_MIGRATIONS: EmbeddedMigrations = embed_migrations!("migra
 
 pub static DATABASE_MANAGER: OnceLock<DbManager> = OnceLock::new();
 
+#[derive(Debug, Clone, Copy)]
+struct ConnectionCustomizer;
+
+impl CustomizeConnection<SqliteConnection, diesel::r2d2::Error> for ConnectionCustomizer {
+    fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), diesel::r2d2::Error> {
+        // Enable foreign key constraints for all connections
+        conn.batch_execute("PRAGMA foreign_keys = ON;")
+            .map_err(diesel::r2d2::Error::QueryError)
+    }
+}
+
 #[derive(Debug)]
 pub struct DatabaseHandle {
     pool: SqlitePool,
@@ -57,6 +69,7 @@ impl DatabaseHandle {
         let manager = ConnectionManager::new(database_url);
         let pool = Pool::builder()
             .max_size(5)
+            .connection_customizer(Box::new(ConnectionCustomizer))
             .build(manager)
             .with_context(|| format!("Failed to create pool for: {}", database_url))?;
 
@@ -145,6 +158,19 @@ impl DbManager {
     /// Language downloads are imported into appdata.
     pub fn get_sutta_languages(&self) -> Vec<String> {
         self.appdata.get_sutta_languages()
+    }
+
+    /// Remove suttas and related data for specific language codes
+    pub fn remove_sutta_languages<F>(&self, language_codes: Vec<String>, progress_callback: F) -> Result<bool>
+    where
+        F: FnMut(usize, usize, &str),
+    {
+        self.appdata.remove_sutta_languages(language_codes, progress_callback)
+    }
+
+    /// Get sutta languages with their counts in format "code|Name|Count"
+    pub fn get_sutta_language_labels_with_counts(&self) -> Vec<String> {
+        self.appdata.get_sutta_language_labels_with_counts()
     }
 }
 

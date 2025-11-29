@@ -14,7 +14,7 @@ use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
 use crate::db::DbManager;
-use crate::logger::{info, error};
+use crate::logger::{info, warn, error};
 
 #[derive(QueryableByName)]
 struct CountResult {
@@ -40,14 +40,13 @@ pub struct SearchQueryTask<'a> {
 impl<'a> SearchQueryTask<'a> {
     pub fn new(
         dbm: &'a DbManager,
-        lang: String,
         query_text_orig: String,
         params: SearchParams,
         area: SearchArea,
     ) -> Self {
         let g = get_app_globals();
-        // Use params.lang if provided, otherwise fall back to the lang parameter
-        let lang_filter = params.lang.clone().unwrap_or(lang);
+        // Use params.lang if provided and not empty, otherwise use empty string for no filter
+        let lang_filter = params.lang.clone().unwrap_or_else(|| String::new());
         SearchQueryTask {
             dbm,
             query_text: normalize_query_text(Some(query_text_orig)),
@@ -204,7 +203,7 @@ impl<'a> SearchQueryTask<'a> {
              }
         }
 
-        error(&format!("Can't create fragment, query terms not found in content: {}", query));
+        warn(&format!("Can't create fragment, query terms not found in content: {}", query));
 
         // If no terms are found, return the beginning of the content
         self.fragment_around_text("", content, before, after)
@@ -243,8 +242,15 @@ impl<'a> SearchQueryTask<'a> {
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
         // First, try exact match
-        let exact_match_result = suttas
-            .filter(uid.eq(query_uid.clone()))
+        let mut exact_match_query = suttas.into_boxed();
+        exact_match_query = exact_match_query.filter(uid.eq(query_uid.clone()));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            exact_match_query = exact_match_query.filter(language.eq(&self.lang));
+        }
+
+        let exact_match_result = exact_match_query
             .select(Sutta::as_select())
             .first(db_conn);
 
@@ -279,9 +285,17 @@ impl<'a> SearchQueryTask<'a> {
 
         let like_pattern = format!("{}%", query_uid);
 
+        // Build query with language filter
+        let mut count_query = suttas.into_boxed();
+        count_query = count_query.filter(uid.like(&like_pattern));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            count_query = count_query.filter(language.eq(&self.lang));
+        }
+
         // Count total hits for pagination
-        let count = suttas
-            .filter(uid.like(&like_pattern))
+        let count = count_query
             .count()
             .get_result::<i64>(db_conn)?;
 
@@ -296,9 +310,17 @@ impl<'a> SearchQueryTask<'a> {
         let offset = (page_num * self.page_len) as i64;
         let limit = self.page_len as i64;
 
+        // Build main query with same filters
+        let mut query = suttas.into_boxed();
+        query = query.filter(uid.like(&like_pattern));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            query = query.filter(language.eq(&self.lang));
+        }
+
         // Execute paginated query
-        let results = suttas
-            .filter(uid.like(&like_pattern))
+        let results = query
             .order(uid.asc()) // Order by uid for consistent pagination
             .limit(limit)
             .offset(offset)
@@ -356,6 +378,12 @@ impl<'a> SearchQueryTask<'a> {
         let mut query = suttas.into_boxed();
         // A separate query for the total count. Can't clone the query before the offset limit.
         let mut count_query = suttas.into_boxed();
+
+        // --- Language Filtering ---
+        if !self.lang.is_empty() && self.lang != "Language" {
+            query = query.filter(language.eq(&self.lang));
+            count_query = count_query.filter(language.eq(&self.lang));
+        }
 
         // --- Source Filtering ---
         if let Some(ref source_val) = self.source {
@@ -423,7 +451,7 @@ impl<'a> SearchQueryTask<'a> {
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         info(&format!("suttas_contains_match_fts5(): page_num: {}", page_num));
-        info(&format!("query_text: {}", &self.query_text));
+        info(&format!("query_text: {}, lang filter: {}", &self.query_text, &self.lang));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -434,17 +462,34 @@ impl<'a> SearchQueryTask<'a> {
 
         let like_pattern = format!("%{}%", self.query_text);
 
+        // Determine if we need language filtering
+        let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
         // --- Count Total Hits ---
-        let count_result: CountResult = sql_query(
-            r#"
-            SELECT COUNT(*) as count
-            FROM suttas_fts f
-            JOIN suttas s ON f.sutta_id = s.id
-            WHERE f.content_plain LIKE ?
-            "#
-        )
-        .bind::<Text, _>(&like_pattern)
-        .get_result(db_conn)?;
+        let count_result: CountResult = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ? AND f.language = ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .get_result(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .get_result(db_conn)?
+        };
 
         self.db_query_hits_count = count_result.count;
         info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
@@ -458,20 +503,38 @@ impl<'a> SearchQueryTask<'a> {
         // Without specifying the ordering, FTS5 results are not ordered and fluctuate.
 
         // --- Execute Query with Pagination ---
-        let db_results: Vec<Sutta> = sql_query(
-            r#"
-            SELECT *
-            FROM suttas_fts f
-            JOIN suttas s ON f.sutta_id = s.id
-            WHERE f.content_plain LIKE ?
-            ORDER BY id
-            LIMIT ? OFFSET ?
-            "#
-        )
-        .bind::<Text, _>(&like_pattern)
-        .bind::<BigInt, _>(limit)
-        .bind::<BigInt, _>(offset)
-        .load(db_conn)?;
+        let db_results: Vec<Sutta> = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT s.*
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ? AND f.language = ?
+                ORDER BY s.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT s.*
+                FROM suttas_fts f
+                JOIN suttas s ON f.sutta_id = s.id
+                WHERE f.content_plain LIKE ?
+                ORDER BY s.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load(db_conn)?
+        };
 
         // --- Map to SearchResult ---
         let search_results = db_results
@@ -483,189 +546,245 @@ impl<'a> SearchQueryTask<'a> {
         Ok(search_results)
     }
 
-    fn dict_words_contains_or_regex_match_page(
+    fn dict_words_contains_match_fts5(
         &mut self,
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("dict_words_contains_match_fts5(): page_num: {}", page_num));
+        info(&format!("query_text: {}", &self.query_text));
+        let timer = Instant::now();
+
         // TODO: review details in query_task.py
 
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
+        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
 
-        // --- Term Filtering and Query Execution ---
+        use crate::db::dpd_models::DpdHeadword;
+        use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
+        use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
+
+        // --- Term Filtering ---
         let terms: Vec<&str> = if self.query_text.contains(" AND ") {
             self.query_text.split(" AND ").map(|s| s.trim()).collect()
         } else {
             vec![self.query_text.as_str()]
         };
 
-        match self.search_mode {
-            SearchMode::ContainsMatch => {
-                // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
+        // --- Calculate Pagination ---
+        // Apply pagination in each phase to reduce the number of items fetched
+        let query_offset = (page_num * self.page_len) as i64;
+        let query_limit = self.page_len as i64;
 
-                use crate::db::dpd_models::DpdHeadword;
+        // Three-phase search: DpdHeadword exact -> DpdHeadword contains -> DictWord definition
 
-                let mut all_results: Vec<DictWord> = Vec::new();
-                let mut result_uids: HashSet<String> = HashSet::new();
+        let mut all_results: Vec<DictWord> = Vec::new();
+        let mut result_uids: HashSet<String> = HashSet::new();
 
-                let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
+        // Phase 1: Exact matches on DpdHeadword.lemma_clean
+        // dpd.lemma_clean has btree index and dpd.lemma_1 has unique constraint and so implicitly indexed.
+        for term in &terms {
+            let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                .filter(dpd_dsl::lemma_clean.eq(term))
+                .order(dpd_dsl::id)
+                .limit(query_limit)
+                .offset(query_offset)
+                .load::<DpdHeadword>(dpd_conn)?;
 
-                // Phase 1: Exact matches on DpdHeadword.lemma_clean
-                for term in &terms {
-                    use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
+            // Convert DpdHeadword results to DictWord using their UIDs
+            for headword in exact_matches {
+                // Use the lemma_1 as the key for deduplication
+                let headword_key = headword.lemma_1.clone();
 
-                    let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                        .filter(dpd_dsl::lemma_clean.eq(term))
-                        .load::<DpdHeadword>(dpd_conn)?;
+                if !result_uids.contains(&headword_key) {
+                    // Find corresponding DictWord by matching the word field to headword.lemma_1
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
 
-                    // Convert DpdHeadword results to DictWord using their UIDs
-                    for headword in exact_matches {
-                        // Use the lemma_1 as the key for deduplication
-                        let headword_key = headword.lemma_1.clone();
-
-                        if !result_uids.contains(&headword_key) {
-                            // Find corresponding DictWord by matching the word field to headword.lemma_1
-                            use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
-                            let mut dict_query = dict_dsl::dict_words.into_boxed();
-
-                            // Apply source filtering
-                            if let Some(ref source_val) = self.source {
-                                let source_pattern = format!("%/{}", source_val);
-                                if self.source_include {
-                                    dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
-                                } else {
-                                    dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
-                                }
-                            }
-
-                            // Match DictWord.word with DpdHeadword.lemma_1
-                            let dict_word_result: Result<DictWord, _> = dict_query
-                                .filter(dict_dsl::word.eq(&headword.lemma_1))
-                                .first::<DictWord>(db_conn);
-
-                            if let Ok(dict_word) = dict_word_result {
-                                result_uids.insert(headword_key);
-                                all_results.push(dict_word);
-                            }
-                        }
-                    }
-                }
-
-                // Phase 2: Contains matches on DpdHeadword.lemma_1
-                for term in &terms {
-                    use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
-
-                    let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                        .filter(dpd_dsl::lemma_1.like(format!("%{}%", term)))
-                        .load::<DpdHeadword>(dpd_conn)?;
-
-                    // Sort by lemma_1 length in ascending order (shorter lemmas first)
-                    contains_matches.sort_by_key(|h| h.lemma_1.len());
-
-                    // Convert DpdHeadword results to DictWord by matching lemma_1 to word
-                    for headword in contains_matches {
-                        // Use the lemma_1 as the key for deduplication
-                        let headword_key = headword.lemma_1.clone();
-
-                        if !result_uids.contains(&headword_key) {
-                            // Find corresponding DictWord by matching the word field to headword.lemma_1
-                            use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
-                            let mut dict_query = dict_dsl::dict_words.into_boxed();
-
-                            // Apply source filtering
-                            if let Some(ref source_val) = self.source {
-                                let source_pattern = format!("%/{}", source_val);
-                                if self.source_include {
-                                    dict_query = dict_query.filter(dict_dsl::uid.like(source_pattern));
-                                } else {
-                                    dict_query = dict_query.filter(dict_dsl::uid.not_like(source_pattern));
-                                }
-                            }
-
-                            // Match DictWord.word with DpdHeadword.lemma_1
-                            let dict_word_result: Result<DictWord, _> = dict_query
-                                .filter(dict_dsl::word.eq(&headword.lemma_1))
-                                .first::<DictWord>(db_conn);
-
-                            if let Ok(dict_word) = dict_word_result {
-                                result_uids.insert(headword_key);
-                                all_results.push(dict_word);
-                            }
-                        }
-                    }
-                }
-
-                // Phase 3: Contains matches on DictWord.definition_plain
-                for term in &terms {
-                    use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
-                    let mut def_query = dict_dsl::dict_words.into_boxed();
-
-                    // Apply source filtering to definition query
+                    // Apply source filtering
+                    // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
                     if let Some(ref source_val) = self.source {
-                        let source_pattern = format!("%/{}", source_val);
                         if self.source_include {
-                            def_query = def_query.filter(dict_dsl::uid.like(source_pattern));
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
                         } else {
-                            def_query = def_query.filter(dict_dsl::uid.not_like(source_pattern));
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
                         }
                     }
 
-                    def_query = def_query.filter(dict_dsl::definition_plain.like(format!("%{}%", term)));
+                    // Match DictWord.word with DpdHeadword.lemma_1
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .first::<DictWord>(db_conn);
 
-                    let def_results: Vec<DictWord> = def_query.load::<DictWord>(db_conn)?;
-
-                    // Add definition results that aren't already included
-                    for result in def_results {
-                        if !result_uids.contains(&result.word) {
-                            result_uids.insert(result.word.clone());
-                            all_results.push(result);
-                        }
+                    if let Ok(dict_word) = dict_word_result {
+                        result_uids.insert(headword_key);
+                        all_results.push(dict_word);
                     }
                 }
-
-                // Set total hits count
-                self.db_query_hits_count = all_results.len() as i64;
-
-                // Apply array-based pagination
-                let offset = page_num * self.page_len;
-                let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
-
-                let paginated_results = if offset >= all_results.len() {
-                    Vec::new()
-                } else {
-                    all_results[offset..end_idx].to_vec()
-                };
-
-                // Map to SearchResult
-                let search_results = paginated_results
-                    .iter()
-                    .map(|dict_word| self.db_word_to_result(dict_word))
-                    .collect();
-
-                Ok(search_results)
-            }
-
-            SearchMode::RegExMatch => {
-                // Implement later with diesel regex match.
-                Ok(Vec::new())
-            }
-
-            _ => {
-                Err(format!(
-                    "Invalid search mode in dict_words_contains_or_regex_match_page: {:?}",
-                    self.search_mode
-                ).into())
             }
         }
 
+        // Query the FTS table to get headword IDs efficiently
+        #[derive(QueryableByName)]
+        struct HeadwordId {
+            #[diesel(sql_type = diesel::sql_types::Integer)]
+            headword_id: i32,
+        }
+
+        // Phase 2: Contains matches on DpdHeadword.lemma_1
+        // Use dpd_headwords_fts with trigram tokenizer for efficient substring matching
+        for term in &terms {
+            let like_pattern = format!("%{}%", term);
+
+            let fts_query = String::from(
+                r#"
+                SELECT headword_id
+                FROM dpd_headwords_fts
+                WHERE lemma_1 LIKE ?
+                ORDER BY headword_id
+                LIMIT ? OFFSET ?
+                "#
+            );
+
+            let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<BigInt, _>(query_limit)
+                .bind::<BigInt, _>(query_offset)
+                .load::<HeadwordId>(dpd_conn)?;
+
+            // Fetch full DpdHeadword records using the IDs
+            let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
+            let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                .filter(dpd_dsl::id.eq_any(&ids))
+                .load::<DpdHeadword>(dpd_conn)?;
+
+            // Sort by lemma_1 length in ascending order (shorter lemmas first)
+            contains_matches.sort_by_key(|h| h.lemma_1.len());
+
+            // Convert DpdHeadword results to DictWord by matching lemma_1 to word
+            for headword in contains_matches {
+                // Use the lemma_1 as the key for deduplication
+                let headword_key = headword.lemma_1.clone();
+
+                if !result_uids.contains(&headword_key) {
+                    // Find corresponding DictWord by matching the word field to headword.lemma_1
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                    // Apply source filtering
+                    if let Some(ref source_val) = self.source {
+                        if self.source_include {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                        } else {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                        }
+                    }
+
+                    // Match DictWord.word with DpdHeadword.lemma_1
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .first::<DictWord>(db_conn);
+
+                    if let Ok(dict_word) = dict_word_result {
+                        result_uids.insert(headword_key);
+                        all_results.push(dict_word);
+                    }
+                }
+            }
+        }
+
+        // Phase 3: FTS5 search on DictWord.definition_plain
+        for term in &terms {
+            let like_pattern = format!("%{}%", term);
+
+            // Build the FTS5 query with source filtering
+            // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
+            // dict_label is available in the FTS table for filtering
+            let fts_query = if self.source.is_some() {
+                if self.source_include {
+                    String::from(
+                        r#"
+                        SELECT d.*
+                        FROM dict_words_fts f
+                        JOIN dict_words d ON f.dict_word_id = d.id
+                        WHERE f.definition_plain LIKE ? AND f.dict_label = ?
+                        ORDER BY d.id
+                        LIMIT ? OFFSET ?
+                        "#
+                    )
+                } else {
+                    String::from(
+                        r#"
+                        SELECT d.*
+                        FROM dict_words_fts f
+                        JOIN dict_words d ON f.dict_word_id = d.id
+                        WHERE f.definition_plain LIKE ? AND f.dict_label != ?
+                        ORDER BY d.id
+                        LIMIT ? OFFSET ?
+                        "#
+                    )
+                }
+            } else {
+                String::from(
+                    r#"
+                    SELECT d.*
+                    FROM dict_words_fts f
+                    JOIN dict_words d ON f.dict_word_id = d.id
+                    WHERE f.definition_plain LIKE ?
+                    ORDER BY d.id
+                    LIMIT ? OFFSET ?
+                    "#
+                )
+            };
+
+            let def_results: Vec<DictWord> = if let Some(ref source_val) = self.source {
+                sql_query(&fts_query)
+                    .bind::<Text, _>(&like_pattern)
+                    .bind::<Text, _>(source_val)
+                    .bind::<BigInt, _>(query_limit)
+                    .bind::<BigInt, _>(query_offset)
+                    .load(db_conn)?
+            } else {
+                sql_query(&fts_query)
+                    .bind::<Text, _>(&like_pattern)
+                    .bind::<BigInt, _>(query_limit)
+                    .bind::<BigInt, _>(query_offset)
+                    .load(db_conn)?
+            };
+
+            // Add definition results that aren't already included
+            for result in def_results {
+                if !result_uids.contains(&result.word) {
+                    result_uids.insert(result.word.clone());
+                    all_results.push(result);
+                }
+            }
+        }
+
+        // Set total hits count
+        self.db_query_hits_count = all_results.len() as i64;
+
+        // Apply array-based pagination which affects all collected results
+        let offset = page_num * self.page_len;
+        let end_idx = std::cmp::min(offset + self.page_len, all_results.len());
+
+        let paginated_results = if offset >= all_results.len() {
+            Vec::new()
+        } else {
+            all_results[offset..end_idx].to_vec()
+        };
+
+        // Map to SearchResult
+        let search_results = paginated_results
+            .iter()
+            .map(|dict_word| self.db_word_to_result(dict_word))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(search_results)
     }
 
     pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        // DPD is English.
-        if self.lang != "en" {
-            return Ok(Vec::new());
-        }
-
+        // DPD is only English, so ignore checking self.lang (which may be "pli", "Language", or empty "").
+        // Assume that if the DPD Lookup was selected then stale language settings can be ignored.
         let app_data = get_app_data();
         let all_results = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
 
@@ -759,7 +878,7 @@ impl<'a> SearchQueryTask<'a> {
                         self.suttas_contains_match_fts5(page_num)
                     }
                     SearchArea::Dictionary => {
-                        self.dict_words_contains_or_regex_match_page(page_num)
+                        self.dict_words_contains_match_fts5(page_num)
                     }
                 }
             }

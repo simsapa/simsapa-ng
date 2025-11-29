@@ -81,43 +81,37 @@ CREATE TABLE sutta_glosses (
     FOREIGN KEY(sutta_id) REFERENCES suttas (id) ON DELETE CASCADE
 );
 
--- Create the FTS5 virtual table with trigram tokenizer
--- The trigram tokenizer enables efficient substring matching like LIKE '%query%'
--- detail='none' reduces index size by not storing term positions
-CREATE VIRTUAL TABLE IF NOT EXISTS suttas_fts USING fts5(
-    sutta_id UNINDEXED,
-    language UNINDEXED,
-    content_plain,
-    tokenize='trigram',
-    detail='none'
-);
+-- B-tree indexes for efficient queries and deletions:
 
--- Trigger for INSERT operations
-CREATE TRIGGER IF NOT EXISTS suttas_fts_insert
-AFTER INSERT ON suttas
-WHEN NEW.content_plain IS NOT NULL
-BEGIN
-    INSERT INTO suttas_fts (sutta_id, language, content_plain)
-    VALUES (NEW.id, NEW.language, NEW.content_plain);
-END;
+-- Index on suttas.language for fast filtering by language (used in removal operations)
+CREATE INDEX IF NOT EXISTS idx_suttas_language ON suttas(language);
 
--- Trigger for UPDATE operations
-CREATE TRIGGER IF NOT EXISTS suttas_fts_update
-AFTER UPDATE ON suttas
-BEGIN
-    -- Delete old entry if it exists
-    DELETE FROM suttas_fts WHERE sutta_id = OLD.id;
+-- Indexes on foreign key columns in child tables for fast CASCADE deletes
+CREATE INDEX IF NOT EXISTS idx_sutta_variants_sutta_id ON sutta_variants(sutta_id);
+CREATE INDEX IF NOT EXISTS idx_sutta_comments_sutta_id ON sutta_comments(sutta_id);
+CREATE INDEX IF NOT EXISTS idx_sutta_glosses_sutta_id ON sutta_glosses(sutta_id);
 
-    -- Insert new entry if content_plain is not NULL
-    INSERT INTO suttas_fts (sutta_id, language, content_plain)
-    SELECT NEW.id, NEW.language, NEW.content_plain
-    WHERE NEW.content_plain IS NOT NULL;
-END;
+-- Composite index for common query patterns (language + uid lookups)
+CREATE INDEX IF NOT EXISTS idx_suttas_language_uid ON suttas(language, uid);
 
--- Trigger for DELETE operations
-CREATE TRIGGER IF NOT EXISTS suttas_fts_delete
-AFTER DELETE ON suttas
-BEGIN
-    DELETE FROM suttas_fts WHERE sutta_id = OLD.id;
-END;
+-- Index on suttas.source_uid for fast source filtering
+CREATE INDEX IF NOT EXISTS idx_suttas_source_uid ON suttas(source_uid);
 
+-- Index on suttas.sutta_ref for fast reference lookup
+CREATE INDEX IF NOT EXISTS idx_suttas_sutta_ref ON suttas(sutta_ref);
+
+-- Index on suttas.nikaya for fast nikaya filtering
+CREATE INDEX IF NOT EXISTS idx_suttas_nikaya ON suttas(nikaya);
+
+-- Composite indexes for common filter combinations
+
+-- Composite index for source_uid + language filtering
+CREATE INDEX IF NOT EXISTS idx_suttas_source_uid_language ON suttas(source_uid, language);
+
+-- Composite index for nikaya + language filtering
+CREATE INDEX IF NOT EXISTS idx_suttas_nikaya_language ON suttas(nikaya, language);
+
+-- Composite index for title searches (ASCII for case-insensitive search)
+CREATE INDEX IF NOT EXISTS idx_suttas_title_ascii_language ON suttas(title_ascii, language);
+
+-- FTS5 trigram indexes will be added with sql script.

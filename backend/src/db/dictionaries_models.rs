@@ -47,7 +47,7 @@ impl Default for NewDictionary<'_> {
     }
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, Associations)]
 #[diesel(table_name = dict_words)]
 #[diesel(belongs_to(Dictionary, foreign_key = dictionary_id))]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -59,7 +59,6 @@ pub struct DictWord {
     pub word: String,
     pub word_ascii: String,
     pub language: Option<String>,
-    pub source_uid: Option<String>,
     pub word_nom_sg: Option<String>,
     pub inflections: Option<String>,
     pub phonetic: Option<String>,
@@ -94,7 +93,6 @@ pub struct NewDictWord {
     pub word: String,
     pub word_ascii: String,
     pub language: Option<String>,
-    pub source_uid: Option<String>,
     pub word_nom_sg: Option<String>,
     pub inflections: Option<String>,
     pub phonetic: Option<String>,

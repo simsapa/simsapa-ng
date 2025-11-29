@@ -61,15 +61,22 @@ pub enum SearchArea {
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub enum SearchMode {
+    #[serde(rename = "Fulltext Match")]
     FulltextMatch,
+    #[serde(rename = "Contains Match")]
     ContainsMatch,
+    #[serde(rename = "Headword Match")]
     HeadwordMatch,
+    #[serde(rename = "Title Match")]
     TitleMatch,
+    #[serde(rename = "DPD ID Match")]
     DpdIdMatch,
     #[serde(rename = "DPD Lookup")]
     DpdLookup,
     Combined,
+    #[serde(rename = "Uid Match")]
     UidMatch,
+    #[serde(rename = "RegEx Match")]
     RegExMatch,
 }
 
@@ -166,7 +173,7 @@ impl SearchResult {
             uid: word.uid.to_string(),
             schema_name: "appdata".to_string(), // FIXME: implement later
             table_name: "dict_words".to_string(), // TODO: can we get the table name from diesel?
-            source_uid: word.source_uid.clone(),
+            source_uid: Some(word.dict_label.clone()),
             title: word.word.clone(),
             sutta_ref: None,
             nikaya: None,

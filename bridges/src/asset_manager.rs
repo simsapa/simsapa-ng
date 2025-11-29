@@ -3,6 +3,7 @@ use std::fs::{File, create_dir_all, remove_file, remove_dir_all};
 use std::io::{self, Read, Write, BufReader};
 use std::path::Path;
 use std::error::Error;
+use std::time::Duration;
 
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList, QUrl};
@@ -14,7 +15,7 @@ use tar::Archive;
 use simsapa_backend::{move_folder_contents, AppGlobalPaths};
 use simsapa_backend::asset_helpers::import_suttas_lang_to_appdata;
 use simsapa_backend::logger::{info, error};
-use simsapa_backend::lookup::{LANGUAGES_AVAILABLE, LANG_CODE_TO_NAME};
+use simsapa_backend::app_settings::LANGUAGES_JSON;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -45,7 +46,7 @@ pub mod qobject {
 
     extern "RustQt" {
         #[qinvokable]
-        fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList);
+        fn download_urls_and_extract(self: Pin<&mut AssetManager>, urls: QStringList, is_initial_setup: bool);
 
         #[qinvokable]
         fn get_available_languages(self: Pin<&mut AssetManager>) -> QStringList;
@@ -58,6 +59,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn release_wake_lock_rust(self: Pin<&mut AssetManager>);
+
+        #[qinvokable]
+        fn remove_sutta_languages(self: Pin<&mut AssetManager>, language_codes: QStringList);
 
         #[qsignal]
         #[cxx_name = "downloadProgressChanged"]
@@ -73,11 +77,72 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "downloadsCompleted"]
         fn downloads_completed(self: Pin<&mut AssetManager>, value: bool);
+
+        #[qsignal]
+        #[cxx_name = "removalShowMsg"]
+        fn removal_show_msg(self: Pin<&mut AssetManager>, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "removalProgressChanged"]
+        fn removal_progress_changed(self: Pin<&mut AssetManager>,
+                                    current_index: usize,
+                                    total_count: usize,
+                                    language_name: QString);
+
+        #[qsignal]
+        #[cxx_name = "removalCompleted"]
+        fn removal_completed(self: Pin<&mut AssetManager>, success: bool, error_msg: QString);
     }
 }
 
 #[derive(Default, Copy, Clone)]
 pub struct AssetManagerRust;
+
+/// Cleanup download and extract folders when download process fails
+/// If is_initial_setup is true, also removes app_assets_folder to ensure clean state
+fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, app_assets_folder: &Path, is_initial_setup: bool, qt_thread: &CxxQtThread<qobject::AssetManager>) {
+    info(&format!("Cleaning up due to download failure (initial_setup: {})", is_initial_setup));
+    let cleanup_msg = QString::from("Removing partially downloaded files due to network error...");
+    qt_thread.queue(move |mut qo| {
+        qo.as_mut().download_show_msg(cleanup_msg);
+    }).unwrap();
+
+    // Remove download temp folder
+    if download_temp_folder.exists() {
+        if let Err(e) = remove_dir_all(download_temp_folder) {
+            error(&format!("Failed to remove download temp folder: {}", e));
+        } else {
+            info("Removed download temp folder");
+        }
+    }
+
+    // Remove extract temp folder
+    if extract_temp_folder.exists() {
+        if let Err(e) = remove_dir_all(extract_temp_folder) {
+            error(&format!("Failed to remove extract temp folder: {}", e));
+        } else {
+            info("Removed extract temp folder");
+        }
+    }
+
+    // If this is initial setup, also remove app_assets_folder to ensure clean state
+    // This prevents the app from launching with incomplete databases
+    if is_initial_setup {
+        info("Initial setup detected - removing app_assets_folder for clean state");
+        let complete_cleanup_msg = QString::from("Removing incomplete initial setup...");
+        qt_thread.queue(move |mut qo| {
+            qo.as_mut().download_show_msg(complete_cleanup_msg);
+        }).unwrap();
+
+        if app_assets_folder.exists() {
+            if let Err(e) = remove_dir_all(app_assets_folder) {
+                error(&format!("Failed to remove app_assets folder: {}", e));
+            } else {
+                info("Removed app_assets folder - app will restart download on next launch");
+            }
+        }
+    }
+}
 
 impl qobject::AssetManager {
     fn acquire_wake_lock_rust(self: Pin<&mut Self>) {
@@ -89,24 +154,39 @@ impl qobject::AssetManager {
     }
 
     /// Get list of available language codes that can be downloaded
-    /// Returns format: "code1|Name1,code2|Name2,..."
+    /// Returns format: "code1|Name1|Count1,code2|Name2|Count2,..."
     fn get_available_languages(self: Pin<&mut Self>) -> QStringList {
+        use serde_json::Value;
+
         let mut langs = QStringList::default();
 
-        // Use LANGUAGES_AVAILABLE for the list of language codes
-        // Filter out base languages (en, pli, san) which are always included
-        let mut lang_list: Vec<String> = LANGUAGES_AVAILABLE.iter()
-            .filter(|code| !["en", "pli", "san"].contains(code))
-            .filter_map(|code| {
-                // Use LANG_CODE_TO_NAME to retrieve the name for each code
-                LANG_CODE_TO_NAME.get(code).map(|name| format!("{}|{}", code, name))
-            })
-            .collect();
+        // Parse languages.json to get language info with counts
+        match serde_json::from_str::<Vec<Value>>(LANGUAGES_JSON) {
+            Ok(language_list) => {
+                let mut lang_strings: Vec<String> = language_list.iter()
+                    .filter_map(|lang_obj| {
+                        let code = lang_obj.get("code")?.as_str()?;
+                        let name = lang_obj.get("name")?.as_str()?;
+                        let count = lang_obj.get("sutta_count")?.as_u64()?;
 
-        lang_list.sort();
+                        // Filter out base languages (en, pli, san) which are always included
+                        if ["en", "pli", "san"].contains(&code) {
+                            return None;
+                        }
 
-        for lang in lang_list {
-            langs.append(QString::from(&lang));
+                        Some(format!("{}|{}|{}", code, name, count))
+                    })
+                    .collect();
+
+                lang_strings.sort();
+
+                for lang in lang_strings {
+                    langs.append(QString::from(&lang));
+                }
+            }
+            Err(e) => {
+                error(&format!("Failed to parse languages.json: {}", e));
+            }
         }
 
         langs
@@ -129,7 +209,72 @@ impl qobject::AssetManager {
         QString::from("")
     }
 
-    fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList) {
+    /// Remove suttas and related data for specific language codes
+    /// Runs in background thread and emits signals for progress and completion
+    fn remove_sutta_languages(self: Pin<&mut Self>, language_codes: QStringList) {
+        use simsapa_backend::get_app_data;
+        use simsapa_backend::lookup::LANG_CODE_TO_NAME;
+
+        info(&format!("remove_sutta_languages(): Removing {} languages", language_codes.len()));
+
+        // Convert QStringList to Vec<String>
+        let codes: Vec<String> = language_codes.iter()
+            .map(|qs| qs.to_string())
+            .collect();
+
+        if codes.is_empty() {
+            info("remove_sutta_languages(): No language codes provided");
+            let qt_thread = self.qt_thread();
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().removal_completed(true, QString::from(""));
+            }).unwrap();
+            return;
+        }
+
+        info(&format!("Removing language codes: {:?}", codes));
+
+        let qt_thread = self.qt_thread();
+
+        // Show initial message
+        let msg = QString::from("Preparing to remove languages...");
+        qt_thread.queue(move |mut qo| {
+            qo.as_mut().removal_show_msg(msg);
+        }).unwrap();
+
+        // Spawn a thread so Qt event loop is not blocked
+        thread::spawn(move || {
+            let app_data = get_app_data();
+
+            // Create a progress callback that sends messages to Qt
+            let progress_callback = |current_index: usize, total: usize, lang_code: &str| {
+                let lang_name = LANG_CODE_TO_NAME.get(lang_code).copied().unwrap_or(lang_code);
+                let lang_name_qstr = QString::from(lang_name);
+                let qt_thread_clone = qt_thread.clone();
+                qt_thread_clone.queue(move |mut qo| {
+                    qo.as_mut().removal_progress_changed(current_index, total, lang_name_qstr);
+                }).unwrap();
+            };
+
+            match app_data.dbm.remove_sutta_languages(codes, progress_callback) {
+                Ok(success) => {
+                    info(&format!("remove_sutta_languages(): Completed with success={}", success));
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().removal_completed(success, QString::from(""));
+                    }).unwrap();
+                },
+                Err(e) => {
+                    let error_msg = format!("Failed to remove languages: {}", e);
+                    error(&format!("remove_sutta_languages(): {}", error_msg));
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().removal_completed(false, error_qstr);
+                    }).unwrap();
+                }
+            }
+        });
+    }
+
+    fn download_urls_and_extract(self: Pin<&mut Self>, urls: QStringList, is_initial_setup: bool) {
         info(&format!("download_urls_and_extract(): {} urls", urls.len()));
 
         // AppGlobals was initialized before the storage path selection.
@@ -164,6 +309,7 @@ impl qobject::AssetManager {
                             Ok(_) => {},
                             Err(e) => {
                                 error(&format!("{}", e));
+                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                                 return;
                             },
                         };
@@ -171,20 +317,64 @@ impl qobject::AssetManager {
 
                     Err(e) => {
                         error(&format!("{}", e));
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                         return;
                     }
                 }
 
                 let client = Client::new();
-                // Start blocking GET
-                let resp = match client.get(&url_str).send() {
-                    Ok(r) => r,
-                    Err(e) => {
-                        // Emit finished signal with the error message
+
+                // Retry logic: try up to 5 times with exponential backoff
+                const MAX_RETRIES: u32 = 5;
+                let mut retry_count = 0;
+                let mut resp = None;
+
+                while retry_count < MAX_RETRIES {
+                    match client.get(&url_str).send() {
+                        Ok(r) => {
+                            resp = Some(r);
+                            break;
+                        }
+                        Err(e) => {
+                            retry_count += 1;
+                            if retry_count < MAX_RETRIES {
+                                // Calculate wait time: 2^retry_count seconds (2, 4, 8, 16, 32)
+                                let wait_seconds = 2_u64.pow(retry_count);
+                                let retry_msg = QString::from(&format!(
+                                    "Download failed for {}: {}. Retrying in {} seconds... (Attempt {}/{})",
+                                    &download_file_name, e, wait_seconds, retry_count + 1, MAX_RETRIES
+                                ));
+                                qt_thread.queue(move |mut qo| {
+                                    qo.as_mut().download_show_msg(retry_msg);
+                                }).unwrap();
+                                error(&format!("Download attempt {} failed: {}", retry_count, e));
+                                thread::sleep(Duration::from_secs(wait_seconds));
+                            } else {
+                                // Max retries reached
+                                error(&format!("Failed to download {} after {} attempts: {}", &download_file_name, MAX_RETRIES, e));
+                                let fail_msg = QString::from(&format!(
+                                    "Network error: Failed to download {} after {} attempts. Please check your internet connection and try again later.",
+                                    &download_file_name, MAX_RETRIES
+                                ));
+                                qt_thread.queue(move |mut qo| {
+                                    qo.as_mut().download_show_msg(fail_msg);
+                                }).unwrap();
+                                cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                let resp = match resp {
+                    Some(r) => r,
+                    None => {
+                        // This shouldn't happen, but handle it just in case
+                        let msg = QString::from("Unexpected error: failed to initiate download.");
                         qt_thread.queue(move |mut qo| {
-                            let msg = QString::from(&format!("Error: {}", e));
                             qo.as_mut().download_show_msg(msg);
                         }).unwrap();
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
                         return;
                     }
                 };

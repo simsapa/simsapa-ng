@@ -1,8 +1,8 @@
 import QtQuick
 
 Item {
-    function download_urls_and_extract(urls: list<string>) {
-        console.log("download_urls_and_extract():")
+    function download_urls_and_extract(urls: list<string>, is_initial_setup: bool) {
+        console.log("download_urls_and_extract():", is_initial_setup)
         for (let i=0; i < urls.length; i++) {
             console.log(i);
         }
@@ -26,7 +26,13 @@ Item {
         console.log("release_wake_lock_rust()");
     }
 
+    function remove_sutta_languages(language_codes: list<string>) {
+        console.log("remove_sutta_languages():", language_codes);
+    }
+
     signal downloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int);
     signal downloadShowMsg(message: string);
     signal downloadsCompleted(message: string);
+    signal removalShowMsg(message: string);
+    signal removalCompleted(success: bool, error_msg: string);
 }
