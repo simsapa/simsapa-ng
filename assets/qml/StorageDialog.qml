@@ -56,7 +56,7 @@ Dialog {
         anchors.margins: 10
 
         Label {
-            text: "Choose a storage location for the app database and other assets:"
+            text: "Choose a storage location for the app database:"
             wrapMode: Text.WordWrap
             font.pointSize: root.font_point_size
             Layout.fillWidth: true
@@ -152,9 +152,14 @@ Dialog {
             }
         }
 
-        RowLayout {
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.margins: 10
+            spacing: 10
+
             Button {
                 text: "Select"
+                Layout.fillWidth: true
                 enabled: root.selectedIndex >= 0
 
                 onClicked: {
@@ -167,12 +172,35 @@ Dialog {
                 }
             }
 
-            Item { Layout.fillWidth: true }
+            Button {
+                text: "Copy Path"
+                Layout.fillWidth: true
+                enabled: root.selectedIndex >= 0
+
+                onClicked: {
+                    if (root.selectedIndex >= 0) {
+                        var idx = root.selectedIndex;
+                        var path = storage_locations_model.get(idx).path;
+                        clip.copy_text(path);
+                    }
+                }
+            }
 
             Button {
                 text: "Cancel"
-                highlighted: true
+                Layout.fillWidth: true
                 onClicked: root.close()
+            }
+        }
+
+        // Invisible helper for clipboard
+        TextEdit {
+            id: clip
+            visible: false
+            function copy_text(text) {
+                clip.text = text;
+                clip.selectAll();
+                clip.copy();
             }
         }
     }
