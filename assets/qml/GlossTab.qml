@@ -1675,6 +1675,7 @@ ${main_text}
 
                         Text {
                             text: "Dictionary definitions from DPD:"
+                            color: root.text_color
                             font.bold: true
                             font.pointSize: root.vocab_font_point_size
                             Layout.alignment: Qt.AlignLeft
@@ -1927,9 +1928,9 @@ ${main_text}
 
                 background: Rectangle {
                     anchors.fill: parent
-                    color: "white"
+                    color: root.bg_color
                     border.width: 1
-                    border.color: "#ccc"
+                    border.color: root.border_color
                     radius: 5
                 }
 
