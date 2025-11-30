@@ -1879,6 +1879,7 @@ ${main_text}
                                         }
 
                                         Button {
+                                            id: show_word_in_dict_tab
                                             icon.source: "icons/32x32/bxs_book_content.png"
                                             Layout.preferredHeight: word_select.height
                                             Layout.preferredWidth: word_select.height

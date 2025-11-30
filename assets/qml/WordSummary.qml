@@ -250,6 +250,7 @@ Frame {
                         }
 
                         Button {
+                            id: show_word_in_dict_tab
                             icon.source: "icons/32x32/bxs_book_content.png"
                             // NOTE: result_item.uid is the numerical dpd id, but dictionaries.sqlite3 has uid based on word lemma_1
                             onClicked: root.handle_open_dict_tab_fn(result_item.word + "/dpd") // qmllint disable use-proper-function

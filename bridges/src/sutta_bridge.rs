@@ -537,6 +537,10 @@ impl qobject::SuttaBridge {
         lazy_static! {
             // (<link href=")(main.js)(") class="load_js" rel="preload" as="script">
             static ref RE_LINK_HREF: Regex = Regex::new(r#"(<link +[^>]*href=['"])([^'"]+)(['"])"#).unwrap();
+            // Match <html> tag with optional attributes
+            static ref RE_HTML_TAG: Regex = Regex::new(r#"<html[^>]*>"#).unwrap();
+            // Match <body> tag with optional attributes
+            static ref RE_BODY_TAG: Regex = Regex::new(r#"<body[^>]*>"#).unwrap();
         }
 
         let html = match word {
@@ -554,15 +558,17 @@ impl qobject::SuttaBridge {
                         "</head>",
                         &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, js_extra));
 
-                    word_html = word_html.replace(
-                        "<body>",
-                        &format!(r#"
-<body>
+                    // Replace <html> tag to include dark mode class
+                    word_html = RE_HTML_TAG.replace(&word_html, &format!(r#"<html class="{}">"#, body_class)).to_string();
+
+                    // Replace <body> tag to include dark mode class and word heading
+                    word_html = RE_BODY_TAG.replace(&word_html, &format!(r#"
+<body class="{}">
     <div class='word-heading'>
         <div class='word-title'>
             <h1>{}</h1>
         </div>
-    </div>"#, word.word()));
+    </div>"#, body_class, word.word())).to_string();
 
                     word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
                         format!("{}{}{}{}",
