@@ -483,20 +483,6 @@ ApplicationWindow {
                     spacing: 10
 
                     Button {
-                        text: "Quit"
-                        font.pointSize: root.pointSize
-                        Layout.fillWidth: true
-                        onClicked: Qt.quit()
-                    }
-
-                    Button {
-                        text: "Select Storage"
-                        font.pointSize: root.pointSize
-                        Layout.fillWidth: true
-                        onClicked: storage_dialog.open()
-                    }
-
-                    Button {
                         text: "Download"
                         font.pointSize: root.pointSize
                         Layout.fillWidth: true
@@ -507,6 +493,20 @@ ApplicationWindow {
                                 root.run_download();
                             }
                         }
+                    }
+
+                    Button {
+                        text: "Select Storage"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: storage_dialog.open()
+                    }
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: Qt.quit()
                     }
                 }
             }
