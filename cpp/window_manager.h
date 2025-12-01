@@ -39,11 +39,13 @@ class WindowManager : public QObject {
         void signal_run_lookup_query(const QString& query_text);
         void signal_run_summary_query(const QString& window_id, const QString& query_text);
         void signal_run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text);
+        void signal_open_sutta_search_window(const QString& show_result_data_json);
 
     public slots:
         void run_lookup_query(const QString& query_text);
         void run_summary_query(const QString& window_id, const QString& query_text);
         void run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text);
+        void open_sutta_search_window_with_query(const QString& show_result_data_json);
 
 };
 

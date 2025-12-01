@@ -20,6 +20,7 @@ use simsapa_backend::logger::{info, error};
 
 static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
 static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");
+static SIMSAPA_JS: &'static str = include_str!("../../assets/js/simsapa.min.js");
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -551,6 +552,7 @@ impl qobject::SuttaBridge {
                     js_extra.push_str(&format!(" const WINDOW_ID = '{}';", &window_id.to_string()));
                     js_extra.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
                     js_extra.push_str(DICTIONARY_JS);
+                    js_extra.push_str(SIMSAPA_JS);
 
                     let mut word_html = definition_html.clone();
 
@@ -920,7 +922,7 @@ impl qobject::SuttaBridge {
 
     pub fn open_sutta_search_window(&self) {
         use crate::api::ffi;
-        ffi::callback_open_sutta_search_window();
+        ffi::callback_open_sutta_search_window(QString::from(""));
     }
 
     pub fn open_sutta_languages_window(&self) {
