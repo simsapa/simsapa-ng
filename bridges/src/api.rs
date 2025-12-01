@@ -48,7 +48,7 @@ pub mod ffi {
         fn callback_run_lookup_query(query_text: QString);
         fn callback_run_summary_query(window_id: QString, query_text: QString);
         fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
-        fn callback_open_sutta_search_window();
+        fn callback_open_sutta_search_window(show_result_data_json: QString);
         fn callback_open_sutta_languages_window();
     }
 }
@@ -190,6 +190,52 @@ fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<Ra
     }
 }
 
+#[get("/open_sutta/<uid..>")]
+fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert PathBuf to string
+    let uid_str = uid.to_string_lossy().to_string();
+    info(&format!("open_sutta(): {}", uid_str));
+
+    // Try to get sutta with original UID
+    let sutta_option = dbm.appdata.get_sutta(&uid_str);
+
+    // If not found and not already pli/ms, try fallback
+    let final_sutta = if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
+        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
+        let code = uid_str.split('/').next().unwrap_or(&uid_str);
+        let fallback_uid = format!("{}/pli/ms", code);
+
+        // Try to get fallback sutta
+        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
+            info(&format!("open_sutta(): Using fallback UID: {}", fallback_uid));
+            Some(fallback_sutta)
+        } else {
+            None
+        }
+    } else {
+        sutta_option
+    };
+
+    // If sutta is found, compose JSON and call callback
+    if let Some(sutta) = final_sutta {
+        let result_data_json = serde_json::json!({
+            "item_uid": sutta.uid,
+            "table_name": "suttas",
+            "sutta_title": sutta.title,
+            "sutta_ref": sutta.sutta_ref,
+            "snippet": "",
+        });
+
+        let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+        ffi::callback_open_sutta_search_window(ffi::QString::from(json_string));
+        Status::Ok
+    } else {
+        // Sutta not found - return 404 so frontend can show error dialog
+        error(&format!("Sutta not found: {}", uid_str));
+        Status::NotFound
+    }
+}
+
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
@@ -220,6 +266,7 @@ pub async extern "C" fn start_webserver() {
             summary_query,
             sutta_menu_action,
             get_sutta_html_by_uid,
+            open_sutta,
         ])
         .manage(assets_files)
         .manage(db_manager)

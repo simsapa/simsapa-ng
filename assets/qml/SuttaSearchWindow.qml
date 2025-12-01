@@ -327,6 +327,61 @@ ${query_text}`;
         return `key_${root.key_counter}`;
     }
 
+    function show_result_in_html_view_with_json(result_data_json: string) {
+        let result_data = JSON.parse(result_data_json);
+        root.show_result_in_html_view(result_data);
+    }
+
+    function show_result_in_html_view(result_data: var) {
+        let tab_data = root.new_tab_data(result_data);
+        let tab_idx = root.add_results_tab(tab_data, true);
+        // NOTE: It will not find the tab first time while window objects are still
+        // constructed, but succeeds later on.
+        root.focus_on_tab_with_id_key("ResultsTab_0");
+
+        // Only add translation tabs for sutta results, not dictionary results
+        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords") {
+            // Add translations tabs for the sutta
+            // Remove existing webviews for translation tabs
+            for (let i=0; i < tabs_translations_model.count; i++) {
+                let tr_tab_data = tabs_translations_model.get(i);
+                if (tr_tab_data.web_item_key !== "") {
+                    sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+                }
+            }
+            tabs_translations_model.clear();
+
+            let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.item_uid));
+
+            for (let i=0; i < translations_data.length; i++) {
+                let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
+                tabs_translations_model.append(tr_tab_data);
+            }
+
+            if (action_open_find_in_sutta_results.checked &&
+                root.last_search_area === "Suttas" &&
+                root.last_query_text.length > 0) {
+                let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
+                if (!query_as_uid.startsWith('uid:')) {
+                    root.pending_find_query = root.last_query_text;
+                }
+            }
+        } else {
+            // For dictionary results, clear translation tabs
+            for (let i=0; i < tabs_translations_model.count; i++) {
+                let tr_tab_data = tabs_translations_model.get(i);
+                if (tr_tab_data.web_item_key !== "") {
+                    sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+                }
+            }
+            tabs_translations_model.clear();
+        }
+
+        if (!root.is_wide) {
+            show_sidebar_btn.checked = false;
+        }
+    }
+
     // Returns the index of the tab in the model.
     function add_results_tab(fulltext_results_data: var, focus_on_new = true, new_tab = false): int {
         /* logger.log("add_results_tab()", "item_uid", fulltext_results_data.item_uid, "sutta_title", fulltext_results_data.sutta_title); */
@@ -1245,53 +1300,7 @@ ${query_text}`;
                                     if (!result_data) {
                                         return;
                                     }
-                                    let tab_data = root.new_tab_data(result_data);
-                                    let tab_idx = root.add_results_tab(tab_data, true);
-                                    // NOTE: It will not find the tab first time while window objects are still
-                                    // constructed, but succeeds later on.
-                                    root.focus_on_tab_with_id_key("ResultsTab_0");
-
-                                    // Only add translation tabs for sutta results, not dictionary results
-                                    if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords") {
-                                        // Add translations tabs for the sutta
-                                        // Remove existing webviews for translation tabs
-                                        for (let i=0; i < tabs_translations_model.count; i++) {
-                                            let tr_tab_data = tabs_translations_model.get(i);
-                                            if (tr_tab_data.web_item_key !== "") {
-                                                sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
-                                            }
-                                        }
-                                        tabs_translations_model.clear();
-
-                                        let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.item_uid));
-
-                                        for (let i=0; i < translations_data.length; i++) {
-                                            let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
-                                            tabs_translations_model.append(tr_tab_data);
-                                        }
-
-                                        if (action_open_find_in_sutta_results.checked &&
-                                            root.last_search_area === "Suttas" &&
-                                            root.last_query_text.length > 0) {
-                                            let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
-                                            if (!query_as_uid.startsWith('uid:')) {
-                                                root.pending_find_query = root.last_query_text;
-                                            }
-                                        }
-                                    } else {
-                                        // For dictionary results, clear translation tabs
-                                        for (let i=0; i < tabs_translations_model.count; i++) {
-                                            let tr_tab_data = tabs_translations_model.get(i);
-                                            if (tr_tab_data.web_item_key !== "") {
-                                                sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
-                                            }
-                                        }
-                                        tabs_translations_model.clear();
-                                    }
-
-                                    if (!root.is_wide) {
-                                        show_sidebar_btn.checked = false;
-                                    }
+                                    root.show_result_in_html_view(result_data);
                                 }
 
                                 onCurrentIndexChanged: fulltext_results.update_item()

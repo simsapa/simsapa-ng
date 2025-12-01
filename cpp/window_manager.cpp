@@ -23,6 +23,7 @@ WindowManager::WindowManager(QApplication* app, QObject* parent)
     QObject::connect(this, &WindowManager::signal_run_lookup_query, this, &WindowManager::run_lookup_query);
     QObject::connect(this, &WindowManager::signal_run_summary_query, this, &WindowManager::run_summary_query);
     QObject::connect(this, &WindowManager::signal_run_sutta_menu_action, this, &WindowManager::run_sutta_menu_action);
+    QObject::connect(this, &WindowManager::signal_open_sutta_search_window, this, &WindowManager::open_sutta_search_window_with_query);
 }
 
 WindowManager::~WindowManager() {
@@ -120,4 +121,14 @@ void WindowManager::run_sutta_menu_action(const QString& window_id, const QStrin
     }
 
     QMetaObject::invokeMethod(target_window->m_root, "run_sutta_menu_action", Q_ARG(QString, action), Q_ARG(QString, query_text));
+}
+
+void WindowManager::open_sutta_search_window_with_query(const QString& show_result_data_json) {
+    SuttaSearchWindow* w = this->create_sutta_search_window();
+
+    // If result data JSON is provided, show the sutta directly
+    if (!show_result_data_json.isEmpty() && w && w->m_root) {
+        QMetaObject::invokeMethod(w->m_root, "show_result_in_html_view_with_json", 
+            Q_ARG(QString, show_result_data_json));
+    }
 }
