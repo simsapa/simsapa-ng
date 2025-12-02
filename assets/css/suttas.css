@@ -1161,3 +1161,22 @@ body.lang-th {
 body.lang-th h1, body.lang-th h2, body.lang-th h3, body.lang-th h4, body.lang-th h5, body.lang-th h6 {
   font-family: "Sarabun", sans-serif;
 }
+
+a.sutta-link {
+  text-decoration: none;
+  border-bottom: 1px dashed black;
+  color: black;
+}
+a.sutta-link:hover {
+  border-bottom-color: #027f55;
+}
+
+html.dark a.sutta-link,
+body.dark a.sutta-link {
+  color: white;
+  border-bottom-color: white;
+}
+html.dark a.sutta-link:hover,
+body.dark a.sutta-link:hover {
+  border-bottom-color: #65DBFF;
+}

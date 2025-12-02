@@ -11,12 +11,22 @@ function attach_link_handlers(): void {
         // Sutta page - only add handlers to links within ssp_content
         const links = sspContent.querySelectorAll('a');
         links.forEach(link => {
+            // Check if this link is a sutta link and add the class
+            const suttaUid = h.extract_sutta_uid_from_link(link as HTMLAnchorElement);
+            if (suttaUid) {
+                link.classList.add('sutta-link');
+            }
             link.addEventListener('click', h.handle_link_click);
         });
     } else {
         // Not a sutta page - add handlers to all links
         const links = document.querySelectorAll('a');
         links.forEach(link => {
+            // Check if this link is a sutta link and add the class
+            const suttaUid = h.extract_sutta_uid_from_link(link as HTMLAnchorElement);
+            if (suttaUid) {
+                link.classList.add('sutta-link');
+            }
             link.addEventListener('click', h.handle_link_click);
         });
     }
