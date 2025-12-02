@@ -1193,7 +1193,8 @@ ${query_text}`;
                                     is_dark: root.is_dark
                                     // Hide the webview when the drawer menu or a dialog is open. The mobile webview
                                     // is always on top, obscuring other items.
-                                    visible: root.webview_visible
+                                    // Also respect the parent container's visibility
+                                    visible: root.webview_visible && suttas_tab_container.visible
 
                                     onPage_loaded: {
                                         if (root.pending_find_query.length > 0) {

@@ -58,6 +58,9 @@ StackLayout {
 
         let is_current = Qt.binding(() => root.current_key === key);
         comp.should_be_visible = is_current;
+        // Explicitly bind Loader visibility to prevent WebView flash on mobile startup
+        // when parent container is invisible but WebView hasn't received visibility update yet
+        comp.visible = Qt.binding(() => (root.current_key === key) && root.visible);
         comp.width = Qt.binding(() => (root.current_key === key) ? comp.parent.width : 0);
         comp.height = Qt.binding(() => (root.current_key === key) ? comp.parent.height : 0);
         root.items_map[key] = comp;
