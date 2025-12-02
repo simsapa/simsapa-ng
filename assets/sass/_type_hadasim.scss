@@ -8,16 +8,21 @@
     src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Regular.ttf') format('truetype');
 }
 
-@font-face {
-  font-family: 'Hadasim';
-  font-style: italic;
-  font-weight: 400;
-  src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-RegularOblique.ttf') format('truetype');
-}
+// Disable the italic (oblique) and bold faces, because these are used for Pāli
+// words, and the latin letters in the font are leaning to the left, but they
+// are missing diacritics which are then substituted by the browser and are
+// leaning to the right.
+//
+// @font-face {
+//   font-family: 'Hadasim';
+//   font-style: italic;
+//   font-weight: 400;
+//   src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-RegularOblique.ttf') format('truetype');
+// }
 
-@font-face {
-    font-family: 'Hadasim';
-    font-style: normal;
-    font-weight: 700;
-    src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Bold.ttf') format('truetype');
-}
+// @font-face {
+//     font-family: 'Hadasim';
+//     font-style: normal;
+//     font-weight: 700;
+//     src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Bold.ttf') format('truetype');
+// }
