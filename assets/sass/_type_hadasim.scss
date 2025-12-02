@@ -1,0 +1,23 @@
+// Hadasim for Hebrew
+// https://hebrewfonts.net/fonts/hadasim-clm-regular
+
+@font-face {
+    font-family: 'Hadasim';
+    font-style: normal;
+    font-weight: 400;
+    src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Hadasim';
+  font-style: italic;
+  font-weight: 400;
+  src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-RegularOblique.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Hadasim';
+    font-style: normal;
+    font-weight: 700;
+    src: url('http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Bold.ttf') format('truetype');
+}

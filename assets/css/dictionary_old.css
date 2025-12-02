@@ -77,12 +77,6 @@
   src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
 }
 @font-face {
-  font-family: "Ezra SIL";
-  font-style: normal;
-  font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/ezra-sil/SILEOT.ttf") format("truetype");
-}
-@font-face {
   font-family: "Sarabun";
   font-style: normal;
   font-weight: 400;
@@ -105,6 +99,24 @@
   font-style: italic;
   font-weight: 700;
   src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-BoldItalic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Hadasim";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Hadasim";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-RegularOblique.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Hadasim";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Bold.ttf") format("truetype");
 }
 html, body {
   height: 100%;
@@ -626,12 +638,6 @@ div.btn a, span.btn a {
   src: url("http://localhost:8000/assets/fonts/source-sans-3/SourceSans3-BoldIt.ttf") format("truetype");
 }
 @font-face {
-  font-family: "Ezra SIL";
-  font-style: normal;
-  font-weight: 400;
-  src: url("http://localhost:8000/assets/fonts/ezra-sil/SILEOT.ttf") format("truetype");
-}
-@font-face {
   font-family: "Sarabun";
   font-style: normal;
   font-weight: 400;
@@ -654,6 +660,24 @@ div.btn a, span.btn a {
   font-style: italic;
   font-weight: 700;
   src: url("http://localhost:8000/assets/fonts/sarabun/Sarabun-BoldItalic.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Hadasim";
+  font-style: normal;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Hadasim";
+  font-style: italic;
+  font-weight: 400;
+  src: url("http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-RegularOblique.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Hadasim";
+  font-style: normal;
+  font-weight: 700;
+  src: url("http://localhost:8000/assets/fonts/hadasim/Hadasim-CLM-Bold.ttf") format("truetype");
 }
 .pali-word html, .pali-word body {
   height: 100%;
