@@ -455,8 +455,10 @@ ${query_text}`;
         }
 
         // Add the default blank tab. The corresponding webview is created when it is focused.
-        if (tabs_results_model.count == 0) {
-            /* logger.log("tabs_results_model.count", tabs_results_model.count); */
+        //
+        // When opened in narrow view, the right panel with results are shown.
+        // In narrow view, don't add a blank tab, because its webview is going to cover the entire screen.
+        if (tabs_results_model.count == 0 && root.is_wide) {
             root.add_results_tab(root.blank_sutta_tab_data());
         }
 
