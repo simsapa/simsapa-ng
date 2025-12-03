@@ -100,6 +100,9 @@ pub mod qobject {
         fn userdata_first_query(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
+        fn reset_userdata_database(self: Pin<&mut SuttaBridge>) -> bool;
+
+        #[qinvokable]
         fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
 
         #[qinvokable]
@@ -587,6 +590,51 @@ impl qobject::SuttaBridge {
 
             info("SuttaBridge::userdata_first_query() end");
         });
+    }
+
+    pub fn reset_userdata_database(self: Pin<&mut Self>) -> bool {
+        info("SuttaBridge::reset_userdata_database() start");
+        use simsapa_backend::db::initialize_userdata;
+
+        let g = get_app_globals();
+        let userdata_path = g.paths.userdata_db_path.clone();
+        let userdata_url = g.paths.userdata_database_url.clone();
+
+        // Step 1: Remove the corrupt userdata database
+        match userdata_path.try_exists() {
+            Ok(true) => {
+                info(&format!("Removing userdata database at: {}", userdata_path.display()));
+                match fs::remove_file(&userdata_path) {
+                    Ok(_) => {
+                        info("Userdata database removed successfully");
+                    },
+                    Err(e) => {
+                        error(&format!("Failed to remove userdata database: {}", e));
+                        return false;
+                    }
+                }
+            },
+            Ok(false) => {
+                info("Userdata database doesn't exist, will create new one");
+            },
+            Err(e) => {
+                error(&format!("Error checking userdata database existence: {}", e));
+                return false;
+            }
+        }
+
+        // Step 2: Re-initialize with defaults
+        info("Re-initializing userdata database with defaults...");
+        match initialize_userdata(&userdata_url) {
+            Ok(_) => {
+                info("SuttaBridge::reset_userdata_database() reset complete");
+                true
+            },
+            Err(e) => {
+                error(&format!("Failed to re-initialize userdata database: {}", e));
+                false
+            }
+        }
     }
 
     pub fn query_text_to_uid_field_query(&self, query_text: &QString) -> QString {

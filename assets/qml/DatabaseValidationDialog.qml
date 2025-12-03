@@ -32,18 +32,10 @@ ApplicationWindow {
     property bool dictionaries_failed: false
     property bool userdata_failed: false
 
-    property alias reset_userdata_dialog: reset_userdata_dialog
-
     // Computed properties
     readonly property bool has_downloadable_failures: appdata_failed || dpd_failed || dictionaries_failed
     readonly property bool has_userdata_failure: userdata_failed
     readonly property bool has_both_types: has_downloadable_failures && has_userdata_failure
-
-    // Signals for user actions
-    signal redownloadRequested()
-    signal resetUserdataRequested()
-    signal fixAllRequested()
-    signal cancelled()
 
     function show_validation_failure(failed_databases) {
         // Parse the failed_databases string (comma-separated list)
@@ -90,30 +82,8 @@ ApplicationWindow {
         return "";
     }
 
-    Connections {
-        target: root
-
-        function onRedownloadRequested() {
-            logger.log("User chose to re-download database(s)");
-            root.handle_redownload();
-        }
-
-        function onResetUserdataRequested() {
-            logger.log("User chose to reset userdata database");
-            root.handle_reset_userdata();
-        }
-
-        function onFixAllRequested() {
-            logger.log("User chose to fix all databases (re-download + reset userdata)");
-            root.handle_fix_all();
-        }
-
-        function onCancelled() {
-            logger.log("User cancelled database validation dialog");
-        }
-    }
-
     function handle_redownload() {
+        logger.log("handle_redownload()");
         // Build list of failed downloadable databases
         let urls = [];
         const github_repo = "simsapa/simsapa-ng-assets";
@@ -152,27 +122,49 @@ ApplicationWindow {
     }
 
     function handle_reset_userdata() {
-        logger.log("Removing corrupt userdata database...");
-        // TODO: Call SuttaBridge function to reset userdata
-        // For now, just show a message
-        reset_userdata_dialog.open();
+        logger.log("handle_reset_userdata()");
+
+        const success = SuttaBridge.reset_userdata_database();
+
+        if (success) {
+            logger.log("Userdata database reset complete");
+            reset_success_dialog.open();
+        } else {
+            logger.log("ERROR: Failed to reset userdata database");
+            reset_error_dialog.open();
+        }
     }
 
     function handle_fix_all() {
-        // Reset userdata first, then proceed to re-download
-        root.handle_reset_userdata();
-        // The re-download will happen after userdata reset in the dialog
+        logger.log("handle_fix_all()");
+
+        // Reset userdata first if it failed
+        if (root.validation_results["userdata"] && !root.validation_results["userdata"].is_valid) {
+            logger.log("Resetting userdata...");
+            const success = SuttaBridge.reset_userdata_database();
+            if (!success) {
+                logger.log("ERROR: Failed to reset userdata database");
+                reset_error_dialog.open();
+                return;
+            }
+            logger.log("Userdata reset complete");
+        }
+
+        // Then proceed to re-download failed downloadable databases
+        if (root.has_downloadable_failures) {
+            root.handle_redownload();
+        }
     }
 
     Dialog {
-        id: reset_userdata_dialog
-        title: "Reset Userdata"
+        id: reset_success_dialog
+        title: "Userdata Reset Complete"
         anchors.centerIn: parent
         modal: true
-        standardButtons: Dialog.Ok | Dialog.Cancel
+        standardButtons: Dialog.Ok
 
         Label {
-            text: "Userdata reset functionality will be implemented in the next phase.\nThe app will quit and you should restart it."
+            text: "Userdata has been reset to defaults.\n\nQuit and restart the app."
             wrapMode: Text.WordWrap
             width: 400
         }
@@ -182,17 +174,24 @@ ApplicationWindow {
         }
     }
 
+    Dialog {
+        id: reset_error_dialog
+        title: "Userdata Reset Failed"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "Failed to reset userdata database."
+            wrapMode: Text.WordWrap
+            width: 400
+        }
+    }
+
     DownloadAppdataWindow {
         id: download_window
         visible: false
         is_initial_setup: false
-
-        function start_redownload(urls) {
-            logger.log("Opening download window for re-download");
-            // TODO: Set the URLs and start download
-            // For now this is a placeholder
-            download_window.show();
-        }
     }
 
     // Expected database names
@@ -265,8 +264,8 @@ ApplicationWindow {
         repeat: false
         onTriggered: {
             // Timeout reached - some checks haven't completed
-            // Show dialog anyway if we have any failures
-            if (root.has_validation_failures()) {
+            // Show dialog if we have any failures OR if some results are missing
+            if (root.has_validation_failures() || !root.all_validations_completed()) {
                 root.show_validation_dialog();
             }
         }
@@ -383,7 +382,7 @@ ApplicationWindow {
                     text: "Re-download"
                     visible: root.has_downloadable_failures && !root.has_userdata_failure
                     onClicked: {
-                        root.redownloadRequested();
+                        root.handle_redownload();
                         root.close();
                     }
                 }
@@ -393,7 +392,7 @@ ApplicationWindow {
                     text: "Reset to Defaults"
                     visible: !root.has_downloadable_failures && root.has_userdata_failure
                     onClicked: {
-                        root.resetUserdataRequested();
+                        root.handle_reset_userdata();
                         root.close();
                     }
                 }
@@ -403,7 +402,7 @@ ApplicationWindow {
                     text: "Fix All"
                     visible: root.has_both_types
                     onClicked: {
-                        root.fixAllRequested();
+                        root.handle_fix_all();
                         root.close();
                     }
                 }
@@ -412,7 +411,7 @@ ApplicationWindow {
                     text: "Re-download Only"
                     visible: root.has_both_types
                     onClicked: {
-                        root.redownloadRequested();
+                        root.handle_redownload();
                         root.close();
                     }
                 }
@@ -421,16 +420,14 @@ ApplicationWindow {
                     text: "Reset Userdata Only"
                     visible: root.has_both_types
                     onClicked: {
-                        root.resetUserdataRequested();
+                        root.handle_reset_userdata();
                         root.close();
                     }
                 }
 
-                // Cancel button - always visible
                 Button {
                     text: "Cancel"
                     onClicked: {
-                        root.cancelled();
                         root.close();
                     }
                 }

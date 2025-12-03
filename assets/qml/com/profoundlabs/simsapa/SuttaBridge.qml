@@ -45,6 +45,11 @@ Item {
         console.log("userdata_first_query()");
     }
 
+    function reset_userdata_database(): bool {
+        console.log("reset_userdata_database()");
+        return true;
+    }
+
     function query_text_to_uid_field_query(query_text: string): string {
       return query_text;
     }
