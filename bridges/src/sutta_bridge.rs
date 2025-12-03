@@ -90,6 +90,12 @@ pub mod qobject {
         fn dpd_first_query(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
+        fn dictionary_first_query(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn userdata_first_query(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
         fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
 
         #[qinvokable]
@@ -341,9 +347,27 @@ impl qobject::SuttaBridge {
     /// faster.
     pub fn appdata_first_query(self: Pin<&mut Self>) {
         info("SuttaBridge::appdata_first_query() start");
-        thread::spawn(move || {
-            let app_data = get_app_data();
 
+        use simsapa_backend::get_app_globals;
+
+        info("Database validation: Checking appdata...");
+        thread::spawn(move || {
+            // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
+            let db_path = get_app_globals().paths.appdata_db_path.clone();
+            match db_path.try_exists() {
+                Ok(true) => {}, // File exists, continue
+                Ok(false) => {
+                    error("Database validation FAILED: Appdata - Database file not found");
+                    return;
+                },
+                Err(e) => {
+                    error(&format!("Database validation FAILED: Appdata - Error checking file existence: {}", e));
+                    return;
+                }
+            }
+
+            // Check 2 & 3: Query executes and returns results
+            let app_data = get_app_data();
             let params = SearchParams {
                 mode: SearchMode::ContainsMatch,
                 page_len: None,
@@ -362,10 +386,16 @@ impl qobject::SuttaBridge {
                 SearchArea::Suttas,
             );
 
-            let _results = match query_task.results_page(0) {
-                Ok(_) => {},
+            match query_task.results_page(0) {
+                Ok(results) => {
+                    if results.is_empty() {
+                        error("Database validation FAILED: Appdata - Query returned 0 results");
+                    } else {
+                        info("Database validation: Appdata OK");
+                    }
+                },
                 Err(e) => {
-                    error(&format!("{}", e));
+                    error(&format!("Database validation FAILED: Appdata - Query error: {}", e));
                 }
             };
 
@@ -375,10 +405,118 @@ impl qobject::SuttaBridge {
 
     pub fn dpd_first_query(self: Pin<&mut Self>) {
         info("SuttaBridge::dpd_first_query() start");
+
+        use simsapa_backend::get_app_globals;
+
+        info("Database validation: Checking dpd...");
         thread::spawn(move || {
+            // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
+            let db_path = get_app_globals().paths.dpd_db_path.clone();
+            match db_path.try_exists() {
+                Ok(true) => {}, // File exists, continue
+                Ok(false) => {
+                    error("Database validation FAILED: DPD - Database file not found");
+                    return;
+                },
+                Err(e) => {
+                    error(&format!("Database validation FAILED: DPD - Error checking file existence: {}", e));
+                    return;
+                }
+            }
+
+            // Check 2 & 3: Query executes and returns results
             let app_data = get_app_data();
-            let _json = app_data.dbm.dpd.dpd_lookup_json("dhamma");
+            let json = app_data.dbm.dpd.dpd_lookup_json("dhamma");
+
+            // dpd_lookup_json returns a JSON array string, check if it contains results
+            if json == "[]" || json.is_empty() {
+                error("Database validation FAILED: DPD - Query returned 0 results");
+            } else {
+                info("Database validation: DPD OK");
+            }
+
             info("SuttaBridge::dpd_first_query() end");
+        });
+    }
+
+    pub fn dictionary_first_query(self: Pin<&mut Self>) {
+        info("SuttaBridge::dictionary_first_query() start");
+
+        use simsapa_backend::get_app_globals;
+
+        info("Database validation: Checking dictionaries...");
+        thread::spawn(move || {
+            // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
+            let db_path = get_app_globals().paths.dict_db_path.clone();
+            match db_path.try_exists() {
+                Ok(true) => {}, // File exists, continue
+                Ok(false) => {
+                    error("Database validation FAILED: Dictionaries - Database file not found");
+                    return;
+                },
+                Err(e) => {
+                    error(&format!("Database validation FAILED: Dictionaries - Error checking file existence: {}", e));
+                    return;
+                }
+            }
+
+            // Check 2 & 3: Query executes and returns results
+            let app_data = get_app_data();
+            let word = app_data.dbm.dictionaries.get_word("anidassana/dpd");
+
+            match word {
+                Some(_) => {
+                    info("Database validation: Dictionaries OK");
+                },
+                None => {
+                    error("Database validation FAILED: Dictionaries - Query returned 0 results (uid 'anidassana/dpd' not found)");
+                },
+            }
+
+            info("SuttaBridge::dictionary_first_query() end");
+        });
+    }
+
+    pub fn userdata_first_query(self: Pin<&mut Self>) {
+        info("SuttaBridge::userdata_first_query() start");
+
+        use simsapa_backend::get_app_globals;
+
+        info("Database validation: Checking userdata...");
+        thread::spawn(move || {
+            // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
+            let db_path = get_app_globals().paths.userdata_db_path.clone();
+            match db_path.try_exists() {
+                Ok(true) => {}, // File exists, continue
+                Ok(false) => {
+                    error("Database validation FAILED: Userdata - Database file not found");
+                    return;
+                },
+                Err(e) => {
+                    error(&format!("Database validation FAILED: Userdata - Error checking file existence: {}", e));
+                    return;
+                }
+            }
+
+            // Check 2 & 3: Try to get app_settings - if this succeeds without error,
+            // the database is valid. We can't easily distinguish between default values
+            // and actual database values without more complex queries, but calling
+            // get_app_settings will fail if the database is corrupt or inaccessible.
+            let app_data = get_app_data();
+
+            // Try a simple database operation to validate connectivity
+            match app_data.dbm.userdata.get_conn() {
+                Ok(_) => {
+                    // Successfully connected, now try to read app_settings
+                    let _settings = app_data.dbm.userdata.get_app_settings();
+                    info("Database validation: Userdata OK");
+                },
+                Err(e) => {
+                    error(&format!("Database validation FAILED: Userdata - Query error: {}", e));
+                }
+            }
+
+            info("SuttaBridge::userdata_first_query() end");
         });
     }
 

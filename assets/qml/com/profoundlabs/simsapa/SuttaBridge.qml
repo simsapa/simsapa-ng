@@ -36,6 +36,14 @@ Item {
         console.log("dpd_first_query()");
     }
 
+    function dictionary_first_query() {
+        console.log("dictionary_first_query()");
+    }
+
+    function userdata_first_query() {
+        console.log("userdata_first_query()");
+    }
+
     function query_text_to_uid_field_query(query_text: string): string {
       return query_text;
     }

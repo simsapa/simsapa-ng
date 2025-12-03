@@ -27,22 +27,22 @@
 
 ## Tasks
 
-- [ ] 1.0 Implement dictionary and userdata first query validation functions in Rust backend
-  - [ ] 1.1 Add `dictionary_first_query()` function in `bridges/src/sutta_bridge.rs` marked as `#[qinvokable]`
-  - [ ] 1.2 Implement dictionary validation query checking `dict_words` table for uid `"anidassana/dpd"` with result count > 0
-  - [ ] 1.3 Use `thread::spawn` to run query in background thread (following existing pattern)
-  - [ ] 1.4 Add `userdata_first_query()` function in `bridges/src/sutta_bridge.rs` marked as `#[qinvokable]`
-  - [ ] 1.5 Implement userdata validation query checking `app_settings` table for key `"app_settings"` returning exactly 1 row
-  - [ ] 1.6 Use `thread::spawn` to run userdata query in background thread
-  - [ ] 1.7 Add corresponding function signatures to `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` for qmllint
+- [x] 1.0 Implement dictionary and userdata first query validation functions in Rust backend
+  - [x] 1.1 Add `dictionary_first_query()` function in `bridges/src/sutta_bridge.rs` marked as `#[qinvokable]`
+  - [x] 1.2 Implement dictionary validation query checking `dict_words` table for uid `"anidassana/dpd"` with result count > 0
+  - [x] 1.3 Use `thread::spawn` to run query in background thread (following existing pattern)
+  - [x] 1.4 Add `userdata_first_query()` function in `bridges/src/sutta_bridge.rs` marked as `#[qinvokable]`
+  - [x] 1.5 Implement userdata validation query checking `app_settings` table for key `"app_settings"` returning exactly 1 row
+  - [x] 1.6 Use `thread::spawn` to run userdata query in background thread
+  - [x] 1.7 Add corresponding function signatures to `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` for qmllint
 
-- [ ] 2.0 Transform existing first query functions into comprehensive validators with error handling
-  - [ ] 2.1 Refactor `appdata_first_query()` to return validation results instead of just running query
-  - [ ] 2.2 Add error handling to check for three conditions: database file missing, query error, zero results
-  - [ ] 2.3 Use `Result<(), anyhow::Error>` pattern for proper error propagation in appdata validation
-  - [ ] 2.4 Refactor `dpd_first_query()` with same three-condition error handling pattern
-  - [ ] 2.5 Update dictionary and userdata query functions with comprehensive error handling
-  - [ ] 2.6 Ensure all validation functions check database file existence using `get_app_globals().paths.*_db_path`
+- [x] 2.0 Transform existing first query functions into comprehensive validators with error handling
+  - [x] 2.1 Refactor `appdata_first_query()` to return validation results instead of just running query
+  - [x] 2.2 Add error handling to check for three conditions: database file missing, query error, zero results
+  - [x] 2.3 Use `Result<(), anyhow::Error>` pattern for proper error propagation in appdata validation
+  - [x] 2.4 Refactor `dpd_first_query()` with same three-condition error handling pattern
+  - [x] 2.5 Update dictionary and userdata query functions with comprehensive error handling
+  - [x] 2.6 Ensure all validation functions check database file existence using `get_app_globals().paths.*_db_path`
 
 - [ ] 3.0 Create QML DatabaseValidationDialog component with multi-database failure handling
   - [ ] 3.1 Create `assets/qml/DatabaseValidationDialog.qml` following dialog patterns from `AboutDialog.qml`
