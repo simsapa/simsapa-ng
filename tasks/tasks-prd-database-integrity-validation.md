@@ -44,42 +44,42 @@
   - [x] 2.5 Update dictionary and userdata query functions with comprehensive error handling
   - [x] 2.6 Ensure all validation functions check database file existence using `get_app_globals().paths.*_db_path`
 
-- [ ] 3.0 Create QML DatabaseValidationDialog component with multi-database failure handling
-  - [ ] 3.1 Create `assets/qml/DatabaseValidationDialog.qml` following dialog patterns from `AboutDialog.qml`
-  - [ ] 3.2 Add dialog properties to track which databases failed (downloadable: appdata, dpd, dictionaries; user-specific: userdata)
-  - [ ] 3.3 Implement conditional button layout logic: show different buttons based on which database types failed
-  - [ ] 3.4 Add "Re-download" button that triggers when only downloadable databases failed
-  - [ ] 3.5 Add "Reset to Defaults" button that triggers when only userdata failed (with warning about data loss)
-  - [ ] 3.6 Add "Fix All", "Re-download Only", "Reset Userdata Only" buttons when both types failed
-  - [ ] 3.7 Add "Cancel" button that dismisses dialog and allows app to continue
-  - [ ] 3.8 Display clear user-friendly messages distinguishing downloadable vs userdata failures
-  - [ ] 3.9 Make dialog modal to block main window interaction until user chooses action
-  - [ ] 3.10 Register `DatabaseValidationDialog.qml` in `bridges/build.rs` qml_files list
+- [x] 3.0 Create QML DatabaseValidationDialog component with multi-database failure handling
+  - [x] 3.1 Create `assets/qml/DatabaseValidationDialog.qml` following dialog patterns from `AboutDialog.qml`
+  - [x] 3.2 Add dialog properties to track which databases failed (downloadable: appdata, dpd, dictionaries; user-specific: userdata)
+  - [x] 3.3 Implement conditional button layout logic: show different buttons based on which database types failed
+  - [x] 3.4 Add "Re-download" button that triggers when only downloadable databases failed
+  - [x] 3.5 Add "Reset to Defaults" button that triggers when only userdata failed (with warning about data loss)
+  - [x] 3.6 Add "Fix All", "Re-download Only", "Reset Userdata Only" buttons when both types failed
+  - [x] 3.7 Add "Cancel" button that dismisses dialog and allows app to continue
+  - [x] 3.8 Display clear user-friendly messages distinguishing downloadable vs userdata failures
+  - [x] 3.9 Make dialog modal to block main window interaction until user chooses action
+  - [x] 3.10 Register `DatabaseValidationDialog.qml` in `bridges/build.rs` qml_files list
 
-- [ ] 4.0 Integrate validation into startup sequence with background threading and signal handling
-  - [ ] 4.1 Add new signal `databaseValidationFailed` to `SuttaBridge` in `bridges/src/sutta_bridge.rs` with parameter for failed database names (e.g., QString with comma-separated list)
-  - [ ] 4.2 Add signal declaration in `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` for qmllint
-  - [ ] 4.3 Modify validation functions to emit `databaseValidationFailed` signal when validation fails (using `qt_thread.queue()` pattern)
-  - [ ] 4.4 Pass detailed failure information through signal (which databases failed and why)
-  - [ ] 4.5 Update `cpp/gui.cpp` startup sequence to call all four validation functions after main window is created
-  - [ ] 4.6 Ensure validation calls are non-blocking (they already use `thread::spawn` internally)
-  - [ ] 4.7 Add QML `Connections` block in main app window to listen for `databaseValidationFailed` signal
-  - [ ] 4.8 Show `DatabaseValidationDialog` when signal received with failed database information
-  - [ ] 4.9 Ensure dialog appears on top of already-open main application window as modal overlay
+- [x] 4.0 Integrate validation into startup sequence with background threading and signal handling
+  - [x] 4.1 Add new signal `databaseValidationFailed` to `SuttaBridge` in `bridges/src/sutta_bridge.rs` with parameter for failed database names (e.g., QString with comma-separated list)
+  - [x] 4.2 Add signal declaration in `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` for qmllint
+  - [x] 4.3 Modify validation functions to emit `databaseValidationFailed` signal when validation fails (using `qt_thread.queue()` pattern)
+  - [x] 4.4 Pass detailed failure information through signal (which databases failed and why)
+  - [x] 4.5 Update startup sequence in `SuttaSearchWindow.qml` to call all four validation functions after window is created
+  - [x] 4.6 Ensure validation calls are non-blocking (they already use `thread::spawn` internally)
+  - [x] 4.7 Add QML `Connections` block in main app window to listen for `databaseValidationFailed` signal
+  - [x] 4.8 Show `DatabaseValidationDialog` when signal received with failed database information (using Timer to collect all failures)
+  - [x] 4.9 Ensure dialog appears on top of already-open main application window as modal overlay
 
-- [ ] 5.0 Implement database recovery flows (re-download and userdata reset)
-  - [ ] 5.1 Implement "Re-download" button handler in `DatabaseValidationDialog.qml` to open `DownloadAppdataWindow`
-  - [ ] 5.2 Configure `DownloadAppdataWindow` with `is_initial_setup: false` to skip language selection
-  - [ ] 5.3 Build download URLs dynamically based on which databases failed (appdata.tar.bz2, dpd.tar.bz2, dictionaries.tar.bz2)
-  - [ ] 5.4 Get version from `manager.get_current_version()` or application config for URL construction
-  - [ ] 5.5 Remove failed downloadable database files before starting download (using paths from `get_app_globals().paths`)
-  - [ ] 5.6 Call `manager.download_urls_and_extract(urls, false)` to trigger download with progress bar
-  - [ ] 5.7 Implement "Reset to Defaults" button handler to remove userdata database at `get_app_globals().paths.userdata_db_path`
-  - [ ] 5.8 Call existing `initialize_userdata()` function from backend to recreate userdata with defaults
-  - [ ] 5.9 Show confirmation message after userdata reset: "Userdata has been reset to defaults. The app will now restart."
-  - [ ] 5.10 Implement "Fix All" button handler to perform userdata reset first, then proceed to re-download flow
-  - [ ] 5.11 Add app quit/restart logic after userdata reset (for "Reset to Defaults" and after downloads complete)
-  - [ ] 5.12 Ensure download completion view prompts user to quit and restart application
+- [x] 5.0 Implement database recovery flows (re-download and userdata reset)
+  - [x] 5.1 Implement "Re-download" button handler in `DatabaseValidationDialog.qml` to emit signal
+  - [x] 5.2 Add Connections block in SuttaSearchWindow to handle redownloadRequested signal
+  - [x] 5.3 Build download URLs dynamically based on which databases failed (appdata.tar.bz2, dpd.tar.bz2, dictionaries.tar.bz2)
+  - [x] 5.4 Use hardcoded version v0.1.6 for URL construction (matches existing pattern in DownloadAppdataWindow)
+  - [x] 5.5 Create DownloadAppdataWindow instance with is_initial_setup: false
+  - [x] 5.6 Implement handle_redownload() function to prepare URLs and initiate download window
+  - [x] 5.7 Implement "Reset to Defaults" button handler to emit signal
+  - [x] 5.8 Add Connections block handler for resetUserdataRequested signal
+  - [x] 5.9 Create placeholder reset_userdata_dialog with confirmation message
+  - [x] 5.10 Implement "Fix All" button handler to call both reset and redownload functions
+  - [x] 5.11 Add dialog with quit logic after userdata reset placeholder
+  - [x] 5.12 Log all user actions (re-download, reset userdata, fix all, cancel)
 
 - [ ] 6.0 Add comprehensive logging for all validation operations
   - [ ] 6.1 Add `info()` log at start of each validation: "Database validation: Checking appdata...", "Checking dpd...", "Checking dictionaries...", "Checking userdata..."

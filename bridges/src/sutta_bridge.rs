@@ -11,7 +11,7 @@ use lazy_static::lazy_static;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
+use simsapa_backend::{get_app_data, get_app_globals, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
@@ -76,6 +76,10 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "ankiPreviewReady"]
         fn anki_preview_ready(self: Pin<&mut SuttaBridge>, preview_html: QString);
+
+        #[qsignal]
+        #[cxx_name = "databaseValidationResult"]
+        fn database_validation_result(self: Pin<&mut SuttaBridge>, database_name: QString, is_valid: bool, message: QString);
 
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
@@ -348,56 +352,73 @@ impl qobject::SuttaBridge {
     pub fn appdata_first_query(self: Pin<&mut Self>) {
         info("SuttaBridge::appdata_first_query() start");
 
-        use simsapa_backend::get_app_globals;
+        let qt_thread = self.qt_thread();
 
-        info("Database validation: Checking appdata...");
         thread::spawn(move || {
+            let mut error_message = String::new();
+
             // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
             let db_path = get_app_globals().paths.appdata_db_path.clone();
             match db_path.try_exists() {
                 Ok(true) => {}, // File exists, continue
                 Ok(false) => {
+                    error_message = "Database file not found".to_string();
                     error("Database validation FAILED: Appdata - Database file not found");
-                    return;
                 },
                 Err(e) => {
+                    error_message = format!("Error checking file existence: {}", e);
                     error(&format!("Database validation FAILED: Appdata - Error checking file existence: {}", e));
-                    return;
                 }
             }
 
-            // Check 2 & 3: Query executes and returns results
-            let app_data = get_app_data();
-            let params = SearchParams {
-                mode: SearchMode::ContainsMatch,
-                page_len: None,
-                lang: Some("en".to_string()),
-                lang_include: true,
-                source: None,
-                source_include: true,
-                enable_regex: false,
-                fuzzy_distance: 0,
-            };
+            if error_message.is_empty() {
+                // Check 2 & 3: Query executes and returns results
+                let app_data = get_app_data();
+                let params = SearchParams {
+                    mode: SearchMode::ContainsMatch,
+                    page_len: None,
+                    lang: None,
+                    lang_include: true,
+                    source: None,
+                    source_include: true,
+                    enable_regex: false,
+                    fuzzy_distance: 0,
+                };
 
-            let mut query_task = SearchQueryTask::new(
-                &app_data.dbm,
-                "dhamma".to_string(),
-                params,
-                SearchArea::Suttas,
-            );
+                let mut query_task = SearchQueryTask::new(
+                    &app_data.dbm,
+                    "dhamma".to_string(),
+                    params,
+                    SearchArea::Suttas,
+                );
 
-            match query_task.results_page(0) {
-                Ok(results) => {
-                    if results.is_empty() {
-                        error("Database validation FAILED: Appdata - Query returned 0 results");
-                    } else {
-                        info("Database validation: Appdata OK");
+                match query_task.results_page(0) {
+                    Ok(results) => {
+                        if results.is_empty() {
+                            error_message = "Query returned 0 results".to_string();
+                            error("Database validation FAILED: Appdata - Query returned 0 results");
+                        } else {
+                            info("Database validation: Appdata OK");
+                        }
+                    },
+                    Err(e) => {
+                        error_message = format!("Query error: {}", e);
+                        error(&format!("Database validation FAILED: Appdata - Query error: {}", e));
                     }
-                },
-                Err(e) => {
-                    error(&format!("Database validation FAILED: Appdata - Query error: {}", e));
-                }
+                };
+            }
+
+            // Always emit signal with result (success or failure)
+            let is_valid = error_message.is_empty();
+            let message = if is_valid {
+                QString::from("OK")
+            } else {
+                QString::from(error_message)
             };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().database_validation_result(QString::from("appdata"), is_valid, message);
+            }).unwrap();
 
             info("SuttaBridge::appdata_first_query() end");
         });
@@ -406,34 +427,50 @@ impl qobject::SuttaBridge {
     pub fn dpd_first_query(self: Pin<&mut Self>) {
         info("SuttaBridge::dpd_first_query() start");
 
-        use simsapa_backend::get_app_globals;
+        let qt_thread = self.qt_thread();
 
-        info("Database validation: Checking dpd...");
         thread::spawn(move || {
+            let mut error_message = String::new();
+
             // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
             let db_path = get_app_globals().paths.dpd_db_path.clone();
             match db_path.try_exists() {
                 Ok(true) => {}, // File exists, continue
                 Ok(false) => {
+                    error_message = "Database file not found".to_string();
                     error("Database validation FAILED: DPD - Database file not found");
-                    return;
                 },
                 Err(e) => {
+                    error_message = format!("Error checking file existence: {}", e);
                     error(&format!("Database validation FAILED: DPD - Error checking file existence: {}", e));
-                    return;
                 }
             }
 
-            // Check 2 & 3: Query executes and returns results
-            let app_data = get_app_data();
-            let json = app_data.dbm.dpd.dpd_lookup_json("dhamma");
+            if error_message.is_empty() {
+                // Check 2 & 3: Query executes and returns results
+                let app_data = get_app_data();
+                let json = app_data.dbm.dpd.dpd_lookup_json("dhamma");
 
-            // dpd_lookup_json returns a JSON array string, check if it contains results
-            if json == "[]" || json.is_empty() {
-                error("Database validation FAILED: DPD - Query returned 0 results");
-            } else {
-                info("Database validation: DPD OK");
+                // dpd_lookup_json returns a JSON array string, check if it contains results
+                if json == "[]" || json.is_empty() {
+                    error_message = "Query returned 0 results".to_string();
+                    error("Database validation FAILED: DPD - Query returned 0 results");
+                } else {
+                    info("Database validation: DPD OK");
+                }
             }
+
+            // Always emit signal with result (success or failure)
+            let is_valid = error_message.is_empty();
+            let message = if is_valid {
+                QString::from("OK")
+            } else {
+                QString::from(error_message)
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().database_validation_result(QString::from("dpd"), is_valid, message);
+            }).unwrap();
 
             info("SuttaBridge::dpd_first_query() end");
         });
@@ -442,36 +479,52 @@ impl qobject::SuttaBridge {
     pub fn dictionary_first_query(self: Pin<&mut Self>) {
         info("SuttaBridge::dictionary_first_query() start");
 
-        use simsapa_backend::get_app_globals;
+        let qt_thread = self.qt_thread();
 
-        info("Database validation: Checking dictionaries...");
         thread::spawn(move || {
+            let mut error_message = String::new();
+
             // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
             let db_path = get_app_globals().paths.dict_db_path.clone();
             match db_path.try_exists() {
                 Ok(true) => {}, // File exists, continue
                 Ok(false) => {
+                    error_message = "Database file not found".to_string();
                     error("Database validation FAILED: Dictionaries - Database file not found");
-                    return;
                 },
                 Err(e) => {
+                    error_message = format!("Error checking file existence: {}", e);
                     error(&format!("Database validation FAILED: Dictionaries - Error checking file existence: {}", e));
-                    return;
                 }
             }
 
-            // Check 2 & 3: Query executes and returns results
-            let app_data = get_app_data();
-            let word = app_data.dbm.dictionaries.get_word("anidassana/dpd");
+            if error_message.is_empty() {
+                // Check 2 & 3: Query executes and returns results
+                let app_data = get_app_data();
+                let word = app_data.dbm.dictionaries.get_word("anidassana/dpd");
 
-            match word {
-                Some(_) => {
-                    info("Database validation: Dictionaries OK");
-                },
-                None => {
-                    error("Database validation FAILED: Dictionaries - Query returned 0 results (uid 'anidassana/dpd' not found)");
-                },
+                match word {
+                    Some(_) => {
+                        info("Database validation: Dictionaries OK");
+                    },
+                    None => {
+                        error_message = "Query returned 0 results".to_string();
+                        error("Database validation FAILED: Dictionaries - Query returned 0 results");
+                    },
+                }
             }
+
+            // Always emit signal with result (success or failure)
+            let is_valid = error_message.is_empty();
+            let message = if is_valid {
+                QString::from("OK")
+            } else {
+                QString::from(error_message)
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().database_validation_result(QString::from("dictionaries"), is_valid, message);
+            }).unwrap();
 
             info("SuttaBridge::dictionary_first_query() end");
         });
@@ -480,41 +533,57 @@ impl qobject::SuttaBridge {
     pub fn userdata_first_query(self: Pin<&mut Self>) {
         info("SuttaBridge::userdata_first_query() start");
 
-        use simsapa_backend::get_app_globals;
+        let qt_thread = self.qt_thread();
 
-        info("Database validation: Checking userdata...");
         thread::spawn(move || {
+            let mut error_message = String::new();
+
             // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
             let db_path = get_app_globals().paths.userdata_db_path.clone();
             match db_path.try_exists() {
                 Ok(true) => {}, // File exists, continue
                 Ok(false) => {
+                    error_message = "Database file not found".to_string();
                     error("Database validation FAILED: Userdata - Database file not found");
-                    return;
                 },
                 Err(e) => {
+                    error_message = format!("Error checking file existence: {}", e);
                     error(&format!("Database validation FAILED: Userdata - Error checking file existence: {}", e));
-                    return;
                 }
             }
 
-            // Check 2 & 3: Try to get app_settings - if this succeeds without error,
-            // the database is valid. We can't easily distinguish between default values
-            // and actual database values without more complex queries, but calling
-            // get_app_settings will fail if the database is corrupt or inaccessible.
-            let app_data = get_app_data();
+            if error_message.is_empty() {
+                // Check 2 & 3: Try to get app_settings - if this succeeds without error,
+                // the database is valid. We can't easily distinguish between default values
+                // and actual database values without more complex queries, but calling
+                // get_app_settings will fail if the database is corrupt or inaccessible.
+                let app_data = get_app_data();
 
-            // Try a simple database operation to validate connectivity
-            match app_data.dbm.userdata.get_conn() {
-                Ok(_) => {
-                    // Successfully connected, now try to read app_settings
-                    let _settings = app_data.dbm.userdata.get_app_settings();
-                    info("Database validation: Userdata OK");
-                },
-                Err(e) => {
-                    error(&format!("Database validation FAILED: Userdata - Query error: {}", e));
+                // Try a simple database operation to validate connectivity
+                match app_data.dbm.userdata.get_conn() {
+                    Ok(_) => {
+                        // Successfully connected, now try to read app_settings
+                        let _settings = app_data.dbm.userdata.get_app_settings();
+                        info("Database validation: Userdata OK");
+                    },
+                    Err(e) => {
+                        error_message = format!("Query error: {}", e);
+                        error(&format!("Database validation FAILED: Userdata - Query error: {}", e));
+                    }
                 }
             }
+
+            // Always emit signal with result (success or failure)
+            let is_valid = error_message.is_empty();
+            let message = if is_valid {
+                QString::from("OK")
+            } else {
+                QString::from(error_message)
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().database_validation_result(QString::from("userdata"), is_valid, message);
+            }).unwrap();
 
             info("SuttaBridge::userdata_first_query() end");
         });

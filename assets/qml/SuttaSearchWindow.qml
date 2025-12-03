@@ -32,7 +32,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.reset_userdata_dialog.visible)
 
     property string last_query_text: ""
     property string last_search_area: ""
@@ -449,6 +449,8 @@ ${query_text}`;
             SuttaBridge.load_db();
             SuttaBridge.appdata_first_query();
             SuttaBridge.dpd_first_query();
+            SuttaBridge.dictionary_first_query();
+            SuttaBridge.userdata_first_query();
 
             search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
             action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
@@ -842,6 +844,10 @@ ${query_text}`;
             SuttaBridge.set_theme_name(theme_name);
             root.apply_theme();
         }
+    }
+
+    DatabaseValidationDialog {
+        id: database_validation_dialog
     }
 
     ColumnLayout {
