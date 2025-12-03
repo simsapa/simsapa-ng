@@ -63,6 +63,21 @@ ApplicationWindow {
 
     AssetManager { id: manager }
 
+    function start_redownload(urls) {
+        logger.log(`DownloadAppdataWindow.start_redownload() with ${urls.length} URL(s)`);
+
+        // Show the window
+        root.show();
+        root.raise();
+        root.requestActivate();
+
+        // Set to download progress view (idx 2)
+        views_stack.currentIndex = 2;
+
+        // Start the download
+        manager.download_urls_and_extract(urls, false);
+    }
+
     function toggle_language_selection(lang_code) {
         let selected = root.selected_languages.slice();
         let index = selected.indexOf(lang_code);

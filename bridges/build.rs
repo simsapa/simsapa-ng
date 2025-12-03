@@ -31,6 +31,7 @@ fn main() {
     qml_files.push("../assets/qml/DictionaryTab.qml");
     qml_files.push("../assets/qml/SuttaStackLayout.qml");
     qml_files.push("../assets/qml/AboutDialog.qml");
+    qml_files.push("../assets/qml/DatabaseValidationDialog.qml");
     qml_files.push("../assets/qml/SystemPromptsDialog.qml");
     qml_files.push("../assets/qml/ModelsDialog.qml");
     qml_files.push("../assets/qml/AnkiExportDialog.qml");

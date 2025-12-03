@@ -19,6 +19,7 @@ Item {
     signal dpdLookupReady(query_id: string, results_json: string);
     signal ankiCsvExportReady(results_json: string);
     signal ankiPreviewReady(preview_html: string);
+    signal databaseValidationResult(database_name: string, is_valid: bool, message: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -34,6 +35,19 @@ Item {
 
     function dpd_first_query() {
         console.log("dpd_first_query()");
+    }
+
+    function dictionary_first_query() {
+        console.log("dictionary_first_query()");
+    }
+
+    function userdata_first_query() {
+        console.log("userdata_first_query()");
+    }
+
+    function reset_userdata_database(): bool {
+        console.log("reset_userdata_database()");
+        return true;
     }
 
     function query_text_to_uid_field_query(query_text: string): string {

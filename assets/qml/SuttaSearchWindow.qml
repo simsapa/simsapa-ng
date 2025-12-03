@@ -449,6 +449,8 @@ ${query_text}`;
             SuttaBridge.load_db();
             SuttaBridge.appdata_first_query();
             SuttaBridge.dpd_first_query();
+            SuttaBridge.dictionary_first_query();
+            SuttaBridge.userdata_first_query();
 
             search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
             action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
@@ -842,6 +844,10 @@ ${query_text}`;
             SuttaBridge.set_theme_name(theme_name);
             root.apply_theme();
         }
+    }
+
+    DatabaseValidationDialog {
+        id: database_validation_dialog
     }
 
     ColumnLayout {
