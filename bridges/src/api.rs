@@ -236,6 +236,58 @@ fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
     }
 }
 
+/// Serve book resources (images, CSS, PDFs, etc.) from the database
+#[get("/book_resources/<book_uid>/<path..>")]
+fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
+    let path_str = path.to_str().unwrap_or("");
+
+    info(&format!("Serving book resource: book_uid={}, path={}", book_uid, path_str));
+
+    // Query the database for the resource
+    match db_manager.appdata.get_book_resource(book_uid, path_str) {
+        Ok(Some(resource)) => {
+            // Determine ContentType from MIME type
+            let content_type = if let Some(ref mime) = resource.mime_type {
+                match mime.as_str() {
+                    "image/png" => ContentType::PNG,
+                    "image/jpeg" | "image/jpg" => ContentType::JPEG,
+                    "image/gif" => ContentType::GIF,
+                    "image/svg+xml" => ContentType::SVG,
+                    "image/webp" => ContentType::WEBP,
+                    "text/css" => ContentType::CSS,
+                    "application/javascript" | "text/javascript" => ContentType::JavaScript,
+                    "application/pdf" => ContentType::PDF,
+                    "font/woff" | "font/woff2" => ContentType::WOFF,
+                    "font/ttf" => ContentType::TTF,
+                    "font/otf" => ContentType::OTF,
+                    _ => ContentType::Binary,
+                }
+            } else {
+                ContentType::Binary
+            };
+
+            // Return the resource data
+            let data = resource.content_data.unwrap_or_default();
+            info(&format!("Serving {} bytes of {} ({})", data.len(), path_str, content_type));
+            (Status::Ok, (content_type, data))
+        }
+        Ok(None) => {
+            // Resource not found
+            let msg = format!("404 Not Found: /book_resources/{}/{}", book_uid, path_str);
+            warn(&msg);
+            let ret = Vec::from(msg.as_bytes());
+            (Status::NotFound, (ContentType::Plain, ret))
+        }
+        Err(e) => {
+            // Database error
+            let msg = format!("500 Internal Server Error: {}", e);
+            error(&msg);
+            let ret = Vec::from(msg.as_bytes());
+            (Status::InternalServerError, (ContentType::Plain, ret))
+        }
+    }
+}
+
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
@@ -261,6 +313,7 @@ pub async extern "C" fn start_webserver() {
             index,
             shutdown,
             serve_assets,
+            serve_book_resources,
             logger_route,
             lookup_window_query,
             summary_query,

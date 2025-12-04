@@ -124,38 +124,38 @@
   - [x] 4.10 Add error handling for corrupted PDFs and extraction failures
   - [x] 4.11 Add function `import_pdf_to_db(db_conn: &mut SqliteConnection, pdf_path: &Path, book_uid: &str) -> Result<()>`
 
-- [ ] 5.0 Implement HTML parsing and import functionality
-  - [ ] 5.1 Create `backend/src/html_import.rs` module
-  - [ ] 5.2 Add function to parse HTML and extract metadata from <title> tag and meta tags (author, description)
-  - [ ] 5.3 Implement function to split HTML by specified tag (h1, h2, h3, h4, h5, h6, or custom tag)
-  - [ ] 5.4 For each split section, use tag content as chapter title
-  - [ ] 5.5 Extract and parse embedded resources (images, CSS) from HTML
-  - [ ] 5.6 Convert each section's HTML to plain text for FTS5 indexing
-  - [ ] 5.7 Generate spine_item_uid for each section: "<book_uid>.<spine_index>"
-  - [ ] 5.8 Rewrite resource links to use API endpoint format: `/book_resources/<book_uid>/<resource_path>`
-  - [ ] 5.9 Insert book record into `books` table with document_type="html"
-  - [ ] 5.10 Insert spine items (single item if no splitting, multiple if split by tag)
-  - [ ] 5.11 Insert resources into `book_resources` table
-  - [ ] 5.12 Handle case where split tag is not found: warn user and import as single spine item
-  - [ ] 5.13 Add function `import_html_to_db(db_conn: &mut SqliteConnection, html_path: &Path, book_uid: &str, split_tag: Option<&str>) -> Result<()>`
+- [x] 5.0 Implement HTML parsing and import functionality
+  - [x] 5.1 Create `backend/src/html_import.rs` module
+  - [x] 5.2 Add function to parse HTML and extract metadata from <title> tag and meta tags (author, description)
+  - [x] 5.3 Implement function to split HTML by specified tag (h1, h2, h3, h4, h5, h6, or custom tag)
+  - [x] 5.4 For each split section, use tag content as chapter title
+  - [x] 5.5 Extract and parse embedded resources (images, CSS) from HTML
+  - [x] 5.6 Convert each section's HTML to plain text for FTS5 indexing
+  - [x] 5.7 Generate spine_item_uid for each section: "<book_uid>.<spine_index>"
+  - [x] 5.8 Rewrite resource links to use API endpoint format: `/book_resources/<book_uid>/<resource_path>`
+  - [x] 5.9 Insert book record into `books` table with document_type="html"
+  - [x] 5.10 Insert spine items (single item if no splitting, multiple if split by tag)
+  - [x] 5.11 Insert resources into `book_resources` table
+  - [x] 5.12 Handle case where split tag is not found: warn user and import as single spine item
+  - [x] 5.13 Add function `import_html_to_db(db_conn: &mut SqliteConnection, html_path: &Path, book_uid: &str, split_tag: Option<&str>) -> Result<()>`
 
-- [ ] 6.0 Implement backend helper functions and database queries
-  - [ ] 6.1 Add `get_book_by_uid(book_uid: &str) -> Result<Option<Book>>` to `backend/src/db/appdata.rs`
-  - [ ] 6.2 Add `get_book_spine_item(spine_item_uid: &str) -> Result<Option<BookSpineItem>>` to `backend/src/db/appdata.rs`
-  - [ ] 6.3 Add `get_book_resource(book_uid: &str, resource_path: &str) -> Result<Option<BookResource>>` to `backend/src/db/appdata.rs`
-  - [ ] 6.4 Add `get_all_books() -> Result<Vec<Book>>` to `backend/src/db/appdata.rs`
-  - [ ] 6.5 Add `get_spine_items_for_book(book_uid: &str) -> Result<Vec<BookSpineItem>>` to `backend/src/db/appdata.rs`
-  - [ ] 6.6 Add `delete_book_by_uid(book_uid: &str) -> Result<()>` to `backend/src/db/appdata.rs` (relies on cascade delete for spine items and resources)
-  - [ ] 6.7 Implement `get_book_spine_html()` in `backend/src/app_data.rs` similar to existing sutta rendering logic
-  - [ ] 6.8 Reuse existing `sutta_html_page()` template function or create `book_spine_html_page()` if customization needed
+- [x] 6.0 Implement backend helper functions and database queries
+  - [x] 6.1 Add `get_book_by_uid(book_uid: &str) -> Result<Option<Book>>` to `backend/src/db/appdata.rs`
+  - [x] 6.2 Add `get_book_spine_item(spine_item_uid: &str) -> Result<Option<BookSpineItem>>` to `backend/src/db/appdata.rs`
+  - [x] 6.3 Add `get_book_resource(book_uid: &str, resource_path: &str) -> Result<Option<BookResource>>` to `backend/src/db/appdata.rs`
+  - [x] 6.4 Add `get_all_books() -> Result<Vec<Book>>` to `backend/src/db/appdata.rs`
+  - [x] 6.5 Add `get_spine_items_for_book(book_uid: &str) -> Result<Vec<BookSpineItem>>` to `backend/src/db/appdata.rs`
+  - [x] 6.6 Add `delete_book_by_uid(book_uid: &str) -> Result<()>` to `backend/src/db/appdata.rs` (relies on cascade delete for spine items and resources)
+  - [x] 6.7 Implement `render_book_spine_content()` in `backend/src/app_data.rs` similar to existing sutta rendering logic
+  - [x] 6.8 Reuse existing `sutta_html_page()` template function or create `book_spine_html_page()` if customization needed
 
-- [ ] 7.0 Create API endpoint for book resource serving
-  - [ ] 7.1 Add route handler in `bridges/src/api.rs` for `GET /book_resources/<book_uid>/<resource_path>`
-  - [ ] 7.2 Parse book_uid and resource_path from URL parameters
-  - [ ] 7.3 Query database using `get_book_resource(book_uid, resource_path)`
-  - [ ] 7.4 Return resource binary data with appropriate MIME type headers (image/png, text/css, application/pdf, etc.)
-  - [ ] 7.5 Handle missing resources gracefully with 404 response
-  - [ ] 7.6 Test endpoint by manually requesting a resource URL in browser after importing a book
+- [x] 7.0 Create API endpoint for book resource serving
+  - [x] 7.1 Add route handler in `bridges/src/api.rs` for `GET /book_resources/<book_uid>/<resource_path>`
+  - [x] 7.2 Parse book_uid and resource_path from URL parameters
+  - [x] 7.3 Query database using `get_book_resource(book_uid, resource_path)`
+  - [x] 7.4 Return resource binary data with appropriate MIME type headers (image/png, text/css, application/pdf, etc.)
+  - [x] 7.5 Handle missing resources gracefully with 404 response
+  - [x] 7.6 Test endpoint by manually requesting a resource URL in browser after importing a book
 
 - [ ] 8.0 Create LibraryWindow QML component and UI
   - [ ] 8.1 Create `assets/qml/LibraryWindow.qml` as ApplicationWindow following pattern of `SuttaLanguagesWindow.qml`
