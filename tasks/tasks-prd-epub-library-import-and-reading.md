@@ -13,10 +13,10 @@
 ### Backend Import Logic
 - `backend/src/document_import.rs` - Core document import functionality for all formats (future)
 - `backend/src/epub_import.rs` - Epub-specific parsing and import logic (COMPLETED - extracts language from metadata, stores in book and spine items)
-- `backend/src/pdf_import.rs` - PDF-specific parsing and import logic (future)
+- `backend/src/pdf_import.rs` - PDF-specific parsing and import logic (COMPLETED - extracts metadata with lopdf, text with pdf-extract, embeds PDF)
 - `backend/src/html_import.rs` - HTML-specific parsing and import logic (future)
-- `backend/Cargo.toml` - Added dependencies: epub = "=2.1.5"
-- `backend/src/lib.rs` - Added epub_import module export
+- `backend/Cargo.toml` - Added dependencies: epub = "=2.1.5", pdf-extract = "0.7", lopdf = "0.34"
+- `backend/src/lib.rs` - Added epub_import and pdf_import module exports
 
 ### Backend Queries and Helpers
 - `backend/src/app_data.rs` - Add book-related query methods (get_book_spine_item, get_book_resource)
@@ -111,18 +111,18 @@
   - [x] 3.9 Verified database contains: book record with metadata JSON, 24 spine items (ess.0-ess.23), 17 resources (images, fonts), FTS5 indexes created
   - [x] 3.10 Tested with existing database: migrations skipped correctly, second book imported successfully
 
-- [ ] 4.0 Implement PDF parsing and import functionality
-  - [ ] 4.1 Add `pdf-extract` and `lopdf` dependencies to `backend/Cargo.toml`
-  - [ ] 4.2 Create `backend/src/pdf_import.rs` module
-  - [ ] 4.3 Implement function to extract plain text from PDF using pdf-extract crate
-  - [ ] 4.4 Implement function to extract metadata (title, author) using lopdf crate (reference: https://github.com/Autoparallel/learner/blob/main/crates/learner/src/pdf.rs)
-  - [ ] 4.5 Read PDF file into memory as binary data
-  - [ ] 4.6 Generate HTML content that embeds PDF using embedpdf.js, pointing to `/book_resources/<book_uid>/document.pdf`
-  - [ ] 4.7 Insert book record into `books` table with document_type="pdf"
-  - [ ] 4.8 Insert single spine item with spine_index=0, spine_item_uid="<book_uid>.0", content_html (embedpdf HTML), content_plain (extracted text)
-  - [ ] 4.9 Insert PDF binary data into `book_resources` table with resource_path="document.pdf", mime_type="application/pdf"
-  - [ ] 4.10 Add error handling for corrupted PDFs and extraction failures
-  - [ ] 4.11 Add function `import_pdf_to_db(db_conn: &mut SqliteConnection, pdf_path: &Path, book_uid: &str) -> Result<()>`
+- [x] 4.0 Implement PDF parsing and import functionality
+  - [x] 4.1 Add `pdf-extract` and `lopdf` dependencies to `backend/Cargo.toml`
+  - [x] 4.2 Create `backend/src/pdf_import.rs` module
+  - [x] 4.3 Implement function to extract plain text from PDF using pdf-extract crate
+  - [x] 4.4 Implement function to extract metadata (title, author, language) using lopdf crate
+  - [x] 4.5 Read PDF file into memory as binary data
+  - [x] 4.6 Generate HTML content that embeds PDF using embed tag, pointing to `/book_resources/<book_uid>/document.pdf`
+  - [x] 4.7 Insert book record into `books` table with document_type="pdf"
+  - [x] 4.8 Insert single spine item with spine_index=0, spine_item_uid="<book_uid>.0", content_html (embed HTML), content_plain (extracted text)
+  - [x] 4.9 Insert PDF binary data into `book_resources` table with resource_path="document.pdf", mime_type="application/pdf"
+  - [x] 4.10 Add error handling for corrupted PDFs and extraction failures
+  - [x] 4.11 Add function `import_pdf_to_db(db_conn: &mut SqliteConnection, pdf_path: &Path, book_uid: &str) -> Result<()>`
 
 - [ ] 5.0 Implement HTML parsing and import functionality
   - [ ] 5.1 Create `backend/src/html_import.rs` module
