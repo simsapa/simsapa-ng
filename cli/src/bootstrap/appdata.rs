@@ -64,8 +64,16 @@ impl AppdataBootstrap {
 
     pub fn create_fts5_indexes(&self) -> Result<()> {
         let appdata_db_path = &self.output_path;
-        let sql_script_path = PathBuf::from("../scripts/appdata-fts5-indexes.sql");
-        run_fts5_indexes_sql_script(appdata_db_path, &sql_script_path)
+
+        // Run appdata FTS5 indexes
+        let appdata_sql_script_path = PathBuf::from("../scripts/appdata-fts5-indexes.sql");
+        run_fts5_indexes_sql_script(appdata_db_path, &appdata_sql_script_path)?;
+
+        // Run books FTS5 indexes
+        let books_sql_script_path = PathBuf::from("../scripts/books-fts5-indexes.sql");
+        run_fts5_indexes_sql_script(appdata_db_path, &books_sql_script_path)?;
+
+        Ok(())
     }
 
     pub fn run(&mut self) -> Result<()> {
@@ -95,9 +103,9 @@ mod tests {
     fn test_database_creation() {
         let temp_dir = TempDir::new().unwrap();
         let db_path = temp_dir.path().join("test_appdata.sqlite3");
-        
+
         let bootstrap = AppdataBootstrap::new(db_path.clone());
-        
+
         assert!(bootstrap.create_database().is_ok());
         assert!(db_path.exists());
     }

@@ -222,7 +222,6 @@ All formats integrate seamlessly with the existing sutta reading infrastructure,
 42. The system must create test cases using `backend/tests/data/its-essential-meaning.epub` with book UID "ess"
 
 43. The system must create test cases for PDF import using:
-    - `backend/tests/data/Nyanatiloka-Word-of-the-Buddha.pdf` with book UID "word-of-buddha"
     - `backend/tests/data/pali-lessons.pdf` with book UID "pali-lessons"
 
 44. The system must create test cases for HTML import with both single-spine and split-by-tag scenarios
@@ -364,7 +363,6 @@ All formats integrate seamlessly with the existing sutta reading infrastructure,
 
 ### PDF Test
 - Test PDF files: 
-  - `backend/tests/data/Nyanatiloka-Word-of-the-Buddha.pdf`
   - `backend/tests/data/pali-lessons.pdf`
 - Test book UIDs: "word-of-buddha", "pali-lessons"
 - Expected single spine item UIDs: "word-of-buddha.0", "pali-lessons.0"

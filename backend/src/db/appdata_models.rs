@@ -163,3 +163,89 @@ pub struct NewSuttaGloss<'a> {
     pub source_uid: Option<&'a str>,
     pub content_json: Option<&'a str>,
 }
+
+// Book models for document library
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[diesel(table_name = books)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct Book {
+    pub id: i32,
+    pub uid: String,
+    pub document_type: String,
+    pub title: Option<String>,
+    pub author: Option<String>,
+    pub language: Option<String>,
+    pub file_path: Option<String>,
+    pub metadata_json: Option<String>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = books)]
+pub struct NewBook<'a> {
+    pub uid: &'a str,
+    pub document_type: &'a str,
+    pub title: Option<&'a str>,
+    pub author: Option<&'a str>,
+    pub language: Option<&'a str>,
+    pub file_path: Option<&'a str>,
+    pub metadata_json: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[diesel(belongs_to(Book, foreign_key = book_id))]
+#[diesel(table_name = book_spine_items)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct BookSpineItem {
+    pub id: i32,
+    pub book_id: i32,
+    pub book_uid: String,
+    pub spine_item_uid: String,
+    pub spine_index: i32,
+    pub title: Option<String>,
+    pub language: Option<String>,
+    pub content_html: Option<String>,
+    pub content_plain: Option<String>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = book_spine_items)]
+pub struct NewBookSpineItem<'a> {
+    pub book_id: i32,
+    pub book_uid: &'a str,
+    pub spine_item_uid: &'a str,
+    pub spine_index: i32,
+    pub title: Option<&'a str>,
+    pub language: Option<&'a str>,
+    pub content_html: Option<&'a str>,
+    pub content_plain: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[diesel(belongs_to(Book, foreign_key = book_id))]
+#[diesel(table_name = book_resources)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct BookResource {
+    pub id: i32,
+    pub book_id: i32,
+    pub book_uid: String,
+    pub resource_path: String,
+    pub mime_type: Option<String>,
+    pub content_data: Option<Vec<u8>>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = book_resources)]
+pub struct NewBookResource<'a> {
+    pub book_id: i32,
+    pub book_uid: &'a str,
+    pub resource_path: &'a str,
+    pub mime_type: Option<&'a str>,
+    pub content_data: Option<&'a [u8]>,
+}

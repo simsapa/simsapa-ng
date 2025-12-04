@@ -3,19 +3,20 @@
 ## Relevant Files
 
 ### Backend Database
-- `backend/src/db/appdata_schema.rs` - Database schema definitions using Diesel ORM
-- `backend/src/db/appdata_models.rs` - Rust model structs for database tables
+- `backend/src/db/appdata_schema.rs` - Database schema definitions using Diesel ORM (UPDATED: added language fields)
+- `backend/src/db/appdata_models.rs` - Rust model structs for database tables (UPDATED: added language fields to Book and BookSpineItem)
 - `backend/src/db/appdata.rs` - Database connection and query functions
-- `backend/migrations/appdata/YYYY-MM-DD-HHMMSS_create_books_tables/up.sql` - Migration to create books tables
-- `backend/migrations/appdata/YYYY-MM-DD-HHMMSS_create_books_tables/down.sql` - Migration rollback
-- `scripts/appdata-fts5-indexes.sql` - FTS5 fulltext search index creation for book_spine_items
+- `backend/migrations/appdata/2025-12-04-130316_create_books_tables/up.sql` - Migration to create books tables (UPDATED: added language columns and indexes)
+- `backend/migrations/appdata/2025-12-04-130316_create_books_tables/down.sql` - Migration rollback
+- `scripts/books-fts5-indexes.sql` - FTS5 fulltext search index creation for book_spine_items (UPDATED: language as UNINDEXED field for filtering)
 
 ### Backend Import Logic
-- `backend/src/document_import.rs` - Core document import functionality for all formats
-- `backend/src/epub_import.rs` - Epub-specific parsing and import logic
-- `backend/src/pdf_import.rs` - PDF-specific parsing and import logic
-- `backend/src/html_import.rs` - HTML-specific parsing and import logic
-- `backend/Cargo.toml` - Add dependencies: epub, pdf-extract, lopdf
+- `backend/src/document_import.rs` - Core document import functionality for all formats (future)
+- `backend/src/epub_import.rs` - Epub-specific parsing and import logic (COMPLETED - extracts language from metadata, stores in book and spine items)
+- `backend/src/pdf_import.rs` - PDF-specific parsing and import logic (future)
+- `backend/src/html_import.rs` - HTML-specific parsing and import logic (future)
+- `backend/Cargo.toml` - Added dependencies: epub = "=2.1.5"
+- `backend/src/lib.rs` - Added epub_import module export
 
 ### Backend Queries and Helpers
 - `backend/src/app_data.rs` - Add book-related query methods (get_book_spine_item, get_book_resource)
@@ -41,8 +42,9 @@
 - `cpp/window_manager.cpp` - Add library window to window manager
 
 ### CLI Module
-- `cli/src/main.rs` - Add subcommand for importing epub with database migration
-- `cli/src/bootstrap/import_documents.rs` - Document import logic for CLI
+- `cli/src/main.rs` - Added ImportEpub subcommand with database migration (COMPLETED)
+- `cli/src/bootstrap/appdata.rs` - Bootstrap appdata database (UPDATED: runs books-fts5-indexes.sql after appdata-fts5-indexes.sql)
+- `cli/src/bootstrap/import_documents.rs` - Document import logic for CLI (future)
 
 ### Tests
 - `backend/tests/test_document_import.rs` - Comprehensive tests for all import formats
@@ -50,7 +52,6 @@
 - `backend/tests/test_pdf_import.rs` - PDF-specific import tests
 - `backend/tests/test_html_import.rs` - HTML-specific import tests
 - `backend/tests/data/its-essential-meaning.epub` - Epub test data (existing)
-- `backend/tests/data/Nyanatiloka-Word-of-the-Buddha.pdf` - PDF test data (existing)
 - `backend/tests/data/pali-lessons.pdf` - PDF test data (existing)
 - `backend/tests/data/sample.html` - HTML test data (to be created)
 
@@ -67,46 +68,48 @@
 
 ## Tasks
 
-- [ ] 1.0 Create database schema and migrations for books, spine items, and resources
-  - [ ] 1.1 Create new migration directory: `backend/migrations/appdata/YYYY-MM-DD-HHMMSS_create_books_tables/`
-  - [ ] 1.2 Write `up.sql` to create `books` table with fields: id, uid, document_type, title, author, file_path, metadata_json
-  - [ ] 1.3 Write `up.sql` to create `book_spine_items` table with fields: id, book_id, book_uid, spine_item_uid, spine_index, title, content_html, content_plain
-  - [ ] 1.4 Write `up.sql` to create `book_resources` table with fields: id, book_id, book_uid, resource_path, mime_type, content_data (Blob)
-  - [ ] 1.5 Add foreign key constraints with cascade delete: book_spine_items.book_id → books.id, book_resources.book_id → books.id
-  - [ ] 1.6 Add indexes on foreign keys and frequently queried fields (book_uid, spine_item_uid)
-  - [ ] 1.7 Write `down.sql` to drop all three tables in reverse order
-  - [ ] 1.8 Add FTS5 virtual table creation for `book_spine_items_fts` in `scripts/appdata-fts5-indexes.sql` following pattern from `suttas_fts`
-  - [ ] 1.9 Add triggers for INSERT, UPDATE, DELETE to keep FTS5 table synchronized with book_spine_items
-  - [ ] 1.10 Define Diesel models in `backend/src/db/appdata_models.rs`: Book, BookSpineItem, BookResource structs
-  - [ ] 1.11 Update `backend/src/db/appdata_schema.rs` with table definitions and joinable relationships
-  - [ ] 1.12 Run migration and verify tables are created: `cd backend && diesel migration run --database-url=path/to/appdata.db`
+- [x] 1.0 Create database schema and migrations for books, spine items, and resources
+  - [x] 1.1 Create new migration directory: `backend/migrations/appdata/2025-12-04-130316_create_books_tables/`
+  - [x] 1.2 Write `up.sql` to create `books` table with fields: id, uid, document_type, title, author, file_path, metadata_json
+  - [x] 1.3 Write `up.sql` to create `book_spine_items` table with fields: id, book_id, book_uid, spine_item_uid, spine_index, title, content_html, content_plain
+  - [x] 1.4 Write `up.sql` to create `book_resources` table with fields: id, book_id, book_uid, resource_path, mime_type, content_data (Blob)
+  - [x] 1.5 Add foreign key constraints with cascade delete: book_spine_items.book_id → books.id, book_resources.book_id → books.id
+  - [x] 1.6 Add indexes on foreign keys and frequently queried fields (book_uid, spine_item_uid)
+  - [x] 1.7 Write `down.sql` to drop all three tables in reverse order
+  - [x] 1.8 Add FTS5 virtual table creation for `book_spine_items_fts` in `scripts/books-fts5-indexes.sql` following pattern from `suttas_fts`
+  - [x] 1.9 Add triggers for INSERT, UPDATE, DELETE to keep FTS5 table synchronized with book_spine_items
+  - [x] 1.10 Define Diesel models in `backend/src/db/appdata_models.rs`: Book, BookSpineItem, BookResource structs
+  - [x] 1.11 Update `backend/src/db/appdata_schema.rs` with table definitions and joinable relationships
+  - [x] 1.12 Run migration and verify tables are created: migrations run automatically on connection, backend compiles successfully
 
-- [ ] 2.0 Implement Epub parsing and import functionality
-  - [ ] 2.1 Add `epub = "2.0"` dependency to `backend/Cargo.toml`
-  - [ ] 2.2 Create `backend/src/epub_import.rs` module
-  - [ ] 2.3 Implement function to open epub file using EpubDoc from epub crate
-  - [ ] 2.4 Extract metadata (title, author) from epub and serialize Vec<MetadataItem> to JSON string
-  - [ ] 2.5 Extract TOC (table of contents) and match chapter titles to spine items using epub crate API
-  - [ ] 2.6 Iterate through spine items and extract HTML content for each chapter
-  - [ ] 2.7 Convert HTML content to plain text using existing plain text extraction logic (reuse from sutta imports)
-  - [ ] 2.8 Generate spine_item_uid in format "<book_uid>.<spine_index>" (e.g., "ess.0", "ess.1", "ess.2")
-  - [ ] 2.9 Extract all resources (images, CSS, fonts) from epub as binary data
-  - [ ] 2.10 Rewrite resource links in chapter HTML to use API endpoint format: `/book_resources/<book_uid>/<resource_path>`
-  - [ ] 2.11 Insert book record into `books` table
-  - [ ] 2.12 Insert all spine items into `book_spine_items` table with book_id, spine_index, titles, content_html, content_plain
-  - [ ] 2.13 Insert all resources into `book_resources` table with book_id, resource_path, mime_type, binary content_data
-  - [ ] 2.14 Add error handling for corrupted files, missing metadata, and parse errors
-  - [ ] 2.15 Add function `import_epub_to_db(db_conn: &mut SqliteConnection, epub_path: &Path, book_uid: &str) -> Result<()>`
+- [x] 2.0 Implement Epub parsing and import functionality
+  - [x] 2.1 Add `epub = "=2.1.5"` dependency to `backend/Cargo.toml`
+  - [x] 2.2 Create `backend/src/epub_import.rs` module with full implementation
+  - [x] 2.3 Fixed epub crate API usage to match version 2.1.5 (metadata is Vec<MetadataItem>, resources use ResourceItem struct)
+  - [x] 2.4 Extract metadata (title, author) from epub using MetadataItem.value
+  - [x] 2.5 Extract TOC (table of contents) and match chapter titles to spine items using correct API
+  - [x] 2.6 Iterate through spine items and extract HTML content for each chapter using ResourceItem.path
+  - [x] 2.7 Convert HTML content to plain text using existing plain text extraction logic (reuse from sutta imports)
+  - [x] 2.8 Generate spine_item_uid in format "<book_uid>.<spine_index>" (e.g., "ess.0", "ess.1", "ess.2")
+  - [x] 2.9 Extract all resources (images, CSS, fonts) from epub as binary data using ResourceItem struct
+  - [x] 2.10 Rewrite resource links in chapter HTML to use API endpoint format: `/book_resources/<book_uid>/<resource_path>`
+  - [x] 2.11 Insert book record into `books` table
+  - [x] 2.12 Insert all spine items into `book_spine_items` table with book_id, spine_index, titles, content_html, content_plain
+  - [x] 2.13 Insert all resources into `book_resources` table with book_id, resource_path, mime_type, binary content_data
+  - [x] 2.14 Add error handling for corrupted files, missing metadata, and parse errors
+  - [x] 2.15 Add function `import_epub_to_db(db_conn: &mut SqliteConnection, epub_path: &Path, book_uid: &str) -> Result<()>`
 
-- [ ] 3.0 Add CLI command for migrating existing database and testing epub import
-  - [ ] 3.1 Add clap dependency to `cli/Cargo.toml` if not already present
-  - [ ] 3.2 Update `cli/src/main.rs` to add subcommand `import-epub` with arguments: `--db-path` and `--epub-path` and `--uid`
-  - [ ] 3.3 Implement command handler that connects to the specified appdata database
-  - [ ] 3.4 Run pending migrations on the database using Diesel migration runner
-  - [ ] 3.5 Call `import_epub_to_db()` with the provided epub file path and book UID
-  - [ ] 3.6 Print success message with imported book details or error message on failure
-  - [ ] 3.7 Test with command: `cargo run --bin simsapa-cli -- import-epub --db-path=/path/to/appdata.db --epub-path=backend/tests/data/its-essential-meaning.epub --uid=ess`
-  - [ ] 3.8 Verify database tables contain book, spine items, and resources using SQLite browser or SQL queries
+- [x] 3.0 Add CLI command for migrating existing database and testing epub import
+  - [x] 3.1 Add clap dependency to `cli/Cargo.toml` (already present)
+  - [x] 3.2 Update `cli/src/main.rs` to add subcommand `import-epub` with arguments: `--db-path` and `--epub-path` and `--uid`
+  - [x] 3.3 Implement command handler that connects to the specified appdata database
+  - [x] 3.4 Run pending migrations ONLY if 'books' or 'book_spine_items_fts' table doesn't exist
+  - [x] 3.5 Call `import_epub_to_db()` with the provided epub file path and book UID
+  - [x] 3.6 Run `run_fts5_indexes_sql_script()` to create FTS5 indexes from books-fts5-indexes.sql after migrations
+  - [x] 3.7 Print success message with imported book details or error message on failure
+  - [x] 3.8 Test with command: successfully imported "Its Essential Meaning" epub - 24 spine items, 17 resources
+  - [x] 3.9 Verified database contains: book record with metadata JSON, 24 spine items (ess.0-ess.23), 17 resources (images, fonts), FTS5 indexes created
+  - [x] 3.10 Tested with existing database: migrations skipped correctly, second book imported successfully
 
 - [ ] 4.0 Implement PDF parsing and import functionality
   - [ ] 4.1 Add `pdf-extract` and `lopdf` dependencies to `backend/Cargo.toml`
@@ -211,7 +214,7 @@
   - [ ] 12.7 Verify resources are stored with correct paths and MIME types
   - [ ] 12.8 Test resource retrieval through `get_book_resource()`
   - [ ] 12.9 Create `backend/tests/test_pdf_import.rs`
-  - [ ] 12.10 Test importing `backend/tests/data/Nyanatiloka-Word-of-the-Buddha.pdf` with book_uid="word-of-buddha"
+  - [ ] 12.10 Test importing `backend/tests/data/pali-lessons.pdf` with book_uid="pali-lessons"
   - [ ] 12.11 Verify single spine item created with spine_item_uid="word-of-buddha.0"
   - [ ] 12.12 Verify PDF stored in book_resources with resource_path="document.pdf" and mime_type="application/pdf"
   - [ ] 12.13 Verify content_html contains embedpdf.js reference
