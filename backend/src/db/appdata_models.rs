@@ -1,6 +1,7 @@
 use diesel::prelude::*;
 use crate::db::appdata_schema::*;
 // use chrono::NaiveDateTime;
+use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = app_settings)]
@@ -166,7 +167,7 @@ pub struct NewSuttaGloss<'a> {
 
 // Book models for document library
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Serialize, Deserialize)]
 #[diesel(table_name = books)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Book {
@@ -194,7 +195,7 @@ pub struct NewBook<'a> {
     pub metadata_json: Option<&'a str>,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
 #[diesel(belongs_to(Book, foreign_key = book_id))]
 #[diesel(table_name = book_spine_items)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

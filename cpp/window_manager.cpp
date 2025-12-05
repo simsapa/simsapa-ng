@@ -3,6 +3,7 @@
 #include "download_appdata_window.h"
 #include "word_lookup_window.h"
 #include "sutta_languages_window.h"
+#include "library_window.h"
 #include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
@@ -48,6 +49,11 @@ WindowManager::~WindowManager() {
         auto w = sutta_languages_windows.takeFirst();
         w->deleteLater();
     }
+
+    while (!library_windows.isEmpty()) {
+        auto w = library_windows.takeFirst();
+        w->deleteLater();
+    }
 }
 
 SuttaSearchWindow* WindowManager::create_sutta_search_window() {
@@ -73,6 +79,12 @@ WordLookupWindow* WindowManager::create_word_lookup_window(const QString& word) 
 SuttaLanguagesWindow* WindowManager::create_sutta_languages_window() {
     SuttaLanguagesWindow* w = new SuttaLanguagesWindow(this->m_app);
     sutta_languages_windows.append(w);
+    return w;
+}
+
+LibraryWindow* WindowManager::create_library_window() {
+    LibraryWindow* w = new LibraryWindow(this->m_app);
+    library_windows.append(w);
     return w;
 }
 

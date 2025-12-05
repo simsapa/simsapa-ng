@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::thread;
 
 use core::pin::Pin;
@@ -80,6 +80,14 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "databaseValidationResult"]
         fn database_validation_result(self: Pin<&mut SuttaBridge>, database_name: QString, is_valid: bool, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "documentImportProgress"]
+        fn document_import_progress(self: Pin<&mut SuttaBridge>, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "documentImportCompleted"]
+        fn document_import_completed(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
 
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
@@ -188,6 +196,24 @@ pub mod qobject {
 
         #[qinvokable]
         fn open_sutta_languages_window(self: &SuttaBridge);
+
+        #[qinvokable]
+        fn open_library_window(self: &SuttaBridge);
+
+        #[qinvokable]
+        fn get_all_books_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_spine_items_for_book_json(self: &SuttaBridge, book_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_book_spine_html(self: &SuttaBridge, window_id: &QString, spine_item_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn check_book_uid_exists(self: &SuttaBridge, book_uid: &QString) -> bool;
+
+        #[qinvokable]
+        fn import_document(self: Pin<&mut SuttaBridge>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString);
 
         #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
@@ -1183,6 +1209,156 @@ impl qobject::SuttaBridge {
     pub fn open_sutta_languages_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_sutta_languages_window();
+    }
+
+    pub fn open_library_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_library_window();
+    }
+
+    pub fn get_all_books_json(&self) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.get_all_books() {
+            Ok(books) => {
+                let json = serde_json::to_string(&books).unwrap_or_else(|_| "[]".to_string());
+                QString::from(json)
+            }
+            Err(e) => {
+                error(&format!("Failed to get books: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    pub fn get_spine_items_for_book_json(&self, book_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid = book_uid.to_string();
+        match app_data.dbm.appdata.get_spine_items_for_book(&uid) {
+            Ok(items) => {
+                let json = serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string());
+                QString::from(json)
+            }
+            Err(e) => {
+                error(&format!("Failed to get spine items for book {}: {}", uid, e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    pub fn get_book_spine_html(&self, window_id: &QString, spine_item_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        let body_class = app_settings.theme_name_as_string();
+
+        let blank_page_html = blank_html_page(Some(body_class.clone()));
+        if spine_item_uid.trimmed().is_empty() {
+            return QString::from(blank_page_html);
+        }
+
+        let uid = spine_item_uid.to_string();
+        let spine_item = match app_data.dbm.appdata.get_book_spine_item(&uid) {
+            Ok(Some(item)) => item,
+            Ok(None) => return QString::from(blank_page_html),
+            Err(e) => {
+                error(&format!("Failed to get spine item {}: {}", uid, e));
+                return QString::from(blank_page_html);
+            }
+        };
+
+        let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
+
+        let html = app_data.render_book_spine_content(&spine_item, Some(js_extra))
+            .unwrap_or(sutta_html_page("Rendering error", None, None, None, Some(body_class)));
+
+        QString::from(html)
+    }
+
+    pub fn check_book_uid_exists(&self, book_uid: &QString) -> bool {
+        let app_data = get_app_data();
+        let uid = book_uid.to_string();
+        match app_data.dbm.appdata.get_book_by_uid(&uid) {
+            Ok(Some(_)) => true,
+            Ok(None) => false,
+            Err(e) => {
+                error(&format!("Failed to check book UID {}: {}", uid, e));
+                false
+            }
+        }
+    }
+
+    pub fn import_document(self: Pin<&mut Self>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString) {
+        let path_str = file_path.to_string();
+        let uid_str = book_uid.to_string();
+        let title_str = title.to_string();
+        let _author_str = author.to_string();
+        let doc_type = document_type.to_string();
+        let _split_tag_str = split_tag.to_string();
+
+        info(&format!("import_document: {} as {} ({})", &path_str, &uid_str, &doc_type));
+
+        let qt_thread = self.qt_thread();
+
+        // Spawn thread for import
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            let path = Path::new(&path_str);
+
+            let result = match doc_type.as_str() {
+                "epub" => {
+                    let progress_msg = QString::from("Importing EPUB...");
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().document_import_progress(progress_msg);
+                    }).unwrap();
+
+                    app_data.import_epub_to_db(path, &uid_str)
+                }
+                "pdf" => {
+                    let progress_msg = QString::from("Importing PDF...");
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().document_import_progress(progress_msg);
+                    }).unwrap();
+
+                    app_data.import_pdf_to_db(path, &uid_str)
+                }
+                "html" => {
+                    let progress_msg = QString::from("Importing HTML...");
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().document_import_progress(progress_msg);
+                    }).unwrap();
+
+                    // TODO: Pass split_tag parameter when html_import supports it
+                    // For now, HTML is imported as a single spine item
+                    app_data.import_html_to_db(path, &uid_str)
+                }
+                _ => {
+                    let error_msg = format!("Unknown document type: {}", doc_type);
+                    error(&error_msg);
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().document_import_completed(false, error_qstr);
+                    }).unwrap();
+                    return;
+                }
+            };
+
+            match result {
+                Ok(_) => {
+                    info(&format!("Successfully imported {}", &uid_str));
+                    let success_msg = QString::from(format!("Successfully imported '{}'", &title_str));
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().document_import_completed(true, success_msg);
+                    }).unwrap();
+                }
+                Err(e) => {
+                    let error_msg = format!("Failed to import: {}", e);
+                    error(&error_msg);
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().document_import_completed(false, error_qstr);
+                    }).unwrap();
+                }
+            }
+        });
     }
 
     /// Helper function to create error response JSON for background processing

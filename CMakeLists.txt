@@ -92,7 +92,8 @@ list(APPEND cpp_files
     cpp/sutta_search_window.cpp
     cpp/download_appdata_window.cpp
     cpp/word_lookup_window.cpp
-    cpp/sutta_languages_window.cpp)
+    cpp/sutta_languages_window.cpp
+    cpp/library_window.cpp)
 
 list(APPEND app_files ${cpp_files} ${icons})
 

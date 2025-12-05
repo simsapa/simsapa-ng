@@ -50,6 +50,7 @@ pub mod ffi {
         fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
         fn callback_open_sutta_search_window(show_result_data_json: QString);
         fn callback_open_sutta_languages_window();
+        fn callback_open_library_window();
     }
 }
 

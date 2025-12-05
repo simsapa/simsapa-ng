@@ -726,6 +726,16 @@ ${query_text}`;
                 }
             }
 
+            CMenuItem {
+                action: Action {
+                    id: action_library
+                    text: "Library..."
+                    onTriggered: {
+                        SuttaBridge.open_library_window()
+                    }
+                }
+            }
+
             // CMenuItem {
             //     action: Action {
             //         id: action_sutta_study
