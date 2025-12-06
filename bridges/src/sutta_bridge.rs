@@ -686,6 +686,7 @@ impl qobject::SuttaBridge {
 
             let search_area_enum = match search_area_text.as_str() {
                 "Dictionary" => SearchArea::Dictionary,
+                "Library" => SearchArea::Library,
                 _ => SearchArea::Suttas, // Default to Suttas for any other value
             };
 

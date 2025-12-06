@@ -11,7 +11,7 @@ use diesel::sql_types::{Text, BigInt};
 use crate::helpers::normalize_query_text;
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
-use crate::db::appdata_models::Sutta;
+use crate::db::appdata_models::{Sutta, BookSpineItem};
 use crate::db::dictionaries_models::DictWord;
 use crate::db::DbManager;
 use crate::logger::{info, warn, error};
@@ -232,6 +232,16 @@ impl<'a> SearchQueryTask<'a> {
         SearchResult::from_dict_word(x, snippet)
     }
 
+    fn db_book_spine_item_to_result(&self, x: &BookSpineItem) -> SearchResult {
+        let content = x.content_plain.as_deref()
+            .filter(|s| !s.is_empty())
+            .or(x.content_html.as_deref())
+            .unwrap_or("");
+
+        let snippet = self.fragment_around_query(&self.query_text, content);
+        SearchResult::from_book_spine_item(x, snippet)
+    }
+
     fn uid_sutta(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::db::appdata_schema::suttas::dsl::*;
         use diesel::result::Error as DieselError;
@@ -352,6 +362,28 @@ impl<'a> SearchQueryTask<'a> {
         match res {
             Ok(res_word) => {
                 Ok(vec![self.db_word_to_result(&res_word)])
+            }
+            Err(_) => {
+                Ok(Vec::new())
+            }
+        }
+    }
+
+    fn uid_book_spine_item(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::db::appdata_schema::book_spine_items::dsl::*;
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        let query_uid = self.query_text.to_lowercase().replace("uid:", "");
+
+        let res = book_spine_items
+            .filter(spine_item_uid.eq(query_uid))
+            .select(BookSpineItem::as_select())
+            .first(db_conn);
+
+        match res {
+            Ok(spine_item) => {
+                Ok(vec![self.db_book_spine_item_to_result(&spine_item)])
             }
             Err(_) => {
                 Ok(Vec::new())
@@ -782,6 +814,99 @@ impl<'a> SearchQueryTask<'a> {
         Ok(search_results)
     }
 
+    fn book_spine_items_contains_match_fts5(
+        &mut self,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("book_spine_items_contains_match_fts5(): page_num: {}", page_num));
+        info(&format!("query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+        let timer = Instant::now();
+
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        let like_pattern = format!("%{}%", self.query_text);
+
+        // Determine if we need language filtering
+        let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
+        // --- Count Total Hits ---
+        let count_result: CountResult = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.content_plain LIKE ? AND f.language = ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .get_result(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.content_plain LIKE ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .get_result(db_conn)?
+        };
+
+        self.db_query_hits_count = count_result.count;
+        info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
+
+        // --- Apply Pagination ---
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        // --- Execute Query with Pagination ---
+        let db_results: Vec<BookSpineItem> = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT b.*
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.content_plain LIKE ? AND f.language = ?
+                ORDER BY b.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT b.*
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.content_plain LIKE ?
+                ORDER BY b.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load(db_conn)?
+        };
+
+        // --- Map to SearchResult ---
+        let search_results = db_results
+            .iter()
+            .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(search_results)
+    }
+
     pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // DPD is only English, so ignore checking self.lang (which may be "pli", "Language", or empty "").
         // Assume that if the DPD Lookup was selected then stale language settings can be ignored.
@@ -823,6 +948,11 @@ impl<'a> SearchQueryTask<'a> {
                     }
                     SearchArea::Suttas => {
                         // DPD Lookup doesn't make sense for suttas
+                        self.db_query_hits_count = 0;
+                        Ok(Vec::new())
+                    }
+                    SearchArea::Library => {
+                        // DPD Lookup doesn't make sense for library
                         self.db_query_hits_count = 0;
                         Ok(Vec::new())
                     }
@@ -869,6 +999,9 @@ impl<'a> SearchQueryTask<'a> {
                     SearchArea::Dictionary => {
                         self.uid_word()
                     }
+                    SearchArea::Library => {
+                        self.uid_book_spine_item()
+                    }
                 }
             }
 
@@ -879,6 +1012,9 @@ impl<'a> SearchQueryTask<'a> {
                     }
                     SearchArea::Dictionary => {
                         self.dict_words_contains_match_fts5(page_num)
+                    }
+                    SearchArea::Library => {
+                        self.book_spine_items_contains_match_fts5(page_num)
                     }
                 }
             }

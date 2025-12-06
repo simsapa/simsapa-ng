@@ -195,7 +195,7 @@ pub struct NewBook<'a> {
     pub metadata_json: Option<&'a str>,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
+#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
 #[diesel(belongs_to(Book, foreign_key = book_id))]
 #[diesel(table_name = book_spine_items)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]

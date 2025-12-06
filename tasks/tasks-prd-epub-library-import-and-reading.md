@@ -4,7 +4,7 @@
 
 ### Backend Database
 - `backend/src/db/appdata_schema.rs` - Database schema definitions using Diesel ORM (UPDATED: added language fields)
-- `backend/src/db/appdata_models.rs` - Rust model structs for database tables (UPDATED: added language fields and Serialize/Deserialize derives to Book and BookSpineItem)
+- `backend/src/db/appdata_models.rs` - Rust model structs for database tables (UPDATED: added language fields, Serialize/Deserialize, and QueryableByName derives to BookSpineItem)
 - `backend/src/db/appdata.rs` - Database connection and query functions
 - `backend/migrations/appdata/2025-12-04-130316_create_books_tables/up.sql` - Migration to create books tables (UPDATED: added language columns and indexes)
 - `backend/migrations/appdata/2025-12-04-130316_create_books_tables/down.sql` - Migration rollback
@@ -20,11 +20,11 @@
 
 ### Backend Queries and Helpers
 - `backend/src/app_data.rs` - Add book-related query methods (get_book_spine_item, get_book_resource)
-- `backend/src/query_task.rs` - Extend search to support Library area
-- `backend/src/types.rs` - Add Library variant to SearchArea enum
+- `backend/src/query_task.rs` - Extend search to support Library area (UPDATED - added library_contains_match_fts5, uid_library, db_book_spine_item_to_result)
+- `backend/src/types.rs` - Add Library variant to SearchArea enum (UPDATED - added Library variant and from_book_spine_item method)
 
 ### Bridges
-- `bridges/src/sutta_bridge.rs` - Library functions: get_all_books_json, get_spine_items_for_book_json, get_book_spine_html, check_book_uid_exists, import_document with signals (COMPLETED)
+- `bridges/src/sutta_bridge.rs` - Library functions: get_all_books_json, get_spine_items_for_book_json, get_book_spine_html, check_book_uid_exists, import_document with signals (COMPLETED); results_page updated to handle "Library" search area (UPDATED)
 - `bridges/src/api.rs` - Add /book_resources/<book_uid>/<resource_path> endpoint and callback_open_library_window (UPDATED)
 - `bridges/src/library_bridge.rs` - New bridge for library-specific functions (optional)
 - `bridges/build.rs` - Register new QML files and bridge modules (UPDATED - added LibraryWindow.qml, DocumentImportDialog.qml)
@@ -33,9 +33,11 @@
 
 ### QML Components
 - `assets/qml/LibraryWindow.qml` - Main library browsing window (COMPLETED - displays books from database, expandable spine items, click handlers, import dialog integration) 
-- `assets/qml/SuttaSearchWindow.qml` - Main search window (UPDATED - added Library menu item)
+- `assets/qml/SuttaSearchWindow.qml` - Main search window (UPDATED - added Library menu item, updated show_result_in_html_view to handle book_spine_items)
 - `assets/qml/DocumentImportDialog.qml` - Import dialog (COMPLETED - file picker, metadata fields, UID validation/conflict detection, progress indicators, full import functionality)
-- `assets/qml/SearchBarInput.qml` - Add "Library" option to search_area_dropdown
+- `assets/qml/SearchBarInput.qml` - Add "Library" option to search_area_dropdown (UPDATED - added Library to search area dropdown, search mode dropdown, and placeholder text)
+- `assets/qml/SuttaHtmlView_Desktop.qml` - Desktop HTML view (UPDATED - added load_book_spine_uid function and handling for book_spine_items table)
+- `assets/qml/SuttaHtmlView_Mobile.qml` - Mobile HTML view (UPDATED - added load_book_spine_uid function and handling for book_spine_items table)
 - `assets/qml/com/profoundlabs/simsapa/LibraryBridge.qml` - Type definition for qmllint (if LibraryBridge created)
 - `assets/qml/com/profoundlabs/simsapa/qmldir` - Update with new QML types
 
@@ -72,6 +74,7 @@
 - Use `cd backend && cargo test test_epub_import` to run specific test
 - QML tests can be run with `make qml-test`
 - Build with `make build -B` to verify compilation
+- Note: Two pre-existing test failures in test_query_task.rs (test_dict_word_search_contains_match, test_sutta_search_contains_match) - not related to Library search implementation
 
 ## Tasks
 
@@ -193,15 +196,15 @@
   - [x] 9.12 Refresh LibraryWindow display after successful import
   - [x] 9.13 Added bridge functions: check_book_uid_exists, import_document, documentImportProgress signal, documentImportCompleted signal
 
-- [ ] 10.0 Integrate library search into existing search infrastructure
-  - [ ] 10.1 Add `Library` variant to `SearchArea` enum in `backend/src/types.rs`
-  - [ ] 10.2 Add "Library" option to search_area_dropdown in `assets/qml/SearchBarInput.qml`
-  - [ ] 10.3 Extend `SearchQueryTask` in `backend/src/query_task.rs` to handle SearchArea::Library
-  - [ ] 10.4 Implement FTS5 query against `book_spine_items_fts` table when search_area is Library
-  - [ ] 10.5 Format search results to include book_uid, spine_item_uid, title, snippet with highlighted matches
-  - [ ] 10.6 Return results in format compatible with `FulltextResults.qml` display
-  - [ ] 10.7 Update result click handler to open book spine item using `get_book_spine_html()` when result is from Library
-  - [ ] 10.8 Test search functionality: import a book, search for content, verify results display and clicking opens correct chapter
+- [x] 10.0 Integrate library search into existing search infrastructure
+  - [x] 10.1 Add `Library` variant to `SearchArea` enum in `backend/src/types.rs`
+  - [x] 10.2 Add "Library" option to search_area_dropdown in `assets/qml/SearchBarInput.qml`
+  - [x] 10.3 Extend `SearchQueryTask` in `backend/src/query_task.rs` to handle SearchArea::Library
+  - [x] 10.4 Implement FTS5 query against `book_spine_items_fts` table when search_area is Library
+  - [x] 10.5 Format search results to include book_uid, spine_item_uid, title, snippet with highlighted matches
+  - [x] 10.6 Return results in format compatible with `FulltextResults.qml` display
+  - [x] 10.7 Update result click handler to open book spine item using `get_book_spine_html()` when result is from Library
+  - [x] 10.8 Test search functionality: import a book, search for content, verify results display and clicking opens correct chapter
 
 - [ ] 11.0 Implement document removal functionality
   - [ ] 11.1 Add selection tracking to LibraryWindow list view to track currently selected book

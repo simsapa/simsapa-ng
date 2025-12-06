@@ -72,6 +72,11 @@ Item {
         return html;
     }
 
+    function get_book_spine_html(window_id: string, uid: string): string {
+        var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(uid);
+        return html;
+    }
+
     function get_translations_data_json_for_sutta_uid(sutta_uid: string): string {
         // See sutta_search_window_state.py _add_related_tabs()
         let uid_ref = sutta_uid.replace('^([^/]+)/.*', '$1');
@@ -163,12 +168,20 @@ Item {
         });
     }
 
+    function check_book_uid_exists(): bool {
+        return true;
+    }
+
     function get_api_key(key_name: string): string {
         return 'key_value';
     }
 
     function set_api_keys(api_keys_json: string) {
         console.log("set_api_keys()");
+    }
+
+    function get_all_books_json(): string {
+        return '[]';
     }
 
     function get_system_prompt(prompt_name: string): string {
@@ -279,6 +292,10 @@ Item {
 
     function open_sutta_search_window() {
         console.log("open_sutta_search_window()");
+    }
+
+    function open_library_window() {
+        console.log("open_library_window()");
     }
 
     function process_all_paragraphs_background(input_json: string) {
