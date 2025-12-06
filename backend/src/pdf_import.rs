@@ -59,9 +59,6 @@ pub fn import_pdf_to_db(
 
     tracing::info!("Read PDF file: {} bytes", pdf_bytes.len());
 
-    // Generate HTML content that embeds the PDF
-    let content_html = generate_pdf_embed_html(book_uid);
-
     // Insert book record
     let file_path_str = pdf_path.to_string_lossy().to_string();
     let new_book = NewBook {
@@ -86,6 +83,7 @@ pub fn import_pdf_to_db(
     tracing::info!("Inserted book record with id: {}", book_id);
 
     // Insert single spine item (PDFs are treated as single documents)
+    // content_html is None for PDFs - the API will serve the PDF viewer template
     let spine_item_uid = format!("{}.0", book_uid);
     let new_spine_item = NewBookSpineItem {
         book_id,
@@ -94,7 +92,7 @@ pub fn import_pdf_to_db(
         spine_index: 0,
         title: Some(&title),
         language: if language.is_empty() { None } else { Some(&language) },
-        content_html: Some(&content_html),
+        content_html: None,
         content_plain: Some(&content_plain),
     };
 
@@ -148,47 +146,4 @@ fn extract_pdf_metadata(doc: &Document, key: &[u8]) -> Option<String> {
     }
     
     None
-}
-
-/// Generate HTML that embeds a PDF using embedpdf.js
-fn generate_pdf_embed_html(book_uid: &str) -> String {
-    format!(
-        r#"<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Viewer</title>
-</head>
-<body>
-    <div id="pdf-viewer" style="height: 100vh"></div>
-    
-    <script async type="module">
-        import EmbedPDF from 'https://snippet.embedpdf.com/embedpdf.js';
-        
-        EmbedPDF.init({{
-            type: 'container',
-            target: document.getElementById('pdf-viewer'),
-            src: '/book_resources/{}/document.pdf'
-        }});
-    </script>
-</body>
-</html>"#,
-        book_uid
-    )
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_generate_pdf_embed_html() {
-        let html = generate_pdf_embed_html("testpdf");
-        assert!(html.contains(r#"src: '/book_resources/testpdf/document.pdf'"#));
-        assert!(html.contains(r#"import EmbedPDF from 'https://snippet.embedpdf.com/embedpdf.js'"#));
-        assert!(html.contains(r#"EmbedPDF.init"#));
-        assert!(html.contains(r#"id="pdf-viewer""#));
-        assert!(html.contains("<!DOCTYPE html>"));
-    }
 }

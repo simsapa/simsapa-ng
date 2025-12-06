@@ -223,7 +223,7 @@ impl AppData {
 
     /// Render a book spine item as complete HTML page
     ///
-    /// Similar to render_sutta_content, but for book spine items
+    /// Similar to render_sutta_content, but for book spine items (only for Epub chapters and HTML, PDFs are shown with .url instead of .loadHtml()).
     pub fn render_book_spine_content(
         &self,
         spine_item: &BookSpineItem,

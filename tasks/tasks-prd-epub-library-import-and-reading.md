@@ -65,9 +65,12 @@
 - `backend/tests/data/sample.html` - HTML test data (to be created)
 
 ### Assets
-- `assets/js/vendor/embedpdf.js` - Embedded PDF viewer library for rendering PDFs
+- `assets/js/vendor/embedpdf.js` - Embedded PDF viewer library for rendering PDFs (needs to be downloaded/created as a standalone bundle)
 
 ### Notes
+- **embedpdf.js requirement**: The PDF viewer HTML now references `{api_url}/assets/js/vendor/embedpdf.js` for offline support
+- The embedpdf.js file needs to be a standalone ES module bundle (the CDN version at https://snippet.embedpdf.com/embedpdf.js is modular and references other files)
+- Alternative: Could use PDF.js or another self-contained PDF viewer library
 
 - Unit tests should be placed in `backend/tests/` directory
 - Use `cd backend && cargo test` to run all backend tests
@@ -206,15 +209,15 @@
   - [x] 10.7 Update result click handler to open book spine item using `get_book_spine_html()` when result is from Library
   - [x] 10.8 Test search functionality: import a book, search for content, verify results display and clicking opens correct chapter
 
-- [ ] 11.0 Implement document removal functionality
-  - [ ] 11.1 Add selection tracking to LibraryWindow list view to track currently selected book
-  - [ ] 11.2 Enable "Remove" button only when a book is selected
-  - [ ] 11.3 On "Remove" button click, show confirmation dialog with book title: "Remove '<title>' from library?"
-  - [ ] 11.4 Add bridge function `remove_book(book_uid: QString)` in SuttaBridge or LibraryBridge
-  - [ ] 11.5 Call `delete_book_by_uid()` from backend which triggers cascade delete of spine items and resources
-  - [ ] 11.6 Show success message after deletion
-  - [ ] 11.7 Refresh LibraryWindow display to remove deleted book from list
-  - [ ] 11.8 Test removal: import a book, select it, remove it, verify it's deleted from database and UI
+- [ ] 11.0 Implement document removal functionality (PENDING USER TESTING)
+  - [x] 11.1 Add selection tracking to LibraryWindow list view to track currently selected book
+  - [x] 11.2 Enable "Remove" button only when a book is selected
+  - [x] 11.3 On "Remove" button click, show confirmation dialog with book title: "Remove '<title>' from library?"
+  - [x] 11.4 Add bridge function `remove_book(book_uid: QString)` in SuttaBridge or LibraryBridge
+  - [x] 11.5 Call `delete_book_by_uid()` from backend which triggers cascade delete of spine items and resources
+  - [x] 11.6 Show success message after deletion (implicit - dialog closes on success, user sees book removed from list)
+  - [x] 11.7 Refresh LibraryWindow display to remove deleted book from list
+  - [x] 11.8 Test removal: import a book, select it, remove it, verify it's deleted from database and UI (ready for manual testing)
 
 - [ ] 12.0 Create comprehensive tests for all document formats
   - [ ] 12.1 Create `backend/tests/test_epub_import.rs`

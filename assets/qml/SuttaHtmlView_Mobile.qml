@@ -94,8 +94,18 @@ Item {
     }
 
     function load_book_spine_uid(uid) {
-        var html = SuttaBridge.get_book_spine_html(root.window_id, uid);
-        web.loadHtml(html);
+        // Check if this is a PDF book
+        if (SuttaBridge.is_spine_item_pdf(uid)) {
+            // Load PDF viewer with file parameter
+            const api_url = SuttaBridge.get_api_url();
+            const book_uid = SuttaBridge.get_book_uid_for_spine_item(uid);
+            const pdf_url = `${api_url}/book_resources/${book_uid}/document.pdf`;
+            web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
+        } else {
+            // Regular book content, load HTML
+            var html = SuttaBridge.get_book_spine_html(root.window_id, uid);
+            web.loadHtml(html);
+        }
     }
 
     // Load the sutta or dictionary word when the Loader in SuttaHtmlView updates data_json

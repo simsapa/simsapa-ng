@@ -52,6 +52,39 @@ ApplicationWindow {
         }
     }
 
+    Dialog {
+        id: remove_confirmation_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+
+        width: 400
+
+        title: "Confirm Removal"
+        modal: true
+        standardButtons: Dialog.Yes | Dialog.No
+
+        property string book_title: ""
+        property string book_uid: ""
+
+        Label {
+            text: "Remove '" + remove_confirmation_dialog.book_title + "' from library?"
+            font.pointSize: root.pointSize
+            wrapMode: Text.WordWrap
+        }
+
+        onAccepted: {
+            const success = SuttaBridge.remove_book(remove_confirmation_dialog.book_uid);
+            if (success) {
+                // Clear selection
+                root.selected_book_uid = "";
+                // Refresh library display
+                root.load_library_books();
+            } else {
+                console.error("Failed to remove book:", remove_confirmation_dialog.book_uid);
+            }
+        }
+    }
+
     ColumnLayout {
         spacing: 0
         anchors.fill: parent
@@ -73,8 +106,13 @@ ApplicationWindow {
                 text: "Remove"
                 enabled: root.selected_book_uid !== ""
                 onClicked: {
-                    // TODO: Show confirmation dialog and remove book
-                    console.log("Remove clicked for:", root.selected_book_uid);
+                    // Find the selected book to get its title
+                    const selected_book = root.books_list.find(book => book.uid === root.selected_book_uid);
+                    if (selected_book) {
+                        remove_confirmation_dialog.book_title = selected_book.title || "Untitled";
+                        remove_confirmation_dialog.book_uid = root.selected_book_uid;
+                        remove_confirmation_dialog.open();
+                    }
                 }
             }
 
@@ -219,7 +257,7 @@ ApplicationWindow {
                                         root.selected_book_uid = book_item.modelData.uid;
                                         const was_expanded = book_item.is_expanded;
                                         book_item.is_expanded = !book_item.is_expanded;
-                                        
+
                                         // Load spine items when expanding
                                         if (!was_expanded && book_item.spine_items.length === 0) {
                                             book_item.load_spine_items();
@@ -256,7 +294,7 @@ ApplicationWindow {
                                     delegate: ItemDelegate {
                                         id: spine_item
                                         Layout.fillWidth: true
-                                        
+
                                         required property var modelData
 
                                         background: Rectangle {

@@ -168,8 +168,20 @@ Item {
         });
     }
 
+    function remove_book(book_uid: string) {
+        return;
+    }
+
     function check_book_uid_exists(): bool {
         return true;
+    }
+
+    function is_spine_item_pdf(spine_item_uid: string): bool {
+        return false;
+    }
+
+    function get_book_uid_for_spine_item(spine_item_uid: string): string {
+        return '';
     }
 
     function get_api_key(key_name: string): string {
@@ -210,6 +222,10 @@ Item {
 
     function set_provider_api_key(provider_name: string, api_key: string) {
         console.log("set_provider_api_key():", provider_name, api_key);
+    }
+
+    function get_api_url(): string {
+        return 'http://localhost:4848';
     }
 
     function set_provider_enabled(provider_name: string, enabled: bool) {

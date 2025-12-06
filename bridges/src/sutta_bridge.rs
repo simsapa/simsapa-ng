@@ -192,6 +192,9 @@ pub mod qobject {
         fn set_provider_api_key(self: Pin<&mut SuttaBridge>, provider_name: &QString, api_key: &QString);
 
         #[qinvokable]
+        fn get_api_url(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
         fn open_sutta_search_window(self: &SuttaBridge);
 
         #[qinvokable]
@@ -213,7 +216,16 @@ pub mod qobject {
         fn check_book_uid_exists(self: &SuttaBridge, book_uid: &QString) -> bool;
 
         #[qinvokable]
+        fn is_spine_item_pdf(self: &SuttaBridge, spine_item_uid: &QString) -> bool;
+
+        #[qinvokable]
+        fn get_book_uid_for_spine_item(self: &SuttaBridge, spine_item_uid: &QString) -> QString;
+
+        #[qinvokable]
         fn import_document(self: Pin<&mut SuttaBridge>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString);
+
+        #[qinvokable]
+        fn remove_book(self: &SuttaBridge, book_uid: &QString) -> bool;
 
         #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
@@ -1026,6 +1038,12 @@ impl qobject::SuttaBridge {
         }
     }
 
+    /// Get the API URL for the localhost server
+    pub fn get_api_url(&self) -> QString {
+        let app_data = get_app_data();
+        QString::from(&app_data.api_url)
+    }
+
     /// Enable or disable a provider
     pub fn set_provider_enabled(self: Pin<&mut Self>, provider_name: &QString, enabled: bool) {
         let app_data = get_app_data();
@@ -1287,6 +1305,35 @@ impl qobject::SuttaBridge {
         }
     }
 
+    pub fn is_spine_item_pdf(&self, spine_item_uid: &QString) -> bool {
+        let app_data = get_app_data();
+        let uid = spine_item_uid.to_string();
+
+        // Get the spine item
+        match app_data.dbm.appdata.get_book_spine_item(&uid) {
+            Ok(Some(spine_item)) => {
+                // Get the book to check document_type
+                match app_data.dbm.appdata.get_book_by_uid(&spine_item.book_uid) {
+                    Ok(Some(book)) => book.document_type == "pdf",
+                    _ => false,
+                }
+            },
+            _ => false,
+        }
+    }
+
+    /// Get the book_uid for a given spine_item_uid
+    pub fn get_book_uid_for_spine_item(&self, spine_item_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid = spine_item_uid.to_string();
+
+        // Get the spine item and return its book_uid
+        match app_data.dbm.appdata.get_book_spine_item(&uid) {
+            Ok(Some(spine_item)) => QString::from(&spine_item.book_uid),
+            _ => QString::from(""),
+        }
+    }
+
     pub fn import_document(self: Pin<&mut Self>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString) {
         let path_str = file_path.to_string();
         let uid_str = book_uid.to_string();
@@ -1360,6 +1407,23 @@ impl qobject::SuttaBridge {
                 }
             }
         });
+    }
+
+    pub fn remove_book(&self, book_uid: &QString) -> bool {
+        let uid = book_uid.to_string();
+        info(&format!("remove_book: {}", &uid));
+
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.delete_book_by_uid(&uid) {
+            Ok(_) => {
+                info(&format!("Successfully removed book: {}", &uid));
+                true
+            }
+            Err(e) => {
+                error(&format!("Failed to remove book {}: {}", &uid, e));
+                false
+            }
+        }
     }
 
     /// Helper function to create error response JSON for background processing

@@ -83,7 +83,19 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
                 None => "txt",
             };
 
-            let content_type = ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain);
+            let content_type = match path_ext {
+                "css" => ContentType::CSS,
+                "js" | "mjs" => ContentType::JavaScript,
+                "json" => ContentType::JSON,
+                "svg" => ContentType::SVG,
+                "png" => ContentType::PNG,
+                "jpg" | "jpeg" => ContentType::JPEG,
+                "gif" => ContentType::GIF,
+                "woff" | "woff2" => ContentType::WOFF,
+                "ttf" => ContentType::TTF,
+                "otf" => ContentType::OTF,
+                _ => ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain),
+            };
 
             let body = Vec::from(entry_file.contents());
 
@@ -186,8 +198,33 @@ fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<Ra
     info(&format!("get_sutta_html_by_uid(): {}", uid_str));
 
     match dbm.appdata.get_sutta(&uid_str) {
-        Some(sutta) => Ok(RawHtml(format!("<p>Found: {}</p>", &sutta.uid))),
-        None => Err((Status::NotFound, format!("Sutta Not Found"))),
+        Some(item) => {
+            match item.content_html {
+                Some(html) => Ok(RawHtml(html)),
+                None => Ok(RawHtml(String::from("content_html is None"))),
+            }
+        },
+        None => Err((Status::NotFound, format!("Sutta Not Found: {}", &uid_str))),
+    }
+}
+
+#[get("/get_book_spine_item_html_by_uid/<uid..>")]
+fn get_book_spine_item_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+    let uid_str = uid.to_string_lossy();
+    info(&format!("get_book_spine_item_html_by_uid(): {}", uid_str));
+
+    match dbm.appdata.get_book_spine_item(&uid_str) {
+        Ok(Some(item)) => {
+            if let Some(html) = item.content_html {
+                Ok(RawHtml(html))
+            } else {
+                // PDF books don't have HTML content - QML should handle PDFs as
+                // a parameter to viewer.html instead of calling this function.
+                Err((Status::NotFound, "No HTML content available (PDF book?)".to_string()))
+            }
+        },
+        Ok(None) => Err((Status::NotFound, format!("BookSpineItem Not Found"))),
+        Err(e) => Err((Status::InternalServerError, format!("Database error: {}", e))),
     }
 }
 
@@ -320,6 +357,7 @@ pub async extern "C" fn start_webserver() {
             summary_query,
             sutta_menu_action,
             get_sutta_html_by_uid,
+            get_book_spine_item_html_by_uid,
             open_sutta,
         ])
         .manage(assets_files)
