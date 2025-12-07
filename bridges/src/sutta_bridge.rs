@@ -89,8 +89,15 @@ pub mod qobject {
         #[cxx_name = "documentImportCompleted"]
         fn document_import_completed(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
 
+        #[qsignal]
+        #[cxx_name = "showChapterFromLibrary"]
+        fn show_chapter_from_library(self: Pin<&mut SuttaBridge>, result_data_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
+
+        #[qinvokable]
+        fn emit_show_chapter_from_library(self: Pin<&mut SuttaBridge>, result_data_json: QString);
 
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
@@ -371,6 +378,11 @@ impl qobject::SuttaBridge {
     pub fn emit_update_window_title(self: Pin<&mut Self>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString) {
         // info(&format!("emit_update_window_title(): {} {} {}", &sutta_uid.to_string(), &sutta_ref.to_string(), &sutta_title.to_string()));
         self.update_window_title(sutta_uid, sutta_ref, sutta_title);
+    }
+
+    pub fn emit_show_chapter_from_library(self: Pin<&mut Self>, result_data_json: QString) {
+        use crate::api::ffi;
+        ffi::callback_show_chapter_in_sutta_window(result_data_json);
     }
 
     pub fn load_db(self: Pin<&mut Self>) {

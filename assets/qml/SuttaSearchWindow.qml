@@ -56,6 +56,10 @@ ApplicationWindow {
             fulltext_results.set_search_result_page(d);
             root.is_loading = false;
         }
+
+        function onShowChapterFromLibrary(result_data_json: string) {
+            root.show_result_in_html_view_with_json(result_data_json);
+        }
     }
 
     function update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {

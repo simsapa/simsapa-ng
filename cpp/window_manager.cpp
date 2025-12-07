@@ -140,7 +140,26 @@ void WindowManager::open_sutta_search_window_with_query(const QString& show_resu
 
     // If result data JSON is provided, show the sutta directly
     if (!show_result_data_json.isEmpty() && w && w->m_root) {
-        QMetaObject::invokeMethod(w->m_root, "show_result_in_html_view_with_json", 
+        QMetaObject::invokeMethod(w->m_root, "show_result_in_html_view_with_json",
             Q_ARG(QString, show_result_data_json));
+    }
+}
+
+void WindowManager::show_chapter_in_sutta_window(const QString& result_data_json) {
+    // Find the most recently used SuttaSearchWindow, or use the first one
+    SuttaSearchWindow* target_window = nullptr;
+
+    if (this->sutta_search_windows.length() > 0) {
+        target_window = this->sutta_search_windows.last();
+    }
+
+    if (target_window && target_window->m_root) {
+        // Show and raise the window
+        QMetaObject::invokeMethod(target_window->m_root, "show");
+        QMetaObject::invokeMethod(target_window->m_root, "raise");
+
+        // Show the chapter in the HTML view
+        QMetaObject::invokeMethod(target_window->m_root, "show_result_in_html_view_with_json",
+            Q_ARG(QString, result_data_json));
     }
 }

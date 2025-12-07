@@ -20,9 +20,15 @@ Item {
     signal ankiCsvExportReady(results_json: string);
     signal ankiPreviewReady(preview_html: string);
     signal databaseValidationResult(database_name: string, is_valid: bool, message: string);
+    signal showChapterFromLibrary(result_data_json: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
+    }
+
+    function emit_show_chapter_from_library(result_data_json: string) {
+        console.log("emit_show_chapter_from_library():", result_data_json);
+        showChapterFromLibrary(result_data_json);
     }
 
     function load_db() {
@@ -308,6 +314,10 @@ Item {
 
     function open_sutta_search_window() {
         console.log("open_sutta_search_window()");
+    }
+
+    function open_sutta_search_window_with_result(result_data_json: string) {
+        console.log("open_sutta_search_window_with_result():", result_data_json);
     }
 
     function open_library_window() {

@@ -49,6 +49,7 @@ class WindowManager : public QObject {
         void run_summary_query(const QString& window_id, const QString& query_text);
         void run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text);
         void open_sutta_search_window_with_query(const QString& show_result_data_json);
+        void show_chapter_in_sutta_window(const QString& result_data_json);
 
 };
 
