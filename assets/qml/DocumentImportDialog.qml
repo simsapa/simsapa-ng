@@ -275,18 +275,11 @@ Dialog {
             
             if (success) {
                 root.import_completed(true, message);
-                // Close dialog after a brief delay
-                close_timer.start();
+                root.close()
             } else {
                 root.import_completed(false, message);
             }
         }
-    }
-
-    Timer {
-        id: close_timer
-        interval: 1500
-        onTriggered: root.close()
     }
 
     onAboutToShow: {
