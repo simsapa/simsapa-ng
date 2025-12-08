@@ -183,7 +183,7 @@ Item {
         return '{"title": "", "author": ""}';
     }
 
-    function update_book_metadata(book_uid: string, title: string, author: string) {
+    function update_book_metadata(book_uid: string, title: string, author: string, enable_embedded_css: bool) {
         // Simulate async behavior
         Qt.callLater(function() {
             bookMetadataUpdated(true, "Metadata updated successfully");

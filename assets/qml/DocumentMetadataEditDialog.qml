@@ -18,8 +18,11 @@ Dialog {
 
     property string book_uid: ""
     property bool is_saving: false
+    property string document_type: ""
 
     signal metadata_saved(bool success, string message)
+
+    Logger { id: logger }
 
     function load_metadata(uid) {
         root.book_uid = uid;
@@ -28,19 +31,23 @@ Dialog {
             const json_str = SuttaBridge.get_book_metadata_json(uid);
             const metadata = JSON.parse(json_str);
 
+            root.document_type = metadata.document_type || "";
             title_field.text = metadata.title || "";
             author_field.text = metadata.author || "";
+            enable_embedded_css_checkbox.checked = metadata.enable_embedded_css !== false;
             status_label.text = "";
         } catch (e) {
-            console.error("Failed to load book metadata:", e);
+            logger.error("Failed to load book metadata: " + e);
             status_label.text = "Error loading metadata";
         }
     }
 
     function reset_form() {
         book_uid = "";
+        document_type = "";
         title_field.text = "";
         author_field.text = "";
+        enable_embedded_css_checkbox.checked = true;
         is_saving = false;
         progress_bar.visible = false;
         status_label.text = "";
@@ -84,6 +91,21 @@ Dialog {
             }
         }
 
+        // Embedded CSS checkbox (only for epub and html)
+        RowLayout {
+            visible: root.document_type === "epub" || root.document_type === "html"
+            Layout.fillWidth: true
+            spacing: 10
+
+            Item { Layout.preferredWidth: 80 }
+
+            CheckBox {
+                id: enable_embedded_css_checkbox
+                text: "Enable Embedded CSS"
+                checked: true
+            }
+        }
+
         // Progress indicator
         ProgressBar {
             id: progress_bar
@@ -124,7 +146,8 @@ Dialog {
                     SuttaBridge.update_book_metadata(
                         root.book_uid,
                         title_field.text.trim(),
-                        author_field.text.trim()
+                        author_field.text.trim(),
+                        enable_embedded_css_checkbox.checked
                     );
                 }
             }

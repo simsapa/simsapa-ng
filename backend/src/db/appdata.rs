@@ -266,7 +266,7 @@ impl AppdataDbHandle {
         })
     }
 
-    pub fn update_book_metadata(&self, book_uid_param: &str, title_param: &str, author_param: &str) -> Result<()> {
+    pub fn update_book_metadata(&self, book_uid_param: &str, title_param: &str, author_param: &str, enable_embedded_css_param: bool) -> Result<()> {
         use crate::db::appdata_schema::books::dsl::*;
 
         self.do_write(|db_conn| {
@@ -274,6 +274,7 @@ impl AppdataDbHandle {
                 .set((
                     title.eq(Some(title_param)),
                     author.eq(if author_param.is_empty() { None } else { Some(author_param) }),
+                    enable_embedded_css.eq(enable_embedded_css_param),
                 ))
                 .execute(db_conn)
                 .map(|_| ())

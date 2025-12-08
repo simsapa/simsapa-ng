@@ -93,6 +93,7 @@ diesel::table! {
         language -> Nullable<Text>,
         file_path -> Nullable<Text>,
         metadata_json -> Nullable<Text>,
+        enable_embedded_css -> Bool,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }

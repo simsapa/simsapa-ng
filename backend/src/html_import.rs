@@ -92,6 +92,7 @@ pub fn import_html_to_db(
         },
         file_path: Some(&file_path_str),
         metadata_json: Some(&metadata_json),
+        enable_embedded_css: true, // Default to enabled for HTML
     };
 
     diesel::insert_into(books::table)

@@ -7,6 +7,7 @@ CREATE TABLE books (
     language VARCHAR,
     file_path VARCHAR,
     metadata_json VARCHAR,
+    enable_embedded_css BOOLEAN NOT NULL DEFAULT 1,
     created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
     updated_at DATETIME,
     PRIMARY KEY (id),

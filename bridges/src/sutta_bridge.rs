@@ -245,7 +245,7 @@ pub mod qobject {
         fn get_book_metadata_json(self: &SuttaBridge, book_uid: &QString) -> QString;
 
         #[qinvokable]
-        fn update_book_metadata(self: Pin<&mut SuttaBridge>, book_uid: &QString, title: &QString, author: &QString);
+        fn update_book_metadata(self: Pin<&mut SuttaBridge>, book_uid: &QString, title: &QString, author: &QString, enable_embedded_css: bool);
 
         #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
@@ -1487,7 +1487,9 @@ impl qobject::SuttaBridge {
             Ok(Some(book)) => {
                 let json = serde_json::json!({
                     "title": book.title,
-                    "author": book.author
+                    "author": book.author,
+                    "document_type": book.document_type,
+                    "enable_embedded_css": book.enable_embedded_css
                 });
                 QString::from(json.to_string())
             }
@@ -1495,7 +1497,9 @@ impl qobject::SuttaBridge {
                 error(&format!("Book not found: {}", uid));
                 let json = serde_json::json!({
                     "title": "",
-                    "author": ""
+                    "author": "",
+                    "document_type": "",
+                    "enable_embedded_css": true
                 });
                 QString::from(json.to_string())
             }
@@ -1503,14 +1507,16 @@ impl qobject::SuttaBridge {
                 error(&format!("Failed to get book metadata {}: {}", uid, e));
                 let json = serde_json::json!({
                     "title": "",
-                    "author": ""
+                    "author": "",
+                    "document_type": "",
+                    "enable_embedded_css": true
                 });
                 QString::from(json.to_string())
             }
         }
     }
 
-    pub fn update_book_metadata(self: Pin<&mut Self>, book_uid: &QString, title: &QString, author: &QString) {
+    pub fn update_book_metadata(self: Pin<&mut Self>, book_uid: &QString, title: &QString, author: &QString, enable_embedded_css: bool) {
         let uid = book_uid.to_string();
         let title_str = title.to_string();
         let author_str = author.to_string();
@@ -1520,7 +1526,7 @@ impl qobject::SuttaBridge {
         thread::spawn(move || {
             let app_data = get_app_data();
 
-            match app_data.dbm.appdata.update_book_metadata(&uid, &title_str, &author_str) {
+            match app_data.dbm.appdata.update_book_metadata(&uid, &title_str, &author_str, enable_embedded_css) {
                 Ok(_) => {
                     let success_msg = QString::from(format!("Successfully updated metadata for '{}'", &title_str));
                     qt_thread.queue(move |mut qo| {

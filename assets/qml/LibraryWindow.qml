@@ -321,6 +321,15 @@ ApplicationWindow {
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
                                     }
+
+                                    Label {
+                                        visible: (book_item_wrapper.modelData.document_type === "epub" || book_item_wrapper.modelData.document_type === "html") && book_item_wrapper.modelData.enable_embedded_css === false
+                                        text: "Embedded CSS: Off"
+                                        font.pointSize: root.pointSize - 2
+                                        color: book_item_wrapper.is_selected ? palette.highlightedText : palette.mid
+                                        wrapMode: Text.WordWrap
+                                        Layout.fillWidth: true
+                                    }
                                 }
                             }
                         }

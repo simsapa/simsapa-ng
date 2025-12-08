@@ -179,6 +179,7 @@ pub struct Book {
     pub language: Option<String>,
     pub file_path: Option<String>,
     pub metadata_json: Option<String>,
+    pub enable_embedded_css: bool,
     // pub created_at: NaiveDateTime,
     // pub updated_at: Option<NaiveDateTime>,
 }
@@ -193,6 +194,7 @@ pub struct NewBook<'a> {
     pub language: Option<&'a str>,
     pub file_path: Option<&'a str>,
     pub metadata_json: Option<&'a str>,
+    pub enable_embedded_css: bool,
 }
 
 #[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]

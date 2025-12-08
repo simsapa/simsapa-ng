@@ -3,6 +3,7 @@ use indexmap::IndexMap;
 
 use diesel::prelude::*;
 use regex::Regex;
+use lazy_static::lazy_static;
 use anyhow::{anyhow, Context, Result};
 
 use crate::db::{appdata_models::*, DbManager};
@@ -231,8 +232,15 @@ impl AppData {
     ) -> Result<String> {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
 
+        // Get book information to check enable_embedded_css flag
+        let book_enable_embedded_css = if let Ok(Some(book)) = self.dbm.appdata.get_book_by_uid(&spine_item.book_uid) {
+            book.enable_embedded_css
+        } else {
+            true // Default to true if book not found
+        };
+
         // Use content_html if available, otherwise fall back to plain text
-        let content_html_body = if let Some(ref html) = spine_item.content_html {
+        let mut content_html_body = if let Some(ref html) = spine_item.content_html {
             if !html.is_empty() {
                 html.clone()
             } else {
@@ -247,6 +255,18 @@ impl AppData {
         } else {
             "<div class='book-content'><p>No content.</p></div>".to_string()
         };
+
+        // Remove embedded CSS if enable_embedded_css is false
+        if !book_enable_embedded_css {
+            use regex::Regex;
+            lazy_static! {
+                static ref CSS_LINK_RE: Regex = Regex::new(r"<link[^>]*>").unwrap();
+                static ref CSS_STYLE_RE: Regex = Regex::new(r"<style[^>]*>.*?</style>").unwrap();
+            }
+
+            content_html_body = CSS_LINK_RE.replace_all(&content_html_body, "").into_owned();
+            content_html_body = CSS_STYLE_RE.replace_all(&content_html_body, "").into_owned();
+        }
 
         // Get display settings
         let font_size = app_settings.sutta_font_size;

@@ -109,6 +109,7 @@ pub fn import_epub_to_db(
         language: if language.is_empty() { None } else { Some(&language) },
         file_path: Some(&file_path_str),
         metadata_json: Some(&metadata_json),
+        enable_embedded_css: true,
     };
 
     diesel::insert_into(books::table)

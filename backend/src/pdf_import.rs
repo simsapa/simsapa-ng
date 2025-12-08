@@ -76,6 +76,7 @@ pub fn import_pdf_to_db(
         language: if language.is_empty() { None } else { Some(&language) },
         file_path: Some(&file_path_str),
         metadata_json: None, // PDFs don't have structured metadata like EPUBs
+        enable_embedded_css: true, // Default to enabled for PDFs
     };
 
     diesel::insert_into(books::table)
