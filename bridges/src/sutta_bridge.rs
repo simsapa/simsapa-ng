@@ -93,6 +93,10 @@ pub mod qobject {
         #[cxx_name = "showChapterFromLibrary"]
         fn show_chapter_from_library(self: Pin<&mut SuttaBridge>, result_data_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "bookMetadataUpdated"]
+        fn book_metadata_updated(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -236,6 +240,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn remove_book(self: &SuttaBridge, book_uid: &QString) -> bool;
+
+        #[qinvokable]
+        fn get_book_metadata_json(self: &SuttaBridge, book_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn update_book_metadata(self: Pin<&mut SuttaBridge>, book_uid: &QString, title: &QString, author: &QString);
 
         #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
@@ -1467,6 +1477,66 @@ impl qobject::SuttaBridge {
                 false
             }
         }
+    }
+
+    pub fn get_book_metadata_json(&self, book_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid = book_uid.to_string();
+
+        match app_data.dbm.appdata.get_book_by_uid(&uid) {
+            Ok(Some(book)) => {
+                let json = serde_json::json!({
+                    "title": book.title,
+                    "author": book.author
+                });
+                QString::from(json.to_string())
+            }
+            Ok(None) => {
+                error(&format!("Book not found: {}", uid));
+                let json = serde_json::json!({
+                    "title": "",
+                    "author": ""
+                });
+                QString::from(json.to_string())
+            }
+            Err(e) => {
+                error(&format!("Failed to get book metadata {}: {}", uid, e));
+                let json = serde_json::json!({
+                    "title": "",
+                    "author": ""
+                });
+                QString::from(json.to_string())
+            }
+        }
+    }
+
+    pub fn update_book_metadata(self: Pin<&mut Self>, book_uid: &QString, title: &QString, author: &QString) {
+        let uid = book_uid.to_string();
+        let title_str = title.to_string();
+        let author_str = author.to_string();
+
+        let qt_thread = self.qt_thread();
+
+        thread::spawn(move || {
+            let app_data = get_app_data();
+
+            match app_data.dbm.appdata.update_book_metadata(&uid, &title_str, &author_str) {
+                Ok(_) => {
+                    let success_msg = QString::from(format!("Successfully updated metadata for '{}'", &title_str));
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().book_metadata_updated(true, success_msg);
+                    }).unwrap();
+                }
+                Err(e) => {
+                    let error_msg = format!("Failed to update book metadata: {}", e);
+                    error(&error_msg);
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().book_metadata_updated(false, error_qstr);
+                    }).unwrap();
+                }
+            }
+        });
     }
 
     /// Helper function to create error response JSON for background processing

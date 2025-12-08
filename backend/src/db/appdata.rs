@@ -265,6 +265,20 @@ impl AppdataDbHandle {
                 .map(|_| ())
         })
     }
+
+    pub fn update_book_metadata(&self, book_uid_param: &str, title_param: &str, author_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::books::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(books.filter(uid.eq(book_uid_param)))
+                .set((
+                    title.eq(Some(title_param)),
+                    author.eq(if author_param.is_empty() { None } else { Some(author_param) }),
+                ))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
 }
 
 pub fn delete_sutta() {

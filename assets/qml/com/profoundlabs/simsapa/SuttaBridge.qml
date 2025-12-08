@@ -21,6 +21,7 @@ Item {
     signal ankiPreviewReady(preview_html: string);
     signal databaseValidationResult(database_name: string, is_valid: bool, message: string);
     signal showChapterFromLibrary(result_data_json: string);
+    signal bookMetadataUpdated(success: bool, message: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -176,6 +177,17 @@ Item {
 
     function remove_book(book_uid: string) {
         return;
+    }
+
+    function get_book_metadata_json(book_uid: string): string {
+        return '{"title": "", "author": ""}';
+    }
+
+    function update_book_metadata(book_uid: string, title: string, author: string) {
+        // Simulate async behavior
+        Qt.callLater(function() {
+            bookMetadataUpdated(true, "Metadata updated successfully");
+        });
     }
 
     function check_book_uid_exists(): bool {

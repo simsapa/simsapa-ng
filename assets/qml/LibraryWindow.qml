@@ -90,6 +90,18 @@ ApplicationWindow {
         }
     }
 
+    DocumentMetadataEditDialog {
+        id: metadata_edit_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+
+        onMetadata_saved: (success, message) => {
+            if (success) {
+                root.load_library_books();
+            }
+        }
+    }
+
     Dialog {
         id: remove_confirmation_dialog
         parent: Overlay.overlay
@@ -137,6 +149,15 @@ ApplicationWindow {
                 text: "Import Document..."
                 onClicked: {
                     import_dialog.open();
+                }
+            }
+
+            Button {
+                text: "Edit Metadata"
+                enabled: root.selected_book_uid !== ""
+                onClicked: {
+                    metadata_edit_dialog.load_metadata(root.selected_book_uid);
+                    metadata_edit_dialog.open();
                 }
             }
 
