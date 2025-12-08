@@ -124,8 +124,14 @@ pub fn import_epub_to_db(
 
         let content_html = String::from_utf8_lossy(&content_bytes).to_string();
 
+        // Extract base directory from spine item path (e.g., "OEBPS/" from "OEBPS/cover.xhtml")
+        let base_dir = std::path::Path::new(&resource_path)
+            .parent()
+            .and_then(|p| p.to_str())
+            .unwrap_or("");
+
         // Rewrite resource links to use API endpoint
-        let content_html = rewrite_resource_links(&content_html, book_uid);
+        let content_html = rewrite_resource_links(&content_html, book_uid, base_dir);
 
         // Convert HTML to plain text for FTS5 indexing
         let content_plain = html_to_plain_text(&content_html);
@@ -199,8 +205,9 @@ pub fn import_epub_to_db(
 
 /// Rewrite resource links in HTML to use the API endpoint format
 ///
-/// Converts relative paths like "../images/photo.jpg" to "/book_resources/<book_uid>/images/photo.jpg"
-fn rewrite_resource_links(html: &str, book_uid: &str) -> String {
+/// Converts relative paths like "../images/photo.jpg" to "/book_resources/<book_uid>/OEBPS/images/photo.jpg"
+/// The base_dir parameter (e.g., "OEBPS") is the directory containing the HTML file
+fn rewrite_resource_links(html: &str, book_uid: &str, base_dir: &str) -> String {
     lazy_static::lazy_static! {
         // Match src="..." and href="..." attributes
         static ref RE_SRC: Regex = Regex::new(r#"(?i)(src|href)=["']([^"']+)["']"#).unwrap();
@@ -221,11 +228,19 @@ fn rewrite_resource_links(html: &str, book_uid: &str) -> String {
                 return caps[0].to_string();
             }
 
-            // Normalize the path (remove ../ and ./)
-            let normalized_path = normalize_path(path);
+            // Resolve relative path from the HTML file's directory
+            let full_path = if !base_dir.is_empty() {
+                // Combine base_dir with the relative path
+                let combined = format!("{}/{}", base_dir, path);
+                // Normalize the combined path (resolve ../ and ./)
+                normalize_path(&combined)
+            } else {
+                // No base directory, just normalize the path
+                normalize_path(path)
+            };
 
             // Rewrite to API endpoint
-            format!(r#"{}="/book_resources/{}/{}""#, attr, book_uid, normalized_path)
+            format!(r#"{}="/book_resources/{}/{}""#, attr, book_uid, full_path)
         })
         .to_string()
 }
@@ -274,17 +289,60 @@ mod tests {
     #[test]
     fn test_rewrite_resource_links() {
         let html = "<img src=\"../images/photo.jpg\"><link href=\"styles/main.css\">";
-        let result = rewrite_resource_links(html, "testbook");
+        let result = rewrite_resource_links(html, "testbook", "OEBPS");
+        // println!("Result: {}", result);
+        // With base_dir "OEBPS" and path "../images/photo.jpg"
+        // Combined: "OEBPS/../images/photo.jpg" → normalized to "images/photo.jpg"
         assert!(result.contains("src=\"/book_resources/testbook/images/photo.jpg\""));
-        assert!(result.contains("href=\"/book_resources/testbook/styles/main.css\""));
+        // With base_dir "OEBPS" and path "styles/main.css"
+        // Combined: "OEBPS/styles/main.css"
+        assert!(result.contains("href=\"/book_resources/testbook/OEBPS/styles/main.css\""));
     }
 
     #[test]
     fn test_rewrite_resource_links_absolute() {
         let html = "<a href=\"http://example.com\">Link</a><a href=\"#anchor\">Anchor</a>";
-        let result = rewrite_resource_links(html, "testbook");
+        let result = rewrite_resource_links(html, "testbook", "OEBPS");
         // Absolute URLs and anchors should not be rewritten
         assert!(result.contains("href=\"http://example.com\""));
         assert!(result.contains("href=\"#anchor\""));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_with_oebps_prefix() {
+        // Test typical EPUB structure where HTML is in OEBPS/ and references assets relatively
+        let html = r#"<img src="assets/photos/cover.jpg"><link href="styles/main.css">"#;
+        let result = rewrite_resource_links(html, "bmc", "OEBPS");
+        assert!(result.contains("src=\"/book_resources/bmc/OEBPS/assets/photos/cover.jpg\""));
+        assert!(result.contains("href=\"/book_resources/bmc/OEBPS/styles/main.css\""));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_empty_base_dir() {
+        // Test when base_dir is empty (for non-EPUB or flat structure)
+        let html = "<img src=\"images/photo.jpg\">";
+        let result = rewrite_resource_links(html, "testbook", "");
+        assert!(result.contains("src=\"/book_resources/testbook/images/photo.jpg\""));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_nested_html() {
+        // Test HTML in OEBPS/Text/ referencing ../Images/ (goes up to OEBPS/Images/)
+        let html = r#"<img src="../Images/bmc1_cover.jpg"><link href="../Styles/style.css">"#;
+        let result = rewrite_resource_links(html, "bmc", "OEBPS/Text");
+        // println!("Nested result: {}", result);
+        // OEBPS/Text/../Images/bmc1_cover.jpg → OEBPS/Images/bmc1_cover.jpg
+        assert!(result.contains("src=\"/book_resources/bmc/OEBPS/Images/bmc1_cover.jpg\""));
+        assert!(result.contains("href=\"/book_resources/bmc/OEBPS/Styles/style.css\""));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_nested_html_direct_ref() {
+        // Test HTML in OEBPS/Text/ with direct reference to Images/ (relative, not ../Images/)
+        let html = r#"<img src="Images/bmc1_cover.jpg">"#;
+        let result = rewrite_resource_links(html, "bmc", "OEBPS/Text");
+        // println!("Direct ref result: {}", result);
+        // This would resolve to OEBPS/Text/Images/bmc1_cover.jpg
+        assert!(result.contains("src=\"/book_resources/bmc/OEBPS/Text/Images/bmc1_cover.jpg\""));
     }
 }

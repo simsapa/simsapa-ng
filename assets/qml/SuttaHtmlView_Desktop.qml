@@ -81,9 +81,10 @@ Item {
             const pdf_url = `${api_url}/book_resources/${book_uid}/document.pdf`;
             web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
         } else {
-            // Regular book content, load HTML
+            // Regular book content, load HTML with base URL for resolving resource paths
+            const api_url = SuttaBridge.get_api_url();
             var html = SuttaBridge.get_book_spine_html(root.window_id, uid);
-            web.loadHtml(html);
+            web.loadHtml(html, api_url);
         }
     }
 
