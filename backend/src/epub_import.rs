@@ -9,6 +9,35 @@ use crate::db::appdata_models::{NewBook, NewBookResource, NewBookSpineItem};
 use crate::db::appdata_schema::{book_resources, book_spine_items, books};
 use crate::helpers::{compact_rich_text, strip_html};
 
+/// Extract title from HTML content
+/// Returns the title from <title> tag, taking only the part before the first '|' separator
+/// Returns None if no title found or if title is empty/whitespace only
+fn extract_html_title(content_bytes: &[u8]) -> Option<String> {
+    lazy_static::lazy_static! {
+        static ref TITLE_RE: Regex = Regex::new(r"(?i)<title[^>]*>([^<]+)</title>").unwrap();
+    }
+
+    let content = String::from_utf8_lossy(content_bytes);
+
+    if let Some(caps) = TITLE_RE.captures(&content) {
+        if let Some(title_match) = caps.get(1) {
+            let title = title_match.as_str().trim();
+
+            // Extract the part before '|' separator if present
+            let title_part = title.split('|').next().unwrap_or(title).trim();
+
+            // Only skip if truly empty or already says "Untitled"
+            if title_part.is_empty() || title_part.eq_ignore_ascii_case("untitled") {
+                return None;
+            }
+
+            return Some(title_part.to_string());
+        }
+    }
+
+    None
+}
+
 /// Import an EPUB file into the database
 ///
 /// # Arguments
@@ -97,21 +126,36 @@ pub fn import_epub_to_db(
     let spine_len = doc.spine.len();
     tracing::info!("Processing {} spine items", spine_len);
 
-    // Collect spine information first to avoid borrow checker issues
-    let spine_info: Vec<(usize, String, String)> = doc
+    // First, collect resource paths and IDs from spine
+    let spine_basic_info: Vec<(usize, String, String)> = doc
         .spine
         .iter()
         .enumerate()
         .filter_map(|(idx, spine_item)| {
             let resource_item = doc.resources.get(&spine_item.idref)?;
             let resource_path = resource_item.path.to_str()?;
-            let title = toc_map
-                .get(resource_path)
-                .cloned()
-                .unwrap_or_else(|| format!("Chapter {}", idx + 1));
-            Some((idx, resource_path.to_string(), title))
+            Some((idx, spine_item.idref.clone(), resource_path.to_string()))
         })
         .collect();
+
+    // Now collect titles by extracting content for each spine item
+    let mut spine_info: Vec<(usize, String, String)> = Vec::new();
+
+    for (idx, idref, resource_path) in spine_basic_info {
+        // Try to get title from TOC first
+        let title = if let Some(toc_title) = toc_map.get(&resource_path) {
+            toc_title.clone()
+        } else {
+            // No TOC entry, try to extract from HTML title tag
+            if let Some((content_bytes, _)) = doc.get_resource(&idref) {
+                extract_html_title(&content_bytes).unwrap_or_else(|| "Untitled".to_string())
+            } else {
+                "Untitled".to_string()
+            }
+        };
+
+        spine_info.push((idx, resource_path, title));
+    }
 
     for (spine_index, resource_path, title) in spine_info {
         tracing::debug!("Processing spine item {}/{}: {}", spine_index + 1, spine_len, resource_path);
@@ -276,6 +320,48 @@ fn html_to_plain_text(html: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_extract_html_title() {
+        // Test extracting title with pipe separator
+        let html = b"<html><head><title>Chapter 1 | Book Title</title></head></html>";
+        assert_eq!(extract_html_title(html), Some("Chapter 1".to_string()));
+
+        // Test extracting title without separator
+        let html = b"<html><head><title>Simple Title</title></head></html>";
+        assert_eq!(extract_html_title(html), Some("Simple Title".to_string()));
+
+        // Test extracting title with extra whitespace
+        let html = b"<html><head><title>  Spaced Title  |  Extra  </title></head></html>";
+        assert_eq!(extract_html_title(html), Some("Spaced Title".to_string()));
+
+        // Test generic titles that should be accepted
+        let html = b"<html><head><title>Cover | Book Title</title></head></html>";
+        assert_eq!(extract_html_title(html), Some("Cover".to_string()));
+
+        let html = b"<html><head><title>Quote | Book Title</title></head></html>";
+        assert_eq!(extract_html_title(html), Some("Quote".to_string()));
+
+        // Test "Untitled" which should return None
+        let html = b"<html><head><title>Untitled</title></head></html>";
+        assert_eq!(extract_html_title(html), None);
+
+        // Test empty title
+        let html = b"<html><head><title></title></head></html>";
+        assert_eq!(extract_html_title(html), None);
+
+        // Test whitespace-only title
+        let html = b"<html><head><title>   </title></head></html>";
+        assert_eq!(extract_html_title(html), None);
+
+        // Test no title tag
+        let html = b"<html><head></head></html>";
+        assert_eq!(extract_html_title(html), None);
+
+        // Test case insensitive "Untitled"
+        let html = b"<html><head><title>UNTITLED</title></head></html>";
+        assert_eq!(extract_html_title(html), None);
+    }
 
     #[test]
     fn test_normalize_path() {
