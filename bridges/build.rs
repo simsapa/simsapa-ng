@@ -14,6 +14,8 @@ fn main() {
     qml_files.push("../assets/qml/WordLookupWindow.qml");
     qml_files.push("../assets/qml/DownloadAppdataWindow.qml");
     qml_files.push("../assets/qml/SuttaLanguagesWindow.qml");
+    qml_files.push("../assets/qml/LibraryWindow.qml");
+    qml_files.push("../assets/qml/DocumentImportDialog.qml");
     qml_files.push("../assets/qml/LanguageListSelector.qml");
     qml_files.push("../assets/qml/DownloadProgressFrame.qml");
 

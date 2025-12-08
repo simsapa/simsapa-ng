@@ -6,7 +6,7 @@ use std::str::FromStr;
 use anyhow::Result;
 use thiserror::Error;
 
-use crate::db::appdata_models::Sutta;
+use crate::db::appdata_models::{Sutta, BookSpineItem};
 use crate::db::dictionaries_models::DictWord;
 use crate::db::dpd_models::{DpdHeadword, DpdRoot};
 
@@ -57,6 +57,7 @@ pub struct SuttaQuote {
 pub enum SearchArea {
     Suttas,
     Dictionary,
+    Library,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
@@ -237,6 +238,24 @@ impl SearchResult {
             nikaya: None,
             author: None,
             lang: Some("en".to_string()),
+            snippet,
+            page_number: None,
+            score: None,
+            rank: None,
+        }
+    }
+
+    pub fn from_book_spine_item(spine_item: &BookSpineItem, snippet: String) -> SearchResult {
+        SearchResult {
+            uid: spine_item.spine_item_uid.to_string(),
+            schema_name: "appdata".to_string(),
+            table_name: "book_spine_items".to_string(),
+            source_uid: Some(spine_item.book_uid.clone()),
+            title: spine_item.title.clone().unwrap_or_default(),
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            lang: spine_item.language.clone(),
             snippet,
             page_number: None,
             score: None,

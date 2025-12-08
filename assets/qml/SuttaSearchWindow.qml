@@ -56,6 +56,10 @@ ApplicationWindow {
             fulltext_results.set_search_result_page(d);
             root.is_loading = false;
         }
+
+        function onShowChapterFromLibrary(result_data_json: string) {
+            root.show_result_in_html_view_with_json(result_data_json);
+        }
     }
 
     function update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
@@ -339,8 +343,8 @@ ${query_text}`;
         // constructed, but succeeds later on.
         root.focus_on_tab_with_id_key("ResultsTab_0");
 
-        // Only add translation tabs for sutta results, not dictionary results
-        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords") {
+        // Only add translation tabs for sutta results, not dictionary or library results
+        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
             // Add translations tabs for the sutta
             // Remove existing webviews for translation tabs
             for (let i=0; i < tabs_translations_model.count; i++) {
@@ -722,6 +726,16 @@ ${query_text}`;
                     text: "Sutta Languages..."
                     onTriggered: {
                         SuttaBridge.open_sutta_languages_window()
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_library
+                    text: "Library..."
+                    onTriggered: {
+                        SuttaBridge.open_library_window()
                     }
                 }
             }

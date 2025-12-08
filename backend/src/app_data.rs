@@ -221,6 +221,70 @@ impl AppData {
         Ok(final_html)
     }
 
+    /// Render a book spine item as complete HTML page
+    ///
+    /// Similar to render_sutta_content, but for book spine items (only for Epub chapters and HTML, PDFs are shown with .url instead of .loadHtml()).
+    pub fn render_book_spine_content(
+        &self,
+        spine_item: &BookSpineItem,
+        js_extra_pre: Option<String>,
+    ) -> Result<String> {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+
+        // Use content_html if available, otherwise fall back to plain text
+        let content_html_body = if let Some(ref html) = spine_item.content_html {
+            if !html.is_empty() {
+                html.clone()
+            } else {
+                "<div class='book-content'><p>No content.</p></div>".to_string()
+            }
+        } else if let Some(ref plain) = spine_item.content_plain {
+            if !plain.is_empty() {
+                format!("<div class='book-content'><pre>{}</pre></div>", plain)
+            } else {
+                "<div class='book-content'><p>No content.</p></div>".to_string()
+            }
+        } else {
+            "<div class='book-content'><p>No content.</p></div>".to_string()
+        };
+
+        // Get display settings
+        let font_size = app_settings.sutta_font_size;
+        let max_width = app_settings.sutta_max_width;
+
+        // Format CSS and JS extras
+        let css_extra = format!("html {{ font-size: {}px; }} body {{ max-width: {}ex; }}", font_size, max_width);
+
+        let mut js_extra = format!("const BOOK_SPINE_ITEM_UID = '{}';", spine_item.spine_item_uid);
+
+        if let Some(js_pre) = js_extra_pre {
+            js_extra = format!("{}; {}", js_pre, js_extra);
+        }
+
+        js_extra.push_str(&format!(" const SHOW_BOOKMARKS = {};", app_settings.show_bookmarks));
+
+        // Build body_class with theme and language
+        let mut body_class = self.get_theme_name();
+
+        // Add language-specific class if available
+        if let Some(ref lang) = spine_item.language {
+            if !lang.is_empty() {
+                body_class.push_str(&format!(" lang-{}", lang));
+            }
+        }
+
+        // Wrap content in the full HTML page structure
+        let final_html = sutta_html_page(
+            &content_html_body,
+            Some(self.api_url.to_string()),
+            Some(css_extra.to_string()),
+            Some(js_extra.to_string()),
+            Some(body_class),
+        );
+
+        Ok(final_html)
+    }
+
     pub fn get_theme_name(&self) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         app_settings.theme_name_as_string()
@@ -379,7 +443,7 @@ impl AppData {
     pub fn get_dpd_headword_by_uid(&self, uid_str: &str) -> Option<String> {
         use diesel::prelude::*;
         use crate::db::dpd_schema::dpd_headwords::dsl::*;
-        
+
         let mut conn = match self.dbm.dpd.get_conn() {
             Ok(c) => c,
             Err(e) => {
@@ -387,11 +451,11 @@ impl AppData {
                 return None;
             }
         };
-        
+
         let result = dpd_headwords
             .filter(uid.eq(uid_str))
             .first::<crate::db::dpd_models::DpdHeadword>(&mut conn);
-        
+
         match result {
             Ok(headword) => {
                 match serde_json::to_string(&headword) {
@@ -412,7 +476,7 @@ impl AppData {
     pub fn get_dpd_root_by_root_key(&self, root_key_str: &str) -> Option<String> {
         use diesel::prelude::*;
         use crate::db::dpd_schema::dpd_roots::dsl::*;
-        
+
         let mut conn = match self.dbm.dpd.get_conn() {
             Ok(c) => c,
             Err(e) => {
@@ -420,11 +484,11 @@ impl AppData {
                 return None;
             }
         };
-        
+
         let result = dpd_roots
             .filter(root.eq(root_key_str))
             .first::<crate::db::dpd_models::DpdRoot>(&mut conn);
-        
+
         match result {
             Ok(dpd_root) => {
                 match serde_json::to_string(&dpd_root) {
@@ -684,6 +748,27 @@ impl AppData {
             Ok(_) => (),
             Err(e) => error(&format!("Failed to update app settings: {}", e)),
         }
+    }
+
+    /// Import an EPUB document into the database
+    pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str) -> Result<()> {
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get database connection")?;
+        crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid)
+    }
+
+    /// Import a PDF document into the database
+    pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str) -> Result<()> {
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get database connection")?;
+        crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid)
+    }
+
+    /// Import an HTML document into the database
+    pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str) -> Result<()> {
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get database connection")?;
+        crate::html_import::import_html_to_db(db_conn, html_path, book_uid)
     }
 
     pub fn get_first_time_start(&self) -> bool {

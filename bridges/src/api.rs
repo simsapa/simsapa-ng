@@ -50,6 +50,8 @@ pub mod ffi {
         fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
         fn callback_open_sutta_search_window(show_result_data_json: QString);
         fn callback_open_sutta_languages_window();
+        fn callback_open_library_window();
+        fn callback_show_chapter_in_sutta_window(result_data_json: QString);
     }
 }
 
@@ -82,7 +84,19 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
                 None => "txt",
             };
 
-            let content_type = ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain);
+            let content_type = match path_ext {
+                "css" => ContentType::CSS,
+                "js" | "mjs" => ContentType::JavaScript,
+                "json" => ContentType::JSON,
+                "svg" => ContentType::SVG,
+                "png" => ContentType::PNG,
+                "jpg" | "jpeg" => ContentType::JPEG,
+                "gif" => ContentType::GIF,
+                "woff" | "woff2" => ContentType::WOFF,
+                "ttf" => ContentType::TTF,
+                "otf" => ContentType::OTF,
+                _ => ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain),
+            };
 
             let body = Vec::from(entry_file.contents());
 
@@ -185,8 +199,33 @@ fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<Ra
     info(&format!("get_sutta_html_by_uid(): {}", uid_str));
 
     match dbm.appdata.get_sutta(&uid_str) {
-        Some(sutta) => Ok(RawHtml(format!("<p>Found: {}</p>", &sutta.uid))),
-        None => Err((Status::NotFound, format!("Sutta Not Found"))),
+        Some(item) => {
+            match item.content_html {
+                Some(html) => Ok(RawHtml(html)),
+                None => Ok(RawHtml(String::from("content_html is None"))),
+            }
+        },
+        None => Err((Status::NotFound, format!("Sutta Not Found: {}", &uid_str))),
+    }
+}
+
+#[get("/get_book_spine_item_html_by_uid/<uid..>")]
+fn get_book_spine_item_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+    let uid_str = uid.to_string_lossy();
+    info(&format!("get_book_spine_item_html_by_uid(): {}", uid_str));
+
+    match dbm.appdata.get_book_spine_item(&uid_str) {
+        Ok(Some(item)) => {
+            if let Some(html) = item.content_html {
+                Ok(RawHtml(html))
+            } else {
+                // PDF books don't have HTML content - QML should handle PDFs as
+                // a parameter to viewer.html instead of calling this function.
+                Err((Status::NotFound, "No HTML content available (PDF book?)".to_string()))
+            }
+        },
+        Ok(None) => Err((Status::NotFound, format!("BookSpineItem Not Found"))),
+        Err(e) => Err((Status::InternalServerError, format!("Database error: {}", e))),
     }
 }
 
@@ -236,6 +275,58 @@ fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
     }
 }
 
+/// Serve book resources (images, CSS, PDFs, etc.) from the database
+#[get("/book_resources/<book_uid>/<path..>")]
+fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
+    let path_str = path.to_str().unwrap_or("");
+
+    info(&format!("Serving book resource: book_uid={}, path={}", book_uid, path_str));
+
+    // Query the database for the resource
+    match db_manager.appdata.get_book_resource(book_uid, path_str) {
+        Ok(Some(resource)) => {
+            // Determine ContentType from MIME type
+            let content_type = if let Some(ref mime) = resource.mime_type {
+                match mime.as_str() {
+                    "image/png" => ContentType::PNG,
+                    "image/jpeg" | "image/jpg" => ContentType::JPEG,
+                    "image/gif" => ContentType::GIF,
+                    "image/svg+xml" => ContentType::SVG,
+                    "image/webp" => ContentType::WEBP,
+                    "text/css" => ContentType::CSS,
+                    "application/javascript" | "text/javascript" => ContentType::JavaScript,
+                    "application/pdf" => ContentType::PDF,
+                    "font/woff" | "font/woff2" => ContentType::WOFF,
+                    "font/ttf" => ContentType::TTF,
+                    "font/otf" => ContentType::OTF,
+                    _ => ContentType::Binary,
+                }
+            } else {
+                ContentType::Binary
+            };
+
+            // Return the resource data
+            let data = resource.content_data.unwrap_or_default();
+            info(&format!("Serving {} bytes of {} ({})", data.len(), path_str, content_type));
+            (Status::Ok, (content_type, data))
+        }
+        Ok(None) => {
+            // Resource not found
+            let msg = format!("404 Not Found: /book_resources/{}/{}", book_uid, path_str);
+            warn(&msg);
+            let ret = Vec::from(msg.as_bytes());
+            (Status::NotFound, (ContentType::Plain, ret))
+        }
+        Err(e) => {
+            // Database error
+            let msg = format!("500 Internal Server Error: {}", e);
+            error(&msg);
+            let ret = Vec::from(msg.as_bytes());
+            (Status::InternalServerError, (ContentType::Plain, ret))
+        }
+    }
+}
+
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
@@ -261,11 +352,13 @@ pub async extern "C" fn start_webserver() {
             index,
             shutdown,
             serve_assets,
+            serve_book_resources,
             logger_route,
             lookup_window_query,
             summary_query,
             sutta_menu_action,
             get_sutta_html_by_uid,
+            get_book_spine_item_html_by_uid,
             open_sutta,
         ])
         .manage(assets_files)

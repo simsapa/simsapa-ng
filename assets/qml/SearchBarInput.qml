@@ -76,7 +76,12 @@ Frame {
 
                 focus: true
                 font.pointSize: root.is_mobile ? 14 : 12
-                placeholderText: root.db_loaded ? (search_area_dropdown.currentText === "Dictionary" ? "Search in dictionary" : "Search in suttas") : "Loading..."
+                placeholderText: {
+                    if (!root.db_loaded) return "Loading...";
+                    if (search_area_dropdown.currentText === "Dictionary") return "Search in dictionary";
+                    if (search_area_dropdown.currentText === "Library") return "Search in library";
+                    return "Search in suttas";
+                }
 
                 onAccepted: search_btn.clicked()
                 onTextChanged: root.user_typed()
@@ -104,6 +109,7 @@ Frame {
                 model: [
                     "Suttas",
                     "Dictionary",
+                    "Library",
                 ]
 
                 // NOTE: Don't use onCurrentIndexChanged to re-run the query.
@@ -128,6 +134,10 @@ Frame {
                                 "Contains Match",
                                 /* "Title Match", */
                                 /* "RegEx Match", */
+                        ];
+                    } else if (search_area_dropdown.currentText === "Library") {
+                        return [
+                                "Contains Match",
                         ];
                     } else {
                         return [
@@ -158,10 +168,10 @@ Frame {
                 id: language_filter_dropdown
                 Layout.preferredHeight: 40
                 model: ["Language",]
-                enabled: search_area_dropdown.currentText === "Suttas"
+                enabled: search_area_dropdown.currentText === "Suttas" || search_area_dropdown.currentText === "Library"
                 onCurrentIndexChanged: {
-                    // Save the language filter selection (only for Suttas)
-                    if (search_area_dropdown.currentText === "Suttas" && enabled) {
+                    // Save the language filter selection
+                    if (enabled) {
                         // currentIndex changed but currentText have not yet updated.
                         // Have to get the text manually from the model list.
                         const lang_key = language_filter_dropdown.model[currentIndex];

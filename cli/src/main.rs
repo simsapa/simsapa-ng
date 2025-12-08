@@ -233,6 +233,142 @@ fn suttacentral_lang_code_to_name() -> Result<(), String> {
     Ok(())
 }
 
+/// Import an EPUB file into the appdata database
+fn import_epub(db_path: &Path, epub_path: &Path, book_uid: &str) -> Result<(), String> {
+    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    use simsapa_backend::epub_import::import_epub_to_db;
+    use simsapa_backend::helpers::run_fts5_indexes_sql_script;
+
+    println!("Importing EPUB file...");
+    println!("Database: {:?}", db_path);
+    println!("EPUB file: {:?}", epub_path);
+    println!("Book UID: {}", book_uid);
+
+    // Check if EPUB file exists
+    if !epub_path.exists() {
+        return Err(format!("EPUB file not found: {:?}", epub_path));
+    }
+
+    // Connect to the database (create if it doesn't exist)
+    let mut conn = SqliteConnection::establish(db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to connect to database: {}", e))?;
+
+    // Helper to check if a table exists
+    #[derive(QueryableByName)]
+    struct CountResult {
+        #[diesel(sql_type = diesel::sql_types::BigInt)]
+        count: i64,
+    }
+
+    let table_exists = |conn: &mut SqliteConnection, table_name: &str| -> bool {
+        let query = format!(
+            "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='{}'",
+            table_name
+        );
+        diesel::sql_query(&query)
+            .get_result::<CountResult>(conn)
+            .map(|r| r.count > 0)
+            .unwrap_or(false)
+    };
+
+    // Check if books or book_spine_items_fts tables exist
+    let books_exists = table_exists(&mut conn, "books");
+    let fts_exists = table_exists(&mut conn, "book_spine_items_fts");
+
+    // Run migrations only if books or FTS table doesn't exist
+    if !books_exists || !fts_exists {
+        println!("Running database migrations...");
+        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata");
+        conn.run_pending_migrations(MIGRATIONS)
+            .map_err(|e| format!("Failed to run migrations: {}", e))?;
+
+        // Run the books FTS5 indexes script
+        println!("Creating FTS5 indexes for books...");
+        let sql_script_path = PathBuf::from("../scripts/books-fts5-indexes.sql");
+        run_fts5_indexes_sql_script(db_path, &sql_script_path)
+            .map_err(|e| format!("Failed to run FTS5 indexes script: {}", e))?;
+    } else {
+        println!("Books tables already exist, skipping migrations.");
+    }
+
+    // Import the EPUB
+    println!("Importing EPUB...");
+    import_epub_to_db(&mut conn, epub_path, book_uid)
+        .map_err(|e| format!("Failed to import EPUB: {}", e))?;
+
+    println!("Successfully imported EPUB with UID: {}", book_uid);
+
+    Ok(())
+}
+
+/// Import an HTML file into the appdata database
+fn import_html(db_path: &Path, html_path: &Path, book_uid: &str) -> Result<(), String> {
+    use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+    use simsapa_backend::html_import::import_html_to_db;
+    use simsapa_backend::helpers::run_fts5_indexes_sql_script;
+
+    println!("Importing HTML file...");
+    println!("Database: {:?}", db_path);
+    println!("HTML file: {:?}", html_path);
+    println!("Book UID: {}", book_uid);
+
+    // Check if HTML file exists
+    if !html_path.exists() {
+        return Err(format!("HTML file not found: {:?}", html_path));
+    }
+
+    // Connect to the database (create if it doesn't exist)
+    let mut conn = SqliteConnection::establish(db_path.to_str().unwrap())
+        .map_err(|e| format!("Failed to connect to database: {}", e))?;
+
+    // Helper to check if a table exists
+    #[derive(QueryableByName)]
+    struct CountResult {
+        #[diesel(sql_type = diesel::sql_types::BigInt)]
+        count: i64,
+    }
+
+    let table_exists = |conn: &mut SqliteConnection, table_name: &str| -> bool {
+        let query = format!(
+            "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='{}'",
+            table_name
+        );
+        diesel::sql_query(&query)
+            .get_result::<CountResult>(conn)
+            .map(|r| r.count > 0)
+            .unwrap_or(false)
+    };
+
+    // Check if books or book_spine_items_fts tables exist
+    let books_exists = table_exists(&mut conn, "books");
+    let fts_exists = table_exists(&mut conn, "book_spine_items_fts");
+
+    // Run migrations only if books or FTS table doesn't exist
+    if !books_exists || !fts_exists {
+        println!("Running database migrations...");
+        const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../backend/migrations/appdata");
+        conn.run_pending_migrations(MIGRATIONS)
+            .map_err(|e| format!("Failed to run migrations: {}", e))?;
+
+        // Run the books FTS5 indexes script
+        println!("Creating FTS5 indexes for books...");
+        let sql_script_path = PathBuf::from("../scripts/books-fts5-indexes.sql");
+        run_fts5_indexes_sql_script(db_path, &sql_script_path)
+            .map_err(|e| format!("Failed to run FTS5 indexes script: {}", e))?;
+    } else {
+        println!("Books tables already exist, skipping migrations.");
+    }
+
+    // Import the HTML
+    println!("Importing HTML...");
+    import_html_to_db(&mut conn, html_path, book_uid)
+        .map_err(|e| format!("Failed to import HTML: {}", e))?;
+
+    println!("Successfully imported HTML with UID: {}", book_uid);
+
+    Ok(())
+}
+
 /// Generate statistics for an appdata.sqlite3 database
 fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool) -> Result<(), String> {
     use std::fs;
@@ -565,6 +701,38 @@ enum Commands {
 
     /// List all language codes and their names in SuttaCentral ArangoDB
     SuttacentralLangCodeToName,
+
+    /// Import an EPUB file into the appdata database
+    #[command(arg_required_else_help = true)]
+    ImportEpub {
+        /// Path to the appdata.sqlite3 database
+        #[arg(long, value_name = "DB_PATH")]
+        db_path: PathBuf,
+
+        /// Path to the EPUB file to import
+        #[arg(long, value_name = "EPUB_PATH")]
+        epub_path: PathBuf,
+
+        /// Unique identifier for the book (e.g., "ess" for "Its Essential Meaning")
+        #[arg(long, value_name = "UID")]
+        uid: String,
+    },
+
+    /// Import an HTML file into the appdata database
+    #[command(arg_required_else_help = true)]
+    ImportHtml {
+        /// Path to the appdata.sqlite3 database
+        #[arg(long, value_name = "DB_PATH")]
+        db_path: PathBuf,
+
+        /// Path to the HTML file to import
+        #[arg(long, value_name = "HTML_PATH")]
+        html_path: PathBuf,
+
+        /// Unique identifier for the book (e.g., "guide" for "User Guide")
+        #[arg(long, value_name = "UID")]
+        uid: String,
+    },
 }
 
 /// Enum for the different types of queries available.
@@ -585,8 +753,8 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName => {
-            // Skip app data initialization for bootstrap, export, stats, and suttacentral commands
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } => {
+            // Skip app data initialization for bootstrap, export, stats, suttacentral, and import commands
         }
         _ => {
             init_app_data();
@@ -675,6 +843,14 @@ fn main() {
 
         Commands::SuttacentralLangCodeToName => {
             suttacentral_lang_code_to_name()
+        }
+
+        Commands::ImportEpub { db_path, epub_path, uid } => {
+            import_epub(&db_path, &epub_path, &uid)
+        }
+
+        Commands::ImportHtml { db_path, html_path, uid } => {
+            import_html(&db_path, &html_path, &uid)
         }
     };
 

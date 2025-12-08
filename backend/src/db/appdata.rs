@@ -193,6 +193,78 @@ impl AppdataDbHandle {
             }
         })
     }
+
+    // === Book-related queries ===
+
+    pub fn get_book_by_uid(&self, book_uid: &str) -> Result<Option<Book>> {
+        use crate::db::appdata_schema::books::dsl::*;
+
+        self.do_read(|db_conn| {
+            books
+                .filter(uid.eq(book_uid))
+                .select(Book::as_select())
+                .first(db_conn)
+                .optional()
+        })
+    }
+
+    pub fn get_book_spine_item(&self, spine_item_uid_param: &str) -> Result<Option<BookSpineItem>> {
+        use crate::db::appdata_schema::book_spine_items::dsl::*;
+
+        self.do_read(|db_conn| {
+            book_spine_items
+                .filter(spine_item_uid.eq(spine_item_uid_param))
+                .select(BookSpineItem::as_select())
+                .first(db_conn)
+                .optional()
+        })
+    }
+
+    pub fn get_book_resource(&self, book_uid_param: &str, resource_path_param: &str) -> Result<Option<BookResource>> {
+        use crate::db::appdata_schema::book_resources::dsl::*;
+
+        self.do_read(|db_conn| {
+            book_resources
+                .filter(book_uid.eq(book_uid_param))
+                .filter(resource_path.eq(resource_path_param))
+                .select(BookResource::as_select())
+                .first(db_conn)
+                .optional()
+        })
+    }
+
+    pub fn get_all_books(&self) -> Result<Vec<Book>> {
+        use crate::db::appdata_schema::books::dsl::*;
+
+        self.do_read(|db_conn| {
+            books
+                .select(Book::as_select())
+                .order(title.asc())
+                .load(db_conn)
+        })
+    }
+
+    pub fn get_spine_items_for_book(&self, book_uid_param: &str) -> Result<Vec<BookSpineItem>> {
+        use crate::db::appdata_schema::book_spine_items::dsl::*;
+
+        self.do_read(|db_conn| {
+            book_spine_items
+                .filter(book_uid.eq(book_uid_param))
+                .order(spine_index.asc())
+                .select(BookSpineItem::as_select())
+                .load(db_conn)
+        })
+    }
+
+    pub fn delete_book_by_uid(&self, book_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::books::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(books.filter(uid.eq(book_uid_param)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
 }
 
 pub fn delete_sutta() {

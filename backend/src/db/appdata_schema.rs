@@ -83,9 +83,55 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    books (id) {
+        id -> Integer,
+        uid -> Text,
+        document_type -> Text,
+        title -> Nullable<Text>,
+        author -> Nullable<Text>,
+        language -> Nullable<Text>,
+        file_path -> Nullable<Text>,
+        metadata_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    book_spine_items (id) {
+        id -> Integer,
+        book_id -> Integer,
+        book_uid -> Text,
+        spine_item_uid -> Text,
+        spine_index -> Integer,
+        title -> Nullable<Text>,
+        language -> Nullable<Text>,
+        content_html -> Nullable<Text>,
+        content_plain -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    book_resources (id) {
+        id -> Integer,
+        book_id -> Integer,
+        book_uid -> Text,
+        resource_path -> Text,
+        mime_type -> Nullable<Text>,
+        content_data -> Nullable<Binary>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
 diesel::joinable!(sutta_variants -> suttas (sutta_id));
 diesel::joinable!(sutta_comments -> suttas (sutta_id));
 diesel::joinable!(sutta_glosses -> suttas (sutta_id));
+diesel::joinable!(book_spine_items -> books (book_id));
+diesel::joinable!(book_resources -> books (book_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     app_settings,
@@ -93,4 +139,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     sutta_variants,
     sutta_comments,
     sutta_glosses,
+    books,
+    book_spine_items,
+    book_resources,
 );

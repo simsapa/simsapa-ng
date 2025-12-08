@@ -72,12 +72,30 @@ Item {
         web.loadHtml(html);
     }
 
+    function load_book_spine_uid(uid) {
+        // Check if this is a PDF book
+        if (SuttaBridge.is_spine_item_pdf(uid)) {
+            // Load PDF viewer with file parameter
+            const api_url = SuttaBridge.get_api_url();
+            const book_uid = SuttaBridge.get_book_uid_for_spine_item(uid);
+            const pdf_url = `${api_url}/book_resources/${book_uid}/document.pdf`;
+            web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
+        } else {
+            // Regular book content, load HTML with base URL for resolving resource paths
+            const api_url = SuttaBridge.get_api_url();
+            var html = SuttaBridge.get_book_spine_html(root.window_id, uid);
+            web.loadHtml(html, api_url);
+        }
+    }
+
     // Load the sutta or dictionary word when the Loader in SuttaHtmlView updates data_json
     onData_jsonChanged: function() {
         root.set_properties_from_data_json();
         // Both "dict_words" and "dpd_headwords" should load dictionary content
         if (root.table_name === "dict_words" || root.table_name === "dpd_headwords") {
             root.load_word_uid(root.item_uid);
+        } else if (root.table_name === "book_spine_items") {
+            root.load_book_spine_uid(root.item_uid);
         } else {
             root.load_sutta_uid(root.item_uid);
         }

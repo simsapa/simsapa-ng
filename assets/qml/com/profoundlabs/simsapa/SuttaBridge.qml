@@ -20,9 +20,15 @@ Item {
     signal ankiCsvExportReady(results_json: string);
     signal ankiPreviewReady(preview_html: string);
     signal databaseValidationResult(database_name: string, is_valid: bool, message: string);
+    signal showChapterFromLibrary(result_data_json: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
+    }
+
+    function emit_show_chapter_from_library(result_data_json: string) {
+        console.log("emit_show_chapter_from_library():", result_data_json);
+        showChapterFromLibrary(result_data_json);
     }
 
     function load_db() {
@@ -68,6 +74,11 @@ Item {
     }
 
     function get_word_html(window_id: string, uid: string): string {
+        var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(uid);
+        return html;
+    }
+
+    function get_book_spine_html(window_id: string, uid: string): string {
         var html = "<!doctype><html><body><h1>%1</h1></body></html>".arg(uid);
         return html;
     }
@@ -163,12 +174,36 @@ Item {
         });
     }
 
+    function remove_book(book_uid: string) {
+        return;
+    }
+
+    function check_book_uid_exists(): bool {
+        return true;
+    }
+
+    function extract_document_metadata(file_path: string): string {
+        return '{"title": "", "author": ""}';
+    }
+
+    function is_spine_item_pdf(spine_item_uid: string): bool {
+        return false;
+    }
+
+    function get_book_uid_for_spine_item(spine_item_uid: string): string {
+        return '';
+    }
+
     function get_api_key(key_name: string): string {
         return 'key_value';
     }
 
     function set_api_keys(api_keys_json: string) {
         console.log("set_api_keys()");
+    }
+
+    function get_all_books_json(): string {
+        return '[]';
     }
 
     function get_system_prompt(prompt_name: string): string {
@@ -197,6 +232,10 @@ Item {
 
     function set_provider_api_key(provider_name: string, api_key: string) {
         console.log("set_provider_api_key():", provider_name, api_key);
+    }
+
+    function get_api_url(): string {
+        return 'http://localhost:4848';
     }
 
     function set_provider_enabled(provider_name: string, enabled: bool) {
@@ -279,6 +318,14 @@ Item {
 
     function open_sutta_search_window() {
         console.log("open_sutta_search_window()");
+    }
+
+    function open_sutta_search_window_with_result(result_data_json: string) {
+        console.log("open_sutta_search_window_with_result():", result_data_json);
+    }
+
+    function open_library_window() {
+        console.log("open_library_window()");
     }
 
     function process_all_paragraphs_background(input_json: string) {
