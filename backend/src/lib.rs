@@ -22,6 +22,7 @@ pub mod anki_export;
 pub mod epub_import;
 pub mod pdf_import;
 pub mod html_import;
+pub mod document_metadata;
 
 use std::env;
 use std::io::{self, Read, Write};

@@ -182,6 +182,10 @@ Item {
         return true;
     }
 
+    function extract_document_metadata(file_path: string): string {
+        return '{"title": "", "author": ""}';
+    }
+
     function is_spine_item_pdf(spine_item_uid: string): bool {
         return false;
     }

@@ -28,11 +28,18 @@ pub fn import_pdf_to_db(
     let doc = Document::load(pdf_path)
         .map_err(|e| anyhow!("Failed to load PDF: {}", e))?;
 
-    // Extract metadata
+    // Extract metadata using comprehensive extraction
     let title = extract_pdf_metadata(&doc, b"Title")
         .unwrap_or_else(|| "Untitled".to_string());
 
+    // Try to extract author from multiple sources in order of preference:
+    // 1. PDF Info dictionary Author field
+    // 2. XMP metadata dc:creator (Dublin Core)
+    // 3. XMP metadata pdf:Author (PDF-specific)
+    // 4. PDF Info dictionary Creator field (application that created it)
     let author = extract_pdf_metadata(&doc, b"Author")
+        .or_else(|| extract_xmp_author(&doc))
+        .or_else(|| extract_pdf_metadata(&doc, b"Creator"))
         .unwrap_or_else(|| String::new());
 
     let language = extract_pdf_metadata(&doc, b"Language")
@@ -120,7 +127,7 @@ pub fn import_pdf_to_db(
 }
 
 /// Extract metadata field from PDF document
-fn extract_pdf_metadata(doc: &Document, key: &[u8]) -> Option<String> {
+pub fn extract_pdf_metadata(doc: &Document, key: &[u8]) -> Option<String> {
     // Get the Info dictionary reference - convert Result to Option
     let info_obj_ref = doc.trailer.get(b"Info").ok()?;
     let info_ref = info_obj_ref.as_reference().ok()?;
@@ -151,7 +158,7 @@ fn extract_pdf_metadata(doc: &Document, key: &[u8]) -> Option<String> {
 }
 
 /// Decode PDF text string which may be UTF-16 BE (with BOM) or PDFDocEncoding/Latin1
-fn decode_pdf_text_string(bytes: &[u8]) -> String {
+pub fn decode_pdf_text_string(bytes: &[u8]) -> String {
     // Check for UTF-16 BE BOM (0xFE 0xFF)
     if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
         // UTF-16 BE with BOM - decode starting after the BOM
@@ -189,10 +196,63 @@ fn decode_pdf_text_string(bytes: &[u8]) -> String {
 }
 
 /// Trim whitespace and common control characters from PDF strings
-fn trim_pdf_string(s: &str) -> String {
+pub fn trim_pdf_string(s: &str) -> String {
     s.trim()
         .trim_matches('\u{0000}') // NULL
         .trim_matches('\u{FEFF}') // Zero-width no-break space (BOM)
         .trim()
         .to_string()
+}
+
+/// Extract author from XMP metadata (dc:creator or pdf:Author)
+pub fn extract_xmp_author(doc: &Document) -> Option<String> {
+    // Try to get XMP metadata from catalog
+    if let Ok(catalog) = doc.catalog() {
+        if let Ok(metadata_ref) = catalog.get(b"Metadata") {
+            if let Ok(metadata_obj_id) = metadata_ref.as_reference() {
+                if let Ok(metadata_obj) = doc.get_object(metadata_obj_id) {
+                    if let Ok(stream) = metadata_obj.as_stream() {
+                        if let Ok(content) = stream.get_plain_content() {
+                            let xml = String::from_utf8_lossy(&content);
+
+                            // First try dc:creator (Dublin Core)
+                            if let Some(start) = xml.find("<dc:creator>") {
+                                if let Some(end) = xml[start..].find("</dc:creator>") {
+                                    let creator_start = start + 13;
+                                    let creator_end = start + end;
+                                    let creator_content = &xml[creator_start..creator_end];
+
+                                    // Extract from RDF structure if present
+                                    if creator_content.contains("<rdf:li>") {
+                                        if let Some(li_start) = creator_content.find("<rdf:li>") {
+                                            if let Some(li_end) = creator_content[li_start..].find("</rdf:li>") {
+                                                let li_content_start = li_start + 8;
+                                                let li_content_end = li_start + li_end;
+                                                let author = &creator_content[li_content_start..li_content_end];
+                                                return Some(author.trim().to_string());
+                                            }
+                                        }
+                                    } else {
+                                        return Some(creator_content.trim().to_string());
+                                    }
+                                }
+                            }
+
+                            // Then try pdf:Author (PDF-specific)
+                            if let Some(start) = xml.find("<pdf:Author>") {
+                                if let Some(end) = xml[start..].find("</pdf:Author>") {
+                                    let author_start = start + 12;
+                                    let author_end = start + end;
+                                    let author = &xml[author_start..author_end];
+                                    return Some(author.trim().to_string());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    None
 }

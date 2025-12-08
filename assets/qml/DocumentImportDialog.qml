@@ -13,7 +13,7 @@ Dialog {
     title: "Import Document"
     modal: true
     standardButtons: Dialog.Cancel
-    
+
     width: Math.min(600, parent ? parent.width - 40 : 600)
     height: Math.min(500, parent ? parent.height - 40 : 500)
 
@@ -56,20 +56,41 @@ Dialog {
         title: "Select Document to Import"
         fileMode: FileDialog.OpenFile
         nameFilters: ["Documents (*.epub *.pdf *.html *.htm)", "EPUB files (*.epub)", "PDF files (*.pdf)", "HTML files (*.html *.htm)"]
-        
+
         onAccepted: {
             const file_path = selectedFile.toString().replace("file://", "");
             root.selected_file_path = file_path;
             root.document_type = root.detect_document_type(file_path);
-            
+
             // Pre-fill UID with filename
             const filename = root.extract_filename_without_extension(file_path);
             uid_field.text = filename.replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase();
-            
-            // TODO: Extract metadata from file
-            // For now, just show the filename as title
-            title_field.text = filename;
-            
+
+            // Extract metadata from file
+            try {
+                const metadata_json = SuttaBridge.extract_document_metadata(file_path);
+                const metadata = JSON.parse(metadata_json);
+
+                // Populate title field with extracted metadata or filename as fallback
+                if (metadata.title && metadata.title.trim() !== "") {
+                    title_field.text = metadata.title;
+                } else {
+                    title_field.text = filename;
+                }
+
+                // Populate author field with extracted metadata
+                if (metadata.author && metadata.author.trim() !== "") {
+                    author_field.text = metadata.author;
+                } else {
+                    author_field.text = "";
+                }
+            } catch (e) {
+                // Fallback to filename if extraction fails
+                console.log("Failed to extract metadata:", e);
+                title_field.text = filename;
+                author_field.text = "";
+            }
+
             status_label.text = "Selected: " + file_path;
         }
     }
@@ -245,9 +266,9 @@ Dialog {
                     root.is_importing = true;
                     progress_bar.visible = true;
                     status_label.text = "Starting import...";
-                    
+
                     const split_tag = split_chapters_checkbox.checked ? split_tag_dropdown.currentText : "";
-                    
+
                     SuttaBridge.import_document(
                         root.selected_file_path,
                         uid_field.text,
@@ -272,7 +293,7 @@ Dialog {
             root.is_importing = false;
             progress_bar.visible = false;
             status_label.text = message;
-            
+
             if (success) {
                 root.import_completed(true, message);
                 root.close()

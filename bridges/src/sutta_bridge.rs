@@ -223,6 +223,9 @@ pub mod qobject {
         fn check_book_uid_exists(self: &SuttaBridge, book_uid: &QString) -> bool;
 
         #[qinvokable]
+        fn extract_document_metadata(self: &SuttaBridge, file_path: &QString) -> QString;
+
+        #[qinvokable]
         fn is_spine_item_pdf(self: &SuttaBridge, spine_item_uid: &QString) -> bool;
 
         #[qinvokable]
@@ -1313,6 +1316,34 @@ impl qobject::SuttaBridge {
             Err(e) => {
                 error(&format!("Failed to check book UID {}: {}", uid, e));
                 false
+            }
+        }
+    }
+
+    /// Extract metadata (title and author) from a document file
+    /// Returns a JSON string with "title" and "author" fields
+    pub fn extract_document_metadata(&self, file_path: &QString) -> QString {
+        use simsapa_backend::document_metadata;
+
+        let path_str = file_path.to_string();
+        let path = Path::new(&path_str);
+
+        match document_metadata::extract_document_metadata(path) {
+            Ok(metadata) => {
+                let json = serde_json::json!({
+                    "title": metadata.title,
+                    "author": metadata.author
+                });
+                QString::from(json.to_string())
+            }
+            Err(e) => {
+                error(&format!("Failed to extract metadata: {}", e));
+                // Return empty metadata on error
+                let json = serde_json::json!({
+                    "title": "",
+                    "author": ""
+                });
+                QString::from(json.to_string())
             }
         }
     }
