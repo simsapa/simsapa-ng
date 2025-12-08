@@ -314,14 +314,6 @@ ApplicationWindow {
                             spacing: 5
 
                             Label {
-                                visible: book_item_wrapper.spine_items.length > 0
-                                text: "Chapters:"
-                                font.pointSize: root.pointSize - 1
-                                font.italic: true
-                                color: palette.windowText
-                            }
-
-                            Label {
                                 visible: book_item_wrapper.spine_items.length === 0
                                 text: "No chapters available"
                                 font.pointSize: root.pointSize - 2
