@@ -124,26 +124,75 @@ fn extract_pdf_metadata(doc: &Document, key: &[u8]) -> Option<String> {
     // Get the Info dictionary reference - convert Result to Option
     let info_obj_ref = doc.trailer.get(b"Info").ok()?;
     let info_ref = info_obj_ref.as_reference().ok()?;
-    
+
     // Get the Info object
     let info_obj = doc.get_object(info_ref).ok()?;
-    
+
     // Convert to dictionary
     let info_dict = info_obj.as_dict().ok()?;
-    
+
     // Get the value for the key - convert Result to Option
     let value = info_dict.get(key).ok()?;
-    
+
     // Try to extract as string (most common case)
     // as_str() returns &[u8], so we need to convert it to String
     if let Ok(bytes) = value.as_str() {
-        return Some(String::from_utf8_lossy(bytes).to_string());
+        let decoded = decode_pdf_text_string(bytes);
+        return Some(trim_pdf_string(&decoded));
     }
-    
+
     // Try to extract as name
     if let Ok(name_bytes) = value.as_name() {
-        return Some(String::from_utf8_lossy(name_bytes).to_string());
+        let decoded = decode_pdf_text_string(name_bytes);
+        return Some(trim_pdf_string(&decoded));
     }
-    
+
     None
+}
+
+/// Decode PDF text string which may be UTF-16 BE (with BOM) or PDFDocEncoding/Latin1
+fn decode_pdf_text_string(bytes: &[u8]) -> String {
+    // Check for UTF-16 BE BOM (0xFE 0xFF)
+    if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
+        // UTF-16 BE with BOM - decode starting after the BOM
+        let utf16_bytes = &bytes[2..];
+
+        // Convert bytes to u16 values (big-endian)
+        let mut utf16_chars: Vec<u16> = Vec::new();
+        for chunk in utf16_bytes.chunks(2) {
+            if chunk.len() == 2 {
+                utf16_chars.push(u16::from_be_bytes([chunk[0], chunk[1]]));
+            }
+        }
+
+        String::from_utf16_lossy(&utf16_chars)
+    }
+    // Check for UTF-16 LE BOM (0xFF 0xFE)
+    else if bytes.len() >= 2 && bytes[0] == 0xFF && bytes[1] == 0xFE {
+        // UTF-16 LE with BOM - decode starting after the BOM
+        let utf16_bytes = &bytes[2..];
+
+        // Convert bytes to u16 values (little-endian)
+        let mut utf16_chars: Vec<u16> = Vec::new();
+        for chunk in utf16_bytes.chunks(2) {
+            if chunk.len() == 2 {
+                utf16_chars.push(u16::from_le_bytes([chunk[0], chunk[1]]));
+            }
+        }
+
+        String::from_utf16_lossy(&utf16_chars)
+    }
+    // No BOM - assume PDFDocEncoding or Latin1 (subset of UTF-8)
+    else {
+        String::from_utf8_lossy(bytes).to_string()
+    }
+}
+
+/// Trim whitespace and common control characters from PDF strings
+fn trim_pdf_string(s: &str) -> String {
+    s.trim()
+        .trim_matches('\u{0000}') // NULL
+        .trim_matches('\u{FEFF}') // Zero-width no-break space (BOM)
+        .trim()
+        .to_string()
 }
