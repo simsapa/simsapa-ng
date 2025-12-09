@@ -228,13 +228,35 @@ ApplicationWindow {
                         property bool use_toc: false
 
                         function load_spine_items() {
-                            // First check if the book has a TOC
+                            // First get spine items - we'll need them either way
+                            const json_str = SuttaBridge.get_spine_items_for_book_json(modelData.uid);
+                            try {
+                                spine_items = JSON.parse(json_str);
+                            } catch (e) {
+                                console.error("Failed to parse spine items JSON:", e);
+                                spine_items = [];
+                            }
+
+                            // Check if the book has a TOC
                             if (modelData.toc_json && modelData.toc_json.length > 0) {
                                 try {
                                     const toc = JSON.parse(modelData.toc_json);
                                     if (toc && toc.length > 0) {
-                                        // Use TOC for chapter list
-                                        chapter_list = toc;
+                                        // Use TOC for chapter list, but prepend first spine item (usually cover)
+                                        let combined_list = [];
+
+                                        // Add first spine item as cover if it exists
+                                        if (spine_items.length > 0) {
+                                            combined_list.push(spine_items[0]);
+                                        }
+
+                                        // Add TOC items
+                                        for (let i = 0; i < toc.length; i++) {
+                                            combined_list.push(toc[i]);
+                                        }
+
+                                        // Assign the combined list to trigger property change
+                                        chapter_list = combined_list;
                                         use_toc = true;
                                         return;
                                     }
@@ -243,18 +265,9 @@ ApplicationWindow {
                                 }
                             }
 
-                            // Fall back to spine items
-                            const json_str = SuttaBridge.get_spine_items_for_book_json(modelData.uid);
-                            try {
-                                spine_items = JSON.parse(json_str);
-                                chapter_list = spine_items;
-                                use_toc = false;
-                            } catch (e) {
-                                console.error("Failed to parse spine items JSON:", e);
-                                spine_items = [];
-                                chapter_list = [];
-                                use_toc = false;
-                            }
+                            // Fall back to spine items only
+                            chapter_list = spine_items;
+                            use_toc = false;
                         }
 
                         // Book header Frame
@@ -380,6 +393,10 @@ ApplicationWindow {
                                     Layout.fillWidth: true
 
                                     required property var modelData
+                                    required property int index
+
+                                    // Determine if this is a spine item or TOC item
+                                    readonly property bool is_spine_item: modelData.hasOwnProperty('spine_item_uid')
 
                                     background: Rectangle {
                                         color: chapter_item.hovered ? palette.midlight : "transparent"
@@ -387,9 +404,9 @@ ApplicationWindow {
                                     }
 
                                     contentItem: Label {
-                                        text: book_item_wrapper.use_toc
-                                            ? chapter_item.modelData.label
-                                            : (chapter_item.modelData.title || "Chapter " + (chapter_item.modelData.spine_index + 1))
+                                        text: chapter_item.is_spine_item
+                                            ? (chapter_item.modelData.title || "Chapter " + (chapter_item.modelData.spine_index + 1))
+                                            : chapter_item.modelData.label
                                         font.pointSize: root.pointSize - 1
                                         color: palette.text
                                         wrapMode: Text.WordWrap
@@ -397,7 +414,16 @@ ApplicationWindow {
                                     }
 
                                     onClicked: {
-                                        if (book_item_wrapper.use_toc) {
+                                        if (chapter_item.is_spine_item) {
+                                            // Spine item: use spine_item_uid directly
+                                            const result_data = {
+                                                item_uid: chapter_item.modelData.spine_item_uid,
+                                                table_name: "book_spine_items",
+                                                sutta_title: chapter_item.modelData.title || "Chapter " + (chapter_item.modelData.spine_index + 1),
+                                                sutta_ref: ""
+                                            };
+                                            SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
+                                        } else {
                                             // TOC item: need to look up spine item by resource path
                                             const spine_item_uid = SuttaBridge.get_spine_item_uid_by_path(
                                                 book_item_wrapper.modelData.uid,
@@ -413,15 +439,6 @@ ApplicationWindow {
                                                 };
                                                 SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
                                             }
-                                        } else {
-                                            // Spine item: use spine_item_uid directly
-                                            const result_data = {
-                                                item_uid: chapter_item.modelData.spine_item_uid,
-                                                table_name: "book_spine_items",
-                                                sutta_title: chapter_item.modelData.title || "Chapter " + (chapter_item.modelData.spine_index + 1),
-                                                sutta_ref: ""
-                                            };
-                                            SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
                                         }
                                     }
                                 }
