@@ -256,6 +256,19 @@ impl AppdataDbHandle {
         })
     }
 
+    pub fn get_book_spine_item_by_path(&self, book_uid_param: &str, resource_path_param: &str) -> Result<Option<BookSpineItem>> {
+        use crate::db::appdata_schema::book_spine_items::dsl::*;
+
+        self.do_read(|db_conn| {
+            book_spine_items
+                .filter(book_uid.eq(book_uid_param))
+                .filter(resource_path.eq(resource_path_param))
+                .select(BookSpineItem::as_select())
+                .first(db_conn)
+                .optional()
+        })
+    }
+
     pub fn delete_book_by_uid(&self, book_uid_param: &str) -> Result<()> {
         use crate::db::appdata_schema::books::dsl::*;
 

@@ -106,6 +106,11 @@ pub fn import_html_to_db(
 
     tracing::info!("Inserted book record with id: {}", book_id);
 
+    // Get the HTML filename for all chapters
+    let html_filename = html_path.file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("index.html");
+
     // Insert chapters as spine items
     for (spine_index, chapter) in chapters.iter().enumerate() {
         let spine_item_uid = format!("{}.{}", book_uid, spine_index);
@@ -121,6 +126,7 @@ pub fn import_html_to_db(
             book_uid,
             spine_item_uid: &spine_item_uid,
             spine_index: spine_index as i32,
+            resource_path: html_filename,
             title: Some(&chapter.title),
             language: if language.is_empty() {
                 None
@@ -609,13 +615,14 @@ fn rewrite_resource_links(html: &str, book_uid: &str) -> String {
             let attr = &caps[1];
             let path = &caps[2];
 
-            // Skip absolute URLs, data URIs, and anchors
+            // Skip absolute URLs, data URIs, anchors, and ssp:// links
             if path.starts_with("http://")
                 || path.starts_with("https://")
                 || path.starts_with("//")
                 || path.starts_with("data:")
                 || path.starts_with('/')
                 || path.starts_with('#')
+                || path.starts_with("ssp://")
             {
                 return caps[0].to_string();
             }
@@ -672,5 +679,12 @@ mod tests {
         let result = rewrite_resource_links(html, "testbook");
         assert!(result.contains(r###"href="http://example.com""###));
         assert!(result.contains(r###"href="#anchor""###));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_skip_ssp_protocol() {
+        let html = r#"<a href="ssp://suttas/an5.129/en/thanissaro">AN 5:129</a>"#;
+        let result = rewrite_resource_links(html, "testbook");
+        assert_eq!(result, html); // Should remain unchanged
     }
 }

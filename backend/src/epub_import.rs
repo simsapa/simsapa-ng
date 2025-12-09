@@ -199,6 +199,7 @@ pub fn import_epub_to_db(
             book_uid,
             spine_item_uid: &spine_item_uid,
             spine_index: spine_index as i32,
+            resource_path: &resource_path,
             title: Some(&title),
             language: if language.is_empty() { None } else { Some(&language) },
             content_html: Some(&content_html),
@@ -272,12 +273,13 @@ fn rewrite_resource_links(html: &str, book_uid: &str, base_dir: &str) -> String 
             let attr = &caps[1];
             let path = &caps[2];
 
-            // Skip absolute URLs (http://, https://, //, etc.)
+            // Skip absolute URLs (http://, https://, //, etc.) and ssp:// links
             if path.starts_with("http://")
                 || path.starts_with("https://")
                 || path.starts_with("//")
                 || path.starts_with('/')
                 || path.starts_with('#')
+                || path.starts_with("ssp://")
             {
                 return caps[0].to_string();
             }
@@ -293,8 +295,19 @@ fn rewrite_resource_links(html: &str, book_uid: &str, base_dir: &str) -> String 
                 normalize_path(path)
             };
 
-            // Rewrite to API endpoint
-            format!(r#"{}="/book_resources/{}/{}""#, attr, book_uid, full_path)
+            // Check if this is an HTML page link (for navigation between chapters)
+            // Remove fragment identifier before checking extension
+            let path_without_fragment = path.split('#').next().unwrap_or(path);
+            let is_html_link = path_without_fragment.to_lowercase().ends_with(".html") || path_without_fragment.to_lowercase().ends_with(".htm");
+
+            // Rewrite to appropriate API endpoint
+            let endpoint = if is_html_link {
+                format!(r#"{}="/book_pages/{}/{}""#, attr, book_uid, full_path)
+            } else {
+                format!(r#"{}="/book_resources/{}/{}""#, attr, book_uid, full_path)
+            };
+
+            endpoint
         })
         .to_string()
 }
@@ -396,6 +409,35 @@ mod tests {
     }
 
     #[test]
+    fn test_rewrite_resource_links_nested_html_direct_ref() {
+        let html = r#"<a href="Section0056.html">Next Chapter</a>"#;
+        let result = rewrite_resource_links(html, "bmc", "OEBPS/Text");
+        assert!(result.contains(r#"href="/book_pages/bmc/OEBPS/Text/Section0056.html""#));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_html_vs_resource() {
+        let html = r#"<a href="chapter.html">Chapter</a><img src="image.jpg" alt="Image">"#;
+        let result = rewrite_resource_links(html, "testbook", "OEBPS");
+        assert!(result.contains(r#"href="/book_pages/testbook/OEBPS/chapter.html""#));
+        assert!(result.contains(r#"src="/book_resources/testbook/OEBPS/image.jpg""#));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_preserve_fragment() {
+        let html = r#"<a href="chapter.html#section1">Chapter 1</a>"#;
+        let result = rewrite_resource_links(html, "testbook", "OEBPS");
+        assert!(result.contains(r#"href="/book_pages/testbook/OEBPS/chapter.html#section1""#));
+    }
+
+    #[test]
+    fn test_rewrite_resource_links_skip_ssp_protocol() {
+        let html = r#"<a href="ssp://suttas/an5.129/en/thanissaro">AN 5:129</a>"#;
+        let result = rewrite_resource_links(html, "testbook", "OEBPS");
+        assert_eq!(result, html); // Should remain unchanged
+    }
+
+    #[test]
     fn test_rewrite_resource_links_absolute() {
         let html = "<a href=\"http://example.com\">Link</a><a href=\"#anchor\">Anchor</a>";
         let result = rewrite_resource_links(html, "testbook", "OEBPS");
@@ -433,7 +475,7 @@ mod tests {
     }
 
     #[test]
-    fn test_rewrite_resource_links_nested_html_direct_ref() {
+    fn test_rewrite_resource_links_image_ref() {
         // Test HTML in OEBPS/Text/ with direct reference to Images/ (relative, not ../Images/)
         let html = r#"<img src="Images/bmc1_cover.jpg">"#;
         let result = rewrite_resource_links(html, "bmc", "OEBPS/Text");

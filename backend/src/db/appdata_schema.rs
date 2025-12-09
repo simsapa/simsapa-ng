@@ -106,6 +106,7 @@ diesel::table! {
         book_uid -> Text,
         spine_item_uid -> Text,
         spine_index -> Integer,
+        resource_path -> Text,
         title -> Nullable<Text>,
         language -> Nullable<Text>,
         content_html -> Nullable<Text>,

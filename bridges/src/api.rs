@@ -228,6 +228,25 @@ fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm
     }
 }
 
+#[get("/book_pages/<book_uid>/<resource_path..>")]
+fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+    let resource_path_str = resource_path.to_string_lossy();
+    info(&format!("get_book_page_by_path(): {}/{}", book_uid, resource_path_str));
+
+    let item = match dbm.appdata.get_book_spine_item_by_path(book_uid, &resource_path_str) {
+        Ok(Some(item)) => item,
+        Ok(None) => return Err((Status::NotFound, format!("BookSpineItem Not Found for path: {}", resource_path_str))),
+        Err(e) => return Err((Status::InternalServerError, format!("Database error: {}", e))),
+    };
+
+    let app_data = get_app_data();
+    if let Ok(html) = app_data.render_book_spine_item_html(&item, None, None) {
+        Ok(RawHtml(html))
+    } else {
+        Err((Status::InternalServerError, "HTML rendering error".to_string()))
+    }
+}
+
 #[get("/open_sutta/<uid..>")]
 fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
     // Convert PathBuf to string
@@ -358,6 +377,7 @@ pub async extern "C" fn start_webserver() {
             sutta_menu_action,
             get_sutta_html_by_uid,
             get_book_spine_item_html_by_uid,
+            get_book_page_by_path,
             open_sutta,
         ])
         .manage(assets_files)

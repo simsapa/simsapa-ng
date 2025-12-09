@@ -20,6 +20,7 @@ CREATE TABLE book_spine_items (
     book_uid VARCHAR NOT NULL,
     spine_item_uid VARCHAR NOT NULL,
     spine_index INTEGER NOT NULL,
+    resource_path VARCHAR NOT NULL,
     title VARCHAR,
     language VARCHAR,
     content_html VARCHAR,
@@ -70,6 +71,12 @@ CREATE INDEX IF NOT EXISTS idx_book_spine_items_language ON book_spine_items(lan
 
 -- Composite index for book_uid + spine_index ordering
 CREATE INDEX IF NOT EXISTS idx_book_spine_items_book_uid_spine_index ON book_spine_items(book_uid, spine_index);
+
+-- Create index on resource_path for fast lookups
+CREATE INDEX IF NOT EXISTS idx_book_spine_items_resource_path ON book_spine_items(resource_path);
+
+-- Create composite index for book_uid + resource_path lookups (used by the book_pages API)
+CREATE INDEX IF NOT EXISTS idx_book_spine_items_book_uid_resource_path ON book_spine_items(book_uid, resource_path);
 
 -- Index on book_resources.book_uid for fast book-based resource queries
 CREATE INDEX IF NOT EXISTS idx_book_resources_book_uid ON book_resources(book_uid);

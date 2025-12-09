@@ -98,6 +98,7 @@ pub fn import_pdf_to_db(
         book_uid,
         spine_item_uid: &spine_item_uid,
         spine_index: 0,
+        resource_path: "document.pdf",
         title: Some(&title),
         language: if language.is_empty() { None } else { Some(&language) },
         content_html: None,
