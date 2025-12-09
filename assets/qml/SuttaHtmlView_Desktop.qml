@@ -16,10 +16,18 @@ Item {
     property string table_name
     property string sutta_ref
     property string sutta_title
+    property string anchor
 
     property alias web: web
 
     signal page_loaded()
+
+    Timer {
+        id: scroll_timer
+        interval: 300
+        repeat: false
+        onTriggered: root.scroll_to_anchor()
+    }
 
     function set_properties_from_data_json() {
         let data = JSON.parse(root.data_json);
@@ -27,6 +35,7 @@ Item {
         root.table_name = data.table_name;
         root.sutta_ref = data.sutta_ref;
         root.sutta_title = data.sutta_title;
+        root.anchor = data.anchor || "";
     }
 
     function show_transient_message(msg: string) {
@@ -82,7 +91,42 @@ Item {
             web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
         } else {
             // Regular book content
-            web.url = `${api_url}/get_book_spine_item_html_by_uid/${root.window_id}/${spine_item_uid}/`;
+            // Don't append anchor to URL - instead, we'll scroll to it after page loads
+            // This ensures proper scrolling even when reloading the same page
+            let url = `${api_url}/get_book_spine_item_html_by_uid/${root.window_id}/${spine_item_uid}/`;
+            web.url = url;
+        }
+    }
+
+    function scroll_to_anchor() {
+        if (root.anchor && root.anchor.length > 0) {
+            // Remove the leading # if present
+            let anchor_id = root.anchor.startsWith('#') ? root.anchor.substring(1) : root.anchor;
+
+            // Try to scroll to the element with the anchor ID
+            let js = `
+                (function() {
+                    var element = document.getElementById('${anchor_id}');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+                        return true;
+                    }
+                    // Also try with querySelector in case it's a more complex selector
+                    element = document.querySelector('a[name="${anchor_id}"]');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+                        return true;
+                    }
+                    // Try with the hash directly
+                    element = document.querySelector('${root.anchor}');
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'auto', block: 'start' });
+                        return true;
+                    }
+                    return false;
+                })();
+            `;
+            web.runJavaScript(js);
         }
     }
 
@@ -129,6 +173,10 @@ document.documentElement.style.colorScheme = 'light';
             }
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
                 root.page_loaded();
+                // Scroll to anchor if present (needs a delay to ensure DOM is fully ready)
+                if (root.anchor && root.anchor.length > 0) {
+                    scroll_timer.restart();
+                }
             }
         }
     }

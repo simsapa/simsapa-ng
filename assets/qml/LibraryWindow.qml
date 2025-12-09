@@ -226,6 +226,83 @@ ApplicationWindow {
                         property var spine_items: []
                         property var chapter_list: []
                         property bool use_toc: false
+                        property var expanded_items: ({}) // Track expanded state of items with children
+
+                        // Flatten the TOC tree into a flat list with depth information
+                        function flatten_toc(toc_items, depth) {
+                            let result = [];
+                            for (let i = 0; i < toc_items.length; i++) {
+                                const item = toc_items[i];
+                                const has_children = item.children && item.children.length > 0;
+                                const item_key = depth + "_" + i + "_" + item.label;
+
+                                // Add the item with metadata
+                                result.push({
+                                    data: item,
+                                    depth: depth,
+                                    has_children: has_children,
+                                    item_key: item_key,
+                                    is_expanded: expanded_items[item_key] || false
+                                });
+
+                                // If expanded and has children, recursively add children
+                                if (has_children && expanded_items[item_key]) {
+                                    const children_flat = flatten_toc(item.children, depth + 1);
+                                    result = result.concat(children_flat);
+                                }
+                            }
+                            return result;
+                        }
+
+                        function toggle_item_expanded(item_key) {
+                            // Toggle the expanded state
+                            const new_expanded = Object.assign({}, expanded_items);
+                            new_expanded[item_key] = !new_expanded[item_key];
+                            expanded_items = new_expanded;
+
+                            // Rebuild the chapter list to reflect the change
+                            rebuild_chapter_list();
+                        }
+
+                        function rebuild_chapter_list() {
+                            if (!use_toc) {
+                                // Spine items only - no nesting
+                                chapter_list = spine_items.map((item, idx) => ({
+                                    data: item,
+                                    depth: 0,
+                                    has_children: false,
+                                    item_key: "spine_" + idx,
+                                    is_expanded: false
+                                }));
+                                return;
+                            }
+
+                            // Get the raw TOC from modelData
+                            try {
+                                const toc = JSON.parse(modelData.toc_json);
+                                let combined_list = [];
+
+                                // Add first spine item as cover if it exists
+                                if (spine_items.length > 0) {
+                                    combined_list.push({
+                                        data: spine_items[0],
+                                        depth: 0,
+                                        has_children: false,
+                                        item_key: "cover",
+                                        is_expanded: false
+                                    });
+                                }
+
+                                // Add flattened TOC items
+                                const toc_flat = flatten_toc(toc, 0);
+                                combined_list = combined_list.concat(toc_flat);
+
+                                // Assign the combined list to trigger property change
+                                chapter_list = combined_list;
+                            } catch (e) {
+                                console.error("Failed to rebuild chapter list:", e);
+                            }
+                        }
 
                         function load_spine_items() {
                             // First get spine items - we'll need them either way
@@ -242,22 +319,8 @@ ApplicationWindow {
                                 try {
                                     const toc = JSON.parse(modelData.toc_json);
                                     if (toc && toc.length > 0) {
-                                        // Use TOC for chapter list, but prepend first spine item (usually cover)
-                                        let combined_list = [];
-
-                                        // Add first spine item as cover if it exists
-                                        if (spine_items.length > 0) {
-                                            combined_list.push(spine_items[0]);
-                                        }
-
-                                        // Add TOC items
-                                        for (let i = 0; i < toc.length; i++) {
-                                            combined_list.push(toc[i]);
-                                        }
-
-                                        // Assign the combined list to trigger property change
-                                        chapter_list = combined_list;
                                         use_toc = true;
+                                        rebuild_chapter_list();
                                         return;
                                     }
                                 } catch (e) {
@@ -266,8 +329,8 @@ ApplicationWindow {
                             }
 
                             // Fall back to spine items only
-                            chapter_list = spine_items;
                             use_toc = false;
+                            rebuild_chapter_list();
                         }
 
                         // Book header Frame
@@ -388,58 +451,30 @@ ApplicationWindow {
                             Repeater {
                                 model: book_item_wrapper.chapter_list
 
-                                delegate: ItemDelegate {
-                                    id: chapter_item
-                                    Layout.fillWidth: true
-
+                                delegate: ChapterListItem {
                                     required property var modelData
                                     required property int index
 
-                                    // Determine if this is a spine item or TOC item
-                                    readonly property bool is_spine_item: modelData.hasOwnProperty('spine_item_uid')
+                                    item_data: modelData.data
+                                    depth: modelData.depth
+                                    has_children: modelData.has_children
+                                    is_expanded: modelData.is_expanded
+                                    book_uid: book_item_wrapper.modelData.uid
+                                    pointSize: root.pointSize
 
-                                    background: Rectangle {
-                                        color: chapter_item.hovered ? palette.midlight : "transparent"
-                                        radius: 2
+                                    onToggle_expanded: {
+                                        book_item_wrapper.toggle_item_expanded(modelData.item_key);
                                     }
 
-                                    contentItem: Label {
-                                        text: chapter_item.is_spine_item
-                                            ? (chapter_item.modelData.title || "Chapter " + (chapter_item.modelData.spine_index + 1))
-                                            : chapter_item.modelData.label
-                                        font.pointSize: root.pointSize - 1
-                                        color: palette.text
-                                        wrapMode: Text.WordWrap
-                                        elide: Text.ElideRight
-                                    }
-
-                                    onClicked: {
-                                        if (chapter_item.is_spine_item) {
-                                            // Spine item: use spine_item_uid directly
-                                            const result_data = {
-                                                item_uid: chapter_item.modelData.spine_item_uid,
-                                                table_name: "book_spine_items",
-                                                sutta_title: chapter_item.modelData.title || "Chapter " + (chapter_item.modelData.spine_index + 1),
-                                                sutta_ref: ""
-                                            };
-                                            SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
-                                        } else {
-                                            // TOC item: need to look up spine item by resource path
-                                            const spine_item_uid = SuttaBridge.get_spine_item_uid_by_path(
-                                                book_item_wrapper.modelData.uid,
-                                                chapter_item.modelData.content
-                                            );
-
-                                            if (spine_item_uid.length > 0) {
-                                                const result_data = {
-                                                    item_uid: spine_item_uid,
-                                                    table_name: "book_spine_items",
-                                                    sutta_title: chapter_item.modelData.label,
-                                                    sutta_ref: ""
-                                                };
-                                                SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
-                                            }
-                                        }
+                                    onChapter_clicked: (spine_item_uid, title, anchor) => {
+                                        const result_data = {
+                                            item_uid: spine_item_uid,
+                                            table_name: "book_spine_items",
+                                            sutta_title: title,
+                                            sutta_ref: "",
+                                            anchor: anchor
+                                        };
+                                        SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
                                     }
                                 }
                             }

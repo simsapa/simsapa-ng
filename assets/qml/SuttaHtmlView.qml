@@ -18,6 +18,7 @@ Loader {
     //     table_name: tab_data.table_name,
     //     sutta_ref: tab_data.sutta_ref,
     //     sutta_title: tab_data.sutta_title,
+    //     anchor: tab_data.anchor,
     // };
 
     function get_data_value(key: string): string {

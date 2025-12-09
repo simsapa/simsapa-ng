@@ -128,6 +128,7 @@ ApplicationWindow {
             table_name:  fulltext_results_data.table_name || "",
             sutta_title: fulltext_results_data.sutta_title || "",
             sutta_ref:   fulltext_results_data.sutta_ref || "",
+            anchor:      fulltext_results_data.anchor || "",
             pinned: pinned,
             focus_on_new: focus_on_new,
             id_key: id_key,
@@ -424,6 +425,7 @@ ${query_text}`;
                     table_name: tab_data.table_name,
                     sutta_ref: tab_data.sutta_ref,
                     sutta_title: tab_data.sutta_title,
+                    anchor: tab_data.anchor || "",
                 };
                 comp.data_json = JSON.stringify(data);
             }

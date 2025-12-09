@@ -75,40 +75,43 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 
 ```
 ├── assets
-│   ├── qml
-│   │   ├── com
-│   │   │   └── profoundlabs
-│   │   │       └── simsapa
-│   │   ├── AboutDialog.qml
-│   │   ├── CMenuItem.qml
-│   │   ├── ColorThemeDialog.qml
-│   │   ├── DictionaryHtmlView_Desktop.qml
-│   │   ├── DictionaryHtmlView_Mobile.qml
-│   │   ├── DictionaryHtmlView.qml
-│   │   ├── DictionaryTab.qml
-│   │   ├── DownloadAppdataWindow.qml
-│   │   ├── DrawerEmptyItem.qml
-│   │   ├── DrawerMenu.qml
-│   │   ├── FulltextResults.qml
-│   │   ├── GlossTab.qml
-│   │   ├── ListBackground.qml
-│   │   ├── PromptsTab.qml
-│   │   ├── SearchBarInput.qml
-│   │   ├── StorageDialog.qml
-│   │   ├── SuttaHtmlView_Desktop.qml
-│   │   ├── SuttaHtmlView_Mobile.qml
-│   │   ├── SuttaHtmlView.qml
-│   │   ├── SuttaSearchWindow.qml
-│   │   ├── SuttaStackLayout.qml
-│   │   ├── SuttaTabButton.qml
-│   │   ├── tst_GlossTab.qml
-│   │   ├── WordLookupWindow.qml
-│   │   └── WordSummary.qml
+│   ├── qml
+│   │   ├── com
+│   │   │   └── profoundlabs
+│   │   │       └── simsapa
+│   │   ├── AboutDialog.qml
+│   │   ├── ChapterListItem.qml
+│   │   ├── CMenuItem.qml
+│   │   ├── ColorThemeDialog.qml
+│   │   ├── DictionaryHtmlView_Desktop.qml
+│   │   ├── DictionaryHtmlView_Mobile.qml
+│   │   ├── DictionaryHtmlView.qml
+│   │   ├── DictionaryTab.qml
+│   │   ├── DownloadAppdataWindow.qml
+│   │   ├── DrawerEmptyItem.qml
+│   │   ├── DrawerMenu.qml
+│   │   ├── FulltextResults.qml
+│   │   ├── GlossTab.qml
+│   │   ├── ListBackground.qml
+│   │   ├── PromptsTab.qml
+│   │   ├── SearchBarInput.qml
+│   │   ├── StorageDialog.qml
+│   │   ├── SuttaHtmlView_Desktop.qml
+│   │   ├── SuttaHtmlView_Mobile.qml
+│   │   ├── SuttaHtmlView.qml
+│   │   ├── SuttaSearchWindow.qml
+│   │   ├── SuttaStackLayout.qml
+│   │   ├── SuttaTabButton.qml
+│   │   ├── tst_GlossTab.qml
+│   │   ├── WordLookupWindow.qml
+│   │   └── WordSummary.qml
 ```
 
 - **Main Components:**
   - `WordLookupWindow.qml` - Dictionary lookup window UI
   - `SuttaSearchWindow.qml` - Sutta search and reading interface
+  - `LibraryWindow.qml` - Library management window with nested chapter list support
+  - `ChapterListItem.qml` - Reusable component for rendering book chapters with expand/collapse for nested TOC items
   - `DictionaryTab.qml`, `GlossTab.qml`, `PromptsTab.qml` - Tab interfaces
   - `DictionaryHtmlView.qml`, `SuttaHtmlView.qml` - Content display views
   - `DrawerMenu.qml` - Navigation drawer menu
