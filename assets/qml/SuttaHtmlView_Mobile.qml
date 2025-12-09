@@ -93,19 +93,17 @@ Item {
         web.loadHtml(html);
     }
 
-    function load_book_spine_uid(uid) {
+    function load_book_spine_uid(spine_item_uid) {
         // Check if this is a PDF book
-        if (SuttaBridge.is_spine_item_pdf(uid)) {
+        const api_url = SuttaBridge.get_api_url();
+        if (SuttaBridge.is_spine_item_pdf(spine_item_uid)) {
             // Load PDF viewer with file parameter
-            const api_url = SuttaBridge.get_api_url();
-            const book_uid = SuttaBridge.get_book_uid_for_spine_item(uid);
+            const book_uid = SuttaBridge.get_book_uid_for_spine_item(spine_item_uid);
             const pdf_url = `${api_url}/book_resources/${book_uid}/document.pdf`;
             web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
         } else {
-            // Regular book content, load HTML with base URL for resolving resource paths
-            const api_url = SuttaBridge.get_api_url();
-            var html = SuttaBridge.get_book_spine_html(root.window_id, uid);
-            web.loadHtml(html, api_url);
+            // Regular book content
+            web.url = `${api_url}/get_book_spine_item_html_by_uid/${root.window_id}/${spine_item_uid}/`;
         }
     }
 

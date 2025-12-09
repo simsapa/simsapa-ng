@@ -14,7 +14,7 @@ use rocket::response::content::RawHtml;
 use rocket::http::{ContentType, Status};
 use rocket_cors::CorsOptions;
 
-use simsapa_backend::{AppGlobals, get_create_simsapa_dir, get_create_simsapa_appdata_db_path, save_to_file, create_parent_directory};
+use simsapa_backend::{AppGlobals, get_app_data, get_create_simsapa_dir, get_create_simsapa_appdata_db_path, save_to_file, create_parent_directory};
 use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
@@ -209,23 +209,22 @@ fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<Ra
     }
 }
 
-#[get("/get_book_spine_item_html_by_uid/<uid..>")]
-fn get_book_spine_item_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let uid_str = uid.to_string_lossy();
+#[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]
+fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+    let uid_str = spine_item_uid.to_string_lossy();
     info(&format!("get_book_spine_item_html_by_uid(): {}", uid_str));
 
-    match dbm.appdata.get_book_spine_item(&uid_str) {
-        Ok(Some(item)) => {
-            if let Some(html) = item.content_html {
-                Ok(RawHtml(html))
-            } else {
-                // PDF books don't have HTML content - QML should handle PDFs as
-                // a parameter to viewer.html instead of calling this function.
-                Err((Status::NotFound, "No HTML content available (PDF book?)".to_string()))
-            }
-        },
-        Ok(None) => Err((Status::NotFound, format!("BookSpineItem Not Found"))),
-        Err(e) => Err((Status::InternalServerError, format!("Database error: {}", e))),
+    let item = match dbm.appdata.get_book_spine_item(&uid_str) {
+        Ok(Some(item)) => item,
+        Ok(None) => return Err((Status::NotFound, format!("BookSpineItem Not Found"))),
+        Err(e) => return Err((Status::InternalServerError, format!("Database error: {}", e))),
+    };
+
+    let app_data = get_app_data();
+    if let Ok(html) = app_data.render_book_spine_item_html(&item, Some(window_id.to_string()), None) {
+        Ok(RawHtml(html))
+    } else {
+        Err((Status::InternalServerError, "HTML rendering error".to_string()))
     }
 }
 

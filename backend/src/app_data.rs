@@ -225,9 +225,10 @@ impl AppData {
     /// Render a book spine item as complete HTML page
     ///
     /// Similar to render_sutta_content, but for book spine items (only for Epub chapters and HTML, PDFs are shown with .url instead of .loadHtml()).
-    pub fn render_book_spine_content(
+    pub fn render_book_spine_item_html(
         &self,
         spine_item: &BookSpineItem,
+        window_id: Option<String>,
         js_extra_pre: Option<String>,
     ) -> Result<String> {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
@@ -276,6 +277,10 @@ impl AppData {
         let css_extra = format!("html {{ font-size: {}px; }} body {{ max-width: {}ex; }}", font_size, max_width);
 
         let mut js_extra = format!("const BOOK_SPINE_ITEM_UID = '{}';", spine_item.spine_item_uid);
+
+        if let Some(window_id_value) = window_id {
+            js_extra.push_str(&format!(" const WINDOW_ID = '{}';", window_id_value));
+        }
 
         if let Some(js_pre) = js_extra_pre {
             js_extra = format!("{}; {}", js_pre, js_extra);

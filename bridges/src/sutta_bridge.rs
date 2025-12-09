@@ -1309,9 +1309,7 @@ impl qobject::SuttaBridge {
             }
         };
 
-        let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
-
-        let html = app_data.render_book_spine_content(&spine_item, Some(js_extra))
+        let html = app_data.render_book_spine_item_html(&spine_item, Some(window_id.to_string()), None)
             .unwrap_or(sutta_html_page("Rendering error", None, None, None, Some(body_class)));
 
         QString::from(html)
