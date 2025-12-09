@@ -298,8 +298,6 @@ fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
 fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
     let path_str = path.to_str().unwrap_or("");
 
-    info(&format!("Serving book resource: book_uid={}, path={}", book_uid, path_str));
-
     // Query the database for the resource
     match db_manager.appdata.get_book_resource(book_uid, path_str) {
         Ok(Some(resource)) => {
@@ -325,7 +323,6 @@ fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<Db
 
             // Return the resource data
             let data = resource.content_data.unwrap_or_default();
-            info(&format!("Serving {} bytes of {} ({})", data.len(), path_str, content_type));
             (Status::Ok, (content_type, data))
         }
         Ok(None) => {
