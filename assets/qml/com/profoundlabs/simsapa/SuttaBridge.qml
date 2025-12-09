@@ -218,6 +218,14 @@ Item {
         return '[]';
     }
 
+    function get_spine_items_for_book_json(book_uid: string): string {
+        return '[]';
+    }
+
+    function get_spine_item_uid_by_path(book_uid: string, resource_path: string): string {
+        return '';
+    }
+
     function get_system_prompt(prompt_name: string): string {
         return 'prompt_value';
     }

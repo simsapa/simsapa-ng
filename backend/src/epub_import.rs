@@ -8,7 +8,7 @@ use scraper::Selector;
 use html_escape::decode_html_entities;
 use epub::doc::EpubDoc;
 
-use crate::db::appdata_models::{NewBook, NewBookResource, NewBookSpineItem};
+use crate::db::appdata_models::{NavPointJson, NewBook, NewBookResource, NewBookSpineItem};
 use crate::db::appdata_schema::{book_resources, book_spine_items, books};
 use crate::helpers::{compact_rich_text, strip_html, dhammatalk_org_convert_link_href_in_html};
 
@@ -39,6 +39,15 @@ fn extract_html_title(content_bytes: &[u8]) -> Option<String> {
     }
 
     None
+}
+
+/// Convert epub::doc::NavPoint to NavPointJson for JSON serialization
+fn convert_nav_point_to_json(nav_point: &epub::doc::NavPoint) -> NavPointJson {
+    NavPointJson {
+        label: nav_point.label.clone(),
+        content: nav_point.content.to_string_lossy().to_string(),
+        children: nav_point.children.iter().map(convert_nav_point_to_json).collect(),
+    }
 }
 
 /// Import an EPUB file into the database
@@ -102,6 +111,18 @@ pub fn import_epub_to_db(
         }
     }
 
+    // Convert TOC to JSON format
+    let toc_json_vec: Vec<NavPointJson> = doc.toc.iter()
+        .map(convert_nav_point_to_json)
+        .collect();
+    let toc_json = if !toc_json_vec.is_empty() {
+        Some(serde_json::to_string(&toc_json_vec)?)
+    } else {
+        None
+    };
+
+    tracing::info!("EPUB has {} TOC entries", toc_json_vec.len());
+
     // Insert book record
     let file_path_str = epub_path.to_string_lossy().to_string();
     let new_book = NewBook {
@@ -113,6 +134,7 @@ pub fn import_epub_to_db(
         file_path: Some(&file_path_str),
         metadata_json: Some(&metadata_json),
         enable_embedded_css: true,
+        toc_json: toc_json.as_deref(),
     };
 
     diesel::insert_into(books::table)

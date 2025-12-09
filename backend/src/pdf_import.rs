@@ -77,6 +77,7 @@ pub fn import_pdf_to_db(
         file_path: Some(&file_path_str),
         metadata_json: None, // PDFs don't have structured metadata like EPUBs
         enable_embedded_css: true, // Default to enabled for PDFs
+        toc_json: None, // PDFs don't have TOC support yet
     };
 
     diesel::insert_into(books::table)

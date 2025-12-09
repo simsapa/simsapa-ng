@@ -221,6 +221,9 @@ pub mod qobject {
         fn get_spine_items_for_book_json(self: &SuttaBridge, book_uid: &QString) -> QString;
 
         #[qinvokable]
+        fn get_spine_item_uid_by_path(self: &SuttaBridge, book_uid: &QString, resource_path: &QString) -> QString;
+
+        #[qinvokable]
         fn get_book_spine_html(self: &SuttaBridge, window_id: &QString, spine_item_uid: &QString) -> QString;
 
         #[qinvokable]
@@ -1285,6 +1288,24 @@ impl qobject::SuttaBridge {
             Err(e) => {
                 error(&format!("Failed to get spine items for book {}: {}", uid, e));
                 QString::from("[]")
+            }
+        }
+    }
+
+    pub fn get_spine_item_uid_by_path(&self, book_uid: &QString, resource_path: &QString) -> QString {
+        let app_data = get_app_data();
+        let book_uid_str = book_uid.to_string();
+        let resource_path_str = resource_path.to_string();
+
+        match app_data.dbm.appdata.get_book_spine_item_by_path(&book_uid_str, &resource_path_str) {
+            Ok(Some(item)) => QString::from(&item.spine_item_uid),
+            Ok(None) => {
+                info(&format!("No spine item found for book {} at path {}", book_uid_str, resource_path_str));
+                QString::from("")
+            }
+            Err(e) => {
+                error(&format!("Failed to get spine item by path for book {} at path {}: {}", book_uid_str, resource_path_str, e));
+                QString::from("")
             }
         }
     }

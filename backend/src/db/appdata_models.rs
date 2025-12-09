@@ -180,6 +180,7 @@ pub struct Book {
     pub file_path: Option<String>,
     pub metadata_json: Option<String>,
     pub enable_embedded_css: bool,
+    pub toc_json: Option<String>,
     // pub created_at: NaiveDateTime,
     // pub updated_at: Option<NaiveDateTime>,
 }
@@ -195,6 +196,7 @@ pub struct NewBook<'a> {
     pub file_path: Option<&'a str>,
     pub metadata_json: Option<&'a str>,
     pub enable_embedded_css: bool,
+    pub toc_json: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
@@ -253,4 +255,17 @@ pub struct NewBookResource<'a> {
     pub resource_path: &'a str,
     pub mime_type: Option<&'a str>,
     pub content_data: Option<&'a [u8]>,
+}
+
+/// Represents a navigation point from EPUB table of contents
+/// Mirrors the structure of epub::doc::NavPoint for JSON serialization
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct NavPointJson {
+    /// The label/title of this navigation point
+    pub label: String,
+    /// The resource path this navigation point links to
+    pub content: String,
+    /// Child navigation points (nested TOC items)
+    #[serde(default)]
+    pub children: Vec<NavPointJson>,
 }
