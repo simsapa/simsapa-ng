@@ -28,6 +28,8 @@ ApplicationWindow {
     readonly property bool is_mac: Qt.platform.os == "osx"
     readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
+    readonly property int icon_size: is_tall ? 40 : 30
+
     property bool is_dark: false
 
     property bool is_loading: false
@@ -876,8 +878,8 @@ ${query_text}`;
                 Layout.topMargin: 9
                 visible: root.is_mobile
                 icon.source: "icons/32x32/mdi--menu.png"
-                Layout.preferredHeight: 40
-                Layout.preferredWidth: 40
+                Layout.preferredHeight: root.icon_size
+                Layout.preferredWidth: root.icon_size
                 ToolTip.visible: hovered
                 ToolTip.text: "Show Menu"
                 onClicked: mobile_menu.open()
@@ -887,6 +889,8 @@ ${query_text}`;
                 id: search_bar_input
                 Layout.alignment: Qt.AlignTop
                 is_wide: root.is_wide
+                is_tall: root.is_tall
+                icon_size: root.icon_size
                 db_loaded: SuttaBridge.db_loaded
                 handle_query_fn: root.handle_query
                 search_timer: search_timer
@@ -901,8 +905,8 @@ ${query_text}`;
                 Layout.rightMargin: 10
                 Layout.topMargin: 9
                 icon.source: "icons/32x32/bxs_book_content.png"
-                Layout.preferredHeight: 40
-                Layout.preferredWidth: 40
+                Layout.preferredHeight: root.icon_size
+                Layout.preferredWidth: root.icon_size
                 checkable: true
                 checked: true
                 ToolTip.visible: hovered

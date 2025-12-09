@@ -7,17 +7,20 @@ import com.profoundlabs.simsapa
 Frame {
     id: root
     Layout.fillWidth: true
-    Layout.minimumHeight: 40
+    Layout.minimumHeight: root.icon_size
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
 
     required property bool is_wide
+    required property bool is_tall
     required property bool db_loaded
     required property var handle_query_fn
     required property Timer search_timer
     required property Action search_as_you_type
     required property bool is_loading
+
+    required property int icon_size
 
     property alias search_input: search_input
     property alias search_area_dropdown: search_area_dropdown
@@ -72,7 +75,7 @@ Frame {
                 enabled: root.db_loaded
                 Layout.fillWidth: true
                 Layout.preferredWidth: root.is_wide ? 500 : 250
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: root.icon_size
 
                 focus: true
                 font.pointSize: root.is_mobile ? 14 : 12
@@ -93,8 +96,8 @@ Frame {
                 icon.source: root.is_loading ? "icons/32x32/fa_stopwatch-solid.png" : "icons/32x32/bx_search_alt_2.png"
                 enabled: search_input.text.length > 0
                 onClicked: root.handle_query_fn(search_input.text, 1) // qmllint disable use-proper-function
-                Layout.preferredHeight: 40
-                Layout.preferredWidth: 40
+                Layout.preferredHeight: root.icon_size
+                Layout.preferredWidth: root.icon_size
             }
         }
 
@@ -103,7 +106,7 @@ Frame {
 
             ComboBox {
                 id: search_area_dropdown
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: root.icon_size
                 Layout.preferredWidth: root.is_mobile ? 120 : 100
                 currentIndex: 0 // Default to "Suttas"
                 model: [
@@ -125,7 +128,7 @@ Frame {
 
             ComboBox {
                 id: search_mode_dropdown
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: root.icon_size
                 // FIXME implement search types and pass it as SearchParams
                 model: {
                     if (search_area_dropdown.currentText === "Suttas") {
@@ -158,15 +161,15 @@ Frame {
             //     id: language_include_btn
             //     checkable: true
             //     icon.source: "icons/32x32/fa_plus-solid.png"
-            //     Layout.preferredHeight: 40
-            //     Layout.preferredWidth: 40
+            //     Layout.preferredHeight: root.icon_size
+            //     Layout.preferredWidth: root.icon_size
             //     ToolTip.visible: hovered
             //     ToolTip.text: "+ means 'must include', - means 'must exclude'"
             // }
 
             ComboBox {
                 id: language_filter_dropdown
-                Layout.preferredHeight: 40
+                Layout.preferredHeight: root.icon_size
                 model: ["Language",]
                 enabled: search_area_dropdown.currentText === "Suttas" || search_area_dropdown.currentText === "Library"
                 onCurrentIndexChanged: {
@@ -192,15 +195,15 @@ Frame {
             //     id: source_include_btn
             //     checkable: true
             //     icon.source: "icons/32x32/fa_plus-solid.png"
-            //     Layout.preferredHeight: 40
-            //     Layout.preferredWidth: 40
+            //     Layout.preferredHeight: root.icon_size
+            //     Layout.preferredWidth: root.icon_size
             //     ToolTip.visible: hovered
             //     ToolTip.text: "+ means 'must include', - means 'must exclude'"
             // }
 
             // ComboBox {
             //     id: source_filter_dropdown
-            //     Layout.preferredHeight: 40
+            //     Layout.preferredHeight: root.icon_size
             //     model: [
             //         "Sources",
             //         "ms",
