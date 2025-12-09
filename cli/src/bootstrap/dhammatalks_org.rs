@@ -9,15 +9,11 @@ use indicatif::{ProgressBar, ProgressStyle};
 use simsapa_backend::logger;
 
 use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
-use simsapa_backend::helpers::{consistent_niggahita, sutta_html_to_plain_text};
+use simsapa_backend::helpers::{RE_DHAMMATALKS_ORG_SUTTA_HTML_NAME, consistent_niggahita, sutta_html_to_plain_text, dhammatalks_org_href_sutta_html_to_ssp, dhammatalks_org_ref_notation_convert, dhammatalk_org_convert_link_href_in_html};
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 use crate::bootstrap::SuttaData;
 
 use super::SuttaImporter;
-
-lazy_static::lazy_static! {
-    static ref RE_SUTTA_HTML_NAME: Regex = Regex::new(r"(DN|MN|SN|AN|Ch|iti|khp|StNp|thag|thig|ud)[\d_]+\.html").unwrap();
-}
 
 pub struct DhammatalksSuttaImporter {
     resource_path: PathBuf,
@@ -26,53 +22,6 @@ pub struct DhammatalksSuttaImporter {
 impl DhammatalksSuttaImporter {
     pub fn new(resource_path: PathBuf) -> Self {
         Self { resource_path }
-    }
-
-    fn ref_notation_convert(&self, ref_str: &str) -> String {
-        let mut ref_str = ref_str.replace('_', ".").to_lowercase();
-        ref_str = ref_str.replace(".html", "");
-        ref_str = ref_str.replace("stnp", "snp");
-
-        let khp_re = Regex::new(r"khp(\d)").unwrap();
-        ref_str = khp_re.replace_all(&ref_str, "kp$1").to_string();
-
-        // remove leading zeros, dn02
-        let leading_zeros_re = Regex::new(r"([a-z.])0+").unwrap();
-        ref_str = leading_zeros_re.replace_all(&ref_str, "$1").to_string();
-
-        if ref_str.starts_with("ch") {
-            let ch_re = Regex::new(r"ch(\d+)").unwrap();
-            if let Some(caps) = ch_re.captures(&ref_str) {
-                if let Ok(ch_num) = caps[1].parse::<u32>() {
-                    if let Some((start, end)) = DHP_CHAPTERS_TO_RANGE.get(&ch_num) {
-                        ref_str = format!("dhp{}-{}", start, end);
-                    }
-                }
-            }
-        }
-
-        ref_str
-    }
-
-    fn href_sutta_html_to_ssp(&self, href: &str) -> String {
-        // Extract anchor if present
-        let anchor_re = Regex::new(r"#.+").unwrap();
-        let anchor = anchor_re.find(href)
-            .map(|m| m.as_str())
-            .unwrap_or("");
-
-        // Remove anchor from href before processing
-        let href_without_anchor = anchor_re.replace(href, "");
-
-        // Extract the filename part from the href
-        let ref_re = Regex::new(r"^.*/([^/]+)$").unwrap();
-        let ref_str = ref_re.replace(&href_without_anchor, "$1");
-
-        // Convert to canonical reference notation
-        let ref_str = self.ref_notation_convert(&ref_str);
-
-        // Create internal ssp:// URI
-        format!("ssp://suttas/{}/en/thanissaro{}", ref_str, anchor)
     }
 
     fn extract_sutta_content(&self, html_text: &str) -> Result<String> {
@@ -84,30 +33,7 @@ impl DhammatalksSuttaImporter {
 
         // Find all <a> links inside #sutta and collect replacements
         let link_selector = Selector::parse("#sutta a").unwrap();
-        let mut replacements: Vec<(String, String)> = Vec::new();
-
-        for link in document.select(&link_selector) {
-            if let Some(href) = link.value().attr("href") {
-                // Check if this href matches sutta HTML name pattern
-                if RE_SUTTA_HTML_NAME.is_match(href) {
-                    let ssp_href = self.href_sutta_html_to_ssp(href);
-                    replacements.push((href.to_string(), ssp_href));
-                }
-            }
-        }
-
-        // Apply replacements to the HTML string
-        let mut modified_html = html_text.to_string();
-        for (old_href, new_href) in replacements {
-            // Replace both quoted forms to be safe
-            let old_attr_double = format!("href=\"{}\"", old_href);
-            let new_attr_double = format!("href=\"{}\"", new_href);
-            modified_html = modified_html.replace(&old_attr_double, &new_attr_double);
-
-            let old_attr_single = format!("href='{}'", old_href);
-            let new_attr_single = format!("href='{}'", new_href);
-            modified_html = modified_html.replace(&old_attr_single, &new_attr_single);
-        }
+        let modified_html = dhammatalk_org_convert_link_href_in_html(&link_selector, html_text);
 
         // Re-parse and extract #sutta content
         let modified_document = Html::parse_document(&modified_html);
@@ -206,7 +132,7 @@ impl DhammatalksSuttaImporter {
             .replace_all(&file_stem, "$1")
             .to_lowercase();
 
-        let ref_str = self.ref_notation_convert(&ref_no_zeros);
+        let ref_str = dhammatalks_org_ref_notation_convert(&ref_no_zeros);
 
         let lang = "en";
         let author = "thanissaro";
@@ -271,7 +197,7 @@ impl DhammatalksSuttaImporter {
 
         paths.retain(|p| {
             if let Some(name) = p.file_name() {
-                RE_SUTTA_HTML_NAME.is_match(&name.to_string_lossy())
+                RE_DHAMMATALKS_ORG_SUTTA_HTML_NAME.is_match(&name.to_string_lossy())
             } else {
                 false
             }
@@ -347,16 +273,6 @@ impl SuttaImporter for DhammatalksSuttaImporter {
 mod tests {
     use super::*;
     // use std::fs;
-
-    #[test]
-    fn test_ref_notation_convert() {
-        let importer = DhammatalksSuttaImporter::new(PathBuf::new());
-
-        assert_eq!(importer.ref_notation_convert("DN01"), "dn1");
-        assert_eq!(importer.ref_notation_convert("MN_02"), "mn.2");
-        assert_eq!(importer.ref_notation_convert("stnp1_1"), "snp1.1");
-        assert_eq!(importer.ref_notation_convert("khp1"), "kp1");
-    }
 
     #[test]
     fn test_parse_an6_20() {
@@ -460,28 +376,5 @@ mod tests {
 
             assert!(sutta.content_html.contains("dhammatalks_org"), "Missing wrapper div");
         }
-    }
-
-    #[test]
-    fn test_href_sutta_html_to_ssp() {
-        let importer = DhammatalksSuttaImporter::new(PathBuf::new());
-
-        // Test simple href conversion
-        assert_eq!(
-            importer.href_sutta_html_to_ssp("DN01.html"),
-            "ssp://suttas/dn1/en/thanissaro"
-        );
-
-        // Test with anchor
-        assert_eq!(
-            importer.href_sutta_html_to_ssp("MN02.html#section1"),
-            "ssp://suttas/mn2/en/thanissaro#section1"
-        );
-
-        // Test with path
-        assert_eq!(
-            importer.href_sutta_html_to_ssp("../AN/AN6_20.html"),
-            "ssp://suttas/an6.20/en/thanissaro"
-        );
     }
 }

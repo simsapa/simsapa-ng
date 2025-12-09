@@ -1,14 +1,16 @@
-use anyhow::{anyhow, Result};
-use diesel::prelude::*;
-use epub::doc::EpubDoc;
-use html_escape::decode_html_entities;
-use regex::Regex;
 use std::collections::HashMap;
 use std::path::Path;
 
+use diesel::prelude::*;
+use anyhow::{anyhow, Result};
+use regex::Regex;
+use scraper::Selector;
+use html_escape::decode_html_entities;
+use epub::doc::EpubDoc;
+
 use crate::db::appdata_models::{NewBook, NewBookResource, NewBookSpineItem};
 use crate::db::appdata_schema::{book_resources, book_spine_items, books};
-use crate::helpers::{compact_rich_text, strip_html};
+use crate::helpers::{compact_rich_text, strip_html, dhammatalk_org_convert_link_href_in_html};
 
 /// Extract title from HTML content
 /// Returns the title from <title> tag, taking only the part before the first '|' separator
@@ -177,6 +179,10 @@ pub fn import_epub_to_db(
             .parent()
             .and_then(|p| p.to_str())
             .unwrap_or("");
+
+        // Convert dhammatalks.org style links to ssp://
+        let link_selector = Selector::parse("a").unwrap();
+        let content_html = dhammatalk_org_convert_link_href_in_html(&link_selector, &content_html);
 
         // Rewrite resource links to use API endpoint
         let content_html = rewrite_resource_links(&content_html, book_uid, base_dir);

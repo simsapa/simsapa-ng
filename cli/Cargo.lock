@@ -3095,6 +3095,7 @@ dependencies = [
  "parking_lot",
  "pdf-extract",
  "regex",
+ "scraper",
  "serde",
  "serde_json",
  "stardict",

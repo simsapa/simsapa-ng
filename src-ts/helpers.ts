@@ -84,7 +84,16 @@ function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): string | null {
         }
     }
 
-    // Priority 2: thebuddhaswords.net URL
+    // Priority 2: Suttacentral URL
+    // Format: https://suttacentral.net/sn56.11/en/bodhi
+    if (href.includes('suttacentral.net')) {
+        const match = href.match(/suttacentral\.net\/(.+)$/);
+        if (match) {
+            return match[1];
+        }
+    }
+
+    // Priority 3: thebuddhaswords.net URL
     // Format: https://thebuddhaswords.net/suttas/an4.41.html
     if (href.includes('thebuddhaswords.net')) {
         const match = href.match(/\/suttas\/([^.]+)\.html/);
@@ -94,8 +103,10 @@ function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): string | null {
         }
     }
 
-    // Priority 3: Text-based reference (e.g., "SN 56.11" or "MN 10")
-    const match = text.match(RE_ALL_BOOK_SUTTA_REF);
+    // Priority 4: Text-based reference (e.g., "SN 56.11" or "MN 10")
+    // Convert colons to dots before matching, 'AN 5:114' to 'AN 5.114'
+    const normalized_text = text.replace(/:/g, '.');
+    const match = normalized_text.match(RE_ALL_BOOK_SUTTA_REF);
     if (match) {
         const book = match[1].toLowerCase();
         const number = match[2];
