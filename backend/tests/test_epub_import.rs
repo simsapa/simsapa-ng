@@ -139,3 +139,59 @@ fn test_epub_import_general() {
             .execute(db_conn)
     });
 }
+
+#[test]
+#[serial]
+fn test_epub_html_escape_conversion() {
+    // Test that HTML escape codes in spine item titles are converted to Unicode
+    // For its-essential-meaning.epub, the first spine item should have title "The Buddha's Teaching"
+    // instead of "The Buddha&#8217;s Teaching"
+
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let epub_path = PathBuf::from("tests/data/its-essential-meaning.epub");
+    let book_uid = "test-its-essential-meaning";
+
+    // Clean up any existing test data
+    let _ = app_data.dbm.appdata.do_write(|db_conn| {
+        diesel::delete(books::table.filter(books::uid.eq(book_uid)))
+            .execute(db_conn)
+    });
+
+    // Import the EPUB
+    let result = app_data.import_epub_to_db(&epub_path, book_uid);
+    assert!(result.is_ok(), "EPUB import failed: {:?}", result.err());
+
+    // Get the first spine item title
+    let first_spine_item: (i32, Option<String>) = app_data.dbm.appdata.do_read(|db_conn| {
+        book_spine_items::table
+            .filter(book_spine_items::book_uid.eq(book_uid))
+            .select((book_spine_items::spine_index, book_spine_items::title))
+            .order(book_spine_items::spine_index.asc())
+            .first::<(i32, Option<String>)>(db_conn)
+    }).expect("Query failed");
+
+    let actual_title = first_spine_item.1.as_deref().unwrap_or("");
+
+    // The title should be "The Buddha's Teaching" with proper Unicode apostrophe (U+2019), not "The Buddha&#8217;s Teaching"
+    let expected_title = format!("The Buddha{}s Teaching", '\u{2019}');
+    assert_eq!(
+        actual_title, expected_title,
+        "Expected first spine item title to be '{}' with proper Unicode apostrophe (U+2019), got '{}'",
+        expected_title, actual_title
+    );
+
+    // Verify that the title doesn't contain HTML escape codes
+    assert!(!actual_title.contains("&#8217;"), "Title should not contain HTML escape codes");
+    assert!(!actual_title.contains("&amp;"), "Title should not contain HTML escape codes");
+    assert!(!actual_title.contains("&lt;"), "Title should not contain HTML escape codes");
+    assert!(!actual_title.contains("&gt;"), "Title should not contain HTML escape codes");
+    assert!(!actual_title.contains("&quot;"), "Title should not contain HTML escape codes");
+
+    // Clean up
+    let _ = app_data.dbm.appdata.do_write(|db_conn| {
+        diesel::delete(books::table.filter(books::uid.eq(book_uid)))
+            .execute(db_conn)
+    });
+}

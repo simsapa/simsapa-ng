@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use diesel::prelude::*;
 use epub::doc::EpubDoc;
+use html_escape::decode_html_entities;
 use regex::Regex;
 use std::collections::HashMap;
 use std::path::Path;
@@ -145,11 +146,13 @@ pub fn import_epub_to_db(
     for (idx, idref, resource_path) in spine_basic_info {
         // Try to get title from TOC first
         let title = if let Some(toc_title) = toc_map.get(&resource_path) {
-            toc_title.clone()
+            decode_html_entities(toc_title).to_string()
         } else {
             // No TOC entry, try to extract from HTML title tag
             if let Some((content_bytes, _)) = doc.get_resource(&idref) {
-                extract_html_title(&content_bytes).unwrap_or_else(|| "Untitled".to_string())
+                extract_html_title(&content_bytes)
+                    .map(|t| decode_html_entities(&t).to_string())
+                    .unwrap_or_else(|| "Untitled".to_string())
             } else {
                 "Untitled".to_string()
             }
@@ -431,5 +434,22 @@ mod tests {
         // println!("Direct ref result: {}", result);
         // This would resolve to OEBPS/Text/Images/bmc1_cover.jpg
         assert!(result.contains("src=\"/book_resources/bmc/OEBPS/Text/Images/bmc1_cover.jpg\""));
+    }
+
+    #[test]
+    fn test_html_escape_conversion_in_titles() {
+        // Test that HTML escape codes are properly converted to Unicode
+        let test_cases = vec![
+            ("The Buddha&#8217;s Teaching", format!("The Buddha{}s Teaching", '\u{2019}')),
+            ("Tom &amp; Jerry", "Tom & Jerry".to_string()),
+            ("Less than &lt; and greater than &gt;", "Less than < and greater than >".to_string()),
+            ("Quote: &quot;Hello&quot;", "Quote: \"Hello\"".to_string()),
+            ("Normal text", "Normal text".to_string()),
+        ];
+
+        for (input, expected) in test_cases {
+            let result = decode_html_entities(input);
+            assert_eq!(result, expected, "Failed to convert '{}'", input);
+        }
     }
 }
