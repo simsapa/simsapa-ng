@@ -543,7 +543,13 @@ ${query_text}`;
 
             CMenuItem {
                 action: Action {
+                    id: action_close_window
                     text: "&Close Window"
+                    shortcut: Shortcut {
+                        sequences: ["Alt+F4"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_close_window.trigger()
+                    }
                     onTriggered: root.close()
                 }
             }
