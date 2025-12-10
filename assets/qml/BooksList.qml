@@ -13,6 +13,7 @@ ColumnLayout {
     required property var selected_book_uid
     required property int pointSize
     property bool auto_expand: false
+    property string window_id: ""
 
     anchors.fill: parent
     spacing: 10
@@ -276,12 +277,13 @@ ColumnLayout {
                         is_expanded: modelData.is_expanded
                         book_uid: book_item_wrapper.modelData.uid
                         pointSize: root.pointSize
+                        window_id: root.window_id
 
                         onToggle_expanded: {
                             book_item_wrapper.toggle_item_expanded(modelData.item_key);
                         }
 
-                        onChapter_clicked: (spine_item_uid, title, anchor) => {
+                        onChapter_clicked: (window_id, spine_item_uid, title, anchor) => {
                             const result_data = {
                                 item_uid: spine_item_uid,
                                 table_name: "book_spine_items",
@@ -289,7 +291,7 @@ ColumnLayout {
                                 sutta_ref: "",
                                 anchor: anchor
                             };
-                            SuttaBridge.emit_show_chapter_from_library(JSON.stringify(result_data));
+                            SuttaBridge.emit_show_chapter_from_library(window_id, JSON.stringify(result_data));
                         }
                     }
                 }

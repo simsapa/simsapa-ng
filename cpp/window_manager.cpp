@@ -145,12 +145,27 @@ void WindowManager::open_sutta_search_window_with_query(const QString& show_resu
     }
 }
 
-void WindowManager::show_chapter_in_sutta_window(const QString& result_data_json) {
-    // Find the most recently used SuttaSearchWindow, or use the first one
+void WindowManager::show_chapter_in_sutta_window(const QString& window_id, const QString& result_data_json) {
+    // If window_id is empty, fall back to the last window (for backwards compatibility)
+    // Otherwise, find the specific window by window_id
     SuttaSearchWindow* target_window = nullptr;
 
-    if (this->sutta_search_windows.length() > 0) {
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+
+    if (window_id.isEmpty()) {
+        // Fall back to last window if no window_id provided
         target_window = this->sutta_search_windows.last();
+    } else {
+        // Find the window with matching window_id
+        for (auto w : this->sutta_search_windows) {
+            QVariant prop = w->m_root->property("window_id");
+            if (prop.isValid() && prop.toString() == window_id) {
+                target_window = w;
+                break;
+            }
+        }
     }
 
     if (target_window && target_window->m_root) {

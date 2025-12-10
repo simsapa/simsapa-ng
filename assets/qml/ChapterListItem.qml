@@ -16,9 +16,10 @@ ItemDelegate {
     required property bool is_expanded
     required property string book_uid
     required property int pointSize
+    property string window_id: ""
 
     signal toggle_expanded()
-    signal chapter_clicked(string spine_item_uid, string title, string anchor)
+    signal chapter_clicked(string window_id, string spine_item_uid, string title, string anchor)
 
     // Determine if this is a spine item or TOC item
     readonly property bool is_spine_item: item_data.hasOwnProperty('spine_item_uid')
@@ -76,6 +77,7 @@ ItemDelegate {
         if (chapter_item.is_spine_item) {
             // Spine item: use spine_item_uid directly with no anchor
             chapter_item.chapter_clicked(
+                chapter_item.window_id,
                 chapter_item.item_data.spine_item_uid,
                 chapter_item.item_data.title || "Chapter " + (chapter_item.item_data.spine_index + 1),
                 ""
@@ -95,6 +97,7 @@ ItemDelegate {
 
             if (spine_item_uid.length > 0) {
                 chapter_item.chapter_clicked(
+                    chapter_item.window_id,
                     spine_item_uid,
                     chapter_item.item_data.label,
                     anchor

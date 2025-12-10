@@ -70,8 +70,8 @@ void callback_open_library_window() {
   AppGlobals::manager->create_library_window();
 }
 
-void callback_show_chapter_in_sutta_window(QString result_data_json) {
-  AppGlobals::manager->show_chapter_in_sutta_window(result_data_json);
+void callback_show_chapter_in_sutta_window(QString window_id, QString result_data_json) {
+  AppGlobals::manager->show_chapter_in_sutta_window(window_id, result_data_json);
 }
 
 void start(int argc, char* argv[]) {

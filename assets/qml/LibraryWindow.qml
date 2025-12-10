@@ -198,6 +198,7 @@ ApplicationWindow {
                 books_list: root.books_list
                 selected_book_uid: root.selected_book_uid
                 pointSize: root.pointSize
+                window_id: ""  // Empty string means use the last window
 
                 onSelected_book_uid_changed: function(uid) {
                     root.selected_book_uid = uid;

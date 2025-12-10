@@ -83,6 +83,7 @@ ColumnLayout {
             selected_book_uid: root.current_book_uid
             pointSize: root.pointSize
             auto_expand: true
+            window_id: root.window_id
 
             onSelected_book_uid_changed: function(uid) {
                 // In TocTab, we don't change selection, we just show the TOC

@@ -12,7 +12,7 @@ extern "C++" {
     void callback_open_sutta_search_window(QString show_result_data_json = "");
     void callback_open_sutta_languages_window();
     void callback_open_library_window();
-    void callback_show_chapter_in_sutta_window(QString result_data_json = "");
+    void callback_show_chapter_in_sutta_window(QString window_id, QString result_data_json);
 }
 
 void open_sutta_search_window(QString query_text = "");

@@ -91,7 +91,7 @@ pub mod qobject {
 
         #[qsignal]
         #[cxx_name = "showChapterFromLibrary"]
-        fn show_chapter_from_library(self: Pin<&mut SuttaBridge>, result_data_json: QString);
+        fn show_chapter_from_library(self: Pin<&mut SuttaBridge>, window_id: QString, result_data_json: QString);
 
         #[qsignal]
         #[cxx_name = "bookMetadataUpdated"]
@@ -101,7 +101,7 @@ pub mod qobject {
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
         #[qinvokable]
-        fn emit_show_chapter_from_library(self: Pin<&mut SuttaBridge>, result_data_json: QString);
+        fn emit_show_chapter_from_library(self: Pin<&mut SuttaBridge>, window_id: QString, result_data_json: QString);
 
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
@@ -399,9 +399,9 @@ impl qobject::SuttaBridge {
         self.update_window_title(sutta_uid, sutta_ref, sutta_title);
     }
 
-    pub fn emit_show_chapter_from_library(self: Pin<&mut Self>, result_data_json: QString) {
+    pub fn emit_show_chapter_from_library(self: Pin<&mut Self>, window_id: QString, result_data_json: QString) {
         use crate::api::ffi;
-        ffi::callback_show_chapter_in_sutta_window(result_data_json);
+        ffi::callback_show_chapter_in_sutta_window(window_id, result_data_json);
     }
 
     pub fn load_db(self: Pin<&mut Self>) {

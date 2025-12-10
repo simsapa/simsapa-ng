@@ -59,8 +59,11 @@ ApplicationWindow {
             root.is_loading = false;
         }
 
-        function onShowChapterFromLibrary(result_data_json: string) {
-            root.show_result_in_html_view_with_json(result_data_json);
+        function onShowChapterFromLibrary(window_id: string, result_data_json: string) {
+            // Only handle this signal if it's for this window or if window_id is empty
+            if (window_id === "" || window_id === root.window_id) {
+                root.show_result_in_html_view_with_json(result_data_json);
+            }
         }
     }
 
