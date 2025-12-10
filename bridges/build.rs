@@ -15,6 +15,7 @@ fn main() {
     qml_files.push("../assets/qml/DownloadAppdataWindow.qml");
     qml_files.push("../assets/qml/SuttaLanguagesWindow.qml");
     qml_files.push("../assets/qml/LibraryWindow.qml");
+    qml_files.push("../assets/qml/BooksList.qml");
     qml_files.push("../assets/qml/ChapterListItem.qml");
     qml_files.push("../assets/qml/DocumentImportDialog.qml");
     qml_files.push("../assets/qml/DocumentMetadataEditDialog.qml");
@@ -33,6 +34,7 @@ fn main() {
     qml_files.push("../assets/qml/DictionaryHtmlView_Desktop.qml");
     qml_files.push("../assets/qml/DictionaryHtmlView_Mobile.qml");
     qml_files.push("../assets/qml/DictionaryTab.qml");
+    qml_files.push("../assets/qml/TocTab.qml");
     qml_files.push("../assets/qml/SuttaStackLayout.qml");
     qml_files.push("../assets/qml/AboutDialog.qml");
     qml_files.push("../assets/qml/DatabaseValidationDialog.qml");

@@ -218,11 +218,19 @@ Item {
         return '[]';
     }
 
+    function get_book_by_uid_json(book_uid: string): string {
+        return '{}';
+    }
+
     function get_spine_items_for_book_json(book_uid: string): string {
         return '[]';
     }
 
     function get_spine_item_uid_by_path(book_uid: string, resource_path: string): string {
+        return '';
+    }
+
+    function get_book_uid_for_spine_item(spine_item_uid: string): string {
         return '';
     }
 

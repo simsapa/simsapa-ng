@@ -218,6 +218,9 @@ pub mod qobject {
         fn get_all_books_json(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
+        fn get_book_by_uid_json(self: &SuttaBridge, book_uid: &QString) -> QString;
+
+        #[qinvokable]
         fn get_spine_items_for_book_json(self: &SuttaBridge, book_uid: &QString) -> QString;
 
         #[qinvokable]
@@ -1273,6 +1276,25 @@ impl qobject::SuttaBridge {
             Err(e) => {
                 error(&format!("Failed to get books: {}", e));
                 QString::from("[]")
+            }
+        }
+    }
+
+    pub fn get_book_by_uid_json(&self, book_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid = book_uid.to_string();
+        match app_data.dbm.appdata.get_book_by_uid(&uid) {
+            Ok(Some(book)) => {
+                let json = serde_json::to_string(&book).unwrap_or_else(|_| "{}".to_string());
+                QString::from(json)
+            }
+            Ok(None) => {
+                error(&format!("Book not found: {}", uid));
+                QString::from("{}")
+            }
+            Err(e) => {
+                error(&format!("Failed to get book {}: {}", uid, e));
+                QString::from("{}")
             }
         }
     }

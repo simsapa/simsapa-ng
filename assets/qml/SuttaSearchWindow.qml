@@ -346,6 +346,11 @@ ${query_text}`;
         // constructed, but succeeds later on.
         root.focus_on_tab_with_id_key("ResultsTab_0");
 
+        // Update TocTab if this is a book chapter
+        if (tab_data.table_name === "book_spine_items" && tab_data.item_uid) {
+            toc_tab.update_for_spine_item(tab_data.item_uid);
+        }
+
         // Only add translation tabs for sutta results, not dictionary or library results
         if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
             // Add translations tabs for the sutta
@@ -1299,6 +1304,13 @@ ${query_text}`;
                                 padding: 5
                             }
 
+                            TabButton {
+                                text: "TOC"
+                                id: toc_tab_btn
+                                icon.source: "icons/32x32/bxs_book_bookmark.png"
+                                padding: 5
+                            }
+
                             // TabButton {
                             //     text: "History"
                             //     id: history_tab_btn
@@ -1370,6 +1382,14 @@ ${query_text}`;
                                 window_id: root.window_id
                                 is_dark: root.is_dark
                                 ai_models_auto_retry: models_dialog.auto_retry.checked
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+
+                            TocTab {
+                                id: toc_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                             }
