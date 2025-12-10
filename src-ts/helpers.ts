@@ -119,7 +119,7 @@ function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): string | null {
 
 /**
  * Opens a sutta by UID through the backend API
- * Makes GET request to /open_sutta/{uid}
+ * Makes GET request to /open_sutta_window/{uid}
  */
 async function open_sutta_by_uid(uid: string, original_url?: string): Promise<void> {
     // API_URL is defined as a global const in page.html template
@@ -127,7 +127,7 @@ async function open_sutta_by_uid(uid: string, original_url?: string): Promise<vo
 
     try {
         // Don't encode slashes - Rocket's <uid..> path parameter expects them as-is
-        const url = `${API_URL}/open_sutta/${uid}`;
+        const url = `${API_URL}/open_sutta_window/${uid}`;
         const response = await fetch(url);
 
         if (response.status === 404) {
@@ -154,6 +154,53 @@ async function open_sutta_by_uid(uid: string, original_url?: string): Promise<vo
 }
 
 /**
+ * Opens a sutta by UID in a new tab in the current window
+ * Makes GET request to /open_sutta_tab/{window_id}/{uid}
+ */
+async function open_sutta_in_tab(uid: string, original_url?: string): Promise<void> {
+    // API_URL and WINDOW_ID are defined as global consts in page.html template
+    // Try multiple ways to access these globals
+    const win = window as any;
+
+    const API_URL = win.API_URL || (globalThis as any).API_URL || 'http://localhost:4848';
+    const WINDOW_ID = win.WINDOW_ID || (globalThis as any).WINDOW_ID;
+
+    // If WINDOW_ID is not defined, fall back to opening in a new window
+    if (!WINDOW_ID || WINDOW_ID === '') {
+        await log_error(`WINDOW_ID not defined, falling back to open_sutta_by_uid for uid='${uid}'`);
+        await open_sutta_by_uid(uid, original_url);
+        return;
+    }
+
+    await log_info(`open_sutta_in_tab: WINDOW_ID='${WINDOW_ID}', uid='${uid}'`);
+
+    try {
+        // Don't encode slashes - Rocket's <uid..> path parameter expects them as-is
+        const url = `${API_URL}/open_sutta_tab/${WINDOW_ID}/${uid}`;
+        const response = await fetch(url);
+
+        if (response.status === 404) {
+            // Sutta not found - show error dialog with option to open external link
+            log_error(`Sutta not found: ${uid}`);
+            let message = `Sutta not found in database: ${uid}`;
+            if (original_url) {
+                message += `\n\nOriginal URL: ${original_url}\n\nWould you like to open this link in your web browser?`;
+                if (confirm(message)) {
+                    window.open(original_url, '_blank');
+                }
+            } else {
+                alert(message);
+            }
+        } else if (!response.ok) {
+            log_error(`Failed to open sutta ${uid}: ${response.status}`);
+        }
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        log_error(`Error opening sutta ${uid}: ${errorMsg}`);
+    }
+}
+
+/**
  * Shows a confirmation dialog for external links
  * Returns true if user confirms, false otherwise
  */
@@ -164,7 +211,7 @@ function show_external_link_confirmation(url: string): boolean {
 /**
  * Handles link clicks and classifies them into:
  * - Anchor links (same page) - default behavior
- * - Sutta links - call API to open sutta window
+ * - Sutta links - call API to open sutta in tab
  * - External links - show confirmation before opening
  */
 async function handle_link_click(event: MouseEvent): Promise<void> {
@@ -194,7 +241,8 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
     if (sutta_uid) {
         event.preventDefault();
         // Pass the original href so we can offer to open it if sutta not found
-        await open_sutta_by_uid(sutta_uid, href);
+        // Open in tab instead of new window
+        await open_sutta_in_tab(sutta_uid, href);
         return;
     }
 
@@ -212,6 +260,7 @@ export {
     show_transient_message,
     extract_sutta_uid_from_link,
     open_sutta_by_uid,
+    open_sutta_in_tab,
     show_external_link_confirmation,
     handle_link_click,
     log_info,

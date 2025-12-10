@@ -25,6 +25,7 @@ WindowManager::WindowManager(QApplication* app, QObject* parent)
     QObject::connect(this, &WindowManager::signal_run_summary_query, this, &WindowManager::run_summary_query);
     QObject::connect(this, &WindowManager::signal_run_sutta_menu_action, this, &WindowManager::run_sutta_menu_action);
     QObject::connect(this, &WindowManager::signal_open_sutta_search_window, this, &WindowManager::open_sutta_search_window_with_query);
+    QObject::connect(this, &WindowManager::signal_open_sutta_tab, this, &WindowManager::open_sutta_tab_in_window);
 }
 
 WindowManager::~WindowManager() {
@@ -142,6 +143,40 @@ void WindowManager::open_sutta_search_window_with_query(const QString& show_resu
     if (!show_result_data_json.isEmpty() && w && w->m_root) {
         QMetaObject::invokeMethod(w->m_root, "show_result_in_html_view_with_json",
             Q_ARG(QString, show_result_data_json));
+    }
+}
+
+void WindowManager::open_sutta_tab_in_window(const QString& window_id, const QString& show_result_data_json) {
+    // Find the window with matching window_id
+    SuttaSearchWindow* target_window = nullptr;
+
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+
+    if (window_id.isEmpty()) {
+        // Fall back to last window if no window_id provided
+        target_window = this->sutta_search_windows.last();
+    } else {
+        // Find the window with matching window_id
+        for (auto w : this->sutta_search_windows) {
+            QVariant prop = w->m_root->property("window_id");
+            if (prop.isValid() && prop.toString() == window_id) {
+                target_window = w;
+                break;
+            }
+        }
+    }
+
+    if (target_window && target_window->m_root) {
+        // Show and raise the window
+        QMetaObject::invokeMethod(target_window->m_root, "show");
+        QMetaObject::invokeMethod(target_window->m_root, "raise");
+
+        // Show the sutta in a new tab
+        QMetaObject::invokeMethod(target_window->m_root, "show_result_in_html_view_with_json",
+            Q_ARG(QString, show_result_data_json),
+            Q_ARG(QVariant, QVariant(true)));  // Pass true to create a new tab
     }
 }
 

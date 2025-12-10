@@ -837,7 +837,7 @@ impl qobject::SuttaBridge {
 
         let html = match sutta {
             Some(sutta) => {
-                let js_extra = format!("const WINDOW_ID = '{}';", &window_id.to_string());
+                let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", &window_id.to_string());
 
                 app_data.render_sutta_content(&sutta, None, Some(js_extra))
                 .unwrap_or(sutta_html_page("Rendering error", None, None, None, Some(body_class)))
@@ -873,8 +873,8 @@ impl qobject::SuttaBridge {
             Some(word) => match word.definition_html {
                 Some(ref definition_html) => {
                     let mut js_extra = "".to_string();
-                    js_extra.push_str(&format!(" const API_URL = '{}';", &app_data.api_url));
-                    js_extra.push_str(&format!(" const WINDOW_ID = '{}';", &window_id.to_string()));
+                    js_extra.push_str(&format!(" const API_URL = '{}'; window.API_URL = API_URL;", &app_data.api_url));
+                    js_extra.push_str(&format!(" const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", &window_id.to_string()));
                     js_extra.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
                     js_extra.push_str(DICTIONARY_JS);
                     js_extra.push_str(SIMSAPA_JS);

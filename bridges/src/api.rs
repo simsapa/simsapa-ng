@@ -49,6 +49,7 @@ pub mod ffi {
         fn callback_run_summary_query(window_id: QString, query_text: QString);
         fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
         fn callback_open_sutta_search_window(show_result_data_json: QString);
+        fn callback_open_sutta_tab(window_id: QString, show_result_data_json: QString);
         fn callback_open_sutta_languages_window();
         fn callback_open_library_window();
         fn callback_show_chapter_in_sutta_window(window_id: QString, result_data_json: QString);
@@ -193,16 +194,20 @@ fn shutdown(shutdown: Shutdown) {
 }
 
 
-#[get("/get_sutta_html_by_uid/<uid..>")]
-fn get_sutta_html_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+#[get("/get_sutta_html_by_uid/<window_id>/<uid..>")]
+fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
     let uid_str = uid.to_string_lossy();
-    info(&format!("get_sutta_html_by_uid(): {}", uid_str));
+    info(&format!("get_sutta_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
+
+    let app_data = get_app_data();
 
     match dbm.appdata.get_sutta(&uid_str) {
-        Some(item) => {
-            match item.content_html {
-                Some(html) => Ok(RawHtml(html)),
-                None => Ok(RawHtml(String::from("content_html is None"))),
+        Some(sutta) => {
+            // Render the sutta with WINDOW_ID in the JavaScript
+            let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
+            match app_data.render_sutta_content(&sutta, None, Some(js_extra)) {
+                Ok(html) => Ok(RawHtml(html)),
+                Err(e) => Err((Status::InternalServerError, format!("Rendering error: {}", e))),
             }
         },
         None => Err((Status::NotFound, format!("Sutta Not Found: {}", &uid_str))),
@@ -247,8 +252,8 @@ fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc
     }
 }
 
-#[get("/open_sutta/<uid..>")]
-fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+#[get("/open_sutta_window/<uid..>")]
+fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
     // Convert PathBuf to string
     let uid_str = uid.to_string_lossy().to_string();
     info(&format!("open_sutta(): {}", uid_str));
@@ -285,6 +290,52 @@ fn open_sutta(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
 
         let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
         ffi::callback_open_sutta_search_window(ffi::QString::from(json_string));
+        Status::Ok
+    } else {
+        // Sutta not found - return 404 so frontend can show error dialog
+        error(&format!("Sutta not found: {}", uid_str));
+        Status::NotFound
+    }
+}
+
+#[get("/open_sutta_tab/<window_id>/<uid..>")]
+fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert PathBuf to string
+    let uid_str = uid.to_string_lossy().to_string();
+    info(&format!("open_sutta_tab(): window_id: {}, uid: {}", window_id, uid_str));
+
+    // Try to get sutta with original UID
+    let sutta_option = dbm.appdata.get_sutta(&uid_str);
+
+    // If not found and not already pli/ms, try fallback
+    let final_sutta = if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
+        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
+        let code = uid_str.split('/').next().unwrap_or(&uid_str);
+        let fallback_uid = format!("{}/pli/ms", code);
+
+        // Try to get fallback sutta
+        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
+            info(&format!("open_sutta_tab(): Using fallback UID: {}", fallback_uid));
+            Some(fallback_sutta)
+        } else {
+            None
+        }
+    } else {
+        sutta_option
+    };
+
+    // If sutta is found, compose JSON and call callback
+    if let Some(sutta) = final_sutta {
+        let result_data_json = serde_json::json!({
+            "item_uid": sutta.uid,
+            "table_name": "suttas",
+            "sutta_title": sutta.title,
+            "sutta_ref": sutta.sutta_ref,
+            "snippet": "",
+        });
+
+        let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+        ffi::callback_open_sutta_tab(ffi::QString::from(window_id), ffi::QString::from(json_string));
         Status::Ok
     } else {
         // Sutta not found - return 404 so frontend can show error dialog
@@ -375,7 +426,8 @@ pub async extern "C" fn start_webserver() {
             get_sutta_html_by_uid,
             get_book_spine_item_html_by_uid,
             get_book_page_by_path,
-            open_sutta,
+            open_sutta_window,
+            open_sutta_tab,
         ])
         .manage(assets_files)
         .manage(db_manager)

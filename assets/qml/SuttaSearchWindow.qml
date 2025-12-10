@@ -337,17 +337,27 @@ ${query_text}`;
         return `key_${root.key_counter}`;
     }
 
-    function show_result_in_html_view_with_json(result_data_json: string) {
+    function show_result_in_html_view_with_json(result_data_json: string, new_tab) {
+        if (new_tab === undefined) new_tab = false;
         let result_data = JSON.parse(result_data_json);
-        root.show_result_in_html_view(result_data);
+        root.show_result_in_html_view(result_data, new_tab);
     }
 
-    function show_result_in_html_view(result_data: var) {
+    function show_result_in_html_view(result_data: var, new_tab) {
+        if (new_tab === undefined) new_tab = false;
         let tab_data = root.new_tab_data(result_data);
-        let tab_idx = root.add_results_tab(tab_data, true);
+        let tab_idx = root.add_results_tab(tab_data, true, new_tab);
         // NOTE: It will not find the tab first time while window objects are still
         // constructed, but succeeds later on.
-        root.focus_on_tab_with_id_key("ResultsTab_0");
+        // Focus on the tab that was just created/updated
+        if (new_tab && tab_idx >= 0 && tab_idx < tabs_results_model.count) {
+            // For a new tab, focus on the newly created tab
+            let created_tab_data = tabs_results_model.get(tab_idx);
+            root.focus_on_tab_with_id_key(created_tab_data.id_key);
+        } else {
+            // For updating existing tab, focus on ResultsTab_0
+            root.focus_on_tab_with_id_key("ResultsTab_0");
+        }
 
         // Update TocTab if this is a book chapter
         if (tab_data.table_name === "book_spine_items" && tab_data.item_uid) {

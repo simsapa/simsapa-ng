@@ -62,6 +62,10 @@ void callback_open_sutta_search_window(QString show_result_data_json) {
   emit AppGlobals::manager->signal_open_sutta_search_window(show_result_data_json);
 }
 
+void callback_open_sutta_tab(QString window_id, QString show_result_data_json) {
+  emit AppGlobals::manager->signal_open_sutta_tab(window_id, show_result_data_json);
+}
+
 void callback_open_sutta_languages_window() {
   AppGlobals::manager->create_sutta_languages_window();
 }

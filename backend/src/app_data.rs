@@ -279,7 +279,7 @@ impl AppData {
         let mut js_extra = format!("const BOOK_SPINE_ITEM_UID = '{}';", spine_item.spine_item_uid);
 
         if let Some(window_id_value) = window_id {
-            js_extra.push_str(&format!(" const WINDOW_ID = '{}';", window_id_value));
+            js_extra.push_str(&format!(" const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id_value));
         }
 
         if let Some(js_pre) = js_extra_pre {
