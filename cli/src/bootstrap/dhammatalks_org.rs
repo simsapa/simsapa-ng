@@ -8,8 +8,7 @@ use regex::Regex;
 use indicatif::{ProgressBar, ProgressStyle};
 use simsapa_backend::logger;
 
-use simsapa_backend::lookup::DHP_CHAPTERS_TO_RANGE;
-use simsapa_backend::helpers::{RE_DHAMMATALKS_ORG_SUTTA_HTML_NAME, consistent_niggahita, sutta_html_to_plain_text, dhammatalks_org_href_sutta_html_to_ssp, dhammatalks_org_ref_notation_convert, dhammatalk_org_convert_link_href_in_html};
+use simsapa_backend::helpers::{RE_DHAMMATALKS_ORG_SUTTA_HTML_NAME, consistent_niggahita, sutta_html_to_plain_text, dhammatalks_org_ref_notation_convert, dhammatalk_org_convert_link_href_in_html};
 use crate::bootstrap::helpers::{uid_to_ref, uid_to_nikaya};
 use crate::bootstrap::SuttaData;
 
@@ -147,6 +146,10 @@ impl DhammatalksSuttaImporter {
 
         let content_plain = sutta_html_to_plain_text(&content_html);
 
+        // Parse range information from uid
+        let (sutta_range_group, sutta_range_start, sutta_range_end) =
+            SuttaData::parse_range_from_uid(&uid);
+
         Ok(SuttaData {
             uid,
             sutta_ref,
@@ -158,6 +161,9 @@ impl DhammatalksSuttaImporter {
             content_plain,
             content_html,
             source_uid: author.to_string(),
+            sutta_range_group,
+            sutta_range_start,
+            sutta_range_end,
         })
     }
 

@@ -9,6 +9,7 @@ pub mod buddha_ujja;
 pub mod tipitaka_xml;
 pub mod dpd;
 pub mod completions;
+pub mod library_imports;
 
 use anyhow::{Result, Context};
 use chrono::{DateTime, Local};
@@ -30,6 +31,7 @@ pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
 pub use nyanadipa::NyanadipaImporter;
 pub use suttacentral::SuttaCentralImporter;
 pub use buddha_ujja::BuddhaUjjaImporter;
+pub use library_imports::LibraryImportsImporter;
 // pub use tipitaka_xml::TipitakaXmlImporter;
 
 pub trait SuttaImporter {
@@ -354,6 +356,30 @@ RELEASE_CHANNEL=development
             logger::warn(&format!("Buddha Ujja database not found: {:?}", bu_db_path));
             logger::warn("Skipping Hungarian sutta import");
         }
+    }
+
+    logger::info("=== Bootstrap Library Imports ===");
+
+    // Import library documents (EPUB/HTML files) from library-imports.toml
+    {
+        let library_imports_toml_path = bootstrap_assets_dir.join("library-imports/library-imports.toml");
+        let library_imports_books_folder = bootstrap_assets_dir.join("library-imports/books/");
+
+        // Get database connection for library imports (using main appdata database)
+        let mut conn = create_database_connection(&appdata_db_path)?;
+
+        let mut importer = LibraryImportsImporter::new(
+            library_imports_toml_path,
+            library_imports_books_folder,
+        );
+
+        // Import library documents - errors are logged but don't stop the bootstrap
+        match importer.import(&mut conn) {
+            Ok(_) => logger::info("Library imports completed successfully"),
+            Err(e) => logger::error(&format!("Library imports failed: {}", e)),
+        }
+
+        drop(conn);
     }
 
     logger::info("=== Release Info ===");

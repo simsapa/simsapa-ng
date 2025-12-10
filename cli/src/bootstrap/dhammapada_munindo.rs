@@ -99,6 +99,10 @@ impl DhammapadaMunindoImporter {
         let sutta_ref = uid_to_ref(&ref_str);
         let nikaya = uid_to_nikaya(&ref_str);
 
+        // Parse range information from uid
+        let (sutta_range_group, sutta_range_start, sutta_range_end) =
+            SuttaData::parse_range_from_uid(&uid);
+
         Ok(SuttaData {
             uid,
             sutta_ref,
@@ -110,6 +114,9 @@ impl DhammapadaMunindoImporter {
             content_plain,
             content_html,
             source_uid,
+            sutta_range_group,
+            sutta_range_start,
+            sutta_range_end,
         })
     }
 

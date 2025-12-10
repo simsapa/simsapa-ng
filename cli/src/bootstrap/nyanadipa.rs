@@ -85,6 +85,10 @@ impl NyanadipaImporter {
         let content_html = consistent_niggahita(Some(html_output));
         let content_plain = sutta_html_to_plain_text(&content_html);
 
+        // Parse range information from uid
+        let (sutta_range_group, sutta_range_start, sutta_range_end) =
+            SuttaData::parse_range_from_uid(&uid);
+
         Ok(SuttaData {
             source_uid: source_uid.to_string(),
             title,
@@ -96,6 +100,9 @@ impl NyanadipaImporter {
             language: lang.to_string(),
             content_html,
             content_plain,
+            sutta_range_group,
+            sutta_range_start,
+            sutta_range_end,
         })
     }
 

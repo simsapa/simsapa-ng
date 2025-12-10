@@ -208,6 +208,10 @@ impl BuddhaUjjaImporter {
         let title_ascii = pali_to_ascii(Some(&title));
         let title_pali = consistent_niggahita(Some(bu_sutta.sutta_title_pali.clone()));
 
+        // Parse range information from uid
+        let (sutta_range_group, sutta_range_start, sutta_range_end) =
+            SuttaData::parse_range_from_uid(&uid);
+
         Ok(SuttaData {
             source_uid: author_ref,
             title,
@@ -219,6 +223,9 @@ impl BuddhaUjjaImporter {
             language: "hu".to_string(),
             content_html,
             content_plain,
+            sutta_range_group,
+            sutta_range_start,
+            sutta_range_end,
         })
     }
 

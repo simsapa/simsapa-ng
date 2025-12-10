@@ -210,7 +210,7 @@ ApplicationWindow {
         // TODO _run_download_pre_hook
 
         const github_repo = "simsapa/simsapa-ng-assets";
-        let version = "v0.1.6";
+        let version = "v0.1.7";
 
         let urls = [];
 

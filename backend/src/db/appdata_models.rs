@@ -29,25 +29,48 @@ pub struct NewAppSetting<'a> {
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Sutta {
     pub id: i32,
+    /// dn1/pli/ms
     pub uid: String,
+    /// DN 1
     pub sutta_ref: String,
+    /// dn
     pub nikaya: String,
+    /// pli / en / etc.
     pub language: String,
+
+    /// /sutta-pitaka/digha-nikaya/silakkhandha-vagga
     pub group_path: Option<String>,
+    /// 1
     pub group_index: Option<i32>,
     pub order_index: Option<i32>,
+
+    /// For parsing uids such as sn30.7-16
+    ///
+    /// sn30
     pub sutta_range_group: Option<String>,
+    /// 7
     pub sutta_range_start: Option<i32>,
+    /// 16
     pub sutta_range_end: Option<i32>,
+
+    /// Brahmajāla: The Root of All Things
     pub title: Option<String>,
+    /// Brahmajala
     pub title_ascii: Option<String>,
+    /// Brahmajāla
     pub title_pali: Option<String>,
+    /// The Root of All Things
     pub title_trans: Option<String>,
     pub description: Option<String>,
+    /// content in plain text for fulltext index
     pub content_plain: Option<String>,
+    /// content in HTML when sutta is stored as html blob
     pub content_html: Option<String>,
+    /// content in Bilara JSON when sutta is formatted as line-by-line JSON array
     pub content_json: Option<String>,
+    /// HTML template to wrap around JSON, same line-by-line format
     pub content_json_tmpl: Option<String>,
+    /// ms, bodhi, thanissaro
     pub source_uid: Option<String>,
     pub source_info: Option<String>,
     pub source_language: Option<String>,

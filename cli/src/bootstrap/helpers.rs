@@ -1,5 +1,6 @@
 use regex::Regex;
 use simsapa_backend::db::appdata_models::NewSutta;
+use simsapa_backend::helpers::sutta_range_from_ref;
 
 /// Owned version of sutta data for building during parsing.
 /// This allows us to build sutta data with owned strings during parsing,
@@ -16,11 +17,25 @@ pub struct SuttaData {
     pub content_plain: String,
     pub content_html: String,
     pub source_uid: String,
+    pub sutta_range_group: Option<String>,
+    pub sutta_range_start: Option<i32>,
+    pub sutta_range_end: Option<i32>,
 }
 
 impl SuttaData {
+    /// Parse the uid and populate range fields
+    pub fn parse_range_from_uid(uid: &str) -> (Option<String>, Option<i32>, Option<i32>) {
+        if let Some(range) = sutta_range_from_ref(uid) {
+            let start = range.start.map(|s| s as i32);
+            let end = range.end.map(|e| e as i32);
+            (Some(range.group), start, end)
+        } else {
+            (None, None, None)
+        }
+    }
+
     /// Convert to NewSutta for database insertion
-    pub fn to_new_sutta(&self) -> NewSutta {
+    pub fn to_new_sutta(&self) -> NewSutta<'_> {
         NewSutta {
             uid: &self.uid,
             sutta_ref: &self.sutta_ref,
@@ -29,9 +44,9 @@ impl SuttaData {
             group_path: None,
             group_index: None,
             order_index: None,
-            sutta_range_group: None,
-            sutta_range_start: None,
-            sutta_range_end: None,
+            sutta_range_group: self.sutta_range_group.as_deref(),
+            sutta_range_start: self.sutta_range_start,
+            sutta_range_end: self.sutta_range_end,
             title: Some(&self.title),
             title_ascii: Some(&self.title_ascii),
             title_pali: self.title_pali.as_deref(),

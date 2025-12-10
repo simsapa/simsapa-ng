@@ -87,7 +87,7 @@ ApplicationWindow {
         // Build list of failed downloadable databases
         let urls = [];
         const github_repo = "simsapa/simsapa-ng-assets";
-        let version = "v0.1.6";
+        let version = "v0.1.7";
 
         // ensure 'v' prefix
         if (version[0] !== "v") {

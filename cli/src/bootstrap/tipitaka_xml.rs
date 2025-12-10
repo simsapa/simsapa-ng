@@ -3,7 +3,7 @@ use diesel::sqlite::SqliteConnection;
 use std::path::{Path, PathBuf};
 
 use crate::bootstrap::helpers::uid_to_ref;
-use simsapa_backend::helpers::{consistent_niggahita, sutta_html_to_plain_text};
+use simsapa_backend::helpers::{consistent_niggahita, sutta_html_to_plain_text, sutta_range_from_ref};
 use simsapa_backend::logger;
 use html_escape;
 
@@ -293,6 +293,15 @@ impl TipitakaXmlImporter {
         // Use a transaction for batch insertion
         conn.transaction::<_, anyhow::Error, _>(|conn| {
             for record in &sutta_records {
+                // Parse range information from uid
+                let (range_group, range_start, range_end) = if let Some(range) = sutta_range_from_ref(&record.uid) {
+                    let start = range.start.map(|s| s as i32);
+                    let end = range.end.map(|e| e as i32);
+                    (Some(range.group), start, end)
+                } else {
+                    (None, None, None)
+                };
+
                 // Convert SuttaRecord to NewSutta
                 let new_sutta = NewSutta {
                     uid: &record.uid,
@@ -302,9 +311,9 @@ impl TipitakaXmlImporter {
                     group_path: record.group_path.as_deref(),
                     group_index: record.group_index,
                     order_index: record.order_index,
-                    sutta_range_group: None,
-                    sutta_range_start: None,
-                    sutta_range_end: None,
+                    sutta_range_group: range_group.as_deref(),
+                    sutta_range_start: range_start,
+                    sutta_range_end: range_end,
                     title: record.title.as_deref(),
                     title_ascii: None,
                     title_pali: record.title_pali.as_deref(),

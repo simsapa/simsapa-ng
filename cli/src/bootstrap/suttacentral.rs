@@ -12,6 +12,7 @@ use crate::bootstrap::SuttaImporter;
 use simsapa_backend::helpers::{
     consistent_niggahita, pali_to_ascii, sutta_html_to_plain_text,
     html_get_sutta_page_body, bilara_html_post_process, bilara_text_to_html,
+    sutta_range_from_ref,
 };
 use simsapa_backend::db::appdata_models::{NewSutta, NewSuttaVariant, NewSuttaComment};
 use simsapa_backend::db::appdata_schema::{suttas, sutta_variants, sutta_comments};
@@ -34,11 +35,25 @@ pub struct SuttaCentralData {
     pub content_json: Option<String>,  // JSON segments for Bilara
     pub content_json_tmpl: Option<String>,  // HTML template for Bilara
     pub source_uid: String,
+    pub sutta_range_group: Option<String>,
+    pub sutta_range_start: Option<i32>,
+    pub sutta_range_end: Option<i32>,
 }
 
 impl SuttaCentralData {
+    /// Parse the uid and populate range fields
+    pub fn parse_range_from_uid(uid: &str) -> (Option<String>, Option<i32>, Option<i32>) {
+        if let Some(range) = sutta_range_from_ref(uid) {
+            let start = range.start.map(|s| s as i32);
+            let end = range.end.map(|e| e as i32);
+            (Some(range.group), start, end)
+        } else {
+            (None, None, None)
+        }
+    }
+
     /// Convert to NewSutta for database insertion
-    pub fn to_new_sutta(&self) -> NewSutta {
+    pub fn to_new_sutta(&self) -> NewSutta<'_> {
         NewSutta {
             uid: &self.uid,
             sutta_ref: &self.sutta_ref,
@@ -47,9 +62,9 @@ impl SuttaCentralData {
             group_path: None,
             group_index: None,
             order_index: None,
-            sutta_range_group: None,
-            sutta_range_start: None,
-            sutta_range_end: None,
+            sutta_range_group: self.sutta_range_group.as_deref(),
+            sutta_range_start: self.sutta_range_start,
+            sutta_range_end: self.sutta_range_end,
             title: Some(&self.title),
             title_ascii: Some(&self.title_ascii),
             title_pali: None,
@@ -543,6 +558,10 @@ fn html_text_to_sutta(doc: &Value, title: &str) -> Result<SuttaCentralData> {
     let nikaya = uid_to_nikaya(&uid_base);
     let title_ascii = pali_to_ascii(Some(title));
 
+    // Parse range information from uid
+    let (sutta_range_group, sutta_range_start, sutta_range_end) =
+        SuttaCentralData::parse_range_from_uid(&full_uid);
+
     Ok(SuttaCentralData {
         uid: full_uid,
         sutta_ref,
@@ -555,6 +574,9 @@ fn html_text_to_sutta(doc: &Value, title: &str) -> Result<SuttaCentralData> {
         content_json: None,
         content_json_tmpl: None,
         source_uid: author,
+        sutta_range_group,
+        sutta_range_start,
+        sutta_range_end,
     })
 }
 
@@ -623,6 +645,10 @@ fn bilara_text_to_sutta(
     let nikaya = uid_to_nikaya(&uid_base);
     let title_ascii = pali_to_ascii(Some(title));
 
+    // Parse range information from uid
+    let (sutta_range_group, sutta_range_start, sutta_range_end) =
+        SuttaCentralData::parse_range_from_uid(&full_uid);
+
     Ok(SuttaCentralData {
         uid: full_uid,
         sutta_ref,
@@ -635,6 +661,9 @@ fn bilara_text_to_sutta(
         content_json: Some(json_text),
         content_json_tmpl: tmpl_json.map(|s| s.to_string()),
         source_uid: author,
+        sutta_range_group,
+        sutta_range_start,
+        sutta_range_end,
     })
 }
 

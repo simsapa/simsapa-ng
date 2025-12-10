@@ -3069,7 +3069,7 @@ checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
 
 [[package]]
 name = "simsapa_backend"
-version = "0.1.6"
+version = "0.1.7"
 dependencies = [
  "android_logger",
  "anyhow",
@@ -3134,6 +3134,7 @@ dependencies = [
  "thiserror 2.0.17",
  "tipitaka_xml_parser",
  "tokio",
+ "toml 0.8.23",
 ]
 
 [[package]]

@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::normalize_query_text;
+use crate::helpers::{normalize_query_text, sutta_range_from_ref};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::{Sutta, BookSpineItem};
@@ -271,8 +271,14 @@ impl<'a> SearchQueryTask<'a> {
                 Ok(vec![self.db_sutta_to_result(&sutta)])
             }
             Err(DieselError::NotFound) => {
-                // No exact match found - try LIKE query with pagination
-                self.uid_sutta_like(&query_uid, page_num)
+                // No exact match found - try range query
+                match self.uid_sutta_range(&query_uid, page_num) {
+                    Ok(results) if !results.is_empty() => Ok(results),
+                    _ => {
+                        // No range match found - try LIKE query with pagination
+                        self.uid_sutta_like(&query_uid, page_num)
+                    }
+                }
             }
             Err(e) => {
                 error(&format!("{}", e));
@@ -281,6 +287,89 @@ impl<'a> SearchQueryTask<'a> {
                 Ok(Vec::new())
             }
         }
+    }
+
+    fn uid_sutta_range(
+        &mut self,
+        query_uid: &str,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        // Parse the query uid to extract range information
+        let range = match sutta_range_from_ref(query_uid) {
+            Some(r) => r,
+            None => return Ok(Vec::new()),
+        };
+
+        // Only proceed if we have both start and end values (meaning it's a numeric query)
+        let (range_start, range_end) = match (range.start, range.end) {
+            (Some(s), Some(e)) => (s as i32, e as i32),
+            _ => return Ok(Vec::new()),
+        };
+
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        // Build query to find suttas where the query number falls within the stored range
+        let mut count_query = suttas.into_boxed();
+        count_query = count_query
+            .filter(sutta_range_group.eq(&range.group))
+            .filter(sutta_range_start.is_not_null())
+            .filter(sutta_range_end.is_not_null())
+            .filter(sutta_range_start.le(range_start))
+            .filter(sutta_range_end.ge(range_end));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            count_query = count_query.filter(language.eq(&self.lang));
+        }
+
+        // Count total hits for pagination
+        let count = count_query
+            .count()
+            .get_result::<i64>(db_conn)?;
+
+        self.db_query_hits_count = count;
+
+        // If no results, return empty vector
+        if count == 0 {
+            return Ok(Vec::new());
+        }
+
+        // Calculate pagination
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        // Build main query with same filters
+        let mut query = suttas.into_boxed();
+        query = query
+            .filter(sutta_range_group.eq(&range.group))
+            .filter(sutta_range_start.is_not_null())
+            .filter(sutta_range_end.is_not_null())
+            .filter(sutta_range_start.le(range_start))
+            .filter(sutta_range_end.ge(range_end));
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            query = query.filter(language.eq(&self.lang));
+        }
+
+        // Execute paginated query
+        let results = query
+            .order(uid.asc()) // Order by uid for consistent pagination
+            .limit(limit)
+            .offset(offset)
+            .select(Sutta::as_select())
+            .load::<Sutta>(db_conn)?;
+
+        // Map to SearchResult
+        let search_results = results
+            .iter()
+            .map(|sutta| self.db_sutta_to_result(sutta))
+            .collect();
+
+        Ok(search_results)
     }
 
     fn uid_sutta_like(
