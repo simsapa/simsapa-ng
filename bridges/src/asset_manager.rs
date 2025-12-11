@@ -79,6 +79,10 @@ pub mod qobject {
         fn downloads_completed(self: Pin<&mut AssetManager>, value: bool);
 
         #[qsignal]
+        #[cxx_name = "downloadNeedsRetry"]
+        fn download_needs_retry(self: Pin<&mut AssetManager>, failed_url: QString, error_message: QString);
+
+        #[qsignal]
         #[cxx_name = "removalShowMsg"]
         fn removal_show_msg(self: Pin<&mut AssetManager>, message: QString);
 
@@ -393,12 +397,19 @@ impl qobject::AssetManager {
                 let total = match resp.content_length() {
                     Some(n) => n as usize,
                     None => {
+                        let error_msg = QString::from("Error: can't read download content length.");
+                        let url_qstr_clone = url_qstr.clone();
                         qt_thread.queue(move |mut qo| {
-                            let msg = QString::from("Error: can't read download content length.");
-                            qo.as_mut().download_show_msg(msg);
+                            qo.as_mut().download_needs_retry(url_qstr_clone, error_msg);
                         }).unwrap();
                         // The download file may have already been created with 0 length.
                         let _ = remove_file(download_temp_file_path);
+                        // Stop processing the remaining URLs in the download loop and exit the thread.
+                        // The QML layer receives the downloadNeedsRetry signal and will:
+                        // 1. Display the error message to the user
+                        // 2. Show a "Retry" button in the UI
+                        // 3. When clicked, call download_urls_and_extract() again with just the failed URL
+                        // 4. After successful retry, continue downloading any remaining URLs from the original list
                         return;
                     }
                 };

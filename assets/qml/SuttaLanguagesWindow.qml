@@ -52,9 +52,15 @@ ApplicationWindow {
             download_progress_frame.status_text = message;
         }
 
+        function onDownloadNeedsRetry(failed_url: string, error_message: string) {
+            download_progress_frame.handle_download_needs_retry(failed_url, error_message);
+        }
+
         function onDownloadsCompleted(success: bool) {
             root.is_downloading = false;
-            if (success) {
+            // Delegate to the progress frame's centralized retry logic
+            if (download_progress_frame.handle_downloads_completed(success)) {
+                // All downloads complete - show completion screen
                 completion_message.text = "Languages have been successfully imported.\n\nQuit and start the application again.";
                 views_stack.currentIndex = 2;
             }
@@ -337,6 +343,16 @@ ApplicationWindow {
             onCancel_clicked: {
                 root.cancel_downloads();
             }
+
+            onRetry_download: function(url) {
+                root.is_downloading = true;
+                manager.download_urls_and_extract([url], false);
+            }
+
+            onContinue_downloads: function(urls) {
+                root.is_downloading = true;
+                manager.download_urls_and_extract(urls, false);
+            }
         }
 
         // Idx 2: Completion frame
@@ -453,6 +469,9 @@ ApplicationWindow {
         download_progress_frame.progress_value = 0;
         views_stack.currentIndex = 1;
 
+        // Store URLs in progress frame for potential retry/continuation
+        download_progress_frame.pending_download_urls = urls;
+
         // Start download directly using AssetManager
         // is_initial_setup = false, so it won't download base files
         manager.download_urls_and_extract(urls, false);
@@ -463,10 +482,10 @@ ApplicationWindow {
         // For now, we'll just inform the user that downloads continue in background
         root.is_downloading = false;
         download_progress_frame.status_text = "Cleaning up partially downloaded files...";
-        
+
         // Return to main view
         views_stack.currentIndex = 0;
-        
+
         // Show info dialog
         error_dialog.error_message = "Downloads canceled.";
         error_dialog.open();

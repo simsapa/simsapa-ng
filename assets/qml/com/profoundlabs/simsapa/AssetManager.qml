@@ -34,6 +34,8 @@ Item {
     signal downloadProgressChanged(op_msg: string, downloaded_bytes: int, total_bytes: int);
     signal downloadShowMsg(message: string);
     signal downloadsCompleted(message: string);
+    signal downloadNeedsRetry(failed_url: string, error_message: string);
     signal removalShowMsg(message: string);
+    signal removalProgressChanged(current_index: int, total_count: int, language_name: string);
     signal removalCompleted(success: bool, error_msg: string);
 }

@@ -76,6 +76,9 @@ ApplicationWindow {
         // Set to download progress view (idx 2)
         views_stack.currentIndex = 2;
 
+        // Store URLs in progress frame for potential retry/continuation
+        download_progress_frame.pending_download_urls = urls;
+
         // Start the download
         manager.download_urls_and_extract(urls, false);
     }
@@ -156,8 +159,15 @@ ApplicationWindow {
             download_progress_frame.status_text = message;
         }
 
+        function onDownloadNeedsRetry(failed_url: string, error_message: string) {
+            logger.log("onDownloadNeedsRetry(): " + failed_url + " - " + error_message);
+            download_progress_frame.handle_download_needs_retry(failed_url, error_message);
+        }
+
         function onDownloadsCompleted (value: bool) {
-            if (value) {
+            // Delegate to the progress frame's centralized retry logic
+            if (download_progress_frame.handle_downloads_completed(value)) {
+                // All downloads complete - show completion screen
                 views_stack.currentIndex = 3;
             }
         }
@@ -251,6 +261,9 @@ ApplicationWindow {
 
         /* logger.log("Show progress bar"); */
         download_progress_frame.visible = true;
+
+        // Store URLs in progress frame for potential retry/continuation
+        download_progress_frame.pending_download_urls = urls;
 
         manager.download_urls_and_extract(urls, root.is_initial_setup);
     }
@@ -540,6 +553,16 @@ ApplicationWindow {
 
             onQuit_clicked: {
                 Qt.quit();
+            }
+
+            onRetry_download: function(url) {
+                logger.log("Retrying download for: " + url);
+                manager.download_urls_and_extract([url], root.is_initial_setup);
+            }
+
+            onContinue_downloads: function(urls) {
+                logger.log("Continuing with remaining " + urls.length + " URL(s)");
+                manager.download_urls_and_extract(urls, root.is_initial_setup);
             }
         }
 
