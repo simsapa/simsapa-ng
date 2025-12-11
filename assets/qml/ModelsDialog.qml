@@ -341,208 +341,208 @@ ApplicationWindow {
                 Item {
                     SplitView.fillWidth: true
 
-                ScrollView {
-                    anchors.fill: parent
-                    anchors.margins: 5
-                    clip: true
-                    contentWidth: availableWidth
+                    ScrollView {
+                        anchors.fill: parent
+                        anchors.margins: 5
+                        clip: true
+                        contentWidth: availableWidth
 
-                    ColumnLayout {
-                        width: parent.width
-                        spacing: 15
+                        ColumnLayout {
+                            width: parent.width
+                            spacing: 15
 
-                        Label {
-                            text: root.selected_provider ? root.selected_provider + " Settings" : "Select a provider"
-                            font.bold: true
-                            font.pointSize: root.pointSize + 1
-                        }
-
-                        Text {
-                            visible: root.selected_provider !== ""
-                            text: root.selected_provider ? root.current_providers[root.selected_provider_index].description : ""
-                            textFormat: Text.RichText
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                            onLinkActivated: function(link) {
-                                Qt.openUrlExternally(link);
-                            }
-                            MouseArea {
-                                anchors.fill: parent
-                                acceptedButtons: Qt.NoButton
-                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            }
-                        }
-
-                        // API Key Section
-                        GroupBox {
-                            title: "API Key"
-                            Layout.fillWidth: true
-
-                            background: Rectangle {
-                                anchors.fill: parent
-                                border.width: 0
-                                color: palette.window
+                            Label {
+                                text: root.selected_provider ? root.selected_provider + " Settings" : "Select a provider"
+                                font.bold: true
+                                font.pointSize: root.pointSize + 1
                             }
 
-                            ColumnLayout {
-                                anchors.fill: parent
-                                spacing: 10
-
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 5
-
-                                    TextField {
-                                        id: api_key_input
-                                        Layout.fillWidth: true
-                                        placeholderText: "Enter API key..."
-                                        echoMode: show_key.checked ? TextInput.Normal : TextInput.Password
-                                        font.pointSize: root.pointSize
-                                        enabled: root.selected_provider !== ""
-                                        onTextChanged: {
-                                            if (root.visible && root.selected_provider !== "") {
-                                                root.save_provider_api_key();
-                                            }
-                                        }
-                                    }
-
-                                    Button {
-                                        id: show_key
-                                        icon.source: show_key.checked ? "icons/32x32/mdi--eye-off-outline.png" : "icons/32x32/mdi--eye-outline.png"
-                                        checkable: true
-                                        Layout.preferredHeight: api_key_input.height
-                                        Layout.preferredWidth: api_key_input.height
-                                        enabled: root.selected_provider !== ""
-                                    }
+                            Text {
+                                visible: root.selected_provider !== ""
+                                text: root.selected_provider ? root.current_providers[root.selected_provider_index].description : ""
+                                textFormat: Text.RichText
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                                onLinkActivated: function(link) {
+                                    Qt.openUrlExternally(link);
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    acceptedButtons: Qt.NoButton
+                                    cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
                                 }
                             }
-                        }
 
-                        // Models Section
-                        GroupBox {
-                            title: "Models"
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 400
+                            // API Key Section
+                            GroupBox {
+                                title: "API Key"
+                                Layout.fillWidth: true
 
-                            background: Rectangle {
-                                anchors.fill: parent
-                                border.width: 0
-                                color: palette.window
-                            }
+                                background: Rectangle {
+                                    anchors.fill: parent
+                                    border.width: 0
+                                    color: palette.window
+                                }
 
-                            ColumnLayout {
-                                anchors.fill: parent
-                                spacing: 10
-
-                                // Add Model Section
                                 ColumnLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 5
+                                    anchors.fill: parent
+                                    spacing: 10
 
-                                    Label {
-                                        text: "Add New Model:"
-                                        font.pointSize: root.pointSize
-                                        font.bold: true
-                                    }
-
-                                    TextField {
-                                        id: new_model_input
+                                    RowLayout {
                                         Layout.fillWidth: true
-                                        placeholderText: "Enter model name..."
-                                        font.pointSize: root.pointSize
-                                        enabled: root.selected_provider !== ""
-                                        onAccepted: root.add_model()
-                                    }
+                                        spacing: 5
 
+                                        TextField {
+                                            id: api_key_input
+                                            Layout.fillWidth: true
+                                            placeholderText: "Enter API key..."
+                                            echoMode: show_key.checked ? TextInput.Normal : TextInput.Password
+                                            font.pointSize: root.pointSize
+                                            enabled: root.selected_provider !== ""
+                                            onTextChanged: {
+                                                if (root.visible && root.selected_provider !== "") {
+                                                    root.save_provider_api_key();
+                                                }
+                                            }
+                                        }
 
-
-                                    Button {
-                                        text: "Add Model"
-                                        enabled: root.selected_provider !== "" && new_model_input.text.trim().length > 0
-                                        onClicked: root.add_model()
+                                        Button {
+                                            id: show_key
+                                            icon.source: show_key.checked ? "icons/32x32/mdi--eye-off-outline.png" : "icons/32x32/mdi--eye-outline.png"
+                                            checkable: true
+                                            Layout.preferredHeight: api_key_input.height
+                                            Layout.preferredWidth: api_key_input.height
+                                            enabled: root.selected_provider !== ""
+                                        }
                                     }
                                 }
+                            }
 
-                                // Model List
-                                ScrollView {
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                    clip: true
+                            // Models Section
+                            GroupBox {
+                                title: "Models"
+                                Layout.fillWidth: true
+                                Layout.preferredHeight: 400
 
-                                    ListView {
-                                        id: model_list_view
-                                        model: model_list_model
-                                        spacing: 2
+                                background: Rectangle {
+                                    anchors.fill: parent
+                                    border.width: 0
+                                    color: palette.window
+                                }
 
-                                        delegate: ItemDelegate {
-                                            id: model_item
-                                            required property int index
-                                            required property string model_name
-                                            required property bool model_enabled
-                                            required property bool model_removable
-                                            required property int model_index
+                                ColumnLayout {
+                                    anchors.fill: parent
+                                    spacing: 10
 
-                                            width: model_list_view.width
-                                            height: 50
+                                    // Add Model Section
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 5
 
-                                            background: Rectangle {
-                                                color: {
-                                                    if (!model_enabled_checkbox.checked) {
-                                                        return Qt.darker(palette.base, 1.1);
+                                        Label {
+                                            text: "Add New Model:"
+                                            font.pointSize: root.pointSize
+                                            font.bold: true
+                                        }
+
+                                        TextField {
+                                            id: new_model_input
+                                            Layout.fillWidth: true
+                                            placeholderText: "Enter model name..."
+                                            font.pointSize: root.pointSize
+                                            enabled: root.selected_provider !== ""
+                                            onAccepted: root.add_model()
+                                        }
+
+
+
+                                        Button {
+                                            text: "Add Model"
+                                            enabled: root.selected_provider !== "" && new_model_input.text.trim().length > 0
+                                            onClicked: root.add_model()
+                                        }
+                                    }
+
+                                    // Model List
+                                    ScrollView {
+                                        Layout.fillWidth: true
+                                        Layout.fillHeight: true
+                                        clip: true
+
+                                        ListView {
+                                            id: model_list_view
+                                            model: model_list_model
+                                            spacing: 2
+
+                                            delegate: ItemDelegate {
+                                                id: model_item
+                                                required property int index
+                                                required property string model_name
+                                                required property bool model_enabled
+                                                required property bool model_removable
+                                                required property int model_index
+
+                                                width: model_list_view.width
+                                                height: 50
+
+                                                background: Rectangle {
+                                                    color: {
+                                                        if (!model_enabled_checkbox.checked) {
+                                                            return Qt.darker(palette.base, 1.1);
+                                                        }
+                                                        return model_item.hovered ? palette.alternateBase : palette.base;
                                                     }
-                                                    return model_item.hovered ? palette.alternateBase : palette.base;
+                                                    border.width: 1
+                                                    border.color: palette.mid
                                                 }
-                                                border.width: 1
-                                                border.color: palette.mid
-                                            }
 
-                                            onClicked: {
-                                                model_enabled_checkbox.checked = !model_enabled_checkbox.checked;
-                                                root.toggle_model_enabled(model_item.model_index, model_enabled_checkbox.checked);
-                                            }
+                                                onClicked: {
+                                                    model_enabled_checkbox.checked = !model_enabled_checkbox.checked;
+                                                    root.toggle_model_enabled(model_item.model_index, model_enabled_checkbox.checked);
+                                                }
 
-                                            RowLayout {
-                                                anchors.left: parent.left
-                                                anchors.right: parent.right
-                                                anchors.verticalCenter: parent.verticalCenter
-                                                anchors.leftMargin: 10
-                                                anchors.rightMargin: 10
-                                                spacing: 10
+                                                RowLayout {
+                                                    anchors.left: parent.left
+                                                    anchors.right: parent.right
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    anchors.leftMargin: 10
+                                                    anchors.rightMargin: 10
+                                                    spacing: 10
 
-                                                CheckBox {
-                                                    id: model_enabled_checkbox
-                                                    checked: model_item.model_enabled
-                                                    onToggled: {
-                                                        root.toggle_model_enabled(model_item.model_index, model_enabled_checkbox.checked);
+                                                    CheckBox {
+                                                        id: model_enabled_checkbox
+                                                        checked: model_item.model_enabled
+                                                        onToggled: {
+                                                            root.toggle_model_enabled(model_item.model_index, model_enabled_checkbox.checked);
+                                                        }
                                                     }
-                                                }
 
-                                                Text {
-                                                    text: model_item.model_name
-                                                    font.pointSize: root.pointSize
-                                                    color: palette.text
-                                                    elide: Text.ElideRight
-                                                    Layout.fillWidth: true
-                                                }
+                                                    Text {
+                                                        text: model_item.model_name
+                                                        font.pointSize: root.pointSize
+                                                        color: palette.text
+                                                        elide: Text.ElideRight
+                                                        Layout.fillWidth: true
+                                                    }
 
-                                                Button {
-                                                    id: remove_btn
-                                                    Layout.preferredHeight: remove_btn.height
-                                                    Layout.preferredWidth: remove_btn.height
-                                                    icon.source: "icons/32x32/ion--trash-outline.png"
-                                                    font.pointSize: root.pointSize - 1
-                                                    enabled: model_item.model_removable
-                                                    visible: model_item.model_removable
-                                                    onClicked: root.remove_model_with_confirmation(model_item.model_index)
-                                                    ToolTip.visible: hovered
-                                                    ToolTip.text: "Remove this model"
+                                                    Button {
+                                                        id: remove_btn
+                                                        Layout.preferredHeight: remove_btn.height
+                                                        Layout.preferredWidth: remove_btn.height
+                                                        icon.source: "icons/32x32/ion--trash-outline.png"
+                                                        font.pointSize: root.pointSize - 1
+                                                        enabled: model_item.model_removable
+                                                        visible: model_item.model_removable
+                                                        onClicked: root.remove_model_with_confirmation(model_item.model_index)
+                                                        ToolTip.visible: hovered
+                                                        ToolTip.text: "Remove this model"
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
                         }
                     }
                 }
