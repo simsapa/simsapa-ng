@@ -275,6 +275,7 @@ ApplicationWindow {
     function set_summary_query(query_text: string) {
         word_summary_wrap.visible = true;
         word_summary.set_query(query_text);
+        word_summary.search_btn.click();
     }
 
     function gloss_text(query_text: string) {
@@ -1503,7 +1504,6 @@ ${query_text}`;
                                 target: gloss_tab
                                 function onRequestWordSummary(word) {
                                     root.set_summary_query(word);
-                                    word_summary.search_btn.click();
                                 }
                             }
 
