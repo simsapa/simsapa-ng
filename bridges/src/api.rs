@@ -148,6 +148,72 @@ fn sutta_menu_action(request: Json<SuttaMenuRequest>) -> Status {
 }
 
 #[derive(Deserialize)]
+struct BookPageRequest {
+    book_page_url: String,
+}
+
+#[post("/open_book_page_tab/<window_id>", data = "<request>")]
+fn open_book_page_tab(window_id: &str, request: Json<BookPageRequest>, dbm: &State<Arc<DbManager>>) -> Status {
+    let book_page_url = &request.book_page_url;
+    info(&format!("open_book_page_tab(): window_id: {}, url: {}", window_id, book_page_url));
+
+    // Parse the URL to extract book_uid and resource_path
+    // Format: /book_pages/<book_uid>/<resource_path>
+    if !book_page_url.starts_with("/book_pages/") {
+        error(&format!("Invalid book page URL format: {}", book_page_url));
+        return Status::BadRequest;
+    }
+
+    let path_part = &book_page_url[12..]; // Remove "/book_pages/" prefix
+    let parts: Vec<&str> = path_part.splitn(2, '/').collect();
+
+    if parts.len() < 2 {
+        error(&format!("Invalid book page URL format: {}", book_page_url));
+        return Status::BadRequest;
+    }
+
+    let book_uid = parts[0];
+
+    // Extract anchor fragment if present
+    let path_and_anchor: Vec<&str> = parts[1].splitn(2, '#').collect();
+    let resource_path = path_and_anchor[0];
+    let anchor = if path_and_anchor.len() > 1 {
+        path_and_anchor[1]
+    } else {
+        ""
+    };
+
+    info(&format!("Parsed: book_uid={}, resource_path={}, anchor={}", book_uid, resource_path, anchor));
+
+    // Get the book spine item
+    let item = match dbm.appdata.get_book_spine_item_by_path(book_uid, resource_path) {
+        Ok(Some(item)) => item,
+        Ok(None) => {
+            error(&format!("BookSpineItem not found: {}/{}", book_uid, resource_path));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON with anchor
+    let result_data_json = serde_json::json!({
+        "item_uid": item.spine_item_uid,
+        "table_name": "book_spine_items",
+        "sutta_title": item.title.unwrap_or_default(),
+        "sutta_ref": "",
+        "snippet": "",
+        "anchor": anchor,
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_open_sutta_tab(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
+#[derive(Deserialize)]
 struct LoggerRequest {
     log_level: String,
     msg: String,
@@ -428,6 +494,7 @@ pub async extern "C" fn start_webserver() {
             get_book_page_by_path,
             open_sutta_window,
             open_sutta_tab,
+            open_book_page_tab,
         ])
         .manage(assets_files)
         .manage(db_manager)

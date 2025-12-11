@@ -201,6 +201,45 @@ async function open_sutta_in_tab(uid: string, original_url?: string): Promise<vo
 }
 
 /**
+ * Opens a book page in a new tab in the current window
+ * Makes GET request to /open_book_page_tab/{window_id} with the book page URL
+ */
+async function open_book_page_in_tab(book_page_url: string): Promise<void> {
+    // API_URL and WINDOW_ID are defined as global consts in page.html template
+    const win = window as any;
+    const API_URL = win.API_URL || (globalThis as any).API_URL || 'http://localhost:4848';
+    const WINDOW_ID = win.WINDOW_ID || (globalThis as any).WINDOW_ID;
+
+    // If WINDOW_ID is not defined, just navigate to the page normally
+    if (!WINDOW_ID || WINDOW_ID === '') {
+        await log_info(`WINDOW_ID not defined, navigating to book page: ${book_page_url}`);
+        window.location.href = book_page_url;
+        return;
+    }
+
+    await log_info(`open_book_page_in_tab: WINDOW_ID='${WINDOW_ID}', url='${book_page_url}'`);
+
+    try {
+        // Send the book page URL to the backend to open in a new tab
+        const url = `${API_URL}/open_book_page_tab/${WINDOW_ID}`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ book_page_url: book_page_url })
+        });
+
+        if (!response.ok) {
+            await log_error(`Failed to open book page ${book_page_url}: ${response.status}`);
+        }
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        await log_error(`Error opening book page ${book_page_url}: ${errorMsg}`);
+    }
+}
+
+/**
  * Shows a confirmation dialog for external links
  * Returns true if user confirms, false otherwise
  */
@@ -212,6 +251,7 @@ function show_external_link_confirmation(url: string): boolean {
  * Handles link clicks and classifies them into:
  * - Anchor links (same page) - default behavior
  * - Sutta links - call API to open sutta in tab
+ * - Book page links (to different resource) - open in new tab
  * - External links - show confirmation before opening
  */
 async function handle_link_click(event: MouseEvent): Promise<void> {
@@ -246,7 +286,25 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
         return;
     }
 
-    // Case 3: External links - show confirmation
+    // Case 3: Book page links to different resources
+    // Format: /book_pages/<book_uid>/<resource_path>
+    if (href.startsWith('/book_pages/')) {
+        const current_url = window.location.pathname;
+        // Extract the path without the fragment
+        const href_without_fragment = href.split('#')[0];
+        const current_without_fragment = current_url.split('#')[0];
+
+        // If it's a link to a different resource (not just an anchor on same page)
+        if (href_without_fragment !== current_without_fragment && href_without_fragment !== '') {
+            event.preventDefault();
+            await open_book_page_in_tab(href);
+            return;
+        }
+        // Otherwise, it's either an anchor on the same page or the same page, allow default behavior
+        return;
+    }
+
+    // Case 4: External links - show confirmation
     if (href.startsWith('http://') || href.startsWith('https://')) {
         event.preventDefault();
         if (show_external_link_confirmation(href)) {
@@ -261,6 +319,7 @@ export {
     extract_sutta_uid_from_link,
     open_sutta_by_uid,
     open_sutta_in_tab,
+    open_book_page_in_tab,
     show_external_link_confirmation,
     handle_link_click,
     log_info,
