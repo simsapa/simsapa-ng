@@ -19,6 +19,7 @@ ApplicationWindow {
     readonly property bool is_desktop: !root.is_mobile
 
     readonly property int pointSize: is_mobile? 14 : 12
+    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
 
     // FIXME make text selectable
 
@@ -43,9 +44,9 @@ ApplicationWindow {
 
     Item {
         x: 10
-        y: 10
+        y: 10 + root.top_bar_margin
         implicitWidth: root.width - 20
-        implicitHeight: root.height - 20
+        implicitHeight: root.height - 20 - root.top_bar_margin
 
         ColumnLayout {
             spacing: 10

@@ -23,6 +23,7 @@ ApplicationWindow {
 
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 5
+    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
 
     property var available_languages: []
     property var installed_languages_with_counts: []
@@ -169,6 +170,7 @@ ApplicationWindow {
     StackLayout {
         id: views_stack
         anchors.fill: parent
+        anchors.topMargin: root.top_bar_margin
         currentIndex: 0
 
         // Idx 0: Main language selection frame

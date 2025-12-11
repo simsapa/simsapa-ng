@@ -30,11 +30,15 @@ ApplicationWindow {
 
     readonly property int icon_size: is_tall ? 40 : 30
 
+    // Add extra top margin on mobile to account for status bar
+    // Get the actual status bar height from the system and add base margin
+    property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
+
     property bool is_dark: false
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !mobile_top_margin_dialog.visible)
 
     property string last_query_text: ""
     property string last_search_area: ""
@@ -71,6 +75,10 @@ ApplicationWindow {
         let title_parts = [sutta_ref, sutta_title, item_uid].filter(i => i !== "");
         let title = title_parts.join(" ");
         root.setTitle(`${title} - Simsapa`);
+    }
+
+    function update_top_bar_margin() {
+        root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
     }
 
     function apply_theme() {
@@ -616,16 +624,14 @@ ${query_text}`;
                     text: "Color Theme..."
                     onTriggered: color_theme_dialog.open()
                 }
+            }
 
-                // action: Action {
-                //     id: web_reload
-                //     text: "Reload Page"
-                //     // TODO: implement reload
-                //     // onTriggered: {
-                //     //     if (root.current_web_view)
-                //     //         root.current_web_view.reload();
-                //     // }
-                // }
+            CMenuItem {
+                visible: root.is_mobile
+                action: Action {
+                    text: "Mobile Top Margin..."
+                    onTriggered: mobile_top_margin_dialog.open()
+                }
             }
         }
 
@@ -903,12 +909,21 @@ ${query_text}`;
         }
     }
 
+    MobileTopMarginDialog {
+        id: mobile_top_margin_dialog
+        onMarginChanged: {
+            // Update the top_bar_margin property
+            root.update_top_bar_margin();
+        }
+    }
+
     DatabaseValidationDialog {
         id: database_validation_dialog
     }
 
     ColumnLayout {
         anchors.fill: parent
+        anchors.topMargin: root.top_bar_margin
 
         RowLayout {
             Button {

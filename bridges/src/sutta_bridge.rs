@@ -206,6 +206,9 @@ pub mod qobject {
         fn get_api_url(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
+        fn get_status_bar_height(self: &SuttaBridge) -> i32;
+
+        #[qinvokable]
         fn open_sutta_search_window(self: &SuttaBridge);
 
         #[qinvokable]
@@ -375,6 +378,21 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
+
+        #[qinvokable]
+        fn get_mobile_top_bar_margin(self: &SuttaBridge) -> i32;
+
+        #[qinvokable]
+        fn is_mobile_top_bar_margin_system(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn get_mobile_top_bar_margin_custom_value(self: &SuttaBridge) -> u32;
+
+        #[qinvokable]
+        fn set_mobile_top_bar_margin_system(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn set_mobile_top_bar_margin_custom(self: Pin<&mut SuttaBridge>, value: u32);
 
         #[qinvokable]
         fn get_sutta_language_labels_with_counts(self: &SuttaBridge) -> QStringList;
@@ -1073,6 +1091,13 @@ impl qobject::SuttaBridge {
     pub fn get_api_url(&self) -> QString {
         let app_data = get_app_data();
         QString::from(&app_data.api_url)
+    }
+
+    /// Get the status bar height in density-independent pixels (dp)
+    /// Returns 0 on non-mobile platforms, actual height on Android
+    pub fn get_status_bar_height(&self) -> i32 {
+        use crate::api::ffi;
+        ffi::get_status_bar_height()
     }
 
     /// Enable or disable a provider
@@ -2052,5 +2077,43 @@ impl qobject::SuttaBridge {
     pub fn set_sutta_language_filter_key(self: Pin<&mut Self>, key: QString) {
         let app_data = get_app_data();
         app_data.set_sutta_language_filter_key(key.to_string());
+    }
+
+    /// Get the mobile top bar margin value
+    /// Returns either system value (from get_status_bar_height) or custom value
+    pub fn get_mobile_top_bar_margin(&self) -> i32 {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+
+        use simsapa_backend::app_settings::MobileTopBarMargin;
+        match app_settings.mobile_top_bar_margin {
+            MobileTopBarMargin::SystemValue => {
+                use crate::api::ffi;
+                ffi::get_status_bar_height()
+            }
+            MobileTopBarMargin::CustomValue(value) => value as i32,
+        }
+    }
+
+    pub fn is_mobile_top_bar_margin_system(&self) -> bool {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.is_mobile_top_bar_margin_system()
+    }
+
+    pub fn get_mobile_top_bar_margin_custom_value(&self) -> u32 {
+        let app_data = get_app_data();
+        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.get_mobile_top_bar_margin_custom_value()
+    }
+
+    pub fn set_mobile_top_bar_margin_system(self: Pin<&mut Self>) {
+        let app_data = get_app_data();
+        app_data.set_mobile_top_bar_margin_system();
+    }
+
+    pub fn set_mobile_top_bar_margin_custom(self: Pin<&mut Self>, value: u32) {
+        let app_data = get_app_data();
+        app_data.set_mobile_top_bar_margin_custom(value);
     }
 }

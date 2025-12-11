@@ -22,6 +22,7 @@ ApplicationWindow {
 
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 5
+    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
 
     property var books_list: []
     property var selected_book_uid: ""
@@ -138,6 +139,7 @@ ApplicationWindow {
     ColumnLayout {
         spacing: 0
         anchors.fill: parent
+        anchors.topMargin: root.top_bar_margin
 
         // Toolbar with action buttons
         RowLayout {

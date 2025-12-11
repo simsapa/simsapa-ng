@@ -42,6 +42,7 @@ pub mod ffi {
 
         include!("utils.h");
         fn get_internal_storage_path() -> QString;
+        fn get_status_bar_height() -> i32;
         // fn get_app_assets_path() -> QString;
 
         include!("gui.h");

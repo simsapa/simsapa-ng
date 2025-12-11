@@ -62,6 +62,7 @@ pub struct AppSettings {
     pub open_find_in_sutta_results: bool,
     pub first_time_start: bool,
     pub sutta_language_filter_key: String,
+    pub mobile_top_bar_margin: MobileTopBarMargin,
 }
 
 impl Default for AppSettings {
@@ -190,6 +191,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             open_find_in_sutta_results: true,
             first_time_start: true,
             sutta_language_filter_key: String::new(),
+            mobile_top_bar_margin: MobileTopBarMargin::default(),
         }
     }
 }
@@ -215,6 +217,25 @@ impl AppSettings {
         };
         self.theme_name = theme_name;
     }
+
+    pub fn is_mobile_top_bar_margin_system(&self) -> bool {
+        matches!(self.mobile_top_bar_margin, MobileTopBarMargin::SystemValue)
+    }
+
+    pub fn get_mobile_top_bar_margin_custom_value(&self) -> u32 {
+        match self.mobile_top_bar_margin {
+            MobileTopBarMargin::CustomValue(value) => value,
+            MobileTopBarMargin::SystemValue => 0,
+        }
+    }
+
+    pub fn set_mobile_top_bar_margin_system(&mut self) {
+        self.mobile_top_bar_margin = MobileTopBarMargin::SystemValue;
+    }
+
+    pub fn set_mobile_top_bar_margin_custom(&mut self, value: u32) {
+        self.mobile_top_bar_margin = MobileTopBarMargin::CustomValue(value);
+    }
 }
 
 /// Anki CSV export format type
@@ -223,6 +244,19 @@ pub enum AnkiExportFormat {
     Simple,
     Templated,
     DataCsv,
+}
+
+/// Mobile top bar margin setting
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MobileTopBarMargin {
+    SystemValue,
+    CustomValue(u32),
+}
+
+impl Default for MobileTopBarMargin {
+    fn default() -> Self {
+        MobileTopBarMargin::SystemValue
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

@@ -266,6 +266,30 @@ Item {
         return 'http://localhost:4848';
     }
 
+    function get_status_bar_height(): int {
+        return 0;
+    }
+
+    function get_mobile_top_bar_margin(): int {
+        return 0;
+    }
+
+    function is_mobile_top_bar_margin_system(): bool {
+        return true;
+    }
+
+    function get_mobile_top_bar_margin_custom_value(): int {
+        return 0;
+    }
+
+    function set_mobile_top_bar_margin_system() {
+        console.log("set_mobile_top_bar_margin_system()");
+    }
+
+    function set_mobile_top_bar_margin_custom(value: int) {
+        console.log("set_mobile_top_bar_margin_custom():", value);
+    }
+
     function set_provider_enabled(provider_name: string, enabled: bool) {
         console.log("set_provider_enabled():", provider_name, enabled);
     }

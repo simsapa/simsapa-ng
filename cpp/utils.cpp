@@ -26,6 +26,77 @@ QString get_app_assets_path() {
     return path;
 }
 
+int get_status_bar_height() {
+#ifdef Q_OS_ANDROID
+    // Get the status bar height from Android system resources
+    QJniEnvironment env;
+    QJniObject activity = QJniObject::callStaticObjectMethod(
+        "org/qtproject/qt/android/QtNative",
+        "activity",
+        "()Landroid/app/Activity;"
+    );
+
+    if (activity.isValid()) {
+        // Get the Resources object
+        QJniObject resources = activity.callObjectMethod(
+            "getResources",
+            "()Landroid/content/res/Resources;"
+        );
+
+        if (resources.isValid()) {
+            // Get resource ID for status_bar_height
+            jint resourceId = resources.callMethod<jint>(
+                "getIdentifier",
+                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)I",
+                QJniObject::fromString("status_bar_height").object<jstring>(),
+                QJniObject::fromString("dimen").object<jstring>(),
+                QJniObject::fromString("android").object<jstring>()
+            );
+
+            if (resourceId > 0) {
+                // Get the actual dimension value in pixels
+                jint heightInPixels = resources.callMethod<jint>(
+                    "getDimensionPixelSize",
+                    "(I)I",
+                    resourceId
+                );
+
+                // Get display metrics to convert pixels to density-independent pixels
+                QJniObject displayMetrics = resources.callObjectMethod(
+                    "getDisplayMetrics",
+                    "()Landroid/util/DisplayMetrics;"
+                );
+
+                if (displayMetrics.isValid()) {
+                    jfloat density = displayMetrics.getField<jfloat>("density");
+
+                    // Convert pixels to density-independent pixels (dp)
+                    int heightInDp = static_cast<int>(heightInPixels / density);
+
+                    // Clear any pending JNI exceptions
+                    if (env.checkAndClearExceptions()) {
+                        // Exception was cleared
+                    }
+
+                    return heightInDp;
+                }
+            }
+        }
+    }
+
+    // Clear any pending JNI exceptions
+    if (env.checkAndClearExceptions()) {
+        // Exception was cleared
+    }
+
+    // Default fallback value for Android if we can't get the actual height
+    return 24;
+#else
+    // On non-Android platforms, return 0 (no status bar offset needed)
+    return 0;
+#endif
+}
+
 // Helper function to create storage info JSON object
 QJsonObject createStorageInfo(const QString& path, const QString& internalAppDataPath) {
     QJsonObject item;

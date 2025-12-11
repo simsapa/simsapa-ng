@@ -42,6 +42,7 @@ fn main() {
     qml_files.push("../assets/qml/ModelsDialog.qml");
     qml_files.push("../assets/qml/AnkiExportDialog.qml");
     qml_files.push("../assets/qml/ColorThemeDialog.qml");
+    qml_files.push("../assets/qml/MobileTopMarginDialog.qml");
     qml_files.push("../assets/qml/DrawerMenu.qml");
     qml_files.push("../assets/qml/DrawerEmptyItem.qml");
     qml_files.push("../assets/qml/ListBackground.qml");
