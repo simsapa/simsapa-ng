@@ -183,7 +183,7 @@ fn open_book_page_tab(window_id: &str, request: Json<BookPageRequest>, dbm: &Sta
         ""
     };
 
-    info(&format!("Parsed: book_uid={}, resource_path={}, anchor={}", book_uid, resource_path, anchor));
+    // info(&format!("Parsed: book_uid={}, resource_path={}, anchor={}", book_uid, resource_path, anchor));
 
     // Get the book spine item
     let item = match dbm.appdata.get_book_spine_item_by_path(book_uid, resource_path) {
