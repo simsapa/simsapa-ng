@@ -22,7 +22,7 @@ ApplicationWindow {
 
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 5
-    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
+    property int top_bar_margin: is_mobile ? 24 : 0
 
     property var books_list: []
     property var selected_book_uid: ""
@@ -31,6 +31,9 @@ ApplicationWindow {
     Logger { id: logger }
 
     Component.onCompleted: {
+        // Update top_bar_margin after app data is initialized
+        root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
+
         apply_theme();
         load_library_books();
     }

@@ -163,8 +163,8 @@ Frame {
                 text: "Retry"
                 font.pointSize: root.pointSize
                 onClicked: {
-                    show_retry_button = false;
-                    status_text = "Retrying download...";
+                    root.show_retry_button = false;
+                    download_status.status_text = "Retrying download...";
                     is_retrying_single_url = true;
                     retry_download(failed_download_url);
                 }

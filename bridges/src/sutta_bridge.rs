@@ -11,7 +11,7 @@ use lazy_static::lazy_static;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, get_app_globals, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
+use simsapa_backend::{get_app_data, try_get_app_data, get_app_globals, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
@@ -2081,8 +2081,15 @@ impl qobject::SuttaBridge {
 
     /// Get the mobile top bar margin value
     /// Returns either system value (from get_status_bar_height) or custom value
+    /// Returns a default value of 24 if APP_DATA is not yet initialized
     pub fn get_mobile_top_bar_margin(&self) -> i32 {
-        let app_data = get_app_data();
+        // Return default value if APP_DATA is not yet initialized
+        // This can happen when QML components load before init_app_data() is called
+        let app_data = match try_get_app_data() {
+            Some(data) => data,
+            None => return 24,
+        };
+
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
 
         use simsapa_backend::app_settings::MobileTopBarMargin;
@@ -2096,13 +2103,23 @@ impl qobject::SuttaBridge {
     }
 
     pub fn is_mobile_top_bar_margin_system(&self) -> bool {
-        let app_data = get_app_data();
+        // Return default (true for system value) if APP_DATA is not yet initialized
+        let app_data = match try_get_app_data() {
+            Some(data) => data,
+            None => return true,
+        };
+
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
         app_settings.is_mobile_top_bar_margin_system()
     }
 
     pub fn get_mobile_top_bar_margin_custom_value(&self) -> u32 {
-        let app_data = get_app_data();
+        // Return default custom value of 24 if APP_DATA is not yet initialized
+        let app_data = match try_get_app_data() {
+            Some(data) => data,
+            None => return 24,
+        };
+
         let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
         app_settings.get_mobile_top_bar_margin_custom_value()
     }

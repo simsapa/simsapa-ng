@@ -23,7 +23,8 @@ ApplicationWindow {
 
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 5
-    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
+    // NOTE: Leave top_bar_margin as a fixed default value
+    readonly property int top_bar_margin: is_mobile ? 24 : 0
 
     Logger { id: logger }
 

@@ -32,7 +32,7 @@ ApplicationWindow {
 
     // Add extra top margin on mobile to account for status bar
     // Get the actual status bar height from the system and add base margin
-    property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
+    property int top_bar_margin: is_mobile ? 24 : 0
 
     property bool is_dark: false
 
@@ -486,6 +486,10 @@ ${query_text}`;
             SuttaBridge.dictionary_first_query();
             SuttaBridge.userdata_first_query();
 
+            // Update top_bar_margin after app data is initialized
+            // This will automatically update all child dialogs via property bindings
+            root.update_top_bar_margin();
+
             search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
             action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
         }
@@ -894,11 +898,25 @@ ${query_text}`;
         menu_list: [file_menu, edit_menu, view_menu, find_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
     }
 
-    AboutDialog { id: about_dialog }
+    AboutDialog {
+        id: about_dialog
+        top_bar_margin: root.top_bar_margin
+    }
 
-    SystemPromptsDialog { id: system_prompts_dialog }
-    ModelsDialog { id: models_dialog }
-    AnkiExportDialog { id: anki_export_dialog }
+    SystemPromptsDialog {
+        id: system_prompts_dialog
+        top_bar_margin: root.top_bar_margin
+    }
+
+    ModelsDialog {
+        id: models_dialog
+        top_bar_margin: root.top_bar_margin
+    }
+
+    AnkiExportDialog {
+        id: anki_export_dialog
+        top_bar_margin: root.top_bar_margin
+    }
 
     ColorThemeDialog {
         id: color_theme_dialog
@@ -919,6 +937,7 @@ ${query_text}`;
 
     DatabaseValidationDialog {
         id: database_validation_dialog
+        top_bar_margin: root.top_bar_margin
     }
 
     ColumnLayout {

@@ -23,7 +23,7 @@ ApplicationWindow {
 
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 5
-    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
+    property int top_bar_margin: is_mobile ? 24 : 0
 
     property var available_languages: []
     property var installed_languages_with_counts: []
@@ -89,6 +89,9 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        // Update top_bar_margin after app data is initialized
+        root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
+
         // Populate language lists
         available_languages = manager.get_available_languages();
         installed_languages_with_counts = SuttaBridge.get_sutta_language_labels_with_counts();

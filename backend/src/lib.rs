@@ -75,6 +75,12 @@ pub fn get_app_data() -> &'static AppData {
     APP_DATA.get().expect("AppData is not initialized")
 }
 
+/// Safe wrapper that returns None if APP_DATA is not yet initialized
+/// This is useful for QML components that may load before init_app_data() is called
+pub fn try_get_app_data() -> Option<&'static AppData> {
+    APP_DATA.get()
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn check_and_configure_for_first_start() {
     get_app_data().check_and_configure_for_first_start();

@@ -23,7 +23,7 @@ ApplicationWindow {
     readonly property bool is_desktop: !root.is_mobile
 
     readonly property int pointSize: is_mobile? 14 : 12
-    readonly property int top_bar_margin: is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0
+    required property int top_bar_margin
 
     property var current_providers: []
     property string selected_provider: ""
