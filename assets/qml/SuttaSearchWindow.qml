@@ -726,6 +726,21 @@ ${query_text}`;
                     }
                 }
             }
+
+            CMenuItem {
+                action: Action {
+                    id: action_close_tab
+                    text: "Close Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+W"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_close_tab.trigger()
+                    }
+                    onTriggered: {
+                        suttas_tab_bar.close_current_tab();
+                    }
+                }
+            }
         }
 
         Menu {
@@ -1079,6 +1094,59 @@ ${query_text}`;
                                     }
                                 }
 
+                                function close_current_tab() {
+                                    // Find the currently checked tab across all repeaters (pinned, results, translations)
+                                    // and trigger its close action
+
+                                    // Check pinned tabs
+                                    for (let i = 0; i < tabs_pinned.count; i++) {
+                                        let tab = tabs_pinned.itemAt(i);
+                                        if (tab && tab.checked) {
+                                            // Pinned tabs can always be closed normally
+                                            tab.close_btn.clicked();
+                                            return;
+                                        }
+                                    }
+
+                                    // Check results tabs
+                                    for (let i = 0; i < tabs_results.count; i++) {
+                                        let tab = tabs_results.itemAt(i);
+                                        if (tab && tab.checked) {
+                                            // Special handling for ResultsTab_0
+                                            if (tab.id_key === "ResultsTab_0") {
+                                                if (tab.item_uid === "Sutta") {
+                                                    // If ResultsTab_0 has placeholder content, close the window
+                                                    root.close();
+                                                } else {
+                                                    // Replace with blank content, preserving id_key and web_item_key
+                                                    let old_tab_data = tabs_results_model.get(0);
+                                                    let blank_data = root.new_tab_data(
+                                                        {item_uid: "Sutta", sutta_title: "", sutta_ref: ""},
+                                                        false,
+                                                        false,
+                                                        old_tab_data.id_key,
+                                                        old_tab_data.web_item_key
+                                                    );
+                                                    tabs_results_model.set(0, blank_data);
+                                                }
+                                            } else {
+                                                // For non-ResultsTab_0 tabs, trigger the close button
+                                                tab.close_btn.clicked();
+                                            }
+                                            return;
+                                        }
+                                    }
+
+                                    // Check translations tabs
+                                    for (let i = 0; i < tabs_translations.count; i++) {
+                                        let tab = tabs_translations.itemAt(i);
+                                        if (tab && tab.checked) {
+                                            tab.close_btn.clicked();
+                                            return;
+                                        }
+                                    }
+                                }
+
                                 contentItem: Flickable {
                                     id: tabs_flickable
                                     clip: true
@@ -1137,8 +1205,16 @@ ${query_text}`;
                                                 onCloseClicked: {
                                                     if (tabs_results_model.count == 1) {
                                                         // If this is the only tab, don't remove it, just set it to blank
-                                                        results_tab_btn.item_uid = "Sutta";
-                                                        tabs_results_model.set(0, root.blank_sutta_tab_data());
+                                                        // Preserve id_key and web_item_key
+                                                        let old_tab_data = tabs_results_model.get(0);
+                                                        let blank_data = root.new_tab_data(
+                                                            {item_uid: "Sutta", sutta_title: "", sutta_ref: ""},
+                                                            false,
+                                                            false,
+                                                            old_tab_data.id_key,
+                                                            old_tab_data.web_item_key
+                                                        );
+                                                        tabs_results_model.set(0, blank_data);
                                                     } else {
                                                         suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
                                                     }

@@ -20,6 +20,9 @@ TabButton {
     signal pinToggled(bool pinned)
     signal closeClicked()
 
+    // Alias to allow triggering close from outside (e.g., keyboard shortcut)
+    property alias close_btn: close_btn
+
     /* implicitWidth: Math.min(200, Math.max(150, implicitContentWidth + 30)) */
 
     contentItem: RowLayout {
@@ -47,6 +50,7 @@ TabButton {
         }
 
         Button {
+            id: close_btn
             icon.source: "icons/32x32/mdi--close.png"
             Layout.preferredWidth: 24
             flat: true
