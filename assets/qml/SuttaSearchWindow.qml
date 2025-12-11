@@ -1221,7 +1221,8 @@ ${query_text}`;
                                                 }
                                                 onFocusChanged: suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model)
                                                 onItem_uidChanged: {
-                                                    if (results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
+                                                    // Only update if the new item_uid is not a placeholder (blank tab)
+                                                    if (results_tab_btn.item_uid !== "Sutta" && results_tab_btn.item_uid !== "Word" && results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
                                                         let i = sutta_html_view_layout.get_item(results_tab_btn.web_item_key);
                                                         i.set_data_value('item_uid', results_tab_btn.item_uid);
                                                         // The title changes when an item in FulltextResults is selected,
