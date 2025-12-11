@@ -10,7 +10,7 @@ static QJniObject wakeLock;
 extern "C" void log_info_c(const char* msg);
 extern "C" void log_error_c(const char* msg);
 
-void acquire_wake_lock() {
+bool acquire_wake_lock() {
     log_info_c("acquire_wake_lock()");
 #ifdef Q_OS_ANDROID
     QJniEnvironment env;
@@ -24,7 +24,7 @@ void acquire_wake_lock() {
     
     if (!activity.isValid()) {
         log_error_c("Failed to get activity for wake lock");
-        return;
+        return false;
     }
     log_info_c("Activity obtained successfully");
     
@@ -43,7 +43,7 @@ void acquire_wake_lock() {
     
     if (!powerManager.isValid()) {
         log_error_c("Failed to get PowerManager");
-        return;
+        return false;
     }
     log_info_c("PowerManager obtained successfully");
     
@@ -66,15 +66,19 @@ void acquire_wake_lock() {
         log_info_c("Wake lock object created, acquiring...");
         wakeLock.callMethod<void>("acquire", "()V");
         log_info_c("Wake lock acquired successfully");
+
+        if (env.checkAndClearExceptions()) {
+            log_error_c("JNI exception occurred while acquiring wake lock");
+            return false;
+        }
+        return true;
     } else {
         log_error_c("Failed to create wake lock");
-    }
-    
-    if (env.checkAndClearExceptions()) {
-        log_error_c("JNI exception occurred while acquiring wake lock");
+        return false;
     }
 #else
     log_info_c("acquire_wake_lock() - not on Android platform");
+    return true; // On non-Android platforms, wake lock is not needed, so return success
 #endif
 }
 

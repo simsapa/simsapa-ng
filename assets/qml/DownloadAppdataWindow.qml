@@ -28,7 +28,7 @@ ApplicationWindow {
 
     Component.onCompleted: {
         if (root.is_mobile) {
-            manager.acquire_wake_lock_rust();
+            root.wake_lock_acquired = manager.acquire_wake_lock_rust();
         }
 
         // Initialize language selection
@@ -60,6 +60,7 @@ ApplicationWindow {
     property string init_add_languages: ""
     property var available_languages: []
     property var selected_languages: []
+    property bool wake_lock_acquired: false
 
     AssetManager { id: manager }
 
@@ -533,6 +534,7 @@ ApplicationWindow {
             pointSize: root.pointSize
             is_mobile: root.is_mobile
             status_text: "Downloading ..."
+            wake_lock_acquired: root.wake_lock_acquired
 
             onQuit_clicked: {
                 Qt.quit();

@@ -8,11 +8,13 @@ Frame {
     id: root
 
     required property int pointSize
-    required property bool is_mobile
+    /* required property bool is_mobile */
+    property bool is_mobile: true
     property alias status_text: download_status.text
     property alias progress_value: progress_bar.value
     property bool show_cancel_button: false
     property string quit_button_text: "Quit"
+    property bool wake_lock_acquired: false
 
     signal quit_clicked()
     signal cancel_clicked()
@@ -60,6 +62,33 @@ Frame {
                     to: 1
                     value: 0
                     font.pointSize: root.pointSize
+                }
+
+                // Wake lock status for mobile
+                Label {
+                    visible: root.is_mobile
+                    Layout.alignment: Qt.AlignCenter
+                    Layout.fillWidth: true
+                    text: root.wake_lock_acquired ? "Wake lock: acquired" : "Wake lock: not acquired"
+                    font.pointSize: root.pointSize
+                    color: palette.text
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.topMargin: 10
+                }
+
+                // Warning message for mobile users
+                Label {
+                    visible: root.is_mobile
+                    Layout.alignment: Qt.AlignCenter
+                    Layout.fillWidth: true
+                    text: "Some devices interrupt the download when they enter suspend mode (black screen), while others allow it to continue. If you notice this problem, please tap the device periodically to keep it awake."
+                    font.pointSize: root.pointSize
+                    color: palette.text
+                    wrapMode: Text.WordWrap
+                    horizontalAlignment: Text.AlignHCenter
+                    Layout.topMargin: 5
+                    opacity: 0.8
                 }
             }
         }

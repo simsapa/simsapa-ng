@@ -18,8 +18,9 @@ Item {
         return "";
     }
 
-    function acquire_wake_lock_rust() {
+    function acquire_wake_lock_rust(): bool {
         console.log("acquire_wake_lock_rust()");
+        return true;
     }
 
     function release_wake_lock_rust() {

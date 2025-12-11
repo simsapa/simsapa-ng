@@ -30,6 +30,7 @@ ApplicationWindow {
     AssetManager { id: manager }
 
     property bool is_downloading: false
+    property bool wake_lock_acquired: false
 
     Connections {
         target: manager
@@ -84,6 +85,17 @@ ApplicationWindow {
         // Populate language lists
         available_languages = manager.get_available_languages();
         installed_languages_with_counts = SuttaBridge.get_sutta_language_labels_with_counts();
+
+        // Acquire wake lock on mobile if needed for any operations
+        if (root.is_mobile) {
+            root.wake_lock_acquired = manager.acquire_wake_lock_rust();
+        }
+    }
+
+    Component.onDestruction: {
+        if (root.is_mobile) {
+            manager.release_wake_lock_rust();
+        }
     }
 
     // Confirmation dialog for language removal
@@ -310,6 +322,7 @@ ApplicationWindow {
             status_text: "Processing..."
             show_cancel_button: root.is_downloading
             quit_button_text: root.is_downloading ? "Close" : "Quit"
+            wake_lock_acquired: root.wake_lock_acquired
 
             onQuit_clicked: {
                 if (root.is_downloading) {

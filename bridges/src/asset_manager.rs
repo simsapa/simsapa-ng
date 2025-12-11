@@ -31,7 +31,7 @@ pub mod qobject {
         type QUrl = cxx_qt_lib::QUrl;
 
         include!("wake_lock.h");
-        fn acquire_wake_lock();
+        fn acquire_wake_lock() -> bool;
         fn release_wake_lock();
     }
 
@@ -55,7 +55,7 @@ pub mod qobject {
         fn get_init_languages(self: Pin<&mut AssetManager>) -> QString;
 
         #[qinvokable]
-        fn acquire_wake_lock_rust(self: Pin<&mut AssetManager>);
+        fn acquire_wake_lock_rust(self: Pin<&mut AssetManager>) -> bool;
 
         #[qinvokable]
         fn release_wake_lock_rust(self: Pin<&mut AssetManager>);
@@ -145,8 +145,8 @@ fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, a
 }
 
 impl qobject::AssetManager {
-    fn acquire_wake_lock_rust(self: Pin<&mut Self>) {
-        qobject::acquire_wake_lock();
+    fn acquire_wake_lock_rust(self: Pin<&mut Self>) -> bool {
+        qobject::acquire_wake_lock()
     }
 
     fn release_wake_lock_rust(self: Pin<&mut Self>) {
