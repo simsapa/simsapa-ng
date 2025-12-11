@@ -142,7 +142,8 @@ void WindowManager::open_sutta_search_window_with_query(const QString& show_resu
     // If result data JSON is provided, show the sutta directly
     if (!show_result_data_json.isEmpty() && w && w->m_root) {
         QMetaObject::invokeMethod(w->m_root, "show_result_in_html_view_with_json",
-            Q_ARG(QString, show_result_data_json));
+            Q_ARG(QString, show_result_data_json),
+            Q_ARG(QVariant, QVariant(false)));  // Don't create new tab in fresh window
     }
 }
 
@@ -208,8 +209,9 @@ void WindowManager::show_chapter_in_sutta_window(const QString& window_id, const
         QMetaObject::invokeMethod(target_window->m_root, "show");
         QMetaObject::invokeMethod(target_window->m_root, "raise");
 
-        // Show the chapter in the HTML view
+        // Show the chapter in the HTML view (replace current tab, don't create new)
         QMetaObject::invokeMethod(target_window->m_root, "show_result_in_html_view_with_json",
-            Q_ARG(QString, result_data_json));
+            Q_ARG(QString, result_data_json),
+            Q_ARG(QVariant, QVariant(false)));
     }
 }
