@@ -341,9 +341,14 @@ ApplicationWindow {
                 Item {
                     SplitView.fillWidth: true
 
+                ScrollView {
+                    anchors.fill: parent
+                    anchors.margins: 5
+                    clip: true
+                    contentWidth: availableWidth
+
                     ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 5
+                        width: parent.width
                         spacing: 15
 
                         Label {
@@ -417,7 +422,7 @@ ApplicationWindow {
                         GroupBox {
                             title: "Models"
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
+                            Layout.preferredHeight: 400
 
                             background: Rectangle {
                                 anchors.fill: parent
@@ -537,6 +542,7 @@ ApplicationWindow {
                                     }
                                 }
                             }
+                        }
                         }
                     }
                 }
