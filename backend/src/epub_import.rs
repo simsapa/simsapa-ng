@@ -63,6 +63,8 @@ pub fn import_epub_to_db(
     db_conn: &mut SqliteConnection,
     epub_path: &Path,
     book_uid: &str,
+    custom_title: Option<&str>,
+    custom_author: Option<&str>,
 ) -> Result<()> {
     tracing::info!("Importing EPUB from {:?} with UID: {}", epub_path, book_uid);
 
@@ -70,18 +72,29 @@ pub fn import_epub_to_db(
     let mut doc = EpubDoc::new(epub_path)
         .map_err(|e| anyhow!("Failed to open EPUB file: {}", e))?;
 
-    // Extract metadata
-    let title = doc
+    // Extract metadata from file
+    let extracted_title = doc
         .mdata("title")
         .or_else(|| doc.mdata("dc:title"))
         .map(|item| item.value.clone())
         .unwrap_or_else(|| "Untitled".to_string());
 
-    let author = doc
+    let extracted_author = doc
         .mdata("creator")
         .or_else(|| doc.mdata("dc:creator"))
         .map(|item| item.value.clone())
         .unwrap_or_else(|| String::new());
+
+    // Use custom values if provided and non-empty, otherwise use extracted metadata
+    let title = custom_title
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_title);
+
+    let author = custom_author
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_author);
 
     let language = doc
         .mdata("language")

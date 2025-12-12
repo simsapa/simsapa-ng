@@ -34,6 +34,8 @@ pub fn import_html_to_db(
     db_conn: &mut SqliteConnection,
     html_path: &Path,
     book_uid: &str,
+    custom_title: Option<&str>,
+    custom_author: Option<&str>,
 ) -> Result<()> {
     tracing::info!("Importing HTML from {:?} with UID: {}", html_path, book_uid);
 
@@ -47,13 +49,24 @@ pub fn import_html_to_db(
         .read_from(&mut html_content.as_bytes())
         .map_err(|e| anyhow!("Failed to parse HTML: {}", e))?;
 
-    // Extract metadata
+    // Extract metadata from file
     let metadata = extract_metadata(&dom);
-    let title = metadata
+    let extracted_title = metadata
         .get("title")
         .cloned()
         .unwrap_or_else(|| "Untitled".to_string());
-    let author = metadata.get("author").cloned().unwrap_or_default();
+    let extracted_author = metadata.get("author").cloned().unwrap_or_default();
+
+    // Use custom values if provided and non-empty, otherwise use extracted metadata
+    let title = custom_title
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_title);
+
+    let author = custom_author
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_author);
     let language = metadata.get("language").cloned().unwrap_or_default();
 
     tracing::info!(

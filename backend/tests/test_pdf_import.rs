@@ -28,7 +28,7 @@ fn test_pdf_import_with_utf16_bom_title() {
     });
     
     // Import the PDF
-    let result = app_data.import_pdf_to_db(&pdf_path, book_uid);
+    let result = app_data.import_pdf_to_db(&pdf_path, book_uid, None, None);
     assert!(result.is_ok(), "PDF import failed: {:?}", result.err());
     
     // Verify the book was created with correct title (no BOM or control characters)
@@ -79,7 +79,7 @@ fn test_pdf_import_general() {
     });
     
     // Import the PDF
-    let result = app_data.import_pdf_to_db(&pdf_path, book_uid);
+    let result = app_data.import_pdf_to_db(&pdf_path, book_uid, None, None);
     assert!(result.is_ok(), "PDF import failed: {:?}", result.err());
     
     // Verify book record

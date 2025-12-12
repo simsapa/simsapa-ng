@@ -21,6 +21,8 @@ pub fn import_pdf_to_db(
     db_conn: &mut SqliteConnection,
     pdf_path: &Path,
     book_uid: &str,
+    custom_title: Option<&str>,
+    custom_author: Option<&str>,
 ) -> Result<()> {
     tracing::info!("Importing PDF from {:?} with UID: {}", pdf_path, book_uid);
 
@@ -28,8 +30,8 @@ pub fn import_pdf_to_db(
     let doc = Document::load(pdf_path)
         .map_err(|e| anyhow!("Failed to load PDF: {}", e))?;
 
-    // Extract metadata using comprehensive extraction
-    let title = extract_pdf_metadata(&doc, b"Title")
+    // Extract metadata from file
+    let extracted_title = extract_pdf_metadata(&doc, b"Title")
         .unwrap_or_else(|| "Untitled".to_string());
 
     // Try to extract author from multiple sources in order of preference:
@@ -37,10 +39,21 @@ pub fn import_pdf_to_db(
     // 2. XMP metadata dc:creator (Dublin Core)
     // 3. XMP metadata pdf:Author (PDF-specific)
     // 4. PDF Info dictionary Creator field (application that created it)
-    let author = extract_pdf_metadata(&doc, b"Author")
+    let extracted_author = extract_pdf_metadata(&doc, b"Author")
         .or_else(|| extract_xmp_author(&doc))
         .or_else(|| extract_pdf_metadata(&doc, b"Creator"))
         .unwrap_or_else(|| String::new());
+
+    // Use custom values if provided and non-empty, otherwise use extracted metadata
+    let title = custom_title
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_title);
+
+    let author = custom_author
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_author);
 
     let language = extract_pdf_metadata(&doc, b"Language")
         .or_else(|| extract_pdf_metadata(&doc, b"Lang"))

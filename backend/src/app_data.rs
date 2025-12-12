@@ -818,24 +818,24 @@ impl AppData {
     }
 
     /// Import an EPUB document into the database
-    pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str) -> Result<()> {
+    pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
-        crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid)
+        crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid, custom_title, custom_author)
     }
 
     /// Import a PDF document into the database
-    pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str) -> Result<()> {
+    pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
-        crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid)
+        crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid, custom_title, custom_author)
     }
 
     /// Import an HTML document into the database
-    pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str) -> Result<()> {
+    pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
-        crate::html_import::import_html_to_db(db_conn, html_path, book_uid)
+        crate::html_import::import_html_to_db(db_conn, html_path, book_uid, custom_title, custom_author)
     }
 
     pub fn get_first_time_start(&self) -> bool {

@@ -38,7 +38,7 @@ fn test_epub_spine_item_titles() {
     });
 
     // Import the EPUB
-    let result = app_data.import_epub_to_db(&epub_path, book_uid);
+    let result = app_data.import_epub_to_db(&epub_path, book_uid, None, None);
     assert!(result.is_ok(), "EPUB import failed: {:?}", result.err());
 
     // Verify the first 10 spine item titles
@@ -99,7 +99,7 @@ fn test_epub_import_general() {
     });
 
     // Import the EPUB
-    let result = app_data.import_epub_to_db(&epub_path, book_uid);
+    let result = app_data.import_epub_to_db(&epub_path, book_uid, None, None);
     assert!(result.is_ok(), "EPUB import failed: {:?}", result.err());
 
     // Verify book record
@@ -160,7 +160,7 @@ fn test_epub_html_escape_conversion() {
     });
 
     // Import the EPUB
-    let result = app_data.import_epub_to_db(&epub_path, book_uid);
+    let result = app_data.import_epub_to_db(&epub_path, book_uid, None, None);
     assert!(result.is_ok(), "EPUB import failed: {:?}", result.err());
 
     // Get the first spine item title

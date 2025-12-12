@@ -1457,7 +1457,7 @@ impl qobject::SuttaBridge {
         let path_str = file_path.to_string();
         let uid_str = book_uid.to_string();
         let title_str = title.to_string();
-        let _author_str = author.to_string();
+        let author_str = author.to_string();
         let doc_type = document_type.to_string();
         let _split_tag_str = split_tag.to_string();
 
@@ -1470,6 +1470,18 @@ impl qobject::SuttaBridge {
             let app_data = get_app_data();
             let path = Path::new(&path_str);
 
+            // Convert custom title and author to Option<&str>
+            let custom_title = if title_str.trim().is_empty() {
+                None
+            } else {
+                Some(title_str.as_str())
+            };
+            let custom_author = if author_str.trim().is_empty() {
+                None
+            } else {
+                Some(author_str.as_str())
+            };
+
             let result = match doc_type.as_str() {
                 "epub" => {
                     let progress_msg = QString::from("Importing EPUB...");
@@ -1477,7 +1489,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_epub_to_db(path, &uid_str)
+                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author)
                 }
                 "pdf" => {
                     let progress_msg = QString::from("Importing PDF...");
@@ -1485,7 +1497,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_pdf_to_db(path, &uid_str)
+                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author)
                 }
                 "html" => {
                     let progress_msg = QString::from("Importing HTML...");
@@ -1495,7 +1507,7 @@ impl qobject::SuttaBridge {
 
                     // TODO: Pass split_tag parameter when html_import supports it
                     // For now, HTML is imported as a single spine item
-                    app_data.import_html_to_db(path, &uid_str)
+                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author)
                 }
                 _ => {
                     let error_msg = format!("Unknown document type: {}", doc_type);
