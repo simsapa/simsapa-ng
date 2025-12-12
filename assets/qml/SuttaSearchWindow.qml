@@ -171,12 +171,17 @@ ApplicationWindow {
         let params = root.get_search_params_from_ui();
         let search_area = search_bar_input.search_area_dropdown.get_text();
 
-        // Determine if query_text_orig is a sutta reference
-        let query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
+        // Determine if query_text_orig is a sutta/book reference
+        // For Suttas and Library, convert references to uid: format
+        // For Dictionary, skip conversion to allow normal word searches
+        let query_text = query_text_orig;
+        if (search_area === "Suttas" || search_area === "Library") {
+            query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
+        }
 
         if (query_text.startsWith('uid:')) {
             params['mode'] = 'Uid Match';
-            min_length = 7; // e.g. uid:mn8
+            min_length = 7; // e.g. uid:mn8, uid:bmc
         }
 
         if (query_text.length < min_length)

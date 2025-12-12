@@ -465,17 +465,43 @@ impl<'a> SearchQueryTask<'a> {
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
-        let res = book_spine_items
-            .filter(spine_item_uid.eq(query_uid))
-            .select(BookSpineItem::as_select())
-            .first(db_conn);
+        // If query_uid contains a dot (e.g., "bmc.0"), it's a spine_item_uid
+        // If it doesn't contain a dot (e.g., "bmc"), it's a book_uid
+        if query_uid.contains('.') {
+            // Search for specific spine item
+            let res = book_spine_items
+                .filter(spine_item_uid.eq(query_uid))
+                .select(BookSpineItem::as_select())
+                .first(db_conn);
 
-        match res {
-            Ok(spine_item) => {
-                Ok(vec![self.db_book_spine_item_to_result(&spine_item)])
+            match res {
+                Ok(spine_item) => {
+                    Ok(vec![self.db_book_spine_item_to_result(&spine_item)])
+                }
+                Err(_) => {
+                    Ok(Vec::new())
+                }
             }
-            Err(_) => {
-                Ok(Vec::new())
+        } else {
+            // Search for all spine items with this book_uid
+            let res = book_spine_items
+                .filter(book_uid.eq(query_uid))
+                .select(BookSpineItem::as_select())
+                .order(spine_index.asc())
+                .load(db_conn);
+
+            match res {
+                Ok(spine_items) => {
+                    let results: Vec<SearchResult> = spine_items
+                        .iter()
+                        .map(|item| self.db_book_spine_item_to_result(item))
+                        .collect();
+                    self.db_query_hits_count = results.len() as i64;
+                    Ok(results)
+                }
+                Err(_) => {
+                    Ok(Vec::new())
+                }
             }
         }
     }

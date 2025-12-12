@@ -73,6 +73,11 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
         static ref re_direct_uid: Regex = Regex::new(r"^(dn|mn|sn|an|pv|vv|vism|iti|kp|khp|snp|th|ud|uda|dhp)(\d+[\.-]\d+[\d\.-]*)$").unwrap();
         // Special case for thag/thig with dots (e.g. thag20.1, thig1.10)
         static ref re_thag_thig_uid: Regex = Regex::new(r"^(thag|thig)(\d+\.\d+)$").unwrap();
+        // Match book UIDs: alphanumeric with optional dots for spine items
+        // e.g. bmc, bmc.0, bmc.1, test-book, test-book.5
+        static ref re_book_uid: Regex = Regex::new(r"^[a-z][a-z0-9_-]*(?:\.\d+)?$").unwrap();
+        // Sutta abbreviation prefixes to exclude from book UID matching
+        static ref re_sutta_prefix: Regex = Regex::new(r"^(dn|mn|sn|an|pv|vv|vism|iti|kp|khp|snp|th|ud|uda|dhp|thag|thig)\d").unwrap();
     }
     if re_partial_uid.is_match(&query_text) {
         return format!("uid:{}", query_text);
@@ -81,6 +86,13 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
     // Detect direct uid formats like dhp320-333, sn56.11
     // This should match formats with dots or hyphens (structural separators in UIDs)
     if re_direct_uid.is_match(&query_text) || re_thag_thig_uid.is_match(&query_text) {
+        return format!("uid:{}", query_text);
+    }
+
+    // Detect book UIDs (e.g. bmc, bmc.0)
+    // This should be checked after sutta patterns to avoid false matches
+    // Only match if it doesn't start with a sutta abbreviation
+    if re_book_uid.is_match(&query_text) && !re_sutta_prefix.is_match(&query_text) {
         return format!("uid:{}", query_text);
     }
 
@@ -2338,6 +2350,22 @@ mod tests {
         assert_eq!(query_text_to_uid_field_query("sn56.11"), "uid:sn56.11");
         assert_eq!(query_text_to_uid_field_query("thag20.1"), "uid:thag20.1");
         assert_eq!(query_text_to_uid_field_query("an4.10"), "uid:an4.10");
+        assert_eq!(query_text_to_uid_field_query("dn1"), "uid:dn1");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_book_uids() {
+        // Test that book UIDs are recognized and converted to uid: format
+        assert_eq!(query_text_to_uid_field_query("bmc"), "uid:bmc");
+        assert_eq!(query_text_to_uid_field_query("bmc.0"), "uid:bmc.0");
+        assert_eq!(query_text_to_uid_field_query("bmc.1"), "uid:bmc.1");
+        assert_eq!(query_text_to_uid_field_query("test-book"), "uid:test-book");
+        assert_eq!(query_text_to_uid_field_query("test-book.5"), "uid:test-book.5");
+        assert_eq!(query_text_to_uid_field_query("my_book"), "uid:my_book");
+        assert_eq!(query_text_to_uid_field_query("my_book.10"), "uid:my_book.10");
+
+        // Ensure sutta patterns are NOT matched as book UIDs
+        assert_eq!(query_text_to_uid_field_query("mn8"), "uid:mn8");
         assert_eq!(query_text_to_uid_field_query("dn1"), "uid:dn1");
     }
 

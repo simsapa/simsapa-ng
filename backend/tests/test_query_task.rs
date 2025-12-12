@@ -715,3 +715,182 @@ fn test_sutta_uid_range_with_language_filter() {
         .execute(db_conn)
         .unwrap();
 }
+
+#[test]
+#[serial]
+fn test_book_uid_query_returns_all_spine_items() {
+    use simsapa_backend::db::appdata_schema::{books, book_spine_items};
+    use simsapa_backend::db::appdata_models::{NewBook, NewBookSpineItem};
+
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
+
+    // Clean up any existing test data
+    let _ = diesel::delete(books::table.filter(books::uid.eq("test-book-uid")))
+        .execute(db_conn);
+
+    // Insert a test book
+    let new_book = NewBook {
+        uid: "test-book-uid",
+        document_type: "epub",
+        title: Some("Test Book"),
+        author: None,
+        language: None,
+        file_path: None,
+        metadata_json: None,
+        enable_embedded_css: false,
+        toc_json: None,
+    };
+
+    diesel::insert_into(books::table)
+        .values(&new_book)
+        .execute(db_conn)
+        .unwrap();
+
+    // Get the book_id for foreign key
+    let book_id: i32 = books::table
+        .filter(books::uid.eq("test-book-uid"))
+        .select(books::id)
+        .first(db_conn)
+        .unwrap();
+
+    // Insert multiple spine items for this book
+    for i in 0..3 {
+        let spine_uid = format!("test-book-uid.{}", i);
+        let resource_path = format!("chapter{}.html", i);
+        let title_str = format!("Chapter {}", i + 1);
+        let content_html_str = format!("<p>Content for chapter {}</p>", i);
+        let content_plain_str = format!("Content for chapter {}", i);
+
+        let spine_item = NewBookSpineItem {
+            book_id,
+            book_uid: "test-book-uid",
+            spine_item_uid: &spine_uid,
+            spine_index: i,
+            resource_path: &resource_path,
+            title: Some(&title_str),
+            language: None,
+            content_html: Some(&content_html_str),
+            content_plain: Some(&content_plain_str),
+        };
+
+        diesel::insert_into(book_spine_items::table)
+            .values(&spine_item)
+            .execute(db_conn)
+            .unwrap();
+    }
+
+    // Test query with book_uid (no dot) - should return all spine items
+    let query = "uid:test-book-uid";
+    let params = h::get_uid_params();
+    let mut query_task = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        params,
+        SearchArea::Library,
+    );
+
+    let results = query_task.results_page(0).unwrap();
+
+    // Should find all 3 spine items
+    assert_eq!(results.len(), 3, "Should find all 3 spine items for book_uid");
+    assert_eq!(results[0].uid, "test-book-uid.0");
+    assert_eq!(results[1].uid, "test-book-uid.1");
+    assert_eq!(results[2].uid, "test-book-uid.2");
+    assert_eq!(results[0].title, "Chapter 1");
+    assert_eq!(results[1].title, "Chapter 2");
+    assert_eq!(results[2].title, "Chapter 3");
+
+    // Clean up
+    diesel::delete(books::table.filter(books::uid.eq("test-book-uid")))
+        .execute(db_conn)
+        .unwrap();
+}
+
+#[test]
+#[serial]
+fn test_book_spine_item_uid_query_returns_single_item() {
+    use simsapa_backend::db::appdata_schema::{books, book_spine_items};
+    use simsapa_backend::db::appdata_models::{NewBook, NewBookSpineItem};
+
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
+
+    // Clean up any existing test data
+    let _ = diesel::delete(books::table.filter(books::uid.eq("test-book-spine")))
+        .execute(db_conn);
+
+    // Insert a test book
+    let new_book = NewBook {
+        uid: "test-book-spine",
+        document_type: "epub",
+        title: Some("Test Book Spine"),
+        author: None,
+        language: None,
+        file_path: None,
+        metadata_json: None,
+        enable_embedded_css: false,
+        toc_json: None,
+    };
+
+    diesel::insert_into(books::table)
+        .values(&new_book)
+        .execute(db_conn)
+        .unwrap();
+
+    let book_id: i32 = books::table
+        .filter(books::uid.eq("test-book-spine"))
+        .select(books::id)
+        .first(db_conn)
+        .unwrap();
+
+    // Insert multiple spine items
+    for i in 0..3 {
+        let spine_uid = format!("test-book-spine.{}", i);
+        let resource_path = format!("section{}.html", i);
+        let title_str = format!("Section {}", i + 1);
+        let content_html_str = format!("<p>Section {} content</p>", i);
+        let content_plain_str = format!("Section {} content", i);
+
+        let spine_item = NewBookSpineItem {
+            book_id,
+            book_uid: "test-book-spine",
+            spine_item_uid: &spine_uid,
+            spine_index: i,
+            resource_path: &resource_path,
+            title: Some(&title_str),
+            language: None,
+            content_html: Some(&content_html_str),
+            content_plain: Some(&content_plain_str),
+        };
+
+        diesel::insert_into(book_spine_items::table)
+            .values(&spine_item)
+            .execute(db_conn)
+            .unwrap();
+    }
+
+    // Test query with spine_item_uid (with dot) - should return only that specific item
+    let query = "uid:test-book-spine.1";
+    let params = h::get_uid_params();
+    let mut query_task = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        params,
+        SearchArea::Library,
+    );
+
+    let results = query_task.results_page(0).unwrap();
+
+    // Should find only the specific spine item
+    assert_eq!(results.len(), 1, "Should find only 1 spine item for spine_item_uid");
+    assert_eq!(results[0].uid, "test-book-spine.1");
+    assert_eq!(results[0].title, "Section 2");
+
+    // Clean up
+    diesel::delete(books::table.filter(books::uid.eq("test-book-spine")))
+        .execute(db_conn)
+        .unwrap();
+}
