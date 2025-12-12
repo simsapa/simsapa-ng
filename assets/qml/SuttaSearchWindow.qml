@@ -632,7 +632,7 @@ ${query_text}`;
             }
 
             CMenuItem {
-                visible: root.is_mobile
+                enabled: root.is_mobile // Using 'visible' leaves an empty space on desktop
                 action: Action {
                     text: "Mobile Top Margin..."
                     onTriggered: mobile_top_margin_dialog.open()

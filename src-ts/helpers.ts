@@ -2,6 +2,9 @@
 // Ported from backend/src/helpers.rs:25-27
 const RE_ALL_BOOK_SUTTA_REF = /\b(DN|MN|SN|AN|Pv|Vv|Vism|iti|kp|khp|snp|th|thag|thig|ud|uda|dhp)[ .]*(\d[\d.:]*)\b/i;
 
+// Import the confirmation modal function
+import { show_external_link_confirmation } from "./confirm_modal";
+
 /**
  * Send log message to backend logger
  */
@@ -31,6 +34,30 @@ async function log_info(msg: string): Promise<void> {
 async function log_error(msg: string): Promise<void> {
     console.error(msg);
     send_log(msg, 'error');
+}
+
+/**
+ * Opens an external URL using the backend API
+ * This uses Qt's QDesktopServices to open the URL in the system browser
+ */
+async function open_external_url(url: string): Promise<void> {
+    const API_URL = (globalThis as any).API_URL || 'http://localhost:4848';
+    try {
+        const response = await fetch(`${API_URL}/open_external_url`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url })
+        });
+
+        if (!response.ok) {
+            log_error(`Failed to open external URL: ${response.status}`);
+        }
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        log_error(`Error opening external URL: ${errorMsg}`);
+    }
 }
 
 function show_transient_message(text: string, msg_div_id: string): void {
@@ -136,7 +163,8 @@ async function open_sutta_by_uid(uid: string, original_url?: string): Promise<vo
             let message = `Sutta not found in database: ${uid}`;
             if (original_url) {
                 message += `\n\nOriginal URL: ${original_url}\n\nWould you like to open this link in your web browser?`;
-                if (confirm(message)) {
+                const confirmed = await show_external_link_confirmation(original_url);
+                if (confirmed) {
                     window.open(original_url, '_blank');
                 }
             } else {
@@ -185,8 +213,9 @@ async function open_sutta_in_tab(uid: string, original_url?: string): Promise<vo
             let message = `Sutta not found in database: ${uid}`;
             if (original_url) {
                 message += `\n\nOriginal URL: ${original_url}\n\nWould you like to open this link in your web browser?`;
-                if (confirm(message)) {
-                    window.open(original_url, '_blank');
+                const confirmed = await show_external_link_confirmation(original_url);
+                if (confirmed) {
+                    await open_external_url(original_url);
                 }
             } else {
                 alert(message);
@@ -241,11 +270,10 @@ async function open_book_page_in_tab(book_page_url: string): Promise<void> {
 
 /**
  * Shows a confirmation dialog for external links
- * Returns true if user confirms, false otherwise
+ * Returns a Promise that resolves to true if user confirms, false otherwise
+ * NOTE: This function is now imported from confirm_modal.ts
+ * Import statement at top of file: import { show_external_link_confirmation } from "./confirm_modal";
  */
-function show_external_link_confirmation(url: string): boolean {
-    return confirm(`Open this link in your web browser?\n\n${url}`);
-}
 
 /**
  * Handles link clicks and classifies them into:
@@ -307,8 +335,9 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
     // Case 4: External links - show confirmation
     if (href.startsWith('http://') || href.startsWith('https://')) {
         event.preventDefault();
-        if (show_external_link_confirmation(href)) {
-            window.open(href, '_blank');
+        const confirmed = await show_external_link_confirmation(href);
+        if (confirmed) {
+            await open_external_url(href);
         }
         return;
     }
@@ -320,7 +349,7 @@ export {
     open_sutta_by_uid,
     open_sutta_in_tab,
     open_book_page_in_tab,
-    show_external_link_confirmation,
+    open_external_url,
     handle_link_click,
     log_info,
     log_error,

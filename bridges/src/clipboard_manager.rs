@@ -8,6 +8,7 @@ pub mod qobject {
 
         include!("clipboard_manager.h");
         fn copy_with_mime_type_impl(text: &QString, mime_type: &QString);
+        fn open_external_url_impl(url: &QString) -> bool;
     }
 
     extern "RustQt" {

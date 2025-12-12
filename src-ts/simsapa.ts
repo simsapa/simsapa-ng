@@ -1,5 +1,6 @@
 import * as h from "./helpers";
 import { findManager } from "./find";
+import "./confirm_modal";
 
 function attach_link_handlers(): void {
     h.log_info('[simsapa] Attaching link handlers');

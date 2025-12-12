@@ -232,6 +232,37 @@ fn logger_route(req: Json<LoggerRequest>) -> Status {
     Status::Ok
 }
 
+#[derive(Deserialize)]
+struct CopyToClipboardRequest {
+    text: String,
+}
+
+#[post("/copy_to_clipboard", data = "<req>")]
+fn copy_to_clipboard(req: Json<CopyToClipboardRequest>) -> Status {
+    info(&format!("copy_to_clipboard(): text length: {}", req.text.len()));
+    let text_qstring = ffi::QString::from(&req.text);
+    let mime_qstring = ffi::QString::from("text/plain");
+    crate::clipboard_manager::qobject::copy_with_mime_type_impl(&text_qstring, &mime_qstring);
+    Status::Ok
+}
+
+#[derive(Deserialize)]
+struct OpenExternalUrlRequest {
+    url: String,
+}
+
+#[post("/open_external_url", data = "<req>")]
+fn open_external_url(req: Json<OpenExternalUrlRequest>) -> Status {
+    info(&format!("open_external_url(): {}", req.url));
+    let url_qstring = ffi::QString::from(&req.url);
+    let success = crate::clipboard_manager::qobject::open_external_url_impl(&url_qstring);
+    if success {
+        Status::Ok
+    } else {
+        Status::InternalServerError
+    }
+}
+
 #[get("/")]
 fn index() -> RawHtml<String> {
     let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
@@ -487,6 +518,8 @@ pub async extern "C" fn start_webserver() {
             serve_assets,
             serve_book_resources,
             logger_route,
+            copy_to_clipboard,
+            open_external_url,
             lookup_window_query,
             summary_query,
             sutta_menu_action,

@@ -2,6 +2,8 @@
 #include <QGuiApplication>
 #include <QClipboard>
 #include <QMimeData>
+#include <QDesktopServices>
+#include <QUrl>
 
 void copy_with_mime_type_impl(const QString &text, const QString &mimeType)
 {
@@ -22,4 +24,13 @@ void copy_with_mime_type_impl(const QString &text, const QString &mimeType)
     }
     
     clipboard->setMimeData(mimeData);
+}
+
+bool open_external_url_impl(const QString &url)
+{
+    QUrl qurl(url);
+    if (!qurl.isValid()) {
+        return false;
+    }
+    return QDesktopServices::openUrl(qurl);
 }
