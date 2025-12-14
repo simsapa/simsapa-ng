@@ -1,10 +1,20 @@
 all: run
 
+# Detect platform and set Qt path for macOS
+ifeq ($(shell uname),Darwin)
+    QT_PATH ?= $(HOME)/Qt/6.8.3/macos
+    BUILD_CMD = cmake -S . -B ./build/simsapadhammareader/ -DCMAKE_PREFIX_PATH=$(QT_PATH) && cmake --build ./build/simsapadhammareader/
+    RUN_CMD = ./build/simsapadhammareader/simsapadhammareader.app/Contents/MacOS/simsapadhammareader
+else
+    BUILD_CMD = cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/
+    RUN_CMD = ./build/simsapadhammareader/simsapadhammareader
+endif
+
 build:
-	cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/
+	$(BUILD_CMD)
 
 run: build
-	./build/simsapadhammareader/simsapadhammareader
+	$(RUN_CMD)
 
 sass:
 	sass --no-source-map './assets/sass/:./assets/css/'

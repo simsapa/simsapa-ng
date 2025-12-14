@@ -10,6 +10,26 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif()
 
+# Detect and set CMAKE_PREFIX_PATH for Qt6 on macOS
+if (APPLE AND NOT IOS)
+    # Prevent iOS cross-compilation when building for macOS
+    set(CMAKE_OSX_SYSROOT "macosx" CACHE STRING "macOS SDK" FORCE)
+
+    # Try to find Qt6 installation if CMAKE_PREFIX_PATH is not already set
+    if(NOT CMAKE_PREFIX_PATH)
+        if(EXISTS "$ENV{HOME}/Qt/6.8.3/macos")
+            set(CMAKE_PREFIX_PATH "$ENV{HOME}/Qt/6.8.3/macos")
+        elseif(EXISTS "/opt/Qt/6.8.3/macos")
+            set(CMAKE_PREFIX_PATH "/opt/Qt/6.8.3/macos")
+        elseif(EXISTS "/usr/local/Qt/6.8.3/macos")
+            set(CMAKE_PREFIX_PATH "/usr/local/Qt/6.8.3/macos")
+        else()
+            message(WARNING "Qt6 installation not found in standard locations. Please set CMAKE_PREFIX_PATH manually.")
+        endif()
+    endif()
+    message(STATUS "Using CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+endif()
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -41,6 +61,13 @@ elseif (IOS)
     list(APPEND app_components WebView)
     list(APPEND qt_modules Qt::WebView)
 elseif (APPLE)
+    # Explicitly set Rust target for macOS to prevent iOS cross-compilation
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+        set(Rust_CARGO_TARGET aarch64-apple-darwin)
+    else()
+        set(Rust_CARGO_TARGET x86_64-apple-darwin)
+    endif()
+
     set(qmake_path "$ENV{HOME}/Qt/6.8.3/macos/bin/qmake6")
     list(APPEND app_components WebEngineQuick)
     list(APPEND qt_modules Qt::WebEngineQuick)
