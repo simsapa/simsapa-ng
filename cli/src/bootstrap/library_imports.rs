@@ -102,33 +102,22 @@ impl LibraryImportsImporter {
         ));
 
         // Import based on document type
+        let custom_title = entry.title.as_deref();
+
         match doc_type {
             "epub" => {
-                import_epub_to_db(conn, &file_path, &entry.uid)
+                import_epub_to_db(conn, &file_path, &entry.uid, custom_title, None)
                     .with_context(|| format!("Failed to import EPUB: {}", entry.filename))?;
             }
             "html" => {
-                import_html_to_db(conn, &file_path, &entry.uid)
+                import_html_to_db(conn, &file_path, &entry.uid, custom_title, None)
                     .with_context(|| format!("Failed to import HTML: {}", entry.filename))?;
             }
             "pdf" => {
-                import_pdf_to_db(conn, &file_path, &entry.uid)
+                import_pdf_to_db(conn, &file_path, &entry.uid, custom_title, None)
                     .with_context(|| format!("Failed to import PDF: {}", entry.filename))?;
             }
             _ => unreachable!("Unsupported document type should have been caught earlier"),
-        }
-
-        // If a custom title was provided in the TOML, update the book record
-        if let Some(custom_title) = &entry.title {
-            use simsapa_backend::db::appdata_schema::books;
-
-            diesel::update(books::table)
-                .filter(books::uid.eq(&entry.uid))
-                .set(books::title.eq(custom_title))
-                .execute(conn)
-                .with_context(|| format!("Failed to update title for {}", entry.uid))?;
-
-            logger::info(&format!("Updated title to: {}", custom_title));
         }
 
         Ok(())

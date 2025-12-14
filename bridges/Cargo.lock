@@ -524,7 +524,7 @@ dependencies = [
 [[package]]
 name = "cxx-qt"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?branch=simsapa#321b431731576379c17cc22d68ea3c42058c4aa8"
+source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
 dependencies = [
  "cxx",
  "cxx-qt-build",
@@ -537,7 +537,7 @@ dependencies = [
 [[package]]
 name = "cxx-qt-build"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?branch=simsapa#321b431731576379c17cc22d68ea3c42058c4aa8"
+source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
 dependencies = [
  "cc",
  "codespan-reporting 0.11.1",
@@ -554,7 +554,7 @@ dependencies = [
 [[package]]
 name = "cxx-qt-gen"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?branch=simsapa#321b431731576379c17cc22d68ea3c42058c4aa8"
+source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
 dependencies = [
  "clang-format",
  "convert_case",
@@ -568,7 +568,7 @@ dependencies = [
 [[package]]
 name = "cxx-qt-lib"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?branch=simsapa#321b431731576379c17cc22d68ea3c42058c4aa8"
+source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
 dependencies = [
  "bytes",
  "chrono",
@@ -589,7 +589,7 @@ dependencies = [
 [[package]]
 name = "cxx-qt-macro"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?branch=simsapa#321b431731576379c17cc22d68ea3c42058c4aa8"
+source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
 dependencies = [
  "cxx-qt-gen",
  "proc-macro2",
@@ -2378,7 +2378,7 @@ dependencies = [
 [[package]]
 name = "qt-build-utils"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?branch=simsapa#321b431731576379c17cc22d68ea3c42058c4aa8"
+source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
 dependencies = [
  "anyhow",
  "cc",
