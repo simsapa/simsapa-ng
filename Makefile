@@ -49,3 +49,15 @@ appimage-clean:
 
 appimage-rebuild: appimage-clean
 	./build-appimage.sh --clean --force-download
+
+macos: build
+	./build-macos.sh
+
+macos-app: build
+	./build-macos.sh --skip-dmg
+
+macos-clean:
+	rm -rf ./dist Simsapa-*.dmg
+
+macos-rebuild: macos-clean
+	./build-macos.sh --clean
