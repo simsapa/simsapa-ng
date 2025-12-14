@@ -12,8 +12,23 @@ endif()
 
 # Detect and set CMAKE_PREFIX_PATH for Qt6 on macOS
 if (APPLE AND NOT IOS)
-    # Prevent iOS cross-compilation when building for macOS
-    set(CMAKE_OSX_SYSROOT "macosx" CACHE STRING "macOS SDK" FORCE)
+    # Find the macOS SDK path using xcrun (more reliable than hardcoding)
+    execute_process(
+        COMMAND xcrun --sdk macosx --show-sdk-path
+        OUTPUT_VARIABLE MACOS_SDK_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+
+    # Only set CMAKE_OSX_SYSROOT if we found a valid SDK path
+    if(MACOS_SDK_PATH AND EXISTS "${MACOS_SDK_PATH}")
+        set(CMAKE_OSX_SYSROOT "${MACOS_SDK_PATH}" CACHE PATH "macOS SDK path" FORCE)
+        message(STATUS "Using macOS SDK: ${CMAKE_OSX_SYSROOT}")
+    else()
+        message(WARNING "macOS SDK not found via xcrun, using system default")
+        # Unset to use system default
+        unset(CMAKE_OSX_SYSROOT CACHE)
+    endif()
 
     # Try to find Qt6 installation if CMAKE_PREFIX_PATH is not already set
     if(NOT CMAKE_PREFIX_PATH)
