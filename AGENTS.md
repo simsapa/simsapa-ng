@@ -73,13 +73,27 @@ assets/qml/com/profoundlabs/simsapa/qmldir
 
 ## Build/Test Commands
 
+### Development Build
 - **Build:** `make build -B` (CMake + Qt6) or `cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/`
 - **Run:** `make run` or `./build/simsapadhammareader/simsapadhammareader`
 - **TypeScript:** `npx webpack` (builds src-ts/ → assets/js/simsapa.min.js)
 - **Sass:** `make sass` or `sass --no-source-map './assets/sass/:./assets/css/'`
+
+### Distribution Packages
+- **Linux AppImage:** `make appimage -B` (creates Simsapa-*.AppImage)
+  - Clean rebuild: `make appimage-rebuild`
+  - Clean only: `make appimage-clean`
+- **macOS Bundle & DMG:** `make macos -B` (creates .app and .dmg for macOS)
+  - App bundle only: `make macos-app` (skips DMG creation)
+  - Clean only: `make macos-clean`
+  - Clean rebuild: `make macos-rebuild`
+- **Android APK:** Build with Qt Creator
+
+### Testing
 - **QML Tests:** `make qml-test` (runs all QML tests with offscreen platform)
 - **Rust Tests:** `cd backend && cargo test` (runs all backend tests)
 - **Single Test:** `cd backend && cargo test test_name` (replace test_name with specific test function)
+- **All Tests:** `make test` (runs Rust, QML, and JavaScript tests)
 
 ### GUI Testing for Agents
 

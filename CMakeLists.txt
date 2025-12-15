@@ -10,6 +10,46 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif()
 
+# Detect and set CMAKE_PREFIX_PATH for Qt6 on macOS
+if (APPLE AND NOT IOS)
+    # Find the macOS SDK path using xcrun (more reliable than hardcoding)
+    execute_process(
+        COMMAND xcrun --sdk macosx --show-sdk-path
+        OUTPUT_VARIABLE MACOS_SDK_PATH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+
+    # Only set CMAKE_OSX_SYSROOT if we found a valid SDK path
+    if(MACOS_SDK_PATH AND EXISTS "${MACOS_SDK_PATH}")
+        set(CMAKE_OSX_SYSROOT "${MACOS_SDK_PATH}" CACHE PATH "macOS SDK path" FORCE)
+        message(STATUS "Using macOS SDK: ${CMAKE_OSX_SYSROOT}")
+    else()
+        message(WARNING "macOS SDK not found via xcrun, using system default")
+        # Unset to use system default
+        unset(CMAKE_OSX_SYSROOT CACHE)
+    endif()
+
+    # Set macOS deployment target to match the SDK being used
+    # This prevents version mismatch warnings during linking
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
+    message(STATUS "macOS deployment target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
+
+    # Try to find Qt6 installation if CMAKE_PREFIX_PATH is not already set
+    if(NOT CMAKE_PREFIX_PATH)
+        if(EXISTS "$ENV{HOME}/Qt/6.10.1/macos")
+            set(CMAKE_PREFIX_PATH "$ENV{HOME}/Qt/6.10.1/macos")
+        elseif(EXISTS "/opt/Qt/6.10.1/macos")
+            set(CMAKE_PREFIX_PATH "/opt/Qt/6.10.1/macos")
+        elseif(EXISTS "/usr/local/Qt/6.10.1/macos")
+            set(CMAKE_PREFIX_PATH "/usr/local/Qt/6.10.1/macos")
+        else()
+            message(WARNING "Qt6 installation not found in standard locations. Please set CMAKE_PREFIX_PATH manually.")
+        endif()
+    endif()
+    message(STATUS "Using CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+endif()
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -37,11 +77,18 @@ if (ANDROID)
     add_compile_definitions(Q_OS_ANDROID)
 elseif (IOS)
     set(Rust_CARGO_TARGET aarch64-apple-ios)
-    set(qmake_path "$ENV{HOME}/Qt/6.8.3/ios/bin/qmake6")
+    set(qmake_path "$ENV{HOME}/Qt/6.10.1/ios/bin/qmake6")
     list(APPEND app_components WebView)
     list(APPEND qt_modules Qt::WebView)
 elseif (APPLE)
-    set(qmake_path "$ENV{HOME}/Qt/6.8.3/macos/bin/qmake6")
+    # Explicitly set Rust target for macOS to prevent iOS cross-compilation
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "arm64|aarch64")
+        set(Rust_CARGO_TARGET aarch64-apple-darwin)
+    else()
+        set(Rust_CARGO_TARGET x86_64-apple-darwin)
+    endif()
+
+    set(qmake_path "$ENV{HOME}/Qt/6.10.1/macos/bin/qmake6")
     list(APPEND app_components WebEngineQuick)
     list(APPEND qt_modules Qt::WebEngineQuick)
 else()
@@ -151,6 +198,14 @@ target_link_libraries(simsapadhammareader
         simsapa_bridges
         ${qt_modules}
     )
+
+# Link SystemConfiguration framework on macOS (required by Rust dependencies)
+if(APPLE AND NOT IOS)
+    target_link_libraries(simsapadhammareader
+        PUBLIC
+            "-framework SystemConfiguration"
+    )
+endif()
 
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(simsapadhammareader)

@@ -10,6 +10,7 @@ cli/*.xml
 
 # build folders
 build/
+dist/
 target/
 cli/target
 backend/target
@@ -20,6 +21,7 @@ compile_commands.json
 node_modules/
 project_tree.txt
 Simsapa-*.AppImage
+Simsapa-*.dmg
 appimage-tools/
 Simsapa.AppDir/
 

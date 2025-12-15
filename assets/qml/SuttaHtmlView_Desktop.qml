@@ -30,12 +30,19 @@ Item {
     }
 
     function set_properties_from_data_json() {
-        let data = JSON.parse(root.data_json);
-        root.item_uid = data.item_uid;
-        root.table_name = data.table_name;
-        root.sutta_ref = data.sutta_ref;
-        root.sutta_title = data.sutta_title;
-        root.anchor = data.anchor || "";
+        if (!root.data_json || root.data_json.length === 0) {
+            return;
+        }
+        try {
+            let data = JSON.parse(root.data_json);
+            root.item_uid = data.item_uid || "";
+            root.table_name = data.table_name || "";
+            root.sutta_ref = data.sutta_ref || "";
+            root.sutta_title = data.sutta_title || "";
+            root.anchor = data.anchor || "";
+        } catch (e) {
+            console.error("Failed to parse data_json:", e, "data_json:", root.data_json);
+        }
     }
 
     function show_transient_message(msg: string) {
@@ -127,6 +134,18 @@ Item {
                 })();
             `;
             web.runJavaScript(js);
+        }
+    }
+
+    Component.onCompleted: {
+        root.set_properties_from_data_json();
+        // Both "dict_words" and "dpd_headwords" should load dictionary content
+        if (root.table_name === "dict_words" || root.table_name === "dpd_headwords") {
+            root.load_word_uid(root.item_uid);
+        } else if (root.table_name === "book_spine_items") {
+            root.load_book_spine_uid(root.item_uid);
+        } else {
+            root.load_sutta_uid(root.item_uid);
         }
     }
 
