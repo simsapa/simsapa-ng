@@ -291,36 +291,36 @@ create_dmg() {
     print_status "  App bundle: $APP_NAME.app"
     print_status "  Output: $dmg_name"
 
-    # Run create-dmg with explicit command construction to avoid quoting issues
+    # Run create-dmg with a simple, direct approach
     print_status "Running create-dmg..."
     local dmg_exit_code=0
     
-    # Build the command step by step
-    local cmd="create-dmg --volname \"$APP_NAME\" --window-size 800 400 --icon-size 100"
-    cmd="$cmd --icon \"$APP_NAME.app\" 200 190"
-    cmd="$cmd --hide-extension \"$APP_NAME.app\""
-    cmd="$cmd --app-drop-link 600 185"
+    # Try with minimal options first - create-dmg is very particular about argument order
+    print_status "Attempting DMG creation with simple options..."
     
-    # Add optional parameters
+    # Execute create-dmg directly (not via eval) with minimal parameters
+    # Note: Some versions of create-dmg have issues with certain parameters
+    set +e  # Don't exit on error
+    
+    # Try the simplest possible invocation first
+    print_status "Trying basic create-dmg invocation..."
     if [ -n "$icon_file" ]; then
-        cmd="$cmd --volicon \"$icon_file\""
-    fi
-    
-    if [ -n "$background_image" ]; then
-        cmd="$cmd --background \"$background_image\""
-    fi
-    
-    # Add output and source
-    cmd="$cmd \"$dmg_name\" \"$dmg_temp\""
-    
-    print_status "Executing: $cmd"
-    
-    # Execute the command
-    if eval "$cmd" 2>&1 | grep -v "Device not configured"; then
-        print_status "create-dmg command completed"
+        create-dmg \
+            --volname "$APP_NAME" \
+            --volicon "$icon_file" \
+            "$dmg_name" \
+            "$dmg_temp" 2>&1 | grep -v "Device not configured" || dmg_exit_code=$?
     else
-        dmg_exit_code=$?
-        print_warning "create-dmg returned exit code: $dmg_exit_code (may be normal)"
+        create-dmg \
+            --volname "$APP_NAME" \
+            "$dmg_name" \
+            "$dmg_temp" 2>&1 | grep -v "Device not configured" || dmg_exit_code=$?
+    fi
+    
+    set -e  # Re-enable exit on error
+    
+    if [ $dmg_exit_code -ne 0 ]; then
+        print_warning "create-dmg returned exit code: $dmg_exit_code (this is often normal)"
     fi
     
     # Note: create-dmg often returns non-zero even on success due to Finder automation issues
@@ -343,9 +343,28 @@ create_dmg() {
             print_status "✓ DMG file exists and may be usable"
         fi
     else
-        print_error "✗ DMG file creation failed - file not found"
-        print_error "create-dmg exit code: $dmg_exit_code"
-        exit 1
+        print_warning "create-dmg failed, trying fallback method with hdiutil..."
+        
+        # Fallback: Create a simple DMG using hdiutil
+        print_status "Creating basic DMG with hdiutil..."
+        
+        # Create DMG from the temp directory
+        if hdiutil create -volname "$APP_NAME" -srcfolder "$dmg_temp" -ov -format UDZO "$dmg_name"; then
+            rm -rf "$dmg_temp"
+            
+            if [ -f "$dmg_name" ]; then
+                print_status "✓ Basic DMG created successfully: $dmg_name"
+                ls -lh "$dmg_name"
+                print_warning "Note: DMG created with hdiutil (no custom styling)"
+            else
+                print_error "✗ DMG creation failed even with fallback method"
+                exit 1
+            fi
+        else
+            print_error "✗ Both create-dmg and hdiutil failed to create DMG"
+            rm -rf "$dmg_temp"
+            exit 1
+        fi
     fi
 }
 
