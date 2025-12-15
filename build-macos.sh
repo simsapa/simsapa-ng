@@ -285,54 +285,66 @@ create_dmg() {
         icon_file="assets/icons/appicons/simsapa.icns"
     fi
 
-    # Build create-dmg command
-    local create_dmg_cmd=(
-        create-dmg
-        --volname "$APP_NAME"
-        --window-pos 200 120
-        --window-size 800 400
-        --icon-size 100
-        --icon "$APP_NAME.app" 200 190
-        --hide-extension "$APP_NAME.app"
-        --app-drop-link 600 185
-    )
+    # Build create-dmg command - use simpler approach without arrays to avoid quoting issues
+    print_status "Preparing DMG creation with settings:"
+    print_status "  Volume name: $APP_NAME"
+    print_status "  App bundle: $APP_NAME.app"
+    print_status "  Output: $dmg_name"
 
-    # Add optional parameters if files exist
+    # Run create-dmg with explicit command construction to avoid quoting issues
+    print_status "Running create-dmg..."
+    local dmg_exit_code=0
+    
+    # Build the command step by step
+    local cmd="create-dmg --volname \"$APP_NAME\" --window-size 800 400 --icon-size 100"
+    cmd="$cmd --icon \"$APP_NAME.app\" 200 190"
+    cmd="$cmd --hide-extension \"$APP_NAME.app\""
+    cmd="$cmd --app-drop-link 600 185"
+    
+    # Add optional parameters
     if [ -n "$icon_file" ]; then
-        create_dmg_cmd+=(--volicon "$icon_file")
+        cmd="$cmd --volicon \"$icon_file\""
     fi
-
+    
     if [ -n "$background_image" ]; then
-        create_dmg_cmd+=(--background "$background_image")
+        cmd="$cmd --background \"$background_image\""
     fi
-
-    # Add output DMG and source folder
-    create_dmg_cmd+=("$dmg_name" "$dmg_temp")
-
-    # Run create-dmg
-    if "${create_dmg_cmd[@]}" 2>&1 | grep -v "Device not configured"; then
-        print_status "DMG created successfully: $dmg_name"
+    
+    # Add output and source
+    cmd="$cmd \"$dmg_name\" \"$dmg_temp\""
+    
+    print_status "Executing: $cmd"
+    
+    # Execute the command
+    if eval "$cmd" 2>&1 | grep -v "Device not configured"; then
+        print_status "create-dmg command completed"
     else
-        print_warning "create-dmg had some warnings, but DMG may still be created"
+        dmg_exit_code=$?
+        print_warning "create-dmg returned exit code: $dmg_exit_code (may be normal)"
     fi
-
+    
+    # Note: create-dmg often returns non-zero even on success due to Finder automation issues
+    # So we'll check if the DMG file exists rather than relying on exit code
+    
     # Clean up temp directory
     rm -rf "$dmg_temp"
 
-    # Verify DMG was created
+    # Verify DMG was created and is valid
     if [ -f "$dmg_name" ]; then
-        print_status "✓ DMG file created successfully"
+        print_status "✓ DMG file created: $dmg_name"
         ls -lh "$dmg_name"
         
         # Test if DMG is valid
         print_status "Verifying DMG integrity..."
         if hdiutil verify "$dmg_name" > /dev/null 2>&1; then
-            print_status "✓ DMG integrity verified"
+            print_status "✓ DMG integrity verified - DMG created successfully!"
         else
             print_warning "DMG integrity check returned warnings (this may be normal)"
+            print_status "✓ DMG file exists and may be usable"
         fi
     else
-        print_error "✗ DMG file creation failed"
+        print_error "✗ DMG file creation failed - file not found"
+        print_error "create-dmg exit code: $dmg_exit_code"
         exit 1
     fi
 }
