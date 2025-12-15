@@ -1061,12 +1061,14 @@ ${query_text}`;
                                             tab_data.web_item_key = key;
                                             tab_model.set(tab.index, tab_data);
                                             tab.web_item_key = key;
-                                            sutta_html_view_layout.add_item(tab_data);
+                                            // Add the item but don't show it yet (show_item = false)
+                                            // We'll set current_key explicitly below to ensure it happens after the item is fully added
+                                            sutta_html_view_layout.add_item(tab_data, false);
                                         } else {
                                             logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
                                         }
                                     }
-                                    // show the sutta tab
+                                    // show the sutta tab - set current_key after add_item to ensure the item is fully created
                                     sutta_html_view_layout.current_key = tab.web_item_key;
 
                                     // Scroll the focused tab into view
