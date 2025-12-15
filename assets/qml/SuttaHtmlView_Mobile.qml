@@ -151,6 +151,18 @@ Item {
         }
     }
 
+    Component.onCompleted: {
+        root.set_properties_from_data_json();
+        // Both "dict_words" and "dpd_headwords" should load dictionary content
+        if (root.table_name === "dict_words" || root.table_name === "dpd_headwords") {
+            root.load_word_uid(root.item_uid);
+        } else if (root.table_name === "book_spine_items") {
+            root.load_book_spine_uid(root.item_uid);
+        } else {
+            root.load_sutta_uid(root.item_uid);
+        }
+    }
+
     // Load the sutta or dictionary word when the Loader in SuttaHtmlView updates data_json
     onData_jsonChanged: function() {
         root.set_properties_from_data_json();

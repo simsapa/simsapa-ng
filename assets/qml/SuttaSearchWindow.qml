@@ -52,7 +52,9 @@ ApplicationWindow {
         function onUpdateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string) {
             /* logger.log("onUpdateWindowTitle():", item_uid, sutta_ref, sutta_title); */
             const current_key = sutta_html_view_layout.current_key;
-            if (sutta_html_view_layout.items_map[current_key].get_data_value('item_uid') === item_uid) {
+            // Check if the item exists in items_map before accessing it
+            if (current_key && sutta_html_view_layout.items_map[current_key] &&
+                sutta_html_view_layout.items_map[current_key].get_data_value('item_uid') === item_uid) {
                 root.update_window_title(item_uid, sutta_ref, sutta_title);
             }
         }
@@ -432,7 +434,8 @@ ${query_text}`;
             }
             if (tab_data.web_item_key == "") {
                 tab_data.web_item_key = root.generate_key();
-                sutta_html_view_layout.add_item(tab_data, false);
+                // Show the item if this is the first tab being added (focus_on_new will be true for the blank initial tab)
+                sutta_html_view_layout.add_item(tab_data, tab_data.focus_on_new);
             }
             tabs_results_model.append(tab_data);
             return tabs_results_model.count-1;
