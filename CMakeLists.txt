@@ -30,6 +30,11 @@ if (APPLE AND NOT IOS)
         unset(CMAKE_OSX_SYSROOT CACHE)
     endif()
 
+    # Set macOS deployment target to match the SDK being used
+    # This prevents version mismatch warnings during linking
+    set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version" FORCE)
+    message(STATUS "macOS deployment target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
+
     # Try to find Qt6 installation if CMAKE_PREFIX_PATH is not already set
     if(NOT CMAKE_PREFIX_PATH)
         if(EXISTS "$ENV{HOME}/Qt/6.10.1/macos")
@@ -193,6 +198,14 @@ target_link_libraries(simsapadhammareader
         simsapa_bridges
         ${qt_modules}
     )
+
+# Link SystemConfiguration framework on macOS (required by Rust dependencies)
+if(APPLE AND NOT IOS)
+    target_link_libraries(simsapadhammareader
+        PUBLIC
+            "-framework SystemConfiguration"
+    )
+endif()
 
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(simsapadhammareader)

@@ -1,0 +1,16 @@
+# Cargo configuration for macOS builds
+
+[target.aarch64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-mmacosx-version-min=11.0",
+]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+    "-C", "link-arg=-mmacosx-version-min=11.0",
+]
+
+[env]
+# Set minimum macOS deployment target for all builds
+# This ensures Rust dependencies are built with the correct version
+MACOSX_DEPLOYMENT_TARGET = "11.0"
