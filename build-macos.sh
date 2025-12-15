@@ -291,40 +291,48 @@ create_dmg() {
     print_status "  App bundle: $APP_NAME.app"
     print_status "  Output: $dmg_name"
 
-    # Run create-dmg with a simple, direct approach
+    # Run create-dmg with the correct syntax
+    # Note: Using sindresorhus/create-dmg which has a simpler syntax
     print_status "Running create-dmg..."
     local dmg_exit_code=0
     
-    # Try with minimal options first - create-dmg is very particular about argument order
-    print_status "Attempting DMG creation with simple options..."
-    
-    # Execute create-dmg directly (not via eval) with minimal parameters
-    # Note: Some versions of create-dmg have issues with certain parameters
     set +e  # Don't exit on error
     
-    # Try the simplest possible invocation first
-    print_status "Trying basic create-dmg invocation..."
+    # The sindresorhus/create-dmg syntax is: create-dmg [options] <app> [destination]
+    # It automatically creates a DMG in the current directory or specified destination
+    print_status "Creating DMG with sindresorhus/create-dmg..."
+    
+    local app_in_temp="$dmg_temp/$APP_NAME.app"
+    
+    # Use --overwrite to replace existing DMG, --dmg-title for volume name
     if [ -n "$icon_file" ]; then
         create-dmg \
-            --volname "$APP_NAME" \
-            --volicon "$icon_file" \
-            "$dmg_name" \
-            "$dmg_temp" 2>&1 | grep -v "Device not configured" || dmg_exit_code=$?
+            --overwrite \
+            --dmg-title "$APP_NAME" \
+            "$app_in_temp" \
+            . 2>&1 | grep -v "Device not configured" || dmg_exit_code=$?
     else
         create-dmg \
-            --volname "$APP_NAME" \
-            "$dmg_name" \
-            "$dmg_temp" 2>&1 | grep -v "Device not configured" || dmg_exit_code=$?
+            --overwrite \
+            --dmg-title "$APP_NAME" \
+            "$app_in_temp" \
+            . 2>&1 | grep -v "Device not configured" || dmg_exit_code=$?
     fi
     
     set -e  # Re-enable exit on error
     
-    if [ $dmg_exit_code -ne 0 ]; then
-        print_warning "create-dmg returned exit code: $dmg_exit_code (this is often normal)"
+    # The created DMG will be named automatically, so we need to rename it
+    # sindresorhus/create-dmg creates: AppName 1.2.3.dmg
+    local auto_dmg_name="${APP_NAME} ${APP_VERSION#v}.dmg"
+    
+    if [ -f "$auto_dmg_name" ]; then
+        print_status "Renaming DMG to standard format..."
+        mv "$auto_dmg_name" "$dmg_name"
     fi
     
-    # Note: create-dmg often returns non-zero even on success due to Finder automation issues
-    # So we'll check if the DMG file exists rather than relying on exit code
+    if [ $dmg_exit_code -ne 0 ]; then
+        print_warning "create-dmg returned exit code: $dmg_exit_code (checking if DMG was created anyway)"
+    fi
     
     # Clean up temp directory
     rm -rf "$dmg_temp"
@@ -344,6 +352,14 @@ create_dmg() {
         fi
     else
         print_warning "create-dmg failed, trying fallback method with hdiutil..."
+        
+        # Recreate temp directory if it was deleted
+        if [ ! -d "$dmg_temp" ]; then
+            print_status "Recreating temporary directory for hdiutil..."
+            mkdir -p "$dmg_temp"
+            cp -R "$app_bundle" "$dmg_temp/"
+            ln -s /Applications "$dmg_temp/Applications"
+        fi
         
         # Fallback: Create a simple DMG using hdiutil
         print_status "Creating basic DMG with hdiutil..."
