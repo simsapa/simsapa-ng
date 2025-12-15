@@ -100,14 +100,14 @@ find_macdeployqt() {
     if command -v macdeployqt &> /dev/null; then
         macdeployqt_path="$(which macdeployqt)"
     # Try to find in standard Qt installation locations
-    elif [ -f "$HOME/Qt/6.8.3/macos/bin/macdeployqt" ]; then
-        macdeployqt_path="$HOME/Qt/6.8.3/macos/bin/macdeployqt"
-    elif [ -f "/opt/Qt/6.8.3/macos/bin/macdeployqt" ]; then
-        macdeployqt_path="/opt/Qt/6.8.3/macos/bin/macdeployqt"
-    elif [ -f "/usr/local/Qt/6.8.3/macos/bin/macdeployqt" ]; then
-        macdeployqt_path="/usr/local/Qt/6.8.3/macos/bin/macdeployqt"
+    elif [ -f "$HOME/Qt/6.10.1/macos/bin/macdeployqt" ]; then
+        macdeployqt_path="$HOME/Qt/6.10.1/macos/bin/macdeployqt"
+    elif [ -f "/opt/Qt/6.10.1/macos/bin/macdeployqt" ]; then
+        macdeployqt_path="/opt/Qt/6.10.1/macos/bin/macdeployqt"
+    elif [ -f "/usr/local/Qt/6.10.1/macos/bin/macdeployqt" ]; then
+        macdeployqt_path="/usr/local/Qt/6.10.1/macos/bin/macdeployqt"
     else
-        print_error "macdeployqt not found. Please ensure Qt 6.8.3 is installed."
+        print_error "macdeployqt not found. Please ensure Qt 6.10.1 is installed."
         exit 1
     fi
 
