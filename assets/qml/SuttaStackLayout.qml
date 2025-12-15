@@ -38,7 +38,7 @@ StackLayout {
     }
 
     function add_item(tab_data: var, show_item = true) {
-        logger.log("add_item() called - item_uid:", tab_data.item_uid, "web_item_key:", tab_data.web_item_key, "show_item:", show_item);
+        /* logger.log("add_item() called - item_uid:", tab_data.item_uid, "web_item_key:", tab_data.web_item_key, "show_item:", show_item); */
         let key = tab_data.web_item_key;
         if (root.items_map.hasOwnProperty(key)) {
             logger.error("Item with key", key, "already exists");
@@ -53,9 +53,7 @@ StackLayout {
             anchor: tab_data.anchor || "",
         };
         let data_json = JSON.stringify(data);
-        logger.log("  -> Creating component with data_json:", data_json);
         let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json });
-        logger.log("  -> Component created, children count:", root.children.length);
 
         comp.page_loaded.connect(function() { root.page_loaded(); });
 
@@ -67,12 +65,9 @@ StackLayout {
         // Width/height dimension bindings removed to prevent layout jitter during transitions.
         // Visibility control now relies solely on visible, should_be_visible, and enabled properties.
         root.items_map[key] = comp;
-        logger.log("  -> Added to items_map, total items:", Object.keys(root.items_map).length);
         if (show_item) {
-            logger.log("  -> Setting current_key to:", key);
             root.current_key = key;
         }
-        logger.log("  -> add_item completed");
     }
 
     function get_item(key) {
@@ -103,32 +98,22 @@ StackLayout {
         }
     }
 
-    onCurrent_keyChanged: {
-        logger.log("SuttaStackLayout.current_key changed to:", root.current_key);
-        update_currentIndex();
-    }
-    onCurrentIndexChanged: {
-        logger.log("SuttaStackLayout.currentIndex changed to:", root.currentIndex);
-        update_current_key();
-    }
+    onCurrent_keyChanged: update_currentIndex()
+    onCurrentIndexChanged: update_current_key()
 
     function update_currentIndex() {
-        logger.log("update_currentIndex() called - current_key:", root.current_key);
         if (!root.items_map[root.current_key] || root.current_key === "") {
-            logger.log("  -> No item in items_map or empty key, setting currentIndex to -1");
             root.currentIndex = -1;
             return;
         }
 
         let item = root.items_map[root.current_key];
-        logger.log("  -> Found item in items_map");
 
         // Parse item data safely - data_json might not be set yet during initialization
         if (item.data_json && item.data_json.length > 0) {
             try {
                 let item_data = JSON.parse(item.data_json);
                 if (item_data.item_uid !== "Sutta" && item_data.item_uid !== "Word") {
-                    logger.log("  -> Emitting update_window_title for:", item_data.item_uid);
                     SuttaBridge.emit_update_window_title(item_data.item_uid, item_data.sutta_ref, item_data.sutta_title);
                 }
             } catch (e) {
@@ -136,19 +121,15 @@ StackLayout {
             }
         }
 
-        logger.log("  -> Searching for item in children, count:", root.children.length);
         let found = false;
         for (let i = 0; i < root.children.length; i++) {
-            logger.log("    -> Child", i, "item_key:", root.children[i].item_key);
             if (root.children[i].item_key === root.current_key) {
-                logger.log("  -> Found at index:", i);
                 root.currentIndex = i;
                 found = true;
                 break;
             }
         }
         if (!found) {
-            logger.log("  -> Item not found in children, setting currentIndex to -1");
             root.currentIndex = -1;
         }
     }

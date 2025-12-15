@@ -2,8 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import com.profoundlabs.simsapa
-
 TabButton {
     id: control
 
@@ -21,8 +19,6 @@ TabButton {
 
     signal pinToggled(bool pinned)
     signal closeClicked()
-
-    Logger { id: logger }
 
     // Alias to allow triggering close from outside (e.g., keyboard shortcut)
     property alias close_btn: close_btn
@@ -63,22 +59,8 @@ TabButton {
         }
     }
 
-    onClicked: {
-        logger.log("SuttaTabButton clicked - index:", control.index, "item_uid:", control.item_uid, "checked:", control.checked);
-    }
-
-    onCheckedChanged: {
-        logger.log("SuttaTabButton checked changed to:", control.checked, "index:", control.index, "item_uid:", control.item_uid);
-    }
-
-    onFocusChanged: {
-        logger.log("SuttaTabButton focus changed to:", control.focus, "index:", control.index, "item_uid:", control.item_uid, "web_item_key:", control.web_item_key);
-    }
-
     Component.onCompleted: {
-        logger.log("SuttaTabButton completed - index:", control.index, "item_uid:", control.item_uid, "focus_on_new:", control.focus_on_new);
         if (control.focus_on_new) {
-            logger.log("  -> Clicking tab due to focus_on_new");
             control.click();
         }
     }

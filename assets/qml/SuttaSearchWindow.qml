@@ -393,14 +393,11 @@ ${query_text}`;
             tabs_translations_model.clear();
 
             let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.item_uid));
-            logger.log("Adding translation tabs, count:", translations_data.length);
 
             for (let i=0; i < translations_data.length; i++) {
                 let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
-                logger.log("  -> Translation", i, ":", tr_tab_data.item_uid, "web_item_key:", tr_tab_data.web_item_key);
                 tabs_translations_model.append(tr_tab_data);
             }
-            logger.log("Translation tabs added, model count:", tabs_translations_model.count);
 
             if (action_open_find_in_sutta_results.checked &&
                 root.last_search_area === "Suttas" &&
@@ -1051,41 +1048,31 @@ ${query_text}`;
                                 Layout.alignment: Qt.AlignBottom
 
                                 function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
-                                    logger.log("tab_focus_changed() called - index:", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key, "focus:", tab.focus, "checked:", tab.checked);
+                                    /* logger.log("tab_focus_changed() called - index:", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key, "focus:", tab.focus, "checked:", tab.checked); */
                                     // On macOS, tabs don't get focus when clicked, so we also accept checked tabs
                                     if (!tab.focus && !tab.checked) {
-                                        logger.log("  -> tab doesn't have focus or checked state, returning");
                                         return;
                                     }
                                     // If this tab doesn't have a webview associated yet, create it.
                                     if (tab.web_item_key == "") {
-                                        logger.log("  -> Creating new webview for tab");
                                         let key = root.generate_key();
                                         tab.web_item_key = key;
-                                        logger.log("  -> Generated key:", key);
 
                                         // Update the key in both the model and the tab's property
                                         if (tab_model.count > tab.index) {
                                             let tab_data = tab_model.get(tab.index);
-                                            logger.log("  -> Tab data before update:", JSON.stringify(tab_data));
                                             tab_data.web_item_key = key;
                                             tab_model.set(tab.index, tab_data);
                                             tab.web_item_key = key;
-                                            logger.log("  -> Calling add_item with key:", key);
                                             // Add the item but don't show it yet (show_item = false)
                                             // We'll set current_key explicitly below to ensure it happens after the item is fully added
                                             sutta_html_view_layout.add_item(tab_data, false);
-                                            logger.log("  -> add_item completed");
                                         } else {
                                             logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
                                         }
-                                    } else {
-                                        logger.log("  -> Tab already has webview with key:", tab.web_item_key);
                                     }
                                     // show the sutta tab - set current_key after add_item to ensure the item is fully created
-                                    logger.log("  -> Setting current_key to:", tab.web_item_key, "current value is:", sutta_html_view_layout.current_key);
                                     sutta_html_view_layout.current_key = tab.web_item_key;
-                                    logger.log("  -> current_key now set to:", sutta_html_view_layout.current_key);
 
                                     // Scroll the focused tab into view
                                     suttas_tab_bar.scroll_tab_into_view(tab);
