@@ -393,11 +393,14 @@ ${query_text}`;
             tabs_translations_model.clear();
 
             let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.item_uid));
+            logger.log("Adding translation tabs, count:", translations_data.length);
 
             for (let i=0; i < translations_data.length; i++) {
                 let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
+                logger.log("  -> Translation", i, ":", tr_tab_data.item_uid, "web_item_key:", tr_tab_data.web_item_key);
                 tabs_translations_model.append(tr_tab_data);
             }
+            logger.log("Translation tabs added, model count:", tabs_translations_model.count);
 
             if (action_open_find_in_sutta_results.checked &&
                 root.last_search_area === "Suttas" &&
