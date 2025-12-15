@@ -30,12 +30,19 @@ Item {
     }
 
     function set_properties_from_data_json() {
-        let data = JSON.parse(root.data_json);
-        root.item_uid = data.item_uid;
-        root.table_name = data.table_name;
-        root.sutta_ref = data.sutta_ref;
-        root.sutta_title = data.sutta_title;
-        root.anchor = data.anchor || "";
+        if (!root.data_json || root.data_json.length === 0) {
+            return;
+        }
+        try {
+            let data = JSON.parse(root.data_json);
+            root.item_uid = data.item_uid || "";
+            root.table_name = data.table_name || "";
+            root.sutta_ref = data.sutta_ref || "";
+            root.sutta_title = data.sutta_title || "";
+            root.anchor = data.anchor || "";
+        } catch (e) {
+            console.error("Failed to parse data_json:", e, "data_json:", root.data_json);
+        }
     }
 
     function show_transient_message(msg: string) {

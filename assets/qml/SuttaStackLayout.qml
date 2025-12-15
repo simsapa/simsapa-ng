@@ -108,10 +108,17 @@ StackLayout {
         }
 
         let item = root.items_map[root.current_key];
-        let item_data = JSON.parse(item.data_json);
 
-        if (item_data.item_uid !== "Sutta" && item_data.item_uid !== "Word") {
-            SuttaBridge.emit_update_window_title(item_data.item_uid, item_data.sutta_ref, item_data.sutta_title);
+        // Parse item data safely - data_json might not be set yet during initialization
+        if (item.data_json && item.data_json.length > 0) {
+            try {
+                let item_data = JSON.parse(item.data_json);
+                if (item_data.item_uid !== "Sutta" && item_data.item_uid !== "Word") {
+                    SuttaBridge.emit_update_window_title(item_data.item_uid, item_data.sutta_ref, item_data.sutta_title);
+                }
+            } catch (e) {
+                logger.error("Failed to parse item.data_json in update_currentIndex:", e);
+            }
         }
 
         let found = false;
