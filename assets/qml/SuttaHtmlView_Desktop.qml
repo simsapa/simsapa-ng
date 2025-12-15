@@ -22,6 +22,8 @@ Item {
 
     signal page_loaded()
 
+    Logger { id: logger }
+
     Timer {
         id: scroll_timer
         interval: 300
@@ -64,11 +66,14 @@ Item {
     }
 
     function load_sutta_uid(uid) {
+        logger.log("load_sutta_uid() called with uid:", uid, "window_id:", root.window_id);
         if (uid == "Sutta") {
             // Initial blank page
+            logger.log("  -> Blank page, setting uid to empty");
             uid = "";
         }
         var html = SuttaBridge.get_sutta_html(root.window_id, uid);
+        logger.log("  -> Got HTML, length:", html.length, "loading into webview");
         web.loadHtml(html);
     }
 
@@ -138,7 +143,9 @@ Item {
     }
 
     Component.onCompleted: {
+        logger.log("SuttaHtmlView_Desktop Component.onCompleted - visible:", root.visible, "data_json length:", root.data_json.length);
         root.set_properties_from_data_json();
+        logger.log("  -> After set_properties: item_uid:", root.item_uid, "table_name:", root.table_name);
         // Both "dict_words" and "dpd_headwords" should load dictionary content
         if (root.table_name === "dict_words" || root.table_name === "dpd_headwords") {
             root.load_word_uid(root.item_uid);
@@ -151,7 +158,9 @@ Item {
 
     // Load the sutta or dictionary word when the Loader in SuttaHtmlView updates data_json
     onData_jsonChanged: function() {
+        logger.log("SuttaHtmlView_Desktop onData_jsonChanged - visible:", root.visible, "data_json:", root.data_json);
         root.set_properties_from_data_json();
+        logger.log("  -> After set_properties: item_uid:", root.item_uid, "table_name:", root.table_name);
         // Both "dict_words" and "dpd_headwords" should load dictionary content
         if (root.table_name === "dict_words" || root.table_name === "dpd_headwords") {
             root.load_word_uid(root.item_uid);
@@ -160,6 +169,10 @@ Item {
         } else {
             root.load_sutta_uid(root.item_uid);
         }
+    }
+
+    onVisibleChanged: {
+        logger.log("SuttaHtmlView_Desktop visibility changed to:", root.visible, "item_uid:", root.item_uid);
     }
 
     onIs_darkChanged: function() {
