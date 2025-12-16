@@ -18,7 +18,8 @@ Android:
 
 ### Prerequisites
 
-- Qt 6.10.1
+- MacOS (.dmg): Qt 6.10.1
+- Linux (.Appimage) and Android (.apk): Qt 6.8.3
 - Rust (latest stable)
 - CMake 3.24+
 - Platform-specific build tools

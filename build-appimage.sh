@@ -191,10 +191,10 @@ create_appimage() {
         qt6_path="$QT_BASE_DIR"
         print_status "Using Qt6 from QT_BASE_DIR environment variable: $qt6_path"
     # Try to find Qt6 installation in standard locations
-    elif [ -d "$HOME/Qt/6.10.1/gcc_64" ]; then
-        qt6_path="$HOME/Qt/6.10.1/gcc_64"
-    elif [ -d "/opt/Qt/6.10.1/gcc_64" ]; then
-        qt6_path="/opt/Qt/6.10.1/gcc_64"
+    elif [ -d "$HOME/Qt/6.8.3/gcc_64" ]; then
+        qt6_path="$HOME/Qt/6.8.3/gcc_64"
+    elif [ -d "/opt/Qt/6.8.3/gcc_64" ]; then
+        qt6_path="/opt/Qt/6.8.3/gcc_64"
     elif command -v qmake6 &> /dev/null; then
         qt6_path="$(dirname $(dirname $(which qmake6)))"
     else

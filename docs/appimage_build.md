@@ -5,8 +5,8 @@ This document describes how to build an AppImage for the Simsapa application.
 ## Prerequisites
 
 1. **Qt6 Installation**: Ensure Qt6 is installed with WebEngine support
-   - Default path: `~/Qt/6.10.1/gcc_64/`
-   - Alternative: `/opt/Qt/6.10.1/gcc_64/`
+   - Default path: `~/Qt/6.8.3/gcc_64/`
+   - Alternative: `/opt/Qt/6.8.3/gcc_64/`
    - Or set `QT_BASE_DIR` environment variable
 
 2. **System Dependencies**:

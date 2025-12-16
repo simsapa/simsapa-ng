@@ -51,6 +51,9 @@ project-tree:
 bootstrap:
 	cd cli/ && cargo build && cargo run -- bootstrap --write-new-dotenv
 
+cargo-clean-build:
+	cd backend && cargo clean && cargo build && cd ../bridges && cargo clean && cargo build && cd ../cli && cargo clean && cargo build && cd ..
+
 appimage: build
 	./build-appimage.sh
 
