@@ -27,6 +27,10 @@ struct Chapter {
 /// * `db_conn` - Mutable reference to SQLite database connection
 /// * `html_path` - Path to the HTML file to import
 /// * `book_uid` - Unique identifier for this book
+/// * `custom_title` - Optional custom title to override HTML metadata
+/// * `custom_author` - Optional custom author to override HTML metadata
+/// * `custom_language` - Optional custom language to override HTML metadata
+/// * `custom_enable_embedded_css` - Optional custom enable_embedded_css setting (defaults to true if None)
 ///
 /// # Returns
 /// * `Result<()>` - Ok if successful, Err with details if failed
@@ -36,6 +40,8 @@ pub fn import_html_to_db(
     book_uid: &str,
     custom_title: Option<&str>,
     custom_author: Option<&str>,
+    custom_language: Option<&str>,
+    custom_enable_embedded_css: Option<bool>,
 ) -> Result<()> {
     tracing::info!("Importing HTML from {:?} with UID: {}", html_path, book_uid);
 
@@ -67,7 +73,15 @@ pub fn import_html_to_db(
         .filter(|s| !s.trim().is_empty())
         .map(|s| s.to_string())
         .unwrap_or(extracted_author);
-    let language = metadata.get("language").cloned().unwrap_or_default();
+
+    let extracted_language = metadata.get("language").cloned().unwrap_or_default();
+
+    let language = custom_language
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_language);
+
+    let enable_embedded_css = custom_enable_embedded_css.unwrap_or(true);
 
     tracing::info!(
         "HTML metadata - Title: {}, Author: {}, Language: {}",
@@ -105,7 +119,7 @@ pub fn import_html_to_db(
         },
         file_path: Some(&file_path_str),
         metadata_json: Some(&metadata_json),
-        enable_embedded_css: true, // Default to enabled for HTML
+        enable_embedded_css,
         toc_json: None, // HTML files don't have TOC support yet
     };
 

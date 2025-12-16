@@ -26,7 +26,7 @@ fn test_epub_custom_title_author_override() {
     // Import with custom title and author
     let custom_title = Some("My Custom Title");
     let custom_author = Some("My Custom Author");
-    let result = app_data.import_epub_to_db(&epub_path, book_uid, custom_title, custom_author);
+    let result = app_data.import_epub_to_db(&epub_path, book_uid, custom_title, custom_author, None, None);
     assert!(result.is_ok(), "EPUB import failed: {:?}", result.err());
 
     // Verify custom metadata was used
@@ -63,7 +63,7 @@ fn test_epub_extracted_metadata_when_custom_empty() {
     let epub_path = Path::new("tests/data/BuddhistMonasticCode_251013.epub");
 
     // Import with no custom metadata (None)
-    let result = app_data.import_epub_to_db(&epub_path, book_uid, None, None);
+    let result = app_data.import_epub_to_db(&epub_path, book_uid, None, None, None, None);
     assert!(result.is_ok(), "EPUB import failed: {:?}", result.err());
 
     // Verify extracted metadata was used
@@ -103,7 +103,7 @@ fn test_pdf_custom_title_author_override() {
     // Import with custom title and author
     let custom_title = Some("My Custom PDF Title");
     let custom_author = Some("My Custom PDF Author");
-    let result = app_data.import_pdf_to_db(&pdf_path, book_uid, custom_title, custom_author);
+    let result = app_data.import_pdf_to_db(&pdf_path, book_uid, custom_title, custom_author, None, None);
     assert!(result.is_ok(), "PDF import failed: {:?}", result.err());
 
     // Verify custom metadata was used

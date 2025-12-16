@@ -1489,7 +1489,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author)
+                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author, None, None)
                 }
                 "pdf" => {
                     let progress_msg = QString::from("Importing PDF...");
@@ -1497,7 +1497,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author)
+                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author, None, None)
                 }
                 "html" => {
                     let progress_msg = QString::from("Importing HTML...");
@@ -1507,7 +1507,7 @@ impl qobject::SuttaBridge {
 
                     // TODO: Pass split_tag parameter when html_import supports it
                     // For now, HTML is imported as a single spine item
-                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author)
+                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author, None, None)
                 }
                 _ => {
                     let error_msg = format!("Unknown document type: {}", doc_type);

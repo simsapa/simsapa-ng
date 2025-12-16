@@ -14,6 +14,10 @@ use crate::helpers::compact_rich_text;
 /// * `db_conn` - Mutable reference to SQLite database connection
 /// * `pdf_path` - Path to the PDF file to import
 /// * `book_uid` - Unique identifier for this book
+/// * `custom_title` - Optional custom title to override PDF metadata
+/// * `custom_author` - Optional custom author to override PDF metadata
+/// * `custom_language` - Optional custom language to override PDF metadata
+/// * `custom_enable_embedded_css` - Optional custom enable_embedded_css setting (defaults to true if None)
 ///
 /// # Returns
 /// * `Result<()>` - Ok if successful, Err with details if failed
@@ -23,6 +27,8 @@ pub fn import_pdf_to_db(
     book_uid: &str,
     custom_title: Option<&str>,
     custom_author: Option<&str>,
+    custom_language: Option<&str>,
+    custom_enable_embedded_css: Option<bool>,
 ) -> Result<()> {
     tracing::info!("Importing PDF from {:?} with UID: {}", pdf_path, book_uid);
 
@@ -55,9 +61,16 @@ pub fn import_pdf_to_db(
         .map(|s| s.to_string())
         .unwrap_or(extracted_author);
 
-    let language = extract_pdf_metadata(&doc, b"Language")
+    let extracted_language = extract_pdf_metadata(&doc, b"Language")
         .or_else(|| extract_pdf_metadata(&doc, b"Lang"))
         .unwrap_or_else(|| String::new());
+
+    let language = custom_language
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_language);
+
+    let enable_embedded_css = custom_enable_embedded_css.unwrap_or(true);
 
     tracing::info!("PDF metadata - Title: {}, Author: {}, Language: {}", title, author, language);
 
@@ -89,7 +102,7 @@ pub fn import_pdf_to_db(
         language: if language.is_empty() { None } else { Some(&language) },
         file_path: Some(&file_path_str),
         metadata_json: None, // PDFs don't have structured metadata like EPUBs
-        enable_embedded_css: true, // Default to enabled for PDFs
+        enable_embedded_css,
         toc_json: None, // PDFs don't have TOC support yet
     };
 
@@ -106,6 +119,7 @@ pub fn import_pdf_to_db(
 
     // Insert single spine item (PDFs are treated as single documents)
     // content_html is None for PDFs - the API will serve the PDF viewer template
+    // For PDFs, the spine_item should use the book's title and language, not the extracted metadata
     let spine_item_uid = format!("{}.0", book_uid);
     let new_spine_item = NewBookSpineItem {
         book_id,
@@ -113,8 +127,8 @@ pub fn import_pdf_to_db(
         spine_item_uid: &spine_item_uid,
         spine_index: 0,
         resource_path: "document.pdf",
-        title: Some(&title),
-        language: if language.is_empty() { None } else { Some(&language) },
+        title: Some(&title), // Use book's title (which includes custom or extracted)
+        language: if language.is_empty() { None } else { Some(&language) }, // Use book's language (which includes custom or extracted)
         content_html: None,
         content_plain: Some(&content_plain),
     };

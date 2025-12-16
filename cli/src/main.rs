@@ -293,7 +293,7 @@ fn import_epub(db_path: &Path, epub_path: &Path, book_uid: &str) -> Result<(), S
 
     // Import the EPUB
     println!("Importing EPUB...");
-    import_epub_to_db(&mut conn, epub_path, book_uid, None, None)
+    import_epub_to_db(&mut conn, epub_path, book_uid, None, None, None, None)
         .map_err(|e| format!("Failed to import EPUB: {}", e))?;
 
     println!("Successfully imported EPUB with UID: {}", book_uid);
@@ -361,7 +361,7 @@ fn import_html(db_path: &Path, html_path: &Path, book_uid: &str) -> Result<(), S
 
     // Import the HTML
     println!("Importing HTML...");
-    import_html_to_db(&mut conn, html_path, book_uid, None, None)
+    import_html_to_db(&mut conn, html_path, book_uid, None, None, None, None)
         .map_err(|e| format!("Failed to import HTML: {}", e))?;
 
     println!("Successfully imported HTML with UID: {}", book_uid);

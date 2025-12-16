@@ -56,6 +56,10 @@ fn convert_nav_point_to_json(nav_point: &epub::doc::NavPoint) -> NavPointJson {
 /// * `db_conn` - Mutable reference to SQLite database connection
 /// * `epub_path` - Path to the EPUB file to import
 /// * `book_uid` - Unique identifier for this book (e.g., "ess")
+/// * `custom_title` - Optional custom title to override EPUB metadata
+/// * `custom_author` - Optional custom author to override EPUB metadata
+/// * `custom_language` - Optional custom language to override EPUB metadata
+/// * `custom_enable_embedded_css` - Optional custom enable_embedded_css setting (defaults to true if None)
 ///
 /// # Returns
 /// * `Result<()>` - Ok if successful, Err with details if failed
@@ -65,6 +69,8 @@ pub fn import_epub_to_db(
     book_uid: &str,
     custom_title: Option<&str>,
     custom_author: Option<&str>,
+    custom_language: Option<&str>,
+    custom_enable_embedded_css: Option<bool>,
 ) -> Result<()> {
     tracing::info!("Importing EPUB from {:?} with UID: {}", epub_path, book_uid);
 
@@ -96,11 +102,18 @@ pub fn import_epub_to_db(
         .map(|s| s.to_string())
         .unwrap_or(extracted_author);
 
-    let language = doc
+    let extracted_language = doc
         .mdata("language")
         .or_else(|| doc.mdata("dc:language"))
         .map(|item| item.value.clone())
         .unwrap_or_else(|| String::new());
+
+    let language = custom_language
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| s.to_string())
+        .unwrap_or(extracted_language);
+
+    let enable_embedded_css = custom_enable_embedded_css.unwrap_or(true);
 
     // Serialize metadata to JSON
     let mut metadata_items = Vec::new();
@@ -146,7 +159,7 @@ pub fn import_epub_to_db(
         language: if language.is_empty() { None } else { Some(&language) },
         file_path: Some(&file_path_str),
         metadata_json: Some(&metadata_json),
-        enable_embedded_css: true,
+        enable_embedded_css,
         toc_json: toc_json.as_deref(),
     };
 

@@ -22,6 +22,15 @@ struct LibraryImportEntry {
     /// Optional custom title to override metadata from the file
     #[serde(default)]
     title: Option<String>,
+    /// Optional custom author to override metadata from the file
+    #[serde(default)]
+    author: Option<String>,
+    /// Optional custom language to override metadata from the file
+    #[serde(default)]
+    language: Option<String>,
+    /// Optional custom enable_embedded_css setting (defaults to true if not specified)
+    #[serde(default)]
+    enable_embedded_css: Option<bool>,
 }
 
 /// Root structure of library-imports.toml
@@ -103,18 +112,21 @@ impl LibraryImportsImporter {
 
         // Import based on document type
         let custom_title = entry.title.as_deref();
+        let custom_author = entry.author.as_deref();
+        let custom_language = entry.language.as_deref();
+        let custom_enable_embedded_css = entry.enable_embedded_css;
 
         match doc_type {
             "epub" => {
-                import_epub_to_db(conn, &file_path, &entry.uid, custom_title, None)
+                import_epub_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
                     .with_context(|| format!("Failed to import EPUB: {}", entry.filename))?;
             }
             "html" => {
-                import_html_to_db(conn, &file_path, &entry.uid, custom_title, None)
+                import_html_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
                     .with_context(|| format!("Failed to import HTML: {}", entry.filename))?;
             }
             "pdf" => {
-                import_pdf_to_db(conn, &file_path, &entry.uid, custom_title, None)
+                import_pdf_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
                     .with_context(|| format!("Failed to import PDF: {}", entry.filename))?;
             }
             _ => unreachable!("Unsupported document type should have been caught earlier"),
@@ -264,6 +276,9 @@ filename = "books/test3.pdf"
         assert_eq!(config.books[0].uid, "test-book-1");
         assert_eq!(config.books[0].filename, "books/test1.epub");
         assert_eq!(config.books[0].title, None);
+        assert_eq!(config.books[0].author, None);
+        assert_eq!(config.books[0].language, None);
+        assert_eq!(config.books[0].enable_embedded_css, None);
         assert_eq!(config.books[1].uid, "test-book-2");
         assert_eq!(config.books[1].filename, "books/test2.html");
         assert_eq!(config.books[1].title, None);
@@ -294,5 +309,43 @@ title = "Another Custom Title"
         assert_eq!(config.books[1].uid, "test-book-2");
         assert_eq!(config.books[1].filename, "books/test2.pdf");
         assert_eq!(config.books[1].title, Some("Another Custom Title".to_string()));
+    }
+
+    #[test]
+    fn test_parse_toml_config_with_all_custom_fields() {
+        let toml_content = r#"
+[[books]]
+uid = "test-book-1"
+filename = "books/test1.pdf"
+title = "Custom Title"
+author = "Custom Author"
+language = "en"
+enable_embedded_css = false
+
+[[books]]
+uid = "test-book-2"
+filename = "books/test2.epub"
+title = "Another Title"
+language = "pi"
+"#;
+
+        let config: LibraryImportsConfig = toml::from_str(toml_content).unwrap();
+        assert_eq!(config.books.len(), 2);
+
+        // First book with all fields
+        assert_eq!(config.books[0].uid, "test-book-1");
+        assert_eq!(config.books[0].filename, "books/test1.pdf");
+        assert_eq!(config.books[0].title, Some("Custom Title".to_string()));
+        assert_eq!(config.books[0].author, Some("Custom Author".to_string()));
+        assert_eq!(config.books[0].language, Some("en".to_string()));
+        assert_eq!(config.books[0].enable_embedded_css, Some(false));
+
+        // Second book with partial fields
+        assert_eq!(config.books[1].uid, "test-book-2");
+        assert_eq!(config.books[1].filename, "books/test2.epub");
+        assert_eq!(config.books[1].title, Some("Another Title".to_string()));
+        assert_eq!(config.books[1].author, None);
+        assert_eq!(config.books[1].language, Some("pi".to_string()));
+        assert_eq!(config.books[1].enable_embedded_css, None); // Should default to true when None
     }
 }
