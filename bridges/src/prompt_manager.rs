@@ -278,8 +278,9 @@ async fn handle_deepseek_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = deepseek::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = deepseek::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build DeepSeek client: {}", e))?;
 
@@ -308,8 +309,9 @@ async fn handle_gemini_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = gemini::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = gemini::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build Gemini client: {}", e))?;
 
@@ -349,8 +351,9 @@ async fn handle_xai_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = xai::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = xai::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build xAI client: {}", e))?;
 
@@ -379,8 +382,9 @@ async fn handle_anthropic_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = anthropic::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = anthropic::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build Anthropic client: {}", e))?;
 
@@ -409,8 +413,9 @@ async fn handle_openai_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = openai::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = openai::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build OpenAI client: {}", e))?;
 
@@ -439,8 +444,9 @@ async fn handle_openrouter_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = openrouter::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = openrouter::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build OpenRouter client: {}", e))?;
 
@@ -469,8 +475,9 @@ async fn handle_mistral_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = mistral::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = mistral::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build Mistral client: {}", e))?;
 
@@ -499,8 +506,9 @@ async fn handle_huggingface_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = huggingface::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = huggingface::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build HuggingFace client: {}", e))?;
 
@@ -529,8 +537,9 @@ async fn handle_perplexity_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = perplexity::Client::builder(api_key)
-        .custom_client(http_client)
+    let client = perplexity::Client::<reqwest::Client>::builder()
+        .http_client(http_client)
+        .api_key(api_key)
         .build()
         .map_err(|e| format!("Failed to build Perplexity client: {}", e))?;
 
