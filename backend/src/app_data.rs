@@ -896,6 +896,12 @@ impl AppData {
             get_macos_memory_gb()
         }
 
+        #[cfg(target_os = "ios")]
+        {
+            // FIXME: implement get_ios_memory_gb()
+            Some(8)
+        }
+
         #[cfg(target_os = "windows")]
         {
             get_windows_memory_gb()
