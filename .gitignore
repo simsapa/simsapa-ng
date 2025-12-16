@@ -25,6 +25,8 @@ Simsapa-*.dmg
 appimage-tools/
 Simsapa.AppDir/
 
+.qtcreator/CMakeLists.txt.user
+
 simsapa-legacy/
 
 # Emacs temp files
