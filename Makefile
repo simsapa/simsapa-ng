@@ -23,7 +23,10 @@ sass-watch:
 	sass --no-source-map --watch './assets/sass/:./assets/css/'
 
 count-code:
-	tokei --type Rust,QML,C++,TypeScript,Javascript,CMake --compact --exclude assets/qml/data/ --exclude assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml --exclude assets/js/simsapa.min.js --exclude assets/js/vendor/ --exclude assets/dpd-res/ --exclude backend/src/lookup.rs . | grep -vE '===|---'
+	tokei --types Rust,QML,C++,TypeScript,Javascript,CMake --compact --exclude assets/qml/data/ --exclude assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml --exclude assets/js/simsapa.min.js --exclude assets/js/vendor/ --exclude assets/pdf-viewer/ --exclude assets/dpd-res/ --exclude backend/src/lookup.rs --exclude "*/tests/" --exclude "tst_*.qml" . | grep -vE '===|---'
+
+count-code-pie:
+	tokei -o json --types Rust,QML,C++,TypeScript,Javascript,CMake --exclude assets/qml/data/ --exclude assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml --exclude assets/js/simsapa.min.js --exclude assets/js/vendor/ --exclude assets/pdf-viewer/ --exclude assets/dpd-res/ --exclude backend/src/lookup.rs --exclude "*/tests/" --exclude "tst_*.qml" . | tokei-pie
 
 simsapa.min.js:
 	npx webpack
