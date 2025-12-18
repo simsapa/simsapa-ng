@@ -813,13 +813,13 @@ Item {
 
 
                                 translations_data: {
-                                    logger.log(`🔍 AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`);
+                                    /* logger.log(`AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`); */
                                     try {
                                         let data = JSON.parse(message_item.responses_json || "[]");
-                                        logger.log(`📊 Parsed translations_data:`, JSON.stringify(data));
+                                        /* logger.log(`Parsed translations_data:`, JSON.stringify(data)); */
                                         return data;
                                     } catch (e) {
-                                        logger.error(`❌ Error parsing responses_json for message ${message_item.index}:`, e);
+                                        logger.error(`Error parsing responses_json for message ${message_item.index}:`, e);
                                         return [];
                                     }
                                 }

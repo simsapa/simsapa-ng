@@ -30,9 +30,9 @@ ColumnLayout {
 
     // Debug logging when translations_data changes
     onTranslations_dataChanged: {
-        logger.log(`🔄 AssistantResponses: translations_data changed for paragraph ${paragraph_index}`);
+        /* logger.log(`AssistantResponses: translations_data changed for paragraph ${paragraph_index}`); */
         if (translations_data) {
-            logger.log(`📊 New data has ${translations_data.length} translations:`);
+            /* logger.log(`New data has ${translations_data.length} translations:`); */
             for (var i = 0; i < translations_data.length; i++) {
                 var item = translations_data[i];
                 if (item) {
@@ -42,7 +42,7 @@ ColumnLayout {
                 }
             }
         } else {
-            logger.log(`❌ translations_data is null/undefined`);
+            logger.error(`translations_data is null/undefined`);
         }
     }
 

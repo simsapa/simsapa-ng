@@ -1048,14 +1048,27 @@ ${query_text}`;
                                 Layout.fillHeight: true
                                 Layout.alignment: Qt.AlignBottom
 
-                                function tab_focus_changed(tab: SuttaTabButton, tab_model: ListModel) {
-                                    /* logger.log("tab_focus_changed() called - index:", tab.index, "item_uid:", tab.item_uid, "web_item_key:", tab.web_item_key, "focus:", tab.focus, "checked:", tab.checked); */
-                                    // On macOS, tabs don't get focus when clicked, so we also accept checked tabs
-                                    if (!tab.focus && !tab.checked) {
+                                function tab_checked_changed(tab: SuttaTabButton, tab_model: ListModel) {
+                                    // Called when a tab's checked state changes (user clicked on a tab)
+                                    // Parameters: tab index, item_uid, web_item_key, checked state, current_key
+
+                                    // Only proceed if the tab is checked (selected)
+                                    // When switching tabs: previous tab becomes unchecked (early return here),
+                                    // new tab becomes checked (continue processing)
+                                    if (!tab.checked) {
                                         return;
                                     }
-                                    // If this tab doesn't have a webview associated yet, create it.
+
+                                    // Prevent redundant processing if this tab's webview is already showing
+                                    // This can happen if the same tab is clicked multiple times
+                                    if (tab.web_item_key !== "" && sutta_html_view_layout.current_key === tab.web_item_key) {
+                                        return;
+                                    }
+
+                                    // If this tab doesn't have a webview associated yet, create one
+                                    // This happens on first click of a tab (web_item_key is empty string)
                                     if (tab.web_item_key == "") {
+                                        // Generate unique key for this webview
                                         let key = root.generate_key();
                                         tab.web_item_key = key;
 
@@ -1065,18 +1078,23 @@ ${query_text}`;
                                             tab_data.web_item_key = key;
                                             tab_model.set(tab.index, tab_data);
                                             tab.web_item_key = key;
-                                            // Add the item but don't show it yet (show_item = false)
+                                            // Add the webview but don't show it yet (show_item = false)
                                             // We'll set current_key explicitly below to ensure it happens after the item is fully added
                                             sutta_html_view_layout.add_item(tab_data, false);
+                                            // New webview created and added to layout
                                         } else {
-                                            logger.error("Out of bounds error:", "tab_model.count", tab_model.count, "tab_model.get(tab.index)", tab.index);
+                                            logger.error("Out of bounds error: tab_model.count " + tab_model.count + " tab.index " + tab.index);
                                         }
                                     }
-                                    // show the sutta tab - set current_key after add_item to ensure the item is fully created
+                                    // If tab already has a web_item_key, we're switching to an existing webview
+
+                                    // Show the tab's webview by setting current_key
+                                    // This is called after add_item to ensure the item is fully created
                                     sutta_html_view_layout.current_key = tab.web_item_key;
 
-                                    // Scroll the focused tab into view
+                                    // Scroll the checked tab into view in the tab bar
                                     suttas_tab_bar.scroll_tab_into_view(tab);
+                                    // Tab switch completed: webview shown, tab scrolled into view
                                 }
 
                                 function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
@@ -1226,14 +1244,8 @@ ${query_text}`;
                                                     root.focus_on_tab_with_id_key(new_tab_data.id_key);
                                                 }
                                                 onCloseClicked: suttas_tab_bar.remove_tab_and_webview(pinned_tab_btn, tabs_pinned_model)
-                                                onFocusChanged: suttas_tab_bar.tab_focus_changed(pinned_tab_btn, tabs_pinned_model)
-                                                onCheckedChanged: {
-                                                    // On macOS, TabButton doesn't get focus when clicked, only checked state changes
-                                                    // So we also trigger tab_focus_changed when the tab becomes checked
-                                                    if (pinned_tab_btn.checked) {
-                                                        suttas_tab_bar.tab_focus_changed(pinned_tab_btn, tabs_pinned_model);
-                                                    }
-                                                }
+                                                // Handle tab selection via checked state (works on both Linux and macOS)
+                                                onCheckedChanged: suttas_tab_bar.tab_checked_changed(pinned_tab_btn, tabs_pinned_model)
                                             }
                                         }
 
@@ -1276,14 +1288,8 @@ ${query_text}`;
                                                         suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
                                                     }
                                                 }
-                                                onFocusChanged: suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model)
-                                                onCheckedChanged: {
-                                                    // On macOS, TabButton doesn't get focus when clicked, only checked state changes
-                                                    // So we also trigger tab_focus_changed when the tab becomes checked
-                                                    if (results_tab_btn.checked) {
-                                                        suttas_tab_bar.tab_focus_changed(results_tab_btn, tabs_results_model);
-                                                    }
-                                                }
+                                                // Handle tab selection via checked state (works on both Linux and macOS)
+                                                onCheckedChanged: suttas_tab_bar.tab_checked_changed(results_tab_btn, tabs_results_model)
                                                 onItem_uidChanged: {
                                                     // Only update if the new item_uid is not a placeholder (blank tab)
                                                     if (results_tab_btn.item_uid !== "Sutta" && results_tab_btn.item_uid !== "Word" && results_tab_btn.web_item_key !== "" && sutta_html_view_layout.has_item(results_tab_btn.web_item_key)) {
@@ -1315,14 +1321,8 @@ ${query_text}`;
                                                     root.focus_on_tab_with_id_key(new_tab_data.id_key);
                                                 }
                                                 onCloseClicked: suttas_tab_bar.remove_tab_and_webview(translations_tab_btn, tabs_translations_model)
-                                                onFocusChanged: suttas_tab_bar.tab_focus_changed(translations_tab_btn, tabs_translations_model)
-                                                onCheckedChanged: {
-                                                    // On macOS, TabButton doesn't get focus when clicked, only checked state changes
-                                                    // So we also trigger tab_focus_changed when the tab becomes checked
-                                                    if (translations_tab_btn.checked) {
-                                                        suttas_tab_bar.tab_focus_changed(translations_tab_btn, tabs_translations_model);
-                                                    }
-                                                }
+                                                // Handle tab selection via checked state (works on both Linux and macOS)
+                                                onCheckedChanged: suttas_tab_bar.tab_checked_changed(translations_tab_btn, tabs_translations_model)
                                             }
                                         }
 
