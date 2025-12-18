@@ -37,6 +37,9 @@ pub mod qobject {
 
         include!("system_palette.h");
         fn get_system_palette_json() -> QString;
+
+        include!("utils.h");
+        fn copy_content_uri_to_temp_file(content_uri: &QString) -> QString;
     }
 
     impl cxx_qt::Threading for SuttaBridge{}
@@ -237,6 +240,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn extract_document_metadata(self: &SuttaBridge, file_path: &QString) -> QString;
+
+        #[qinvokable]
+        fn copy_content_uri_to_temp(self: &SuttaBridge, content_uri: &QString) -> QString;
+
+        #[qinvokable]
+        fn delete_temp_import_folder(self: &SuttaBridge) -> bool;
 
         #[qinvokable]
         fn is_spine_item_pdf(self: &SuttaBridge, spine_item_uid: &QString) -> bool;
@@ -1420,6 +1429,62 @@ impl qobject::SuttaBridge {
                     "author": ""
                 });
                 QString::from(json.to_string())
+            }
+        }
+    }
+
+    /// Copy content from a content:// URI to a temporary file (Android only)
+    /// Returns the path to the temporary file, or empty string on error
+    pub fn copy_content_uri_to_temp(&self, content_uri: &QString) -> QString {
+        let uri_str = content_uri.to_string();
+
+        // Only handle content:// URIs
+        if !uri_str.starts_with("content://") {
+            return QString::from("");
+        }
+
+        info(&format!("Copying content URI to temp file: {}", uri_str));
+
+        // Call the C++ function to handle the actual copying
+        let temp_path = qobject::copy_content_uri_to_temp_file(content_uri);
+
+        if temp_path.is_empty() {
+            error("Failed to copy content URI to temp file");
+        } else {
+            info(&format!("Successfully copied to: {}", temp_path.to_string()));
+        }
+
+        temp_path
+    }
+
+    /// Delete the temporary import folder and all its contents
+    /// Returns true if successful, false otherwise
+    pub fn delete_temp_import_folder(&self) -> bool {
+        let temp_dir = std::env::temp_dir().join("simsapa-imports");
+
+        // Use try_exists() instead of exists() to avoid Android permission crashes
+        match temp_dir.try_exists() {
+            Ok(true) => {
+                // Folder exists, try to remove it
+                match fs::remove_dir_all(&temp_dir) {
+                    Ok(_) => {
+                        info(&format!("Deleted temp import folder: {}", temp_dir.display()));
+                        true
+                    }
+                    Err(e) => {
+                        error(&format!("Failed to delete temp import folder {}: {}", temp_dir.display(), e));
+                        false
+                    }
+                }
+            }
+            Ok(false) => {
+                // Folder doesn't exist, consider success
+                true
+            }
+            Err(e) => {
+                // Error checking if folder exists, log and return false
+                error(&format!("Failed to check if temp import folder exists: {}", e));
+                false
             }
         }
     }

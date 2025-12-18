@@ -225,6 +225,72 @@ QString copy_file(QString source_file, QString destination_file) {
     return QString("");
 }
 
+QString copy_content_uri_to_temp_file(const QString& content_uri) {
+#ifdef Q_OS_ANDROID
+    // Only handle content:// URIs
+    if (!content_uri.startsWith("content://")) {
+        return QString("");
+    }
+
+    // Extract filename from URI (last part after /)
+    QString filename = content_uri.section('/', -1);
+    if (filename.isEmpty()) {
+        filename = "imported_file";
+    }
+
+    // Create temp directory
+    QString temp_dir = QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/simsapa-imports";
+    QDir dir;
+    if (!dir.mkpath(temp_dir)) {
+        qWarning() << "Failed to create temp directory:" << temp_dir;
+        return QString("");
+    }
+
+    QString temp_path = temp_dir + "/" + filename;
+
+    // Open the content URI for reading
+    QFile source(content_uri);
+    if (!source.open(QIODevice::ReadOnly)) {
+        qWarning() << "Failed to open content URI:" << content_uri << "Error:" << source.errorString();
+        return QString("");
+    }
+
+    // Open destination file for writing
+    QFile dest(temp_path);
+    if (!dest.open(QIODevice::WriteOnly)) {
+        qWarning() << "Failed to create temp file:" << temp_path << "Error:" << dest.errorString();
+        source.close();
+        return QString("");
+    }
+
+    // Copy data
+    QByteArray data = source.readAll();
+    if (data.isEmpty() && source.error() != QFile::NoError) {
+        qWarning() << "Failed to read from content URI:" << source.errorString();
+        source.close();
+        dest.close();
+        return QString("");
+    }
+
+    qint64 written = dest.write(data);
+    source.close();
+    dest.close();
+
+    if (written != data.size()) {
+        qWarning() << "Failed to write all data to temp file";
+        QFile::remove(temp_path);
+        return QString("");
+    }
+
+    qInfo() << "Copied content URI to temp file:" << temp_path;
+    return temp_path;
+#else
+    // On non-Android platforms, content:// URIs shouldn't occur
+    Q_UNUSED(content_uri);
+    return QString("");
+#endif
+}
+
 QString copy_apk_assets_to_internal_storage(QString apk_asset_path /* = QString("") */) {
     QString assets_storage = get_app_assets_path();
     QString ret_msg = QString("");

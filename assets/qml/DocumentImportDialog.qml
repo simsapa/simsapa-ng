@@ -59,7 +59,18 @@ Dialog {
 
         onAccepted: {
             const file_url = selectedFile.toString().replace("file://", "");
-            const file_path = decodeURIComponent(file_url);
+            let file_path = decodeURIComponent(file_url);
+
+            // On Android, if we got a content:// URI, copy it to a temp file
+            if (Qt.platform.os === "android" && file_path.startsWith("content://")) {
+                const temp_path = SuttaBridge.copy_content_uri_to_temp(file_path);
+                if (temp_path === "") {
+                    status_label.text = "Error: Failed to access file. Please try again.";
+                    return;
+                }
+                file_path = temp_path;
+            }
+
             root.selected_file_path = file_path;
             root.document_type = root.detect_document_type(file_path);
 
@@ -295,6 +306,9 @@ Dialog {
             progress_bar.visible = false;
             status_label.text = message;
 
+            // Clean up temp folder after import (success or failure)
+            SuttaBridge.delete_temp_import_folder();
+
             if (success) {
                 root.import_completed(true, message);
                 root.close()
@@ -306,5 +320,9 @@ Dialog {
 
     onAboutToShow: {
         reset_form();
+    }
+
+    onRejected: {
+        SuttaBridge.delete_temp_import_folder();
     }
 }

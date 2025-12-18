@@ -198,6 +198,14 @@ Item {
         return '{"title": "", "author": ""}';
     }
 
+    function copy_content_uri_to_temp(content_uri: string): string {
+        return '';
+    }
+
+    function delete_temp_import_folder(): bool {
+        return false;
+    }
+
     function is_spine_item_pdf(spine_item_uid: string): bool {
         return false;
     }
