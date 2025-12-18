@@ -2,7 +2,7 @@ all: run
 
 # Detect platform and set Qt path for macOS
 ifeq ($(shell uname),Darwin)
-    QT_PATH ?= $(HOME)/Qt/6.10.1/macos
+    QT_PATH ?= $(HOME)/Qt/6.9.3/macos
     BUILD_CMD = cmake -S . -B ./build/simsapadhammareader/ -DCMAKE_PREFIX_PATH=$(QT_PATH) && cmake --build ./build/simsapadhammareader/
     RUN_CMD = ./build/simsapadhammareader/simsapadhammareader.app/Contents/MacOS/simsapadhammareader
 else

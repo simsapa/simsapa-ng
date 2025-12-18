@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 /* Based on Fusion style.
- * ~/Qt/6.8.3/gcc_64/qml/QtQuick/Controls/Fusion/MenuItem.qml
+ * ~/Qt/6.9.3/gcc_64/qml/QtQuick/Controls/Fusion/MenuItem.qml
  * Added the feature to show the text of shortcut sequences.
  */
 
