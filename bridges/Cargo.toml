@@ -18,9 +18,9 @@ crate-type = ["staticlib", "rlib"]
 simsapa_backend = { path = "../backend" }
 cxx = "1.0.148"
 # simsapa/cxx-qt simsapa branch, fix the commit rev. The branch = "simsapa" always checks for latest rev.
-cxx-qt = { git = "https://github.com/simsapa/cxx-qt.git", rev = "73b136857e3c19e1758eb9e044e84cfe8ef771a6" }
-cxx-qt-lib = { git = "https://github.com/simsapa/cxx-qt.git", rev = "73b136857e3c19e1758eb9e044e84cfe8ef771a6", features = ["full"] }
-qt-build-utils = { git = "https://github.com/simsapa/cxx-qt.git", rev = "73b136857e3c19e1758eb9e044e84cfe8ef771a6" }
+cxx-qt = { git = "https://github.com/simsapa/cxx-qt.git", rev = "8a597414623c704a465f55369ff168f01ca4e93f" }
+cxx-qt-lib = { git = "https://github.com/simsapa/cxx-qt.git", rev = "8a597414623c704a465f55369ff168f01ca4e93f", features = ["full"] }
+qt-build-utils = { git = "https://github.com/simsapa/cxx-qt.git", rev = "8a597414623c704a465f55369ff168f01ca4e93f" }
 rocket = { version = "0.5", features = ["json"] }
 rocket_cors = "0.6.0"
 serde = { version = "1.0", features = ["derive"] }
