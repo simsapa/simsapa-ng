@@ -58,7 +58,8 @@ Dialog {
         nameFilters: ["Documents (*.epub *.pdf *.html *.htm)", "EPUB files (*.epub)", "PDF files (*.pdf)", "HTML files (*.html *.htm)"]
 
         onAccepted: {
-            const file_path = selectedFile.toString().replace("file://", "");
+            const file_url = selectedFile.toString().replace("file://", "");
+            const file_path = decodeURIComponent(file_url);
             root.selected_file_path = file_path;
             root.document_type = root.detect_document_type(file_path);
 
