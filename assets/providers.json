@@ -8,12 +8,12 @@
         "models": [
             {
                 "model_name": "gemini-2.5-pro",
-                "enabled": true,
+                "enabled": false,
                 "removable": false
             },
             {
                 "model_name": "gemini-2.5-flash",
-                "enabled": false,
+                "enabled": true,
                 "removable": false
             }
         ]
@@ -47,7 +47,7 @@
             },
             {
                 "model_name": "google/gemma-3-27b-it:free",
-                "enabled": true,
+                "enabled": false,
                 "removable": true
             },
             {
@@ -62,12 +62,12 @@
             },
             {
                 "model_name": "meta-llama/llama-3.1-405b-instruct:free",
-                "enabled": true,
+                "enabled": false,
                 "removable": true
             },
             {
                 "model_name": "mistralai/mistral-small-3.2-24b-instruct:free",
-                "enabled": true,
+                "enabled": false,
                 "removable": true
             }
         ]
