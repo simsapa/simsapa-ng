@@ -73,9 +73,10 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
         static ref re_direct_uid: Regex = Regex::new(r"^(dn|mn|sn|an|pv|vv|vism|iti|kp|khp|snp|th|ud|uda|dhp)(\d+[\.-]\d+[\d\.-]*)$").unwrap();
         // Special case for thag/thig with dots (e.g. thag20.1, thig1.10)
         static ref re_thag_thig_uid: Regex = Regex::new(r"^(thag|thig)(\d+\.\d+)$").unwrap();
-        // Match book UIDs: alphanumeric with optional dots for spine items
-        // e.g. bmc, bmc.0, bmc.1, test-book, test-book.5
-        static ref re_book_uid: Regex = Regex::new(r"^[a-z][a-z0-9_-]*(?:\.\d+)?$").unwrap();
+        // Match book UIDs with chapter/section numbers: e.g. bmc.0, bmc.1, test-book.5, my_book.10
+        // Require a literal dot to avoid matching regular English words like 'heard', 'karan'
+        // Format: alphanumeric with optional hyphens/underscores, followed by dot and digits
+        static ref re_book_uid: Regex = Regex::new(r"^[a-z][a-z0-9_-]*\.\d+$").unwrap();
         // Sutta abbreviation prefixes to exclude from book UID matching
         static ref re_sutta_prefix: Regex = Regex::new(r"^(dn|mn|sn|an|pv|vv|vism|iti|kp|khp|snp|th|ud|uda|dhp|thag|thig)\d").unwrap();
     }
@@ -2355,18 +2356,33 @@ mod tests {
 
     #[test]
     fn test_query_text_to_uid_book_uids() {
-        // Test that book UIDs are recognized and converted to uid: format
-        assert_eq!(query_text_to_uid_field_query("bmc"), "uid:bmc");
+        // Test that book UIDs with chapter numbers are recognized and converted to uid: format
+        // Book UIDs MUST contain a dot to avoid matching regular English words
         assert_eq!(query_text_to_uid_field_query("bmc.0"), "uid:bmc.0");
         assert_eq!(query_text_to_uid_field_query("bmc.1"), "uid:bmc.1");
-        assert_eq!(query_text_to_uid_field_query("test-book"), "uid:test-book");
         assert_eq!(query_text_to_uid_field_query("test-book.5"), "uid:test-book.5");
-        assert_eq!(query_text_to_uid_field_query("my_book"), "uid:my_book");
         assert_eq!(query_text_to_uid_field_query("my_book.10"), "uid:my_book.10");
+
+        // Book UIDs without chapter numbers are NOT automatically converted
+        // to avoid matching regular words - users must use explicit uid: prefix
+        assert_eq!(query_text_to_uid_field_query("bmc"), "bmc");
+        assert_eq!(query_text_to_uid_field_query("test-book"), "test-book");
+        assert_eq!(query_text_to_uid_field_query("my_book"), "my_book");
 
         // Ensure sutta patterns are NOT matched as book UIDs
         assert_eq!(query_text_to_uid_field_query("mn8"), "uid:mn8");
         assert_eq!(query_text_to_uid_field_query("dn1"), "uid:dn1");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_regular_words_not_converted() {
+        // Test that regular English words are NOT converted to uid: format
+        // This prevents false matches that break fulltext search
+        assert_eq!(query_text_to_uid_field_query("heard"), "heard");
+        assert_eq!(query_text_to_uid_field_query("karan"), "karan");
+        assert_eq!(query_text_to_uid_field_query("meditation"), "meditation");
+        assert_eq!(query_text_to_uid_field_query("dharma"), "dharma");
+        assert_eq!(query_text_to_uid_field_query("sutta"), "sutta");
     }
 
     // #[test]

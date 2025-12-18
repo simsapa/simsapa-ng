@@ -178,6 +178,7 @@ ApplicationWindow {
         // For Dictionary, skip conversion to allow normal word searches
         let query_text = query_text_orig;
         if (search_area === "Suttas" || search_area === "Library") {
+            // query_text_to_uid_field_query() should return the query as normal (e.g. 'heard') if not recognized as a uid
             query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
         }
 
