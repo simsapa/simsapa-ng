@@ -819,7 +819,7 @@ Item {
                                         /* logger.log(`Parsed translations_data:`, JSON.stringify(data)); */
                                         return data;
                                     } catch (e) {
-                                        logger.error(`Error parsing responses_json for message ${message_item.index}:`, e);
+                                        logger.error(`Error parsing responses_json for message ${message_item.index}:` + e);
                                         return [];
                                     }
                                 }
