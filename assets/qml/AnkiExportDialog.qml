@@ -33,6 +33,12 @@ ApplicationWindow {
     property string selected_template_key: "Front"
     property string current_export_format: "Simple"
     property bool current_include_cloze: true
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
 
     Logger { id: logger }
 
@@ -98,6 +104,7 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        theme_helper.apply();
         load_templates();
         render_preview();
     }
@@ -259,7 +266,7 @@ ApplicationWindow {
 
                             background: Rectangle {
                                 anchors.fill: parent
-                                color: "white"
+                                color: root.is_dark ? "black" : "white"
                                 border.width: 1
                                 border.color: "#ccc"
                                 radius: 5
@@ -312,7 +319,7 @@ ApplicationWindow {
 
                             background: Rectangle {
                                 anchors.fill: parent
-                                color: "#f5f5f5"
+                                color: root.is_dark ? "black" : "#f5f5f5"
                                 border.width: 1
                                 border.color: "#ccc"
                                 radius: 5

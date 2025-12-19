@@ -31,6 +31,13 @@ ApplicationWindow {
 
     property alias auto_retry: auto_retry
 
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
+
     Logger { id: logger }
 
     function load_providers() {
@@ -186,6 +193,7 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        theme_helper.apply();
         load_providers();
         // Select first provider by default
         select_first_provider();

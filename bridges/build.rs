@@ -53,6 +53,7 @@ fn main() {
     qml_files.push("../assets/qml/AssistantResponses.qml");
     qml_files.push("../assets/qml/ResponseTabButton.qml");
     qml_files.push("../assets/qml/ScrollableHelper.qml");
+    qml_files.push("../assets/qml/ThemeHelper.qml");
     qml_files.push("../assets/qml/Logger.qml");
     qml_files.push("../assets/qml/UnrecognizedWordsList.qml");
 

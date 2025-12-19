@@ -32,6 +32,17 @@ ApplicationWindow {
 
     property string current_platform: ""
 
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
+
+    Component.onCompleted: {
+        theme_helper.apply();
+    }
+
     function info_lines() {
         return [
             `App version: ${root.app_version}`,

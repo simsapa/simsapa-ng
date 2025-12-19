@@ -27,6 +27,12 @@ ApplicationWindow {
 
     property var available_languages: []
     property var installed_languages_with_counts: []
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
 
     AssetManager { id: manager }
 
@@ -89,6 +95,8 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        theme_helper.apply();
+
         // Update top_bar_margin after app data is initialized
         root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
 

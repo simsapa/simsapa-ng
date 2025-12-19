@@ -2,8 +2,6 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 
-import com.profoundlabs.simsapa
-
 /**
  * ScrollableHelper - Reusable component for managing automatic scrolling to bottom
  *

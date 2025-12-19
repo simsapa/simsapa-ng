@@ -27,6 +27,13 @@ ApplicationWindow {
     property var current_prompts: ({})
     property string selected_prompt_key: ""
 
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
+
     Logger { id: logger }
 
     function load_prompts() {
@@ -62,6 +69,7 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        theme_helper.apply();
         load_prompts();
     }
 
@@ -180,7 +188,7 @@ ApplicationWindow {
 
                             background: Rectangle {
                                 anchors.fill: parent
-                                color: "white"
+                                color: root.is_dark ? "black" : "white"
                                 border.width: 1
                                 border.color: "#ccc"
                                 radius: 5
