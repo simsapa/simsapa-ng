@@ -125,6 +125,19 @@ a {
   color: black;
 }
 
+body.dark a,
+body.dark a:link,
+body.dark a:visited,
+body.dark a:hover,
+body.dark a:active,
+body.dark #ssp_content #content a,
+body.dark #ssp_content #content a:link,
+body.dark #ssp_content #content a:visited,
+body.dark #ssp_content #content a:hover,
+body.dark #ssp_content #content a:active {
+  color: white !important;
+}
+
 .ssp-toolbar {
   position: fixed;
   top: 1em;
@@ -672,6 +685,18 @@ div.btn a, span.btn a {
 }
 .pali-word a {
   color: black;
+}
+.pali-word body.dark a,
+.pali-word body.dark a:link,
+.pali-word body.dark a:visited,
+.pali-word body.dark a:hover,
+.pali-word body.dark a:active,
+.pali-word body.dark #ssp_content #content a,
+.pali-word body.dark #ssp_content #content a:link,
+.pali-word body.dark #ssp_content #content a:visited,
+.pali-word body.dark #ssp_content #content a:hover,
+.pali-word body.dark #ssp_content #content a:active {
+  color: white !important;
 }
 .pali-word .ssp-toolbar {
   position: fixed;
