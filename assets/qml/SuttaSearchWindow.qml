@@ -1266,8 +1266,10 @@ ${query_text}`;
                                                     tabs_pinned_model.append(new_tab_data);
                                                     // Remove the tab data, but webview remains associated with the pinned item.
                                                     tabs_results_model.remove(results_tab_btn.index);
-                                                    // Add a blank tab to replace the pinned one (new_tab=true to avoid overwriting existing tabs)
-                                                    root.add_results_tab(root.blank_sutta_tab_data(), false, true);
+                                                    // Only add a blank tab if we just removed the last tab from results group
+                                                    if (tabs_results_model.count === 0) {
+                                                        root.add_results_tab(root.blank_sutta_tab_data(), false, true);
+                                                    }
                                                     // TODO: If this is before add_results_tab(), the new results tab gets focus, despite of focus_on_new = false.
                                                     root.focus_on_tab_with_id_key(new_tab_data.id_key);
                                                 }
