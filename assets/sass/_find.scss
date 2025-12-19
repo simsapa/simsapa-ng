@@ -240,13 +240,22 @@ body.dark .find-error {
 
 // Search Highlights in Content
 .ssp-find-highlight {
-    background-color: #ffff00 !important;
+    background-color: #FFFF00 !important;
     color: inherit !important;
     padding: 1px 0px;
 }
 
 .ssp-find-highlight.current {
-    background-color: #ff9632 !important;
+    background-color: #FF9632 !important;
+}
+
+// Dark mode search highlights
+body.dark .ssp-find-highlight {
+    background-color: #007A31 !important;
+}
+
+body.dark .ssp-find-highlight.current {
+    background-color: #CF6303 !important;
 }
 
 // Mobile Responsiveness
