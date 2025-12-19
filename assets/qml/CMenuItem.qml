@@ -71,6 +71,7 @@ T.MenuItem {
             visible: control.is_desktop
             text: control.action_seq_to_str(control.action)
             anchors.right: parent.right
+            color: control.down || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
         }
     }
 
