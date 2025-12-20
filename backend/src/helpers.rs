@@ -478,7 +478,7 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
 
     match text {
         Some(text) => {
-            text.replace("ṃ", "ṁ")
+            text.replace("ṃ", "ṁ").replace("ŋ", "ṁ")
         }
         None => String::from("")
     }
@@ -1232,8 +1232,8 @@ pub fn pali_to_ascii(text: Option<&str>) -> String {
 
     // including √ (root sign) and replacing it with space, which gets stripped
     // if occurs at the beginning or end
-    let from_chars = "āīūṁṃṅñṭḍṇḷṛṣśĀĪŪṀṂṄÑṬḌṆḶṚṢŚ√";
-    let to_chars =   "aiummnntdnlrssAIUMMNNTDNLRSS ";
+    let from_chars = "āīūḥṁṃŋṅñṭḍṇḷṛṣśĀĪŪḤṀṂṄÑṬḌṆḶṚṢŚ√";
+    let to_chars =   "aiuhmmmnntdnlrssAIUHMMNNTDNLRSS ";
 
     let translation: HashMap<char, char> = from_chars.chars()
         .zip(to_chars.chars())
@@ -1409,8 +1409,8 @@ pub fn root_info_clean_plaintext(html: &str) -> String {
 
 /// Replace accented Pāḷi characters with ASCII latin equivalents.
 pub fn latinize(text: &str) -> String {
-    let accents = ["ā","ī","ū","ṃ","ṁ","ṅ","ñ","ṭ","ḍ","ṇ","ḷ","ṛ","ṣ","ś"];
-    let latin  =  ["a","i","u","m","m","n","n","t","d","n","l","r","s","s"];
+    let accents = ["ā","ī","ū","ḥ","ṃ","ṁ","ŋ","ṅ","ñ","ṭ","ḍ","ṇ","ḷ","ṛ","ṣ","ś"];
+    let latin  =  ["a","i","u","h","m","m","m","n","n","t","d","n","l","r","s","s"];
     let mut s = text.to_string().to_lowercase();
     for (a, l) in accents.iter().zip(latin.iter()) {
         s = s.replace(a, l);
