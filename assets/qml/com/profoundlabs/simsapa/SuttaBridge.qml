@@ -380,6 +380,10 @@ Item {
         console.log("open_sutta_search_window()");
     }
 
+    function open_reference_search_window() {
+        console.log("open_reference_search_window()");
+    }
+
     function open_sutta_search_window_with_result(result_data_json: string) {
         console.log("open_sutta_search_window_with_result():", result_data_json);
     }
@@ -568,6 +572,36 @@ Item {
 
     function open_sutta_languages_window() {
         console.log("open_sutta_languages_window()");
+    }
+
+    function search_reference(query: string, field: string): string {
+        console.log("search_reference():", query, field);
+        return '[]';
+    }
+
+    function extract_uid_from_url(url: string): string {
+        console.log("extract_uid_from_url():", url);
+        // Simple extraction for testing
+        if (url.includes("suttacentral.net/")) {
+            let path = url.split("suttacentral.net/")[1];
+            return path.split("/")[0];
+        }
+        return url;
+    }
+
+    function get_full_sutta_uid(partial_uid: string): string {
+        console.log("get_full_sutta_uid():", partial_uid);
+        return partial_uid + "/pli/ms";
+    }
+
+    function get_sutta_reference_info(uid: string): string {
+        console.log("get_sutta_reference_info():", uid);
+        return JSON.stringify({
+            uid: uid,
+            sutta_ref: "MN 9",
+            title: "Right View",
+            title_pali: "Sammādiṭṭhisutta"
+        });
     }
 
     Item {

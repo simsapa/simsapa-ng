@@ -215,10 +215,16 @@ pub mod qobject {
         fn open_sutta_search_window(self: &SuttaBridge);
 
         #[qinvokable]
+        fn open_sutta_search_window_with_result(self: &SuttaBridge, result_data_json: &QString);
+
+        #[qinvokable]
         fn open_sutta_languages_window(self: &SuttaBridge);
 
         #[qinvokable]
         fn open_library_window(self: &SuttaBridge);
+
+        #[qinvokable]
+        fn open_reference_search_window(self: &SuttaBridge);
 
         #[qinvokable]
         fn get_all_books_json(self: &SuttaBridge) -> QString;
@@ -405,6 +411,18 @@ pub mod qobject {
 
         #[qinvokable]
         fn get_sutta_language_labels_with_counts(self: &SuttaBridge) -> QStringList;
+
+        #[qinvokable]
+        fn search_reference(self: &SuttaBridge, query: &QString, field: &QString) -> QString;
+
+        #[qinvokable]
+        fn extract_uid_from_url(self: &SuttaBridge, url: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_full_sutta_uid(self: &SuttaBridge, partial_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_sutta_reference_info(self: &SuttaBridge, uid: &QString) -> QString;
     }
 }
 
@@ -1290,6 +1308,11 @@ impl qobject::SuttaBridge {
         ffi::callback_open_sutta_search_window(QString::from(""));
     }
 
+    pub fn open_sutta_search_window_with_result(&self, result_data_json: &QString) {
+        use crate::api::ffi;
+        ffi::callback_open_sutta_search_window(result_data_json.clone());
+    }
+
     pub fn open_sutta_languages_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_sutta_languages_window();
@@ -1298,6 +1321,11 @@ impl qobject::SuttaBridge {
     pub fn open_library_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_library_window();
+    }
+
+    pub fn open_reference_search_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_reference_search_window();
     }
 
     pub fn get_all_books_json(&self) -> QString {
@@ -2209,5 +2237,73 @@ impl qobject::SuttaBridge {
     pub fn set_mobile_top_bar_margin_custom(self: Pin<&mut Self>, value: u32) {
         let app_data = get_app_data();
         app_data.set_mobile_top_bar_margin_custom(value);
+    }
+
+    pub fn search_reference(&self, query: &QString, field: &QString) -> QString {
+        use simsapa_backend::pts_reference_search;
+
+        let results = pts_reference_search::search(
+            &query.to_string(),
+            &field.to_string()
+        );
+
+        match serde_json::to_string(&results) {
+            Ok(json) => QString::from(json),
+            Err(e) => {
+                error(&format!("Failed to serialize reference search results: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    pub fn extract_uid_from_url(&self, url: &QString) -> QString {
+        let url_str = url.to_string();
+
+        // Extract UID from SuttaCentral URL
+        // Examples:
+        // - https://suttacentral.net/sn56.102 -> sn56.102
+        // - https://suttacentral.net/dn1/en/sujato -> dn1
+        // - sn56.102 -> sn56.102 (pass through if already just UID)
+
+        if let Some(path_start) = url_str.find("suttacentral.net/") {
+            let path = &url_str[path_start + 17..]; // Skip "suttacentral.net/"
+
+            // Take everything up to the first '/' or end of string
+            if let Some(slash_pos) = path.find('/') {
+                QString::from(&path[..slash_pos])
+            } else {
+                QString::from(path)
+            }
+        } else {
+            // If it's not a URL, return as-is (might already be a UID)
+            QString::from(url_str)
+        }
+    }
+
+    pub fn get_full_sutta_uid(&self, partial_uid: &QString) -> QString {
+        let partial_str = partial_uid.to_string();
+        let app_data = get_app_data();
+
+        match app_data.dbm.appdata.get_full_sutta_uid(&partial_str) {
+            Some(full_uid) => QString::from(full_uid),
+            None => QString::from(""), // Return empty string if not found
+        }
+    }
+
+    pub fn get_sutta_reference_info(&self, uid: &QString) -> QString {
+        let uid_str = uid.to_string();
+        let app_data = get_app_data();
+
+        if let Some(sutta) = app_data.dbm.appdata.get_sutta(&uid_str) {
+            let info = serde_json::json!({
+                "uid": sutta.uid,
+                "sutta_ref": sutta.sutta_ref,
+                "title": sutta.title.unwrap_or_default(),
+                "title_pali": sutta.title_pali.unwrap_or_default(),
+            });
+            QString::from(serde_json::to_string(&info).unwrap_or_else(|_| "{}".to_string()))
+        } else {
+            QString::from("{}")
+        }
     }
 }

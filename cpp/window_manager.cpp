@@ -4,6 +4,7 @@
 #include "word_lookup_window.h"
 #include "sutta_languages_window.h"
 #include "library_window.h"
+#include "reference_search_window.h"
 #include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
@@ -86,6 +87,12 @@ SuttaLanguagesWindow* WindowManager::create_sutta_languages_window() {
 LibraryWindow* WindowManager::create_library_window() {
     LibraryWindow* w = new LibraryWindow(this->m_app);
     library_windows.append(w);
+    return w;
+}
+
+ReferenceSearchWindow* WindowManager::create_reference_search_window() {
+    ReferenceSearchWindow* w = new ReferenceSearchWindow(this->m_app);
+    reference_search_windows.append(w);
     return w;
 }
 
