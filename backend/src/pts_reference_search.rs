@@ -28,6 +28,8 @@ pub struct ReferenceSearchResult {
     pub pts_vol: Option<String>,
     pub pts_start_page: Option<u32>,
     pub pts_end_page: Option<u32>,
+    // Edition, e.g. Feer, Somaratne1999
+    pub edition: Option<String>,
 }
 
 /// Parse a PTS reference string like "D ii 20" into components

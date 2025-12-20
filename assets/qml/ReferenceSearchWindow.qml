@@ -91,13 +91,6 @@ ApplicationWindow {
                 width: parent.width
                 spacing: 10
 
-                Label {
-                    text: "Search for suttas by PTS reference, DPR reference, or title"
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 10
@@ -105,7 +98,7 @@ ApplicationWindow {
                     TextField {
                         id: search_input
                         Layout.fillWidth: true
-                        placeholderText: "Enter PTS reference (e.g., D ii 20), DPR reference, or title..."
+                        placeholderText: "E.g.: 'D ii 20', 'M iii 10', 'brahmajala', 'DN 1', 'KN 1'"
                         font.pointSize: root.pointSize
                         selectByMouse: true
 
@@ -140,15 +133,6 @@ ApplicationWindow {
                         }
                     }
                 }
-
-                // Example queries
-                Label {
-                    text: "Examples: 'D ii 20', 'M iii 10', 'brahmajala', 'DN 1', 'KN 1'"
-                    font.pointSize: root.pointSize - 2
-                    color: palette.mid
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
             }
         }
 
@@ -176,14 +160,6 @@ ApplicationWindow {
                         spacing: 15
 
                         Label {
-                            text: "Enter a search term above (minimum 3 characters)"
-                            font.pointSize: root.largePointSize
-                            font.bold: true
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
                             text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Identifier (e.g., 'DN 1')"
                             font.pointSize: root.pointSize
                             horizontalAlignment: Text.AlignHCenter
@@ -204,7 +180,7 @@ ApplicationWindow {
                         anchors.centerIn: parent
                         text: root.current_query.length < 3 ? "Enter at least 3 characters" : "No results found"
                         font.pointSize: root.largePointSize
-                        color: palette.mid
+                        /* color: palette.mid */
                     }
                 }
 
@@ -237,12 +213,19 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             Layout.margins: 5
 
+                            background: Rectangle {
+                                color: palette.base
+                                border.color: palette.mid
+                                border.width: 1
+                                radius: 4
+                            }
+
                             ColumnLayout {
                                 width: parent.width
                                 spacing: 8
 
-                                // Reference info
-                                RowLayout {
+                                // Reference codes and metadata - wrappable row
+                                Flow {
                                     Layout.fillWidth: true
                                     spacing: 10
 
@@ -250,7 +233,6 @@ ApplicationWindow {
                                         text: result_frame.modelData.identifier || ""
                                         font.pointSize: root.pointSize
                                         font.bold: true
-                                        Layout.fillWidth: false
                                     }
 
                                     Label {
@@ -264,8 +246,42 @@ ApplicationWindow {
                                         text: result_frame.modelData.name || ""
                                         font.pointSize: root.pointSize
                                         wrapMode: Text.WordWrap
-                                        Layout.fillWidth: true
+                                        /* Layout.fillWidth: true */
                                         visible: (result_frame.modelData.name || "").length > 0
+                                    }
+
+                                    Label {
+                                        text: {
+                                            const start = result_frame.modelData.pts_start_page;
+                                            const end = result_frame.modelData.pts_end_page;
+                                            if (start !== null && start !== undefined && end !== null && end !== undefined) {
+                                                return `(pp. ${start}–${end})`;
+                                            }
+                                            return "";
+                                        }
+                                        font.pointSize: root.pointSize - 1
+                                        /* color: palette.mid */
+                                        visible: text.length > 0
+                                    }
+
+                                    Label {
+                                        text: {
+                                            const ed = result_frame.modelData.edition;
+                                            return (ed && ed.length > 0) ? `[${ed}]` : "";
+                                        }
+                                        font.pointSize: root.pointSize - 1
+                                        /* color: palette.mid */
+                                        visible: text.length > 0
+                                    }
+
+                                    Label {
+                                        text: {
+                                            const dpr = result_frame.modelData.dpr_reference;
+                                            return (dpr && dpr.length > 0) ? `DPR: ${dpr}` : "";
+                                        }
+                                        font.pointSize: root.pointSize - 1
+                                        /* color: palette.mid */
+                                        visible: text.length > 0
                                     }
                                 }
 
@@ -278,7 +294,7 @@ ApplicationWindow {
                                         id: status_label
                                         text: result_frame.exists_in_db ? "" : "(Not found in database)"
                                         font.pointSize: root.pointSize - 2
-                                        color: palette.mid
+                                        /* color: palette.mid */
                                         visible: text.length > 0
                                     }
 
