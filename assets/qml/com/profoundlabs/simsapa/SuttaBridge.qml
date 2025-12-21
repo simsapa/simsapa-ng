@@ -21,6 +21,7 @@ Item {
     signal ankiPreviewReady(preview_html: string);
     signal databaseValidationResult(database_name: string, is_valid: bool, message: string);
     signal showChapterFromLibrary(window_id: string, result_data_json: string);
+    signal showSuttaFromReferenceSearch(window_id: string, result_data_json: string);
     signal bookMetadataUpdated(success: bool, message: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
@@ -30,6 +31,11 @@ Item {
     function emit_show_chapter_from_library(window_id: string, result_data_json: string) {
         console.log("emit_show_chapter_from_library():", window_id, result_data_json);
         showChapterFromLibrary(window_id, result_data_json);
+    }
+
+    function emit_show_sutta_from_reference_search(window_id: string, result_data_json: string) {
+        console.log("emit_show_sutta_from_reference_search():", window_id, result_data_json);
+        showSuttaFromReferenceSearch(window_id, result_data_json);
     }
 
     function load_db() {

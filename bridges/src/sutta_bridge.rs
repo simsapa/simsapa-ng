@@ -97,6 +97,10 @@ pub mod qobject {
         fn show_chapter_from_library(self: Pin<&mut SuttaBridge>, window_id: QString, result_data_json: QString);
 
         #[qsignal]
+        #[cxx_name = "showSuttaFromReferenceSearch"]
+        fn show_sutta_from_reference_search(self: Pin<&mut SuttaBridge>, window_id: QString, result_data_json: QString);
+
+        #[qsignal]
         #[cxx_name = "bookMetadataUpdated"]
         fn book_metadata_updated(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
 
@@ -105,6 +109,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn emit_show_chapter_from_library(self: Pin<&mut SuttaBridge>, window_id: QString, result_data_json: QString);
+
+        #[qinvokable]
+        fn emit_show_sutta_from_reference_search(self: Pin<&mut SuttaBridge>, window_id: QString, result_data_json: QString);
 
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
@@ -447,6 +454,11 @@ impl qobject::SuttaBridge {
     pub fn emit_show_chapter_from_library(self: Pin<&mut Self>, window_id: QString, result_data_json: QString) {
         use crate::api::ffi;
         ffi::callback_show_chapter_in_sutta_window(window_id, result_data_json);
+    }
+
+    pub fn emit_show_sutta_from_reference_search(self: Pin<&mut Self>, window_id: QString, result_data_json: QString) {
+        use crate::api::ffi;
+        ffi::callback_show_sutta_from_reference_search(window_id, result_data_json);
     }
 
     pub fn load_db(self: Pin<&mut Self>) {
@@ -2298,8 +2310,9 @@ impl qobject::SuttaBridge {
             let info = serde_json::json!({
                 "uid": sutta.uid,
                 "sutta_ref": sutta.sutta_ref,
-                "title": sutta.title.unwrap_or_default(),
-                "title_pali": sutta.title_pali.unwrap_or_default(),
+                "title": sutta.title.clone().unwrap_or_default(),
+                // FIXME: bootstrap issue: 'title_pali' is empty in the db, 'title' is used
+                "title_pali": sutta.title.unwrap_or_default(),
             });
             QString::from(serde_json::to_string(&info).unwrap_or_else(|_| "{}".to_string()))
         } else {

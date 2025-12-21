@@ -31,6 +31,7 @@ ApplicationWindow {
     property var search_results: []
     property var database_results: []
     property bool is_searching: false
+    property bool open_in_new_window: false
 
     ThemeHelper {
         id: theme_helper
@@ -70,7 +71,7 @@ ApplicationWindow {
 
     // Keyboard shortcuts
     Shortcut {
-        sequence: "Ctrl+F"
+        sequence: "Ctrl+L"
         onActivated: {
             search_input.forceActiveFocus();
             search_input.selectAll();
@@ -131,6 +132,17 @@ ApplicationWindow {
                                 search_timer.restart();
                             }
                         }
+                    }
+                }
+
+                CheckBox {
+                    id: open_in_new_window_checkbox
+                    text: "Open in new window"
+                    font.pointSize: root.pointSize
+                    checked: root.open_in_new_window
+
+                    onCheckedChanged: {
+                        root.open_in_new_window = checked;
                     }
                 }
             }
@@ -393,8 +405,14 @@ ApplicationWindow {
         };
         const result_json = JSON.stringify(result_data);
 
-        // Open in a new sutta search window
-        SuttaBridge.open_sutta_search_window_with_result(result_json);
+        if (root.open_in_new_window) {
+            // Open in a new sutta search window
+            SuttaBridge.open_sutta_search_window_with_result(result_json);
+        } else {
+            // Open in a new tab in the existing window
+            // Use empty window_id to target any available sutta window
+            SuttaBridge.emit_show_sutta_from_reference_search("", result_json);
+        }
     }
 
     function copy_sutta_link(full_uid, result_data) {

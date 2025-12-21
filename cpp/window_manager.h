@@ -55,6 +55,7 @@ class WindowManager : public QObject {
         void open_sutta_search_window_with_query(const QString& show_result_data_json);
         void open_sutta_tab_in_window(const QString& window_id, const QString& show_result_data_json);
         void show_chapter_in_sutta_window(const QString& window_id, const QString& result_data_json);
+        void show_sutta_from_reference_search(const QString& window_id, const QString& result_data_json);
 
 };
 

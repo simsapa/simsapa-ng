@@ -82,6 +82,10 @@ void callback_show_chapter_in_sutta_window(QString window_id, QString result_dat
   AppGlobals::manager->show_chapter_in_sutta_window(window_id, result_data_json);
 }
 
+void callback_show_sutta_from_reference_search(QString window_id, QString result_data_json) {
+  AppGlobals::manager->show_sutta_from_reference_search(window_id, result_data_json);
+}
+
 void start(int argc, char* argv[]) {
   dotenv_c();
   log_info_with_options_c("gui::start()", true);

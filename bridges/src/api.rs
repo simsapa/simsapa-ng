@@ -55,6 +55,7 @@ pub mod ffi {
         fn callback_open_library_window();
         fn callback_open_reference_search_window();
         fn callback_show_chapter_in_sutta_window(window_id: QString, result_data_json: QString);
+        fn callback_show_sutta_from_reference_search(window_id: QString, result_data_json: QString);
     }
 }
 
