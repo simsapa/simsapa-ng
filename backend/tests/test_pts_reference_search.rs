@@ -33,16 +33,16 @@ fn test_parse_pts_reference_invalid() {
 // Test case 2.2: Search DN 1 by identifier
 #[test]
 fn test_search_dn1_by_identifier() {
-    let results = search("DN 1", "identifier");
+    let results = search("DN 1", "sutta_ref");
 
     assert!(!results.is_empty(), "Should find at least one result for DN 1");
 
     // Check if the first result is DN 1
     let first = &results[0];
     assert!(
-        first.identifier.contains("DN 1") || first.identifier.contains("DN1"),
-        "Expected identifier to contain 'DN 1', got: {}",
-        first.identifier
+        first.sutta_ref.contains("DN 1") || first.sutta_ref.contains("DN1"),
+        "Expected sutta_ref to contain 'DN 1', got: {}",
+        first.sutta_ref
     );
 }
 
@@ -128,17 +128,17 @@ fn test_search_mn_by_pts_ref_in_between() {
 // Test case 2.8: Search by name (case insensitive)
 #[test]
 fn test_search_by_name_case_insensitive() {
-    let results = search("brahmajala", "name");
+    let results = search("brahmajala", "title_pali");
 
     assert!(!results.is_empty(), "Should find result for 'brahmajala'");
 
     // Should find Brahmajāla Sutta
     let first = &results[0];
-    let normalized_name = latinize(&first.name.to_lowercase());
+    let normalized_name = latinize(&first.title_pali.to_lowercase());
     assert!(
         normalized_name.contains("brahmajala"),
-        "Expected name to contain 'brahmajala', got: {} (normalized: {})",
-        first.name,
+        "Expected title_pali to contain 'brahmajala', got: {} (normalized: {})",
+        first.title_pali,
         normalized_name
     );
 }
@@ -153,18 +153,20 @@ fn test_search_kn_by_dpr_reference() {
     // If not, this is also acceptable
     if !results.is_empty() {
         let first = &results[0];
-        assert!(
-            first.dpr_reference.contains("KN 1") || first.dpr_reference.contains("KN1"),
-            "Expected DPR reference to contain 'KN 1', got: {}",
-            first.dpr_reference
-        );
+        if let Some(ref dpr_ref) = first.dpr_reference {
+            assert!(
+                dpr_ref.contains("KN 1") || dpr_ref.contains("KN1"),
+                "Expected DPR reference to contain 'KN 1', got: {}",
+                dpr_ref
+            );
+        }
     }
 }
 
 // Additional test: Verify empty query returns all results
 #[test]
 fn test_search_empty_query_returns_all() {
-    let results = search("", "identifier");
+    let results = search("", "sutta_ref");
 
     // Empty query should return all entries (or at least a significant number)
     assert!(
@@ -177,8 +179,8 @@ fn test_search_empty_query_returns_all() {
 // Additional test: Verify search with diacritics works
 #[test]
 fn test_search_with_diacritics() {
-    let results_with_diacritics = search("brahmajāla", "name");
-    let results_without_diacritics = search("brahmajala", "name");
+    let results_with_diacritics = search("brahmajāla", "title_pali");
+    let results_without_diacritics = search("brahmajala", "title_pali");
 
     // Both should return the same results due to latinize normalization
     assert_eq!(
@@ -219,11 +221,11 @@ fn test_debug_data_loading() {
     eprintln!("Total entries in JSON: {}", all_data.len());
 
     // Find DN 14
-    let dn14: Vec<_> = all_data.iter().filter(|r| r.identifier.contains("DN 14")).collect();
+    let dn14: Vec<_> = all_data.iter().filter(|r| r.sutta_ref.contains("DN 14")).collect();
     eprintln!("\nDN 14 entries:");
     for r in &dn14 {
         eprintln!("  {} - pts_ref: '{}' - nikaya: {:?}, vol: {:?}, start: {:?}, end: {:?}",
-            r.identifier, r.pts_reference, r.pts_nikaya, r.pts_vol, r.pts_start_page, r.pts_end_page);
+            r.sutta_ref, r.pts_reference, r.pts_nikaya, r.pts_vol, r.pts_start_page, r.pts_end_page);
     }
 
     // Now test search
@@ -231,7 +233,7 @@ fn test_debug_data_loading() {
     eprintln!("\nSearch 'D ii 20' - Results count: {}", results.len());
     for (i, r) in results.iter().enumerate() {
         eprintln!("  Result {}: {} - pts_ref: '{}' - nikaya: {:?}, vol: {:?}, start: {:?}, end: {:?}",
-            i, r.identifier, r.pts_reference, r.pts_nikaya, r.pts_vol, r.pts_start_page, r.pts_end_page);
+            i, r.sutta_ref, r.pts_reference, r.pts_nikaya, r.pts_vol, r.pts_start_page, r.pts_end_page);
     }
 }
 
@@ -244,8 +246,8 @@ fn test_pts_reference_volume_boundary() {
     // These should find different suttas
     if !results_vol_i.is_empty() && !results_vol_ii.is_empty() {
         assert_ne!(
-            results_vol_i[0].identifier,
-            results_vol_ii[0].identifier,
+            results_vol_i[0].sutta_ref,
+            results_vol_ii[0].sutta_ref,
             "Volume boundaries should separate different suttas"
         );
     }

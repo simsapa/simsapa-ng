@@ -14,18 +14,19 @@ pub struct PTSReference {
 /// Represents a single search result from the reference data
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReferenceSearchResult {
-    pub identifier: String,
+    pub sutta_ref: String,
     #[serde(default)]
-    pub name: String,
+    pub title_pali: String,
     #[serde(default)]
     pub pts_reference: String,
-    #[serde(default)]
-    pub dpr_reference: String,
+    pub dpr_reference: Option<String>,
+    pub dpr_reference_alt: Option<String>,
     pub url: String,
     // Parsed PTS reference fields for range matching
     // These can be null in the JSON
     pub pts_nikaya: Option<String>,
     pub pts_vol: Option<String>,
+    pub pts_vol_verse: Option<String>,
     pub pts_start_page: Option<u32>,
     pub pts_end_page: Option<u32>,
     // Edition, e.g. Feer, Somaratne1999
@@ -86,18 +87,20 @@ pub fn search_by_text(query: &str, field: &str) -> Vec<ReferenceSearchResult> {
     load_all_references()
         .into_iter()
         .filter(|entry| {
-            let field_value = match field {
-                "identifier" => &entry.identifier,
-                "name" => &entry.name,
-                "pts_reference" => &entry.pts_reference,
-                "dpr_reference" => &entry.dpr_reference,
-                _ => "",
+            let field_value_opt: Option<&str> = match field {
+                "identifier" | "sutta_ref" => Some(&entry.sutta_ref),
+                "name" | "title_pali" => Some(&entry.title_pali),
+                "pts_reference" => Some(&entry.pts_reference),
+                "dpr_reference" => entry.dpr_reference.as_deref(),
+                "dpr_reference_alt" => entry.dpr_reference_alt.as_deref(),
+                _ => None,
             };
 
-            // Skip empty field values
-            if field_value.is_empty() {
-                return false;
-            }
+            // Skip if field doesn't exist or is empty
+            let field_value = match field_value_opt {
+                Some(v) if !v.is_empty() => v,
+                _ => return false,
+            };
 
             let normalized_field = latinize(&field_value.to_lowercase());
             normalized_field.contains(&normalized_query)
@@ -123,7 +126,7 @@ pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
 
     let all_refs = load_all_references();
 
-    all_refs
+    let mut results: Vec<_> = all_refs
         .into_iter()
         .filter(|entry| {
             // Skip entries without parsed PTS data
@@ -160,7 +163,18 @@ pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
                 }
             }
         })
-        .collect()
+        .collect();
+
+    // Sort results so that suttas starting at the exact page come first
+    results.sort_by_key(|entry| {
+        match entry.pts_start_page {
+            Some(start) if start == parsed_query.page => 0, // Exact start page match
+            Some(_) => 1, // Within range but not starting at this page
+            None => 2,
+        }
+    });
+
+    results
 }
 
 /// Universal search function that routes to appropriate search method
@@ -225,12 +239,19 @@ mod tests {
 
     #[test]
     fn test_json_loading() {
+        // Try parsing directly to see the error
+        use serde_json;
+        let parse_result = serde_json::from_str::<Vec<ReferenceSearchResult>>(SUTTA_REFERENCE_CONVERTER_JSON);
+        if let Err(e) = &parse_result {
+            eprintln!("JSON parse error: {}", e);
+        }
+
         let data = load_all_references();
         assert!(data.len() > 0, "JSON data should be loaded and contain entries");
 
         // Print first entry for debugging
         if let Some(first) = data.first() {
-            eprintln!("First entry: identifier={}, pts_ref={}", first.identifier, first.pts_reference);
+            eprintln!("First entry: sutta_ref={}, pts_ref={}", first.sutta_ref, first.pts_reference);
         }
     }
 }

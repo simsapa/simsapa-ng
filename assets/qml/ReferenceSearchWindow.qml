@@ -115,7 +115,7 @@ ApplicationWindow {
 
                     ComboBox {
                         id: field_selector
-                        model: ["PTS Ref", "DPR Ref", "Title", "Identifier"]
+                        model: ["PTS Ref", "DPR Ref", "Title", "Sutta Ref"]
                         currentIndex: 0
                         font.pointSize: root.pointSize
 
@@ -123,8 +123,8 @@ ApplicationWindow {
                             const field_map = {
                                 0: "pts_reference",
                                 1: "dpr_reference",
-                                2: "name",
-                                3: "identifier"
+                                2: "title_pali",
+                                3: "sutta_ref"
                             };
                             root.current_field = field_map[currentIndex];
                             if (root.current_query.length > 0) {
@@ -160,7 +160,7 @@ ApplicationWindow {
                         spacing: 15
 
                         Label {
-                            text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Identifier (e.g., 'DN 1')"
+                            text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Sutta Ref (e.g., 'DN 1')"
                             font.pointSize: root.pointSize
                             horizontalAlignment: Text.AlignHCenter
                             wrapMode: Text.WordWrap
@@ -230,7 +230,7 @@ ApplicationWindow {
                                     spacing: 10
 
                                     Label {
-                                        text: result_frame.modelData.identifier || ""
+                                        text: result_frame.modelData.sutta_ref || ""
                                         font.pointSize: root.pointSize
                                         font.bold: true
                                     }
@@ -243,11 +243,11 @@ ApplicationWindow {
                                     }
 
                                     Label {
-                                        text: result_frame.modelData.name || ""
+                                        text: result_frame.modelData.title_pali || ""
                                         font.pointSize: root.pointSize
                                         wrapMode: Text.WordWrap
                                         /* Layout.fillWidth: true */
-                                        visible: (result_frame.modelData.name || "").length > 0
+                                        visible: (result_frame.modelData.title_pali || "").length > 0
                                     }
 
                                     Label {
@@ -412,7 +412,7 @@ ApplicationWindow {
 
         // Build the HTML link
         // Format: <a href="{url}">{sc_ref} / {pts_ref}</a>, <em>{sutta_title_pali}</em>
-        const sc_ref = info.sutta_ref || result_data.identifier || "";
+        const sc_ref = info.sutta_ref || result_data.sutta_ref || "";
         const title_pali = info.title_pali || "";
 
         let html_link = `<a href="${sc_url}">${sc_ref}`;
