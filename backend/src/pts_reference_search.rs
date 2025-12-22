@@ -33,6 +33,32 @@ pub struct ReferenceSearchResult {
     pub edition: Option<String>,
 }
 
+pub fn normalize_pts_reference(pts_ref: &str) -> String {
+    let mut result = pts_ref.trim().to_lowercase();
+
+    // Replace dots and tildes with spaces
+    result = result.replace('.', " ").replace('~', " ");
+
+    // Normalize multiple spaces to one
+    result = result.split_whitespace().collect::<Vec<_>>().join(" ");
+
+    // Remove range at the end (e.g., "209-213" becomes "209")
+    // Look for a pattern like "number-number" at the end
+    if let Some(last_space_idx) = result.rfind(' ') {
+        let last_part = &result[last_space_idx + 1..];
+        if let Some(dash_idx) = last_part.find('-') {
+            let before_dash = &last_part[..dash_idx];
+            // Check if before_dash is a number
+            if before_dash.parse::<u32>().is_ok() {
+                // Keep everything up to and including the space, plus the part before the dash
+                result = format!("{} {}", &result[..last_space_idx], before_dash);
+            }
+        }
+    }
+
+    result.trim().to_string()
+}
+
 /// Parse a PTS reference string like "D ii 20" into components
 /// Returns None if the string cannot be parsed
 pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
@@ -41,7 +67,7 @@ pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
     }
 
     // Normalize: trim, lowercase, normalize whitespace
-    let normalized = pts_ref.trim().to_lowercase();
+    let normalized = normalize_pts_reference(pts_ref);
     let normalized = normalized.split_whitespace().collect::<Vec<_>>().join(" ");
 
     // Match pattern: letter(s) + roman numeral + number
@@ -113,7 +139,7 @@ pub fn search_by_text(query: &str, field: &str) -> Vec<ReferenceSearchResult> {
 /// if page 20 falls within the pts_start_page to pts_end_page range
 pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
     if query.trim().is_empty() {
-        return load_all_references();
+        return Vec::new();
     }
 
     let parsed_query = match parse_pts_reference(query) {
@@ -253,5 +279,29 @@ mod tests {
         if let Some(first) = data.first() {
             eprintln!("First entry: sutta_ref={}, pts_ref={}", first.sutta_ref, first.pts_reference);
         }
+    }
+
+    #[test]
+    fn test_normalize_pts_reference_with_dots_tilde_and_range() {
+        let result = normalize_pts_reference("D.~I. 13-45");
+        assert_eq!(result, "d i 13");
+    }
+
+    #[test]
+    fn test_normalize_pts_reference_with_trailing_dot() {
+        let result = normalize_pts_reference("M.~II. 209-213.");
+        assert_eq!(result, "m ii 209");
+    }
+
+    #[test]
+    fn test_normalize_pts_reference_multiple_spaces() {
+        let result = normalize_pts_reference("D   i    13");
+        assert_eq!(result, "d i 13");
+    }
+
+    #[test]
+    fn test_normalize_pts_reference_no_range() {
+        let result = normalize_pts_reference("A.~III. 42");
+        assert_eq!(result, "a iii 42");
     }
 }
