@@ -6,6 +6,7 @@ Item {
     id: root
 
     property bool db_loaded: false;
+    property bool sutta_references_loaded: false;
     property var dpd_lookup_test_data: ({})
 
     Component.onCompleted: {
@@ -21,6 +22,7 @@ Item {
     signal ankiPreviewReady(preview_html: string);
     signal databaseValidationResult(database_name: string, is_valid: bool, message: string);
     signal showChapterFromLibrary(window_id: string, result_data_json: string);
+    signal showSuttaFromReferenceSearch(window_id: string, result_data_json: string);
     signal bookMetadataUpdated(success: bool, message: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
@@ -32,8 +34,21 @@ Item {
         showChapterFromLibrary(window_id, result_data_json);
     }
 
+    function emit_show_sutta_from_reference_search(window_id: string, result_data_json: string) {
+        console.log("emit_show_sutta_from_reference_search():", window_id, result_data_json);
+        showSuttaFromReferenceSearch(window_id, result_data_json);
+    }
+
     function load_db() {
         console.log("load_db()");
+    }
+
+    function load_sutta_references() {
+        console.log("load_sutta_references()");
+        // Simulate async behavior
+        Qt.callLater(function() {
+            root.sutta_references_loaded = true;
+        });
     }
 
     function appdata_first_query() {
@@ -380,6 +395,10 @@ Item {
         console.log("open_sutta_search_window()");
     }
 
+    function open_reference_search_window() {
+        console.log("open_reference_search_window()");
+    }
+
     function open_sutta_search_window_with_result(result_data_json: string) {
         console.log("open_sutta_search_window_with_result():", result_data_json);
     }
@@ -568,6 +587,36 @@ Item {
 
     function open_sutta_languages_window() {
         console.log("open_sutta_languages_window()");
+    }
+
+    function search_reference(query: string, field: string): string {
+        console.log("search_reference():", query, field);
+        return '[]';
+    }
+
+    function extract_uid_from_url(url: string): string {
+        console.log("extract_uid_from_url():", url);
+        // Simple extraction for testing
+        if (url.includes("suttacentral.net/")) {
+            let path = url.split("suttacentral.net/")[1];
+            return path.split("/")[0];
+        }
+        return url;
+    }
+
+    function get_full_sutta_uid(partial_uid: string): string {
+        console.log("get_full_sutta_uid():", partial_uid);
+        return partial_uid + "/pli/ms";
+    }
+
+    function get_sutta_reference_info(uid: string): string {
+        console.log("get_sutta_reference_info():", uid);
+        return JSON.stringify({
+            uid: uid,
+            sutta_ref: "MN 9",
+            title: "Right View",
+            title_pali: "Sammādiṭṭhisutta"
+        });
     }
 
     Item {

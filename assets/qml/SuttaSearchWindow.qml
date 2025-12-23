@@ -38,7 +38,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !storage_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !mobile_top_margin_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !mobile_top_margin_dialog.visible)
 
     property string last_query_text: ""
     property string last_search_area: ""
@@ -66,6 +66,13 @@ ApplicationWindow {
         }
 
         function onShowChapterFromLibrary(window_id: string, result_data_json: string) {
+            // Only handle this signal if it's for this window or if window_id is empty
+            if (window_id === "" || window_id === root.window_id) {
+                root.show_result_in_html_view_with_json(result_data_json);
+            }
+        }
+
+        function onShowSuttaFromReferenceSearch(window_id: string, result_data_json: string) {
             // Only handle this signal if it's for this window or if window_id is empty
             if (window_id === "" || window_id === root.window_id) {
                 root.show_result_in_html_view_with_json(result_data_json);
@@ -563,8 +570,6 @@ ${query_text}`;
         }
     }
 
-    StorageDialog { id: storage_dialog }
-
     menuBar: MenuBar {
         visible: root.is_desktop
         // NOTE: A Menu > CMenuItem should always have an Action. This property
@@ -585,13 +590,6 @@ ${query_text}`;
                     onTriggered: root.close()
                 }
             }
-
-            // CMenuItem {
-            //     action: Action {
-            //         text: "Select Storage..."
-            //         onTriggered: storage_dialog.open()
-            //     }
-            // }
 
             CMenuItem {
                 action: Action {
@@ -799,6 +797,16 @@ ${query_text}`;
                     text: "Library..."
                     onTriggered: {
                         SuttaBridge.open_library_window()
+                    }
+                }
+            }
+
+                CMenuItem {
+                action: Action {
+                    id: action_reference_search
+                    text: "&Reference Search..."
+                    onTriggered: {
+                        SuttaBridge.open_reference_search_window()
                     }
                 }
             }

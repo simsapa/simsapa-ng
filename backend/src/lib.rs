@@ -23,6 +23,7 @@ pub mod epub_import;
 pub mod pdf_import;
 pub mod html_import;
 pub mod document_metadata;
+pub mod pts_reference_search;
 
 use std::env;
 use std::io::{self, Read, Write};
@@ -39,10 +40,12 @@ use cfg_if::cfg_if;
 
 use crate::logger::{info, warn, error, LOGGER};
 use crate::app_data::AppData;
+use crate::pts_reference_search::ReferenceSearchResult;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
 static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
+static SUTTA_REFERENCES: OnceLock<Vec<ReferenceSearchResult>> = OnceLock::new();
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_globals() {
@@ -79,6 +82,36 @@ pub fn get_app_data() -> &'static AppData {
 /// This is useful for QML components that may load before init_app_data() is called
 pub fn try_get_app_data() -> Option<&'static AppData> {
     APP_DATA.get()
+}
+
+/// Initialize the sutta references global with parsed JSON data
+#[unsafe(no_mangle)]
+pub extern "C" fn init_sutta_references() {
+    if SUTTA_REFERENCES.get().is_none() {
+        info("init_sutta_references() start");
+        use crate::app_settings::SUTTA_REFERENCE_CONVERTER_JSON;
+        match serde_json::from_str::<Vec<ReferenceSearchResult>>(SUTTA_REFERENCE_CONVERTER_JSON) {
+            Ok(data) => {
+                SUTTA_REFERENCES.set(data).expect("Can't set SUTTA_REFERENCES");
+                info("init_sutta_references() end");
+            }
+            Err(e) => {
+                error(&format!("Failed to parse sutta-reference-converter.json: {}", e));
+                // Set empty vector on error
+                SUTTA_REFERENCES.set(vec![]).expect("Can't set SUTTA_REFERENCES");
+            }
+        }
+    }
+}
+
+/// Get the parsed sutta references from global static
+pub fn get_sutta_references() -> &'static Vec<ReferenceSearchResult> {
+    SUTTA_REFERENCES.get().expect("SUTTA_REFERENCES is not initialized")
+}
+
+/// Safe wrapper that returns None if SUTTA_REFERENCES is not yet initialized
+pub fn try_get_sutta_references() -> Option<&'static Vec<ReferenceSearchResult>> {
+    SUTTA_REFERENCES.get()
 }
 
 #[unsafe(no_mangle)]

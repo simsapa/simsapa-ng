@@ -72,6 +72,67 @@ impl AppdataDbHandle {
         }
     }
 
+    pub fn get_full_sutta_uid(&self, partial_uid: &str) -> Option<String> {
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        // If UID already contains '/', check if it exists and return it
+        if partial_uid.contains('/') {
+            let result = self.do_read(|db_conn| {
+                suttas
+                    .filter(uid.eq(partial_uid))
+                    .select(uid)
+                    .first::<String>(db_conn)
+                    .optional()
+            });
+
+            return match result {
+                Ok(found_uid) => found_uid,
+                Err(e) => {
+                    error(&format!("Error checking sutta UID '{}': {}", partial_uid, e));
+                    None
+                }
+            };
+        }
+
+        // First, try to find the Pali Mahasangiti version "{partial_uid}/pli/ms"
+        let pli_ms_uid = format!("{}/pli/ms", partial_uid);
+        let pli_result = self.do_read(|db_conn| {
+            suttas
+                .filter(uid.eq(&pli_ms_uid))
+                .select(uid)
+                .first::<String>(db_conn)
+                .optional()
+        });
+
+        match pli_result {
+            Ok(Some(found_uid)) => return Some(found_uid),
+            Ok(None) => {
+                // Pali MS not found, try LIKE query for any translation
+            },
+            Err(e) => {
+                error(&format!("Error checking Pali MS UID '{}': {}", pli_ms_uid, e));
+            }
+        }
+
+        // If Pali MS not found, find the first matching UID with LIKE
+        let pattern = format!("{}/%", partial_uid);
+        let result = self.do_read(|db_conn| {
+            suttas
+                .filter(uid.like(pattern))
+                .select(uid)
+                .first::<String>(db_conn)
+                .optional()
+        });
+
+        match result {
+            Ok(found_uid) => found_uid,
+            Err(e) => {
+                error(&format!("Error finding sutta UID for '{}': {}", partial_uid, e));
+                None
+            },
+        }
+    }
+
     pub fn get_translations_data_json_for_sutta_uid(&self, sutta_uid: &str) -> String {
         // See sutta_search_window_state.py::_add_related_tabs()
 

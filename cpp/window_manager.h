@@ -11,6 +11,7 @@ class DownloadAppdataWindow;
 class WordLookupWindow;
 class SuttaLanguagesWindow;
 class LibraryWindow;
+class ReferenceSearchWindow;
 
 class WindowManager : public QObject {
         Q_OBJECT
@@ -24,6 +25,7 @@ class WindowManager : public QObject {
         WordLookupWindow* create_word_lookup_window(const QString& word);
         SuttaLanguagesWindow* create_sutta_languages_window();
         LibraryWindow* create_library_window();
+        ReferenceSearchWindow* create_reference_search_window();
 
         static WindowManager *m_instance;
         QApplication* m_app;
@@ -33,6 +35,7 @@ class WindowManager : public QObject {
         QList<WordLookupWindow*> word_lookup_windows;
         QList<SuttaLanguagesWindow*> sutta_languages_windows;
         QList<LibraryWindow*> library_windows;
+        QList<ReferenceSearchWindow*> reference_search_windows;
 
     private:
         WindowManager(QApplication* app, QObject *parent = nullptr);
@@ -52,6 +55,7 @@ class WindowManager : public QObject {
         void open_sutta_search_window_with_query(const QString& show_result_data_json);
         void open_sutta_tab_in_window(const QString& window_id, const QString& show_result_data_json);
         void show_chapter_in_sutta_window(const QString& window_id, const QString& result_data_json);
+        void show_sutta_from_reference_search(const QString& window_id, const QString& result_data_json);
 
 };
 

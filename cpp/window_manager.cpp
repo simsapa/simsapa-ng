@@ -4,6 +4,7 @@
 #include "word_lookup_window.h"
 #include "sutta_languages_window.h"
 #include "library_window.h"
+#include "reference_search_window.h"
 #include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
@@ -86,6 +87,12 @@ SuttaLanguagesWindow* WindowManager::create_sutta_languages_window() {
 LibraryWindow* WindowManager::create_library_window() {
     LibraryWindow* w = new LibraryWindow(this->m_app);
     library_windows.append(w);
+    return w;
+}
+
+ReferenceSearchWindow* WindowManager::create_reference_search_window() {
+    ReferenceSearchWindow* w = new ReferenceSearchWindow(this->m_app);
+    reference_search_windows.append(w);
     return w;
 }
 
@@ -213,5 +220,40 @@ void WindowManager::show_chapter_in_sutta_window(const QString& window_id, const
         QMetaObject::invokeMethod(target_window->m_root, "show_result_in_html_view_with_json",
             Q_ARG(QString, result_data_json),
             Q_ARG(QVariant, QVariant(false)));
+    }
+}
+
+void WindowManager::show_sutta_from_reference_search(const QString& window_id, const QString& result_data_json) {
+    // If window_id is empty, fall back to the last window (for backwards compatibility)
+    // Otherwise, find the specific window by window_id
+    SuttaSearchWindow* target_window = nullptr;
+
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+
+    if (window_id.isEmpty()) {
+        // Fall back to last window if no window_id provided
+        target_window = this->sutta_search_windows.last();
+    } else {
+        // Find the window with matching window_id
+        for (auto w : this->sutta_search_windows) {
+            QVariant prop = w->m_root->property("window_id");
+            if (prop.isValid() && prop.toString() == window_id) {
+                target_window = w;
+                break;
+            }
+        }
+    }
+
+    if (target_window && target_window->m_root) {
+        // Show and raise the window
+        QMetaObject::invokeMethod(target_window->m_root, "show");
+        QMetaObject::invokeMethod(target_window->m_root, "raise");
+
+        // Show the sutta in the HTML view (create a new tab)
+        QMetaObject::invokeMethod(target_window->m_root, "show_result_in_html_view_with_json",
+            Q_ARG(QString, result_data_json),
+            Q_ARG(QVariant, QVariant(true)));  // Pass true to create a new tab
     }
 }
