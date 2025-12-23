@@ -1,4 +1,7 @@
+use regex::Regex;
+use lazy_static::lazy_static;
 use serde::{Serialize, Deserialize};
+
 use crate::app_settings::SUTTA_REFERENCE_CONVERTER_JSON;
 use crate::helpers::latinize;
 use crate::logger::error;
@@ -39,8 +42,12 @@ pub struct ReferenceSearchResult {
 pub fn normalize_pts_reference(pts_ref: &str) -> String {
     let mut result = pts_ref.trim().to_lowercase();
 
-    // Replace dots and tildes with spaces
-    result = result.replace('.', " ").replace('~', " ");
+    lazy_static! {
+        static ref re_pts_punct: Regex = Regex::new(r#"[\.,;:\(\)~\u{00A0}]+"#).unwrap();
+    }
+
+    // Replace punctuation with space
+    result = re_pts_punct.replace_all(&result, " ").into_owned();
 
     // Normalize multiple spaces to one
     result = result.split_whitespace().collect::<Vec<_>>().join(" ");
