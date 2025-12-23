@@ -77,3 +77,12 @@ macos-clean:
 
 macos-rebuild: macos-clean
 	./build-macos.sh --clean
+
+windows:
+	powershell -ExecutionPolicy Bypass -File build-windows.ps1
+
+windows-clean:
+	powershell -Command "if (Test-Path './build/simsapadhammareader') { Remove-Item -Recurse -Force './build/simsapadhammareader' }; if (Test-Path './dist') { Remove-Item -Recurse -Force './dist' }; if (Test-Path 'Simsapa-Setup-*.exe') { Remove-Item -Force 'Simsapa-Setup-*.exe' }"
+
+windows-rebuild: windows-clean
+	powershell -ExecutionPolicy Bypass -File build-windows.ps1 -Clean

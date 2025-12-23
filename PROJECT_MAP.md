@@ -304,6 +304,10 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - `CMakeLists.txt` - Main CMake build configuration
 - `Makefile` - Build shortcuts and common commands
 - `package.json` & `webpack.config.js` - TypeScript/JavaScript build setup
+- `build-appimage.sh` - Linux AppImage build script
+- `build-macos.sh` - macOS .app bundle and DMG build script
+- `build-windows.ps1` - Windows installer build script (PowerShell)
+- `simsapa-installer.iss` - Inno Setup installer configuration for Windows
 
 ## Essential Function Locations
 
@@ -367,12 +371,40 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Directory Paths:** `backend/src/lib.rs:131` - `AppGlobalPaths`
 
 ## Build Commands Quick Reference
+
+### Development Build
 - **Full Build:** `make build -B`
 - **Run Application:** `make run`
 - **TypeScript Build:** `npx webpack`
 - **Sass Build:** `make sass`
 - **Backend Tests:** `cd backend && cargo test`
 - **QML Tests:** `make qml-test`
+
+### Distribution Packages
+
+#### Linux AppImage
+- **Build AppImage:** `make appimage -B`
+- **Clean rebuild:** `make appimage-rebuild`
+- **Clean only:** `make appimage-clean`
+
+#### macOS Bundle & DMG
+- **Build DMG:** `make macos -B`
+- **App bundle only:** `make macos-app` (skips DMG creation)
+- **Clean rebuild:** `make macos-rebuild`
+- **Clean only:** `make macos-clean`
+
+#### Windows Installer
+- **Build Installer:** `make windows` or `powershell -ExecutionPolicy Bypass -File build-windows.ps1`
+- **Clean rebuild:** `make windows-rebuild`
+- **Clean only:** `make windows-clean`
+- **Requirements:**
+  - Qt 6.9.3 installed at `C:\Qt\6.9.3\msvc2022_64`
+  - CMake and Ninja (from Qt installation or system PATH)
+  - Rust toolchain: `x86_64-pc-windows-msvc`
+  - Inno Setup 6 for installer creation
+- **Output:**
+  - `dist\simsapadhammareader.exe` (with Qt dependencies)
+  - `Simsapa-Setup-{version}.exe` (installer)
 
 ## Data Flow
 1. **User Input** → QML Components → C++ Event Handlers

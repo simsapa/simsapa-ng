@@ -10,8 +10,22 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 endif()
 
-# Detect and set CMAKE_PREFIX_PATH for Qt6 on macOS
-if (APPLE AND NOT IOS)
+# Detect and set CMAKE_PREFIX_PATH for Qt6 on different platforms
+if (WIN32 AND NOT CMAKE_PREFIX_PATH)
+    # Try to find Qt6 installation on Windows
+    if(EXISTS "C:/Qt/6.9.3/msvc2022_64")
+        set(CMAKE_PREFIX_PATH "C:/Qt/6.9.3/msvc2022_64")
+    elseif(EXISTS "C:/Qt/6.9.3/msvc2019_64")
+        set(CMAKE_PREFIX_PATH "C:/Qt/6.9.3/msvc2019_64")
+    elseif(EXISTS "$ENV{USERPROFILE}/Qt/6.9.3/msvc2022_64")
+        set(CMAKE_PREFIX_PATH "$ENV{USERPROFILE}/Qt/6.9.3/msvc2022_64")
+    else()
+        message(WARNING "Qt6 installation not found in standard Windows locations. Please set CMAKE_PREFIX_PATH manually.")
+    endif()
+    if(CMAKE_PREFIX_PATH)
+        message(STATUS "Using CMAKE_PREFIX_PATH: ${CMAKE_PREFIX_PATH}")
+    endif()
+elseif (APPLE AND NOT IOS)
     # Find the macOS SDK path using xcrun (more reliable than hardcoding)
     execute_process(
         COMMAND xcrun --sdk macosx --show-sdk-path
@@ -91,6 +105,24 @@ elseif (APPLE)
     set(qmake_path "$ENV{HOME}/Qt/6.9.3/macos/bin/qmake6")
     list(APPEND app_components WebEngineQuick)
     list(APPEND qt_modules Qt::WebEngineQuick)
+elseif (WIN32)
+    # Explicitly set Rust target for Windows MSVC
+    set(Rust_CARGO_TARGET x86_64-pc-windows-msvc)
+
+    # Try to find qmake in Qt installation
+    if(EXISTS "C:/Qt/6.9.3/msvc2022_64/bin/qmake6.exe")
+        set(qmake_path "C:/Qt/6.9.3/msvc2022_64/bin/qmake6.exe")
+    elseif(EXISTS "C:/Qt/6.9.3/msvc2019_64/bin/qmake6.exe")
+        set(qmake_path "C:/Qt/6.9.3/msvc2019_64/bin/qmake6.exe")
+    elseif(EXISTS "$ENV{USERPROFILE}/Qt/6.9.3/msvc2022_64/bin/qmake6.exe")
+        set(qmake_path "$ENV{USERPROFILE}/Qt/6.9.3/msvc2022_64/bin/qmake6.exe")
+    else()
+        # Fallback to using qmake from PATH
+        set(qmake_path "qmake6")
+    endif()
+
+    list(APPEND app_components WebEngineQuick)
+    list(APPEND qt_modules Qt::WebEngineQuick)
 else()
     set(qmake_path "$ENV{HOME}/Qt/6.9.3/gcc_64/bin/qmake6")
     list(APPEND app_components WebEngineQuick)
@@ -113,7 +145,7 @@ endif()
 
 # CXX-Qt (using Corrosion) creates a CMake target with the same name as the crate.
 cxx_qt_import_crate(
-    MANIFEST_PATH bridges/Cargo.toml 
+    MANIFEST_PATH bridges/Cargo.toml
     CRATES simsapa_bridges
     LOCKED
     QMAKE ${qmake_path}
