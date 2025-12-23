@@ -156,7 +156,7 @@ ColumnLayout {
 
                 background: Rectangle {
                     color: book_item_wrapper.is_selected ? palette.highlight : palette.base
-                    border.color: palette.mid
+                    border.color: palette.shadow
                     border.width: 1
                     radius: 4
                 }

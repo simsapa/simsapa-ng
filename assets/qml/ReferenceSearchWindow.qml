@@ -195,7 +195,6 @@ ApplicationWindow {
                         anchors.centerIn: parent
                         text: root.current_query.length < 3 ? "Enter at least 3 characters" : "No results found"
                         font.pointSize: root.largePointSize
-                        /* color: palette.mid */
                     }
                 }
 
@@ -230,7 +229,7 @@ ApplicationWindow {
 
                             background: Rectangle {
                                 color: palette.base
-                                border.color: palette.mid
+                                border.color: palette.shadow
                                 border.width: 1
                                 radius: 4
                             }
@@ -275,7 +274,7 @@ ApplicationWindow {
                                             return "";
                                         }
                                         font.pointSize: root.pointSize - 1
-                                        /* color: palette.mid */
+                                        color: palette.mid
                                         visible: text.length > 0
                                     }
 
@@ -285,7 +284,7 @@ ApplicationWindow {
                                             return (ed && ed.length > 0) ? `[${ed}]` : "";
                                         }
                                         font.pointSize: root.pointSize - 1
-                                        /* color: palette.mid */
+                                        color: palette.mid
                                         visible: text.length > 0
                                     }
 
@@ -295,7 +294,7 @@ ApplicationWindow {
                                             return (dpr && dpr.length > 0) ? `DPR: ${dpr}` : "";
                                         }
                                         font.pointSize: root.pointSize - 1
-                                        /* color: palette.mid */
+                                        color: palette.mid
                                         visible: text.length > 0
                                     }
                                 }
@@ -309,7 +308,6 @@ ApplicationWindow {
                                         id: status_label
                                         text: result_frame.exists_in_db ? "" : "(Not found in database)"
                                         font.pointSize: root.pointSize - 2
-                                        /* color: palette.mid */
                                         visible: text.length > 0
                                     }
 
