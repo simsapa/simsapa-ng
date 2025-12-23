@@ -3,11 +3,14 @@ use crate::app_settings::SUTTA_REFERENCE_CONVERTER_JSON;
 use crate::helpers::latinize;
 use crate::logger::error;
 
-/// Represents a parsed PTS reference (e.g., "D ii 20" → nikaya: "d", volume: "ii", page: 20)
+/// Represents a parsed PTS reference
+/// Two formats supported:
+/// - "D ii 20" → nikaya: "d", volume: Some("ii"), page: 20
+/// - "Sn 52" → nikaya: "sn", volume: None, page: 52
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PTSReference {
     pub nikaya: String,
-    pub volume: String,
+    pub volume: Option<String>,
     pub page: u32,
 }
 
@@ -59,7 +62,10 @@ pub fn normalize_pts_reference(pts_ref: &str) -> String {
     result.trim().to_string()
 }
 
-/// Parse a PTS reference string like "D ii 20" into components
+/// Parse a PTS reference string into components
+/// Supports two formats:
+/// - 3-part: "D ii 20" → nikaya: "d", volume: Some("ii"), page: 20
+/// - 2-part: "Sn 52" → nikaya: "sn", volume: None, page: 52
 /// Returns None if the string cannot be parsed
 pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
     if pts_ref.trim().is_empty() {
@@ -70,11 +76,9 @@ pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
     let normalized = normalize_pts_reference(pts_ref);
     let normalized = normalized.split_whitespace().collect::<Vec<_>>().join(" ");
 
-    // Match pattern: letter(s) + roman numeral + number
-    // Example: "d ii 20" or "m iii 10"
     let parts: Vec<&str> = normalized.split_whitespace().collect();
 
-    if parts.len() < 3 {
+    if parts.len() < 2 {
         return None;
     }
 
@@ -84,20 +88,34 @@ pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
         return None;
     }
 
-    // Second part should be the volume (roman numerals)
-    let volume = parts[1];
-    if !volume.chars().all(|c| matches!(c, 'i' | 'v' | 'x')) {
-        return None;
+    // Try 3-part format first: nikaya + volume + page
+    if parts.len() >= 3 {
+        let volume = parts[1];
+        // Check if second part is a roman numeral (volume)
+        if volume.chars().all(|c| matches!(c, 'i' | 'v' | 'x')) {
+            // Third part should be the page number
+            if let Ok(page) = parts[2].parse::<u32>() {
+                return Some(PTSReference {
+                    nikaya: nikaya.to_string(),
+                    volume: Some(volume.to_string()),
+                    page,
+                });
+            }
+        }
     }
 
-    // Third part should be the page number
-    let page = parts[2].parse::<u32>().ok()?;
+    // Try 2-part format: nikaya + page (no volume)
+    if parts.len() >= 2 {
+        if let Ok(page) = parts[1].parse::<u32>() {
+            return Some(PTSReference {
+                nikaya: nikaya.to_string(),
+                volume: None,
+                page,
+            });
+        }
+    }
 
-    Some(PTSReference {
-        nikaya: nikaya.to_string(),
-        volume: volume.to_string(),
-        page,
-    })
+    None
 }
 
 /// Search by text in a specific field with normalization
@@ -155,22 +173,32 @@ pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
     let mut results: Vec<_> = all_refs
         .into_iter()
         .filter(|entry| {
-            // Skip entries without parsed PTS data
+            // Skip entries without nikaya
             let nikaya = match &entry.pts_nikaya {
                 Some(n) => n,
                 None => return false,
             };
-            let vol = match &entry.pts_vol {
-                Some(v) => v,
-                None => return false,
-            };
 
-            // Check if nikaya and volume match (case-insensitive)
+            // Check if nikaya matches (case-insensitive)
             let nikaya_match = nikaya.to_lowercase() == parsed_query.nikaya;
-            let volume_match = vol.to_lowercase() == parsed_query.volume;
-
-            if !nikaya_match || !volume_match {
+            if !nikaya_match {
                 return false;
+            }
+
+            // Check volume matching based on query and entry format
+            match (&parsed_query.volume, &entry.pts_vol) {
+                // Query has volume, entry has volume: must match
+                (Some(query_vol), Some(entry_vol)) => {
+                    if query_vol.to_lowercase() != entry_vol.to_lowercase() {
+                        return false;
+                    }
+                }
+                // Query has volume, entry doesn't: no match
+                (Some(_), None) => return false,
+                // Query has no volume, entry has volume: no match
+                (None, Some(_)) => return false,
+                // Both have no volume: continue to page matching
+                (None, None) => {}
             }
 
             // Check if query page falls within the range
@@ -235,7 +263,7 @@ mod tests {
         assert!(result.is_some());
         let parsed = result.unwrap();
         assert_eq!(parsed.nikaya, "d");
-        assert_eq!(parsed.volume, "ii");
+        assert_eq!(parsed.volume, Some("ii".to_string()));
         assert_eq!(parsed.page, 20);
     }
 
@@ -245,15 +273,25 @@ mod tests {
         assert!(result.is_some());
         let parsed = result.unwrap();
         assert_eq!(parsed.nikaya, "m");
-        assert_eq!(parsed.volume, "iii");
+        assert_eq!(parsed.volume, Some("iii".to_string()));
         assert_eq!(parsed.page, 10);
+    }
+
+    #[test]
+    fn test_parse_pts_reference_two_part() {
+        let result = parse_pts_reference("Sn 52");
+        assert!(result.is_some());
+        let parsed = result.unwrap();
+        assert_eq!(parsed.nikaya, "sn");
+        assert_eq!(parsed.volume, None);
+        assert_eq!(parsed.page, 52);
     }
 
     #[test]
     fn test_parse_pts_reference_invalid() {
         assert!(parse_pts_reference("").is_none());
         assert!(parse_pts_reference("invalid").is_none());
-        assert!(parse_pts_reference("D 20").is_none()); // Missing volume
+        assert!(parse_pts_reference("abc").is_none()); // Just letters
     }
 
     #[test]

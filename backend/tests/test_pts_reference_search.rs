@@ -9,7 +9,7 @@ fn test_parse_pts_reference_valid() {
     assert!(result.is_some());
     let parsed = result.unwrap();
     assert_eq!(parsed.nikaya, "d");
-    assert_eq!(parsed.volume, "ii");
+    assert_eq!(parsed.volume, Some("ii".to_string()));
     assert_eq!(parsed.page, 20);
 }
 
@@ -19,15 +19,25 @@ fn test_parse_pts_reference_with_extra_spaces() {
     assert!(result.is_some());
     let parsed = result.unwrap();
     assert_eq!(parsed.nikaya, "m");
-    assert_eq!(parsed.volume, "iii");
+    assert_eq!(parsed.volume, Some("iii".to_string()));
     assert_eq!(parsed.page, 10);
+}
+
+#[test]
+fn test_parse_pts_reference_two_part() {
+    let result = parse_pts_reference("Sn 52");
+    assert!(result.is_some());
+    let parsed = result.unwrap();
+    assert_eq!(parsed.nikaya, "sn");
+    assert_eq!(parsed.volume, None);
+    assert_eq!(parsed.page, 52);
 }
 
 #[test]
 fn test_parse_pts_reference_invalid() {
     assert!(parse_pts_reference("").is_none());
     assert!(parse_pts_reference("invalid").is_none());
-    assert!(parse_pts_reference("D 20").is_none()); // Missing volume
+    assert!(parse_pts_reference("abc").is_none()); // Just letters
 }
 
 // Test case 2.2: Search DN 1 by identifier
@@ -251,4 +261,55 @@ fn test_pts_reference_volume_boundary() {
             "Volume boundaries should separate different suttas"
         );
     }
+}
+
+// Test case: Search Sutta Nipāta by PTS reference (2-part format)
+#[test]
+fn test_search_snp_by_pts_ref() {
+    let results = search("sn 52", "pts_reference");
+
+    assert!(!results.is_empty(), "Should find result for 'sn 52'");
+
+    // Should find Snp 2.7 which has pts_start_page: 50, pts_end_page: 55
+    let first = &results[0];
+    assert!(
+        first.sutta_ref.contains("Snp"),
+        "Expected sutta_ref to contain 'Snp', got: {}",
+        first.sutta_ref
+    );
+
+    // Verify it's the right sutta (Brāhmaṇadhammikasutta)
+    if first.sutta_ref == "Snp 2.7" {
+        assert_eq!(first.title_pali, "Brāhmaṇadhammikasutta");
+        assert_eq!(first.pts_nikaya, Some("Sn".to_string()));
+        assert_eq!(first.pts_vol, None);
+        assert_eq!(first.pts_start_page, Some(50));
+        assert_eq!(first.pts_end_page, Some(55));
+    }
+}
+
+// Test case: Search Sutta Nipāta by exact start page
+#[test]
+fn test_search_snp_exact_start_page() {
+    let results = search("sn 50", "pts_reference");
+
+    assert!(!results.is_empty(), "Should find result for 'sn 50'");
+
+    let first = &results[0];
+    assert_eq!(first.sutta_ref, "Snp 2.7");
+    assert_eq!(first.pts_start_page, Some(50));
+}
+
+// Test case: Search Sutta Nipāta at page boundary (start of next sutta)
+#[test]
+fn test_search_snp_end_page() {
+    let results = search("sn 55", "pts_reference");
+
+    assert!(!results.is_empty(), "Should find result for 'sn 55'");
+
+    // Page 55 is where Snp 2.8 starts (and also the end of Snp 2.7)
+    // The sorting should put the sutta that starts at this page first
+    let first = &results[0];
+    assert_eq!(first.sutta_ref, "Snp 2.8");
+    assert_eq!(first.pts_start_page, Some(55));
 }
