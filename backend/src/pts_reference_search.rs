@@ -2,9 +2,7 @@ use regex::Regex;
 use lazy_static::lazy_static;
 use serde::{Serialize, Deserialize};
 
-use crate::app_settings::SUTTA_REFERENCE_CONVERTER_JSON;
 use crate::helpers::latinize;
-use crate::logger::error;
 
 /// Represents a parsed PTS reference
 /// Two formats supported:
@@ -129,14 +127,16 @@ pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
 /// Uses the latinize() function to remove diacritics for matching
 pub fn search_by_text(query: &str, field: &str) -> Vec<ReferenceSearchResult> {
     if query.trim().is_empty() {
-        return load_all_references();
+        return Vec::new();
     }
+
+    let all_refs = crate::get_sutta_references();
 
     // Normalize query: lowercase and remove diacritics
     let normalized_query = latinize(&query.trim().to_lowercase());
 
-    load_all_references()
-        .into_iter()
+    all_refs
+        .iter()
         .filter(|entry| {
             let field_value_opt: Option<&str> = match field {
                 "identifier" | "sutta_ref" => Some(&entry.sutta_ref),
@@ -156,6 +156,7 @@ pub fn search_by_text(query: &str, field: &str) -> Vec<ReferenceSearchResult> {
             let normalized_field = latinize(&field_value.to_lowercase());
             normalized_field.contains(&normalized_query)
         })
+        .cloned()
         .collect()
 }
 
@@ -175,10 +176,10 @@ pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
         }
     };
 
-    let all_refs = load_all_references();
+    let all_refs = crate::get_sutta_references();
 
     let mut results: Vec<_> = all_refs
-        .into_iter()
+        .iter()
         .filter(|entry| {
             // Skip entries without nikaya
             let nikaya = match &entry.pts_nikaya {
@@ -224,6 +225,7 @@ pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
                 }
             }
         })
+        .cloned()
         .collect();
 
     // Sort results so that suttas starting at the exact page come first
@@ -246,17 +248,6 @@ pub fn search(query: &str, field: &str) -> Vec<ReferenceSearchResult> {
         search_by_pts_reference(query)
     } else {
         search_by_text(query, field)
-    }
-}
-
-/// Load all reference entries from the JSON data
-fn load_all_references() -> Vec<ReferenceSearchResult> {
-    match serde_json::from_str::<Vec<ReferenceSearchResult>>(SUTTA_REFERENCE_CONVERTER_JSON) {
-        Ok(data) => data,
-        Err(e) => {
-            error(&format!("Failed to parse sutta-reference-converter.json: {}", e));
-            vec![]
-        }
     }
 }
 
@@ -310,14 +301,10 @@ mod tests {
 
     #[test]
     fn test_json_loading() {
-        // Try parsing directly to see the error
-        use serde_json;
-        let parse_result = serde_json::from_str::<Vec<ReferenceSearchResult>>(SUTTA_REFERENCE_CONVERTER_JSON);
-        if let Err(e) = &parse_result {
-            eprintln!("JSON parse error: {}", e);
-        }
+        // Initialize the global sutta references
+        crate::init_sutta_references();
 
-        let data = load_all_references();
+        let data = crate::get_sutta_references();
         assert!(data.len() > 0, "JSON data should be loaded and contain entries");
 
         // Print first entry for debugging

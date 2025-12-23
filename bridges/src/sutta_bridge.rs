@@ -49,6 +49,7 @@ pub mod qobject {
         #[qml_element]
         #[qml_singleton]
         #[qproperty(bool, db_loaded)]
+        #[qproperty(bool, sutta_references_loaded)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
 
@@ -115,6 +116,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn load_sutta_references(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
         fn appdata_first_query(self: Pin<&mut SuttaBridge>);
@@ -435,12 +439,14 @@ pub mod qobject {
 
 pub struct SuttaBridgeRust {
     db_loaded: bool,
+    sutta_references_loaded: bool,
 }
 
 impl Default for SuttaBridgeRust {
     fn default() -> Self {
         Self {
             db_loaded: false,
+            sutta_references_loaded: false,
         }
     }
 }
@@ -472,6 +478,18 @@ impl qobject::SuttaBridge {
                 qo.as_mut().set_db_loaded(r);
             }).unwrap();
             info("SuttaBridge::load_db() end");
+        });
+    }
+
+    pub fn load_sutta_references(self: Pin<&mut Self>) {
+        info("SuttaBridge::load_sutta_references() start");
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            simsapa_backend::init_sutta_references();
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().set_sutta_references_loaded(true);
+            }).unwrap();
+            info("SuttaBridge::load_sutta_references() end");
         });
     }
 

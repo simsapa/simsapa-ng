@@ -67,6 +67,7 @@ ApplicationWindow {
     Component.onCompleted: {
         theme_helper.apply();
         root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
+        SuttaBridge.load_sutta_references();
     }
 
     // Keyboard shortcuts
@@ -99,9 +100,10 @@ ApplicationWindow {
                     TextField {
                         id: search_input
                         Layout.fillWidth: true
-                        placeholderText: "E.g.: 'D ii 20', 'M iii 10', 'brahmajala', 'DN 1', 'KN 1'"
+                        placeholderText: SuttaBridge.sutta_references_loaded ? "E.g.: 'D ii 20', 'M iii 10', 'brahmajala', 'DN 1', 'KN 1'" : "Loading references..."
                         font.pointSize: root.pointSize
                         selectByMouse: true
+                        enabled: SuttaBridge.sutta_references_loaded
 
                         onTextChanged: {
                             root.current_query = text;
@@ -119,6 +121,7 @@ ApplicationWindow {
                         model: ["PTS Ref", "DPR Ref", "Title", "Sutta Ref"]
                         currentIndex: 0
                         font.pointSize: root.pointSize
+                        enabled: SuttaBridge.sutta_references_loaded
 
                         onCurrentIndexChanged: {
                             const field_map = {

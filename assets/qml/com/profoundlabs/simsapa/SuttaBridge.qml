@@ -6,6 +6,7 @@ Item {
     id: root
 
     property bool db_loaded: false;
+    property bool sutta_references_loaded: false;
     property var dpd_lookup_test_data: ({})
 
     Component.onCompleted: {
@@ -40,6 +41,14 @@ Item {
 
     function load_db() {
         console.log("load_db()");
+    }
+
+    function load_sutta_references() {
+        console.log("load_sutta_references()");
+        // Simulate async behavior
+        Qt.callLater(function() {
+            root.sutta_references_loaded = true;
+        });
     }
 
     function appdata_first_query() {
