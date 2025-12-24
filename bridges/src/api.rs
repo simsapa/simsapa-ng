@@ -335,7 +335,12 @@ fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm
 
 #[get("/book_pages/<book_uid>/<resource_path..>")]
 fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let resource_path_str = resource_path.to_string_lossy();
+    // Convert path to string with forward slashes (consistent across platforms)
+    // On Windows, PathBuf uses backslashes, but database stores paths with forward slashes
+    let resource_path_str = resource_path.iter()
+        .map(|s| s.to_str().unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join("/");
     info(&format!("get_book_page_by_path(): {}/{}", book_uid, resource_path_str));
 
     let item = match dbm.appdata.get_book_spine_item_by_path(book_uid, &resource_path_str) {
@@ -447,10 +452,15 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) ->
 /// Serve book resources (images, CSS, PDFs, etc.) from the database
 #[get("/book_resources/<book_uid>/<path..>")]
 fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
-    let path_str = path.to_str().unwrap_or("");
+    // Convert path to string with forward slashes (consistent across platforms)
+    // On Windows, PathBuf uses backslashes, but database stores paths with forward slashes
+    let path_str = path.iter()
+        .map(|s| s.to_str().unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join("/");
 
     // Query the database for the resource
-    match db_manager.appdata.get_book_resource(book_uid, path_str) {
+    match db_manager.appdata.get_book_resource(book_uid, &path_str) {
         Ok(Some(resource)) => {
             // Determine ContentType from MIME type
             let content_type = if let Some(ref mime) = resource.mime_type {
