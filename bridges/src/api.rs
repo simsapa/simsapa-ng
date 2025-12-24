@@ -87,7 +87,8 @@ impl Default for AssetsHandler {
 fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (ContentType, Vec<u8>)) {
     // Convert path to forward slashes for cross-platform consistency
     let path_str = pathbuf_to_forward_slash_string(&path);
-    info(&format!("serve_assets: {}", path_str));
+    // Also log the raw PathBuf for debugging Windows path issues
+    info(&format!("serve_assets: path_str='{}', raw_path='{:?}'", path_str, path));
 
     let some_entry = assets.files.get_entry(&path_str);
 
@@ -351,6 +352,41 @@ fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm
     }
 }
 
+/// Serve PDF viewer page for a PDF book - for browser testing
+/// URL: /get_pdf_viewer/<book_uid>
+/// This generates the same URL that the QML view would load
+#[get("/get_pdf_viewer/<book_uid>")]
+fn get_pdf_viewer(book_uid: &str) -> RawHtml<String> {
+    let g = get_app_globals_api();
+    let api_url = format!("http://localhost:{}", g.api_port);
+    let pdf_url = format!("{}/book_resources/{}/document.pdf", api_url, book_uid);
+    // URL encode the pdf_url for use as query parameter
+    let encoded_pdf_url = pdf_url.replace(":", "%3A").replace("/", "%2F");
+    let viewer_url = format!("{}/assets/pdf-viewer/web/viewer.html?file={}", api_url, encoded_pdf_url);
+
+    // Return a simple redirect page
+    let html = format!(r#"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PDF Viewer - {}</title>
+    <meta http-equiv="refresh" content="0; url={}">
+</head>
+<body>
+    <p>Loading PDF viewer...</p>
+    <p>If not redirected, <a href="{}">click here</a></p>
+    <p>Debug info:</p>
+    <ul>
+        <li>Book UID: {}</li>
+        <li>PDF URL: {}</li>
+        <li>Viewer URL: {}</li>
+    </ul>
+</body>
+</html>"#, book_uid, viewer_url, viewer_url, book_uid, pdf_url, viewer_url);
+
+    RawHtml(html)
+}
+
 #[get("/book_pages/<book_uid>/<resource_path..>")]
 fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
     // Convert path to forward slashes for cross-platform consistency
@@ -548,6 +584,7 @@ pub async extern "C" fn start_webserver() {
             sutta_menu_action,
             get_sutta_html_by_uid,
             get_book_spine_item_html_by_uid,
+            get_pdf_viewer,
             get_book_page_by_path,
             open_sutta_window,
             open_sutta_tab,
