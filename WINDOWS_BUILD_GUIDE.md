@@ -31,34 +31,79 @@ This guide explains how to build the Simsapa Dhamma Reader on Windows.
 
 ### Quick Start
 
-Open PowerShell in the project root directory and run:
+#### Option 1: PowerShell with Execution Policy Bypass (Recommended)
+
+If you get an error about script execution being disabled, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build-windows.ps1
+```
+
+This bypasses the execution policy for this single script without changing system settings.
+
+#### Option 2: Enable Scripts for Current User
+
+Alternatively, you can enable script execution for your user account:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Then run the script normally:
 
 ```powershell
 .\build-windows.ps1
 ```
 
-This will:
+#### Option 3: Use Developer PowerShell for VS 2022 (RECOMMENDED)
+
+The **Developer PowerShell for VS 2022** is the best option because:
+- ✅ Execution policies already configured
+- ✅ C++ compiler (MSVC) already in PATH
+- ✅ All build tools ready to use
+- ✅ No environment setup needed
+
+**How to use:**
+1. Open Start Menu
+2. Search for "Developer PowerShell for VS 2022"
+3. Navigate to project directory: `cd C:\path\to\simsapa-ng`
+4. Run: `.\build-windows.ps1`
+
+**Why this is better:** Regular PowerShell requires the script to configure the MSVC environment, which can sometimes fail. Developer PowerShell already has everything configured.
+
+---
+
+The build script will:
 1. Build the application with CMake
 2. Deploy Qt dependencies with windeployqt
 3. Create an installer with Inno Setup
 
 ### Build Options
 
+All these options use the `-ExecutionPolicy Bypass` method:
+
 ```powershell
 # Show help
-.\build-windows.ps1 -Help
+powershell -ExecutionPolicy Bypass -File build-windows.ps1 -Help
 
 # Clean build
-.\build-windows.ps1 -Clean
+powershell -ExecutionPolicy Bypass -File build-windows.ps1 -Clean
 
 # Build with custom Qt path
-.\build-windows.ps1 -QtPath "C:\Qt\6.9.3\msvc2022_64"
+powershell -ExecutionPolicy Bypass -File build-windows.ps1 -QtPath "C:\Qt\6.9.3\msvc2022_64"
 
 # Skip installer creation (just build and deploy)
-.\build-windows.ps1 -SkipInstaller
+powershell -ExecutionPolicy Bypass -File build-windows.ps1 -SkipInstaller
 
 # Use existing build (only deploy and create installer)
-.\build-windows.ps1 -SkipBuild
+powershell -ExecutionPolicy Bypass -File build-windows.ps1 -SkipBuild
+```
+
+Or if you've set the execution policy, use the shorter form:
+
+```powershell
+.\build-windows.ps1 -Clean
+.\build-windows.ps1 -QtPath "C:\Qt\6.9.3\msvc2022_64"
 ```
 
 ### Using Makefile (if Make is available)
@@ -101,13 +146,66 @@ The Inno Setup installer includes:
 
 ## Troubleshooting
 
+### PowerShell Script Execution Disabled
+
+**Problem:** Error message: "cannot be loaded because running scripts is disabled on this system"
+
+**Solution 1 (Best):** Use **Developer PowerShell for VS 2022**
+- Open Start Menu → Search "Developer PowerShell for VS 2022"
+- Navigate to project directory
+- Run: `.\build-windows.ps1`
+
+**Solution 2:** Run with execution policy bypass:
+```powershell
+powershell -ExecutionPolicy Bypass -File build-windows.ps1
+```
+
+**Solution 3:** Enable scripts for current user:
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+**Why this happens:** Windows blocks unsigned PowerShell scripts by default for security.
+
+---
+
+### CMake Cannot Find Build Program (Ninja) or C++ Compiler
+
+**Problem:** 
+```
+CMake Error: CMake was unable to find a build program corresponding to "Ninja"
+CMake Error: CMAKE_CXX_COMPILER not set, after EnableLanguage
+```
+
+**Cause:** The MSVC (Visual C++) compiler environment is not configured in your PowerShell session.
+
+**Solution 1 (Recommended):** Use **Developer PowerShell for VS 2022**
+- This PowerShell variant has the C++ compiler already configured
+- Open Start Menu → Search "Developer PowerShell for VS 2022"
+- Navigate to project and run: `.\build-windows.ps1`
+
+**Solution 2:** Manually import Visual Studio environment:
+```powershell
+# Import the VS environment (adjust path if needed)
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1"
+
+# Then run the build
+.\build-windows.ps1
+```
+
+**Solution 3:** The script will now automatically try to import the MSVC environment. If this fails, use Solution 1.
+
+**Why this happens:** CMake needs the Visual C++ compiler to build C++ code. The compiler is only available when the Visual Studio environment is properly configured.
+
+---
+
 ### CMake Configuration Fails
 
 **Problem:** CMake can't find Qt installation
 
 **Solution:**
 ```powershell
-.\build-windows.ps1 -QtPath "C:\path\to\Qt\6.9.3\msvc2022_64"
+powershell -ExecutionPolicy Bypass -File build-windows.ps1 -QtPath "C:\path\to\Qt\6.9.3\msvc2022_64"
 ```
 
 ### Build Fails with Linking Errors

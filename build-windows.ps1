@@ -169,21 +169,41 @@ if ($Clean) {
 if (-not $SkipBuild) {
     Write-Status "Building application..."
     
-    # Set up environment for MSVC
+    # Set up environment for MSVC by calling vcvars64.bat
     $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+    $vcvarsPath = $null
+    
     if (Test-Path $vsWhere) {
         $vsPath = & $vsWhere -latest -property installationPath
         $vcvarsPath = Join-Path $vsPath "VC\Auxiliary\Build\vcvars64.bat"
         
         if (Test-Path $vcvarsPath) {
+            Write-Status "Found Visual Studio at: $vsPath"
             Write-Status "Setting up MSVC environment..."
-            # We'll use the Developer PowerShell instead of calling vcvars64.bat
-            # because it's difficult to capture environment variables from batch files
+            
+            # Import environment variables from vcvars64.bat
+            # We use cmd.exe to run vcvars64.bat and capture the environment
+            $envVars = & cmd /c "`"$vcvarsPath`" && set"
+            
+            foreach ($line in $envVars) {
+                if ($line -match '^([^=]+)=(.*)$') {
+                    $name = $matches[1]
+                    $value = $matches[2]
+                    # Set important build-related variables
+                    if ($name -match '^(PATH|INCLUDE|LIB|LIBPATH|VCINSTALLDIR|WindowsSdkDir|WindowsSDKVersion)$') {
+                        Set-Item -Path "env:$name" -Value $value
+                    }
+                }
+            }
+            Write-Status "MSVC environment configured"
         } else {
-            Write-Warning "vcvars64.bat not found, assuming MSVC is already in PATH"
+            Write-Warning "vcvars64.bat not found at: $vcvarsPath"
         }
-    } else {
-        Write-Warning "Visual Studio not found via vswhere, assuming build tools are in PATH"
+    }
+    
+    if (-not $vcvarsPath -or -not (Test-Path $vcvarsPath)) {
+        Write-Warning "Visual Studio environment not configured"
+        Write-Warning "If the build fails, please run this script from 'Developer PowerShell for VS 2022'"
     }
     
     # Configure with CMake
@@ -195,13 +215,23 @@ if (-not $SkipBuild) {
         "-DCMAKE_BUILD_TYPE=Release"
     )
     
-    if ($ninja) {
+    # Only use Ninja if it's available and we're not already in an environment
+    # that has a default generator configured
+    if ($ninja -and (Get-Command $ninja -ErrorAction SilentlyContinue)) {
+        Write-Status "Using Ninja build system"
         $cmakeArgs += "-G", "Ninja"
+    } else {
+        Write-Status "Using default CMake generator (MSVC)"
     }
     
     & $cmake $cmakeArgs
     if ($LASTEXITCODE -ne 0) {
         Write-Error "CMake configuration failed"
+        Write-Error ""
+        Write-Error "Possible solutions:"
+        Write-Error "1. Run this script from 'Developer PowerShell for VS 2022'"
+        Write-Error "2. Or run: & 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1'"
+        Write-Error "3. Or install Visual Studio 2022 with C++ development tools"
         exit 1
     }
     

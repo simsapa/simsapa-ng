@@ -308,6 +308,8 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - `build-macos.sh` - macOS .app bundle and DMG build script
 - `build-windows.ps1` - Windows installer build script (PowerShell)
 - `simsapa-installer.iss` - Inno Setup installer configuration for Windows
+- `WINDOWS_QUICK_START.md` - Quick reference for Windows builds
+- `WINDOWS_BUILD_GUIDE.md` - Complete Windows build documentation
 
 ## Essential Function Locations
 
@@ -394,9 +396,11 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Clean only:** `make macos-clean`
 
 #### Windows Installer
-- **Build Installer:** `make windows` or `powershell -ExecutionPolicy Bypass -File build-windows.ps1`
+- **Build Installer:** `powershell -ExecutionPolicy Bypass -File build-windows.ps1` or `make windows`
 - **Clean rebuild:** `make windows-rebuild`
 - **Clean only:** `make windows-clean`
+- **Quick Start:** See [WINDOWS_QUICK_START.md](WINDOWS_QUICK_START.md)
+- **Full Guide:** See [WINDOWS_BUILD_GUIDE.md](WINDOWS_BUILD_GUIDE.md)
 - **Requirements:**
   - Qt 6.9.3 installed at `C:\Qt\6.9.3\msvc2022_64`
   - CMake and Ninja (from Qt installation or system PATH)
@@ -405,6 +409,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Output:**
   - `dist\simsapadhammareader.exe` (with Qt dependencies)
   - `Simsapa-Setup-{version}.exe` (installer)
+- **Note:** Use `-ExecutionPolicy Bypass` to run PowerShell scripts if you get "scripts disabled" error
 
 ## Data Flow
 1. **User Input** → QML Components → C++ Event Handlers
