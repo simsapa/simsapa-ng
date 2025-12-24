@@ -73,7 +73,7 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(
 
 [Code]
 var
-  UserDataDirPage: TInputDirWizardPage;
+  UninstallUserDataPage: TInputOptionWizardPage;
   DeleteUserDataCheckbox: TNewCheckBox;
 
 // Check if Visual C++ Redistributable is installed
@@ -125,63 +125,85 @@ begin
   Result := ExpandConstant('{localappdata}\profound-labs\simsapa-ng');
 end;
 
-// Initialize the uninstall wizard
+// Initialize the uninstall wizard with custom page
 procedure InitializeUninstallProgressForm();
 var
+  UninstallConfirmPage: TNewNotebookPage;
   PageText: TNewStaticText;
-  PagePanel: TPanel;
-  BevelTop: TBevel;
+  PathLabel: TLabel;
+  UserDataDir: String;
 begin
   if not UninstallSilent then
   begin
-    // Create a custom page for uninstall options
-    PagePanel := TPanel.Create(UninstallProgressForm);
-    PagePanel.Parent := UninstallProgressForm;
-    PagePanel.Left := 0;
-    PagePanel.Top := UninstallProgressForm.OuterNotebook.Top + UninstallProgressForm.OuterNotebook.Height + ScaleY(20);
-    PagePanel.Width := UninstallProgressForm.ClientWidth;
-    PagePanel.Height := ScaleY(90);
-    PagePanel.Anchors := [akLeft, akTop, akRight];
-    PagePanel.BevelOuter := bvNone;
+    // Create a custom page in the uninstall wizard
+    UninstallConfirmPage := TNewNotebookPage.Create(UninstallProgressForm);
+    UninstallConfirmPage.Notebook := UninstallProgressForm.InnerNotebook;
+    UninstallConfirmPage.Parent := UninstallProgressForm.InnerNotebook;
+    UninstallConfirmPage.Align := alClient;
 
-    BevelTop := TBevel.Create(UninstallProgressForm);
-    BevelTop.Parent := PagePanel;
-    BevelTop.Left := 0;
-    BevelTop.Top := 0;
-    BevelTop.Width := PagePanel.Width;
-    BevelTop.Height := ScaleY(2);
-    BevelTop.Anchors := [akLeft, akTop, akRight];
-    BevelTop.Shape := bsTopLine;
-
+    // Title text
     PageText := TNewStaticText.Create(UninstallProgressForm);
-    PageText.Parent := PagePanel;
-    PageText.Left := ScaleX(10);
-    PageText.Top := ScaleY(15);
-    PageText.Width := PagePanel.Width - ScaleX(20);
-    PageText.Height := ScaleY(30);
-    PageText.Anchors := [akLeft, akTop, akRight];
-    PageText.Caption := 'Remove downloaded databases and user data?';
+    PageText.Parent := UninstallConfirmPage;
+    PageText.Top := ScaleY(16);
+    PageText.Left := ScaleX(0);
+    PageText.Width := UninstallConfirmPage.Width;
+    PageText.AutoSize := False;
+    PageText.ShowAccelChar := False;
+    PageText.Font.Style := [fsBold];
+    PageText.Caption := 'Remove Downloaded Data and User Settings?';
 
+    // Description text
+    PageText := TNewStaticText.Create(UninstallProgressForm);
+    PageText.Parent := UninstallConfirmPage;
+    PageText.Top := ScaleY(48);
+    PageText.Left := ScaleX(0);
+    PageText.Width := UninstallConfirmPage.Width - ScaleX(16);
+    PageText.Height := ScaleY(60);
+    PageText.AutoSize := False;
+    PageText.ShowAccelChar := False;
+    PageText.Caption := 
+      'Simsapa stores downloaded language databases, user settings, and annotations in your user data folder.' + #13#10#13#10 +
+      'Would you like to remove this data as well?';
+
+    // Path label
+    UserDataDir := GetUserDataDir;
+    PathLabel := TLabel.Create(UninstallProgressForm);
+    PathLabel.Parent := UninstallConfirmPage;
+    PathLabel.Top := ScaleY(118);
+    PathLabel.Left := ScaleX(0);
+    PathLabel.Width := UninstallConfirmPage.Width - ScaleX(16);
+    PathLabel.AutoSize := False;
+    PathLabel.Caption := 'Location: ' + UserDataDir;
+    PathLabel.Font.Color := clGrayText;
+
+    // Checkbox for deletion
     DeleteUserDataCheckbox := TNewCheckBox.Create(UninstallProgressForm);
-    DeleteUserDataCheckbox.Parent := PagePanel;
-    DeleteUserDataCheckbox.Left := ScaleX(10);
-    DeleteUserDataCheckbox.Top := PageText.Top + PageText.Height + ScaleY(5);
-    DeleteUserDataCheckbox.Width := PagePanel.Width - ScaleX(20);
-    DeleteUserDataCheckbox.Height := ScaleY(35);
-    DeleteUserDataCheckbox.Anchors := [akLeft, akTop, akRight];
-    DeleteUserDataCheckbox.Caption := 'Delete all downloaded language databases and user data (including settings and annotations)';
-    DeleteUserDataCheckbox.Checked := False;
+    DeleteUserDataCheckbox.Parent := UninstallConfirmPage;
+    DeleteUserDataCheckbox.Top := ScaleY(148);
+    DeleteUserDataCheckbox.Left := ScaleX(0);
+    DeleteUserDataCheckbox.Width := UninstallConfirmPage.Width - ScaleX(16);
+    DeleteUserDataCheckbox.Height := ScaleY(20);
+    DeleteUserDataCheckbox.Caption := 'Yes, delete all downloaded databases, settings, and user data';
+    DeleteUserDataCheckbox.Checked := True;  // Enabled by default
 
-    // Adjust form height to accommodate the new panel
-    UninstallProgressForm.ClientHeight := UninstallProgressForm.ClientHeight + PagePanel.Height;
+    // Set this as the initial page
+    UninstallProgressForm.InnerNotebook.ActivePage := UninstallConfirmPage;
+    
+    // Update button labels for the first page
+    UninstallProgressForm.StatusLabel.Caption := 'Click Next to continue, or Cancel to exit.';
   end;
+end;
+
+// Handle the Next button click in uninstall wizard
+function UninstallNeedRestart(): Boolean;
+begin
+  Result := False;
 end;
 
 // Custom uninstall process to remove user data if requested
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   UserDataDir: String;
-  ResultCode: Integer;
   ShouldDelete: Boolean;
 begin
   if CurUninstallStep = usPostUninstall then
@@ -207,27 +229,19 @@ begin
     // Perform deletion if requested
     if ShouldDelete and DirExists(UserDataDir) then
     begin
-      // Double-check with confirmation dialog (except during silent uninstall)
-      if UninstallSilent or 
-         (MsgBox('This will permanently delete all your downloaded databases and user data at:' + #13#10#13#10 +
-                 UserDataDir + #13#10#13#10 +
-                 'Are you sure you want to continue?',
-                 mbConfirmation, MB_YESNO) = IDYES) then
+      // Delete the user data directory
+      if DelTree(UserDataDir, True, True, True) then
       begin
-        // Delete the user data directory
-        if DelTree(UserDataDir, True, True, True) then
-        begin
-          if not UninstallSilent then
-            MsgBox('User data has been successfully deleted.', mbInformation, MB_OK);
-        end
-        else
-        begin
-          if not UninstallSilent then
-            MsgBox('Could not delete all user data. Some files may still remain at:' + #13#10 +
-                   UserDataDir + #13#10#13#10 +
-                   'You may need to delete them manually.',
-                   mbError, MB_OK);
-        end;
+        if not UninstallSilent then
+          MsgBox('User data has been successfully deleted from:' + #13#10#13#10 + UserDataDir, mbInformation, MB_OK);
+      end
+      else
+      begin
+        if not UninstallSilent then
+          MsgBox('Could not delete all user data. Some files may still remain at:' + #13#10 +
+                 UserDataDir + #13#10#13#10 +
+                 'You may need to delete them manually.',
+                 mbError, MB_OK);
       end;
     end;
   end;
