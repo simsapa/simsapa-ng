@@ -185,10 +185,20 @@ Write-Status ""
 
 # Check for Rust toolchain
 try {
-    $rustupOutput = & rustup show 2>&1
-    if ($rustupOutput -notmatch "x86_64-pc-windows-msvc") {
-        Write-Warning "x86_64-pc-windows-msvc toolchain not found"
-        Write-Status "Installing Rust MSVC toolchain..."
+    # Check if any MSVC toolchain is installed (stable, beta, or nightly)
+    $rustupOutput = & rustup toolchain list 2>&1
+    if ($rustupOutput -match "msvc") {
+        Write-Status "[OK] MSVC Rust toolchain found"
+    } else {
+        Write-Warning "No MSVC Rust toolchain found"
+        Write-Status "Installing stable MSVC toolchain..."
+        & rustup toolchain install stable-x86_64-pc-windows-msvc
+    }
+    
+    # Also ensure the MSVC target is available for cross-compilation
+    $targetOutput = & rustup target list --installed 2>&1
+    if ($targetOutput -notmatch "x86_64-pc-windows-msvc") {
+        Write-Status "Adding x86_64-pc-windows-msvc target..."
         & rustup target add x86_64-pc-windows-msvc
     }
 } catch {
