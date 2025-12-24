@@ -7,6 +7,7 @@ use diesel::RunQueryDsl;
 use crate::logger::{info, error};
 use crate::db::appdata_models::Sutta;
 use crate::db::appdata_schema::suttas;
+use crate::normalize_path_for_sqlite;
 
 /// Import suttas from language database files into appdata
 ///
@@ -69,7 +70,7 @@ pub fn import_suttas_from_db(import_db_path: &PathBuf, target_database_url: &str
     info(&format!("import_suttas_from_db(): {:?} -> {}", import_db_path, target_database_url));
 
     // Establish connection to import database
-    let import_abs_path = std::fs::canonicalize(import_db_path)?;
+    let import_abs_path = normalize_path_for_sqlite(std::fs::canonicalize(import_db_path)?);
     let import_database_url = format!("sqlite://{}", import_abs_path.to_str().ok_or("Path conversion error")?);
 
     let mut import_conn = SqliteConnection::establish(&import_database_url)

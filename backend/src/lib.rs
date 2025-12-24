@@ -183,6 +183,27 @@ impl AppGlobals {
     }
 }
 
+/// Normalize a path for use with SQLite on Windows.
+/// On Windows, fs::canonicalize() returns UNC paths with \\?\ prefix which can cause issues with SQLite.
+/// This function strips the UNC prefix to get a regular Windows path.
+pub fn normalize_path_for_sqlite(path: PathBuf) -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        // Convert to string and strip the UNC prefix if present
+        if let Some(path_str) = path.to_str() {
+            if path_str.starts_with(r"\\?\") {
+                // Strip the \\?\ prefix
+                return PathBuf::from(&path_str[4..]);
+            }
+        }
+        path
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        path
+    }
+}
+
 impl AppGlobalPaths {
     pub fn new() -> Self {
         let simsapa_dir = if let Ok(p) = get_create_simsapa_dir() {
@@ -199,19 +220,19 @@ impl AppGlobalPaths {
         let app_assets_dir = simsapa_dir.join("app-assets");
 
         let appdata_db_path = app_assets_dir.join("appdata.sqlite3");
-        let appdata_abs_path = fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path.clone());
+        let appdata_abs_path = normalize_path_for_sqlite(fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path.clone()));
         let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
         let userdata_db_path = app_assets_dir.join("userdata.sqlite3");
-        let userdata_abs_path = fs::canonicalize(userdata_db_path.clone()).unwrap_or(userdata_db_path.clone());
+        let userdata_abs_path = normalize_path_for_sqlite(fs::canonicalize(userdata_db_path.clone()).unwrap_or(userdata_db_path.clone()));
         let userdata_database_url = format!("sqlite://{}", userdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
         let dict_db_path = app_assets_dir.join("dictionaries.sqlite3");
-        let dict_abs_path = fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path.clone());
+        let dict_abs_path = normalize_path_for_sqlite(fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path.clone()));
         let dict_database_url = format!("sqlite://{}", dict_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
         let dpd_db_path = app_assets_dir.join("dpd.sqlite3");
-        let dpd_abs_path = fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone());
+        let dpd_abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone()));
         let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
         AppGlobalPaths {
