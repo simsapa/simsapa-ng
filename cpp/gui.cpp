@@ -86,7 +86,7 @@ void callback_show_sutta_from_reference_search(QString window_id, QString result
   AppGlobals::manager->show_sutta_from_reference_search(window_id, result_data_json);
 }
 
-void start(int argc, char* argv[]) {
+int start(int argc, char* argv[]) {
   dotenv_c();
   log_info_with_options_c("gui::start()", true);
   find_port_set_env_c();
@@ -209,4 +209,6 @@ void start(int argc, char* argv[]) {
   std::ostringstream msg;
   msg << "Exiting with status " << status << ".";
   log_info_c(msg.str().c_str());
+
+  return status;
 }

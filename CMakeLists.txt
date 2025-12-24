@@ -240,5 +240,13 @@ if(APPLE AND NOT IOS)
     )
 endif()
 
+# Link bcrypt library on Windows (required by Rust getrandom crate)
+if(WIN32)
+    target_link_libraries(simsapadhammareader
+        PUBLIC
+            bcrypt
+    )
+endif()
+
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(simsapadhammareader)
