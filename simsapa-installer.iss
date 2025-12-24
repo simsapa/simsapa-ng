@@ -140,7 +140,7 @@ begin
     PagePanel.Left := 0;
     PagePanel.Top := UninstallProgressForm.OuterNotebook.Top + UninstallProgressForm.OuterNotebook.Height + ScaleY(20);
     PagePanel.Width := UninstallProgressForm.ClientWidth;
-    PagePanel.Height := ScaleY(80);
+    PagePanel.Height := ScaleY(90);
     PagePanel.Anchors := [akLeft, akTop, akRight];
     PagePanel.BevelOuter := bvNone;
 
@@ -160,16 +160,16 @@ begin
     PageText.Width := PagePanel.Width - ScaleX(20);
     PageText.Height := ScaleY(30);
     PageText.Anchors := [akLeft, akTop, akRight];
-    PageText.Caption := 'User data and downloaded databases:';
+    PageText.Caption := 'Remove downloaded databases and user data?';
 
     DeleteUserDataCheckbox := TNewCheckBox.Create(UninstallProgressForm);
     DeleteUserDataCheckbox.Parent := PagePanel;
     DeleteUserDataCheckbox.Left := ScaleX(10);
     DeleteUserDataCheckbox.Top := PageText.Top + PageText.Height + ScaleY(5);
     DeleteUserDataCheckbox.Width := PagePanel.Width - ScaleX(20);
-    DeleteUserDataCheckbox.Height := ScaleY(25);
+    DeleteUserDataCheckbox.Height := ScaleY(35);
     DeleteUserDataCheckbox.Anchors := [akLeft, akTop, akRight];
-    DeleteUserDataCheckbox.Caption := 'Delete user data and downloaded databases at: ' + GetUserDataDir();
+    DeleteUserDataCheckbox.Caption := 'Delete all downloaded language databases and user data (including settings and annotations)';
     DeleteUserDataCheckbox.Checked := False;
 
     // Adjust form height to accommodate the new panel
@@ -182,37 +182,52 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   UserDataDir: String;
   ResultCode: Integer;
+  ShouldDelete: Boolean;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
-    // Check if user wants to delete their data
-    if Assigned(DeleteUserDataCheckbox) and DeleteUserDataCheckbox.Checked then
+    UserDataDir := GetUserDataDir;
+    ShouldDelete := False;
+    
+    // Determine if we should delete user data
+    if UninstallSilent then
     begin
-      UserDataDir := GetUserDataDir;
-      if DirExists(UserDataDir) then
+      // During silent uninstall, don't delete user data by default
+      ShouldDelete := False;
+    end
+    else
+    begin
+      // During interactive uninstall, check if user opted to delete
+      if Assigned(DeleteUserDataCheckbox) and DeleteUserDataCheckbox.Checked then
       begin
-        if MsgBox('This will permanently delete all your downloaded databases and user data at:' + #13#10#13#10 +
-                  UserDataDir + #13#10#13#10 +
-                  'Are you sure you want to continue?',
-                  mbConfirmation, MB_YESNO) = IDYES then
+        ShouldDelete := True;
+      end;
+    end;
+    
+    // Perform deletion if requested
+    if ShouldDelete and DirExists(UserDataDir) then
+    begin
+      // Double-check with confirmation dialog (except during silent uninstall)
+      if UninstallSilent or 
+         (MsgBox('This will permanently delete all your downloaded databases and user data at:' + #13#10#13#10 +
+                 UserDataDir + #13#10#13#10 +
+                 'Are you sure you want to continue?',
+                 mbConfirmation, MB_YESNO) = IDYES) then
+      begin
+        // Delete the user data directory
+        if DelTree(UserDataDir, True, True, True) then
         begin
-          // Delete the user data directory
-          if DelTree(UserDataDir, True, True, True) then
-          begin
+          if not UninstallSilent then
             MsgBox('User data has been successfully deleted.', mbInformation, MB_OK);
-          end
-          else
-          begin
+        end
+        else
+        begin
+          if not UninstallSilent then
             MsgBox('Could not delete all user data. Some files may still remain at:' + #13#10 +
                    UserDataDir + #13#10#13#10 +
                    'You may need to delete them manually.',
                    mbError, MB_OK);
-          end;
         end;
-      end
-      else
-      begin
-        MsgBox('User data directory not found. Nothing to delete.', mbInformation, MB_OK);
       end;
     end;
   end;
