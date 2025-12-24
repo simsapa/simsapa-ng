@@ -12,6 +12,7 @@ param(
     [switch]$SkipBuild,
     [switch]$SkipDeploy,
     [switch]$SkipInstaller,
+    [switch]$Verbose,
     [switch]$Help
 )
 
@@ -30,6 +31,7 @@ Options:
   -SkipBuild            Skip building, use existing executable
   -SkipDeploy           Skip Qt deployment
   -SkipInstaller        Skip installer creation
+  -Verbose              Show detailed debugging output
   -Help                 Show this help message
 
 "@
@@ -97,6 +99,7 @@ Write-Status "  App Version: $AppVersion"
 Write-Status "  Qt Path: $QtPath"
 Write-Status "  Build Dir: $BuildDir"
 Write-Status "  Dist Dir: $DistDir"
+Write-Status ""
 
 # Check if Qt installation exists
 if (-not (Test-Path $QtPath)) {
@@ -108,27 +111,65 @@ if (-not (Test-Path $QtPath)) {
 # Find required tools
 $qtBinPath = Join-Path $QtPath "bin"
 $windeployqt = Join-Path $qtBinPath "windeployqt.exe"
-$cmake = "C:\Qt\Tools\CMake_64\bin\cmake.exe"
-$ninja = "C:\Qt\Tools\Ninja\ninja.exe"
 
-# Check for CMake (try Qt installation first, then system PATH)
-if (-not (Test-Path $cmake)) {
-    Write-Warning "CMake not found in Qt Tools, trying system PATH..."
-    $cmake = "cmake"
-    if (-not (Get-Command cmake -ErrorAction SilentlyContinue)) {
-        Write-Error "CMake not found. Please install CMake or ensure it's in PATH"
-        exit 1
-    }
+# Find Qt Tools directory (where CMake and Ninja are installed)
+# Qt Path: C:\Qt\6.9.3\msvc2022_64
+# Tools Dir: C:\Qt\Tools
+$qtRootDir = Split-Path (Split-Path $QtPath -Parent) -Parent
+$qtToolsDir = Join-Path $qtRootDir "Tools"
+$cmake = Join-Path $qtToolsDir "CMake_64\bin\cmake.exe"
+$ninja = Join-Path $qtToolsDir "Ninja\ninja.exe"
+
+if ($Verbose) {
+    Write-Status "Debug: Qt Path: $QtPath"
+    Write-Status "Debug: Qt Root Dir: $qtRootDir"
+    Write-Status "Debug: Qt Tools Dir: $qtToolsDir"
+    Write-Status "Debug: Expected CMake: $cmake"
+    Write-Status "Debug: Expected Ninja: $ninja"
 }
 
-# Check for Ninja (try Qt installation first, then system PATH)
+# Add Qt tools to PATH so CMake can find them
+$qtCMakeBinDir = Join-Path $qtToolsDir "CMake_64\bin"
+$qtNinjaDir = Join-Path $qtToolsDir "Ninja"
+
+if (Test-Path $qtCMakeBinDir) {
+    $env:PATH = "$qtCMakeBinDir;$env:PATH"
+    Write-Status "✓ Added Qt CMake to PATH: $qtCMakeBinDir"
+} else {
+    Write-Warning "Qt CMake directory not found: $qtCMakeBinDir"
+}
+
+if (Test-Path $qtNinjaDir) {
+    $env:PATH = "$qtNinjaDir;$env:PATH"
+    Write-Status "✓ Added Qt Ninja to PATH: $qtNinjaDir"
+} else {
+    Write-Warning "Qt Ninja directory not found: $qtNinjaDir"
+}
+
+# Check for CMake
+if (-not (Test-Path $cmake)) {
+    Write-Warning "CMake not found at: $cmake"
+    Write-Status "Trying to find CMake in system PATH..."
+    $cmake = "cmake"
+    if (-not (Get-Command cmake -ErrorAction SilentlyContinue)) {
+        Write-Error "CMake not found. Please install CMake or ensure Qt Tools is installed"
+        exit 1
+    }
+} else {
+    Write-Status "✓ Found CMake: $cmake"
+}
+
+# Check for Ninja
 if (-not (Test-Path $ninja)) {
-    Write-Warning "Ninja not found in Qt Tools, trying system PATH..."
+    Write-Warning "Ninja not found at: $ninja"
+    Write-Status "Trying to find Ninja in system PATH..."
     $ninja = "ninja"
     if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) {
-        Write-Warning "Ninja not found, CMake will use default generator"
+        Write-Warning "Ninja not found, CMake will use Visual Studio generator instead"
         $ninja = $null
     }
+} else {
+    Write-Status "✓ Found Ninja: $ninja"
 }
 
 # Check for windeployqt
@@ -136,7 +177,11 @@ if (-not (Test-Path $windeployqt)) {
     Write-Error "windeployqt.exe not found at: $windeployqt"
     Write-Error "Please ensure Qt 6.9.3 is properly installed"
     exit 1
+} else {
+    Write-Status "✓ Found windeployqt: $windeployqt"
 }
+
+Write-Status ""
 
 # Check for Rust toolchain
 try {
@@ -183,19 +228,31 @@ if (-not $SkipBuild) {
             
             # Import environment variables from vcvars64.bat
             # We use cmd.exe to run vcvars64.bat and capture the environment
-            $envVars = & cmd /c "`"$vcvarsPath`" && set"
+            $tempFile = [System.IO.Path]::GetTempFileName()
+            
+            # Run vcvars64.bat and output environment to temp file
+            cmd /c "`"$vcvarsPath`" > nul && set > `"$tempFile`""
+            
+            # Read and parse environment variables
+            $envVars = Get-Content $tempFile
+            Remove-Item $tempFile
             
             foreach ($line in $envVars) {
                 if ($line -match '^([^=]+)=(.*)$') {
                     $name = $matches[1]
                     $value = $matches[2]
-                    # Set important build-related variables
-                    if ($name -match '^(PATH|INCLUDE|LIB|LIBPATH|VCINSTALLDIR|WindowsSdkDir|WindowsSDKVersion)$') {
-                        Set-Item -Path "env:$name" -Value $value
-                    }
+                    # Set ALL environment variables to ensure complete MSVC setup
+                    Set-Item -Path "env:$name" -Value $value -Force
                 }
             }
             Write-Status "MSVC environment configured"
+            
+            # Verify compiler is available
+            if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
+                Write-Status "✓ C++ compiler (cl.exe) found in PATH"
+            } else {
+                Write-Warning "⚠ C++ compiler (cl.exe) not found in PATH after environment setup"
+            }
         } else {
             Write-Warning "vcvars64.bat not found at: $vcvarsPath"
         }
@@ -215,13 +272,22 @@ if (-not $SkipBuild) {
         "-DCMAKE_BUILD_TYPE=Release"
     )
     
-    # Only use Ninja if it's available and we're not already in an environment
-    # that has a default generator configured
-    if ($ninja -and (Get-Command $ninja -ErrorAction SilentlyContinue)) {
+    # Determine which generator to use
+    $useNinja = $false
+    if ($ninja -and (Test-Path $ninja)) {
+        # Ninja exists, tell CMake exactly where it is
         Write-Status "Using Ninja build system"
         $cmakeArgs += "-G", "Ninja"
+        $cmakeArgs += "-DCMAKE_MAKE_PROGRAM=$ninja"
+        $useNinja = $true
+    } elseif (Get-Command ninja -ErrorAction SilentlyContinue) {
+        # Ninja is in PATH
+        Write-Status "Using Ninja build system (from PATH)"
+        $cmakeArgs += "-G", "Ninja"
+        $useNinja = $true
     } else {
-        Write-Status "Using default CMake generator (MSVC)"
+        Write-Status "Using Visual Studio generator (Ninja not found)"
+        # CMake will auto-detect Visual Studio
     }
     
     & $cmake $cmakeArgs
