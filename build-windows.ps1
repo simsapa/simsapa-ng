@@ -134,14 +134,14 @@ $qtNinjaDir = Join-Path $qtToolsDir "Ninja"
 
 if (Test-Path $qtCMakeBinDir) {
     $env:PATH = "$qtCMakeBinDir;$env:PATH"
-    Write-Status "✓ Added Qt CMake to PATH: $qtCMakeBinDir"
+    Write-Status "[OK] Added Qt CMake to PATH: $qtCMakeBinDir"
 } else {
     Write-Warning "Qt CMake directory not found: $qtCMakeBinDir"
 }
 
 if (Test-Path $qtNinjaDir) {
     $env:PATH = "$qtNinjaDir;$env:PATH"
-    Write-Status "✓ Added Qt Ninja to PATH: $qtNinjaDir"
+    Write-Status "[OK] Added Qt Ninja to PATH: $qtNinjaDir"
 } else {
     Write-Warning "Qt Ninja directory not found: $qtNinjaDir"
 }
@@ -156,7 +156,7 @@ if (-not (Test-Path $cmake)) {
         exit 1
     }
 } else {
-    Write-Status "✓ Found CMake: $cmake"
+    Write-Status "[OK] Found CMake: $cmake"
 }
 
 # Check for Ninja
@@ -169,7 +169,7 @@ if (-not (Test-Path $ninja)) {
         $ninja = $null
     }
 } else {
-    Write-Status "✓ Found Ninja: $ninja"
+    Write-Status "[OK] Found Ninja: $ninja"
 }
 
 # Check for windeployqt
@@ -178,7 +178,7 @@ if (-not (Test-Path $windeployqt)) {
     Write-Error "Please ensure Qt 6.9.3 is properly installed"
     exit 1
 } else {
-    Write-Status "✓ Found windeployqt: $windeployqt"
+    Write-Status "[OK] Found windeployqt: $windeployqt"
 }
 
 Write-Status ""
@@ -231,7 +231,7 @@ if (-not $SkipBuild) {
             $tempFile = [System.IO.Path]::GetTempFileName()
             
             # Run vcvars64.bat and output environment to temp file
-            cmd /c "`"$vcvarsPath`" > nul && set > `"$tempFile`""
+            & cmd.exe /c "`"$vcvarsPath`" >nul 2>&1 & set > `"$tempFile`""
             
             # Read and parse environment variables
             $envVars = Get-Content $tempFile
@@ -249,9 +249,9 @@ if (-not $SkipBuild) {
             
             # Verify compiler is available
             if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
-                Write-Status "✓ C++ compiler (cl.exe) found in PATH"
+                Write-Status "[OK] C++ compiler (cl.exe) found in PATH"
             } else {
-                Write-Warning "⚠ C++ compiler (cl.exe) not found in PATH after environment setup"
+                Write-Warning "WARNING: C++ compiler (cl.exe) not found in PATH after environment setup"
             }
         } else {
             Write-Warning "vcvars64.bat not found at: $vcvarsPath"
