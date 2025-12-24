@@ -34,6 +34,16 @@ pub fn get_app_globals_api() -> &'static AppGlobals {
     APP_GLOBALS_API.get().expect("AppGlobals (in API) is not initialized")
 }
 
+/// Convert a PathBuf to a string using forward slashes as separators.
+/// On Windows, PathBuf uses backslashes, but URLs and database paths use forward slashes.
+/// This ensures consistent path handling across all platforms.
+fn pathbuf_to_forward_slash_string(path: &PathBuf) -> String {
+    path.iter()
+        .map(|s| s.to_str().unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
 #[cxx_qt::bridge]
 pub mod ffi {
     unsafe extern "C++" {
@@ -75,14 +85,17 @@ impl Default for AssetsHandler {
 
 #[get("/assets/<path..>")]
 fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (ContentType, Vec<u8>)) {
-    let path_str = path.to_str().unwrap_or("");
+    // Convert path to forward slashes for cross-platform consistency
+    let path_str = pathbuf_to_forward_slash_string(&path);
+    // Also log the raw PathBuf for debugging Windows path issues
+    info(&format!("serve_assets: path_str='{}', raw_path='{:?}'", path_str, path));
 
-    let some_entry = assets.files.get_entry(path_str);
+    let some_entry = assets.files.get_entry(&path_str);
 
     if let Some(entry) = some_entry {
         if let Some(entry_file) = entry.as_file() {
 
-            let p = PathBuf::from(path_str);
+            let p = PathBuf::from(&path_str);
             let path_ext = match p.extension() {
                 Some(s) => s.to_str().unwrap_or("txt"),
                 None => "txt",
@@ -99,6 +112,10 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
                 "woff" | "woff2" => ContentType::WOFF,
                 "ttf" => ContentType::TTF,
                 "otf" => ContentType::OTF,
+                "html" | "htm" => ContentType::HTML,
+                "wasm" => ContentType::WASM,
+                "pdf" => ContentType::PDF,
+                "map" => ContentType::JSON, // Source maps
                 _ => ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain),
             };
 
@@ -296,7 +313,8 @@ fn shutdown(shutdown: Shutdown) {
 
 #[get("/get_sutta_html_by_uid/<window_id>/<uid..>")]
 fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let uid_str = uid.to_string_lossy();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("get_sutta_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
 
     let app_data = get_app_data();
@@ -316,7 +334,8 @@ fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManage
 
 #[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]
 fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let uid_str = spine_item_uid.to_string_lossy();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&spine_item_uid);
     info(&format!("get_book_spine_item_html_by_uid(): {}", uid_str));
 
     let item = match dbm.appdata.get_book_spine_item(&uid_str) {
@@ -333,9 +352,45 @@ fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm
     }
 }
 
+/// Serve PDF viewer page for a PDF book - for browser testing
+/// URL: /get_pdf_viewer/<book_uid>
+/// This generates the same URL that the QML view would load
+#[get("/get_pdf_viewer/<book_uid>")]
+fn get_pdf_viewer(book_uid: &str) -> RawHtml<String> {
+    let g = get_app_globals_api();
+    let api_url = format!("http://localhost:{}", g.api_port);
+    let pdf_url = format!("{}/book_resources/{}/document.pdf", api_url, book_uid);
+    // URL encode the pdf_url for use as query parameter
+    let encoded_pdf_url = pdf_url.replace(":", "%3A").replace("/", "%2F");
+    let viewer_url = format!("{}/assets/pdf-viewer/web/viewer.html?file={}", api_url, encoded_pdf_url);
+
+    // Return a simple redirect page
+    let html = format!(r#"<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PDF Viewer - {}</title>
+    <meta http-equiv="refresh" content="0; url={}">
+</head>
+<body>
+    <p>Loading PDF viewer...</p>
+    <p>If not redirected, <a href="{}">click here</a></p>
+    <p>Debug info:</p>
+    <ul>
+        <li>Book UID: {}</li>
+        <li>PDF URL: {}</li>
+        <li>Viewer URL: {}</li>
+    </ul>
+</body>
+</html>"#, book_uid, viewer_url, viewer_url, book_uid, pdf_url, viewer_url);
+
+    RawHtml(html)
+}
+
 #[get("/book_pages/<book_uid>/<resource_path..>")]
 fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let resource_path_str = resource_path.to_string_lossy();
+    // Convert path to forward slashes for cross-platform consistency
+    let resource_path_str = pathbuf_to_forward_slash_string(&resource_path);
     info(&format!("get_book_page_by_path(): {}/{}", book_uid, resource_path_str));
 
     let item = match dbm.appdata.get_book_spine_item_by_path(book_uid, &resource_path_str) {
@@ -354,8 +409,8 @@ fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc
 
 #[get("/open_sutta_window/<uid..>")]
 fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
-    // Convert PathBuf to string
-    let uid_str = uid.to_string_lossy().to_string();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("open_sutta(): {}", uid_str));
 
     // Try to get sutta with original UID
@@ -400,8 +455,8 @@ fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
 
 #[get("/open_sutta_tab/<window_id>/<uid..>")]
 fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
-    // Convert PathBuf to string
-    let uid_str = uid.to_string_lossy().to_string();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("open_sutta_tab(): window_id: {}, uid: {}", window_id, uid_str));
 
     // Try to get sutta with original UID
@@ -447,10 +502,12 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) ->
 /// Serve book resources (images, CSS, PDFs, etc.) from the database
 #[get("/book_resources/<book_uid>/<path..>")]
 fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
-    let path_str = path.to_str().unwrap_or("");
+    // Convert path to forward slashes for cross-platform consistency
+    let path_str = pathbuf_to_forward_slash_string(&path);
+    info(&format!("serve_book_resources: book_uid={}, path={}", book_uid, path_str));
 
     // Query the database for the resource
-    match db_manager.appdata.get_book_resource(book_uid, path_str) {
+    match db_manager.appdata.get_book_resource(book_uid, &path_str) {
         Ok(Some(resource)) => {
             // Determine ContentType from MIME type
             let content_type = if let Some(ref mime) = resource.mime_type {
@@ -527,6 +584,7 @@ pub async extern "C" fn start_webserver() {
             sutta_menu_action,
             get_sutta_html_by_uid,
             get_book_spine_item_html_by_uid,
+            get_pdf_viewer,
             get_book_page_by_path,
             open_sutta_window,
             open_sutta_tab,

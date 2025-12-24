@@ -22,6 +22,28 @@ static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js
 static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");
 static SIMSAPA_JS: &'static str = include_str!("../../assets/js/simsapa.min.js");
 
+/// Convert a QUrl to a local file path string.
+/// Handles Windows paths correctly - QUrl::path() returns "/C:/path" on Windows,
+/// but we need "C:/path" for Rust's Path/PathBuf to work correctly.
+fn qurl_to_local_path(url: &QUrl) -> String {
+    let path_str = url.path().to_string();
+
+    // On Windows, QUrl::path() returns "/C:/path" for local files
+    // We need to remove the leading slash for Windows drive paths
+    #[cfg(target_os = "windows")]
+    {
+        if path_str.len() >= 3 && path_str.starts_with('/') {
+            let chars: Vec<char> = path_str.chars().collect();
+            // Check for pattern like "/C:" where second char is a letter and third is ':'
+            if chars.len() >= 3 && chars[1].is_ascii_alphabetic() && chars[2] == ':' {
+                return path_str[1..].to_string();
+            }
+        }
+    }
+
+    path_str
+}
+
 #[cxx_qt::bridge]
 pub mod qobject {
 
@@ -1306,7 +1328,7 @@ impl qobject::SuttaBridge {
                      folder_url: &QUrl,
                      filename: &QString,
                      content: &QString) -> bool {
-        let folder_path = PathBuf::from(folder_url.path().to_string());
+        let folder_path = PathBuf::from(qurl_to_local_path(folder_url));
         let output_path = folder_path.join(&filename.to_string());
         match output_path.to_str() {
             Some(p) => {
@@ -1320,7 +1342,7 @@ impl qobject::SuttaBridge {
     pub fn check_file_exists_in_folder(&self,
                                        folder_url: &QUrl,
                                        filename: &QString) -> bool {
-        let folder_path = PathBuf::from(folder_url.path().to_string());
+        let folder_path = PathBuf::from(qurl_to_local_path(folder_url));
         let output_path = folder_path.join(&filename.to_string());
         let exists = match check_file_exists_print_err(&output_path) {
             Ok(r) => r,

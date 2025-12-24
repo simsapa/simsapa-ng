@@ -12,7 +12,7 @@ use serde::{Serialize, Deserialize};
 use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
 
-use crate::{get_app_data, get_create_simsapa_app_assets_path};
+use crate::{get_app_data, get_create_simsapa_app_assets_path, normalize_path_for_sqlite};
 use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text};
 use crate::pali_stemmer::pali_stem;
 use crate::pali_sort::{pali_sort_key, sort_search_results_natural};
@@ -622,7 +622,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
                    -> Result<(), diesel::result::Error> {
     info("migrate_dpd()");
 
-    let abs_path = fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf());
+    let abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf()));
     let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
     let mut db_conn = SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
@@ -635,7 +635,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
 
     info("Updating dictionary_id ...");
 
-    let abs_path = fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf());
+    let abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf()));
     let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
     let mut db_conn = SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));

@@ -979,7 +979,7 @@ fn get_windows_memory_gb() -> Option<u64> {
     }
 
     #[link(name = "kernel32")]
-    extern "system" {
+    unsafe extern "system" {
         fn GlobalMemoryStatusEx(lpbuffer: *mut MEMORYSTATUSEX) -> i32;
     }
 

@@ -10,6 +10,8 @@ cli/*.xml
 
 # build folders
 build/
+# But include pdf-viewer build folder (needed for PDF.js)
+!assets/pdf-viewer/build/
 dist/
 target/
 cli/target
@@ -22,6 +24,8 @@ node_modules/
 project_tree.txt
 Simsapa-*.AppImage
 Simsapa-*.dmg
+Simsapa-Setup-*.exe
+redist/
 appimage-tools/
 Simsapa.AppDir/
 

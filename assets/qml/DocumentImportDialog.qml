@@ -58,8 +58,28 @@ Dialog {
         nameFilters: ["Documents (*.epub *.pdf *.html *.htm)", "EPUB files (*.epub)", "PDF files (*.pdf)", "HTML files (*.html *.htm)"]
 
         onAccepted: {
-            const file_url = selectedFile.toString().replace("file://", "");
-            let file_path = decodeURIComponent(file_url);
+            let file_path = "";
+
+            // Handle file:// URLs - convert to local path
+            const file_url_str = selectedFile.toString();
+            if (file_url_str.startsWith("file:///")) {
+                // On Windows: file:///C:/path -> C:/path
+                // On Unix: file:///path -> /path
+                const without_prefix = file_url_str.substring(8); // Remove "file:///"
+                if (Qt.platform.os === "windows" && without_prefix.match(/^[A-Za-z]:/)) {
+                    // Windows path like "C:/Users/..." - use as-is
+                    file_path = decodeURIComponent(without_prefix);
+                } else {
+                    // Unix path - add leading slash back
+                    file_path = "/" + decodeURIComponent(without_prefix);
+                }
+            } else if (file_url_str.startsWith("file://")) {
+                // file://path (no third slash) - just remove prefix
+                file_path = decodeURIComponent(file_url_str.substring(7));
+            } else {
+                // Not a file URL (e.g., content:// on Android)
+                file_path = file_url_str;
+            }
 
             // On Android, if we got a content:// URI, copy it to a temp file
             if (Qt.platform.os === "android" && file_path.startsWith("content://")) {

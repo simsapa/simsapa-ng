@@ -28,7 +28,7 @@ use crate::db::appdata_models::AppSetting;
 use crate::db::dictionaries::DictionariesDbHandle;
 use crate::db::dpd::DpdDbHandle;
 use crate::app_settings::AppSettings;
-use crate::{check_file_exists_print_err, get_create_simsapa_dir, get_app_globals};
+use crate::{check_file_exists_print_err, get_create_simsapa_dir, get_app_globals, normalize_path_for_sqlite};
 
 pub type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
 pub type DbConn = PooledConnection<ConnectionManager<SqliteConnection>>;
@@ -297,17 +297,17 @@ pub fn establish_connection() -> (SqliteConnection, SqliteConnection, SqliteConn
     let _ = check_file_exists_print_err(&dict_db_path);
     let _ = check_file_exists_print_err(&dpd_db_path);
 
-    let appdata_abs_path = fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path);
+    let appdata_abs_path = normalize_path_for_sqlite(fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path));
     let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
     let appdata_conn = SqliteConnection::establish(&appdata_database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", appdata_database_url));
 
-    let dict_abs_path = fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path);
+    let dict_abs_path = normalize_path_for_sqlite(fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path));
     let dict_database_url = format!("sqlite://{}", dict_abs_path.as_os_str().to_str().expect("os_str Error!"));
     let dict_conn = SqliteConnection::establish(&dict_database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", dict_database_url));
 
-    let dpd_abs_path = fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path);
+    let dpd_abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path));
     let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
     let dpd_conn = SqliteConnection::establish(&dpd_database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", dpd_database_url));
