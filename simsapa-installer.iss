@@ -161,7 +161,6 @@ begin
     PageText.Height := ScaleY(30);
     PageText.Anchors := [akLeft, akTop, akRight];
     PageText.Caption := 'User data and downloaded databases:';
-    PageText.WordWrap := False;
 
     DeleteUserDataCheckbox := TNewCheckBox.Create(UninstallProgressForm);
     DeleteUserDataCheckbox.Parent := PagePanel;
@@ -172,7 +171,6 @@ begin
     DeleteUserDataCheckbox.Anchors := [akLeft, akTop, akRight];
     DeleteUserDataCheckbox.Caption := 'Delete user data and downloaded databases at: ' + GetUserDataDir();
     DeleteUserDataCheckbox.Checked := False;
-    DeleteUserDataCheckbox.WordWrap := True;
 
     // Adjust form height to accommodate the new panel
     UninstallProgressForm.ClientHeight := UninstallProgressForm.ClientHeight + PagePanel.Height;
