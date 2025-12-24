@@ -87,6 +87,7 @@ impl Default for AssetsHandler {
 fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (ContentType, Vec<u8>)) {
     // Convert path to forward slashes for cross-platform consistency
     let path_str = pathbuf_to_forward_slash_string(&path);
+    info(&format!("serve_assets: {}", path_str));
 
     let some_entry = assets.files.get_entry(&path_str);
 
@@ -110,6 +111,10 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
                 "woff" | "woff2" => ContentType::WOFF,
                 "ttf" => ContentType::TTF,
                 "otf" => ContentType::OTF,
+                "html" | "htm" => ContentType::HTML,
+                "wasm" => ContentType::WASM,
+                "pdf" => ContentType::PDF,
+                "map" => ContentType::JSON, // Source maps
                 _ => ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain),
             };
 
@@ -463,6 +468,7 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) ->
 fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
     // Convert path to forward slashes for cross-platform consistency
     let path_str = pathbuf_to_forward_slash_string(&path);
+    info(&format!("serve_book_resources: book_uid={}, path={}", book_uid, path_str));
 
     // Query the database for the resource
     match db_manager.appdata.get_book_resource(book_uid, &path_str) {
