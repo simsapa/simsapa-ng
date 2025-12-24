@@ -34,6 +34,16 @@ pub fn get_app_globals_api() -> &'static AppGlobals {
     APP_GLOBALS_API.get().expect("AppGlobals (in API) is not initialized")
 }
 
+/// Convert a PathBuf to a string using forward slashes as separators.
+/// On Windows, PathBuf uses backslashes, but URLs and database paths use forward slashes.
+/// This ensures consistent path handling across all platforms.
+fn pathbuf_to_forward_slash_string(path: &PathBuf) -> String {
+    path.iter()
+        .map(|s| s.to_str().unwrap_or(""))
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
 #[cxx_qt::bridge]
 pub mod ffi {
     unsafe extern "C++" {
@@ -75,14 +85,15 @@ impl Default for AssetsHandler {
 
 #[get("/assets/<path..>")]
 fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (ContentType, Vec<u8>)) {
-    let path_str = path.to_str().unwrap_or("");
+    // Convert path to forward slashes for cross-platform consistency
+    let path_str = pathbuf_to_forward_slash_string(&path);
 
-    let some_entry = assets.files.get_entry(path_str);
+    let some_entry = assets.files.get_entry(&path_str);
 
     if let Some(entry) = some_entry {
         if let Some(entry_file) = entry.as_file() {
 
-            let p = PathBuf::from(path_str);
+            let p = PathBuf::from(&path_str);
             let path_ext = match p.extension() {
                 Some(s) => s.to_str().unwrap_or("txt"),
                 None => "txt",
@@ -296,7 +307,8 @@ fn shutdown(shutdown: Shutdown) {
 
 #[get("/get_sutta_html_by_uid/<window_id>/<uid..>")]
 fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let uid_str = uid.to_string_lossy();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("get_sutta_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
 
     let app_data = get_app_data();
@@ -316,7 +328,8 @@ fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManage
 
 #[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]
 fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    let uid_str = spine_item_uid.to_string_lossy();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&spine_item_uid);
     info(&format!("get_book_spine_item_html_by_uid(): {}", uid_str));
 
     let item = match dbm.appdata.get_book_spine_item(&uid_str) {
@@ -335,12 +348,8 @@ fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm
 
 #[get("/book_pages/<book_uid>/<resource_path..>")]
 fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
-    // Convert path to string with forward slashes (consistent across platforms)
-    // On Windows, PathBuf uses backslashes, but database stores paths with forward slashes
-    let resource_path_str = resource_path.iter()
-        .map(|s| s.to_str().unwrap_or(""))
-        .collect::<Vec<_>>()
-        .join("/");
+    // Convert path to forward slashes for cross-platform consistency
+    let resource_path_str = pathbuf_to_forward_slash_string(&resource_path);
     info(&format!("get_book_page_by_path(): {}/{}", book_uid, resource_path_str));
 
     let item = match dbm.appdata.get_book_spine_item_by_path(book_uid, &resource_path_str) {
@@ -359,8 +368,8 @@ fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc
 
 #[get("/open_sutta_window/<uid..>")]
 fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
-    // Convert PathBuf to string
-    let uid_str = uid.to_string_lossy().to_string();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("open_sutta(): {}", uid_str));
 
     // Try to get sutta with original UID
@@ -405,8 +414,8 @@ fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
 
 #[get("/open_sutta_tab/<window_id>/<uid..>")]
 fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
-    // Convert PathBuf to string
-    let uid_str = uid.to_string_lossy().to_string();
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("open_sutta_tab(): window_id: {}, uid: {}", window_id, uid_str));
 
     // Try to get sutta with original UID
@@ -452,12 +461,8 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) ->
 /// Serve book resources (images, CSS, PDFs, etc.) from the database
 #[get("/book_resources/<book_uid>/<path..>")]
 fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
-    // Convert path to string with forward slashes (consistent across platforms)
-    // On Windows, PathBuf uses backslashes, but database stores paths with forward slashes
-    let path_str = path.iter()
-        .map(|s| s.to_str().unwrap_or(""))
-        .collect::<Vec<_>>()
-        .join("/");
+    // Convert path to forward slashes for cross-platform consistency
+    let path_str = pathbuf_to_forward_slash_string(&path);
 
     // Query the database for the resource
     match db_manager.appdata.get_book_resource(book_uid, &path_str) {
