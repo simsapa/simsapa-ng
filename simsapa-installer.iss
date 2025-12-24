@@ -143,9 +143,9 @@ begin
         'Simsapa stores downloaded language databases, user settings, and annotations in your user data folder.' + #13#10#13#10 +
         'Location: ' + UserDataDir + #13#10#13#10 +
         'Do you want to delete this data as well?' + #13#10#13#10 +
-        'Click Yes to remove all user data.' + #13#10 +
-        'Click No to keep user data (you can reinstall later without re-downloading).' + #13#10 +
-        'Click Cancel to abort uninstallation.',
+        'Click Yes to remove the Simsapa app and all user data.' + #13#10 +
+        'Click No to remove the Simsapa app but keep user data (you can reinstall the app later without re-downloading).' + #13#10 +
+        'Click Cancel to exit and abort uninstallation.',
         mbConfirmation, MB_YESNOCANCEL);
       
       case MsgResult of
