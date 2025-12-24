@@ -439,6 +439,49 @@ if (-not $SkipDeploy) {
     Write-Status "Skipping Qt deployment"
 }
 
+# Download VC++ Redistributable if missing
+if (-not $SkipInstaller) {
+    $vcRedistDir = ".\redist"
+    $vcRedistPath = "$vcRedistDir\vc_redist.x64.exe"
+    $vcRedistUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+    
+    if (-not (Test-Path $vcRedistPath)) {
+        Write-Status "Downloading Visual C++ Redistributable..."
+        
+        # Create redist directory if it doesn't exist
+        if (-not (Test-Path $vcRedistDir)) {
+            New-Item -ItemType Directory -Path $vcRedistDir | Out-Null
+        }
+        
+        try {
+            # Use BITS for more reliable download with progress, fallback to Invoke-WebRequest
+            $bitsSupported = Get-Command Start-BitsTransfer -ErrorAction SilentlyContinue
+            if ($bitsSupported) {
+                Write-Status "Downloading using BITS..."
+                Start-BitsTransfer -Source $vcRedistUrl -Destination $vcRedistPath -Description "Downloading VC++ Redistributable"
+            } else {
+                Write-Status "Downloading using Invoke-WebRequest..."
+                # Show progress for large download
+                $ProgressPreference = 'Continue'
+                Invoke-WebRequest -Uri $vcRedistUrl -OutFile $vcRedistPath -UseBasicParsing
+            }
+            
+            if (Test-Path $vcRedistPath) {
+                $fileSize = (Get-Item $vcRedistPath).Length / 1MB
+                Write-Status "[OK] VC++ Redistributable downloaded ($([math]::Round($fileSize, 2)) MB)"
+            } else {
+                Write-Warning "Download completed but file not found at: $vcRedistPath"
+            }
+        } catch {
+            Write-Warning "Failed to download VC++ Redistributable: $_"
+            Write-Warning "The installer will show a warning to users if VC++ is not installed"
+            Write-Warning "You can manually download from: $vcRedistUrl"
+        }
+    } else {
+        Write-Status "[OK] VC++ Redistributable already present"
+    }
+}
+
 # Create installer with Inno Setup
 if (-not $SkipInstaller) {
     Write-Status "Creating installer with Inno Setup..."
@@ -514,5 +557,12 @@ Write-Status "  - Install location: C:\Program Files\Simsapa"
 Write-Status "  - User data: %LOCALAPPDATA%\profound-labs\simsapa-ng"
 Write-Status "  - Databases: %LOCALAPPDATA%\profound-labs\simsapa-ng\app-assets"
 Write-Status ""
-Write-Status "Note: Users will need Visual C++ Redistributable installed"
-Write-Status "      (The installer will check for this)"
+
+# Report VC++ Redistributable status
+$vcRedistPath = ".\redist\vc_redist.x64.exe"
+if (Test-Path $vcRedistPath) {
+    Write-Status "VC++ Redistributable: Bundled (will install silently if needed)"
+} else {
+    Write-Warning "VC++ Redistributable: Not bundled (download failed or -SkipInstaller used)"
+    Write-Warning "  Users will see a warning if VC++ is not installed on their system"
+}

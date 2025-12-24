@@ -22,6 +22,8 @@ node_modules/
 project_tree.txt
 Simsapa-*.AppImage
 Simsapa-*.dmg
+Simsapa-Setup-*.exe
+redist/
 appimage-tools/
 Simsapa.AppDir/
 

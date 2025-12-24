@@ -63,12 +63,20 @@ Source: "{#DistDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs cr
 ; Application icon
 Source: "assets\icons\appicons\simsapa.ico"; DestDir: "{app}"; Flags: ignoreversion
 
+; Visual C++ Redistributable (bundled for offline installation)
+; Download from: https://aka.ms/vs/17/release/vc_redist.x64.exe
+; Place in redist\ folder before building installer
+Source: "redist\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: ignoreversion deleteafterinstall; Check: VCRedistNeedsInstall
+
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\simsapa.ico"
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\simsapa.ico"; Tasks: desktopicon
 
 [Run]
+; Install Visual C++ Redistributable silently if needed (runs before app launch)
+Filename: "{tmp}\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; StatusMsg: "Installing Visual C++ Redistributable..."; Flags: waituntilterminated; Check: VCRedistNeedsInstall
+; Launch application after installation
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
@@ -90,13 +98,20 @@ begin
     Result := True;
 end;
 
+// Check if VC++ Redistributable installer is bundled
+function VCRedistBundled: Boolean;
+begin
+  Result := FileExists(ExpandConstant('{src}\redist\vc_redist.x64.exe'));
+end;
+
 // Initialize the wizard with custom pages
 procedure InitializeWizard;
 var
   WarningPage: TOutputMsgWizardPage;
 begin
-  // Add a warning page if VC++ Redistributable is needed
-  if VCRedistNeedsInstall then
+  // Add a warning page if VC++ Redistributable is needed but NOT bundled
+  // If bundled, it will be installed silently - no warning needed
+  if VCRedistNeedsInstall and not VCRedistBundled then
   begin
     WarningPage := CreateOutputMsgPage(wpWelcome,
       'Visual C++ Redistributable Required',
