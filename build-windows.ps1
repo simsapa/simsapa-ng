@@ -234,24 +234,50 @@ if (-not $SkipBuild) {
             & cmd.exe /c "`"$vcvarsPath`" >nul 2>&1 & set > `"$tempFile`""
             
             # Read and parse environment variables
-            $envVars = Get-Content $tempFile
-            Remove-Item $tempFile
-            
-            foreach ($line in $envVars) {
-                if ($line -match '^([^=]+)=(.*)$') {
-                    $name = $matches[1]
-                    $value = $matches[2]
-                    # Set ALL environment variables to ensure complete MSVC setup
-                    Set-Item -Path "env:$name" -Value $value -Force
+            if (Test-Path $tempFile) {
+                $envVars = Get-Content $tempFile
+                Remove-Item $tempFile
+                
+                foreach ($line in $envVars) {
+                    if ($line -match '^([^=]+)=(.*)$') {
+                        $name = $matches[1]
+                        $value = $matches[2]
+                        # Set ALL environment variables to ensure complete MSVC setup
+                        Set-Item -Path "env:$name" -Value $value -Force
+                    }
                 }
-            }
-            Write-Status "MSVC environment configured"
-            
-            # Verify compiler is available
-            if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
-                Write-Status "[OK] C++ compiler (cl.exe) found in PATH"
+                Write-Status "MSVC environment configured"
+                
+                # Verify required build tools are available
+                $toolsFound = $true
+                
+                if (Get-Command cl.exe -ErrorAction SilentlyContinue) {
+                    Write-Status "[OK] C++ compiler (cl.exe) found"
+                } else {
+                    Write-Warning "WARNING: C++ compiler (cl.exe) not found"
+                    $toolsFound = $false
+                }
+                
+                if (Get-Command link.exe -ErrorAction SilentlyContinue) {
+                    Write-Status "[OK] Linker (link.exe) found"
+                } else {
+                    Write-Warning "WARNING: Linker (link.exe) not found"
+                    $toolsFound = $false
+                }
+                
+                if (Get-Command rc.exe -ErrorAction SilentlyContinue) {
+                    Write-Status "[OK] Resource compiler (rc.exe) found"
+                } else {
+                    Write-Warning "WARNING: Resource compiler (rc.exe) not found"
+                    $toolsFound = $false
+                }
+                
+                if (-not $toolsFound) {
+                    Write-Warning "Some build tools are missing. Build may fail."
+                    Write-Warning "Please ensure you're running from Developer PowerShell for VS 2022"
+                }
             } else {
-                Write-Warning "WARNING: C++ compiler (cl.exe) not found in PATH after environment setup"
+                Write-Warning "Failed to capture MSVC environment"
             }
         } else {
             Write-Warning "vcvars64.bat not found at: $vcvarsPath"
@@ -260,7 +286,26 @@ if (-not $SkipBuild) {
     
     if (-not $vcvarsPath -or -not (Test-Path $vcvarsPath)) {
         Write-Warning "Visual Studio environment not configured"
-        Write-Warning "If the build fails, please run this script from 'Developer PowerShell for VS 2022'"
+        Write-Warning ""
+        Write-Warning "RECOMMENDED: Run this script from 'Developer PowerShell for VS 2022'"
+        Write-Warning "  1. Open Start Menu"
+        Write-Warning "  2. Search for 'Developer PowerShell for VS 2022'"
+        Write-Warning "  3. Navigate to: $PWD"
+        Write-Warning "  4. Run: .\build-windows.ps1"
+        Write-Warning ""
+    }
+    
+    # Check if we're already in a Developer environment
+    if ($env:VSCMD_VER) {
+        Write-Status "[OK] Running in Visual Studio Developer environment (version $env:VSCMD_VER)"
+    } elseif ($env:VisualStudioVersion) {
+        Write-Status "[OK] Visual Studio environment detected (version $env:VisualStudioVersion)"
+    } else {
+        Write-Warning "Not running in Visual Studio Developer environment"
+        Write-Warning "The build may fail due to missing Windows SDK tools"
+        Write-Warning ""
+        Write-Warning "SOLUTION: Use 'Developer PowerShell for VS 2022' instead of regular PowerShell"
+        Write-Warning ""
     }
     
     # Configure with CMake
@@ -292,12 +337,26 @@ if (-not $SkipBuild) {
     
     & $cmake $cmakeArgs
     if ($LASTEXITCODE -ne 0) {
-        Write-Error "CMake configuration failed"
         Write-Error ""
-        Write-Error "Possible solutions:"
-        Write-Error "1. Run this script from 'Developer PowerShell for VS 2022'"
-        Write-Error "2. Or run: & 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1'"
-        Write-Error "3. Or install Visual Studio 2022 with C++ development tools"
+        Write-Error "========================================"
+        Write-Error "CMake configuration failed"
+        Write-Error "========================================"
+        Write-Error ""
+        Write-Error "The most common cause is missing Windows SDK tools (rc.exe, mt.exe)"
+        Write-Error "These tools are only available when using Developer PowerShell."
+        Write-Error ""
+        Write-Error "SOLUTION (Recommended):"
+        Write-Error "  1. Close this PowerShell window"
+        Write-Error "  2. Open Start Menu"
+        Write-Error "  3. Search for: Developer PowerShell for VS 2022"
+        Write-Error "  4. In Developer PowerShell, run:"
+        Write-Error "       cd $PWD"
+        Write-Error "       .\build-windows.ps1"
+        Write-Error ""
+        Write-Error "Alternative: Import VS environment in current session:"
+        Write-Error "  & 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1'"
+        Write-Error "  .\build-windows.ps1"
+        Write-Error ""
         exit 1
     }
     

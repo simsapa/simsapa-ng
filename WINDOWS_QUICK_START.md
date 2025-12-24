@@ -2,33 +2,50 @@
 
 ## TL;DR - Just Build It!
 
-### Method 1: Double-Click (Easiest)
+### ⭐ RECOMMENDED: Developer PowerShell for VS 2022
 
-Just double-click **`build-windows.bat`** in the project folder.
-
-This batch file will:
-- Automatically find and configure Visual Studio
-- Run the PowerShell build script
-- Show progress and any errors
-
-### Method 2: Developer PowerShell for VS 2022 (Most Reliable)
+**This is the ONLY reliably working method:**
 
 1. Open **Start Menu**
-2. Search for **"Developer PowerShell for VS 2022"**
-3. Navigate to project directory: `cd C:\Users\YourName\prods\simsapa-ng-project\simsapa-ng`
-4. Run: `.\build-windows.ps1`
+2. Search for: **Developer PowerShell for VS 2022**
+3. Navigate to project:
+   ```powershell
+   cd C:\Users\Sumedharama\prods\simsapa-ng-project\simsapa-ng
+   ```
+4. Run:
+   ```powershell
+   .\build-windows.ps1
+   ```
 
-This is the most reliable method because Developer PowerShell has the C++ compiler and build tools already configured.
+**Why this is required:** The build needs Windows SDK tools (rc.exe, mt.exe) which are ONLY available in Developer PowerShell. Regular PowerShell will fail with "rc.exe not found" errors.
 
-### Method 3: Regular PowerShell
+---
 
-If you prefer regular PowerShell, run:
+### ❌ Methods That DON'T Work Reliably
+
+These methods will likely fail with "rc.exe not found" errors:
+
+- ❌ Double-clicking `build-windows.bat`
+- ❌ Running from regular PowerShell
+- ❌ Running from Command Prompt
+
+**The problem:** These don't have the full Visual Studio environment configured.
+
+---
+
+### Alternative: Import VS Environment First (Advanced)
+
+If you must use regular PowerShell:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File build-windows.ps1
+# Step 1: Import Visual Studio environment
+& "C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64 -HostArch amd64
+
+# Step 2: Run build
+.\build-windows.ps1
 ```
 
-The script will attempt to configure the MSVC environment automatically. If it fails, use Method 2.
+But using Developer PowerShell directly is much simpler!
 
 ---
 
