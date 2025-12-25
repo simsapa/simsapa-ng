@@ -164,6 +164,7 @@ impl AppdataDbHandle {
         #[derive(Serialize)]
         struct TranslationData {
             item_uid: String,
+            table_name: String,
             sutta_title: String,
             sutta_ref: String,
         }
@@ -171,6 +172,7 @@ impl AppdataDbHandle {
         let res_sorted_data: Vec<TranslationData> = sort_suttas(res)
             .into_iter().map(|s| TranslationData {
                 item_uid: s.uid,
+                table_name: "suttas".to_string(),
                 sutta_title: s.title.unwrap_or("".to_string()),
                 sutta_ref: s.sutta_ref,
             }).collect();

@@ -311,6 +311,46 @@ ApplicationWindow {
         /* logger.log("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
 
         switch (action) {
+        case "load-translations":
+            // Get the current tab's item_uid
+            const current_key = sutta_html_view_layout.current_key;
+            if (!current_key || !sutta_html_view_layout.items_map[current_key]) {
+                sutta_html_view_layout.show_transient_message("No sutta currently loaded");
+                break;
+            }
+
+            const item_uid = sutta_html_view_layout.items_map[current_key].get_data_value('item_uid');
+            const table_name = sutta_html_view_layout.items_map[current_key].get_data_value('table_name');
+
+            // Only load translations for sutta results, not dictionary or library results
+            if (table_name === "dict_words" || table_name === "dpd_headwords" || table_name === "book_spine_items") {
+                sutta_html_view_layout.show_transient_message("Translations not available");
+                break;
+            }
+
+            if (!item_uid) {
+                sutta_html_view_layout.show_transient_message("No sutta UID found");
+                break;
+            }
+
+            // If the current tab is in the translations group, move it to results group first
+            // to prevent it from being cleared when loading new translations
+            for (let i = 0; i < tabs_translations_model.count; i++) {
+                let tr_tab_data = tabs_translations_model.get(i);
+                if (tr_tab_data.web_item_key === current_key) {
+                    // Move tab from translations to results group
+                    let new_tab_data = root.new_tab_data(tr_tab_data, false, true, root.generate_key(), tr_tab_data.web_item_key);
+                    tabs_results_model.append(new_tab_data);
+                    tabs_translations_model.remove(i);
+                    root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                    break;
+                }
+            }
+
+            const num_translations = root.load_translations_for_sutta(item_uid);
+            sutta_html_view_layout.show_transient_message(`Loaded ${num_translations} translation(s)`);
+            break;
+
         case "copy-selection":
             clip.copy_text(query_text);
             sutta_html_view_layout.show_transient_message(`Copied: ${query_text.slice(0, 30)} ...`);
@@ -362,6 +402,39 @@ ${query_text}`;
         return `key_${root.key_counter}`;
     }
 
+    // Clear existing translation tabs and load translations for the given sutta UID.
+    // Returns the number of translations loaded.
+    function load_translations_for_sutta(item_uid: string): int {
+        // Remove existing webviews for translation tabs
+        for (let i = 0; i < tabs_translations_model.count; i++) {
+            let tr_tab_data = tabs_translations_model.get(i);
+            if (tr_tab_data.web_item_key !== "") {
+                sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+            }
+        }
+        tabs_translations_model.clear();
+
+        let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(item_uid));
+
+        for (let i = 0; i < translations_data.length; i++) {
+            let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
+            tabs_translations_model.append(tr_tab_data);
+        }
+
+        return translations_data.length;
+    }
+
+    // Clear all translation tabs without loading new ones.
+    function clear_translation_tabs() {
+        for (let i = 0; i < tabs_translations_model.count; i++) {
+            let tr_tab_data = tabs_translations_model.get(i);
+            if (tr_tab_data.web_item_key !== "") {
+                sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
+            }
+        }
+        tabs_translations_model.clear();
+    }
+
     function show_result_in_html_view_with_json(result_data_json: string, new_tab) {
         if (new_tab === undefined) new_tab = false;
         let result_data = JSON.parse(result_data_json);
@@ -391,22 +464,7 @@ ${query_text}`;
 
         // Only add translation tabs for sutta results, not dictionary or library results
         if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
-            // Add translations tabs for the sutta
-            // Remove existing webviews for translation tabs
-            for (let i=0; i < tabs_translations_model.count; i++) {
-                let tr_tab_data = tabs_translations_model.get(i);
-                if (tr_tab_data.web_item_key !== "") {
-                    sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
-                }
-            }
-            tabs_translations_model.clear();
-
-            let translations_data = JSON.parse(SuttaBridge.get_translations_data_json_for_sutta_uid(tab_data.item_uid));
-
-            for (let i=0; i < translations_data.length; i++) {
-                let tr_tab_data = root.new_tab_data(translations_data[i], false, false);
-                tabs_translations_model.append(tr_tab_data);
-            }
+            root.load_translations_for_sutta(tab_data.item_uid);
 
             if (action_open_find_in_sutta_results.checked &&
                 root.last_search_area === "Suttas" &&
@@ -418,13 +476,7 @@ ${query_text}`;
             }
         } else {
             // For dictionary results, clear translation tabs
-            for (let i=0; i < tabs_translations_model.count; i++) {
-                let tr_tab_data = tabs_translations_model.get(i);
-                if (tr_tab_data.web_item_key !== "") {
-                    sutta_html_view_layout.delete_item(tr_tab_data.web_item_key);
-                }
-            }
-            tabs_translations_model.clear();
+            root.clear_translation_tabs();
         }
 
         if (!root.is_wide) {
