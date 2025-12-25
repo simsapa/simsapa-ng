@@ -120,9 +120,14 @@ Item {
             web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
         } else {
             // Regular book content
-            // Don't append anchor to URL - instead, we'll scroll to it after page loads
-            // This ensures proper scrolling even when reloading the same page
+            // Append anchor to URL for native browser scrolling (works on all platforms)
+            // On same-page reloads, clear and re-set URL to trigger scroll
             let url = `${api_url}/get_book_spine_item_html_by_uid/${root.window_id}/${spine_item_uid}/`;
+            if (root.anchor && root.anchor.length > 0) {
+                // Ensure anchor has # prefix
+                let anchor_fragment = root.anchor.startsWith('#') ? root.anchor : `#${root.anchor}`;
+                url = `${url}${anchor_fragment}`;
+            }
             web.url = url;
         }
     }
@@ -240,7 +245,12 @@ if (document.getElementById('readingModeButton')) {
             }
             if (loadRequest.loadProgress === 100) {
                 root.page_loaded();
-                // Scroll to anchor if present (needs a delay to ensure DOM is fully ready)
+                // Note: Anchor scrolling is now handled natively by including it in the URL
+                //
+                // The JavaScript fallback provides additional reliability in case:
+                // - The anchor element has a different attribute (like `name` instead of `id`)
+                // - There are timing issues with native scrolling
+                // - The WebView needs a "nudge" to complete scrolling
                 if (root.anchor && root.anchor.length > 0) {
                     scroll_timer.restart();
                 }
