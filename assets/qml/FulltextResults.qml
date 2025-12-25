@@ -87,7 +87,7 @@ ColumnLayout {
             icon.source: "icons/32x32/fa_angle-right-solid.png"
             ToolTip.visible: hovered
             ToolTip.text: "Next page of results"
-            enabled: root.page_num < root.total_pages
+            enabled: root.page_num < root.total_pages - 1
             onClicked: {
                 fulltext_list.positionViewAtBeginning();
                 root.page_num++;

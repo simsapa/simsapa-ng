@@ -8,6 +8,7 @@ use crate::logger::{info, error};
 use crate::db::appdata_models::Sutta;
 use crate::db::appdata_schema::suttas;
 use crate::normalize_path_for_sqlite;
+use crate::helpers::sutta_range_from_ref;
 
 /// Import suttas from language database files into appdata
 ///
@@ -95,6 +96,21 @@ pub fn import_suttas_from_db(import_db_path: &PathBuf, target_database_url: &str
             .execute(&mut target_conn)
             .map_err(|e| format!("Failed to delete existing sutta: {}", e))?;
 
+        // If range fields are missing (NULL), calculate them from the UID
+        let (range_group, range_start, range_end) = if sutta.sutta_range_group.is_none()
+            || sutta.sutta_range_start.is_none()
+            || sutta.sutta_range_end.is_none() {
+            if let Some(range) = sutta_range_from_ref(&sutta.uid) {
+                let start = range.start.map(|s| s as i32);
+                let end = range.end.map(|e| e as i32);
+                (Some(range.group), start, end)
+            } else {
+                (None, None, None)
+            }
+        } else {
+            (sutta.sutta_range_group.clone(), sutta.sutta_range_start, sutta.sutta_range_end)
+        };
+
         // Insert the new sutta
         // We need to create a new insert without the id field
         diesel::insert_into(suttas::table)
@@ -106,9 +122,9 @@ pub fn import_suttas_from_db(import_db_path: &PathBuf, target_database_url: &str
                 suttas::group_path.eq(&sutta.group_path),
                 suttas::group_index.eq(&sutta.group_index),
                 suttas::order_index.eq(&sutta.order_index),
-                suttas::sutta_range_group.eq(&sutta.sutta_range_group),
-                suttas::sutta_range_start.eq(&sutta.sutta_range_start),
-                suttas::sutta_range_end.eq(&sutta.sutta_range_end),
+                suttas::sutta_range_group.eq(&range_group),
+                suttas::sutta_range_start.eq(&range_start),
+                suttas::sutta_range_end.eq(&range_end),
                 suttas::title.eq(&sutta.title),
                 suttas::title_ascii.eq(&sutta.title_ascii),
                 suttas::title_pali.eq(&sutta.title_pali),

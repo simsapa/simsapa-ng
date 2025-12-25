@@ -43,6 +43,7 @@ ApplicationWindow {
 
     property string last_query_text: ""
     property string last_search_area: ""
+    property var last_params: null
     property string pending_find_query: ""
 
     Logger { id: logger }
@@ -231,6 +232,7 @@ ApplicationWindow {
     ) {
         root.last_query_text = query_text;
         root.last_search_area = search_area;
+        root.last_params = params;
 
         // FIXME: page number
         root.results_page(query_text, 0, search_area, params);
@@ -249,9 +251,11 @@ ApplicationWindow {
     }
 
     function new_results_page(page_num) {
-        let query = search_bar_input.search_input.text;
-        let search_area = search_bar_input.search_area_dropdown.get_text();
-        let params = root.get_search_params_from_ui();
+        // Use the last query text, search area, and params instead of reading from the UI,
+        // because the input might have been cleared or changed, and the search mode needs to match
+        let query = root.last_query_text;
+        let search_area = root.last_search_area;
+        let params = root.last_params || root.get_search_params_from_ui();
         root.results_page(query, page_num, search_area, params);
     }
 

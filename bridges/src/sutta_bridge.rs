@@ -808,12 +808,13 @@ impl qobject::SuttaBridge {
     }
 
     pub fn results_page(self: Pin<&mut Self>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) {
-        info("SuttaBridge::results_page() start");
+        info(&format!("SuttaBridge::results_page() start - query='{}', page_num={}, search_area='{}'", query.to_string(), page_num, search_area.to_string()));
         let qt_thread = self.qt_thread();
 
         let query_text = query.to_string();
         let search_area_text = search_area.to_string();
         let params_json_text = params_json.to_string();
+        info(&format!("params_json: {}", params_json_text));
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {

@@ -400,6 +400,8 @@ impl<'a> SearchQueryTask<'a> {
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::db::appdata_schema::suttas::dsl::*;
 
+        info(&format!("uid_sutta_like(): query_uid='{}', page_num={}, lang='{}'", query_uid, page_num, self.lang));
+
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
@@ -446,6 +448,8 @@ impl<'a> SearchQueryTask<'a> {
             .offset(offset)
             .select(Sutta::as_select())
             .load::<Sutta>(db_conn)?;
+
+        info(&format!("uid_sutta_like(): Found {} results for page {}, total_hits={}", results.len(), page_num, self.db_query_hits_count));
 
         // Map to SearchResult
         let search_results = results
