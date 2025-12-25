@@ -470,7 +470,13 @@ ${query_text}`;
         if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
             root.load_translations_for_sutta(tab_data.item_uid);
 
+            // Only open find bar with search query if:
+            // 1. User preference is enabled
+            // 2. This is from a search result (not a sutta link, i.e. new_tab is false)
+            // 3. Last search was in Suttas
+            // 4. There is a query text available
             if (action_open_find_in_sutta_results.checked &&
+                !new_tab &&
                 root.last_search_area === "Suttas" &&
                 root.last_query_text.length > 0) {
                 let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
