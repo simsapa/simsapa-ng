@@ -27,6 +27,7 @@ WindowManager::WindowManager(QApplication* app, QObject* parent)
     QObject::connect(this, &WindowManager::signal_run_sutta_menu_action, this, &WindowManager::run_sutta_menu_action);
     QObject::connect(this, &WindowManager::signal_open_sutta_search_window, this, &WindowManager::open_sutta_search_window_with_query);
     QObject::connect(this, &WindowManager::signal_open_sutta_tab, this, &WindowManager::open_sutta_tab_in_window);
+    QObject::connect(this, &WindowManager::signal_toggle_reading_mode, this, &WindowManager::toggle_reading_mode);
 }
 
 WindowManager::~WindowManager() {
@@ -256,4 +257,25 @@ void WindowManager::show_sutta_from_reference_search(const QString& window_id, c
             Q_ARG(QString, result_data_json),
             Q_ARG(QVariant, QVariant(true)));  // Pass true to create a new tab
     }
+}
+
+void WindowManager::toggle_reading_mode(const QString& window_id, bool is_active) {
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+
+    SuttaSearchWindow* target_window = nullptr;
+    for (auto w : this->sutta_search_windows) {
+        QVariant prop = w->m_root->property("window_id");
+        if (prop.isValid() && prop.toString() == window_id) {
+            target_window = w;
+            break;
+        }
+    }
+
+    if (target_window == nullptr) {
+        return;
+    }
+
+    QMetaObject::invokeMethod(target_window->m_root, "toggle_search_ui_visibility", Q_ARG(bool, !is_active));
 }

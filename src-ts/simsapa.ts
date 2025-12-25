@@ -3,7 +3,7 @@ import { findManager } from "./find";
 import "./confirm_modal";
 
 function attach_link_handlers(): void {
-    h.log_info('[simsapa] Attaching link handlers');
+    // h.log_info('[simsapa] Attaching link handlers');
 
     // Check if this is a sutta page (has ssp_content div)
     const sspContent = document.getElementById('ssp_content');
@@ -40,6 +40,6 @@ document.SSP = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    h.log_info('[simsapa] DOMContentLoaded event fired');
+    // h.log_info('[simsapa] DOMContentLoaded event fired');
     attach_link_handlers();
 });

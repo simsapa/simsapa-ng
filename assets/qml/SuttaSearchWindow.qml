@@ -570,6 +570,11 @@ ${query_text}`;
         }
     }
 
+    function toggle_search_ui_visibility(visible: bool) {
+        show_sidebar_btn.checked = visible;
+        search_ui_row.visible = visible;
+    }
+
     menuBar: MenuBar {
         visible: root.is_desktop
         // NOTE: A Menu > CMenuItem should always have an Action. This property
@@ -963,6 +968,8 @@ ${query_text}`;
         anchors.topMargin: root.top_bar_margin
 
         RowLayout {
+            id: search_ui_row
+
             Button {
                 id: show_menu
                 Layout.alignment: Qt.AlignTop

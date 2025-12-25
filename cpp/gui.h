@@ -16,6 +16,7 @@ extern "C++" {
     void callback_open_reference_search_window();
     void callback_show_chapter_in_sutta_window(QString window_id, QString result_data_json);
     void callback_show_sutta_from_reference_search(QString window_id, QString result_data_json);
+    void callback_toggle_reading_mode(QString window_id, bool is_active);
 }
 
 void open_sutta_search_window(QString query_text = "");

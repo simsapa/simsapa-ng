@@ -66,6 +66,7 @@ pub mod ffi {
         fn callback_open_reference_search_window();
         fn callback_show_chapter_in_sutta_window(window_id: QString, result_data_json: QString);
         fn callback_show_sutta_from_reference_search(window_id: QString, result_data_json: QString);
+        fn callback_toggle_reading_mode(window_id: QString, is_active: bool);
     }
 }
 
@@ -88,7 +89,7 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
     // Convert path to forward slashes for cross-platform consistency
     let path_str = pathbuf_to_forward_slash_string(&path);
     // Also log the raw PathBuf for debugging Windows path issues
-    info(&format!("serve_assets: path_str='{}', raw_path='{:?}'", path_str, path));
+    // info(&format!("serve_assets: path_str='{}', raw_path='{:?}'", path_str, path));
 
     let some_entry = assets.files.get_entry(&path_str);
 
@@ -146,6 +147,14 @@ fn lookup_window_query(text: &str) -> Status {
 fn summary_query(window_id: &str, text: &str) -> Status {
     ffi::callback_run_summary_query(ffi::QString::from(window_id),
                                     ffi::QString::from(text));
+    Status::Ok
+}
+
+#[get("/toggle_reading_mode/<window_id>/<is_active>")]
+fn toggle_reading_mode(window_id: &str, is_active: &str) -> Status {
+    let active = is_active == "true";
+    // info(&format!("toggle_reading_mode(): window_id: {}, is_active: {}", window_id, active));
+    ffi::callback_toggle_reading_mode(ffi::QString::from(window_id), active);
     Status::Ok
 }
 
@@ -581,6 +590,7 @@ pub async extern "C" fn start_webserver() {
             open_external_url,
             lookup_window_query,
             summary_query,
+            toggle_reading_mode,
             sutta_menu_action,
             get_sutta_html_by_uid,
             get_book_spine_item_html_by_uid,

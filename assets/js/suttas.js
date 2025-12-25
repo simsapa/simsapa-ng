@@ -251,9 +251,97 @@ class TextResizeController {
     }
 }
 
+class ReadingModeController {
+    constructor() {
+        this.readingModeButton = document.getElementById('readingModeButton');
+        this.findContainer = document.getElementById('findContainer');
+        this.textResizeButtons = document.querySelectorAll('.text-resize-button');
+        this.menuButton = document.getElementById('menuButton');
+        this.isActive = false;
+
+        this.init();
+    }
+
+    init() {
+        if (!this.readingModeButton) {
+            return;
+        }
+
+        this.readingModeButton.addEventListener('click', () => this.toggle_reading_mode());
+    }
+
+    async toggle_reading_mode() {
+        this.isActive = !this.isActive;
+
+        if (this.isActive) {
+            // Activate reading mode
+            this.readingModeButton.classList.add('active');
+
+            // Fade out other UI elements
+            if (this.findContainer) {
+                this.findContainer.style.transition = 'opacity 0.3s ease';
+                this.findContainer.style.opacity = '0';
+                setTimeout(() => {
+                    this.findContainer.style.visibility = 'hidden';
+                }, 300);
+            }
+
+            this.textResizeButtons.forEach(btn => {
+                btn.style.transition = 'opacity 0.3s ease';
+                btn.style.opacity = '0';
+                setTimeout(() => {
+                    btn.style.visibility = 'hidden';
+                }, 300);
+            });
+
+            if (this.menuButton) {
+                this.menuButton.style.transition = 'opacity 0.3s ease';
+                this.menuButton.style.opacity = '0';
+                setTimeout(() => {
+                    this.menuButton.style.visibility = 'hidden';
+                }, 300);
+            }
+
+            // Send HTTP request to hide search UI
+            try {
+                await fetch(`${API_URL}/toggle_reading_mode/${WINDOW_ID}/true`);
+            } catch (error) {
+                log_error('Failed to toggle reading mode: ' + error);
+            }
+        } else {
+            // Deactivate reading mode
+            this.readingModeButton.classList.remove('active');
+
+            // Fade in other UI elements
+            if (this.findContainer) {
+                this.findContainer.style.visibility = 'visible';
+                this.findContainer.style.opacity = '1';
+            }
+
+            this.textResizeButtons.forEach(btn => {
+                btn.style.visibility = 'visible';
+                btn.style.opacity = '1';
+            });
+
+            if (this.menuButton) {
+                this.menuButton.style.visibility = 'visible';
+                this.menuButton.style.opacity = '1';
+            }
+
+            // Send HTTP request to show search UI
+            try {
+                await fetch(`${API_URL}/toggle_reading_mode/${WINDOW_ID}/false`);
+            } catch (error) {
+                log_error('Failed to toggle reading mode: ' + error);
+            }
+        }
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function(_event) {
     new HamburgerMenu();
     new TextResizeController();
+    new ReadingModeController();
     if (IS_MOBILE) {
         // On mobile in a WebView, there is no double click event, so listen to
         // selection change (from a long press action).

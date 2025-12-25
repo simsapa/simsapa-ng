@@ -86,6 +86,10 @@ void callback_show_sutta_from_reference_search(QString window_id, QString result
   AppGlobals::manager->show_sutta_from_reference_search(window_id, result_data_json);
 }
 
+void callback_toggle_reading_mode(QString window_id, bool is_active) {
+  emit AppGlobals::manager->signal_toggle_reading_mode(window_id, is_active);
+}
+
 int start(int argc, char* argv[]) {
   dotenv_c();
   log_info_with_options_c("gui::start()", true);
