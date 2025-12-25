@@ -47,9 +47,18 @@ impl<'a> SearchQueryTask<'a> {
         let g = get_app_globals();
         // Use params.lang if provided and not empty, otherwise use empty string for no filter
         let lang_filter = params.lang.clone().unwrap_or_else(|| String::new());
+
+        // For UidMatch mode, don't normalize the query text to preserve dots and other characters
+        // For other modes, normalize to handle punctuation and spacing
+        let query_text = if params.mode == SearchMode::UidMatch {
+            query_text_orig.to_lowercase()
+        } else {
+            normalize_query_text(Some(query_text_orig))
+        };
+
         SearchQueryTask {
             dbm,
-            query_text: normalize_query_text(Some(query_text_orig)),
+            query_text,
             search_mode: params.mode,
             search_area: area,
             page_len: params.page_len.unwrap_or(g.page_len),
@@ -271,14 +280,26 @@ impl<'a> SearchQueryTask<'a> {
                 Ok(vec![self.db_sutta_to_result(&sutta)])
             }
             Err(DieselError::NotFound) => {
-                // No exact match found - try range query
-                match self.uid_sutta_range(&query_uid, page_num) {
-                    Ok(results) if !results.is_empty() => Ok(results),
-                    _ => {
-                        // No range match found - try LIKE query with pagination
-                        self.uid_sutta_like(&query_uid, page_num)
+                // No exact match found
+                // Check if this is actually a range query (e.g., sn56.11-15) or just a simple ref (e.g., sn56.11)
+                let is_range_query = query_uid.contains('-') &&
+                    query_uid.chars().filter(|&c| c == '-').count() == 1 &&
+                    query_uid.split('-').all(|part| part.chars().any(char::is_numeric));
+
+                if is_range_query {
+                    // Try range query for actual ranges like sn56.11-15
+                    match self.uid_sutta_range(&query_uid, page_num) {
+                        Ok(results) if !results.is_empty() => {
+                            return Ok(results);
+                        }
+                        _ => {
+                            // Range query failed, fall through to LIKE query
+                        }
                     }
                 }
+
+                // For simple references like sn56.11, use LIKE query to get all translations
+                self.uid_sutta_like(&query_uid, page_num)
             }
             Err(e) => {
                 error(&format!("{}", e));
