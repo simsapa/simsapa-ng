@@ -10,6 +10,7 @@ StackLayout {
 
     required property string window_id
     required property bool is_dark
+    required property bool is_reading_mode
     property string current_key: ""
     property var items_map: ({})
 
@@ -28,6 +29,7 @@ StackLayout {
             id: html_view
             window_id: root.window_id
             is_dark: root.is_dark
+            is_reading_mode: root.is_reading_mode
             Layout.fillWidth: true
             Layout.fillHeight: true
 

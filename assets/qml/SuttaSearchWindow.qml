@@ -35,6 +35,7 @@ ApplicationWindow {
     property int top_bar_margin: is_mobile ? 24 : 0
 
     property bool is_dark: false
+    property bool is_reading_mode: false
 
     property bool is_loading: false
 
@@ -571,8 +572,17 @@ ${query_text}`;
     }
 
     function toggle_search_ui_visibility(visible: bool) {
-        show_sidebar_btn.checked = visible;
-        search_ui_row.visible = visible;
+        root.is_reading_mode = !visible;
+    }
+
+    onIs_reading_modeChanged: {
+        search_ui_row.visible = !root.is_reading_mode;
+        // On a narrow screen, the sidebar was already hidden when the user
+        // enabled reading mode from the html button, and turning reader mode
+        // off would show the sidebar for them instead of the html view.
+        if (root.is_wide) {
+            show_sidebar_btn.checked = !root.is_reading_mode;
+        }
     }
 
     menuBar: MenuBar {
@@ -1408,6 +1418,7 @@ ${query_text}`;
                                     anchors.fill: parent
                                     window_id: root.window_id
                                     is_dark: root.is_dark
+                                    is_reading_mode: root.is_reading_mode
                                     // Hide the webview when the drawer menu or a dialog is open. The mobile webview
                                     // is always on top, obscuring other items.
                                     // Also respect the parent container's visibility

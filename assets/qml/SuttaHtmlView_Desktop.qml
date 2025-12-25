@@ -9,6 +9,7 @@ Item {
 
     property string window_id
     property bool is_dark
+    property bool is_reading_mode
 
     property string data_json
 
@@ -180,6 +181,24 @@ document.documentElement.style.colorScheme = 'light';
         web.runJavaScript(js);
     }
 
+    onIs_reading_modeChanged: function() {
+        let js = "";
+        if (root.is_reading_mode) {
+            js = `
+if (document.getElementById('readingModeButton')) {
+    document.getElementById('readingModeButton').classList.add('active');
+}
+`;
+        } else {
+            js = `
+if (document.getElementById('readingModeButton')) {
+    document.getElementById('readingModeButton').classList.remove('active');
+}
+`;
+        }
+        web.runJavaScript(js);
+    }
+
     WebEngineView {
         id: web
         anchors.fill: parent
@@ -189,6 +208,14 @@ document.documentElement.style.colorScheme = 'light';
         onLoadingChanged: function(loadRequest) {
             if (root.is_dark) {
                 web.runJavaScript("document.documentElement.style.colorScheme = 'dark';");
+            }
+            if (root.is_reading_mode) {
+                let js = `
+if (document.getElementById('readingModeButton')) {
+    document.getElementById('readingModeButton').classList.add('active');
+}
+`;
+                web.runJavaScript(js);
             }
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
                 root.page_loaded();

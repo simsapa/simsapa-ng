@@ -254,10 +254,6 @@ class TextResizeController {
 class ReadingModeController {
     constructor() {
         this.readingModeButton = document.getElementById('readingModeButton');
-        this.findContainer = document.getElementById('findContainer');
-        this.textResizeButtons = document.querySelectorAll('.text-resize-button');
-        this.menuButton = document.getElementById('menuButton');
-        this.isActive = false;
 
         this.init();
     }
@@ -271,36 +267,13 @@ class ReadingModeController {
     }
 
     async toggle_reading_mode() {
-        this.isActive = !this.isActive;
+        // Read current state from the button's class instead of tracking it separately
+        const isCurrentlyActive = this.readingModeButton.classList.contains('active');
+        const newState = !isCurrentlyActive;
 
-        if (this.isActive) {
+        if (newState) {
             // Activate reading mode
             this.readingModeButton.classList.add('active');
-
-            // Fade out other UI elements
-            if (this.findContainer) {
-                this.findContainer.style.transition = 'opacity 0.3s ease';
-                this.findContainer.style.opacity = '0';
-                setTimeout(() => {
-                    this.findContainer.style.visibility = 'hidden';
-                }, 300);
-            }
-
-            this.textResizeButtons.forEach(btn => {
-                btn.style.transition = 'opacity 0.3s ease';
-                btn.style.opacity = '0';
-                setTimeout(() => {
-                    btn.style.visibility = 'hidden';
-                }, 300);
-            });
-
-            if (this.menuButton) {
-                this.menuButton.style.transition = 'opacity 0.3s ease';
-                this.menuButton.style.opacity = '0';
-                setTimeout(() => {
-                    this.menuButton.style.visibility = 'hidden';
-                }, 300);
-            }
 
             // Send HTTP request to hide search UI
             try {
@@ -311,22 +284,6 @@ class ReadingModeController {
         } else {
             // Deactivate reading mode
             this.readingModeButton.classList.remove('active');
-
-            // Fade in other UI elements
-            if (this.findContainer) {
-                this.findContainer.style.visibility = 'visible';
-                this.findContainer.style.opacity = '1';
-            }
-
-            this.textResizeButtons.forEach(btn => {
-                btn.style.visibility = 'visible';
-                btn.style.opacity = '1';
-            });
-
-            if (this.menuButton) {
-                this.menuButton.style.visibility = 'visible';
-                this.menuButton.style.opacity = '1';
-            }
 
             // Send HTTP request to show search UI
             try {

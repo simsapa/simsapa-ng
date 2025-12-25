@@ -4,6 +4,7 @@ Loader {
     id: loader
     required property string window_id
     required property bool is_dark
+    required property bool is_reading_mode
     required property string item_key
 
     property bool should_be_visible: true
@@ -67,6 +68,7 @@ Loader {
     onLoaded: {
         loader.item.window_id = Qt.binding(() => window_id);
         loader.item.is_dark = Qt.binding(() => is_dark);
+        loader.item.is_reading_mode = Qt.binding(() => is_reading_mode);
         loader.item.data_json = Qt.binding(() => data_json);
         loader.item.visible = Qt.binding(() => loader.should_be_visible && loader.visible);
         loader.item.page_loaded.connect(function() { loader.page_loaded(); });
