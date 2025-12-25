@@ -50,7 +50,7 @@ Frame {
     }
 
     // Handle download completion signal from AssetManager
-    function handle_downloads_completed(success: bool) {
+    function handle_downloads_completed(success: bool): bool {
         if (success) {
             // If we just completed a single-URL retry, continue with remaining URLs
             if (is_retrying_single_url) {
