@@ -393,16 +393,22 @@ pub struct UpdateInfo {
 /// Uses platform-specific implementations to get CPU and memory info,
 /// avoiding the sysinfo crate which requires higher Android API levels.
 ///
+/// The `save_stats` value is determined from `AppGlobals` which reads
+/// environment variables (SAVE_STATS, NO_STATS) at initialization.
+///
 /// # Arguments
 ///
 /// * `screen_size` - Optional screen resolution string (e.g., "1920 x 1080")
-/// * `save_stats` - If false, sets no_stats to true in the request
 ///
 /// # Returns
 ///
 /// Populated `ReleasesRequestParams` struct
-pub fn collect_system_info(screen_size: Option<&str>, save_stats: bool) -> ReleasesRequestParams {
+pub fn collect_system_info(screen_size: Option<&str>) -> ReleasesRequestParams {
     use crate::app_data::{get_system_memory_bytes, get_cpu_cores, get_cpu_max_frequency_mhz};
+    use crate::get_app_globals;
+
+    // Get save_stats from AppGlobals (determined from env variables at startup)
+    let save_stats = get_app_globals().save_stats;
 
     // Get CPU info using platform-specific implementations
     let cpu_cores = get_cpu_cores()
@@ -434,11 +440,11 @@ pub fn collect_system_info(screen_size: Option<&str>, save_stats: bool) -> Relea
 /// Fetch release information from the Simsapa releases API.
 ///
 /// Makes a POST request with system information and returns parsed release data.
+/// The `save_stats` value is determined from `AppGlobals` (via environment variables).
 ///
 /// # Arguments
 ///
 /// * `screen_size` - Optional screen resolution for analytics (e.g., "1920 x 1080")
-/// * `save_stats` - Whether to allow saving stats on the server
 ///
 /// # Returns
 ///
@@ -448,11 +454,11 @@ pub fn collect_system_info(screen_size: Option<&str>, save_stats: bool) -> Relea
 /// # Example
 ///
 /// ```ignore
-/// let info = fetch_releases_info(Some("1920 x 1080"), true)?;
+/// let info = fetch_releases_info(Some("1920 x 1080"))?;
 /// println!("Latest app version: {}", info.application.releases[0].version_tag);
 /// ```
-pub fn fetch_releases_info(screen_size: Option<&str>, save_stats: bool) -> Result<ReleasesInfo> {
-    let params = collect_system_info(screen_size, save_stats);
+pub fn fetch_releases_info(screen_size: Option<&str>) -> Result<ReleasesInfo> {
+    let params = collect_system_info(screen_size);
 
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(REQUEST_TIMEOUT_SECS))

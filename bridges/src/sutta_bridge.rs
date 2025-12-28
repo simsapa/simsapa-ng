@@ -2442,7 +2442,7 @@ impl qobject::SuttaBridge {
             }
 
             // Try to fetch release information
-            let releases_info = match update_checker::fetch_releases_info(screen_size_opt.as_deref(), true) {
+            let releases_info = match update_checker::fetch_releases_info(screen_size_opt.as_deref()) {
                 Ok(info) => info,
                 Err(e) => {
                     let error_msg = format!("Failed to fetch updates: {}", e);

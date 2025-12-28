@@ -126,6 +126,7 @@ pub struct AppGlobals {
     pub api_port: i32,
     pub api_url: String,
     pub paths: AppGlobalPaths,
+    pub save_stats: bool,
 }
 
 #[derive(Debug)]
@@ -171,12 +172,48 @@ impl AppGlobals {
 
         save_to_file(format!("{}", api_port).as_bytes(), paths.simsapa_api_port_path.to_str().expect("Path error"));
 
+        // Determine save_stats from environment variables.
+        // Don't save stats if env var asks not to.
+        //
+        // Env var SAVE_STATS=false overrides the default save_stats=true.
+        // Env var NO_STATS=true => save_stats=false
+        let save_stats = Self::determine_save_stats();
+
         AppGlobals {
             page_len: 10,
             api_port,
             api_url,
             paths,
+            save_stats,
         }
+    }
+
+    /// Determine save_stats value from environment variables.
+    ///
+    /// By default, save_stats is false (don't save stats unless explicitly enabled).
+    ///
+    /// - SAVE_STATS=true enables saving stats
+    /// - SAVE_STATS=false disables saving stats
+    /// - NO_STATS=true disables saving stats (overrides SAVE_STATS)
+    fn determine_save_stats() -> bool {
+        // Default to false - don't save stats unless explicitly enabled
+        let mut save_stats = false;
+
+        // SAVE_STATS=true enables saving stats
+        if let Ok(s) = env::var("SAVE_STATS") {
+            if s.to_lowercase() == "true" {
+                save_stats = true;
+            }
+        }
+
+        // NO_STATS=true overrides and disables saving stats
+        if let Ok(s) = env::var("NO_STATS") {
+            if s.to_lowercase() == "true" {
+                save_stats = false;
+            }
+        }
+
+        save_stats
     }
 
     pub fn re_init_paths(&mut self) {
