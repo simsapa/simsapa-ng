@@ -26,6 +26,7 @@ extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
 extern "C" void ensure_no_empty_db_files();
+extern "C" void check_delete_files_for_upgrade();
 extern "C" void remove_download_temp_folder();
 extern "C" void init_app_globals();
 extern "C" void init_app_data();
@@ -100,6 +101,11 @@ int start(int argc, char* argv[]) {
   // There may be a 0-byte size db file remaining from a failed
   // install attempt.
   ensure_no_empty_db_files();
+
+  // Check if database files should be deleted for an upgrade.
+  // This is triggered by the delete_files_for_upgrade.txt marker file
+  // created by prepare_for_database_upgrade().
+  check_delete_files_for_upgrade();
 
   QString os(QSysInfo::productType());
 

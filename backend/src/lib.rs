@@ -523,6 +523,71 @@ pub extern "C" fn ensure_no_empty_db_files() {
     }
 }
 
+/// Check for the delete_files_for_upgrade.txt marker file and delete database files if found.
+///
+/// This is called during app startup. If the marker file exists, it deletes:
+/// - The marker file itself
+/// - appdata.sqlite3
+/// - userdata.sqlite3
+/// - dictionaries.sqlite3
+/// - dpd.sqlite3
+///
+/// This is used during database upgrades to force a fresh download of the databases.
+#[unsafe(no_mangle)]
+pub extern "C" fn check_delete_files_for_upgrade() {
+    let g = get_app_globals();
+
+    // Check for the marker file in app_assets_dir
+    let marker_path = g.paths.app_assets_dir.join("delete_files_for_upgrade.txt");
+
+    match marker_path.try_exists() {
+        Ok(true) => {
+            info(&format!("Found upgrade marker file: {}", marker_path.display()));
+
+            // Delete the marker file first
+            if let Err(e) = fs::remove_file(&marker_path) {
+                error(&format!("Failed to remove marker file {:?}: {}", marker_path, e));
+            } else {
+                info("Removed delete_files_for_upgrade.txt marker file");
+            }
+
+            // Delete database files
+            let db_paths = [
+                &g.paths.appdata_db_path,
+                &g.paths.userdata_db_path,
+                &g.paths.dict_db_path,
+                &g.paths.dpd_db_path,
+            ];
+
+            for db_path in db_paths {
+                match db_path.try_exists() {
+                    Ok(true) => {
+                        if let Err(e) = fs::remove_file(db_path) {
+                            error(&format!("Failed to remove database file {:?}: {}", db_path, e));
+                        } else {
+                            info(&format!("Removed database file: {}", db_path.display()));
+                        }
+                    }
+                    Ok(false) => {
+                        // File doesn't exist, nothing to do
+                    }
+                    Err(e) => {
+                        error(&format!("Failed to check if database file exists {:?}: {}", db_path, e));
+                    }
+                }
+            }
+
+            info("Database files deleted for upgrade");
+        }
+        Ok(false) => {
+            // Marker file doesn't exist, nothing to do
+        }
+        Err(e) => {
+            error(&format!("Failed to check for upgrade marker file {:?}: {}", marker_path, e));
+        }
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn remove_download_temp_folder() {
     let g = get_app_globals();

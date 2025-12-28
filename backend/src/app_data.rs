@@ -1,4 +1,6 @@
 use std::sync::RwLock;
+use std::path::Path;
+
 use indexmap::IndexMap;
 
 use diesel::prelude::*;
@@ -9,7 +11,7 @@ use anyhow::{anyhow, Context, Result};
 use crate::db::{appdata_models::*, DbManager};
 use crate::db::appdata_schema::suttas::dsl::*;
 
-use crate::logger::error;
+use crate::logger::{error, info};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
@@ -949,6 +951,278 @@ impl AppData {
 
     fn get_system_memory_gb(&self) -> Option<u64> {
         get_system_memory_bytes().map(|bytes| bytes / 1024 / 1024 / 1024)
+    }
+
+    /// Export user data to the import-me folder for database upgrade.
+    ///
+    /// This creates an "import-me" folder in the simsapa directory and exports:
+    /// - app_settings.json: The current application settings
+    /// - download_languages.txt: CSV list of languages in the database (except 'san', 'en', 'pli')
+    /// - download_select_sanskrit_bundle.txt: If 'san' language is present
+    /// - appdata.sqlite3: A database with user-imported books and their related data
+    ///
+    /// User-imported books are those not in the original dataset.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If export was successful
+    /// * `Err` - If any error occurred during export
+    pub fn export_user_data_to_assets(&self) -> Result<()> {
+        let globals = get_app_globals();
+        let app_assets_dir = &globals.paths.app_assets_dir;
+        let import_dir = app_assets_dir.join("import-me");
+
+        info(&format!("export_user_data_to_assets(): Creating import-me folder at {}", import_dir.display()));
+
+        // Create import-me folder if it doesn't exist
+        if !import_dir.exists() {
+            std::fs::create_dir_all(&import_dir)
+                .with_context(|| format!("Failed to create import-me directory: {}", import_dir.display()))?;
+        }
+
+        // Export app_settings.json to import-me folder
+        self.export_app_settings_json(&import_dir)?;
+
+        // Export download_languages.txt to app_assets_dir (same location as
+        // auto_start_download.txt and delete_files_for_upgrade.txt).
+        // This is read by DownloadAppdataWindow to auto-fill language selection.
+        self.export_download_languages(&app_assets_dir)?;
+
+        // Export user-imported books to import-me folder
+        self.export_user_books(&import_dir)?;
+
+        info("export_user_data_to_assets(): Export completed successfully");
+        Ok(())
+    }
+
+    /// Export app settings to JSON file.
+    fn export_app_settings_json(&self, import_dir: &Path) -> Result<()> {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        let settings_json = serde_json::to_string_pretty(&*app_settings)
+            .context("Failed to serialize app settings to JSON")?;
+
+        let settings_path = import_dir.join("app_settings.json");
+        std::fs::write(&settings_path, settings_json)
+            .with_context(|| format!("Failed to write app_settings.json to {}", settings_path.display()))?;
+
+        info(&format!("Exported app_settings.json to {}", settings_path.display()));
+        Ok(())
+    }
+
+    /// Export download languages to text file.
+    ///
+    /// Creates download_languages.txt with a CSV list of languages (except 'san', 'en', 'pli').
+    /// If 'san' is present, creates download_select_sanskrit_bundle.txt.
+    ///
+    /// These files are written to app_assets_dir (same location as auto_start_download.txt
+    /// and delete_files_for_upgrade.txt) and are read by DownloadAppdataWindow
+    /// to auto-fill the language selection during database upgrades.
+    fn export_download_languages(&self, app_assets_dir: &Path) -> Result<()> {
+        let languages = self.dbm.get_sutta_languages();
+
+        // Check for Sanskrit bundle
+        if languages.contains(&"san".to_string()) {
+            let sanskrit_path = app_assets_dir.join("download_select_sanskrit_bundle.txt");
+            std::fs::write(&sanskrit_path, "True")
+                .with_context(|| format!("Failed to write download_select_sanskrit_bundle.txt to {}", sanskrit_path.display()))?;
+            info(&format!("Created download_select_sanskrit_bundle.txt at {}", sanskrit_path.display()));
+        }
+
+        // Filter out default languages
+        let filtered_languages: Vec<String> = languages
+            .into_iter()
+            .filter(|lang| lang != "san" && lang != "en" && lang != "pli")
+            .collect();
+
+        if !filtered_languages.is_empty() {
+            let languages_csv = filtered_languages.join(", ");
+            let languages_path = app_assets_dir.join("download_languages.txt");
+            std::fs::write(&languages_path, &languages_csv)
+                .with_context(|| format!("Failed to write download_languages.txt to {}", languages_path.display()))?;
+            info(&format!("Exported download_languages.txt with: {}", languages_csv));
+        }
+
+        Ok(())
+    }
+
+    /// Export user-imported books to a new appdata.sqlite3 database.
+    ///
+    /// User-imported books are those not in the original dataset (identified by their UIDs).
+    fn export_user_books(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::{books, book_spine_items, book_resources};
+        use diesel::sqlite::SqliteConnection;
+
+        // UIDs of books in the original dataset
+        let original_book_uids = vec![
+            "buddhadhamma",
+            "bmc",
+            "cbmc",
+            "nibbana-sermons",
+            "bhikkhu-manual",
+            "the-island",
+            "its-essential-meaning",
+            "pali-lessons",
+            "pali-lessons-answerkey",
+            "way-of-meditation",
+        ];
+
+        // Get user-imported books (not in original dataset)
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection")?;
+
+        let user_books: Vec<Book> = books::table
+            .filter(books::uid.ne_all(&original_book_uids))
+            .load::<Book>(db_conn)
+            .context("Failed to load user books")?;
+
+        if user_books.is_empty() {
+            info("No user-imported books to export");
+            return Ok(());
+        }
+
+        info(&format!("Found {} user-imported books to export", user_books.len()));
+
+        // Create export database
+        let export_db_path = import_dir.join("appdata.sqlite3");
+        if export_db_path.exists() {
+            std::fs::remove_file(&export_db_path)
+                .with_context(|| format!("Failed to remove existing export database: {}", export_db_path.display()))?;
+        }
+
+        let export_db_url = format!("sqlite://{}", export_db_path.display());
+        let mut export_conn = SqliteConnection::establish(&export_db_url)
+            .with_context(|| format!("Failed to create export database: {}", export_db_path.display()))?;
+
+        // Create tables in export database
+        diesel::sql_query(r#"
+            CREATE TABLE books (
+                id INTEGER NOT NULL,
+                uid VARCHAR NOT NULL,
+                document_type VARCHAR NOT NULL,
+                title VARCHAR,
+                author VARCHAR,
+                language VARCHAR,
+                file_path VARCHAR,
+                metadata_json VARCHAR,
+                enable_embedded_css BOOLEAN NOT NULL DEFAULT 1,
+                toc_json VARCHAR,
+                created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+                updated_at DATETIME,
+                PRIMARY KEY (id),
+                UNIQUE (uid)
+            )
+        "#).execute(&mut export_conn).context("Failed to create books table")?;
+
+        diesel::sql_query(r#"
+            CREATE TABLE book_spine_items (
+                id INTEGER NOT NULL,
+                book_id INTEGER NOT NULL,
+                book_uid VARCHAR NOT NULL,
+                spine_item_uid VARCHAR NOT NULL,
+                spine_index INTEGER NOT NULL,
+                resource_path VARCHAR NOT NULL,
+                title VARCHAR,
+                language VARCHAR,
+                content_html VARCHAR,
+                content_plain VARCHAR,
+                created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+                updated_at DATETIME,
+                PRIMARY KEY (id),
+                UNIQUE (spine_item_uid),
+                FOREIGN KEY(book_id) REFERENCES books (id) ON DELETE CASCADE
+            )
+        "#).execute(&mut export_conn).context("Failed to create book_spine_items table")?;
+
+        diesel::sql_query(r#"
+            CREATE TABLE book_resources (
+                id INTEGER NOT NULL,
+                book_id INTEGER NOT NULL,
+                book_uid VARCHAR NOT NULL,
+                resource_path VARCHAR NOT NULL,
+                mime_type VARCHAR,
+                content_data BLOB,
+                created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
+                updated_at DATETIME,
+                PRIMARY KEY (id),
+                FOREIGN KEY(book_id) REFERENCES books (id) ON DELETE CASCADE
+            )
+        "#).execute(&mut export_conn).context("Failed to create book_resources table")?;
+
+        // Export each user book with its related data
+        for book in &user_books {
+            // Insert book
+            diesel::sql_query(format!(
+                r#"INSERT INTO books (id, uid, document_type, title, author, language, file_path, metadata_json, enable_embedded_css, toc_json)
+                   VALUES ({}, '{}', '{}', {}, {}, {}, {}, {}, {}, {})"#,
+                book.id,
+                book.uid.replace("'", "''"),
+                book.document_type.replace("'", "''"),
+                book.title.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                book.author.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                book.language.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                book.file_path.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                book.metadata_json.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                if book.enable_embedded_css { 1 } else { 0 },
+                book.toc_json.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+            )).execute(&mut export_conn)
+                .with_context(|| format!("Failed to insert book: {}", book.uid))?;
+
+            // Get and insert spine items for this book
+            let spine_items: Vec<BookSpineItem> = book_spine_items::table
+                .filter(book_spine_items::book_id.eq(book.id))
+                .load::<BookSpineItem>(db_conn)
+                .with_context(|| format!("Failed to load spine items for book: {}", book.uid))?;
+
+            for spine_item in &spine_items {
+                diesel::sql_query(format!(
+                    r#"INSERT INTO book_spine_items (id, book_id, book_uid, spine_item_uid, spine_index, resource_path, title, language, content_html, content_plain)
+                       VALUES ({}, {}, '{}', '{}', {}, '{}', {}, {}, {}, {})"#,
+                    spine_item.id,
+                    spine_item.book_id,
+                    spine_item.book_uid.replace("'", "''"),
+                    spine_item.spine_item_uid.replace("'", "''"),
+                    spine_item.spine_index,
+                    spine_item.resource_path.replace("'", "''"),
+                    spine_item.title.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                    spine_item.language.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                    spine_item.content_html.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                    spine_item.content_plain.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                )).execute(&mut export_conn)
+                    .with_context(|| format!("Failed to insert spine item: {}", spine_item.spine_item_uid))?;
+            }
+
+            // Get and insert resources for this book
+            let resources: Vec<BookResource> = book_resources::table
+                .filter(book_resources::book_id.eq(book.id))
+                .load::<BookResource>(db_conn)
+                .with_context(|| format!("Failed to load resources for book: {}", book.uid))?;
+
+            for resource in &resources {
+                // For blob data, we need to use parameterized queries
+                // For simplicity, we'll use hex encoding for the blob
+                let blob_hex = resource.content_data.as_ref()
+                    .map(|data| format!("X'{}'", data.iter().map(|b| format!("{:02X}", b)).collect::<String>()))
+                    .unwrap_or("NULL".to_string());
+
+                diesel::sql_query(format!(
+                    r#"INSERT INTO book_resources (id, book_id, book_uid, resource_path, mime_type, content_data)
+                       VALUES ({}, {}, '{}', '{}', {}, {})"#,
+                    resource.id,
+                    resource.book_id,
+                    resource.book_uid.replace("'", "''"),
+                    resource.resource_path.replace("'", "''"),
+                    resource.mime_type.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
+                    blob_hex,
+                )).execute(&mut export_conn)
+                    .with_context(|| format!("Failed to insert resource: {}", resource.resource_path))?;
+            }
+
+            info(&format!("Exported book: {} with {} spine items and {} resources",
+                         book.uid, spine_items.len(), resources.len()));
+        }
+
+        info(&format!("Exported {} user books to {}", user_books.len(), export_db_path.display()));
+        Ok(())
     }
 }
 

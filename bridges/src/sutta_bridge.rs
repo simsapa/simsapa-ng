@@ -2513,7 +2513,10 @@ impl qobject::SuttaBridge {
         app_data.set_notify_about_simsapa_updates(enabled);
     }
 
-    /// Prepare for database upgrade by creating marker files.
+    /// Prepare for database upgrade by exporting user data and creating marker files.
+    ///
+    /// First exports user data (app_settings, download_languages, user-imported books)
+    /// to the import-me folder for restoration after the upgrade.
     ///
     /// Can't delete the db and index without triggering file-lock problems on Windows.
     /// Write a file to assets to signal deleting them on next start.
@@ -2525,6 +2528,14 @@ impl qobject::SuttaBridge {
     /// The user should quit the app after calling this function and restart it
     /// to begin the database download process.
     pub fn prepare_for_database_upgrade(&self) {
+        let app_data = get_app_data();
+
+        // Export user data to import-me folder
+        if let Err(e) = app_data.export_user_data_to_assets() {
+            error(&format!("Failed to export user data: {}", e));
+            // Continue anyway - we still want to trigger the upgrade even if export fails
+        }
+
         let globals = get_app_globals();
         let app_assets_dir = &globals.paths.app_assets_dir;
 

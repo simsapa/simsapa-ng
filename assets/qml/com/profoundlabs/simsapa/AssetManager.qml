@@ -18,6 +18,11 @@ Item {
         return "";
     }
 
+    function should_auto_start_download(): bool {
+        console.log("should_auto_start_download()");
+        return false;
+    }
+
     function acquire_wake_lock_rust(): bool {
         console.log("acquire_wake_lock_rust()");
         return true;
