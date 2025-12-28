@@ -72,6 +72,7 @@ pub mod qobject {
         #[qml_singleton]
         #[qproperty(bool, db_loaded)]
         #[qproperty(bool, sutta_references_loaded)]
+        #[qproperty(bool, updates_checked)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
 
@@ -126,6 +127,27 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "bookMetadataUpdated"]
         fn book_metadata_updated(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
+
+        // Update checker signals
+        #[qsignal]
+        #[cxx_name = "appUpdateAvailable"]
+        fn app_update_available(self: Pin<&mut SuttaBridge>, update_info_json: QString);
+
+        #[qsignal]
+        #[cxx_name = "dbUpdateAvailable"]
+        fn db_update_available(self: Pin<&mut SuttaBridge>, update_info_json: QString);
+
+        #[qsignal]
+        #[cxx_name = "localDbObsolete"]
+        fn local_db_obsolete(self: Pin<&mut SuttaBridge>, update_info_json: QString);
+
+        #[qsignal]
+        #[cxx_name = "noUpdatesAvailable"]
+        fn no_updates_available(self: Pin<&mut SuttaBridge>);
+
+        #[qsignal]
+        #[cxx_name = "updateCheckError"]
+        fn update_check_error(self: Pin<&mut SuttaBridge>, error_message: QString);
 
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
@@ -456,12 +478,24 @@ pub mod qobject {
 
         #[qinvokable]
         fn get_sutta_reference_info(self: &SuttaBridge, uid: &QString) -> QString;
+
+        // Update checker functions
+        #[qinvokable]
+        fn check_for_updates(self: Pin<&mut SuttaBridge>, include_no_updates: bool, screen_size: &QString);
+
+        #[qinvokable]
+        fn get_notify_about_simsapa_updates(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_notify_about_simsapa_updates(self: Pin<&mut SuttaBridge>, enabled: bool);
     }
 }
 
 pub struct SuttaBridgeRust {
     db_loaded: bool,
     sutta_references_loaded: bool,
+    /// Flag to track if update check has already been performed in this session
+    updates_checked: bool,
 }
 
 impl Default for SuttaBridgeRust {
@@ -469,6 +503,7 @@ impl Default for SuttaBridgeRust {
         Self {
             db_loaded: false,
             sutta_references_loaded: false,
+            updates_checked: false,
         }
     }
 }
@@ -2359,5 +2394,119 @@ impl qobject::SuttaBridge {
         } else {
             QString::from("{}")
         }
+    }
+
+    // ========================================================================
+    // Update Checker Functions
+    // ========================================================================
+
+    /// Check for application and database updates.
+    ///
+    /// Spawns a background thread to perform the update check and emits
+    /// appropriate signals when complete.
+    ///
+    /// # Arguments
+    ///
+    /// * `include_no_updates` - If true, emits noUpdatesAvailable signal when no updates found
+    /// * `screen_size` - Screen resolution string (e.g., "1920 x 1080") for analytics, can be empty
+    pub fn check_for_updates(self: Pin<&mut Self>, include_no_updates: bool, screen_size: &QString) {
+        use simsapa_backend::update_checker;
+
+        info("SuttaBridge::check_for_updates() start");
+        let qt_thread = self.qt_thread();
+
+        // Convert screen_size to Option<String> for the background thread
+        let screen_size_str = screen_size.to_string();
+        let screen_size_opt: Option<String> = if screen_size_str.is_empty() {
+            None
+        } else {
+            Some(screen_size_str)
+        };
+
+        thread::spawn(move || {
+            // Get current app and db versions
+            let app_version = update_checker::get_app_version();
+            let db_version = update_checker::get_db_version();
+
+            // First check if local db is obsolete (incompatible with app)
+            if let Some(obsolete_info) = update_checker::is_local_db_obsolete(
+                &app_version,
+                db_version.as_deref(),
+            ) {
+                let json = serde_json::to_string(&obsolete_info).unwrap_or_default();
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().local_db_obsolete(QString::from(json));
+                }).unwrap();
+                info("SuttaBridge::check_for_updates() - local db obsolete");
+                return;
+            }
+
+            // Try to fetch release information
+            let releases_info = match update_checker::fetch_releases_info(screen_size_opt.as_deref(), true) {
+                Ok(info) => info,
+                Err(e) => {
+                    let error_msg = format!("Failed to fetch updates: {}", e);
+                    error(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().update_check_error(QString::from(error_msg));
+                    }).unwrap();
+                    info("SuttaBridge::check_for_updates() - fetch error");
+                    return;
+                }
+            };
+
+            // Check for app update
+            if let Some(mut app_update) = update_checker::has_app_update(&releases_info, &app_version) {
+                // Convert release_notes from markdown to HTML
+                if let Some(ref notes) = app_update.release_notes {
+                    app_update.release_notes = Some(markdown_to_html(notes));
+                }
+                let json = serde_json::to_string(&app_update).unwrap_or_default();
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().app_update_available(QString::from(json));
+                }).unwrap();
+                info("SuttaBridge::check_for_updates() - app update available");
+                return;
+            }
+
+            // Check for db update
+            if let Some(mut db_update) = update_checker::has_db_update(
+                &releases_info,
+                &app_version,
+                db_version.as_deref(),
+            ) {
+                // Convert release_notes from markdown to HTML
+                if let Some(ref notes) = db_update.release_notes {
+                    db_update.release_notes = Some(markdown_to_html(notes));
+                }
+                let json = serde_json::to_string(&db_update).unwrap_or_default();
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().db_update_available(QString::from(json));
+                }).unwrap();
+                info("SuttaBridge::check_for_updates() - db update available");
+                return;
+            }
+
+            // No updates available
+            if include_no_updates {
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().no_updates_available();
+                }).unwrap();
+            }
+
+            info("SuttaBridge::check_for_updates() - no updates available");
+        });
+    }
+
+    /// Get whether to notify about Simsapa updates.
+    pub fn get_notify_about_simsapa_updates(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_notify_about_simsapa_updates()
+    }
+
+    /// Set whether to notify about Simsapa updates.
+    pub fn set_notify_about_simsapa_updates(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_notify_about_simsapa_updates(enabled);
     }
 }

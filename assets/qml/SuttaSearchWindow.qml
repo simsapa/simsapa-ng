@@ -572,6 +572,12 @@ ${query_text}`;
 
             search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
             action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
+
+            // Initialize update notification setting from saved preference
+            action_notify_about_updates.checked = SuttaBridge.get_notify_about_simsapa_updates();
+
+            // Start delayed update check timer
+            update_check_timer.start();
         }
 
         // Add the default blank tab. The corresponding webview is created when it is focused.
@@ -977,6 +983,25 @@ ${query_text}`;
         Menu {
             id: help_menu
             title: "&Help"
+
+            CMenuItem {
+                action: Action {
+                    id: action_check_for_updates
+                    text: "Check for Simsapa Updates..."
+                    onTriggered: SuttaBridge.check_for_updates(true, root.width + " x " + root.height)
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_notify_about_updates
+                    text: "Notify About Simsapa Updates"
+                    checkable: true
+                    checked: true
+                    onToggled: SuttaBridge.set_notify_about_simsapa_updates(checked)
+                }
+            }
+
             CMenuItem {
                 action: Action {
                     text: "&About"
@@ -1033,6 +1058,54 @@ ${query_text}`;
     DatabaseValidationDialog {
         id: database_validation_dialog
         top_bar_margin: root.top_bar_margin
+    }
+
+    UpdateNotificationDialog {
+        id: update_notification_dialog
+        top_bar_margin: root.top_bar_margin
+    }
+
+    // Timer for delayed update check on startup (500ms delay)
+    // The equivalent of windows.py init_timer which runs _init_tasks()
+    Timer {
+        id: update_check_timer
+        interval: 500
+        repeat: false
+        onTriggered: {
+            if (!SuttaBridge.updates_checked) {
+                SuttaBridge.updates_checked = true;
+                if (SuttaBridge.get_notify_about_simsapa_updates()) {
+                    SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight);
+                }
+            }
+        }
+    }
+
+    // Connections for update check signals
+    Connections {
+        target: SuttaBridge
+
+        function onAppUpdateAvailable(update_info_json: string) {
+            update_notification_dialog.show_app_update(update_info_json);
+        }
+
+        function onDbUpdateAvailable(update_info_json: string) {
+            update_notification_dialog.show_db_update(update_info_json);
+        }
+
+        function onLocalDbObsolete(update_info_json: string) {
+            update_notification_dialog.show_obsolete_warning(update_info_json);
+        }
+
+        function onNoUpdatesAvailable() {
+            update_notification_dialog.show_no_updates();
+        }
+
+        function onUpdateCheckError(error_message: string) {
+            // Log error but don't show dialog on automatic startup check
+            // For manual checks, the user will see "no updates" if check succeeds
+            logger.log("Update check error:", error_message);
+        }
     }
 
     ColumnLayout {

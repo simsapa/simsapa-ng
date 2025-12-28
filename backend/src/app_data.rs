@@ -878,39 +878,165 @@ impl AppData {
         self.set_first_time_start(false);
     }
 
+    /// Get the database version from the appdata database.
+    ///
+    /// Queries the `app_settings` table for the 'db_version' key.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - The database version if found
+    /// * `None` - If the database doesn't exist or version not found
+    pub fn get_db_version(&self) -> Option<String> {
+        use crate::db::appdata_schema::app_settings;
+
+        let db_conn = &mut self.dbm.appdata.get_conn().ok()?;
+
+        let result = app_settings::table
+            .filter(app_settings::key.eq("db_version"))
+            .select(app_settings::value)
+            .first::<Option<String>>(db_conn)
+            .ok()?;
+
+        result
+    }
+
+    /// Get the release channel from app settings.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - The release channel if configured
+    /// * `None` - If not configured (will default to "simsapa-ng")
+    pub fn get_release_channel(&self) -> Option<String> {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.release_channel.clone()
+    }
+
+    /// Get whether to notify about Simsapa updates.
+    ///
+    /// # Returns
+    ///
+    /// `true` if update notifications are enabled (default), `false` otherwise
+    pub fn get_notify_about_simsapa_updates(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.notify_about_simsapa_updates
+    }
+
+    /// Set whether to notify about Simsapa updates.
+    ///
+    /// # Arguments
+    ///
+    /// * `enabled` - Whether to show update notifications on startup
+    pub fn set_notify_about_simsapa_updates(&self, enabled: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.notify_about_simsapa_updates = enabled;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
     fn get_system_memory_gb(&self) -> Option<u64> {
-        // NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
-        // Hence, we use system specific implementations.
-        #[cfg(target_os = "android")]
-        {
-            get_android_memory_gb()
-        }
+        get_system_memory_bytes().map(|bytes| bytes / 1024 / 1024 / 1024)
+    }
+}
 
-        #[cfg(target_os = "linux")]
-        {
-            get_linux_memory_gb()
-        }
+/// Get the total system memory in bytes.
+///
+/// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+/// Therefore, we use platform-specific implementations.
+pub fn get_system_memory_bytes() -> Option<u64> {
+    #[cfg(target_os = "android")]
+    {
+        get_android_memory_bytes()
+    }
 
-        #[cfg(target_os = "macos")]
-        {
-            get_macos_memory_gb()
-        }
+    #[cfg(target_os = "linux")]
+    {
+        get_linux_memory_bytes()
+    }
 
-        #[cfg(target_os = "ios")]
-        {
-            // FIXME: implement get_ios_memory_gb()
-            Some(8)
-        }
+    #[cfg(target_os = "macos")]
+    {
+        get_macos_memory_bytes()
+    }
 
-        #[cfg(target_os = "windows")]
-        {
-            get_windows_memory_gb()
-        }
+    #[cfg(target_os = "ios")]
+    {
+        get_ios_memory_bytes()
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        get_windows_memory_bytes()
+    }
+}
+
+/// Get the number of CPU cores.
+///
+/// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+/// Therefore, we use platform-specific implementations.
+pub fn get_cpu_cores() -> Option<u32> {
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    {
+        get_linux_cpu_cores()
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        get_macos_cpu_cores()
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        get_ios_cpu_cores()
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        get_windows_cpu_cores()
+    }
+}
+
+/// Get the maximum CPU frequency in MHz.
+///
+/// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+/// Therefore, we use platform-specific implementations.
+pub fn get_cpu_max_frequency_mhz() -> Option<u64> {
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    {
+        get_linux_cpu_max_frequency_mhz()
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        get_macos_cpu_max_frequency_mhz()
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        get_ios_cpu_max_frequency_mhz()
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        get_windows_cpu_max_frequency_mhz()
     }
 }
 
 #[cfg(target_os = "android")]
-fn get_android_memory_gb() -> Option<u64> {
+fn get_android_memory_bytes() -> Option<u64> {
     use std::fs;
 
     // Read /proc/meminfo which is available on Android
@@ -921,7 +1047,7 @@ fn get_android_memory_gb() -> Option<u64> {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
                 let kb = parts[1].parse::<u64>().ok()?;
-                return Some(kb / 1024 / 1024); // Convert KB to GB
+                return Some(kb * 1024); // Convert KB to bytes
             }
         }
     }
@@ -929,7 +1055,7 @@ fn get_android_memory_gb() -> Option<u64> {
 }
 
 #[cfg(target_os = "linux")]
-fn get_linux_memory_gb() -> Option<u64> {
+fn get_linux_memory_bytes() -> Option<u64> {
     use std::fs;
 
     let meminfo = fs::read_to_string("/proc/meminfo").ok()?;
@@ -939,7 +1065,7 @@ fn get_linux_memory_gb() -> Option<u64> {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
                 let kb = parts[1].parse::<u64>().ok()?;
-                return Some(kb / 1024 / 1024);
+                return Some(kb * 1024); // Convert KB to bytes
             }
         }
     }
@@ -947,7 +1073,7 @@ fn get_linux_memory_gb() -> Option<u64> {
 }
 
 #[cfg(target_os = "macos")]
-fn get_macos_memory_gb() -> Option<u64> {
+fn get_macos_memory_bytes() -> Option<u64> {
     use std::process::Command;
 
     let output = Command::new("sysctl")
@@ -957,12 +1083,11 @@ fn get_macos_memory_gb() -> Option<u64> {
         .ok()?;
 
     let bytes_str = String::from_utf8(output.stdout).ok()?;
-    let bytes = bytes_str.trim().parse::<u64>().ok()?;
-    Some(bytes / 1024 / 1024 / 1024)
+    bytes_str.trim().parse::<u64>().ok()
 }
 
 #[cfg(target_os = "windows")]
-fn get_windows_memory_gb() -> Option<u64> {
+fn get_windows_memory_bytes() -> Option<u64> {
     use std::mem;
 
     #[repr(C)]
@@ -988,9 +1113,297 @@ fn get_windows_memory_gb() -> Option<u64> {
         status.dw_length = mem::size_of::<MEMORYSTATUSEX>() as u32;
 
         if GlobalMemoryStatusEx(&mut status) != 0 {
-            Some(status.ull_total_phys / 1024 / 1024 / 1024)
+            Some(status.ull_total_phys)
         } else {
             None
+        }
+    }
+}
+
+// CPU cores implementations
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+fn get_linux_cpu_cores() -> Option<u32> {
+    use std::fs;
+
+    // Try reading from /proc/cpuinfo
+    if let Ok(cpuinfo) = fs::read_to_string("/proc/cpuinfo") {
+        let count = cpuinfo.lines()
+            .filter(|line| line.starts_with("processor"))
+            .count();
+        if count > 0 {
+            return Some(count as u32);
+        }
+    }
+
+    // Fallback: try reading from /sys/devices/system/cpu/present
+    if let Ok(present) = fs::read_to_string("/sys/devices/system/cpu/present") {
+        // Format is like "0-7" for 8 cores
+        let trimmed = present.trim();
+        if let Some(pos) = trimmed.rfind('-') {
+            if let Ok(max) = trimmed[pos + 1..].parse::<u32>() {
+                return Some(max + 1);
+            }
+        }
+    }
+
+    None
+}
+
+#[cfg(target_os = "macos")]
+fn get_macos_cpu_cores() -> Option<u32> {
+    use std::process::Command;
+
+    let output = Command::new("sysctl")
+        .arg("-n")
+        .arg("hw.ncpu")
+        .output()
+        .ok()?;
+
+    let cores_str = String::from_utf8(output.stdout).ok()?;
+    cores_str.trim().parse::<u32>().ok()
+}
+
+#[cfg(target_os = "windows")]
+fn get_windows_cpu_cores() -> Option<u32> {
+    use std::env;
+
+    // Use NUMBER_OF_PROCESSORS environment variable
+    env::var("NUMBER_OF_PROCESSORS")
+        .ok()
+        .and_then(|s| s.parse::<u32>().ok())
+}
+
+// CPU frequency implementations
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+fn get_linux_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::fs;
+
+    // Try reading from scaling_max_freq (in KHz)
+    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq") {
+        if let Ok(khz) = freq_str.trim().parse::<u64>() {
+            return Some(khz / 1000); // Convert KHz to MHz
+        }
+    }
+
+    // Fallback: try cpuinfo_max_freq
+    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq") {
+        if let Ok(khz) = freq_str.trim().parse::<u64>() {
+            return Some(khz / 1000);
+        }
+    }
+
+    // Fallback: try parsing /proc/cpuinfo for "cpu MHz"
+    if let Ok(cpuinfo) = fs::read_to_string("/proc/cpuinfo") {
+        for line in cpuinfo.lines() {
+            if line.starts_with("cpu MHz") {
+                if let Some(pos) = line.find(':') {
+                    let mhz_str = line[pos + 1..].trim();
+                    if let Ok(mhz) = mhz_str.parse::<f64>() {
+                        return Some(mhz as u64);
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+#[cfg(target_os = "macos")]
+fn get_macos_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::process::Command;
+
+    // sysctl hw.cpufrequency returns frequency in Hz
+    let output = Command::new("sysctl")
+        .arg("-n")
+        .arg("hw.cpufrequency")
+        .output()
+        .ok()?;
+
+    let hz_str = String::from_utf8(output.stdout).ok()?;
+    let hz = hz_str.trim().parse::<u64>().ok()?;
+    Some(hz / 1_000_000) // Convert Hz to MHz
+}
+
+#[cfg(target_os = "windows")]
+fn get_windows_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::process::Command;
+
+    // Use WMIC to get max clock speed
+    let output = Command::new("wmic")
+        .args(["cpu", "get", "MaxClockSpeed", "/value"])
+        .output()
+        .ok()?;
+
+    let output_str = String::from_utf8(output.stdout).ok()?;
+    for line in output_str.lines() {
+        if line.starts_with("MaxClockSpeed=") {
+            let mhz_str = line.trim_start_matches("MaxClockSpeed=");
+            return mhz_str.trim().parse::<u64>().ok();
+        }
+    }
+
+    None
+}
+
+// iOS implementations using sysctlbyname FFI
+// Note: iOS uses the same sysctl API as macOS but we can't spawn processes,
+// so we use direct FFI calls to sysctlbyname.
+
+#[cfg(target_os = "ios")]
+fn get_ios_memory_bytes() -> Option<u64> {
+    use std::ffi::CStr;
+    use std::mem;
+    use std::ptr;
+
+    #[link(name = "System")]
+    unsafe extern "C" {
+        fn sysctlbyname(
+            name: *const i8,
+            oldp: *mut std::ffi::c_void,
+            oldlenp: *mut usize,
+            newp: *mut std::ffi::c_void,
+            newlen: usize,
+        ) -> i32;
+    }
+
+    let name = CStr::from_bytes_with_nul(b"hw.memsize\0").ok()?;
+    let mut value: u64 = 0;
+    let mut size = mem::size_of::<u64>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut u64 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 {
+            Some(value)
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(target_os = "ios")]
+fn get_ios_cpu_cores() -> Option<u32> {
+    use std::ffi::CStr;
+    use std::mem;
+    use std::ptr;
+
+    #[link(name = "System")]
+    unsafe extern "C" {
+        fn sysctlbyname(
+            name: *const i8,
+            oldp: *mut std::ffi::c_void,
+            oldlenp: *mut usize,
+            newp: *mut std::ffi::c_void,
+            newlen: usize,
+        ) -> i32;
+    }
+
+    // Try hw.ncpu first (total CPUs including logical)
+    let name = CStr::from_bytes_with_nul(b"hw.ncpu\0").ok()?;
+    let mut value: i32 = 0;
+    let mut size = mem::size_of::<i32>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut i32 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            return Some(value as u32);
+        }
+    }
+
+    // Fallback to hw.physicalcpu
+    let name = CStr::from_bytes_with_nul(b"hw.physicalcpu\0").ok()?;
+    let mut value: i32 = 0;
+    let mut size = mem::size_of::<i32>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut i32 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            Some(value as u32)
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(target_os = "ios")]
+fn get_ios_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::ffi::CStr;
+    use std::mem;
+    use std::ptr;
+
+    #[link(name = "System")]
+    unsafe extern "C" {
+        fn sysctlbyname(
+            name: *const i8,
+            oldp: *mut std::ffi::c_void,
+            oldlenp: *mut usize,
+            newp: *mut std::ffi::c_void,
+            newlen: usize,
+        ) -> i32;
+    }
+
+    // Try hw.cpufrequency (returns Hz)
+    let name = CStr::from_bytes_with_nul(b"hw.cpufrequency\0").ok()?;
+    let mut value: u64 = 0;
+    let mut size = mem::size_of::<u64>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut u64 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            return Some(value / 1_000_000); // Convert Hz to MHz
+        }
+    }
+
+    // Fallback to hw.cpufrequency_max
+    let name = CStr::from_bytes_with_nul(b"hw.cpufrequency_max\0").ok()?;
+    let mut value: u64 = 0;
+    let mut size = mem::size_of::<u64>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut u64 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            Some(value / 1_000_000) // Convert Hz to MHz
+        } else {
+            // On modern iOS devices, CPU frequency info may not be available via sysctl
+            // Return a reasonable default for modern iOS devices
+            Some(2400) // 2.4 GHz - typical for modern iPhones
         }
     }
 }

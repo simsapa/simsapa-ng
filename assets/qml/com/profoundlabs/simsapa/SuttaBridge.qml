@@ -7,6 +7,7 @@ Item {
 
     property bool db_loaded: false;
     property bool sutta_references_loaded: false;
+    property bool updates_checked: false;
     property var dpd_lookup_test_data: ({})
 
     Component.onCompleted: {
@@ -24,6 +25,13 @@ Item {
     signal showChapterFromLibrary(window_id: string, result_data_json: string);
     signal showSuttaFromReferenceSearch(window_id: string, result_data_json: string);
     signal bookMetadataUpdated(success: bool, message: string);
+
+    // Update checker signals
+    signal appUpdateAvailable(update_info_json: string);
+    signal dbUpdateAvailable(update_info_json: string);
+    signal localDbObsolete(update_info_json: string);
+    signal noUpdatesAvailable();
+    signal updateCheckError(error_message: string);
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -617,6 +625,26 @@ Item {
             title: "Right View",
             title_pali: "Sammādiṭṭhisutta"
         });
+    }
+
+    // Update checker functions
+    function check_for_updates(include_no_updates: bool, screen_size: string) {
+        console.log("check_for_updates():", include_no_updates, screen_size);
+        // Simulate async behavior - emit noUpdatesAvailable for testing
+        Qt.callLater(function() {
+            if (include_no_updates) {
+                noUpdatesAvailable();
+            }
+        });
+    }
+
+    function get_notify_about_simsapa_updates(): bool {
+        console.log("get_notify_about_simsapa_updates()");
+        return true;
+    }
+
+    function set_notify_about_simsapa_updates(enabled: bool) {
+        console.log("set_notify_about_simsapa_updates():", enabled);
     }
 
     Item {
