@@ -647,6 +647,10 @@ Item {
         console.log("set_notify_about_simsapa_updates():", enabled);
     }
 
+    function prepare_for_database_upgrade() {
+        console.log("prepare_for_database_upgrade()");
+    }
+
     Item {
         id: dpd_lookup_data
         visible: false

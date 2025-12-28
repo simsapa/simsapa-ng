@@ -637,11 +637,10 @@ pub fn is_local_db_obsolete(app_version: &str, db_version: Option<&str>) -> Opti
         Some(UpdateInfo {
             version: app_version.to_string(),
             message: format!(
-                "Your database (v{}) is not compatible with this version of Simsapa (v{}). \
-                Please download a compatible database version.",
+                "<p>The current database (v{}) is not compatible with this version of Simsapa (v{}).</p>",
                 db_ver_str, app_version
             ),
-            visit_url: "https://github.com/simsapa/simsapa-assets/releases".to_string(),
+            visit_url: "".to_string(),
             current_version: db_ver_str.to_string(),
             release_notes: None,
             languages: None,

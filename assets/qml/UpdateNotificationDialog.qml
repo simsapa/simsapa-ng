@@ -24,7 +24,7 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile ? 14 : 12
     required property int top_bar_margin
 
-    // Dialog type: "app", "db", "obsolete", "no_updates"
+    // Dialog type: "app", "db", "obsolete", "no_updates", "closing"
     property string dialog_type: ""
 
     // Update info properties (parsed from JSON)
@@ -50,9 +50,11 @@ ApplicationWindow {
         case "db":
             return "Database Update Available";
         case "obsolete":
-            return "Database Compatibility Warning";
+            return "Local Database Needs Upgrade";
         case "no_updates":
             return "No Updates Available";
+        case "closing":
+            return "Restart Required";
         default:
             return "Update Notification";
         }
@@ -142,6 +144,7 @@ ApplicationWindow {
             case "db": return 1;
             case "obsolete": return 2;
             case "no_updates": return 3;
+            case "closing": return 4;
             default: return 0;
             }
         }
@@ -437,7 +440,8 @@ ApplicationWindow {
                         }
 
                         Label {
-                            text: "Download and update now?"
+                            // text: "Download and update now?" // FIXME: implement userdata migration
+                            text: "Remove database and download the new version?"
                             font.pointSize: root.pointSize
                             font.bold: true
                             wrapMode: Text.WordWrap
@@ -466,10 +470,8 @@ ApplicationWindow {
                         text: "Yes"
                         font.pointSize: root.pointSize
                         onClicked: {
-                            // TODO: Trigger database download through the appropriate manager
-                            // This should open the download appdata window with auto_start_download = true
-                            root.open_visit_url();
-                            root.close();
+                            SuttaBridge.prepare_for_database_upgrade();
+                            root.dialog_type = "closing";
                         }
                     }
 
@@ -514,52 +516,17 @@ ApplicationWindow {
                         }
 
                         Label {
-                            text: "Your database may be incompatible with this version of Simsapa."
-                            font.pointSize: root.pointSize
-                            font.bold: true
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                            color: "#ff6b6b"
-                        }
-
-                        Label {
-                            text: "The database version does not match the application version. Some features may not work correctly."
-                            font.pointSize: root.pointSize
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
-                            visible: root.current_version.length > 0
-                            text: `Database version: ${root.current_version}`
-                            font.pointSize: root.pointSize
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
-                            visible: root.version.length > 0
-                            text: `Required version: ${root.version}`
-                            font.pointSize: root.pointSize
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
-                            text: "It is recommended to download the latest database to ensure compatibility."
-                            font.pointSize: root.pointSize
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                        Label {
                             visible: root.message.length > 0
                             text: root.message
                             font.pointSize: root.pointSize
+                            textFormat: Text.RichText
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                         }
 
                         Label {
-                            text: "Download the new database and migrate data now?"
+                            // text: "Download the new database and migrate data now?" // FIXME: implement userdata migration
+                            text: "Remove database and download the new version?"
                             font.pointSize: root.pointSize
                             font.bold: true
                             wrapMode: Text.WordWrap
@@ -580,7 +547,7 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
 
                     Button {
-                        text: "Continue Anyway"
+                        text: "Cancel"
                         font.pointSize: root.pointSize
                         onClicked: root.close()
                     }
@@ -589,9 +556,8 @@ ApplicationWindow {
                         text: "Download Now"
                         font.pointSize: root.pointSize
                         onClicked: {
-                            // TODO: Trigger database download through the appropriate manager
-                            root.open_visit_url();
-                            root.close();
+                            SuttaBridge.prepare_for_database_upgrade();
+                            root.dialog_type = "closing";
                         }
                     }
 
@@ -660,6 +626,66 @@ ApplicationWindow {
                         text: "OK"
                         font.pointSize: root.pointSize
                         onClicked: root.close()
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+            }
+        }
+
+        // =====================================================================
+        // Closing Message Dialog
+        // =====================================================================
+        // Shown after prepare_for_database_upgrade() is called.
+        // The user should quit and restart the app to begin the database download.
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Centered content area
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        spacing: 10
+
+                        Label {
+                            text: "The application will now quit."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Label {
+                            text: "Start it again to begin the database download."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.pointSize
+                        onClicked: Qt.quit()
                     }
 
                     Item { Layout.fillWidth: true }

@@ -488,6 +488,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_notify_about_simsapa_updates(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn prepare_for_database_upgrade(self: &SuttaBridge);
     }
 }
 
@@ -2508,5 +2511,37 @@ impl qobject::SuttaBridge {
     pub fn set_notify_about_simsapa_updates(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_notify_about_simsapa_updates(enabled);
+    }
+
+    /// Prepare for database upgrade by creating marker files.
+    ///
+    /// Can't delete the db and index without triggering file-lock problems on Windows.
+    /// Write a file to assets to signal deleting them on next start.
+    ///
+    /// This creates two marker files in the simsapa directory:
+    /// - `delete_files_for_upgrade.txt`: Signals the app to delete old database files on next startup
+    /// - `auto_start_download.txt`: Signals the app to automatically start the download on next startup
+    ///
+    /// The user should quit the app after calling this function and restart it
+    /// to begin the database download process.
+    pub fn prepare_for_database_upgrade(&self) {
+        let globals = get_app_globals();
+        let app_assets_dir = &globals.paths.app_assets_dir;
+
+        // Create delete_files_for_upgrade.txt marker file
+        let delete_marker_path = app_assets_dir.join("delete_files_for_upgrade.txt");
+        if let Err(e) = std::fs::write(&delete_marker_path, "") {
+            error(&format!("Failed to create delete_files_for_upgrade.txt: {}", e));
+        } else {
+            info(&format!("Created marker file: {}", delete_marker_path.display()));
+        }
+
+        // Create auto_start_download.txt marker file
+        let auto_download_path = app_assets_dir.join("auto_start_download.txt");
+        if let Err(e) = std::fs::write(&auto_download_path, "") {
+            error(&format!("Failed to create auto_start_download.txt: {}", e));
+        } else {
+            info(&format!("Created marker file: {}", auto_download_path.display()));
+        }
     }
 }
