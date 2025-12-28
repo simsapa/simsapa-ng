@@ -2537,19 +2537,18 @@ impl qobject::SuttaBridge {
         }
 
         let globals = get_app_globals();
-        let app_assets_dir = &globals.paths.app_assets_dir;
 
         // Create delete_files_for_upgrade.txt marker file
-        let delete_marker_path = app_assets_dir.join("delete_files_for_upgrade.txt");
-        if let Err(e) = std::fs::write(&delete_marker_path, "") {
+        let delete_marker_path = &globals.paths.delete_files_for_upgrade_marker;
+        if let Err(e) = std::fs::write(delete_marker_path, "") {
             error(&format!("Failed to create delete_files_for_upgrade.txt: {}", e));
         } else {
             info(&format!("Created marker file: {}", delete_marker_path.display()));
         }
 
         // Create auto_start_download.txt marker file
-        let auto_download_path = app_assets_dir.join("auto_start_download.txt");
-        if let Err(e) = std::fs::write(&auto_download_path, "") {
+        let auto_download_path = &globals.paths.auto_start_download_marker;
+        if let Err(e) = std::fs::write(auto_download_path, "") {
             error(&format!("Failed to create auto_start_download.txt: {}", e));
         } else {
             info(&format!("Created marker file: {}", auto_download_path.display()));

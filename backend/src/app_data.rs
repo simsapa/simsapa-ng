@@ -983,10 +983,10 @@ impl AppData {
         // Export app_settings.json to import-me folder
         self.export_app_settings_json(&import_dir)?;
 
-        // Export download_languages.txt to app_assets_dir (same location as
-        // auto_start_download.txt and delete_files_for_upgrade.txt).
-        // This is read by DownloadAppdataWindow to auto-fill language selection.
-        self.export_download_languages(&app_assets_dir)?;
+        // Export download_languages.txt and download_select_sanskrit_bundle.txt
+        // to app_assets_dir. These are read by DownloadAppdataWindow to auto-fill
+        // language selection during database upgrades.
+        self.export_download_languages()?;
 
         // Export user-imported books to import-me folder
         self.export_user_books(&import_dir)?;
@@ -1009,21 +1009,21 @@ impl AppData {
         Ok(())
     }
 
-    /// Export download languages to text file.
+    /// Export download languages to marker files.
     ///
     /// Creates download_languages.txt with a CSV list of languages (except 'san', 'en', 'pli').
     /// If 'san' is present, creates download_select_sanskrit_bundle.txt.
     ///
-    /// These files are written to app_assets_dir (same location as auto_start_download.txt
-    /// and delete_files_for_upgrade.txt) and are read by DownloadAppdataWindow
+    /// These files are written to app_assets_dir and are read by DownloadAppdataWindow
     /// to auto-fill the language selection during database upgrades.
-    fn export_download_languages(&self, app_assets_dir: &Path) -> Result<()> {
+    fn export_download_languages(&self) -> Result<()> {
+        let globals = get_app_globals();
         let languages = self.dbm.get_sutta_languages();
 
         // Check for Sanskrit bundle
         if languages.contains(&"san".to_string()) {
-            let sanskrit_path = app_assets_dir.join("download_select_sanskrit_bundle.txt");
-            std::fs::write(&sanskrit_path, "True")
+            let sanskrit_path = &globals.paths.download_select_sanskrit_bundle_marker;
+            std::fs::write(sanskrit_path, "True")
                 .with_context(|| format!("Failed to write download_select_sanskrit_bundle.txt to {}", sanskrit_path.display()))?;
             info(&format!("Created download_select_sanskrit_bundle.txt at {}", sanskrit_path.display()));
         }
@@ -1036,8 +1036,8 @@ impl AppData {
 
         if !filtered_languages.is_empty() {
             let languages_csv = filtered_languages.join(", ");
-            let languages_path = app_assets_dir.join("download_languages.txt");
-            std::fs::write(&languages_path, &languages_csv)
+            let languages_path = &globals.paths.download_languages_marker;
+            std::fs::write(languages_path, &languages_csv)
                 .with_context(|| format!("Failed to write download_languages.txt to {}", languages_path.display()))?;
             info(&format!("Exported download_languages.txt with: {}", languages_csv));
         }

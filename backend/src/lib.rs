@@ -152,6 +152,12 @@ pub struct AppGlobalPaths {
     pub dpd_db_path: PathBuf,
     pub dpd_abs_path: PathBuf,
     pub dpd_database_url: String,
+
+    // Marker files for database upgrade process
+    pub download_languages_marker: PathBuf,
+    pub auto_start_download_marker: PathBuf,
+    pub delete_files_for_upgrade_marker: PathBuf,
+    pub download_select_sanskrit_bundle_marker: PathBuf,
 }
 
 impl AppGlobals {
@@ -273,6 +279,12 @@ impl AppGlobalPaths {
         let dpd_abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone()));
         let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
+        // Marker files for database upgrade process
+        let download_languages_marker = app_assets_dir.join("download_languages.txt");
+        let auto_start_download_marker = app_assets_dir.join("auto_start_download.txt");
+        let delete_files_for_upgrade_marker = app_assets_dir.join("delete_files_for_upgrade.txt");
+        let download_select_sanskrit_bundle_marker = app_assets_dir.join("download_select_sanskrit_bundle.txt");
+
         AppGlobalPaths {
             simsapa_dir,
             simsapa_api_port_path,
@@ -295,6 +307,11 @@ impl AppGlobalPaths {
             dpd_db_path,
             dpd_abs_path,
             dpd_database_url,
+
+            download_languages_marker,
+            auto_start_download_marker,
+            delete_files_for_upgrade_marker,
+            download_select_sanskrit_bundle_marker,
         }
     }
 }
@@ -538,14 +555,14 @@ pub extern "C" fn check_delete_files_for_upgrade() {
     let g = get_app_globals();
 
     // Check for the marker file in app_assets_dir
-    let marker_path = g.paths.app_assets_dir.join("delete_files_for_upgrade.txt");
+    let marker_path = &g.paths.delete_files_for_upgrade_marker;
 
     match marker_path.try_exists() {
         Ok(true) => {
             info(&format!("Found upgrade marker file: {}", marker_path.display()));
 
             // Delete the marker file first
-            if let Err(e) = fs::remove_file(&marker_path) {
+            if let Err(e) = fs::remove_file(marker_path) {
                 error(&format!("Failed to remove marker file {:?}: {}", marker_path, e));
             } else {
                 info("Removed delete_files_for_upgrade.txt marker file");

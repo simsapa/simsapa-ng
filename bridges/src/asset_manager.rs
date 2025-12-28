@@ -206,12 +206,13 @@ impl qobject::AssetManager {
     /// same location as auto_start_download.txt and delete_files_for_upgrade.txt.
     fn get_init_languages(self: Pin<&mut Self>) -> QString {
         let paths = AppGlobalPaths::new();
-        let download_languages_path = paths.app_assets_dir.join("download_languages.txt");
+        let download_languages_path = &paths.download_languages_marker;
 
         if download_languages_path.exists() {
-            if let Ok(contents) = std::fs::read_to_string(&download_languages_path) {
+            if let Ok(contents) = std::fs::read_to_string(download_languages_path) {
+                info(&format!("Read download_languages.txt: {}", contents.trim()));
                 // Remove the file after reading
-                let _ = std::fs::remove_file(&download_languages_path);
+                let _ = std::fs::remove_file(download_languages_path);
                 return QString::from(contents.trim());
             }
         }
@@ -227,12 +228,12 @@ impl qobject::AssetManager {
     /// Returns true if the file exists (and removes it), false otherwise.
     fn should_auto_start_download(self: Pin<&mut Self>) -> bool {
         let paths = AppGlobalPaths::new();
-        let auto_start_path = paths.app_assets_dir.join("auto_start_download.txt");
+        let auto_start_path = &paths.auto_start_download_marker;
 
         if auto_start_path.exists() {
             info("Found auto_start_download.txt marker file");
             // Remove the file after checking
-            if let Err(e) = std::fs::remove_file(&auto_start_path) {
+            if let Err(e) = std::fs::remove_file(auto_start_path) {
                 error(&format!("Failed to remove auto_start_download.txt: {}", e));
             }
             return true;
