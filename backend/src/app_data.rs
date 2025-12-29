@@ -1179,6 +1179,224 @@ impl AppData {
         info(&format!("Exported {} user books to {}", user_books.len(), export_db_path.display()));
         Ok(())
     }
+
+    /// Import user data from the import-me folder after database upgrade.
+    ///
+    /// This reads from the "import-me" folder in the simsapa directory and imports:
+    /// - app_settings.json: Restores the application settings
+    /// - appdata.sqlite3: Imports user books back into the new database
+    ///
+    /// After successful import, the import-me folder is deleted.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If import was successful (or nothing to import)
+    /// * `Err` - If any error occurred during import
+    pub fn import_user_data_from_assets(&self) -> Result<()> {
+        let globals = get_app_globals();
+        let import_dir = globals.paths.app_assets_dir.join("import-me");
+
+        if !import_dir.exists() {
+            info("import_user_data_from_assets(): No import-me folder found, skipping import");
+            return Ok(());
+        }
+
+        info(&format!("import_user_data_from_assets(): Found import-me folder at {}", import_dir.display()));
+
+        // Import app_settings.json
+        if let Err(e) = self.import_app_settings_json(&import_dir) {
+            error(&format!("Failed to import app settings: {}", e));
+            // Continue with other imports even if settings fail
+        }
+
+        // Import user books from appdata.sqlite3
+        if let Err(e) = self.import_user_books(&import_dir) {
+            error(&format!("Failed to import user books: {}", e));
+            // Continue with cleanup even if books import fails
+        }
+
+        // Clean up: remove the import-me folder
+        if let Err(e) = std::fs::remove_dir_all(&import_dir) {
+            error(&format!("Failed to remove import-me folder: {}", e));
+        } else {
+            info("import_user_data_from_assets(): Removed import-me folder after import");
+        }
+
+        info("import_user_data_from_assets(): Import completed");
+        Ok(())
+    }
+
+    /// Import app settings from JSON file.
+    fn import_app_settings_json(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::app_settings;
+
+        let settings_path = import_dir.join("app_settings.json");
+
+        if !settings_path.exists() {
+            info("No app_settings.json found in import-me folder");
+            return Ok(());
+        }
+
+        let settings_json = std::fs::read_to_string(&settings_path)
+            .with_context(|| format!("Failed to read app_settings.json from {}", settings_path.display()))?;
+
+        let imported_settings: AppSettings = serde_json::from_str(&settings_json)
+            .with_context(|| "Failed to parse app_settings.json")?;
+
+        // Update the app settings cache with imported settings
+        {
+            let mut cache = self.app_settings_cache.write().expect("Failed to write app settings");
+            *cache = imported_settings;
+        }
+
+        // Save the imported settings to the database
+        let cache = self.app_settings_cache.read().expect("Failed to read app settings");
+        let serialized_json = serde_json::to_string(&*cache)
+            .context("Failed to serialize app settings to JSON")?;
+
+        let db_conn = &mut self.dbm.userdata.get_conn()
+            .context("Failed to get userdata connection")?;
+
+        diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(serialized_json)))
+            .execute(db_conn)
+            .context("Failed to update app settings in database")?;
+
+        info(&format!("Imported app settings from {}", settings_path.display()));
+        Ok(())
+    }
+
+    /// Import user books from the export database.
+    ///
+    /// Reads books from the import-me/appdata.sqlite3 and inserts them into the new database.
+    fn import_user_books(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::{books, book_spine_items, book_resources};
+        use diesel::sqlite::SqliteConnection;
+
+        let import_db_path = import_dir.join("appdata.sqlite3");
+
+        if !import_db_path.exists() {
+            info("No appdata.sqlite3 found in import-me folder");
+            return Ok(());
+        }
+
+        info(&format!("Importing user books from {}", import_db_path.display()));
+
+        // Open the import database
+        let import_db_url = format!("sqlite://{}", import_db_path.display());
+        let mut import_conn = SqliteConnection::establish(&import_db_url)
+            .with_context(|| format!("Failed to open import database: {}", import_db_path.display()))?;
+
+        // Get all books from the import database
+        let import_books: Vec<Book> = books::table
+            .load::<Book>(&mut import_conn)
+            .context("Failed to load books from import database")?;
+
+        if import_books.is_empty() {
+            info("No books to import from appdata.sqlite3");
+            return Ok(());
+        }
+
+        info(&format!("Found {} books to import", import_books.len()));
+
+        // Get connection to the current appdata database
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection")?;
+
+        // Import each book with its related data
+        for book in &import_books {
+            // Check if book already exists in the current database (by UID)
+            let existing_book: Option<i32> = books::table
+                .filter(books::uid.eq(&book.uid))
+                .select(books::id)
+                .first(db_conn)
+                .optional()
+                .context("Failed to check for existing book")?;
+
+            if existing_book.is_some() {
+                info(&format!("Book {} already exists, skipping", book.uid));
+                continue;
+            }
+
+            // Insert the book
+            let new_book = NewBook {
+                uid: &book.uid,
+                document_type: &book.document_type,
+                title: book.title.as_deref(),
+                author: book.author.as_deref(),
+                language: book.language.as_deref(),
+                file_path: book.file_path.as_deref(),
+                metadata_json: book.metadata_json.as_deref(),
+                enable_embedded_css: book.enable_embedded_css,
+                toc_json: book.toc_json.as_deref(),
+            };
+
+            diesel::insert_into(books::table)
+                .values(&new_book)
+                .execute(db_conn)
+                .with_context(|| format!("Failed to insert book: {}", book.uid))?;
+
+            // Get the inserted book's ID
+            let new_book_id: i32 = books::table
+                .filter(books::uid.eq(&book.uid))
+                .select(books::id)
+                .first(db_conn)
+                .with_context(|| format!("Failed to get new book ID for: {}", book.uid))?;
+
+            // Get and insert spine items from import database
+            let spine_items: Vec<BookSpineItem> = book_spine_items::table
+                .filter(book_spine_items::book_id.eq(book.id))
+                .load::<BookSpineItem>(&mut import_conn)
+                .with_context(|| format!("Failed to load spine items for book: {}", book.uid))?;
+
+            for spine_item in &spine_items {
+                let new_spine_item = NewBookSpineItem {
+                    book_id: new_book_id,
+                    book_uid: &spine_item.book_uid,
+                    spine_item_uid: &spine_item.spine_item_uid,
+                    spine_index: spine_item.spine_index,
+                    resource_path: &spine_item.resource_path,
+                    title: spine_item.title.as_deref(),
+                    language: spine_item.language.as_deref(),
+                    content_html: spine_item.content_html.as_deref(),
+                    content_plain: spine_item.content_plain.as_deref(),
+                };
+
+                diesel::insert_into(book_spine_items::table)
+                    .values(&new_spine_item)
+                    .execute(db_conn)
+                    .with_context(|| format!("Failed to insert spine item: {}", spine_item.spine_item_uid))?;
+            }
+
+            // Get and insert resources from import database
+            let resources: Vec<BookResource> = book_resources::table
+                .filter(book_resources::book_id.eq(book.id))
+                .load::<BookResource>(&mut import_conn)
+                .with_context(|| format!("Failed to load resources for book: {}", book.uid))?;
+
+            for resource in &resources {
+                let new_resource = NewBookResource {
+                    book_id: new_book_id,
+                    book_uid: &resource.book_uid,
+                    resource_path: &resource.resource_path,
+                    mime_type: resource.mime_type.as_deref(),
+                    content_data: resource.content_data.as_deref(),
+                };
+
+                diesel::insert_into(book_resources::table)
+                    .values(&new_resource)
+                    .execute(db_conn)
+                    .with_context(|| format!("Failed to insert resource: {}", resource.resource_path))?;
+            }
+
+            info(&format!("Imported book: {} with {} spine items and {} resources",
+                         book.uid, spine_items.len(), resources.len()));
+        }
+
+        info(&format!("Successfully imported {} user books", import_books.len()));
+        Ok(())
+    }
 }
 
 /// Get the total system memory in bytes.

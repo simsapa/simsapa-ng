@@ -373,6 +373,38 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Theme Colors:** `backend/src/theme_colors.rs`
 - **Directory Paths:** `backend/src/lib.rs:131` - `AppGlobalPaths`
 
+### Database Upgrade Flow
+When the user triggers a database upgrade, the following flow occurs:
+
+1. **Prepare for Upgrade:** `bridges/src/sutta_bridge.rs` - `prepare_for_database_upgrade()`
+   - Exports user data via `export_user_data_to_assets()` in `backend/src/app_data.rs`
+   - Creates marker files: `delete_files_for_upgrade.txt`, `auto_start_download.txt`, `download_languages.txt`
+
+2. **Export User Data:** `backend/src/app_data.rs:970` - `export_user_data_to_assets()`
+   - Creates `import-me/` folder in app_assets_dir
+   - Exports `app_settings.json` - user's application settings
+   - Exports `download_languages.txt` - selected language codes for re-download
+   - Exports `appdata.sqlite3` - user-imported books (not in original dataset)
+
+3. **User Restarts App**
+
+4. **Startup Detection:** `cpp/gui.cpp:108` - `check_delete_files_for_upgrade()`
+   - `backend/src/lib.rs:580` - Checks for marker file, deletes old databases
+
+5. **Download New Databases:** `assets/qml/DownloadAppdataWindow.qml`
+   - Auto-starts download if `auto_start_download.txt` marker exists
+   - Pre-fills language selection from `download_languages.txt`
+
+6. **User Restarts After Download**
+
+7. **Import User Data:** `cpp/gui.cpp:203` - `import_user_data_after_upgrade()`
+   - Called after `init_app_data()` on startup
+   - `backend/src/lib.rs:657` - FFI function
+   - `backend/src/app_data.rs:1197` - `import_user_data_from_assets()`
+     - Imports app settings from `import-me/app_settings.json`
+     - Imports user books from `import-me/appdata.sqlite3`
+     - Cleans up by removing the `import-me/` folder
+
 ## Build Commands Quick Reference
 
 ### Development Build

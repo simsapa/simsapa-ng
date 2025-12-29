@@ -440,8 +440,7 @@ ApplicationWindow {
                         }
 
                         Label {
-                            // text: "Download and update now?" // FIXME: implement userdata migration
-                            text: "Remove database and download the new version?"
+                            text: "Download and update now?"
                             font.pointSize: root.pointSize
                             font.bold: true
                             wrapMode: Text.WordWrap
@@ -525,8 +524,7 @@ ApplicationWindow {
                         }
 
                         Label {
-                            // text: "Download the new database and migrate data now?" // FIXME: implement userdata migration
-                            text: "Remove database and download the new version?"
+                            text: "Download the new database and migrate data now?"
                             font.pointSize: root.pointSize
                             font.bold: true
                             wrapMode: Text.WordWrap

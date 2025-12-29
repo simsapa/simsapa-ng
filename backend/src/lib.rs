@@ -649,6 +649,24 @@ pub extern "C" fn remove_download_temp_folder() {
     }
 }
 
+/// Import user data from the import-me folder after database upgrade.
+///
+/// This should be called after init_app_data() when restarting after a database upgrade.
+/// It imports app settings and user books from the import-me folder, then cleans up.
+#[unsafe(no_mangle)]
+pub extern "C" fn import_user_data_after_upgrade() {
+    match try_get_app_data() {
+        Some(app_data) => {
+            if let Err(e) = app_data.import_user_data_from_assets() {
+                error(&format!("Failed to import user data after upgrade: {}", e));
+            }
+        }
+        None => {
+            error("import_user_data_after_upgrade: APP_DATA is not initialized");
+        }
+    }
+}
+
 pub fn move_folder_contents<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
     let src_path = src.as_ref();
     let dest_path = dest.as_ref();
