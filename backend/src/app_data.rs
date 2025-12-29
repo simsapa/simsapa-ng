@@ -1050,7 +1050,9 @@ impl AppData {
     /// User-imported books are those not in the original dataset (identified by their UIDs).
     fn export_user_books(&self, import_dir: &Path) -> Result<()> {
         use crate::db::appdata_schema::{books, book_spine_items, book_resources};
+        use crate::db::APPDATA_MIGRATIONS;
         use diesel::sqlite::SqliteConnection;
+        use diesel_migrations::MigrationHarness;
 
         // UIDs of books in the original dataset
         let original_book_uids = vec![
@@ -1093,79 +1095,36 @@ impl AppData {
         let mut export_conn = SqliteConnection::establish(&export_db_url)
             .with_context(|| format!("Failed to create export database: {}", export_db_path.display()))?;
 
-        // Create tables in export database
-        diesel::sql_query(r#"
-            CREATE TABLE books (
-                id INTEGER NOT NULL,
-                uid VARCHAR NOT NULL,
-                document_type VARCHAR NOT NULL,
-                title VARCHAR,
-                author VARCHAR,
-                language VARCHAR,
-                file_path VARCHAR,
-                metadata_json VARCHAR,
-                enable_embedded_css BOOLEAN NOT NULL DEFAULT 1,
-                toc_json VARCHAR,
-                created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
-                updated_at DATETIME,
-                PRIMARY KEY (id),
-                UNIQUE (uid)
-            )
-        "#).execute(&mut export_conn).context("Failed to create books table")?;
-
-        diesel::sql_query(r#"
-            CREATE TABLE book_spine_items (
-                id INTEGER NOT NULL,
-                book_id INTEGER NOT NULL,
-                book_uid VARCHAR NOT NULL,
-                spine_item_uid VARCHAR NOT NULL,
-                spine_index INTEGER NOT NULL,
-                resource_path VARCHAR NOT NULL,
-                title VARCHAR,
-                language VARCHAR,
-                content_html VARCHAR,
-                content_plain VARCHAR,
-                created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
-                updated_at DATETIME,
-                PRIMARY KEY (id),
-                UNIQUE (spine_item_uid),
-                FOREIGN KEY(book_id) REFERENCES books (id) ON DELETE CASCADE
-            )
-        "#).execute(&mut export_conn).context("Failed to create book_spine_items table")?;
-
-        diesel::sql_query(r#"
-            CREATE TABLE book_resources (
-                id INTEGER NOT NULL,
-                book_id INTEGER NOT NULL,
-                book_uid VARCHAR NOT NULL,
-                resource_path VARCHAR NOT NULL,
-                mime_type VARCHAR,
-                content_data BLOB,
-                created_at DATETIME DEFAULT (CURRENT_TIMESTAMP),
-                updated_at DATETIME,
-                PRIMARY KEY (id),
-                FOREIGN KEY(book_id) REFERENCES books (id) ON DELETE CASCADE
-            )
-        "#).execute(&mut export_conn).context("Failed to create book_resources table")?;
+        // Create tables using diesel migrations to ensure schema stays in sync
+        export_conn.run_pending_migrations(APPDATA_MIGRATIONS)
+            .map_err(|e| anyhow!("Failed to run migrations on export database: {}", e))?;
 
         // Export each user book with its related data
         for book in &user_books {
-            // Insert book
-            diesel::sql_query(format!(
-                r#"INSERT INTO books (id, uid, document_type, title, author, language, file_path, metadata_json, enable_embedded_css, toc_json)
-                   VALUES ({}, '{}', '{}', {}, {}, {}, {}, {}, {}, {})"#,
-                book.id,
-                book.uid.replace("'", "''"),
-                book.document_type.replace("'", "''"),
-                book.title.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                book.author.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                book.language.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                book.file_path.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                book.metadata_json.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                if book.enable_embedded_css { 1 } else { 0 },
-                book.toc_json.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-            )).execute(&mut export_conn)
+            // Insert book using diesel model struct
+            let new_book = NewBook {
+                uid: &book.uid,
+                document_type: &book.document_type,
+                title: book.title.as_deref(),
+                author: book.author.as_deref(),
+                language: book.language.as_deref(),
+                file_path: book.file_path.as_deref(),
+                metadata_json: book.metadata_json.as_deref(),
+                enable_embedded_css: book.enable_embedded_css,
+                toc_json: book.toc_json.as_deref(),
+            };
+
+            diesel::insert_into(books::table)
+                .values(&new_book)
+                .execute(&mut export_conn)
                 .with_context(|| format!("Failed to insert book: {}", book.uid))?;
+
+            // Get the inserted book's ID (it will be different from the source ID)
+            let exported_book_id: i32 = books::table
+                .filter(books::uid.eq(&book.uid))
+                .select(books::id)
+                .first(&mut export_conn)
+                .with_context(|| format!("Failed to get exported book ID for: {}", book.uid))?;
 
             // Get and insert spine items for this book
             let spine_items: Vec<BookSpineItem> = book_spine_items::table
@@ -1174,20 +1133,21 @@ impl AppData {
                 .with_context(|| format!("Failed to load spine items for book: {}", book.uid))?;
 
             for spine_item in &spine_items {
-                diesel::sql_query(format!(
-                    r#"INSERT INTO book_spine_items (id, book_id, book_uid, spine_item_uid, spine_index, resource_path, title, language, content_html, content_plain)
-                       VALUES ({}, {}, '{}', '{}', {}, '{}', {}, {}, {}, {})"#,
-                    spine_item.id,
-                    spine_item.book_id,
-                    spine_item.book_uid.replace("'", "''"),
-                    spine_item.spine_item_uid.replace("'", "''"),
-                    spine_item.spine_index,
-                    spine_item.resource_path.replace("'", "''"),
-                    spine_item.title.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                    spine_item.language.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                    spine_item.content_html.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                    spine_item.content_plain.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                )).execute(&mut export_conn)
+                let new_spine_item = NewBookSpineItem {
+                    book_id: exported_book_id,
+                    book_uid: &spine_item.book_uid,
+                    spine_item_uid: &spine_item.spine_item_uid,
+                    spine_index: spine_item.spine_index,
+                    resource_path: &spine_item.resource_path,
+                    title: spine_item.title.as_deref(),
+                    language: spine_item.language.as_deref(),
+                    content_html: spine_item.content_html.as_deref(),
+                    content_plain: spine_item.content_plain.as_deref(),
+                };
+
+                diesel::insert_into(book_spine_items::table)
+                    .values(&new_spine_item)
+                    .execute(&mut export_conn)
                     .with_context(|| format!("Failed to insert spine item: {}", spine_item.spine_item_uid))?;
             }
 
@@ -1198,22 +1158,17 @@ impl AppData {
                 .with_context(|| format!("Failed to load resources for book: {}", book.uid))?;
 
             for resource in &resources {
-                // For blob data, we need to use parameterized queries
-                // For simplicity, we'll use hex encoding for the blob
-                let blob_hex = resource.content_data.as_ref()
-                    .map(|data| format!("X'{}'", data.iter().map(|b| format!("{:02X}", b)).collect::<String>()))
-                    .unwrap_or("NULL".to_string());
+                let new_resource = NewBookResource {
+                    book_id: exported_book_id,
+                    book_uid: &resource.book_uid,
+                    resource_path: &resource.resource_path,
+                    mime_type: resource.mime_type.as_deref(),
+                    content_data: resource.content_data.as_deref(),
+                };
 
-                diesel::sql_query(format!(
-                    r#"INSERT INTO book_resources (id, book_id, book_uid, resource_path, mime_type, content_data)
-                       VALUES ({}, {}, '{}', '{}', {}, {})"#,
-                    resource.id,
-                    resource.book_id,
-                    resource.book_uid.replace("'", "''"),
-                    resource.resource_path.replace("'", "''"),
-                    resource.mime_type.as_ref().map(|s| format!("'{}'", s.replace("'", "''"))).unwrap_or("NULL".to_string()),
-                    blob_hex,
-                )).execute(&mut export_conn)
+                diesel::insert_into(book_resources::table)
+                    .values(&new_resource)
+                    .execute(&mut export_conn)
                     .with_context(|| format!("Failed to insert resource: {}", resource.resource_path))?;
             }
 
