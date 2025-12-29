@@ -12,7 +12,7 @@ Dialog {
     modal: true
 
     anchors.centerIn: parent
-    width: 500
+    width: Math.min(500, parent ? parent.width - 40 : 500)
 
     property alias storageManager: sm
     property int selectedIndex: -1
@@ -67,12 +67,13 @@ Dialog {
             model: storage_locations_model
             delegate: storage_list_delegate
             clip: true
+            spacing: 8
 
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Layout.preferredHeight: (item_height+20) * storage_locations_model.count
-            readonly property int item_height: 40
+            Layout.preferredHeight: (item_height + spacing + 10) * storage_locations_model.count
+            readonly property int item_height: 70
         }
 
         Component {
@@ -80,7 +81,7 @@ Dialog {
             ItemDelegate {
                 id: list_item
 
-                width: parent ? parent.width : 0
+                width: storageListView.width
                 height: storageListView.item_height
 
                 required property int index
@@ -92,7 +93,6 @@ Dialog {
 
                 Rectangle {
                     anchors.fill: parent
-                    height: storageListView.item_height
 
                     radius: 5
                     border.width: 1
@@ -106,46 +106,66 @@ Dialog {
                         }
                     }
 
-                    Column {
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: 10
+                    RowLayout {
+                        id: main_row
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        spacing: 4
 
-                        Row {
-                            id: storageItem
-                            anchors.fill: parent
-                            spacing: 4
+                        RadioButton {
+                            id: storageRadioButton
+                            checked: root.selectedIndex === list_item.index
+                            onClicked: {
+                                root.selectedIndex = list_item.index;
+                            }
+                            Layout.alignment: Qt.AlignVCenter
+                        }
 
-                            RadioButton {
-                                id: storageRadioButton
-                                checked: root.selectedIndex === list_item.index
-                                onClicked: {
-                                    root.selectedIndex = list_item.index;
-                                }
-                                anchors.verticalCenter: parent.verticalCenter
+                        ColumnLayout {
+                            id: text_column
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                            spacing: 2
+
+                            // Label and storage info
+                            Text {
+                                id: internal_label
+                                visible: list_item.is_internal
+                                text: "(Internal)"
+                                font.pointSize: root.font_point_size
+                                font.bold: true
+                                Layout.fillWidth: true
                             }
 
                             Text {
+                                id: label_text
                                 text: list_item.label
                                 font.pointSize: root.font_point_size
                                 font.bold: true
-                                anchors.verticalCenter: parent.verticalCenter
+                                elide: Text.ElideRight
+                                maximumLineCount: 1
+                                Layout.fillWidth: true
                             }
 
+                            // Storage size info
                             Text {
-                                text: root.megabytes_to_gb(list_item.megabytes_available) + " of " + root.megabytes_to_gb(list_item.megabytes_total) + " GB free"
+                                text: root.megabytes_to_gb(list_item.megabytes_available) + " GB free of " + root.megabytes_to_gb(list_item.megabytes_total) + " GB"
                                 font.pointSize: root.font_point_size - 2
-                                anchors.verticalCenter: parent.verticalCenter
+                                color: "#555"
+                                Layout.fillWidth: true
                             }
 
-                            Text {
-                                id: internalLabel
-                                visible: list_item.is_internal
-                                text: "(Internal)"
-                                font.pointSize: root.font_point_size - 2
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                            // Path (truncated)
+                            // (Don't show to save space)
+                            // Text {
+                            //     id: path_text
+                            //     text: list_item.path
+                            //     font.pointSize: root.font_point_size - 3
+                            //     color: "#555"
+                            //     elide: Text.ElideMiddle
+                            //     maximumLineCount: 1
+                            //     Layout.fillWidth: true
+                            // }
                         }
                     }
                 }
