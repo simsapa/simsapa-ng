@@ -314,9 +314,10 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 ## Essential Function Locations
 
 ### Application Lifecycle
-- **App Initialization:** `cpp/main.cpp:6` → `cpp/gui.cpp` → `backend/src/lib.rs:37`
-- **Global State:** `backend/src/lib.rs:44` - `get_app_globals()`
-- **App Data:** `backend/src/lib.rs:63` - `get_app_data()`
+- **App Initialization:** `cpp/main.cpp:6` → `cpp/gui.cpp` → `backend/src/lib.rs:52`
+- **Global State:** `backend/src/lib.rs:59` - `get_app_globals()`
+- **App Data:** `backend/src/lib.rs:78` - `get_app_data()`
+- **Releases Info:** `backend/src/lib.rs:125` - `set_releases_info()`, `try_get_releases_info()` - Cached API response from update checks
 
 ### Database Operations
 - **Database Models:** `backend/src/db/schema.rs` (Diesel models)

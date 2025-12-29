@@ -42,11 +42,13 @@ use cfg_if::cfg_if;
 use crate::logger::{info, warn, error, LOGGER};
 use crate::app_data::AppData;
 use crate::pts_reference_search::ReferenceSearchResult;
+use crate::update_checker::ReleasesInfo;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
 static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
 static SUTTA_REFERENCES: OnceLock<Vec<ReferenceSearchResult>> = OnceLock::new();
+static RELEASES_INFO: OnceLock<std::sync::RwLock<Option<ReleasesInfo>>> = OnceLock::new();
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_globals() {
@@ -113,6 +115,30 @@ pub fn get_sutta_references() -> &'static Vec<ReferenceSearchResult> {
 /// Safe wrapper that returns None if SUTTA_REFERENCES is not yet initialized
 pub fn try_get_sutta_references() -> Option<&'static Vec<ReferenceSearchResult>> {
     SUTTA_REFERENCES.get()
+}
+
+/// Initialize the RELEASES_INFO global with an empty RwLock
+fn init_releases_info() {
+    if RELEASES_INFO.get().is_none() {
+        RELEASES_INFO.set(std::sync::RwLock::new(None)).ok();
+    }
+}
+
+/// Set the releases info from a successful network fetch
+pub fn set_releases_info(info: ReleasesInfo) {
+    init_releases_info();
+    if let Some(lock) = RELEASES_INFO.get() {
+        if let Ok(mut guard) = lock.write() {
+            *guard = Some(info);
+        }
+    }
+}
+
+/// Get a clone of the releases info if it has been fetched
+pub fn try_get_releases_info() -> Option<ReleasesInfo> {
+    RELEASES_INFO.get().and_then(|lock| {
+        lock.read().ok().and_then(|guard| guard.clone())
+    })
 }
 
 #[unsafe(no_mangle)]

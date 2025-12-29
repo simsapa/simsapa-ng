@@ -32,6 +32,7 @@ Item {
     signal localDbObsolete(update_info_json: string);
     signal noUpdatesAvailable();
     signal updateCheckError(error_message: string);
+    signal releasesCheckCompleted();
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -258,10 +259,6 @@ Item {
     }
 
     function get_spine_item_uid_by_path(book_uid: string, resource_path: string): string {
-        return '';
-    }
-
-    function get_book_uid_for_spine_item(spine_item_uid: string): string {
         return '';
     }
 
@@ -649,6 +646,16 @@ Item {
 
     function prepare_for_database_upgrade() {
         console.log("prepare_for_database_upgrade()");
+    }
+
+    function get_compatible_asset_version_tag(): string {
+        console.log("get_compatible_asset_version_tag()");
+        return "";
+    }
+
+    function get_compatible_asset_github_repo(): string {
+        console.log("get_compatible_asset_github_repo()");
+        return "";
     }
 
     Item {

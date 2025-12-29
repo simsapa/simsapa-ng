@@ -47,8 +47,31 @@ ApplicationWindow {
             root.sync_selection_from_input();
         }
 
-        // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
-        // Assuming there is a network connection, show the download selection screen.
+        // Start at "Checking sources" screen (Idx 0) while fetching releases info
+        views_stack.currentIndex = 0;
+
+        // Check for updates to get the latest releases info.
+        // When the check completes, the Connections handler below will proceed to the selection screen.
+        // The screen_size parameter is used for analytics (if enabled).
+        SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight);
+    }
+
+    // Handle releases check completion from SuttaBridge
+    Connections {
+        target: SuttaBridge
+
+        function onReleasesCheckCompleted() {
+            root.proceed_after_releases_check();
+        }
+    }
+
+    function proceed_after_releases_check() {
+        if (root.releases_info_checked) {
+            return; // Already handled
+        }
+        root.releases_info_checked = true;
+
+        // Now show the download selection screen
         views_stack.currentIndex = 1;
 
         if (root.auto_start_download) {
@@ -80,6 +103,7 @@ ApplicationWindow {
     property var available_languages: []
     property var selected_languages: []
     property bool wake_lock_acquired: false
+    property bool releases_info_checked: false
 
     AssetManager { id: manager }
 
@@ -239,8 +263,17 @@ ApplicationWindow {
     function run_download() {
         // TODO _run_download_pre_hook
 
-        const github_repo = "simsapa/simsapa-ng-assets";
-        let version = "v0.1.7";
+        const github_repo = SuttaBridge.get_compatible_asset_github_repo();
+        let version = SuttaBridge.get_compatible_asset_version_tag();
+
+        // If releases info wasn't fetched, show error and stop
+        if (github_repo === "" || version === "") {
+            error_dialog.error_message = "Unable to retrieve download information.\n\nPlease check your internet connection and try again.";
+            error_dialog.open();
+            // Go back to the selection screen
+            views_stack.currentIndex = 1;
+            return;
+        }
 
         let urls = [];
 

@@ -149,6 +149,10 @@ pub mod qobject {
         #[cxx_name = "updateCheckError"]
         fn update_check_error(self: Pin<&mut SuttaBridge>, error_message: QString);
 
+        #[qsignal]
+        #[cxx_name = "releasesCheckCompleted"]
+        fn releases_check_completed(self: Pin<&mut SuttaBridge>);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -491,6 +495,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn prepare_for_database_upgrade(self: &SuttaBridge);
+
+        #[qinvokable]
+        fn get_compatible_asset_version_tag(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_compatible_asset_github_repo(self: &SuttaBridge) -> QString;
     }
 }
 
@@ -2439,6 +2449,7 @@ impl qobject::SuttaBridge {
                 let json = serde_json::to_string(&obsolete_info).unwrap_or_default();
                 qt_thread.queue(move |mut qo| {
                     qo.as_mut().local_db_obsolete(QString::from(json));
+                    qo.as_mut().releases_check_completed();
                 }).unwrap();
                 info("SuttaBridge::check_for_updates() - local db obsolete");
                 return;
@@ -2446,12 +2457,17 @@ impl qobject::SuttaBridge {
 
             // Try to fetch release information
             let releases_info = match update_checker::fetch_releases_info(screen_size_opt.as_deref()) {
-                Ok(info) => info,
+                Ok(info) => {
+                    // Save the successfully fetched releases info to the global
+                    simsapa_backend::set_releases_info(info.clone());
+                    info
+                },
                 Err(e) => {
                     let error_msg = format!("Failed to fetch updates: {}", e);
                     error(&error_msg);
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().update_check_error(QString::from(error_msg));
+                        qo.as_mut().releases_check_completed();
                     }).unwrap();
                     info("SuttaBridge::check_for_updates() - fetch error");
                     return;
@@ -2467,6 +2483,7 @@ impl qobject::SuttaBridge {
                 let json = serde_json::to_string(&app_update).unwrap_or_default();
                 qt_thread.queue(move |mut qo| {
                     qo.as_mut().app_update_available(QString::from(json));
+                    qo.as_mut().releases_check_completed();
                 }).unwrap();
                 info("SuttaBridge::check_for_updates() - app update available");
                 return;
@@ -2485,6 +2502,7 @@ impl qobject::SuttaBridge {
                 let json = serde_json::to_string(&db_update).unwrap_or_default();
                 qt_thread.queue(move |mut qo| {
                     qo.as_mut().db_update_available(QString::from(json));
+                    qo.as_mut().releases_check_completed();
                 }).unwrap();
                 info("SuttaBridge::check_for_updates() - db update available");
                 return;
@@ -2494,6 +2512,11 @@ impl qobject::SuttaBridge {
             if include_no_updates {
                 qt_thread.queue(move |mut qo| {
                     qo.as_mut().no_updates_available();
+                    qo.as_mut().releases_check_completed();
+                }).unwrap();
+            } else {
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().releases_check_completed();
                 }).unwrap();
             }
 
@@ -2553,5 +2576,45 @@ impl qobject::SuttaBridge {
         } else {
             info(&format!("Created marker file: {}", auto_download_path.display()));
         }
+    }
+
+    /// Get the version_tag of the highest compatible assets release.
+    /// Returns empty string if releases info has not been fetched or no compatible release found.
+    pub fn get_compatible_asset_version_tag(&self) -> QString {
+        use simsapa_backend::update_checker;
+
+        // Try to get the releases info from the global
+        if let Some(releases_info) = simsapa_backend::try_get_releases_info() {
+            let app_version_str = update_checker::get_app_version();
+            if let Ok(app_version) = update_checker::to_version(&app_version_str) {
+                // Find the latest compatible assets release
+                if let Some(release) = update_checker::get_latest_app_compatible_assets_release(&releases_info, &app_version) {
+                    return QString::from(&release.version_tag);
+                }
+            }
+        }
+
+        // Return empty string when releases info is not available
+        QString::from("")
+    }
+
+    /// Get the github_repo of the highest compatible assets release.
+    /// Returns empty string if releases info has not been fetched or no compatible release found.
+    pub fn get_compatible_asset_github_repo(&self) -> QString {
+        use simsapa_backend::update_checker;
+
+        // Try to get the releases info from the global
+        if let Some(releases_info) = simsapa_backend::try_get_releases_info() {
+            let app_version_str = update_checker::get_app_version();
+            if let Ok(app_version) = update_checker::to_version(&app_version_str) {
+                // Find the latest compatible assets release
+                if let Some(release) = update_checker::get_latest_app_compatible_assets_release(&releases_info, &app_version) {
+                    return QString::from(&release.github_repo);
+                }
+            }
+        }
+
+        // Return empty string when releases info is not available
+        QString::from("")
     }
 }

@@ -231,7 +231,14 @@ pub fn get_db_version() -> Option<String> {
     use crate::try_get_app_data;
 
     let app_data = try_get_app_data()?;
-    app_data.get_db_version()
+    let version = app_data.get_db_version()?;
+
+    // Handle legacy database version "1" from pre-semver releases (app v0.1.7)
+    if version == "1" {
+        return Some("v0.1.7".to_string());
+    }
+
+    Some(version)
 }
 
 /// Get the release channel for update checking.
