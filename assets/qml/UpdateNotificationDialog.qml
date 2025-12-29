@@ -1,0 +1,694 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Window
+
+import com.profoundlabs.simsapa
+
+ApplicationWindow {
+    id: root
+    title: root.get_dialog_title()
+    width: is_mobile ? Screen.desktopAvailableWidth : 550
+    height: is_mobile ? Screen.desktopAvailableHeight : 600
+    visible: false
+    color: palette.window
+    flags: Qt.Dialog
+    modality: Qt.ApplicationModal
+
+    Logger { id: logger }
+
+    readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+    readonly property bool is_desktop: !root.is_mobile
+    readonly property int pointSize: is_mobile ? 14 : 12
+    required property int top_bar_margin
+
+    // Dialog type: "app", "db", "obsolete", "no_updates", "closing"
+    property string dialog_type: ""
+
+    // Update info properties (parsed from JSON)
+    property string version: ""
+    property string message: ""
+    property string visit_url: ""
+    property string current_version: ""
+    property string release_notes: ""
+    property var languages: []
+
+    // Theme support
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
+
+    function get_dialog_title(): string {
+        switch (root.dialog_type) {
+        case "app":
+            return "Application Update Available";
+        case "db":
+            return "Database Update Available";
+        case "obsolete":
+            return "Local Database Needs Upgrade";
+        case "no_updates":
+            return "No Updates Available";
+        case "closing":
+            return "Restart Required";
+        default:
+            return "Update Notification";
+        }
+    }
+
+    function parse_update_info(update_info_json: string) {
+        try {
+            let info = JSON.parse(update_info_json);
+            root.version = info.version || "";
+            root.message = info.message || "";
+            root.visit_url = info.visit_url || "";
+            root.current_version = info.current_version || "";
+            root.release_notes = info.release_notes || "";
+            root.languages = info.languages || [];
+        } catch (e) {
+            logger.error("Failed to parse update info JSON:", e);
+            root.version = "";
+            root.message = "";
+            root.visit_url = "";
+            root.current_version = "";
+            root.release_notes = "";
+            root.languages = [];
+        }
+    }
+
+    function show_app_update(update_info_json: string) {
+        root.parse_update_info(update_info_json);
+        root.dialog_type = "app";
+        theme_helper.apply();
+        root.show();
+        root.raise();
+        root.requestActivate();
+    }
+
+    function show_db_update(update_info_json: string) {
+        root.parse_update_info(update_info_json);
+        root.dialog_type = "db";
+        theme_helper.apply();
+        root.show();
+        root.raise();
+        root.requestActivate();
+    }
+
+    function show_obsolete_warning(update_info_json: string) {
+        root.parse_update_info(update_info_json);
+        root.dialog_type = "obsolete";
+        theme_helper.apply();
+        root.show();
+        root.raise();
+        root.requestActivate();
+    }
+
+    function show_no_updates() {
+        root.dialog_type = "no_updates";
+        root.version = "";
+        root.message = "";
+        root.visit_url = "";
+        root.current_version = "";
+        root.release_notes = "";
+        root.languages = [];
+        theme_helper.apply();
+        root.show();
+        root.raise();
+        root.requestActivate();
+    }
+
+    function truncate_text(text: string, max_length: int): string {
+        if (text.length <= max_length) {
+            return text;
+        }
+        return text.substring(0, max_length) + "...";
+    }
+
+    function open_visit_url() {
+        if (root.visit_url && root.visit_url.length > 0) {
+            Qt.openUrlExternally(root.visit_url);
+        }
+    }
+
+    StackLayout {
+        id: views_stack
+        anchors.fill: parent
+        anchors.topMargin: root.top_bar_margin
+        currentIndex: {
+            switch (root.dialog_type) {
+            case "app": return 0;
+            case "db": return 1;
+            case "obsolete": return 2;
+            case "no_updates": return 3;
+            case "closing": return 4;
+            default: return 0;
+            }
+        }
+
+        // =====================================================================
+        // App Update Dialog
+        // =====================================================================
+        // From Python show_app_update_message():
+        // - Displays a message box with information icon
+        // - Shows the visit_url as a clickable link to open the download page
+        // - Appends: "Click on the link to open the download page."
+        // - Uses QMessageBox.StandardButton.Close button only
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Scrollable content area
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 10
+
+                        Label {
+                            text: "Simsapa Update Available"
+                            font.bold: true
+                            font.pointSize: root.pointSize + 4
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.current_version.length > 0
+                            text: `Current version: ${root.current_version}`
+                            font.pointSize: root.pointSize
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.version.length > 0
+                            text: `New version: ${root.version}`
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.message.length > 0
+                            text: root.message
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        // Release notes in a scrollable area
+                        Label {
+                            visible: root.release_notes.length > 0
+                            text: "Release Notes:"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+
+                        Rectangle {
+                            visible: root.release_notes.length > 0
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 200
+                            color: root.palette.base
+                            border.color: root.palette.mid
+                            border.width: 1
+                            radius: 4
+
+                            ScrollView {
+                                anchors.fill: parent
+                                anchors.margins: 5
+
+                                TextArea {
+                                    text: root.release_notes
+                                    font.pointSize: root.pointSize - 1
+                                    wrapMode: Text.WordWrap
+                                    textFormat: Text.RichText
+                                    selectByMouse: true
+                                    readOnly: true
+                                    background: null
+
+                                    onLinkActivated: function(link) {
+                                        Qt.openUrlExternally(link);
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.NoButton
+                                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    }
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "Downloads available at:"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.topMargin: 10
+                        }
+
+                        Text {
+                            visible: root.visit_url.length > 0
+                            text: `<a href="${root.visit_url}">${root.visit_url}</a>`
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            color: palette.text
+                            onLinkActivated: function(link) {
+                                Qt.openUrlExternally(link);
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.NoButton
+                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            }
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Open Link"
+                        font.pointSize: root.pointSize
+                        onClicked: {
+                            Qt.openUrlExternally(root.visit_url);
+                            root.close();
+                        }
+                    }
+
+                    Button {
+                        text: "Close"
+                        font.pointSize: root.pointSize
+                        onClicked: root.close()
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+            }
+        }
+
+        // =====================================================================
+        // Database Update Dialog
+        // =====================================================================
+        // From Python show_db_update_message():
+        // - Db version must be compatible with app version.
+        // - Major and minor version must agree, patch version means updated content.
+        // - On first install, app should download latest compatible db version.
+        // - On app startup, if obsolete db is found, delete it and show download window.
+        // - An installed app should filter available db versions.
+        // - Show db update notification only about compatible versions.
+        // - App notifications will alert to new app version.
+        // - When the new app is installed, it will remove old db and download a compatible version.
+        //
+        // - Appends: "This update is optional, and the download may take a while."
+        // - Appends: "Download and update now?"
+        // - Uses Yes/No buttons
+        // - If Yes: Download update without deleting existing database.
+        //   When the download is successful, delete old db and replace with new.
+        //   Remove half-downloaded assets if download is cancelled.
+        //   Remove half-downloaded assets if found on startup.
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Scrollable content area
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 10
+
+                        Label {
+                            text: "Database Update Available"
+                            font.bold: true
+                            font.pointSize: root.pointSize + 4
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "A database update is available with new content."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.current_version.length > 0
+                            text: `Current version: ${root.current_version}`
+                            font.pointSize: root.pointSize
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.version.length > 0
+                            text: `New version: ${root.version}`
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.message.length > 0
+                            text: root.message
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        // Release notes in a scrollable area
+                        Label {
+                            visible: root.release_notes.length > 0
+                            text: "Release Notes:"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+
+                        Rectangle {
+                            visible: root.release_notes.length > 0
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 200
+                            color: root.palette.base
+                            border.color: root.palette.mid
+                            border.width: 1
+                            radius: 4
+
+                            ScrollView {
+                                anchors.fill: parent
+                                anchors.margins: 5
+
+                                TextArea {
+                                    text: root.release_notes
+                                    font.pointSize: root.pointSize - 1
+                                    wrapMode: Text.WordWrap
+                                    textFormat: Text.RichText
+                                    selectByMouse: true
+                                    readOnly: true
+                                    background: null
+
+                                    onLinkActivated: function(link) {
+                                        Qt.openUrlExternally(link);
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        acceptedButtons: Qt.NoButton
+                                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                    }
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "This update is optional, and the download may take a while."
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.topMargin: 10
+                        }
+
+                        Label {
+                            text: "Download and update now?"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "No"
+                        font.pointSize: root.pointSize
+                        onClicked: root.close()
+                    }
+
+                    Button {
+                        text: "Yes"
+                        font.pointSize: root.pointSize
+                        onClicked: {
+                            SuttaBridge.prepare_for_database_upgrade();
+                            root.dialog_type = "closing";
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+            }
+        }
+
+        // =====================================================================
+        // Obsolete Database Warning Dialog
+        // =====================================================================
+        // From Python show_local_db_obsolete_message():
+        // - Displayed when the local database is incompatible with the app version
+        // - Db version must be compatible with app version.
+        // - Major and minor version must agree.
+        // - On app startup, if obsolete db is found, delete it and show download window.
+        // - Appends: "Download the new database and migrate data now?"
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Scrollable content area
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 10
+
+                        Label {
+                            text: "Database Compatibility Warning"
+                            font.bold: true
+                            font.pointSize: root.pointSize + 4
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            visible: root.message.length > 0
+                            text: root.message
+                            font.pointSize: root.pointSize
+                            textFormat: Text.RichText
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "Download the new database and migrate data now?"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.topMargin: 10
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Cancel"
+                        font.pointSize: root.pointSize
+                        onClicked: root.close()
+                    }
+
+                    Button {
+                        text: "Download Now"
+                        font.pointSize: root.pointSize
+                        onClicked: {
+                            SuttaBridge.prepare_for_database_upgrade();
+                            root.dialog_type = "closing";
+                        }
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+            }
+        }
+
+        // =====================================================================
+        // No Updates Dialog
+        // =====================================================================
+        // From Python show_no_simsapa_updates_message():
+        // - Simple message: "Simsapa application and database are up to date."
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Centered content area
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        spacing: 10
+
+                        Label {
+                            text: "No Updates Available"
+                            font.bold: true
+                            font.pointSize: root.pointSize + 4
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Label {
+                            text: "Simsapa application and database are up to date."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Label {
+                            text: "No updates are currently available."
+                            font.pointSize: root.pointSize
+                            color: root.palette.mid
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "OK"
+                        font.pointSize: root.pointSize
+                        onClicked: root.close()
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+            }
+        }
+
+        // =====================================================================
+        // Closing Message Dialog
+        // =====================================================================
+        // Shown after prepare_for_database_upgrade() is called.
+        // The user should quit and restart the app to begin the database download.
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Centered content area
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        spacing: 10
+
+                        Label {
+                            text: "The application will now quit."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Label {
+                            text: "Start it again to begin the database download."
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Quit"
+                        font.pointSize: root.pointSize
+                        onClicked: Qt.quit()
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
+            }
+        }
+    }
+}

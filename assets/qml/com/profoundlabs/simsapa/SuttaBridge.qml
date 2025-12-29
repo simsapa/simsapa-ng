@@ -7,6 +7,7 @@ Item {
 
     property bool db_loaded: false;
     property bool sutta_references_loaded: false;
+    property bool updates_checked: false;
     property var dpd_lookup_test_data: ({})
 
     Component.onCompleted: {
@@ -24,6 +25,14 @@ Item {
     signal showChapterFromLibrary(window_id: string, result_data_json: string);
     signal showSuttaFromReferenceSearch(window_id: string, result_data_json: string);
     signal bookMetadataUpdated(success: bool, message: string);
+
+    // Update checker signals
+    signal appUpdateAvailable(update_info_json: string);
+    signal dbUpdateAvailable(update_info_json: string);
+    signal localDbObsolete(update_info_json: string);
+    signal noUpdatesAvailable();
+    signal updateCheckError(error_message: string);
+    signal releasesCheckCompleted();
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -250,10 +259,6 @@ Item {
     }
 
     function get_spine_item_uid_by_path(book_uid: string, resource_path: string): string {
-        return '';
-    }
-
-    function get_book_uid_for_spine_item(spine_item_uid: string): string {
         return '';
     }
 
@@ -617,6 +622,40 @@ Item {
             title: "Right View",
             title_pali: "Sammādiṭṭhisutta"
         });
+    }
+
+    // Update checker functions
+    function check_for_updates(include_no_updates: bool, screen_size: string) {
+        console.log("check_for_updates():", include_no_updates, screen_size);
+        // Simulate async behavior - emit noUpdatesAvailable for testing
+        Qt.callLater(function() {
+            if (include_no_updates) {
+                noUpdatesAvailable();
+            }
+        });
+    }
+
+    function get_notify_about_simsapa_updates(): bool {
+        console.log("get_notify_about_simsapa_updates()");
+        return true;
+    }
+
+    function set_notify_about_simsapa_updates(enabled: bool) {
+        console.log("set_notify_about_simsapa_updates():", enabled);
+    }
+
+    function prepare_for_database_upgrade() {
+        console.log("prepare_for_database_upgrade()");
+    }
+
+    function get_compatible_asset_version_tag(): string {
+        console.log("get_compatible_asset_version_tag()");
+        return "";
+    }
+
+    function get_compatible_asset_github_repo(): string {
+        console.log("get_compatible_asset_github_repo()");
+        return "";
     }
 
     Item {

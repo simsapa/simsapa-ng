@@ -26,9 +26,11 @@ extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
 extern "C" void ensure_no_empty_db_files();
+extern "C" void check_delete_files_for_upgrade();
 extern "C" void remove_download_temp_folder();
 extern "C" void init_app_globals();
 extern "C" void init_app_data();
+extern "C" void import_user_data_after_upgrade();
 extern "C" void check_and_configure_for_first_start();
 extern "C" void create_or_update_linux_desktop_icon_file_ffi();
 
@@ -100,6 +102,11 @@ int start(int argc, char* argv[]) {
   // There may be a 0-byte size db file remaining from a failed
   // install attempt.
   ensure_no_empty_db_files();
+
+  // Check if database files should be deleted for an upgrade.
+  // This is triggered by the delete_files_for_upgrade.txt marker file
+  // created by prepare_for_database_upgrade().
+  check_delete_files_for_upgrade();
 
   QString os(QSysInfo::productType());
 
@@ -191,6 +198,10 @@ int start(int argc, char* argv[]) {
   // init_app_data() would create the userdata db, and we can't use it to test in
   // DownloadAppdataWindow() if this is the first ever start.
   init_app_data();
+
+  // Import user data from the import-me folder if it exists.
+  // This restores app settings and user-imported books after a database upgrade.
+  import_user_data_after_upgrade();
 
   // Check if this is the first start and configure settings based on system memory
   check_and_configure_for_first_start();

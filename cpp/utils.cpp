@@ -102,17 +102,29 @@ QJsonObject createStorageInfo(const QString& path, const QString& internalAppDat
     QJsonObject item;
     item["path"] = path;
 
+    // Check if internal
+    bool isInternal = (path == internalAppDataPath);
+    item["is_internal"] = isInternal;
+
     // Get storage info for the path
     QStorageInfo storage(path);
 
-    // Set label
-    QString label = storage.displayName().isEmpty() ?
-        QDir(storage.rootPath()).dirName() :
-        storage.displayName();
+    // Set label - use displayName if available, otherwise use friendly default
+    QString label = storage.displayName();
+    if (label.isEmpty()) {
+        // Provide user-friendly labels when displayName is not available
+        if (isInternal) {
+            label = "Internal Storage";
+        } else {
+            // Check if it looks like an SD card path
+            if (path.contains("/storage/") && !path.contains("/emulated/")) {
+                label = "SD Card";
+            } else {
+                label = "External Storage";
+            }
+        }
+    }
     item["label"] = label;
-
-    // Check if internal
-    item["is_internal"] = (path == internalAppDataPath);
 
     // Storage sizes in megabytes
     item["megabytes_total"] = static_cast<int>(storage.bytesTotal() / (1024 * 1024));
@@ -180,9 +192,7 @@ QJsonArray get_app_data_storage_paths() {
     }
 
     // Clear any pending JNI exceptions
-    if (env.checkAndClearExceptions()) {
-        // Exception was cleared
-    }
+    env.checkAndClearExceptions();
 #endif
 
     return storageArray;

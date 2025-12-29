@@ -33,7 +33,11 @@ ApplicationWindow {
             root.wake_lock_acquired = manager.acquire_wake_lock_rust();
         }
 
-        // Initialize language selection
+        // Check if auto_start_download.txt marker file exists
+        // This is set during database upgrades to automatically start the download
+        root.auto_start_download = manager.should_auto_start_download();
+
+        // Initialize language selection from download_languages.txt if it exists
         init_add_languages = manager.get_init_languages();
         available_languages = manager.get_available_languages();
 
@@ -43,11 +47,46 @@ ApplicationWindow {
             root.sync_selection_from_input();
         }
 
-        // TODO: Implement checking releases info. See asset_management.py class ReleasesWorker(QRunnable).
-        // Assuming there is a network connection, show the download selection screen.
+        // Start at "Checking sources" screen (Idx 0) while fetching releases info
+        views_stack.currentIndex = 0;
+
+        // Check for updates to get the latest releases info.
+        // When the check completes, the Connections handler below will proceed to the selection screen.
+        // The screen_size parameter is used for analytics (if enabled).
+        SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight);
+    }
+
+    // Handle releases check completion from SuttaBridge
+    Connections {
+        target: SuttaBridge
+
+        function onReleasesCheckCompleted() {
+            root.proceed_after_releases_check();
+        }
+    }
+
+    function proceed_after_releases_check() {
+        if (root.releases_info_checked) {
+            return; // Already handled
+        }
+        root.releases_info_checked = true;
+
+        // Now show the download selection screen
         views_stack.currentIndex = 1;
 
-        if (root.is_mobile) {
+        if (root.auto_start_download) {
+            // Auto-start download if marker file was present (database upgrade scenario)
+            // This takes priority over showing the storage dialog on mobile
+            logger.log("Auto-starting download due to auto_start_download.txt marker");
+            // Use Qt.callLater to ensure UI is fully initialized before starting download
+            Qt.callLater(function() {
+                if (root.validate_download()) {
+                    views_stack.currentIndex = 2;
+                    root.run_download();
+                }
+            });
+        } else if (root.is_mobile) {
+            // On mobile, show storage dialog for initial setup (not upgrade)
             storage_dialog.open();
         }
     }
@@ -59,10 +98,12 @@ ApplicationWindow {
     }
 
     property bool is_initial_setup: true
+    property bool auto_start_download: false
     property string init_add_languages: ""
     property var available_languages: []
     property var selected_languages: []
     property bool wake_lock_acquired: false
+    property bool releases_info_checked: false
 
     AssetManager { id: manager }
 
@@ -222,8 +263,17 @@ ApplicationWindow {
     function run_download() {
         // TODO _run_download_pre_hook
 
-        const github_repo = "simsapa/simsapa-ng-assets";
-        let version = "v0.1.7";
+        const github_repo = SuttaBridge.get_compatible_asset_github_repo();
+        let version = SuttaBridge.get_compatible_asset_version_tag();
+
+        // If releases info wasn't fetched, show error and stop
+        if (github_repo === "" || version === "") {
+            error_dialog.error_message = "Unable to retrieve download information.\n\nPlease check your internet connection and try again.";
+            error_dialog.open();
+            // Go back to the selection screen
+            views_stack.currentIndex = 1;
+            return;
+        }
 
         let urls = [];
 

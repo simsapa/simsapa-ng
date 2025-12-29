@@ -24,6 +24,7 @@ pub mod pdf_import;
 pub mod html_import;
 pub mod document_metadata;
 pub mod pts_reference_search;
+pub mod update_checker;
 
 use std::env;
 use std::io::{self, Read, Write};
@@ -41,11 +42,13 @@ use cfg_if::cfg_if;
 use crate::logger::{info, warn, error, LOGGER};
 use crate::app_data::AppData;
 use crate::pts_reference_search::ReferenceSearchResult;
+use crate::update_checker::ReleasesInfo;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
 static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
 static SUTTA_REFERENCES: OnceLock<Vec<ReferenceSearchResult>> = OnceLock::new();
+static RELEASES_INFO: OnceLock<std::sync::RwLock<Option<ReleasesInfo>>> = OnceLock::new();
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_globals() {
@@ -114,6 +117,30 @@ pub fn try_get_sutta_references() -> Option<&'static Vec<ReferenceSearchResult>>
     SUTTA_REFERENCES.get()
 }
 
+/// Initialize the RELEASES_INFO global with an empty RwLock
+fn init_releases_info() {
+    if RELEASES_INFO.get().is_none() {
+        RELEASES_INFO.set(std::sync::RwLock::new(None)).ok();
+    }
+}
+
+/// Set the releases info from a successful network fetch
+pub fn set_releases_info(info: ReleasesInfo) {
+    init_releases_info();
+    if let Some(lock) = RELEASES_INFO.get() {
+        if let Ok(mut guard) = lock.write() {
+            *guard = Some(info);
+        }
+    }
+}
+
+/// Get a clone of the releases info if it has been fetched
+pub fn try_get_releases_info() -> Option<ReleasesInfo> {
+    RELEASES_INFO.get().and_then(|lock| {
+        lock.read().ok().and_then(|guard| guard.clone())
+    })
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn check_and_configure_for_first_start() {
     get_app_data().check_and_configure_for_first_start();
@@ -125,6 +152,7 @@ pub struct AppGlobals {
     pub api_port: i32,
     pub api_url: String,
     pub paths: AppGlobalPaths,
+    pub save_stats: bool,
 }
 
 #[derive(Debug)]
@@ -150,6 +178,12 @@ pub struct AppGlobalPaths {
     pub dpd_db_path: PathBuf,
     pub dpd_abs_path: PathBuf,
     pub dpd_database_url: String,
+
+    // Marker files for database upgrade process
+    pub download_languages_marker: PathBuf,
+    pub auto_start_download_marker: PathBuf,
+    pub delete_files_for_upgrade_marker: PathBuf,
+    pub download_select_sanskrit_bundle_marker: PathBuf,
 }
 
 impl AppGlobals {
@@ -170,12 +204,48 @@ impl AppGlobals {
 
         save_to_file(format!("{}", api_port).as_bytes(), paths.simsapa_api_port_path.to_str().expect("Path error"));
 
+        // Determine save_stats from environment variables.
+        // Don't save stats if env var asks not to.
+        //
+        // Env var SAVE_STATS=false overrides the default save_stats=true.
+        // Env var NO_STATS=true => save_stats=false
+        let save_stats = Self::determine_save_stats();
+
         AppGlobals {
             page_len: 10,
             api_port,
             api_url,
             paths,
+            save_stats,
         }
+    }
+
+    /// Determine save_stats value from environment variables.
+    ///
+    /// By default, save_stats is false (don't save stats unless explicitly enabled).
+    ///
+    /// - SAVE_STATS=true enables saving stats
+    /// - SAVE_STATS=false disables saving stats
+    /// - NO_STATS=true disables saving stats (overrides SAVE_STATS)
+    fn determine_save_stats() -> bool {
+        // Default to false - don't save stats unless explicitly enabled
+        let mut save_stats = false;
+
+        // SAVE_STATS=true enables saving stats
+        if let Ok(s) = env::var("SAVE_STATS") {
+            if s.to_lowercase() == "true" {
+                save_stats = true;
+            }
+        }
+
+        // NO_STATS=true overrides and disables saving stats
+        if let Ok(s) = env::var("NO_STATS") {
+            if s.to_lowercase() == "true" {
+                save_stats = false;
+            }
+        }
+
+        save_stats
     }
 
     pub fn re_init_paths(&mut self) {
@@ -235,6 +305,12 @@ impl AppGlobalPaths {
         let dpd_abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone()));
         let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
+        // Marker files for database upgrade process
+        let download_languages_marker = app_assets_dir.join("download_languages.txt");
+        let auto_start_download_marker = app_assets_dir.join("auto_start_download.txt");
+        let delete_files_for_upgrade_marker = app_assets_dir.join("delete_files_for_upgrade.txt");
+        let download_select_sanskrit_bundle_marker = app_assets_dir.join("download_select_sanskrit_bundle.txt");
+
         AppGlobalPaths {
             simsapa_dir,
             simsapa_api_port_path,
@@ -257,6 +333,11 @@ impl AppGlobalPaths {
             dpd_db_path,
             dpd_abs_path,
             dpd_database_url,
+
+            download_languages_marker,
+            auto_start_download_marker,
+            delete_files_for_upgrade_marker,
+            download_select_sanskrit_bundle_marker,
         }
     }
 }
@@ -485,6 +566,71 @@ pub extern "C" fn ensure_no_empty_db_files() {
     }
 }
 
+/// Check for the delete_files_for_upgrade.txt marker file and delete database files if found.
+///
+/// This is called during app startup. If the marker file exists, it deletes:
+/// - The marker file itself
+/// - appdata.sqlite3
+/// - userdata.sqlite3
+/// - dictionaries.sqlite3
+/// - dpd.sqlite3
+///
+/// This is used during database upgrades to force a fresh download of the databases.
+#[unsafe(no_mangle)]
+pub extern "C" fn check_delete_files_for_upgrade() {
+    let g = get_app_globals();
+
+    // Check for the marker file in app_assets_dir
+    let marker_path = &g.paths.delete_files_for_upgrade_marker;
+
+    match marker_path.try_exists() {
+        Ok(true) => {
+            info(&format!("Found upgrade marker file: {}", marker_path.display()));
+
+            // Delete the marker file first
+            if let Err(e) = fs::remove_file(marker_path) {
+                error(&format!("Failed to remove marker file {:?}: {}", marker_path, e));
+            } else {
+                info("Removed delete_files_for_upgrade.txt marker file");
+            }
+
+            // Delete database files
+            let db_paths = [
+                &g.paths.appdata_db_path,
+                &g.paths.userdata_db_path,
+                &g.paths.dict_db_path,
+                &g.paths.dpd_db_path,
+            ];
+
+            for db_path in db_paths {
+                match db_path.try_exists() {
+                    Ok(true) => {
+                        if let Err(e) = fs::remove_file(db_path) {
+                            error(&format!("Failed to remove database file {:?}: {}", db_path, e));
+                        } else {
+                            info(&format!("Removed database file: {}", db_path.display()));
+                        }
+                    }
+                    Ok(false) => {
+                        // File doesn't exist, nothing to do
+                    }
+                    Err(e) => {
+                        error(&format!("Failed to check if database file exists {:?}: {}", db_path, e));
+                    }
+                }
+            }
+
+            info("Database files deleted for upgrade");
+        }
+        Ok(false) => {
+            // Marker file doesn't exist, nothing to do
+        }
+        Err(e) => {
+            error(&format!("Failed to check for upgrade marker file {:?}: {}", marker_path, e));
+        }
+    }
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn remove_download_temp_folder() {
     let g = get_app_globals();
@@ -499,6 +645,24 @@ pub extern "C" fn remove_download_temp_folder() {
         Err(e) => {
             error(&format!("{}", e));
             return;
+        }
+    }
+}
+
+/// Import user data from the import-me folder after database upgrade.
+///
+/// This should be called after init_app_data() when restarting after a database upgrade.
+/// It imports app settings and user books from the import-me folder, then cleans up.
+#[unsafe(no_mangle)]
+pub extern "C" fn import_user_data_after_upgrade() {
+    match try_get_app_data() {
+        Some(app_data) => {
+            if let Err(e) = app_data.import_user_data_from_assets() {
+                error(&format!("Failed to import user data after upgrade: {}", e));
+            }
+        }
+        None => {
+            error("import_user_data_after_upgrade: APP_DATA is not initialized");
         }
     }
 }

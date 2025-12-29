@@ -57,6 +57,7 @@ fn main() {
     qml_files.push("../assets/qml/ThemeHelper.qml");
     qml_files.push("../assets/qml/Logger.qml");
     qml_files.push("../assets/qml/UnrecognizedWordsList.qml");
+    qml_files.push("../assets/qml/UpdateNotificationDialog.qml");
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library

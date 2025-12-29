@@ -64,6 +64,11 @@ pub struct AppSettings {
     pub first_time_start: bool,
     pub sutta_language_filter_key: String,
     pub mobile_top_bar_margin: MobileTopBarMargin,
+    /// Whether to show update notifications on startup
+    pub notify_about_simsapa_updates: bool,
+    /// Release channel for updates (e.g., "main", "development", "simsapa-ng")
+    /// None means use default "simsapa-ng"
+    pub release_channel: Option<String>,
 }
 
 impl Default for AppSettings {
@@ -193,6 +198,8 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             first_time_start: true,
             sutta_language_filter_key: String::new(),
             mobile_top_bar_margin: MobileTopBarMargin::default(),
+            notify_about_simsapa_updates: true,
+            release_channel: None,
         }
     }
 }

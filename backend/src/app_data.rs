@@ -1,4 +1,6 @@
 use std::sync::RwLock;
+use std::path::Path;
+
 use indexmap::IndexMap;
 
 use diesel::prelude::*;
@@ -9,7 +11,7 @@ use anyhow::{anyhow, Context, Result};
 use crate::db::{appdata_models::*, DbManager};
 use crate::db::appdata_schema::suttas::dsl::*;
 
-use crate::logger::error;
+use crate::logger::{error, info};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
@@ -878,39 +880,610 @@ impl AppData {
         self.set_first_time_start(false);
     }
 
+    /// Get the database version from the appdata database.
+    ///
+    /// Queries the `app_settings` table for the 'db_version' key.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - The database version if found
+    /// * `None` - If the database doesn't exist or version not found
+    pub fn get_db_version(&self) -> Option<String> {
+        use crate::db::appdata_schema::app_settings;
+
+        let db_conn = &mut self.dbm.appdata.get_conn().ok()?;
+
+        let result = app_settings::table
+            .filter(app_settings::key.eq("db_version"))
+            .select(app_settings::value)
+            .first::<Option<String>>(db_conn)
+            .ok()?;
+
+        result
+    }
+
+    /// Get the release channel from app settings.
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` - The release channel if configured
+    /// * `None` - If not configured (will default to "simsapa-ng")
+    pub fn get_release_channel(&self) -> Option<String> {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.release_channel.clone()
+    }
+
+    /// Get whether to notify about Simsapa updates.
+    ///
+    /// # Returns
+    ///
+    /// `true` if update notifications are enabled (default), `false` otherwise
+    pub fn get_notify_about_simsapa_updates(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.notify_about_simsapa_updates
+    }
+
+    /// Set whether to notify about Simsapa updates.
+    ///
+    /// # Arguments
+    ///
+    /// * `enabled` - Whether to show update notifications on startup
+    pub fn set_notify_about_simsapa_updates(&self, enabled: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.notify_about_simsapa_updates = enabled;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
     fn get_system_memory_gb(&self) -> Option<u64> {
-        // NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
-        // Hence, we use system specific implementations.
-        #[cfg(target_os = "android")]
-        {
-            get_android_memory_gb()
+        get_system_memory_bytes().map(|bytes| bytes / 1024 / 1024 / 1024)
+    }
+
+    /// Export user data to the import-me folder for database upgrade.
+    ///
+    /// This creates an "import-me" folder in the simsapa directory and exports:
+    /// - app_settings.json: The current application settings
+    /// - download_languages.txt: CSV list of languages in the database (except 'san', 'en', 'pli')
+    /// - download_select_sanskrit_bundle.txt: If 'san' language is present
+    /// - appdata.sqlite3: A database with user-imported books and their related data
+    ///
+    /// User-imported books are those not in the original dataset.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If export was successful
+    /// * `Err` - If any error occurred during export
+    pub fn export_user_data_to_assets(&self) -> Result<()> {
+        let globals = get_app_globals();
+        let app_assets_dir = &globals.paths.app_assets_dir;
+        let import_dir = app_assets_dir.join("import-me");
+
+        info(&format!("export_user_data_to_assets(): Creating import-me folder at {}", import_dir.display()));
+
+        // Create import-me folder if it doesn't exist
+        if !import_dir.exists() {
+            std::fs::create_dir_all(&import_dir)
+                .with_context(|| format!("Failed to create import-me directory: {}", import_dir.display()))?;
         }
 
-        #[cfg(target_os = "linux")]
-        {
-            get_linux_memory_gb()
+        // Export app_settings.json to import-me folder
+        self.export_app_settings_json(&import_dir)?;
+
+        // Export download_languages.txt and download_select_sanskrit_bundle.txt
+        // to app_assets_dir. These are read by DownloadAppdataWindow to auto-fill
+        // language selection during database upgrades.
+        self.export_download_languages()?;
+
+        // Export user-imported books to import-me folder
+        self.export_user_books(&import_dir)?;
+
+        info("export_user_data_to_assets(): Export completed successfully");
+        Ok(())
+    }
+
+    /// Export app settings to JSON file.
+    fn export_app_settings_json(&self, import_dir: &Path) -> Result<()> {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        let settings_json = serde_json::to_string_pretty(&*app_settings)
+            .context("Failed to serialize app settings to JSON")?;
+
+        let settings_path = import_dir.join("app_settings.json");
+        std::fs::write(&settings_path, settings_json)
+            .with_context(|| format!("Failed to write app_settings.json to {}", settings_path.display()))?;
+
+        info(&format!("Exported app_settings.json to {}", settings_path.display()));
+        Ok(())
+    }
+
+    /// Export download languages to marker files.
+    ///
+    /// Creates download_languages.txt with a CSV list of languages (except 'san', 'en', 'pli').
+    /// If 'san' is present, creates download_select_sanskrit_bundle.txt.
+    ///
+    /// These files are written to app_assets_dir and are read by DownloadAppdataWindow
+    /// to auto-fill the language selection during database upgrades.
+    fn export_download_languages(&self) -> Result<()> {
+        let globals = get_app_globals();
+        let languages = self.dbm.get_sutta_languages();
+
+        // Check for Sanskrit bundle
+        if languages.contains(&"san".to_string()) {
+            let sanskrit_path = &globals.paths.download_select_sanskrit_bundle_marker;
+            std::fs::write(sanskrit_path, "True")
+                .with_context(|| format!("Failed to write download_select_sanskrit_bundle.txt to {}", sanskrit_path.display()))?;
+            info(&format!("Created download_select_sanskrit_bundle.txt at {}", sanskrit_path.display()));
         }
 
-        #[cfg(target_os = "macos")]
-        {
-            get_macos_memory_gb()
+        // Filter out default languages
+        let filtered_languages: Vec<String> = languages
+            .into_iter()
+            .filter(|lang| lang != "san" && lang != "en" && lang != "pli")
+            .collect();
+
+        if !filtered_languages.is_empty() {
+            let languages_csv = filtered_languages.join(", ");
+            let languages_path = &globals.paths.download_languages_marker;
+            std::fs::write(languages_path, &languages_csv)
+                .with_context(|| format!("Failed to write download_languages.txt to {}", languages_path.display()))?;
+            info(&format!("Exported download_languages.txt with: {}", languages_csv));
         }
 
-        #[cfg(target_os = "ios")]
-        {
-            // FIXME: implement get_ios_memory_gb()
-            Some(8)
+        Ok(())
+    }
+
+    /// Export user-imported books to a new appdata.sqlite3 database.
+    ///
+    /// User-imported books are those not in the original dataset (identified by their UIDs).
+    fn export_user_books(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::{books, book_spine_items, book_resources};
+        use crate::db::APPDATA_MIGRATIONS;
+        use diesel::sqlite::SqliteConnection;
+        use diesel_migrations::MigrationHarness;
+
+        // UIDs of books in the original dataset
+        let original_book_uids = vec![
+            "buddhadhamma",
+            "bmc",
+            "cbmc",
+            "nibbana-sermons",
+            "bhikkhu-manual",
+            "the-island",
+            "its-essential-meaning",
+            "pali-lessons",
+            "pali-lessons-answerkey",
+            "way-of-meditation",
+        ];
+
+        // Get user-imported books (not in original dataset)
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection")?;
+
+        let user_books: Vec<Book> = books::table
+            .filter(books::uid.ne_all(&original_book_uids))
+            .load::<Book>(db_conn)
+            .context("Failed to load user books")?;
+
+        if user_books.is_empty() {
+            info("No user-imported books to export");
+            return Ok(());
         }
 
-        #[cfg(target_os = "windows")]
-        {
-            get_windows_memory_gb()
+        info(&format!("Found {} user-imported books to export", user_books.len()));
+
+        // Create export database
+        let export_db_path = import_dir.join("appdata.sqlite3");
+        if export_db_path.exists() {
+            std::fs::remove_file(&export_db_path)
+                .with_context(|| format!("Failed to remove existing export database: {}", export_db_path.display()))?;
         }
+
+        let export_db_url = format!("sqlite://{}", export_db_path.display());
+        let mut export_conn = SqliteConnection::establish(&export_db_url)
+            .with_context(|| format!("Failed to create export database: {}", export_db_path.display()))?;
+
+        // Create tables using diesel migrations to ensure schema stays in sync
+        export_conn.run_pending_migrations(APPDATA_MIGRATIONS)
+            .map_err(|e| anyhow!("Failed to run migrations on export database: {}", e))?;
+
+        // Export each user book with its related data
+        for book in &user_books {
+            // Insert book using diesel model struct
+            let new_book = NewBook {
+                uid: &book.uid,
+                document_type: &book.document_type,
+                title: book.title.as_deref(),
+                author: book.author.as_deref(),
+                language: book.language.as_deref(),
+                file_path: book.file_path.as_deref(),
+                metadata_json: book.metadata_json.as_deref(),
+                enable_embedded_css: book.enable_embedded_css,
+                toc_json: book.toc_json.as_deref(),
+            };
+
+            diesel::insert_into(books::table)
+                .values(&new_book)
+                .execute(&mut export_conn)
+                .with_context(|| format!("Failed to insert book: {}", book.uid))?;
+
+            // Get the inserted book's ID (it will be different from the source ID)
+            let exported_book_id: i32 = books::table
+                .filter(books::uid.eq(&book.uid))
+                .select(books::id)
+                .first(&mut export_conn)
+                .with_context(|| format!("Failed to get exported book ID for: {}", book.uid))?;
+
+            // Get and insert spine items for this book
+            let spine_items: Vec<BookSpineItem> = book_spine_items::table
+                .filter(book_spine_items::book_id.eq(book.id))
+                .load::<BookSpineItem>(db_conn)
+                .with_context(|| format!("Failed to load spine items for book: {}", book.uid))?;
+
+            for spine_item in &spine_items {
+                let new_spine_item = NewBookSpineItem {
+                    book_id: exported_book_id,
+                    book_uid: &spine_item.book_uid,
+                    spine_item_uid: &spine_item.spine_item_uid,
+                    spine_index: spine_item.spine_index,
+                    resource_path: &spine_item.resource_path,
+                    title: spine_item.title.as_deref(),
+                    language: spine_item.language.as_deref(),
+                    content_html: spine_item.content_html.as_deref(),
+                    content_plain: spine_item.content_plain.as_deref(),
+                };
+
+                diesel::insert_into(book_spine_items::table)
+                    .values(&new_spine_item)
+                    .execute(&mut export_conn)
+                    .with_context(|| format!("Failed to insert spine item: {}", spine_item.spine_item_uid))?;
+            }
+
+            // Get and insert resources for this book
+            let resources: Vec<BookResource> = book_resources::table
+                .filter(book_resources::book_id.eq(book.id))
+                .load::<BookResource>(db_conn)
+                .with_context(|| format!("Failed to load resources for book: {}", book.uid))?;
+
+            for resource in &resources {
+                let new_resource = NewBookResource {
+                    book_id: exported_book_id,
+                    book_uid: &resource.book_uid,
+                    resource_path: &resource.resource_path,
+                    mime_type: resource.mime_type.as_deref(),
+                    content_data: resource.content_data.as_deref(),
+                };
+
+                diesel::insert_into(book_resources::table)
+                    .values(&new_resource)
+                    .execute(&mut export_conn)
+                    .with_context(|| format!("Failed to insert resource: {}", resource.resource_path))?;
+            }
+
+            info(&format!("Exported book: {} with {} spine items and {} resources",
+                         book.uid, spine_items.len(), resources.len()));
+        }
+
+        info(&format!("Exported {} user books to {}", user_books.len(), export_db_path.display()));
+        Ok(())
+    }
+
+    /// Import user data from the import-me folder after database upgrade.
+    ///
+    /// This reads from the "import-me" folder in the simsapa directory and imports:
+    /// - app_settings.json: Restores the application settings
+    /// - appdata.sqlite3: Imports user books back into the new database
+    ///
+    /// After successful import, the import-me folder is deleted.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - If import was successful (or nothing to import)
+    /// * `Err` - If any error occurred during import
+    pub fn import_user_data_from_assets(&self) -> Result<()> {
+        let globals = get_app_globals();
+        let import_dir = globals.paths.app_assets_dir.join("import-me");
+
+        if !import_dir.exists() {
+            info("import_user_data_from_assets(): No import-me folder found, skipping import");
+            return Ok(());
+        }
+
+        info(&format!("import_user_data_from_assets(): Found import-me folder at {}", import_dir.display()));
+
+        // Import app_settings.json
+        if let Err(e) = self.import_app_settings_json(&import_dir) {
+            error(&format!("Failed to import app settings: {}", e));
+            // Continue with other imports even if settings fail
+        }
+
+        // Import user books from appdata.sqlite3
+        if let Err(e) = self.import_user_books(&import_dir) {
+            error(&format!("Failed to import user books: {}", e));
+            // Continue with cleanup even if books import fails
+        }
+
+        // Clean up: remove the import-me folder
+        if let Err(e) = std::fs::remove_dir_all(&import_dir) {
+            error(&format!("Failed to remove import-me folder: {}", e));
+        } else {
+            info("import_user_data_from_assets(): Removed import-me folder after import");
+        }
+
+        info("import_user_data_from_assets(): Import completed");
+        Ok(())
+    }
+
+    /// Import app settings from JSON file.
+    fn import_app_settings_json(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::app_settings;
+
+        let settings_path = import_dir.join("app_settings.json");
+
+        if !settings_path.exists() {
+            info("No app_settings.json found in import-me folder");
+            return Ok(());
+        }
+
+        let settings_json = std::fs::read_to_string(&settings_path)
+            .with_context(|| format!("Failed to read app_settings.json from {}", settings_path.display()))?;
+
+        let imported_settings: AppSettings = serde_json::from_str(&settings_json)
+            .with_context(|| "Failed to parse app_settings.json")?;
+
+        // Update the app settings cache with imported settings
+        {
+            let mut cache = self.app_settings_cache.write().expect("Failed to write app settings");
+            *cache = imported_settings;
+        }
+
+        // Save the imported settings to the database
+        let cache = self.app_settings_cache.read().expect("Failed to read app settings");
+        let serialized_json = serde_json::to_string(&*cache)
+            .context("Failed to serialize app settings to JSON")?;
+
+        let db_conn = &mut self.dbm.userdata.get_conn()
+            .context("Failed to get userdata connection")?;
+
+        diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(serialized_json)))
+            .execute(db_conn)
+            .context("Failed to update app settings in database")?;
+
+        info(&format!("Imported app settings from {}", settings_path.display()));
+        Ok(())
+    }
+
+    /// Import user books from the export database.
+    ///
+    /// Reads books from the import-me/appdata.sqlite3 and inserts them into the new database.
+    fn import_user_books(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::{books, book_spine_items, book_resources};
+        use diesel::sqlite::SqliteConnection;
+
+        let import_db_path = import_dir.join("appdata.sqlite3");
+
+        if !import_db_path.exists() {
+            info("No appdata.sqlite3 found in import-me folder");
+            return Ok(());
+        }
+
+        info(&format!("Importing user books from {}", import_db_path.display()));
+
+        // Open the import database
+        let import_db_url = format!("sqlite://{}", import_db_path.display());
+        let mut import_conn = SqliteConnection::establish(&import_db_url)
+            .with_context(|| format!("Failed to open import database: {}", import_db_path.display()))?;
+
+        // Get all books from the import database
+        let import_books: Vec<Book> = books::table
+            .load::<Book>(&mut import_conn)
+            .context("Failed to load books from import database")?;
+
+        if import_books.is_empty() {
+            info("No books to import from appdata.sqlite3");
+            return Ok(());
+        }
+
+        info(&format!("Found {} books to import", import_books.len()));
+
+        // Get connection to the current appdata database
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection")?;
+
+        // Import each book with its related data
+        for book in &import_books {
+            // Check if book already exists in the current database (by UID)
+            let existing_book: Option<i32> = books::table
+                .filter(books::uid.eq(&book.uid))
+                .select(books::id)
+                .first(db_conn)
+                .optional()
+                .context("Failed to check for existing book")?;
+
+            if existing_book.is_some() {
+                info(&format!("Book {} already exists, skipping", book.uid));
+                continue;
+            }
+
+            // Insert the book
+            let new_book = NewBook {
+                uid: &book.uid,
+                document_type: &book.document_type,
+                title: book.title.as_deref(),
+                author: book.author.as_deref(),
+                language: book.language.as_deref(),
+                file_path: book.file_path.as_deref(),
+                metadata_json: book.metadata_json.as_deref(),
+                enable_embedded_css: book.enable_embedded_css,
+                toc_json: book.toc_json.as_deref(),
+            };
+
+            diesel::insert_into(books::table)
+                .values(&new_book)
+                .execute(db_conn)
+                .with_context(|| format!("Failed to insert book: {}", book.uid))?;
+
+            // Get the inserted book's ID
+            let new_book_id: i32 = books::table
+                .filter(books::uid.eq(&book.uid))
+                .select(books::id)
+                .first(db_conn)
+                .with_context(|| format!("Failed to get new book ID for: {}", book.uid))?;
+
+            // Get and insert spine items from import database
+            let spine_items: Vec<BookSpineItem> = book_spine_items::table
+                .filter(book_spine_items::book_id.eq(book.id))
+                .load::<BookSpineItem>(&mut import_conn)
+                .with_context(|| format!("Failed to load spine items for book: {}", book.uid))?;
+
+            for spine_item in &spine_items {
+                let new_spine_item = NewBookSpineItem {
+                    book_id: new_book_id,
+                    book_uid: &spine_item.book_uid,
+                    spine_item_uid: &spine_item.spine_item_uid,
+                    spine_index: spine_item.spine_index,
+                    resource_path: &spine_item.resource_path,
+                    title: spine_item.title.as_deref(),
+                    language: spine_item.language.as_deref(),
+                    content_html: spine_item.content_html.as_deref(),
+                    content_plain: spine_item.content_plain.as_deref(),
+                };
+
+                diesel::insert_into(book_spine_items::table)
+                    .values(&new_spine_item)
+                    .execute(db_conn)
+                    .with_context(|| format!("Failed to insert spine item: {}", spine_item.spine_item_uid))?;
+            }
+
+            // Get and insert resources from import database
+            let resources: Vec<BookResource> = book_resources::table
+                .filter(book_resources::book_id.eq(book.id))
+                .load::<BookResource>(&mut import_conn)
+                .with_context(|| format!("Failed to load resources for book: {}", book.uid))?;
+
+            for resource in &resources {
+                let new_resource = NewBookResource {
+                    book_id: new_book_id,
+                    book_uid: &resource.book_uid,
+                    resource_path: &resource.resource_path,
+                    mime_type: resource.mime_type.as_deref(),
+                    content_data: resource.content_data.as_deref(),
+                };
+
+                diesel::insert_into(book_resources::table)
+                    .values(&new_resource)
+                    .execute(db_conn)
+                    .with_context(|| format!("Failed to insert resource: {}", resource.resource_path))?;
+            }
+
+            info(&format!("Imported book: {} with {} spine items and {} resources",
+                         book.uid, spine_items.len(), resources.len()));
+        }
+
+        info(&format!("Successfully imported {} user books", import_books.len()));
+        Ok(())
+    }
+}
+
+/// Get the total system memory in bytes.
+///
+/// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+/// Therefore, we use platform-specific implementations.
+pub fn get_system_memory_bytes() -> Option<u64> {
+    #[cfg(target_os = "android")]
+    {
+        get_android_memory_bytes()
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        get_linux_memory_bytes()
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        get_macos_memory_bytes()
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        get_ios_memory_bytes()
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        get_windows_memory_bytes()
+    }
+}
+
+/// Get the number of CPU cores.
+///
+/// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+/// Therefore, we use platform-specific implementations.
+pub fn get_cpu_cores() -> Option<u32> {
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    {
+        get_linux_cpu_cores()
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        get_macos_cpu_cores()
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        get_ios_cpu_cores()
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        get_windows_cpu_cores()
+    }
+}
+
+/// Get the maximum CPU frequency in MHz.
+///
+/// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
+/// Therefore, we use platform-specific implementations.
+pub fn get_cpu_max_frequency_mhz() -> Option<u64> {
+    #[cfg(any(target_os = "android", target_os = "linux"))]
+    {
+        get_linux_cpu_max_frequency_mhz()
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        get_macos_cpu_max_frequency_mhz()
+    }
+
+    #[cfg(target_os = "ios")]
+    {
+        get_ios_cpu_max_frequency_mhz()
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        get_windows_cpu_max_frequency_mhz()
     }
 }
 
 #[cfg(target_os = "android")]
-fn get_android_memory_gb() -> Option<u64> {
+fn get_android_memory_bytes() -> Option<u64> {
     use std::fs;
 
     // Read /proc/meminfo which is available on Android
@@ -921,7 +1494,7 @@ fn get_android_memory_gb() -> Option<u64> {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
                 let kb = parts[1].parse::<u64>().ok()?;
-                return Some(kb / 1024 / 1024); // Convert KB to GB
+                return Some(kb * 1024); // Convert KB to bytes
             }
         }
     }
@@ -929,7 +1502,7 @@ fn get_android_memory_gb() -> Option<u64> {
 }
 
 #[cfg(target_os = "linux")]
-fn get_linux_memory_gb() -> Option<u64> {
+fn get_linux_memory_bytes() -> Option<u64> {
     use std::fs;
 
     let meminfo = fs::read_to_string("/proc/meminfo").ok()?;
@@ -939,7 +1512,7 @@ fn get_linux_memory_gb() -> Option<u64> {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 2 {
                 let kb = parts[1].parse::<u64>().ok()?;
-                return Some(kb / 1024 / 1024);
+                return Some(kb * 1024); // Convert KB to bytes
             }
         }
     }
@@ -947,7 +1520,7 @@ fn get_linux_memory_gb() -> Option<u64> {
 }
 
 #[cfg(target_os = "macos")]
-fn get_macos_memory_gb() -> Option<u64> {
+fn get_macos_memory_bytes() -> Option<u64> {
     use std::process::Command;
 
     let output = Command::new("sysctl")
@@ -957,12 +1530,11 @@ fn get_macos_memory_gb() -> Option<u64> {
         .ok()?;
 
     let bytes_str = String::from_utf8(output.stdout).ok()?;
-    let bytes = bytes_str.trim().parse::<u64>().ok()?;
-    Some(bytes / 1024 / 1024 / 1024)
+    bytes_str.trim().parse::<u64>().ok()
 }
 
 #[cfg(target_os = "windows")]
-fn get_windows_memory_gb() -> Option<u64> {
+fn get_windows_memory_bytes() -> Option<u64> {
     use std::mem;
 
     #[repr(C)]
@@ -988,9 +1560,297 @@ fn get_windows_memory_gb() -> Option<u64> {
         status.dw_length = mem::size_of::<MEMORYSTATUSEX>() as u32;
 
         if GlobalMemoryStatusEx(&mut status) != 0 {
-            Some(status.ull_total_phys / 1024 / 1024 / 1024)
+            Some(status.ull_total_phys)
         } else {
             None
+        }
+    }
+}
+
+// CPU cores implementations
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+fn get_linux_cpu_cores() -> Option<u32> {
+    use std::fs;
+
+    // Try reading from /proc/cpuinfo
+    if let Ok(cpuinfo) = fs::read_to_string("/proc/cpuinfo") {
+        let count = cpuinfo.lines()
+            .filter(|line| line.starts_with("processor"))
+            .count();
+        if count > 0 {
+            return Some(count as u32);
+        }
+    }
+
+    // Fallback: try reading from /sys/devices/system/cpu/present
+    if let Ok(present) = fs::read_to_string("/sys/devices/system/cpu/present") {
+        // Format is like "0-7" for 8 cores
+        let trimmed = present.trim();
+        if let Some(pos) = trimmed.rfind('-') {
+            if let Ok(max) = trimmed[pos + 1..].parse::<u32>() {
+                return Some(max + 1);
+            }
+        }
+    }
+
+    None
+}
+
+#[cfg(target_os = "macos")]
+fn get_macos_cpu_cores() -> Option<u32> {
+    use std::process::Command;
+
+    let output = Command::new("sysctl")
+        .arg("-n")
+        .arg("hw.ncpu")
+        .output()
+        .ok()?;
+
+    let cores_str = String::from_utf8(output.stdout).ok()?;
+    cores_str.trim().parse::<u32>().ok()
+}
+
+#[cfg(target_os = "windows")]
+fn get_windows_cpu_cores() -> Option<u32> {
+    use std::env;
+
+    // Use NUMBER_OF_PROCESSORS environment variable
+    env::var("NUMBER_OF_PROCESSORS")
+        .ok()
+        .and_then(|s| s.parse::<u32>().ok())
+}
+
+// CPU frequency implementations
+
+#[cfg(any(target_os = "android", target_os = "linux"))]
+fn get_linux_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::fs;
+
+    // Try reading from scaling_max_freq (in KHz)
+    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq") {
+        if let Ok(khz) = freq_str.trim().parse::<u64>() {
+            return Some(khz / 1000); // Convert KHz to MHz
+        }
+    }
+
+    // Fallback: try cpuinfo_max_freq
+    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq") {
+        if let Ok(khz) = freq_str.trim().parse::<u64>() {
+            return Some(khz / 1000);
+        }
+    }
+
+    // Fallback: try parsing /proc/cpuinfo for "cpu MHz"
+    if let Ok(cpuinfo) = fs::read_to_string("/proc/cpuinfo") {
+        for line in cpuinfo.lines() {
+            if line.starts_with("cpu MHz") {
+                if let Some(pos) = line.find(':') {
+                    let mhz_str = line[pos + 1..].trim();
+                    if let Ok(mhz) = mhz_str.parse::<f64>() {
+                        return Some(mhz as u64);
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
+#[cfg(target_os = "macos")]
+fn get_macos_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::process::Command;
+
+    // sysctl hw.cpufrequency returns frequency in Hz
+    let output = Command::new("sysctl")
+        .arg("-n")
+        .arg("hw.cpufrequency")
+        .output()
+        .ok()?;
+
+    let hz_str = String::from_utf8(output.stdout).ok()?;
+    let hz = hz_str.trim().parse::<u64>().ok()?;
+    Some(hz / 1_000_000) // Convert Hz to MHz
+}
+
+#[cfg(target_os = "windows")]
+fn get_windows_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::process::Command;
+
+    // Use WMIC to get max clock speed
+    let output = Command::new("wmic")
+        .args(["cpu", "get", "MaxClockSpeed", "/value"])
+        .output()
+        .ok()?;
+
+    let output_str = String::from_utf8(output.stdout).ok()?;
+    for line in output_str.lines() {
+        if line.starts_with("MaxClockSpeed=") {
+            let mhz_str = line.trim_start_matches("MaxClockSpeed=");
+            return mhz_str.trim().parse::<u64>().ok();
+        }
+    }
+
+    None
+}
+
+// iOS implementations using sysctlbyname FFI
+// Note: iOS uses the same sysctl API as macOS but we can't spawn processes,
+// so we use direct FFI calls to sysctlbyname.
+
+#[cfg(target_os = "ios")]
+fn get_ios_memory_bytes() -> Option<u64> {
+    use std::ffi::CStr;
+    use std::mem;
+    use std::ptr;
+
+    #[link(name = "System")]
+    unsafe extern "C" {
+        fn sysctlbyname(
+            name: *const i8,
+            oldp: *mut std::ffi::c_void,
+            oldlenp: *mut usize,
+            newp: *mut std::ffi::c_void,
+            newlen: usize,
+        ) -> i32;
+    }
+
+    let name = CStr::from_bytes_with_nul(b"hw.memsize\0").ok()?;
+    let mut value: u64 = 0;
+    let mut size = mem::size_of::<u64>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut u64 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 {
+            Some(value)
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(target_os = "ios")]
+fn get_ios_cpu_cores() -> Option<u32> {
+    use std::ffi::CStr;
+    use std::mem;
+    use std::ptr;
+
+    #[link(name = "System")]
+    unsafe extern "C" {
+        fn sysctlbyname(
+            name: *const i8,
+            oldp: *mut std::ffi::c_void,
+            oldlenp: *mut usize,
+            newp: *mut std::ffi::c_void,
+            newlen: usize,
+        ) -> i32;
+    }
+
+    // Try hw.ncpu first (total CPUs including logical)
+    let name = CStr::from_bytes_with_nul(b"hw.ncpu\0").ok()?;
+    let mut value: i32 = 0;
+    let mut size = mem::size_of::<i32>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut i32 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            return Some(value as u32);
+        }
+    }
+
+    // Fallback to hw.physicalcpu
+    let name = CStr::from_bytes_with_nul(b"hw.physicalcpu\0").ok()?;
+    let mut value: i32 = 0;
+    let mut size = mem::size_of::<i32>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut i32 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            Some(value as u32)
+        } else {
+            None
+        }
+    }
+}
+
+#[cfg(target_os = "ios")]
+fn get_ios_cpu_max_frequency_mhz() -> Option<u64> {
+    use std::ffi::CStr;
+    use std::mem;
+    use std::ptr;
+
+    #[link(name = "System")]
+    unsafe extern "C" {
+        fn sysctlbyname(
+            name: *const i8,
+            oldp: *mut std::ffi::c_void,
+            oldlenp: *mut usize,
+            newp: *mut std::ffi::c_void,
+            newlen: usize,
+        ) -> i32;
+    }
+
+    // Try hw.cpufrequency (returns Hz)
+    let name = CStr::from_bytes_with_nul(b"hw.cpufrequency\0").ok()?;
+    let mut value: u64 = 0;
+    let mut size = mem::size_of::<u64>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut u64 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            return Some(value / 1_000_000); // Convert Hz to MHz
+        }
+    }
+
+    // Fallback to hw.cpufrequency_max
+    let name = CStr::from_bytes_with_nul(b"hw.cpufrequency_max\0").ok()?;
+    let mut value: u64 = 0;
+    let mut size = mem::size_of::<u64>();
+
+    unsafe {
+        let result = sysctlbyname(
+            name.as_ptr(),
+            &mut value as *mut u64 as *mut std::ffi::c_void,
+            &mut size,
+            ptr::null_mut(),
+            0,
+        );
+
+        if result == 0 && value > 0 {
+            Some(value / 1_000_000) // Convert Hz to MHz
+        } else {
+            // On modern iOS devices, CPU frequency info may not be available via sysctl
+            // Return a reasonable default for modern iOS devices
+            Some(2400) // 2.4 GHz - typical for modern iPhones
         }
     }
 }

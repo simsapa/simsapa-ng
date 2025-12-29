@@ -87,8 +87,8 @@ ApplicationWindow {
         logger.log("handle_redownload()");
         // Build list of failed downloadable databases
         let urls = [];
-        const github_repo = "simsapa/simsapa-ng-assets";
-        let version = "v0.1.7";
+        const github_repo = SuttaBridge.get_compatible_asset_github_repo();
+        let version = SuttaBridge.get_compatible_asset_version_tag();
 
         // ensure 'v' prefix
         if (version[0] !== "v") {

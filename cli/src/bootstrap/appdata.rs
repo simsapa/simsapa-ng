@@ -50,7 +50,7 @@ impl AppdataBootstrap {
         let settings = vec![
             NewAppSetting {
                 key: "db_version",
-                value: Some("1"),
+                value: Some("0.1.5"),
             },
         ];
 

@@ -43,6 +43,9 @@ struct ConnectionCustomizer;
 
 impl CustomizeConnection<SqliteConnection, diesel::r2d2::Error> for ConnectionCustomizer {
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), diesel::r2d2::Error> {
+        // Set busy timeout to 5 seconds to handle concurrent access
+        conn.batch_execute("PRAGMA busy_timeout = 5000;")
+            .map_err(diesel::r2d2::Error::QueryError)?;
         // Enable foreign key constraints for all connections
         conn.batch_execute("PRAGMA foreign_keys = ON;")
             .map_err(diesel::r2d2::Error::QueryError)
