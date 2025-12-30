@@ -988,7 +988,7 @@ ${query_text}`;
                 action: Action {
                     id: action_check_for_updates
                     text: "Check for Simsapa Updates..."
-                    onTriggered: SuttaBridge.check_for_updates(true, root.width + " x " + root.height)
+                    onTriggered: SuttaBridge.check_for_updates(true, root.width + " x " + root.height, "determine")
                 }
             }
 
@@ -1075,7 +1075,7 @@ ${query_text}`;
             if (!SuttaBridge.updates_checked) {
                 SuttaBridge.updates_checked = true;
                 if (SuttaBridge.get_notify_about_simsapa_updates()) {
-                    SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight);
+                    SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight, "determine");
                 }
             }
         }

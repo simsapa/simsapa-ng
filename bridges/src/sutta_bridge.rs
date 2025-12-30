@@ -485,7 +485,7 @@ pub mod qobject {
 
         // Update checker functions
         #[qinvokable]
-        fn check_for_updates(self: Pin<&mut SuttaBridge>, include_no_updates: bool, screen_size: &QString);
+        fn check_for_updates(self: Pin<&mut SuttaBridge>, include_no_updates: bool, screen_size: &QString, save_stats_behaviour: &QString);
 
         #[qinvokable]
         fn get_notify_about_simsapa_updates(self: &SuttaBridge) -> bool;
@@ -2422,8 +2422,9 @@ impl qobject::SuttaBridge {
     ///
     /// * `include_no_updates` - If true, emits noUpdatesAvailable signal when no updates found
     /// * `screen_size` - Screen resolution string (e.g., "1920 x 1080") for analytics, can be empty
-    pub fn check_for_updates(self: Pin<&mut Self>, include_no_updates: bool, screen_size: &QString) {
-        use simsapa_backend::update_checker;
+    /// * `save_stats_behaviour` - Controls stats saving: "enabled", "disabled", or "determine"
+    pub fn check_for_updates(self: Pin<&mut Self>, include_no_updates: bool, screen_size: &QString, save_stats_behaviour: &QString) {
+        use simsapa_backend::update_checker::{self, SaveStatsBehaviour};
 
         info("SuttaBridge::check_for_updates() start");
         let qt_thread = self.qt_thread();
@@ -2435,6 +2436,9 @@ impl qobject::SuttaBridge {
         } else {
             Some(screen_size_str)
         };
+
+        // Parse save_stats_behaviour from string
+        let stats_behaviour = SaveStatsBehaviour::from_str(&save_stats_behaviour.to_string());
 
         thread::spawn(move || {
             // Get current app and db versions
@@ -2456,7 +2460,7 @@ impl qobject::SuttaBridge {
             }
 
             // Try to fetch release information
-            let releases_info = match update_checker::fetch_releases_info(screen_size_opt.as_deref()) {
+            let releases_info = match update_checker::fetch_releases_info(screen_size_opt.as_deref(), stats_behaviour) {
                 Ok(info) => {
                     // Save the successfully fetched releases info to the global
                     simsapa_backend::set_releases_info(info.clone());

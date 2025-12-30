@@ -625,8 +625,9 @@ Item {
     }
 
     // Update checker functions
-    function check_for_updates(include_no_updates: bool, screen_size: string) {
-        console.log("check_for_updates():", include_no_updates, screen_size);
+    // save_stats_behaviour: "enabled", "disabled", or "determine"
+    function check_for_updates(include_no_updates: bool, screen_size: string, save_stats_behaviour: string) {
+        console.log("check_for_updates():", include_no_updates, screen_size, save_stats_behaviour);
         // Simulate async behavior - emit noUpdatesAvailable for testing
         Qt.callLater(function() {
             if (include_no_updates) {

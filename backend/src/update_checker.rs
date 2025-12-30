@@ -31,6 +31,37 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
+/// Behaviour for saving statistics when fetching releases info.
+///
+/// This enum controls whether system information is sent to the server
+/// for analytics purposes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SaveStatsBehaviour {
+    /// Always save stats (no_stats = false)
+    Enabled,
+    /// Never save stats (no_stats = true)
+    Disabled,
+    /// Determine from environment/app settings (default behaviour)
+    #[default]
+    Determine,
+}
+
+impl SaveStatsBehaviour {
+    /// Parse a string value into SaveStatsBehaviour.
+    ///
+    /// Accepts case-insensitive values:
+    /// - "enabled" -> Enabled
+    /// - "disabled" -> Disabled
+    /// - "determine" or anything else -> Determine
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "enabled" => SaveStatsBehaviour::Enabled,
+            "disabled" => SaveStatsBehaviour::Disabled,
+            _ => SaveStatsBehaviour::Determine,
+        }
+    }
+}
+
 /// Represents a parsed semantic version with optional alpha release number.
 ///
 /// Version ordering follows semver rules:
@@ -400,22 +431,33 @@ pub struct UpdateInfo {
 /// Uses platform-specific implementations to get CPU and memory info,
 /// avoiding the sysinfo crate which requires higher Android API levels.
 ///
-/// The `save_stats` value is determined from `AppGlobals` which reads
-/// environment variables (SAVE_STATS, NO_STATS) at initialization.
+/// The `save_stats` value is determined based on the `save_stats_behaviour` parameter:
+/// - `Enabled`: Always save stats (no_stats = false)
+/// - `Disabled`: Never save stats (no_stats = true)
+/// - `Determine`: Use value from `AppGlobals` (environment variables)
 ///
 /// # Arguments
 ///
 /// * `screen_size` - Optional screen resolution string (e.g., "1920 x 1080")
+/// * `save_stats_behaviour` - Controls whether to save stats
 ///
 /// # Returns
 ///
 /// Populated `ReleasesRequestParams` struct
-pub fn collect_system_info(screen_size: Option<&str>) -> ReleasesRequestParams {
+pub fn collect_system_info(screen_size: Option<&str>, save_stats_behaviour: SaveStatsBehaviour) -> ReleasesRequestParams {
     use crate::app_data::{get_system_memory_bytes, get_cpu_cores, get_cpu_max_frequency_mhz};
     use crate::get_app_globals;
 
-    // Get save_stats from AppGlobals (determined from env variables at startup)
-    let save_stats = get_app_globals().save_stats;
+    // Determine no_stats based on behaviour
+    let no_stats = match save_stats_behaviour {
+        SaveStatsBehaviour::Enabled => false,
+        SaveStatsBehaviour::Disabled => true,
+        SaveStatsBehaviour::Determine => {
+            // Get save_stats from AppGlobals (determined from env variables at startup)
+            let save_stats = get_app_globals().save_stats;
+            !save_stats
+        }
+    };
 
     // Get CPU info using platform-specific implementations
     let cpu_cores = get_cpu_cores()
@@ -440,18 +482,21 @@ pub fn collect_system_info(screen_size: Option<&str>) -> ReleasesRequestParams {
         cpu_cores,
         mem_total,
         screen: screen_size.unwrap_or("").to_string(),
-        no_stats: !save_stats,
+        no_stats,
     }
 }
 
 /// Fetch release information from the Simsapa releases API.
 ///
 /// Makes a POST request with system information and returns parsed release data.
-/// The `save_stats` value is determined from `AppGlobals` (via environment variables).
 ///
 /// # Arguments
 ///
 /// * `screen_size` - Optional screen resolution for analytics (e.g., "1920 x 1080")
+/// * `save_stats_behaviour` - Controls whether to save stats:
+///   - `Enabled`: Always save stats
+///   - `Disabled`: Never save stats
+///   - `Determine`: Use value from environment/app settings
 ///
 /// # Returns
 ///
@@ -461,11 +506,11 @@ pub fn collect_system_info(screen_size: Option<&str>) -> ReleasesRequestParams {
 /// # Example
 ///
 /// ```ignore
-/// let info = fetch_releases_info(Some("1920 x 1080"))?;
+/// let info = fetch_releases_info(Some("1920 x 1080"), SaveStatsBehaviour::Determine)?;
 /// println!("Latest app version: {}", info.application.releases[0].version_tag);
 /// ```
-pub fn fetch_releases_info(screen_size: Option<&str>) -> Result<ReleasesInfo> {
-    let params = collect_system_info(screen_size);
+pub fn fetch_releases_info(screen_size: Option<&str>, save_stats_behaviour: SaveStatsBehaviour) -> Result<ReleasesInfo> {
+    let params = collect_system_info(screen_size, save_stats_behaviour);
 
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(REQUEST_TIMEOUT_SECS))

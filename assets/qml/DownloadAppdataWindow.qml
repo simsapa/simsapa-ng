@@ -53,7 +53,8 @@ ApplicationWindow {
         // Check for updates to get the latest releases info.
         // When the check completes, the Connections handler below will proceed to the selection screen.
         // The screen_size parameter is used for analytics (if enabled).
-        SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight);
+        // Pass "disabled" for save_stats_behaviour to avoid duplicate stats during initial setup.
+        SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight, "disabled");
     }
 
     // Handle releases check completion from SuttaBridge

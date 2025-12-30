@@ -204,11 +204,6 @@ impl AppGlobals {
 
         save_to_file(format!("{}", api_port).as_bytes(), paths.simsapa_api_port_path.to_str().expect("Path error"));
 
-        // Determine save_stats from environment variables.
-        // Don't save stats if env var asks not to.
-        //
-        // Env var SAVE_STATS=false overrides the default save_stats=true.
-        // Env var NO_STATS=true => save_stats=false
         let save_stats = Self::determine_save_stats();
 
         AppGlobals {
@@ -222,14 +217,13 @@ impl AppGlobals {
 
     /// Determine save_stats value from environment variables.
     ///
-    /// By default, save_stats is false (don't save stats unless explicitly enabled).
+    /// By default, save_stats is true.
     ///
     /// - SAVE_STATS=true enables saving stats
     /// - SAVE_STATS=false disables saving stats
     /// - NO_STATS=true disables saving stats (overrides SAVE_STATS)
     fn determine_save_stats() -> bool {
-        // Default to false - don't save stats unless explicitly enabled
-        let mut save_stats = false;
+        let mut save_stats = true;
 
         // SAVE_STATS=true enables saving stats
         if let Ok(s) = env::var("SAVE_STATS") {
