@@ -36,7 +36,44 @@ ApplicationWindow {
     // Computed properties
     readonly property bool has_downloadable_failures: appdata_failed || dpd_failed || dictionaries_failed
     readonly property bool has_userdata_failure: userdata_failed
+    readonly property bool has_any_failure: has_downloadable_failures || has_userdata_failure
     readonly property bool has_both_types: has_downloadable_failures && has_userdata_failure
+
+    // Track if dialog was opened from menu (manual) vs automatic validation failure
+    property bool opened_from_menu: false
+
+    function show_from_menu() {
+        root.opened_from_menu = true;
+        // Clear previous results and run validation
+        root.validation_results = {};
+        root.appdata_failed = false;
+        root.dpd_failed = false;
+        root.dictionaries_failed = false;
+        root.userdata_failed = false;
+
+        root.show();
+        root.raise();
+        root.requestActivate();
+
+        // Run validation checks
+        root.run_validation_checks();
+    }
+
+    function run_validation_checks() {
+        logger.log("run_validation_checks()");
+        // Clear previous results
+        root.validation_results = {};
+        root.appdata_failed = false;
+        root.dpd_failed = false;
+        root.dictionaries_failed = false;
+        root.userdata_failed = false;
+
+        // Run the first query checks which will emit validation signals
+        SuttaBridge.appdata_first_query();
+        SuttaBridge.dpd_first_query();
+        SuttaBridge.dictionary_first_query();
+        SuttaBridge.userdata_first_query();
+    }
 
     function show_validation_failure(failed_databases) {
         // Parse the failed_databases string (comma-separated list)
@@ -83,7 +120,8 @@ ApplicationWindow {
         return "";
     }
 
-    function handle_redownload() {
+    // Returns true if download was started, false if no databases to download
+    function handle_redownload(): bool {
         logger.log("handle_redownload()");
         // Build list of failed downloadable databases
         let urls = [];
@@ -119,6 +157,11 @@ ApplicationWindow {
             // Note: We pass is_initial_setup = false
             logger.log(`Starting re-download of ${urls.length} database(s)`);
             download_window.start_redownload(urls);
+            return true;
+        } else {
+            // No failed databases to re-download
+            no_failed_databases_dialog.open();
+            return false;
         }
     }
 
@@ -136,25 +179,10 @@ ApplicationWindow {
         }
     }
 
-    function handle_fix_all() {
-        logger.log("handle_fix_all()");
-
-        // Reset userdata first if it failed
-        if (root.validation_results["userdata"] && !root.validation_results["userdata"].is_valid) {
-            logger.log("Resetting userdata...");
-            const success = SuttaBridge.reset_userdata_database();
-            if (!success) {
-                logger.log("ERROR: Failed to reset userdata database");
-                reset_error_dialog.open();
-                return;
-            }
-            logger.log("Userdata reset complete");
-        }
-
-        // Then proceed to re-download failed downloadable databases
-        if (root.has_downloadable_failures) {
-            root.handle_redownload();
-        }
+    function handle_remove_all_and_redownload() {
+        logger.log("handle_remove_all_and_redownload()");
+        SuttaBridge.prepare_for_database_upgrade();
+        remove_all_success_dialog.open();
     }
 
     Dialog {
@@ -186,6 +214,38 @@ ApplicationWindow {
             text: "Failed to reset userdata database."
             wrapMode: Text.WordWrap
             width: 400
+        }
+    }
+
+    Dialog {
+        id: no_failed_databases_dialog
+        title: "No Failed Databases"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "There are no failed databases to re-download."
+            wrapMode: Text.WordWrap
+            width: 400
+        }
+    }
+
+    Dialog {
+        id: remove_all_success_dialog
+        title: "Ready for Re-download"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "Start the app again to begin the database download."
+            wrapMode: Text.WordWrap
+            width: 400
+        }
+
+        onAccepted: {
+            Qt.quit();
         }
     }
 
@@ -227,13 +287,17 @@ ApplicationWindow {
                 message: message
             };
 
+            // Update failed flags
+            root.set_validation_results(root.validation_results);
+
             // Check if all validations are complete
             if (root.all_validations_completed()) {
                 // All checks completed - cancel timeout
                 validation_timeout_timer.stop();
 
-                // Show dialog if there were failures
-                if (root.has_validation_failures()) {
+                // If opened from menu, dialog is already visible - just update UI
+                // If not from menu (automatic check), show dialog only if there were failures
+                if (!root.opened_from_menu && root.has_validation_failures()) {
                     root.show_validation_dialog();
                 }
             } else {
@@ -283,11 +347,34 @@ ApplicationWindow {
             spacing: 15
             anchors.fill: parent
 
-            // Title
+            // Re-run Validation Checks button at the top
+            Button {
+                text: "Re-run Validation Checks"
+                Layout.alignment: Qt.AlignLeft
+                onClicked: {
+                    root.run_validation_checks();
+                }
+            }
+
+            // Status title
             Label {
-                text: "Database Validation Failed"
+                text: "Status:"
                 font.bold: true
                 font.pointSize: root.pointSize + 2
+            }
+
+            // Success message when no failures
+            Label {
+                text: "Database checks were successful."
+                font.pointSize: root.pointSize
+                visible: root.all_validations_completed() && !root.has_any_failure
+            }
+
+            // Failure message header
+            Label {
+                text: "Database checks failed for:"
+                font.pointSize: root.pointSize
+                visible: root.has_any_failure
             }
 
             // Downloadable databases section
@@ -312,7 +399,7 @@ ApplicationWindow {
                         spacing: 2
                         Layout.fillWidth: true
                         Label {
-                            text: "  • " + delegate_item.name
+                            text: "  - " + delegate_item.name
                             font.pointSize: root.pointSize
                             font.bold: true
                             Layout.fillWidth: true
@@ -344,7 +431,7 @@ ApplicationWindow {
                 }
 
                 Label {
-                    text: "  • Userdata Database"
+                    text: "  - Userdata Database"
                     font.pointSize: root.pointSize
                     font.bold: true
                     Layout.fillWidth: true
@@ -371,55 +458,27 @@ ApplicationWindow {
 
             Item { Layout.fillHeight: true }
 
-            // Button layout - changes based on which types of databases failed
-            RowLayout {
+            ColumnLayout {
                 spacing: 10
                 Layout.fillWidth: true
+                // Extra space on mobile to avoid the bottom bar covering the buttons
+                Layout.bottomMargin: root.is_mobile ? 60 : 5
 
-                Item { Layout.fillWidth: true }
-
-                // Only downloadable databases failed
                 Button {
-                    text: "Re-download"
-                    visible: root.has_downloadable_failures && !root.has_userdata_failure
+                    text: "Re-download Failed Databases"
+                    font.pointSize: root.pointSize
+                    Layout.fillWidth: true
                     onClicked: {
-                        root.handle_redownload();
-                        root.close();
-                    }
-                }
-
-                // Only userdata failed
-                Button {
-                    text: "Reset to Defaults"
-                    visible: !root.has_downloadable_failures && root.has_userdata_failure
-                    onClicked: {
-                        root.handle_reset_userdata();
-                        root.close();
-                    }
-                }
-
-                // Both types failed - show all options
-                Button {
-                    text: "Fix All"
-                    visible: root.has_both_types
-                    onClicked: {
-                        root.handle_fix_all();
-                        root.close();
+                        if (root.handle_redownload()) {
+                            root.close();
+                        }
                     }
                 }
 
                 Button {
-                    text: "Re-download Only"
-                    visible: root.has_both_types
-                    onClicked: {
-                        root.handle_redownload();
-                        root.close();
-                    }
-                }
-
-                Button {
-                    text: "Reset Userdata Only"
-                    visible: root.has_both_types
+                    text: "Reset Userdata"
+                    font.pointSize: root.pointSize
+                    Layout.fillWidth: true
                     onClicked: {
                         root.handle_reset_userdata();
                         root.close();
@@ -427,8 +486,20 @@ ApplicationWindow {
                 }
 
                 Button {
-                    text: "Cancel"
+                    text: "Remove All and Re-download"
+                    font.pointSize: root.pointSize
+                    Layout.fillWidth: true
                     onClicked: {
+                        root.handle_remove_all_and_redownload();
+                    }
+                }
+
+                Button {
+                    text: "Close"
+                    font.pointSize: root.pointSize
+                    Layout.fillWidth: true
+                    onClicked: {
+                        root.opened_from_menu = false;
                         root.close();
                     }
                 }

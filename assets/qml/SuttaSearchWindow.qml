@@ -39,7 +39,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !mobile_top_margin_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !mobile_top_margin_dialog.visible && !database_validation_dialog.visible)
 
     property string last_query_text: ""
     property string last_search_area: ""
@@ -999,6 +999,16 @@ ${query_text}`;
                     checkable: true
                     checked: true
                     onToggled: SuttaBridge.set_notify_about_simsapa_updates(checked)
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_database_validation
+                    text: "Database Validation..."
+                    onTriggered: {
+                        database_validation_dialog.show_from_menu();
+                    }
                 }
             }
 

@@ -120,13 +120,28 @@ Frame {
                 }
 
                 // Wake lock status for mobile
+                // (NOTE: Not displayed, not useful information for the user.
+                // Even with wake lock, the extraction process can fail when switching apps.)
+                // Label {
+                //     visible: root.is_mobile
+                //     Layout.alignment: Qt.AlignCenter
+                //     Layout.fillWidth: true
+                //     text: root.wake_lock_acquired ? "Wake lock: acquired" : "Wake lock: not acquired"
+                //     font.pointSize: root.pointSize
+                //     color: palette.text
+                //     wrapMode: Text.WordWrap
+                //     horizontalAlignment: Text.AlignHCenter
+                //     Layout.topMargin: 10
+                // }
+
                 Label {
                     visible: root.is_mobile
                     Layout.alignment: Qt.AlignCenter
                     Layout.fillWidth: true
-                    text: root.wake_lock_acquired ? "Wake lock: acquired" : "Wake lock: not acquired"
+                    text: "<p><b>NOTE:</b> Please keep the app in the foreground during the download and extract process.</p>"
                     font.pointSize: root.pointSize
                     color: palette.text
+                    textFormat: Text.RichText
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
                     Layout.topMargin: 10
@@ -137,13 +152,12 @@ Frame {
                     visible: root.is_mobile
                     Layout.alignment: Qt.AlignCenter
                     Layout.fillWidth: true
-                    text: "Some devices interrupt the download when they enter suspend mode (black screen), while others allow it to continue. If you notice this problem, please tap the device periodically to keep it awake."
+                    text: "Switching apps or suspend mode (black screen) can interrupt the download and extract process. If you notice this problem, please tap the device periodically to keep it awake."
                     font.pointSize: root.pointSize
                     color: palette.text
                     wrapMode: Text.WordWrap
                     horizontalAlignment: Text.AlignHCenter
                     Layout.topMargin: 5
-                    opacity: 0.8
                 }
             }
         }
