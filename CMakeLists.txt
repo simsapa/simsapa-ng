@@ -71,7 +71,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC_OPTIONS --format-version 1)
 list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
 
-set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test QmlImportScanner)
+set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test)
 
 list(APPEND app_components Widgets Quick)
 
