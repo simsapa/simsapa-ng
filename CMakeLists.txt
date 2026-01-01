@@ -85,7 +85,29 @@ list(APPEND qt_modules
         Qt::QuickControls2)
 
 if (ANDROID)
-    set(qmake_path "$ENV{HOME}/Qt/6.9.3/android_x86_64/bin/qmake6")
+    # Detect Android ABI and set appropriate Qt paths
+    # ANDROID_ABI is set by the Android toolchain (e.g., armeabi-v7a, arm64-v8a, x86_64)
+    if(ANDROID_ABI STREQUAL "armeabi-v7a")
+        set(ANDROID_QT_DIR "$ENV{HOME}/Qt/6.9.3/android_armv7")
+    elseif(ANDROID_ABI STREQUAL "arm64-v8a")
+        set(ANDROID_QT_DIR "$ENV{HOME}/Qt/6.9.3/android_arm64_v8a")
+    elseif(ANDROID_ABI STREQUAL "x86_64")
+        set(ANDROID_QT_DIR "$ENV{HOME}/Qt/6.9.3/android_x86_64")
+    elseif(ANDROID_ABI STREQUAL "x86")
+        set(ANDROID_QT_DIR "$ENV{HOME}/Qt/6.9.3/android_x86")
+    else()
+        # Default to arm64-v8a if ABI not detected
+        set(ANDROID_QT_DIR "$ENV{HOME}/Qt/6.9.3/android_arm64_v8a")
+        message(WARNING "ANDROID_ABI not detected, defaulting to android_arm64_v8a")
+    endif()
+
+    if(NOT CMAKE_PREFIX_PATH)
+        set(CMAKE_PREFIX_PATH "${ANDROID_QT_DIR}")
+    endif()
+    message(STATUS "Android ABI: ${ANDROID_ABI}")
+    message(STATUS "Using Android Qt: ${ANDROID_QT_DIR}")
+
+    set(qmake_path "${ANDROID_QT_DIR}/bin/qmake")
     list(APPEND app_components WebView)
     list(APPEND qt_modules Qt::WebView)
     add_compile_definitions(Q_OS_ANDROID)
