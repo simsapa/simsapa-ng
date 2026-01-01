@@ -90,10 +90,11 @@ ApplicationWindow {
     function set_validation_results(results) {
         root.validation_results = results;
         // Update failed flags based on results
-        root.appdata_failed = results["appdata"] && !results["appdata"].is_valid;
-        root.dpd_failed = results["dpd"] && !results["dpd"].is_valid;
-        root.dictionaries_failed = results["dictionaries"] && !results["dictionaries"].is_valid;
-        root.userdata_failed = results["userdata"] && !results["userdata"].is_valid;
+        // Use Boolean() to ensure we always assign a bool, not undefined
+        root.appdata_failed = Boolean(results["appdata"] && !results["appdata"].is_valid);
+        root.dpd_failed = Boolean(results["dpd"] && !results["dpd"].is_valid);
+        root.dictionaries_failed = Boolean(results["dictionaries"] && !results["dictionaries"].is_valid);
+        root.userdata_failed = Boolean(results["userdata"] && !results["userdata"].is_valid);
     }
 
     function get_failed_downloadable_list() {
