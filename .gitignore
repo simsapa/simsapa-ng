@@ -32,6 +32,7 @@ Simsapa.AppDir/
 .qtcreator/CMakeLists.txt.user
 
 simsapa-legacy/
+simsapa-extensions-and-plugins/
 
 # Emacs temp files
 *~
