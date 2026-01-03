@@ -92,6 +92,10 @@ void callback_toggle_reading_mode(QString window_id, bool is_active) {
   emit AppGlobals::manager->signal_toggle_reading_mode(window_id, is_active);
 }
 
+void callback_open_in_lookup_window(QString result_data_json) {
+  emit AppGlobals::manager->signal_open_in_lookup_window(result_data_json);
+}
+
 int start(int argc, char* argv[]) {
   dotenv_c();
   log_info_with_options_c("gui::start()", true);

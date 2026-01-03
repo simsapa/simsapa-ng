@@ -601,6 +601,15 @@ ${query_text}`;
         search_bar_input.search_input.text = text;
     }
 
+    function run_lookup_query(query_text: string) {
+        // Set search area to Dictionary
+        search_bar_input.search_area_dropdown.currentIndex = 1; // "Dictionary"
+        // Set the query text
+        search_bar_input.search_input.text = query_text;
+        // Run the search with min_length 1 to allow single character queries
+        root.handle_query(query_text, 1);
+    }
+
     function get_tab_with_web_item_key(web_item_key) {
         var tab = null;
         for (var i=0; i < tabs_row.children.length; i++) {

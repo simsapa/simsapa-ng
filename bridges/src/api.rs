@@ -110,6 +110,7 @@ pub mod ffi {
         fn callback_show_chapter_in_sutta_window(window_id: QString, result_data_json: QString);
         fn callback_show_sutta_from_reference_search(window_id: QString, result_data_json: QString);
         fn callback_toggle_reading_mode(window_id: QString, is_active: bool);
+        fn callback_open_in_lookup_window(result_data_json: QString);
     }
 }
 
@@ -694,7 +695,7 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
 
     // Build source filter - only apply if not "Dictionaries" (the default placeholder)
     let source_filter = match &request.dict_dict {
-        Some(source) if source != "Dictionaries" && lang != "Dictionary" && !source.is_empty() => Some(source.clone()),
+        Some(source) if source != "Dictionaries" && source != "Dictionary" && !source.is_empty() => Some(source.clone()),
         _ => None,
     };
     let source_include = request.dict_dict_include.unwrap_or(true);
@@ -790,7 +791,8 @@ fn open_sutta_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> (Status, Stri
         });
 
         let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
-        ffi::callback_open_sutta_search_window(ffi::QString::from(json_string));
+        // Use the dedicated lookup window for browser extension requests
+        ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
 
         // Return plain text response for the browser tab
         (Status::Ok, format!("The Simsapa window should appear with '{}'. You can close this tab.", uid_str))
@@ -803,11 +805,62 @@ fn open_sutta_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> (Status, Stri
 
 /// POST /lookup_window_query
 /// Open the word lookup window and search for a word (browser extension route)
+/// If query_text is a UID (contains '/'), look up the word directly
+/// Otherwise, run a search query
 #[post("/lookup_window_query", data = "<request>")]
-fn lookup_window_query_post(request: Json<LookupWindowRequest>) -> Status {
+fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<DbManager>>) -> Status {
     let query_text = &request.query_text;
     info(&format!("lookup_window_query_post(): {}", query_text));
 
+    // Check if this is a UID (contains '/') - e.g., "dhamma 1.01/dpd" or "buddhadhamma/dpd"
+    if query_text.contains('/') {
+        // Try to look up as a dictionary word UID
+        if let Some(dict_word) = dbm.dictionaries.get_word(query_text) {
+            let result_data_json = serde_json::json!({
+                "item_uid": dict_word.uid,
+                "table_name": "dict_words",
+                "sutta_title": dict_word.word,
+                "sutta_ref": "",
+                "snippet": dict_word.definition_plain.unwrap_or_default(),
+            });
+
+            let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+            ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
+            return Status::Ok;
+        }
+
+        // If not found in dict_words, try DPD headwords (for numeric UIDs like "34626/dpd")
+        let app_data = get_app_data();
+        if query_text.ends_with("/dpd") {
+            if let Some(json_str) = app_data.get_dpd_headword_by_uid(query_text) {
+                if let Ok(headword) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    let word_title = headword.get("lemma_1")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    let meaning = headword.get("meaning_1")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+
+                    let result_data_json = serde_json::json!({
+                        "item_uid": query_text,
+                        "table_name": "dpd_headwords",
+                        "sutta_title": word_title,
+                        "sutta_ref": "",
+                        "snippet": meaning,
+                    });
+
+                    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+                    ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
+                    return Status::Ok;
+                }
+            }
+        }
+
+        // UID not found, fall through to search query
+        info(&format!("lookup_window_query_post(): UID not found, running search: {}", query_text));
+    }
+
+    // Not a UID or UID not found - run a search query
     ffi::callback_run_lookup_query(ffi::QString::from(query_text.as_str()));
     Status::Ok
 }
@@ -831,7 +884,7 @@ fn get_word_json(uid_with_ext: PathBuf, dbm: &State<Arc<DbManager>>) -> Json<Vec
     // - dict_words: everything else (e.g., "dhamma/ncped")
 
     if uid.ends_with("/dpd") {
-        // Try DPD headword first
+        // Try DPD headword first (uses numeric IDs like "34626/dpd")
         if let Some(json_str) = app_data.get_dpd_headword_by_uid(uid) {
             if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
                 return Json(vec![value]);
@@ -846,8 +899,16 @@ fn get_word_json(uid_with_ext: PathBuf, dbm: &State<Arc<DbManager>>) -> Json<Vec
                 return Json(vec![value]);
             }
         }
+
+        // If not found in dpd.sqlite3, try dict_words table in dictionaries.sqlite3
+        // This handles UIDs like "dhamma 1.01/dpd" which are stored in dict_words
+        if let Some(dict_word) = dbm.dictionaries.get_word(uid) {
+            if let Ok(value) = serde_json::to_value(&dict_word) {
+                return Json(vec![value]);
+            }
+        }
     } else {
-        // Try dict_words table
+        // Try dict_words table for non-DPD entries (e.g., "dhamma/ncped")
         if let Some(dict_word) = dbm.dictionaries.get_word(uid) {
             if let Ok(value) = serde_json::to_value(&dict_word) {
                 return Json(vec![value]);
