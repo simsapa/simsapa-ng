@@ -79,9 +79,37 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
         static ref re_book_uid: Regex = Regex::new(r"^[a-z][a-z0-9_-]*\.\d+$").unwrap();
         // Sutta abbreviation prefixes to exclude from book UID matching
         static ref re_sutta_prefix: Regex = Regex::new(r"^(dn|mn|sn|an|pv|vv|vism|iti|kp|khp|snp|th|ud|uda|dhp|thag|thig)\d").unwrap();
+        // Dictionary UID patterns:
+        // - DPD headword numeric UID with /dpd suffix: 34626/dpd
+        static ref re_dpd_headword_uid: Regex = Regex::new(r"^\d+/dpd$").unwrap();
+        // - dict_words UID with disambiguating number: "dhamma 1.01" or "dhamma 1.01/dpd"
+        // Format: word (Pāli or ASCII letters, at least 2 chars) + space + disambiguating number (e.g. 1, 1.01, 2.1)
+        // Optionally followed by /dpd or other dictionary source
+        // IMPORTANT: Must NOT match sutta references like "SN 44.22" or "Dhp 182"
+        // Sutta refs have 2-4 letter abbreviations; dict words are typically longer Pāli words
+        // We use is_book_sutta_ref() to exclude sutta reference patterns
+        static ref re_dict_word_uid: Regex = Regex::new(r"^[a-zāīūṁṃṅñṭḍṇḷ]{2,} \d+(\.\d+)?(/[a-z]+)?$").unwrap();
     }
     if re_partial_uid.is_match(&query_text) {
         return format!("uid:{}", query_text);
+    }
+
+    // Check for dictionary UID patterns
+    // DPD headword numeric UID: 34626/dpd
+    if re_dpd_headword_uid.is_match(&query_text) {
+        return format!("uid:{}", query_text);
+    }
+
+    // dict_words UID with disambiguating number: "dhamma 1.01" or "dhamma 1.01/dpd"
+    // But NOT sutta references like "SN 44.22" or "Dhp 182"
+    // Use is_book_sutta_ref() to exclude sutta reference patterns
+    if re_dict_word_uid.is_match(&query_text) && !is_book_sutta_ref(&query_text) {
+        // If no dictionary suffix, assume /dpd
+        if query_text.contains('/') {
+            return format!("uid:{}", query_text);
+        } else {
+            return format!("uid:{}/dpd", query_text);
+        }
     }
 
     // Detect direct uid formats like dhp320-333, sn56.11
@@ -438,7 +466,7 @@ pub fn dhammatalk_org_convert_link_href_in_html(link_selector: &Selector, html_t
         modified_html = modified_html.replace(&old_attr_single, &new_attr_single);
     }
 
-    return modified_html
+    modified_html
 }
 
 pub fn is_complete_sutta_uid(uid: &str) -> bool {
@@ -477,10 +505,8 @@ pub fn consistent_niggahita(text: Option<String>) -> String {
     // Buddhadhamma uses ṃ
 
     match text {
-        Some(text) => {
-            text.replace("ṃ", "ṁ").replace("ŋ", "ṁ")
-        }
-        None => String::from("")
+        Some(text) => text.replace("ṃ", "ṁ").replace("ŋ", "ṁ"),
+        None => String::from(""),
     }
 }
 
@@ -531,14 +557,17 @@ pub struct ContextBoundaries {
     pub word_end: usize,
 }
 
-
 pub fn find_sentence_start(text: &str, char_pos: usize) -> usize {
     if char_pos == 0 || text.is_empty() {
         return 0;
     }
 
     // let chars: Vec<char> = text.chars().collect();
-    let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(text.len());
+    let byte_pos = text
+        .char_indices()
+        .nth(char_pos)
+        .map(|(i, _)| i)
+        .unwrap_or(text.len());
 
     let bytes = text.as_bytes();
     let search_start = byte_pos.min(text.len());
@@ -562,7 +591,11 @@ pub fn find_sentence_start(text: &str, char_pos: usize) -> usize {
 pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
     let bytes = text.as_bytes();
     let len = text.len();
-    let byte_pos = text.char_indices().nth(char_pos).map(|(i, _)| i).unwrap_or(len);
+    let byte_pos = text
+        .char_indices()
+        .nth(char_pos)
+        .map(|(i, _)| i)
+        .unwrap_or(len);
 
     if byte_pos >= len {
         return text.chars().count();
@@ -579,7 +612,6 @@ pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
 
     text.chars().count()
 }
-
 
 pub fn preprocess_text_for_word_extraction(text: &str) -> String {
     lazy_static! {
@@ -630,8 +662,18 @@ pub fn extract_clean_words(preprocessed_text: &str) -> Vec<String> {
 }
 
 fn is_word_char(c: char) -> bool {
-    c.is_alphanumeric() || c == 'ā' || c == 'ī' || c == 'ū' || c == 'ṁ' || c == 'ṃ'
-        || c == 'ṅ' || c == 'ñ' || c == 'ṭ' || c == 'ḍ' || c == 'ṇ' || c == 'ḷ'
+    c.is_alphanumeric()
+        || c == 'ā'
+        || c == 'ī'
+        || c == 'ū'
+        || c == 'ṁ'
+        || c == 'ṃ'
+        || c == 'ṅ'
+        || c == 'ñ'
+        || c == 'ṭ'
+        || c == 'ḍ'
+        || c == 'ṇ'
+        || c == 'ḷ'
 }
 
 fn skip_non_word_chars(chars: &[char], mut pos: usize) -> usize {
@@ -1423,11 +1465,13 @@ pub fn html_get_sutta_page_body(html_page: &str) -> Result<String> {
     // Only parse if it looks like a full HTML document
     if html_page.contains("<html") || html_page.contains("<HTML") {
         // Find the start of the body tag (try both lowercase and uppercase)
-        let body_start_pos = html_page.find("<body")
+        let body_start_pos = html_page
+            .find("<body")
             .or_else(|| html_page.find("<BODY"))
             .or_else(|| html_page.find("<Body"));
 
-        let body_end_pos = html_page.find("</body>")
+        let body_end_pos = html_page
+            .find("</body>")
             .or_else(|| html_page.find("</BODY>"))
             .or_else(|| html_page.find("</Body>"));
 
@@ -1479,7 +1523,6 @@ pub fn bilara_text_to_segments(
     show_variant_readings: bool,
     show_glosses: bool,
 ) -> Result<IndexMap<String, String>> {
-
     // Parse the JSON strings into IndexMaps to preserve insertion order
     let mut content_json: IndexMap<String, String> = serde_json::from_str(content_json_str)
         .with_context(|| format!("Failed to parse content JSON: '{}'", content_json_str))?;
@@ -1596,7 +1639,6 @@ pub fn bilara_text_to_segments(
     Ok(content_json)
 }
 
-
 /// Converts an IndexMap of processed HTML segments into a single HTML string, preserving insertion order.
 pub fn bilara_content_json_to_html(content_json: &IndexMap<String, String>) -> Result<String> {
     // IndexMap preserves insertion order from JSON, so no custom sorting needed
@@ -1646,7 +1688,6 @@ pub fn bilara_line_by_line_html(
     // Convert the combined segments map (which now respects template structure) to final HTML
     bilara_content_json_to_html(&content_json)
 }
-
 
 /// Convenience function to convert Bilara text JSON directly to HTML.
 pub fn bilara_text_to_html(
@@ -2062,7 +2103,6 @@ pub fn run_fts5_indexes_sql_script(db_path: &Path, sql_script_path: &Path) -> Re
     Ok(())
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2383,6 +2423,49 @@ mod tests {
         assert_eq!(query_text_to_uid_field_query("meditation"), "meditation");
         assert_eq!(query_text_to_uid_field_query("dharma"), "dharma");
         assert_eq!(query_text_to_uid_field_query("sutta"), "sutta");
+    }
+
+    #[test]
+    fn test_query_text_to_uid_dictionary_uids() {
+        // Test DPD headword numeric UID: 34626/dpd
+        assert_eq!(query_text_to_uid_field_query("34626/dpd"), "uid:34626/dpd");
+        assert_eq!(query_text_to_uid_field_query("1/dpd"), "uid:1/dpd");
+        assert_eq!(
+            query_text_to_uid_field_query("123456/dpd"),
+            "uid:123456/dpd"
+        );
+
+        // Test dict_words UID with disambiguating number: "dhamma 1.01" -> "uid:dhamma 1.01/dpd"
+        assert_eq!(
+            query_text_to_uid_field_query("dhamma 1.01"),
+            "uid:dhamma 1.01/dpd"
+        );
+        assert_eq!(
+            query_text_to_uid_field_query("dhamma 1"),
+            "uid:dhamma 1/dpd"
+        );
+        assert_eq!(
+            query_text_to_uid_field_query("kamma 2.1"),
+            "uid:kamma 2.1/dpd"
+        );
+        assert_eq!(
+            query_text_to_uid_field_query("ñāṇa 1.01"),
+            "uid:ñāṇa 1.01/dpd"
+        );
+
+        // Test dict_words UID with explicit dictionary source: "dhamma 1.01/dpd"
+        assert_eq!(
+            query_text_to_uid_field_query("dhamma 1.01/dpd"),
+            "uid:dhamma 1.01/dpd"
+        );
+        assert_eq!(
+            query_text_to_uid_field_query("dhamma 1/dpd"),
+            "uid:dhamma 1/dpd"
+        );
+
+        // Regular words without disambiguating numbers should NOT be converted
+        assert_eq!(query_text_to_uid_field_query("dhamma"), "dhamma");
+        assert_eq!(query_text_to_uid_field_query("kamma"), "kamma");
     }
 
     // #[test]

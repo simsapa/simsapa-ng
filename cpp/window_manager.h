@@ -48,6 +48,7 @@ class WindowManager : public QObject {
         void signal_open_sutta_search_window(const QString& show_result_data_json);
         void signal_open_sutta_tab(const QString& window_id, const QString& show_result_data_json);
         void signal_toggle_reading_mode(const QString& window_id, bool is_active);
+        void signal_open_in_lookup_window(const QString& result_data_json);
 
     public slots:
         void run_lookup_query(const QString& query_text);
@@ -58,6 +59,7 @@ class WindowManager : public QObject {
         void show_chapter_in_sutta_window(const QString& window_id, const QString& result_data_json);
         void show_sutta_from_reference_search(const QString& window_id, const QString& result_data_json);
         void toggle_reading_mode(const QString& window_id, bool is_active);
+        void open_in_lookup_window(const QString& result_data_json);
 
 };
 

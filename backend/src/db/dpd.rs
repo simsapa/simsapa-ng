@@ -410,6 +410,44 @@ impl DpdDbHandle {
         };
         serde_json::to_string(&list).unwrap_or_default()
     }
+
+    /// Get a meaning snippet for a word from DPD headwords.
+    /// Returns the formatted snippet with pos, meaning, construction, and grammar.
+    /// Returns None if no matching headword is found.
+    ///
+    /// The `lemma_1` parameter should be:
+    /// - For DpdHeadword: the lemma_1 field directly
+    /// - For DictWord: the uid without the "/dpd" suffix (e.g., "dhamma 1" from "dhamma 1/dpd")
+    pub fn get_dpd_meaning_snippet(&self, lemma_1: &str) -> Option<String> {
+        use crate::db::dpd_schema::dpd_headwords;
+
+        let db_conn = &mut self.get_conn().ok()?;
+
+        // Find by lemma_1 field
+        let headword: Option<DpdHeadword> = dpd_headwords::table
+            .filter(dpd_headwords::lemma_1.eq(lemma_1))
+            .first::<DpdHeadword>(db_conn)
+            .optional()
+            .ok()?;
+
+        headword.map(|h| {
+            let meaning = if !h.meaning_1.is_empty() {
+                &h.meaning_1
+            } else {
+                &h.meaning_2
+            };
+            let construction = if h.construction.is_empty() {
+                " ".to_string()
+            } else {
+                format!(" <b>[{}]</b> ", h.construction.replace("\n", "], ["))
+            };
+            format!("<i>({})</i> {} {} <i>{}</i>",
+                    h.pos,
+                    meaning,
+                    construction,
+                    strip_html(&h.grammar))
+        })
+    }
 }
 
 /// Parse word models into search results, deduplicating and optional sorting

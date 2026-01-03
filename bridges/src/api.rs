@@ -4,7 +4,7 @@ use std::net::TcpStream;
 use std::time::Duration;
 use std::sync::{OnceLock, Arc};
 
-use rocket::serde::Deserialize;
+use rocket::serde::{Deserialize, Serialize};
 use rocket::serde::json::Json;
 
 use http;
@@ -18,8 +18,51 @@ use simsapa_backend::{AppGlobals, get_app_data, get_create_simsapa_dir, get_crea
 use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
-use simsapa_backend::helpers::create_or_update_linux_desktop_icon_file;
+use simsapa_backend::helpers::{create_or_update_linux_desktop_icon_file, query_text_to_uid_field_query};
 use simsapa_backend::logger::{info, warn, error, profile};
+use simsapa_backend::types::{SearchResult, SearchParams, SearchMode, SearchArea};
+use simsapa_backend::query_task::SearchQueryTask;
+
+// ============================================================================
+// Browser Extension API Data Structures
+// ============================================================================
+
+/// Response structure for search endpoints (suttas and dictionary)
+/// Matches the Python `ApiSearchResult` TypedDict for browser extension compatibility
+#[derive(Debug, Clone, Serialize)]
+pub struct ApiSearchResult {
+    pub hits: i32,
+    pub results: Vec<SearchResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deconstructor: Option<Vec<String>>,
+}
+
+/// Request body for POST search endpoints
+#[derive(Debug, Clone, Deserialize)]
+pub struct ApiSearchRequest {
+    pub query_text: String,
+    pub page_num: Option<i32>,
+    pub suttas_lang: Option<String>,
+    pub suttas_lang_include: Option<bool>,
+    pub dict_lang: Option<String>,
+    pub dict_lang_include: Option<bool>,
+    pub dict_dict: Option<String>,
+    pub dict_dict_include: Option<bool>,
+}
+
+/// Response structure for /sutta_and_dict_search_options endpoint
+#[derive(Debug, Clone, Serialize)]
+pub struct SearchOptions {
+    pub sutta_languages: Vec<String>,
+    pub dict_languages: Vec<String>,
+    pub dict_sources: Vec<String>,
+}
+
+/// Request body for POST /lookup_window_query endpoint
+#[derive(Debug, Clone, Deserialize)]
+pub struct LookupWindowRequest {
+    pub query_text: String,
+}
 
 pub static APP_GLOBALS_API: OnceLock<AppGlobals> = OnceLock::new();
 
@@ -67,6 +110,7 @@ pub mod ffi {
         fn callback_show_chapter_in_sutta_window(window_id: QString, result_data_json: QString);
         fn callback_show_sutta_from_reference_search(window_id: QString, result_data_json: QString);
         fn callback_toggle_reading_mode(window_id: QString, is_active: bool);
+        fn callback_open_in_lookup_window(result_data_json: QString);
     }
 }
 
@@ -291,8 +335,8 @@ fn open_external_url(req: Json<OpenExternalUrlRequest>) -> Status {
     }
 }
 
-#[get("/")]
-fn index() -> RawHtml<String> {
+#[get("/app-assets-list")]
+fn app_assets_list() -> RawHtml<String> {
     let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
     let app_data_path = p.to_string_lossy();
     let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
@@ -311,6 +355,24 @@ fn index() -> RawHtml<String> {
 <pre>{}</pre>", app_data_path, app_data_folder_contents, storage_path, storage_folder_contents);
 
     RawHtml(sutta_html_page(&html, None, None, None, None))
+}
+
+#[get("/")]
+fn index() -> RawHtml<String> {
+    let html = r#"
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Simsapa Dhamma Reader</title>
+</head>
+<body>
+  <h1>Simsapa Dhamma Reader</h1>
+</body>
+</html>
+"#.to_string();
+
+    RawHtml(html)
 }
 
 #[get("/shutdown")]
@@ -559,6 +621,364 @@ fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<Db
     }
 }
 
+// ============================================================================
+// Browser Extension API Routes
+// ============================================================================
+
+/// GET /sutta_and_dict_search_options
+/// Returns available filter options for sutta and dictionary searches
+#[get("/sutta_and_dict_search_options")]
+fn get_search_options(dbm: &State<Arc<DbManager>>) -> Json<SearchOptions> {
+    let sutta_languages = dbm.appdata.get_sutta_languages();
+    let dict_languages = dbm.dictionaries.get_distinct_languages();
+    let dict_sources = dbm.dictionaries.get_distinct_sources();
+
+    Json(SearchOptions {
+        sutta_languages,
+        dict_languages,
+        dict_sources,
+    })
+}
+
+/// POST /suttas_fulltext_search
+/// Search suttas using ContainsMatch (placeholder for fulltext search)
+#[post("/suttas_fulltext_search", data = "<request>")]
+fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
+    let query_text_orig = request.query_text.clone();
+    let page_num = request.page_num.unwrap_or(0) as usize;
+
+    // Build language filter - only apply if not "Languages" (the default placeholder)
+    let lang_filter = match &request.suttas_lang {
+        Some(lang) if lang != "Languages" && lang != "Language" && !lang.is_empty() => Some(lang.clone()),
+        _ => None,
+    };
+    let lang_include = request.suttas_lang_include.unwrap_or(true);
+
+    // Check if query is a sutta reference pattern (e.g., "sn56.11", "MN 44", "dhp182")
+    // query_text_to_uid_field_query returns "uid:..." if it's a UID/reference pattern
+    let uid_query = query_text_to_uid_field_query(&query_text_orig);
+    let (query_text, search_mode) = if uid_query.starts_with("uid:") {
+        (uid_query, SearchMode::UidMatch)
+    } else {
+        (query_text_orig.clone(), SearchMode::ContainsMatch)
+    };
+
+    info(&format!("suttas_fulltext_search(): query='{}', page={}, lang={:?}, include={}, mode={:?}",
+                  query_text, page_num, lang_filter, lang_include, search_mode));
+
+    // Create search params - use UidMatch for reference patterns, ContainsMatch otherwise
+    let params = SearchParams {
+        mode: search_mode,
+        page_len: Some(20), // Browser extension uses 20 results per page
+        lang: lang_filter,
+        lang_include,
+        source: None,
+        source_include: true,
+        enable_regex: false,
+        fuzzy_distance: 0,
+    };
+
+    // Create and execute search task
+    let mut search_task = SearchQueryTask::new(
+        dbm.inner(),
+        query_text,
+        params,
+        SearchArea::Suttas,
+    );
+
+    match search_task.results_page(page_num) {
+        Ok(results) => {
+            let hits = search_task.total_hits() as i32;
+            Json(ApiSearchResult {
+                hits,
+                results,
+                deconstructor: None, // Not applicable for sutta search
+            })
+        }
+        Err(e) => {
+            error(&format!("suttas_fulltext_search error: {}", e));
+            Json(ApiSearchResult {
+                hits: 0,
+                results: Vec::new(),
+                deconstructor: None,
+            })
+        }
+    }
+}
+
+/// POST /dict_combined_search
+/// Search dictionary words with language and source filtering, includes deconstructor results
+#[post("/dict_combined_search", data = "<request>")]
+fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
+    let query_text_orig = request.query_text.clone();
+    let page_num = request.page_num.unwrap_or(0) as usize;
+
+    // Build language filter - only apply if not "Languages" (the default placeholder)
+    let lang_filter = match &request.dict_lang {
+        Some(lang) if lang != "Languages" && lang != "Language" && !lang.is_empty() => Some(lang.clone()),
+        _ => None,
+    };
+    let lang_include = request.dict_lang_include.unwrap_or(true);
+
+    // Build source filter - only apply if not "Dictionaries" (the default placeholder)
+    let source_filter = match &request.dict_dict {
+        Some(source) if source != "Dictionaries" && source != "Dictionary" && !source.is_empty() => Some(source.clone()),
+        _ => None,
+    };
+    let source_include = request.dict_dict_include.unwrap_or(true);
+
+    // Check if query is a UID pattern (e.g., "dhamma 1.01", "dhamma 1.01/dpd", "123/dpd")
+    // query_text_to_uid_field_query returns "uid:..." if it's a UID pattern
+    let uid_query = query_text_to_uid_field_query(&query_text_orig);
+    let (query_text, search_mode) = if uid_query.starts_with("uid:") {
+        (uid_query, SearchMode::UidMatch)
+    } else {
+        // Use DpdLookup as the default mode for dictionary search (same as SuttaSearchWindow QML)
+        // This searches DPD headwords by lemma rather than doing a broad contains search
+        (query_text_orig.clone(), SearchMode::DpdLookup)
+    };
+
+    info(&format!("dict_combined_search(): query='{}', page={}, lang={:?}, source={:?}, mode={:?}",
+                  query_text, page_num, lang_filter, source_filter, search_mode));
+
+    // Get deconstructor results for the original query (not the uid: prefixed version)
+    let deconstructor_results = dbm.dpd.dpd_deconstructor_list(&query_text_orig);
+    let deconstructor = if deconstructor_results.is_empty() {
+        None
+    } else {
+        Some(deconstructor_results)
+    };
+
+    // Create search params - use UidMatch for UID patterns, ContainsMatch otherwise
+    let params = SearchParams {
+        mode: search_mode,
+        page_len: Some(20), // Browser extension uses 20 results per page
+        lang: lang_filter,
+        lang_include,
+        source: source_filter,
+        source_include,
+        enable_regex: false,
+        fuzzy_distance: 0,
+    };
+
+    // Create and execute search task
+    let mut search_task = SearchQueryTask::new(
+        dbm.inner(),
+        query_text,
+        params,
+        SearchArea::Dictionary,
+    );
+
+    match search_task.results_page(page_num) {
+        Ok(results) => {
+            let hits = search_task.total_hits() as i32;
+            Json(ApiSearchResult {
+                hits,
+                results,
+                deconstructor,
+            })
+        }
+        Err(e) => {
+            error(&format!("dict_combined_search error: {}", e));
+            Json(ApiSearchResult {
+                hits: 0,
+                results: Vec::new(),
+                deconstructor,
+            })
+        }
+    }
+}
+
+/// GET /suttas/<uid>
+/// Open a sutta in the Simsapa application window (browser extension route)
+/// Returns plain text message for the browser tab
+#[get("/suttas/<uid..>")]
+fn open_sutta_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> (Status, String) {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
+    info(&format!("open_sutta_by_uid(): {}", uid_str));
+
+    // Try to get sutta with original UID
+    let sutta_option = dbm.appdata.get_sutta(&uid_str);
+
+    // If not found and not already pli/ms, try fallback
+    let final_sutta = if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
+        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
+        let code = uid_str.split('/').next().unwrap_or(&uid_str);
+        let fallback_uid = format!("{}/pli/ms", code);
+
+        // Try to get fallback sutta
+        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
+            info(&format!("open_sutta_by_uid(): Using fallback UID: {}", fallback_uid));
+            Some(fallback_sutta)
+        } else {
+            None
+        }
+    } else {
+        sutta_option
+    };
+
+    // If sutta is found, compose JSON and call callback
+    if let Some(sutta) = final_sutta {
+        let result_data_json = serde_json::json!({
+            "item_uid": sutta.uid,
+            "table_name": "suttas",
+            "sutta_title": sutta.title,
+            "sutta_ref": sutta.sutta_ref,
+            "snippet": "",
+        });
+
+        let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+        // Use the dedicated lookup window for browser extension requests
+        ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
+
+        // Return plain text response for the browser tab
+        (Status::Ok, format!("The Simsapa window should appear with '{}'. You can close this tab.", uid_str))
+    } else {
+        // Sutta not found
+        error(&format!("Sutta not found: {}", uid_str));
+        (Status::NotFound, format!("Sutta not found: {}", uid_str))
+    }
+}
+
+/// POST /lookup_window_query
+/// Open the word lookup window and search for a word (browser extension route)
+/// If query_text is a UID (contains '/'), look up the word directly
+/// Otherwise, run a search query
+#[post("/lookup_window_query", data = "<request>")]
+fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<DbManager>>) -> Status {
+    let query_text = &request.query_text;
+    info(&format!("lookup_window_query_post(): {}", query_text));
+
+    // Check if this is a UID (contains '/') - e.g., "dhamma 1.01/dpd" or "buddhadhamma/dpd"
+    if query_text.contains('/') {
+        // Try to look up as a dictionary word UID
+        if let Some(dict_word) = dbm.dictionaries.get_word(query_text) {
+            let result_data_json = serde_json::json!({
+                "item_uid": dict_word.uid,
+                "table_name": "dict_words",
+                "sutta_title": dict_word.word,
+                "sutta_ref": "",
+                "snippet": dict_word.definition_plain.unwrap_or_default(),
+            });
+
+            let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+            ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
+            return Status::Ok;
+        }
+
+        // If not found in dict_words, try DPD headwords (for numeric UIDs like "34626/dpd")
+        let app_data = get_app_data();
+        if query_text.ends_with("/dpd") {
+            if let Some(json_str) = app_data.get_dpd_headword_by_uid(query_text) {
+                if let Ok(headword) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    let word_title = headword.get("lemma_1")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+                    let meaning = headword.get("meaning_1")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("");
+
+                    let result_data_json = serde_json::json!({
+                        "item_uid": query_text,
+                        "table_name": "dpd_headwords",
+                        "sutta_title": word_title,
+                        "sutta_ref": "",
+                        "snippet": meaning,
+                    });
+
+                    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+                    ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
+                    return Status::Ok;
+                }
+            }
+        }
+
+        // UID not found, fall through to search query
+        info(&format!("lookup_window_query_post(): UID not found, running search: {}", query_text));
+    }
+
+    // Not a UID or UID not found - run a search query
+    ffi::callback_run_lookup_query(ffi::QString::from(query_text.as_str()));
+    Status::Ok
+}
+
+/// GET /words/<uid>.json
+/// Get full dictionary word data as JSON for copying glossary information
+/// The .json extension is part of the path parameter
+#[get("/words/<uid_with_ext..>")]
+fn get_word_json(uid_with_ext: PathBuf, dbm: &State<Arc<DbManager>>) -> Json<Vec<serde_json::Value>> {
+    // Convert path to forward slashes and remove .json extension
+    let uid_str = pathbuf_to_forward_slash_string(&uid_with_ext);
+    let uid = uid_str.trim_end_matches(".json");
+
+    info(&format!("get_word_json(): uid={}", uid));
+
+    let app_data = get_app_data();
+
+    // Determine word type based on UID pattern:
+    // - DPD headwords: end with "/dpd" (e.g., "dhamma 1/dpd" or numeric id patterns)
+    // - DPD roots: contain "roots/" pattern (e.g., "√kar/dpd")
+    // - dict_words: everything else (e.g., "dhamma/ncped")
+
+    if uid.ends_with("/dpd") {
+        // Try DPD headword first (uses numeric IDs like "34626/dpd")
+        if let Some(json_str) = app_data.get_dpd_headword_by_uid(uid) {
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                return Json(vec![value]);
+            }
+        }
+
+        // If not found as headword, try as root (roots have format like "√kar/dpd")
+        // Extract root key by removing "/dpd" suffix
+        let root_key = uid.trim_end_matches("/dpd");
+        if let Some(json_str) = app_data.get_dpd_root_by_root_key(root_key) {
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                return Json(vec![value]);
+            }
+        }
+
+        // If not found in dpd.sqlite3, try dict_words table in dictionaries.sqlite3
+        // This handles UIDs like "dhamma 1.01/dpd" which are stored in dict_words
+        if let Some(dict_word) = dbm.dictionaries.get_word(uid) {
+            if let Ok(value) = serde_json::to_value(&dict_word) {
+                return Json(vec![value]);
+            }
+        }
+    } else {
+        // Try dict_words table for non-DPD entries (e.g., "dhamma/ncped")
+        if let Some(dict_word) = dbm.dictionaries.get_word(uid) {
+            if let Ok(value) = serde_json::to_value(&dict_word) {
+                return Json(vec![value]);
+            }
+        }
+    }
+
+    // Word not found - return empty array
+    Json(Vec::new())
+}
+
+/// GET /sutta_titles_flat_completion_list
+/// Returns list of sutta titles for autocomplete (placeholder - returns empty array)
+/// TODO: Future implementation should query sutta titles from database with Pali sort order
+#[get("/sutta_titles_flat_completion_list")]
+fn sutta_titles_completion() -> Json<Vec<String>> {
+    // Placeholder: return empty array
+    // Future implementation could query sutta titles sorted by Pali order
+    Json(Vec::new())
+}
+
+/// GET /dict_words_flat_completion_list
+/// Returns list of dictionary words for autocomplete (placeholder - returns empty array)
+/// TODO: Future implementation could query DPD lemmas and roots
+/// Note: The browser extension currently loads this from a bundled JSON file
+#[get("/dict_words_flat_completion_list")]
+fn dict_words_completion() -> Json<Vec<String>> {
+    // Placeholder: return empty array
+    // The browser extension has a fallback bundled word list
+    Json(Vec::new())
+}
+
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
@@ -583,6 +1003,7 @@ pub async extern "C" fn start_webserver() {
         .mount("/", routes![
             index,
             shutdown,
+            app_assets_list,
             serve_assets,
             serve_book_resources,
             logger_route,
@@ -599,6 +1020,15 @@ pub async extern "C" fn start_webserver() {
             open_sutta_window,
             open_sutta_tab,
             open_book_page_tab,
+            // Browser Extension API routes
+            get_search_options,
+            suttas_fulltext_search,
+            dict_combined_search,
+            open_sutta_by_uid,
+            lookup_window_query_post,
+            get_word_json,
+            sutta_titles_completion,
+            dict_words_completion,
         ])
         .manage(assets_files)
         .manage(db_manager)

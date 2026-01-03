@@ -230,14 +230,37 @@ impl<'a> SearchQueryTask<'a> {
     }
 
     fn db_word_to_result(&self, x: &DictWord) -> SearchResult {
-        let content = x.summary.as_deref()
-            .filter(|s| !s.is_empty())
-            .or(x.definition_plain.as_deref())
-            .filter(|s| !s.is_empty())
-            .or(x.definition_html.as_deref())
-            .unwrap_or("");
+        // For DPD words (dict_label contains "dpd"), try to get meaning from DpdHeadword
+        // This provides a more useful snippet with pos, meaning, construction, and grammar
+        let snippet = if x.dict_label.to_lowercase().contains("dpd") {
+            // Extract lemma_1 from uid by removing the "/dpd" suffix
+            // e.g., "dhamma 1/dpd" -> "dhamma 1"
+            let lemma_1 = x.uid.trim_end_matches("/dpd");
 
-        let snippet = self.fragment_around_query(&self.query_text, content);
+            // Try to get DPD meaning snippet using lemma_1
+            let app_data = get_app_data();
+            app_data.dbm.dpd.get_dpd_meaning_snippet(lemma_1)
+                .unwrap_or_else(|| {
+                    // Fallback to original content if DPD lookup fails
+                    let content = x.summary.as_deref()
+                        .filter(|s| !s.is_empty())
+                        .or(x.definition_plain.as_deref())
+                        .filter(|s| !s.is_empty())
+                        .or(x.definition_html.as_deref())
+                        .unwrap_or("");
+                    self.fragment_around_query(&self.query_text, content)
+                })
+        } else {
+            // Non-DPD dictionaries: use original content
+            let content = x.summary.as_deref()
+                .filter(|s| !s.is_empty())
+                .or(x.definition_plain.as_deref())
+                .filter(|s| !s.is_empty())
+                .or(x.definition_html.as_deref())
+                .unwrap_or("");
+            self.fragment_around_query(&self.query_text, content)
+        };
+
         SearchResult::from_dict_word(x, snippet)
     }
 
@@ -464,23 +487,63 @@ impl<'a> SearchQueryTask<'a> {
         // TODO: review details in query_task.py
         use crate::db::dictionaries_schema::dict_words::dsl::*;
         let app_data = get_app_data();
-        let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
+        // Check if this is a DPD numeric UID (e.g., "123/dpd" or just "123")
+        // DPD headword UIDs are numeric IDs, optionally with /dpd suffix
+        let ref_str = query_uid.replace("/dpd", "");
+        if query_uid.ends_with("/dpd") && ref_str.chars().all(char::is_numeric) {
+            // Use dpd_lookup which handles numeric UIDs
+            let results = app_data.dbm.dpd.dpd_lookup(&query_uid, false, true)?;
+            self.db_query_hits_count = results.len() as i64;
+            return Ok(results);
+        }
+
+        let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
+
+        // First try exact UID match for dict_words
         let res = dict_words
-            .filter(uid.eq(query_uid))
+            .filter(uid.eq(&query_uid))
             .select(DictWord::as_select())
             .first(db_conn);
 
         match res {
             Ok(res_word) => {
-                Ok(vec![self.db_word_to_result(&res_word)])
+                self.db_query_hits_count = 1;
+                return Ok(vec![self.db_word_to_result(&res_word)]);
             }
             Err(_) => {
-                Ok(Vec::new())
+                // Exact match not found, continue to try partial match
             }
         }
+
+        // Fallback: Check if this is a partial UID that needs LIKE query
+        // e.g., "dhamma 1" should match "dhamma 1.01/dpd", "dhamma 1.02/dpd", etc.
+        // A partial UID has a space followed by a number but no dot after the number
+        // Only try this if exact match failed (UIDs like "kamma 1", "kamma 2" exist)
+        lazy_static::lazy_static! {
+            static ref RE_PARTIAL_DICT_UID: Regex = Regex::new(r"^[a-zāīūṁṃṅñṭḍṇḷ]+ \d+(/[a-z]+)?$").unwrap();
+        }
+        if RE_PARTIAL_DICT_UID.is_match(&query_uid) {
+            // Use LIKE query to find matching UIDs
+            // Remove any trailing /dpd for the LIKE pattern
+            let base_uid = query_uid.trim_end_matches("/dpd");
+            let like_pattern = format!("{}%", base_uid);
+
+            let res: Vec<DictWord> = dict_words
+                .filter(uid.like(&like_pattern))
+                .order(uid.asc())
+                .select(DictWord::as_select())
+                .load(db_conn)?;
+
+            self.db_query_hits_count = res.len() as i64;
+            return Ok(res.iter().map(|w| self.db_word_to_result(w)).collect());
+        }
+
+        // No results found
+        self.db_query_hits_count = 0;
+        Ok(Vec::new())
     }
 
     fn uid_book_spine_item(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
@@ -931,6 +994,98 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
+        // Phase 4: Fallback to word_ascii matching if no results found
+        // This allows queries like 'sutthu' to find 'suṭṭhu'
+        if all_results.is_empty() {
+            for term in &terms {
+                // Try exact match on word_ascii
+                let ascii_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                    .filter(dpd_dsl::word_ascii.eq(term))
+                    .order(dpd_dsl::id)
+                    .limit(query_limit)
+                    .offset(query_offset)
+                    .load::<DpdHeadword>(dpd_conn)?;
+
+                for headword in ascii_matches {
+                    let headword_key = headword.lemma_1.clone();
+
+                    if !result_uids.contains(&headword_key) {
+                        let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                        if let Some(ref source_val) = self.source {
+                            if self.source_include {
+                                dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                            } else {
+                                dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                            }
+                        }
+
+                        let dict_word_result: Result<DictWord, _> = dict_query
+                            .filter(dict_dsl::word.eq(&headword.lemma_1))
+                            .first::<DictWord>(db_conn);
+
+                        if let Ok(dict_word) = dict_word_result {
+                            result_uids.insert(headword_key);
+                            all_results.push(dict_word);
+                        }
+                    }
+                }
+
+                // If still no results, try contains match on word_ascii
+                if all_results.is_empty() {
+                    let like_pattern = format!("%{}%", term);
+
+                    let fts_query = String::from(
+                        r#"
+                        SELECT headword_id
+                        FROM dpd_headwords_fts
+                        WHERE word_ascii LIKE ?
+                        ORDER BY headword_id
+                        LIMIT ? OFFSET ?
+                        "#
+                    );
+
+                    let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+                        .bind::<Text, _>(&like_pattern)
+                        .bind::<BigInt, _>(query_limit)
+                        .bind::<BigInt, _>(query_offset)
+                        .load::<HeadwordId>(dpd_conn)?;
+
+                    let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
+                    let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                        .filter(dpd_dsl::id.eq_any(&ids))
+                        .load::<DpdHeadword>(dpd_conn)?;
+
+                    contains_matches.sort_by_key(|h| h.lemma_1.len());
+
+                    for headword in contains_matches {
+                        let headword_key = headword.lemma_1.clone();
+
+                        if !result_uids.contains(&headword_key) {
+                            let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                            if let Some(ref source_val) = self.source {
+                                if self.source_include {
+                                    dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                                } else {
+                                    dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                                }
+                            }
+
+                            let dict_word_result: Result<DictWord, _> = dict_query
+                                .filter(dict_dsl::word.eq(&headword.lemma_1))
+                                .first::<DictWord>(db_conn);
+
+                            if let Ok(dict_word) = dict_word_result {
+                                result_uids.insert(headword_key);
+                                all_results.push(dict_word);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Set total hits count
         self.db_query_hits_count = all_results.len() as i64;
 
@@ -1186,10 +1341,19 @@ impl<'a> SearchQueryTask<'a> {
         let highlighted_results: Vec<SearchResult> = results
             .into_iter()
             .map(|mut result| {
-                // Re-highlight the snippet based on the full query text
-                // Note: _db_sutta_to_result already created a basic snippet.
-                // This step applies the final highlighting spans.
-                result.snippet = self.highlight_query_in_content(&self.query_text, &result.snippet);
+                // Skip highlighting for DPD results (dpd_headwords, dpd_roots, dict_words with DPD source)
+                // as they already have formatted meaning snippets from get_dpd_meaning_snippet()
+                let is_dpd_result = result.table_name == "dpd_headwords"
+                    || result.table_name == "dpd_roots"
+                    || (result.table_name == "dict_words"
+                        && result.source_uid.as_ref().map_or(false, |s| s.to_lowercase().contains("dpd")));
+
+                if !is_dpd_result {
+                    // Re-highlight the snippet based on the full query text
+                    // Note: _db_sutta_to_result already created a basic snippet.
+                    // This step applies the final highlighting spans.
+                    result.snippet = self.highlight_query_in_content(&self.query_text, &result.snippet);
+                }
                 result
             })
             .collect();
