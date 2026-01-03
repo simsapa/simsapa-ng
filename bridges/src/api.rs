@@ -18,7 +18,7 @@ use simsapa_backend::{AppGlobals, get_app_data, get_create_simsapa_dir, get_crea
 use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
-use simsapa_backend::helpers::create_or_update_linux_desktop_icon_file;
+use simsapa_backend::helpers::{create_or_update_linux_desktop_icon_file, query_text_to_uid_field_query};
 use simsapa_backend::logger::{info, warn, error, profile};
 use simsapa_backend::types::{SearchResult, SearchParams, SearchMode, SearchArea};
 use simsapa_backend::query_task::SearchQueryTask;
@@ -701,7 +701,7 @@ fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
 /// Search dictionary words with language and source filtering, includes deconstructor results
 #[post("/dict_combined_search", data = "<request>")]
 fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
-    let query_text = request.query_text.clone();
+    let query_text_orig = request.query_text.clone();
     let page_num = request.page_num.unwrap_or(0) as usize;
 
     // Build language filter - only apply if not "Languages" (the default placeholder)
@@ -718,20 +718,29 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
     };
     let source_include = request.dict_dict_include.unwrap_or(true);
 
-    info(&format!("dict_combined_search(): query='{}', page={}, lang={:?}, source={:?}",
-                  query_text, page_num, lang_filter, source_filter));
+    // Check if query is a UID pattern (e.g., "dhamma 1.01", "dhamma 1.01/dpd", "123/dpd")
+    // query_text_to_uid_field_query returns "uid:..." if it's a UID pattern
+    let uid_query = query_text_to_uid_field_query(&query_text_orig);
+    let (query_text, search_mode) = if uid_query.starts_with("uid:") {
+        (uid_query, SearchMode::UidMatch)
+    } else {
+        (query_text_orig.clone(), SearchMode::ContainsMatch)
+    };
 
-    // Get deconstructor results for the query
-    let deconstructor_results = dbm.dpd.dpd_deconstructor_list(&query_text);
+    info(&format!("dict_combined_search(): query='{}', page={}, lang={:?}, source={:?}, mode={:?}",
+                  query_text, page_num, lang_filter, source_filter, search_mode));
+
+    // Get deconstructor results for the original query (not the uid: prefixed version)
+    let deconstructor_results = dbm.dpd.dpd_deconstructor_list(&query_text_orig);
     let deconstructor = if deconstructor_results.is_empty() {
         None
     } else {
         Some(deconstructor_results)
     };
 
-    // Create search params with ContainsMatch mode
+    // Create search params - use UidMatch for UID patterns, ContainsMatch otherwise
     let params = SearchParams {
-        mode: SearchMode::ContainsMatch,
+        mode: search_mode,
         page_len: Some(20), // Browser extension uses 20 results per page
         lang: lang_filter,
         lang_include,
