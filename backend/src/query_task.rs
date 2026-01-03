@@ -464,23 +464,63 @@ impl<'a> SearchQueryTask<'a> {
         // TODO: review details in query_task.py
         use crate::db::dictionaries_schema::dict_words::dsl::*;
         let app_data = get_app_data();
-        let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
 
         let query_uid = self.query_text.to_lowercase().replace("uid:", "");
 
+        // Check if this is a DPD numeric UID (e.g., "123/dpd" or just "123")
+        // DPD headword UIDs are numeric IDs, optionally with /dpd suffix
+        let ref_str = query_uid.replace("/dpd", "");
+        if query_uid.ends_with("/dpd") && ref_str.chars().all(char::is_numeric) {
+            // Use dpd_lookup which handles numeric UIDs
+            let results = app_data.dbm.dpd.dpd_lookup(&query_uid, false, true)?;
+            self.db_query_hits_count = results.len() as i64;
+            return Ok(results);
+        }
+
+        let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
+
+        // First try exact UID match for dict_words
         let res = dict_words
-            .filter(uid.eq(query_uid))
+            .filter(uid.eq(&query_uid))
             .select(DictWord::as_select())
             .first(db_conn);
 
         match res {
             Ok(res_word) => {
-                Ok(vec![self.db_word_to_result(&res_word)])
+                self.db_query_hits_count = 1;
+                return Ok(vec![self.db_word_to_result(&res_word)]);
             }
             Err(_) => {
-                Ok(Vec::new())
+                // Exact match not found, continue to try partial match
             }
         }
+
+        // Fallback: Check if this is a partial UID that needs LIKE query
+        // e.g., "dhamma 1" should match "dhamma 1.01/dpd", "dhamma 1.02/dpd", etc.
+        // A partial UID has a space followed by a number but no dot after the number
+        // Only try this if exact match failed (UIDs like "kamma 1", "kamma 2" exist)
+        lazy_static::lazy_static! {
+            static ref RE_PARTIAL_DICT_UID: Regex = Regex::new(r"^[a-zāīūṁṃṅñṭḍṇḷ]+ \d+(/[a-z]+)?$").unwrap();
+        }
+        if RE_PARTIAL_DICT_UID.is_match(&query_uid) {
+            // Use LIKE query to find matching UIDs
+            // Remove any trailing /dpd for the LIKE pattern
+            let base_uid = query_uid.trim_end_matches("/dpd");
+            let like_pattern = format!("{}%", base_uid);
+
+            let res: Vec<DictWord> = dict_words
+                .filter(uid.like(&like_pattern))
+                .order(uid.asc())
+                .select(DictWord::as_select())
+                .load(db_conn)?;
+
+            self.db_query_hits_count = res.len() as i64;
+            return Ok(res.iter().map(|w| self.db_word_to_result(w)).collect());
+        }
+
+        // No results found
+        self.db_query_hits_count = 0;
+        Ok(Vec::new())
     }
 
     fn uid_book_spine_item(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {

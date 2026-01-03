@@ -182,14 +182,12 @@ ApplicationWindow {
         let params = root.get_search_params_from_ui();
         let search_area = search_bar_input.search_area_dropdown.get_text();
 
-        // Determine if query_text_orig is a sutta/book reference
-        // For Suttas and Library, convert references to uid: format
-        // For Dictionary, skip conversion to allow normal word searches
-        let query_text = query_text_orig;
-        if (search_area === "Suttas" || search_area === "Library") {
-            // query_text_to_uid_field_query() should return the query as normal (e.g. 'heard') if not recognized as a uid
-            query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
-        }
+        // Determine if query_text_orig is a sutta/book/dictionary reference
+        // query_text_to_uid_field_query() returns the query as normal (e.g. 'heard') if not recognized as a uid
+        // For all search areas, check if it matches a uid pattern:
+        // - Suttas/Library: sutta refs like 'SN 56.11', book UIDs like 'bmc.0'
+        // - Dictionary: dictionary UIDs like 'dhamma 1.01', '34626/dpd'
+        let query_text = SuttaBridge.query_text_to_uid_field_query(query_text_orig);
 
         if (query_text.startsWith('uid:')) {
             params['mode'] = 'Uid Match';
