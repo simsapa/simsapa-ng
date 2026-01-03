@@ -733,7 +733,9 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
     let (query_text, search_mode) = if uid_query.starts_with("uid:") {
         (uid_query, SearchMode::UidMatch)
     } else {
-        (query_text_orig.clone(), SearchMode::ContainsMatch)
+        // Use DpdLookup as the default mode for dictionary search (same as SuttaSearchWindow QML)
+        // This searches DPD headwords by lemma rather than doing a broad contains search
+        (query_text_orig.clone(), SearchMode::DpdLookup)
     };
 
     info(&format!("dict_combined_search(): query='{}', page={}, lang={:?}, source={:?}, mode={:?}",

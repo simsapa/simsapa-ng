@@ -994,6 +994,98 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
+        // Phase 4: Fallback to word_ascii matching if no results found
+        // This allows queries like 'sutthu' to find 'suṭṭhu'
+        if all_results.is_empty() {
+            for term in &terms {
+                // Try exact match on word_ascii
+                let ascii_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                    .filter(dpd_dsl::word_ascii.eq(term))
+                    .order(dpd_dsl::id)
+                    .limit(query_limit)
+                    .offset(query_offset)
+                    .load::<DpdHeadword>(dpd_conn)?;
+
+                for headword in ascii_matches {
+                    let headword_key = headword.lemma_1.clone();
+
+                    if !result_uids.contains(&headword_key) {
+                        let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                        if let Some(ref source_val) = self.source {
+                            if self.source_include {
+                                dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                            } else {
+                                dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                            }
+                        }
+
+                        let dict_word_result: Result<DictWord, _> = dict_query
+                            .filter(dict_dsl::word.eq(&headword.lemma_1))
+                            .first::<DictWord>(db_conn);
+
+                        if let Ok(dict_word) = dict_word_result {
+                            result_uids.insert(headword_key);
+                            all_results.push(dict_word);
+                        }
+                    }
+                }
+
+                // If still no results, try contains match on word_ascii
+                if all_results.is_empty() {
+                    let like_pattern = format!("%{}%", term);
+
+                    let fts_query = String::from(
+                        r#"
+                        SELECT headword_id
+                        FROM dpd_headwords_fts
+                        WHERE word_ascii LIKE ?
+                        ORDER BY headword_id
+                        LIMIT ? OFFSET ?
+                        "#
+                    );
+
+                    let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+                        .bind::<Text, _>(&like_pattern)
+                        .bind::<BigInt, _>(query_limit)
+                        .bind::<BigInt, _>(query_offset)
+                        .load::<HeadwordId>(dpd_conn)?;
+
+                    let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
+                    let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                        .filter(dpd_dsl::id.eq_any(&ids))
+                        .load::<DpdHeadword>(dpd_conn)?;
+
+                    contains_matches.sort_by_key(|h| h.lemma_1.len());
+
+                    for headword in contains_matches {
+                        let headword_key = headword.lemma_1.clone();
+
+                        if !result_uids.contains(&headword_key) {
+                            let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                            if let Some(ref source_val) = self.source {
+                                if self.source_include {
+                                    dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                                } else {
+                                    dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                                }
+                            }
+
+                            let dict_word_result: Result<DictWord, _> = dict_query
+                                .filter(dict_dsl::word.eq(&headword.lemma_1))
+                                .first::<DictWord>(db_conn);
+
+                            if let Ok(dict_word) = dict_word_result {
+                                result_uids.insert(headword_key);
+                                all_results.push(dict_word);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Set total hits count
         self.db_query_hits_count = all_results.len() as i64;
 
