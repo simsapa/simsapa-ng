@@ -230,14 +230,37 @@ impl<'a> SearchQueryTask<'a> {
     }
 
     fn db_word_to_result(&self, x: &DictWord) -> SearchResult {
-        let content = x.summary.as_deref()
-            .filter(|s| !s.is_empty())
-            .or(x.definition_plain.as_deref())
-            .filter(|s| !s.is_empty())
-            .or(x.definition_html.as_deref())
-            .unwrap_or("");
+        // For DPD words (dict_label contains "dpd"), try to get meaning from DpdHeadword
+        // This provides a more useful snippet with pos, meaning, construction, and grammar
+        let snippet = if x.dict_label.to_lowercase().contains("dpd") {
+            // Extract lemma_1 from uid by removing the "/dpd" suffix
+            // e.g., "dhamma 1/dpd" -> "dhamma 1"
+            let lemma_1 = x.uid.trim_end_matches("/dpd");
 
-        let snippet = self.fragment_around_query(&self.query_text, content);
+            // Try to get DPD meaning snippet using lemma_1
+            let app_data = get_app_data();
+            app_data.dbm.dpd.get_dpd_meaning_snippet(lemma_1)
+                .unwrap_or_else(|| {
+                    // Fallback to original content if DPD lookup fails
+                    let content = x.summary.as_deref()
+                        .filter(|s| !s.is_empty())
+                        .or(x.definition_plain.as_deref())
+                        .filter(|s| !s.is_empty())
+                        .or(x.definition_html.as_deref())
+                        .unwrap_or("");
+                    self.fragment_around_query(&self.query_text, content)
+                })
+        } else {
+            // Non-DPD dictionaries: use original content
+            let content = x.summary.as_deref()
+                .filter(|s| !s.is_empty())
+                .or(x.definition_plain.as_deref())
+                .filter(|s| !s.is_empty())
+                .or(x.definition_html.as_deref())
+                .unwrap_or("");
+            self.fragment_around_query(&self.query_text, content)
+        };
+
         SearchResult::from_dict_word(x, snippet)
     }
 
@@ -1226,10 +1249,19 @@ impl<'a> SearchQueryTask<'a> {
         let highlighted_results: Vec<SearchResult> = results
             .into_iter()
             .map(|mut result| {
-                // Re-highlight the snippet based on the full query text
-                // Note: _db_sutta_to_result already created a basic snippet.
-                // This step applies the final highlighting spans.
-                result.snippet = self.highlight_query_in_content(&self.query_text, &result.snippet);
+                // Skip highlighting for DPD results (dpd_headwords, dpd_roots, dict_words with DPD source)
+                // as they already have formatted meaning snippets from get_dpd_meaning_snippet()
+                let is_dpd_result = result.table_name == "dpd_headwords"
+                    || result.table_name == "dpd_roots"
+                    || (result.table_name == "dict_words"
+                        && result.source_uid.as_ref().map_or(false, |s| s.to_lowercase().contains("dpd")));
+
+                if !is_dpd_result {
+                    // Re-highlight the snippet based on the full query text
+                    // Note: _db_sutta_to_result already created a basic snippet.
+                    // This step applies the final highlighting spans.
+                    result.snippet = self.highlight_query_in_content(&self.query_text, &result.snippet);
+                }
                 result
             })
             .collect();
