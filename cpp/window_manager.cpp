@@ -98,7 +98,16 @@ ReferenceSearchWindow* WindowManager::create_reference_search_window() {
 }
 
 void WindowManager::run_lookup_query(const QString& query_text) {
-    this->create_word_lookup_window(query_text);
+    // Open a SuttaSearchWindow, set the query text, and run the search
+    // This is used by the browser extension to search for dictionary words
+    SuttaSearchWindow* w = this->create_sutta_search_window();
+
+    if (w && w->m_root) {
+        // Set the query text in the search input
+        QMetaObject::invokeMethod(w->m_root, "set_query", Q_ARG(QString, query_text));
+        // Run the search with the query
+        QMetaObject::invokeMethod(w->m_root, "handle_query", Q_ARG(QString, query_text), Q_ARG(int, 1));
+    }
 }
 
 void WindowManager::run_summary_query(const QString& window_id, const QString& query_text) {
