@@ -335,8 +335,8 @@ fn open_external_url(req: Json<OpenExternalUrlRequest>) -> Status {
     }
 }
 
-#[get("/")]
-fn index() -> RawHtml<String> {
+#[get("/app-assets-list")]
+fn app_assets_list() -> RawHtml<String> {
     let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
     let app_data_path = p.to_string_lossy();
     let app_data_folder_contents = generate_html_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
@@ -355,6 +355,24 @@ fn index() -> RawHtml<String> {
 <pre>{}</pre>", app_data_path, app_data_folder_contents, storage_path, storage_folder_contents);
 
     RawHtml(sutta_html_page(&html, None, None, None, None))
+}
+
+#[get("/")]
+fn index() -> RawHtml<String> {
+    let html = r#"
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Simsapa Dhamma Reader</title>
+</head>
+<body>
+  <h1>Simsapa Dhamma Reader</h1>
+</body>
+</html>
+"#.to_string();
+
+    RawHtml(html)
 }
 
 #[get("/shutdown")]
@@ -965,6 +983,7 @@ pub async extern "C" fn start_webserver() {
         .mount("/", routes![
             index,
             shutdown,
+            app_assets_list,
             serve_assets,
             serve_book_resources,
             logger_route,
