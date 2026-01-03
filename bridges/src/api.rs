@@ -644,7 +644,7 @@ fn get_search_options(dbm: &State<Arc<DbManager>>) -> Json<SearchOptions> {
 /// Search suttas using ContainsMatch (placeholder for fulltext search)
 #[post("/suttas_fulltext_search", data = "<request>")]
 fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
-    let query_text = request.query_text.clone();
+    let query_text_orig = request.query_text.clone();
     let page_num = request.page_num.unwrap_or(0) as usize;
 
     // Build language filter - only apply if not "Languages" (the default placeholder)
@@ -654,12 +654,21 @@ fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
     };
     let lang_include = request.suttas_lang_include.unwrap_or(true);
 
-    info(&format!("suttas_fulltext_search(): query='{}', page={}, lang={:?}, include={}",
-                  query_text, page_num, lang_filter, lang_include));
+    // Check if query is a sutta reference pattern (e.g., "sn56.11", "MN 44", "dhp182")
+    // query_text_to_uid_field_query returns "uid:..." if it's a UID/reference pattern
+    let uid_query = query_text_to_uid_field_query(&query_text_orig);
+    let (query_text, search_mode) = if uid_query.starts_with("uid:") {
+        (uid_query, SearchMode::UidMatch)
+    } else {
+        (query_text_orig.clone(), SearchMode::ContainsMatch)
+    };
 
-    // Create search params with ContainsMatch mode
+    info(&format!("suttas_fulltext_search(): query='{}', page={}, lang={:?}, include={}, mode={:?}",
+                  query_text, page_num, lang_filter, lang_include, search_mode));
+
+    // Create search params - use UidMatch for reference patterns, ContainsMatch otherwise
     let params = SearchParams {
-        mode: SearchMode::ContainsMatch,
+        mode: search_mode,
         page_len: Some(20), // Browser extension uses 20 results per page
         lang: lang_filter,
         lang_include,
