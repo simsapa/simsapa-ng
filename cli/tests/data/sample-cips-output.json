@@ -1,0 +1,235 @@
+[
+  {
+    "letter": "A",
+    "headwords": [
+      {
+        "headword": "abandoning (pajahati, pahāna)",
+        "headword_id": "abandoning-pajahati-pahaana",
+        "entries": [
+          {
+            "sub": "—",
+            "refs": [
+              {
+                "sutta_ref": "an4.159",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "blemishes in oneself",
+            "refs": [
+              {
+                "sutta_ref": "mn5",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "striving",
+            "refs": [
+              {
+                "sutta_ref": "dn33:1.11.0",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "headword": "abandoning spiritual path",
+        "headword_id": "abandoning-spiritual-path",
+        "entries": [
+          {
+            "sub": "",
+            "refs": [
+              {
+                "ref_target": "disrobing",
+                "type": "xref"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "headword": "Ānanda, Ven.",
+        "headword_id": "Aananda-Ven",
+        "entries": [
+          {
+            "sub": "Buddha's attendant",
+            "refs": [
+              {
+                "sutta_ref": "dn16:1.2.0",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "conversations with Buddha",
+            "refs": [
+              {
+                "sutta_ref": "mn26",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "letter": "B",
+    "headwords": [
+      {
+        "headword": "Buddha",
+        "headword_id": "Buddha",
+        "entries": [
+          {
+            "sub": "definition",
+            "refs": [
+              {
+                "sutta_ref": "dn16:2.3.0",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "three previous",
+            "refs": [
+              {
+                "sutta_ref": "dn14",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "letter": "D",
+    "headwords": [
+      {
+        "headword": "disrobing",
+        "headword_id": "disrobing",
+        "entries": [
+          {
+            "sub": "causes of",
+            "refs": [
+              {
+                "sutta_ref": "an10.14",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "mental states leading to",
+            "refs": [
+              {
+                "sutta_ref": "an6.60",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "letter": "G",
+    "headwords": [
+      {
+        "headword": "giving up",
+        "headword_id": "giving-up",
+        "entries": [
+          {
+            "sub": "",
+            "refs": [
+              {
+                "ref_target": "abandoning (pajahati, pahāna)",
+                "type": "xref"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "letter": "N",
+    "headwords": [
+      {
+        "headword": "nibbāna",
+        "headword_id": "nibbaana",
+        "entries": [
+          {
+            "sub": "as cessation",
+            "refs": [
+              {
+                "sutta_ref": "an4.174",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "attainment of",
+            "refs": [
+              {
+                "sutta_ref": "sn56.11",
+                "type": "sutta"
+              }
+            ]
+          },
+          {
+            "sub": "definitions",
+            "refs": [
+              {
+                "sutta_ref": "an10.60",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "letter": "O",
+    "headwords": [
+      {
+        "headword": "of the Dhamma",
+        "headword_id": "of-the-Dhamma",
+        "entries": [
+          {
+            "sub": "investigation",
+            "refs": [
+              {
+                "sutta_ref": "an10.17",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "letter": "T",
+    "headwords": [
+      {
+        "headword": "the aggregates",
+        "headword_id": "the-aggregates",
+        "entries": [
+          {
+            "sub": "contemplation of",
+            "refs": [
+              {
+                "sutta_ref": "sn22.57",
+                "type": "sutta"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

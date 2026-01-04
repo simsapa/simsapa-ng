@@ -80,6 +80,10 @@ void callback_open_reference_search_window() {
   AppGlobals::manager->create_reference_search_window();
 }
 
+void callback_open_topic_index_window() {
+  AppGlobals::manager->create_topic_index_window();
+}
+
 void callback_show_chapter_in_sutta_window(QString window_id, QString result_data_json) {
   AppGlobals::manager->show_chapter_in_sutta_window(window_id, result_data_json);
 }

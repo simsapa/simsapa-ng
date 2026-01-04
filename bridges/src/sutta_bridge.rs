@@ -17,6 +17,7 @@ use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
 use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, error};
+use simsapa_backend::topic_index;
 
 static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
 static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");
@@ -73,6 +74,7 @@ pub mod qobject {
         #[qproperty(bool, db_loaded)]
         #[qproperty(bool, sutta_references_loaded)]
         #[qproperty(bool, updates_checked)]
+        #[qproperty(bool, topic_index_loaded)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
 
@@ -152,6 +154,10 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "releasesCheckCompleted"]
         fn releases_check_completed(self: Pin<&mut SuttaBridge>);
+
+        #[qsignal]
+        #[cxx_name = "topicIndexLoaded"]
+        fn topic_index_loaded_signal(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
@@ -501,6 +507,31 @@ pub mod qobject {
 
         #[qinvokable]
         fn get_compatible_asset_github_repo(self: &SuttaBridge) -> QString;
+
+        // Topic Index functions
+        #[qinvokable]
+        fn load_topic_index(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn is_topic_index_cached(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn get_topic_index_letters(self: &SuttaBridge) -> QStringList;
+
+        #[qinvokable]
+        fn get_topic_headwords_for_letter(self: &SuttaBridge, letter: &QString) -> QString;
+
+        #[qinvokable]
+        fn search_topic_headwords(self: &SuttaBridge, query: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_topic_headword_by_id(self: &SuttaBridge, headword_id: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_topic_letter_for_headword_id(self: &SuttaBridge, headword_id: &QString) -> QString;
+
+        #[qinvokable]
+        fn open_topic_index_window(self: &SuttaBridge);
     }
 }
 
@@ -509,6 +540,8 @@ pub struct SuttaBridgeRust {
     sutta_references_loaded: bool,
     /// Flag to track if update check has already been performed in this session
     updates_checked: bool,
+    /// Flag to track if topic index has been loaded
+    topic_index_loaded: bool,
 }
 
 impl Default for SuttaBridgeRust {
@@ -517,6 +550,7 @@ impl Default for SuttaBridgeRust {
             db_loaded: false,
             sutta_references_loaded: false,
             updates_checked: false,
+            topic_index_loaded: false,
         }
     }
 }
@@ -2620,5 +2654,100 @@ impl qobject::SuttaBridge {
 
         // Return empty string when releases info is not available
         QString::from("")
+    }
+
+    // =========================================================================
+    // Topic Index Functions
+    // =========================================================================
+
+    /// Load the topic index data (CIPS general index).
+    /// The data is cached after first load, so subsequent calls are fast.
+    /// Emits topicIndexLoaded signal when complete.
+    pub fn load_topic_index(self: Pin<&mut Self>) {
+        info("SuttaBridge::load_topic_index() start");
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            // Load the topic index (this caches it for future use)
+            let _ = topic_index::load_topic_index();
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().set_topic_index_loaded(true);
+                qo.as_mut().topic_index_loaded_signal();
+            }).unwrap();
+            info("SuttaBridge::load_topic_index() end");
+        });
+    }
+
+    /// Check if the topic index has been loaded and cached.
+    pub fn is_topic_index_cached(&self) -> bool {
+        topic_index::is_topic_index_loaded()
+    }
+
+    /// Get the list of available letters (A-Z) in the topic index.
+    pub fn get_topic_index_letters(&self) -> QStringList {
+        let letters = topic_index::get_letters();
+        let mut qlist = QStringList::default();
+        for letter in letters {
+            qlist.append(QString::from(&letter));
+        }
+        qlist
+    }
+
+    /// Get all headwords for a specific letter as JSON.
+    pub fn get_topic_headwords_for_letter(&self, letter: &QString) -> QString {
+        let letter_str = letter.to_string();
+        let headwords = topic_index::get_headwords_for_letter(&letter_str);
+        match serde_json::to_string(&headwords) {
+            Ok(json) => QString::from(&json),
+            Err(e) => {
+                error(&format!("Failed to serialize headwords: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    /// Search headwords and sub-entries with case-insensitive partial matching.
+    /// Returns matching headwords as JSON.
+    pub fn search_topic_headwords(&self, query: &QString) -> QString {
+        let query_str = query.to_string();
+        let results = topic_index::search_headwords(&query_str);
+        match serde_json::to_string(&results) {
+            Ok(json) => QString::from(&json),
+            Err(e) => {
+                error(&format!("Failed to serialize search results: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    /// Get a headword by its normalized ID as JSON.
+    pub fn get_topic_headword_by_id(&self, headword_id: &QString) -> QString {
+        let id_str = headword_id.to_string();
+        match topic_index::get_headword_by_id(&id_str) {
+            Some(headword) => {
+                match serde_json::to_string(&headword) {
+                    Ok(json) => QString::from(&json),
+                    Err(e) => {
+                        error(&format!("Failed to serialize headword: {}", e));
+                        QString::from("{}")
+                    }
+                }
+            }
+            None => QString::from("{}")
+        }
+    }
+
+    /// Get the letter section for a headword by its ID.
+    pub fn get_topic_letter_for_headword_id(&self, headword_id: &QString) -> QString {
+        let id_str = headword_id.to_string();
+        match topic_index::get_letter_for_headword_id(&id_str) {
+            Some(letter) => QString::from(&letter),
+            None => QString::from("")
+        }
+    }
+
+    /// Open the Topic Index window.
+    pub fn open_topic_index_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_topic_index_window();
     }
 }

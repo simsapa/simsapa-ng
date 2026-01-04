@@ -4,9 +4,12 @@ Based on PRD: `tasks/prd-cips-topic-index-window.md`
 
 ## Relevant Files
 
-- `cli/src/bootstrap/parse_cips_index.rs` - New CLI subcommand to parse CIPS general-index.csv and generate JSON output
-- `cli/src/bootstrap/mod.rs` - Register the new parse_cips_index module
-- `cli/src/main.rs` - Add new CLI subcommand for CIPS index parsing
+- `cli/src/bootstrap/parse_cips_index.rs` - CLI module to parse CIPS general-index.csv and generate JSON output (structs, normalization, sorting, validation)
+- `cli/src/bootstrap/mod.rs` - Registers the parse_cips_index module
+- `cli/src/main.rs` - Contains `ParseCipsIndex` subcommand and `parse_cips_index_command()` function with database title lookup
+- `cli/Cargo.toml` - Added `unicode-normalization` dependency for diacritic handling
+- `cli/tests/data/sample-cips-index.csv` - Sample test data for parser testing
+- `cli/tests/data/sample-cips-output.json` - Sample output from parser for verification
 - `assets/general-index.json` - Generated JSON data file containing the parsed topic index
 - `backend/src/app_settings.rs` - Add static JSON inclusion constant `CIPS_GENERAL_INDEX_JSON`
 - `backend/src/topic_index.rs` - New module for topic index data structures, parsing, and search functions
@@ -30,39 +33,39 @@ Based on PRD: `tasks/prd-cips-topic-index-window.md`
 
 ## Tasks
 
-- [ ] 1.0 Create CLI Parser for CIPS general-index.csv
-  - [ ] 1.1 Create new file `cli/src/bootstrap/parse_cips_index.rs` with module structure
-  - [ ] 1.2 Define Rust structs for JSON output: `TopicIndexLetter`, `TopicIndexHeadword`, `TopicIndexEntry`, `TopicIndexRef`
-  - [ ] 1.3 Implement `normalize_diacritic_string()` function using Unicode NFD normalization (similar to existing `latinize()` in helpers.rs)
-  - [ ] 1.4 Implement `make_normalized_id()` function to create valid anchor IDs from headwords (ā→aa, ī→ii, ū→uu, remove punctuation, spaces→hyphens)
-  - [ ] 1.5 Implement CSV parsing logic to read tab-delimited file with columns: headword, subheading, locator
-  - [ ] 1.6 Implement ignore words stripping for sorting ("in", "of", "with", "from", "to", "for", "on", "the", "as", "a", "an", "vs.", "and")
-  - [ ] 1.7 Implement headword sorting algorithm (case-insensitive, diacritic-insensitive, ignore leading articles)
-  - [ ] 1.8 Implement citation/locator sorting by canonical book order (DN, MN, SN, AN, Kp, Dhp, Ud, Iti, Snp, Vv, Pv, Thag, Thig) with natural number sorting
-  - [ ] 1.9 Implement cross-reference detection (locator contains "xref") and target extraction
-  - [ ] 1.10 Implement sutta reference parsing to extract book, sutta_ref, and segment ID
-  - [ ] 1.11 Implement blank sub-entry handling (replace with "—" em-dash for direct headword→sutta links)
-  - [ ] 1.12 Implement sutta title lookup from database (query Pāli titles like "mn5/pli/ms")
-  - [ ] 1.13 Build nested data structure: Letter → Headword → Entry → Refs
-  - [ ] 1.14 Implement JSON serialization with minified output (no pretty-printing)
-  - [ ] 1.15 Register module in `cli/src/bootstrap/mod.rs`
-  - [ ] 1.16 Add `ParseCipsIndex` subcommand to `cli/src/main.rs` with input CSV path and output JSON path arguments
-  - [ ] 1.17 Implement validation: check xref targets exist, no duplicate headword+sub combinations, locator format validation
-  - [ ] 1.18 Test parser with sample CIPS CSV data and verify output JSON structure
+- [x] 1.0 Create CLI Parser for CIPS general-index.csv
+  - [x] 1.1 Create new file `cli/src/bootstrap/parse_cips_index.rs` with module structure
+  - [x] 1.2 Define Rust structs for JSON output: `TopicIndexLetter`, `TopicIndexHeadword`, `TopicIndexEntry`, `TopicIndexRef`
+  - [x] 1.3 Implement `normalize_diacritic_string()` function using Unicode NFD normalization (similar to existing `latinize()` in helpers.rs)
+  - [x] 1.4 Implement `make_normalized_id()` function to create valid anchor IDs from headwords (ā→aa, ī→ii, ū→uu, remove punctuation, spaces→hyphens)
+  - [x] 1.5 Implement CSV parsing logic to read tab-delimited file with columns: headword, subheading, locator
+  - [x] 1.6 Implement ignore words stripping for sorting ("in", "of", "with", "from", "to", "for", "on", "the", "as", "a", "an", "vs.", "and")
+  - [x] 1.7 Implement headword sorting algorithm (case-insensitive, diacritic-insensitive, ignore leading articles)
+  - [x] 1.8 Implement citation/locator sorting by canonical book order (DN, MN, SN, AN, Kp, Dhp, Ud, Iti, Snp, Vv, Pv, Thag, Thig) with natural number sorting
+  - [x] 1.9 Implement cross-reference detection (locator contains "xref") and target extraction
+  - [x] 1.10 Implement sutta reference parsing to extract book, sutta_ref, and segment ID
+  - [x] 1.11 Implement blank sub-entry handling (replace with "—" em-dash for direct headword→sutta links)
+  - [x] 1.12 Implement sutta title lookup from database (query Pāli titles like "mn5/pli/ms")
+  - [x] 1.13 Build nested data structure: Letter → Headword → Entry → Refs
+  - [x] 1.14 Implement JSON serialization with minified output (no pretty-printing)
+  - [x] 1.15 Register module in `cli/src/bootstrap/mod.rs`
+  - [x] 1.16 Add `ParseCipsIndex` subcommand to `cli/src/main.rs` with input CSV path and output JSON path arguments
+  - [x] 1.17 Implement validation: check xref targets exist, no duplicate headword+sub combinations, locator format validation
+  - [x] 1.18 Test parser with sample CIPS CSV data and verify output JSON structure
 
-- [ ] 2.0 Implement Static JSON Inclusion and Backend Functions
-  - [ ] 2.1 Run CLI parser to generate `assets/general-index.json` from CIPS CSV
-  - [ ] 2.2 Add `pub static CIPS_GENERAL_INDEX_JSON: &str = include_str!("../../assets/general-index.json");` to `backend/src/app_settings.rs`
-  - [ ] 2.3 Create new file `backend/src/topic_index.rs` with data structures matching JSON schema
-  - [ ] 2.4 Implement `TopicIndex` struct with `Vec<TopicIndexLetter>` and lazy-initialized cache using `OnceLock`
-  - [ ] 2.5 Implement `load_topic_index()` function to parse JSON and populate cache (called once on first access)
-  - [ ] 2.6 Implement `is_topic_index_loaded()` function to check if data is already cached
-  - [ ] 2.7 Implement `get_letters()` function returning array of available letters (A-Z)
-  - [ ] 2.8 Implement `get_headwords_for_letter(letter: &str)` function returning all headwords for a specific letter
-  - [ ] 2.9 Implement `search_headwords(query: &str)` function with case-insensitive partial matching on headwords, sub-entries, and Pāli terms in parentheses
-  - [ ] 2.10 Implement `get_headword_by_id(headword_id: &str)` function for xref navigation lookup
-  - [ ] 2.11 Register module in `backend/src/lib.rs`
-  - [ ] 2.12 Write unit tests in `backend/tests/test_topic_index.rs` for parsing, search, and lookup functions
+- [x] 2.0 Implement Static JSON Inclusion and Backend Functions
+  - [x] 2.1 Run CLI parser to generate `assets/general-index.json` from CIPS CSV
+  - [x] 2.2 Add `pub static CIPS_GENERAL_INDEX_JSON: &str = include_str!("../../assets/general-index.json");` to `backend/src/app_settings.rs`
+  - [x] 2.3 Create new file `backend/src/topic_index.rs` with data structures matching JSON schema
+  - [x] 2.4 Implement `TopicIndex` struct with `Vec<TopicIndexLetter>` and lazy-initialized cache using `OnceLock`
+  - [x] 2.5 Implement `load_topic_index()` function to parse JSON and populate cache (called once on first access)
+  - [x] 2.6 Implement `is_topic_index_loaded()` function to check if data is already cached
+  - [x] 2.7 Implement `get_letters()` function returning array of available letters (A-Z)
+  - [x] 2.8 Implement `get_headwords_for_letter(letter: &str)` function returning all headwords for a specific letter
+  - [x] 2.9 Implement `search_headwords(query: &str)` function with case-insensitive partial matching on headwords, sub-entries, and Pāli terms in parentheses
+  - [x] 2.10 Implement `get_headword_by_id(headword_id: &str)` function for xref navigation lookup
+  - [x] 2.11 Register module in `backend/src/lib.rs`
+  - [x] 2.12 Write unit tests in `backend/tests/test_topic_index.rs` for parsing, search, and lookup functions (tests in topic_index.rs module)
 
 - [ ] 3.0 Create Bridge Functions and QML Type Definitions
   - [ ] 3.1 Add `topic_index_loaded` property to `SuttaBridgeRust` struct in `bridges/src/sutta_bridge.rs`

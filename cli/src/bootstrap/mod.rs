@@ -10,6 +10,7 @@ pub mod tipitaka_xml;
 pub mod dpd;
 pub mod completions;
 pub mod library_imports;
+pub mod parse_cips_index;
 
 use anyhow::{Result, Context};
 use chrono::{DateTime, Local};

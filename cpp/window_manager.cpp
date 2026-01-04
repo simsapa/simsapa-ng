@@ -5,6 +5,7 @@
 #include "sutta_languages_window.h"
 #include "library_window.h"
 #include "reference_search_window.h"
+#include "topic_index_window.h"
 #include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
