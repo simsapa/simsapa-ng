@@ -697,27 +697,6 @@ ${query_text}`;
         }
 
         Menu {
-            id: edit_menu
-            title: "&Edit"
-
-            CMenuItem {
-                action: Action {
-                    id: action_focus_search
-                    text: "Focus Search Input"
-                    shortcut: Shortcut {
-                        sequences: ["Ctrl+L"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_focus_search.trigger()
-                    }
-                    onTriggered: {
-                        search_bar_input.search_input.forceActiveFocus();
-                        search_bar_input.search_input.selectAll();
-                    }
-                }
-            }
-        }
-
-        Menu {
             id: view_menu
             title: "&View"
 
@@ -758,6 +737,37 @@ ${query_text}`;
                     checkable: true
                     checked: true
                     onToggled: SuttaBridge.set_open_find_in_sutta_results(checked)
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_focus_search
+                    text: "Focus Search Input"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+L"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_focus_search.trigger()
+                    }
+                    onTriggered: {
+                        search_bar_input.search_input.forceActiveFocus();
+                        search_bar_input.search_input.selectAll();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_next_search_area
+                    text: "Next Search Area"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+;"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_next_search_area.trigger()
+                    }
+                    onTriggered: {
+                        search_bar_input.search_area_dropdown.cycle_next();
+                    }
                 }
             }
 
@@ -1032,7 +1042,7 @@ ${query_text}`;
         id: mobile_menu
         window_width: root.width
         window_height: root.height
-        menu_list: [file_menu, edit_menu, view_menu, find_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
+        menu_list: [file_menu, view_menu, find_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
     }
 
     AboutDialog {

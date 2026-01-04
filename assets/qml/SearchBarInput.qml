@@ -124,6 +124,10 @@ Frame {
                     // Read from the model list because currentText doesn't update immediately on currentIndexChanged
                     return model[currentIndex];
                 }
+
+                function cycle_next() {
+                    currentIndex = (currentIndex + 1) % model.length;
+                }
             }
 
             ComboBox {
