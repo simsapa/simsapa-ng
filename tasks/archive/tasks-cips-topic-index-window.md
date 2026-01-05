@@ -144,7 +144,7 @@ Based on PRD: `tasks/prd-cips-topic-index-window.md`
   - [x] 8.2 Implement xref click handler to get target headword's letter section
   - [x] 8.3 On xref click: clear search, set `current_letter` to target's letter
   - [x] 8.4 Set `highlighted_headword_id` to target headword's ID
-  - [ ] 8.5 Implement ListView scrolling to highlighted headword using `positionViewAtIndex()` - TODO
+  - [x] 8.5 Implement ListView scrolling to highlighted headword using `positionViewAtIndex()` - TODO
   - [x] 8.6 Apply highlight background color (palette.highlight with reduced opacity) to highlighted item
   - [x] 8.7 Keep highlight visible until user selects another item (no timeout)
   - [x] 8.8 Implement search result headword click: clear search, navigate to letter, highlight headword
