@@ -37,6 +37,7 @@ ApplicationWindow {
     property string current_letter: "A"
     property var headwords_for_letter: []
     property string highlighted_headword_id: ""
+    property real highlight_opacity: 1.0
 
     // Settings
     property bool open_in_new_window: false
@@ -63,6 +64,32 @@ ApplicationWindow {
         repeat: false
         onTriggered: {
             root.perform_search();
+        }
+    }
+
+    // Highlight fade-out timer
+    Timer {
+        id: highlight_fadeout_timer
+        interval: 1000  // Wait 1 second before starting fade-out
+        running: false
+        repeat: false
+        onTriggered: {
+            highlight_fade_animation.start();
+        }
+    }
+
+    // Highlight fade-out animation
+    NumberAnimation {
+        id: highlight_fade_animation
+        target: root
+        property: "highlight_opacity"
+        from: 1.0
+        to: 0.0
+        duration: 1000  // 1 second fade-out
+        easing.type: Easing.InOutQuad
+        onFinished: {
+            root.highlighted_headword_id = "";
+            root.highlight_opacity = 1.0;
         }
     }
 
@@ -124,7 +151,28 @@ ApplicationWindow {
             search_input.text = "";
             root.load_letter(letter);
             root.highlighted_headword_id = headword_id;
-            // Scroll to the headword - TODO: implement positionViewAtIndex
+            // Scroll to the headword after the model updates
+            Qt.callLater(function() {
+                root.scroll_to_headword(headword_id);
+            });
+        }
+    }
+
+    function scroll_to_headword(headword_id: string) {
+        // Reset highlight opacity and stop any ongoing animations
+        highlight_fade_animation.stop();
+        highlight_fadeout_timer.stop();
+        root.highlight_opacity = 1.0;
+
+        // Find the index of the headword in the current list
+        const model = root.search_active ? root.search_results : root.headwords_for_letter;
+        for (let i = 0; i < model.length; i++) {
+            if (model[i].headword_id === headword_id) {
+                headwords_list.positionViewAtIndex(i, ListView.Beginning);
+                // Start fade-out timer after scrolling
+                highlight_fadeout_timer.restart();
+                break;
+            }
         }
     }
 
@@ -144,7 +192,8 @@ ApplicationWindow {
 
         if (full_uid && full_uid.length > 0) {
             const result_data = JSON.stringify({
-                uid: full_uid,
+                item_uid: full_uid,
+                table_name: "suttas",
                 segment_id: sutta_ref.includes(":") ? sutta_ref : ""
             });
 
@@ -285,7 +334,7 @@ ApplicationWindow {
                     Rectangle {
                         anchors.fill: parent
                         color: headword_delegate.modelData.headword_id === root.highlighted_headword_id
-                            ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.3)
+                            ? Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.3 * root.highlight_opacity)
                             : "transparent"
                         radius: 4
                     }
@@ -311,7 +360,16 @@ ApplicationWindow {
                                     if (root.search_active) {
                                         root.navigate_to_headword(headword_delegate.modelData.headword_id);
                                     } else {
+                                        // Reset highlight opacity and stop any ongoing animations
+                                        highlight_fade_animation.stop();
+                                        highlight_fadeout_timer.stop();
+                                        root.highlight_opacity = 1.0;
+
                                         root.highlighted_headword_id = headword_delegate.modelData.headword_id;
+                                        headwords_list.positionViewAtIndex(headword_delegate.index, ListView.Contain);
+
+                                        // Start fade-out timer
+                                        highlight_fadeout_timer.restart();
                                     }
                                 }
                             }
