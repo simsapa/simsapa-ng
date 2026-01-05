@@ -226,6 +226,56 @@ pub fn get_letter_for_headword_id(headword_id: &str) -> Option<String> {
     None
 }
 
+/// Find a headword by matching its text (for xref navigation).
+/// This does case-insensitive matching and handles partial matches
+/// where the headword text starts with or contains the target.
+///
+/// # Arguments
+/// * `target` - The xref target text (e.g., "disrobing", "heavenly realms")
+///
+/// # Returns
+/// The headword_id if found, or None
+pub fn find_headword_id_by_text(target: &str) -> Option<String> {
+    let index = load_topic_index();
+    let target_lower = target.to_lowercase();
+
+    // First, try exact match (case-insensitive) on the main headword part
+    // (before any parenthetical Pāli terms)
+    for letter in &index.letters {
+        for headword in &letter.headwords {
+            let hw_text = &headword.headword;
+            // Extract main headword (before parentheses)
+            let main_hw = hw_text.split('(').next().unwrap_or(hw_text).trim().to_lowercase();
+
+            if main_hw == target_lower {
+                return Some(headword.headword_id.clone());
+            }
+        }
+    }
+
+    // Second, try if headword starts with target
+    for letter in &index.letters {
+        for headword in &letter.headwords {
+            let hw_lower = headword.headword.to_lowercase();
+            if hw_lower.starts_with(&target_lower) {
+                return Some(headword.headword_id.clone());
+            }
+        }
+    }
+
+    // Third, try contains match
+    for letter in &index.letters {
+        for headword in &letter.headwords {
+            let hw_lower = headword.headword.to_lowercase();
+            if hw_lower.contains(&target_lower) {
+                return Some(headword.headword_id.clone());
+            }
+        }
+    }
+
+    None
+}
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -306,5 +356,25 @@ mod tests {
     fn test_get_letter_for_headword_id() {
         let letter = get_letter_for_headword_id("abandoning-pajahati-pahaana");
         assert_eq!(letter, Some("A".to_string()));
+    }
+
+    #[test]
+    fn test_find_headword_id_by_text() {
+        // Exact match (main headword text)
+        let result = find_headword_id_by_text("abandoning");
+        assert!(result.is_some());
+        assert!(result.unwrap().contains("abandoning"));
+
+        // Match with xref target text like "disrobing"
+        let result = find_headword_id_by_text("disrobing");
+        assert!(result.is_some(), "Should find 'disrobing' headword");
+
+        // Match partial text
+        let result = find_headword_id_by_text("heavenly realms");
+        // May or may not exist, just check it doesn't panic
+
+        // Non-existent headword
+        let result = find_headword_id_by_text("nonexistentheadwordxyz123");
+        assert!(result.is_none());
     }
 }

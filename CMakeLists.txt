@@ -195,7 +195,8 @@ list(APPEND cpp_files
     cpp/word_lookup_window.cpp
     cpp/sutta_languages_window.cpp
     cpp/library_window.cpp
-    cpp/reference_search_window.cpp)
+    cpp/reference_search_window.cpp
+    cpp/topic_index_window.cpp)
 
 list(APPEND app_files ${cpp_files} ${icons})
 

@@ -16,6 +16,8 @@ fn main() {
     qml_files.push("../assets/qml/SuttaLanguagesWindow.qml");
     qml_files.push("../assets/qml/LibraryWindow.qml");
     qml_files.push("../assets/qml/ReferenceSearchWindow.qml");
+    qml_files.push("../assets/qml/TopicIndexWindow.qml");
+    qml_files.push("../assets/qml/TopicIndexInfoDialog.qml");
     qml_files.push("../assets/qml/BooksList.qml");
     qml_files.push("../assets/qml/ChapterListItem.qml");
     qml_files.push("../assets/qml/DocumentImportDialog.qml");

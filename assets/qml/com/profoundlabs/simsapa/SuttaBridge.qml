@@ -8,6 +8,7 @@ Item {
     property bool db_loaded: false;
     property bool sutta_references_loaded: false;
     property bool updates_checked: false;
+    property bool topic_index_loaded: false;
     property var dpd_lookup_test_data: ({})
 
     Component.onCompleted: {
@@ -33,6 +34,9 @@ Item {
     signal noUpdatesAvailable();
     signal updateCheckError(error_message: string);
     signal releasesCheckCompleted();
+
+    // Topic Index signals
+    signal topicIndexLoaded();
 
     function emit_update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
         console.log("update_window_title()");
@@ -657,6 +661,54 @@ Item {
     function get_compatible_asset_github_repo(): string {
         console.log("get_compatible_asset_github_repo()");
         return "";
+    }
+
+    // Topic Index functions
+
+    function load_topic_index() {
+        console.log("load_topic_index()");
+        // Simulate async behavior
+        Qt.callLater(function() {
+            root.topic_index_loaded = true;
+            topicIndexLoaded();
+        });
+    }
+
+    function is_topic_index_cached(): bool {
+        return root.topic_index_loaded;
+    }
+
+    function get_topic_index_letters(): list<string> {
+        return ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"];
+    }
+
+    function get_topic_headwords_for_letter(letter: string): string {
+        console.log("get_topic_headwords_for_letter():", letter);
+        return "[]";
+    }
+
+    function search_topic_headwords(query: string): string {
+        console.log("search_topic_headwords():", query);
+        return "[]";
+    }
+
+    function get_topic_headword_by_id(headword_id: string): string {
+        console.log("get_topic_headword_by_id():", headword_id);
+        return "{}";
+    }
+
+    function get_topic_letter_for_headword_id(headword_id: string): string {
+        console.log("get_topic_letter_for_headword_id():", headword_id);
+        return "";
+    }
+
+    function find_topic_headword_id_by_text(target: string): string {
+        console.log("find_topic_headword_id_by_text():", target);
+        return "";
+    }
+
+    function open_topic_index_window() {
+        console.log("open_topic_index_window()");
     }
 
     Item {

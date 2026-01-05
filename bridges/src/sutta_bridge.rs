@@ -531,6 +531,9 @@ pub mod qobject {
         fn get_topic_letter_for_headword_id(self: &SuttaBridge, headword_id: &QString) -> QString;
 
         #[qinvokable]
+        fn find_topic_headword_id_by_text(self: &SuttaBridge, target: &QString) -> QString;
+
+        #[qinvokable]
         fn open_topic_index_window(self: &SuttaBridge);
     }
 }
@@ -2741,6 +2744,15 @@ impl qobject::SuttaBridge {
         let id_str = headword_id.to_string();
         match topic_index::get_letter_for_headword_id(&id_str) {
             Some(letter) => QString::from(&letter),
+            None => QString::from("")
+        }
+    }
+
+    /// Find a headword ID by its text (for xref navigation).
+    pub fn find_topic_headword_id_by_text(&self, target: &QString) -> QString {
+        let target_str = target.to_string();
+        match topic_index::find_headword_id_by_text(&target_str) {
+            Some(headword_id) => QString::from(&headword_id),
             None => QString::from("")
         }
     }
