@@ -697,6 +697,110 @@ ${query_text}`;
         }
 
         Menu {
+            id: windows_menu
+            title: "&Windows"
+
+            CMenuItem {
+                action: Action {
+                    id: action_sutta_search
+                    text: "&Sutta Search"
+                    icon.source: "icons/32x32/bxs_book_bookmark.png"
+                    shortcut: Shortcut {
+                        sequences: ["F5"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_sutta_search.trigger()
+                    }
+                    onTriggered: {
+                        SuttaBridge.open_sutta_search_window()
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_sutta_languages
+                    text: "Sutta Languages..."
+                    onTriggered: {
+                        SuttaBridge.open_sutta_languages_window()
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_library
+                    text: "Library..."
+                    onTriggered: {
+                        SuttaBridge.open_library_window()
+                    }
+                }
+            }
+
+                CMenuItem {
+                action: Action {
+                    id: action_reference_search
+                    text: "&Reference Search..."
+                    onTriggered: {
+                        SuttaBridge.open_reference_search_window()
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_topic_index
+                    text: "&Topic Index..."
+                    onTriggered: {
+                        SuttaBridge.open_topic_index_window()
+                    }
+                }
+            }
+
+            // CMenuItem {
+            //     action: Action {
+            //         id: action_sutta_study
+            //         text: "&Sutta Study"
+            //         icon.source: "icons/32x32/bxs_book_bookmark.png"
+            //         shortcut: Shortcut {
+            //             sequences: ["Ctrl+F5"]
+            //             context: Qt.WindowShortcut
+            //             onActivated: action_sutta_study.trigger()
+            //         }
+            //         /* onTriggered: TODO */
+            //     }
+            // }
+
+            // CMenuItem {
+            //     action: Action {
+            //         id: action_dictionary_search
+            //         text: "&Dictionary Search"
+            //         icon.source: "icons/32x32/bxs_book_content.png"
+            //         shortcut: Shortcut {
+            //             sequences: ["F6"]
+            //             context: Qt.WindowShortcut
+            //             onActivated: action_dictionary_search.trigger()
+            //         }
+            //         /* onTriggered: TODO */
+            //     }
+            // }
+
+            // CMenuItem {
+            //     action: Action {
+            //         id: action_show_word_lookup
+            //         text: "Show Word Lookup"
+            //         checkable: true
+            //         checked: false
+            //         shortcut: Shortcut {
+            //             sequences: ["Ctrl+F6"]
+            //             context: Qt.WindowShortcut
+            //             onActivated: action_show_word_lookup.trigger()
+            //         }
+            //         /* onTriggered: TODO */
+            //     }
+            // }
+        }
+
+        Menu {
             id: view_menu
             title: "&View"
 
@@ -862,110 +966,6 @@ ${query_text}`;
         }
 
         Menu {
-            id: windows_menu
-            title: "&Windows"
-
-            CMenuItem {
-                action: Action {
-                    id: action_sutta_search
-                    text: "&Sutta Search"
-                    icon.source: "icons/32x32/bxs_book_bookmark.png"
-                    shortcut: Shortcut {
-                        sequences: ["F5"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_sutta_search.trigger()
-                    }
-                    onTriggered: {
-                        SuttaBridge.open_sutta_search_window()
-                    }
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_sutta_languages
-                    text: "Sutta Languages..."
-                    onTriggered: {
-                        SuttaBridge.open_sutta_languages_window()
-                    }
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_library
-                    text: "Library..."
-                    onTriggered: {
-                        SuttaBridge.open_library_window()
-                    }
-                }
-            }
-
-                CMenuItem {
-                action: Action {
-                    id: action_reference_search
-                    text: "&Reference Search..."
-                    onTriggered: {
-                        SuttaBridge.open_reference_search_window()
-                    }
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_topic_index
-                    text: "&Topic Index..."
-                    onTriggered: {
-                        SuttaBridge.open_topic_index_window()
-                    }
-                }
-            }
-
-            // CMenuItem {
-            //     action: Action {
-            //         id: action_sutta_study
-            //         text: "&Sutta Study"
-            //         icon.source: "icons/32x32/bxs_book_bookmark.png"
-            //         shortcut: Shortcut {
-            //             sequences: ["Ctrl+F5"]
-            //             context: Qt.WindowShortcut
-            //             onActivated: action_sutta_study.trigger()
-            //         }
-            //         /* onTriggered: TODO */
-            //     }
-            // }
-
-            // CMenuItem {
-            //     action: Action {
-            //         id: action_dictionary_search
-            //         text: "&Dictionary Search"
-            //         icon.source: "icons/32x32/bxs_book_content.png"
-            //         shortcut: Shortcut {
-            //             sequences: ["F6"]
-            //             context: Qt.WindowShortcut
-            //             onActivated: action_dictionary_search.trigger()
-            //         }
-            //         /* onTriggered: TODO */
-            //     }
-            // }
-
-            // CMenuItem {
-            //     action: Action {
-            //         id: action_show_word_lookup
-            //         text: "Show Word Lookup"
-            //         checkable: true
-            //         checked: false
-            //         shortcut: Shortcut {
-            //             sequences: ["Ctrl+F6"]
-            //             context: Qt.WindowShortcut
-            //             onActivated: action_show_word_lookup.trigger()
-            //         }
-            //         /* onTriggered: TODO */
-            //     }
-            // }
-        }
-
-        Menu {
             id: gloss_menu
             title: "&Gloss"
 
@@ -1052,7 +1052,7 @@ ${query_text}`;
         id: mobile_menu
         window_width: root.width
         window_height: root.height
-        menu_list: [file_menu, view_menu, find_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
+        menu_list: [file_menu, windows_menu, view_menu, find_menu, gloss_menu, prompts_menu, help_menu]
     }
 
     AboutDialog {
