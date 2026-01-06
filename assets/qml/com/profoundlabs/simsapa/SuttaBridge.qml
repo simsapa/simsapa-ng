@@ -89,6 +89,10 @@ Item {
       return query_text;
     }
 
+    function convert_verse_ref_to_uid(sutta_ref: string): string {
+      return sutta_ref;
+    }
+
     function results_page(query: string, page_num: int, search_area: string, params_json: string) {
         console.log(query);
         // Simulate async behavior

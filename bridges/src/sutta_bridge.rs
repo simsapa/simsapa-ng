@@ -193,6 +193,9 @@ pub mod qobject {
         fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
 
         #[qinvokable]
+        fn convert_verse_ref_to_uid(self: &SuttaBridge, sutta_ref: &QString) -> QString;
+
+        #[qinvokable]
         fn results_page(self: Pin<&mut SuttaBridge>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString);
 
         #[qinvokable]
@@ -890,6 +893,22 @@ impl qobject::SuttaBridge {
 
     pub fn query_text_to_uid_field_query(&self, query_text: &QString) -> QString {
         QString::from(query_text_to_uid_field_query(&query_text.to_string()))
+    }
+
+    /// Convert a verse reference (e.g., "dhp33", "thag50", "thig12") to its proper sutta UID.
+    /// Returns the converted UID if it's a verse reference, otherwise returns the original string.
+    pub fn convert_verse_ref_to_uid(&self, sutta_ref: &QString) -> QString {
+        use simsapa_backend::helpers::verse_sutta_ref_to_uid;
+
+        let ref_str = sutta_ref.to_string();
+
+        // Try to convert verse reference to UID
+        if let Some(converted_uid) = verse_sutta_ref_to_uid(&ref_str) {
+            QString::from(converted_uid)
+        } else {
+            // Not a verse reference, return original
+            sutta_ref.clone()
+        }
     }
 
     pub fn results_page(self: Pin<&mut Self>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) {

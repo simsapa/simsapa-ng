@@ -21,7 +21,7 @@ ApplicationWindow {
     readonly property bool is_desktop: !root.is_mobile
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 2
-    property int top_bar_margin: is_mobile ? 24 : 0
+    property int top_bar_margin: is_mobile ? 24 : 5
 
     property bool is_dark: theme_helper.is_dark
 
@@ -54,6 +54,7 @@ ApplicationWindow {
 
     TopicIndexInfoDialog {
         id: info_dialog
+        top_bar_margin: root.top_bar_margin
     }
 
     // Search debounce timer
@@ -187,7 +188,11 @@ ApplicationWindow {
 
     function open_sutta(sutta_ref: string) {
         // Extract uid (without segment) for database lookup
-        const uid = sutta_ref.includes(":") ? sutta_ref.split(":")[0] : sutta_ref;
+        let uid = sutta_ref.includes(":") ? sutta_ref.split(":")[0] : sutta_ref;
+
+        // Convert verse references (e.g., dhp33, thag50, thig12) to proper sutta UIDs
+        uid = SuttaBridge.convert_verse_ref_to_uid(uid);
+
         const full_uid = SuttaBridge.get_full_sutta_uid(uid);
 
         if (full_uid && full_uid.length > 0) {
@@ -223,7 +228,9 @@ ApplicationWindow {
                 text: "Info"
                 font.pointSize: root.pointSize
                 onClicked: {
-                    info_dialog.open();
+                    info_dialog.show();
+                    info_dialog.raise();
+                    info_dialog.requestActivate();
                 }
             }
 
