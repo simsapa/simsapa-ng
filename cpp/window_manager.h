@@ -12,6 +12,7 @@ class WordLookupWindow;
 class SuttaLanguagesWindow;
 class LibraryWindow;
 class ReferenceSearchWindow;
+class TopicIndexWindow;
 
 class WindowManager : public QObject {
         Q_OBJECT
@@ -26,6 +27,7 @@ class WindowManager : public QObject {
         SuttaLanguagesWindow* create_sutta_languages_window();
         LibraryWindow* create_library_window();
         ReferenceSearchWindow* create_reference_search_window();
+        TopicIndexWindow* create_topic_index_window();
 
         static WindowManager *m_instance;
         QApplication* m_app;
@@ -36,6 +38,7 @@ class WindowManager : public QObject {
         QList<SuttaLanguagesWindow*> sutta_languages_windows;
         QList<LibraryWindow*> library_windows;
         QList<ReferenceSearchWindow*> reference_search_windows;
+        QList<TopicIndexWindow*> topic_index_windows;
 
     private:
         WindowManager(QApplication* app, QObject *parent = nullptr);

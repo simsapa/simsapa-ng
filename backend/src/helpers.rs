@@ -134,47 +134,13 @@ pub fn query_text_to_uid_field_query(query_text: &str) -> String {
         let number = cap.get(2).unwrap().as_str();
 
         // Handle special cases for Dhp, Thag, and Thig verse numbers
-        let replacement = if nikaya == "dhp" {
-            // Parse the number as a verse number
-            if let Ok(verse_num) = number.parse::<u32>() {
-                if let Some(chapter_uid) = dhp_verse_to_chapter(verse_num) {
-                    format!("uid:{}", chapter_uid)
-                } else {
-                    // If no chapter found, use the number as-is (fallback)
-                    format!("uid:{}{}", nikaya, number)
-                }
-            } else {
-                // If parsing fails, use the number as-is
-                format!("uid:{}{}", nikaya, number)
-            }
-        } else if nikaya == "thag" {
-            // Parse the number as a verse number
-            if let Ok(verse_num) = number.parse::<u32>() {
-                if let Some(sutta_uid) = thag_verse_to_uid(verse_num) {
-                    format!("uid:{}", sutta_uid)
-                } else {
-                    // If no sutta found, use the number as-is (fallback)
-                    format!("uid:{}{}", nikaya, number)
-                }
-            } else {
-                // If parsing fails, use the number as-is
-                format!("uid:{}{}", nikaya, number)
-            }
-        } else if nikaya == "thig" {
-            // Parse the number as a verse number
-            if let Ok(verse_num) = number.parse::<u32>() {
-                if let Some(sutta_uid) = thig_verse_to_uid(verse_num) {
-                    format!("uid:{}", sutta_uid)
-                } else {
-                    // If no sutta found, use the number as-is (fallback)
-                    format!("uid:{}{}", nikaya, number)
-                }
-            } else {
-                // If parsing fails, use the number as-is
-                format!("uid:{}{}", nikaya, number)
-            }
+        // Try to convert verse references using the helper function
+        let simple_ref = format!("{}{}", nikaya, number);
+        let replacement = if let Some(converted_uid) = verse_sutta_ref_to_uid(&simple_ref) {
+            // Successfully converted verse reference to proper UID
+            format!("uid:{}", converted_uid)
         } else {
-            // For all other nikayas, use the standard format
+            // Not a verse reference, use the standard format
             format!("uid:{}{}", nikaya, number)
         };
 
@@ -390,6 +356,34 @@ pub fn snp_verse_to_uid(verse_num: u32) -> Option<String> {
         }
     }
     None
+}
+
+/// Convert a verse number reference (e.g., "dhp33", "thag50", "thig12") to its sutta UID
+/// Returns Some(uid) if the reference is a verse number that needs conversion, None otherwise
+pub fn verse_sutta_ref_to_uid(sutta_ref: &str) -> Option<String> {
+    lazy_static! {
+        // Match verse number patterns: dhp123, thag456, thig78
+        // Captures: (1) nikaya prefix (dhp/thag/thig), (2) verse number
+        static ref RE_VERSE_REF: Regex = Regex::new(r"^(dhp|thag|thig)(\d+)$").unwrap();
+    }
+
+    let sutta_ref_lower = sutta_ref.to_lowercase();
+
+    if let Some(caps) = RE_VERSE_REF.captures(&sutta_ref_lower) {
+        let nikaya = caps.get(1)?.as_str();
+        let verse_str = caps.get(2)?.as_str();
+        let verse_num = verse_str.parse::<u32>().ok()?;
+
+        match nikaya {
+            "dhp" => dhp_verse_to_chapter(verse_num),
+            "thag" => thag_verse_to_uid(verse_num),
+            "thig" => thig_verse_to_uid(verse_num),
+            _ => None,
+        }
+    } else {
+        // Not a verse reference pattern, return None
+        None
+    }
 }
 
 pub fn dhammatalks_org_ref_notation_convert(ref_str: &str) -> String {
@@ -2582,5 +2576,53 @@ mod tests {
         assert!(body.contains("This is test content."));
         assert!(!body.contains("<body"));
         assert!(!body.contains("</body>"));
+    }
+
+    #[test]
+    fn test_verse_sutta_ref_to_uid_dhp() {
+        // Test Dhammapada verse number conversions
+        assert_eq!(verse_sutta_ref_to_uid("dhp33"), Some("dhp33-43".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("dhp1"), Some("dhp1-20".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("dhp423"), Some("dhp383-423".to_string())); // Last chapter
+        assert_eq!(verse_sutta_ref_to_uid("dhp100"), Some("dhp100-115".to_string()));
+
+        // Test case insensitivity
+        assert_eq!(verse_sutta_ref_to_uid("DHP33"), Some("dhp33-43".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("Dhp33"), Some("dhp33-43".to_string()));
+    }
+
+    #[test]
+    fn test_verse_sutta_ref_to_uid_thag() {
+        // Test Theragāthā verse number conversions
+        assert_eq!(verse_sutta_ref_to_uid("thag50"), Some("thag1.50".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("thag1"), Some("thag1.1".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("thag120"), Some("thag1.120".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("thag121"), Some("thag2.1".to_string()));
+
+        // Test case insensitivity
+        assert_eq!(verse_sutta_ref_to_uid("THAG50"), Some("thag1.50".to_string()));
+    }
+
+    #[test]
+    fn test_verse_sutta_ref_to_uid_thig() {
+        // Test Therīgāthā verse number conversions
+        assert_eq!(verse_sutta_ref_to_uid("thig12"), Some("thig1.12".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("thig1"), Some("thig1.1".to_string()));
+        assert_eq!(verse_sutta_ref_to_uid("thig18"), Some("thig1.18".to_string()));
+
+        // Test case insensitivity
+        assert_eq!(verse_sutta_ref_to_uid("THIG12"), Some("thig1.12".to_string()));
+    }
+
+    #[test]
+    fn test_verse_sutta_ref_to_uid_non_verse_refs() {
+        // Test that non-verse references return None
+        assert_eq!(verse_sutta_ref_to_uid("dn1"), None);
+        assert_eq!(verse_sutta_ref_to_uid("mn44"), None);
+        assert_eq!(verse_sutta_ref_to_uid("sn56.11"), None);
+        assert_eq!(verse_sutta_ref_to_uid("an4.10"), None);
+        assert_eq!(verse_sutta_ref_to_uid("dhp1-20"), None); // Already a chapter range
+        assert_eq!(verse_sutta_ref_to_uid("thag1.50"), None); // Already a proper UID
+        assert_eq!(verse_sutta_ref_to_uid("not-a-ref"), None);
     }
 }

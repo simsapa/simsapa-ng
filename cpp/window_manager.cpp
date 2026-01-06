@@ -5,6 +5,7 @@
 #include "sutta_languages_window.h"
 #include "library_window.h"
 #include "reference_search_window.h"
+#include "topic_index_window.h"
 #include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
@@ -58,6 +59,11 @@ WindowManager::~WindowManager() {
         auto w = library_windows.takeFirst();
         w->deleteLater();
     }
+
+    while (!topic_index_windows.isEmpty()) {
+        auto w = topic_index_windows.takeFirst();
+        w->deleteLater();
+    }
 }
 
 SuttaSearchWindow* WindowManager::create_sutta_search_window() {
@@ -95,6 +101,12 @@ LibraryWindow* WindowManager::create_library_window() {
 ReferenceSearchWindow* WindowManager::create_reference_search_window() {
     ReferenceSearchWindow* w = new ReferenceSearchWindow(this->m_app);
     reference_search_windows.append(w);
+    return w;
+}
+
+TopicIndexWindow* WindowManager::create_topic_index_window() {
+    TopicIndexWindow* w = new TopicIndexWindow(this->m_app);
+    topic_index_windows.append(w);
     return w;
 }
 

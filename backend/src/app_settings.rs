@@ -6,6 +6,7 @@ use crate::logger::error;
 static PROVIDERS_JSON: &str = include_str!("../../assets/providers.json");
 pub static LANGUAGES_JSON: &str = include_str!("../../assets/languages.json");
 pub static SUTTA_REFERENCE_CONVERTER_JSON: &str = include_str!("../../assets/sutta-reference-converter.json");
+pub static CIPS_GENERAL_INDEX_JSON: &str = include_str!("../../assets/general-index.json");
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModelEntry {

@@ -911,6 +911,16 @@ ${query_text}`;
                 }
             }
 
+            CMenuItem {
+                action: Action {
+                    id: action_topic_index
+                    text: "&Topic Index..."
+                    onTriggered: {
+                        SuttaBridge.open_topic_index_window()
+                    }
+                }
+            }
+
             // CMenuItem {
             //     action: Action {
             //         id: action_sutta_study

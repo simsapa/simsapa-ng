@@ -581,6 +581,71 @@ fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool
     Ok(())
 }
 
+/// Parse CIPS general-index.csv and generate JSON for topic index
+fn parse_cips_index_command(csv_path: &Path, json_path: &Path, db_path: Option<&Path>, minify: bool) -> Result<(), String> {
+    use simsapa_backend::db::appdata_schema::suttas;
+
+    println!("Parsing CIPS general-index.csv...");
+    println!("CSV file: {:?}", csv_path);
+    println!("Output JSON: {:?}", json_path);
+
+    // Check if CSV file exists
+    if !csv_path.exists() {
+        return Err(format!("CSV file not found: {:?}", csv_path));
+    }
+
+    // Create title lookup function
+    let title_lookup: Box<dyn Fn(&str) -> Option<String>> = if let Some(db) = db_path {
+        if !db.exists() {
+            return Err(format!("Database file not found: {:?}", db));
+        }
+
+        // Connect to database for title lookups
+        let mut conn = SqliteConnection::establish(db.to_str().unwrap())
+            .map_err(|e| format!("Failed to connect to database: {}", e))?;
+
+        println!("Using database for sutta title lookup: {:?}", db);
+
+        // Create a HashMap of uid -> title for efficient lookups
+        let mut title_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+
+        // Query all Pāli sutta titles (source_uid = 'ms' for SuttaCentral Pāli)
+        let pali_suttas: Vec<(String, Option<String>)> = suttas::table
+            .select((suttas::uid, suttas::title))
+            .filter(suttas::language.eq("pli"))
+            .filter(suttas::source_uid.eq("ms"))
+            .load(&mut conn)
+            .unwrap_or_default();
+
+        for (uid, title) in pali_suttas {
+            if let Some(t) = title {
+                // Extract just the sutta part from uid (e.g., "mn5/pli/ms" -> "mn5")
+                let sutta_uid = uid.split('/').next().unwrap_or(&uid).to_lowercase();
+                title_map.insert(sutta_uid, t);
+            }
+        }
+
+        println!("Loaded {} Pāli sutta titles from database", title_map.len());
+
+        Box::new(move |uid: &str| {
+            title_map.get(&uid.to_lowercase()).cloned()
+        })
+    } else {
+        println!("No database provided - sutta titles will be empty");
+        Box::new(|_uid: &str| None)
+    };
+
+    // Parse and generate JSON
+    match bootstrap::parse_cips_index::parse_cips_to_json(csv_path, json_path, title_lookup, minify) {
+        Ok(count) => {
+            println!("Successfully parsed {} headwords", count);
+            println!("JSON written to: {:?}", json_path);
+            Ok(())
+        }
+        Err(e) => Err(format!("Failed to parse CIPS index: {}", e)),
+    }
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -733,6 +798,26 @@ enum Commands {
         #[arg(long, value_name = "UID")]
         uid: String,
     },
+
+    /// Parse CIPS general-index.csv and generate JSON for topic index
+    #[command(arg_required_else_help = true)]
+    ParseCipsIndex {
+        /// Path to the CIPS general-index.csv file
+        #[arg(long, value_name = "CSV_PATH")]
+        csv_path: PathBuf,
+
+        /// Path to the output JSON file
+        #[arg(long, value_name = "JSON_PATH")]
+        json_path: PathBuf,
+
+        /// Path to appdata.sqlite3 for sutta title lookup (optional)
+        #[arg(long, value_name = "DB_PATH")]
+        db_path: Option<PathBuf>,
+
+        /// Output minified JSON (no pretty-printing)
+        #[arg(long, default_value_t = false)]
+        minify: bool,
+    },
 }
 
 /// Enum for the different types of queries available.
@@ -753,8 +838,8 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } => {
-            // Skip app data initialization for bootstrap, export, stats, suttacentral, and import commands
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } => {
+            // Skip app data initialization for bootstrap, export, stats, suttacentral, import, and parse commands
         }
         _ => {
             init_app_data();
@@ -851,6 +936,10 @@ fn main() {
 
         Commands::ImportHtml { db_path, html_path, uid } => {
             import_html(&db_path, &html_path, &uid)
+        }
+
+        Commands::ParseCipsIndex { csv_path, json_path, db_path, minify } => {
+            parse_cips_index_command(&csv_path, &json_path, db_path.as_deref(), minify)
         }
     };
 
