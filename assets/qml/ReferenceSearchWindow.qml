@@ -89,262 +89,263 @@ ApplicationWindow {
 
             // Search controls
             Frame {
-            Layout.fillWidth: true
-            Layout.margins: 10
+                Layout.fillWidth: true
+                Layout.margins: 10
 
-            ColumnLayout {
-                width: parent.width
-                spacing: 10
-
-                RowLayout {
-                    Layout.fillWidth: true
+                ColumnLayout {
+                    width: parent.width
                     spacing: 10
 
-                    TextField {
-                        id: search_input
+                    RowLayout {
                         Layout.fillWidth: true
-                        placeholderText: SuttaBridge.sutta_references_loaded ? "E.g.: 'D ii 20', 'M iii 10', 'brahmajala', 'DN 1', 'KN 1'" : "Loading references..."
-                        font.pointSize: root.pointSize
-                        selectByMouse: true
-                        enabled: SuttaBridge.sutta_references_loaded
+                        spacing: 10
 
-                        onTextChanged: {
-                            root.current_query = text;
-                            search_timer.restart();
-                        }
+                        TextField {
+                            id: search_input
+                            Layout.fillWidth: true
+                            placeholderText: SuttaBridge.sutta_references_loaded ? "E.g.: 'D ii 20', 'M iii 10', 'brahmajala', 'DN 1', 'KN 1'" : "Loading references..."
+                            font.pointSize: root.pointSize
+                            selectByMouse: true
+                            enabled: SuttaBridge.sutta_references_loaded
 
-                        Keys.onReturnPressed: {
-                            search_timer.stop();
-                            root.perform_search();
-                        }
-                    }
-
-                    ComboBox {
-                        id: field_selector
-                        model: ["PTS Ref", "DPR Ref", "Title", "Sutta Ref"]
-                        currentIndex: 0
-                        font.pointSize: root.pointSize
-                        enabled: SuttaBridge.sutta_references_loaded
-
-                        onCurrentIndexChanged: {
-                            const field_map = {
-                                0: "pts_reference",
-                                1: "dpr_reference",
-                                2: "title_pali",
-                                3: "sutta_ref"
-                            };
-                            root.current_field = field_map[currentIndex];
-                            if (root.current_query.length > 0) {
+                            onTextChanged: {
+                                root.current_query = text;
                                 search_timer.restart();
                             }
+
+                            Keys.onReturnPressed: {
+                                search_timer.stop();
+                                root.perform_search();
+                            }
+                        }
+
+                        ComboBox {
+                            id: field_selector
+                            model: ["PTS Ref", "DPR Ref", "Title", "Sutta Ref"]
+                            currentIndex: 0
+                            font.pointSize: root.pointSize
+                            enabled: SuttaBridge.sutta_references_loaded
+
+                            onCurrentIndexChanged: {
+                                const field_map = {
+                                    0: "pts_reference",
+                                    1: "dpr_reference",
+                                    2: "title_pali",
+                                    3: "sutta_ref"
+                                };
+                                root.current_field = field_map[currentIndex];
+                                if (root.current_query.length > 0) {
+                                    search_timer.restart();
+                                }
+                            }
+                        }
+                    }
+
+                    CheckBox {
+                        id: open_in_new_window_checkbox
+                        text: "Open in new window"
+                        font.pointSize: root.pointSize
+                        checked: root.open_in_new_window
+
+                        onCheckedChanged: {
+                            root.open_in_new_window = checked;
                         }
                     }
                 }
-
-                CheckBox {
-                    id: open_in_new_window_checkbox
-                    text: "Open in new window"
-                    font.pointSize: root.pointSize
-                    checked: root.open_in_new_window
-
-                    onCheckedChanged: {
-                        root.open_in_new_window = checked;
-                    }
-                }
             }
-        }
 
-        // Results area
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            contentWidth: availableWidth
-            clip: true
+            // Results area
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
 
-            ColumnLayout {
-                width: parent.width
-                spacing: 0
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 0
 
-                // Empty state
-                Item {
-                    visible: root.current_query.length === 0
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: 200
+                    // Empty state
+                    Item {
+                        visible: root.current_query.length === 0
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.preferredHeight: 200
 
-                    ColumnLayout {
-                        anchors.centerIn: parent
-                        width: parent.width * 0.8
-                        spacing: 15
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            width: parent.width * 0.8
+                            spacing: 15
+
+                            Label {
+                                text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Sutta Ref (e.g., 'DN 1')"
+                                font.pointSize: root.pointSize
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+
+                    // No results state
+                    Item {
+                        visible: root.current_query.length > 0 && root.search_results.length === 0 && !root.is_searching
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.preferredHeight: 200
 
                         Label {
-                            text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Sutta Ref (e.g., 'DN 1')"
-                            font.pointSize: root.pointSize
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
+                            anchors.centerIn: parent
+                            text: root.current_query.length < 3 ? "Enter at least 3 characters" : "No results found"
+                            font.pointSize: root.largePointSize
                         }
                     }
-                }
 
-                // No results state
-                Item {
-                    visible: root.current_query.length > 0 && root.search_results.length === 0 && !root.is_searching
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.preferredHeight: 200
+                    // Results list
+                    ColumnLayout {
+                        visible: root.search_results.length > 0
+                        Layout.fillWidth: true
+                        spacing: 5
 
-                    Label {
-                        anchors.centerIn: parent
-                        text: root.current_query.length < 3 ? "Enter at least 3 characters" : "No results found"
-                        font.pointSize: root.largePointSize
-                    }
-                }
+                        Label {
+                            text: `Found ${root.search_results.length} ${root.search_results.length === 1 ? 'entry' : 'entries'}`
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            Layout.leftMargin: 10
+                            Layout.topMargin: 10
+                        }
 
-                // Results list
-                ColumnLayout {
-                    visible: root.search_results.length > 0
-                    Layout.fillWidth: true
-                    spacing: 5
+                        Repeater {
+                            model: root.search_results
 
-                    Label {
-                        text: `Found ${root.search_results.length} ${root.search_results.length === 1 ? 'entry' : 'entries'}`
-                        font.pointSize: root.pointSize
-                        font.bold: true
-                        Layout.leftMargin: 10
-                        Layout.topMargin: 10
-                    }
+                            delegate: Frame {
+                                id: result_frame
+                                required property var modelData
 
-                    Repeater {
-                        model: root.search_results
+                                // Extract and store the full UID from database
+                                readonly property string partial_uid: root.extract_uid_from_url(modelData.url || "")
+                                readonly property string full_uid: SuttaBridge.get_full_sutta_uid(partial_uid)
+                                readonly property bool exists_in_db: full_uid.length > 0 && full_uid !== partial_uid
 
-                        delegate: Frame {
-                            id: result_frame
-                            required property var modelData
+                                Layout.fillWidth: true
+                                Layout.margins: 5
 
-                            // Extract and store the full UID from database
-                            readonly property string partial_uid: root.extract_uid_from_url(modelData.url || "")
-                            readonly property string full_uid: SuttaBridge.get_full_sutta_uid(partial_uid)
-                            readonly property bool exists_in_db: full_uid.length > 0 && full_uid !== partial_uid
-
-                            Layout.fillWidth: true
-                            Layout.margins: 5
-
-                            background: Rectangle {
-                                color: palette.base
-                                border.color: palette.shadow
-                                border.width: 1
-                                radius: 4
-                            }
-
-                            ColumnLayout {
-                                width: parent.width
-                                spacing: 8
-
-                                // Reference codes and metadata - wrappable row
-                                Flow {
-                                    Layout.fillWidth: true
-                                    spacing: 10
-
-                                    Label {
-                                        text: result_frame.modelData.sutta_ref || ""
-                                        font.pointSize: root.pointSize
-                                        font.bold: true
-                                    }
-
-                                    Label {
-                                        text: result_frame.modelData.pts_reference || ""
-                                        font.pointSize: root.pointSize
-                                        color: palette.link
-                                        visible: (result_frame.modelData.pts_reference || "").length > 0
-                                    }
-
-                                    Label {
-                                        text: result_frame.modelData.title_pali || ""
-                                        font.pointSize: root.pointSize
-                                        wrapMode: Text.WordWrap
-                                        /* Layout.fillWidth: true */
-                                        visible: (result_frame.modelData.title_pali || "").length > 0
-                                    }
-
-                                    Label {
-                                        text: {
-                                            const start = result_frame.modelData.pts_start_page;
-                                            const end = result_frame.modelData.pts_end_page;
-                                            if (start !== null && start !== undefined && end !== null && end !== undefined) {
-                                                return `(pp. ${start}–${end})`;
-                                            }
-                                            return "";
-                                        }
-                                        font.pointSize: root.pointSize - 1
-                                        color: palette.mid
-                                        visible: text.length > 0
-                                    }
-
-                                    Label {
-                                        text: {
-                                            const ed = result_frame.modelData.edition;
-                                            return (ed && ed.length > 0) ? `[${ed}]` : "";
-                                        }
-                                        font.pointSize: root.pointSize - 1
-                                        color: palette.mid
-                                        visible: text.length > 0
-                                    }
-
-                                    Label {
-                                        text: {
-                                            const dpr = result_frame.modelData.dpr_reference;
-                                            return (dpr && dpr.length > 0) ? `DPR: ${dpr}` : "";
-                                        }
-                                        font.pointSize: root.pointSize - 1
-                                        color: palette.mid
-                                        visible: text.length > 0
-                                    }
+                                background: Rectangle {
+                                    color: palette.base
+                                    border.color: palette.shadow
+                                    border.width: 1
+                                    radius: 4
                                 }
 
-                                // Database status and actions
-                                RowLayout {
-                                    Layout.fillWidth: true
-                                    spacing: 10
+                                ColumnLayout {
+                                    width: parent.width
+                                    spacing: 8
 
-                                    Label {
-                                        id: status_label
-                                        text: result_frame.exists_in_db ? "" : "(Not found in database)"
-                                        font.pointSize: root.pointSize - 2
-                                        visible: text.length > 0
-                                    }
+                                    // Reference codes and metadata - wrappable row
+                                    Flow {
+                                        Layout.fillWidth: true
+                                        spacing: 10
 
-                                    Item { Layout.fillWidth: true }
+                                        Label {
+                                            text: result_frame.modelData.sutta_ref || ""
+                                            font.pointSize: root.pointSize
+                                            font.bold: true
+                                        }
 
-                                    Button {
-                                        text: "Copy URL"
-                                        font.pointSize: root.pointSize - 2
-                                        enabled: result_frame.exists_in_db
-                                        onClicked: {
-                                            // Get the partial UID and create pli/ms URL
-                                            const partial_uid = result_frame.full_uid.split('/')[0];
-                                            const pli_ms_uid = partial_uid + "/pli/ms";
-                                            const sc_url = "https://suttacentral.net/" + pli_ms_uid;
-                                            plain_clipboard.copy_text(sc_url);
+                                        Label {
+                                            text: result_frame.modelData.pts_reference || ""
+                                            font.pointSize: root.pointSize
+                                            color: palette.link
+                                            visible: (result_frame.modelData.pts_reference || "").length > 0
+                                        }
+
+                                        Label {
+                                            text: result_frame.modelData.title_pali || ""
+                                            font.pointSize: root.pointSize
+                                            wrapMode: Text.WordWrap
+                                            /* Layout.fillWidth: true */
+                                            visible: (result_frame.modelData.title_pali || "").length > 0
+                                        }
+
+                                        Label {
+                                            text: {
+                                                const start = result_frame.modelData.pts_start_page;
+                                                const end = result_frame.modelData.pts_end_page;
+                                                if (start !== null && start !== undefined && end !== null && end !== undefined) {
+                                                    return `(pp. ${start}–${end})`;
+                                                }
+                                                return "";
+                                            }
+                                            font.pointSize: root.pointSize - 1
+                                            color: palette.mid
+                                            visible: text.length > 0
+                                        }
+
+                                        Label {
+                                            text: {
+                                                const ed = result_frame.modelData.edition;
+                                                return (ed && ed.length > 0) ? `[${ed}]` : "";
+                                            }
+                                            font.pointSize: root.pointSize - 1
+                                            color: palette.mid
+                                            visible: text.length > 0
+                                        }
+
+                                        Label {
+                                            text: {
+                                                const dpr = result_frame.modelData.dpr_reference;
+                                                return (dpr && dpr.length > 0) ? `DPR: ${dpr}` : "";
+                                            }
+                                            font.pointSize: root.pointSize - 1
+                                            color: palette.mid
+                                            visible: text.length > 0
                                         }
                                     }
 
-                                    Button {
-                                        text: "Copy Link"
-                                        font.pointSize: root.pointSize - 2
-                                        enabled: result_frame.exists_in_db
-                                        onClicked: {
-                                            root.copy_sutta_link(result_frame.full_uid, result_frame.modelData);
-                                        }
-                                    }
+                                    // Database status and actions
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 10
 
-                                    Button {
-                                        id: open_button
-                                        text: "Open"
-                                        font.pointSize: root.pointSize - 2
-                                        enabled: result_frame.exists_in_db
-                                        onClicked: {
-                                            root.open_sutta(result_frame.full_uid);
+                                        Label {
+                                            id: status_label
+                                            text: result_frame.exists_in_db ? "" : "(Not found in database)"
+                                            font.pointSize: root.pointSize - 2
+                                            visible: text.length > 0
+                                        }
+
+                                        Item { Layout.fillWidth: true }
+
+                                        Button {
+                                            text: "Copy URL"
+                                            font.pointSize: root.pointSize - 2
+                                            enabled: result_frame.exists_in_db
+                                            onClicked: {
+                                                // Get the partial UID and create pli/ms URL
+                                                const partial_uid = result_frame.full_uid.split('/')[0];
+                                                const pli_ms_uid = partial_uid + "/pli/ms";
+                                                const sc_url = "https://suttacentral.net/" + pli_ms_uid;
+                                                plain_clipboard.copy_text(sc_url);
+                                            }
+                                        }
+
+                                        Button {
+                                            text: "Copy Link"
+                                            font.pointSize: root.pointSize - 2
+                                            enabled: result_frame.exists_in_db
+                                            onClicked: {
+                                                root.copy_sutta_link(result_frame.full_uid, result_frame.modelData);
+                                            }
+                                        }
+
+                                        Button {
+                                            id: open_button
+                                            text: "Open"
+                                            font.pointSize: root.pointSize - 2
+                                            enabled: result_frame.exists_in_db
+                                            onClicked: {
+                                                root.open_sutta(result_frame.full_uid);
+                                            }
                                         }
                                     }
                                 }
@@ -353,7 +354,6 @@ ApplicationWindow {
                     }
                 }
             }
-        }
 
             // Close button
             RowLayout {
