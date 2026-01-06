@@ -281,10 +281,75 @@ fn extract_xref_target(locator: &str) -> String {
     locator.replace("xref ", "").trim().to_string()
 }
 
+/// Check if a locator is in CUSTOM format.
+/// Format: "CUSTOM:Label:Title:URL" where URL contains the sutta ref
+fn is_custom_format(locator: &str) -> bool {
+    locator.starts_with("CUSTOM:")
+}
+
+/// Parse CUSTOM format locator to extract sutta reference.
+/// Format: "CUSTOM:Dhp:Dhp Chapter 3:suttacentral.net/dhp33-43/en/sujato"
+/// Returns: "dhp33-43"
+fn parse_custom_locator(locator: &str) -> Option<String> {
+    if !is_custom_format(locator) {
+        return None;
+    }
+
+    // Split by colon to get parts
+    let parts: Vec<&str> = locator.split(':').collect();
+
+    // We need at least 4 parts: CUSTOM, Label, Title, URL...
+    if parts.len() < 4 {
+        eprintln!("Warning: Invalid CUSTOM format (not enough parts): {}", locator);
+        return None;
+    }
+
+    // The URL is everything after the third colon
+    // "CUSTOM:Dhp:Dhp Chapter 3:suttacentral.net/dhp33-43/en/sujato"
+    //   0     1   2             3 (URL starts here)
+    let url_start = 3;
+    let url_parts: Vec<&str> = parts[url_start..].to_vec();
+    let url = url_parts.join(":");
+
+    // Extract sutta ref from URL
+    // Expected format: "suttacentral.net/dhp33-43/en/sujato"
+    // We want just the sutta UID: "dhp33-43"
+
+    // First, remove the domain if present
+    let path = if url.contains('/') {
+        // Split by '/' and get the parts after the domain
+        let path_parts: Vec<&str> = url.split('/').collect();
+        // Find first non-domain part (should be the sutta ref)
+        path_parts.iter()
+            .skip(1) // Skip domain
+            .next()
+            .unwrap_or(&"")
+            .to_string()
+    } else {
+        url.clone()
+    };
+
+    if path.is_empty() {
+        eprintln!("Warning: Could not extract sutta ref from CUSTOM URL: {}", locator);
+        return None;
+    }
+
+    Some(path)
+}
+
 /// Parse a locator into a sutta reference.
 /// Preserves the segment ID for navigation.
 /// "DN33:1.11.0" → "dn33:1.11.0"
+/// "CUSTOM:Dhp:Title:suttacentral.net/dhp33-43/en/sujato" → "dhp33-43"
 fn parse_sutta_ref(locator: &str) -> String {
+    // Check for CUSTOM format first
+    if is_custom_format(locator) {
+        if let Some(sutta_ref) = parse_custom_locator(locator) {
+            return sutta_ref.to_lowercase();
+        }
+    }
+
+    // Standard format
     locator.to_lowercase()
 }
 
@@ -632,5 +697,43 @@ mod tests {
         assert_eq!(sutta_ref_to_uid("dn33:1.11.0"), "dn33");
         assert_eq!(sutta_ref_to_uid("mn5"), "mn5");
         assert_eq!(sutta_ref_to_uid("an4.10"), "an4.10");
+    }
+
+    #[test]
+    fn test_is_custom_format() {
+        assert!(is_custom_format("CUSTOM:Dhp:Dhp Chapter 3:suttacentral.net/dhp33-43/en/sujato"));
+        assert!(!is_custom_format("DN33:1.11.0"));
+        assert!(!is_custom_format("xref abandoning"));
+    }
+
+    #[test]
+    fn test_parse_custom_locator() {
+        // Standard CUSTOM format
+        assert_eq!(
+            parse_custom_locator("CUSTOM:Dhp:Dhp Chapter 3:suttacentral.net/dhp33-43/en/sujato"),
+            Some("dhp33-43".to_string())
+        );
+
+        // CUSTOM format with different sutta
+        assert_eq!(
+            parse_custom_locator("CUSTOM:Thag:Theragāthā 1.50:suttacentral.net/thag1.50/en/sujato"),
+            Some("thag1.50".to_string())
+        );
+
+        // Non-CUSTOM format returns None
+        assert_eq!(parse_custom_locator("DN33:1.11.0"), None);
+    }
+
+    #[test]
+    fn test_parse_sutta_ref_custom_format() {
+        // CUSTOM format should extract sutta ref
+        assert_eq!(
+            parse_sutta_ref("CUSTOM:Dhp:Dhp Chapter 3:suttacentral.net/dhp33-43/en/sujato"),
+            "dhp33-43"
+        );
+
+        // Standard format should work as before
+        assert_eq!(parse_sutta_ref("DN33:1.11.0"), "dn33:1.11.0");
+        assert_eq!(parse_sutta_ref("MN5"), "mn5");
     }
 }
