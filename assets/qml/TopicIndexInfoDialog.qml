@@ -30,94 +30,93 @@ ApplicationWindow {
         theme_helper.apply();
     }
 
-    ColumnLayout {
-        spacing: 0
+    Frame {
         anchors.fill: parent
-        anchors.topMargin: root.top_bar_margin
-        anchors.leftMargin: 10
-        anchors.rightMargin: 10
 
-        // Scrollable content area
-        ScrollView {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            contentWidth: availableWidth
-            clip: true
+        ColumnLayout {
+            spacing: 0
+            anchors.fill: parent
+            anchors.topMargin: root.top_bar_margin
 
-            ColumnLayout {
-                width: parent.width
-                spacing: 5
+            // Scrollable content area
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
 
-                Text {
-                    Layout.fillWidth: true
-                    text: `
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 5
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: `
 <p><b>CIPS - Comprehensive Index of Pāli Suttas</b></p>
-
 <p>An index of topics, words, people, similes, and titles found in the suttas of
-the Pāli canon of the Theravada Buddhist tradition.</p>
-`
-                    font.pointSize: root.pointSize + 2
-                    color: palette.text
-                    wrapMode: Text.Wrap
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    text: `<a href="https://index.readingfaithfully.org">https://index.readingfaithfully.org</a>`
-                    font.pointSize: root.pointSize
-                    color: palette.link
-                    wrapMode: Text.Wrap
-                    onLinkActivated: (link) => Qt.openUrlExternally(link)
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Qt.openUrlExternally("https://index.readingfaithfully.org")
+the Pāli canon of the Theravada Buddhist tradition.</p>`
+                        font.pointSize: root.pointSize + 2
+                        color: palette.text
+                        wrapMode: Text.Wrap
                     }
-                }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: `<a href="https://index.readingfaithfully.org">https://index.readingfaithfully.org</a>`
+                        font.pointSize: root.pointSize
+                        color: palette.link
+                        wrapMode: Text.Wrap
+                        onLinkActivated: (link) => Qt.openUrlExternally(link)
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Qt.openUrlExternally("https://index.readingfaithfully.org")
+                        }
+                    }
 
 
-                Text {
-                    Layout.fillWidth: true
-                    text: `
+                    Text {
+                        Layout.fillWidth: true
+                        text: `
 <p>This is a first draft of an index of the Sutta Piṭaka.</p>
 <p>To report missing or incorrect information, please use the contact form:</p>
-<p><a href="https://readingfaithfully.org/contact/">https://readingfaithfully.org/contact/</a></p>
-`
-                    font.pointSize: root.pointSize
-                    color: palette.text
-                    wrapMode: Text.Wrap
-                    onLinkActivated: (link) => Qt.openUrlExternally(link)
+<p><a href="https://readingfaithfully.org/contact/">https://readingfaithfully.org/contact/</a></p>`
+                        font.pointSize: root.pointSize
+                        color: palette.text
+                        wrapMode: Text.Wrap
+                        onLinkActivated: (link) => Qt.openUrlExternally(link)
 
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: Qt.openUrlExternally("https://readingfaithfully.org/contact/")
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Qt.openUrlExternally("https://readingfaithfully.org/contact/")
+                        }
+                    }
+
+                    Item {
+                        Layout.fillHeight: true
                     }
                 }
+            }
 
-                Item {
-                    Layout.fillHeight: true
+            // Fixed button area at the bottom
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 20
+                // Extra space on mobile to avoid the bottom bar covering the button.
+                Layout.bottomMargin: root.is_mobile ? 60 : 20
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: "Close"
+                    font.pointSize: root.pointSize
+                    onClicked: root.close()
                 }
+
+                Item { Layout.fillWidth: true }
             }
-        }
-
-        // Fixed button area at the bottom
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.margins: 20
-            // Extra space on mobile to avoid the bottom bar covering the button.
-            Layout.bottomMargin: root.is_mobile ? 60 : 20
-
-            Item { Layout.fillWidth: true }
-
-            Button {
-                text: "Close"
-                font.pointSize: root.pointSize
-                onClicked: root.close()
-            }
-
-            Item { Layout.fillWidth: true }
         }
     }
 }
