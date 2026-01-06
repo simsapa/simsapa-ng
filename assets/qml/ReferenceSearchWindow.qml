@@ -79,13 +79,16 @@ ApplicationWindow {
         }
     }
 
-    ColumnLayout {
+    Frame {
         anchors.fill: parent
         anchors.topMargin: root.top_bar_margin
-        spacing: 0
 
-        // Search controls
-        Frame {
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 0
+
+            // Search controls
+            Frame {
             Layout.fillWidth: true
             Layout.margins: 10
 
@@ -352,23 +355,41 @@ ApplicationWindow {
             }
         }
 
-        // Close button
-        RowLayout {
-            visible: root.is_desktop
-            Layout.fillWidth: true
-            Layout.margins: 10
+            // Close button
+            RowLayout {
+                visible: root.is_desktop
+                Layout.fillWidth: true
+                Layout.margins: 10
 
-            Item { Layout.fillWidth: true }
+                Item { Layout.fillWidth: true }
 
-            Button {
-                text: "Close"
-                font.pointSize: root.pointSize
-                onClicked: {
-                    root.close();
+                Button {
+                    text: "Close"
+                    font.pointSize: root.pointSize
+                    onClicked: {
+                        root.close();
+                    }
                 }
+
+                Item { Layout.fillWidth: true }
             }
 
-            Item { Layout.fillWidth: true }
+            ColumnLayout {
+                visible: root.is_mobile
+                Layout.fillWidth: true
+                Layout.margins: 10
+                // Extra space on mobile to avoid the bottom bar covering the button.
+                Layout.bottomMargin: 60
+                spacing: 10
+
+                Button {
+                    text: "Close"
+                    Layout.fillWidth: true
+                    onClicked: {
+                        root.close();
+                    }
+                }
+            }
         }
     }
 
