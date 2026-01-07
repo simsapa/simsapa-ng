@@ -227,6 +227,22 @@ ApplicationWindow {
                 Layout.margins: 10
                 spacing: 10
 
+                Rectangle {
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    radius: 16
+                    color: "white"
+                    border.width: 1
+                    border.color: palette.mid
+
+                    Image {
+                        source: "icons/64x64/favicon-index-thicker64.png"
+                        width: 20
+                        height: 20
+                        anchors.centerIn: parent
+                    }
+                }
+
                 Button {
                     text: "Info"
                     font.pointSize: root.pointSize
@@ -261,7 +277,7 @@ ApplicationWindow {
                     TextField {
                         id: search_input
                         Layout.fillWidth: true
-                        placeholderText: root.is_loading ? "Loading..." : "Search topics (min. 3 characters)"
+                        placeholderText: root.is_loading ? "Loading..." : "Search: e.g. mind citta = mind AND citta"
                         font.pointSize: root.pointSize
                         selectByMouse: true
                         enabled: !root.is_loading
@@ -429,7 +445,8 @@ ApplicationWindow {
                                                 }
                                                 font.pointSize: root.pointSize
                                                 font.italic: modelData.type === "xref"
-                                                color: modelData.type === "xref" ? palette.text : palette.link
+                                                font.bold: modelData.type === "xref"
+                                                color: modelData.type === "xref" ? (root.is_dark ? "#59AC77" : "#3A6F43") : palette.link
 
                                                 // Dashed underline for sutta links
                                                 Rectangle {

@@ -101,5 +101,6 @@
     <file>icons/32x32/material-symbols--list-alt-outline.png</file>
     <file>icons/32x32/ion--trash-outline.png</file>
     <file>icons/32x32/mdi--hamburger-menu.png</file>
+    <file>icons/64x64/favicon-index-thicker64.png</file>
   </qresource>
 </RCC>

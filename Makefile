@@ -22,7 +22,8 @@ sass:
 sass-watch:
 	sass --no-source-map --watch './assets/sass/:./assets/css/'
 
-parse-cips: cd cli && cargo run -- parse-cips-index --csv-path ../CIPS/src/data/general-index.csv --json-path ../assets/general-index.json --db-path ../../bootstrap-assets-resources/dist/simsapa-ng/app-assets/appdata.sqlite3 --minify
+parse-cips:
+	cd cli && cargo run -- parse-cips-index --csv-path ../../src-lib/CIPS/src/data/general-index.csv --json-path ../assets/general-index.json --db-path ../../bootstrap-assets-resources/dist/simsapa-ng/app-assets/appdata.sqlite3 --minify
 
 count-code:
 	tokei --types Rust,QML,C++,TypeScript,Javascript,CMake --compact --exclude assets/qml/data/ --exclude assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml --exclude assets/js/simsapa.min.js --exclude assets/js/vendor/ --exclude assets/pdf-viewer/ --exclude assets/dpd-res/ --exclude backend/src/lookup.rs --exclude "*/tests/" --exclude "tst_*.qml" . | grep -vE '===|---'
