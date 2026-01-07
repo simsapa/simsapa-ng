@@ -29,7 +29,7 @@ redist/
 appimage-tools/
 Simsapa.AppDir/
 
-.qtcreator/CMakeLists.txt.user
+.qtcreator/
 
 simsapa-legacy/
 simsapa-extensions-and-plugins/
