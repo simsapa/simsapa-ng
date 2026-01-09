@@ -447,26 +447,7 @@ ApplicationWindow {
                                                 font.italic: modelData.type === "xref"
                                                 font.bold: modelData.type === "xref"
                                                 color: modelData.type === "xref" ? (root.is_dark ? "#59AC77" : "#3A6F43") : palette.link
-
-                                                // Dashed underline for sutta links
-                                                Rectangle {
-                                                    anchors.bottom: parent.bottom
-                                                    anchors.left: parent.left
-                                                    anchors.right: parent.right
-                                                    height: 1
-                                                    visible: modelData.type === "sutta"
-                                                    color: palette.link
-                                                    // Create dashed effect
-                                                    Repeater {
-                                                        model: Math.ceil(parent.width / 6)
-                                                        Rectangle {
-                                                            x: index * 6
-                                                            width: 3
-                                                            height: 1
-                                                            color: palette.link
-                                                        }
-                                                    }
-                                                }
+                                                font.underline: modelData.type === "sutta"
 
                                                 MouseArea {
                                                     anchors.fill: parent
