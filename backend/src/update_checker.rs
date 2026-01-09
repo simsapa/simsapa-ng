@@ -31,6 +31,8 @@ use std::time::Duration;
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::logger::info;
+
 /// Behaviour for saving statistics when fetching releases info.
 ///
 /// This enum controls whether system information is sent to the server
@@ -510,6 +512,7 @@ pub fn collect_system_info(screen_size: Option<&str>, save_stats_behaviour: Save
 /// println!("Latest app version: {}", info.application.releases[0].version_tag);
 /// ```
 pub fn fetch_releases_info(screen_size: Option<&str>, save_stats_behaviour: SaveStatsBehaviour) -> Result<ReleasesInfo> {
+    info("fetch_releases_info()");
     let params = collect_system_info(screen_size, save_stats_behaviour);
 
     let client = reqwest::blocking::Client::builder()
