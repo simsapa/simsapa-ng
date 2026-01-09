@@ -7,7 +7,6 @@ Item {
 
     property bool db_loaded: false;
     property bool sutta_references_loaded: false;
-    property bool updates_checked: false;
     property bool topic_index_loaded: false;
     property var dpd_lookup_test_data: ({})
 
@@ -651,6 +650,15 @@ Item {
 
     function set_notify_about_simsapa_updates(enabled: bool) {
         console.log("set_notify_about_simsapa_updates():", enabled);
+    }
+
+    function get_updates_checked(): bool {
+        console.log("get_updates_checked()");
+        return false;
+    }
+
+    function set_updates_checked(checked: bool) {
+        console.log("set_updates_checked():", checked);
     }
 
     function prepare_for_database_upgrade() {

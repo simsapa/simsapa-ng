@@ -73,7 +73,6 @@ pub mod qobject {
         #[qml_singleton]
         #[qproperty(bool, db_loaded)]
         #[qproperty(bool, sutta_references_loaded)]
-        #[qproperty(bool, updates_checked)]
         #[qproperty(bool, topic_index_loaded)]
         #[namespace = "sutta_bridge"]
         type SuttaBridge = super::SuttaBridgeRust;
@@ -503,6 +502,12 @@ pub mod qobject {
         fn set_notify_about_simsapa_updates(self: Pin<&mut SuttaBridge>, enabled: bool);
 
         #[qinvokable]
+        fn get_updates_checked(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_updates_checked(self: &SuttaBridge, checked: bool);
+
+        #[qinvokable]
         fn prepare_for_database_upgrade(self: &SuttaBridge);
 
         #[qinvokable]
@@ -544,8 +549,6 @@ pub mod qobject {
 pub struct SuttaBridgeRust {
     db_loaded: bool,
     sutta_references_loaded: bool,
-    /// Flag to track if update check has already been performed in this session
-    updates_checked: bool,
     /// Flag to track if topic index has been loaded
     topic_index_loaded: bool,
 }
@@ -555,7 +558,6 @@ impl Default for SuttaBridgeRust {
         Self {
             db_loaded: false,
             sutta_references_loaded: false,
-            updates_checked: false,
             topic_index_loaded: false,
         }
     }
@@ -2594,6 +2596,20 @@ impl qobject::SuttaBridge {
     pub fn set_notify_about_simsapa_updates(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_notify_about_simsapa_updates(enabled);
+    }
+
+    /// Get whether updates have already been checked in this session.
+    pub fn get_updates_checked(&self) -> bool {
+        use std::sync::atomic::Ordering;
+        let globals = get_app_globals();
+        globals.updates_checked.load(Ordering::Relaxed)
+    }
+
+    /// Set whether updates have been checked in this session.
+    pub fn set_updates_checked(&self, checked: bool) {
+        use std::sync::atomic::Ordering;
+        let globals = get_app_globals();
+        globals.updates_checked.store(checked, Ordering::Relaxed);
     }
 
     /// Prepare for database upgrade by exporting user data and creating marker files.

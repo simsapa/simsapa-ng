@@ -1109,8 +1109,8 @@ ${query_text}`;
         interval: 500
         repeat: false
         onTriggered: {
-            if (!SuttaBridge.updates_checked) {
-                SuttaBridge.updates_checked = true;
+            if (!SuttaBridge.get_updates_checked()) {
+                SuttaBridge.set_updates_checked(true);
                 if (SuttaBridge.get_notify_about_simsapa_updates()) {
                     SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight, "determine");
                 }

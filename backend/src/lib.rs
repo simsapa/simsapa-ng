@@ -33,6 +33,7 @@ use std::fs::{self, File, create_dir_all, remove_dir_all};
 use std::path::{Path, PathBuf};
 use std::error::Error;
 use std::sync::OnceLock;
+use std::sync::atomic::AtomicBool;
 use std::net::{TcpListener, SocketAddr};
 
 use app_dirs::{get_app_root, AppDataType, AppInfo};
@@ -154,6 +155,7 @@ pub struct AppGlobals {
     pub api_url: String,
     pub paths: AppGlobalPaths,
     pub save_stats: bool,
+    pub updates_checked: AtomicBool,
 }
 
 #[derive(Debug)]
@@ -213,6 +215,7 @@ impl AppGlobals {
             api_url,
             paths,
             save_stats,
+            updates_checked: AtomicBool::new(false),
         }
     }
 
