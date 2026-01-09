@@ -129,6 +129,7 @@ pub fn get_headwords_for_letter(letter: &str) -> Vec<TopicIndexHeadword> {
 }
 
 /// Search headwords and sub-entries with case-insensitive partial matching.
+/// Multiple terms are split on spaces and matched with AND logic.
 ///
 /// # Arguments
 /// * `query` - The search query (minimum 3 characters for meaningful results)
@@ -142,7 +143,7 @@ pub fn search_headwords(query: &str) -> Vec<TopicIndexHeadword> {
 
     let index = load_topic_index();
     let query_lower = query.to_lowercase();
-    let query_latinized = latinize(&query_lower);
+    let terms: Vec<&str> = query_lower.split_whitespace().collect();
 
     let mut results: Vec<TopicIndexHeadword> = Vec::new();
 
@@ -151,18 +152,23 @@ pub fn search_headwords(query: &str) -> Vec<TopicIndexHeadword> {
             let headword_lower = headword.headword.to_lowercase();
             let headword_latinized = latinize(&headword_lower);
 
-            // Check if headword matches
-            let headword_matches = headword_lower.contains(&query_lower)
-                || headword_latinized.contains(&query_latinized);
+            // Check if headword matches all terms
+            let headword_matches = terms.iter().all(|&term| {
+                let term_latinized = latinize(term);
+                headword_lower.contains(term) || headword_latinized.contains(&term_latinized)
+            });
 
-            // Check if any sub-entry matches
+            // Check if any sub-entry matches all terms
             let matching_entries: Vec<TopicIndexEntry> = headword
                 .entries
                 .iter()
                 .filter(|entry| {
                     let sub_lower = entry.sub.to_lowercase();
                     let sub_latinized = latinize(&sub_lower);
-                    sub_lower.contains(&query_lower) || sub_latinized.contains(&query_latinized)
+                    terms.iter().all(|&term| {
+                        let term_latinized = latinize(term);
+                        sub_lower.contains(term) || sub_latinized.contains(&term_latinized)
+                    })
                 })
                 .cloned()
                 .collect();
@@ -339,6 +345,17 @@ mod tests {
         // Search with fewer than 3 characters should return empty
         let results = search_headwords("ab");
         assert!(results.is_empty());
+
+        // Search for multi-term query with AND logic
+        let results = search_headwords("abandoning pajahati");
+        assert!(!results.is_empty());
+
+        // Test multi-term search for "mind (citta)" headword with different term orders
+        let results_mind_citta = search_headwords("mind citta");
+        assert!(results_mind_citta.iter().any(|h| h.headword == "mind (citta)"));
+
+        let results_citta_mind = search_headwords("citta mind");
+        assert!(results_citta_mind.iter().any(|h| h.headword == "mind (citta)"));
     }
 
     #[test]
