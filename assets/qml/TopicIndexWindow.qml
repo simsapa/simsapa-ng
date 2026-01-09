@@ -437,7 +437,7 @@ ApplicationWindow {
 
                                                 text: {
                                                     if (modelData.type === "xref") {
-                                                        return "see: " + modelData.ref_target;
+                                                        return "• see: " + modelData.ref_target;
                                                     } else {
                                                         const formatted_ref = root.format_sutta_ref(modelData.sutta_ref);
                                                         return modelData.title ? formatted_ref + " " + modelData.title : formatted_ref;
