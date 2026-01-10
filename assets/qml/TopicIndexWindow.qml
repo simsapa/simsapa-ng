@@ -277,7 +277,7 @@ ApplicationWindow {
                     TextField {
                         id: search_input
                         Layout.fillWidth: true
-                        placeholderText: root.is_loading ? "Loading..." : "Search: e.g. mind water = mind AND water"
+                        placeholderText: root.is_loading ? "Loading..." : "Search: e.g. mind simile = mind AND simile"
                         font.pointSize: root.pointSize
                         selectByMouse: true
                         enabled: !root.is_loading
