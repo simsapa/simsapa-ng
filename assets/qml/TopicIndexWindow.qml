@@ -19,6 +19,7 @@ ApplicationWindow {
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
+    readonly property string match_bg: root.is_dark ? "#007A31" : "#F6E600"
     readonly property int pointSize: is_mobile ? 16 : 12
     readonly property int largePointSize: pointSize + 2
     property int top_bar_margin: is_mobile ? 24 : 5
@@ -212,6 +213,36 @@ ApplicationWindow {
         }
     }
 
+    function highlight_query_terms(text_orig: string): string {
+        if (root.current_query.trim().length < 3)
+            return text_orig;
+
+        const terms = root.current_query.trim().split(" ");
+
+        let text_highlighted = text_orig;
+        for (let i = 0; i < terms.length; i++) {
+            // Use <AAA> and <BBB> as placeholders to avoid 'color' being
+            // replaced in style=background-color by a 'color' term in a
+            // subsequent iteration.
+            let t = terms[i].trim();
+            if (t.length === 0) continue;
+
+            // Escape special regex characters
+            t = t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // Use regex with global and case-insensitive flags to replace all occurrences
+            const regex = new RegExp(t, 'gi');
+            text_highlighted = text_highlighted.replace(regex, "<AAA>$&<BBB>");
+        }
+
+        // Replace all placeholders with HTML tags using global regex
+        text_highlighted = text_highlighted
+            .replace(/<AAA>/g, `<span style='background-color: ${root.match_bg};'>`)
+            .replace(/<BBB>/g, "</span>");
+
+        return text_highlighted;
+    }
+
     Frame {
         anchors.fill: parent
 
@@ -374,11 +405,12 @@ ApplicationWindow {
                             // Headword text
                             Text {
                                 Layout.fillWidth: true
-                                text: headword_delegate.modelData.headword
+                                text: root.highlight_query_terms(headword_delegate.modelData.headword)
                                 font.pointSize: root.largePointSize
                                 font.bold: true
                                 color: palette.text
                                 wrapMode: Text.Wrap
+                                textFormat: Text.RichText
 
                                 MouseArea {
                                     anchors.fill: parent
@@ -418,10 +450,14 @@ ApplicationWindow {
                                     // Sub-entry text
                                     Text {
                                         Layout.fillWidth: true
-                                        text: sub_topic.modelData.sub && sub_topic.modelData.sub !== "—" ? sub_topic.modelData.sub : ""
+                                        text: {
+                                            const text = sub_topic.modelData.sub && sub_topic.modelData.sub !== "—" ? sub_topic.modelData.sub : "";
+                                            return root.highlight_query_terms(text);
+                                        }
                                         font.pointSize: root.pointSize
                                         color: palette.text
                                         wrapMode: Text.Wrap
+                                        textFormat: Text.RichText
                                         visible: sub_topic.modelData.sub && sub_topic.modelData.sub !== "—" && sub_topic.modelData.sub.length > 0
                                     }
 
