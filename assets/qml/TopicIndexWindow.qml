@@ -315,20 +315,21 @@ ApplicationWindow {
                 Repeater {
                     model: root.alphabet
                     delegate: Button {
+                        id: letter_btn
                         required property string modelData
                         required property int index
 
-                        text: modelData
+                        text: letter_btn.modelData
                         width: 32
                         height: 32
                         font.pointSize: root.pointSize - 2
-                        flat: modelData !== root.current_letter
-                        highlighted: modelData === root.current_letter
+                        flat: letter_btn.modelData !== root.current_letter
+                        highlighted: letter_btn.modelData === root.current_letter
                         enabled: !root.is_loading && !root.search_active
 
                         onClicked: {
                             root.highlighted_headword_id = "";
-                            root.load_letter(modelData);
+                            root.load_letter(letter_btn.modelData);
                         }
                     }
                 }
@@ -406,6 +407,7 @@ ApplicationWindow {
                                 model: headword_delegate.modelData.entries
 
                                 delegate: ColumnLayout {
+                                    id: sub_topic
                                     required property var modelData
                                     required property int index
 
@@ -416,53 +418,54 @@ ApplicationWindow {
                                     // Sub-entry text
                                     Text {
                                         Layout.fillWidth: true
-                                        text: modelData.sub && modelData.sub !== "—" ? modelData.sub : ""
+                                        text: sub_topic.modelData.sub && sub_topic.modelData.sub !== "—" ? sub_topic.modelData.sub : ""
                                         font.pointSize: root.pointSize
                                         color: palette.text
                                         wrapMode: Text.Wrap
-                                        visible: modelData.sub && modelData.sub !== "—" && modelData.sub.length > 0
+                                        visible: sub_topic.modelData.sub && sub_topic.modelData.sub !== "—" && sub_topic.modelData.sub.length > 0
                                     }
 
                                     // References
                                     Flow {
                                         Layout.fillWidth: true
-                                        Layout.leftMargin: modelData.sub && modelData.sub !== "—" ? 10 : 0
+                                        Layout.leftMargin: sub_topic.modelData.sub && sub_topic.modelData.sub !== "—" ? 10 : 0
                                         spacing: 8
 
                                         Repeater {
-                                            model: modelData.refs
+                                            model: sub_topic.modelData.refs
 
                                             delegate: Text {
+                                                id: ref_item
                                                 required property var modelData
 
                                                 text: {
-                                                    if (modelData.type === "xref") {
-                                                        return "• see: " + modelData.ref_target;
+                                                    if (ref_item.modelData.type === "xref") {
+                                                        return "• see: " + ref_item.modelData.ref_target;
                                                     } else {
-                                                        const formatted_ref = root.format_sutta_ref(modelData.sutta_ref);
-                                                        return modelData.title ? formatted_ref + " " + modelData.title : formatted_ref;
+                                                        const formatted_ref = root.format_sutta_ref(ref_item.modelData.sutta_ref);
+                                                        return ref_item.modelData.title ? formatted_ref + " " + ref_item.modelData.title : formatted_ref;
                                                     }
                                                 }
                                                 font.pointSize: root.pointSize
-                                                font.italic: modelData.type === "xref"
-                                                font.bold: modelData.type === "xref"
-                                                color: modelData.type === "xref" ? (root.is_dark ? "#59AC77" : "#3A6F43") : palette.link
-                                                font.underline: modelData.type === "sutta"
+                                                font.italic: ref_item.modelData.type === "xref"
+                                                font.bold: ref_item.modelData.type === "xref"
+                                                color: ref_item.modelData.type === "xref" ? (root.is_dark ? "#59AC77" : "#3A6F43") : palette.link
+                                                font.underline: ref_item.modelData.type === "sutta"
 
                                                 MouseArea {
                                                     anchors.fill: parent
                                                     cursorShape: Qt.PointingHandCursor
                                                     onClicked: {
-                                                        if (modelData.type === "xref") {
+                                                        if (ref_item.modelData.type === "xref") {
                                                             // Find the target headword ID by matching the text
-                                                            const headword_id = SuttaBridge.find_topic_headword_id_by_text(modelData.ref_target);
+                                                            const headword_id = SuttaBridge.find_topic_headword_id_by_text(ref_item.modelData.ref_target);
                                                             if (headword_id && headword_id.length > 0) {
                                                                 root.navigate_to_headword(headword_id);
                                                             } else {
-                                                                logger.warn("Could not find headword for xref: " + modelData.ref_target);
+                                                                logger.warn("Could not find headword for xref: " + ref_item.modelData.ref_target);
                                                             }
                                                         } else {
-                                                            root.open_sutta(modelData.sutta_ref);
+                                                            root.open_sutta(ref_item.modelData.sutta_ref);
                                                         }
                                                     }
                                                 }
