@@ -783,21 +783,6 @@ ${query_text}`;
             //         /* onTriggered: TODO */
             //     }
             // }
-
-            // CMenuItem {
-            //     action: Action {
-            //         id: action_show_word_lookup
-            //         text: "Show Word Lookup"
-            //         checkable: true
-            //         checked: false
-            //         shortcut: Shortcut {
-            //             sequences: ["Ctrl+F6"]
-            //             context: Qt.WindowShortcut
-            //             onActivated: action_show_word_lookup.trigger()
-            //         }
-            //         /* onTriggered: TODO */
-            //     }
-            // }
         }
 
         Menu {

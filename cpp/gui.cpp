@@ -220,7 +220,6 @@ int start(int argc, char* argv[]) {
   // === Create the first app window ===
 
   AppGlobals::manager->create_sutta_search_window();
-  // AppGlobals::manager->create_word_lookup_window("hey ho");
 
   log_info_c("app.exec()");
   int status = app.exec();

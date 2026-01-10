@@ -8,7 +8,6 @@
 
 class SuttaSearchWindow;
 class DownloadAppdataWindow;
-class WordLookupWindow;
 class SuttaLanguagesWindow;
 class LibraryWindow;
 class ReferenceSearchWindow;
@@ -23,7 +22,6 @@ class WindowManager : public QObject {
         void create_plain_sutta_search_window();
         SuttaSearchWindow* create_sutta_search_window();
         DownloadAppdataWindow* create_download_appdata_window();
-        WordLookupWindow* create_word_lookup_window(const QString& word);
         SuttaLanguagesWindow* create_sutta_languages_window();
         LibraryWindow* create_library_window();
         ReferenceSearchWindow* create_reference_search_window();
@@ -34,7 +32,6 @@ class WindowManager : public QObject {
         int m_window_id_count;
         QList<SuttaSearchWindow*> sutta_search_windows;
         QList<DownloadAppdataWindow*> download_appdata_windows;
-        QList<WordLookupWindow*> word_lookup_windows;
         QList<SuttaLanguagesWindow*> sutta_languages_windows;
         QList<LibraryWindow*> library_windows;
         QList<ReferenceSearchWindow*> reference_search_windows;

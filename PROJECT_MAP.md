@@ -103,12 +103,10 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 │   │   ├── SuttaStackLayout.qml
 │   │   ├── SuttaTabButton.qml
 │   │   ├── tst_GlossTab.qml
-│   │   ├── WordLookupWindow.qml
 │   │   └── WordSummary.qml
 ```
 
 - **Main Components:**
-  - `WordLookupWindow.qml` - Dictionary lookup window UI
   - `SuttaSearchWindow.qml` - Sutta search and reading interface
   - `LibraryWindow.qml` - Library management window with nested chapter list support
   - `ChapterListItem.qml` - Reusable component for rendering book chapters with expand/collapse for nested TOC items
@@ -257,9 +255,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 │   ├── utils.cpp
 │   ├── utils.h
 │   ├── window_manager.cpp
-│   ├── window_manager.h
-│   ├── word_lookup_window.cpp
-│   └── word_lookup_window.h
+│   └── window_manager.h
 ```
 
 - **Entry Point:** `main.cpp:6` - `start()` function called from `main()`
@@ -267,7 +263,6 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - `gui.cpp/.h` - Main GUI initialization and callbacks
   - `window_manager.cpp/.h` - Multiple window management system
   - `sutta_search_window.cpp/.h` - Sutta search interface
-  - `word_lookup_window.cpp/.h` - Dictionary lookup interface
   - `download_appdata_window.cpp/.h` - Data download interface
   - `system_palette.cpp/.h` - System theme integration
   - `errors.cpp/.h` - Custom exception handling
@@ -337,7 +332,6 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 ### UI Components
 - **Main Windows:** `cpp/window_manager.cpp`, QML window components
 - **Search Interface:** `cpp/sutta_search_window.cpp`, `assets/qml/SuttaSearchWindow.qml`
-- **Dictionary Interface:** `cpp/word_lookup_window.cpp`, `assets/qml/WordLookupWindow.qml`
 - **Download Interface:** `cpp/download_appdata_window.cpp`, `assets/qml/DownloadAppdataWindow.qml`
   - **Language Selection:** User can enter comma-separated language codes (e.g., "hu, pt, it") or "*" for all
   - **Language Validation:** Validates entered codes against available languages from LANG_CODE_TO_NAME
