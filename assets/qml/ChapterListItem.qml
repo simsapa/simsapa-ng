@@ -38,26 +38,26 @@ ItemDelegate {
         }
 
         // Expand/collapse indicator for items with children
-        Label {
+        Button {
+            id: expand_children_toggle
             visible: chapter_item.has_children
-            text: chapter_item.is_expanded ? "▼" : "▶"
-            font.pointSize: chapter_item.pointSize - 3
-            color: palette.text
-            Layout.preferredWidth: 15
+            flat: true
+            icon.source: chapter_item.is_expanded
+                ? "icons/32x32/fa_chevron-down-solid.png"
+                : "icons/32x32/fa_chevron-right-solid.png"
+            icon.color: palette.text
+            Layout.preferredWidth: 32
+            Layout.preferredHeight: 32
 
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    chapter_item.toggle_expanded();
-                }
+            onClicked: {
+                chapter_item.toggle_expanded();
             }
         }
 
         // Spacer for items without children to align with items that have children
         Item {
             visible: !chapter_item.has_children
-            Layout.preferredWidth: 15
+            Layout.preferredWidth: 32
         }
 
         // Chapter title
