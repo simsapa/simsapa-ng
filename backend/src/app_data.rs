@@ -300,13 +300,31 @@ impl AppData {
             }
         }
 
+        // Query prev/next spine items to determine navigation button state
+        let prev_item = self.dbm.appdata.get_prev_book_spine_item(&spine_item.spine_item_uid).ok().flatten();
+        let next_item = self.dbm.appdata.get_next_book_spine_item(&spine_item.spine_item_uid).ok().flatten();
+
+        let is_first_chapter = prev_item.is_none();
+        let is_last_chapter = next_item.is_none();
+
+        // Build the navigation HTML by replacing placeholders
+        use crate::html_content::PREV_NEXT_CHAPTER_HTML;
+        let nav_html = PREV_NEXT_CHAPTER_HTML
+            .replace("{current_spine_item_uid}", &spine_item.spine_item_uid)
+            .replace("{current_book_uid}", &spine_item.book_uid)
+            .replace("{is_first_chapter}", &is_first_chapter.to_string())
+            .replace("{is_last_chapter}", &is_last_chapter.to_string())
+            .replace("{api_url}", &self.api_url);
+
         // Wrap content in the full HTML page structure
-        let final_html = sutta_html_page(
+        use crate::html_content::sutta_html_page_with_nav;
+        let final_html = sutta_html_page_with_nav(
             &content_html_body,
             Some(self.api_url.to_string()),
             Some(css_extra.to_string()),
             Some(js_extra.to_string()),
             Some(body_class),
+            Some(nav_html),
         );
 
         Ok(final_html)

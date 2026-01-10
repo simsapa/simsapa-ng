@@ -332,6 +332,50 @@ impl AppdataDbHandle {
         })
     }
 
+    pub fn get_prev_book_spine_item(&self, spine_item_uid_param: &str) -> Result<Option<BookSpineItem>> {
+        use crate::db::appdata_schema::book_spine_items::dsl::*;
+
+        // First get the current spine item to obtain book_uid and spine_index
+        let current_item = self.get_book_spine_item(spine_item_uid_param)?;
+
+        match current_item {
+            Some(item) => {
+                // Query for spine item with same book_uid and spine_index - 1
+                self.do_read(|db_conn| {
+                    book_spine_items
+                        .filter(book_uid.eq(&item.book_uid))
+                        .filter(spine_index.eq(item.spine_index - 1))
+                        .select(BookSpineItem::as_select())
+                        .first(db_conn)
+                        .optional()
+                })
+            }
+            None => Ok(None), // Current item not found, return None
+        }
+    }
+
+    pub fn get_next_book_spine_item(&self, spine_item_uid_param: &str) -> Result<Option<BookSpineItem>> {
+        use crate::db::appdata_schema::book_spine_items::dsl::*;
+
+        // First get the current spine item to obtain book_uid and spine_index
+        let current_item = self.get_book_spine_item(spine_item_uid_param)?;
+
+        match current_item {
+            Some(item) => {
+                // Query for spine item with same book_uid and spine_index + 1
+                self.do_read(|db_conn| {
+                    book_spine_items
+                        .filter(book_uid.eq(&item.book_uid))
+                        .filter(spine_index.eq(item.spine_index + 1))
+                        .select(BookSpineItem::as_select())
+                        .first(db_conn)
+                        .optional()
+                })
+            }
+            None => Ok(None), // Current item not found, return None
+        }
+    }
+
     pub fn delete_book_by_uid(&self, book_uid_param: &str) -> Result<()> {
         use crate::db::appdata_schema::books::dsl::*;
 

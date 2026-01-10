@@ -287,6 +287,74 @@ fn open_book_page_tab(window_id: &str, request: Json<BookPageRequest>, dbm: &Sta
     Status::Ok
 }
 
+#[get("/prev_chapter/<window_id>/<current_spine_item_uid..>")]
+fn prev_chapter(window_id: &str, current_spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&current_spine_item_uid);
+    info(&format!("prev_chapter(): window_id: {}, spine_item_uid: {}", window_id, uid_str));
+
+    // Get the previous spine item
+    let prev_item = match dbm.appdata.get_prev_book_spine_item(&uid_str) {
+        Ok(Some(item)) => item,
+        Ok(None) => {
+            info(&format!("No previous chapter found for: {}", uid_str));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error in prev_chapter: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON
+    let result_data_json = serde_json::json!({
+        "item_uid": prev_item.spine_item_uid,
+        "table_name": "book_spine_items",
+        "sutta_title": prev_item.title.unwrap_or_default(),
+        "sutta_ref": "",
+        "snippet": "",
+        "anchor": "",
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_show_chapter_in_sutta_window(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
+#[get("/next_chapter/<window_id>/<current_spine_item_uid..>")]
+fn next_chapter(window_id: &str, current_spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&current_spine_item_uid);
+    info(&format!("next_chapter(): window_id: {}, spine_item_uid: {}", window_id, uid_str));
+
+    // Get the next spine item
+    let next_item = match dbm.appdata.get_next_book_spine_item(&uid_str) {
+        Ok(Some(item)) => item,
+        Ok(None) => {
+            info(&format!("No next chapter found for: {}", uid_str));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error in next_chapter: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON
+    let result_data_json = serde_json::json!({
+        "item_uid": next_item.spine_item_uid,
+        "table_name": "book_spine_items",
+        "sutta_title": next_item.title.unwrap_or_default(),
+        "sutta_ref": "",
+        "snippet": "",
+        "anchor": "",
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_show_chapter_in_sutta_window(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
 #[derive(Deserialize)]
 struct LoggerRequest {
     log_level: String,
@@ -1021,6 +1089,8 @@ pub async extern "C" fn start_webserver() {
             open_sutta_window,
             open_sutta_tab,
             open_book_page_tab,
+            prev_chapter,
+            next_chapter,
             // Browser Extension API routes
             get_search_options,
             suttas_fulltext_search,

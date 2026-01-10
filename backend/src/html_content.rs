@@ -7,6 +7,7 @@ static PAGE_HTML: &'static str = include_str!("../../assets/templates/page.html"
 static FIND_HTML: &'static str = include_str!("../../assets/templates/find.html");
 static TEXT_RESIZE_HTML: &'static str = include_str!("../../assets/templates/text_resize.html");
 static READING_MODE_HTML: &'static str = include_str!("../../assets/templates/reading_mode.html");
+pub static PREV_NEXT_CHAPTER_HTML: &'static str = include_str!("../../assets/templates/prev_next_chapter.html");
 static MENU_HTML: &'static str = include_str!("../../assets/templates/menu.html");
 static CONFIRM_MODAL_HTML: &'static str = include_str!("../../assets/templates/confirm_modal.html");
 static ICONS_HTML: &'static str = include_str!("../../assets/templates/icons.html");
@@ -21,6 +22,7 @@ struct TmplContext {
     js_head: String,
     js_body: String,
     reading_mode_html: String,
+    prev_next_chapter_html: String,
     find_html: String,
     text_resize_html: String,
     menu_html: String,
@@ -39,6 +41,7 @@ impl Default for TmplContext {
             js_head: "".to_string(),
             js_body: "".to_string(),
             reading_mode_html: READING_MODE_HTML.replace("{api_url}", &g.api_url).to_string(),
+            prev_next_chapter_html: "".to_string(),  // Default to empty for suttas
             find_html: FIND_HTML.replace("{api_url}", &g.api_url).to_string(),
             text_resize_html: TEXT_RESIZE_HTML.replace("{api_url}", &g.api_url).to_string(),
             menu_html: MENU_HTML.replace("{api_url}", &g.api_url).to_string(),
@@ -55,6 +58,15 @@ pub fn sutta_html_page(content: &str,
                        css_extra: Option<String>,
                        js_extra: Option<String>,
                        body_class: Option<String>) -> String {
+    sutta_html_page_with_nav(content, api_url, css_extra, js_extra, body_class, None)
+}
+
+pub fn sutta_html_page_with_nav(content: &str,
+                                 api_url: Option<String>,
+                                 css_extra: Option<String>,
+                                 js_extra: Option<String>,
+                                 body_class: Option<String>,
+                                 prev_next_chapter_html: Option<String>) -> String {
 
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
@@ -64,6 +76,10 @@ pub fn sutta_html_page(content: &str,
 
     if let Some(s) = body_class {
         ctx.body_class = String::from(s.clone());
+    }
+
+    if let Some(nav_html) = prev_next_chapter_html {
+        ctx.prev_next_chapter_html = nav_html;
     }
 
     let mut css = String::new();

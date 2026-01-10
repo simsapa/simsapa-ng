@@ -295,10 +295,58 @@ class ReadingModeController {
     }
 }
 
+class ChapterNavigationController {
+    constructor() {
+        this.prevButton = document.getElementById('prevChapterButton');
+        this.nextButton = document.getElementById('nextChapterButton');
+
+        this.init();
+    }
+
+    init() {
+        if (!this.prevButton || !this.nextButton) {
+            return;
+        }
+
+        // Set initial disabled state based on data attributes
+        if (this.prevButton.dataset.isFirst === 'true') {
+            this.prevButton.disabled = true;
+        }
+        if (this.nextButton.dataset.isLast === 'true') {
+            this.nextButton.disabled = true;
+        }
+
+        // Add click event listeners
+        this.prevButton.addEventListener('click', () => this.navigate_prev());
+        this.nextButton.addEventListener('click', () => this.navigate_next());
+    }
+
+    async navigate_prev() {
+        const spine_item_uid = this.prevButton.dataset.spineItemUid;
+
+        try {
+            await fetch(`${API_URL}/prev_chapter/${WINDOW_ID}/${spine_item_uid}`);
+        } catch (error) {
+            log_error('Failed to navigate to previous chapter: ' + error);
+        }
+    }
+
+    async navigate_next() {
+        const spine_item_uid = this.nextButton.dataset.spineItemUid;
+
+        try {
+            await fetch(`${API_URL}/next_chapter/${WINDOW_ID}/${spine_item_uid}`);
+        } catch (error) {
+            log_error('Failed to navigate to next chapter: ' + error);
+        }
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function(_event) {
     new HamburgerMenu();
     new TextResizeController();
     new ReadingModeController();
+    new ChapterNavigationController();
     if (IS_MOBILE) {
         // On mobile in a WebView, there is no double click event, so listen to
         // selection change (from a long press action).
