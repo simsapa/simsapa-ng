@@ -506,12 +506,16 @@ ${query_text}`;
                 tab_data.id_key = "ResultsTab_0";
             }
             logger.debug("ADD_RESULTS_TAB: tab_data - id_key: " + tab_data.id_key + " web_item_key: " + tab_data.web_item_key);
-            if (tab_data.web_item_key == "") {
-                logger.debug("ADD_RESULTS_TAB: web_item_key is empty, generating new key");
+            // Only create webview if we're going to show it immediately (focus_on_new is true)
+            // Otherwise leave web_item_key empty and let tab_checked_changed create it when tab is clicked
+            if (tab_data.web_item_key == "" && tab_data.focus_on_new) {
+                logger.debug("ADD_RESULTS_TAB: web_item_key is empty and focus_on_new is true, generating new key");
                 tab_data.web_item_key = root.generate_key();
                 logger.debug("ADD_RESULTS_TAB: Generated web_item_key: " + tab_data.web_item_key + ", calling add_item with show_item: " + tab_data.focus_on_new);
-                // Show the item if this is the first tab being added (focus_on_new will be true for the blank initial tab)
-                sutta_html_view_layout.add_item(tab_data, tab_data.focus_on_new);
+                // Show the item since focus_on_new is true
+                sutta_html_view_layout.add_item(tab_data, true);
+            } else if (tab_data.web_item_key == "") {
+                logger.debug("ADD_RESULTS_TAB: web_item_key is empty but focus_on_new is false, leaving empty for lazy creation");
             }
             tabs_results_model.append(tab_data);
             logger.debug("ADD_RESULTS_TAB: Tab appended. New tabs_results_model.count: " + tabs_results_model.count);
