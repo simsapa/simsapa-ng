@@ -1,3 +1,5 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -8,8 +10,8 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
     title: `About ${root.app_name}`
-    width: is_mobile ? Screen.desktopAvailableWidth : 500
-    height: is_mobile ? Screen.desktopAvailableHeight : 500
+    width: is_mobile ? Screen.desktopAvailableWidth : 600
+    height: is_mobile ? Screen.desktopAvailableHeight : Math.min(750, Screen.desktopAvailableHeight)
     visible: false
     /* visible: true // for qml preview */
     color: palette.window
@@ -51,6 +53,17 @@ ApplicationWindow {
             `App data folder: ${SuttaBridge.app_data_folder_path()}`,
             `App data folder is writable: ${SuttaBridge.is_app_data_folder_writable()}`,
         ];
+    }
+
+    // Invisible helper for clipboard - placed at root level to avoid id conflicts
+    TextEdit {
+        id: clipboard_helper
+        visible: false
+        function copy_text(text) {
+            clipboard_helper.text = text;
+            clipboard_helper.selectAll();
+            clipboard_helper.copy();
+        }
     }
 
     Item {
@@ -100,20 +113,91 @@ ApplicationWindow {
                 }
             }
 
+            ColumnLayout {
+                spacing: 10
+                Layout.fillWidth: true
+
+                Label {
+                    text: "Log Files"
+                    font.bold: true
+                    font.pointSize: root.pointSize
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 200
+                    clip: true
+
+                    ListView {
+                        id: log_files_list
+                        model: ListModel { id: log_files_model }
+                        spacing: 5
+
+                        delegate: Rectangle {
+                            id: log_file_item
+                            width: log_files_list.width
+                            height: 50
+                            color: "transparent"
+                            border.color: palette.mid
+                            border.width: 1
+                            radius: 4
+                            required property string fileName
+
+                            RowLayout {
+                                id: log_file_row
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                spacing: 5
+
+                                Label {
+                                    text: log_file_item.fileName
+                                    font.pointSize: root.pointSize
+                                    Layout.fillWidth: true
+                                    elide: Text.ElideMiddle
+                                }
+
+                                Button {
+                                    text: "Open"
+                                    font.pointSize: root.pointSize - 2
+                                    onClicked: {
+                                        let file_path = SuttaBridge.get_log_file_path(log_file_item.fileName);
+                                        if (file_path !== "") {
+                                            Qt.openUrlExternally("file://" + file_path);
+                                        }
+                                    }
+                                }
+
+                                Button {
+                                    text: "Copy"
+                                    font.pointSize: root.pointSize - 2
+                                    onClicked: {
+                                        let contents = SuttaBridge.get_log_file_contents(log_file_item.fileName);
+                                        clipboard_helper.copy_text(contents);
+                                    }
+                                }
+                            }
+                        }
+
+                        Component.onCompleted: {
+                            load_log_files();
+                        }
+
+                        function load_log_files() {
+                            log_files_model.clear();
+                            let log_files_json = SuttaBridge.get_log_files_list();
+                            let log_files = JSON.parse(log_files_json);
+                            for (let i = 0; i < log_files.length; i++) {
+                                log_files_model.append({ fileName: log_files[i] });
+                            }
+                        }
+                    }
+                }
+            }
+
             Item { Layout.fillHeight: true }
 
             RowLayout {
                 spacing: 10
-                // Invisible helper for clipboard
-                TextEdit {
-                    id: clip
-                    visible: false
-                    function copy_text(text) {
-                        clip.text = text;
-                        clip.selectAll();
-                        clip.copy();
-                    }
-                }
 
                 Item { Layout.fillWidth: true }
 
@@ -122,7 +206,7 @@ ApplicationWindow {
                     onClicked: {
                         let info = root.info_lines().join("\n");
                         info += "\nContents:\n\n" + SuttaBridge.app_data_contents_plain_table()
-                        clip.copy_text(info);
+                        clipboard_helper.copy_text(info);
                     }
                 }
 

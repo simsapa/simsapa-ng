@@ -150,6 +150,18 @@ Item {
         return `| file | size | modified |`;
     }
 
+    function get_log_files_list(): string {
+        return '["log.txt", "log.2026-01-11T07-09-13.txt"]';
+    }
+
+    function get_log_file_contents(file_name: string): string {
+        return "Log file contents...";
+    }
+
+    function get_log_file_path(file_name: string): string {
+        return "/path/to/" + file_name;
+    }
+
     function consistent_niggahita(text: string): string {
         if (text == null) {
             return "";

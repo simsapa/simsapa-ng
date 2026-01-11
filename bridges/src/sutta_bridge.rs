@@ -234,6 +234,15 @@ pub mod qobject {
         fn app_data_contents_plain_table(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
+        fn get_log_files_list(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_log_file_contents(self: &SuttaBridge, file_name: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_log_file_path(self: &SuttaBridge, file_name: &QString) -> QString;
+
+        #[qinvokable]
         fn get_theme_name(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
@@ -1162,6 +1171,94 @@ impl qobject::SuttaBridge {
         let app_data_path = p.to_string_lossy();
         let app_data_folder_contents = generate_plain_directory_listing(&app_data_path, 3).unwrap_or(String::from("Error"));
         QString::from(app_data_folder_contents)
+    }
+
+    /// Get list of log files as JSON array of filenames
+    pub fn get_log_files_list(&self) -> QString {
+        let data_dir = match get_create_simsapa_dir() {
+            Ok(d) => d,
+            Err(_) => return QString::from("[]"),
+        };
+
+        // Find all log files (log.txt and log.*.txt)
+        let mut log_files: Vec<String> = Vec::new();
+
+        // Add current log.txt if it exists
+        let current_log = data_dir.join("log.txt");
+        match current_log.try_exists() {
+            Ok(true) => log_files.push("log.txt".to_string()),
+            _ => {}
+        }
+
+        // Find all rotated log files
+        match fs::read_dir(&data_dir) {
+            Ok(entries) => {
+                for entry in entries.filter_map(|e| e.ok()) {
+                    let path = entry.path();
+                    if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                        if filename.starts_with("log.") && filename.ends_with(".txt") && filename != "log.txt" {
+                            log_files.push(filename.to_string());
+                        }
+                    }
+                }
+            }
+            Err(_) => {}
+        }
+
+        // Sort so current log.txt is first, then rotated logs in reverse chronological order
+        log_files.sort_by(|a, b| {
+            if a == "log.txt" {
+                std::cmp::Ordering::Less
+            } else if b == "log.txt" {
+                std::cmp::Ordering::Greater
+            } else {
+                b.cmp(a) // Reverse sort for dated logs
+            }
+        });
+
+        // Convert to JSON array
+        let json = serde_json::to_string(&log_files).unwrap_or_else(|_| "[]".to_string());
+        QString::from(json)
+    }
+
+    /// Read the contents of a log file
+    pub fn get_log_file_contents(&self, file_name: &QString) -> QString {
+        let file_name_str = file_name.to_string();
+
+        // Security: only allow reading log files
+        if !file_name_str.starts_with("log.") && file_name_str != "log.txt" {
+            return QString::from("Invalid file name");
+        }
+
+        let data_dir = match get_create_simsapa_dir() {
+            Ok(d) => d,
+            Err(_) => return QString::from("Error: Could not get data directory"),
+        };
+
+        let file_path = data_dir.join(&file_name_str);
+
+        match fs::read_to_string(&file_path) {
+            Ok(contents) => QString::from(contents),
+            Err(e) => QString::from(format!("Error reading file: {}", e)),
+        }
+    }
+
+    /// Get the full path to a log file for opening with external apps
+    pub fn get_log_file_path(&self, file_name: &QString) -> QString {
+        let file_name_str = file_name.to_string();
+
+        // Security: only allow log files
+        if !file_name_str.starts_with("log.") && file_name_str != "log.txt" {
+            return QString::from("");
+        }
+
+        let data_dir = match get_create_simsapa_dir() {
+            Ok(d) => d,
+            Err(_) => return QString::from(""),
+        };
+
+        let file_path = data_dir.join(&file_name_str);
+        QString::from(file_path.to_string_lossy().as_ref())
     }
 
     /// Get the current theme setting, 'system', 'light', or 'dark'
