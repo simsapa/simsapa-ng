@@ -6,6 +6,7 @@ use std::time::{Duration, Instant};
 
 use tracing_subscriber::EnvFilter;
 use cfg_if::cfg_if;
+use chrono::{DateTime, Local};
 
 use crate::get_create_simsapa_dir;
 
@@ -165,6 +166,68 @@ impl TimeLog {
     }
 }
 
+/// Rotates log files, keeping only the last 5 log files
+fn rotate_log_files(log_file: &PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+    // Use try_exists() to avoid Android permission crashes
+    match log_file.try_exists() {
+        Ok(true) => {
+            // File exists, proceed with rotation
+        }
+        Ok(false) => {
+            // File doesn't exist, nothing to rotate
+            return Ok(());
+        }
+        Err(_) => {
+            // Permission error or other issue, skip rotation
+            return Ok(());
+        }
+    }
+
+    // Get the last modified time
+    let metadata = std::fs::metadata(log_file)?;
+    let modified = metadata.modified()?;
+
+    // Convert to datetime
+    let datetime: DateTime<Local> = modified.into();
+    let timestamp = datetime.format("%Y-%m-%dT%H-%M-%S");
+
+    // Create the new filename
+    let parent = log_file.parent().ok_or("No parent directory")?;
+    let new_name = format!("log.{}.txt", timestamp);
+    let new_path = parent.join(&new_name);
+
+    // Rename the old log file
+    std::fs::rename(log_file, &new_path)?;
+
+    // Find all log.*.txt files
+    let mut log_files: Vec<PathBuf> = std::fs::read_dir(parent)?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| {
+            if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
+                filename.starts_with("log.") && filename.ends_with(".txt") && filename != "log.txt"
+            } else {
+                false
+            }
+        })
+        .collect();
+
+    // Sort by filename (which sorts by datetime)
+    log_files.sort();
+
+    // Keep only the last 5
+    if log_files.len() > 5 {
+        for file in &log_files[0..log_files.len() - 5] {
+            // Try to remove but don't fail if we can't (Android permissions)
+            if let Err(e) = std::fs::remove_file(file) {
+                eprintln!("Failed to remove old log file {:?}: {}", file, e);
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub struct Logger {
     log_file: PathBuf,
     time_log: Option<Arc<Mutex<TimeLog>>>,
@@ -179,6 +242,11 @@ impl Logger {
 
         std::fs::create_dir_all(&data_dir)?;
         let log_file = data_dir.join("log.txt");
+
+        // Rotate existing log file before creating a new one
+        if let Err(e) = rotate_log_files(&log_file) {
+            eprintln!("Failed to rotate log files: {}", e);
+        }
 
         // Read environment variables
         let disable_log = std::env::var("DISABLE_LOG")

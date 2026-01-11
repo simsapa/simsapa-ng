@@ -25,6 +25,33 @@ Documentation is in the `docs/` folder. Keep it updated for relevant features.
 
 ## Specific coding procedures
 
+### Android compatibility: File existence checks
+
+**IMPORTANT:** Always use `try_exists()` instead of `.exists()` when checking if files or directories exist. The `.exists()` method can cause permission crashes on Android.
+
+Example:
+```rust
+// ❌ BAD - can crash on Android
+if log_file.exists() {
+    // ...
+}
+
+// ✅ GOOD - safe on all platforms including Android
+match log_file.try_exists() {
+    Ok(true) => {
+        // File exists
+    }
+    Ok(false) => {
+        // File doesn't exist
+    }
+    Err(_) => {
+        // Permission error or other issue
+    }
+}
+```
+
+See `backend/src/logger.rs` for examples of this pattern in practice.
+
 ### New QML components
 
 When you create a new QML component such as `SearchBarInput.qml`, the file has to be added to the `qml_files` list in `bridges/build.rs`.
