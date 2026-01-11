@@ -322,22 +322,30 @@ class ChapterNavigationController {
     }
 
     async navigate_prev() {
-        const spine_item_uid = this.prevButton.dataset.spineItemUid;
+        const item_uid = this.prevButton.dataset.spineItemUid;
+
+        // Determine if this is a sutta or book chapter based on which constant is defined
+        const is_sutta = typeof SUTTA_UID !== 'undefined';
+        const endpoint = is_sutta ? 'prev_sutta' : 'prev_chapter';
 
         try {
-            await fetch(`${API_URL}/prev_chapter/${WINDOW_ID}/${spine_item_uid}`);
+            await fetch(`${API_URL}/${endpoint}/${WINDOW_ID}/${item_uid}`);
         } catch (error) {
-            log_error('Failed to navigate to previous chapter: ' + error);
+            log_error(`Failed to navigate to previous ${is_sutta ? 'sutta' : 'chapter'}: ` + error);
         }
     }
 
     async navigate_next() {
-        const spine_item_uid = this.nextButton.dataset.spineItemUid;
+        const item_uid = this.nextButton.dataset.spineItemUid;
+
+        // Determine if this is a sutta or book chapter based on which constant is defined
+        const is_sutta = typeof SUTTA_UID !== 'undefined';
+        const endpoint = is_sutta ? 'next_sutta' : 'next_chapter';
 
         try {
-            await fetch(`${API_URL}/next_chapter/${WINDOW_ID}/${spine_item_uid}`);
+            await fetch(`${API_URL}/${endpoint}/${WINDOW_ID}/${item_uid}`);
         } catch (error) {
-            log_error('Failed to navigate to next chapter: ' + error);
+            log_error(`Failed to navigate to next ${is_sutta ? 'sutta' : 'chapter'}: ` + error);
         }
     }
 }

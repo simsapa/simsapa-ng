@@ -1,0 +1,39 @@
+// Chapter Navigation Buttons (Previous/Next)
+// Positioned on the left side of the page, after the reading mode button
+
+$button_size: 30px;
+$edge_margin: 10px;
+$border_radius: 2px;
+$button_spacing: 5px;
+
+// Previous chapter button (left side, after reading mode button)
+#prevChapterButton {
+    position: fixed;
+    top: $edge_margin;
+    left: $edge_margin + $button_size + $button_spacing;  // 45px
+    z-index: 1000;
+    transform: translateZ(0);
+}
+
+// Next chapter button (left side, after prev chapter button)
+#nextChapterButton {
+    position: fixed;
+    top: $edge_margin;
+    left: $edge_margin + ($button_size + $button_spacing) * 2;  // 80px
+    z-index: 1000;
+    transform: translateZ(0);
+}
+
+.chapter-nav-button {
+    .chapter-nav-icon {
+        width: 15px;
+        height: 15px;
+        opacity: 0.8;
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+}
