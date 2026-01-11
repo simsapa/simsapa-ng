@@ -60,7 +60,7 @@ ApplicationWindow {
     }
 
     function run_validation_checks() {
-        logger.log("run_validation_checks()");
+        logger.info("run_validation_checks()");
         // Clear previous results
         root.validation_results = {};
         root.appdata_failed = false;
@@ -123,7 +123,7 @@ ApplicationWindow {
 
     // Returns true if download was started, false if no databases to download
     function handle_redownload(): bool {
-        logger.log("handle_redownload()");
+        logger.info("handle_redownload()");
         // Build list of failed downloadable databases
         let urls = [];
         const github_repo = SuttaBridge.get_compatible_asset_github_repo();
@@ -138,25 +138,25 @@ ApplicationWindow {
         if (root.validation_results["appdata"] && !root.validation_results["appdata"].is_valid) {
             const appdata_tar_url = `https://github.com/${github_repo}/releases/download/${version}/appdata.tar.bz2`;
             urls.push(appdata_tar_url);
-            logger.log("Adding appdata to re-download list");
+            logger.info("Adding appdata to re-download list");
         }
 
         if (root.validation_results["dpd"] && !root.validation_results["dpd"].is_valid) {
             const dpd_tar_url = `https://github.com/${github_repo}/releases/download/${version}/dpd.tar.bz2`;
             urls.push(dpd_tar_url);
-            logger.log("Adding dpd to re-download list");
+            logger.info("Adding dpd to re-download list");
         }
 
         if (root.validation_results["dictionaries"] && !root.validation_results["dictionaries"].is_valid) {
             const dictionaries_tar_url = `https://github.com/${github_repo}/releases/download/${version}/dictionaries.tar.bz2`;
             urls.push(dictionaries_tar_url);
-            logger.log("Adding dictionaries to re-download list");
+            logger.info("Adding dictionaries to re-download list");
         }
 
         if (urls.length > 0) {
             // Open DownloadAppdataWindow to handle the re-download
             // Note: We pass is_initial_setup = false
-            logger.log(`Starting re-download of ${urls.length} database(s)`);
+            logger.info(`Starting re-download of ${urls.length} database(s)`);
             download_window.start_redownload(urls);
             return true;
         } else {
@@ -167,21 +167,21 @@ ApplicationWindow {
     }
 
     function handle_reset_userdata() {
-        logger.log("handle_reset_userdata()");
+        logger.info("handle_reset_userdata()");
 
         const success = SuttaBridge.reset_userdata_database();
 
         if (success) {
-            logger.log("Userdata database reset complete");
+            logger.info("Userdata database reset complete");
             reset_success_dialog.open();
         } else {
-            logger.log("ERROR: Failed to reset userdata database");
+            logger.info("ERROR: Failed to reset userdata database");
             reset_error_dialog.open();
         }
     }
 
     function handle_remove_all_and_redownload() {
-        logger.log("handle_remove_all_and_redownload()");
+        logger.info("handle_remove_all_and_redownload()");
         SuttaBridge.prepare_for_database_upgrade();
         remove_all_success_dialog.open();
     }

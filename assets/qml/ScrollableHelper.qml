@@ -59,7 +59,7 @@ QtObject {
         if (contentGrew && contentHeight > viewHeight) {
             var maxContentY = Math.max(0, contentHeight - viewHeight);
             if (scroll_to_position(maxContentY)) {
-                logger.log(`✅ ScrollableHelper: scrolled to bottom`);
+                logger.info(`✅ ScrollableHelper: scrolled to bottom`);
             } else {
                 logger.warn("ScrollableHelper: Unable to scroll - no valid scroll method found");
             }

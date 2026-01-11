@@ -137,7 +137,7 @@ Item {
             all_results.push(...result);
 
             var result_words = result.map(i => i.original_word);
-            // logger.log(result_words);
+            // logger.info(result_words);
             // [ariyasāvako,vossaggārammaṇaṁ,karitvā,labhati,samādhiṁ,,cittassa,ekaggataṁ.]
 
             // Should skip common words and local duplicates

@@ -59,7 +59,7 @@ Frame {
         function onDpdLookupReady(query_id: string, results_json: string) {
             // Ignore results from stale queries
             if (query_id !== root.current_query_id) {
-                logger.log(`Discarding stale query results: ${query_id}, current: ${root.current_query_id}`);
+                logger.info(`Discarding stale query results: ${query_id}, current: ${root.current_query_id}`);
                 return;
             }
 

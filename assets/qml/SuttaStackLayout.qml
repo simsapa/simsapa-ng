@@ -34,13 +34,13 @@ StackLayout {
             Layout.fillHeight: true
 
             property int index
-            /* Component.onCompleted: logger.log("SuttaHtmlView created at index", html_view.index) */
-            /* Component.onDestruction: logger.log("SuttaHtmlView destroyed at index", html_view.index) */
+            /* Component.onCompleted: logger.info("SuttaHtmlView created at index", html_view.index) */
+            /* Component.onDestruction: logger.info("SuttaHtmlView destroyed at index", html_view.index) */
         }
     }
 
     function add_item(tab_data: var, show_item = true) {
-        /* logger.log("add_item() called - item_uid:", tab_data.item_uid, "web_item_key:", tab_data.web_item_key, "show_item:", show_item); */
+        /* logger.info("add_item() called - item_uid:", tab_data.item_uid, "web_item_key:", tab_data.web_item_key, "show_item:", show_item); */
         let key = tab_data.web_item_key;
         if (root.items_map.hasOwnProperty(key)) {
             logger.error("Item with key", key, "already exists");
@@ -145,5 +145,5 @@ StackLayout {
         }
     }
 
-    Component.onDestruction: logger.log("SuttaStackLayout destroyed, children: ", root.children.length)
+    Component.onDestruction: logger.info("SuttaStackLayout destroyed, children: ", root.children.length)
 }

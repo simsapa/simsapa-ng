@@ -52,7 +52,7 @@ ApplicationWindow {
         target: SuttaBridge
 
         function onUpdateWindowTitle(item_uid: string, sutta_ref: string, sutta_title: string) {
-            /* logger.log("onUpdateWindowTitle():", item_uid, sutta_ref, sutta_title); */
+            /* logger.info("onUpdateWindowTitle():", item_uid, sutta_ref, sutta_title); */
             const current_key = sutta_html_view_layout.current_key;
             // Check if the item exists in items_map before accessing it
             if (current_key && sutta_html_view_layout.items_map[current_key] &&
@@ -95,7 +95,7 @@ ApplicationWindow {
     function apply_theme() {
         root.is_dark = SuttaBridge.get_theme_name() === "dark";
         var theme_json = SuttaBridge.get_saved_theme();
-        /* logger.log("Theme JSON:\n---\n", theme_json, "\n---\n"); */
+        /* logger.info("Theme JSON:\n---\n", theme_json, "\n---\n"); */
         if (theme_json.length === 0 || theme_json === "{}") {
             logger.error("Couldn't get theme JSON.")
             return;
@@ -105,15 +105,15 @@ ApplicationWindow {
             var d = JSON.parse(theme_json);
 
             for (var color_group_key in d) {
-                /* logger.log(color_group_key); // active, inactive, disabled */
+                /* logger.info(color_group_key); // active, inactive, disabled */
                 if (!root.palette.hasOwnProperty(color_group_key) || root.palette[color_group_key] === undefined) {
                     logger.error("Member not found on root.palette:", color_group_key);
                     continue;
                 }
                 var color_group = d[color_group_key];
                 for (var color_role_key in color_group) {
-                    /* logger.log(color_role_key); // window, windowText, etc. */
-                    /* logger.log(color_group[color_role_key]); // #EFEFEF, #000000, etc. */
+                    /* logger.info(color_role_key); // window, windowText, etc. */
+                    /* logger.info(color_group[color_role_key]); // #EFEFEF, #000000, etc. */
                     if (!root.palette[color_group_key].hasOwnProperty(color_role_key) || root.palette[color_group_key][color_role_key] === undefined) {
                         logger.error("Member not found on root.palette:", color_group_key, color_role_key);
                         continue;
@@ -135,7 +135,7 @@ ApplicationWindow {
     ListModel { id: tabs_translations_model }
 
     function new_tab_data(fulltext_results_data: var, pinned = false, focus_on_new = false, id_key = null, web_item_key = ""): var {
-        /* logger.log("new_tab_data()", fulltext_results_data, pinned, focus_on_new); */
+        /* logger.info("new_tab_data()", fulltext_results_data, pinned, focus_on_new); */
         if (!id_key) {
             id_key = root.generate_key();
         }
@@ -143,8 +143,8 @@ ApplicationWindow {
         // will be created when the tab is first focused.
         //
         // NOTE: same attributes as on TabButton.
-        /* logger.log("item_uid", fulltext_results_data.item_uid); */
-        /* logger.log("sutta_title", fulltext_results_data.sutta_title); */
+        /* logger.info("item_uid", fulltext_results_data.item_uid); */
+        /* logger.info("sutta_title", fulltext_results_data.sutta_title); */
         let tab_data = {
             item_uid:    fulltext_results_data.item_uid || "",
             table_name:  fulltext_results_data.table_name || "",
@@ -310,7 +310,7 @@ ApplicationWindow {
     }
 
     function run_sutta_menu_action(action: string, query_text: string) {
-        /* logger.log("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
+        /* logger.info("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
 
         switch (action) {
         case "load-translations":
@@ -494,9 +494,9 @@ ${query_text}`;
 
     // Returns the index of the tab in the model.
     function add_results_tab(fulltext_results_data: var, focus_on_new = true, new_tab = false): int {
-        /* logger.log("add_results_tab()", "item_uid", fulltext_results_data.item_uid, "sutta_title", fulltext_results_data.sutta_title); */
+        /* logger.info("add_results_tab()", "item_uid", fulltext_results_data.item_uid, "sutta_title", fulltext_results_data.sutta_title); */
         if (new_tab || tabs_results_model.count == 0) {
-            /* logger.log("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
+            /* logger.info("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
             let tab_data = root.new_tab_data(fulltext_results_data, false, focus_on_new);
             if (tabs_results_model.count == 0) {
                 tab_data.id_key = "ResultsTab_0";
@@ -509,7 +509,7 @@ ${query_text}`;
             tabs_results_model.append(tab_data);
             return tabs_results_model.count-1;
         } else {
-            /* logger.log("Updating existing results tab"); */
+            /* logger.info("Updating existing results tab"); */
             // Not creating a new tab, update the existing one at idx 0.
             let tab_data = root.new_tab_data(
                 fulltext_results_data,
@@ -543,7 +543,7 @@ ${query_text}`;
     }
 
     function focus_on_tab_with_id_key(id_key: string) {
-        /* logger.log("focus_on_tab_with_id_key()", id_key); */
+        /* logger.info("focus_on_tab_with_id_key()", id_key); */
         let tab = root.get_tab_with_id_key(id_key);
         if (tab) {
             tab.click();
@@ -553,7 +553,7 @@ ${query_text}`;
     }
 
     Component.onCompleted: {
-        /* logger.log("SuttaSearchWindow: Component.onCompleted()"); */
+        /* logger.info("SuttaSearchWindow: Component.onCompleted()"); */
         if (root.is_qml_preview) {
             return;
         } else {
@@ -1126,7 +1126,7 @@ ${query_text}`;
         function onUpdateCheckError(error_message: string) {
             // Log error but don't show dialog on automatic startup check
             // For manual checks, the user will see "no updates" if check succeeds
-            logger.log("Update check error:", error_message);
+            logger.info("Update check error:", error_message);
         }
     }
 
@@ -1280,7 +1280,7 @@ ${query_text}`;
                                 }
 
                                 function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
-                                    /* logger.log("remove_tab_and_webview()", tab.index, tab.item_uid, tab.web_item_key); */
+                                    /* logger.info("remove_tab_and_webview()", tab.index, tab.item_uid, tab.web_item_key); */
                                     // Remove the tab and webview, focus the next or the previous
                                     let old_idx = tab.index;
                                     let old_web_item_key = tab_model.get(old_idx).web_item_key;
@@ -1687,7 +1687,7 @@ ${query_text}`;
                                 new_results_page_fn: root.new_results_page
 
                                 function update_item() {
-                                    /* logger.log("update_item()"); */
+                                    /* logger.info("update_item()"); */
                                     let result_data = fulltext_results.current_result_data();
                                     // E.g. in the case when fulltext_list.currentIndex is set to -1 such as when update_page() shows a new page of results.
                                     if (!result_data) {

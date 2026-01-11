@@ -78,7 +78,7 @@ ApplicationWindow {
         if (root.auto_start_download) {
             // Auto-start download if marker file was present (database upgrade scenario)
             // This takes priority over showing the storage dialog on mobile
-            logger.log("Auto-starting download due to auto_start_download.txt marker");
+            logger.info("Auto-starting download due to auto_start_download.txt marker");
             // Use Qt.callLater to ensure UI is fully initialized before starting download
             Qt.callLater(function() {
                 if (root.validate_download()) {
@@ -109,7 +109,7 @@ ApplicationWindow {
     AssetManager { id: manager }
 
     function start_redownload(urls) {
-        logger.log(`DownloadAppdataWindow.start_redownload() with ${urls.length} URL(s)`);
+        logger.info(`DownloadAppdataWindow.start_redownload() with ${urls.length} URL(s)`);
 
         // Show the window
         root.show();
@@ -198,12 +198,12 @@ ApplicationWindow {
         }
 
         function onDownloadShowMsg (message) {
-            logger.log("onDownloadShowMsg(): " + message);
+            logger.info("onDownloadShowMsg(): " + message);
             download_progress_frame.status_text = message;
         }
 
         function onDownloadNeedsRetry(failed_url: string, error_message: string) {
-            logger.log("onDownloadNeedsRetry(): " + failed_url + " - " + error_message);
+            logger.info("onDownloadNeedsRetry(): " + failed_url + " - " + error_message);
             download_progress_frame.handle_download_needs_retry(failed_url, error_message);
         }
 
@@ -311,7 +311,7 @@ ApplicationWindow {
             urls.push(lang_url);
         }
 
-        /* logger.log("Show progress bar"); */
+        /* logger.info("Show progress bar"); */
         download_progress_frame.visible = true;
 
         // Store URLs in progress frame for potential retry/continuation
@@ -369,7 +369,7 @@ ApplicationWindow {
                             Layout.fillWidth: true
                             Layout.alignment: Qt.AlignCenter
                             onLinkActivated: function(link) {
-                                /* logger.log(link + " link activated"); */
+                                /* logger.info(link + " link activated"); */
                                 Qt.openUrlExternally(link);
                             }
                             text: `
@@ -608,12 +608,12 @@ ApplicationWindow {
             }
 
             onRetry_download: function(url) {
-                logger.log("Retrying download for: " + url);
+                logger.info("Retrying download for: " + url);
                 manager.download_urls_and_extract([url], root.is_initial_setup);
             }
 
             onContinue_downloads: function(urls) {
-                logger.log("Continuing with remaining " + urls.length + " URL(s)");
+                logger.info("Continuing with remaining " + urls.length + " URL(s)");
                 manager.download_urls_and_extract(urls, root.is_initial_setup);
             }
         }

@@ -36,8 +36,8 @@ Item {
         target: pm
 
         function onPromptResponseForMessages(sender_message_idx: int, model_name: string, response: string) {
-            logger.log(`🤖 onPromptResponseForMessages received: sender_message_idx=${sender_message_idx}, model_name=${model_name}`);
-            logger.log(`📝 Response content: "${response.substring(0, 100)}..."`);
+            logger.info(`🤖 onPromptResponseForMessages received: sender_message_idx=${sender_message_idx}, model_name=${model_name}`);
+            logger.info(`📝 Response content: "${response.substring(0, 100)}..."`);
 
             root.waiting_for_response = false;
 
@@ -60,7 +60,7 @@ Item {
             if (assistant_message.responses_json) {
                 try {
                     responses = JSON.parse(assistant_message.responses_json);
-                    logger.log(`📚 Parsed ${responses.length} existing responses`);
+                    logger.info(`📚 Parsed ${responses.length} existing responses`);
                 } catch (e) {
                     logger.error("Failed to parse responses_json:", e);
                     return;
@@ -73,7 +73,7 @@ Item {
                     let is_error = root.is_error_response(response);
                     let current_retry_count = responses[i].retry_count || 0;
 
-                    logger.log(`🔄 Updating response for ${model_name}: is_error=${is_error}, retry_count=${current_retry_count}`);
+                    logger.info(`🔄 Updating response for ${model_name}: is_error=${is_error}, retry_count=${current_retry_count}`);
 
                     responses[i].response = response;
                     responses[i].status = is_error ? "error" : "completed";
@@ -81,24 +81,24 @@ Item {
 
                     // Handle automatic retry for errors (up to 5 times)
                     if (is_error && current_retry_count < 5 && root.ai_models_auto_retry && !root.is_rate_limit_error(response)) {
-                        logger.log(`🔁 Scheduling automatic retry for ${model_name}`);
+                        logger.info(`🔁 Scheduling automatic retry for ${model_name}`);
                         Qt.callLater(function() {
                             root.handle_retry_request(assistant_message_idx, model_name, root.generate_request_id());
                         });
                     } else if (is_error && root.is_rate_limit_error(response)) {
-                        logger.log(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
+                        logger.info(`⏸️  Skipping auto-retry for rate limit error: ${model_name}`);
                     } else if (is_error && !root.ai_models_auto_retry) {
-                        logger.log(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
+                        logger.info(`⏸️  Auto-retry disabled, not retrying: ${model_name}`);
                     }
 
-                    logger.log(`✅ Updated response data:`, JSON.stringify(responses[i]));
+                    logger.info(`✅ Updated response data:`, JSON.stringify(responses[i]));
                     break;
                 }
             }
 
             // Update the assistant message with new responses
             messages_model.setProperty(assistant_message_idx, "responses_json", JSON.stringify(responses));
-            logger.log(`💾 Saved responses_json to message model`);
+            logger.info(`💾 Saved responses_json to message model`);
         }
     }
 
@@ -112,22 +112,22 @@ Item {
     ListModel { id: available_models }
 
     function load_available_models() {
-        logger.log(`🔄 Loading available models from all providers...`);
+        logger.info(`🔄 Loading available models from all providers...`);
         available_models.clear();
         let providers_json = SuttaBridge.get_providers_json();
-        logger.log(`📥 Raw providers JSON: "${providers_json}"`);
+        logger.info(`📥 Raw providers JSON: "${providers_json}"`);
         try {
             let providers_array = JSON.parse(providers_json);
-            logger.log(`📊 Parsing ${providers_array.length} providers`);
+            logger.info(`📊 Parsing ${providers_array.length} providers`);
             for (var i = 0; i < providers_array.length; i++) {
                 var provider = providers_array[i];
-                logger.log(`  Provider ${provider.name}: enabled=${provider.enabled}`);
+                logger.info(`  Provider ${provider.name}: enabled=${provider.enabled}`);
 
                 // Only load models from enabled providers
                 if (provider.enabled) {
                     for (var j = 0; j < provider.models.length; j++) {
                         var model = provider.models[j];
-                        logger.log(`    [${j}] ${model.model_name}: enabled=${model.enabled}`);
+                        logger.info(`    [${j}] ${model.model_name}: enabled=${model.enabled}`);
                         available_models.append({
                             model_name: model.model_name,
                             enabled: model.enabled,
@@ -135,10 +135,10 @@ Item {
                         });
                     }
                 } else {
-                    logger.log(`    Skipping disabled provider ${provider.name}`);
+                    logger.info(`    Skipping disabled provider ${provider.name}`);
                 }
             }
-            logger.log(`🎯 Total models loaded: ${available_models.count}`);
+            logger.info(`🎯 Total models loaded: ${available_models.count}`);
         } catch (e) {
             logger.error("Failed to parse providers JSON:", e);
         }
@@ -813,10 +813,10 @@ Item {
 
 
                                 translations_data: {
-                                    /* logger.log(`AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`); */
+                                    /* logger.info(`AssistantResponses for message ${message_item.index}: role=${message_item.role}, responses_json="${message_item.responses_json}"`); */
                                     try {
                                         let data = JSON.parse(message_item.responses_json || "[]");
-                                        /* logger.log(`Parsed translations_data:`, JSON.stringify(data)); */
+                                        /* logger.info(`Parsed translations_data:`, JSON.stringify(data)); */
                                         return data;
                                     } catch (e) {
                                         logger.error(`Error parsing responses_json for message ${message_item.index}:` + e);
@@ -876,11 +876,11 @@ Item {
                                             return;
                                         }
 
-                                        logger.log(`🚀 Send button clicked for message ${message_item.index}`);
+                                        logger.info(`🚀 Send button clicked for message ${message_item.index}`);
 
                                         // Load enabled models
                                         root.load_available_models();
-                                        logger.log(`📋 Loaded ${available_models.count} available models`);
+                                        logger.info(`📋 Loaded ${available_models.count} available models`);
 
                                         if (available_models.count === 0) {
                                             no_models_dialog.open();
@@ -892,7 +892,7 @@ Item {
                                         for (var i = 0; i < available_models.count; i++) {
                                             var model = available_models.get(i);
                                             if (model.enabled) {
-                                                logger.log(`✅ Adding enabled model: ${model.model_name}`);
+                                                logger.info(`✅ Adding enabled model: ${model.model_name}`);
                                                 responses.push({
                                                     model_name: model.model_name,
                                                     status: "waiting",
@@ -903,11 +903,11 @@ Item {
                                                     user_selected: responses.length === 0  // First model selected by default
                                                 });
                                             } else {
-                                                logger.log(`⏭️  Skipping disabled model: ${model.model_name}`);
+                                                logger.info(`⏭️  Skipping disabled model: ${model.model_name}`);
                                             }
                                         }
 
-                                        logger.log(`📊 Created ${responses.length} response entries`);
+                                        logger.info(`📊 Created ${responses.length} response entries`);
 
                                         if (responses.length === 0) {
                                             msg_dialog_ok.text = "No AI models are enabled. Please enable at least one model in settings.";
@@ -950,7 +950,7 @@ Item {
                                                             role: "assistant",
                                                             content: assistant_responses[selected_idx].response
                                                         });
-                                                        logger.log(`📝 Added assistant message from ${assistant_responses[selected_idx].model_name}`);
+                                                        logger.info(`📝 Added assistant message from ${assistant_responses[selected_idx].model_name}`);
                                                     }
                                                     // Skip assistant messages that don't have completed selected responses
                                                 } catch (e) {
@@ -962,15 +962,15 @@ Item {
                                                     role: msg.role,
                                                     content: msg.content
                                                 });
-                                                logger.log(`📝 Added ${msg.role} message`);
+                                                logger.info(`📝 Added ${msg.role} message`);
                                             }
                                         }
                                         let messages_json = JSON.stringify(messages);
-                                        logger.log(`📤 Composed message history with ${messages.length} messages`);
+                                        logger.info(`📤 Composed message history with ${messages.length} messages`);
 
                                         // Send requests to all enabled models using the same message history
                                         for (var j = 0; j < responses.length; j++) {
-                                            logger.log(`🎯 Sending request to ${responses[j].model_name}`);
+                                            logger.info(`🎯 Sending request to ${responses[j].model_name}`);
                                             let provider_name = SuttaBridge.get_provider_for_model(responses[j].model_name);
                                             pm.prompt_request_with_messages(
                                                 message_item.index, // sender message index (user message that triggered this)

@@ -458,10 +458,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     function handle_ai_translate_request(paragraph_index: int, with_vocab = true) {
-        logger.log(`🚀 AI Translate button clicked for paragraph ${paragraph_index}, with_vocab=${with_vocab}`);
+        logger.info(`🚀 AI Translate button clicked for paragraph ${paragraph_index}, with_vocab=${with_vocab}`);
 
         root.load_translation_models();
-        logger.log(`📋 Loaded ${translation_models.count} translation models`);
+        logger.info(`📋 Loaded ${translation_models.count} translation models`);
 
         if (translation_models.count === 0) {
             no_models_dialog.open();
@@ -484,7 +484,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             combined_prompt = system_prompt + "\n\n" + user_prompt;
         }
 
-        logger.log(`📝 Generated prompt with system context: "${combined_prompt.substring(0, 200)}..."`);
+        logger.info(`📝 Generated prompt with system context: "${combined_prompt.substring(0, 200)}..."`);
 
         let translations = [];
 
@@ -493,7 +493,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             if (item.enabled) {
                 let request_id = root.generate_request_id();
                 let translation_idx = translations.length; // Use the current translations array length as index
-                logger.log(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
+                logger.info(`🎯 Sending request to ${item.model_name} (model_idx=${i}, translation_idx=${translation_idx}, request_id=${request_id})`);
                 let provider_name = SuttaBridge.get_provider_for_model(item.model_name);
                 pm.prompt_request(paragraph_index, translation_idx, provider_name, item.model_name, combined_prompt);
                 translations.push({
@@ -507,11 +507,11 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     with_vocab: with_vocab
                 });
             } else {
-                logger.log(`⏭️  Skipping disabled model ${item.model_name}`);
+                logger.info(`⏭️  Skipping disabled model ${item.model_name}`);
             }
         }
 
-        logger.log(`📊 Created ${translations.length} translation entries`);
+        logger.info(`📊 Created ${translations.length} translation entries`);
         let translations_json = JSON.stringify(translations);
         paragraph_model.setProperty(paragraph_index, "translations_json", translations_json);
     }

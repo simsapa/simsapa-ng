@@ -30,15 +30,15 @@ ColumnLayout {
 
     // Debug logging when translations_data changes
     onTranslations_dataChanged: {
-        /* logger.log(`AssistantResponses: translations_data changed for paragraph ${paragraph_index}`); */
+        /* logger.info(`AssistantResponses: translations_data changed for paragraph ${paragraph_index}`); */
         if (translations_data) {
-            /* logger.log(`New data has ${translations_data.length} translations:`); */
+            /* logger.info(`New data has ${translations_data.length} translations:`); */
             for (var i = 0; i < translations_data.length; i++) {
                 var item = translations_data[i];
                 if (item) {
-                    logger.log(`  [${i}] ${item.model_name}: status=${item.status}, response_length=${item.response ? item.response.length : 0}`);
+                    logger.info(`  [${i}] ${item.model_name}: status=${item.status}, response_length=${item.response ? item.response.length : 0}`);
                 } else {
-                    logger.log(`  [${i}] null/undefined item`);
+                    logger.info(`  [${i}] null/undefined item`);
                 }
             }
         } else {
@@ -166,29 +166,29 @@ ColumnLayout {
                             property var data: response_content_item.modelData || {}
 
                             text: {
-                                logger.log(`🎨 TextArea rendering for item:`, JSON.stringify(data));
+                                logger.info(`🎨 TextArea rendering for item:`, JSON.stringify(data));
 
                                 // Handle empty or invalid data
                                 if (!data || Object.keys(data).length === 0) {
-                                    logger.log(`⚠️  Empty or invalid data, showing waiting message`);
+                                    logger.info(`⚠️  Empty or invalid data, showing waiting message`);
                                     return `Waiting for response from ${data.model_name} (3min timeout) ...`;
                                 }
 
                                 if (data.status === "waiting") {
-                                    logger.log(`⏳ Showing waiting message for ${data.model_name}`);
+                                    logger.info(`⏳ Showing waiting message for ${data.model_name}`);
                                     return `Waiting for response from ${data.model_name} (3min timeout) ...`;
                                 } else if (data.status === "error") {
-                                    logger.log(`❌ Showing error message`);
+                                    logger.info(`❌ Showing error message`);
                                     var error_text = data.response || "Unknown error occurred"
                                     var retry_text = data.retry_count > 0 ? `\n\nRetrying... (${data.retry_count}x)` : ""
                                     return error_text + retry_text;
                                 } else if (data.status === "completed") {
-                                    logger.log(`✅ Showing completed response, raw content: "${data.response}"`);
+                                    logger.info(`✅ Showing completed response, raw content: "${data.response}"`);
                                     var html_content = SuttaBridge.markdown_to_html(data.response || "");
-                                    logger.log(`🎨 Converted HTML: "${html_content}"`);
+                                    logger.info(`🎨 Converted HTML: "${html_content}"`);
                                     return html_content;
                                 } else {
-                                    logger.log(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
+                                    logger.info(`❓ Unknown status: "${data.status}", showing waiting message for ${data.model_name}`);
                                     return `Waiting for response from ${data.model_name} (3min timeout) ...`;
                                 }
                             }

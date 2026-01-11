@@ -193,7 +193,7 @@ ColumnLayout {
         }
 
         Keys.onPressed: function(event) {
-            logger.log("key:" + event.key);
+            logger.info("key:" + event.key);
             if (event.key === Qt.Key_Up ||
                 (event.key === Qt.Key_K && event.modifiers & Qt.ControlModifier)) {
                 if (fulltext_list.currentIndex > 0)

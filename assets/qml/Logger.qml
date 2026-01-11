@@ -25,12 +25,6 @@ QtObject {
         }
     }
 
-    function log(message) {
-        if (level >= Logger.Level.Info) {
-            console.log("[LOG]", message)
-        }
-    }
-
     function warn(message) {
         if (level >= Logger.Level.Warn) {
             console.warn("[WARN]", message)
