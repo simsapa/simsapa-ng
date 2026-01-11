@@ -1,6 +1,6 @@
 [package]
 name = "simsapa_bridges"
-version = "0.1.10-alpha.1"
+version = "0.1.10-alpha.2"
 edition = "2024"
 authors = ["Gambhiro Bhikkhu <profound.labs@gmail.com>"]
 license = "GPLv3"
