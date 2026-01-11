@@ -295,10 +295,66 @@ class ReadingModeController {
     }
 }
 
+class ChapterNavigationController {
+    constructor() {
+        this.prevButton = document.getElementById('prevChapterButton');
+        this.nextButton = document.getElementById('nextChapterButton');
+
+        this.init();
+    }
+
+    init() {
+        if (!this.prevButton || !this.nextButton) {
+            return;
+        }
+
+        // Set initial disabled state based on data attributes
+        if (this.prevButton.dataset.isFirst === 'true') {
+            this.prevButton.disabled = true;
+        }
+        if (this.nextButton.dataset.isLast === 'true') {
+            this.nextButton.disabled = true;
+        }
+
+        // Add click event listeners
+        this.prevButton.addEventListener('click', () => this.navigate_prev());
+        this.nextButton.addEventListener('click', () => this.navigate_next());
+    }
+
+    async navigate_prev() {
+        const item_uid = this.prevButton.dataset.spineItemUid;
+
+        // Determine if this is a sutta or book chapter based on which constant is defined
+        const is_sutta = typeof SUTTA_UID !== 'undefined';
+        const endpoint = is_sutta ? 'prev_sutta' : 'prev_chapter';
+
+        try {
+            await fetch(`${API_URL}/${endpoint}/${WINDOW_ID}/${item_uid}`);
+        } catch (error) {
+            log_error(`Failed to navigate to previous ${is_sutta ? 'sutta' : 'chapter'}: ` + error);
+        }
+    }
+
+    async navigate_next() {
+        const item_uid = this.nextButton.dataset.spineItemUid;
+
+        // Determine if this is a sutta or book chapter based on which constant is defined
+        const is_sutta = typeof SUTTA_UID !== 'undefined';
+        const endpoint = is_sutta ? 'next_sutta' : 'next_chapter';
+
+        try {
+            await fetch(`${API_URL}/${endpoint}/${WINDOW_ID}/${item_uid}`);
+        } catch (error) {
+            log_error(`Failed to navigate to next ${is_sutta ? 'sutta' : 'chapter'}: ` + error);
+        }
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function(_event) {
     new HamburgerMenu();
     new TextResizeController();
     new ReadingModeController();
+    new ChapterNavigationController();
     if (IS_MOBILE) {
         // On mobile in a WebView, there is no double click event, so listen to
         // selection change (from a long press action).

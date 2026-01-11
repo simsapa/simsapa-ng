@@ -15,7 +15,6 @@ use crate::logger::{error, info};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
-use crate::html_content::sutta_html_page;
 use crate::{get_app_globals, init_app_globals};
 
 /// Represents the application data and settings
@@ -212,13 +211,46 @@ impl AppData {
             body_class.push_str(&format!(" lang-{}", sutta.language));
         }
 
+        // Only add navigation if sutta has range information
+        let nav_html = if sutta.sutta_range_group.is_some() &&
+                          sutta.sutta_range_start.is_some() &&
+                          sutta.sutta_range_end.is_some() {
+            info(&format!("Sutta {} has range info: group={:?}, start={:?}, end={:?}",
+                sutta.uid, sutta.sutta_range_group, sutta.sutta_range_start, sutta.sutta_range_end));
+
+            // Query prev/next suttas to determine navigation button state
+            let prev_sutta = self.dbm.appdata.get_prev_sutta(&sutta.uid).ok().flatten();
+            let next_sutta = self.dbm.appdata.get_next_sutta(&sutta.uid).ok().flatten();
+
+            let is_first_sutta = prev_sutta.is_none();
+            let is_last_sutta = next_sutta.is_none();
+
+            info(&format!("Sutta {} navigation: has_prev={}, has_next={}",
+                sutta.uid, !is_first_sutta, !is_last_sutta));
+
+            // Build the navigation HTML by replacing placeholders
+            use crate::html_content::PREV_NEXT_CHAPTER_HTML;
+            PREV_NEXT_CHAPTER_HTML
+                .replace("{current_spine_item_uid}", &sutta.uid)
+                .replace("{current_book_uid}", &sutta.uid)  // Use sutta.uid for both since suttas don't have book_uid
+                .replace("{is_first_chapter}", &is_first_sutta.to_string())
+                .replace("{is_last_chapter}", &is_last_sutta.to_string())
+                .replace("{api_url}", &self.api_url)
+        } else {
+            info(&format!("Sutta {} missing range info - no navigation buttons", sutta.uid));
+            // No range information, don't show navigation buttons
+            String::new()
+        };
+
         // Wrap content in the full HTML page structure
-        let final_html = sutta_html_page(
+        use crate::html_content::sutta_html_page_with_nav;
+        let final_html = sutta_html_page_with_nav(
             &content_html_body,
             Some(self.api_url.to_string()),
             Some(css_extra.to_string()),
             Some(js_extra.to_string()),
             Some(body_class),
+            Some(nav_html),
         );
 
         Ok(final_html)
@@ -300,13 +332,31 @@ impl AppData {
             }
         }
 
+        // Query prev/next spine items to determine navigation button state
+        let prev_item = self.dbm.appdata.get_prev_book_spine_item(&spine_item.spine_item_uid).ok().flatten();
+        let next_item = self.dbm.appdata.get_next_book_spine_item(&spine_item.spine_item_uid).ok().flatten();
+
+        let is_first_chapter = prev_item.is_none();
+        let is_last_chapter = next_item.is_none();
+
+        // Build the navigation HTML by replacing placeholders
+        use crate::html_content::PREV_NEXT_CHAPTER_HTML;
+        let nav_html = PREV_NEXT_CHAPTER_HTML
+            .replace("{current_spine_item_uid}", &spine_item.spine_item_uid)
+            .replace("{current_book_uid}", &spine_item.book_uid)
+            .replace("{is_first_chapter}", &is_first_chapter.to_string())
+            .replace("{is_last_chapter}", &is_last_chapter.to_string())
+            .replace("{api_url}", &self.api_url);
+
         // Wrap content in the full HTML page structure
-        let final_html = sutta_html_page(
+        use crate::html_content::sutta_html_page_with_nav;
+        let final_html = sutta_html_page_with_nav(
             &content_html_body,
             Some(self.api_url.to_string()),
             Some(css_extra.to_string()),
             Some(js_extra.to_string()),
             Some(body_class),
+            Some(nav_html),
         );
 
         Ok(final_html)

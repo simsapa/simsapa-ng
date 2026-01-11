@@ -287,6 +287,142 @@ fn open_book_page_tab(window_id: &str, request: Json<BookPageRequest>, dbm: &Sta
     Status::Ok
 }
 
+#[get("/prev_chapter/<window_id>/<current_spine_item_uid..>")]
+fn prev_chapter(window_id: &str, current_spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&current_spine_item_uid);
+    info(&format!("prev_chapter(): window_id: {}, spine_item_uid: {}", window_id, uid_str));
+
+    // Get the previous spine item
+    let prev_item = match dbm.appdata.get_prev_book_spine_item(&uid_str) {
+        Ok(Some(item)) => item,
+        Ok(None) => {
+            info(&format!("No previous chapter found for: {}", uid_str));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error in prev_chapter: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON
+    let result_data_json = serde_json::json!({
+        "item_uid": prev_item.spine_item_uid,
+        "table_name": "book_spine_items",
+        "sutta_title": prev_item.title.unwrap_or_default(),
+        "sutta_ref": "",
+        "snippet": "",
+        "anchor": "",
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_show_chapter_in_sutta_window(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
+#[get("/next_chapter/<window_id>/<current_spine_item_uid..>")]
+fn next_chapter(window_id: &str, current_spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&current_spine_item_uid);
+    info(&format!("next_chapter(): window_id: {}, spine_item_uid: {}", window_id, uid_str));
+
+    // Get the next spine item
+    let next_item = match dbm.appdata.get_next_book_spine_item(&uid_str) {
+        Ok(Some(item)) => item,
+        Ok(None) => {
+            info(&format!("No next chapter found for: {}", uid_str));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error in next_chapter: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON
+    let result_data_json = serde_json::json!({
+        "item_uid": next_item.spine_item_uid,
+        "table_name": "book_spine_items",
+        "sutta_title": next_item.title.unwrap_or_default(),
+        "sutta_ref": "",
+        "snippet": "",
+        "anchor": "",
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_show_chapter_in_sutta_window(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
+#[get("/prev_sutta/<window_id>/<current_sutta_uid..>")]
+fn prev_sutta(window_id: &str, current_sutta_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&current_sutta_uid);
+    info(&format!("prev_sutta(): window_id: {}, sutta_uid: {}", window_id, uid_str));
+
+    // Get the previous sutta
+    let prev_sutta = match dbm.appdata.get_prev_sutta(&uid_str) {
+        Ok(Some(sutta)) => sutta,
+        Ok(None) => {
+            info(&format!("No previous sutta found for: {}", uid_str));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error in prev_sutta: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON (matching the format used for suttas)
+    let result_data_json = serde_json::json!({
+        "item_uid": prev_sutta.uid,
+        "table_name": "suttas",
+        "sutta_title": prev_sutta.title.unwrap_or_default(),
+        "sutta_ref": prev_sutta.sutta_ref,
+        "snippet": "",
+        "anchor": "",
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_show_chapter_in_sutta_window(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
+#[get("/next_sutta/<window_id>/<current_sutta_uid..>")]
+fn next_sutta(window_id: &str, current_sutta_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&current_sutta_uid);
+    info(&format!("next_sutta(): window_id: {}, sutta_uid: {}", window_id, uid_str));
+
+    // Get the next sutta
+    let next_sutta = match dbm.appdata.get_next_sutta(&uid_str) {
+        Ok(Some(sutta)) => sutta,
+        Ok(None) => {
+            info(&format!("No next sutta found for: {}", uid_str));
+            return Status::NotFound;
+        }
+        Err(e) => {
+            error(&format!("Database error in next_sutta: {}", e));
+            return Status::InternalServerError;
+        }
+    };
+
+    // Compose the result data JSON (matching the format used for suttas)
+    let result_data_json = serde_json::json!({
+        "item_uid": next_sutta.uid,
+        "table_name": "suttas",
+        "sutta_title": next_sutta.title.unwrap_or_default(),
+        "sutta_ref": next_sutta.sutta_ref,
+        "snippet": "",
+        "anchor": "",
+    });
+
+    let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
+    ffi::callback_show_chapter_in_sutta_window(ffi::QString::from(window_id), ffi::QString::from(json_string));
+    Status::Ok
+}
+
 #[derive(Deserialize)]
 struct LoggerRequest {
     log_level: String,
@@ -1021,6 +1157,10 @@ pub async extern "C" fn start_webserver() {
             open_sutta_window,
             open_sutta_tab,
             open_book_page_tab,
+            prev_chapter,
+            next_chapter,
+            prev_sutta,
+            next_sutta,
             // Browser Extension API routes
             get_search_options,
             suttas_fulltext_search,
