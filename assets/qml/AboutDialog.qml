@@ -125,7 +125,7 @@ ApplicationWindow {
 
                 ScrollView {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 200
+                    Layout.preferredHeight: 330
                     clip: true
 
                     ListView {
