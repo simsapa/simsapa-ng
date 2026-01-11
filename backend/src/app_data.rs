@@ -11,7 +11,7 @@ use anyhow::{anyhow, Context, Result};
 use crate::db::{appdata_models::*, DbManager};
 use crate::db::appdata_schema::suttas::dsl::*;
 
-use crate::logger::{error, info};
+use crate::logger::{warn, error, info, debug};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
@@ -215,7 +215,7 @@ impl AppData {
         let nav_html = if sutta.sutta_range_group.is_some() &&
                           sutta.sutta_range_start.is_some() &&
                           sutta.sutta_range_end.is_some() {
-            info(&format!("Sutta {} has range info: group={:?}, start={:?}, end={:?}",
+            debug(&format!("Sutta {} has range info: group={:?}, start={:?}, end={:?}",
                 sutta.uid, sutta.sutta_range_group, sutta.sutta_range_start, sutta.sutta_range_end));
 
             // Query prev/next suttas to determine navigation button state
@@ -225,7 +225,7 @@ impl AppData {
             let is_first_sutta = prev_sutta.is_none();
             let is_last_sutta = next_sutta.is_none();
 
-            info(&format!("Sutta {} navigation: has_prev={}, has_next={}",
+            debug(&format!("Sutta {} navigation: has_prev={}, has_next={}",
                 sutta.uid, !is_first_sutta, !is_last_sutta));
 
             // Build the navigation HTML by replacing placeholders
@@ -237,7 +237,7 @@ impl AppData {
                 .replace("{is_last_chapter}", &is_last_sutta.to_string())
                 .replace("{api_url}", &self.api_url)
         } else {
-            info(&format!("Sutta {} missing range info - no navigation buttons", sutta.uid));
+            warn(&format!("Sutta {} missing range info - no navigation buttons", sutta.uid));
             // No range information, don't show navigation buttons
             String::new()
         };
