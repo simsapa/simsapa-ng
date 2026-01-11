@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
+import QtQuick.Dialogs
 
 import com.profoundlabs.simsapa
 
@@ -157,18 +158,16 @@ ApplicationWindow {
                                 }
 
                                 Button {
-                                    text: "Open"
+                                    text: "Save As..."
                                     font.pointSize: root.pointSize - 2
                                     onClicked: {
-                                        let file_path = SuttaBridge.get_log_file_path(log_file_item.fileName);
-                                        if (file_path !== "") {
-                                            Qt.openUrlExternally("file://" + file_path);
-                                        }
+                                        save_log_file_dialog.current_file_name = log_file_item.fileName;
+                                        save_log_file_dialog.open();
                                     }
                                 }
 
                                 Button {
-                                    text: "Copy"
+                                    text: "Copy Contents"
                                     font.pointSize: root.pointSize - 2
                                     onClicked: {
                                         let contents = SuttaBridge.get_log_file_contents(log_file_item.fileName);
@@ -214,6 +213,23 @@ ApplicationWindow {
                     text: "OK"
                     onClicked: root.close()
                 }
+            }
+        }
+    }
+
+    FolderDialog {
+        id: save_log_file_dialog
+        acceptLabel: "Save Log File"
+        property string current_file_name: ""
+        onAccepted: {
+            if (save_log_file_dialog.current_file_name === "") return;
+
+            let contents = SuttaBridge.get_log_file_contents(save_log_file_dialog.current_file_name);
+            let ok = SuttaBridge.save_file(save_log_file_dialog.selectedFolder,
+                                           save_log_file_dialog.current_file_name,
+                                           contents);
+            if (!ok) {
+                console.log("Failed to save log file");
             }
         }
     }
