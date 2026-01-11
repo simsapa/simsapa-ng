@@ -40,10 +40,11 @@ StackLayout {
     }
 
     function add_item(tab_data: var, show_item = true) {
-        /* logger.info("add_item() called - item_uid:", tab_data.item_uid, "web_item_key:", tab_data.web_item_key, "show_item:", show_item); */
+        logger.debug("STACK_LAYOUT: add_item() called - item_uid: " + tab_data.item_uid + " web_item_key: " + tab_data.web_item_key + " show_item: " + show_item);
+        logger.debug("STACK_LAYOUT: Current items_map keys: " + Object.keys(root.items_map).join(", "));
         let key = tab_data.web_item_key;
         if (root.items_map.hasOwnProperty(key)) {
-            logger.error("Item with key", key, "already exists");
+            logger.error("STACK_LAYOUT: ERROR - Item with key " + key + " already exists in items_map!");
             return;
         }
 
@@ -55,6 +56,7 @@ StackLayout {
             anchor: tab_data.anchor || "",
         };
         let data_json = JSON.stringify(data);
+        logger.debug("STACK_LAYOUT: Creating webview component for key: " + key);
         let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json });
 
         comp.page_loaded.connect(function() { root.page_loaded(); });
@@ -67,9 +69,12 @@ StackLayout {
         // Width/height dimension bindings removed to prevent layout jitter during transitions.
         // Visibility control now relies solely on visible, should_be_visible, and enabled properties.
         root.items_map[key] = comp;
+        logger.debug("STACK_LAYOUT: Added item to items_map. Total items: " + Object.keys(root.items_map).length);
         if (show_item) {
+            logger.debug("STACK_LAYOUT: show_item=true, setting current_key to: " + key);
             root.current_key = key;
         }
+        logger.debug("STACK_LAYOUT: add_item completed");
     }
 
     function get_item(key) {
@@ -85,31 +90,45 @@ StackLayout {
     }
 
     function delete_item(key, show_key_after_delete = null) {
+        logger.debug("STACK_LAYOUT: delete_item() called for key: " + key);
+        logger.debug("STACK_LAYOUT: Current items_map keys: " + Object.keys(root.items_map).join(", "));
+        logger.debug("STACK_LAYOUT: Current current_key: " + root.current_key);
         if (!root.items_map.hasOwnProperty(key)) {
-            logger.error("Item with key", key, "not found")
+            logger.error("STACK_LAYOUT: ERROR - Item with key " + key + " not found in items_map!")
             return;
         }
 
         const item = root.items_map[key];
         delete root.items_map[key];
+        logger.debug("STACK_LAYOUT: Deleted item from items_map. Remaining items: " + Object.keys(root.items_map).length);
         item.destroy();
+        logger.debug("STACK_LAYOUT: Destroyed webview component");
 
         // Update current_key if needed
         if (root.current_key === key) {
+            logger.debug("STACK_LAYOUT: Deleted item was current, updating current_key to: " + (show_key_after_delete || "(empty)"));
             root.current_key = show_key_after_delete || "";
         }
+        logger.debug("STACK_LAYOUT: delete_item completed");
     }
 
-    onCurrent_keyChanged: update_currentIndex()
+    onCurrent_keyChanged: {
+        logger.debug("STACK_LAYOUT: current_key changed to: " + root.current_key);
+        logger.debug("STACK_LAYOUT: items_map has key: " + root.items_map.hasOwnProperty(root.current_key));
+        update_currentIndex();
+    }
     onCurrentIndexChanged: update_current_key()
 
     function update_currentIndex() {
+        logger.debug("STACK_LAYOUT: update_currentIndex() called. current_key: " + root.current_key);
         if (!root.items_map[root.current_key] || root.current_key === "") {
+            logger.debug("STACK_LAYOUT: current_key not in items_map or empty, setting currentIndex to -1");
             root.currentIndex = -1;
             return;
         }
 
         let item = root.items_map[root.current_key];
+        logger.debug("STACK_LAYOUT: Found item in items_map");
 
         // Parse item data safely - data_json might not be set yet during initialization
         if (item.data_json && item.data_json.length > 0) {
@@ -119,19 +138,21 @@ StackLayout {
                     SuttaBridge.emit_update_window_title(item_data.item_uid, item_data.sutta_ref, item_data.sutta_title);
                 }
             } catch (e) {
-                logger.error("Failed to parse item.data_json in update_currentIndex:", e);
+                logger.error("STACK_LAYOUT: Failed to parse item.data_json in update_currentIndex: " + e);
             }
         }
 
         let found = false;
         for (let i = 0; i < root.children.length; i++) {
             if (root.children[i].item_key === root.current_key) {
+                logger.debug("STACK_LAYOUT: Found matching child at index " + i + ", setting currentIndex");
                 root.currentIndex = i;
                 found = true;
                 break;
             }
         }
         if (!found) {
+            logger.debug("STACK_LAYOUT: No matching child found, setting currentIndex to -1");
             root.currentIndex = -1;
         }
     }

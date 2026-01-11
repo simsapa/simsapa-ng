@@ -12,7 +12,7 @@ ApplicationWindow {
     id: root
     title: `About ${root.app_name}`
     width: is_mobile ? Screen.desktopAvailableWidth : 600
-    height: is_mobile ? Screen.desktopAvailableHeight : Math.min(750, Screen.desktopAvailableHeight)
+    height: is_mobile ? Screen.desktopAvailableHeight : Math.min(800, Screen.desktopAvailableHeight)
     visible: false
     /* visible: true // for qml preview */
     color: palette.window
