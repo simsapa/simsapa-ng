@@ -82,6 +82,62 @@ impl LogPrecision {
     }
 }
 
+/// Log levels representing increasing verbosity.
+///
+/// # Behavior
+/// Setting a log level enables that level and all less verbose levels below it.
+/// The levels are ordered from least to most verbose:
+///
+/// - **Silent (0)**: No logging output
+/// - **Error (1)**: Only error messages
+/// - **Warn (2)**: Warning and error messages
+/// - **Info (3)**: Informational, warning, and error messages (default)
+/// - **Debug (4)**: All messages including debug output (most verbose)
+///
+/// # Examples
+/// - Level::Info enables: Info, Warn, and Error (but not Debug)
+/// - Level::Error enables: Only Error messages
+/// - Level::Silent: No messages are logged
+/// - Level::Debug: All messages are logged (Debug, Info, Warn, Error)
+///
+/// The level can be set via the `LOG_LEVEL` environment variable or at runtime
+/// using `set_log_level()` or `Logger::set_level()`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Level {
+    Silent = 0,
+    Error = 1,
+    Warn = 2,
+    Info = 3,
+    Debug = 4,
+}
+
+impl Level {
+    /// Parse a log level from a string (case insensitive)
+    ///
+    /// Valid values: "silent", "error", "warn", "info", "debug"
+    /// Returns None if the string doesn't match a valid level.
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "silent" => Some(Level::Silent),
+            "error" => Some(Level::Error),
+            "warn" => Some(Level::Warn),
+            "info" => Some(Level::Info),
+            "debug" => Some(Level::Debug),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Level::Silent => "Silent",
+            Level::Error => "Error",
+            Level::Warn => "Warn",
+            Level::Info => "Info",
+            Level::Debug => "Debug",
+        }
+    }
+}
+
 pub struct TimeLog {
     start_time: Instant,
     prev_time: Mutex<Instant>,
@@ -233,6 +289,7 @@ pub struct Logger {
     time_log: Option<Arc<Mutex<TimeLog>>>,
     disable_log: bool,
     enable_print_log: bool,
+    level: Arc<Mutex<Level>>,
 }
 
 impl Logger {
@@ -276,11 +333,18 @@ impl Logger {
             None
         };
 
+        // Read LOG_LEVEL from environment variable, default to Info
+        let level = std::env::var("LOG_LEVEL")
+            .ok()
+            .and_then(|v| Level::from_str(&v))
+            .unwrap_or(Level::Info);
+
         Ok(Logger {
             log_file,
             time_log,
             disable_log,
             enable_print_log,
+            level: Arc::new(Mutex::new(level)),
         })
     }
 
@@ -330,7 +394,37 @@ impl Logger {
         Ok(())
     }
 
+    /// Log a debug message (most verbose level).
+    /// Only logs if the current level is set to Debug.
+    pub fn debug(&self, msg: &str, start_new: bool) {
+        // Check if debug level is enabled (requires Level::Debug)
+        if let Ok(level) = self.level.lock() {
+            if *level < Level::Debug {
+                return;
+            }
+        }
+
+        let formatted_msg = format!("DEBUG: {}", msg);
+
+        if self.enable_print_log {
+            tracing::debug!("{}", msg);
+        }
+
+        if let Err(e) = self.write_to_file(&formatted_msg, start_new) {
+            eprintln!("Failed to write to log file: {}", e);
+        }
+    }
+
+    /// Log an informational message.
+    /// Logs if the current level is Info or Debug.
     pub fn info(&self, msg: &str, start_new: bool) {
+        // Check if info level is enabled (requires Level::Info or higher)
+        if let Ok(level) = self.level.lock() {
+            if *level < Level::Info {
+                return;
+            }
+        }
+
         let formatted_msg = format!("INFO: {}", msg);
 
         if self.enable_print_log {
@@ -342,7 +436,16 @@ impl Logger {
         }
     }
 
+    /// Log a warning message.
+    /// Logs if the current level is Warn, Info, or Debug.
     pub fn warn(&self, msg: &str, start_new: bool) {
+        // Check if warn level is enabled (requires Level::Warn or higher)
+        if let Ok(level) = self.level.lock() {
+            if *level < Level::Warn {
+                return;
+            }
+        }
+
         let formatted_msg = format!("WARN: {}", msg);
 
         if self.enable_print_log {
@@ -354,7 +457,16 @@ impl Logger {
         }
     }
 
+    /// Log an error message.
+    /// Logs if the current level is Error, Warn, Info, or Debug (all levels except Silent).
     pub fn error(&self, msg: &str, start_new: bool) {
+        // Check if error level is enabled (requires Level::Error or higher)
+        if let Ok(level) = self.level.lock() {
+            if *level < Level::Error {
+                return;
+            }
+        }
+
         let formatted_msg = format!("ERROR: {}", msg);
 
         if self.enable_print_log {
@@ -387,6 +499,27 @@ impl Logger {
 
         if let Err(e) = self.write_to_file(&profile_msg, start_new) {
             eprintln!("Failed to write to log file: {}", e);
+        }
+    }
+
+    /// Get the current log level.
+    ///
+    /// Returns the currently configured log level. If the lock cannot be acquired,
+    /// returns Level::Info as a safe default.
+    pub fn get_level(&self) -> Level {
+        self.level.lock().map(|l| *l).unwrap_or(Level::Info)
+    }
+
+    /// Set the log level.
+    ///
+    /// Changes the logging verbosity at runtime. Setting a level enables that level
+    /// and all less verbose levels. For example:
+    /// - Setting Level::Info enables Info, Warn, and Error messages
+    /// - Setting Level::Debug enables all message types
+    /// - Setting Level::Silent disables all logging
+    pub fn set_level(&self, new_level: Level) {
+        if let Ok(mut level) = self.level.lock() {
+            *level = new_level;
         }
     }
 }
@@ -425,6 +558,7 @@ where
                     time_log: None,
                     disable_log: true,
                     enable_print_log: false,
+                    level: Arc::new(Mutex::new(Level::Info)),
                 }
             }
         }
@@ -458,12 +592,70 @@ pub fn error_with_options(msg: &str, start_new: bool) {
     with_logger(|logger| logger.error(msg, start_new));
 }
 
+pub fn debug(msg: &str) {
+    debug_with_options(msg, false);
+}
+
+pub fn debug_with_options(msg: &str, start_new: bool) {
+    with_logger(|logger| logger.debug(msg, start_new));
+}
+
 pub fn profile(msg: &str) {
     profile_with_options(msg, false);
 }
 
 pub fn profile_with_options(msg: &str, start_new: bool) {
     with_logger(|logger| logger.profile(msg, start_new));
+}
+
+/// Get the current log level.
+///
+/// Returns the currently configured log level enum value.
+pub fn get_log_level() -> Level {
+    with_logger(|logger| logger.get_level())
+}
+
+/// Set the log level.
+///
+/// Changes the logging verbosity at runtime. Setting a level enables that level
+/// and all less verbose levels:
+/// - Level::Silent: No logging
+/// - Level::Error: Only errors
+/// - Level::Warn: Warnings and errors
+/// - Level::Info: Info, warnings, and errors (default)
+/// - Level::Debug: All messages (most verbose)
+pub fn set_log_level(level: Level) {
+    with_logger(|logger| logger.set_level(level));
+}
+
+/// Get the current log level as a string.
+///
+/// Returns one of: "Silent", "Error", "Warn", "Info", or "Debug"
+pub fn get_log_level_str() -> String {
+    with_logger(|logger| logger.get_level().as_str().to_string())
+}
+
+/// Set the log level from a string (case insensitive).
+///
+/// Valid values: "silent", "error", "warn", "info", "debug" (case insensitive)
+///
+/// Returns true if successful, false if the string is not a valid level.
+///
+/// # Example
+/// ```ignore
+/// use simsapa_backend::logger::set_log_level_str;
+///
+/// set_log_level_str("debug"); // Enable all logging
+/// set_log_level_str("error"); // Only log errors
+/// set_log_level_str("INFO");  // Case insensitive - logs Info, Warn, and Error
+/// ```
+pub fn set_log_level_str(level_str: &str) -> bool {
+    if let Some(level) = Level::from_str(level_str) {
+        set_log_level(level);
+        true
+    } else {
+        false
+    }
 }
 
 // Utility function to format duration similar to the Python strfdelta

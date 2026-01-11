@@ -114,6 +114,40 @@ ApplicationWindow {
                 }
             }
 
+            RowLayout {
+                spacing: 10
+                Layout.fillWidth: true
+
+                Label {
+                    text: "Log Level"
+                    font.pointSize: root.pointSize
+                }
+
+                ComboBox {
+                    id: log_level_combo
+                    model: ["Silent", "Error", "Warn", "Info", "Debug"]
+                    font.pointSize: root.pointSize
+                    Layout.preferredWidth: 150
+
+                    Component.onCompleted: {
+                        // Get current log level from SuttaBridge
+                        let current_level = SuttaBridge.get_log_level();
+                        let index = log_level_combo.model.indexOf(current_level);
+                        if (index >= 0) {
+                            log_level_combo.currentIndex = index;
+                        }
+                    }
+
+                    onActivated: {
+                        // Set the new log level when selection changes
+                        let level_str = log_level_combo.model[log_level_combo.currentIndex];
+                        SuttaBridge.set_log_level(level_str);
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
             ColumnLayout {
                 spacing: 10
                 Layout.fillWidth: true

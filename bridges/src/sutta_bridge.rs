@@ -16,7 +16,7 @@ use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
 use simsapa_backend::prompt_utils::markdown_to_html;
-use simsapa_backend::logger::{info, error};
+use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_log_level_str};
 use simsapa_backend::topic_index;
 
 static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
@@ -552,6 +552,25 @@ pub mod qobject {
 
         #[qinvokable]
         fn open_topic_index_window(self: &SuttaBridge);
+
+        // Logger functions
+        #[qinvokable]
+        fn log_debug(self: &SuttaBridge, message: &QString);
+
+        #[qinvokable]
+        fn log_info(self: &SuttaBridge, message: &QString);
+
+        #[qinvokable]
+        fn log_warn(self: &SuttaBridge, message: &QString);
+
+        #[qinvokable]
+        fn log_error(self: &SuttaBridge, message: &QString);
+
+        #[qinvokable]
+        fn get_log_level(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_log_level(self: &SuttaBridge, level: &QString) -> bool;
     }
 }
 
@@ -2893,5 +2912,40 @@ impl qobject::SuttaBridge {
     pub fn open_topic_index_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_topic_index_window();
+    }
+
+    // =========================================================================
+    // Logger Functions
+    // =========================================================================
+
+    /// Log a debug message
+    pub fn log_debug(&self, message: &QString) {
+        debug(&message.to_string());
+    }
+
+    /// Log an info message
+    pub fn log_info(&self, message: &QString) {
+        info(&message.to_string());
+    }
+
+    /// Log a warning message
+    pub fn log_warn(&self, message: &QString) {
+        warn(&message.to_string());
+    }
+
+    /// Log an error message
+    pub fn log_error(&self, message: &QString) {
+        error(&message.to_string());
+    }
+
+    /// Get the current log level as a string
+    pub fn get_log_level(&self) -> QString {
+        QString::from(&get_log_level_str())
+    }
+
+    /// Set the log level from a string (case insensitive)
+    /// Returns true if successful, false if the string is not a valid level
+    pub fn set_log_level(&self, level: &QString) -> bool {
+        set_log_level_str(&level.to_string())
     }
 }

@@ -1,39 +1,30 @@
 import QtQuick
+import com.profoundlabs.simsapa
 
 QtObject {
     id: logger
 
-    enum Level {
-        Silent = 0,
-        Error = 1,
-        Warn = 2,
-        Info = 3,
-        Debug = 4
-    }
-
-    property int level: Logger.Level.Error
-
     function debug(message) {
-        if (level >= Logger.Level.Debug) {
-            console.log("[DEBUG]", message)
-        }
+        SuttaBridge.log_debug(message)
     }
 
     function info(message) {
-        if (level >= Logger.Level.Info) {
-            console.log("[INFO]", message)
-        }
+        SuttaBridge.log_info(message)
     }
 
     function warn(message) {
-        if (level >= Logger.Level.Warn) {
-            console.warn("[WARN]", message)
-        }
+        SuttaBridge.log_warn(message)
     }
 
     function error(message) {
-        if (level >= Logger.Level.Error) {
-            console.error("[ERROR]", message)
-        }
+        SuttaBridge.log_error(message)
+    }
+
+    function get_level() {
+        return SuttaBridge.get_log_level()
+    }
+
+    function set_level(level_str) {
+        return SuttaBridge.set_log_level(level_str)
     }
 }

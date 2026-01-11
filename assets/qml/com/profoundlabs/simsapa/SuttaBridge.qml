@@ -735,6 +735,32 @@ Item {
         console.log("open_topic_index_window()");
     }
 
+    // Logger functions
+    function log_debug(message: string) {
+        console.log("[DEBUG]", message);
+    }
+
+    function log_info(message: string) {
+        console.log("[INFO]", message);
+    }
+
+    function log_warn(message: string) {
+        console.warn("[WARN]", message);
+    }
+
+    function log_error(message: string) {
+        console.error("[ERROR]", message);
+    }
+
+    function get_log_level(): string {
+        return "Info";
+    }
+
+    function set_log_level(level: string): bool {
+        console.log("set_log_level():", level);
+        return true;
+    }
+
     Item {
         id: dpd_lookup_data
         visible: false
