@@ -47,6 +47,28 @@ use crate::pts_reference_search::ReferenceSearchResult;
 use crate::update_checker::ReleasesInfo;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
+
+/// Initialize environment variables from multiple sources.
+///
+/// Loads environment variables in the following order:
+/// 1. Standard .env file in current directory
+/// 2. config.txt in current directory
+/// 3. config.txt in simsapa directory (from get_create_simsapa_dir())
+///
+/// Does not override existing environment variables.
+fn init_dotenv() {
+    // Load from standard .env file
+    dotenv().ok();
+
+    // Try to load from config.txt in current directory
+    dotenvy::from_filename("config.txt").ok();
+
+    // Try to load from config.txt in simsapa directory
+    if let Ok(simsapa_dir) = get_create_simsapa_dir() {
+        let config_path = simsapa_dir.join("config.txt");
+        dotenvy::from_path(config_path).ok();
+    }
+}
 static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
 static SUTTA_REFERENCES: OnceLock<Vec<ReferenceSearchResult>> = OnceLock::new();
@@ -193,7 +215,7 @@ impl AppGlobals {
     pub fn new() -> Self {
         // Does not override existing env variables, e.g. if API_PORT is set
         // earlier by find_port_set_env().
-        dotenv().ok();
+        init_dotenv();
 
         let paths = AppGlobalPaths::new();
 
@@ -536,7 +558,7 @@ pub extern "C" fn appdata_db_exists() -> bool {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn dotenv_c() {
-    dotenv().ok();
+    init_dotenv();
 }
 
 #[unsafe(no_mangle)]
