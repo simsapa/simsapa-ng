@@ -327,7 +327,7 @@ pub fn natural_sort_compare(a: &str, b: &str) -> Ordering {
 /// sort_search_results_natural(&mut results);
 /// // Results in order: vajja 2, vajja 2.2, vajja 10.1
 /// ```
-pub fn sort_search_results_natural(results: &mut Vec<SearchResult>) {
+pub fn sort_search_results_natural(results: &mut [SearchResult]) {
     results.sort_by(|a, b| natural_sort_compare(&a.title, &b.title));
 }
 

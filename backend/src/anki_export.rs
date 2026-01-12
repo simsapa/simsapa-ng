@@ -394,7 +394,7 @@ fn generate_data_csv(
                             None
                         }
                     })
-                    .unwrap_or_else(|| "".to_string())
+                    .unwrap_or_default()
             };
 
             let row = vec![
@@ -484,7 +484,7 @@ pub fn render_anki_preview(
     let root_data = sample_data.get("root")
         .and_then(|v| v.as_object())
         .cloned()
-        .unwrap_or_else(|| create_empty_root_data());
+        .unwrap_or_else(create_empty_root_data);
 
     let uid = vocab_obj.get("uid")
         .and_then(|v| v.as_str())

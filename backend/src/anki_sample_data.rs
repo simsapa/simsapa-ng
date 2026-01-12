@@ -1,10 +1,10 @@
+use serde_json::json;
+
 /// Sample vocabulary data for Anki template preview
 /// 
 /// This module provides hardcoded sample data for the word "abhivādetvā"
 /// to be used in the Anki export dialog preview functionality.
-
-use serde_json::json;
-
+///
 /// Get sample vocabulary data as JSON string for preview
 /// 
 /// Returns a JSON object containing:

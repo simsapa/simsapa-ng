@@ -46,7 +46,7 @@ impl<'a> SearchQueryTask<'a> {
     ) -> Self {
         let g = get_app_globals();
         // Use params.lang if provided and not empty, otherwise use empty string for no filter
-        let lang_filter = params.lang.clone().unwrap_or_else(|| String::new());
+        let lang_filter = params.lang.clone().unwrap_or_default();
 
         // For UidMatch mode, don't normalize the query text to preserve dots and other characters
         // For other modes, normalize to handle punctuation and spacing
@@ -82,7 +82,7 @@ impl<'a> SearchQueryTask<'a> {
         // Content and term are expected to be lowercase, no need for case-insensitive matching.
         let pattern = format!("({})", escaped_term);
         let re = Regex::new(&pattern)?;
-        let highlighted = re.replace_all(&content, "<span class='match'>$1</span>");
+        let highlighted = re.replace_all(content, "<span class='match'>$1</span>");
         Ok(highlighted.into_owned())
     }
 
@@ -1346,7 +1346,7 @@ impl<'a> SearchQueryTask<'a> {
                 let is_dpd_result = result.table_name == "dpd_headwords"
                     || result.table_name == "dpd_roots"
                     || (result.table_name == "dict_words"
-                        && result.source_uid.as_ref().map_or(false, |s| s.to_lowercase().contains("dpd")));
+                        && result.source_uid.as_ref().is_some_and(|s| s.to_lowercase().contains("dpd")));
 
                 if !is_dpd_result {
                     // Re-highlight the snippet based on the full query text

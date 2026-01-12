@@ -21,6 +21,7 @@ pub struct Dictionary {
 
 #[derive(Insertable)]
 #[diesel(table_name = dictionaries)]
+#[derive(Default)]
 pub struct NewDictionary<'a> {
     pub label: &'a str,
     pub title: &'a str,
@@ -32,20 +33,6 @@ pub struct NewDictionary<'a> {
     pub version: Option<&'a str>,
 }
 
-impl Default for NewDictionary<'_> {
-    fn default() -> Self {
-        Self {
-            label: "",
-            title: "",
-            dict_type: "",
-            creator: None,
-            description: None,
-            feedback_email: None,
-            feedback_url: None,
-            version: None,
-        }
-    }
-}
 
 #[derive(
     Debug,

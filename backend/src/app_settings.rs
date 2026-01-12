@@ -257,16 +257,13 @@ pub enum AnkiExportFormat {
 
 /// Mobile top bar margin setting
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default)]
 pub enum MobileTopBarMargin {
+    #[default]
     SystemValue,
     CustomValue(u32),
 }
 
-impl Default for MobileTopBarMargin {
-    fn default() -> Self {
-        MobileTopBarMargin::SystemValue
-    }
-}
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ThemeName {

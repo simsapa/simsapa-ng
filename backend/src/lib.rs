@@ -151,11 +151,10 @@ fn init_releases_info() {
 /// Set the releases info from a successful network fetch
 pub fn set_releases_info(info: ReleasesInfo) {
     init_releases_info();
-    if let Some(lock) = RELEASES_INFO.get() {
-        if let Ok(mut guard) = lock.write() {
+    if let Some(lock) = RELEASES_INFO.get()
+        && let Ok(mut guard) = lock.write() {
             *guard = Some(info);
         }
-    }
 }
 
 /// Get a clone of the releases info if it has been fetched
@@ -220,7 +219,7 @@ impl AppGlobals {
         let paths = AppGlobalPaths::new();
 
         let api_port: i32 = if let Ok(port_str) = env::var("API_PORT") {
-            if let Ok(port) = port_str.parse::<i32>() { port } else { 4848 }
+            port_str.parse::<i32>().unwrap_or(4848)
         } else {
             4848
         };
@@ -252,24 +251,34 @@ impl AppGlobals {
         let mut save_stats = true;
 
         // SAVE_STATS=true enables saving stats
-        if let Ok(s) = env::var("SAVE_STATS") {
-            if s.to_lowercase() == "true" {
+        if let Ok(s) = env::var("SAVE_STATS")
+            && s.to_lowercase() == "true" {
                 save_stats = true;
             }
-        }
 
         // NO_STATS=true overrides and disables saving stats
-        if let Ok(s) = env::var("NO_STATS") {
-            if s.to_lowercase() == "true" {
+        if let Ok(s) = env::var("NO_STATS")
+            && s.to_lowercase() == "true" {
                 save_stats = false;
             }
-        }
 
         save_stats
     }
 
     pub fn re_init_paths(&mut self) {
         self.paths = AppGlobalPaths::new();
+    }
+}
+
+impl Default for AppGlobals {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Default for AppGlobalPaths {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -434,7 +443,8 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
     } else if enable_print_log {
         println!("{}", msg);
     }
-    let simsapa_dir = match env::var("SIMSAPA_DIR") {
+
+    match env::var("SIMSAPA_DIR") {
         // If SIMSAPA_DIR env variable was defined, use that.
         Ok(s) => Ok(PathBuf::from(s)),
         Err(_) => {
@@ -505,9 +515,7 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
             }
             Ok(p)
         }
-    };
-
-    simsapa_dir
+    }
 }
 
 pub fn get_create_simsapa_app_assets_path() -> PathBuf {
@@ -664,7 +672,6 @@ pub extern "C" fn remove_download_temp_folder() {
 
         Err(e) => {
             error(&format!("{}", e));
-            return;
         }
     }
 }
@@ -698,16 +705,16 @@ pub fn move_folder_contents<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
     let mut entries: Vec<_> = WalkDir::new(src_path)
         .into_iter()
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        .map_err(io::Error::other)?;
 
     // Sort by depth (deepest first) to handle nested structures properly
-    entries.sort_by(|a, b| b.depth().cmp(&a.depth()));
+    entries.sort_by_key(|b| std::cmp::Reverse(b.depth()));
 
     // Create directory structure first
     for entry in &entries {
         if entry.file_type().is_dir() && entry.path() != src_path {
             let relative_path = entry.path().strip_prefix(src_path)
-                                            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                                            .map_err(io::Error::other)?;
             let dest_dir = dest_path.join(relative_path);
             fs::create_dir_all(&dest_dir)?;
         }
@@ -723,7 +730,7 @@ pub fn move_folder_contents<P: AsRef<Path>>(src: P, dest: P) -> io::Result<()> {
 
         if entry.file_type().is_file() {
             let relative_path = entry_path.strip_prefix(src_path)
-                                          .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+                                          .map_err(io::Error::other)?;
             let dest_file = dest_path.join(relative_path);
             fs::rename(entry_path, dest_file)?;
         } else if entry.file_type().is_dir() {
@@ -763,7 +770,7 @@ pub fn create_parent_directory(path: &str) -> String {
 pub fn save_to_file(data: &[u8], path: &str) -> String {
     match File::create(path) {
         Ok(mut file) => match file.write_all(data) {
-            Ok(_) => String::from(format!("File saved successfully to {}", path)),
+            Ok(_) => format!("File saved successfully to {}", path),
             Err(e) => format!("Failed to write file: {}", e),
         },
         Err(e) => format!("Failed to create file: {}", e),
@@ -877,18 +884,17 @@ pub extern "C" fn get_desktop_file_path_ffi() -> *mut std::os::raw::c_char {
     if let Some(path) = get_desktop_file_path() {
         // Remove .desktop extension for Qt setDesktopFileName
         let path_without_ext = path.with_extension("");
-        if let Some(path_str) = path_without_ext.to_str() {
-            if let Ok(c_string) = CString::new(path_str) {
+        if let Some(path_str) = path_without_ext.to_str()
+            && let Ok(c_string) = CString::new(path_str) {
                 return c_string.into_raw();
             }
-        }
     }
     std::ptr::null_mut()
 }
 
 /// FFI function to free strings allocated by Rust
 #[unsafe(no_mangle)]
-pub extern "C" fn free_rust_string(s: *mut std::os::raw::c_char) {
+pub unsafe extern "C" fn free_rust_string(s: *mut std::os::raw::c_char) {
     if !s.is_null() {
         unsafe {
             let _ = std::ffi::CString::from_raw(s);

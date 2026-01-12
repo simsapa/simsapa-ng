@@ -209,59 +209,53 @@ fn extract_metadata(dom: &RcDom) -> HashMap<String, String> {
 
     // Walk the DOM to find head elements
     fn walk_head(handle: &Handle, metadata: &mut HashMap<String, String>) {
-        match handle.data {
-            NodeData::Element {
+        if let NodeData::Element {
                 ref name,
                 ref attrs,
                 ..
-            } => {
-                let tag_name = name.local.as_ref();
+            } = handle.data {
+            let tag_name = name.local.as_ref();
 
-                // Extract title
-                if tag_name == "title" {
-                    if let Some(text) = get_element_text(handle) {
-                        metadata.insert("title".to_string(), text);
-                    }
+            // Extract title
+            if tag_name == "title"
+                && let Some(text) = get_element_text(handle) {
+                    metadata.insert("title".to_string(), text);
                 }
 
-                // Extract meta tags
-                if tag_name == "meta" {
-                    let attrs = attrs.borrow();
-                    let name_attr = attrs
-                        .iter()
-                        .find(|a| a.name.local.as_ref() == "name")
-                        .map(|a| a.value.to_string());
-                    let property_attr = attrs
-                        .iter()
-                        .find(|a| a.name.local.as_ref() == "property")
-                        .map(|a| a.value.to_string());
-                    let content_attr = attrs
-                        .iter()
-                        .find(|a| a.name.local.as_ref() == "content")
-                        .map(|a| a.value.to_string());
+            // Extract meta tags
+            if tag_name == "meta" {
+                let attrs = attrs.borrow();
+                let name_attr = attrs
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "name")
+                    .map(|a| a.value.to_string());
+                let property_attr = attrs
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "property")
+                    .map(|a| a.value.to_string());
+                let content_attr = attrs
+                    .iter()
+                    .find(|a| a.name.local.as_ref() == "content")
+                    .map(|a| a.value.to_string());
 
-                    if let Some(content) = content_attr {
-                        if let Some(name) = name_attr.or(property_attr) {
-                            let key = name.to_lowercase();
-                            if key.contains("author") || key == "dc:creator" {
-                                metadata.insert("author".to_string(), content);
-                            } else if key.contains("language") || key == "dc:language" {
-                                metadata.insert("language".to_string(), content);
-                            } else {
-                                metadata.insert(key, content);
-                            }
+                if let Some(content) = content_attr
+                    && let Some(name) = name_attr.or(property_attr) {
+                        let key = name.to_lowercase();
+                        if key.contains("author") || key == "dc:creator" {
+                            metadata.insert("author".to_string(), content);
+                        } else if key.contains("language") || key == "dc:language" {
+                            metadata.insert("language".to_string(), content);
+                        } else {
+                            metadata.insert(key, content);
                         }
                     }
 
-                    // Handle lang attribute on html tag
-                    if tag_name == "html" {
-                        if let Some(lang_attr) = attrs.iter().find(|a| a.name.local.as_ref() == "lang") {
-                            metadata.insert("language".to_string(), lang_attr.value.to_string());
-                        }
+                // Handle lang attribute on html tag
+                if tag_name == "html"
+                    && let Some(lang_attr) = attrs.iter().find(|a| a.name.local.as_ref() == "lang") {
+                        metadata.insert("language".to_string(), lang_attr.value.to_string());
                     }
-                }
             }
-            _ => {}
         }
 
         // Recursively walk children
@@ -279,11 +273,8 @@ fn get_element_text(handle: &Handle) -> Option<String> {
     let mut text = String::new();
     
     fn collect_text(handle: &Handle, text: &mut String) {
-        match handle.data {
-            NodeData::Text { ref contents } => {
-                text.push_str(&contents.borrow());
-            }
-            _ => {}
+        if let NodeData::Text { ref contents } = handle.data {
+            text.push_str(&contents.borrow());
         }
         
         for child in handle.children.borrow().iter() {
@@ -431,15 +422,11 @@ fn extract_body_html(dom: &RcDom) -> String {
     let mut html = String::new();
 
     fn find_body(handle: &Handle, html: &mut String) -> bool {
-        match handle.data {
-            NodeData::Element { ref name, .. } => {
-                if name.local.as_ref() == "body" {
-                    serialize_node(handle, html);
-                    return true;
-                }
+        if let NodeData::Element { ref name, .. } = handle.data
+            && name.local.as_ref() == "body" {
+                serialize_node(handle, html);
+                return true;
             }
-            _ => {}
-        }
 
         for child in handle.children.borrow().iter() {
             if find_body(child, html) {
@@ -574,12 +561,11 @@ fn extract_resources(
 
             // Try to read the file
             let resource_path = parent_dir.join(path);
-            if resource_path.exists() && resource_path.is_file() {
-                if let Ok(data) = fs::read(&resource_path) {
+            if resource_path.exists() && resource_path.is_file()
+                && let Ok(data) = fs::read(&resource_path) {
                     resources.insert(path.to_string(), data);
                     tracing::debug!("Extracted external resource: {}", path);
                 }
-            }
         }
     }
 

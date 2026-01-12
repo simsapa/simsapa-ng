@@ -192,8 +192,9 @@ fn is_void_element(tag: &str) -> bool {
 /// * `id` - The ID attribute value to search for
 ///
 /// # Returns
-/// * `Option<String>` - The extracted HTML element including its opening and closing tags,
-///                      or None if the ID is not found
+///
+/// * `Option<String>` - The extracted HTML element including its opening and
+///   closing tags, or None if the ID is not found
 ///
 /// # Example
 /// ```
@@ -252,8 +253,7 @@ pub fn extract_element_by_id_from_indented(html: &str, id: &str) -> Option<Strin
     let closing_tag = format!("</{}>", tag_name);
     let mut end_line_idx = None;
 
-    for idx in (start_idx + 1)..lines.len() {
-        let line = lines[idx];
+    for (idx, &line) in lines.iter().enumerate().skip(start_idx + 1) {
         let line_indent = line.len() - line.trim_start().len();
 
         // Check if this line contains a closing tag at the same or lower indentation

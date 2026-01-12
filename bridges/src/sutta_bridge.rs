@@ -2612,7 +2612,7 @@ impl qobject::SuttaBridge {
         };
 
         // Parse save_stats_behaviour from string
-        let stats_behaviour = SaveStatsBehaviour::from_str(&save_stats_behaviour.to_string());
+        let stats_behaviour: SaveStatsBehaviour = save_stats_behaviour.to_string().parse().unwrap();
 
         thread::spawn(move || {
             // Get current app and db versions

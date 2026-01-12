@@ -48,7 +48,7 @@ pub fn import_pdf_to_db(
     let extracted_author = extract_pdf_metadata(&doc, b"Author")
         .or_else(|| extract_xmp_author(&doc))
         .or_else(|| extract_pdf_metadata(&doc, b"Creator"))
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_default();
 
     // Use custom values if provided and non-empty, otherwise use extracted metadata
     let title = custom_title
@@ -63,7 +63,7 @@ pub fn import_pdf_to_db(
 
     let extracted_language = extract_pdf_metadata(&doc, b"Language")
         .or_else(|| extract_pdf_metadata(&doc, b"Lang"))
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_default();
 
     let language = custom_language
         .filter(|s| !s.trim().is_empty())
@@ -237,52 +237,44 @@ pub fn trim_pdf_string(s: &str) -> String {
 /// Extract author from XMP metadata (dc:creator or pdf:Author)
 pub fn extract_xmp_author(doc: &Document) -> Option<String> {
     // Try to get XMP metadata from catalog
-    if let Ok(catalog) = doc.catalog() {
-        if let Ok(metadata_ref) = catalog.get(b"Metadata") {
-            if let Ok(metadata_obj_id) = metadata_ref.as_reference() {
-                if let Ok(metadata_obj) = doc.get_object(metadata_obj_id) {
-                    if let Ok(stream) = metadata_obj.as_stream() {
-                        if let Ok(content) = stream.get_plain_content() {
+    if let Ok(catalog) = doc.catalog()
+        && let Ok(metadata_ref) = catalog.get(b"Metadata")
+            && let Ok(metadata_obj_id) = metadata_ref.as_reference()
+                && let Ok(metadata_obj) = doc.get_object(metadata_obj_id)
+                    && let Ok(stream) = metadata_obj.as_stream()
+                        && let Ok(content) = stream.get_plain_content() {
                             let xml = String::from_utf8_lossy(&content);
 
                             // First try dc:creator (Dublin Core)
-                            if let Some(start) = xml.find("<dc:creator>") {
-                                if let Some(end) = xml[start..].find("</dc:creator>") {
+                            if let Some(start) = xml.find("<dc:creator>")
+                                && let Some(end) = xml[start..].find("</dc:creator>") {
                                     let creator_start = start + 13;
                                     let creator_end = start + end;
                                     let creator_content = &xml[creator_start..creator_end];
 
                                     // Extract from RDF structure if present
                                     if creator_content.contains("<rdf:li>") {
-                                        if let Some(li_start) = creator_content.find("<rdf:li>") {
-                                            if let Some(li_end) = creator_content[li_start..].find("</rdf:li>") {
+                                        if let Some(li_start) = creator_content.find("<rdf:li>")
+                                            && let Some(li_end) = creator_content[li_start..].find("</rdf:li>") {
                                                 let li_content_start = li_start + 8;
                                                 let li_content_end = li_start + li_end;
                                                 let author = &creator_content[li_content_start..li_content_end];
                                                 return Some(author.trim().to_string());
                                             }
-                                        }
                                     } else {
                                         return Some(creator_content.trim().to_string());
                                     }
                                 }
-                            }
 
                             // Then try pdf:Author (PDF-specific)
-                            if let Some(start) = xml.find("<pdf:Author>") {
-                                if let Some(end) = xml[start..].find("</pdf:Author>") {
+                            if let Some(start) = xml.find("<pdf:Author>")
+                                && let Some(end) = xml[start..].find("</pdf:Author>") {
                                     let author_start = start + 12;
                                     let author_end = start + end;
                                     let author = &xml[author_start..author_end];
                                     return Some(author.trim().to_string());
                                 }
-                            }
                         }
-                    }
-                }
-            }
-        }
-    }
 
     None
 }

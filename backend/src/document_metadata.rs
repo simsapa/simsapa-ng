@@ -10,19 +10,12 @@ use std::path::Path;
 use crate::pdf_import::{extract_pdf_metadata, extract_xmp_author};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(Default)]
 pub struct DocumentMetadata {
     pub title: String,
     pub author: String,
 }
 
-impl Default for DocumentMetadata {
-    fn default() -> Self {
-        Self {
-            title: String::new(),
-            author: String::new(),
-        }
-    }
-}
 
 /// Extract metadata (title and author) from a document file
 pub fn extract_document_metadata(file_path: &Path) -> Result<DocumentMetadata> {
@@ -96,48 +89,43 @@ fn add_pdf_metadata_from_file(file_path: &Path, metadata: &mut DocumentMetadata)
 
 /// Walk the HTML DOM to find metadata
 fn walk_html_for_metadata(handle: &Handle, metadata: &mut DocumentMetadata) {
-    match handle.data {
-        NodeData::Element {
+    if let NodeData::Element {
             ref name,
             ref attrs,
             ..
-        } => {
-            let tag_name = name.local.as_ref();
+        } = handle.data {
+        let tag_name = name.local.as_ref();
 
-            // Extract title from <title> tag
-            if tag_name == "title" && metadata.title.is_empty() {
-                if let Some(text) = get_element_text(handle) {
-                    metadata.title = text;
-                }
+        // Extract title from <title> tag
+        if tag_name == "title" && metadata.title.is_empty()
+            && let Some(text) = get_element_text(handle) {
+                metadata.title = text;
             }
 
-            // Extract meta tags
-            if tag_name == "meta" {
-                let attrs = attrs.borrow();
-                let name_attr = attrs
-                    .iter()
-                    .find(|a| a.name.local.as_ref() == "name")
-                    .map(|a| a.value.to_string());
-                let property_attr = attrs
-                    .iter()
-                    .find(|a| a.name.local.as_ref() == "property")
-                    .map(|a| a.value.to_string());
-                let content_attr = attrs
-                    .iter()
-                    .find(|a| a.name.local.as_ref() == "content")
-                    .map(|a| a.value.to_string());
+        // Extract meta tags
+        if tag_name == "meta" {
+            let attrs = attrs.borrow();
+            let name_attr = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "name")
+                .map(|a| a.value.to_string());
+            let property_attr = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "property")
+                .map(|a| a.value.to_string());
+            let content_attr = attrs
+                .iter()
+                .find(|a| a.name.local.as_ref() == "content")
+                .map(|a| a.value.to_string());
 
-                if let Some(content) = content_attr {
-                    if let Some(name) = name_attr.or(property_attr) {
-                        let key = name.to_lowercase();
-                        if (key.contains("author") || key == "dc:creator") && metadata.author.is_empty() {
-                            metadata.author = content;
-                        }
+            if let Some(content) = content_attr
+                && let Some(name) = name_attr.or(property_attr) {
+                    let key = name.to_lowercase();
+                    if (key.contains("author") || key == "dc:creator") && metadata.author.is_empty() {
+                        metadata.author = content;
                     }
                 }
-            }
         }
-        _ => {}
     }
 
     // Recursively walk children
@@ -151,11 +139,8 @@ fn get_element_text(handle: &Handle) -> Option<String> {
     let mut text = String::new();
 
     fn collect_text(handle: &Handle, text: &mut String) {
-        match handle.data {
-            NodeData::Text { ref contents } => {
-                text.push_str(&contents.borrow());
-            }
-            _ => {}
+        if let NodeData::Text { ref contents } = handle.data {
+            text.push_str(&contents.borrow());
         }
 
         for child in handle.children.borrow().iter() {

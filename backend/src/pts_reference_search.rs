@@ -71,6 +71,7 @@ pub fn normalize_pts_reference(pts_ref: &str) -> String {
 /// Supports two formats:
 /// - 3-part: "D ii 20" → nikaya: "d", volume: Some("ii"), page: 20
 /// - 2-part: "Sn 52" → nikaya: "sn", volume: None, page: 52
+///
 /// Returns None if the string cannot be parsed
 pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
     if pts_ref.trim().is_empty() {
@@ -110,15 +111,14 @@ pub fn parse_pts_reference(pts_ref: &str) -> Option<PTSReference> {
     }
 
     // Try 2-part format: nikaya + page (no volume)
-    if parts.len() >= 2 {
-        if let Ok(page) = parts[1].parse::<u32>() {
+    if parts.len() >= 2
+        && let Ok(page) = parts[1].parse::<u32>() {
             return Some(PTSReference {
                 nikaya: nikaya.to_string(),
                 volume: None,
                 page,
             });
         }
-    }
 
     None
 }

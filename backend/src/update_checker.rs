@@ -26,6 +26,8 @@
 //! - `v0.1.0-alpha.1` - Both prefix and suffix
 
 use std::cmp::Ordering;
+use std::convert::Infallible;
+use std::str::FromStr;
 use std::time::Duration;
 
 use anyhow::{anyhow, Result};
@@ -48,19 +50,23 @@ pub enum SaveStatsBehaviour {
     Determine,
 }
 
-impl SaveStatsBehaviour {
+impl FromStr for SaveStatsBehaviour {
+    type Err = Infallible;
+
     /// Parse a string value into SaveStatsBehaviour.
     ///
     /// Accepts case-insensitive values:
     /// - "enabled" -> Enabled
     /// - "disabled" -> Disabled
     /// - "determine" or anything else -> Determine
-    pub fn from_str(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
+    ///
+    /// This implementation never fails and defaults to `Determine` for unrecognized values.
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_str() {
             "enabled" => SaveStatsBehaviour::Enabled,
             "disabled" => SaveStatsBehaviour::Disabled,
             _ => SaveStatsBehaviour::Determine,
-        }
+        })
     }
 }
 
@@ -289,18 +295,16 @@ pub fn get_release_channel() -> String {
     use crate::try_get_app_data;
 
     // Check environment variable first
-    if let Ok(channel) = env::var("RELEASE_CHANNEL") {
-        if !channel.is_empty() {
+    if let Ok(channel) = env::var("RELEASE_CHANNEL")
+        && !channel.is_empty() {
             return channel;
         }
-    }
 
     // Check app settings
-    if let Some(app_data) = try_get_app_data() {
-        if let Some(channel) = app_data.get_release_channel() {
+    if let Some(app_data) = try_get_app_data()
+        && let Some(channel) = app_data.get_release_channel() {
             return channel;
         }
-    }
 
     // Default to simsapa-ng
     "simsapa-ng".to_string()
@@ -605,11 +609,10 @@ pub fn get_latest_app_compatible_assets_release<'a>(
     app_version: &Version,
 ) -> Option<&'a ReleaseEntry> {
     for release in &info.assets.releases {
-        if let Ok(release_version) = to_version(&release.version_tag) {
-            if is_app_version_compatible_with_db_version(app_version, &release_version) {
+        if let Ok(release_version) = to_version(&release.version_tag)
+            && is_app_version_compatible_with_db_version(app_version, &release_version) {
                 return Some(release);
             }
-        }
     }
     None
 }

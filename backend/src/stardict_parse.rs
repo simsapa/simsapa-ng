@@ -141,7 +141,7 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
         } else {
             n += 1;
         }
-        let def_result = dict.dict.get_definition(&idx_entry, &dict.ifo);
+        let def_result = dict.dict.get_definition(idx_entry, &dict.ifo);
 
         match def_result {
             Ok(Some(def)) => {

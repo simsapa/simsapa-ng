@@ -9,7 +9,7 @@ use crate::db::DatabaseHandle;
 use crate::app_settings::AppSettings;
 use crate::logger::{info, error};
 
-static COMMON_WORDS_JSON: &'static str = include_str!("../../../assets/common-words.json");
+static COMMON_WORDS_JSON: &str = include_str!("../../../assets/common-words.json");
 
 pub type AppdataDbHandle = DatabaseHandle;
 
@@ -138,7 +138,7 @@ impl AppdataDbHandle {
 
         // Capture the reference before the first '/'
         let re = Regex::new(r"^([^/]+)/.*").expect("Invalid regex");
-        let uid_ref = re.replace(&sutta_uid, "$1").to_string();
+        let uid_ref = re.replace(sutta_uid, "$1").to_string();
 
         use crate::db::appdata_schema::suttas::dsl::*;
 
@@ -485,13 +485,12 @@ impl AppdataDbHandle {
             .collect();
 
         // Priority 1: Same source_uid and same language
-        if let Some(source) = current_source {
-            if let Some(sutta) = same_range.iter().find(|s| {
+        if let Some(source) = current_source
+            && let Some(sutta) = same_range.iter().find(|s| {
                 s.language == current_language && s.source_uid.as_ref() == Some(source)
             }) {
                 return Some(sutta.clone());
             }
-        }
 
         // Priority 2: Same language, any source
         if let Some(sutta) = same_range.iter().find(|s| s.language == current_language) {

@@ -314,7 +314,7 @@ pub fn dhp_verse_to_chapter(verse_num: u32) -> Option<String> {
 
 pub fn dhp_chapter_ref_for_verse_num(num: u32) -> Option<String> {
     for (ch, (start, end)) in DHP_CHAPTERS_TO_RANGE.iter() {
-        if num >= *ch && num <= *ch {
+        if num == *ch {
             return Some(format!("dhp{}-{}", start, end));
         }
     }
@@ -400,13 +400,11 @@ pub fn dhammatalks_org_ref_notation_convert(ref_str: &str) -> String {
 
     if ref_str.starts_with("ch") {
         let ch_re = Regex::new(r"ch(\d+)").unwrap();
-        if let Some(caps) = ch_re.captures(&ref_str) {
-            if let Ok(ch_num) = caps[1].parse::<u32>() {
-                if let Some((start, end)) = DHP_CHAPTERS_TO_RANGE.get(&ch_num) {
+        if let Some(caps) = ch_re.captures(&ref_str)
+            && let Ok(ch_num) = caps[1].parse::<u32>()
+                && let Some((start, end)) = DHP_CHAPTERS_TO_RANGE.get(&ch_num) {
                     ref_str = format!("dhp{}-{}", start, end);
                 }
-            }
-        }
     }
 
     ref_str
@@ -437,7 +435,7 @@ pub fn dhammatalk_org_convert_link_href_in_html(link_selector: &Selector, html_t
     let document = Html::parse_document(html_text);
     let mut replacements: Vec<(String, String)> = Vec::new();
 
-    for link in document.select(&link_selector) {
+    for link in document.select(link_selector) {
         if let Some(href) = link.value().attr("href") {
             // Check if this href matches sutta HTML name pattern
             if RE_DHAMMATALKS_ORG_SUTTA_HTML_NAME.is_match(href) {
@@ -597,11 +595,10 @@ pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
 
     for i in byte_pos..len {
         let ch = bytes[i];
-        if ch == b'.' || ch == b'?' || ch == b'!' || ch == b';' {
-            if let Ok(s) = std::str::from_utf8(&bytes[0..=i]) {
+        if (ch == b'.' || ch == b'?' || ch == b'!' || ch == b';')
+            && let Ok(s) = std::str::from_utf8(&bytes[0..=i]) {
                 return s.chars().count();
             }
-        }
     }
 
     text.chars().count()
@@ -1077,7 +1074,7 @@ pub fn calculate_context_boundaries(
     let sentence_start = find_sentence_start(original_text, word_start);
     let sentence_end = find_sentence_end(original_text, word_end);
 
-    let context_start_candidate = if word_start >= 50 { word_start - 50 } else { 0 };
+    let context_start_candidate = word_start.saturating_sub(50);
     let context_end_candidate = (word_end + 50).min(text_len);
 
     let mut context_start = sentence_start.max(context_start_candidate);
@@ -1088,20 +1085,18 @@ pub fn calculate_context_boundaries(
     let chars: Vec<char> = original_text.chars().collect();
 
     // If context_start is in the middle of a word, move backward to include the whole word
-    if context_start > 0 && context_start < chars.len() {
-        if is_word_char(chars[context_start]) {
+    if context_start > 0 && context_start < chars.len()
+        && is_word_char(chars[context_start]) {
             // We're starting mid-word, move back to include the complete word
             context_start = find_word_start_before(&chars, context_start);
         }
-    }
 
     // If context_end is in the middle of a word, move backward to previous word boundary
-    if context_end > 0 && context_end < chars.len() {
-        if is_word_char(chars[context_end]) {
+    if context_end > 0 && context_end < chars.len()
+        && is_word_char(chars[context_end]) {
             // We're ending mid-word, move back to the start of this word
             context_end = find_word_start_before(&chars, context_end);
         }
-    }
 
     ContextBoundaries {
         context_start,
@@ -1204,7 +1199,7 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
             current_search_pos = word_position.char_end;
         } else {
             let snippet = if current_search_pos < text_len {
-                let context_start = if current_search_pos >= 30 { current_search_pos - 30 } else { 0 };
+                let context_start = current_search_pos.saturating_sub(30);
                 let context_end = (current_search_pos + 70).min(text_len);
                 let context_slice: String = original_chars[context_start..context_end].iter().collect();
                 context_slice
@@ -1254,9 +1249,8 @@ pub fn normalize_query_text(text: Option<String>) -> String {
     let text = text.replace("-", "");
     let text = RE_PUNCT.replace_all(&text, " ").into_owned();
     let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
-    let text = text.trim().to_string();
 
-    text
+    text.trim().to_string()
 }
 
 /// Convert Pāḷi text to ASCII equivalents.
@@ -1345,7 +1339,7 @@ pub fn compact_plain_text(text: &str) -> String {
     }
     // Replace multiple spaces to one.
     let mut s = RE_SPACES.replace_all(text, " ").to_string();
-    s = s.replace('{', "").replace('}', "");
+    s = s.replace(['{', '}'], "");
 
     // Make lowercase and remove punctuation to help matching query strings.
     s = s.to_lowercase();
@@ -1523,22 +1517,22 @@ pub fn bilara_text_to_segments(
 
     // Optional JSONs also use IndexMap to preserve order consistency
     let tmpl_json: Option<IndexMap<String, String>> = tmpl_json_str
-        .map(|s| serde_json::from_str(s))
+        .map(serde_json::from_str)
         .transpose()
         .with_context(|| format!("Failed to parse template JSON: '{:?}'", tmpl_json_str))?;
 
     let variant_json: Option<IndexMap<String, String>> = variant_json_str
-        .map(|s| serde_json::from_str(s))
+        .map(serde_json::from_str)
         .transpose()
         .with_context(|| format!("Failed to parse variant JSON: '{:?}'", variant_json_str))?;
 
     let comment_json: Option<IndexMap<String, String>> = comment_json_str
-        .map(|s| serde_json::from_str(s))
+        .map(serde_json::from_str)
         .transpose()
         .with_context(|| format!("Failed to parse comment JSON: '{:?}'", comment_json_str))?;
 
     let gloss_json: Option<IndexMap<String, String>> = gloss_json_str
-        .map(|s| serde_json::from_str(s))
+        .map(serde_json::from_str)
         .transpose()
         .with_context(|| format!("Failed to parse gloss JSON: '{:?}'", gloss_json_str))?;
 
@@ -1555,8 +1549,8 @@ pub fn bilara_text_to_segments(
             let mut segment_additions = String::new();
 
             // Append Variant HTML
-            if let Some(ref variants) = variant_json {
-                if let Some(txt) = variants.get(&i).map(|s| s.trim()).filter(|s| !s.is_empty()) {
+            if let Some(ref variants) = variant_json
+                && let Some(txt) = variants.get(&i).map(|s| s.trim()).filter(|s| !s.is_empty()) {
                     let mut classes = vec!["variant"];
                     if !show_variant_readings { classes.push("hide"); }
                     let s = format!(r#"
@@ -1567,20 +1561,18 @@ pub fn bilara_text_to_segments(
                                     classes.join(" "), txt);
                     segment_additions.push_str(&s);
                 }
-            }
 
             // Append Comment HTML
-            if let Some(ref comments) = comment_json {
-                if let Some(txt) = comments.get(&i).map(|s| s.trim()).filter(|s| !s.is_empty()) {
+            if let Some(ref comments) = comment_json
+                && let Some(txt) = comments.get(&i).map(|s| s.trim()).filter(|s| !s.is_empty()) {
                     let s = format!(r#"<span class='comment-wrap'><span class='mark'>✱</span><span class='comment hide'>({})</span></span>"#,
                                     txt);
                     segment_additions.push_str(&s);
                 }
-            }
 
             // Append Gloss HTML
-            if let Some(ref glosses) = gloss_json {
-                if let Some(txt) = glosses.get(&i).map(|s| s.trim()).filter(|s| !s.is_empty()) {
+            if let Some(ref glosses) = gloss_json
+                && let Some(txt) = glosses.get(&i).map(|s| s.trim()).filter(|s| !s.is_empty()) {
                     let mut classes = vec!["gloss"];
                     if !show_glosses { classes.push("hide"); }
                     let gloss_id = format!("gloss_{}", i.replace(":", "_").replace(".", "_"));
@@ -1588,7 +1580,6 @@ pub fn bilara_text_to_segments(
                                     gloss_id, classes.join(" "), txt);
                     segment_additions.push_str(&s);
                 }
-            }
 
             /*
             Template JSON example:
@@ -1723,11 +1714,10 @@ pub fn unique_search_results(mut results: Vec<SearchResult>) -> Vec<SearchResult
 
 /// Check if the application is running from an AppImage
 pub fn is_running_from_appimage() -> bool {
-    if let Ok(appimage_path) = env::var("APPIMAGE") {
-        if let Ok(path) = std::path::Path::new(&appimage_path).try_exists() {
+    if let Ok(appimage_path) = env::var("APPIMAGE")
+        && let Ok(path) = std::path::Path::new(&appimage_path).try_exists() {
             return path;
         }
-    }
     false
 }
 
@@ -1735,24 +1725,22 @@ pub fn is_running_from_appimage() -> bool {
 pub fn get_appimage_path() -> Option<PathBuf> {
     if let Ok(appimage_path) = env::var("APPIMAGE") {
         let path = PathBuf::from(&appimage_path);
-        if let Ok(exists) = path.try_exists() {
-            if exists {
+        if let Ok(exists) = path.try_exists()
+            && exists {
                 return Some(path);
             }
-        }
     }
     None
 }
 
 /// Get the desktop file path for Linux systems
 pub fn get_desktop_file_path() -> Option<PathBuf> {
-    if cfg!(target_os = "linux") {
-        if let Ok(home) = env::var("HOME") {
+    if cfg!(target_os = "linux")
+        && let Ok(home) = env::var("HOME") {
             let path = PathBuf::from(home)
                 .join(".local/share/applications/simsapa.desktop");
             return Some(path);
         }
-    }
     None
 }
 
@@ -1966,12 +1954,11 @@ pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
 
     if !user_icon_path.exists() {
         // Create icon directory if it doesn't exist
-        if let Some(parent) = user_icon_path.parent() {
-            if let Err(e) = fs::create_dir_all(parent) {
+        if let Some(parent) = user_icon_path.parent()
+            && let Err(e) = fs::create_dir_all(parent) {
                 error(&format!("Failed to create icon directory: {}", e));
                 // Continue anyway, icon might not be critical
             }
-        }
 
         // Try to copy icon from assets
         // Note: In AppImage, assets are in APPDIR
@@ -1979,22 +1966,20 @@ pub fn create_or_update_linux_desktop_icon_file() -> anyhow::Result<()> {
             let asset_icon_path = PathBuf::from(appdir)
                 .join("usr/share/simsapa/icons/appicons/simsapa.png");
 
-            if asset_icon_path.exists() {
-                if let Err(e) = fs::copy(&asset_icon_path, &user_icon_path) {
+            if asset_icon_path.exists()
+                && let Err(e) = fs::copy(&asset_icon_path, &user_icon_path) {
                     error(&format!("Failed to copy icon from assets: {}", e));
                     // Continue anyway, desktop file can work without custom icon
                 }
-            }
         }
     }
 
     // Create desktop file directory if it doesn't exist
-    if let Some(parent) = desktop_file_path.parent() {
-        if let Err(e) = fs::create_dir_all(parent) {
+    if let Some(parent) = desktop_file_path.parent()
+        && let Err(e) = fs::create_dir_all(parent) {
             error(&format!("Failed to create desktop file directory: {}", e));
             return Ok(());
         }
-    }
 
     // Don't strip the blank line from the end. Otherwise the system doesn't
     // start app with the .desktop file.

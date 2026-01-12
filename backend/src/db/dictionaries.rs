@@ -45,7 +45,7 @@ impl DictionariesDbHandle {
             Ok(langs) => {
                 let mut unique_langs: Vec<String> = langs
                     .into_iter()
-                    .filter_map(|lang| lang) // Filter out None values
+                    .flatten() // Filter out None values
                     .filter(|lang| !lang.is_empty()) // Filter out empty strings
                     .collect();
                 unique_langs.sort();
@@ -120,14 +120,10 @@ impl DictionariesDbHandle {
 
         let db_conn = &mut self.get_conn()?;
 
-        match dictionaries
+        if let Ok(x) = dictionaries
             .select(Dictionary::as_select())
             .filter(label.eq("dpd"))
-            .first(db_conn)
-        {
-            Ok(x) => return Ok(x),
-            Err(_) => {}
-        }
+            .first(db_conn) { return Ok(x) }
 
         // If not returned yet, create a new record
         let new_dict = NewDictionary {

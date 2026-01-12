@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::collections::HashSet;
 use std::time::Instant;
 
@@ -37,7 +37,7 @@ impl LookupResult {
         }
     }
 
-    pub fn from_search_results(res: &Vec<SearchResult>) -> Vec<LookupResult> {
+    pub fn from_search_results(res: &[SearchResult]) -> Vec<LookupResult> {
         res.iter().map(|i| { LookupResult::from_search_result(i) })
                   .collect()
     }
@@ -82,14 +82,13 @@ impl DpdDbHandle {
             .optional()?; // .optional() converts NotFound to Ok(None), other errors propagate.
 
         // Attempt 2: If not exact_only, try to match as 'starts with'.
-        if !exact_only {
-            if result.is_none() && query_text.chars().count() >= 4 {
+        if !exact_only
+            && result.is_none() && query_text.chars().count() >= 4 {
                 result = lookup
                     .filter(lookup_key.like(&format!("{}%", query_text)))
                     .first::<Lookup>(db_conn)
                     .optional()?;
             }
-        }
 
         // Attempt 3: If the query contained multiple words, remove spaces to find compound forms.
         if result.is_none() && query_text.contains(' ') {
@@ -509,7 +508,7 @@ fn parse_words(
     res_page
 }
 
-pub fn import_migrate_dpd(dpd_input_path: &PathBuf, dpd_output_path: Option<PathBuf>) -> Result<(), String> {
+pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf>) -> Result<(), String> {
     // Migrate the db at the provided input path.
     let migrate_db_path = dpd_input_path.to_path_buf();
 
@@ -660,7 +659,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
                    -> Result<(), diesel::result::Error> {
     info("migrate_dpd()");
 
-    let abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf()));
+    let abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path).unwrap_or(dpd_db_path.to_path_buf()));
     let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
     let mut db_conn = SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
@@ -673,7 +672,7 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
 
     info("Updating dictionary_id ...");
 
-    let abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.to_path_buf()).unwrap_or(dpd_db_path.to_path_buf()));
+    let abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path).unwrap_or(dpd_db_path.to_path_buf()));
     let database_url = format!("sqlite://{}", abs_path.as_os_str().to_str().expect("os_str Error!"));
     let mut db_conn = SqliteConnection::establish(&database_url)
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));

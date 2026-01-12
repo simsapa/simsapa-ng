@@ -145,9 +145,8 @@ impl AppData {
                 };
                 let pali_sutta = pali_sutta_result.context("Failed to get Pali sutta for translated version")?;
 
-                if line_by_line && pali_sutta.is_some() {
+                if let (true, Some(pali_sutta)) = (line_by_line, pali_sutta) {
                     // Generate line-by-line HTML
-                    let pali_sutta = pali_sutta.unwrap();
                     let translated_segments = self.sutta_to_segments_json(sutta, false)
                                                       .context("Failed to generate translated segments for line-by-line view")?;
                     let pali_segments = self.sutta_to_segments_json(&pali_sutta, false)
@@ -326,11 +325,10 @@ impl AppData {
         let mut body_class = self.get_theme_name();
 
         // Add language-specific class if available
-        if let Some(ref lang) = spine_item.language {
-            if !lang.is_empty() {
+        if let Some(ref lang) = spine_item.language
+            && !lang.is_empty() {
                 body_class.push_str(&format!(" lang-{}", lang));
             }
-        }
 
         // Query prev/next spine items to determine navigation button state
         let prev_item = self.dbm.appdata.get_prev_book_spine_item(&spine_item.spine_item_uid).ok().flatten();
@@ -921,11 +919,10 @@ impl AppData {
             return;
         }
 
-        if let Some(total_memory_gb) = self.get_system_memory_gb() {
-            if total_memory_gb <= 8 {
+        if let Some(total_memory_gb) = self.get_system_memory_gb()
+            && total_memory_gb <= 8 {
                 self.set_search_as_you_type(false);
             }
-        }
 
         self.set_first_time_start(false);
     }
@@ -943,13 +940,11 @@ impl AppData {
 
         let db_conn = &mut self.dbm.appdata.get_conn().ok()?;
 
-        let result = app_settings::table
+        app_settings::table
             .filter(app_settings::key.eq("db_version"))
             .select(app_settings::value)
             .first::<Option<String>>(db_conn)
-            .ok()?;
-
-        result
+            .ok()?
     }
 
     /// Get the release channel from app settings.
@@ -1449,6 +1444,12 @@ impl AppData {
     }
 }
 
+impl Default for AppData {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Get the total system memory in bytes.
 ///
 /// NOTE: Cannot use sysinfo::System because it requires higher Android API levels.
@@ -1637,11 +1638,10 @@ fn get_linux_cpu_cores() -> Option<u32> {
     if let Ok(present) = fs::read_to_string("/sys/devices/system/cpu/present") {
         // Format is like "0-7" for 8 cores
         let trimmed = present.trim();
-        if let Some(pos) = trimmed.rfind('-') {
-            if let Ok(max) = trimmed[pos + 1..].parse::<u32>() {
+        if let Some(pos) = trimmed.rfind('-')
+            && let Ok(max) = trimmed[pos + 1..].parse::<u32>() {
                 return Some(max + 1);
             }
-        }
     }
 
     None
@@ -1678,30 +1678,27 @@ fn get_linux_cpu_max_frequency_mhz() -> Option<u64> {
     use std::fs;
 
     // Try reading from scaling_max_freq (in KHz)
-    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq") {
-        if let Ok(khz) = freq_str.trim().parse::<u64>() {
+    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq")
+        && let Ok(khz) = freq_str.trim().parse::<u64>() {
             return Some(khz / 1000); // Convert KHz to MHz
         }
-    }
 
     // Fallback: try cpuinfo_max_freq
-    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq") {
-        if let Ok(khz) = freq_str.trim().parse::<u64>() {
+    if let Ok(freq_str) = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+        && let Ok(khz) = freq_str.trim().parse::<u64>() {
             return Some(khz / 1000);
         }
-    }
 
     // Fallback: try parsing /proc/cpuinfo for "cpu MHz"
     if let Ok(cpuinfo) = fs::read_to_string("/proc/cpuinfo") {
         for line in cpuinfo.lines() {
-            if line.starts_with("cpu MHz") {
-                if let Some(pos) = line.find(':') {
+            if line.starts_with("cpu MHz")
+                && let Some(pos) = line.find(':') {
                     let mhz_str = line[pos + 1..].trim();
                     if let Ok(mhz) = mhz_str.parse::<f64>() {
                         return Some(mhz as u64);
                     }
                 }
-            }
         }
     }
 

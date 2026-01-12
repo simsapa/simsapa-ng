@@ -124,20 +124,14 @@ impl DbManager {
         let _ = check_file_exists_print_err(&g.paths.dpd_db_path);
 
         // If userdata doesn't exist, create it with default settings.
-        let userdata_exists = match check_file_exists_print_err(&g.paths.userdata_db_path) {
-            Ok(r) => r,
-            Err(_) => false,
-        };
+        let userdata_exists = check_file_exists_print_err(&g.paths.userdata_db_path).unwrap_or_default();
 
         if !userdata_exists {
             initialize_userdata(&g.paths.userdata_database_url)
                 .with_context(|| format!("Failed to initialize database at '{}'", g.paths.userdata_database_url))?;
         }
 
-        let dictionaries_exists = match check_file_exists_print_err(&g.paths.dict_db_path) {
-            Ok(r) => r,
-            Err(_) => false,
-        };
+        let dictionaries_exists = check_file_exists_print_err(&g.paths.dict_db_path).unwrap_or_default();
 
         if !dictionaries_exists {
             initialize_dictionaries(&g.paths.dict_database_url)

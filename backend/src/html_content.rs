@@ -3,17 +3,17 @@ use tinytemplate::TinyTemplate;
 
 use crate::{get_app_globals, is_mobile};
 
-static PAGE_HTML: &'static str = include_str!("../../assets/templates/page.html");
-static FIND_HTML: &'static str = include_str!("../../assets/templates/find.html");
-static TEXT_RESIZE_HTML: &'static str = include_str!("../../assets/templates/text_resize.html");
-static READING_MODE_HTML: &'static str = include_str!("../../assets/templates/reading_mode.html");
-pub static PREV_NEXT_CHAPTER_HTML: &'static str = include_str!("../../assets/templates/prev_next_chapter.html");
-static MENU_HTML: &'static str = include_str!("../../assets/templates/menu.html");
-static CONFIRM_MODAL_HTML: &'static str = include_str!("../../assets/templates/confirm_modal.html");
-static ICONS_HTML: &'static str = include_str!("../../assets/templates/icons.html");
+static PAGE_HTML: &str = include_str!("../../assets/templates/page.html");
+static FIND_HTML: &str = include_str!("../../assets/templates/find.html");
+static TEXT_RESIZE_HTML: &str = include_str!("../../assets/templates/text_resize.html");
+static READING_MODE_HTML: &str = include_str!("../../assets/templates/reading_mode.html");
+pub static PREV_NEXT_CHAPTER_HTML: &str = include_str!("../../assets/templates/prev_next_chapter.html");
+static MENU_HTML: &str = include_str!("../../assets/templates/menu.html");
+static CONFIRM_MODAL_HTML: &str = include_str!("../../assets/templates/confirm_modal.html");
+static ICONS_HTML: &str = include_str!("../../assets/templates/icons.html");
 
-static SUTTAS_CSS: &'static str = include_str!("../../assets/css/suttas.css");
-static SUTTAS_JS: &'static str = include_str!("../../assets/js/suttas.js");
+static SUTTAS_CSS: &str = include_str!("../../assets/css/suttas.css");
+static SUTTAS_JS: &str = include_str!("../../assets/js/suttas.js");
 
 #[derive(Serialize)]
 struct TmplContext {
@@ -75,7 +75,7 @@ pub fn sutta_html_page_with_nav(content: &str,
     let mut ctx = TmplContext::default();
 
     if let Some(s) = body_class {
-        ctx.body_class = String::from(s.clone());
+        ctx.body_class = s.clone();
     }
 
     if let Some(nav_html) = prev_next_chapter_html {
@@ -85,7 +85,7 @@ pub fn sutta_html_page_with_nav(content: &str,
     let mut css = String::new();
 
     if let Some(s) = api_url {
-        ctx.api_url = String::from(s.clone());
+        ctx.api_url = s.clone();
     }
     css.push_str(&SUTTAS_CSS.to_string().replace("http://localhost:8000", &ctx.api_url));
 
@@ -125,10 +125,7 @@ pub fn sutta_html_page_with_nav(content: &str,
     ctx.js_head = js;
     ctx.content = String::from(content);
 
-    match tt.render("page_html", &ctx) {
-        Ok(html) => html,
-        Err(_) => String::new(),
-    }
+    tt.render("page_html", &ctx).unwrap_or_default()
 }
 
 pub fn blank_html_page(body_class: Option<String>) -> String {
@@ -136,17 +133,16 @@ pub fn blank_html_page(body_class: Option<String>) -> String {
     tt.set_default_formatter(&tinytemplate::format_unescaped);
     tt.add_template("page_html", PAGE_HTML).expect("Template error in page.html!");
 
-    let mut ctx = TmplContext::default();
-    ctx.reading_mode_html = "".to_string();
-    ctx.find_html = "".to_string();
-    ctx.text_resize_html = "".to_string();
-    ctx.menu_html = "".to_string();
-    ctx.confirm_modal_html = "".to_string();
-    ctx.icons_html = "".to_string();
-
-    if let Some(s) = body_class {
-        ctx.body_class = String::from(s.clone());
-    }
+    let mut ctx = TmplContext {
+        reading_mode_html: "".to_string(),
+        find_html: "".to_string(),
+        text_resize_html: "".to_string(),
+        menu_html: "".to_string(),
+        confirm_modal_html: "".to_string(),
+        icons_html: "".to_string(),
+        body_class: body_class.unwrap_or_default(),
+        ..Default::default()
+    };
 
     let mut css = String::new();
 
@@ -154,8 +150,5 @@ pub fn blank_html_page(body_class: Option<String>) -> String {
 
     ctx.css_head = css;
 
-    match tt.render("page_html", &ctx) {
-        Ok(html) => html,
-        Err(_) => String::new(),
-    }
+    tt.render("page_html", &ctx).unwrap_or_default()
 }

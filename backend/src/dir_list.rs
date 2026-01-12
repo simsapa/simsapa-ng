@@ -34,8 +34,8 @@ pub fn generate_directory_listing(root_path: &str, max_depth: usize) -> Result<V
                 .to_string_lossy()
                 .into_owned();
 
-            if relative_path.len() == 0 {
-                relative_path.push_str(".");
+            if relative_path.is_empty() {
+                relative_path.push('.');
             }
 
             (
@@ -71,7 +71,7 @@ pub fn generate_html_directory_listing(root_path: &str, max_depth: usize) -> Res
     );
 
     for (_, info) in entries {
-        let modified = info.modified.map_or("N/A".to_string(), |t| format_timestamp(t));
+        let modified = info.modified.map_or("N/A".to_string(), format_timestamp);
 
         let entry_type = if info.is_directory { "Dir" } else { "File" };
 
@@ -102,7 +102,7 @@ pub fn generate_plain_directory_listing(root_path: &str, max_depth: usize) -> Re
     let mut res = String::from("| Path | Size | Modified | Type |\n|------+------+----------+------|\n");
 
     for (_, info) in entries {
-        let modified = info.modified.map_or("N/A".to_string(), |t| format_timestamp(t));
+        let modified = info.modified.map_or("N/A".to_string(), format_timestamp);
 
         let entry_type = if info.is_directory { "Dir" } else { "File" };
 

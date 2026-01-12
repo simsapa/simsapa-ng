@@ -1,6 +1,7 @@
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 
@@ -112,21 +113,6 @@ pub enum Level {
 }
 
 impl Level {
-    /// Parse a log level from a string (case insensitive)
-    ///
-    /// Valid values: "silent", "error", "warn", "info", "debug"
-    /// Returns None if the string doesn't match a valid level.
-    pub fn from_str(s: &str) -> Option<Self> {
-        match s.to_lowercase().as_str() {
-            "silent" => Some(Level::Silent),
-            "error" => Some(Level::Error),
-            "warn" => Some(Level::Warn),
-            "info" => Some(Level::Info),
-            "debug" => Some(Level::Debug),
-            _ => None,
-        }
-    }
-
     pub fn as_str(&self) -> &'static str {
         match self {
             Level::Silent => "Silent",
@@ -134,6 +120,35 @@ impl Level {
             Level::Warn => "Warn",
             Level::Info => "Info",
             Level::Debug => "Debug",
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ParseLevelError;
+
+impl std::fmt::Display for ParseLevelError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Invalid log level. Valid values: silent, error, warn, info, debug")
+    }
+}
+
+impl std::error::Error for ParseLevelError {}
+
+impl FromStr for Level {
+    type Err = ParseLevelError;
+
+    /// Parse a log level from a string (case insensitive)
+    ///
+    /// Valid values: "silent", "error", "warn", "info", "debug"
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "silent" => Ok(Level::Silent),
+            "error" => Ok(Level::Error),
+            "warn" => Ok(Level::Warn),
+            "info" => Ok(Level::Info),
+            "debug" => Ok(Level::Debug),
+            _ => Err(ParseLevelError),
         }
     }
 }
@@ -336,7 +351,7 @@ impl Logger {
         // Read LOG_LEVEL from environment variable, default to Info
         let level = std::env::var("LOG_LEVEL")
             .ok()
-            .and_then(|v| Level::from_str(&v))
+            .and_then(|v| v.parse::<Level>().ok())
             .unwrap_or(Level::Info);
 
         Ok(Logger {
@@ -398,11 +413,10 @@ impl Logger {
     /// Only logs if the current level is set to Debug.
     pub fn debug(&self, msg: &str, start_new: bool) {
         // Check if debug level is enabled (requires Level::Debug)
-        if let Ok(level) = self.level.lock() {
-            if *level < Level::Debug {
+        if let Ok(level) = self.level.lock()
+            && *level < Level::Debug {
                 return;
             }
-        }
 
         let formatted_msg = format!("DEBUG: {}", msg);
 
@@ -419,11 +433,10 @@ impl Logger {
     /// Logs if the current level is Info or Debug.
     pub fn info(&self, msg: &str, start_new: bool) {
         // Check if info level is enabled (requires Level::Info or higher)
-        if let Ok(level) = self.level.lock() {
-            if *level < Level::Info {
+        if let Ok(level) = self.level.lock()
+            && *level < Level::Info {
                 return;
             }
-        }
 
         let formatted_msg = format!("INFO: {}", msg);
 
@@ -440,11 +453,10 @@ impl Logger {
     /// Logs if the current level is Warn, Info, or Debug.
     pub fn warn(&self, msg: &str, start_new: bool) {
         // Check if warn level is enabled (requires Level::Warn or higher)
-        if let Ok(level) = self.level.lock() {
-            if *level < Level::Warn {
+        if let Ok(level) = self.level.lock()
+            && *level < Level::Warn {
                 return;
             }
-        }
 
         let formatted_msg = format!("WARN: {}", msg);
 
@@ -461,11 +473,10 @@ impl Logger {
     /// Logs if the current level is Error, Warn, Info, or Debug (all levels except Silent).
     pub fn error(&self, msg: &str, start_new: bool) {
         // Check if error level is enabled (requires Level::Error or higher)
-        if let Ok(level) = self.level.lock() {
-            if *level < Level::Error {
+        if let Ok(level) = self.level.lock()
+            && *level < Level::Error {
                 return;
             }
-        }
 
         let formatted_msg = format!("ERROR: {}", msg);
 
@@ -479,13 +490,11 @@ impl Logger {
     }
 
     pub fn profile(&self, msg: &str, start_new: bool) {
-        if let Some(time_log) = &self.time_log {
-            if let Ok(tl) = time_log.lock() {
-                if let Err(e) = tl.log(msg) {
-                    eprintln!("Failed to write to profile log: {}", e);
-                }
+        if let Some(time_log) = &self.time_log
+            && let Ok(tl) = time_log.lock()
+            && let Err(e) = tl.log(msg) {
+                eprintln!("Failed to write to profile log: {}", e);
             }
-        }
 
         let elapsed = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -650,7 +659,7 @@ pub fn get_log_level_str() -> String {
 /// set_log_level_str("INFO");  // Case insensitive - logs Info, Warn, and Error
 /// ```
 pub fn set_log_level_str(level_str: &str) -> bool {
-    if let Some(level) = Level::from_str(level_str) {
+    if let Ok(level) = level_str.parse::<Level>() {
         set_log_level(level);
         true
     } else {
@@ -673,7 +682,7 @@ use std::ffi::CStr;
 use std::os::raw::c_char;
 
 #[unsafe(no_mangle)]
-pub extern "C" fn log_info_c(msg: *const c_char) {
+pub unsafe extern "C" fn log_info_c(msg: *const c_char) {
     if msg.is_null() {
         return;
     }
@@ -684,7 +693,7 @@ pub extern "C" fn log_info_c(msg: *const c_char) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn log_info_with_options_c(msg: *const c_char, start_new: bool) {
+pub unsafe extern "C" fn log_info_with_options_c(msg: *const c_char, start_new: bool) {
     if msg.is_null() {
         return;
     }
@@ -695,7 +704,7 @@ pub extern "C" fn log_info_with_options_c(msg: *const c_char, start_new: bool) {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn log_error_c(msg: *const c_char) {
+pub unsafe extern "C" fn log_error_c(msg: *const c_char) {
     if msg.is_null() {
         return;
     }

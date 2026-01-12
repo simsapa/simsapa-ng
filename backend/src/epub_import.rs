@@ -22,8 +22,8 @@ fn extract_html_title(content_bytes: &[u8]) -> Option<String> {
 
     let content = String::from_utf8_lossy(content_bytes);
 
-    if let Some(caps) = TITLE_RE.captures(&content) {
-        if let Some(title_match) = caps.get(1) {
+    if let Some(caps) = TITLE_RE.captures(&content)
+        && let Some(title_match) = caps.get(1) {
             let title = title_match.as_str().trim();
 
             // Extract the part before '|' separator if present
@@ -36,7 +36,6 @@ fn extract_html_title(content_bytes: &[u8]) -> Option<String> {
 
             return Some(title_part.to_string());
         }
-    }
 
     None
 }
@@ -89,7 +88,7 @@ pub fn import_epub_to_db(
         .mdata("creator")
         .or_else(|| doc.mdata("dc:creator"))
         .map(|item| item.value.clone())
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_else(String::new);
 
     // Use custom values if provided and non-empty, otherwise use extracted metadata
     let title = custom_title
@@ -106,7 +105,7 @@ pub fn import_epub_to_db(
         .mdata("language")
         .or_else(|| doc.mdata("dc:language"))
         .map(|item| item.value.clone())
-        .unwrap_or_else(|| String::new());
+        .unwrap_or_else(String::new);
 
     let language = custom_language
         .filter(|s| !s.trim().is_empty())
@@ -349,13 +348,11 @@ fn rewrite_resource_links(html: &str, book_uid: &str, base_dir: &str) -> String 
             let is_html_link = path_without_fragment.to_lowercase().ends_with(".html") || path_without_fragment.to_lowercase().ends_with(".htm");
 
             // Rewrite to appropriate API endpoint
-            let endpoint = if is_html_link {
+            if is_html_link {
                 format!(r#"{}="/book_pages/{}/{}""#, attr, book_uid, full_path)
             } else {
                 format!(r#"{}="/book_resources/{}/{}""#, attr, book_uid, full_path)
-            };
-
-            endpoint
+            }
         })
         .to_string()
 }

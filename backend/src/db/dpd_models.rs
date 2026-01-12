@@ -93,7 +93,7 @@ impl DpdRoot {
         lazy_static! {
             static ref re_no_digits: Regex = Regex::new(r" \d.*$").unwrap();
         }
-        return re_no_digits.replace_all(&self.root, "").to_string()
+        re_no_digits.replace_all(&self.root, "").to_string()
     }
 
     /// Remove digits and the root sign
@@ -101,7 +101,7 @@ impl DpdRoot {
         lazy_static! {
             static ref re_no_root_sign: Regex = Regex::new(r"\d| |√").unwrap();
         }
-        return re_no_root_sign.replace_all(&self.root, "").to_string()
+        re_no_root_sign.replace_all(&self.root, "").to_string()
     }
 
     // === Methods used in Simsapa ===
@@ -363,7 +363,7 @@ impl DpdHeadword {
         lazy_static! {
             static ref re_lemma_clean: Regex = Regex::new(r" \d.*$").unwrap();
         }
-        return re_lemma_clean.replace_all(&self.lemma_1, "").to_string()
+        re_lemma_clean.replace_all(&self.lemma_1, "").to_string()
     }
 
     // === Methods used in Simsapa ===
