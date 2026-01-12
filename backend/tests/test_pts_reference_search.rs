@@ -313,3 +313,175 @@ fn test_search_snp_end_page() {
     assert_eq!(first.sutta_ref, "Snp 2.8");
     assert_eq!(first.pts_start_page, Some(55));
 }
+
+// Integration test: Verify all PTS references from chapter markdown files
+#[test]
+fn test_pts_references_from_chapters() {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader, Write};
+    use std::collections::HashSet;
+
+    // CONTROL: Set to true to write new exceptions to CSV, false to skip known exceptions
+    const WRITE_EXCEPTIONS: bool = false;
+
+    // Initialize the sutta references database
+    simsapa_backend::init_sutta_references();
+
+    // Path to the CSV file generated from chapter markdown files
+    let csv_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/pts_references_lookup_test.csv");
+    let exceptions_path = concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/pts_references_lookup_exceptions.csv");
+
+    // Load existing exceptions
+    let mut known_exceptions: HashSet<String> = HashSet::new();
+    if !WRITE_EXCEPTIONS {
+        if let Ok(file) = File::open(exceptions_path) {
+            let reader = BufReader::new(file);
+            for line in reader.lines().skip(1) { // Skip header
+                if let Ok(line) = line {
+                    let parts: Vec<&str> = line.split(',').collect();
+                    if !parts.is_empty() {
+                        known_exceptions.insert(parts[0].to_string());
+                    }
+                }
+            }
+            if !known_exceptions.is_empty() {
+                eprintln!("Loaded {} known exceptions from {}", known_exceptions.len(), exceptions_path);
+            }
+        }
+    }
+
+    let file = File::open(csv_path)
+        .expect("Failed to open pts_references_lookup_test.csv. Run extract_pts_references.py first.");
+
+    let reader = BufReader::new(file);
+    let mut lines = reader.lines();
+
+    // Skip header line
+    let _header = lines.next();
+
+    let mut total_tests = 0;
+    let mut skipped_tests = 0;
+    let mut failed_tests = Vec::new();
+
+    for (line_num, line) in lines.enumerate() {
+        let line = line.expect("Failed to read line");
+        let parts: Vec<&str> = line.split(',').collect();
+
+        if parts.len() < 3 {
+            eprintln!("Warning: Skipping malformed line {}: {}", line_num + 2, line);
+            continue;
+        }
+
+        let pts_ref_query = parts[0];
+        let expected_sutta_ref = parts[1];
+        let expected_url = parts[2];
+
+        total_tests += 1;
+
+        // Skip if this is a known exception
+        if !WRITE_EXCEPTIONS && known_exceptions.contains(pts_ref_query) {
+            skipped_tests += 1;
+            continue;
+        }
+
+        // Search by PTS reference
+        let results = search_by_pts_reference(pts_ref_query);
+
+        // Extract base URL from expected URL (remove /pli/ms suffix if present)
+        // E.g., https://suttacentral.net/mn18/pli/ms -> https://suttacentral.net/mn18
+        let expected_base_url = expected_url
+            .trim_end_matches("/pli/ms")
+            .trim_end_matches("/en/sujato");
+
+        // Check if any result matches the expected URL (compare base URLs)
+        let found = results.iter().any(|r| {
+            let result_base_url = r.url
+                .trim_end_matches("/pli/ms")
+                .trim_end_matches("/en/sujato");
+            result_base_url == expected_base_url
+        });
+
+        if !found {
+            failed_tests.push(format!(
+                "Line {}: PTS '{}' → expected URL '{}' (sutta_ref: {})\n  Results: {}",
+                line_num + 2,
+                pts_ref_query,
+                expected_url,
+                expected_sutta_ref,
+                if results.is_empty() {
+                    "No results".to_string()
+                } else {
+                    results.iter()
+                        .map(|r| format!("{} ({})", r.sutta_ref, r.url))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                }
+            ));
+        }
+    }
+
+    // Print summary
+    eprintln!("\n=== PTS Reference Lookup Test Summary ===");
+    eprintln!("Total tests: {}", total_tests);
+    eprintln!("Skipped (known exceptions): {}", skipped_tests);
+    eprintln!("Actually tested: {}", total_tests - skipped_tests);
+    eprintln!("Passed: {}", total_tests - skipped_tests - failed_tests.len());
+    eprintln!("Failed: {}", failed_tests.len());
+    if total_tests > skipped_tests {
+        eprintln!("Success rate: {:.1}%", (total_tests - skipped_tests - failed_tests.len()) as f64 / (total_tests - skipped_tests) as f64 * 100.0);
+    }
+
+    if !failed_tests.is_empty() {
+        eprintln!("\n=== Missing/Failed PTS References ===");
+        eprintln!("The following {} references from the chapter markdown files", failed_tests.len());
+        eprintln!("could not be found in sutta-reference-converter.json:\n");
+
+        for failure in failed_tests.iter() {
+            eprintln!("{}", failure);
+        }
+
+        eprintln!("\n=== Missing References Summary ===");
+        eprintln!("These PTS references are used in the chapter files but missing from the database.");
+        eprintln!("Consider adding them to assets/sutta-reference-converter.json if needed.");
+
+        // Write exceptions to CSV if WRITE_EXCEPTIONS is true
+        if WRITE_EXCEPTIONS {
+            match File::create(exceptions_path) {
+                Ok(mut file) => {
+                    // Write header
+                    writeln!(file, "pts_ref_query,sutta_ref,url").expect("Failed to write header");
+
+                    // Re-read the test CSV and write all failed items
+                    let file_read = File::open(csv_path).expect("Failed to reopen test CSV");
+                    let reader = BufReader::new(file_read);
+
+                    for line in reader.lines().skip(1) { // Skip header
+                        if let Ok(line) = line {
+                            let parts: Vec<&str> = line.split(',').collect();
+                            if parts.len() >= 3 {
+                                let pts_ref_query = parts[0];
+                                // Check if this was a failed test
+                                if failed_tests.iter().any(|f| f.contains(&format!("PTS '{}'", pts_ref_query))) {
+                                    writeln!(file, "{}", line).expect("Failed to write exception");
+                                }
+                            }
+                        }
+                    }
+
+                    eprintln!("\nWrote {} exceptions to: {}", failed_tests.len(), exceptions_path);
+                }
+                Err(e) => {
+                    eprintln!("\nWarning: Failed to write exceptions file: {}", e);
+                }
+            }
+        }
+    }
+
+    // Assert that all PTS references were found (excluding known exceptions)
+    assert!(
+        failed_tests.is_empty(),
+        "\n{} out of {} PTS reference lookups failed. See detailed report above.\nSet WRITE_EXCEPTIONS=true to save these as known exceptions.",
+        failed_tests.len(),
+        total_tests - skipped_tests
+    );
+}

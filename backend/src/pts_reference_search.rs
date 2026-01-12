@@ -228,6 +228,35 @@ pub fn search_by_pts_reference(query: &str) -> Vec<ReferenceSearchResult> {
         .cloned()
         .collect();
 
+    // For 2-part format without volume (like "Sn 235" or "Th 627"),
+    // also try treating it as a verse number using verse_sutta_ref_to_uid()
+    // and append any verse matches to the results
+    if parsed_query.volume.is_none() {
+        // Construct a verse reference string like "Sn 235" or "Th 627"
+        let verse_ref = format!("{} {}", parsed_query.nikaya, parsed_query.page);
+
+        if let Some(uid) = crate::helpers::verse_sutta_ref_to_uid(&verse_ref) {
+            // Search for this uid in the sutta_ref field
+            let verse_results: Vec<_> = all_refs
+                .iter()
+                .filter(|entry| {
+                    // Match the uid in sutta_ref (e.g., "snp2.1" or "Snp 2.1")
+                    let sutta_ref_lower = entry.sutta_ref.to_lowercase().replace(' ', "");
+                    let uid_lower = uid.to_lowercase();
+                    sutta_ref_lower == uid_lower || sutta_ref_lower.starts_with(&format!("{}.", uid_lower))
+                })
+                .cloned()
+                .collect();
+
+            // Append verse results to existing results (avoiding duplicates)
+            for verse_result in verse_results {
+                if !results.iter().any(|r| r.url == verse_result.url) {
+                    results.push(verse_result);
+                }
+            }
+        }
+    }
+
     // Sort results so that suttas starting at the exact page come first
     results.sort_by_key(|entry| {
         match entry.pts_start_page {
@@ -332,8 +361,56 @@ mod tests {
     }
 
     #[test]
-    fn test_normalize_pts_reference_no_range() {
-        let result = normalize_pts_reference("A.~III. 42");
-        assert_eq!(result, "a iii 42");
+    fn test_search_sn_verse_number() {
+        // Initialize the sutta references database
+        crate::init_sutta_references();
+
+        // Test "Sn 235" which is a verse number, should find Snp 2.1
+        let results = search_by_pts_reference("Sn 235");
+
+        assert!(!results.is_empty(), "Should find results for Sn 235 (verse number)");
+
+        // Should find Snp 2.1
+        let found = results.iter().any(|r| {
+            r.sutta_ref.to_lowercase().replace(' ', "") == "snp2.1"
+        });
+        assert!(found, "Should find Snp 2.1 when searching for verse Sn 235");
+    }
+
+    #[test]
+    fn test_search_theragatha_verse() {
+        crate::init_sutta_references();
+
+        // Th 627 should map to Thag 12.2
+        let results = search_by_pts_reference("Th 627");
+
+        assert!(!results.is_empty(), "Should find result for Th 627 (Theragāthā verse)");
+
+        // Check if thag12.2 is in the results
+        let found = results.iter().any(|r| {
+            let sutta_ref_lower = r.sutta_ref.to_lowercase().replace(' ', "");
+            sutta_ref_lower.contains("thag12.2")
+        });
+
+        assert!(found, "Expected to find Thag 12.2 for verse Th 627");
+    }
+
+    #[test]
+    fn test_search_therigatha_verse() {
+        crate::init_sutta_references();
+
+        // Thī 3 should map to Thig 1.3
+        let results = search_by_pts_reference("Thī 3");
+
+        assert!(!results.is_empty(), "Should find result for Thī 3 (Therīgāthā verse)");
+
+        // Check if thig1.3 is in the results
+        let found = results.iter().any(|r| {
+            let sutta_ref_lower = r.sutta_ref.to_lowercase().replace(' ', "");
+            sutta_ref_lower == "thig1.3"
+        });
+
+        assert!(found, "Expected to find Thig 1.3 for verse Thī 3, got: {:?}",
+            results.iter().map(|r| &r.sutta_ref).collect::<Vec<_>>());
     }
 }

@@ -358,24 +358,40 @@ pub fn snp_verse_to_uid(verse_num: u32) -> Option<String> {
     None
 }
 
-/// Convert a verse number reference (e.g., "dhp33", "thag50", "thig12") to its sutta UID
+/// Convert a verse number reference to its sutta UID
+/// Handles formats:
+/// - "dhp33", "thag50", "thig12" (compact format)
+/// - "Sn 235", "Th 627", "Thī 28" (alternative format with space)
+/// - "Dhp 33", "Snp 235" (with space)
+///
+/// Normalizes alternative names: Sn → snp, Th → thag, Thī → thig
 /// Returns Some(uid) if the reference is a verse number that needs conversion, None otherwise
 pub fn verse_sutta_ref_to_uid(sutta_ref: &str) -> Option<String> {
     lazy_static! {
-        // Match verse number patterns: dhp123, thag456, thig78
-        // Captures: (1) nikaya prefix (dhp/thag/thig), (2) verse number
-        static ref RE_VERSE_REF: Regex = Regex::new(r"^(dhp|thag|thig)(\d+)$").unwrap();
+        // Match verse number patterns with or without space
+        // Captures: (1) nikaya prefix, (2) verse number
+        // Note: "thi" not "thī" because we normalize ī→i before regex matching
+        static ref RE_VERSE_REF: Regex = Regex::new(r"^(dhp|th|thag|thi|thig|sn|snp)\s*(\d+)$").unwrap();
     }
 
-    let sutta_ref_lower = sutta_ref.to_lowercase();
+    let sutta_ref_lower = sutta_ref.to_lowercase().replace('ī', "i");
 
     if let Some(caps) = RE_VERSE_REF.captures(&sutta_ref_lower) {
-        let nikaya = caps.get(1)?.as_str();
+        let nikaya_raw = caps.get(1)?.as_str();
         let verse_str = caps.get(2)?.as_str();
         let verse_num = verse_str.parse::<u32>().ok()?;
 
+        // Normalize alternative nikaya names
+        let nikaya = match nikaya_raw {
+            "sn" => "snp",
+            "th" => "thag",
+            "thi" => "thig",  // Already converted from thī
+            other => other,
+        };
+
         match nikaya {
             "dhp" => dhp_verse_to_chapter(verse_num),
+            "snp" => snp_verse_to_uid(verse_num),
             "thag" => thag_verse_to_uid(verse_num),
             "thig" => thig_verse_to_uid(verse_num),
             _ => None,
