@@ -23,13 +23,9 @@ pub mod qobject {
     }
 }
 
+#[derive(Default)]
 pub struct ClipboardManagerRust {}
 
-impl Default for ClipboardManagerRust {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 impl qobject::ClipboardManager {
     pub fn copy_with_mime_type(&self, text: &QString, mime_type: &QString) {

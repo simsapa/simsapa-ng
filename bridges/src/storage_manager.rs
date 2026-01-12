@@ -29,13 +29,9 @@ pub mod qobject {
     }
 }
 
+#[derive(Default)]
 pub struct StorageManagerRust {}
 
-impl Default for StorageManagerRust {
-    fn default() -> Self {
-        Self {}
-    }
-}
 
 impl qobject::StorageManager {
     pub fn get_app_data_storage_paths_json(&self) -> QString {
@@ -67,7 +63,7 @@ impl qobject::StorageManager {
         };
 
         let save_path = internal_app_root.join("storage-path.txt");
-        let msg = save_to_file(selected_path.to_string().as_bytes(), &save_path.to_str().unwrap_or_default());
+        let msg = save_to_file(selected_path.to_string().as_bytes(), save_path.to_str().unwrap_or_default());
         info(&msg);
     }
 }

@@ -208,14 +208,13 @@ impl qobject::AssetManager {
         let paths = AppGlobalPaths::new();
         let download_languages_path = &paths.download_languages_marker;
 
-        if download_languages_path.exists() {
-            if let Ok(contents) = std::fs::read_to_string(download_languages_path) {
+        if download_languages_path.exists()
+            && let Ok(contents) = std::fs::read_to_string(download_languages_path) {
                 info(&format!("Read download_languages.txt: {}", contents.trim()));
                 // Remove the file after reading
                 let _ = std::fs::remove_file(download_languages_path);
                 return QString::from(contents.trim());
             }
-        }
 
         QString::from("")
     }
@@ -445,7 +444,7 @@ impl qobject::AssetManager {
 
                 let mut reader = resp;
                 let mut buf = [0u8; 8192]; // 8 KB buffer
-                let mut downloaded = 0 as usize;
+                let mut downloaded = 0_usize;
 
                 loop {
                     let n = reader.read(&mut buf).unwrap(); // read up to buf.len()
@@ -641,7 +640,7 @@ pub fn extract_tar_bz2_with_progress(
     let buffered_reader = BufReader::new(input_file);
 
     let a = archive_path.file_name().unwrap_or_default();
-    let file_name = format!("{}", a.to_str().unwrap_or_default());
+    let file_name = a.to_str().unwrap_or_default().to_string();
 
     // ProgressReader tracks bytes read from buffered_reader (the compressed stream).
     let progress_reader = ProgressReader::new(buffered_reader, total_size, &file_name, qt_thread);

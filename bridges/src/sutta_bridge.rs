@@ -19,9 +19,9 @@ use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_log_level_str};
 use simsapa_backend::topic_index;
 
-static DICTIONARY_JS: &'static str = include_str!("../../assets/js/dictionary.js");
-static DICTIONARY_CSS: &'static str = include_str!("../../assets/css/dictionary.css");
-static SIMSAPA_JS: &'static str = include_str!("../../assets/js/simsapa.min.js");
+static DICTIONARY_JS: &str = include_str!("../../assets/js/dictionary.js");
+static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
+static SIMSAPA_JS: &str = include_str!("../../assets/js/simsapa.min.js");
 
 /// Convert a QUrl to a local file path string.
 /// Handles Windows paths correctly - QUrl::path() returns "/C:/path" on Windows,
@@ -574,6 +574,7 @@ pub mod qobject {
     }
 }
 
+#[derive(Default)]
 pub struct SuttaBridgeRust {
     db_loaded: bool,
     sutta_references_loaded: bool,
@@ -581,15 +582,6 @@ pub struct SuttaBridgeRust {
     topic_index_loaded: bool,
 }
 
-impl Default for SuttaBridgeRust {
-    fn default() -> Self {
-        Self {
-            db_loaded: false,
-            sutta_references_loaded: false,
-            topic_index_loaded: false,
-        }
-    }
-}
 
 impl qobject::SuttaBridge {
     pub fn emit_update_window_title(self: Pin<&mut Self>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString) {
@@ -942,7 +934,7 @@ impl qobject::SuttaBridge {
     }
 
     pub fn results_page(self: Pin<&mut Self>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString) {
-        info(&format!("SuttaBridge::results_page() start - query='{}', page_num={}, search_area='{}'", query.to_string(), page_num, search_area.to_string()));
+        info(&format!("SuttaBridge::results_page() start - query='{}', page_num={}, search_area='{}'", query, page_num, search_area));
         let qt_thread = self.qt_thread();
 
         let query_text = query.to_string();
@@ -1156,10 +1148,7 @@ impl qobject::SuttaBridge {
     pub fn app_data_folder_path(&self) -> QString {
         let p = get_create_simsapa_dir().unwrap_or(PathBuf::from("."));
         let app_data_path = p.as_os_str();
-        let s = match app_data_path.to_str() {
-            Some(x) => x,
-            None => "Path error",
-        };
+        let s = app_data_path.to_str().unwrap_or("Path error");
         QString::from(s)
     }
 
@@ -1171,11 +1160,7 @@ impl qobject::SuttaBridge {
         };
         let permissions = md.permissions();
         let read_only = permissions.readonly();
-        if read_only {
-            false
-        } else {
-            true
-        }
+        !read_only
     }
 
     pub fn app_data_contents_html_table(&self) -> QString {
@@ -1204,24 +1189,17 @@ impl qobject::SuttaBridge {
 
         // Add current log.txt if it exists
         let current_log = data_dir.join("log.txt");
-        match current_log.try_exists() {
-            Ok(true) => log_files.push("log.txt".to_string()),
-            _ => {}
-        }
+        if let Ok(true) = current_log.try_exists() { log_files.push("log.txt".to_string()) }
 
         // Find all rotated log files
-        match fs::read_dir(&data_dir) {
-            Ok(entries) => {
-                for entry in entries.filter_map(|e| e.ok()) {
-                    let path = entry.path();
-                    if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-                        if filename.starts_with("log.") && filename.ends_with(".txt") && filename != "log.txt" {
-                            log_files.push(filename.to_string());
-                        }
+        if let Ok(entries) = fs::read_dir(&data_dir) {
+            for entry in entries.filter_map(|e| e.ok()) {
+                let path = entry.path();
+                if let Some(filename) = path.file_name().and_then(|n| n.to_str())
+                    && filename.starts_with("log.") && filename.ends_with(".txt") && filename != "log.txt" {
+                        log_files.push(filename.to_string());
                     }
-                }
             }
-            Err(_) => {}
         }
 
         // Sort so current log.txt is first, then rotated logs in reverse chronological order
@@ -1507,14 +1485,14 @@ impl qobject::SuttaBridge {
     pub fn get_theme(&self, theme_name: &QString) -> QString {
         let theme = theme_name.to_string();
 
-        let theme_json = match theme.as_str() {
+        
+
+        match theme.as_str() {
             "system" => qobject::get_system_palette_json(),
             "light" => QString::from(&ThemeColors::light_json()),
             "dark" => QString::from(&ThemeColors::dark_json()),
             _ => QString::from(serde_json::json!({}).to_string()),
-        };
-
-        theme_json
+        }
     }
 
     pub fn get_common_words_json(&self) -> QString {
@@ -1536,7 +1514,6 @@ impl qobject::SuttaBridge {
     }
 
     pub fn update_gloss_session(&self, _session_uid: &QString, _gloss_data_json: &QString) {
-        return
     }
 
     pub fn save_new_gloss_session(&self, _gloss_data_json: &QString) -> QString {
@@ -1552,13 +1529,13 @@ impl qobject::SuttaBridge {
                      filename: &QString,
                      content: &QString) -> bool {
         let folder_path = PathBuf::from(qurl_to_local_path(folder_url));
-        let output_path = folder_path.join(&filename.to_string());
+        let output_path = folder_path.join(filename.to_string());
         match output_path.to_str() {
             Some(p) => {
                 save_to_file(content.to_string().as_bytes(), p);
-                return true;
+                true
             },
-            None => return false,
+            None => false,
         }
     }
 
@@ -1566,12 +1543,9 @@ impl qobject::SuttaBridge {
                                        folder_url: &QUrl,
                                        filename: &QString) -> bool {
         let folder_path = PathBuf::from(qurl_to_local_path(folder_url));
-        let output_path = folder_path.join(&filename.to_string());
-        let exists = match check_file_exists_print_err(&output_path) {
-            Ok(r) => r,
-            Err(_) => false,
-        };
-        exists
+        let output_path = folder_path.join(filename.to_string());
+
+        check_file_exists_print_err(&output_path).unwrap_or(false)
     }
 
     pub fn markdown_to_html(&self, markdown_text: &QString) -> QString {
@@ -1754,7 +1728,7 @@ impl qobject::SuttaBridge {
         if temp_path.is_empty() {
             error("Failed to copy content URI to temp file");
         } else {
-            info(&format!("Successfully copied to: {}", temp_path.to_string()));
+            info(&format!("Successfully copied to: {}", temp_path));
         }
 
         temp_path
@@ -2348,7 +2322,7 @@ impl qobject::SuttaBridge {
                 }
             };
 
-            let result = match simsapa_backend::anki_export::export_anki_csv(input, &app_data) {
+            let result = match simsapa_backend::anki_export::export_anki_csv(input, app_data) {
                 Ok(res) => res,
                 Err(e) => simsapa_backend::types::AnkiCsvExportResult {
                     success: false,
@@ -2391,7 +2365,7 @@ impl qobject::SuttaBridge {
                 &sample_json,
                 &front_template_str,
                 &back_template_str,
-                &app_data,
+                app_data,
             ) {
                 Ok(html) => html,
                 Err(e) => format!("<span style='color: red;'>Preview error: {}</span>", e),

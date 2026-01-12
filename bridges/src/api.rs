@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::io::{Read, Write};
 use std::net::TcpStream;
 use std::time::Duration;
@@ -77,10 +77,10 @@ pub fn get_app_globals_api() -> &'static AppGlobals {
     APP_GLOBALS_API.get().expect("AppGlobals (in API) is not initialized")
 }
 
-/// Convert a PathBuf to a string using forward slashes as separators.
-/// On Windows, PathBuf uses backslashes, but URLs and database paths use forward slashes.
+/// Convert a Path to a string using forward slashes as separators.
+/// On Windows, paths use backslashes, but URLs and database paths use forward slashes.
 /// This ensures consistent path handling across all platforms.
-fn pathbuf_to_forward_slash_string(path: &PathBuf) -> String {
+fn pathbuf_to_forward_slash_string(path: &Path) -> String {
     path.iter()
         .map(|s| s.to_str().unwrap_or(""))
         .collect::<Vec<_>>()
@@ -548,7 +548,7 @@ fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm
 
     let item = match dbm.appdata.get_book_spine_item(&uid_str) {
         Ok(Some(item)) => item,
-        Ok(None) => return Err((Status::NotFound, format!("BookSpineItem Not Found"))),
+        Ok(None) => return Err((Status::NotFound, "BookSpineItem Not Found".to_string())),
         Err(e) => return Err((Status::InternalServerError, format!("Database error: {}", e))),
     };
 
@@ -1006,9 +1006,9 @@ fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<
 
         // If not found in dict_words, try DPD headwords (for numeric UIDs like "34626/dpd")
         let app_data = get_app_data();
-        if query_text.ends_with("/dpd") {
-            if let Some(json_str) = app_data.get_dpd_headword_by_uid(query_text) {
-                if let Ok(headword) = serde_json::from_str::<serde_json::Value>(&json_str) {
+        if query_text.ends_with("/dpd")
+            && let Some(json_str) = app_data.get_dpd_headword_by_uid(query_text)
+                && let Ok(headword) = serde_json::from_str::<serde_json::Value>(&json_str) {
                     let word_title = headword.get("lemma_1")
                         .and_then(|v| v.as_str())
                         .unwrap_or("");
@@ -1028,8 +1028,6 @@ fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<
                     ffi::callback_open_in_lookup_window(ffi::QString::from(json_string));
                     return Status::Ok;
                 }
-            }
-        }
 
         // UID not found, fall through to search query
         info(&format!("lookup_window_query_post(): UID not found, running search: {}", query_text));
@@ -1060,35 +1058,31 @@ fn get_word_json(uid_with_ext: PathBuf, dbm: &State<Arc<DbManager>>) -> Json<Vec
 
     if uid.ends_with("/dpd") {
         // Try DPD headword first (uses numeric IDs like "34626/dpd")
-        if let Some(json_str) = app_data.get_dpd_headword_by_uid(uid) {
-            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+        if let Some(json_str) = app_data.get_dpd_headword_by_uid(uid)
+            && let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
                 return Json(vec![value]);
             }
-        }
 
         // If not found as headword, try as root (roots have format like "√kar/dpd")
         // Extract root key by removing "/dpd" suffix
         let root_key = uid.trim_end_matches("/dpd");
-        if let Some(json_str) = app_data.get_dpd_root_by_root_key(root_key) {
-            if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+        if let Some(json_str) = app_data.get_dpd_root_by_root_key(root_key)
+            && let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
                 return Json(vec![value]);
             }
-        }
 
         // If not found in dpd.sqlite3, try dict_words table in dictionaries.sqlite3
         // This handles UIDs like "dhamma 1.01/dpd" which are stored in dict_words
-        if let Some(dict_word) = dbm.dictionaries.get_word(uid) {
-            if let Ok(value) = serde_json::to_value(&dict_word) {
+        if let Some(dict_word) = dbm.dictionaries.get_word(uid)
+            && let Ok(value) = serde_json::to_value(&dict_word) {
                 return Json(vec![value]);
             }
-        }
     } else {
         // Try dict_words table for non-DPD entries (e.g., "dhamma/ncped")
-        if let Some(dict_word) = dbm.dictionaries.get_word(uid) {
-            if let Ok(value) = serde_json::to_value(&dict_word) {
+        if let Some(dict_word) = dbm.dictionaries.get_word(uid)
+            && let Ok(value) = serde_json::to_value(&dict_word) {
                 return Json(vec![value]);
             }
-        }
     }
 
     // Word not found - return empty array
@@ -1225,19 +1219,16 @@ pub extern "C" fn download_small_database() {
                 Ok(buffer) => {
                     let resp = save_to_file(&buffer, &save_path);
                     info(&resp);
-                    return;
                 },
                 Err(e) => {
                     error(&format!("Failed to read to vec: {}", e));
-                    return;
                 }
             }
         },
         Err(e) => {
             error(&format!("HTTP request failed: {}", e));
-            return;
         },
-    };
+    }
 }
 
 #[unsafe(no_mangle)]
@@ -1251,7 +1242,7 @@ pub extern "C" fn shutdown_webserver_tcp() {
             }
 
             // Construct and send the HTTP GET request
-            let request = format!("GET /shutdown HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+            let request = "GET /shutdown HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n".to_string();
             if let Err(e) = connection.write_all(request.as_bytes()) {
                 error(&format!("Error sending request: {}", e));
             }

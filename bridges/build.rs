@@ -9,56 +9,56 @@ fn main() {
     };
     let mobile_build = s.contains("Qt::WebView");
 
-    let mut qml_files = Vec::new();
-    qml_files.push("../assets/qml/SuttaSearchWindow.qml");
-    qml_files.push("../assets/qml/DownloadAppdataWindow.qml");
-    qml_files.push("../assets/qml/SuttaLanguagesWindow.qml");
-    qml_files.push("../assets/qml/LibraryWindow.qml");
-    qml_files.push("../assets/qml/ReferenceSearchWindow.qml");
-    qml_files.push("../assets/qml/TopicIndexWindow.qml");
-    qml_files.push("../assets/qml/TopicIndexInfoDialog.qml");
-    qml_files.push("../assets/qml/BooksList.qml");
-    qml_files.push("../assets/qml/ChapterListItem.qml");
-    qml_files.push("../assets/qml/DocumentImportDialog.qml");
-    qml_files.push("../assets/qml/DocumentMetadataEditDialog.qml");
-    qml_files.push("../assets/qml/LanguageListSelector.qml");
-    qml_files.push("../assets/qml/DownloadProgressFrame.qml");
-
-    qml_files.push("../assets/qml/SearchBarInput.qml");
-    qml_files.push("../assets/qml/FulltextResults.qml");
-    qml_files.push("../assets/qml/CMenuItem.qml");
-    qml_files.push("../assets/qml/SuttaTabButton.qml");
-    qml_files.push("../assets/qml/TabListDialog.qml");
-    qml_files.push("../assets/qml/SuttaHtmlView.qml");
-    qml_files.push("../assets/qml/SuttaHtmlView_Desktop.qml");
-    qml_files.push("../assets/qml/SuttaHtmlView_Mobile.qml");
-    qml_files.push("../assets/qml/DictionaryHtmlView.qml");
-    qml_files.push("../assets/qml/DictionaryHtmlView_Desktop.qml");
-    qml_files.push("../assets/qml/DictionaryHtmlView_Mobile.qml");
-    qml_files.push("../assets/qml/DictionaryTab.qml");
-    qml_files.push("../assets/qml/TocTab.qml");
-    qml_files.push("../assets/qml/SuttaStackLayout.qml");
-    qml_files.push("../assets/qml/AboutDialog.qml");
-    qml_files.push("../assets/qml/DatabaseValidationDialog.qml");
-    qml_files.push("../assets/qml/SystemPromptsDialog.qml");
-    qml_files.push("../assets/qml/ModelsDialog.qml");
-    qml_files.push("../assets/qml/AnkiExportDialog.qml");
-    qml_files.push("../assets/qml/ColorThemeDialog.qml");
-    qml_files.push("../assets/qml/MobileTopMarginDialog.qml");
-    qml_files.push("../assets/qml/DrawerMenu.qml");
-    qml_files.push("../assets/qml/DrawerEmptyItem.qml");
-    qml_files.push("../assets/qml/ListBackground.qml");
-    qml_files.push("../assets/qml/WordSummary.qml");
-    qml_files.push("../assets/qml/StorageDialog.qml");
-    qml_files.push("../assets/qml/GlossTab.qml");
-    qml_files.push("../assets/qml/PromptsTab.qml");
-    qml_files.push("../assets/qml/AssistantResponses.qml");
-    qml_files.push("../assets/qml/ResponseTabButton.qml");
-    qml_files.push("../assets/qml/ScrollableHelper.qml");
-    qml_files.push("../assets/qml/ThemeHelper.qml");
-    qml_files.push("../assets/qml/Logger.qml");
-    qml_files.push("../assets/qml/UnrecognizedWordsList.qml");
-    qml_files.push("../assets/qml/UpdateNotificationDialog.qml");
+    let qml_files = vec![
+        "../assets/qml/SuttaSearchWindow.qml",
+        "../assets/qml/DownloadAppdataWindow.qml",
+        "../assets/qml/SuttaLanguagesWindow.qml",
+        "../assets/qml/LibraryWindow.qml",
+        "../assets/qml/ReferenceSearchWindow.qml",
+        "../assets/qml/TopicIndexWindow.qml",
+        "../assets/qml/TopicIndexInfoDialog.qml",
+        "../assets/qml/BooksList.qml",
+        "../assets/qml/ChapterListItem.qml",
+        "../assets/qml/DocumentImportDialog.qml",
+        "../assets/qml/DocumentMetadataEditDialog.qml",
+        "../assets/qml/LanguageListSelector.qml",
+        "../assets/qml/DownloadProgressFrame.qml",
+        "../assets/qml/SearchBarInput.qml",
+        "../assets/qml/FulltextResults.qml",
+        "../assets/qml/CMenuItem.qml",
+        "../assets/qml/SuttaTabButton.qml",
+        "../assets/qml/TabListDialog.qml",
+        "../assets/qml/SuttaHtmlView.qml",
+        "../assets/qml/SuttaHtmlView_Desktop.qml",
+        "../assets/qml/SuttaHtmlView_Mobile.qml",
+        "../assets/qml/DictionaryHtmlView.qml",
+        "../assets/qml/DictionaryHtmlView_Desktop.qml",
+        "../assets/qml/DictionaryHtmlView_Mobile.qml",
+        "../assets/qml/DictionaryTab.qml",
+        "../assets/qml/TocTab.qml",
+        "../assets/qml/SuttaStackLayout.qml",
+        "../assets/qml/AboutDialog.qml",
+        "../assets/qml/DatabaseValidationDialog.qml",
+        "../assets/qml/SystemPromptsDialog.qml",
+        "../assets/qml/ModelsDialog.qml",
+        "../assets/qml/AnkiExportDialog.qml",
+        "../assets/qml/ColorThemeDialog.qml",
+        "../assets/qml/MobileTopMarginDialog.qml",
+        "../assets/qml/DrawerMenu.qml",
+        "../assets/qml/DrawerEmptyItem.qml",
+        "../assets/qml/ListBackground.qml",
+        "../assets/qml/WordSummary.qml",
+        "../assets/qml/StorageDialog.qml",
+        "../assets/qml/GlossTab.qml",
+        "../assets/qml/PromptsTab.qml",
+        "../assets/qml/AssistantResponses.qml",
+        "../assets/qml/ResponseTabButton.qml",
+        "../assets/qml/ScrollableHelper.qml",
+        "../assets/qml/ThemeHelper.qml",
+        "../assets/qml/Logger.qml",
+        "../assets/qml/UnrecognizedWordsList.qml",
+        "../assets/qml/UpdateNotificationDialog.qml",
+    ];
 
     let builder = CxxQtBuilder::new()
         // Link Qt's Network library
