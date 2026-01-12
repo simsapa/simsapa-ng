@@ -9,8 +9,8 @@ use crate::logger::{warn, error};
 
 #[derive(Debug, Clone)]
 pub enum UDpdWord {
-    Headword(DpdHeadword),
-    Root(DpdRoot),
+    Headword(Box<DpdHeadword>),
+    Root(Box<DpdRoot>),
 }
 
 impl UDpdWord {

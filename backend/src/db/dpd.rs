@@ -197,7 +197,7 @@ impl DpdDbHandle {
                         .first::<DpdHeadword>(db_conn)
                         .optional()?;
                     if let Some(r) = r_opt {
-                        res_words.push(UDpdWord::Headword(r));
+                        res_words.push(UDpdWord::Headword(Box::new(r)));
                     }
                 }
             } else {
@@ -207,7 +207,7 @@ impl DpdDbHandle {
                     .first::<DpdRoot>(db_conn)
                     .optional()?;
                 if let Some(r) = r_opt {
-                    res_words.push(UDpdWord::Root(r));
+                    res_words.push(UDpdWord::Root(Box::new(r)));
                 }
             }
 
@@ -230,7 +230,7 @@ impl DpdDbHandle {
                 .load::<DpdHeadword>(db_conn)?;
 
             let mut res_words: Vec<UDpdWord> = Vec::new();
-            res_words.extend(r.into_iter().map(UDpdWord::Headword));
+            res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
             let mut res = parse_words(res_words, do_pali_sort);
             res.retain(|i| !results_uids.contains(&i.uid));
@@ -258,7 +258,7 @@ impl DpdDbHandle {
 
         {
             let mut res_words: Vec<UDpdWord> = Vec::new();
-            res_words.extend(roots.into_iter().map(UDpdWord::Root));
+            res_words.extend(roots.into_iter().map(|r| UDpdWord::Root(Box::new(r))));
 
             let mut res = parse_words(res_words, do_pali_sort);
             res.retain(|i| !results_uids.contains(&i.uid));
@@ -274,7 +274,7 @@ impl DpdDbHandle {
         let r = self.inflection_to_pali_words(&query_text)?;
         {
             let mut res_words: Vec<UDpdWord> = Vec::new();
-            res_words.extend(r.into_iter().map(UDpdWord::Headword));
+            res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
             let mut res = parse_words(res_words, do_pali_sort);
             res.retain(|i| !results_uids.contains(&i.uid));
@@ -291,7 +291,7 @@ impl DpdDbHandle {
                 .load::<DpdHeadword>(db_conn)?;
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
-                res_words.extend(r.into_iter().map(UDpdWord::Headword));
+                res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
                 let mut res = parse_words(res_words, do_pali_sort);
                 res.retain(|i| !results_uids.contains(&i.uid));
@@ -311,7 +311,7 @@ impl DpdDbHandle {
                     .load::<DpdHeadword>(db_conn)?;
                 {
                     let mut res_words: Vec<UDpdWord> = Vec::new();
-                    res_words.extend(r.into_iter().map(UDpdWord::Headword));
+                    res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
                     let mut res = parse_words(res_words, do_pali_sort);
                     res.retain(|i| !results_uids.contains(&i.uid));
@@ -328,7 +328,7 @@ impl DpdDbHandle {
             let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only)?;
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
-                res_words.extend(r.into_iter().map(UDpdWord::Headword));
+                res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
                 let mut res = parse_words(res_words, do_pali_sort);
                 res.retain(|i| !results_uids.contains(&i.uid));
@@ -353,7 +353,7 @@ impl DpdDbHandle {
 
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
-                res_words.extend(r.into_iter().map(UDpdWord::Headword));
+                res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
                 let mut res = parse_words(res_words, do_pali_sort);
                 res.retain(|i| !results_uids.contains(&i.uid));
@@ -370,7 +370,7 @@ impl DpdDbHandle {
                     .load::<DpdHeadword>(db_conn)?;
                 {
                     let mut res_words: Vec<UDpdWord> = Vec::new();
-                    res_words.extend(r.into_iter().map(UDpdWord::Headword));
+                    res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
 
                     let mut res = parse_words(res_words, do_pali_sort);
                     res.retain(|i| !results_uids.contains(&i.uid));
