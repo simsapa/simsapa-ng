@@ -165,13 +165,7 @@ impl BuddhaUjjaImporter {
         content_text = backslash_newline_re.replace_all(&content_text, "  \n").to_string();
 
         // Convert markdown to HTML
-        let mut options = pulldown_cmark::Options::empty();
-        options.insert(pulldown_cmark::Options::ENABLE_FOOTNOTES);
-        options.insert(pulldown_cmark::Options::ENABLE_SMART_PUNCTUATION);
-
-        let parser = pulldown_cmark::Parser::new_ext(&content_text, options);
-        let mut content_main = String::new();
-        pulldown_cmark::html::push_html(&mut content_main, parser);
+        let content_main = mdbook::utils::render_markdown(&content_text, true);
 
         // Add license HTML
         let license_html = if bu_sutta.license.as_deref() == Some("cc-by-nc-sa") {

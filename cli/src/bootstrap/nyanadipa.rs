@@ -3,7 +3,6 @@ use diesel::prelude::*;
 use std::path::PathBuf;
 use std::fs;
 use indicatif::{ProgressBar, ProgressStyle};
-use pulldown_cmark::{Parser, html, Options};
 
 use simsapa_backend::db::appdata_schema::suttas;
 use simsapa_backend::helpers::{pali_to_ascii, consistent_niggahita, sutta_html_to_plain_text};
@@ -50,14 +49,8 @@ impl NyanadipaImporter {
         let md_text = fs::read_to_string(path)
             .with_context(|| format!("Failed to read file: {:?}", path))?;
 
-        // Convert markdown to HTML with footnotes and smarty extensions
-        let mut options = Options::empty();
-        options.insert(Options::ENABLE_FOOTNOTES);
-        options.insert(Options::ENABLE_SMART_PUNCTUATION);
-
-        let parser = Parser::new_ext(&md_text, options);
-        let mut html_output = String::new();
-        html::push_html(&mut html_output, parser);
+        // Convert markdown to HTML with footnotes and smart punctuation
+        let html_output = mdbook::utils::render_markdown(&md_text, true);
 
         // Parse HTML to extract title from h1
         let html = scraper::Html::parse_document(&html_output);
