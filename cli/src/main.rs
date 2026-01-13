@@ -38,14 +38,12 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
         area,
     );
 
-    let results = match query_task.results_page(0) {
+    match query_task.results_page(0) {
         Ok(x) => x,
         Err(s) => {
             panic!("{}", s);
         }
-    };
-
-    results
+    }
 }
 
 fn query_suttas(
@@ -718,9 +716,21 @@ enum Commands {
         #[arg(long, default_value_t = false)]
         write_new_dotenv: bool,
 
+        /// Skip Appdata database initialization and bootstrap
+        #[arg(long, default_value_t = false)]
+        skip_appdata: bool,
+
         /// Skip DPD database initialization and bootstrap
         #[arg(long, default_value_t = false)]
         skip_dpd: bool,
+
+        /// Skip additional languages bootstrap ('en', 'pli' will be still included)
+        #[arg(long, default_value_t = false)]
+        skip_languages: bool,
+
+        /// Only import specific languages (comma-separated list, e.g., "hu,pt,de")
+        #[arg(long, value_name = "LANG_CODES")]
+        only_languages: Option<String>,
     },
 
     /// Rebuild the application database using the legacy bootstrap implementation.
@@ -889,7 +899,7 @@ fn main() {
              if !path.exists() {
                   Err(format!("Dictionary source path does not exist: {:?}", path))
              } else if !path.is_dir() {
-                 Err(format!("Warning: Provided dictionary source path is a file, not a directory. Unzip the StarDict files to a directory."))
+                 Err("Warning: Provided dictionary source path is a file, not a directory. Unzip the StarDict files to a directory.".to_string())
              } else {
                  import_stardict_dictionary(&dict_label, &path, limit)
              }
@@ -903,8 +913,8 @@ fn main() {
              }
         }
 
-        Commands::Bootstrap { write_new_dotenv, skip_dpd } => {
-            bootstrap::bootstrap(write_new_dotenv, skip_dpd)
+        Commands::Bootstrap { write_new_dotenv, skip_appdata, skip_dpd, skip_languages, only_languages } => {
+            bootstrap::bootstrap(write_new_dotenv, skip_appdata, skip_dpd, skip_languages, only_languages )
                 .map_err(|e| e.to_string())
         }
 

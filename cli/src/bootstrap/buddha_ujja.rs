@@ -101,7 +101,8 @@ impl BuddhaUjjaImporter {
         let query = "SELECT id, sutta_ref_code, title, sutta_title_pali, sutta_title_trans, \
                      markdown_content, sutta_pts, copyright, license \
                      FROM suttas \
-                     WHERE language_code = 'hu' AND is_published = 1";
+                     WHERE language_code = 'hu' \
+                     AND (is_published = 1 OR translator_name = 'A páli fordító csoport')";
 
         let suttas = diesel::sql_query(query)
             .load::<BuddhaUjjaSutta>(source_conn)

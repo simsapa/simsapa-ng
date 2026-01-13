@@ -61,10 +61,28 @@ pub fn ensure_directory_exists(path: &Path) -> Result<()> {
 }
 
 /// Main bootstrap function - orchestrates the entire bootstrap process
-pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
+pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, skip_languages: bool, only_languages: Option<String>) -> Result<()> {
     logger::info("=== bootstrap() ===");
+    if skip_appdata {
+        logger::info("--skip-appdata flag set: Appdata initialization and bootstrap will be skipped");
+    }
     if skip_dpd {
         logger::info("--skip-dpd flag set: DPD initialization and bootstrap will be skipped");
+    }
+    if skip_languages {
+        logger::info("--skip-languages flag set: Additional languages bootstrap will be skipped ('en', 'pli' will be still included)");
+    }
+
+    // Parse the only_languages parameter into a vector of language codes
+    let only_languages_vec: Option<Vec<String>> = only_languages.clone().map(|langs| {
+        langs.split(',')
+            .map(|s| s.trim().to_lowercase())
+            .filter(|s| !s.is_empty())
+            .collect()
+    });
+
+    if let Some(ref langs) = only_languages_vec {
+        logger::info(&format!("--only-languages flag set: Only importing languages: {:?}", langs));
     }
 
     let start_time: DateTime<Local> = Local::now();
@@ -93,7 +111,7 @@ pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
     // During bootstrap, don't touch the user's Simsapa dir (~/.local/share/simsapa-ng)
     // Create files in the dist/ folder instead.
     // Setting the env var here to override any previous value.
-    unsafe { env::set_var("SIMSAPA_DIR", &dist_dir.join("simsapa-ng")); }
+    unsafe { env::set_var("SIMSAPA_DIR", dist_dir.join("simsapa-ng")); }
 
     let simsapa_dir = get_create_simsapa_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get simsapa directory: {}", e))?;
@@ -135,120 +153,125 @@ RELEASE_CHANNEL=development
 
     clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
 
-    logger::info("=== Create appdata.sqlite3 ===");
+    if !skip_appdata {
+        logger::info("=== Create appdata.sqlite3 ===");
 
-    // Create appdata.sqlite3 in the app-assets directory
-    let appdata_db_path = assets_dir.join("appdata.sqlite3");
-    let mut appdata_bootstrap = AppdataBootstrap::new(appdata_db_path.clone());
+        // Create appdata.sqlite3 in the app-assets directory
+        let appdata_db_path = assets_dir.join("appdata.sqlite3");
+        let mut appdata_bootstrap = AppdataBootstrap::new(appdata_db_path.clone());
 
-    // Create the appdata database, populated later.
-    appdata_bootstrap.run()?;
+        // Create the appdata database, populated later.
+        appdata_bootstrap.run()?;
 
-    logger::info("=== Importing suttas from various sources ===");
+        logger::info("=== Importing suttas from various sources ===");
 
-    // Get database connection for sutta imports
-    let mut conn = create_database_connection(&appdata_db_path)?;
-
-    // Import suttas from SuttaCentral
-    {
-        if sc_data_dir.exists() {
-            logger::info("Importing suttas from SuttaCentral");
-            for lang in ["en", "pli"] {
-                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
-                importer.import(&mut conn)?;
-            }
-        } else {
-            logger::warn("SuttaCentral data directory not found, skipping");
-        }
-    }
-
-    // Import suttas from tipitaka.org (CST4)
-    // {
-    //     let tipitaka_xml_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/");
-    //     let mut importer = TipitakaXmlImporter::new(tipitaka_xml_path);
-    //     importer.import(&mut conn)?;
-    // }
-
-    // Import from Dhammatalks.org
-    {
-        let dhammatalks_path = bootstrap_assets_dir.join("dhammatalks-org/www.dhammatalks.org/suttas");
-        if dhammatalks_path.exists() {
-            logger::info("Importing suttas from dhammatalks.org");
-            let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path);
-            importer.import(&mut conn)?;
-        } else {
-            logger::warn("Dhammatalks.org resource path not found, skipping");
-        }
-    }
-
-    // Import Dhammapada from Tipitaka.net (Daw Mya Tin translation)
-    // Uses exported database from dhammapada_tipitaka_net_export command
-    {
-        let exported_db_path = bootstrap_assets_dir.join("dhammapada-tipitaka-net/dhammapada-tipitaka-net.sqlite3");
-        if exported_db_path.exists() {
-            logger::info("Importing suttas from dhammapada-tipitaka-net (exported DB)");
-            let mut importer = DhammapadaTipitakaImporter::new(exported_db_path);
-            importer.import(&mut conn)?;
-        } else {
-            logger::warn(&format!("Dhammapada Tipitaka.net exported database not found: {:?}", exported_db_path));
-            logger::warn("Run: simsapa_cli dhammapada-tipitaka-net-export <legacy_db> <output_db>");
-        }
-    }
-
-    // Import Nyanadipa translations (Sutta Nipata selections)
-    {
-        let nyanadipa_path = bootstrap_assets_dir.join("nyanadipa-translations");
-        if nyanadipa_path.exists() {
-            logger::info("Importing suttas from nyanadipa-translations");
-            let mut importer = NyanadipaImporter::new(nyanadipa_path);
-            importer.import(&mut conn)?;
-        } else {
-            logger::warn("Nyanadipa translations resource path not found, skipping");
-        }
-    }
-
-    // Import Ajahn Munindo's Dhammapada
-    {
-        let dhammapada_munindo_path = bootstrap_assets_dir.join("dhammapada-munindo");
-        if dhammapada_munindo_path.exists() {
-            logger::info("Importing suttas from dhammapada-munindo");
-            let mut importer = DhammapadaMunindoImporter::new(dhammapada_munindo_path);
-            importer.import(&mut conn)?;
-        } else {
-            logger::warn("Dhammapada Munindo resource path not found, skipping");
-        }
-    }
-
-    logger::info("=== Bootstrap Library Imports ===");
-
-    // Import library documents from library-imports.toml
-    {
-        let library_imports_toml_path = bootstrap_assets_dir.join("library-imports/library-imports.toml");
-        let library_imports_books_folder = bootstrap_assets_dir.join("library-imports/books/");
-
-        // Get database connection for library imports (using main appdata database)
+        // Get database connection for sutta imports
         let mut conn = create_database_connection(&appdata_db_path)?;
 
-        let mut importer = LibraryImportsImporter::new(
-            library_imports_toml_path,
-            library_imports_books_folder,
-        );
-
-        // Import library documents - errors are logged but don't stop the bootstrap
-        match importer.import(&mut conn) {
-            Ok(_) => logger::info("Library imports completed successfully"),
-            Err(e) => logger::error(&format!("Library imports failed: {}", e)),
+        // Import suttas from SuttaCentral
+        {
+            if sc_data_dir.exists() {
+                logger::info("Importing suttas from SuttaCentral");
+                for lang in ["en", "pli"] {
+                    let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
+                    importer.import(&mut conn)?;
+                }
+            } else {
+                logger::warn("SuttaCentral data directory not found, skipping");
+            }
         }
 
+        // Import suttas from tipitaka.org (CST4)
+        // {
+        //     let tipitaka_xml_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/");
+        //     let mut importer = TipitakaXmlImporter::new(tipitaka_xml_path);
+        //     importer.import(&mut conn)?;
+        // }
+
+        // Import from Dhammatalks.org
+        {
+            let dhammatalks_path = bootstrap_assets_dir.join("dhammatalks-org/www.dhammatalks.org/suttas");
+            if dhammatalks_path.exists() {
+                logger::info("Importing suttas from dhammatalks.org");
+                let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path);
+                importer.import(&mut conn)?;
+            } else {
+                logger::warn("Dhammatalks.org resource path not found, skipping");
+            }
+        }
+
+        // Import Dhammapada from Tipitaka.net (Daw Mya Tin translation)
+        // Uses exported database from dhammapada_tipitaka_net_export command
+        {
+            let exported_db_path = bootstrap_assets_dir.join("dhammapada-tipitaka-net/dhammapada-tipitaka-net.sqlite3");
+            if exported_db_path.exists() {
+                logger::info("Importing suttas from dhammapada-tipitaka-net (exported DB)");
+                let mut importer = DhammapadaTipitakaImporter::new(exported_db_path);
+                importer.import(&mut conn)?;
+            } else {
+                logger::warn(&format!("Dhammapada Tipitaka.net exported database not found: {:?}", exported_db_path));
+                logger::warn("Run: simsapa_cli dhammapada-tipitaka-net-export <legacy_db> <output_db>");
+            }
+        }
+
+        // Import Nyanadipa translations (Sutta Nipata selections)
+        {
+            let nyanadipa_path = bootstrap_assets_dir.join("nyanadipa-translations");
+            if nyanadipa_path.exists() {
+                logger::info("Importing suttas from nyanadipa-translations");
+                let mut importer = NyanadipaImporter::new(nyanadipa_path);
+                importer.import(&mut conn)?;
+            } else {
+                logger::warn("Nyanadipa translations resource path not found, skipping");
+            }
+        }
+
+        // Import Ajahn Munindo's Dhammapada
+        {
+            let dhammapada_munindo_path = bootstrap_assets_dir.join("dhammapada-munindo");
+            if dhammapada_munindo_path.exists() {
+                logger::info("Importing suttas from dhammapada-munindo");
+                let mut importer = DhammapadaMunindoImporter::new(dhammapada_munindo_path);
+                importer.import(&mut conn)?;
+            } else {
+                logger::warn("Dhammapada Munindo resource path not found, skipping");
+            }
+        }
+
+        logger::info("=== Bootstrap Library Imports ===");
+
+        // Import library documents from library-imports.toml
+        {
+            let library_imports_toml_path = bootstrap_assets_dir.join("library-imports/library-imports.toml");
+            let library_imports_books_folder = bootstrap_assets_dir.join("library-imports/books/");
+
+            // Get database connection for library imports (using main appdata database)
+            let mut conn = create_database_connection(&appdata_db_path)?;
+
+            let mut importer = LibraryImportsImporter::new(
+                library_imports_toml_path,
+                library_imports_books_folder,
+            );
+
+            // Import library documents - errors are logged but don't stop the bootstrap
+            match importer.import(&mut conn) {
+                Ok(_) => logger::info("Library imports completed successfully"),
+                Err(e) => logger::error(&format!("Library imports failed: {}", e)),
+            }
+
+            drop(conn);
+        }
+
+        // Drop connection to close database before further operations
         drop(conn);
+
+        logger::info("=== Create appdata.tar.bz2 ===");
+
+        create_database_archive(&appdata_db_path, &release_dir)?;
+
+    } else {
+        logger::info("Skipping Appdata initialization and bootstrap");
     }
-
-    // Drop connection to close database before further operations
-    drop(conn);
-
-    logger::info("=== Create appdata.tar.bz2 ===");
-
-    create_database_archive(&appdata_db_path, &release_dir)?;
 
     // Digital Pāli Dictionary
     if !skip_dpd {
@@ -269,17 +292,26 @@ RELEASE_CHANNEL=development
     logger::info("=== Bootstrap Languages from SuttaCentral ===");
 
     // Import suttas for each language from SuttaCentral ArangoDB
-    {
+    if !skip_languages {
         if sc_data_dir.exists() {
             // Connect to ArangoDB to get the languages list
             match suttacentral::connect_to_arangodb() {
                 Ok(db) => {
                     match suttacentral::get_sorted_languages_list(&db) {
                         Ok(languages) => {
-                            let total_languages = languages.len();
+                            // Filter languages if only_languages was specified
+                            let filtered_languages: Vec<String> = if let Some(ref only_langs) = only_languages_vec {
+                                languages.into_iter()
+                                    .filter(|lang| only_langs.contains(&lang.to_lowercase()))
+                                    .collect()
+                            } else {
+                                languages
+                            };
+
+                            let total_languages = filtered_languages.len();
                             logger::info(&format!("Found {} languages to import from SuttaCentral", total_languages));
 
-                            for (idx, lang) in languages.iter().enumerate() {
+                            for (idx, lang) in filtered_languages.iter().enumerate() {
                                 let lang_num = idx + 1;
                                 logger::info(&format!("=== Importing language: {} ({}/{}) ===", lang, lang_num, total_languages));
 
@@ -290,7 +322,7 @@ RELEASE_CHANNEL=development
                                 run_migrations(&mut lang_conn)?;
 
                                 // Import suttas for this language
-                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), &lang);
+                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
                                 match importer.import(&mut lang_conn) {
                                     Ok(_) => {
                                         // Check if any suttas were actually imported
@@ -353,59 +385,77 @@ RELEASE_CHANNEL=development
         } else {
             logger::warn("SuttaCentral data directory not found, skipping language imports");
         }
+    } else {
+        logger::info("Skipping SuttaCentral languages bootstrap");
     }
 
     logger::info("=== Bootstrap Hungarian from Buddha Ujja ===");
 
     // Import Hungarian translations from Buddha Ujja
-    {
-        let bu_db_path = bootstrap_assets_dir.join("buddha-ujja-sql/bu.sqlite3");
-        if bu_db_path.exists() {
-            logger::info("Importing Hungarian suttas from Buddha Ujja");
+    if !skip_languages {
+        let lang = "hu";
 
-            let lang = "hu";
-            let lang_db_path = assets_dir.join(format!("suttas_lang_{}.sqlite3", lang));
-
-            // Create the language-specific database with appdata schema
-            let mut lang_conn = create_database_connection(&lang_db_path)?;
-            run_migrations(&mut lang_conn)?;
-
-            // Import Hungarian suttas directly into the language database
-            let mut importer = BuddhaUjjaImporter::new(bu_db_path);
-            importer.import(&mut lang_conn)?;
-            drop(lang_conn);
-
-            // Create archive and move to release directory
-            create_database_archive(&lang_db_path, &release_dir)?;
+        // Check if we should import Hungarian based on only_languages filter
+        let should_import_hungarian = if let Some(ref only_langs) = only_languages_vec {
+            only_langs.contains(&lang.to_lowercase())
         } else {
-            logger::warn(&format!("Buddha Ujja database not found: {:?}", bu_db_path));
-            logger::warn("Skipping Hungarian sutta import");
+            true
+        };
+
+        if should_import_hungarian {
+            let bu_db_path = bootstrap_assets_dir.join("buddha-ujja-sql/bu.sqlite3");
+            if bu_db_path.exists() {
+                logger::info("Importing Hungarian suttas from Buddha Ujja");
+
+                let lang_db_path = assets_dir.join(format!("suttas_lang_{}.sqlite3", lang));
+
+                // Create the language-specific database with appdata schema
+                let mut lang_conn = create_database_connection(&lang_db_path)?;
+                run_migrations(&mut lang_conn)?;
+
+                // Import Hungarian suttas directly into the language database
+                let mut importer = BuddhaUjjaImporter::new(bu_db_path);
+                importer.import(&mut lang_conn)?;
+                drop(lang_conn);
+
+                // Create archive and move to release directory
+                create_database_archive(&lang_db_path, &release_dir)?;
+            } else {
+                logger::warn(&format!("Buddha Ujja database not found: {:?}", bu_db_path));
+                logger::warn("Skipping Hungarian sutta import");
+            }
+        } else {
+            logger::info("Skipping Hungarian (not in --only-languages list)");
         }
+    } else {
+        logger::info("Skipping Hungarian from Buddha Ujja bootstrap");
     }
 
     logger::info("=== Release Info ===");
 
     write_release_info(&assets_dir, &release_dir)?;
 
-    logger::info("=== Copy languages.json to assets/ ===");
+    if !skip_languages && only_languages.is_none() {
+        logger::info("=== Copy languages.json to assets/ ===");
 
-    // Copy languages.json from release_dir to the Simsapa project's assets/ folder
-    let languages_json_src = release_dir.join("languages.json");
+        // Copy languages.json from release_dir to the Simsapa project's assets/ folder
+        let languages_json_src = release_dir.join("languages.json");
 
-    // Use CARGO_MANIFEST_DIR to get the cli/ directory, then go up one level to project root
-    let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR")
-        .context("CARGO_MANIFEST_DIR environment variable not set")?;
-    let project_assets_dir = PathBuf::from(cargo_manifest_dir)
-        .parent()
-        .context("Failed to get project root directory from CARGO_MANIFEST_DIR")?
-        .join("assets");
-    let languages_json_dst = project_assets_dir.join("languages.json");
+        // Use CARGO_MANIFEST_DIR to get the cli/ directory, then go up one level to project root
+        let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR")
+            .context("CARGO_MANIFEST_DIR environment variable not set")?;
+        let project_assets_dir = PathBuf::from(cargo_manifest_dir)
+            .parent()
+            .context("Failed to get project root directory from CARGO_MANIFEST_DIR")?
+            .join("assets");
+        let languages_json_dst = project_assets_dir.join("languages.json");
 
-    fs::copy(&languages_json_src, &languages_json_dst)
-        .with_context(|| format!("Failed to copy languages.json from {:?} to {:?}",
-            languages_json_src, languages_json_dst))?;
+        fs::copy(&languages_json_src, &languages_json_dst)
+            .with_context(|| format!("Failed to copy languages.json from {:?} to {:?}",
+                languages_json_src, languages_json_dst))?;
 
-    logger::info(&format!("Copied languages.json to {:?}", languages_json_dst));
+        logger::info(&format!("Copied languages.json to {:?}", languages_json_dst));
+    }
 
     logger::info("=== Bootstrap completed ===");
 
