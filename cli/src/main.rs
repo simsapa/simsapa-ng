@@ -11,11 +11,12 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use indexmap::IndexMap;
 
-use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir, logger};
+use simsapa_backend::{db, init_app_data, get_app_data, get_create_simsapa_dir, logger, normalize_path_for_sqlite};
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
 use simsapa_backend::db::appdata_models::Sutta;
+use simsapa_backend::asset_helpers::import_suttas_from_db;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     let app_data = get_app_data();
@@ -579,6 +580,38 @@ fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool
     Ok(())
 }
 
+/// Import suttas from a language database into the appdata database
+fn import_language(db_path: &Path, language_db_path: &Path) -> Result<(), String> {
+    println!("Importing language database...");
+    println!("Target database: {:?}", db_path);
+    println!("Language database: {:?}", language_db_path);
+
+    // Check if language database exists
+    if !language_db_path.exists() {
+        return Err(format!("Language database not found: {:?}", language_db_path));
+    }
+
+    // Check if target database exists
+    if !db_path.exists() {
+        return Err(format!("Target database not found: {:?}", db_path));
+    }
+
+    // Convert db_path to absolute path and construct database URL
+    let db_abs_path = normalize_path_for_sqlite(
+        std::fs::canonicalize(db_path)
+            .map_err(|e| format!("Failed to get absolute path for database: {}", e))?
+    );
+    let database_url = format!("sqlite://{}",
+        db_abs_path.to_str().ok_or("Failed to convert path to string")?);
+
+    // Import suttas from language database
+    import_suttas_from_db(&language_db_path.to_path_buf(), &database_url)
+        .map_err(|e| format!("Failed to import language database: {}", e))?;
+
+    println!("Successfully imported language database");
+    Ok(())
+}
+
 /// Parse CIPS general-index.csv and generate JSON for topic index
 fn parse_cips_index_command(csv_path: &Path, json_path: &Path, db_path: Option<&Path>, minify: bool) -> Result<(), String> {
     use simsapa_backend::db::appdata_schema::suttas;
@@ -828,6 +861,18 @@ enum Commands {
         #[arg(long, default_value_t = false)]
         minify: bool,
     },
+
+    /// Import suttas from a language database into the appdata database
+    #[command(arg_required_else_help = true)]
+    ImportLanguage {
+        /// Path to the target appdata database
+        #[arg(long, value_name = "DB_PATH")]
+        db_path: PathBuf,
+
+        /// Path to the language database to import
+        #[arg(long, value_name = "LANGUAGE_DB_PATH")]
+        language_db_path: PathBuf,
+    },
 }
 
 /// Enum for the different types of queries available.
@@ -848,7 +893,7 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } => {
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } | Commands::ImportLanguage { .. } => {
             // Skip app data initialization for bootstrap, export, stats, suttacentral, import, and parse commands
         }
         _ => {
@@ -950,6 +995,10 @@ fn main() {
 
         Commands::ParseCipsIndex { csv_path, json_path, db_path, minify } => {
             parse_cips_index_command(&csv_path, &json_path, db_path.as_deref(), minify)
+        }
+
+        Commands::ImportLanguage { db_path, language_db_path } => {
+            import_language(&db_path, &language_db_path)
         }
     };
 
