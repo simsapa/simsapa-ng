@@ -251,16 +251,23 @@ impl AppGlobals {
         let mut save_stats = true;
 
         // SAVE_STATS=true enables saving stats
-        if let Ok(s) = env::var("SAVE_STATS")
-            && s.to_lowercase() == "true" {
-                save_stats = true;
+        if let Ok(s) = env::var("SAVE_STATS") {
+            match s.to_lowercase().as_str() {
+                "true" => { save_stats = true; }
+                "false" => { save_stats = false; }
+                _ => {}
             }
+        }
 
         // NO_STATS=true overrides and disables saving stats
-        if let Ok(s) = env::var("NO_STATS")
-            && s.to_lowercase() == "true" {
-                save_stats = false;
+        if let Ok(s) = env::var("NO_STATS") {
+            match s.to_lowercase().as_str() {
+                "true" => { save_stats = false; }
+                "false" => { save_stats = true; }
+                // For NO_STATS, any other other value is taken as turning off stats
+                _ => { save_stats = false; }
             }
+        }
 
         save_stats
     }

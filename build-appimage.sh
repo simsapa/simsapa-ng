@@ -378,9 +378,9 @@ parse_args() {
     # Set file names based on arguments
     APPDIR_NAME="${APP_NAME}.AppDir"
     if [ -n "$OS_SUFFIX" ]; then
-        APPIMAGE_NAME="${APP_NAME}-${APP_VERSION}-${ARCH}${OS_SUFFIX}.AppImage"
+        APPIMAGE_NAME="${APP_NAME}-${APP_VERSION}-Linux-${ARCH}${OS_SUFFIX}.AppImage"
     else
-        APPIMAGE_NAME="${APP_NAME}-${APP_VERSION}-${ARCH}.AppImage"
+        APPIMAGE_NAME="${APP_NAME}-${APP_VERSION}-Linux-${ARCH}.AppImage"
     fi
 
     print_status "Building AppImage with:"
