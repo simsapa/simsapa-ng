@@ -12,7 +12,7 @@ ApplicationWindow {
     id: root
     title: `About ${root.app_name}`
     width: is_mobile ? Screen.desktopAvailableWidth : 600
-    height: is_mobile ? Screen.desktopAvailableHeight : Math.min(750, Screen.desktopAvailableHeight)
+    height: is_mobile ? Screen.desktopAvailableHeight : Math.min(800, Screen.desktopAvailableHeight)
     visible: false
     /* visible: true // for qml preview */
     color: palette.window
@@ -67,175 +67,189 @@ ApplicationWindow {
         }
     }
 
-    Item {
-        x: 10
-        y: 10 + root.top_bar_margin
-        implicitWidth: root.width - 20
-        implicitHeight: root.height - 20 - root.top_bar_margin
+    Frame {
+        anchors.fill: parent
 
         ColumnLayout {
-            spacing: 10
+            spacing: 0
             anchors.fill: parent
+            anchors.topMargin: root.top_bar_margin
+            anchors.margins: 10
 
-            RowLayout {
-                spacing: 8
-                Image {
-                    source: "icons/appicons/simsapa.png"
-                    Layout.preferredWidth: 64
-                    Layout.preferredHeight: 64
-                }
-                Label {
-                    text: root.app_name
-                    font.bold: true
-                    font.pointSize: root.pointSize + 5
-                }
-            }
-
-            ColumnLayout {
-                spacing: 10
-                Text {
-                    textFormat: Text.RichText
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    text: "<p>" + root.info_lines().join("</p><p>") + "</p>"
-                }
-                Button {
-                    text: "List Contents"
-                    onClicked: data_contents.text = SuttaBridge.app_data_contents_html_table()
-                }
-                Text {
-                    id: data_contents
-                    textFormat: Text.RichText
-                    font.pointSize: root.pointSize
-                    text: ""
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-            }
-
-            RowLayout {
-                spacing: 10
+            // Scrollable content area
+            ScrollView {
                 Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                clip: true
 
-                Label {
-                    text: "Log Level"
-                    font.pointSize: root.pointSize
-                }
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 10
 
-                ComboBox {
-                    id: log_level_combo
-                    model: ["Silent", "Error", "Warn", "Info", "Debug"]
-                    font.pointSize: root.pointSize
-                    Layout.preferredWidth: 150
-
-                    Component.onCompleted: {
-                        // Get current log level from SuttaBridge
-                        let current_level = SuttaBridge.get_log_level();
-                        let index = log_level_combo.model.indexOf(current_level);
-                        if (index >= 0) {
-                            log_level_combo.currentIndex = index;
+                    RowLayout {
+                        spacing: 8
+                        Image {
+                            source: "icons/appicons/simsapa.png"
+                            Layout.preferredWidth: 64
+                            Layout.preferredHeight: 64
+                        }
+                        Label {
+                            text: root.app_name
+                            font.bold: true
+                            font.pointSize: root.pointSize + 5
                         }
                     }
 
-                    onActivated: {
-                        // Set the new log level when selection changes
-                        let level_str = log_level_combo.model[log_level_combo.currentIndex];
-                        SuttaBridge.set_log_level(level_str);
+                    ColumnLayout {
+                        spacing: 10
+                        Text {
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            text: "<p>" + root.info_lines().join("</p><p>") + "</p>"
+                        }
+                        Button {
+                            text: "List Contents"
+                            onClicked: data_contents.text = SuttaBridge.app_data_contents_html_table()
+                        }
+                        Text {
+                            id: data_contents
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            text: ""
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
                     }
-                }
 
-                Item { Layout.fillWidth: true }
-            }
+                    RowLayout {
+                        spacing: 10
+                        Layout.fillWidth: true
 
-            ColumnLayout {
-                spacing: 10
-                Layout.fillWidth: true
+                        Label {
+                            text: "Log Level"
+                            font.pointSize: root.pointSize
+                        }
 
-                Label {
-                    text: "Log Files"
-                    font.bold: true
-                    font.pointSize: root.pointSize
-                }
+                        ComboBox {
+                            id: log_level_combo
+                            model: ["Silent", "Error", "Warn", "Info", "Debug"]
+                            font.pointSize: root.pointSize
+                            Layout.preferredWidth: 150
 
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 330
-                    clip: true
+                            Component.onCompleted: {
+                                // Get current log level from SuttaBridge
+                                let current_level = SuttaBridge.get_log_level();
+                                let index = log_level_combo.model.indexOf(current_level);
+                                if (index >= 0) {
+                                    log_level_combo.currentIndex = index;
+                                }
+                            }
 
-                    ListView {
-                        id: log_files_list
-                        model: ListModel { id: log_files_model }
-                        spacing: 5
+                            onActivated: {
+                                // Set the new log level when selection changes
+                                let level_str = log_level_combo.model[log_level_combo.currentIndex];
+                                SuttaBridge.set_log_level(level_str);
+                            }
+                        }
 
-                        delegate: Rectangle {
-                            id: log_file_item
-                            width: log_files_list.width
-                            height: 50
-                            color: "transparent"
-                            border.color: palette.mid
-                            border.width: 1
-                            radius: 4
-                            required property string fileName
+                        Item { Layout.fillWidth: true }
+                    }
 
-                            RowLayout {
-                                id: log_file_row
-                                anchors.fill: parent
-                                anchors.margins: 5
+                    ColumnLayout {
+                        spacing: 10
+                        Layout.fillWidth: true
+
+                        Label {
+                            text: "Log Files"
+                            font.bold: true
+                            font.pointSize: root.pointSize
+                        }
+
+                        ScrollView {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 330
+                            clip: true
+
+                            ListView {
+                                id: log_files_list
+                                model: ListModel { id: log_files_model }
                                 spacing: 5
 
-                                Label {
-                                    text: log_file_item.fileName
-                                    font.pointSize: root.pointSize
-                                    Layout.fillWidth: true
-                                    elide: Text.ElideMiddle
-                                }
+                                delegate: Rectangle {
+                                    id: log_file_item
+                                    width: log_files_list.width
+                                    height: 50
+                                    color: "transparent"
+                                    border.color: palette.mid
+                                    border.width: 1
+                                    radius: 4
+                                    required property string fileName
 
-                                Button {
-                                    text: "Save As..."
-                                    font.pointSize: root.pointSize - 2
-                                    onClicked: {
-                                        save_log_file_dialog.current_file_name = log_file_item.fileName;
-                                        save_log_file_dialog.open();
+                                    RowLayout {
+                                        id: log_file_row
+                                        anchors.fill: parent
+                                        anchors.margins: 5
+                                        spacing: 5
+
+                                        Label {
+                                            text: log_file_item.fileName
+                                            font.pointSize: root.pointSize
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideMiddle
+                                        }
+
+                                        Button {
+                                            text: "Save As..."
+                                            font.pointSize: root.pointSize - 2
+                                            onClicked: {
+                                                save_log_file_dialog.current_file_name = log_file_item.fileName;
+                                                save_log_file_dialog.open();
+                                            }
+                                        }
+
+                                        Button {
+                                            text: "Copy Contents"
+                                            font.pointSize: root.pointSize - 2
+                                            onClicked: {
+                                                let contents = SuttaBridge.get_log_file_contents(log_file_item.fileName);
+                                                clipboard_helper.copy_text(contents);
+                                            }
+                                        }
                                     }
                                 }
 
-                                Button {
-                                    text: "Copy Contents"
-                                    font.pointSize: root.pointSize - 2
-                                    onClicked: {
-                                        let contents = SuttaBridge.get_log_file_contents(log_file_item.fileName);
-                                        clipboard_helper.copy_text(contents);
+                                Component.onCompleted: {
+                                    load_log_files();
+                                }
+
+                                function load_log_files() {
+                                    log_files_model.clear();
+                                    let log_files_json = SuttaBridge.get_log_files_list();
+                                    let log_files = JSON.parse(log_files_json);
+                                    for (let i = 0; i < log_files.length; i++) {
+                                        log_files_model.append({ fileName: log_files[i] });
                                     }
                                 }
-                            }
-                        }
-
-                        Component.onCompleted: {
-                            load_log_files();
-                        }
-
-                        function load_log_files() {
-                            log_files_model.clear();
-                            let log_files_json = SuttaBridge.get_log_files_list();
-                            let log_files = JSON.parse(log_files_json);
-                            for (let i = 0; i < log_files.length; i++) {
-                                log_files_model.append({ fileName: log_files[i] });
                             }
                         }
                     }
                 }
             }
 
-            Item { Layout.fillHeight: true }
-
+            // Fixed button area at the bottom
             RowLayout {
-                spacing: 10
+                Layout.fillWidth: true
+                Layout.margins: 20
+                // Extra space on mobile to avoid the bottom bar covering the button.
+                Layout.bottomMargin: root.is_mobile ? 60 : 20
 
                 Item { Layout.fillWidth: true }
 
                 Button {
-                    text: "Copy"
+                    text: "Copy App Info"
                     onClicked: {
                         let info = root.info_lines().join("\n");
                         info += "\nContents:\n\n" + SuttaBridge.app_data_contents_plain_table()
@@ -244,7 +258,7 @@ ApplicationWindow {
                 }
 
                 Button {
-                    text: "OK"
+                    text: "Close"
                     onClicked: root.close()
                 }
             }
