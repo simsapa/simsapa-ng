@@ -4,6 +4,7 @@ const RE_ALL_BOOK_SUTTA_REF = /\b(DN|MN|SN|AN|Pv|Vv|Vism|iti|kp|khp|snp|th|thag|
 
 // Import the confirmation modal function
 import { show_external_link_confirmation } from "./confirm_modal";
+import { show_footnote, footnote_modal } from "./footnote_modal";
 
 /**
  * Send log message to backend logger
@@ -163,6 +164,12 @@ async function open_sutta_by_uid(uid: string, original_url?: string): Promise<vo
             let message = `Sutta not found in database: ${uid}`;
             if (original_url) {
                 message += `\n\nOriginal URL: ${original_url}\n\nWould you like to open this link in your web browser?`;
+
+                // Close footnote modal if it's open before showing external link confirmation
+                if (footnote_modal.is_visible()) {
+                    footnote_modal.close();
+                }
+
                 const confirmed = await show_external_link_confirmation(original_url);
                 if (confirmed) {
                     window.open(original_url, '_blank');
@@ -213,6 +220,12 @@ async function open_sutta_in_tab(uid: string, original_url?: string): Promise<vo
             let message = `Sutta not found in database: ${uid}`;
             if (original_url) {
                 message += `\n\nOriginal URL: ${original_url}\n\nWould you like to open this link in your web browser?`;
+
+                // Close footnote modal if it's open before showing external link confirmation
+                if (footnote_modal.is_visible()) {
+                    footnote_modal.close();
+                }
+
                 const confirmed = await show_external_link_confirmation(original_url);
                 if (confirmed) {
                     await open_external_url(original_url);
@@ -299,8 +312,14 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
 
     const href = anchor.getAttribute('href') || '';
 
-    // Case 1: Anchor links (same page navigation) - allow default behavior
+    // Case 1: Footnote links - show in modal instead of jumping to footnote
     if (href.startsWith('#')) {
+        // Try to handle as a footnote
+        if (show_footnote(anchor)) {
+            event.preventDefault();
+            return;
+        }
+        // If not a footnote, allow default anchor link behavior
         return;
     }
 
@@ -335,6 +354,12 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
     // Case 4: External links - show confirmation
     if (href.startsWith('http://') || href.startsWith('https://')) {
         event.preventDefault();
+
+        // Close footnote modal if it's open before showing external link confirmation
+        if (footnote_modal.is_visible()) {
+            footnote_modal.close();
+        }
+
         const confirmed = await show_external_link_confirmation(href);
         if (confirmed) {
             await open_external_url(href);

@@ -1095,6 +1095,170 @@ body.dark {
     order: 1;
   }
 }
+:root {
+  --footnote-modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --footnote-modal-bg: white;
+  --footnote-modal-border: #d0d0d0;
+  --footnote-modal-header-bg: #f5f5f5;
+  --footnote-modal-text: #1a1a1a;
+  --footnote-modal-close-hover-bg: #e0e0e0;
+  --footnote-modal-close-active-bg: #d0d0d0;
+}
+
+body.dark {
+  --footnote-modal-overlay-bg: rgba(0, 0, 0, 0.7);
+  --footnote-modal-bg: #3c3c3c;
+  --footnote-modal-border: #555555;
+  --footnote-modal-header-bg: #464646;
+  --footnote-modal-text: #ffffff;
+  --footnote-modal-close-hover-bg: #4c4c4c;
+  --footnote-modal-close-active-bg: #3c3c3c;
+}
+
+.footnote-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--footnote-modal-overlay-bg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.footnote-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.footnote-modal-overlay.show .footnote-modal {
+  transform: scale(1);
+}
+
+.footnote-modal {
+  background: var(--footnote-modal-bg);
+  border: 1px solid var(--footnote-modal-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.footnote-modal-header {
+  padding: 16px;
+  background: var(--footnote-modal-header-bg);
+  border-bottom: 1px solid var(--footnote-modal-border);
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.footnote-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--footnote-modal-text);
+  font-family: sans-serif;
+  flex: 1;
+}
+
+.footnote-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  color: var(--footnote-modal-text);
+  transition: background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.footnote-modal-close:hover {
+  background: var(--footnote-modal-close-hover-bg);
+}
+
+.footnote-modal-close:active {
+  background: var(--footnote-modal-close-active-bg);
+}
+
+.footnote-modal-close:focus {
+  outline: 2px solid var(--footnote-modal-border);
+  outline-offset: 2px;
+}
+
+.footnote-modal-close svg {
+  width: 16px;
+  height: 16px;
+}
+
+.footnote-modal-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.footnote-modal-content {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--footnote-modal-text);
+  font-family: inherit;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.footnote-modal-content p {
+  margin: 0.5em 0;
+}
+
+.footnote-modal-content p:first-child {
+  margin-top: 0;
+}
+
+.footnote-modal-content p:last-child {
+  margin-bottom: 0;
+}
+
+.footnote-modal-content a {
+  color: var(--footnote-modal-text);
+  text-decoration: underline;
+}
+
+.footnote-modal-content em {
+  font-style: italic;
+}
+
+.footnote-modal-content strong {
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .footnote-modal {
+    width: 95%;
+    max-width: none;
+    max-height: 85vh;
+  }
+  .footnote-modal-content {
+    font-size: 13px;
+  }
+}
 .find-container * {
   margin: 0;
   padding: 0;
