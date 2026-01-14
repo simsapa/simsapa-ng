@@ -5,6 +5,7 @@ const RE_ALL_BOOK_SUTTA_REF = /\b(DN|MN|SN|AN|Pv|Vv|Vism|iti|kp|khp|snp|th|thag|
 // Import the confirmation modal function
 import { show_external_link_confirmation } from "./confirm_modal";
 import { show_footnote, footnote_modal } from "./footnote_modal";
+import { invalid_link_modal } from "./invalid_link_modal";
 
 /**
  * Send log message to backend logger
@@ -366,6 +367,19 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
         }
         return;
     }
+
+    // Case 5: Invalid localhost links - show warning modal
+    if (href.startsWith('/')) {
+        event.preventDefault();
+
+        // Close footnote modal if it's open before showing invalid link modal
+        if (footnote_modal.is_visible()) {
+            footnote_modal.close();
+        }
+
+        invalid_link_modal.show(href);
+        return;
+    }
 }
 
 export {
@@ -378,4 +392,5 @@ export {
     handle_link_click,
     log_info,
     log_error,
+    invalid_link_modal,
 }

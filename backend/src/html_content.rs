@@ -11,6 +11,7 @@ pub static PREV_NEXT_CHAPTER_HTML: &str = include_str!("../../assets/templates/p
 static MENU_HTML: &str = include_str!("../../assets/templates/menu.html");
 static CONFIRM_MODAL_HTML: &str = include_str!("../../assets/templates/confirm_modal.html");
 static FOOTNOTE_MODAL_HTML: &str = include_str!("../../assets/templates/footnote_modal.html");
+static INVALID_LINK_MODAL_HTML: &str = include_str!("../../assets/templates/invalid_link_modal.html");
 static ICONS_HTML: &str = include_str!("../../assets/templates/icons.html");
 
 static SUTTAS_CSS: &str = include_str!("../../assets/css/suttas.css");
@@ -29,6 +30,7 @@ struct TmplContext {
     menu_html: String,
     confirm_modal_html: String,
     footnote_modal_html: String,
+    invalid_link_modal_html: String,
     icons_html: String,
     content: String,
     body_class: String,
@@ -49,6 +51,7 @@ impl Default for TmplContext {
             menu_html: MENU_HTML.replace("{api_url}", &g.api_url).to_string(),
             confirm_modal_html: CONFIRM_MODAL_HTML.to_string(),
             footnote_modal_html: FOOTNOTE_MODAL_HTML.to_string(),
+            invalid_link_modal_html: INVALID_LINK_MODAL_HTML.to_string(),
             icons_html: ICONS_HTML.to_string(),
             content: "".to_string(),
             body_class: "".to_string(),

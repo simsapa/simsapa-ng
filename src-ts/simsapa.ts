@@ -2,6 +2,7 @@ import * as h from "./helpers";
 import { findManager } from "./find";
 import "./confirm_modal";
 import "./footnote_modal";
+import "./invalid_link_modal";
 
 /**
  * Attach link handlers to all links within a specific element
