@@ -161,6 +161,16 @@ export function get_footnote_content(footnote_id: string): string | null {
         return clone.innerHTML;
     }
 
+    // For <p> elements that are footnote definitions (e.g., <p id="mn36note02">2. Text...</p>)
+    // Strip the leading number and period
+    if (clone.tagName === 'P') {
+        let html = clone.innerHTML;
+        // Match and remove leading number followed by period and optional space
+        // e.g., "2. In other words..." -> "In other words..."
+        html = html.replace(/^\d+\.\s*/, '');
+        return html;
+    }
+
     // Default: return the full inner HTML
     return clone.innerHTML;
 }
@@ -178,7 +188,8 @@ export function is_footnote_link(anchor: HTMLAnchorElement): string | null {
     }
 
     // Check if the link has the footnote-reference class
-    const parent = anchor.closest('.footnote-reference');
+    // or if it's inside a span with class "fn" (e.g., <span class="fn"><a href="#mn36note02">2</a></span>)
+    const parent = anchor.closest('.footnote-reference, .fn');
     if (!parent) {
         return null;
     }
