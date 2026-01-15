@@ -3,6 +3,7 @@ import { findManager } from "./find";
 import "./confirm_modal";
 import "./footnote_modal";
 import "./invalid_link_modal";
+import { footnote_bottom_bar } from "./footnote_bottom_bar";
 
 /**
  * Attach link handlers to all links within a specific element
@@ -47,4 +48,10 @@ document.SSP = {
 document.addEventListener('DOMContentLoaded', () => {
     // h.log_info('[simsapa] DOMContentLoaded event fired');
     attach_link_handlers();
+
+    // Initialize footnote bottom bar for sutta pages
+    const sspContent = document.getElementById('ssp_content');
+    if (sspContent) {
+        footnote_bottom_bar.init();
+    }
 });

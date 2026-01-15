@@ -1,0 +1,191 @@
+// Footnote Bottom Bar Styles
+// Shows footnote definitions for currently visible footnote references
+
+@use 'sass:color';
+
+$solarized_light_bg: #FAE6B2;
+$bar_border_radius: 4px;
+$bar_padding: 12px;
+$bar_max_height: 30vh; // Maximum height before scrolling
+
+:root {
+    // Light mode colors
+    --footnote-bar-bg: #{color.adjust($solarized_light_bg, $lightness: 10%)};
+    --footnote-bar-border: #d0d0d0;
+    --footnote-bar-text: #1a1a1a;
+    --footnote-bar-number-text: #333333;
+    --footnote-bar-shadow: rgba(0, 0, 0, 0.15);
+}
+
+// Dark mode colors
+body.dark {
+    --footnote-bar-bg: rgba(60, 60, 60, 0.95);
+    --footnote-bar-border: #555555;
+    --footnote-bar-text: #e0e0e0;
+    --footnote-bar-number-text: #ffffff;
+    --footnote-bar-shadow: rgba(0, 0, 0, 0.4);
+}
+
+// Fixed bottom bar container
+.footnote-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--footnote-bar-bg);
+    border-top: 2px solid var(--footnote-bar-border);
+    box-shadow: 0 -2px 8px var(--footnote-bar-shadow);
+    z-index: 1000;
+    padding: $bar_padding;
+    max-height: $bar_max_height;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Backdrop blur for modern browsers (optional visual enhancement)
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    // Hidden by default
+    transform: translateY(100%);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+
+    // Show when active
+    &.show {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+// Individual footnote item in the bar
+.footnote-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--footnote-bar-border);
+
+    &:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+}
+
+// Footnote number badge
+.footnote-number {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 24px;
+    padding: 0 6px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--footnote-bar-number-text);
+    font-family: sans-serif;
+}
+
+// Footnote content area
+.footnote-content {
+    flex: 1;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--footnote-bar-text);
+    font-family: inherit;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+
+    // Preserve formatting from footnote content
+    p {
+        margin: 0.25em 0;
+
+        &:first-child {
+            margin-top: 0;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    a {
+        color: var(--footnote-bar-text);
+        text-decoration: underline;
+
+        &:hover {
+            opacity: 0.8;
+        }
+    }
+
+    em {
+        font-style: italic;
+    }
+
+    strong {
+        font-weight: bold;
+    }
+}
+
+// Custom scrollbar styling for the footnote bar
+.footnote-bottom-bar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.footnote-bottom-bar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.footnote-bottom-bar::-webkit-scrollbar-thumb {
+    background: var(--footnote-bar-border);
+    border-radius: 4px;
+
+    &:hover {
+        background: var(--footnote-bar-text);
+        opacity: 0.5;
+    }
+}
+
+// Mobile responsiveness
+@media (max-width: 768px) {
+    .footnote-bottom-bar {
+        max-height: 40vh; // Allow more space on mobile
+        padding: 10px;
+    }
+
+    .footnote-item {
+        gap: 8px;
+        flex-direction: column; // Stack number and content vertically on mobile
+    }
+
+    .footnote-number {
+        align-self: flex-start;
+    }
+
+    .footnote-content {
+        font-size: 0.7rem;
+    }
+}
+
+// Ensure page content has enough bottom padding to not be obscured by the bar
+// This should be added to the main content area when the bar is visible
+#ssp_content {
+    // Add transition for smooth padding change
+    transition: padding-bottom 0.3s ease;
+}
+
+// Add extra padding to main content when bar is visible
+// This is applied via JavaScript when the bar shows
+body.footnote-bar-visible #ssp_content {
+    padding-bottom: calc($bar_max_height + 20px);
+}
+
+// Print styles - hide the bottom bar when printing
+@media print {
+    .footnote-bottom-bar {
+        display: none !important;
+    }
+}
