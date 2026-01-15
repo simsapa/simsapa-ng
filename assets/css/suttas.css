@@ -878,9 +878,9 @@ body.dark {
 
 :root {
   --modal-overlay-bg: rgba(0, 0, 0, 0.5);
-  --modal-bg: white;
+  --modal-bg: rgb(253.1097560976, 245.5487804878, 225.8902439024);
   --modal-border: #d0d0d0;
-  --modal-header-bg: #f5f5f5;
+  --modal-header-bg: #FAE6B2;
   --modal-text: #1a1a1a;
   --modal-text-secondary: #666;
   --modal-btn-cancel-bg: #f0f0f0;
@@ -1097,9 +1097,9 @@ body.dark {
 }
 :root {
   --footnote-modal-overlay-bg: rgba(0, 0, 0, 0.5);
-  --footnote-modal-bg: white;
+  --footnote-modal-bg: rgb(253.1097560976, 245.5487804878, 225.8902439024);
   --footnote-modal-border: #d0d0d0;
-  --footnote-modal-header-bg: #f5f5f5;
+  --footnote-modal-header-bg: #FAE6B2;
   --footnote-modal-text: #1a1a1a;
   --footnote-modal-close-hover-bg: #e0e0e0;
   --footnote-modal-close-active-bg: #d0d0d0;
@@ -1261,9 +1261,9 @@ body.dark {
 }
 :root {
   --invalid-link-modal-overlay-bg: rgba(0, 0, 0, 0.5);
-  --invalid-link-modal-bg: white;
+  --invalid-link-modal-bg: rgb(253.1097560976, 245.5487804878, 225.8902439024);
   --invalid-link-modal-border: #d0d0d0;
-  --invalid-link-modal-header-bg: #f5f5f5;
+  --invalid-link-modal-header-bg: #FAE6B2;
   --invalid-link-modal-text: #1a1a1a;
   --invalid-link-modal-close-hover-bg: #e0e0e0;
   --invalid-link-modal-close-active-bg: #d0d0d0;

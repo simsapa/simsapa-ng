@@ -1,5 +1,8 @@
 // Invalid Link Modal Styles
 
+@use 'sass:color';
+
+$solarized_light_bg: #FAE6B2;
 $modal_border_radius: 4px;
 $modal_padding: 16px;
 $modal_max_width: 600px;
@@ -7,9 +10,9 @@ $modal_max_width: 600px;
 :root {
     // Light mode colors
     --invalid-link-modal-overlay-bg: rgba(0, 0, 0, 0.5);
-    --invalid-link-modal-bg: white;
+    --invalid-link-modal-bg: #{color.adjust($solarized_light_bg, $lightness: 10%)};
     --invalid-link-modal-border: #d0d0d0;
-    --invalid-link-modal-header-bg: #f5f5f5;
+    --invalid-link-modal-header-bg: #{$solarized_light_bg};
     --invalid-link-modal-text: #1a1a1a;
     --invalid-link-modal-close-hover-bg: #e0e0e0;
     --invalid-link-modal-close-active-bg: #d0d0d0;

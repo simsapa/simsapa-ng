@@ -1,5 +1,8 @@
 // Footnote Modal Styles
 
+@use 'sass:color';
+
+$solarized_light_bg: #FAE6B2;
 $modal_border_radius: 4px;
 $modal_padding: 16px;
 $modal_max_width: 600px;
@@ -7,9 +10,9 @@ $modal_max_width: 600px;
 :root {
     // Light mode colors
     --footnote-modal-overlay-bg: rgba(0, 0, 0, 0.5);
-    --footnote-modal-bg: white;
+    --footnote-modal-bg: #{color.adjust($solarized_light_bg, $lightness: 10%)};
     --footnote-modal-border: #d0d0d0;
-    --footnote-modal-header-bg: #f5f5f5;
+    --footnote-modal-header-bg: #{$solarized_light_bg};
     --footnote-modal-text: #1a1a1a;
     --footnote-modal-close-hover-bg: #e0e0e0;
     --footnote-modal-close-active-bg: #d0d0d0;
