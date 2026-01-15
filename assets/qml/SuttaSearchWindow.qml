@@ -80,6 +80,13 @@ ApplicationWindow {
                 root.show_result_in_html_view_with_json(result_data_json);
             }
         }
+
+        function onShowBottomFootnotesChanged() {
+            const enabled = SuttaBridge.get_show_bottom_footnotes();
+            // Update menu checkbox state to stay in sync
+            action_show_bottom_footnotes.checked = enabled;
+            // Note: JavaScript updates are handled by each SuttaHtmlView's own signal handler
+        }
     }
 
     function update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
@@ -570,6 +577,7 @@ ${query_text}`;
 
             search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
             action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
+            action_show_bottom_footnotes.checked = SuttaBridge.get_show_bottom_footnotes();
 
             // Initialize update notification setting from saved preference
             action_notify_about_updates.checked = SuttaBridge.get_notify_about_simsapa_updates();
@@ -803,6 +811,31 @@ ${query_text}`;
                     onTriggered: mobile_top_margin_dialog.open()
                 }
             }
+
+            CMenuItem {
+                action: Action {
+                    id: action_show_bottom_footnotes
+                    text: "Show Footnotes Bar"
+                    checkable: true
+                    checked: true
+                    onToggled: SuttaBridge.set_show_bottom_footnotes(checked)
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_close_tab
+                    text: "Close Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+W"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_close_tab.trigger()
+                    }
+                    onTriggered: {
+                        suttas_tab_bar.close_current_tab();
+                    }
+                }
+            }
         }
 
         Menu {
@@ -930,21 +963,6 @@ ${query_text}`;
                     onTriggered: {
                         let html_view = sutta_html_view_layout.get_current_item();
                         html_view.find_previous();
-                    }
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_close_tab
-                    text: "Close Tab"
-                    shortcut: Shortcut {
-                        sequences: ["Ctrl+W"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_close_tab.trigger()
-                    }
-                    onTriggered: {
-                        suttas_tab_bar.close_current_tab();
                     }
                 }
             }

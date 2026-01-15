@@ -25,6 +25,7 @@ Item {
     signal showChapterFromLibrary(window_id: string, result_data_json: string);
     signal showSuttaFromReferenceSearch(window_id: string, result_data_json: string);
     signal bookMetadataUpdated(success: bool, message: string);
+    signal showBottomFootnotesChanged();
 
     // Update checker signals
     signal appUpdateAvailable(update_info_json: string);
@@ -535,6 +536,14 @@ Item {
 
     function set_open_find_in_sutta_results(enabled: bool) {
         console.log("set_open_find_in_sutta_results():", enabled);
+    }
+
+    function get_show_bottom_footnotes(): bool {
+        return true;
+    }
+
+    function set_show_bottom_footnotes(enabled: bool) {
+        console.log("set_show_bottom_footnotes():", enabled);
     }
 
     function get_common_words_json(): string {

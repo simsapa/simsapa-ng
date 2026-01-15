@@ -129,6 +129,10 @@ pub mod qobject {
         #[cxx_name = "bookMetadataUpdated"]
         fn book_metadata_updated(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
 
+        #[qsignal]
+        #[cxx_name = "showBottomFootnotesChanged"]
+        fn show_bottom_footnotes_changed(self: Pin<&mut SuttaBridge>);
+
         // Update checker signals
         #[qsignal]
         #[cxx_name = "appUpdateAvailable"]
@@ -460,6 +464,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_open_find_in_sutta_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn get_show_bottom_footnotes(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_show_bottom_footnotes(self: Pin<&mut SuttaBridge>, enabled: bool);
 
         #[qinvokable]
         fn get_sutta_language_labels(self: &SuttaBridge) -> QStringList;
@@ -2397,6 +2407,17 @@ impl qobject::SuttaBridge {
     pub fn set_open_find_in_sutta_results(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_open_find_in_sutta_results(enabled);
+    }
+
+    pub fn get_show_bottom_footnotes(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_show_bottom_footnotes()
+    }
+
+    pub fn set_show_bottom_footnotes(mut self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_show_bottom_footnotes(enabled);
+        self.as_mut().show_bottom_footnotes_changed();
     }
 
     pub fn get_sutta_language_labels(&self) -> QStringList {

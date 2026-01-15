@@ -204,6 +204,22 @@ if (document.getElementById('readingModeButton')) {
         web.runJavaScript(js);
     }
 
+    Connections {
+        target: SuttaBridge
+
+        function onShowBottomFootnotesChanged() {
+            const enabled = SuttaBridge.get_show_bottom_footnotes();
+            const js = `
+if (document.SSP) {
+    document.SSP.show_bottom_footnotes = ${enabled};
+    if (window.footnote_bottom_bar_refresh) {
+        window.footnote_bottom_bar_refresh();
+    }
+}`;
+            web.runJavaScript(js);
+        }
+    }
+
     WebEngineView {
         id: web
         anchors.fill: parent
@@ -222,6 +238,13 @@ if (document.getElementById('readingModeButton')) {
 `;
                 web.runJavaScript(js);
             }
+            // Set footnote bottom bar setting from database
+            const show_footnotes = SuttaBridge.get_show_bottom_footnotes();
+            web.runJavaScript(`
+if (document.SSP) {
+    document.SSP.show_bottom_footnotes = ${show_footnotes};
+}
+`);
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
                 root.page_loaded();
                 // Note: Anchor scrolling is now handled natively by including it in the URL

@@ -144,8 +144,11 @@ class FootnoteBottomBar {
             return;
         }
 
-        // If no footnotes are visible, hide the container
-        if (this.visible_footnotes.size === 0) {
+        // Check if the feature is enabled via global setting
+        const setting_enabled = (document as any).SSP?.show_bottom_footnotes !== false;
+
+        // If feature is disabled or no footnotes are visible, hide the container
+        if (!setting_enabled || this.visible_footnotes.size === 0) {
             this.container.classList.remove('show');
             document.body.classList.remove('footnote-bar-visible');
             return;
@@ -196,6 +199,11 @@ class FootnoteBottomBar {
             this.observer = null;
         }
         this.visible_footnotes.clear();
+
+        // Hide the container
+        if (this.container) {
+            this.container.classList.remove('show');
+        }
         document.body.classList.remove('footnote-bar-visible');
         this.initialized = false;
     }
