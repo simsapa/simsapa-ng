@@ -750,6 +750,140 @@ fn test_sutta_uid_range_match_more_cases() {
 
     // Clean up
     diesel::delete(suttas::table)
+        .filter(suttas::uid.eq_any(vec![
+            "sn17.13-20/pli/ms",
+            "sn12.72-81/pli/ms",
+            "an11.22-29/pli/ms"
+        ]))
+        .execute(db_conn)
+        .unwrap();
+}
+
+#[test]
+#[serial]
+fn test_sutta_uid_range_overlap_start_match() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
+
+    let test_uids = vec![
+        "dummy-an10.229-232/pli/ms",
+        "dummy-an3.156-162/pli/ms",
+    ];
+
+    // Cleanup first
+    diesel::delete(suttas::table)
+        .filter(suttas::uid.eq_any(&test_uids))
+        .execute(db_conn)
+        .unwrap();
+
+    let test_suttas = vec![
+        NewSutta {
+            uid: test_uids[0],
+            sutta_ref: "AN 10.229-232",
+            nikaya: "an",
+            language: "pli",
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: Some("dummy-an10"),
+            sutta_range_start: Some(229),
+            sutta_range_end: Some(232),
+            title: Some("AN 10.229-232"),
+            title_ascii: Some("AN 10.229-232"),
+            title_pali: None,
+            title_trans: None,
+            description: None,
+            content_plain: Some("Content AN10"),
+            content_html: None,
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some("ms"),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        },
+        NewSutta {
+            uid: test_uids[1],
+            sutta_ref: "AN 3.156-162",
+            nikaya: "an",
+            language: "pli",
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: Some("dummy-an3"),
+            sutta_range_start: Some(156),
+            sutta_range_end: Some(162),
+            title: Some("AN 3.156-162"),
+            title_ascii: Some("AN 3.156-162"),
+            title_pali: None,
+            title_trans: None,
+            description: None,
+            content_plain: Some("Content AN3"),
+            content_html: None,
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some("ms"),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        },
+    ];
+
+    diesel::insert_into(suttas::table)
+        .values(&test_suttas)
+        .execute(db_conn)
+        .unwrap();
+
+    let params = h::get_uid_params_with_lang(Some("pli".to_string()));
+
+    // Test Case 1: Query "dummy-an10.230-232" should find "dummy-an10.229-232"
+    // The query range start (230) is inside the DB range (229-232).
+    let query1 = "dummy-an10.230-232";
+    let mut task1 = SearchQueryTask::new(
+        &app_data.dbm,
+        query1.to_string(),
+        params.clone(),
+        SearchArea::Suttas,
+    );
+    let results1 = task1.results_page(0).unwrap();
+    assert!(!results1.is_empty(), "Failed to find 'dummy-an10.230-232'");
+    assert_eq!(results1[0].uid, test_uids[0]);
+
+    // Test Case 2: Query "dummy-an3.157-162" should find "dummy-an3.156-162"
+    // The query range start (157) is inside the DB range (156-162).
+    let query2 = "dummy-an3.157-162";
+    let mut task2 = SearchQueryTask::new(
+        &app_data.dbm,
+        query2.to_string(),
+        params.clone(),
+        SearchArea::Suttas,
+    );
+    let results2 = task2.results_page(0).unwrap();
+    assert!(!results2.is_empty(), "Failed to find 'dummy-an3.157-162'");
+    assert_eq!(results2[0].uid, test_uids[1]);
+
+    // Test Case 3: Partial overlap where query end exceeds DB end
+    // Query "dummy-an10.230-235" -> should find "dummy-an10.229-232"
+    // Start (230) is in range. End (235) is outside.
+    // This confirms the logic uses start matching.
+    let query3 = "dummy-an10.230-235";
+    let mut task3 = SearchQueryTask::new(
+        &app_data.dbm,
+        query3.to_string(),
+        params.clone(),
+        SearchArea::Suttas,
+    );
+    let results3 = task3.results_page(0).unwrap();
+    assert!(!results3.is_empty(), "Failed to find 'dummy-an10.230-235' (partial overlap)");
+    assert_eq!(results3[0].uid, test_uids[0]);
+
+    // Clean up
+    diesel::delete(suttas::table)
         .filter(suttas::uid.eq_any(&test_uids))
         .execute(db_conn)
         .unwrap();

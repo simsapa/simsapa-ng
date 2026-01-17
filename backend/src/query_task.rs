@@ -343,7 +343,7 @@ impl<'a> SearchQueryTask<'a> {
         };
 
         // Only proceed if we have both start and end values (meaning it's a numeric query)
-        let (range_start, range_end) = match (range.start, range.end) {
+        let (range_start, _range_end) = match (range.start, range.end) {
             (Some(s), Some(e)) => (s as i32, e as i32),
             _ => return Ok(Vec::new()),
         };
@@ -358,7 +358,7 @@ impl<'a> SearchQueryTask<'a> {
             .filter(sutta_range_start.is_not_null())
             .filter(sutta_range_end.is_not_null())
             .filter(sutta_range_start.le(range_start))
-            .filter(sutta_range_end.ge(range_end));
+            .filter(sutta_range_end.ge(range_start));
 
         // Apply language filter if specified
         if !self.lang.is_empty() && self.lang != "Language" {
@@ -388,7 +388,7 @@ impl<'a> SearchQueryTask<'a> {
             .filter(sutta_range_start.is_not_null())
             .filter(sutta_range_end.is_not_null())
             .filter(sutta_range_start.le(range_start))
-            .filter(sutta_range_end.ge(range_end));
+            .filter(sutta_range_end.ge(range_start));
 
         // Apply language filter if specified
         if !self.lang.is_empty() && self.lang != "Language" {
