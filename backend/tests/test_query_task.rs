@@ -604,6 +604,159 @@ fn test_sutta_uid_range_match_an() {
 
 #[test]
 #[serial]
+fn test_sutta_uid_range_match_more_cases() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
+
+    let test_uids = vec![
+        "dummy-sn17.13-20/pli/ms",
+        "dummy-sn12.72-81/pli/ms",
+        "dummy-an11.22-29/pli/ms",
+    ];
+
+    // Cleanup first
+    diesel::delete(suttas::table)
+        .filter(suttas::uid.eq_any(&test_uids))
+        .execute(db_conn)
+        .unwrap();
+
+    let test_suttas = vec![
+        NewSutta {
+            uid: test_uids[0],
+            sutta_ref: "SN 17.13-20",
+            nikaya: "sn",
+            language: "pli",
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: Some("dummy-sn17"),
+            sutta_range_start: Some(13),
+            sutta_range_end: Some(20),
+            title: Some("SN 17.13-20"),
+            title_ascii: Some("SN 17.13-20"),
+            title_pali: None,
+            title_trans: None,
+            description: None,
+            content_plain: Some("Content 1"),
+            content_html: None,
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some("ms"),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        },
+        NewSutta {
+            uid: test_uids[1],
+            sutta_ref: "SN 12.72-81",
+            nikaya: "sn",
+            language: "pli",
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: Some("dummy-sn12"),
+            sutta_range_start: Some(72),
+            sutta_range_end: Some(81),
+            title: Some("SN 12.72-81"),
+            title_ascii: Some("SN 12.72-81"),
+            title_pali: None,
+            title_trans: None,
+            description: None,
+            content_plain: Some("Content 2"),
+            content_html: None,
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some("ms"),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        },
+        NewSutta {
+            uid: test_uids[2],
+            sutta_ref: "AN 11.22-29",
+            nikaya: "an",
+            language: "pli",
+            group_path: None,
+            group_index: None,
+            order_index: None,
+            sutta_range_group: Some("dummy-an11"),
+            sutta_range_start: Some(22),
+            sutta_range_end: Some(29),
+            title: Some("AN 11.22-29"),
+            title_ascii: Some("AN 11.22-29"),
+            title_pali: None,
+            title_trans: None,
+            description: None,
+            content_plain: Some("Content 3"),
+            content_html: None,
+            content_json: None,
+            content_json_tmpl: None,
+            source_uid: Some("ms"),
+            source_info: None,
+            source_language: None,
+            message: None,
+            copyright: None,
+            license: None,
+        },
+    ];
+
+    diesel::insert_into(suttas::table)
+        .values(&test_suttas)
+        .execute(db_conn)
+        .unwrap();
+
+    let params = h::get_uid_params_with_lang(Some("pli".to_string()));
+
+    // Test Case 1: "dummy-sn 17.20" -> dummy-sn17.13-20
+    let query1 = "dummy-sn 17.20";
+    let mut task1 = SearchQueryTask::new(
+        &app_data.dbm,
+        query1.to_string(),
+        params.clone(),
+        SearchArea::Suttas,
+    );
+    let results1 = task1.results_page(0).unwrap();
+    assert!(!results1.is_empty(), "Failed to find 'dummy-sn 17.20'");
+    assert_eq!(results1[0].uid, test_uids[0]);
+
+    // Test Case 2: "dummy-sn 12.75" -> dummy-sn12.72-81
+    let query2 = "dummy-sn 12.75";
+    let mut task2 = SearchQueryTask::new(
+        &app_data.dbm,
+        query2.to_string(),
+        params.clone(),
+        SearchArea::Suttas,
+    );
+    let results2 = task2.results_page(0).unwrap();
+    assert!(!results2.is_empty(), "Failed to find 'dummy-sn 12.75'");
+    assert_eq!(results2[0].uid, test_uids[1]);
+
+    // Test Case 3: "dummy-an 11.29" -> dummy-an11.22-29
+    let query3 = "dummy-an 11.29";
+    let mut task3 = SearchQueryTask::new(
+        &app_data.dbm,
+        query3.to_string(),
+        params.clone(),
+        SearchArea::Suttas,
+    );
+    let results3 = task3.results_page(0).unwrap();
+    assert!(!results3.is_empty(), "Failed to find 'dummy-an 11.29'");
+    assert_eq!(results3[0].uid, test_uids[2]);
+
+    // Clean up
+    diesel::delete(suttas::table)
+        .filter(suttas::uid.eq_any(&test_uids))
+        .execute(db_conn)
+        .unwrap();
+}
+
+#[test]
+#[serial]
 fn test_sutta_uid_range_with_language_filter() {
     h::app_data_setup();
     let app_data = get_app_data();

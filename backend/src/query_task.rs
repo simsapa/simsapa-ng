@@ -281,7 +281,9 @@ impl<'a> SearchQueryTask<'a> {
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
-        let query_uid = self.query_text.to_lowercase().replace("uid:", "");
+        let query_uid = self.query_text.to_lowercase()
+            .replace("uid:", "")
+            .replace(' ', "");
 
         // First, try exact match
         let mut exact_match_query = suttas.into_boxed();
@@ -304,20 +306,14 @@ impl<'a> SearchQueryTask<'a> {
             }
             Err(DieselError::NotFound) => {
                 // No exact match found
-                // Check if this is actually a range query (e.g., sn56.11-15) or just a simple ref (e.g., sn56.11)
-                let is_range_query = query_uid.contains('-') &&
-                    query_uid.chars().filter(|&c| c == '-').count() == 1 &&
-                    query_uid.split('-').all(|part| part.chars().any(char::is_numeric));
-
-                if is_range_query {
-                    // Try range query for actual ranges like sn56.11-15
-                    match self.uid_sutta_range(&query_uid, page_num) {
-                        Ok(results) if !results.is_empty() => {
-                            return Ok(results);
-                        }
-                        _ => {
-                            // Range query failed, fall through to LIKE query
-                        }
+                // Try range query for both actual ranges like sn56.11-15
+                // and for single references like sn17.20 which might fall within a range like sn17.13-20
+                match self.uid_sutta_range(&query_uid, page_num) {
+                    Ok(results) if !results.is_empty() => {
+                        return Ok(results);
+                    }
+                    _ => {
+                        // Range query failed, fall through to LIKE query
                     }
                 }
 

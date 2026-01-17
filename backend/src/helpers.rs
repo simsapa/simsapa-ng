@@ -2529,6 +2529,35 @@ mod tests {
     }
 
     #[test]
+    fn test_sutta_range_from_ref() {
+        use crate::helpers::sutta_range_from_ref;
+
+        // Standard range
+        let range = sutta_range_from_ref("sn17.13-20").unwrap();
+        assert_eq!(range.group, "sn17");
+        assert_eq!(range.start, Some(13));
+        assert_eq!(range.end, Some(20));
+
+        // Single reference
+        let range = sutta_range_from_ref("sn17.20").unwrap();
+        assert_eq!(range.group, "sn17");
+        assert_eq!(range.start, Some(20));
+        assert_eq!(range.end, Some(20));
+
+        // Range with slash
+        let range = sutta_range_from_ref("an2.32-41/pli/ms").unwrap();
+        assert_eq!(range.group, "an2");
+        assert_eq!(range.start, Some(32));
+        assert_eq!(range.end, Some(41));
+
+        // No dot
+        let range = sutta_range_from_ref("dn1-5").unwrap();
+        assert_eq!(range.group, "dn");
+        assert_eq!(range.start, Some(1));
+        assert_eq!(range.end, Some(5));
+    }
+
+    #[test]
     fn test_html_get_sutta_page_body_with_turkish_chars() {
         // Test with Turkish characters that can cause UTF-8 boundary issues
         let html = r#"<!DOCTYPE html>
