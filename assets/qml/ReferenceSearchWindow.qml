@@ -40,6 +40,11 @@ ApplicationWindow {
 
     Logger { id: logger }
 
+    ReferenceSearchInfoDialog {
+        id: info_dialog
+        top_bar_margin: root.top_bar_margin
+    }
+
     ClipboardManager { id: clipboard }
 
     // Invisible helper for plain text clipboard
@@ -86,6 +91,33 @@ ApplicationWindow {
         ColumnLayout {
             anchors.fill: parent
             spacing: 0
+
+            // Header with Info and Close buttons
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 10
+                spacing: 10
+
+                Button {
+                    text: "Info"
+                    font.pointSize: root.pointSize
+                    onClicked: {
+                        info_dialog.show();
+                        info_dialog.raise();
+                        info_dialog.requestActivate();
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: "Close"
+                    font.pointSize: root.pointSize
+                    onClicked: {
+                        root.close();
+                    }
+                }
+            }
 
             // Search controls
             Frame {
@@ -355,41 +387,6 @@ ApplicationWindow {
                 }
             }
 
-            // Close button
-            RowLayout {
-                visible: root.is_desktop
-                Layout.fillWidth: true
-                Layout.margins: 10
-
-                Item { Layout.fillWidth: true }
-
-                Button {
-                    text: "Close"
-                    font.pointSize: root.pointSize
-                    onClicked: {
-                        root.close();
-                    }
-                }
-
-                Item { Layout.fillWidth: true }
-            }
-
-            ColumnLayout {
-                visible: root.is_mobile
-                Layout.fillWidth: true
-                Layout.margins: 10
-                // Extra space on mobile to avoid the bottom bar covering the button.
-                Layout.bottomMargin: 60
-                spacing: 10
-
-                Button {
-                    text: "Close"
-                    Layout.fillWidth: true
-                    onClicked: {
-                        root.close();
-                    }
-                }
-            }
         }
     }
 
