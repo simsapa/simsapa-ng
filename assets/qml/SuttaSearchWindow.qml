@@ -1044,6 +1044,14 @@ ${query_text}`;
 
             CMenuItem {
                 action: Action {
+                    id: action_dhamma_text_sources
+                    text: "Dhamma Text Sources"
+                    onTriggered: dhamma_text_sources_dialog.show()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
                     text: "&About"
                     onTriggered: about_dialog.show()
                 }
@@ -1097,6 +1105,11 @@ ${query_text}`;
 
     DatabaseValidationDialog {
         id: database_validation_dialog
+        top_bar_margin: root.top_bar_margin
+    }
+
+    DhammaTextSourcesDialog {
+        id: dhamma_text_sources_dialog
         top_bar_margin: root.top_bar_margin
     }
 
