@@ -18,6 +18,10 @@ use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_c
 use crate::html_content::{blank_html_page, sutta_html_page};
 use crate::{get_app_globals, init_app_globals};
 
+static DICTIONARY_JS: &str = include_str!("../../assets/js/dictionary.js");
+static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
+static SIMSAPA_JS: &str = include_str!("../../assets/js/simsapa.min.js");
+
 /// Represents the application data and settings
 #[derive(Debug)]
 pub struct AppData {
@@ -286,6 +290,87 @@ impl AppData {
                 let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
                 self.render_sutta_content(&sutta, None, Some(js_extra))
                     .unwrap_or_else(|_| sutta_html_page("Rendering error", None, None, None, Some(body_class)))
+            },
+            None => blank_page_html,
+        }
+    }
+
+    /// Renders a dictionary word by UID as a complete HTML page with window context.
+    ///
+    /// This is a convenience method that encapsulates the common pattern of:
+    /// 1. Getting the theme/body_class from app settings
+    /// 2. Returning a blank page for empty UIDs or missing words
+    /// 3. Rendering the word HTML with JavaScript context (API_URL, WINDOW_ID, IS_MOBILE)
+    /// 4. Injecting dictionary-specific CSS and JavaScript
+    /// 5. Modifying HTML tags to include theme classes
+    /// 6. Updating resource links to point to API endpoints
+    ///
+    /// Used by both QML bridge (sutta_bridge.rs::get_word_html) and
+    /// API endpoint (api.rs::get_word_html_by_uid) to ensure consistent behavior.
+    pub fn render_word_html_by_uid(&self, window_id: &str, word_uid: &str) -> String {
+        use regex::{Regex, Captures};
+
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        let body_class = app_settings.theme_name_as_string();
+
+        let blank_page_html = blank_html_page(Some(body_class.clone()));
+
+        // Return blank page for empty UID
+        if word_uid.is_empty() {
+            return blank_page_html;
+        }
+
+        // Try to get the word from database
+        let word = self.dbm.dictionaries.get_word(word_uid);
+
+        lazy_static! {
+            // (<link href=")(main.js)(") class="load_js" rel="preload" as="script">
+            static ref RE_LINK_HREF: Regex = Regex::new(r#"(<link +[^>]*href=['"])([^'"]+)(['"])"#).unwrap();
+            // Match <html> tag with optional attributes
+            static ref RE_HTML_TAG: Regex = Regex::new(r#"<html[^>]*>"#).unwrap();
+            // Match <body> tag with optional attributes
+            static ref RE_BODY_TAG: Regex = Regex::new(r#"<body[^>]*>"#).unwrap();
+        }
+
+        match word {
+            Some(word) => match word.definition_html {
+                Some(ref definition_html) => {
+                    let mut js_extra = "".to_string();
+                    js_extra.push_str(&format!(" const API_URL = '{}'; window.API_URL = API_URL;", &self.api_url));
+                    js_extra.push_str(&format!(" const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id));
+                    js_extra.push_str(&format!(" const IS_MOBILE = {};", crate::is_mobile()));
+                    js_extra.push_str(DICTIONARY_JS);
+                    js_extra.push_str(SIMSAPA_JS);
+
+                    let mut word_html = definition_html.clone();
+
+                    word_html = word_html.replace(
+                        "</head>",
+                        &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, js_extra));
+
+                    // Replace <html> tag to include dark mode class
+                    word_html = RE_HTML_TAG.replace(&word_html, &format!(r#"<html class="{}">"#, body_class)).to_string();
+
+                    // Replace <body> tag to include dark mode class and word heading
+                    word_html = RE_BODY_TAG.replace(&word_html, &format!(r#"
+<body class="{}">
+    <div class='word-heading'>
+        <div class='word-title'>
+            <h1>{}</h1>
+        </div>
+    </div>"#, body_class, word.word())).to_string();
+
+                    word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
+                        format!("{}{}{}{}",
+                                &caps[1],
+                                &format!("{}/assets/dpd-res/", &self.api_url),
+                                &caps[2],
+                                &caps[3])
+                    }).to_string();
+
+                    word_html
+                },
+                None => blank_page_html.clone(),
             },
             None => blank_page_html,
         }

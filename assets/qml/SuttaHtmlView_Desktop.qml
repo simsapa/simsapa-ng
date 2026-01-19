@@ -92,6 +92,7 @@ Item {
             // Initial blank page
             uid = "";
         }
+
         if (root.table_name === "dpd_headwords") {
             // Results from DPD Lookup are in the form of
             // "item_uid": "25671/dpd", "table_name": "dpd_headwords", "sutta_title":"cakka 1"
@@ -99,8 +100,16 @@ Item {
             // where the form is "uid": "cakka 1/dpd"
             uid = `${root.sutta_title}/dpd`;
         }
-        var html = SuttaBridge.get_word_html(root.window_id, uid);
-        web.loadHtml(html);
+
+        // For empty UID, use loadHtml to avoid 404 from API endpoint
+        if (uid === "") {
+            var html = SuttaBridge.get_word_html(root.window_id, "");
+            web.loadHtml(html);
+            return;
+        }
+
+        const api_url = SuttaBridge.get_api_url();
+        web.url = `${api_url}/get_word_html_by_uid/${root.window_id}/${uid}/`;
     }
 
     function load_book_spine_uid(spine_item_uid) {

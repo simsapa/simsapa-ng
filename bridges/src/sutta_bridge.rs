@@ -5,23 +5,17 @@ use std::thread;
 use core::pin::Pin;
 use cxx_qt_lib::{QString, QStringList, QUrl};
 use cxx_qt::Threading;
-use regex::{Regex, Captures};
-use lazy_static::lazy_static;
 
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, try_get_app_data, get_app_globals, get_create_simsapa_dir, is_mobile, save_to_file, check_file_exists_print_err};
+use simsapa_backend::{get_app_data, try_get_app_data, get_app_globals, get_create_simsapa_dir, save_to_file, check_file_exists_print_err};
 use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
 use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_log_level_str};
 use simsapa_backend::topic_index;
-
-static DICTIONARY_JS: &str = include_str!("../../assets/js/dictionary.js");
-static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
-static SIMSAPA_JS: &str = include_str!("../../assets/js/simsapa.min.js");
 
 /// Convert a QUrl to a local file path string.
 /// Handles Windows paths correctly - QUrl::path() returns "/C:/path" on Windows,
@@ -1065,68 +1059,7 @@ impl qobject::SuttaBridge {
 
     pub fn get_word_html(&self, window_id: &QString, uid: &QString) -> QString {
         let app_data = get_app_data();
-        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
-        let body_class = app_settings.theme_name_as_string();
-
-        let blank_page_html = blank_html_page(Some(body_class.clone()));
-        if uid.trimmed().is_empty() {
-            return QString::from(blank_page_html);
-        }
-
-        let word = app_data.dbm.dictionaries.get_word(&uid.to_string());
-
-        lazy_static! {
-            // (<link href=")(main.js)(") class="load_js" rel="preload" as="script">
-            static ref RE_LINK_HREF: Regex = Regex::new(r#"(<link +[^>]*href=['"])([^'"]+)(['"])"#).unwrap();
-            // Match <html> tag with optional attributes
-            static ref RE_HTML_TAG: Regex = Regex::new(r#"<html[^>]*>"#).unwrap();
-            // Match <body> tag with optional attributes
-            static ref RE_BODY_TAG: Regex = Regex::new(r#"<body[^>]*>"#).unwrap();
-        }
-
-        let html = match word {
-            Some(word) => match word.definition_html {
-                Some(ref definition_html) => {
-                    let mut js_extra = "".to_string();
-                    js_extra.push_str(&format!(" const API_URL = '{}'; window.API_URL = API_URL;", &app_data.api_url));
-                    js_extra.push_str(&format!(" const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", &window_id.to_string()));
-                    js_extra.push_str(&format!(" const IS_MOBILE = {};", is_mobile()));
-                    js_extra.push_str(DICTIONARY_JS);
-                    js_extra.push_str(SIMSAPA_JS);
-
-                    let mut word_html = definition_html.clone();
-
-                    word_html = word_html.replace(
-                        "</head>",
-                        &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, js_extra));
-
-                    // Replace <html> tag to include dark mode class
-                    word_html = RE_HTML_TAG.replace(&word_html, &format!(r#"<html class="{}">"#, body_class)).to_string();
-
-                    // Replace <body> tag to include dark mode class and word heading
-                    word_html = RE_BODY_TAG.replace(&word_html, &format!(r#"
-<body class="{}">
-    <div class='word-heading'>
-        <div class='word-title'>
-            <h1>{}</h1>
-        </div>
-    </div>"#, body_class, word.word())).to_string();
-
-                    word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
-                        format!("{}{}{}{}",
-                                &caps[1],
-                                &format!("{}/assets/dpd-res/", &app_data.api_url),
-                                &caps[2],
-                                &caps[3])
-                    }).to_string();
-
-                    word_html
-                },
-                None => blank_page_html,
-            },
-            None => blank_page_html,
-        };
-
+        let html = app_data.render_word_html_by_uid(&window_id.to_string(), &uid.to_string());
         QString::from(html)
     }
 

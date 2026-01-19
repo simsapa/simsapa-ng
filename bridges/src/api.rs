@@ -531,6 +531,18 @@ fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManag
     RawHtml(html)
 }
 
+#[get("/get_word_html_by_uid/<window_id>/<uid..>")]
+fn get_word_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
+    info(&format!("get_word_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
+
+    let app_data = get_app_data();
+    let html = app_data.render_word_html_by_uid(window_id, &uid_str);
+
+    RawHtml(html)
+}
+
 #[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]
 fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
     // Convert path to forward slashes for cross-platform consistency
@@ -1136,6 +1148,7 @@ pub async extern "C" fn start_webserver() {
             toggle_reading_mode,
             sutta_menu_action,
             get_sutta_html_by_uid,
+            get_word_html_by_uid,
             get_book_spine_item_html_by_uid,
             get_pdf_viewer,
             get_book_page_by_path,

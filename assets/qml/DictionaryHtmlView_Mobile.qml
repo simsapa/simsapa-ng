@@ -26,8 +26,16 @@ Item {
             // Initial blank page
             uid = "";
         }
-        var html = SuttaBridge.get_word_html(root.window_id, uid);
-        web.loadHtml(html);
+
+        // For empty UID, use loadHtml to avoid 404 from API endpoint
+        if (uid === "") {
+            var html = SuttaBridge.get_word_html(root.window_id, "");
+            web.loadHtml(html);
+            return;
+        }
+
+        const api_url = SuttaBridge.get_api_url();
+        web.url = `${api_url}/get_word_html_by_uid/${root.window_id}/${uid}/`;
     }
 
     Component.onCompleted: {
