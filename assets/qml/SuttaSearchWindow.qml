@@ -833,21 +833,6 @@ ${query_text}`;
                     onToggled: SuttaBridge.set_show_bottom_footnotes(checked)
                 }
             }
-
-            CMenuItem {
-                action: Action {
-                    id: action_close_tab
-                    text: "Close Tab"
-                    shortcut: Shortcut {
-                        sequences: ["Ctrl+W"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_close_tab.trigger()
-                    }
-                    onTriggered: {
-                        suttas_tab_bar.close_current_tab();
-                    }
-                }
-            }
         }
 
         Menu {
@@ -975,6 +960,21 @@ ${query_text}`;
                     onTriggered: {
                         let html_view = sutta_html_view_layout.get_current_item();
                         html_view.find_previous();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_close_tab
+                    text: "Close Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+W"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_close_tab.trigger()
+                    }
+                    onTriggered: {
+                        suttas_tab_bar.close_current_tab();
                     }
                 }
             }
