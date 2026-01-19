@@ -544,23 +544,15 @@ fn get_word_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManage
 }
 
 #[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]
-fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+fn get_book_spine_item_html_by_uid(window_id: &str, spine_item_uid: PathBuf, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
     // Convert path to forward slashes for cross-platform consistency
     let uid_str = pathbuf_to_forward_slash_string(&spine_item_uid);
     info(&format!("get_book_spine_item_html_by_uid(): {}", uid_str));
 
-    let item = match dbm.appdata.get_book_spine_item(&uid_str) {
-        Ok(Some(item)) => item,
-        Ok(None) => return Err((Status::NotFound, "BookSpineItem Not Found".to_string())),
-        Err(e) => return Err((Status::InternalServerError, format!("Database error: {}", e))),
-    };
-
     let app_data = get_app_data();
-    if let Ok(html) = app_data.render_book_spine_item_html(&item, Some(window_id.to_string()), None) {
-        Ok(RawHtml(html))
-    } else {
-        Err((Status::InternalServerError, "HTML rendering error".to_string()))
-    }
+    let html = app_data.render_book_spine_html_by_uid(window_id, &uid_str);
+
+    RawHtml(html)
 }
 
 /// Serve PDF viewer page for a PDF book - for browser testing

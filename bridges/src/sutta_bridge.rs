@@ -10,7 +10,6 @@ use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
 use simsapa_backend::{get_app_data, try_get_app_data, get_app_globals, get_create_simsapa_dir, save_to_file, check_file_exists_print_err};
-use simsapa_backend::html_content::{sutta_html_page, blank_html_page};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
 use simsapa_backend::prompt_utils::markdown_to_html;
@@ -1569,27 +1568,7 @@ impl qobject::SuttaBridge {
 
     pub fn get_book_spine_html(&self, window_id: &QString, spine_item_uid: &QString) -> QString {
         let app_data = get_app_data();
-        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
-        let body_class = app_settings.theme_name_as_string();
-
-        let blank_page_html = blank_html_page(Some(body_class.clone()));
-        if spine_item_uid.trimmed().is_empty() {
-            return QString::from(blank_page_html);
-        }
-
-        let uid = spine_item_uid.to_string();
-        let spine_item = match app_data.dbm.appdata.get_book_spine_item(&uid) {
-            Ok(Some(item)) => item,
-            Ok(None) => return QString::from(blank_page_html),
-            Err(e) => {
-                error(&format!("Failed to get spine item {}: {}", uid, e));
-                return QString::from(blank_page_html);
-            }
-        };
-
-        let html = app_data.render_book_spine_item_html(&spine_item, Some(window_id.to_string()), None)
-            .unwrap_or(sutta_html_page("Rendering error", None, None, None, Some(body_class)));
-
+        let html = app_data.render_book_spine_html_by_uid(&window_id.to_string(), &spine_item_uid.to_string());
         QString::from(html)
     }
 

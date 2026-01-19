@@ -376,6 +376,46 @@ impl AppData {
         }
     }
 
+    /// Renders a book spine item by UID as a complete HTML page with window context.
+    ///
+    /// This is a convenience method that encapsulates the common pattern of:
+    /// 1. Getting the theme/body_class from app settings
+    /// 2. Returning a blank page for empty UIDs or missing spine items
+    /// 3. Rendering the spine item HTML with WINDOW_ID JavaScript context
+    /// 4. Handling rendering errors gracefully with an error page
+    ///
+    /// Used by both QML bridge (sutta_bridge.rs::get_book_spine_html) and
+    /// API endpoint (api.rs::get_book_spine_item_html_by_uid) to ensure consistent behavior.
+    pub fn render_book_spine_html_by_uid(&self, window_id: &str, spine_item_uid: &str) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        let body_class = app_settings.theme_name_as_string();
+
+        let blank_page_html = blank_html_page(Some(body_class.clone()));
+
+        // Return blank page for empty UID
+        if spine_item_uid.is_empty() {
+            return blank_page_html;
+        }
+
+        // Try to get the spine item from database
+        let spine_item = match self.dbm.appdata.get_book_spine_item(spine_item_uid) {
+            Ok(Some(item)) => item,
+            Ok(None) => {
+                info(&format!("Book spine item not found: {}", spine_item_uid));
+                return blank_page_html;
+            }
+            Err(e) => {
+                error(&format!("Failed to get spine item {}: {}", spine_item_uid, e));
+                return blank_page_html;
+            }
+        };
+
+        // Render the spine item with WINDOW_ID in the JavaScript
+        let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
+        self.render_book_spine_item_html(&spine_item, Some(window_id.to_string()), Some(js_extra))
+            .unwrap_or_else(|_| sutta_html_page("Rendering error", None, None, None, Some(body_class)))
+    }
+
     /// Render a book spine item as complete HTML page
     ///
     /// Similar to render_sutta_content, but for book spine items (only for Epub chapters and HTML, PDFs are shown with .url instead of .loadHtml()).
