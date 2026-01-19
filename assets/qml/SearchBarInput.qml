@@ -139,17 +139,20 @@ Frame {
                         return [
                                 /* "Fulltext Match", */
                                 "Contains Match",
-                                /* "Title Match", */
+                                "Title Match",
                                 /* "RegEx Match", */
                         ];
                     } else if (search_area_dropdown.currentText === "Library") {
                         return [
                                 "Contains Match",
+                                "Title Match",
                         ];
                     } else {
+                        // currentText === "Dictionary"
                         return [
                                 "DPD Lookup",
                                 "Contains Match",
+                                "Headword Match",
                         ];
                     }
                 }

@@ -1220,6 +1220,321 @@ impl<'a> SearchQueryTask<'a> {
         Ok(paginated_results)
     }
 
+    fn suttas_title_match(
+        &mut self,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("suttas_title_match(): page_num: {}", page_num));
+        info(&format!("query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+        let timer = Instant::now();
+
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        let like_pattern = format!("%{}%", self.query_text);
+
+        // Box query for dynamic filtering
+        let mut query = suttas.into_boxed();
+        let mut count_query = suttas.into_boxed();
+
+        // Apply title search filter (search in both title and title_ascii)
+        query = query.filter(
+            title.like(&like_pattern)
+            .or(title_ascii.like(&like_pattern))
+        );
+        count_query = count_query.filter(
+            title.like(&like_pattern)
+            .or(title_ascii.like(&like_pattern))
+        );
+
+        // Apply language filter if specified
+        if !self.lang.is_empty() && self.lang != "Language" {
+            query = query.filter(language.eq(&self.lang));
+            count_query = count_query.filter(language.eq(&self.lang));
+        }
+
+        // Count total hits
+        self.db_query_hits_count = count_query.count().get_result::<i64>(db_conn)?;
+        info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
+
+        // Apply pagination
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        // Execute query
+        let db_results: Vec<Sutta> = query
+            .order(uid.asc())
+            .limit(limit)
+            .offset(offset)
+            .select(Sutta::as_select())
+            .load(db_conn)?;
+
+        // Map to SearchResult
+        let search_results = db_results
+            .iter()
+            .map(|sutta| self.db_sutta_to_result(sutta))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(search_results)
+    }
+
+    fn library_title_match(
+        &mut self,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("library_title_match(): page_num: {}", page_num));
+        info(&format!("query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+        let timer = Instant::now();
+
+        use crate::db::appdata_schema::books::dsl as books_dsl;
+        use crate::db::appdata_schema::book_spine_items::dsl as spine_dsl;
+
+        let app_data = get_app_data();
+        let db_conn = &mut app_data.dbm.appdata.get_conn()?;
+
+        let like_pattern = format!("%{}%", self.query_text);
+
+        // Determine if we need language filtering
+        let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
+        // Search in book_spine_items.title using FTS5
+        let spine_count_result: CountResult = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.title LIKE ? AND f.language = ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .get_result(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT COUNT(*) as count
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.title LIKE ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .get_result(db_conn)?
+        };
+
+        // Search in books.title using regular LIKE
+        let mut books_count_query = books_dsl::books.into_boxed();
+        books_count_query = books_count_query.filter(books_dsl::title.like(&like_pattern));
+
+        if apply_lang_filter {
+            books_count_query = books_count_query.filter(books_dsl::language.eq(&self.lang));
+        }
+
+        let books_count = books_count_query.count().get_result::<i64>(db_conn)?;
+
+        // Total count is the sum of both
+        self.db_query_hits_count = spine_count_result.count + books_count;
+        info(&format!("db_query_hits_count: {} (books: {}, spine_items: {})",
+            self.db_query_hits_count, books_count, spine_count_result.count));
+
+        // Apply pagination across the combined result set
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        let mut all_results: Vec<SearchResult> = Vec::new();
+
+        // Calculate books pagination
+        let books_offset = offset;
+        let books_limit = if books_offset >= books_count {
+            0 // Skip books if offset is beyond books
+        } else {
+            std::cmp::min(limit, books_count - books_offset)
+        };
+
+        // Always execute books query
+        let mut books_query = books_dsl::books.into_boxed();
+        books_query = books_query.filter(books_dsl::title.like(&like_pattern));
+
+        if apply_lang_filter {
+            books_query = books_query.filter(books_dsl::language.eq(&self.lang));
+        }
+
+        let book_uids: Vec<String> = books_query
+            .order(books_dsl::id.asc())
+            .limit(books_limit)
+            .offset(books_offset)
+            .select(books_dsl::uid)
+            .load(db_conn)?;
+
+        // For each book, get the first spine item
+        for book_uid in book_uids {
+            let first_spine_item: Result<BookSpineItem, _> = spine_dsl::book_spine_items
+                .filter(spine_dsl::book_uid.eq(&book_uid))
+                .order(spine_dsl::spine_index.asc())
+                .first::<BookSpineItem>(db_conn);
+
+            if let Ok(spine_item) = first_spine_item {
+                all_results.push(self.db_book_spine_item_to_result(&spine_item));
+            }
+        }
+
+        // Calculate spine_items pagination
+        let spine_offset = if offset < books_count {
+            0 // Start from beginning of spine_items
+        } else {
+            offset - books_count // Adjust offset relative to spine_items
+        };
+        let spine_limit = limit - all_results.len() as i64;
+
+        // Always execute spine_items query
+        let spine_results: Vec<BookSpineItem> = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT b.*
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.title LIKE ? AND f.language = ?
+                ORDER BY b.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .bind::<BigInt, _>(spine_limit)
+            .bind::<BigInt, _>(spine_offset)
+            .load(db_conn)?
+        } else {
+            sql_query(
+                r#"
+                SELECT b.*
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.title LIKE ?
+                ORDER BY b.id
+                LIMIT ? OFFSET ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<BigInt, _>(spine_limit)
+            .bind::<BigInt, _>(spine_offset)
+            .load(db_conn)?
+        };
+
+        for spine_item in spine_results {
+            all_results.push(self.db_book_spine_item_to_result(&spine_item));
+        }
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(all_results)
+    }
+
+    fn lemma_1_dpd_headword_match_fts5(
+        &mut self,
+        page_num: usize,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        info(&format!("lemma_1_dpd_headword_match_fts5(): page_num: {}", page_num));
+        info(&format!("query_text: {}", &self.query_text));
+        let timer = Instant::now();
+
+        let app_data = get_app_data();
+        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
+        let dict_conn = &mut app_data.dbm.dictionaries.get_conn()?;
+
+        use crate::db::dpd_models::DpdHeadword;
+        use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
+        use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
+
+        let like_pattern = format!("%{}%", self.query_text);
+
+        // Query the FTS table to get headword IDs efficiently
+        #[derive(QueryableByName)]
+        struct HeadwordId {
+            #[diesel(sql_type = diesel::sql_types::Integer)]
+            headword_id: i32,
+        }
+
+        // Count total hits using FTS5
+        let count_query = String::from(
+            r#"
+            SELECT COUNT(*) as count
+            FROM dpd_headwords_fts
+            WHERE lemma_1 LIKE ?
+            "#
+        );
+
+        let count_result: CountResult = sql_query(&count_query)
+            .bind::<Text, _>(&like_pattern)
+            .get_result(dpd_conn)?;
+
+        self.db_query_hits_count = count_result.count;
+        info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
+
+        // Apply pagination
+        let offset = (page_num * self.page_len) as i64;
+        let limit = self.page_len as i64;
+
+        // Get headword IDs from FTS
+        let fts_query = String::from(
+            r#"
+            SELECT headword_id
+            FROM dpd_headwords_fts
+            WHERE lemma_1 LIKE ?
+            ORDER BY headword_id
+            LIMIT ? OFFSET ?
+            "#
+        );
+
+        let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+            .bind::<Text, _>(&like_pattern)
+            .bind::<BigInt, _>(limit)
+            .bind::<BigInt, _>(offset)
+            .load::<HeadwordId>(dpd_conn)?;
+
+        // Fetch full DpdHeadword records using the IDs
+        let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
+
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let headwords: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+            .filter(dpd_dsl::id.eq_any(&ids))
+            .load::<DpdHeadword>(dpd_conn)?;
+
+        // Convert DpdHeadword results to SearchResults via DictWord
+        let mut search_results: Vec<SearchResult> = Vec::new();
+
+        for headword in headwords {
+            // Try to find corresponding DictWord by matching word field to headword.lemma_1
+            let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+            // Apply source filtering if specified
+            if let Some(ref source_val) = self.source {
+                if self.source_include {
+                    dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                } else {
+                    dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                }
+            }
+
+            // Match DictWord.word with DpdHeadword.lemma_1
+            let dict_word_result: Result<DictWord, _> = dict_query
+                .filter(dict_dsl::word.eq(&headword.lemma_1))
+                .first::<DictWord>(dict_conn);
+
+            if let Ok(dict_word) = dict_word_result {
+                search_results.push(self.db_word_to_result(&dict_word));
+            }
+        }
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok(search_results)
+    }
+
     /// Gets a specific page of search results, performing the query if needed.
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // Check cache first. If this results page has been calculated before, return it.
@@ -1306,6 +1621,43 @@ impl<'a> SearchQueryTask<'a> {
                     }
                     SearchArea::Library => {
                         self.book_spine_items_contains_match_fts5(page_num)
+                    }
+                }
+            }
+
+            SearchMode::TitleMatch => {
+                match self.search_area {
+                    SearchArea::Suttas => {
+                        // TODO def _suttas_title_match(self)
+                        self.suttas_title_match(page_num)
+                    }
+                    SearchArea::Dictionary => {
+                        // Title Match doesn't make sense for dictionary
+                        self.db_query_hits_count = 0;
+                        Ok(Vec::new())
+                    }
+                    SearchArea::Library => {
+                        // TODO Search in the book and book_spine_item chapter titles
+                        self.library_title_match(page_num)
+                    }
+                }
+            }
+
+            SearchMode::HeadwordMatch => {
+                match self.search_area {
+                    SearchArea::Suttas => {
+                        // Headword Match doesn't make sense for suttas
+                        self.db_query_hits_count = 0;
+                        Ok(Vec::new())
+                    }
+                    SearchArea::Dictionary => {
+                        // TODO implement headword match
+                        self.lemma_1_dpd_headword_match_fts5(page_num)
+                    }
+                    SearchArea::Library => {
+                        // Headword Match doesn't make sense for library
+                        self.db_query_hits_count = 0;
+                        Ok(Vec::new())
                     }
                 }
             }
