@@ -241,6 +241,7 @@ ApplicationWindow {
 
             // Fixed button area at the bottom
             RowLayout {
+                spacing: 10
                 Layout.fillWidth: true
                 Layout.margins: 20
                 // Extra space on mobile to avoid the bottom bar covering the button.
@@ -261,6 +262,8 @@ ApplicationWindow {
                     text: "Close"
                     onClicked: root.close()
                 }
+
+                Item { Layout.fillWidth: true }
             }
         }
     }

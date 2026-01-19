@@ -452,7 +452,9 @@ ${query_text}`;
 
     function show_result_in_html_view(result_data: var, new_tab) {
         if (new_tab === undefined) new_tab = false;
+        logger.debug("SHOW_RESULT: show_result_in_html_view() called - item_uid: " + result_data.item_uid + " new_tab: " + new_tab);
         let tab_data = root.new_tab_data(result_data);
+        logger.debug("SHOW_RESULT: Created tab_data - id_key: " + tab_data.id_key + " web_item_key: " + tab_data.web_item_key);
         let tab_idx = root.add_results_tab(tab_data, true, new_tab);
         // NOTE: It will not find the tab first time while window objects are still
         // constructed, but succeeds later on.
@@ -501,22 +503,32 @@ ${query_text}`;
 
     // Returns the index of the tab in the model.
     function add_results_tab(fulltext_results_data: var, focus_on_new = true, new_tab = false): int {
-        /* logger.info("add_results_tab()", "item_uid", fulltext_results_data.item_uid, "sutta_title", fulltext_results_data.sutta_title); */
+        logger.debug("ADD_RESULTS_TAB: add_results_tab() called - item_uid: " + fulltext_results_data.item_uid + " focus_on_new: " + focus_on_new + " new_tab: " + new_tab);
+        logger.debug("ADD_RESULTS_TAB: tabs_results_model.count: " + tabs_results_model.count);
         if (new_tab || tabs_results_model.count == 0) {
-            /* logger.info("Adding a new results tab", "tabs_results_model.count", tabs_results_model.count); */
+            logger.debug("ADD_RESULTS_TAB: Adding a new results tab");
             let tab_data = root.new_tab_data(fulltext_results_data, false, focus_on_new);
             if (tabs_results_model.count == 0) {
+                logger.debug("ADD_RESULTS_TAB: First tab, setting id_key to ResultsTab_0");
                 tab_data.id_key = "ResultsTab_0";
             }
-            if (tab_data.web_item_key == "") {
+            logger.debug("ADD_RESULTS_TAB: tab_data - id_key: " + tab_data.id_key + " web_item_key: " + tab_data.web_item_key);
+            // Only create webview if we're going to show it immediately (focus_on_new is true)
+            // Otherwise leave web_item_key empty and let tab_checked_changed create it when tab is clicked
+            if (tab_data.web_item_key == "" && tab_data.focus_on_new) {
+                logger.debug("ADD_RESULTS_TAB: web_item_key is empty and focus_on_new is true, generating new key");
                 tab_data.web_item_key = root.generate_key();
-                // Show the item if this is the first tab being added (focus_on_new will be true for the blank initial tab)
-                sutta_html_view_layout.add_item(tab_data, tab_data.focus_on_new);
+                logger.debug("ADD_RESULTS_TAB: Generated web_item_key: " + tab_data.web_item_key + ", calling add_item with show_item: " + tab_data.focus_on_new);
+                // Show the item since focus_on_new is true
+                sutta_html_view_layout.add_item(tab_data, true);
+            } else if (tab_data.web_item_key == "") {
+                logger.debug("ADD_RESULTS_TAB: web_item_key is empty but focus_on_new is false, leaving empty for lazy creation");
             }
             tabs_results_model.append(tab_data);
+            logger.debug("ADD_RESULTS_TAB: Tab appended. New tabs_results_model.count: " + tabs_results_model.count);
             return tabs_results_model.count-1;
         } else {
-            /* logger.info("Updating existing results tab"); */
+            logger.debug("ADD_RESULTS_TAB: Updating existing results tab at index 0");
             // Not creating a new tab, update the existing one at idx 0.
             let tab_data = root.new_tab_data(
                 fulltext_results_data,
@@ -1272,18 +1284,24 @@ ${query_text}`;
                                         return;
                                     }
 
+                                    logger.debug("TAB_CHECK: Tab checked changed. Tab id_key: " + tab.id_key + " item_uid: " + tab.item_uid + " web_item_key: " + tab.web_item_key + " index: " + tab.index);
+                                    logger.debug("TAB_CHECK: Current SuttaStackLayout.current_key: " + sutta_html_view_layout.current_key);
+
                                     // Prevent redundant processing if this tab's webview is already showing
                                     // This can happen if the same tab is clicked multiple times
                                     if (tab.web_item_key !== "" && sutta_html_view_layout.current_key === tab.web_item_key) {
+                                        logger.debug("TAB_CHECK: Tab webview already showing, skipping");
                                         return;
                                     }
 
                                     // If this tab doesn't have a webview associated yet, create one
                                     // This happens on first click of a tab (web_item_key is empty string)
                                     if (tab.web_item_key == "") {
+                                        logger.debug("TAB_CHECK: Tab has no webview, creating new one");
                                         // Generate unique key for this webview
                                         let key = root.generate_key();
                                         tab.web_item_key = key;
+                                        logger.debug("TAB_CHECK: Generated new web_item_key: " + key);
 
                                         // Update the key in both the model and the tab's property
                                         if (tab_model.count > tab.index) {
@@ -1291,23 +1309,30 @@ ${query_text}`;
                                             tab_data.web_item_key = key;
                                             tab_model.set(tab.index, tab_data);
                                             tab.web_item_key = key;
+                                            logger.debug("TAB_CHECK: Updated model with new web_item_key, calling add_item");
                                             // Add the webview but don't show it yet (show_item = false)
                                             // We'll set current_key explicitly below to ensure it happens after the item is fully added
                                             sutta_html_view_layout.add_item(tab_data, false);
+                                            logger.debug("TAB_CHECK: add_item completed");
                                             // New webview created and added to layout
                                         } else {
                                             logger.error("Out of bounds error: tab_model.count " + tab_model.count + " tab.index " + tab.index);
                                         }
+                                    } else {
+                                        logger.debug("TAB_CHECK: Tab already has web_item_key, switching to existing webview");
                                     }
                                     // If tab already has a web_item_key, we're switching to an existing webview
 
                                     // Show the tab's webview by setting current_key
                                     // This is called after add_item to ensure the item is fully created
+                                    logger.debug("TAB_CHECK: Setting current_key to: " + tab.web_item_key);
                                     sutta_html_view_layout.current_key = tab.web_item_key;
+                                    logger.debug("TAB_CHECK: current_key set. New value: " + sutta_html_view_layout.current_key);
 
                                     // Scroll the checked tab into view in the tab bar
                                     suttas_tab_bar.scroll_tab_into_view(tab);
                                     // Tab switch completed: webview shown, tab scrolled into view
+                                    logger.debug("TAB_CHECK: Tab switch completed");
                                 }
 
                                 function remove_tab_and_webview(tab: SuttaTabButton, tab_model: ListModel) {
@@ -1450,11 +1475,16 @@ ${query_text}`;
                                                     // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                                     if (pinned) return;
                                                     // Unpin and move back to results group
+                                                    logger.debug("UNPIN: Starting unpin from pinned group. Tab index: " + pinned_tab_btn.index + " item_uid: " + pinned_tab_btn.item_uid + " id_key: " + pinned_tab_btn.id_key + " web_item_key: " + pinned_tab_btn.web_item_key);
+                                                    logger.debug("UNPIN: Model counts before - pinned: " + tabs_pinned_model.count + " results: " + tabs_results_model.count + " translations: " + tabs_translations_model.count);
                                                     let old_tab_data = tabs_pinned_model.get(pinned_tab_btn.index);
                                                     let new_tab_data = root.new_tab_data(old_tab_data, false, true, root.generate_key(), old_tab_data.web_item_key);
+                                                    logger.debug("UNPIN: Created new tab data - old_id_key: " + old_tab_data.id_key + " new_id_key: " + new_tab_data.id_key + " web_item_key: " + new_tab_data.web_item_key);
                                                     tabs_results_model.append(new_tab_data);
                                                     tabs_pinned_model.remove(pinned_tab_btn.index)
+                                                    logger.debug("UNPIN: Model counts after - pinned: " + tabs_pinned_model.count + " results: " + tabs_results_model.count + " translations: " + tabs_translations_model.count);
                                                     root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                                    logger.debug("UNPIN: Completed unpin operation");
                                                 }
                                                 onCloseClicked: suttas_tab_bar.remove_tab_and_webview(pinned_tab_btn, tabs_pinned_model)
                                                 // Handle tab selection via checked state (works on both Linux and macOS)
@@ -1473,18 +1503,28 @@ ${query_text}`;
                                                     // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                                     if (!pinned) return;
                                                     // Pin and move to pinned group
+                                                    logger.debug("PIN from results: Starting pin. Tab index: " + results_tab_btn.index + " item_uid: " + results_tab_btn.item_uid + " id_key: " + results_tab_btn.id_key + " web_item_key: " + results_tab_btn.web_item_key);
+                                                    logger.debug("PIN from results: Model counts before - pinned: " + tabs_pinned_model.count + " results: " + tabs_results_model.count + " translations: " + tabs_translations_model.count);
+                                                    logger.debug("PIN from results: Current SuttaStackLayout.current_key: " + sutta_html_view_layout.current_key);
                                                     let old_tab_data = tabs_results_model.get(results_tab_btn.index);
                                                     // New pinned tab will get focus.
                                                     let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
+                                                    logger.debug("PIN from results: Created new tab data - old_id_key: " + old_tab_data.id_key + " new_id_key: " + new_tab_data.id_key + " web_item_key: " + new_tab_data.web_item_key);
                                                     tabs_pinned_model.append(new_tab_data);
+                                                    logger.debug("PIN from results: Appended to pinned model. New pinned count: " + tabs_pinned_model.count);
                                                     // Remove the tab data, but webview remains associated with the pinned item.
                                                     tabs_results_model.remove(results_tab_btn.index);
+                                                    logger.debug("PIN from results: Removed from results model. New results count: " + tabs_results_model.count);
                                                     // Only add a blank tab if we just removed the last tab from results group
                                                     if (tabs_results_model.count === 0) {
+                                                        logger.debug("PIN from results: Results model is empty, adding blank tab");
                                                         root.add_results_tab(root.blank_sutta_tab_data(), false, true);
+                                                        logger.debug("PIN from results: Blank tab added. Results count: " + tabs_results_model.count);
                                                     }
                                                     // TODO: If this is before add_results_tab(), the new results tab gets focus, despite of focus_on_new = false.
+                                                    logger.debug("PIN from results: About to focus on new pinned tab with id_key: " + new_tab_data.id_key);
                                                     root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                                    logger.debug("PIN from results: Completed pin operation. Final current_key: " + sutta_html_view_layout.current_key);
                                                 }
                                                 onCloseClicked: {
                                                     if (tabs_results_model.count == 1) {
@@ -1529,11 +1569,19 @@ ${query_text}`;
                                                     // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                                     if (!pinned) return;
                                                     // Pin and move to pinned group
+                                                    logger.debug("PIN from translations: Starting pin. Tab index: " + translations_tab_btn.index + " item_uid: " + translations_tab_btn.item_uid + " id_key: " + translations_tab_btn.id_key + " web_item_key: " + translations_tab_btn.web_item_key);
+                                                    logger.debug("PIN from translations: Model counts before - pinned: " + tabs_pinned_model.count + " results: " + tabs_results_model.count + " translations: " + tabs_translations_model.count);
+                                                    logger.debug("PIN from translations: Current SuttaStackLayout.current_key: " + sutta_html_view_layout.current_key);
                                                     let old_tab_data = tabs_translations_model.get(translations_tab_btn.index);
                                                     let new_tab_data = root.new_tab_data(old_tab_data, true, true, root.generate_key(), old_tab_data.web_item_key);
+                                                    logger.debug("PIN from translations: Created new tab data - old_id_key: " + old_tab_data.id_key + " new_id_key: " + new_tab_data.id_key + " web_item_key: " + new_tab_data.web_item_key);
                                                     tabs_pinned_model.append(new_tab_data);
+                                                    logger.debug("PIN from translations: Appended to pinned model. New pinned count: " + tabs_pinned_model.count);
                                                     tabs_translations_model.remove(translations_tab_btn.index);
+                                                    logger.debug("PIN from translations: Removed from translations model. New translations count: " + tabs_translations_model.count);
+                                                    logger.debug("PIN from translations: About to focus on new pinned tab with id_key: " + new_tab_data.id_key);
                                                     root.focus_on_tab_with_id_key(new_tab_data.id_key);
+                                                    logger.debug("PIN from translations: Completed pin operation. Final current_key: " + sutta_html_view_layout.current_key);
                                                 }
                                                 onCloseClicked: suttas_tab_bar.remove_tab_and_webview(translations_tab_btn, tabs_translations_model)
                                                 // Handle tab selection via checked state (works on both Linux and macOS)
