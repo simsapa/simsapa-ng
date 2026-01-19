@@ -15,6 +15,7 @@ use crate::logger::{error, info};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
+use crate::html_content::{blank_html_page, sutta_html_page};
 use crate::{get_app_globals, init_app_globals};
 
 /// Represents the application data and settings
@@ -253,6 +254,41 @@ impl AppData {
         );
 
         Ok(final_html)
+    }
+
+    /// Renders a sutta by UID as a complete HTML page with window context.
+    ///
+    /// This is a convenience method that encapsulates the common pattern of:
+    /// 1. Getting the theme/body_class from app settings
+    /// 2. Returning a blank page for empty UIDs or missing suttas
+    /// 3. Rendering the sutta content with WINDOW_ID JavaScript context
+    /// 4. Handling rendering errors gracefully with an error page
+    ///
+    /// Used by both QML bridge (sutta_bridge.rs::get_sutta_html) and
+    /// API endpoint (api.rs::get_sutta_html_by_uid) to ensure consistent behavior.
+    pub fn render_sutta_html_by_uid(&self, window_id: &str, sutta_uid: &str) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        let body_class = app_settings.theme_name_as_string();
+
+        let blank_page_html = blank_html_page(Some(body_class.clone()));
+
+        // Return blank page for empty UID
+        if sutta_uid.is_empty() {
+            return blank_page_html;
+        }
+
+        // Try to get the sutta from database
+        let sutta = self.dbm.appdata.get_sutta(sutta_uid);
+
+        match sutta {
+            Some(sutta) => {
+                // Render the sutta with WINDOW_ID in the JavaScript
+                let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
+                self.render_sutta_content(&sutta, None, Some(js_extra))
+                    .unwrap_or_else(|_| sutta_html_page("Rendering error", None, None, None, Some(body_class)))
+            },
+            None => blank_page_html,
+        }
     }
 
     /// Render a book spine item as complete HTML page

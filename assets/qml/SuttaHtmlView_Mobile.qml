@@ -90,8 +90,22 @@ Item {
             // Initial blank page
             uid = "";
         }
-        var html = SuttaBridge.get_sutta_html(root.window_id, uid);
-        web.loadHtml(html);
+
+        // For empty UID, use loadHtml to avoid 404 from API endpoint
+        if (uid === "") {
+            var html = SuttaBridge.get_sutta_html(root.window_id, "");
+            web.loadHtml(html);
+            return;
+        }
+
+        const api_url = SuttaBridge.get_api_url();
+        let url = `${api_url}/get_sutta_html_by_uid/${root.window_id}/${uid}/`;
+        if (root.anchor && root.anchor.length > 0) {
+            // Ensure anchor has # prefix
+            let anchor_fragment = root.anchor.startsWith('#') ? root.anchor : `#${root.anchor}`;
+            url = `${url}${anchor_fragment}`;
+        }
+        web.url = url;
     }
 
     function load_word_uid(uid) {

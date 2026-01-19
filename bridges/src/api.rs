@@ -520,24 +520,15 @@ fn shutdown(shutdown: Shutdown) {
 
 
 #[get("/get_sutta_html_by_uid/<window_id>/<uid..>")]
-fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Result<RawHtml<String>, (Status, String)> {
+fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
     // Convert path to forward slashes for cross-platform consistency
     let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("get_sutta_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
 
     let app_data = get_app_data();
+    let html = app_data.render_sutta_html_by_uid(window_id, &uid_str);
 
-    match dbm.appdata.get_sutta(&uid_str) {
-        Some(sutta) => {
-            // Render the sutta with WINDOW_ID in the JavaScript
-            let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
-            match app_data.render_sutta_content(&sutta, None, Some(js_extra)) {
-                Ok(html) => Ok(RawHtml(html)),
-                Err(e) => Err((Status::InternalServerError, format!("Rendering error: {}", e))),
-            }
-        },
-        None => Err((Status::NotFound, format!("Sutta Not Found: {}", &uid_str))),
-    }
+    RawHtml(html)
 }
 
 #[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]

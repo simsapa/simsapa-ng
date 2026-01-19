@@ -1059,26 +1059,7 @@ impl qobject::SuttaBridge {
 
     pub fn get_sutta_html(&self, window_id: &QString, uid: &QString) -> QString {
         let app_data = get_app_data();
-        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
-        let body_class = app_settings.theme_name_as_string();
-
-        let blank_page_html = blank_html_page(Some(body_class.clone()));
-        if uid.trimmed().is_empty() {
-            return QString::from(blank_page_html);
-        }
-
-        let sutta = app_data.dbm.appdata.get_sutta(&uid.to_string());
-
-        let html = match sutta {
-            Some(sutta) => {
-                let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", &window_id.to_string());
-
-                app_data.render_sutta_content(&sutta, None, Some(js_extra))
-                .unwrap_or(sutta_html_page("Rendering error", None, None, None, Some(body_class)))
-            },
-            None => blank_page_html,
-        };
-
+        let html = app_data.render_sutta_html_by_uid(&window_id.to_string(), &uid.to_string());
         QString::from(html)
     }
 
