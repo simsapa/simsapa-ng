@@ -31,6 +31,9 @@ ApplicationWindow {
     property bool use_system_margin: true
     property int custom_margin_value: 24
 
+    // Wake lock state
+    property bool wake_lock_acquired: false
+
     // Expose settings as properties for external access (avoid repeated database calls)
     property alias search_as_you_type: search_as_you_type_checkbox.checked
     property alias open_find_in_sutta_results: open_find_in_results_checkbox.checked
@@ -133,6 +136,44 @@ ApplicationWindow {
                                     root.database_validation_dialog.show_from_menu();
                                 }
                             }
+                        }
+
+                        // Wake Lock section (mobile only)
+                        Label {
+                            visible: root.is_mobile
+                            text: "Wake Lock"
+                            font.pointSize: root.pointSize + 1
+                            font.bold: true
+                            Layout.topMargin: 10
+                        }
+
+                        Button {
+                            visible: root.is_mobile
+                            text: root.wake_lock_acquired ? "Release Wake Lock" : "Acquire Wake Lock"
+                            font.pointSize: root.pointSize
+                            onClicked: {
+                                if (root.wake_lock_acquired) {
+                                    SuttaBridge.release_wake_lock_rust();
+                                } else {
+                                    SuttaBridge.acquire_wake_lock_rust();
+                                }
+                                root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
+                            }
+                        }
+
+                        Button {
+                            visible: root.is_mobile
+                            text: "Refresh Status"
+                            font.pointSize: root.pointSize
+                            onClicked: {
+                                root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
+                            }
+                        }
+
+                        Label {
+                            visible: root.is_mobile
+                            text: "Wake Lock Status: " + (root.wake_lock_acquired ? "Acquired" : "Not Acquired")
+                            font.pointSize: root.pointSize
                         }
 
                         Item { Layout.fillHeight: true }
@@ -405,5 +446,10 @@ ApplicationWindow {
         // Load initial state for Find tab settings
         search_as_you_type_checkbox.checked = SuttaBridge.get_search_as_you_type();
         open_find_in_results_checkbox.checked = SuttaBridge.get_open_find_in_sutta_results();
+
+        // Load wake lock state (mobile only)
+        if (root.is_mobile) {
+            root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
+        }
     }
 }

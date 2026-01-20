@@ -489,6 +489,15 @@ pub mod qobject {
         fn set_mobile_top_bar_margin_custom(self: Pin<&mut SuttaBridge>, value: u32);
 
         #[qinvokable]
+        fn acquire_wake_lock_rust(self: Pin<&mut SuttaBridge>) -> bool;
+
+        #[qinvokable]
+        fn release_wake_lock_rust(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn is_wake_lock_acquired_rust(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
         fn get_sutta_language_labels_with_counts(self: &SuttaBridge) -> QStringList;
 
         #[qinvokable]
@@ -2400,6 +2409,18 @@ impl qobject::SuttaBridge {
     pub fn set_mobile_top_bar_margin_custom(self: Pin<&mut Self>, value: u32) {
         let app_data = get_app_data();
         app_data.set_mobile_top_bar_margin_custom(value);
+    }
+
+    pub fn acquire_wake_lock_rust(self: Pin<&mut Self>) -> bool {
+        crate::asset_manager::qobject::acquire_wake_lock()
+    }
+
+    pub fn release_wake_lock_rust(self: Pin<&mut Self>) {
+        crate::asset_manager::qobject::release_wake_lock();
+    }
+
+    pub fn is_wake_lock_acquired_rust(&self) -> bool {
+        crate::asset_manager::qobject::is_wake_lock_acquired()
     }
 
     pub fn search_reference(&self, query: &QString, field: &QString) -> QString {

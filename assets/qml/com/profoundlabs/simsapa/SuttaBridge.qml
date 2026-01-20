@@ -338,6 +338,20 @@ Item {
         console.log("set_mobile_top_bar_margin_custom():", value);
     }
 
+    function acquire_wake_lock_rust(): bool {
+        console.log("acquire_wake_lock_rust()");
+        return true;
+    }
+
+    function release_wake_lock_rust() {
+        console.log("release_wake_lock_rust()");
+    }
+
+    function is_wake_lock_acquired_rust(): bool {
+        console.log("is_wake_lock_acquired_rust()");
+        return false;
+    }
+
     function set_provider_enabled(provider_name: string, enabled: bool) {
         console.log("set_provider_enabled():", provider_name, enabled);
     }

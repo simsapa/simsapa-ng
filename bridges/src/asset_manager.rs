@@ -33,6 +33,7 @@ pub mod qobject {
         include!("wake_lock.h");
         fn acquire_wake_lock() -> bool;
         fn release_wake_lock();
+        fn is_wake_lock_acquired() -> bool;
     }
 
     extern "RustQt" {

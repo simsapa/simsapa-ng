@@ -86,11 +86,11 @@ void release_wake_lock() {
     log_info_c("release_wake_lock()");
 #ifdef Q_OS_ANDROID
     QJniEnvironment env;
-    
+
     if (wakeLock.isValid()) {
         log_info_c("Wake lock is valid, checking if held");
         jboolean isHeld = wakeLock.callMethod<jboolean>("isHeld", "()Z");
-        
+
         if (isHeld) {
             log_info_c("Wake lock is held, releasing...");
             wakeLock.callMethod<void>("release", "()V");
@@ -98,16 +98,29 @@ void release_wake_lock() {
         } else {
             log_info_c("Wake lock was not held");
         }
-        
+
         wakeLock = QJniObject();
     } else {
         log_info_c("Wake lock was not valid (already released or never acquired)");
     }
-    
+
     if (env.checkAndClearExceptions()) {
         log_error_c("JNI exception occurred while releasing wake lock");
     }
 #else
     log_info_c("release_wake_lock() - not on Android platform");
+#endif
+}
+
+bool is_wake_lock_acquired() {
+#ifdef Q_OS_ANDROID
+    if (wakeLock.isValid()) {
+        jboolean isHeld = wakeLock.callMethod<jboolean>("isHeld", "()Z");
+        return isHeld;
+    }
+    return false;
+#else
+    // On non-Android platforms, wake lock is not applicable
+    return false;
 #endif
 }
