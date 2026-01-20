@@ -39,7 +39,7 @@ ApplicationWindow {
 
     property bool is_loading: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !color_theme_dialog.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !mobile_top_margin_dialog.visible && !database_validation_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible)
 
     property string last_query_text: ""
     property string last_search_area: ""
@@ -176,7 +176,7 @@ ApplicationWindow {
         interval: 400 // milliseconds
         repeat: false
         onTriggered: {
-            if (search_as_you_type.checked) {
+            if (app_settings_window.search_as_you_type) {
                 root.handle_query(search_bar_input.search_input.text, 4);
             }
         }
@@ -482,7 +482,7 @@ ${query_text}`;
             // 2. This is from a search result (not a sutta link, i.e. new_tab is false)
             // 3. Last search was in Suttas
             // 4. There is a query text available
-            if (action_open_find_in_sutta_results.checked &&
+            if (app_settings_window.open_find_in_sutta_results &&
                 !new_tab &&
                 root.last_search_area === "Suttas" &&
                 root.last_query_text.length > 0) {
@@ -587,13 +587,6 @@ ${query_text}`;
             // This will automatically update all child dialogs via property bindings
             root.update_top_bar_margin();
 
-            search_as_you_type.checked = SuttaBridge.get_search_as_you_type();
-            action_open_find_in_sutta_results.checked = SuttaBridge.get_open_find_in_sutta_results();
-            action_show_bottom_footnotes.checked = SuttaBridge.get_show_bottom_footnotes();
-
-            // Initialize update notification setting from saved preference
-            action_notify_about_updates.checked = SuttaBridge.get_notify_about_simsapa_updates();
-
             // Start delayed update check timer
             update_check_timer.start();
         }
@@ -687,6 +680,19 @@ ${query_text}`;
         Menu {
             id: file_menu
             title: "&File"
+
+            CMenuItem {
+                action: Action {
+                    id: action_settings
+                    text: "&Settings..."
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+,"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_settings.trigger()
+                    }
+                    onTriggered: app_settings_window.show()
+                }
+            }
 
             CMenuItem {
                 action: Action {
@@ -806,58 +812,8 @@ ${query_text}`;
         }
 
         Menu {
-            id: view_menu
-            title: "&View"
-
-            CMenuItem {
-                action: Action {
-                    text: "Color Theme..."
-                    onTriggered: color_theme_dialog.open()
-                }
-            }
-
-            CMenuItem {
-                enabled: root.is_mobile // Using 'visible' leaves an empty space on desktop
-                action: Action {
-                    text: "Mobile Top Margin..."
-                    onTriggered: mobile_top_margin_dialog.open()
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_show_bottom_footnotes
-                    text: "Show Footnotes Bar"
-                    checkable: true
-                    checked: true
-                    onToggled: SuttaBridge.set_show_bottom_footnotes(checked)
-                }
-            }
-        }
-
-        Menu {
             id: find_menu
             title: "&Find"
-
-            CMenuItem {
-                action: Action {
-                    id: search_as_you_type
-                    text: "Search As You Type"
-                    checkable: true
-                    checked: true
-                    onToggled: SuttaBridge.set_search_as_you_type(checked)
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_open_find_in_sutta_results
-                    text: "Open Find in Sutta Results"
-                    checkable: true
-                    checked: true
-                    onToggled: SuttaBridge.set_open_find_in_sutta_results(checked)
-                }
-            }
 
             CMenuItem {
                 action: Action {
@@ -1030,27 +986,7 @@ ${query_text}`;
                 action: Action {
                     id: action_check_for_updates
                     text: "Check for Simsapa Updates..."
-                    onTriggered: SuttaBridge.check_for_updates(true, root.width + " x " + root.height, "determine")
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_notify_about_updates
-                    text: "Notify About Simsapa Updates"
-                    checkable: true
-                    checked: true
-                    onToggled: SuttaBridge.set_notify_about_simsapa_updates(checked)
-                }
-            }
-
-            CMenuItem {
-                action: Action {
-                    id: action_database_validation
-                    text: "Database Validation..."
-                    onTriggered: {
-                        database_validation_dialog.show_from_menu();
-                    }
+                    onTriggered: SuttaBridge.check_for_updates(true, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight, "determine")
                 }
             }
 
@@ -1075,7 +1011,8 @@ ${query_text}`;
         id: mobile_menu
         window_width: root.width
         window_height: root.height
-        menu_list: [file_menu, windows_menu, view_menu, find_menu, gloss_menu, prompts_menu, help_menu]
+        // NOTE: No need for find_menu on mobile, they are keyboard actions
+        menu_list: [file_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
     }
 
     AboutDialog {
@@ -1098,23 +1035,6 @@ ${query_text}`;
         top_bar_margin: root.top_bar_margin
     }
 
-    ColorThemeDialog {
-        id: color_theme_dialog
-        current_theme: SuttaBridge.get_theme_name()
-        onThemeChanged: function(theme_name) {
-            SuttaBridge.set_theme_name(theme_name);
-            root.apply_theme();
-        }
-    }
-
-    MobileTopMarginDialog {
-        id: mobile_top_margin_dialog
-        onMarginChanged: {
-            // Update the top_bar_margin property
-            root.update_top_bar_margin();
-        }
-    }
-
     DatabaseValidationDialog {
         id: database_validation_dialog
         top_bar_margin: root.top_bar_margin
@@ -1128,6 +1048,19 @@ ${query_text}`;
     UpdateNotificationDialog {
         id: update_notification_dialog
         top_bar_margin: root.top_bar_margin
+    }
+
+    AppSettingsWindow {
+        id: app_settings_window
+        top_bar_margin: root.top_bar_margin
+        database_validation_dialog: database_validation_dialog
+        onThemeChanged: function(theme_name) {
+            SuttaBridge.set_theme_name(theme_name);
+            root.apply_theme();
+        }
+        onMarginChanged: {
+            root.update_top_bar_margin();
+        }
     }
 
     // Timer for delayed update check on startup (500ms delay)
@@ -1690,7 +1623,7 @@ ${query_text}`;
                                     window_height: root.height
                                     handle_summary_close_fn: word_summary_wrap.handle_summary_close
                                     handle_open_dict_tab_fn: root.open_dict_tab
-                                    search_as_you_type_checked: search_as_you_type.checked
+                                    search_as_you_type_checked: app_settings_window.search_as_you_type
                                 }
                             }
                         }
