@@ -41,37 +41,78 @@ function attach_link_handlers(): void {
 
 // Scroll management functions
 const scrollManager = {
-    // Scroll by a small amount (for j/k keys)
+    // Animation state
+    _animationId: null as number | null,
+
+    // Easing function for smooth animation (ease-out cubic)
+    _easeOutCubic: function(t: number): number {
+        return 1 - Math.pow(1 - t, 3);
+    },
+
+    // Core smooth scroll animation function
+    _smoothScrollBy: function(distance: number, duration: number = 200): void {
+        // Cancel any ongoing animation
+        if (this._animationId !== null) {
+            cancelAnimationFrame(this._animationId);
+        }
+
+        const startY = window.scrollY;
+        const startTime = performance.now();
+
+        const animateScroll = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = this._easeOutCubic(progress);
+
+            window.scrollTo(0, startY + distance * easedProgress);
+
+            if (progress < 1) {
+                this._animationId = requestAnimationFrame(animateScroll);
+            } else {
+                this._animationId = null;
+            }
+        };
+
+        this._animationId = requestAnimationFrame(animateScroll);
+    },
+
+    _smoothScrollTo: function(targetY: number, duration: number = 300): void {
+        const distance = targetY - window.scrollY;
+        this._smoothScrollBy(distance, duration);
+    },
+
+    // Scroll by a small amount (for j/k/Up/Down keys)
     scrollSmallUp: function(): void {
-        window.scrollBy({ top: -80, behavior: 'smooth' });
+        this._smoothScrollBy(-80, 150);
     },
     scrollSmallDown: function(): void {
-        window.scrollBy({ top: 80, behavior: 'smooth' });
+        this._smoothScrollBy(80, 150);
     },
     // Scroll by half a page (for Ctrl+U/Ctrl+D)
     scrollHalfPageUp: function(): void {
         const halfPage = window.innerHeight / 2;
-        window.scrollBy({ top: -halfPage, behavior: 'smooth' });
+        this._smoothScrollBy(-halfPage, 250);
     },
     scrollHalfPageDown: function(): void {
         const halfPage = window.innerHeight / 2;
-        window.scrollBy({ top: halfPage, behavior: 'smooth' });
+        this._smoothScrollBy(halfPage, 250);
     },
     // Scroll by a full page (for Space/Shift+Space/Page Up/Page Down)
     scrollPageUp: function(): void {
         const page = window.innerHeight - 50; // Leave some overlap
-        window.scrollBy({ top: -page, behavior: 'smooth' });
+        this._smoothScrollBy(-page, 300);
     },
     scrollPageDown: function(): void {
         const page = window.innerHeight - 50; // Leave some overlap
-        window.scrollBy({ top: page, behavior: 'smooth' });
+        this._smoothScrollBy(page, 300);
     },
     // Scroll to beginning/end (for Home/End)
     scrollToTop: function(): void {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        this._smoothScrollTo(0, 400);
     },
     scrollToBottom: function(): void {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        this._smoothScrollTo(maxScroll, 400);
     },
 };
 
