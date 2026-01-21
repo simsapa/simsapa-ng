@@ -17,15 +17,30 @@ Frame {
     required property bool db_loaded
     required property var handle_query_fn
     required property Timer search_timer
-    required property Action search_as_you_type
+    required property bool search_as_you_type_checked
     required property bool is_loading
 
     required property int icon_size
 
     property alias search_input: search_input
-    property alias search_area_dropdown: search_area_dropdown
     property alias search_mode_dropdown: search_mode_dropdown
     property alias language_filter_dropdown: language_filter_dropdown
+
+    // Search area state: "Suttas", "Dictionary", or "Library"
+    property string search_area: "Suttas"
+    readonly property var search_area_list: ["Suttas", "Dictionary", "Library"]
+
+    function set_search_area(area: string) {
+        if (search_area_list.indexOf(area) !== -1) {
+            search_area = area;
+        }
+    }
+
+    function cycle_search_area() {
+        const current_index = search_area_list.indexOf(search_area);
+        const next_index = (current_index + 1) % search_area_list.length;
+        search_area = search_area_list[next_index];
+    }
 
     background: Rectangle {
         color: "transparent"
@@ -54,7 +69,7 @@ Frame {
 
     function user_typed() {
         // TODO self._show_search_normal_icon()
-        if (root.search_as_you_type.checked) root.search_timer.restart();
+        if (root.search_as_you_type_checked) root.search_timer.restart();
     }
 
     Flow {
@@ -81,8 +96,8 @@ Frame {
                 font.pointSize: root.is_mobile ? 14 : 12
                 placeholderText: {
                     if (!root.db_loaded) return "Loading...";
-                    if (search_area_dropdown.currentText === "Dictionary") return "Search in dictionary";
-                    if (search_area_dropdown.currentText === "Library") return "Search in library";
+                    if (root.search_area === "Dictionary") return "Search in dictionary";
+                    if (root.search_area === "Library") return "Search in library";
                     return "Search in suttas";
                 }
 
@@ -104,29 +119,48 @@ Frame {
         RowLayout {
             id: search_options_layout
 
-            ComboBox {
-                id: search_area_dropdown
-                Layout.preferredHeight: root.icon_size
-                Layout.preferredWidth: root.is_mobile ? 120 : 100
-                currentIndex: 0 // Default to "Suttas"
-                model: [
-                    "Suttas",
-                    "Dictionary",
-                    "Library",
-                ]
+            // Search area buttons (S = Suttas, D = Dictionary, L = Library)
+            Row {
+                id: search_area_buttons
+                spacing: 0
 
-                // NOTE: Don't use onCurrentIndexChanged to re-run the query.
-                // When the search area is changed from Suttas with Contains Match to Dictionary,
-                // the default search mode hasn't yet changed to DPD Lookup, and will send a Dictionary Contains Match
-                // query which can take a long time to process.
-
-                function get_text(): string {
-                    // Read from the model list because currentText doesn't update immediately on currentIndexChanged
-                    return model[currentIndex];
+                Button {
+                    id: btn_suttas
+                    text: "S"
+                    checked: root.search_area === "Suttas"
+                    checkable: true
+                    autoExclusive: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Suttas"
+                    onClicked: root.search_area = "Suttas"
                 }
 
-                function cycle_next() {
-                    currentIndex = (currentIndex + 1) % model.length;
+                Button {
+                    id: btn_dictionary
+                    text: "D"
+                    checked: root.search_area === "Dictionary"
+                    checkable: true
+                    autoExclusive: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Dictionary"
+                    onClicked: root.search_area = "Dictionary"
+                }
+
+                Button {
+                    id: btn_library
+                    text: "L"
+                    checked: root.search_area === "Library"
+                    checkable: true
+                    autoExclusive: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Library"
+                    onClicked: root.search_area = "Library"
                 }
             }
 
@@ -135,20 +169,20 @@ Frame {
                 Layout.preferredHeight: root.icon_size
                 // FIXME implement search types and pass it as SearchParams
                 model: {
-                    if (search_area_dropdown.currentText === "Suttas") {
+                    if (root.search_area === "Suttas") {
                         return [
                                 /* "Fulltext Match", */
                                 "Contains Match",
                                 "Title Match",
                                 /* "RegEx Match", */
                         ];
-                    } else if (search_area_dropdown.currentText === "Library") {
+                    } else if (root.search_area === "Library") {
                         return [
                                 "Contains Match",
                                 "Title Match",
                         ];
                     } else {
-                        // currentText === "Dictionary"
+                        // search_area === "Dictionary"
                         return [
                                 "DPD Lookup",
                                 "Contains Match",
@@ -178,7 +212,7 @@ Frame {
                 id: language_filter_dropdown
                 Layout.preferredHeight: root.icon_size
                 model: ["Language",]
-                enabled: search_area_dropdown.currentText === "Suttas" || search_area_dropdown.currentText === "Library"
+                enabled: root.search_area === "Suttas" || root.search_area === "Library"
                 onCurrentIndexChanged: {
                     // Save the language filter selection
                     if (enabled) {

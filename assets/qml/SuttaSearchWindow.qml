@@ -80,13 +80,6 @@ ApplicationWindow {
                 root.show_result_in_html_view_with_json(result_data_json);
             }
         }
-
-        function onShowBottomFootnotesChanged() {
-            const enabled = SuttaBridge.get_show_bottom_footnotes();
-            // Update menu checkbox state to stay in sync
-            action_show_bottom_footnotes.checked = enabled;
-            // Note: JavaScript updates are handled by each SuttaHtmlView's own signal handler
-        }
     }
 
     function update_window_title(item_uid: string, sutta_ref: string, sutta_title: string) {
@@ -187,7 +180,7 @@ ApplicationWindow {
             return;
 
         let params = root.get_search_params_from_ui();
-        let search_area = search_bar_input.search_area_dropdown.get_text();
+        let search_area = search_bar_input.search_area;
 
         // Determine if query_text_orig is a sutta/book/dictionary reference
         // query_text_to_uid_field_query() returns the query as normal (e.g. 'heard') if not recognized as a uid
@@ -278,7 +271,7 @@ ApplicationWindow {
         //     fuzzy_distance: int
 
         const mode = search_bar_input.search_mode_dropdown.get_text();
-        const search_area = search_bar_input.search_area_dropdown.get_text();
+        const search_area = search_bar_input.search_area;
         let lang = search_bar_input.language_filter_dropdown.get_text();
         // Dictionary currently only uses English language from DPD.
         if (search_area === "Dictionary") {
@@ -614,7 +607,7 @@ ${query_text}`;
 
     function run_lookup_query(query_text: string) {
         // Set search area to Dictionary
-        search_bar_input.search_area_dropdown.currentIndex = 1; // "Dictionary"
+        search_bar_input.set_search_area("Dictionary");
         // Set the query text
         search_bar_input.search_input.text = query_text;
         // Run the search with min_length 1 to allow single character queries
@@ -841,7 +834,7 @@ ${query_text}`;
                         onActivated: action_next_search_area.trigger()
                     }
                     onTriggered: {
-                        search_bar_input.search_area_dropdown.cycle_next();
+                        search_bar_input.cycle_search_area();
                     }
                 }
             }
@@ -1137,7 +1130,7 @@ ${query_text}`;
                 db_loaded: SuttaBridge.db_loaded
                 handle_query_fn: root.handle_query
                 search_timer: search_timer
-                search_as_you_type: search_as_you_type
+                search_as_you_type_checked: app_settings_window.search_as_you_type
                 is_loading: root.is_loading
             }
 
