@@ -921,7 +921,7 @@ ${query_text}`;
             CMenuItem {
                 action: Action {
                     id: action_find_in_page
-                    text: "Find in Page..."
+                    text: "Find in Page"
                     shortcut: Shortcut {
                         sequences: ["Ctrl+F"]
                         context: Qt.WindowShortcut
@@ -937,7 +937,7 @@ ${query_text}`;
             CMenuItem {
                 action: Action {
                     id: action_find_next_in_page
-                    text: "Find Next in Page..."
+                    text: "Find Next in Page"
                     shortcut: Shortcut {
                         sequences: ["Ctrl+N"]
                         context: Qt.WindowShortcut
@@ -953,7 +953,7 @@ ${query_text}`;
             CMenuItem {
                 action: Action {
                     id: action_find_previous_in_page
-                    text: "Find Previous in Page..."
+                    text: "Find Previous in Page"
                     shortcut: Shortcut {
                         sequences: ["Ctrl+P"]
                         context: Qt.WindowShortcut
@@ -962,6 +962,26 @@ ${query_text}`;
                     onTriggered: {
                         let html_view = sutta_html_view_layout.get_current_item();
                         html_view.find_previous();
+                    }
+                }
+            }
+        }
+
+        Menu {
+            id: tabs_menu
+            title: "&Tabs"
+
+            CMenuItem {
+                action: Action {
+                    id: action_toggle_reading_mode
+                    text: "Toggle Reading Mode"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+Backspace"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_toggle_reading_mode.trigger()
+                    }
+                    onTriggered: {
+                        root.is_reading_mode = !root.is_reading_mode;
                     }
                 }
             }
@@ -985,20 +1005,22 @@ ${query_text}`;
 
             CMenuItem {
                 action: Action {
-                    id: action_toggle_reading_mode
-                    text: "Toggle Reading Mode"
+                    id: action_toggle_tab_list
+                    text: "Toggle Tab List"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+Backspace"]
+                        sequences: ["Ctrl+Tab"]
                         context: Qt.WindowShortcut
-                        onActivated: action_toggle_reading_mode.trigger()
+                        onActivated: action_toggle_tab_list.trigger()
                     }
                     onTriggered: {
-                        root.is_reading_mode = !root.is_reading_mode;
+                        if (tab_list_dialog.visible) {
+                            tab_list_dialog.close();
+                        } else {
+                            tab_list_dialog.open();
+                        }
                     }
                 }
             }
-
-            MenuSeparator {}
 
             CMenuItem {
                 action: Action {
@@ -1025,27 +1047,6 @@ ${query_text}`;
                     onTriggered: root.activate_next_html_tab()
                 }
             }
-
-            CMenuItem {
-                action: Action {
-                    id: action_toggle_tab_list
-                    text: "Toggle Tab List"
-                    shortcut: Shortcut {
-                        sequences: ["Ctrl+Tab"]
-                        context: Qt.WindowShortcut
-                        onActivated: action_toggle_tab_list.trigger()
-                    }
-                    onTriggered: {
-                        if (tab_list_dialog.visible) {
-                            tab_list_dialog.close();
-                        } else {
-                            tab_list_dialog.open();
-                        }
-                    }
-                }
-            }
-
-            MenuSeparator {}
 
             CMenuItem {
                 action: Action {
@@ -1279,7 +1280,7 @@ ${query_text}`;
         id: mobile_menu
         window_width: root.width
         window_height: root.height
-        // NOTE: No need for find_menu on mobile, they are keyboard actions
+        // NOTE: No need for find_menu and tabs_menu on mobile, they are keyboard actions
         menu_list: [file_menu, windows_menu, gloss_menu, prompts_menu, help_menu]
     }
 
