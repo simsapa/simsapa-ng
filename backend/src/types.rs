@@ -62,6 +62,7 @@ pub enum SearchArea {
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub enum SearchMode {
+    Combined,
     #[serde(rename = "Fulltext Match")]
     FulltextMatch,
     #[serde(rename = "Contains Match")]
@@ -74,7 +75,6 @@ pub enum SearchMode {
     DpdIdMatch,
     #[serde(rename = "DPD Lookup")]
     DpdLookup,
-    Combined,
     #[serde(rename = "Uid Match")]
     UidMatch,
     #[serde(rename = "RegEx Match")]

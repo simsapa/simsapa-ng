@@ -1713,11 +1713,11 @@ pub fn bilara_text_to_html(
     bilara_content_json_to_html(&content_json)
 }
 
-/// Remove duplicates based on title, schema_name, and uid
+/// Remove duplicates based on title and uid
 pub fn unique_search_results(mut results: Vec<SearchResult>) -> Vec<SearchResult> {
     let mut seen: HashSet<String> = HashSet::new();
     results.retain(|item| {
-        let key = format!("{} {} {}", item.title, item.schema_name, item.uid);
+        let key = format!("{} {}", item.title, item.uid);
         if seen.contains(&key) {
             false
         } else {
