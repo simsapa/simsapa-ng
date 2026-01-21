@@ -74,6 +74,7 @@ impl AppData {
         &self,
         sutta: &Sutta,
         use_template: bool,
+        show_references: bool,
     ) -> Result<IndexMap<String, String>> {
         use crate::db::appdata_schema::{sutta_variants, sutta_comments, sutta_glosses};
 
@@ -123,17 +124,22 @@ impl AppData {
             gloss_json_str.as_deref(),
             app_settings.show_all_variant_readings,
             app_settings.show_glosses,
+            show_references,
         )
     }
 
     /// Renders the complete HTML page for a sutta.
     ///
     /// See also: simsapa/simsapa/app/export_helpers.py::render_sutta_content()
+    ///
+    /// The `show_references` parameter controls whether segment reference anchors (e.g., 37.5)
+    /// are rendered in the HTML. These are needed when navigating to a specific anchor in the sutta.
     pub fn render_sutta_content(
         &self,
         sutta: &Sutta,
         sutta_quote: Option<&SuttaQuote>,
         js_extra_pre: Option<String>,
+        show_references: bool,
     ) -> Result<String> {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
 
@@ -152,9 +158,9 @@ impl AppData {
 
                 if let (true, Some(pali_sutta)) = (line_by_line, pali_sutta) {
                     // Generate line-by-line HTML
-                    let translated_segments = self.sutta_to_segments_json(sutta, false)
+                    let translated_segments = self.sutta_to_segments_json(sutta, false, show_references)
                                                       .context("Failed to generate translated segments for line-by-line view")?;
-                    let pali_segments = self.sutta_to_segments_json(&pali_sutta, false)
+                    let pali_segments = self.sutta_to_segments_json(&pali_sutta, false, show_references)
                                                 .context("Failed to generate Pali segments for line-by-line view")?;
 
                     let tmpl_str = sutta.content_json_tmpl.as_deref()
@@ -163,10 +169,10 @@ impl AppData {
                     let tmpl_json: IndexMap<String, String> = serde_json::from_str(tmpl_str)
                         .with_context(|| format!("Failed to parse template JSON into IndexMap for line-by-line view (Sutta: {})", sutta.uid))?;
 
-                    bilara_line_by_line_html(&translated_segments, &pali_segments, &tmpl_json)?
+                    bilara_line_by_line_html(&translated_segments, &pali_segments, &tmpl_json, show_references)?
                 } else {
                     // Generate standard HTML view (using template within sutta_to_segments_json)
-                    let segments_json = self.sutta_to_segments_json(sutta, true)
+                    let segments_json = self.sutta_to_segments_json(sutta, true, show_references)
                                                 .context("Failed to generate segments for standard view")?;
                     bilara_content_json_to_html(&segments_json)?
                 }
@@ -270,7 +276,10 @@ impl AppData {
     ///
     /// Used by both QML bridge (sutta_bridge.rs::get_sutta_html) and
     /// API endpoint (api.rs::get_sutta_html_by_uid) to ensure consistent behavior.
-    pub fn render_sutta_html_by_uid(&self, window_id: &str, sutta_uid: &str) -> String {
+    ///
+    /// The `show_references` parameter controls whether segment reference anchors are rendered.
+    /// This should be true when the sutta was requested with an anchor ID to scroll to.
+    pub fn render_sutta_html_by_uid(&self, window_id: &str, sutta_uid: &str, show_references: bool) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         let body_class = app_settings.theme_name_as_string();
 
@@ -288,7 +297,7 @@ impl AppData {
             Some(sutta) => {
                 // Render the sutta with WINDOW_ID in the JavaScript
                 let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
-                self.render_sutta_content(&sutta, None, Some(js_extra))
+                self.render_sutta_content(&sutta, None, Some(js_extra), show_references)
                     .unwrap_or_else(|_| sutta_html_page("Rendering error", None, None, None, Some(body_class)))
             },
             None => blank_page_html,

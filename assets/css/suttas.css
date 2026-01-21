@@ -370,6 +370,21 @@ div.btn a, span.btn a {
 .suttacentral a.ref {
   display: none;
 }
+.suttacentral span.reference a.sc {
+  font-size: 0.7em;
+  color: #333;
+  text-decoration: none;
+  padding: 2px 5px;
+  margin-right: 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: rgb(253.1097560976, 245.5487804878, 225.8902439024);
+  vertical-align: middle;
+}
+.suttacentral span.reference a.sc:hover {
+  background-color: rgb(246.8902439024, 214.4512195122, 130.1097560976);
+  border-color: #999;
+}
 .suttacentral footer {
   margin-top: 4em;
   border-top: 1px solid #aaa;

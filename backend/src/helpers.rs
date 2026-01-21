@@ -1517,6 +1517,26 @@ pub fn bilara_html_post_process(body: &str) -> String {
     body.replace("<footer>", "<footer class='noindex'>")
 }
 
+/// Extracts the short reference number from a segment key.
+/// For example, "mn12:37.5" returns "37.5", "dn1:0.5" returns "0.5".
+fn extract_short_reference(segment_key: &str) -> Option<&str> {
+    segment_key.split(':').nth(1)
+}
+
+/// Generates the reference anchor HTML for a segment.
+/// For segment key "mn12:37.5", generates:
+/// `<span class="reference"><a class="sc" id="37.5" href="#37.5">37.5</a></span>`
+fn generate_reference_anchor(segment_key: &str) -> String {
+    if let Some(short_ref) = extract_short_reference(segment_key) {
+        format!(
+            "<span class=\"reference\"><a class=\"sc\" id=\"{0}\" href=\"#{0}\">{0}</a></span>",
+            short_ref
+        )
+    } else {
+        String::new()
+    }
+}
+
 /// Converts Bilara text JSON data into an IndexMap of processed HTML segments, preserving insertion order.
 pub fn bilara_text_to_segments(
     content_json_str: &str,
@@ -1526,6 +1546,7 @@ pub fn bilara_text_to_segments(
     gloss_json_str: Option<&str>,
     show_variant_readings: bool,
     show_glosses: bool,
+    show_references: bool,
 ) -> Result<IndexMap<String, String>> {
     // Parse the JSON strings into IndexMaps to preserve insertion order
     let mut content_json: IndexMap<String, String> = serde_json::from_str(content_json_str)
@@ -1612,13 +1633,21 @@ pub fn bilara_text_to_segments(
             // Combine original content with additions
             let final_segment_content = format!("{}{}", original_content, segment_additions);
 
+            // Generate reference anchor for this segment only if show_references is true
+            let reference_anchor = if show_references {
+                generate_reference_anchor(&i)
+            } else {
+                String::new()
+            };
+
             // Apply template if available
             let final_segment = if let Some(ref tmpl) = tmpl_json {
                 if let Some(template_str) = tmpl.get(&i) {
-                    // Wrap the combined content in SuttaCentral format before inserting into the template
+                    // Wrap the combined content in SuttaCentral format with reference anchor
                     let wrapped_content = format!(
-                        "<span class=\"segment\" id=\"{}\"><span class=\"root\" lang=\"pli\" translate=\"no\"><span class=\"text\" lang=\"la\">{}</span></span></span>",
+                        "<span class=\"segment\" id=\"{}\">{}<span class=\"root\" lang=\"pli\" translate=\"no\"><span class=\"text\" lang=\"la\">{}</span></span></span>",
                         i,
+                        reference_anchor,
                         final_segment_content
                     );
                     template_str.replace("{}", &wrapped_content)
@@ -1662,6 +1691,7 @@ pub fn bilara_line_by_line_html(
     translated_content_json: &IndexMap<String, String>,
     pali_content_json: &IndexMap<String, String>,
     tmpl_json: &IndexMap<String, String>,
+    show_references: bool,
 ) -> Result<String> {
     let mut content_json: IndexMap<String, String> = IndexMap::new();
 
@@ -1669,12 +1699,16 @@ pub fn bilara_line_by_line_html(
     for (i, translated_segment) in translated_content_json.iter() {
         let pali_segment = pali_content_json.get(i).cloned().unwrap_or_default(); // Get Pali or empty string
 
+        // Generate reference anchor for this segment only if show_references is true
+        let reference_anchor = if show_references {
+            generate_reference_anchor(i)
+        } else {
+            String::new()
+        };
+
         let combined_segment = format!(
-            "<span class='segment'>
-                <span class='translated'>{}</span>
-                <span class='pali'>{}</span>
-            </span>",
-            translated_segment, pali_segment
+            "<span class='segment' id='{}'>{}<span class='translated'>{}</span><span class='pali'>{}</span></span>",
+            i, reference_anchor, translated_segment, pali_segment
         );
 
         // Apply template if available
@@ -1699,6 +1733,7 @@ pub fn bilara_text_to_html(
     gloss_json_str: Option<&str>,
     show_variant_readings: bool,
     show_glosses: bool,
+    show_references: bool,
 ) -> Result<String> {
     let content_json = bilara_text_to_segments(
         content_json_str,
@@ -1708,6 +1743,7 @@ pub fn bilara_text_to_html(
         gloss_json_str,
         show_variant_readings,
         show_glosses,
+        show_references,
     )?;
 
     bilara_content_json_to_html(&content_json)

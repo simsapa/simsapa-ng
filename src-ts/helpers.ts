@@ -94,41 +94,63 @@ function show_transient_message(text: string, msg_div_id: string): void {
 }
 
 /**
- * Extract sutta UID from an anchor element based on priority:
- * 1. ssp:// protocol in href
- * 2. thebuddhaswords.net URL
- * 3. Text-based reference (e.g., "SN 56.11")
- * Returns the sutta UID or null if not found
+ * Extract sutta UID and optional anchor from an anchor element
+ * Returns object with uid and anchor, or null if not found
+ * Format: { uid: string, anchor?: string }
  */
-function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): string | null {
+function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): { uid: string, anchor?: string } | null {
     const href = anchor.getAttribute('href') || '';
     const text = anchor.textContent || '';
 
+    // Helper to extract anchor from URL
+    const extract_anchor = (url: string): string | undefined => {
+        const hash_index = url.indexOf('#');
+        if (hash_index !== -1) {
+            const anchor_part = url.substring(hash_index + 1);
+            return anchor_part || undefined;
+        }
+        return undefined;
+    };
+
+    // Helper to remove anchor from URL
+    const remove_anchor = (url: string): string => {
+        const hash_index = url.indexOf('#');
+        return hash_index !== -1 ? url.substring(0, hash_index) : url;
+    };
+
     // Priority 1: ssp:// protocol
-    // Format: ssp://suttas/{uid} where uid can be sn47.8/en/thanissaro
+    // Format: ssp://suttas/{uid} where uid can be sn47.8/en/thanissaro or sn47.8/en/thanissaro#anchor
     if (href.startsWith('ssp://')) {
         const match = href.match(/^ssp:\/\/suttas\/(.+)$/);
         if (match) {
-            return match[1];
+            const full_path = match[1];
+            const anchor_id = extract_anchor(full_path);
+            const uid = remove_anchor(full_path);
+            return { uid, anchor: anchor_id };
         }
     }
 
     // Priority 2: Suttacentral URL
-    // Format: https://suttacentral.net/sn56.11/en/bodhi
+    // Format: https://suttacentral.net/sn56.11/en/bodhi or https://suttacentral.net/mn12/en/sujato#37.5
     if (href.includes('suttacentral.net')) {
         const match = href.match(/suttacentral\.net\/(.+)$/);
         if (match) {
-            return match[1];
+            const full_path = match[1];
+            const anchor_id = extract_anchor(full_path);
+            const uid = remove_anchor(full_path);
+            return { uid, anchor: anchor_id };
         }
     }
 
     // Priority 3: thebuddhaswords.net URL
     // Format: https://thebuddhaswords.net/suttas/an4.41.html
     if (href.includes('thebuddhaswords.net')) {
-        const match = href.match(/\/suttas\/([^.]+)\.html/);
+        const match = href.match(/\/suttas\/([^.#]+)\.html/);
         if (match) {
             // Extract the sutta code (e.g., an4.41) and append /pli/ms
-            return `${match[1]}/pli/ms`;
+            const uid = `${match[1]}/pli/ms`;
+            const anchor_id = extract_anchor(href);
+            return { uid, anchor: anchor_id };
         }
     }
 
@@ -140,7 +162,9 @@ function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): string | null {
         const book = match[1].toLowerCase();
         const number = match[2];
         // Construct UID with /pli/ms fallback
-        return `${book}${number}/pli/ms`;
+        const uid = `${book}${number}/pli/ms`;
+        const anchor_id = extract_anchor(href);
+        return { uid, anchor: anchor_id };
     }
 
     return null;
@@ -191,9 +215,9 @@ async function open_sutta_by_uid(uid: string, original_url?: string): Promise<vo
 
 /**
  * Opens a sutta by UID in a new tab in the current window
- * Makes GET request to /open_sutta_tab/{window_id}/{uid}
+ * Makes GET request to /open_sutta_tab/{window_id}/{uid}?anchor={anchor}
  */
-async function open_sutta_in_tab(uid: string, original_url?: string): Promise<void> {
+async function open_sutta_in_tab(uid: string, original_url?: string, anchor?: string): Promise<void> {
     // API_URL and WINDOW_ID are defined as global consts in page.html template
     // Try multiple ways to access these globals
     const win = window as any;
@@ -208,11 +232,17 @@ async function open_sutta_in_tab(uid: string, original_url?: string): Promise<vo
         return;
     }
 
-    await log_info(`open_sutta_in_tab: WINDOW_ID='${WINDOW_ID}', uid='${uid}'`);
+    await log_info(`open_sutta_in_tab: WINDOW_ID='${WINDOW_ID}', uid='${uid}'${anchor ? `, anchor='${anchor}'` : ''}`);
 
     try {
         // Don't encode slashes - Rocket's <uid..> path parameter expects them as-is
-        const url = `${API_URL}/open_sutta_tab/${WINDOW_ID}/${uid}`;
+        let url = `${API_URL}/open_sutta_tab/${WINDOW_ID}/${uid}`;
+
+        // Add anchor as query parameter if present
+        if (anchor) {
+            url += `?anchor=${encodeURIComponent(anchor)}`;
+        }
+
         const response = await fetch(url);
 
         if (response.status === 404) {
@@ -324,13 +354,13 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
         return;
     }
 
-    // Case 2: Try to extract sutta UID
-    const sutta_uid = extract_sutta_uid_from_link(anchor);
-    if (sutta_uid) {
+    // Case 2: Try to extract sutta UID and anchor
+    const sutta_result = extract_sutta_uid_from_link(anchor);
+    if (sutta_result) {
         event.preventDefault();
         // Pass the original href so we can offer to open it if sutta not found
-        // Open in tab instead of new window
-        await open_sutta_in_tab(sutta_uid, href);
+        // Open in tab instead of new window, including anchor if present
+        await open_sutta_in_tab(sutta_result.uid, href, sutta_result.anchor);
         return;
     }
 

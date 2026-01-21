@@ -134,9 +134,10 @@ Item {
         const api_url = SuttaBridge.get_api_url();
         let url = `${api_url}/get_sutta_html_by_uid/${root.window_id}/${uid}/`;
         if (root.anchor && root.anchor.length > 0) {
-            // Ensure anchor has # prefix
-            let anchor_fragment = root.anchor.startsWith('#') ? root.anchor : `#${root.anchor}`;
-            url = `${url}${anchor_fragment}`;
+            // Pass anchor as query parameter so server renders reference elements
+            // Also append as URL fragment for browser scrolling
+            let anchor_value = root.anchor.startsWith('#') ? root.anchor.substring(1) : root.anchor;
+            url = `${url}?anchor=${encodeURIComponent(anchor_value)}#${anchor_value}`;
         }
         web.url = url;
     }

@@ -519,14 +519,23 @@ fn shutdown(shutdown: Shutdown) {
 }
 
 
-#[get("/get_sutta_html_by_uid/<window_id>/<uid..>")]
-fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
+#[get("/get_sutta_html_by_uid/<window_id>/<uid..>?<anchor>")]
+fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, anchor: Option<&str>, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
     // Convert path to forward slashes for cross-platform consistency
     let uid_str = pathbuf_to_forward_slash_string(&uid);
-    info(&format!("get_sutta_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
+
+    // Show reference anchors only when navigating to a specific anchor
+    let show_references = anchor.is_some();
+
+    let log_msg = if let Some(a) = anchor {
+        format!("get_sutta_html_by_uid(): window_id: {}, uid: {}, anchor: {}", window_id, uid_str, a)
+    } else {
+        format!("get_sutta_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str)
+    };
+    info(&log_msg);
 
     let app_data = get_app_data();
-    let html = app_data.render_sutta_html_by_uid(window_id, &uid_str);
+    let html = app_data.render_sutta_html_by_uid(window_id, &uid_str, show_references);
 
     RawHtml(html)
 }
@@ -656,11 +665,17 @@ fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
     }
 }
 
-#[get("/open_sutta_tab/<window_id>/<uid..>")]
-fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
+#[get("/open_sutta_tab/<window_id>/<uid..>?<anchor>")]
+fn open_sutta_tab(window_id: &str, uid: PathBuf, anchor: Option<&str>, dbm: &State<Arc<DbManager>>) -> Status {
     // Convert path to forward slashes for cross-platform consistency
     let uid_str = pathbuf_to_forward_slash_string(&uid);
-    info(&format!("open_sutta_tab(): window_id: {}, uid: {}", window_id, uid_str));
+
+    let log_msg = if let Some(a) = anchor {
+        format!("open_sutta_tab(): window_id: {}, uid: {}, anchor: {}", window_id, uid_str, a)
+    } else {
+        format!("open_sutta_tab(): window_id: {}, uid: {}", window_id, uid_str)
+    };
+    info(&log_msg);
 
     // Try to get sutta with original UID
     let sutta_option = dbm.appdata.get_sutta(&uid_str);
@@ -684,13 +699,20 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, dbm: &State<Arc<DbManager>>) ->
 
     // If sutta is found, compose JSON and call callback
     if let Some(sutta) = final_sutta {
-        let result_data_json = serde_json::json!({
+        let mut result_data_json = serde_json::json!({
             "item_uid": sutta.uid,
             "table_name": "suttas",
             "sutta_title": sutta.title,
             "sutta_ref": sutta.sutta_ref,
             "snippet": "",
         });
+
+        // Add anchor to JSON if present
+        if let Some(anchor_value) = anchor {
+            if let Some(obj) = result_data_json.as_object_mut() {
+                obj.insert("anchor".to_string(), serde_json::Value::String(anchor_value.to_string()));
+            }
+        }
 
         let json_string = serde_json::to_string(&result_data_json).unwrap_or_default();
         ffi::callback_open_sutta_tab(ffi::QString::from(window_id), ffi::QString::from(json_string));

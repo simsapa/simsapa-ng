@@ -13,8 +13,8 @@ export function attach_link_handlers_to_element(element: HTMLElement): void {
     const links = element.querySelectorAll('a');
     links.forEach(link => {
         // Check if this link is a sutta link and add the class
-        const suttaUid = h.extract_sutta_uid_from_link(link as HTMLAnchorElement);
-        if (suttaUid) {
+        const suttaResult = h.extract_sutta_uid_from_link(link as HTMLAnchorElement);
+        if (suttaResult) {
             link.classList.add('sutta-link');
         }
         link.addEventListener('click', h.handle_link_click);

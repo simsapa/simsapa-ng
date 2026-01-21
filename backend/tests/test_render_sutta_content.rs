@@ -18,15 +18,17 @@ fn test_html_for_pali() {
     let app_data = get_app_data();
     let sutta = app_data.dbm.appdata.get_sutta("mn2/pli/ms").expect("Can't get sutta from db");
 
-    let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    // show_references = false, so no reference anchors in output
+    let html = app_data.render_sutta_content(&sutta, None, None, false).expect("Can't render the html");
 
     assert!(html.contains(r#"<div class='suttacentral bilara-text'>"#));
 
+    // Segments without reference anchors
     assert!(html.contains(r#"<header><ul><li class='division'><span class="segment" id="mn2:0.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">Majjhima Nikāya 2 </span></span></span></li></ul>"#));
 
     assert!(html.contains(r#"<span class="segment" id="mn2:1.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">Evaṁ me sutaṁ—</span></span></span>"#));
 
-    assert!(html.contains(r#"<span class="segment" id="mn2:2.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">“sabbāsavasaṁvarapariyāyaṁ vo, bhikkhave, desessāmi. </span></span></span>"#));
+    assert!(html.contains(r#"<span class="segment" id="mn2:2.1"><span class="root" lang="pli" translate="no"><span class="text" lang="la">"sabbāsavasaṁvarapariyāyaṁ vo, bhikkhave, desessāmi. </span></span></span>"#));
 }
 
 #[test]
@@ -37,7 +39,7 @@ fn test_html_en() {
     let app_data = get_app_data();
     let sutta = app_data.dbm.appdata.get_sutta("dn22/en/thanissaro").expect("Can't get sutta from db");
 
-    let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    let html = app_data.render_sutta_content(&sutta, None, None, false).expect("Can't render the html");
     let main_html = extract_element_by_id_from_indented(&html_indent(&html), "DN22").unwrap_or("None".to_string());
 
     // fs::write(PathBuf::from("tests/data/dn22_en_thanissaro.main.html"), main_html.clone()).expect("Unable to write file!");
@@ -56,7 +58,7 @@ fn test_line_by_line_with_variants() {
     let app_data = get_app_data();
     let sutta = app_data.dbm.appdata.get_sutta("sn1.61/en/sujato").expect("Can't get sutta from db");
 
-    let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    let html = app_data.render_sutta_content(&sutta, None, None, false).expect("Can't render the html");
 
     let article_html = extract_element_by_id_from_indented(&html_indent(&html), "sn1.61").unwrap_or("None".to_string());
     // fs::write(PathBuf::from("tests/data/sn1.61_en_sujato.article.html"), article_html.clone()).expect("Unable to write file!");
@@ -67,7 +69,7 @@ fn test_line_by_line_with_variants() {
     assert_eq!(article_html, expected_html);
 
     // let sutta = app_data.dbm.appdata.get_sutta("sn56.11/en/sujato").expect("Can't get sutta from db");
-    // let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    // let html = app_data.render_sutta_content(&sutta, None, None, false).expect("Can't render the html");
     // fs::write(PathBuf::from("tests/data/sn56.11_en_sujato.entire.html"), html.clone()).expect("Unable to write file!");
 }
 
@@ -78,13 +80,13 @@ fn test_pali_only() {
 
     let sutta_uid = "sn56.11/pli/ms".to_string();
     let sutta_name = format!("{}", sutta_uid.replace("/", "_"));
-    let sutta_filename = format!("{}.html", sutta_name);
+    let sutta_filename = format!("tests/data/{}.html", sutta_name);
     let do_write = false;
 
     let app_data = get_app_data();
     let sutta = app_data.dbm.appdata.get_sutta(&sutta_uid).expect("Can't get sutta from db");
 
-    let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    let html = app_data.render_sutta_content(&sutta, None, None, false).expect("Can't render the html");
     let html = extract_element_by_id_from_indented(&html_indent(&html), "sn56.11").unwrap_or("None".to_string());
 
     if do_write {
@@ -96,7 +98,7 @@ fn test_pali_only() {
         fs::write(PathBuf::from(&format!("tests/data/{}.suttacentral.main.html", &sutta_name)), sc_html.clone()).expect("Unable to write file!");
     }
 
-    let expected_html = fs::read_to_string(PathBuf::from(&format!("tests/data/{}", &sutta_filename)))
+    let expected_html = fs::read_to_string(PathBuf::from(&sutta_filename))
         .expect("Failed to read file");
 
     assert_eq!(html, expected_html);
@@ -110,7 +112,7 @@ fn test_sn56_11_html_format_validation() {
     let app_data = get_app_data();
     let sutta = app_data.dbm.appdata.get_sutta("sn56.11/pli/ms").expect("Can't get sutta from db");
 
-    let html = app_data.render_sutta_content(&sutta, None, None).expect("Can't render the html");
+    let html = app_data.render_sutta_content(&sutta, None, None, false).expect("Can't render the html");
 
     // Validate SuttaCentral format structure
     assert!(html.contains(r#"<div class='suttacentral bilara-text'>"#));
@@ -131,7 +133,7 @@ fn test_sn56_11_html_format_validation() {
     assert!(pos_0_2 < pos_0_3, "Segment 0.2 should come before 0.3");
     assert!(pos_0_3 < pos_1_1, "Segment 0.3 should come before 1.1");
 
-    // fs::write(PathBuf::from("sn56.11_pli_ms.article.html"), html_article.clone()).expect("Unable to write file!");
+    // fs::write(PathBuf::from("tests/data/sn56.11_pli_ms.article.html"), html_article.clone()).expect("Unable to write file!");
 
     // Validate against reference file
     let expected_html = fs::read_to_string(PathBuf::from("tests/data/sn56.11_pli_ms.article.html"))
@@ -164,7 +166,7 @@ fn render_and_extract_article(sutta_uid: &str) -> String {
     let sutta = app_data.dbm.appdata.get_sutta(sutta_uid)
         .expect(&format!("Can't get sutta {} from db", sutta_uid));
 
-    let html = app_data.render_sutta_content(&sutta, None, None)
+    let html = app_data.render_sutta_content(&sutta, None, None, false)
         .expect(&format!("Can't render html for {}", sutta_uid));
 
     // Try extraction from the original HTML without re-indenting

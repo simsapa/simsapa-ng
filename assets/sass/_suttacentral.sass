@@ -1,3 +1,7 @@
+@use 'sass:color'
+
+$solarized_light_bg: #FAE6B2
+
 .suttacentral
   span.segment
     span.translated
@@ -93,6 +97,22 @@
 
   a.ref
     display: none
+
+  span.reference
+    a.sc
+      font-size: 0.7em
+      color: #333
+      text-decoration: none
+      padding: 2px 5px
+      margin-right: 4px
+      border: 1px solid #ccc
+      border-radius: 4px
+      background-color: color.adjust($solarized_light_bg, $lightness: 10%)
+      vertical-align: middle
+
+      &:hover
+        background-color: color.adjust($solarized_light_bg, $lightness: -10%)
+        border-color: #999
 
   footer
     margin-top: 4em
