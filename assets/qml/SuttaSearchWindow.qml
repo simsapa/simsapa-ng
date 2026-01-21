@@ -656,6 +656,59 @@ ${query_text}`;
         root.is_reading_mode = !visible;
     }
 
+    function get_visible_html_tabs(): var {
+        // Returns an array of visible tab objects from all three tab groups
+        var visible_tabs = [];
+        for (var i = 0; i < tabs_row.children.length; i++) {
+            var child = tabs_row.children[i];
+            // Check if it's a tab button (has id_key) and is visible
+            if (child.id_key !== undefined && child.visible) {
+                visible_tabs.push(child);
+            }
+        }
+        return visible_tabs;
+    }
+
+    function get_current_html_tab_index(visible_tabs: var): int {
+        // Find the index of the currently checked tab in the visible_tabs array
+        for (var i = 0; i < visible_tabs.length; i++) {
+            if (visible_tabs[i].checked) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function activate_next_html_tab() {
+        var visible_tabs = get_visible_html_tabs();
+        if (visible_tabs.length === 0) return;
+        var current_idx = get_current_html_tab_index(visible_tabs);
+        var next_idx = (current_idx + 1) % visible_tabs.length;
+        visible_tabs[next_idx].click();
+    }
+
+    function activate_previous_html_tab() {
+        var visible_tabs = get_visible_html_tabs();
+        if (visible_tabs.length === 0) return;
+        var current_idx = get_current_html_tab_index(visible_tabs);
+        var prev_idx = (current_idx - 1 + visible_tabs.length) % visible_tabs.length;
+        visible_tabs[prev_idx].click();
+    }
+
+    function activate_next_sidebar_tab() {
+        var count = rightside_tabs.count;
+        if (count === 0) return;
+        var next_idx = (rightside_tabs.currentIndex + 1) % count;
+        rightside_tabs.setCurrentIndex(next_idx);
+    }
+
+    function activate_previous_sidebar_tab() {
+        var count = rightside_tabs.count;
+        if (count === 0) return;
+        var prev_idx = (rightside_tabs.currentIndex - 1 + count) % count;
+        rightside_tabs.setCurrentIndex(prev_idx);
+    }
+
     onIs_reading_modeChanged: {
         search_ui_row.visible = !root.is_reading_mode;
         // On a narrow screen, the sidebar was already hidden when the user
@@ -924,6 +977,228 @@ ${query_text}`;
                     }
                     onTriggered: {
                         suttas_tab_bar.close_current_tab();
+                    }
+                }
+            }
+
+            MenuSeparator {}
+
+            CMenuItem {
+                action: Action {
+                    id: action_toggle_reading_mode
+                    text: "Toggle Reading Mode"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+Backspace"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_toggle_reading_mode.trigger()
+                    }
+                    onTriggered: {
+                        root.is_reading_mode = !root.is_reading_mode;
+                    }
+                }
+            }
+
+            MenuSeparator {}
+
+            CMenuItem {
+                action: Action {
+                    id: action_previous_tab
+                    text: "Previous Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+["]
+                        context: Qt.WindowShortcut
+                        onActivated: action_previous_tab.trigger()
+                    }
+                    onTriggered: root.activate_previous_html_tab()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_next_tab
+                    text: "Next Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+]"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_next_tab.trigger()
+                    }
+                    onTriggered: root.activate_next_html_tab()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_toggle_tab_list
+                    text: "Toggle Tab List"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+Tab"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_toggle_tab_list.trigger()
+                    }
+                    onTriggered: {
+                        if (tab_list_dialog.visible) {
+                            tab_list_dialog.close();
+                        } else {
+                            tab_list_dialog.open();
+                        }
+                    }
+                }
+            }
+
+            MenuSeparator {}
+
+            CMenuItem {
+                action: Action {
+                    id: action_previous_sidebar_tab
+                    text: "Previous Sidebar Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Shift+["]
+                        context: Qt.WindowShortcut
+                        onActivated: action_previous_sidebar_tab.trigger()
+                    }
+                    onTriggered: root.activate_previous_sidebar_tab()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_next_sidebar_tab
+                    text: "Next Sidebar Tab"
+                    shortcut: Shortcut {
+                        sequences: ["Shift+]"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_next_sidebar_tab.trigger()
+                    }
+                    onTriggered: root.activate_next_sidebar_tab()
+                }
+            }
+
+            MenuSeparator {}
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_up
+                    text: "Scroll Up"
+                    shortcut: Shortcut {
+                        sequences: ["K", "Up"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_up.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_small_up();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_down
+                    text: "Scroll Down"
+                    shortcut: Shortcut {
+                        sequences: ["J", "Down"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_down.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_small_down();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_half_page_up
+                    text: "Scroll Half Page Up"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+U"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_half_page_up.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_half_page_up();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_half_page_down
+                    text: "Scroll Half Page Down"
+                    shortcut: Shortcut {
+                        sequences: ["Ctrl+D"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_half_page_down.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_half_page_down();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_page_up
+                    text: "Scroll Page Up"
+                    shortcut: Shortcut {
+                        sequences: ["Shift+Space", "PgUp"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_page_up.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_page_up();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_page_down
+                    text: "Scroll Page Down"
+                    shortcut: Shortcut {
+                        sequences: ["Space", "PgDown"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_page_down.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_page_down();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_to_top
+                    text: "Scroll to Top"
+                    shortcut: Shortcut {
+                        sequences: ["Home"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_to_top.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_to_top();
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_scroll_to_bottom
+                    text: "Scroll to Bottom"
+                    shortcut: Shortcut {
+                        sequences: ["End"]
+                        context: Qt.WindowShortcut
+                        onActivated: action_scroll_to_bottom.trigger()
+                    }
+                    onTriggered: {
+                        let html_view = sutta_html_view_layout.get_current_item();
+                        if (html_view) html_view.scroll_to_bottom();
                     }
                 }
             }

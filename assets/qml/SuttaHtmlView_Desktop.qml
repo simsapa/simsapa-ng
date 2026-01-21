@@ -64,6 +64,39 @@ Item {
         web.runJavaScript(`document.SSP.find.previousMatch();`);
     }
 
+    // Scroll functions
+    function scroll_small_up() {
+        web.runJavaScript(`document.SSP.scroll.scrollSmallUp();`);
+    }
+
+    function scroll_small_down() {
+        web.runJavaScript(`document.SSP.scroll.scrollSmallDown();`);
+    }
+
+    function scroll_half_page_up() {
+        web.runJavaScript(`document.SSP.scroll.scrollHalfPageUp();`);
+    }
+
+    function scroll_half_page_down() {
+        web.runJavaScript(`document.SSP.scroll.scrollHalfPageDown();`);
+    }
+
+    function scroll_page_up() {
+        web.runJavaScript(`document.SSP.scroll.scrollPageUp();`);
+    }
+
+    function scroll_page_down() {
+        web.runJavaScript(`document.SSP.scroll.scrollPageDown();`);
+    }
+
+    function scroll_to_top() {
+        web.runJavaScript(`document.SSP.scroll.scrollToTop();`);
+    }
+
+    function scroll_to_bottom() {
+        web.runJavaScript(`document.SSP.scroll.scrollToBottom();`);
+    }
+
     function load_sutta_uid(uid) {
         if (uid == "Sutta") {
             // Initial blank page

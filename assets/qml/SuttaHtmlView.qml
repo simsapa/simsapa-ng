@@ -53,6 +53,39 @@ Loader {
         loader.item.find_previous(); // qmllint disable missing-property
     }
 
+    // Scroll functions
+    function scroll_small_up() {
+        loader.item.scroll_small_up(); // qmllint disable missing-property
+    }
+
+    function scroll_small_down() {
+        loader.item.scroll_small_down(); // qmllint disable missing-property
+    }
+
+    function scroll_half_page_up() {
+        loader.item.scroll_half_page_up(); // qmllint disable missing-property
+    }
+
+    function scroll_half_page_down() {
+        loader.item.scroll_half_page_down(); // qmllint disable missing-property
+    }
+
+    function scroll_page_up() {
+        loader.item.scroll_page_up(); // qmllint disable missing-property
+    }
+
+    function scroll_page_down() {
+        loader.item.scroll_page_down(); // qmllint disable missing-property
+    }
+
+    function scroll_to_top() {
+        loader.item.scroll_to_top(); // qmllint disable missing-property
+    }
+
+    function scroll_to_bottom() {
+        loader.item.scroll_to_bottom(); // qmllint disable missing-property
+    }
+
     signal page_loaded()
 
     /* signal loadingChanged(var loadRequest) */

@@ -39,11 +39,48 @@ function attach_link_handlers(): void {
     }
 }
 
+// Scroll management functions
+const scrollManager = {
+    // Scroll by a small amount (for j/k keys)
+    scrollSmallUp: function(): void {
+        window.scrollBy({ top: -80, behavior: 'smooth' });
+    },
+    scrollSmallDown: function(): void {
+        window.scrollBy({ top: 80, behavior: 'smooth' });
+    },
+    // Scroll by half a page (for Ctrl+U/Ctrl+D)
+    scrollHalfPageUp: function(): void {
+        const halfPage = window.innerHeight / 2;
+        window.scrollBy({ top: -halfPage, behavior: 'smooth' });
+    },
+    scrollHalfPageDown: function(): void {
+        const halfPage = window.innerHeight / 2;
+        window.scrollBy({ top: halfPage, behavior: 'smooth' });
+    },
+    // Scroll by a full page (for Space/Shift+Space/Page Up/Page Down)
+    scrollPageUp: function(): void {
+        const page = window.innerHeight - 50; // Leave some overlap
+        window.scrollBy({ top: -page, behavior: 'smooth' });
+    },
+    scrollPageDown: function(): void {
+        const page = window.innerHeight - 50; // Leave some overlap
+        window.scrollBy({ top: page, behavior: 'smooth' });
+    },
+    // Scroll to beginning/end (for Home/End)
+    scrollToTop: function(): void {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    scrollToBottom: function(): void {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    },
+};
+
 document.SSP = {
     show_transient_message: h.show_transient_message,
     find: findManager,
     attach_link_handlers: attach_link_handlers,
     show_bottom_footnotes: true, // Default to true, will be updated from QML
+    scroll: scrollManager,
 };
 
 /**
