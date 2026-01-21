@@ -1566,35 +1566,7 @@ impl<'a> SearchQueryTask<'a> {
             }
 
             SearchMode::Combined => {
-                let mut res: Vec<SearchResult> = Vec::new();
-
-                // Display all DPD Lookup results (not many) on the
-                // first (0 index) results page by boosting their scores.
-                if page_num == 0 {
-                    // Run DPD Lookup and boost results to the top.
-                    let mut dpd_results: Vec<SearchResult> = self.dpd_lookup(0)?;
-                    for item in dpd_results.iter_mut() {
-                        match item.score {
-                            Some(ref mut s) => *s += 10000.0,
-                            None => item.score = Some(10000.0),
-                        }
-                    }
-                    res.extend(dpd_results);
-                    self.db_all_results = res.clone();
-                }
-
-                // The fulltext query has been executed before this step,
-                // get highlighted snippets
-
-                // FIXME implement when fulltext query works
-                // let mut page_results = self.search_query.highlighted_results_page(page_num)?;
-                // res.extend(page_results);
-
-                // Deduplicate: unique by title, schema_name, and uid
-                // NOTE: Is this necessary? Maybe When fulltext results are also added.
-                // Ok(unique_search_results(res))
-
-                Ok(res)
+                Ok(Vec::new())
             }
 
             SearchMode::UidMatch => {
@@ -1628,7 +1600,7 @@ impl<'a> SearchQueryTask<'a> {
             SearchMode::TitleMatch => {
                 match self.search_area {
                     SearchArea::Suttas => {
-                        // TODO def _suttas_title_match(self)
+                        // def _suttas_title_match(self)
                         self.suttas_title_match(page_num)
                     }
                     SearchArea::Dictionary => {
@@ -1651,7 +1623,6 @@ impl<'a> SearchQueryTask<'a> {
                         Ok(Vec::new())
                     }
                     SearchArea::Dictionary => {
-                        // TODO implement headword match
                         self.lemma_1_dpd_headword_match_fts5(page_num)
                     }
                     SearchArea::Library => {

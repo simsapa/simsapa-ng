@@ -167,10 +167,10 @@ Frame {
             ComboBox {
                 id: search_mode_dropdown
                 Layout.preferredHeight: root.icon_size
-                // FIXME implement search types and pass it as SearchParams
                 model: {
                     if (root.search_area === "Suttas") {
                         return [
+                                /* "Combined", */
                                 /* "Fulltext Match", */
                                 "Contains Match",
                                 "Title Match",
@@ -178,13 +178,17 @@ Frame {
                         ];
                     } else if (root.search_area === "Library") {
                         return [
+                                /* "Combined", */
+                                /* "Fulltext Match", */
                                 "Contains Match",
                                 "Title Match",
                         ];
                     } else {
                         // search_area === "Dictionary"
                         return [
+                                /* "Combined", */
                                 "DPD Lookup",
+                                /* "Fulltext Match", */
                                 "Contains Match",
                                 "Headword Match",
                         ];
