@@ -46,6 +46,19 @@ ApplicationWindow {
     property var last_params: null
     property string pending_find_query: ""
 
+    // Keybindings loaded from settings
+    property var keybindings: ({})
+
+    // Load keybindings from settings
+    function load_keybindings() {
+        root.keybindings = JSON.parse(SuttaBridge.get_keybindings_json());
+    }
+
+    // Get shortcut sequences for an action, returns empty array if not found
+    function get_sequences(action_id: string): var {
+        return root.keybindings[action_id] || [];
+    }
+
     Logger { id: logger }
 
     Connections {
@@ -570,6 +583,7 @@ ${query_text}`;
             return;
         } else {
             root.apply_theme();
+            root.load_keybindings();
             SuttaBridge.load_db();
             SuttaBridge.appdata_first_query();
             SuttaBridge.dpd_first_query();
@@ -732,7 +746,7 @@ ${query_text}`;
                     id: action_settings
                     text: "&Settings..."
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+,"]
+                        sequences: root.get_sequences("settings")
                         context: Qt.WindowShortcut
                         onActivated: action_settings.trigger()
                     }
@@ -745,7 +759,7 @@ ${query_text}`;
                     id: action_close_window
                     text: "&Close Window"
                     shortcut: Shortcut {
-                        sequences: ["Alt+F4"]
+                        sequences: root.get_sequences("close_window")
                         context: Qt.WindowShortcut
                         onActivated: action_close_window.trigger()
                     }
@@ -759,7 +773,7 @@ ${query_text}`;
                     icon.source: "icons/32x32/fa_times-circle.png"
                     id: action_quit
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+Q"]
+                        sequences: root.get_sequences("quit_app")
                         context: Qt.WindowShortcut
                         onActivated: action_quit.trigger()
                     }
@@ -778,7 +792,7 @@ ${query_text}`;
                     text: "&Sutta Search"
                     icon.source: "icons/32x32/bxs_book_bookmark.png"
                     shortcut: Shortcut {
-                        sequences: ["F5"]
+                        sequences: root.get_sequences("sutta_search")
                         context: Qt.WindowShortcut
                         onActivated: action_sutta_search.trigger()
                     }
@@ -866,7 +880,7 @@ ${query_text}`;
                     id: action_focus_search
                     text: "Focus Search Input"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+L"]
+                        sequences: root.get_sequences("focus_search")
                         context: Qt.WindowShortcut
                         onActivated: action_focus_search.trigger()
                     }
@@ -882,7 +896,7 @@ ${query_text}`;
                     id: action_next_search_area
                     text: "Next Search Area"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+;"]
+                        sequences: root.get_sequences("next_search_area")
                         context: Qt.WindowShortcut
                         onActivated: action_next_search_area.trigger()
                     }
@@ -897,7 +911,7 @@ ${query_text}`;
                     id: select_previous_result
                     text: "Previous Result"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+Up", "Ctrl+K"]
+                        sequences: root.get_sequences("prev_result")
                         context: Qt.WindowShortcut
                         onActivated: select_previous_result.trigger()
                     }
@@ -910,7 +924,7 @@ ${query_text}`;
                     id: select_next_result
                     text: "Next Result"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+Down", "Ctrl+J"]
+                        sequences: root.get_sequences("next_result")
                         context: Qt.WindowShortcut
                         onActivated: select_next_result.trigger()
                     }
@@ -923,7 +937,7 @@ ${query_text}`;
                     id: action_find_in_page
                     text: "Find in Page"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+F"]
+                        sequences: root.get_sequences("find_in_page")
                         context: Qt.WindowShortcut
                         onActivated: action_find_in_page.trigger()
                     }
@@ -939,7 +953,7 @@ ${query_text}`;
                     id: action_find_next_in_page
                     text: "Find Next in Page"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+N"]
+                        sequences: root.get_sequences("find_next")
                         context: Qt.WindowShortcut
                         onActivated: action_find_next_in_page.trigger()
                     }
@@ -955,7 +969,7 @@ ${query_text}`;
                     id: action_find_previous_in_page
                     text: "Find Previous in Page"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+P"]
+                        sequences: root.get_sequences("find_prev")
                         context: Qt.WindowShortcut
                         onActivated: action_find_previous_in_page.trigger()
                     }
@@ -974,9 +988,9 @@ ${query_text}`;
             CMenuItem {
                 action: Action {
                     id: action_toggle_reading_mode
-                    text: "Toggle Reading Mode"
+                    text: "Reading Mode"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+Backspace"]
+                        sequences: root.get_sequences("toggle_reading_mode")
                         context: Qt.WindowShortcut
                         onActivated: action_toggle_reading_mode.trigger()
                     }
@@ -991,7 +1005,7 @@ ${query_text}`;
                     id: action_close_tab
                     text: "Close Tab"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+W"]
+                        sequences: root.get_sequences("close_tab")
                         context: Qt.WindowShortcut
                         onActivated: action_close_tab.trigger()
                     }
@@ -1008,7 +1022,7 @@ ${query_text}`;
                     id: action_toggle_tab_list
                     text: "Toggle Tab List"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+Tab"]
+                        sequences: root.get_sequences("toggle_tab_list")
                         context: Qt.WindowShortcut
                         onActivated: action_toggle_tab_list.trigger()
                     }
@@ -1027,7 +1041,7 @@ ${query_text}`;
                     id: action_previous_tab
                     text: "Previous Tab"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+["]
+                        sequences: root.get_sequences("prev_tab")
                         context: Qt.WindowShortcut
                         onActivated: action_previous_tab.trigger()
                     }
@@ -1040,7 +1054,7 @@ ${query_text}`;
                     id: action_next_tab
                     text: "Next Tab"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+]"]
+                        sequences: root.get_sequences("next_tab")
                         context: Qt.WindowShortcut
                         onActivated: action_next_tab.trigger()
                     }
@@ -1053,7 +1067,7 @@ ${query_text}`;
                     id: action_previous_sidebar_tab
                     text: "Previous Sidebar Tab"
                     shortcut: Shortcut {
-                        sequences: ["Shift+["]
+                        sequences: root.get_sequences("prev_sidebar_tab")
                         context: Qt.WindowShortcut
                         onActivated: action_previous_sidebar_tab.trigger()
                     }
@@ -1066,7 +1080,7 @@ ${query_text}`;
                     id: action_next_sidebar_tab
                     text: "Next Sidebar Tab"
                     shortcut: Shortcut {
-                        sequences: ["Shift+]"]
+                        sequences: root.get_sequences("next_sidebar_tab")
                         context: Qt.WindowShortcut
                         onActivated: action_next_sidebar_tab.trigger()
                     }
@@ -1081,7 +1095,7 @@ ${query_text}`;
                     id: action_scroll_up
                     text: "Scroll Up"
                     shortcut: Shortcut {
-                        sequences: ["K", "Up"]
+                        sequences: root.get_sequences("scroll_up")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_up.trigger()
                     }
@@ -1097,7 +1111,7 @@ ${query_text}`;
                     id: action_scroll_down
                     text: "Scroll Down"
                     shortcut: Shortcut {
-                        sequences: ["J", "Down"]
+                        sequences: root.get_sequences("scroll_down")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_down.trigger()
                     }
@@ -1113,7 +1127,7 @@ ${query_text}`;
                     id: action_scroll_half_page_up
                     text: "Scroll Half Page Up"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+U"]
+                        sequences: root.get_sequences("scroll_half_page_up")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_half_page_up.trigger()
                     }
@@ -1329,6 +1343,9 @@ ${query_text}`;
         }
         onMarginChanged: {
             root.update_top_bar_margin();
+        }
+        onKeybindingsChanged: {
+            root.load_keybindings();
         }
     }
 

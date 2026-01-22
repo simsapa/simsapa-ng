@@ -1,0 +1,128 @@
+[
+    {
+        "id": "settings",
+        "name": "Settings",
+        "description": "Open the Settings window",
+        "shortcuts": ["Ctrl+,"]
+    },
+    {
+        "id": "close_window",
+        "name": "Close Window",
+        "description": "Close the current window",
+        "shortcuts": ["Alt+F4"]
+    },
+    {
+        "id": "quit_app",
+        "name": "Quit Simsapa",
+        "description": "Quit the application",
+        "shortcuts": ["Ctrl+Q"]
+    },
+    {
+        "id": "sutta_search",
+        "name": "Sutta Search",
+        "description": "Open the Sutta Search window",
+        "shortcuts": ["F5"]
+    },
+    {
+        "id": "focus_search",
+        "name": "Focus Search Input",
+        "description": "Move focus to the search input field",
+        "shortcuts": ["Ctrl+L"]
+    },
+    {
+        "id": "next_search_area",
+        "name": "Next Search Area",
+        "description": "Cycle to the next search area (sutta, dictionary)",
+        "shortcuts": ["Ctrl+;"]
+    },
+    {
+        "id": "prev_result",
+        "name": "Previous Result",
+        "description": "Navigate to the previous search result",
+        "shortcuts": ["Ctrl+Up", "Ctrl+K"]
+    },
+    {
+        "id": "next_result",
+        "name": "Next Result",
+        "description": "Navigate to the next search result",
+        "shortcuts": ["Ctrl+Down", "Ctrl+J"]
+    },
+    {
+        "id": "find_in_page",
+        "name": "Find in Page",
+        "description": "Open the find bar to search within the current page",
+        "shortcuts": ["Ctrl+F"]
+    },
+    {
+        "id": "find_next",
+        "name": "Find Next in Page",
+        "description": "Find the next occurrence in the current page",
+        "shortcuts": ["Ctrl+N"]
+    },
+    {
+        "id": "find_prev",
+        "name": "Find Previous in Page",
+        "description": "Find the previous occurrence in the current page",
+        "shortcuts": ["Ctrl+P"]
+    },
+    {
+        "id": "toggle_reading_mode",
+        "name": "Toggle Reading Mode",
+        "description": "Toggle between reading mode and normal view",
+        "shortcuts": ["Ctrl+Backspace"]
+    },
+    {
+        "id": "close_tab",
+        "name": "Close Tab",
+        "description": "Close the current tab",
+        "shortcuts": ["Ctrl+W"]
+    },
+    {
+        "id": "toggle_tab_list",
+        "name": "Toggle Tab List",
+        "description": "Show or hide the tab list popup",
+        "shortcuts": ["Ctrl+Tab"]
+    },
+    {
+        "id": "prev_tab",
+        "name": "Previous Tab",
+        "description": "Switch to the previous tab",
+        "shortcuts": ["Ctrl+["]
+    },
+    {
+        "id": "next_tab",
+        "name": "Next Tab",
+        "description": "Switch to the next tab",
+        "shortcuts": ["Ctrl+]"]
+    },
+    {
+        "id": "prev_sidebar_tab",
+        "name": "Previous Sidebar Tab",
+        "description": "Switch to the previous sidebar tab",
+        "shortcuts": ["Shift+["]
+    },
+    {
+        "id": "next_sidebar_tab",
+        "name": "Next Sidebar Tab",
+        "description": "Switch to the next sidebar tab",
+        "shortcuts": ["Shift+]"]
+    },
+    {
+        "id": "scroll_up",
+        "name": "Scroll Up",
+        "description": "Scroll the page up",
+        "shortcuts": ["K", "Up"]
+    },
+    {
+        "id": "scroll_down",
+        "name": "Scroll Down",
+        "description": "Scroll the page down",
+        "shortcuts": ["J", "Down"]
+    },
+    {
+        "id": "scroll_half_page_up",
+        "name": "Scroll Half Page Up",
+        "description": "Scroll half a page up",
+        "shortcuts": ["Ctrl+U"]
+    }
+]

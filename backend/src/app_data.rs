@@ -1190,6 +1190,108 @@ impl AppData {
         }
     }
 
+    /// Get the current keybindings as a JSON string.
+    pub fn get_keybindings_json(&self) -> String {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        serde_json::to_string(&app_settings.app_keybindings.bindings).expect("Failed to serialize keybindings")
+    }
+
+    /// Get the default keybindings as a JSON string.
+    pub fn get_default_keybindings_json(&self) -> String {
+        let default_keybindings = crate::app_settings::AppKeybindings::default();
+        serde_json::to_string(&default_keybindings.bindings).expect("Failed to serialize default keybindings")
+    }
+
+    /// Get the action names mapping as a JSON string.
+    pub fn get_action_names_json(&self) -> String {
+        let action_names = crate::app_settings::AppKeybindings::get_action_names();
+        serde_json::to_string(&action_names).expect("Failed to serialize action names")
+    }
+
+    /// Get the action descriptions mapping as a JSON string.
+    pub fn get_action_descriptions_json(&self) -> String {
+        let action_descriptions = crate::app_settings::AppKeybindings::get_action_descriptions();
+        serde_json::to_string(&action_descriptions).expect("Failed to serialize action descriptions")
+    }
+
+    /// Set the shortcuts for a specific action.
+    ///
+    /// # Arguments
+    ///
+    /// * `action_id` - The action identifier (e.g., "focus_search")
+    /// * `shortcuts` - List of keyboard shortcuts (e.g., ["Ctrl+L"])
+    pub fn set_keybinding(&self, action_id: &str, shortcuts: Vec<String>) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.app_keybindings.bindings.insert(action_id.to_string(), shortcuts);
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
+    /// Reset a single action's keybindings to default.
+    ///
+    /// # Arguments
+    ///
+    /// * `action_id` - The action identifier to reset
+    pub fn reset_keybinding(&self, action_id: &str) {
+        use crate::db::appdata_schema::app_settings;
+
+        let default_keybindings = crate::app_settings::AppKeybindings::default();
+        if let Some(default_shortcuts) = default_keybindings.bindings.get(action_id) {
+            let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+            app_settings.app_keybindings.bindings.insert(action_id.to_string(), default_shortcuts.clone());
+
+            let a = app_settings.clone();
+            let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+            let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+            match diesel::update(app_settings::table)
+                .filter(app_settings::key.eq("app_settings"))
+                .set(app_settings::value.eq(Some(settings_json)))
+                .execute(db_conn)
+            {
+                Ok(_) => (),
+                Err(e) => error(&format!("Failed to update app settings: {}", e)),
+            }
+        }
+    }
+
+    /// Reset all keybindings to their defaults.
+    pub fn reset_all_keybindings(&self) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.app_keybindings = crate::app_settings::AppKeybindings::default();
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
+    }
+
     fn get_system_memory_gb(&self) -> Option<u64> {
         get_system_memory_bytes().map(|bytes| bytes / 1024 / 1024 / 1024)
     }
