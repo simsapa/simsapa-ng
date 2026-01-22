@@ -10,6 +10,8 @@ Dialog {
     modal: true
     standardButtons: Dialog.No | Dialog.Yes
 
+    width: Math.min(450, parent ? parent.width - 40 : 450)
+
     readonly property int pointSize: 12
 
     // Properties for the dialog

@@ -419,9 +419,8 @@ impl AppData {
             }
         };
 
-        // Render the spine item with WINDOW_ID in the JavaScript
-        let js_extra = format!("const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id);
-        self.render_book_spine_item_html(&spine_item, Some(window_id.to_string()), Some(js_extra))
+        // Render the spine item (WINDOW_ID is added by render_book_spine_item_html)
+        self.render_book_spine_item_html(&spine_item, Some(window_id.to_string()), None)
             .unwrap_or_else(|_| sutta_html_page("Rendering error", None, None, None, Some(body_class)))
     }
 

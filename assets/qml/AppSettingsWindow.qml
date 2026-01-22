@@ -252,6 +252,7 @@ ApplicationWindow {
                 ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    contentWidth: availableWidth
                     clip: true
 
                     ColumnLayout {
@@ -317,6 +318,14 @@ ApplicationWindow {
                             Layout.topMargin: 10
                         }
 
+                        Label {
+                            visible: root.is_mobile
+                            text: "The wake lock for example allows the Obsidian Simsapa plugin to communicate with the Simsapa app while it is in the background."
+                            font.pointSize: root.pointSize - 2
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
                         Button {
                             visible: root.is_mobile
                             text: root.wake_lock_acquired ? "Release Wake Lock" : "Acquire Wake Lock"
@@ -354,6 +363,7 @@ ApplicationWindow {
                 ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    contentWidth: availableWidth
                     clip: true
 
                     ColumnLayout {
@@ -511,6 +521,7 @@ ApplicationWindow {
                 ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+                    contentWidth: availableWidth
                     clip: true
 
                     ColumnLayout {
