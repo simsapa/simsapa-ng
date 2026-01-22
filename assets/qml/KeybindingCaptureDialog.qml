@@ -5,13 +5,11 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
 
-import com.profoundlabs.simsapa
-
 ApplicationWindow {
     id: root
     title: "Capture Keyboard Shortcut"
-    width: is_mobile ? Screen.desktopAvailableWidth : 400
-    height: is_mobile ? Screen.desktopAvailableHeight : 350
+    width: is_mobile ? Screen.desktopAvailableWidth : 450
+    height: is_mobile ? Screen.desktopAvailableHeight : 400
     visible: false
     color: palette.window
     flags: Qt.Dialog
@@ -389,6 +387,22 @@ ApplicationWindow {
                     Component.onCompleted: {
                         text = root.captured_shortcut;
                     }
+                }
+            }
+
+            Label {
+                text: `For reference, see the <a href="https://doc.qt.io/qt-6/qkeysequence.html#standard-shortcuts">QKeySequence Class</a> and the values of <a href="https://doc.qt.io/qt-6/qt.html#Key-enum">Qt::Key</a>.`
+                font.pointSize: root.pointSize - 2
+                color: palette.text
+                textFormat: Text.RichText
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+                Layout.bottomMargin: 8
+                onLinkActivated: (link) => Qt.openUrlExternally(link)
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.NoButton // we don't want to eat clicks on the Text
+                    cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
                 }
             }
 
