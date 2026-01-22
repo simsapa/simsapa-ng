@@ -160,7 +160,7 @@ ApplicationWindow {
             root.conflicting_action_id = conflict_action;
             shortcut_conflict_dialog.shortcut = shortcut;
             shortcut_conflict_dialog.conflicting_action_name = root.action_names[conflict_action] || conflict_action;
-            shortcut_conflict_dialog.show();
+            shortcut_conflict_dialog.open();
         } else {
             // No conflict, apply directly
             apply_shortcut(shortcut);
@@ -193,7 +193,8 @@ ApplicationWindow {
     // Shortcut conflict dialog
     ShortcutConflictDialog {
         id: shortcut_conflict_dialog
-        top_bar_margin: root.top_bar_margin
+        parent: Overlay.overlay
+        anchors.centerIn: parent
 
         onConfirmed: {
             // Remove from conflicting action and apply

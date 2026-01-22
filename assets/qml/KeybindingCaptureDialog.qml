@@ -15,6 +15,7 @@ ApplicationWindow {
     visible: false
     color: palette.window
     flags: Qt.Dialog
+    modality: Qt.ApplicationModal
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
@@ -296,6 +297,12 @@ ApplicationWindow {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: key_capture_area.forceActiveFocus()
+                }
+
+                Keys.onShortcutOverride: function(event) {
+                    // Override all shortcuts to prevent them from being triggered
+                    // This allows us to capture key combinations that are already assigned
+                    event.accepted = true;
                 }
 
                 Keys.onPressed: function(event) {
