@@ -78,6 +78,12 @@
         "shortcuts": ["Ctrl+W"]
     },
     {
+        "id": "pin_tab",
+        "name": "Pin Tab",
+        "description": "Pin or unpin the current tab",
+        "shortcuts": ["Ctrl+I"]
+    },
+    {
         "id": "toggle_tab_list",
         "name": "Toggle Tab List",
         "description": "Show or hide the tab list popup",

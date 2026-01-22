@@ -1015,6 +1015,21 @@ ${query_text}`;
                 }
             }
 
+            CMenuItem {
+                action: Action {
+                    id: action_pin_tab
+                    text: "Pin Tab"
+                    shortcut: Shortcut {
+                        sequences: root.get_sequences("pin_tab")
+                        context: Qt.WindowShortcut
+                        onActivated: action_pin_tab.trigger()
+                    }
+                    onTriggered: {
+                        suttas_tab_bar.toggle_pin_current_tab();
+                    }
+                }
+            }
+
             MenuSeparator {}
 
             CMenuItem {
@@ -1666,6 +1681,37 @@ ${query_text}`;
                                         let tab = tabs_translations.itemAt(i);
                                         if (tab && tab.checked) {
                                             tab.close_btn.clicked();
+                                            return;
+                                        }
+                                    }
+                                }
+
+                                function toggle_pin_current_tab() {
+                                    // Find the currently checked tab and toggle its pin state
+
+                                    // Check pinned tabs (will unpin)
+                                    for (let i = 0; i < tabs_pinned.count; i++) {
+                                        let tab = tabs_pinned.itemAt(i);
+                                        if (tab && tab.checked) {
+                                            tab.pin_btn.toggle();
+                                            return;
+                                        }
+                                    }
+
+                                    // Check results tabs (will pin)
+                                    for (let i = 0; i < tabs_results.count; i++) {
+                                        let tab = tabs_results.itemAt(i);
+                                        if (tab && tab.checked) {
+                                            tab.pin_btn.toggle();
+                                            return;
+                                        }
+                                    }
+
+                                    // Check translations tabs (will pin)
+                                    for (let i = 0; i < tabs_translations.count; i++) {
+                                        let tab = tabs_translations.itemAt(i);
+                                        if (tab && tab.checked) {
+                                            tab.pin_btn.toggle();
                                             return;
                                         }
                                     }
