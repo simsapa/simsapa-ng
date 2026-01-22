@@ -20,8 +20,9 @@ TabButton {
     signal pinToggled(bool pinned)
     signal closeClicked()
 
-    // Alias to allow triggering close from outside (e.g., keyboard shortcut)
+    // Aliases to allow triggering from outside (e.g., keyboard shortcut)
     property alias close_btn: close_btn
+    property alias pin_btn: pin_btn
 
     /* implicitWidth: Math.min(200, Math.max(150, implicitContentWidth + 30)) */
 

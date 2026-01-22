@@ -6,3 +6,5 @@ PromptManager 1.0 PromptManager.qml
 ClipboardManager 1.0 ClipboardManager.qml
 LanguageListSelector 1.0 LanguageListSelector.qml
 SuttaLanguagesWindow 1.0 SuttaLanguagesWindow.qml
+KeybindingCaptureDialog 1.0 KeybindingCaptureDialog.qml
+ShortcutConflictDialog 1.0 ShortcutConflictDialog.qml

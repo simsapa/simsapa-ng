@@ -26,6 +26,7 @@ ApplicationWindow {
 
     signal themeChanged(string theme_name)
     signal marginChanged()
+    signal keybindingsChanged()
 
     // State properties for mobile margin settings
     property bool use_system_margin: true
@@ -34,6 +35,13 @@ ApplicationWindow {
     // Wake lock state
     property bool wake_lock_acquired: false
 
+    // Keybindings data
+    property var keybindings_data: ({})
+    property var default_keybindings: ({})
+    property var action_names: ({})
+    property var action_descriptions: ({})
+    property var action_ids_list: []
+
     // Expose settings as properties for external access (avoid repeated database calls)
     property alias search_as_you_type: search_as_you_type_checkbox.checked
     property alias open_find_in_sutta_results: open_find_in_results_checkbox.checked
@@ -41,6 +49,162 @@ ApplicationWindow {
     ThemeHelper {
         id: theme_helper
         target_window: root
+    }
+
+    // State for capture dialog
+    property string capture_action_id: ""
+    property int capture_shortcut_index: -1
+    property bool capture_is_new: false
+
+    // State for conflict dialog
+    property string pending_shortcut: ""
+    property string conflicting_action_id: ""
+
+    // Load keybindings from backend
+    function load_keybindings() {
+        root.keybindings_data = JSON.parse(SuttaBridge.get_keybindings_json());
+        root.default_keybindings = JSON.parse(SuttaBridge.get_default_keybindings_json());
+        root.action_names = JSON.parse(SuttaBridge.get_action_names_json());
+        root.action_descriptions = JSON.parse(SuttaBridge.get_action_descriptions_json());
+        root.action_ids_list = Object.keys(root.action_names);
+    }
+
+    // Open capture dialog for editing existing shortcut
+    function open_capture_dialog(action_id: string, shortcut_index: int, current_shortcut: string) {
+        root.capture_action_id = action_id;
+        root.capture_shortcut_index = shortcut_index;
+        root.capture_is_new = false;
+
+        keybinding_capture_dialog.action_name = root.action_names[action_id] || action_id;
+        keybinding_capture_dialog.current_shortcut = current_shortcut;
+        keybinding_capture_dialog.is_new_shortcut = false;
+        keybinding_capture_dialog.show();
+    }
+
+    // Open capture dialog for adding new shortcut
+    function open_capture_dialog_for_new(action_id: string) {
+        root.capture_action_id = action_id;
+        root.capture_shortcut_index = -1;
+        root.capture_is_new = true;
+
+        keybinding_capture_dialog.action_name = root.action_names[action_id] || action_id;
+        keybinding_capture_dialog.current_shortcut = "";
+        keybinding_capture_dialog.is_new_shortcut = true;
+        keybinding_capture_dialog.show();
+    }
+
+    // Find if shortcut conflicts with another action, returns action_id or empty string
+    function find_conflict(shortcut: string, exclude_action_id: string): string {
+        for (let action_id in root.keybindings_data) {
+            if (action_id === exclude_action_id) continue;
+            let shortcuts = root.keybindings_data[action_id];
+            if (shortcuts && shortcuts.indexOf(shortcut) >= 0) {
+                return action_id;
+            }
+        }
+        return "";
+    }
+
+    // Save shortcut at specific index
+    function save_shortcut(action_id: string, shortcut_index: int, new_shortcut: string) {
+        let shortcuts = root.keybindings_data[action_id] || [];
+        shortcuts = shortcuts.slice(); // copy array
+        if (shortcut_index >= 0 && shortcut_index < shortcuts.length) {
+            shortcuts[shortcut_index] = new_shortcut;
+        }
+        SuttaBridge.set_keybinding(action_id, JSON.stringify(shortcuts));
+        root.load_keybindings();
+        root.keybindingsChanged();
+    }
+
+    // Add new shortcut to action
+    function add_shortcut(action_id: string, new_shortcut: string) {
+        let shortcuts = root.keybindings_data[action_id] || [];
+        shortcuts = shortcuts.slice(); // copy array
+        shortcuts.push(new_shortcut);
+        SuttaBridge.set_keybinding(action_id, JSON.stringify(shortcuts));
+        root.load_keybindings();
+        root.keybindingsChanged();
+    }
+
+    // Remove shortcut at index from action
+    function remove_shortcut(action_id: string, shortcut_index: int) {
+        let shortcuts = root.keybindings_data[action_id] || [];
+        shortcuts = shortcuts.slice(); // copy array
+        if (shortcut_index >= 0 && shortcut_index < shortcuts.length) {
+            shortcuts.splice(shortcut_index, 1);
+        }
+        SuttaBridge.set_keybinding(action_id, JSON.stringify(shortcuts));
+        root.load_keybindings();
+        root.keybindingsChanged();
+    }
+
+    // Remove shortcut from conflicting action
+    function remove_conflict_shortcut(action_id: string, shortcut: string) {
+        let shortcuts = root.keybindings_data[action_id] || [];
+        shortcuts = shortcuts.slice(); // copy array
+        let idx = shortcuts.indexOf(shortcut);
+        if (idx >= 0) {
+            shortcuts.splice(idx, 1);
+        }
+        SuttaBridge.set_keybinding(action_id, JSON.stringify(shortcuts));
+    }
+
+    // Handle accepted shortcut with conflict check
+    function handle_shortcut_accepted(shortcut: string) {
+        let conflict_action = find_conflict(shortcut, root.capture_action_id);
+
+        if (conflict_action !== "") {
+            // Store pending state and show conflict dialog
+            root.pending_shortcut = shortcut;
+            root.conflicting_action_id = conflict_action;
+            shortcut_conflict_dialog.shortcut = shortcut;
+            shortcut_conflict_dialog.conflicting_action_name = root.action_names[conflict_action] || conflict_action;
+            shortcut_conflict_dialog.open();
+        } else {
+            // No conflict, apply directly
+            apply_shortcut(shortcut);
+        }
+    }
+
+    // Apply the shortcut (after conflict resolution or no conflict)
+    function apply_shortcut(shortcut: string) {
+        if (root.capture_is_new) {
+            add_shortcut(root.capture_action_id, shortcut);
+        } else {
+            save_shortcut(root.capture_action_id, root.capture_shortcut_index, shortcut);
+        }
+    }
+
+    // Keybinding capture dialog
+    KeybindingCaptureDialog {
+        id: keybinding_capture_dialog
+        top_bar_margin: root.top_bar_margin
+
+        onShortcutAccepted: function(shortcut) {
+            root.handle_shortcut_accepted(shortcut);
+        }
+
+        onShortcutRemoved: {
+            root.remove_shortcut(root.capture_action_id, root.capture_shortcut_index);
+        }
+    }
+
+    // Shortcut conflict dialog
+    ShortcutConflictDialog {
+        id: shortcut_conflict_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+
+        onConfirmed: {
+            // Remove from conflicting action and apply
+            root.remove_conflict_shortcut(root.conflicting_action_id, root.pending_shortcut);
+            root.apply_shortcut(root.pending_shortcut);
+        }
+
+        onCancelled: {
+            // Do nothing, user cancelled
+        }
     }
 
     Frame {
@@ -69,6 +233,12 @@ ApplicationWindow {
                 TabButton {
                     text: "Find"
                     padding: 5
+                }
+
+                TabButton {
+                    text: "Keybindings"
+                    padding: 5
+                    visible: root.is_desktop
                 }
             }
 
@@ -397,6 +567,164 @@ ApplicationWindow {
                         Item { Layout.fillHeight: true }
                     }
                 }
+
+                // Keybindings Tab
+                ScrollView {
+                    id: keybindings_scrollview
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+
+                    ColumnLayout {
+                        width: keybindings_scrollview.availableWidth - 20
+                        spacing: 10
+
+                        Label {
+                            text: "Keybindings"
+                            font.pointSize: root.pointSize + 2
+                            font.bold: true
+                            Layout.topMargin: 10
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "Click a keyboard shortcut to edit, or use [+] to add additional shortcuts."
+                            font.pointSize: root.pointSize - 2
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        // Reset All button at top
+                        Button {
+                            text: "Reset All to Defaults"
+                            font.pointSize: root.pointSize
+                            Layout.bottomMargin: 10
+                            onClicked: {
+                                SuttaBridge.reset_all_keybindings();
+                                root.load_keybindings();
+                                root.keybindingsChanged();
+                            }
+                        }
+
+                        // Keybindings list
+                        Repeater {
+                            id: keybindings_repeater
+                            model: root.action_ids_list
+
+                            delegate: ColumnLayout {
+                                id: keybinding_item
+                                Layout.fillWidth: true
+                                spacing: 2
+                                required property string modelData
+                                required property int index
+
+                                property string action_id: modelData
+                                property var shortcuts: root.keybindings_data[action_id] || []
+                                property var default_shortcuts: root.default_keybindings[action_id] || []
+
+                                RowLayout {
+                                    id: keybinding_row
+                                    Layout.fillWidth: true
+                                    spacing: 8
+
+                                    // Action name
+                                    Label {
+                                        id: label_action_name
+                                        text: root.action_names[keybinding_item.action_id] || keybinding_item.action_id
+                                        font.pointSize: root.pointSize
+                                        Layout.minimumWidth: 180
+                                    }
+
+                                    // Shortcut buttons
+                                    Flow {
+                                        Layout.fillWidth: true
+                                        spacing: 5
+
+                                        Repeater {
+                                            model: keybinding_item.shortcuts
+
+                                            delegate: Button {
+                                                id: shortcut_button
+                                                required property string modelData
+                                                required property int index
+
+                                                text: modelData
+                                                font.pointSize: root.pointSize - 1
+                                                padding: 5
+
+                                                // Highlight if different from default
+                                                property bool is_default: {
+                                                    let defaults = keybinding_item.default_shortcuts;
+                                                    return defaults.indexOf(modelData) >= 0;
+                                                }
+
+                                                background: Rectangle {
+                                                    color: shortcut_button.is_default ?
+                                                        (shortcut_button.down ? palette.mid : palette.button) :
+                                                        (shortcut_button.down ? "#5a9bd4" : "#7ab8e8")
+                                                    border.color: shortcut_button.is_default ? palette.mid : "#4a8bc4"
+                                                    border.width: 1
+                                                    radius: 4
+                                                }
+
+                                                onClicked: {
+                                                    root.open_capture_dialog(keybinding_item.action_id, shortcut_button.index, modelData);
+                                                }
+                                            }
+                                        }
+
+                                        // Add [+] button
+                                        Button {
+                                            text: "+"
+                                            font.pointSize: root.pointSize - 1
+                                            padding: 5
+                                            implicitWidth: 30
+
+                                            onClicked: {
+                                                root.open_capture_dialog_for_new(keybinding_item.action_id);
+                                            }
+                                        }
+
+                                        // Spacer to push reset button to the right
+                                        Item { Layout.fillWidth: true }
+                                    }
+
+                                    // Reset button
+                                    Button {
+                                        text: "Reset"
+                                        font.pointSize: root.pointSize - 2
+                                        padding: 4
+                                        visible: {
+                                            let current = JSON.stringify(keybinding_item.shortcuts);
+                                            let defaults = JSON.stringify(keybinding_item.default_shortcuts);
+                                            return current !== defaults;
+                                        }
+
+                                        onClicked: {
+                                            SuttaBridge.reset_keybinding(keybinding_item.action_id);
+                                            root.load_keybindings();
+                                            root.keybindingsChanged();
+                                        }
+                                    }
+                                }
+
+                                // Description label
+                                Label {
+                                    text: root.action_descriptions[keybinding_item.action_id] || ""
+                                    font.pointSize: root.pointSize - 2
+                                    color: palette.placeholderText
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                    Layout.bottomMargin: 8
+                                }
+                            }
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+                }
             }
 
             // Fixed bottom area with Close button
@@ -451,5 +779,8 @@ ApplicationWindow {
         if (root.is_mobile) {
             root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
         }
+
+        // Load keybindings
+        root.load_keybindings();
     }
 }

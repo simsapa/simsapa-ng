@@ -522,6 +522,28 @@ pub mod qobject {
         #[qinvokable]
         fn set_notify_about_simsapa_updates(self: Pin<&mut SuttaBridge>, enabled: bool);
 
+        // Keybindings management
+        #[qinvokable]
+        fn get_keybindings_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_default_keybindings_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_action_names_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_action_descriptions_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn set_keybinding(self: Pin<&mut SuttaBridge>, action_id: &QString, shortcuts_json: &QString);
+
+        #[qinvokable]
+        fn reset_keybinding(self: Pin<&mut SuttaBridge>, action_id: &QString);
+
+        #[qinvokable]
+        fn reset_all_keybindings(self: Pin<&mut SuttaBridge>);
+
         #[qinvokable]
         fn get_updates_checked(self: &SuttaBridge) -> bool;
 
@@ -2622,6 +2644,51 @@ impl qobject::SuttaBridge {
     pub fn set_notify_about_simsapa_updates(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_notify_about_simsapa_updates(enabled);
+    }
+
+    /// Get the current keybindings as a JSON string.
+    pub fn get_keybindings_json(&self) -> QString {
+        let app_data = get_app_data();
+        QString::from(app_data.get_keybindings_json())
+    }
+
+    /// Get the default keybindings as a JSON string.
+    pub fn get_default_keybindings_json(&self) -> QString {
+        let app_data = get_app_data();
+        QString::from(app_data.get_default_keybindings_json())
+    }
+
+    /// Get the action names mapping as a JSON string.
+    pub fn get_action_names_json(&self) -> QString {
+        let app_data = get_app_data();
+        QString::from(app_data.get_action_names_json())
+    }
+
+    /// Get the action descriptions mapping as a JSON string.
+    pub fn get_action_descriptions_json(&self) -> QString {
+        let app_data = get_app_data();
+        QString::from(app_data.get_action_descriptions_json())
+    }
+
+    /// Set the shortcuts for a specific action.
+    /// shortcuts_json is a JSON array of strings, e.g. '["Ctrl+L", "Ctrl+K"]'
+    pub fn set_keybinding(self: Pin<&mut Self>, action_id: &QString, shortcuts_json: &QString) {
+        let app_data = get_app_data();
+        let shortcuts: Vec<String> = serde_json::from_str(&shortcuts_json.to_string())
+            .unwrap_or_default();
+        app_data.set_keybinding(&action_id.to_string(), shortcuts);
+    }
+
+    /// Reset a single action's keybindings to default.
+    pub fn reset_keybinding(self: Pin<&mut Self>, action_id: &QString) {
+        let app_data = get_app_data();
+        app_data.reset_keybinding(&action_id.to_string());
+    }
+
+    /// Reset all keybindings to their defaults.
+    pub fn reset_all_keybindings(self: Pin<&mut Self>) {
+        let app_data = get_app_data();
+        app_data.reset_all_keybindings();
     }
 
     /// Get whether updates have already been checked in this session.

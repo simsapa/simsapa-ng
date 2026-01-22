@@ -59,6 +59,8 @@ fn main() {
         "../assets/qml/Logger.qml",
         "../assets/qml/UnrecognizedWordsList.qml",
         "../assets/qml/UpdateNotificationDialog.qml",
+        "../assets/qml/KeybindingCaptureDialog.qml",
+        "../assets/qml/ShortcutConflictDialog.qml",
     ];
 
     let builder = CxxQtBuilder::new()

@@ -7,6 +7,7 @@ static PROVIDERS_JSON: &str = include_str!("../../assets/providers.json");
 pub static LANGUAGES_JSON: &str = include_str!("../../assets/languages.json");
 pub static SUTTA_REFERENCE_CONVERTER_JSON: &str = include_str!("../../assets/sutta-reference-converter.json");
 pub static CIPS_GENERAL_INDEX_JSON: &str = include_str!("../../assets/general-index.json");
+static KEYBINDINGS_JSON: &str = include_str!("../../assets/keybindings.json");
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ModelEntry {
@@ -71,6 +72,8 @@ pub struct AppSettings {
     /// Release channel for updates (e.g., "main", "development", "simsapa-ng")
     /// None means use default "simsapa-ng"
     pub release_channel: Option<String>,
+    /// Custom keyboard shortcuts for application actions
+    pub app_keybindings: AppKeybindings,
 }
 
 impl Default for AppSettings {
@@ -203,6 +206,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             mobile_top_bar_margin: MobileTopBarMargin::default(),
             notify_about_simsapa_updates: true,
             release_channel: None,
+            app_keybindings: AppKeybindings::default(),
         }
     }
 }
@@ -275,4 +279,76 @@ pub enum ThemeName {
     Light,
     #[serde(rename = "dark")]
     Dark,
+}
+
+/// Definition of a keybinding action loaded from JSON (used for defaults and UI display)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct KeybindingDefinition {
+    /// Unique identifier for the action (e.g., "focus_search")
+    pub id: String,
+    /// Human-readable name for display (e.g., "Focus Search Input")
+    pub name: String,
+    /// Description of what the action does (for UI help text)
+    pub description: String,
+    /// Default keyboard shortcuts for this action
+    pub shortcuts: Vec<String>,
+}
+
+/// Returns the keybinding definitions loaded from the embedded JSON
+fn get_keybinding_definitions() -> Vec<KeybindingDefinition> {
+    match serde_json::from_str::<Vec<KeybindingDefinition>>(KEYBINDINGS_JSON) {
+        Ok(definitions) => definitions,
+        Err(e) => {
+            error(&format!("Failed to parse keybindings JSON: {}", e));
+            vec![]
+        }
+    }
+}
+
+/// Stores custom keyboard shortcuts for application actions.
+/// Maps action IDs to lists of key sequences (e.g., "settings" -> ["Ctrl+,"])
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct AppKeybindings {
+    /// Mapping of action ID to list of keyboard shortcuts
+    pub bindings: IndexMap<String, Vec<String>>,
+}
+
+impl Default for AppKeybindings {
+    fn default() -> Self {
+        let definitions = get_keybinding_definitions();
+        let mut bindings = IndexMap::new();
+
+        for def in definitions {
+            bindings.insert(def.id, def.shortcuts);
+        }
+
+        AppKeybindings { bindings }
+    }
+}
+
+impl AppKeybindings {
+    /// Returns a mapping of action IDs to human-readable names for UI display.
+    pub fn get_action_names() -> IndexMap<String, String> {
+        let definitions = get_keybinding_definitions();
+        let mut names = IndexMap::new();
+
+        for def in definitions {
+            names.insert(def.id, def.name);
+        }
+
+        names
+    }
+
+    /// Returns a mapping of action IDs to descriptions for UI display.
+    pub fn get_action_descriptions() -> IndexMap<String, String> {
+        let definitions = get_keybinding_definitions();
+        let mut descriptions = IndexMap::new();
+
+        for def in definitions {
+            descriptions.insert(def.id, def.description);
+        }
+
+        descriptions
+    }
 }

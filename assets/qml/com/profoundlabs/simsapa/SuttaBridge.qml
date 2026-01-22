@@ -687,6 +687,39 @@ Item {
         console.log("set_notify_about_simsapa_updates():", enabled);
     }
 
+    // Keybindings management functions
+    function get_keybindings_json(): string {
+        console.log("get_keybindings_json()");
+        return '{}';
+    }
+
+    function get_default_keybindings_json(): string {
+        console.log("get_default_keybindings_json()");
+        return '{}';
+    }
+
+    function get_action_names_json(): string {
+        console.log("get_action_names_json()");
+        return '{}';
+    }
+
+    function get_action_descriptions_json(): string {
+        console.log("get_action_descriptions_json()");
+        return '{}';
+    }
+
+    function set_keybinding(action_id: string, shortcuts_json: string) {
+        console.log("set_keybinding():", action_id, shortcuts_json);
+    }
+
+    function reset_keybinding(action_id: string) {
+        console.log("reset_keybinding():", action_id);
+    }
+
+    function reset_all_keybindings() {
+        console.log("reset_all_keybindings()");
+    }
+
     function get_updates_checked(): bool {
         console.log("get_updates_checked()");
         return false;
