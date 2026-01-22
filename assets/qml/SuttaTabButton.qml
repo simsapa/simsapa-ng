@@ -54,7 +54,6 @@ TabButton {
             icon.source: "icons/32x32/mdi--close.png"
             Layout.preferredWidth: 24
             flat: true
-            visible: control.id_key != "ResultsTab_0"
             onClicked: control.closeClicked()
         }
     }

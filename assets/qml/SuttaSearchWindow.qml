@@ -1679,6 +1679,19 @@ ${query_text}`;
                                                     // Unpin and move back to results group
                                                     logger.debug("UNPIN: Starting unpin from pinned group. Tab index: " + pinned_tab_btn.index + " item_uid: " + pinned_tab_btn.item_uid + " id_key: " + pinned_tab_btn.id_key + " web_item_key: " + pinned_tab_btn.web_item_key);
                                                     logger.debug("UNPIN: Model counts before - pinned: " + tabs_pinned_model.count + " results: " + tabs_results_model.count + " translations: " + tabs_translations_model.count);
+
+                                                    // If unpinning a blank tab, just remove it from pinned group.
+                                                    // The hidden blank tab in results group will become visible automatically.
+                                                    let is_blank_tab = (pinned_tab_btn.item_uid === "Sutta" || pinned_tab_btn.item_uid === "Word");
+                                                    if (is_blank_tab) {
+                                                        logger.debug("UNPIN: Blank tab, just removing from pinned group");
+                                                        tabs_pinned_model.remove(pinned_tab_btn.index);
+                                                        // Focus on the blank tab in results (ResultsTab_0)
+                                                        root.focus_on_tab_with_id_key("ResultsTab_0");
+                                                        logger.debug("UNPIN: Completed unpin of blank tab");
+                                                        return;
+                                                    }
+
                                                     let old_tab_data = tabs_pinned_model.get(pinned_tab_btn.index);
                                                     let new_tab_data = root.new_tab_data(old_tab_data, false, true, root.generate_key(), old_tab_data.web_item_key);
                                                     logger.debug("UNPIN: Created new tab data - old_id_key: " + old_tab_data.id_key + " new_id_key: " + new_tab_data.id_key + " web_item_key: " + new_tab_data.web_item_key);
@@ -1701,6 +1714,15 @@ ${query_text}`;
                                             model: tabs_results_model
                                             delegate: SuttaTabButton {
                                                 id: results_tab_btn
+                                                // Blank tabs (item_uid is "Sutta" or "Word") should only be visible
+                                                // when pinned and translations groups are empty, so the tab bar is not empty.
+                                                visible: {
+                                                    let is_blank_tab = (item_uid === "Sutta" || item_uid === "Word");
+                                                    if (is_blank_tab) {
+                                                        return tabs_pinned_model.count === 0 && tabs_translations_model.count === 0;
+                                                    }
+                                                    return true;
+                                                }
                                                 onPinToggled: function (pinned) {
                                                     // NOTE: Don't convert this to a method function, it causes a binding loop on the 'checked' property.
                                                     if (!pinned) return;
