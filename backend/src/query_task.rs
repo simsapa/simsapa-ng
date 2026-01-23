@@ -1033,10 +1033,10 @@ impl<'a> SearchQueryTask<'a> {
 
                     let fts_query = String::from(
                         r#"
-                        SELECT headword_id
-                        FROM dpd_headwords_fts
+                        SELECT id
+                        FROM dpd_headwords
                         WHERE word_ascii LIKE ?
-                        ORDER BY headword_id
+                        ORDER BY id
                         LIMIT ? OFFSET ?
                         "#
                     );
