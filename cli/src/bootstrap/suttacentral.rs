@@ -615,6 +615,7 @@ fn bilara_text_to_sutta(
             None,  // gloss_json_str
             false, // show_variant_readings
             false, // show_glosses
+            false, // show_references
         ).context("Failed to convert Bilara JSON to HTML")?;
         let html = bilara_html_post_process(&html);
         let html = consistent_niggahita(Some(html));
