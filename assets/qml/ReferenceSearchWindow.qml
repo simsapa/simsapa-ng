@@ -139,16 +139,32 @@ ApplicationWindow {
                             font.pointSize: root.pointSize
                             selectByMouse: true
                             enabled: SuttaBridge.sutta_references_loaded
+                            Layout.preferredHeight: 30
 
                             onTextChanged: {
                                 root.current_query = text;
-                                search_timer.restart();
+                                // Only auto-search if query is at least 5 characters
+                                if (text.length >= 5) {
+                                    search_timer.restart();
+                                }
                             }
 
                             Keys.onReturnPressed: {
                                 search_timer.stop();
-                                root.perform_search();
+                                root.perform_search(true);
                             }
+                        }
+
+                        Button {
+                            id: search_btn
+                            icon.source: root.is_searching ? "icons/32x32/fa_stopwatch-solid.png" : "icons/32x32/bx_search_alt_2.png"
+                            enabled: search_input.text.length > 0 && SuttaBridge.sutta_references_loaded
+                            onClicked: {
+                                search_timer.stop();
+                                root.perform_search(true);
+                            }
+                            Layout.preferredHeight: 30
+                            Layout.preferredWidth: 30
                         }
 
                         ComboBox {
@@ -157,6 +173,7 @@ ApplicationWindow {
                             currentIndex: 0
                             font.pointSize: root.pointSize
                             enabled: SuttaBridge.sutta_references_loaded
+                            Layout.preferredHeight: 30
 
                             onCurrentIndexChanged: {
                                 const field_map = {
@@ -166,7 +183,8 @@ ApplicationWindow {
                                     3: "sutta_ref"
                                 };
                                 root.current_field = field_map[currentIndex];
-                                if (root.current_query.length > 0) {
+                                // Only auto-search if query is at least 5 characters
+                                if (root.current_query.length >= 5) {
                                     search_timer.restart();
                                 }
                             }
@@ -210,7 +228,7 @@ ApplicationWindow {
                             spacing: 15
 
                             Label {
-                                text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Sutta Ref (e.g., 'DN 1')"
+                                text: "Search by:\n• PTS reference (e.g., 'D ii 20', 'M iii 10', 'S i 4')\n• DPR reference (e.g., 'KN 1')\n• Title (e.g., 'brahmajala')\n• Sutta Ref (e.g., 'DN 1')"
                                 font.pointSize: root.pointSize
                                 horizontalAlignment: Text.AlignHCenter
                                 wrapMode: Text.WordWrap
@@ -228,7 +246,7 @@ ApplicationWindow {
 
                         Label {
                             anchors.centerIn: parent
-                            text: root.current_query.length < 3 ? "Enter at least 3 characters" : "No results found"
+                            text: root.current_query.length < 5 ? "Enter at least 5 characters or click Search" : "No results found"
                             font.pointSize: root.largePointSize
                         }
                     }
@@ -391,9 +409,13 @@ ApplicationWindow {
     }
 
     // Functions
-    function perform_search() {
-        // Minimum 3 characters required
-        if (root.current_query.length < 3) {
+    function perform_search(forced = false) {
+        // If not forced (button/Enter), require minimum 5 characters
+        // If forced (button click or Enter press), allow any length >= 3
+        // mn1 = 3 chars
+        // s i 4 = 5 chars
+        const min_length = forced ? 3 : 5;
+        if (root.current_query.length < min_length) {
             root.search_results = [];
             return;
         }
