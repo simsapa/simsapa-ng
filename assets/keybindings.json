@@ -117,13 +117,13 @@
         "id": "scroll_up",
         "name": "Scroll Up",
         "description": "Scroll the page up",
-        "shortcuts": ["K", "Up"]
+        "shortcuts": ["K"]
     },
     {
         "id": "scroll_down",
         "name": "Scroll Down",
         "description": "Scroll the page down",
-        "shortcuts": ["J", "Down"]
+        "shortcuts": ["J"]
     },
     {
         "id": "scroll_half_page_up",
