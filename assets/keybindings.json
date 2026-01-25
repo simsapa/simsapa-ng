@@ -8,7 +8,7 @@
     {
         "id": "close_window",
         "name": "Close Window",
-        "description": "Close the current window",
+        "description": "Close the current Simsapa window",
         "shortcuts": ["Alt+F4"]
     },
     {
@@ -20,7 +20,7 @@
     {
         "id": "sutta_search",
         "name": "Sutta Search",
-        "description": "Open the Sutta Search window",
+        "description": "Open a new Sutta Search window",
         "shortcuts": ["F5"]
     },
     {
@@ -32,37 +32,37 @@
     {
         "id": "next_search_area",
         "name": "Next Search Area",
-        "description": "Cycle to the next search area (sutta, dictionary)",
+        "description": "Cycle to the next search area (Suttas, Dictionary, Library)",
         "shortcuts": ["Ctrl+;"]
     },
     {
         "id": "prev_result",
         "name": "Previous Result",
-        "description": "Navigate to the previous search result",
+        "description": "Select the previous search result in the sidebar",
         "shortcuts": ["Ctrl+Up", "Ctrl+K"]
     },
     {
         "id": "next_result",
         "name": "Next Result",
-        "description": "Navigate to the next search result",
+        "description": "Select the next search result in the sidebar",
         "shortcuts": ["Ctrl+Down", "Ctrl+J"]
     },
     {
         "id": "find_in_page",
         "name": "Find in Page",
-        "description": "Open the find bar to search within the current page",
+        "description": "Open the find bar to search within the current tab",
         "shortcuts": ["Ctrl+F"]
     },
     {
         "id": "find_next",
         "name": "Find Next in Page",
-        "description": "Find the next occurrence in the current page",
+        "description": "Find the next occurrence in the current tab",
         "shortcuts": ["Ctrl+N"]
     },
     {
         "id": "find_prev",
         "name": "Find Previous in Page",
-        "description": "Find the previous occurrence in the current page",
+        "description": "Find the previous occurrence in the current tab",
         "shortcuts": ["Ctrl+P"]
     },
     {
@@ -79,7 +79,7 @@
     },
     {
         "id": "pin_tab",
-        "name": "Pin Tab",
+        "name": "Pin/Unpin Tab",
         "description": "Pin or unpin the current tab",
         "shortcuts": ["Ctrl+I"]
     },
@@ -116,19 +116,49 @@
     {
         "id": "scroll_up",
         "name": "Scroll Up",
-        "description": "Scroll the page up",
+        "description": "Scroll the page up in the current tab",
         "shortcuts": ["K"]
     },
     {
         "id": "scroll_down",
         "name": "Scroll Down",
-        "description": "Scroll the page down",
+        "description": "Scroll the page down in the current tab",
         "shortcuts": ["J"]
     },
     {
         "id": "scroll_half_page_up",
         "name": "Scroll Half Page Up",
-        "description": "Scroll half a page up",
+        "description": "Scroll half a page up in the current tab",
         "shortcuts": ["Ctrl+U"]
+    },
+    {
+        "id": "scroll_half_page_down",
+        "name": "Scroll Half Page Down",
+        "description": "Scroll half a page down in the current tab",
+        "shortcuts": ["Ctrl+D"]
+    },
+    {
+        "id": "scroll_page_up",
+        "name": "Scroll Page Up",
+        "description": "Scroll a page up in the current tab",
+        "shortcuts": ["Shift+Space", "PgUp"]
+    },
+    {
+        "id": "scroll_page_down",
+        "name": "Scroll Page Down",
+        "description": "Scroll a page down in the current tab",
+        "shortcuts": ["Space", "PgDown"]
+    },
+    {
+        "id": "scroll_to_top",
+        "name": "Scroll To Top",
+        "description": "Scroll to the top of the page in the current tab",
+        "shortcuts": ["Home", "G"]
+    },
+    {
+        "id": "scroll_to_bottom",
+        "name": "Scroll To Bottom",
+        "description": "Scroll to the bottom of the page in the current tab",
+        "shortcuts": ["End", "Shift+G"]
     }
 ]

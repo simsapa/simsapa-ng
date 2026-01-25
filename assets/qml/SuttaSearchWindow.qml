@@ -841,34 +841,6 @@ ${query_text}`;
                     }
                 }
             }
-
-            // CMenuItem {
-            //     action: Action {
-            //         id: action_sutta_study
-            //         text: "&Sutta Study"
-            //         icon.source: "icons/32x32/bxs_book_bookmark.png"
-            //         shortcut: Shortcut {
-            //             sequences: ["Ctrl+F5"]
-            //             context: Qt.WindowShortcut
-            //             onActivated: action_sutta_study.trigger()
-            //         }
-            //         /* onTriggered: TODO */
-            //     }
-            // }
-
-            // CMenuItem {
-            //     action: Action {
-            //         id: action_dictionary_search
-            //         text: "&Dictionary Search"
-            //         icon.source: "icons/32x32/bxs_book_content.png"
-            //         shortcut: Shortcut {
-            //             sequences: ["F6"]
-            //             context: Qt.WindowShortcut
-            //             onActivated: action_dictionary_search.trigger()
-            //         }
-            //         /* onTriggered: TODO */
-            //     }
-            // }
         }
 
         Menu {
@@ -1158,7 +1130,7 @@ ${query_text}`;
                     id: action_scroll_half_page_down
                     text: "Scroll Half Page Down"
                     shortcut: Shortcut {
-                        sequences: ["Ctrl+D"]
+                        sequences: root.get_sequences("scroll_half_page_down")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_half_page_down.trigger()
                     }
@@ -1174,7 +1146,7 @@ ${query_text}`;
                     id: action_scroll_page_up
                     text: "Scroll Page Up"
                     shortcut: Shortcut {
-                        sequences: ["Shift+Space", "PgUp"]
+                        sequences: root.get_sequences("scroll_page_up")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_page_up.trigger()
                     }
@@ -1190,7 +1162,7 @@ ${query_text}`;
                     id: action_scroll_page_down
                     text: "Scroll Page Down"
                     shortcut: Shortcut {
-                        sequences: ["Space", "PgDown"]
+                        sequences: root.get_sequences("scroll_page_down")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_page_down.trigger()
                     }
@@ -1206,7 +1178,7 @@ ${query_text}`;
                     id: action_scroll_to_top
                     text: "Scroll to Top"
                     shortcut: Shortcut {
-                        sequences: ["Home"]
+                        sequences: root.get_sequences("scroll_to_top")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_to_top.trigger()
                     }
@@ -1222,7 +1194,7 @@ ${query_text}`;
                     id: action_scroll_to_bottom
                     text: "Scroll to Bottom"
                     shortcut: Shortcut {
-                        sequences: ["End"]
+                        sequences: root.get_sequences("scroll_to_bottom")
                         context: Qt.WindowShortcut
                         onActivated: action_scroll_to_bottom.trigger()
                     }
