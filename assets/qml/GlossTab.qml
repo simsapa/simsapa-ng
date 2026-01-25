@@ -1405,6 +1405,9 @@ ${main_text}
                                 placeholderText: "Enter paragraphs to gloss ..."
                                 selectByMouse: true
                                 wrapMode: TextEdit.WordWrap
+                                background: Rectangle {
+                                    color: "transparent"
+                                }
                             }
                         }
 
@@ -1579,6 +1582,9 @@ ${main_text}
                                     if (text !== paragraph_item.text) {
                                         root.update_paragraph_text(paragraph_item.index, text);
                                     }
+                                }
+                                background: Rectangle {
+                                    color: "transparent"
                                 }
                             }
                         }

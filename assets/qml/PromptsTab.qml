@@ -848,6 +848,9 @@ Item {
                                 wrapMode: TextEdit.WordWrap
                                 placeholderText: "Prompt message ..."
                                 readOnly: !message_item.is_editable
+                                background: Rectangle {
+                                    color: "transparent"
+                                }
                                 onTextChanged: {
                                     if (text !== message_item.content) {
                                         messages_model.set(message_item.index, {
