@@ -310,50 +310,53 @@ ApplicationWindow {
                         }
 
                         // Wake Lock section (mobile only)
-                        Label {
-                            visible: root.is_mobile
-                            text: "Wake Lock"
-                            font.pointSize: root.pointSize + 1
-                            font.bold: true
-                            Layout.topMargin: 10
-                        }
+                        // 
+                        // NOTE: Commented out for now because the Wake Lock is not sufficient to stop Android from suspending the app when placed in the background.
+                        
+                        /* Label { */
+                        /*     visible: root.is_mobile */
+                        /*     text: "Wake Lock" */
+                        /*     font.pointSize: root.pointSize + 1 */
+                        /*     font.bold: true */
+                        /*     Layout.topMargin: 10 */
+                        /* } */
 
-                        Label {
-                            visible: root.is_mobile
-                            text: "The wake lock for example allows the Obsidian Simsapa plugin to communicate with the Simsapa app while it is in the background."
-                            font.pointSize: root.pointSize - 2
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
+                        /* Label { */
+                        /*     visible: root.is_mobile */
+                        /*     text: "The wake lock for example allows the Obsidian Simsapa plugin to communicate with the Simsapa app while it is in the background." */
+                        /*     font.pointSize: root.pointSize - 2 */
+                        /*     wrapMode: Text.WordWrap */
+                        /*     Layout.fillWidth: true */
+                        /* } */
 
-                        Button {
-                            visible: root.is_mobile
-                            text: root.wake_lock_acquired ? "Release Wake Lock" : "Acquire Wake Lock"
-                            font.pointSize: root.pointSize
-                            onClicked: {
-                                if (root.wake_lock_acquired) {
-                                    SuttaBridge.release_wake_lock_rust();
-                                } else {
-                                    SuttaBridge.acquire_wake_lock_rust();
-                                }
-                                root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
-                            }
-                        }
+                        /* Button { */
+                        /*     visible: root.is_mobile */
+                        /*     text: root.wake_lock_acquired ? "Release Wake Lock" : "Acquire Wake Lock" */
+                        /*     font.pointSize: root.pointSize */
+                        /*     onClicked: { */
+                        /*         if (root.wake_lock_acquired) { */
+                        /*             SuttaBridge.release_wake_lock_rust(); */
+                        /*         } else { */
+                        /*             SuttaBridge.acquire_wake_lock_rust(); */
+                        /*         } */
+                        /*         root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust(); */
+                        /*     } */
+                        /* } */
 
-                        Button {
-                            visible: root.is_mobile
-                            text: "Refresh Status"
-                            font.pointSize: root.pointSize
-                            onClicked: {
-                                root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
-                            }
-                        }
+                        /* Button { */
+                        /*     visible: root.is_mobile */
+                        /*     text: "Refresh Status" */
+                        /*     font.pointSize: root.pointSize */
+                        /*     onClicked: { */
+                        /*         root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust(); */
+                        /*     } */
+                        /* } */
 
-                        Label {
-                            visible: root.is_mobile
-                            text: "Wake Lock Status: " + (root.wake_lock_acquired ? "Acquired" : "Not Acquired")
-                            font.pointSize: root.pointSize
-                        }
+                        /* Label { */
+                        /*     visible: root.is_mobile */
+                        /*     text: "Wake Lock Status: " + (root.wake_lock_acquired ? "Acquired" : "Not Acquired") */
+                        /*     font.pointSize: root.pointSize */
+                        /* } */
 
                         Item { Layout.fillHeight: true }
                     }
