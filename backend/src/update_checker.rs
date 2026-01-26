@@ -855,6 +855,10 @@ mod tests {
         assert_eq!(update.version, "v0.2.0");
         assert!(update.visit_url.contains("simsapa/simsapa"));
         assert!(update.visit_url.contains("v0.2.0"));
+
+        // Check that an alpha version ("0.2.0-alpha.1") is lower than the released version ("0.2.0")
+        let result = has_app_update(&info, "0.2.0-alpha.1");
+        assert_eq!(update.version, "v0.2.0");
     }
 
     #[test]
