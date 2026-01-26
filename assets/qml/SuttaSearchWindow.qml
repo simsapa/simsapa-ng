@@ -1084,6 +1084,7 @@ ${query_text}`;
                     shortcut: Shortcut {
                         sequences: root.get_sequences("scroll_up")
                         context: Qt.WindowShortcut
+                        enabled: !tab_list_dialog.visible
                         onActivated: action_scroll_up.trigger()
                     }
                     onTriggered: {
@@ -1100,6 +1101,7 @@ ${query_text}`;
                     shortcut: Shortcut {
                         sequences: root.get_sequences("scroll_down")
                         context: Qt.WindowShortcut
+                        enabled: !tab_list_dialog.visible
                         onActivated: action_scroll_down.trigger()
                     }
                     onTriggered: {
@@ -1180,6 +1182,7 @@ ${query_text}`;
                     shortcut: Shortcut {
                         sequences: root.get_sequences("scroll_to_top")
                         context: Qt.WindowShortcut
+                        enabled: !tab_list_dialog.visible
                         onActivated: action_scroll_to_top.trigger()
                     }
                     onTriggered: {
@@ -1196,6 +1199,7 @@ ${query_text}`;
                     shortcut: Shortcut {
                         sequences: root.get_sequences("scroll_to_bottom")
                         context: Qt.WindowShortcut
+                        enabled: !tab_list_dialog.visible
                         onActivated: action_scroll_to_bottom.trigger()
                     }
                     onTriggered: {
