@@ -14,7 +14,7 @@ use crate::db::appdata_schema::suttas::dsl::*;
 use crate::logger::{warn, error, info, debug};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
-use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html};
+use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html, thebuddhaswords_net_convert_links_in_html};
 use crate::html_content::{blank_html_page, sutta_html_page};
 use crate::{get_app_globals, init_app_globals};
 
@@ -376,6 +376,9 @@ impl AppData {
                                 &caps[2],
                                 &caps[3])
                     }).to_string();
+
+                    // Convert thebuddhaswords.net links to ssp:// internal links
+                    word_html = thebuddhaswords_net_convert_links_in_html(&word_html);
 
                     word_html
                 },

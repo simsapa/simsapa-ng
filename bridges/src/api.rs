@@ -18,7 +18,8 @@ use simsapa_backend::{AppGlobals, get_app_data, get_create_simsapa_dir, get_crea
 use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
-use simsapa_backend::helpers::{create_or_update_linux_desktop_icon_file, query_text_to_uid_field_query};
+use simsapa_backend::db::appdata_models::Sutta;
+use simsapa_backend::helpers::{create_or_update_linux_desktop_icon_file, query_text_to_uid_field_query, verse_sutta_ref_to_uid};
 use simsapa_backend::logger::{info, warn, error, profile};
 use simsapa_backend::types::{SearchResult, SearchParams, SearchMode, SearchArea};
 use simsapa_backend::query_task::SearchQueryTask;
@@ -85,6 +86,53 @@ fn pathbuf_to_forward_slash_string(path: &Path) -> String {
         .map(|s| s.to_str().unwrap_or(""))
         .collect::<Vec<_>>()
         .join("/")
+}
+
+/// Convert verse references to actual sutta UIDs.
+/// E.g., "thag179/pli/ms" -> "thag2.30/pli/ms", "dhp34/pli/ms" -> "dhp33-43/pli/ms"
+/// Returns the original UID if no conversion is needed.
+fn convert_verse_ref_to_sutta_uid(uid_str: &str) -> String {
+    // Extract the sutta code without language/author (before first '/')
+    let code = uid_str.split('/').next().unwrap_or(uid_str);
+
+    // Try to convert verse reference to sutta UID (e.g., "thag179" -> "thag2.30")
+    if let Some(converted_uid) = verse_sutta_ref_to_uid(code) {
+        // Preserve the language/author part if present (e.g., keep "/pli/ms")
+        if uid_str.contains('/') {
+            let parts: Vec<&str> = uid_str.splitn(2, '/').collect();
+            if parts.len() == 2 {
+                format!("{}/{}", converted_uid, parts[1])
+            } else {
+                format!("{}/pli/ms", converted_uid)
+            }
+        } else {
+            format!("{}/pli/ms", converted_uid)
+        }
+    } else {
+        uid_str.to_string()
+    }
+}
+
+/// Look up a sutta by UID with fallback to /pli/ms version.
+/// Returns the sutta if found, or None if not found.
+fn lookup_sutta_with_fallback(dbm: &DbManager, uid_str: &str) -> Option<Sutta> {
+    // Try to get sutta with the given UID
+    let sutta_option = dbm.appdata.get_sutta(uid_str);
+
+    // If not found and not already pli/ms, try fallback
+    if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
+        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
+        let code = uid_str.split('/').next().unwrap_or(uid_str);
+        let fallback_uid = format!("{}/pli/ms", code);
+
+        // Try to get fallback sutta
+        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
+            info(&format!("Using fallback UID: {}", fallback_uid));
+            return Some(fallback_sutta);
+        }
+    }
+
+    sutta_option
 }
 
 #[cxx_qt::bridge]
@@ -623,30 +671,16 @@ fn get_book_page_by_path(book_uid: &str, resource_path: PathBuf, dbm: &State<Arc
 fn open_sutta_window(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> Status {
     // Convert path to forward slashes for cross-platform consistency
     let uid_str = pathbuf_to_forward_slash_string(&uid);
-    info(&format!("open_sutta(): {}", uid_str));
+    info(&format!("open_sutta_window(): {}", uid_str));
 
-    // Try to get sutta with original UID
-    let sutta_option = dbm.appdata.get_sutta(&uid_str);
-
-    // If not found and not already pli/ms, try fallback
-    let final_sutta = if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
-        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
-        let code = uid_str.split('/').next().unwrap_or(&uid_str);
-        let fallback_uid = format!("{}/pli/ms", code);
-
-        // Try to get fallback sutta
-        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
-            info(&format!("open_sutta(): Using fallback UID: {}", fallback_uid));
-            Some(fallback_sutta)
-        } else {
-            None
-        }
-    } else {
-        sutta_option
-    };
+    // Convert verse references and look up sutta
+    let processed_uid = convert_verse_ref_to_sutta_uid(&uid_str);
+    if processed_uid != uid_str {
+        info(&format!("Converted verse reference '{}' to '{}'", uid_str, processed_uid));
+    }
 
     // If sutta is found, compose JSON and call callback
-    if let Some(sutta) = final_sutta {
+    if let Some(sutta) = lookup_sutta_with_fallback(dbm, &processed_uid) {
         let result_data_json = serde_json::json!({
             "item_uid": sutta.uid,
             "table_name": "suttas",
@@ -677,28 +711,14 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, anchor: Option<&str>, dbm: &Sta
     };
     info(&log_msg);
 
-    // Try to get sutta with original UID
-    let sutta_option = dbm.appdata.get_sutta(&uid_str);
-
-    // If not found and not already pli/ms, try fallback
-    let final_sutta = if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
-        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
-        let code = uid_str.split('/').next().unwrap_or(&uid_str);
-        let fallback_uid = format!("{}/pli/ms", code);
-
-        // Try to get fallback sutta
-        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
-            info(&format!("open_sutta_tab(): Using fallback UID: {}", fallback_uid));
-            Some(fallback_sutta)
-        } else {
-            None
-        }
-    } else {
-        sutta_option
-    };
+    // Convert verse references and look up sutta
+    let processed_uid = convert_verse_ref_to_sutta_uid(&uid_str);
+    if processed_uid != uid_str {
+        info(&format!("Converted verse reference '{}' to '{}'", uid_str, processed_uid));
+    }
 
     // If sutta is found, compose JSON and call callback
-    if let Some(sutta) = final_sutta {
+    if let Some(sutta) = lookup_sutta_with_fallback(dbm, &processed_uid) {
         let mut result_data_json = serde_json::json!({
             "item_uid": sutta.uid,
             "table_name": "suttas",
@@ -952,28 +972,14 @@ fn open_sutta_by_uid(uid: PathBuf, dbm: &State<Arc<DbManager>>) -> (Status, Stri
     let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("open_sutta_by_uid(): {}", uid_str));
 
-    // Try to get sutta with original UID
-    let sutta_option = dbm.appdata.get_sutta(&uid_str);
-
-    // If not found and not already pli/ms, try fallback
-    let final_sutta = if sutta_option.is_none() && !uid_str.ends_with("/pli/ms") {
-        // Extract code (e.g., "sn47.8" from "sn47.8/en/thanissaro")
-        let code = uid_str.split('/').next().unwrap_or(&uid_str);
-        let fallback_uid = format!("{}/pli/ms", code);
-
-        // Try to get fallback sutta
-        if let Some(fallback_sutta) = dbm.appdata.get_sutta(&fallback_uid) {
-            info(&format!("open_sutta_by_uid(): Using fallback UID: {}", fallback_uid));
-            Some(fallback_sutta)
-        } else {
-            None
-        }
-    } else {
-        sutta_option
-    };
+    // Convert verse references and look up sutta
+    let processed_uid = convert_verse_ref_to_sutta_uid(&uid_str);
+    if processed_uid != uid_str {
+        info(&format!("Converted verse reference '{}' to '{}'", uid_str, processed_uid));
+    }
 
     // If sutta is found, compose JSON and call callback
-    if let Some(sutta) = final_sutta {
+    if let Some(sutta) = lookup_sutta_with_fallback(dbm, &processed_uid) {
         let result_data_json = serde_json::json!({
             "item_uid": sutta.uid,
             "table_name": "suttas",

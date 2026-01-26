@@ -477,6 +477,114 @@ pub fn dhammatalk_org_convert_link_href_in_html(link_selector: &Selector, html_t
     modified_html
 }
 
+/// Convert thebuddhaswords.net URL to sutta UID
+/// Handles URLs like:
+/// - https://thebuddhaswords.net/dn/dn11.html → dn11/pli/ms
+/// - https://thebuddhaswords.net/sn/sn35.93.html → sn35.93/pli/ms
+/// - https://thebuddhaswords.net/snp/snp1.12.html → snp1.12/pli/ms
+/// - For verse-based texts (tha, thi, it), returns what can be extracted from URL
+pub fn thebuddhaswords_net_url_to_uid(url: &str, link_text: &str) -> Option<String> {
+    lazy_static! {
+        // Match thebuddhaswords.net URLs
+        // Captures: (1) collection code (dn, mn, sn, an, tha, thi, snp, it, etc.), (2) filename
+        static ref RE_THEBUDDHASWORDS_URL: Regex = Regex::new(
+            r"thebuddhaswords\.net/([a-z]+)/([a-z0-9.]+)\.html"
+        ).unwrap();
+
+        // Match verse references in link text: TH179, THI71, ITI16
+        static ref RE_VERSE_TEXT: Regex = Regex::new(r"^(TH|THI|ITI)(\d+)$").unwrap();
+    }
+
+    // Extract anchor if present
+    let (url_without_anchor, anchor) = if let Some(pos) = url.find('#') {
+        (&url[..pos], &url[pos..])
+    } else {
+        (url, "")
+    };
+
+    if let Some(caps) = RE_THEBUDDHASWORDS_URL.captures(url_without_anchor) {
+        let collection = caps.get(1)?.as_str();
+        let filename = caps.get(2)?.as_str();
+
+        // Handle verse-based texts by looking at the link text
+        if collection == "tha" || collection == "thi" || collection == "it" {
+            // Try to extract verse number from link text
+            let text_normalized = link_text.trim().to_uppercase();
+            if let Some(text_caps) = RE_VERSE_TEXT.captures(&text_normalized) {
+                let book = text_caps.get(1)?.as_str();
+                let verse_str = text_caps.get(2)?.as_str();
+                let verse_num = verse_str.parse::<u32>().ok()?;
+
+                let uid = match book {
+                    "TH" => thag_verse_to_uid(verse_num),
+                    "THI" => thig_verse_to_uid(verse_num),
+                    "ITI" => Some(format!("iti{}", verse_num)),
+                    _ => None,
+                }?;
+
+                return Some(format!("{}/pli/ms{}", uid, anchor));
+            }
+        }
+
+        // For standard suttas, extract the sutta code from filename
+        // dn11.html → dn11, sn35.93.html → sn35.93, snp1.12.html → snp1.12
+        let sutta_code = filename;
+
+        // Construct UID with /pli/ms suffix
+        return Some(format!("{}/pli/ms{}", sutta_code, anchor));
+    }
+
+    None
+}
+
+/// Convert thebuddhaswords.net links in HTML to ssp:// internal links
+/// This processes <a> tags with href containing thebuddhaswords.net URLs
+pub fn thebuddhaswords_net_convert_links_in_html(html_text: &str) -> String {
+    lazy_static! {
+        // Match <a> tags with thebuddhaswords.net href
+        static ref RE_LINK_TAG: Regex = Regex::new(
+            r#"<a\s+([^>]*href=["']https?://thebuddhaswords\.net/[^"']+["'][^>]*)>([^<]*)</a>"#
+        ).unwrap();
+
+        // Extract href attribute value
+        static ref RE_HREF_ATTR: Regex = Regex::new(
+            r#"href=["'](https?://thebuddhaswords\.net/[^"']+)["']"#
+        ).unwrap();
+    }
+
+    let mut modified_html = html_text.to_string();
+    let mut replacements: Vec<(String, String)> = Vec::new();
+
+    for caps in RE_LINK_TAG.captures_iter(html_text) {
+        let full_tag = caps.get(0).map(|m| m.as_str()).unwrap_or("");
+        let attrs = caps.get(1).map(|m| m.as_str()).unwrap_or("");
+        let link_text = caps.get(2).map(|m| m.as_str()).unwrap_or("");
+
+        // Extract the href URL
+        if let Some(href_caps) = RE_HREF_ATTR.captures(attrs) {
+            let original_url = href_caps.get(1).map(|m| m.as_str()).unwrap_or("");
+
+            // Convert URL to UID
+            if let Some(uid) = thebuddhaswords_net_url_to_uid(original_url, link_text) {
+                let ssp_url = format!("ssp://suttas/{}", uid);
+
+                // Create the new tag with ssp:// URL
+                let new_attrs = attrs.replace(original_url, &ssp_url);
+                let new_tag = format!("<a {}>{}></a>", new_attrs, link_text);
+
+                replacements.push((full_tag.to_string(), new_tag));
+            }
+        }
+    }
+
+    // Apply replacements
+    for (old_tag, new_tag) in replacements {
+        modified_html = modified_html.replace(&old_tag, &new_tag);
+    }
+
+    modified_html
+}
+
 pub fn is_complete_sutta_uid(uid: &str) -> bool {
     let uid = uid.trim_matches('/');
 
@@ -2690,5 +2798,92 @@ mod tests {
         assert_eq!(verse_sutta_ref_to_uid("dhp1-20"), None); // Already a chapter range
         assert_eq!(verse_sutta_ref_to_uid("thag1.50"), None); // Already a proper UID
         assert_eq!(verse_sutta_ref_to_uid("not-a-ref"), None);
+    }
+
+    #[test]
+    fn test_thebuddhaswords_net_url_to_uid() {
+        // Test standard sutta URLs from dictionary pages
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/dn/dn11.html", "DN11.6"),
+            Some("dn11/pli/ms".to_string())
+        );
+
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/mn/mn21.html", "MN21"),
+            Some("mn21/pli/ms".to_string())
+        );
+
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/an/an4.45.html", "AN4.45"),
+            Some("an4.45/pli/ms".to_string())
+        );
+
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/sn/sn35.93.html", "SN35.93"),
+            Some("sn35.93/pli/ms".to_string())
+        );
+
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/snp/snp1.12.html", "SNP12"),
+            Some("snp1.12/pli/ms".to_string())
+        );
+
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/ud/ud8.7.html", "UD77"),
+            Some("ud8.7/pli/ms".to_string())
+        );
+
+        // Test verse-based suttas with text extraction
+        // TH179 → thag verse 179
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/tha/tha3.html", "TH179"),
+            Some("thag2.30/pli/ms".to_string()) // thag_verse_to_uid(179)
+        );
+
+        // THI71 → thig verse 71
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/thi/thi14.html", "THI71"),
+            Some("thig5.1/pli/ms".to_string()) // thig_verse_to_uid(71)
+        );
+
+        // ITI16 → iti16
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/it/it.html", "ITI16"),
+            Some("iti16/pli/ms".to_string())
+        );
+
+        // Test with anchor
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://thebuddhaswords.net/mn/mn10.html#12.5", "MN10"),
+            Some("mn10/pli/ms#12.5".to_string())
+        );
+
+        // Test non-matching URLs
+        assert_eq!(
+            thebuddhaswords_net_url_to_uid("https://example.com/test.html", "test"),
+            None
+        );
+    }
+
+    #[test]
+    fn test_thebuddhaswords_net_convert_links_in_html() {
+        // Test HTML with thebuddhaswords.net links
+        let html = r#"<a class="sutta_link" href="https://thebuddhaswords.net/dn/dn11.html">DN11.6</a>"#;
+        let result = thebuddhaswords_net_convert_links_in_html(html);
+        assert!(result.contains("ssp://suttas/dn11/pli/ms"));
+
+        let html = r#"<a href="https://thebuddhaswords.net/sn/sn35.93.html">SN35.93</a>"#;
+        let result = thebuddhaswords_net_convert_links_in_html(html);
+        assert!(result.contains("ssp://suttas/sn35.93/pli/ms"));
+
+        // Test HTML with verse-based links
+        let html = r#"<a class="sutta_link" href="https://thebuddhaswords.net/tha/tha3.html">TH179</a>"#;
+        let result = thebuddhaswords_net_convert_links_in_html(html);
+        assert!(result.contains("ssp://suttas/thag2.30/pli/ms"));
+
+        // Test that non-thebuddhaswords links are unchanged
+        let html = r#"<a href="https://example.com/test.html">test</a>"#;
+        let result = thebuddhaswords_net_convert_links_in_html(html);
+        assert_eq!(html, result);
     }
 }

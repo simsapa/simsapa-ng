@@ -143,13 +143,54 @@ function extract_sutta_uid_from_link(anchor: HTMLAnchorElement): { uid: string, 
     }
 
     // Priority 3: thebuddhaswords.net URL
-    // Format: https://thebuddhaswords.net/suttas/an4.41.html
+    // Format 1: https://thebuddhaswords.net/suttas/an4.41.html
+    // Format 2: https://thebuddhaswords.net/dn/dn11.html (dictionary links)
+    // Format 3: https://thebuddhaswords.net/tha/tha3.html with text TH179 (verse-based)
     if (href.includes('thebuddhaswords.net')) {
-        const match = href.match(/\/suttas\/([^.#]+)\.html/);
+        // Try format 1: /suttas/...
+        let match = href.match(/\/suttas\/([^.#]+)\.html/);
         if (match) {
-            // Extract the sutta code (e.g., an4.41) and append /pli/ms
             const uid = `${match[1]}/pli/ms`;
             const anchor_id = extract_anchor(href);
+            return { uid, anchor: anchor_id };
+        }
+
+        // Try format 2: /collection/code.html (e.g., /dn/dn11.html, /sn/sn35.93.html)
+        match = href.match(/\/([a-z]+)\/([a-z0-9.]+)\.html/);
+        if (match) {
+            const collection = match[1];
+            const code = match[2];
+            const anchor_id = extract_anchor(href);
+
+            // Handle verse-based texts (tha, thi, it) by checking link text
+            if (collection === 'tha' || collection === 'thi' || collection === 'it') {
+                // Try to extract verse number from link text (e.g., "TH179", "THI71", "ITI16")
+                const verse_match = text.match(/^(TH|THI|ITI)(\d+)$/);
+                if (verse_match) {
+                    const book = verse_match[1].toLowerCase();
+                    const verse_num = verse_match[2];
+
+                    // For verse-based texts, construct UID directly
+                    // The Rust backend helpers will handle the conversion
+                    // For now, we'll use a simple format that the backend can process
+                    if (book === 'th') {
+                        // TH179 → thag verse 179 (backend will convert to proper UID)
+                        const uid = `thag${verse_num}/pli/ms`;
+                        return { uid, anchor: anchor_id };
+                    } else if (book === 'thi') {
+                        // THI71 → thig verse 71
+                        const uid = `thig${verse_num}/pli/ms`;
+                        return { uid, anchor: anchor_id };
+                    } else if (book === 'iti') {
+                        // ITI16 → iti16
+                        const uid = `iti${verse_num}/pli/ms`;
+                        return { uid, anchor: anchor_id };
+                    }
+                }
+            }
+
+            // For standard suttas, use the code from the filename
+            const uid = `${code}/pli/ms`;
             return { uid, anchor: anchor_id };
         }
     }
