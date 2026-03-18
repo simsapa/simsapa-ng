@@ -4093,6 +4093,7 @@ name = "tipitaka_xml_parser"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "arangors",
  "chrono",
  "clap",
  "csv",
