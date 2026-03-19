@@ -1702,23 +1702,8 @@ impl<'a> SearchQueryTask<'a> {
     // ===== Fulltext Search Methods =====
 
     fn fulltext_suttas(&mut self, _page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        use crate::try_get_fulltext_searcher;
+        use crate::with_fulltext_searcher;
         use crate::search::searcher::SearchFilters;
-
-        let searcher = match try_get_fulltext_searcher() {
-            Some(s) => s,
-            None => {
-                warn("Fulltext searcher not initialized. Indexes may not exist.");
-                self.db_query_hits_count = 0;
-                return Ok(Vec::new());
-            }
-        };
-
-        if !searcher.has_sutta_indexes() {
-            warn("No sutta fulltext indexes available.");
-            self.db_query_hits_count = 0;
-            return Ok(Vec::new());
-        }
 
         let filters = SearchFilters {
             lang: if !self.lang.is_empty() && self.lang != "Language" {
@@ -1733,30 +1718,32 @@ impl<'a> SearchQueryTask<'a> {
             sutta_ref: None,
         };
 
-        let results = searcher.search_suttas(&self.query_text, &filters, self.page_len)?;
-        self.db_query_hits_count = results.len() as i64;
+        let query_text = self.query_text.clone();
+        let page_len = self.page_len;
 
-        Ok(results)
+        match with_fulltext_searcher(|searcher| {
+            if !searcher.has_sutta_indexes() {
+                warn("No sutta fulltext indexes available.");
+                return Ok(Vec::new());
+            }
+            searcher.search_suttas(&query_text, &filters, page_len)
+        }) {
+            Some(Ok(results)) => {
+                self.db_query_hits_count = results.len() as i64;
+                Ok(results)
+            }
+            Some(Err(e)) => Err(e.into()),
+            None => {
+                warn("Fulltext searcher not initialized. Indexes may not exist.");
+                self.db_query_hits_count = 0;
+                Ok(Vec::new())
+            }
+        }
     }
 
     fn fulltext_dict_words(&mut self, _page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        use crate::try_get_fulltext_searcher;
+        use crate::with_fulltext_searcher;
         use crate::search::searcher::SearchFilters;
-
-        let searcher = match try_get_fulltext_searcher() {
-            Some(s) => s,
-            None => {
-                warn("Fulltext searcher not initialized. Indexes may not exist.");
-                self.db_query_hits_count = 0;
-                return Ok(Vec::new());
-            }
-        };
-
-        if !searcher.has_dict_indexes() {
-            warn("No dict_word fulltext indexes available.");
-            self.db_query_hits_count = 0;
-            return Ok(Vec::new());
-        }
 
         let filters = SearchFilters {
             lang: if !self.lang.is_empty() && self.lang != "Language" {
@@ -1771,10 +1758,27 @@ impl<'a> SearchQueryTask<'a> {
             sutta_ref: None,
         };
 
-        let results = searcher.search_dict_words(&self.query_text, &filters, self.page_len)?;
-        self.db_query_hits_count = results.len() as i64;
+        let query_text = self.query_text.clone();
+        let page_len = self.page_len;
 
-        Ok(results)
+        match with_fulltext_searcher(|searcher| {
+            if !searcher.has_dict_indexes() {
+                warn("No dict_word fulltext indexes available.");
+                return Ok(Vec::new());
+            }
+            searcher.search_dict_words(&query_text, &filters, page_len)
+        }) {
+            Some(Ok(results)) => {
+                self.db_query_hits_count = results.len() as i64;
+                Ok(results)
+            }
+            Some(Err(e)) => Err(e.into()),
+            None => {
+                warn("Fulltext searcher not initialized. Indexes may not exist.");
+                self.db_query_hits_count = 0;
+                Ok(Vec::new())
+            }
+        }
     }
 
     /// Returns the total number of hits found in the last database query.

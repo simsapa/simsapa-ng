@@ -35,6 +35,10 @@ Item {
     signal updateCheckError(error_message: string);
     signal releasesCheckCompleted();
 
+    // Search index signals
+    signal rebuildSearchIndexProgress(message: string);
+    signal rebuildSearchIndexCompleted(success: bool, message: string);
+
     // Topic Index signals
     signal topicIndexLoaded();
 
@@ -217,6 +221,14 @@ Item {
             }
             dpdLookupReady(query_id, result);
         });
+    }
+
+    function check_search_index_status(): string {
+        return '{"exists": true, "current": true}';
+    }
+
+    function rebuild_search_index() {
+        console.log("rebuild_search_index()");
     }
 
     function remove_book(book_uid: string) {

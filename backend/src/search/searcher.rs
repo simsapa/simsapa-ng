@@ -13,6 +13,7 @@ use crate::AppGlobalPaths;
 
 use super::schema::{build_dict_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
+pub use super::types::SearchFilters;
 
 /// Holds open indexes for fulltext searching.
 pub struct FulltextSearcher {
@@ -20,17 +21,6 @@ pub struct FulltextSearcher {
     sutta_indexes: HashMap<String, (Index, IndexReader)>,
     /// Map of language → (Index, IndexReader) for dict_word indexes
     dict_indexes: HashMap<String, (Index, IndexReader)>,
-}
-
-/// Filters that can be applied to fulltext search.
-#[derive(Debug, Default, Clone)]
-pub struct SearchFilters {
-    pub lang: Option<String>,
-    pub lang_include: bool,
-    pub source_uid: Option<String>,
-    pub source_include: bool,
-    pub nikaya: Option<String>,
-    pub sutta_ref: Option<String>,
 }
 
 impl FulltextSearcher {

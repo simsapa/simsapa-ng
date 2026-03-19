@@ -288,11 +288,13 @@ ApplicationWindow {
             const appdata_tar_url = `https://github.com/${github_repo}/releases/download/${version}/appdata.tar.bz2`;
             const dictionaries_tar_url = `https://github.com/${github_repo}/releases/download/${version}/dictionaries.tar.bz2`;
             const dpd_tar_url = `https://github.com/${github_repo}/releases/download/${version}/dpd.tar.bz2`;
+            const index_tar_url = `https://github.com/${github_repo}/releases/download/${version}/index.tar.bz2`;
 
             // Default: General bundle
             urls.push(appdata_tar_url);
             urls.push(dictionaries_tar_url);
             urls.push(dpd_tar_url);
+            urls.push(index_tar_url);
         }
 
         // Add language databases

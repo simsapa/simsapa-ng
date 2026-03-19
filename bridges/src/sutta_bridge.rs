@@ -155,6 +155,14 @@ pub mod qobject {
         #[cxx_name = "topicIndexLoaded"]
         fn topic_index_loaded_signal(self: Pin<&mut SuttaBridge>);
 
+        #[qsignal]
+        #[cxx_name = "rebuildSearchIndexProgress"]
+        fn rebuild_search_index_progress(self: Pin<&mut SuttaBridge>, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "rebuildSearchIndexCompleted"]
+        fn rebuild_search_index_completed(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -334,6 +342,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn import_document(self: Pin<&mut SuttaBridge>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString);
+
+        #[qinvokable]
+        fn rebuild_search_index(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn check_search_index_status(self: &SuttaBridge) -> QString;
 
         #[qinvokable]
         fn remove_book(self: &SuttaBridge, book_uid: &QString) -> bool;
@@ -1811,6 +1825,94 @@ impl qobject::SuttaBridge {
                     let error_qstr = QString::from(&error_msg);
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().document_import_completed(false, error_qstr);
+                    }).unwrap();
+                }
+            }
+        });
+    }
+
+    /// Check the search index status.
+    /// Returns a JSON string: {"exists": bool, "current": bool}
+    /// - exists: whether the index directory exists
+    /// - current: whether the VERSION file matches the expected version
+    pub fn check_search_index_status(&self) -> QString {
+        let globals = get_app_globals();
+        let index_dir = &globals.paths.index_dir;
+
+        let exists = match index_dir.try_exists() {
+            Ok(true) => true,
+            _ => false,
+        };
+
+        let current = if exists {
+            simsapa_backend::search::indexer::is_index_current(index_dir)
+        } else {
+            false
+        };
+
+        let json = format!(r#"{{"exists": {}, "current": {}}}"#, exists, current);
+        QString::from(&json)
+    }
+
+    pub fn rebuild_search_index(self: Pin<&mut Self>) {
+        info("rebuild_search_index: starting background rebuild");
+
+        let qt_thread = self.qt_thread();
+
+        thread::spawn(move || {
+            let progress_msg = QString::from("Rebuilding search index...");
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().rebuild_search_index_progress(progress_msg);
+            }).unwrap();
+
+            let app_data = get_app_data();
+            let globals = get_app_globals();
+            let paths = &globals.paths;
+
+            // Delete existing index directories to rebuild from scratch
+            if let Ok(true) = paths.index_dir.try_exists() {
+                let msg = QString::from("Removing old index...");
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().rebuild_search_index_progress(msg);
+                }).unwrap();
+
+                if let Err(e) = std::fs::remove_dir_all(&paths.index_dir) {
+                    let error_msg = format!("Failed to remove old index: {}", e);
+                    error(&error_msg);
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().rebuild_search_index_completed(false, error_qstr);
+                    }).unwrap();
+                    return;
+                }
+            }
+
+            let msg = QString::from("Building fulltext indexes for all languages...");
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().rebuild_search_index_progress(msg);
+            }).unwrap();
+
+            match simsapa_backend::search::indexer::build_all_indexes(
+                &app_data.dbm.appdata,
+                &app_data.dbm.dictionaries,
+                paths,
+            ) {
+                Ok(()) => {
+                    // Re-initialize the fulltext searcher with new indexes
+                    simsapa_backend::reinit_fulltext_searcher();
+
+                    info("rebuild_search_index: completed successfully");
+                    let success_msg = QString::from("Search index rebuilt successfully.");
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().rebuild_search_index_completed(true, success_msg);
+                    }).unwrap();
+                }
+                Err(e) => {
+                    let error_msg = format!("Failed to rebuild search index: {}", e);
+                    error(&error_msg);
+                    let error_qstr = QString::from(&error_msg);
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().rebuild_search_index_completed(false, error_qstr);
                     }).unwrap();
                 }
             }

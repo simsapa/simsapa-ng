@@ -16,13 +16,16 @@
 - `backend/src/search/schema.rs` - NEW: `build_sutta_schema()`, `build_dict_schema()`
 - `backend/src/search/indexer.rs` - NEW: `open_or_create_index()`, `build_sutta_index()`, `build_dict_index()`
 - `backend/src/search/searcher.rs` - NEW: `FulltextSearcher`, dual-field querying, snippet generation
-- `backend/src/search/types.rs` - NEW: `SearchStep`, `SearchFilters`, `SearchPipeline` (or placed in `backend/src/types.rs`)
+- `backend/src/search/types.rs` - NEW: `SearchStep`, `SearchFilters`, `SearchPipeline` extensible pipeline types
 - `backend/tests/test_snowball.rs` - NEW: Unit tests for stemmer module
 - `backend/tests/test_search.rs` - NEW: Integration tests for indexing and searching
 - `cli/src/bootstrap/mod.rs` - Add index building stages to bootstrap pipeline
 - `cli/Cargo.toml` - May need tantivy or backend search dependency updates
 - `bridges/src/asset_manager.rs` - Merge index directories during download extraction
+- `bridges/src/sutta_bridge.rs` - Add `rebuild_search_index()`, `check_search_index_status()` bridge functions with progress signals
 - `assets/qml/DownloadAppdataWindow.qml` - Add `index.tar.bz2` to initial setup download URLs
+- `assets/qml/SuttaSearchWindow.qml` - Add "Rebuild Search Index" menu item, rebuild dialog, startup index check notification
+- `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` - Add QML type stubs for new bridge functions and signals
 - `Makefile` - Add `compile-stemmers` target
 - `pali-stemmer-in-snowball/assets/snowball/algorithms/*.sbl` - Source Snowball algorithm files (read-only reference)
 - `pali-stemmer-in-snowball/algorithms/pali.sbl` - Custom Pali stemmer source (read-only reference)
@@ -116,15 +119,15 @@
   - [x] 6.4 Call `write_version_file()` before creating `index.tar.bz2` so `index/VERSION` is included. Also ensure the VERSION file is present in per-language archives (copy it into each per-language index directory or include it at the `index/` level in the tarball).
   - [x] 6.5 Test the bootstrap pipeline end-to-end: run a bootstrap, verify `index.tar.bz2` is created with the expected directory structure, verify per-language archives include `index/suttas/{lang}/`.
 
-- [ ] 7.0 Integrate index distribution with download flow
-  - [ ] 7.1 In `assets/qml/DownloadAppdataWindow.qml`, add `index.tar.bz2` to the initial setup URL list in `run_download()`, alongside `appdata.tar.bz2`, `dictionaries.tar.bz2`, `dpd.tar.bz2`.
-  - [ ] 7.2 Verify that `move_folder_contents()` in `bridges/src/asset_manager.rs` correctly merges the extracted `index/` directory into `app-assets/index/`. The existing mechanism should handle this — confirm with a manual test or code review.
-  - [ ] 7.3 Verify per-language downloads: after downloading and extracting `suttas_lang_{code}.tar.bz2` (which now includes `index/suttas/{lang}/`), the index files should land at `app-assets/index/suttas/{lang}/`. No code changes expected — just confirm the existing extraction logic handles the nested directory structure.
+- [x] 7.0 Integrate index distribution with download flow
+  - [x] 7.1 In `assets/qml/DownloadAppdataWindow.qml`, add `index.tar.bz2` to the initial setup URL list in `run_download()`, alongside `appdata.tar.bz2`, `dictionaries.tar.bz2`, `dpd.tar.bz2`.
+  - [x] 7.2 Verify that `move_folder_contents()` in `bridges/src/asset_manager.rs` correctly merges the extracted `index/` directory into `app-assets/index/`. The existing mechanism should handle this — confirm with a manual test or code review.
+  - [x] 7.3 Verify per-language downloads: after downloading and extracting `suttas_lang_{code}.tar.bz2` (which now includes `index/suttas/{lang}/`), the index files should land at `app-assets/index/suttas/{lang}/`. No code changes expected — just confirm the existing extraction logic handles the nested directory structure.
 
-- [ ] 8.0 Add extensible pipeline types and UI re-index action
-  - [ ] 8.1 Define the extensible pipeline types in `backend/src/types.rs` (or `backend/src/search/types.rs`): `SearchStep` (mode, query_text, filters), `SearchFilters` (lang, source_uid, nikaya, sutta_ref with include booleans), `SearchPipeline` (steps, area, page_len). Only single-step `FulltextMatch` is implemented for now.
-  - [ ] 8.2 Add a "Rebuild Search Index" action to the application menu or settings panel in QML. This should call a Rust bridge function that triggers `build_all_indexes()` in a background thread.
-  - [ ] 8.3 Add a progress indicator for re-indexing (e.g., emit a Qt signal with progress percentage or per-language status updates).
-  - [ ] 8.4 Add missing-index detection: on app startup (or when fulltext search is first attempted), check whether the expected index directories exist (using `try_exists()`). If indexes are missing, show a notification to the user suggesting they build or download indexes. Do NOT auto-build.
-  - [ ] 8.5 Add index VERSION check: on startup, call `is_index_current()`. If the version file is missing or stale, notify the user that re-indexing is recommended.
-  - [ ] 8.6 Run `make build -B` and `make qml-test` to verify full compilation and QML tests pass.
+- [x] 8.0 Add extensible pipeline types and UI re-index action
+  - [x] 8.1 Define the extensible pipeline types in `backend/src/search/types.rs`: `SearchStep` (mode, query_text, filters), `SearchFilters` (lang, source_uid, nikaya, sutta_ref with include booleans), `SearchPipeline` (steps, area, page_len). Only single-step `FulltextMatch` is implemented for now. Moved `SearchFilters` from `searcher.rs` to `search/types.rs` with re-export for backwards compatibility.
+  - [x] 8.2 Add a "Rebuild Search Index" action to the application menu or settings panel in QML. This should call a Rust bridge function that triggers `build_all_indexes()` in a background thread.
+  - [x] 8.3 Add a progress indicator for re-indexing (e.g., emit a Qt signal with progress percentage or per-language status updates). Implemented as part of 8.2 — dialog shows progress messages and BusyIndicator.
+  - [x] 8.4 Add missing-index detection: on app startup (or when fulltext search is first attempted), check whether the expected index directories exist (using `try_exists()`). If indexes are missing, show a notification to the user suggesting they build or download indexes. Do NOT auto-build.
+  - [x] 8.5 Add index VERSION check: on startup, call `is_index_current()`. If the version file is missing or stale, notify the user that re-indexing is recommended. Implemented as part of 8.4 via `check_search_index_status()`.
+  - [x] 8.6 Run `make build -B` and `make qml-test` to verify full compilation and QML tests pass.

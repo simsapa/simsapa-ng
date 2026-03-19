@@ -75,7 +75,7 @@ static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
 static SUTTA_REFERENCES: OnceLock<Vec<ReferenceSearchResult>> = OnceLock::new();
 static RELEASES_INFO: OnceLock<std::sync::RwLock<Option<ReleasesInfo>>> = OnceLock::new();
-static FULLTEXT_SEARCHER: OnceLock<search::searcher::FulltextSearcher> = OnceLock::new();
+static FULLTEXT_SEARCHER: std::sync::RwLock<Option<search::searcher::FulltextSearcher>> = std::sync::RwLock::new(None);
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_globals() {
@@ -173,14 +173,25 @@ pub fn try_get_releases_info() -> Option<ReleasesInfo> {
 /// Initialize the fulltext searcher by opening available indexes.
 /// This is safe to call even if indexes don't exist yet (it will just have no indexes).
 pub fn init_fulltext_searcher() {
-    if FULLTEXT_SEARCHER.get().is_some() {
-        return;
+    // Only initialize if not already set
+    if let Ok(guard) = FULLTEXT_SEARCHER.read() {
+        if guard.is_some() {
+            return;
+        }
     }
 
+    reinit_fulltext_searcher();
+}
+
+/// Re-initialize the fulltext searcher, replacing any existing instance.
+/// Call this after rebuilding indexes to pick up the new index files.
+pub fn reinit_fulltext_searcher() {
     let g = get_app_globals();
     match search::searcher::FulltextSearcher::open(&g.paths) {
         Ok(searcher) => {
-            FULLTEXT_SEARCHER.set(searcher).ok();
+            if let Ok(mut guard) = FULLTEXT_SEARCHER.write() {
+                *guard = Some(searcher);
+            }
             info("Fulltext searcher initialized");
         }
         Err(e) => {
@@ -190,8 +201,12 @@ pub fn init_fulltext_searcher() {
 }
 
 /// Get the fulltext searcher if initialized.
-pub fn try_get_fulltext_searcher() -> Option<&'static search::searcher::FulltextSearcher> {
-    FULLTEXT_SEARCHER.get()
+/// Returns a read guard that holds the searcher reference.
+pub fn with_fulltext_searcher<F, R>(f: F) -> Option<R>
+where
+    F: FnOnce(&search::searcher::FulltextSearcher) -> R,
+{
+    FULLTEXT_SEARCHER.read().ok().and_then(|guard| guard.as_ref().map(f))
 }
 
 #[unsafe(no_mangle)]
