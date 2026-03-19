@@ -19,6 +19,7 @@ Frame {
     required property Timer search_timer
     required property bool search_as_you_type_checked
     required property bool is_loading
+    required property bool has_query_error
 
     required property int icon_size
 
@@ -108,7 +109,7 @@ Frame {
 
             Button {
                 id: search_btn
-                icon.source: root.is_loading ? "icons/32x32/fa_stopwatch-solid.png" : "icons/32x32/bx_search_alt_2.png"
+                icon.source: root.has_query_error ? "icons/32x32/fa_triangle-exclamation-solid.png" : (root.is_loading ? "icons/32x32/fa_stopwatch-solid.png" : "icons/32x32/bx_search_alt_2.png")
                 enabled: search_input.text.length > 0
                 onClicked: root.handle_query_fn(search_input.text, 1) // qmllint disable use-proper-function
                 Layout.preferredHeight: root.icon_size

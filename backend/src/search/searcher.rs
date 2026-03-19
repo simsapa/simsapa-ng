@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
@@ -21,6 +22,14 @@ pub struct FulltextSearcher {
     sutta_indexes: HashMap<String, (Index, IndexReader)>,
     /// Map of language → (Index, IndexReader) for dict_word indexes
     dict_indexes: HashMap<String, (Index, IndexReader)>,
+}
+
+/// Returned by `FulltextSearcher::debug_query()`: the formatted debug text
+/// plus an optional parse-error message.
+#[derive(Debug)]
+pub struct DebugQueryResult {
+    pub debug_text: String,
+    pub parse_error: Option<String>,
 }
 
 impl FulltextSearcher {
@@ -89,6 +98,131 @@ impl FulltextSearcher {
 
         let reader = index.reader()?;
         Ok((index, reader))
+    }
+
+    /// Run the named tokenizer on `text` and return the resulting tokens as a
+    /// comma-separated string.
+    pub fn tokenize_to_string(index: &Index, tokenizer_name: &str, text: &str) -> Result<String> {
+        let mut tokenizer = index
+            .tokenizers()
+            .get(tokenizer_name)
+            .ok_or_else(|| anyhow::anyhow!("tokenizer '{}' not registered", tokenizer_name))?;
+
+        let mut stream = tokenizer.token_stream(text);
+        let mut tokens: Vec<String> = Vec::new();
+        while stream.advance() {
+            tokens.push(stream.token().text.clone());
+        }
+        Ok(tokens.join(", "))
+    }
+
+    /// Build a human-readable debug report for the given query.
+    ///
+    /// For each relevant language index (respecting `filters.lang`) the report
+    /// includes:
+    /// - tokenization results for both `{lang}_stem` and `{lang}_normalize`
+    /// - whether stemming changed any tokens
+    /// - parsed query ASTs for `content` and `content_exact` fields
+    /// - total document count
+    ///
+    /// Parse errors are captured but do **not** short-circuit: partial results
+    /// (tokens, doc count) are still included.
+    pub fn debug_query(&self, query_text: &str, filters: &SearchFilters) -> Result<DebugQueryResult> {
+        let mut out = String::new();
+        let mut first_parse_error: Option<String> = None;
+
+        let indexes = &self.sutta_indexes;
+        if indexes.is_empty() {
+            return Ok(DebugQueryResult {
+                debug_text: "No sutta indexes available.".to_string(),
+                parse_error: None,
+            });
+        }
+
+        // Determine which languages to search (same logic as search_indexes)
+        let langs_to_search: Vec<&String> = if let Some(ref lang) = filters.lang {
+            if filters.lang_include && !lang.is_empty() && lang != "Language" {
+                indexes.keys().filter(|k| *k == lang).collect()
+            } else {
+                indexes.keys().collect()
+            }
+        } else {
+            indexes.keys().collect()
+        };
+
+        let mut sorted_langs: Vec<&String> = langs_to_search;
+        sorted_langs.sort();
+
+        for lang in sorted_langs {
+            let Some((index, reader)) = indexes.get(lang) else {
+                continue;
+            };
+
+            writeln!(out, "=== Language: {} ===", lang)?;
+            writeln!(out)?;
+
+            // --- Tokenization ---
+            let stem_name = format!("{}_stem", lang);
+            let norm_name = format!("{}_normalize", lang);
+
+            let stem_tokens = Self::tokenize_to_string(index, &stem_name, query_text)
+                .unwrap_or_else(|e| format!("(error: {})", e));
+            let norm_tokens = Self::tokenize_to_string(index, &norm_name, query_text)
+                .unwrap_or_else(|e| format!("(error: {})", e));
+
+            writeln!(out, "Tokens ({}_stem):      {}", lang, stem_tokens)?;
+            writeln!(out, "Tokens ({}_normalize): {}", lang, norm_tokens)?;
+
+            // Stemming effect analysis
+            if stem_tokens != norm_tokens {
+                writeln!(out, "Stemming effect: stemmed differs from exact")?;
+            } else {
+                writeln!(out, "Stemming effect: no change (stemmed == exact)")?;
+            }
+            writeln!(out)?;
+
+            // --- Parsed queries ---
+            let schema = index.schema();
+            if let Ok(content_field) = schema.get_field("content") {
+                let parser = QueryParser::for_index(index, vec![content_field]);
+                match parser.parse_query(query_text) {
+                    Ok(q) => writeln!(out, "Parsed query (content):\n{:#?}", q)?,
+                    Err(e) => {
+                        let err_msg = format!("{}", e);
+                        writeln!(out, "Parsed query (content): ERROR: {}", err_msg)?;
+                        if first_parse_error.is_none() {
+                            first_parse_error = Some(err_msg);
+                        }
+                    }
+                }
+                writeln!(out)?;
+            }
+
+            if let Ok(content_exact_field) = schema.get_field("content_exact") {
+                let parser = QueryParser::for_index(index, vec![content_exact_field]);
+                match parser.parse_query(query_text) {
+                    Ok(q) => writeln!(out, "Parsed query (content_exact):\n{:#?}", q)?,
+                    Err(e) => {
+                        let err_msg = format!("{}", e);
+                        writeln!(out, "Parsed query (content_exact): ERROR: {}", err_msg)?;
+                        if first_parse_error.is_none() {
+                            first_parse_error = Some(err_msg);
+                        }
+                    }
+                }
+                writeln!(out)?;
+            }
+
+            // --- Doc count ---
+            let num_docs = reader.searcher().num_docs();
+            writeln!(out, "Total docs in index: {}", num_docs)?;
+            writeln!(out)?;
+        }
+
+        Ok(DebugQueryResult {
+            debug_text: out,
+            parse_error: first_parse_error,
+        })
     }
 
     /// Check if any sutta indexes are available.
@@ -396,4 +530,179 @@ pub fn sutta_index_dir(paths: &AppGlobalPaths) -> &PathBuf {
 /// Get the path to the dict_words index dir.
 pub fn dict_index_dir(paths: &AppGlobalPaths) -> &PathBuf {
     &paths.dict_words_index_dir
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::super::schema::build_sutta_schema;
+    use super::super::tokenizer::register_tokenizers;
+    use tantivy::doc;
+
+    /// Create a temporary in-memory sutta index with one document for the given language.
+    fn create_test_index(lang: &str) -> (Index, IndexReader) {
+        let schema = build_sutta_schema(lang);
+        let index = Index::create_in_ram(schema.clone());
+        register_tokenizers(&index, lang);
+
+        let mut writer = index.writer_with_num_threads(1, 15_000_000).unwrap();
+
+        let uid = schema.get_field("uid").unwrap();
+        let title = schema.get_field("title").unwrap();
+        let language = schema.get_field("language").unwrap();
+        let source_uid = schema.get_field("source_uid").unwrap();
+        let sutta_ref = schema.get_field("sutta_ref").unwrap();
+        let nikaya = schema.get_field("nikaya").unwrap();
+        let content = schema.get_field("content").unwrap();
+        let content_exact = schema.get_field("content_exact").unwrap();
+
+        writer
+            .add_document(doc!(
+                uid => "sn12.2/pli/ms",
+                title => "Vibhaṅgasutta",
+                language => lang,
+                source_uid => "ms",
+                sutta_ref => "SN 12.2",
+                nikaya => "sn",
+                content => "Katamo ca bhikkhave jarāmaraṇaṁ. Yā tesaṁ tesaṁ sattānaṁ.",
+                content_exact => "Katamo ca bhikkhave jarāmaraṇaṁ. Yā tesaṁ tesaṁ sattānaṁ."
+            ))
+            .unwrap();
+
+        writer.commit().unwrap();
+
+        let reader = index.reader().unwrap();
+        (index, reader)
+    }
+
+    #[test]
+    fn test_tokenize_to_string_stem() {
+        let (index, _reader) = create_test_index("pli");
+        let result = FulltextSearcher::tokenize_to_string(&index, "pli_stem", "bhikkhūnaṁ dhammo").unwrap();
+        assert_eq!(result, "bhikkhu, dhamma");
+    }
+
+    #[test]
+    fn test_tokenize_to_string_normalize() {
+        let (index, _reader) = create_test_index("pli");
+        let result = FulltextSearcher::tokenize_to_string(&index, "pli_normalize", "bhikkhūnaṁ dhammo").unwrap();
+        // normalize: lowercase + niggahita norm + ascii fold, but no stemming
+        assert!(result.contains("bhikkhunam"));
+        assert!(result.contains("dhammo"));
+    }
+
+    #[test]
+    fn test_tokenize_to_string_unknown_tokenizer() {
+        let (index, _reader) = create_test_index("pli");
+        let result = FulltextSearcher::tokenize_to_string(&index, "nonexistent", "test");
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("not registered"));
+    }
+
+    #[test]
+    fn test_debug_query_basic() {
+        let (index, reader) = create_test_index("pli");
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        let result = searcher.debug_query("bhikkhave", &filters).unwrap();
+
+        assert!(result.debug_text.contains("=== Language: pli ==="));
+        assert!(result.debug_text.contains("Tokens (pli_stem):"));
+        assert!(result.debug_text.contains("Tokens (pli_normalize):"));
+        assert!(result.debug_text.contains("Parsed query (content):"));
+        assert!(result.debug_text.contains("Parsed query (content_exact):"));
+        assert!(result.debug_text.contains("Total docs in index: 1"));
+        assert!(result.parse_error.is_none());
+    }
+
+    #[test]
+    fn test_debug_query_invalid_query_partial_results() {
+        let (index, reader) = create_test_index("pli");
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        // Unbalanced quotes should cause a parse error but still return partial results
+        let result = searcher.debug_query("\"unclosed quote", &filters).unwrap();
+
+        // Tokens should still be present even if query parsing fails
+        assert!(result.debug_text.contains("Tokens (pli_stem):"));
+        assert!(result.debug_text.contains("Total docs in index: 1"));
+        // Parse error should be reported
+        assert!(result.parse_error.is_some());
+    }
+
+    #[test]
+    fn test_debug_query_stemming_effect() {
+        let (index, reader) = create_test_index("pli");
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        // "bhikkhūnaṁ" should stem differently than normalize
+        let result = searcher.debug_query("bhikkhūnaṁ", &filters).unwrap();
+        assert!(result.debug_text.contains("Stemming effect: stemmed differs from exact"));
+    }
+
+    #[test]
+    fn test_debug_query_no_indexes() {
+        let searcher = FulltextSearcher {
+            sutta_indexes: HashMap::new(),
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        let result = searcher.debug_query("test", &filters).unwrap();
+        assert_eq!(result.debug_text, "No sutta indexes available.");
+        assert!(result.parse_error.is_none());
+    }
 }
