@@ -9,7 +9,7 @@ use cxx_qt::Threading;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResultPage};
 use simsapa_backend::theme_colors::ThemeColors;
-use simsapa_backend::{get_app_data, try_get_app_data, get_app_globals, get_create_simsapa_dir, save_to_file, check_file_exists_print_err};
+use simsapa_backend::{get_app_data, try_get_app_data, get_app_globals, get_create_simsapa_dir, save_to_file, check_file_exists_print_err, with_fulltext_searcher};
 use simsapa_backend::dir_list::{generate_html_directory_listing, generate_plain_directory_listing};
 use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_to_uid_field_query};
 use simsapa_backend::prompt_utils::markdown_to_html;
@@ -163,6 +163,10 @@ pub mod qobject {
         #[cxx_name = "rebuildSearchIndexCompleted"]
         fn rebuild_search_index_completed(self: Pin<&mut SuttaBridge>, success: bool, message: QString);
 
+        #[qsignal]
+        #[cxx_name = "debugQueryReady"]
+        fn debug_query_ready(self: Pin<&mut SuttaBridge>, debug_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -201,6 +205,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn results_page(self: Pin<&mut SuttaBridge>, query: &QString, page_num: usize, search_area: &QString, params_json: &QString);
+
+        #[qinvokable]
+        fn debug_query(self: Pin<&mut SuttaBridge>, query: &QString, search_area: &QString, params_json: &QString);
 
         #[qinvokable]
         fn extract_words(self: &SuttaBridge, text: &QString) -> QStringList;
@@ -1041,6 +1048,85 @@ impl qobject::SuttaBridge {
             }).unwrap();
 
             info("SuttaBridge::results_page() end");
+        });
+    }
+
+    pub fn debug_query(self: Pin<&mut Self>, query: &QString, search_area: &QString, params_json: &QString) {
+        let qt_thread = self.qt_thread();
+
+        let query_text = query.to_string();
+        let search_area_text = search_area.to_string();
+        let params_json_text = params_json.to_string();
+
+        thread::spawn(move || {
+            let params: SearchParams = serde_json::from_str(&params_json_text).unwrap_or_default();
+
+            let mode = &params.mode;
+            let is_fulltext = matches!(mode, SearchMode::FulltextMatch | SearchMode::Combined);
+
+            if !is_fulltext {
+                // For non-fulltext modes, return a parameter summary
+                let mode_name = format!("{:?}", mode);
+                let debug_text = format!(
+                    "Search Mode: {}\nSearch Area: {}\nQuery: {}\nLanguage: {} (include: {})\nSource: {} (include: {})\nRegex: {}\nFuzzy Distance: {}",
+                    mode_name,
+                    search_area_text,
+                    query_text,
+                    params.lang.as_deref().unwrap_or("(all)"),
+                    params.lang_include,
+                    params.source.as_deref().unwrap_or("(all)"),
+                    params.source_include,
+                    params.enable_regex,
+                    params.fuzzy_distance,
+                );
+
+                let json = serde_json::json!({"debug_text": debug_text}).to_string();
+                qt_thread.queue(move |mut qo| {
+                    qo.as_mut().debug_query_ready(QString::from(json));
+                }).unwrap();
+                return;
+            }
+
+            // Fulltext mode: use backend debug_query
+            use simsapa_backend::search::searcher::SearchFilters;
+
+            let filters = SearchFilters {
+                lang: params.lang.clone(),
+                lang_include: params.lang_include,
+                source_uid: params.source.clone(),
+                source_include: params.source_include,
+                nikaya: None,
+                sutta_ref: None,
+            };
+
+            let result = with_fulltext_searcher(|searcher| {
+                searcher.debug_query(&query_text, &filters)
+            });
+
+            let json = match result {
+                Some(Ok(debug_result)) => {
+                    let mut j = serde_json::json!({"debug_text": debug_result.debug_text});
+                    if let Some(parse_err) = debug_result.parse_error {
+                        j["error"] = serde_json::Value::String(parse_err);
+                    }
+                    j.to_string()
+                }
+                Some(Err(e)) => {
+                    serde_json::json!({
+                        "error": format!("{}", e),
+                        "debug_text": format!("Error running debug query: {}", e),
+                    }).to_string()
+                }
+                None => {
+                    serde_json::json!({
+                        "debug_text": "Fulltext search indexes not available.",
+                    }).to_string()
+                }
+            };
+
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().debug_query_ready(QString::from(json));
+            }).unwrap();
         });
     }
 

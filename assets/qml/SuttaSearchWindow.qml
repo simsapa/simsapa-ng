@@ -38,6 +38,7 @@ ApplicationWindow {
     property bool is_reading_mode: false
 
     property bool is_loading: false
+    property bool has_query_error: false
 
     property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible)
 
@@ -76,8 +77,29 @@ ApplicationWindow {
 
         function onResultsPageReady(results_json: string) {
             let d = JSON.parse(results_json);
-            fulltext_results.set_search_result_page(d);
             root.is_loading = false;
+
+            // On parse error, preserve existing results and only update error state
+            if (d.error) {
+                root.has_query_error = true;
+                query_tab.update_debug("", d.error);
+                return;
+            }
+
+            fulltext_results.set_search_result_page(d);
+        }
+
+        function onDebugQueryReady(debug_json: string) {
+            try {
+                let d = JSON.parse(debug_json);
+                let debug_text = d.debug_text || "";
+                let error_text = d.error || "";
+                query_tab.update_debug(debug_text, error_text);
+                root.has_query_error = (error_text !== "");
+            } catch (e) {
+                query_tab.update_debug("", "Failed to parse debug response");
+                root.has_query_error = true;
+            }
         }
 
         function onShowChapterFromLibrary(window_id: string, result_data_json: string) {
@@ -188,6 +210,33 @@ ApplicationWindow {
         }
     }
 
+    // Timer for debug query debounce
+    Timer {
+        id: debug_query_timer
+        interval: 400
+        repeat: false
+        onTriggered: root.trigger_debug_query()
+    }
+
+    function trigger_debug_query() {
+        let query_text = search_bar_input.search_input.text;
+        if (query_text.length === 0) {
+            return;
+        }
+        let search_area = search_bar_input.search_area;
+        let params = root.get_search_params_from_ui();
+        let params_json = JSON.stringify(params);
+        SuttaBridge.debug_query(query_text, search_area, params_json);
+    }
+
+    Connections {
+        target: search_bar_input.search_input
+        function onTextChanged() {
+            root.has_query_error = false;
+            debug_query_timer.restart();
+        }
+    }
+
     function handle_query(query_text_orig: string, min_length=4) {
         if (query_text_orig === 'uid:')
             return;
@@ -247,6 +296,9 @@ ApplicationWindow {
 
         // FIXME: page number
         root.results_page(query_text, 0, search_area, params);
+
+        // Also trigger debug query on explicit search
+        root.trigger_debug_query();
 
         // if len(results) > 0 and hits == 1 and results[0]['uid'] is not None:
         //     self._show_sutta_by_uid(results[0]['uid'])
@@ -1543,6 +1595,7 @@ ${query_text}`;
                 search_timer: search_timer
                 search_as_you_type_checked: app_settings_window.search_as_you_type
                 is_loading: root.is_loading
+                has_query_error: root.has_query_error
             }
 
             Button {
@@ -2132,6 +2185,13 @@ ${query_text}`;
                                 padding: 5
                             }
 
+                            TabButton {
+                                text: "Query"
+                                id: query_tab_btn
+                                icon.source: root.has_query_error ? "icons/32x32/fa_triangle-exclamation-solid.png" : "icons/32x32/fa_circle-info-solid.png"
+                                padding: 5
+                            }
+
                             // TabButton {
                             //     text: "History"
                             //     id: history_tab_btn
@@ -2208,6 +2268,14 @@ ${query_text}`;
 
                             TocTab {
                                 id: toc_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
+
+                            QueryTab {
+                                id: query_tab
                                 window_id: root.window_id
                                 is_dark: root.is_dark
                                 Layout.fillWidth: true

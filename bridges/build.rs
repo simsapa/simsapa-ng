@@ -37,6 +37,7 @@ fn main() {
         "../assets/qml/DictionaryHtmlView_Mobile.qml",
         "../assets/qml/DictionaryTab.qml",
         "../assets/qml/TocTab.qml",
+        "../assets/qml/QueryTab.qml",
         "../assets/qml/SuttaStackLayout.qml",
         "../assets/qml/AboutDialog.qml",
         "../assets/qml/DatabaseValidationDialog.qml",

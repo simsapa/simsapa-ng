@@ -39,6 +39,8 @@ Item {
     signal rebuildSearchIndexProgress(message: string);
     signal rebuildSearchIndexCompleted(success: bool, message: string);
 
+    signal debugQueryReady(debug_json: string);
+
     // Topic Index signals
     signal topicIndexLoaded();
 
@@ -102,6 +104,13 @@ Item {
         // Simulate async behavior
         Qt.callLater(function() {
             resultsPageReady("{}");
+        });
+    }
+
+    function debug_query(query: string, search_area: string, params_json: string) {
+        console.log("debug_query: " + query);
+        Qt.callLater(function() {
+            debugQueryReady('{"debug_text": ""}');
         });
     }
 
