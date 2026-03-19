@@ -9,7 +9,7 @@ path = "src/main.rs"
 
 [dependencies]
 simsapa_backend = { path = "../backend" }
-tipitaka_xml_parser = { path = "../../tipitaka-xml-parser" }
+# tipitaka_xml_parser = { path = "../../tipitaka-xml-parser" }
 clap = { version = "4.5.37", features = ["derive", "env"] }
 dotenvy = "0.15.7"
 anyhow = "1.0"

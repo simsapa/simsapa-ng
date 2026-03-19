@@ -6,7 +6,7 @@ pub mod dhammapada_munindo;
 pub mod dhammapada_tipitaka;
 pub mod nyanadipa;
 pub mod buddha_ujja;
-pub mod tipitaka_xml;
+// pub mod tipitaka_xml; // commented out: tipitaka_xml_parser dependency under development
 pub mod dpd;
 pub mod completions;
 pub mod library_imports;
@@ -21,8 +21,9 @@ use std::{fs, env};
 use diesel::prelude::*;
 use diesel_migrations::MigrationHarness;
 
-use simsapa_backend::db::APPDATA_MIGRATIONS;
-use simsapa_backend::{init_app_data, get_create_simsapa_dir, get_create_simsapa_app_assets_path, logger};
+use simsapa_backend::db::{DatabaseHandle, APPDATA_MIGRATIONS};
+use simsapa_backend::{init_app_data, get_app_data, get_app_globals, get_create_simsapa_dir, get_create_simsapa_app_assets_path, logger};
+use simsapa_backend::search::indexer;
 
 pub use helpers::SuttaData;
 pub use appdata::AppdataBootstrap;
@@ -289,6 +290,46 @@ RELEASE_CHANNEL=development
         logger::info("Skipping DPD initialization and bootstrap");
     }
 
+    // === Build fulltext indexes for base languages for index.tar.bz2 ===
+    logger::info("=== Build fulltext indexes for base languages ===");
+    {
+        // Ensure app data is initialized (may already be from DPD step)
+        init_app_data();
+        let app_data = get_app_data();
+        let globals = get_app_globals();
+        let paths = &globals.paths;
+
+        // Build sutta indexes for base languages (en, pli, san)
+        for lang in ["en", "pli", "san"] {
+            logger::info(&format!("Building sutta index for base language: {}", lang));
+            match indexer::build_sutta_index(&app_data.dbm.appdata, &paths.suttas_index_dir, lang) {
+                Ok(_) => {}
+                Err(e) => logger::warn(&format!("Failed to build sutta index for {}: {}", lang, e)),
+            }
+        }
+
+        // Build dict_word indexes for all available languages
+        match indexer::get_dict_word_languages(&app_data.dbm.dictionaries) {
+            Ok(dict_langs) => {
+                for lang in &dict_langs {
+                    logger::info(&format!("Building dict_word index for language: {}", lang));
+                    match indexer::build_dict_index(&app_data.dbm.dictionaries, &paths.dict_words_index_dir, lang) {
+                        Ok(_) => {}
+                        Err(e) => logger::warn(&format!("Failed to build dict index for {}: {}", lang, e)),
+                    }
+                }
+            }
+            Err(e) => logger::warn(&format!("Failed to get dict_word languages: {}", e)),
+        }
+
+        // Write VERSION file before archiving
+        indexer::write_version_file(&paths.index_dir)?;
+
+        // Create index.tar.bz2 from the index/ directory
+        logger::info("=== Create index.tar.bz2 ===");
+        create_index_archive(&assets_dir, &release_dir)?;
+    }
+
     logger::info("=== Bootstrap Languages from SuttaCentral ===");
 
     // Import suttas for each language from SuttaCentral ArangoDB
@@ -352,8 +393,26 @@ RELEASE_CHANNEL=development
                                             }
                                         } else {
                                             logger::info(&format!("Language {} has {} suttas", lang, sutta_count));
-                                            // Create archive and move to release directory
-                                            match create_database_archive(&lang_db_path, &release_dir) {
+
+                                            // Build sutta index for this language
+                                            let globals = get_app_globals();
+                                            let lang_db_url = lang_db_path.to_str()
+                                                .ok_or_else(|| anyhow::anyhow!("Invalid lang db path"))
+                                                .and_then(|url| DatabaseHandle::new(url).map_err(|e| e.into()));
+
+                                            match lang_db_url {
+                                                Ok(lang_db_handle) => {
+                                                    match indexer::build_sutta_index(&lang_db_handle, &globals.paths.suttas_index_dir, lang) {
+                                                        Ok(_) => logger::info(&format!("Built sutta index for language: {}", lang)),
+                                                        Err(e) => logger::error(&format!("Failed to build sutta index for {}: {}", lang, e)),
+                                                    }
+                                                }
+                                                Err(e) => logger::error(&format!("Failed to open lang db for indexing {}: {}", lang, e)),
+                                            }
+
+                                            // Create archive with database and index directory
+                                            let lang_index_dir = globals.paths.suttas_index_dir.join(lang);
+                                            match create_language_archive(&lang_db_path, &lang_index_dir, &assets_dir, &release_dir) {
                                                 Ok(_) => {
                                                     logger::info(&format!("Successfully created archive for language: {}", lang));
                                                 }
@@ -418,8 +477,24 @@ RELEASE_CHANNEL=development
                 importer.import(&mut lang_conn)?;
                 drop(lang_conn);
 
-                // Create archive and move to release directory
-                create_database_archive(&lang_db_path, &release_dir)?;
+                // Build sutta index for Hungarian
+                let globals = get_app_globals();
+                let lang_db_url = lang_db_path.to_str()
+                    .ok_or_else(|| anyhow::anyhow!("Invalid lang db path"));
+
+                match lang_db_url.and_then(|url| DatabaseHandle::new(url).map_err(|e| e.into())) {
+                    Ok(lang_db_handle) => {
+                        match indexer::build_sutta_index(&lang_db_handle, &globals.paths.suttas_index_dir, lang) {
+                            Ok(_) => logger::info(&format!("Built sutta index for language: {}", lang)),
+                            Err(e) => logger::error(&format!("Failed to build sutta index for {}: {}", lang, e)),
+                        }
+                    }
+                    Err(e) => logger::error(&format!("Failed to open lang db for indexing {}: {}", lang, e)),
+                }
+
+                // Create archive with database and index directory
+                let lang_index_dir = globals.paths.suttas_index_dir.join(lang);
+                create_language_archive(&lang_db_path, &lang_index_dir, &assets_dir, &release_dir)?;
             } else {
                 logger::warn(&format!("Buddha Ujja database not found: {:?}", bu_db_path));
                 logger::warn("Skipping Hungarian sutta import");
@@ -578,6 +653,92 @@ pub fn create_database_archive(db_path: &Path, release_dir: &Path) -> Result<()>
 
     // Move tar archive to release directory
     let tar_src = db_dir.join(&tar_name);
+    let tar_dst = release_dir.join(&tar_name);
+    fs::rename(&tar_src, &tar_dst)
+        .with_context(|| format!("Failed to move {} to release directory", tar_name))?;
+
+    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_dir));
+
+    Ok(())
+}
+
+/// Create index.tar.bz2 from the index/ directory under assets_dir.
+pub fn create_index_archive(assets_dir: &Path, release_dir: &Path) -> Result<()> {
+    let index_dir = assets_dir.join("index");
+    match index_dir.try_exists() {
+        Ok(true) => {}
+        _ => {
+            logger::warn("No index/ directory found, skipping index.tar.bz2 creation");
+            return Ok(());
+        }
+    }
+
+    logger::info("Creating index.tar.bz2 archive");
+
+    let tar_result = std::process::Command::new("tar")
+        .arg("cjf")
+        .arg("index.tar.bz2")
+        .arg("index")
+        .current_dir(assets_dir)
+        .status()
+        .context("Failed to execute tar command for index archive")?;
+
+    if !tar_result.success() {
+        anyhow::bail!("tar command failed for index.tar.bz2");
+    }
+
+    let tar_src = assets_dir.join("index.tar.bz2");
+    let tar_dst = release_dir.join("index.tar.bz2");
+    fs::rename(&tar_src, &tar_dst)
+        .with_context(|| format!("Failed to move index.tar.bz2 to release directory"))?;
+
+    logger::info(&format!("Created and moved index.tar.bz2 to {:?}", release_dir));
+
+    Ok(())
+}
+
+/// Create a per-language archive containing the .sqlite3 file and the sutta index directory.
+///
+/// The archive is named after the database (e.g., `suttas_lang_hu.tar.bz2`) and contains:
+/// - `suttas_lang_hu.sqlite3`
+/// - `index/suttas/hu/` (if the index directory exists)
+pub fn create_language_archive(
+    db_path: &Path,
+    lang_index_dir: &Path,
+    assets_dir: &Path,
+    release_dir: &Path,
+) -> Result<()> {
+    let db_name = db_path.file_name()
+        .and_then(|n| n.to_str())
+        .ok_or_else(|| anyhow::anyhow!("Invalid database filename"))?;
+
+    let tar_name = db_name.replace(".sqlite3", ".tar.bz2");
+
+    logger::info(&format!("Creating {} archive", tar_name));
+
+    let mut cmd = std::process::Command::new("tar");
+    cmd.arg("cjf")
+        .arg(&tar_name)
+        .arg(db_name);
+
+    // Include the index directory if it exists (relative to assets_dir)
+    if let Ok(true) = lang_index_dir.try_exists() {
+        // Get the relative path from assets_dir to the index dir
+        if let Ok(rel_path) = lang_index_dir.strip_prefix(assets_dir) {
+            cmd.arg(rel_path.to_str().unwrap_or(""));
+        }
+    }
+
+    let tar_result = cmd
+        .current_dir(assets_dir)
+        .status()
+        .context("Failed to execute tar command for language archive")?;
+
+    if !tar_result.success() {
+        anyhow::bail!("tar command failed for {}", tar_name);
+    }
+
+    let tar_src = assets_dir.join(&tar_name);
     let tar_dst = release_dir.join(&tar_name);
     fs::rename(&tar_src, &tar_dst)
         .with_context(|| format!("Failed to move {} to release directory", tar_name))?;

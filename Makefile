@@ -89,3 +89,25 @@ windows-clean:
 
 windows-rebuild: windows-clean
 	powershell -ExecutionPolicy Bypass -File build-windows.ps1 -Clean
+
+SNOWBALL_COMPILER := pali-stemmer-in-snowball/assets/snowball/snowball
+SNOWBALL_ALGO_DIR := pali-stemmer-in-snowball/assets/snowball/algorithms
+PALI_SBL := pali-stemmer-in-snowball/algorithms/pali.sbl
+STEMMER_OUT_DIR := backend/src/snowball/algorithms
+
+# All .sbl files excluding legacy/variant stemmers and pali (handled separately)
+SNOWBALL_SBLS := $(filter-out $(SNOWBALL_ALGO_DIR)/dutch_porter.sbl $(SNOWBALL_ALGO_DIR)/lovins.sbl $(SNOWBALL_ALGO_DIR)/porter.sbl $(SNOWBALL_ALGO_DIR)/pali.sbl, $(wildcard $(SNOWBALL_ALGO_DIR)/*.sbl))
+
+compile-stemmers:
+	@echo "Compiling Snowball stemmers to Rust..."
+	@mkdir -p $(STEMMER_OUT_DIR)
+	@for sbl in $(SNOWBALL_SBLS); do \
+		lang=$$(basename $$sbl .sbl); \
+		echo "  $$lang"; \
+		$(SNOWBALL_COMPILER) $$sbl -rust -o $(STEMMER_OUT_DIR)/$${lang}_stemmer; \
+		sed -i 's/use snowball::/use crate::snowball::/g' $(STEMMER_OUT_DIR)/$${lang}_stemmer.rs; \
+	done
+	@echo "  pali"
+	@$(SNOWBALL_COMPILER) $(PALI_SBL) -rust -o $(STEMMER_OUT_DIR)/pali_stemmer
+	@sed -i 's/use snowball::/use crate::snowball::/g' $(STEMMER_OUT_DIR)/pali_stemmer.rs
+	@echo "Done. Generated stemmers in $(STEMMER_OUT_DIR)/"

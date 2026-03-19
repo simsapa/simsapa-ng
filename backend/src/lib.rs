@@ -26,6 +26,8 @@ pub mod document_metadata;
 pub mod pts_reference_search;
 pub mod update_checker;
 pub mod topic_index;
+pub mod snowball;
+pub mod search;
 
 use std::env;
 use std::io::{self, Read, Write};
@@ -73,6 +75,7 @@ static APP_GLOBALS: OnceLock<AppGlobals> = OnceLock::new();
 static APP_DATA: OnceLock<AppData> = OnceLock::new();
 static SUTTA_REFERENCES: OnceLock<Vec<ReferenceSearchResult>> = OnceLock::new();
 static RELEASES_INFO: OnceLock<std::sync::RwLock<Option<ReleasesInfo>>> = OnceLock::new();
+static FULLTEXT_SEARCHER: OnceLock<search::searcher::FulltextSearcher> = OnceLock::new();
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_globals() {
@@ -99,6 +102,9 @@ pub extern "C" fn init_app_data() {
         APP_DATA.set(app_data).expect("Can't set AppData");
         info("init_appdata() end");
     }
+
+    // Initialize the fulltext searcher (safe to call multiple times, uses OnceLock)
+    init_fulltext_searcher();
 }
 
 pub fn get_app_data() -> &'static AppData {
@@ -164,6 +170,30 @@ pub fn try_get_releases_info() -> Option<ReleasesInfo> {
     })
 }
 
+/// Initialize the fulltext searcher by opening available indexes.
+/// This is safe to call even if indexes don't exist yet (it will just have no indexes).
+pub fn init_fulltext_searcher() {
+    if FULLTEXT_SEARCHER.get().is_some() {
+        return;
+    }
+
+    let g = get_app_globals();
+    match search::searcher::FulltextSearcher::open(&g.paths) {
+        Ok(searcher) => {
+            FULLTEXT_SEARCHER.set(searcher).ok();
+            info("Fulltext searcher initialized");
+        }
+        Err(e) => {
+            warn(&format!("Failed to initialize fulltext searcher: {}", e));
+        }
+    }
+}
+
+/// Get the fulltext searcher if initialized.
+pub fn try_get_fulltext_searcher() -> Option<&'static search::searcher::FulltextSearcher> {
+    FULLTEXT_SEARCHER.get()
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn check_and_configure_for_first_start() {
     get_app_data().check_and_configure_for_first_start();
@@ -202,6 +232,11 @@ pub struct AppGlobalPaths {
     pub dpd_db_path: PathBuf,
     pub dpd_abs_path: PathBuf,
     pub dpd_database_url: String,
+
+    // Fulltext search index directories
+    pub index_dir: PathBuf,
+    pub suttas_index_dir: PathBuf,
+    pub dict_words_index_dir: PathBuf,
 
     // Marker files for database upgrade process
     pub download_languages_marker: PathBuf,
@@ -341,6 +376,11 @@ impl AppGlobalPaths {
         let dpd_abs_path = normalize_path_for_sqlite(fs::canonicalize(dpd_db_path.clone()).unwrap_or(dpd_db_path.clone()));
         let dpd_database_url = format!("sqlite://{}", dpd_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
+        // Fulltext search index directories
+        let index_dir = app_assets_dir.join("index");
+        let suttas_index_dir = index_dir.join("suttas");
+        let dict_words_index_dir = index_dir.join("dict_words");
+
         // Marker files for database upgrade process
         let download_languages_marker = app_assets_dir.join("download_languages.txt");
         let auto_start_download_marker = app_assets_dir.join("auto_start_download.txt");
@@ -369,6 +409,10 @@ impl AppGlobalPaths {
             dpd_db_path,
             dpd_abs_path,
             dpd_database_url,
+
+            index_dir,
+            suttas_index_dir,
+            dict_words_index_dir,
 
             download_languages_marker,
             auto_start_download_marker,

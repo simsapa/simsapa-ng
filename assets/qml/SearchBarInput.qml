@@ -171,7 +171,7 @@ Frame {
                     if (root.search_area === "Suttas") {
                         return [
                                 /* "Combined", */
-                                /* "Fulltext Match", */
+                                "Fulltext Match",
                                 "Contains Match",
                                 "Title Match",
                                 /* "RegEx Match", */
@@ -188,7 +188,7 @@ Frame {
                         return [
                                 /* "Combined", */
                                 "DPD Lookup",
-                                /* "Fulltext Match", */
+                                "Fulltext Match",
                                 "Contains Match",
                                 "Headword Match",
                         ];
