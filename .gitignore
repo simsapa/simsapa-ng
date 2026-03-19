@@ -31,7 +31,8 @@ Simsapa.AppDir/
 
 .qtcreator/
 
-simsapa-legacy/
+pali-stemmer-in-snowball
+simsapa-legacy
 simsapa-extensions-and-plugins/
 CIPS/
 

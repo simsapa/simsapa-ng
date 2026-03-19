@@ -17,6 +17,7 @@ use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::stardict_parse::import_stardict_as_new;
 use simsapa_backend::db::appdata_models::Sutta;
 use simsapa_backend::asset_helpers::import_suttas_from_db;
+use simsapa_backend::search::indexer;
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     let app_data = get_app_data();
@@ -677,6 +678,130 @@ fn parse_cips_index_command(csv_path: &Path, json_path: &Path, db_path: Option<&
     }
 }
 
+/// Handle the `index build` and `index rebuild` CLI commands.
+fn index_command(cmd: IndexCommands) -> Result<(), String> {
+    let app_data = get_app_data();
+    let globals = simsapa_backend::get_app_globals();
+    let paths = &globals.paths;
+
+    let is_rebuild = matches!(cmd, IndexCommands::Rebuild { .. });
+
+    let (area, lang) = match &cmd {
+        IndexCommands::Build { area, lang } | IndexCommands::Rebuild { area, lang } => {
+            (area.clone(), lang.clone())
+        }
+    };
+
+    if is_rebuild {
+        // Delete existing index directories before rebuilding
+        delete_index_dirs(paths, &area, &lang)?;
+    }
+
+    match (&area, &lang) {
+        // Build everything
+        (None, None) => {
+            println!("Building all fulltext indexes...");
+            indexer::build_all_indexes(&app_data.dbm.appdata, &app_data.dbm.dictionaries, paths)
+                .map_err(|e| e.to_string())?;
+        }
+
+        // Build all languages for a specific area
+        (Some(IndexArea::Suttas), None) => {
+            println!("Building sutta indexes for all languages...");
+            let langs = indexer::get_sutta_languages(&app_data.dbm.appdata)
+                .map_err(|e| e.to_string())?;
+            for l in &langs {
+                println!("  Building sutta index for language: {}", l);
+                indexer::build_sutta_index(&app_data.dbm.appdata, &paths.suttas_index_dir, l)
+                    .map_err(|e| e.to_string())?;
+            }
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
+
+        (Some(IndexArea::DictWords), None) => {
+            println!("Building dictionary indexes for all languages...");
+            let langs = indexer::get_dict_word_languages(&app_data.dbm.dictionaries)
+                .map_err(|e| e.to_string())?;
+            for l in &langs {
+                println!("  Building dict_word index for language: {}", l);
+                indexer::build_dict_index(&app_data.dbm.dictionaries, &paths.dict_words_index_dir, l)
+                    .map_err(|e| e.to_string())?;
+            }
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
+
+        // Build a specific language across all areas (or filtered)
+        (None, Some(lang_code)) => {
+            println!("Building indexes for language: {}", lang_code);
+            let sutta_langs = indexer::get_sutta_languages(&app_data.dbm.appdata)
+                .map_err(|e| e.to_string())?;
+            if sutta_langs.contains(lang_code) {
+                println!("  Building sutta index for language: {}", lang_code);
+                indexer::build_sutta_index(&app_data.dbm.appdata, &paths.suttas_index_dir, lang_code)
+                    .map_err(|e| e.to_string())?;
+            }
+
+            let dict_langs = indexer::get_dict_word_languages(&app_data.dbm.dictionaries)
+                .map_err(|e| e.to_string())?;
+            if dict_langs.contains(lang_code) {
+                println!("  Building dict_word index for language: {}", lang_code);
+                indexer::build_dict_index(&app_data.dbm.dictionaries, &paths.dict_words_index_dir, lang_code)
+                    .map_err(|e| e.to_string())?;
+            }
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
+
+        // Build a specific area + language
+        (Some(IndexArea::Suttas), Some(lang_code)) => {
+            println!("Building sutta index for language: {}", lang_code);
+            indexer::build_sutta_index(&app_data.dbm.appdata, &paths.suttas_index_dir, lang_code)
+                .map_err(|e| e.to_string())?;
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
+
+        (Some(IndexArea::DictWords), Some(lang_code)) => {
+            println!("Building dict_word index for language: {}", lang_code);
+            indexer::build_dict_index(&app_data.dbm.dictionaries, &paths.dict_words_index_dir, lang_code)
+                .map_err(|e| e.to_string())?;
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
+    }
+
+    println!("Done.");
+    Ok(())
+}
+
+/// Delete index directories based on area and language filters.
+fn delete_index_dirs(
+    paths: &simsapa_backend::AppGlobalPaths,
+    area: &Option<IndexArea>,
+    lang: &Option<String>,
+) -> Result<(), String> {
+    let dirs_to_delete: Vec<PathBuf> = match (area, lang) {
+        (None, None) => vec![paths.index_dir.clone()],
+        (Some(IndexArea::Suttas), None) => vec![paths.suttas_index_dir.clone()],
+        (Some(IndexArea::DictWords), None) => vec![paths.dict_words_index_dir.clone()],
+        (None, Some(l)) => vec![
+            paths.suttas_index_dir.join(l),
+            paths.dict_words_index_dir.join(l),
+        ],
+        (Some(IndexArea::Suttas), Some(l)) => vec![paths.suttas_index_dir.join(l)],
+        (Some(IndexArea::DictWords), Some(l)) => vec![paths.dict_words_index_dir.join(l)],
+    };
+
+    for dir in &dirs_to_delete {
+        match dir.try_exists() {
+            Ok(true) => {
+                println!("  Removing: {}", dir.display());
+                std::fs::remove_dir_all(dir).map_err(|e| format!("Failed to remove {}: {}", dir.display(), e))?;
+            }
+            _ => {}
+        }
+    }
+
+    Ok(())
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Simsapa CLI", long_about = None)]
 #[command(propagate_version = true)]
@@ -873,6 +998,10 @@ enum Commands {
         #[arg(long, value_name = "LANGUAGE_DB_PATH")]
         language_db_path: PathBuf,
     },
+
+    /// Manage fulltext search indexes
+    #[command(subcommand)]
+    Index(IndexCommands),
 }
 
 /// Enum for the different types of queries available.
@@ -880,6 +1009,39 @@ enum Commands {
 enum QueryType {
     Suttas,
     Words,
+}
+
+/// Area filter for index build commands.
+#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
+enum IndexArea {
+    Suttas,
+    DictWords,
+}
+
+/// Subcommands for the `index` command group.
+#[derive(Subcommand, Debug)]
+enum IndexCommands {
+    /// Build fulltext indexes (all or filtered by area/language)
+    Build {
+        /// Only build indexes for the specified area
+        #[arg(long, value_enum)]
+        area: Option<IndexArea>,
+
+        /// Only build indexes for the specified language code (e.g., "pli", "en")
+        #[arg(long, value_name = "LANG_CODE")]
+        lang: Option<String>,
+    },
+
+    /// Delete existing indexes and rebuild from scratch
+    Rebuild {
+        /// Only rebuild indexes for the specified area
+        #[arg(long, value_enum)]
+        area: Option<IndexArea>,
+
+        /// Only rebuild indexes for the specified language code
+        #[arg(long, value_name = "LANG_CODE")]
+        lang: Option<String>,
+    },
 }
 
 fn main() {
@@ -999,6 +1161,10 @@ fn main() {
 
         Commands::ImportLanguage { db_path, language_db_path } => {
             import_language(&db_path, &language_db_path)
+        }
+
+        Commands::Index(subcmd) => {
+            index_command(subcmd)
         }
     };
 

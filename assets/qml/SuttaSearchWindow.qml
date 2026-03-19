@@ -577,6 +577,22 @@ ${query_text}`;
         }
     }
 
+    function check_search_index_on_startup() {
+        let status_json = SuttaBridge.check_search_index_status();
+        try {
+            let status = JSON.parse(status_json);
+            if (!status.exists) {
+                search_index_notification.status_text = "Search index not found. Fulltext search will not work until you build it.\n\nUse File > Rebuild Search Index to create one.";
+                search_index_notification.open();
+            } else if (!status.current) {
+                search_index_notification.status_text = "Search index is outdated. Re-indexing is recommended for best results.\n\nUse File > Rebuild Search Index to update it.";
+                search_index_notification.open();
+            }
+        } catch (e) {
+            logger.warn("Failed to parse search index status: " + e);
+        }
+    }
+
     Component.onCompleted: {
         /* logger.info("SuttaSearchWindow: Component.onCompleted()"); */
         if (root.is_qml_preview) {
@@ -596,6 +612,9 @@ ${query_text}`;
 
             // Start delayed update check timer
             update_check_timer.start();
+
+            // Check search index status
+            root.check_search_index_on_startup();
         }
 
         // Add the default blank tab. The corresponding webview is created when it is focused.
@@ -751,6 +770,14 @@ ${query_text}`;
                         onActivated: action_settings.trigger()
                     }
                     onTriggered: app_settings_window.show()
+                }
+            }
+
+            CMenuItem {
+                action: Action {
+                    id: action_rebuild_search_index
+                    text: "&Rebuild Search Index..."
+                    onTriggered: rebuild_index_dialog.open()
                 }
             }
 
@@ -1322,6 +1349,106 @@ ${query_text}`;
     UpdateNotificationDialog {
         id: update_notification_dialog
         top_bar_margin: root.top_bar_margin
+    }
+
+    Dialog {
+        id: rebuild_index_dialog
+        title: "Rebuild Search Index"
+        anchors.centerIn: parent
+        modal: true
+        width: 400
+
+        property bool is_rebuilding: false
+        property string status_message: ""
+
+        standardButtons: rebuild_index_dialog.is_rebuilding ? Dialog.NoButton : (rebuild_index_dialog.status_message !== "" ? Dialog.Ok : Dialog.Yes | Dialog.No)
+
+        onAccepted: {
+            if (!rebuild_index_dialog.is_rebuilding && rebuild_index_dialog.status_message === "") {
+                rebuild_index_dialog.is_rebuilding = true;
+                rebuild_index_dialog.status_message = "";
+                rebuild_index_dialog.open();
+                SuttaBridge.rebuild_search_index();
+            }
+        }
+
+        onRejected: {
+            rebuild_index_dialog.is_rebuilding = false;
+            rebuild_index_dialog.status_message = "";
+        }
+
+        onClosed: {
+            if (!rebuild_index_dialog.is_rebuilding) {
+                rebuild_index_dialog.status_message = "";
+            }
+        }
+
+        ColumnLayout {
+            spacing: 10
+            width: parent.width
+
+            Label {
+                visible: !rebuild_index_dialog.is_rebuilding && rebuild_index_dialog.status_message === ""
+                text: "This will rebuild the fulltext search index for all languages.\nThis may take a few minutes."
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            Label {
+                visible: rebuild_index_dialog.is_rebuilding
+                text: rebuild_index_dialog.status_message !== "" ? rebuild_index_dialog.status_message : "Rebuilding..."
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            BusyIndicator {
+                visible: rebuild_index_dialog.is_rebuilding && rebuild_index_dialog.status_message === ""
+                running: visible
+                Layout.alignment: Qt.AlignHCenter
+            }
+
+            Label {
+                visible: !rebuild_index_dialog.is_rebuilding && rebuild_index_dialog.status_message !== ""
+                text: rebuild_index_dialog.status_message
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+
+        Connections {
+            target: SuttaBridge
+
+            function onRebuildSearchIndexProgress(message) {
+                rebuild_index_dialog.status_message = message;
+            }
+
+            function onRebuildSearchIndexCompleted(success, message) {
+                rebuild_index_dialog.is_rebuilding = false;
+                rebuild_index_dialog.status_message = message;
+            }
+        }
+    }
+
+    Dialog {
+        id: search_index_notification
+        title: "Search Index"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+        width: 400
+
+        property string status_text: ""
+
+        ColumnLayout {
+            spacing: 10
+            width: parent.width
+
+            Label {
+                text: search_index_notification.status_text
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
     }
 
     AppSettingsWindow {

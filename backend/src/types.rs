@@ -53,7 +53,7 @@ pub struct SuttaQuote {
     pub selection_range: Option<String>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
 pub enum SearchArea {
     Suttas,
     Dictionary,
