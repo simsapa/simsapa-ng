@@ -18,6 +18,7 @@ use simsapa_backend::stardict_parse::import_stardict_as_new;
 use simsapa_backend::db::appdata_models::Sutta;
 use simsapa_backend::asset_helpers::import_suttas_from_db;
 use simsapa_backend::search::indexer;
+use simsapa_backend::search::searcher::{FulltextSearcher, SearchFilters};
 
 fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
     let app_data = get_app_data();
@@ -678,6 +679,106 @@ fn parse_cips_index_command(csv_path: &Path, json_path: &Path, db_path: Option<&
     }
 }
 
+/// Fulltext search result for JSON output
+#[derive(serde::Serialize)]
+struct FulltextJsonResult {
+    uid: String,
+    title: String,
+    language: String,
+    source_uid: String,
+    score: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    snippet_html: Option<String>,
+}
+
+/// Top-level JSON output with total hits and results.
+#[derive(serde::Serialize)]
+struct FulltextJsonOutput {
+    total: usize,
+    results: Vec<FulltextJsonResult>,
+}
+
+/// Run a fulltext (tantivy) search and print results.
+fn fulltext_search(
+    query: &str,
+    area: SearchArea,
+    limit: usize,
+    snippet: bool,
+    lang: Option<&str>,
+    source: Option<&str>,
+    format: &str,
+    output: Option<&Path>,
+) -> Result<(), String> {
+    let globals = simsapa_backend::get_app_globals();
+
+    let searcher = FulltextSearcher::open(&globals.paths)
+        .map_err(|e| format!("Failed to open fulltext indexes: {}", e))?;
+
+    let filters = SearchFilters {
+        lang: lang.map(|s| s.to_string()),
+        lang_include: lang.is_some(),
+        source_uid: source.map(|s| s.to_string()),
+        source_include: source.is_some(),
+        nikaya: None,
+        sutta_ref: None,
+    };
+
+    let (total_hits, results) = match area {
+        SearchArea::Suttas => searcher.search_suttas_with_count(query, &filters, limit),
+        SearchArea::Dictionary => searcher.search_dict_words_with_count(query, &filters, limit),
+        _ => return Err(format!("Fulltext search not supported for area: {:?}", area)),
+    }.map_err(|e| format!("Search error: {}", e))?;
+
+    let text = match format {
+        "json" => {
+            let json_results: Vec<FulltextJsonResult> = results.iter().map(|r| {
+                FulltextJsonResult {
+                    uid: r.uid.clone(),
+                    title: r.title.clone(),
+                    language: r.lang.clone().unwrap_or_default(),
+                    source_uid: r.source_uid.clone().unwrap_or_default(),
+                    score: r.score.unwrap_or(0.0),
+                    snippet_html: if snippet { Some(r.snippet.clone()) } else { None },
+                }
+            }).collect();
+
+            let output = FulltextJsonOutput {
+                total: total_hits,
+                results: json_results,
+            };
+
+            serde_json::to_string_pretty(&output)
+                .map_err(|e| format!("JSON serialization error: {}", e))?
+        }
+        _ => {
+            let mut buf = String::new();
+            for (i, r) in results.iter().enumerate() {
+                buf.push_str(&format!("{}. [{}] {} (score: {:.2})\n",
+                    i + 1,
+                    r.uid,
+                    r.title,
+                    r.score.unwrap_or(0.0),
+                ));
+                if snippet && !r.snippet.is_empty() {
+                    buf.push_str(&format!("   {}\n", r.snippet));
+                }
+            }
+            buf.push_str(&format!("\nTotal: {} hits, showing {}", total_hits, results.len()));
+            buf
+        }
+    };
+
+    if let Some(path) = output {
+        std::fs::write(path, &text)
+            .map_err(|e| format!("Failed to write output file: {}", e))?;
+        println!("Wrote results to {}", path.display());
+    } else {
+        println!("{}", text);
+    }
+
+    Ok(())
+}
+
 /// Handle the `index build` and `index rebuild` CLI commands.
 fn index_command(cmd: IndexCommands) -> Result<(), String> {
     let app_data = get_app_data();
@@ -1002,11 +1103,53 @@ enum Commands {
     /// Manage fulltext search indexes
     #[command(subcommand)]
     Index(IndexCommands),
+
+    /// Fulltext (tantivy) search for suttas or dictionary words
+    #[command(arg_required_else_help = true)]
+    FulltextSearch {
+        /// The search query string
+        query: String,
+
+        /// Maximum number of results
+        #[arg(long, default_value_t = 10)]
+        limit: usize,
+
+        /// Show matching snippets
+        #[arg(long, default_value_t = false)]
+        snippet: bool,
+
+        /// Filter by language code (e.g., "pli", "en")
+        #[arg(long)]
+        lang: Option<String>,
+
+        /// Filter by source UID (e.g., "ms", "cst4")
+        #[arg(long)]
+        source: Option<String>,
+
+        /// Output format: "text" or "json"
+        #[arg(long, default_value = "text")]
+        format: String,
+
+        /// Search area: "suttas" or "words"
+        #[arg(long, value_enum, default_value_t = FulltextSearchArea::Suttas)]
+        area: FulltextSearchArea,
+
+        /// Write output to a file instead of stdout
+        #[arg(long, value_name = "FILENAME")]
+        output: Option<PathBuf>,
+    },
 }
 
 /// Enum for the different types of queries available.
 #[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
 enum QueryType {
+    Suttas,
+    Words,
+}
+
+/// Search area for fulltext search command.
+#[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
+enum FulltextSearchArea {
     Suttas,
     Words,
 }
@@ -1165,6 +1308,14 @@ fn main() {
 
         Commands::Index(subcmd) => {
             index_command(subcmd)
+        }
+
+        Commands::FulltextSearch { query, limit, snippet, lang, source, format, area, output } => {
+            let search_area = match area {
+                FulltextSearchArea::Suttas => SearchArea::Suttas,
+                FulltextSearchArea::Words => SearchArea::Dictionary,
+            };
+            fulltext_search(&query, search_area, limit, snippet, lang.as_deref(), source.as_deref(), &format, output.as_deref())
         }
     };
 

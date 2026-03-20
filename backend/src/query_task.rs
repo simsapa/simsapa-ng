@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::{normalize_query_text, sutta_range_from_ref};
+use crate::helpers::{consistent_niggahita, normalize_query_text, sutta_range_from_ref};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::{Sutta, BookSpineItem};
@@ -48,12 +48,20 @@ impl<'a> SearchQueryTask<'a> {
         // Use params.lang if provided and not empty, otherwise use empty string for no filter
         let lang_filter = params.lang.clone().unwrap_or_default();
 
-        // For UidMatch mode, don't normalize the query text to preserve dots and other characters
-        // For other modes, normalize to handle punctuation and spacing
-        let query_text = if params.mode == SearchMode::UidMatch {
-            query_text_orig.to_lowercase()
-        } else {
-            normalize_query_text(Some(query_text_orig))
+        // For UidMatch mode, don't normalize the query text to preserve dots and other characters.
+        // For FulltextMatch mode, only normalize niggahita — tantivy's query parser uses quotes
+        // for phrase queries and should/must controls (e.g. '"so ce" evaṁ +vadeyya') so we must not strip punctuation.
+        // For other modes, normalize to handle punctuation and spacing.
+        let query_text = match params.mode {
+            SearchMode::UidMatch => {
+                query_text_orig.to_lowercase()
+            }
+            SearchMode::FulltextMatch => {
+                consistent_niggahita(Some(query_text_orig))
+            }
+            _ => {
+                normalize_query_text(Some(query_text_orig))
+            }
         };
 
         SearchQueryTask {
@@ -1724,12 +1732,12 @@ impl<'a> SearchQueryTask<'a> {
         match with_fulltext_searcher(|searcher| {
             if !searcher.has_sutta_indexes() {
                 warn("No sutta fulltext indexes available.");
-                return Ok(Vec::new());
+                return Ok((0, Vec::new()));
             }
-            searcher.search_suttas(&query_text, &filters, page_len)
+            searcher.search_suttas_with_count(&query_text, &filters, page_len)
         }) {
-            Some(Ok(results)) => {
-                self.db_query_hits_count = results.len() as i64;
+            Some(Ok((total, results))) => {
+                self.db_query_hits_count = total as i64;
                 Ok(results)
             }
             Some(Err(e)) => Err(e.into()),
@@ -1764,12 +1772,12 @@ impl<'a> SearchQueryTask<'a> {
         match with_fulltext_searcher(|searcher| {
             if !searcher.has_dict_indexes() {
                 warn("No dict_word fulltext indexes available.");
-                return Ok(Vec::new());
+                return Ok((0, Vec::new()));
             }
-            searcher.search_dict_words(&query_text, &filters, page_len)
+            searcher.search_dict_words_with_count(&query_text, &filters, page_len)
         }) {
-            Some(Ok(results)) => {
-                self.db_query_hits_count = results.len() as i64;
+            Some(Ok((total, results))) => {
+                self.db_query_hits_count = total as i64;
                 Ok(results)
             }
             Some(Err(e)) => Err(e.into()),

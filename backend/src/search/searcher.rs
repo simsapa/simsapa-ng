@@ -3,7 +3,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use anyhow::Result;
-use tantivy::collector::TopDocs;
+use tantivy::collector::{Count, TopDocs};
 use tantivy::query::{BooleanQuery, Occur, QueryParser, TermQuery};
 use tantivy::schema::{IndexRecordOption, Value};
 use tantivy::{Index, IndexReader, Term};
@@ -235,24 +235,24 @@ impl FulltextSearcher {
         !self.dict_indexes.is_empty()
     }
 
-    /// Search sutta indexes.
-    pub fn search_suttas(
+    /// Search sutta indexes, returning (total_hits, results).
+    pub fn search_suttas_with_count(
         &self,
         query_text: &str,
         filters: &SearchFilters,
         page_len: usize,
-    ) -> Result<Vec<SearchResult>> {
-        self.search_indexes(query_text, filters, page_len, &self.sutta_indexes, true)
+    ) -> Result<(usize, Vec<SearchResult>)> {
+        self.search_indexes(query_text, filters, page_len, &self.sutta_indexes, true, true)
     }
 
-    /// Search dict_word indexes.
-    pub fn search_dict_words(
+    /// Search dict_word indexes, returning (total_hits, results).
+    pub fn search_dict_words_with_count(
         &self,
         query_text: &str,
         filters: &SearchFilters,
         page_len: usize,
-    ) -> Result<Vec<SearchResult>> {
-        self.search_indexes(query_text, filters, page_len, &self.dict_indexes, false)
+    ) -> Result<(usize, Vec<SearchResult>)> {
+        self.search_indexes(query_text, filters, page_len, &self.dict_indexes, false, true)
     }
 
     fn search_indexes(
@@ -262,9 +262,10 @@ impl FulltextSearcher {
         page_len: usize,
         indexes: &HashMap<String, (Index, IndexReader)>,
         is_sutta: bool,
-    ) -> Result<Vec<SearchResult>> {
+        with_count: bool,
+    ) -> Result<(usize, Vec<SearchResult>)> {
         if indexes.is_empty() {
-            return Ok(Vec::new());
+            return Ok((0, Vec::new()));
         }
 
         // Determine which languages to search
@@ -281,11 +282,13 @@ impl FulltextSearcher {
 
         // Collect results from all matching languages with scores
         let mut all_scored: Vec<(f32, SearchResult)> = Vec::new();
+        let mut total_hits: usize = 0;
 
         for lang in langs_to_search {
             if let Some((index, reader)) = indexes.get(lang) {
-                match self.search_single_index(query_text, filters, page_len, index, reader, is_sutta) {
-                    Ok(scored_results) => {
+                match self.search_single_index(query_text, filters, page_len, index, reader, is_sutta, with_count) {
+                    Ok((count, scored_results)) => {
+                        total_hits += count;
                         all_scored.extend(scored_results);
                     }
                     Err(e) => {
@@ -305,7 +308,7 @@ impl FulltextSearcher {
             .map(|(_, r)| r)
             .collect();
 
-        Ok(results)
+        Ok((total_hits, results))
     }
 
     fn search_single_index(
@@ -316,7 +319,8 @@ impl FulltextSearcher {
         index: &Index,
         reader: &IndexReader,
         is_sutta: bool,
-    ) -> Result<Vec<(f32, SearchResult)>> {
+        with_count: bool,
+    ) -> Result<(usize, Vec<(f32, SearchResult)>)> {
         let searcher = reader.searcher();
         let schema = index.schema();
 
@@ -349,7 +353,12 @@ impl FulltextSearcher {
 
         let combined_query = BooleanQuery::new(subqueries);
 
-        let top_docs = searcher.search(&combined_query, &TopDocs::with_limit(page_len))?;
+        let (top_docs, count) = if with_count {
+            searcher.search(&combined_query, &(TopDocs::with_limit(page_len), Count))?
+        } else {
+            let top_docs = searcher.search(&combined_query, &TopDocs::with_limit(page_len))?;
+            (top_docs, 0)
+        };
 
         let mut results = Vec::new();
 
@@ -365,7 +374,7 @@ impl FulltextSearcher {
             results.push((score, result));
         }
 
-        Ok(results)
+        Ok((count, results))
     }
 
     fn add_sutta_filters(
