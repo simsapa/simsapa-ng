@@ -50,6 +50,20 @@ impl FulltextSearcher {
         })
     }
 
+    /// Open indexes from explicit directory paths (without needing AppGlobalPaths).
+    ///
+    /// Useful for CLI tools or tests that manage index directories directly.
+    /// Pass an empty or non-existent path to skip sutta or dict indexes.
+    pub fn open_from_dirs(suttas_index_dir: &Path, dict_words_index_dir: &Path) -> Result<Self> {
+        let sutta_indexes = Self::open_indexes(suttas_index_dir, true)?;
+        let dict_indexes = Self::open_indexes(dict_words_index_dir, false)?;
+
+        Ok(Self {
+            sutta_indexes,
+            dict_indexes,
+        })
+    }
+
     /// Scan a directory for per-language subdirectories and open each as a Tantivy index.
     fn open_indexes(base_dir: &Path, is_sutta: bool) -> Result<HashMap<String, (Index, IndexReader)>> {
         let mut map = HashMap::new();
