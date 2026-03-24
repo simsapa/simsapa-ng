@@ -920,6 +920,16 @@ ${query_text}`;
                     }
                 }
             }
+
+            CMenuItem {
+                action: Action {
+                    id: action_chanting_practice
+                    text: "&Chanting Practice..."
+                    onTriggered: {
+                        SuttaBridge.open_chanting_practice_window()
+                    }
+                }
+            }
         }
 
         Menu {

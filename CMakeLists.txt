@@ -71,7 +71,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC_OPTIONS --format-version 1)
 list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
 
-set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test)
+set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test Multimedia)
 
 list(APPEND app_components Widgets Quick)
 
@@ -82,7 +82,8 @@ list(APPEND qt_modules
         Qt::Network
         Qt::Widgets
         Qt::Quick
-        Qt::QuickControls2)
+        Qt::QuickControls2
+        Qt::Multimedia)
 
 if (ANDROID)
     # Detect Android ABI and set appropriate Qt paths
@@ -195,7 +196,9 @@ list(APPEND cpp_files
     cpp/sutta_languages_window.cpp
     cpp/library_window.cpp
     cpp/reference_search_window.cpp
-    cpp/topic_index_window.cpp)
+    cpp/topic_index_window.cpp
+    cpp/chanting_practice_window.cpp
+    cpp/chanting_review_window.cpp)
 
 list(APPEND app_files ${cpp_files} ${icons})
 

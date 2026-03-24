@@ -25,6 +25,9 @@
 - `assets/qml/SuttaSearchWindow.qml` - Add menu item for Chanting Practice window
 - `CMakeLists.txt` - Link Qt::Multimedia module
 - `android/AndroidManifest.xml` - Add RECORD_AUDIO permission
+- `backend/migrations/appdata/2026-03-24-000000_create_chanting_tables/up.sql` - Migration SQL creating 4 chanting tables with indexes
+- `backend/migrations/appdata/2026-03-24-000000_create_chanting_tables/down.sql` - Migration rollback
+- `backend/tests/test_chanting_crud.rs` - Unit tests for chanting CRUD operations and cascade deletes
 
 ### Notes
 
@@ -36,91 +39,91 @@
 
 ## Tasks
 
-- [ ] 1.0 Database Schema & Models
-  - [ ] 1.1 Create Diesel migration directory `backend/migrations/appdata/<timestamp>_create_chanting_tables/`
-  - [ ] 1.2 Write `up.sql`: CREATE TABLE for `chanting_collections` (id, uid, title, description, language, sort_index, is_user_added, metadata_json, created_at, updated_at) with UNIQUE index on uid
-  - [ ] 1.3 Write `up.sql`: CREATE TABLE for `chanting_chants` (id, uid, collection_uid, title, description, sort_index, is_user_added, metadata_json, created_at, updated_at) with UNIQUE index on uid and index on collection_uid
-  - [ ] 1.4 Write `up.sql`: CREATE TABLE for `chanting_sections` (id, uid, chant_uid, title, content_pali, sort_index, is_user_added, metadata_json, created_at, updated_at) with UNIQUE index on uid and index on chant_uid
-  - [ ] 1.5 Write `up.sql`: CREATE TABLE for `chanting_recordings` (id, uid, section_uid, file_name, recording_type, label, duration_ms, markers_json, created_at, updated_at) with UNIQUE index on uid and index on section_uid
-  - [ ] 1.6 Write `down.sql`: DROP TABLE for all 4 tables in reverse order
-  - [ ] 1.7 Update `appdata_schema.rs` with Diesel table! macros for all 4 tables
-  - [ ] 1.8 Add Queryable structs to `appdata_models.rs`: `ChantingCollection`, `ChantingChant`, `ChantingSection`, `ChantingRecording` with appropriate derives (Queryable, Selectable, Identifiable, PartialEq, Debug, Clone)
-  - [ ] 1.9 Add Insertable structs to `appdata_models.rs`: `NewChantingCollection`, `NewChantingChant`, `NewChantingSection`, `NewChantingRecording`
-  - [ ] 1.10 Add JSON serializable structs for passing data to QML: `ChantingCollectionJson`, `ChantingChantJson`, `ChantingSectionJson`, `ChantingRecordingJson` (with serde Serialize/Deserialize)
-  - [ ] 1.11 Verify `cargo build` succeeds in backend crate
+- [x] 1.0 Database Schema & Models
+  - [x] 1.1 Create Diesel migration directory `backend/migrations/appdata/<timestamp>_create_chanting_tables/`
+  - [x] 1.2 Write `up.sql`: CREATE TABLE for `chanting_collections` (id, uid, title, description, language, sort_index, is_user_added, metadata_json, created_at, updated_at) with UNIQUE index on uid
+  - [x] 1.3 Write `up.sql`: CREATE TABLE for `chanting_chants` (id, uid, collection_uid, title, description, sort_index, is_user_added, metadata_json, created_at, updated_at) with UNIQUE index on uid and index on collection_uid
+  - [x] 1.4 Write `up.sql`: CREATE TABLE for `chanting_sections` (id, uid, chant_uid, title, content_pali, sort_index, is_user_added, metadata_json, created_at, updated_at) with UNIQUE index on uid and index on chant_uid
+  - [x] 1.5 Write `up.sql`: CREATE TABLE for `chanting_recordings` (id, uid, section_uid, file_name, recording_type, label, duration_ms, markers_json, created_at, updated_at) with UNIQUE index on uid and index on section_uid
+  - [x] 1.6 Write `down.sql`: DROP TABLE for all 4 tables in reverse order
+  - [x] 1.7 Update `appdata_schema.rs` with Diesel table! macros for all 4 tables
+  - [x] 1.8 Add Queryable structs to `appdata_models.rs`: `ChantingCollection`, `ChantingChant`, `ChantingSection`, `ChantingRecording` with appropriate derives (Queryable, Selectable, Identifiable, PartialEq, Debug, Clone)
+  - [x] 1.9 Add Insertable structs to `appdata_models.rs`: `NewChantingCollection`, `NewChantingChant`, `NewChantingSection`, `NewChantingRecording`
+  - [x] 1.10 Add JSON serializable structs for passing data to QML: `ChantingCollectionJson`, `ChantingChantJson`, `ChantingSectionJson`, `ChantingRecordingJson` (with serde Serialize/Deserialize)
+  - [x] 1.11 Verify `cargo build` succeeds in backend crate
 
-- [ ] 2.0 Rust Backend CRUD Operations
-  - [ ] 2.1 In `appdata.rs`, add `get_all_chanting_collections()` — returns all collections with nested chants and sections as a JSON-serializable tree structure
-  - [ ] 2.2 Add `get_chanting_section_detail(section_uid)` — returns section data with all associated recordings
-  - [ ] 2.3 Add `create_chanting_collection()`, `update_chanting_collection()`, `delete_chanting_collection()` (cascade deletes chants, sections, recordings + files)
-  - [ ] 2.4 Add `create_chanting_chant()`, `update_chanting_chant()`, `delete_chanting_chant()` (cascade deletes sections, recordings + files)
-  - [ ] 2.5 Add `create_chanting_section()`, `update_chanting_section()`, `delete_chanting_section()` (cascade deletes recordings + files)
-  - [ ] 2.6 Add `create_chanting_recording()`, `delete_chanting_recording(uid)` — delete also removes the audio file from disk using `try_exists()` check
-  - [ ] 2.7 Add `update_recording_markers(uid, markers_json)` — updates the markers_json field for a recording
-  - [ ] 2.8 In `backend/src/lib.rs`, add `get_chanting_recordings_dir()` that returns the resolved path (`<simsapa_dir>/app-assets/chanting-recordings/`), creating the directory if it doesn't exist (using `try_exists()`)
-  - [ ] 2.9 Write unit tests for CRUD operations: create, read, update, delete for each table, and verify cascade deletes
-  - [ ] 2.10 Verify `cargo test` passes
+- [x] 2.0 Rust Backend CRUD Operations
+  - [x] 2.1 In `appdata.rs`, add `get_all_chanting_collections()` — returns all collections with nested chants and sections as a JSON-serializable tree structure
+  - [x] 2.2 Add `get_chanting_section_detail(section_uid)` — returns section data with all associated recordings
+  - [x] 2.3 Add `create_chanting_collection()`, `update_chanting_collection()`, `delete_chanting_collection()` (cascade deletes chants, sections, recordings + files)
+  - [x] 2.4 Add `create_chanting_chant()`, `update_chanting_chant()`, `delete_chanting_chant()` (cascade deletes sections, recordings + files)
+  - [x] 2.5 Add `create_chanting_section()`, `update_chanting_section()`, `delete_chanting_section()` (cascade deletes recordings + files)
+  - [x] 2.6 Add `create_chanting_recording()`, `delete_chanting_recording(uid)` — delete also removes the audio file from disk using `try_exists()` check
+  - [x] 2.7 Add `update_recording_markers(uid, markers_json)` — updates the markers_json field for a recording
+  - [x] 2.8 In `backend/src/lib.rs`, add `get_chanting_recordings_dir()` that returns the resolved path (`<simsapa_dir>/app-assets/chanting-recordings/`), creating the directory if it doesn't exist (using `try_exists()`)
+  - [x] 2.9 Write unit tests for CRUD operations: create, read, update, delete for each table, and verify cascade deletes
+  - [x] 2.10 Verify `cargo test` passes
 
-- [ ] 3.0 Rust Bridge & C++ Window Scaffold
-  - [ ] 3.1 Add bridge functions to `sutta_bridge.rs` (extern "RustQt" block): `open_chanting_practice_window()`, `open_chanting_review_window(section_uid)`, `get_all_chanting_collections_json()`, `get_chanting_section_detail_json(section_uid)`, `get_chanting_recordings_dir()`
-  - [ ] 3.2 Add CRUD bridge functions: `create_chanting_collection(json)`, `update_chanting_collection(json)`, `delete_chanting_collection(uid)`, and equivalent for chants, sections, and recordings
-  - [ ] 3.3 Add `update_recording_markers(uid, markers_json)` bridge function
-  - [ ] 3.4 Implement all bridge functions in `sutta_bridge.rs`, calling the backend functions from task 2.0
-  - [ ] 3.5 Update `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` with qmllint type definitions for all new functions
-  - [ ] 3.6 Add FFI callback declarations in `bridges/src/api.rs`: `callback_open_chanting_practice_window()`, `callback_open_chanting_review_window(section_uid: &QString)`
-  - [ ] 3.7 Create `cpp/chanting_practice_window.h` and `cpp/chanting_practice_window.cpp` following the LibraryWindow pattern
-  - [ ] 3.8 Create `cpp/chanting_review_window.h` and `cpp/chanting_review_window.cpp` — constructor takes `section_uid` QString and passes it to QML as a context property
-  - [ ] 3.9 Register both windows in `cpp/window_manager.h` and `cpp/window_manager.cpp`: add creation methods, window lists, and destructor cleanup
-  - [ ] 3.10 Add callback implementations in `cpp/gui.cpp`: `callback_open_chanting_practice_window()` and `callback_open_chanting_review_window()`
-  - [ ] 3.11 Create placeholder `assets/qml/ChantingPracticeWindow.qml` (minimal ApplicationWindow with title)
-  - [ ] 3.12 Create placeholder `assets/qml/ChantingPracticeReviewWindow.qml` (minimal ApplicationWindow with title showing section_uid)
-  - [ ] 3.13 Verify `make build -B` compiles successfully
+- [x] 3.0 Rust Bridge & C++ Window Scaffold
+  - [x] 3.1 Add bridge functions to `sutta_bridge.rs` (extern "RustQt" block): `open_chanting_practice_window()`, `open_chanting_review_window(section_uid)`, `get_all_chanting_collections_json()`, `get_chanting_section_detail_json(section_uid)`, `get_chanting_recordings_dir()`
+  - [x] 3.2 Add CRUD bridge functions: `create_chanting_collection(json)`, `update_chanting_collection(json)`, `delete_chanting_collection(uid)`, and equivalent for chants, sections, and recordings
+  - [x] 3.3 Add `update_recording_markers(uid, markers_json)` bridge function
+  - [x] 3.4 Implement all bridge functions in `sutta_bridge.rs`, calling the backend functions from task 2.0
+  - [x] 3.5 Update `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` with qmllint type definitions for all new functions
+  - [x] 3.6 Add FFI callback declarations in `bridges/src/api.rs`: `callback_open_chanting_practice_window()`, `callback_open_chanting_review_window(section_uid: &QString)`
+  - [x] 3.7 Create `cpp/chanting_practice_window.h` and `cpp/chanting_practice_window.cpp` following the LibraryWindow pattern
+  - [x] 3.8 Create `cpp/chanting_review_window.h` and `cpp/chanting_review_window.cpp` — constructor takes `section_uid` QString and passes it to QML as a context property
+  - [x] 3.9 Register both windows in `cpp/window_manager.h` and `cpp/window_manager.cpp`: add creation methods, window lists, and destructor cleanup
+  - [x] 3.10 Add callback implementations in `cpp/gui.cpp`: `callback_open_chanting_practice_window()` and `callback_open_chanting_review_window()`
+  - [x] 3.11 Create placeholder `assets/qml/ChantingPracticeWindow.qml` (minimal ApplicationWindow with title)
+  - [x] 3.12 Create placeholder `assets/qml/ChantingPracticeReviewWindow.qml` (minimal ApplicationWindow with title showing section_uid)
+  - [x] 3.13 Verify `make build -B` compiles successfully
 
-- [ ] 4.0 ChantingPracticeWindow QML
-  - [ ] 4.1 Create `assets/qml/ChantingTreeList.qml` — a reusable tree list component (following BooksList.qml pattern) that takes a JSON model of collections/chants/sections and renders 3-level expand/collapse tree
-  - [ ] 4.2 Implement ChantingPracticeWindow.qml: ApplicationWindow with ThemeHelper, mobile support (is_mobile, top_bar_margin), standard window flags
-  - [ ] 4.3 Add Component.onCompleted to load data via `SuttaBridge.get_all_chanting_collections_json()` and parse into the tree model
-  - [ ] 4.4 Wire section item click to call `SuttaBridge.open_chanting_review_window(section_uid)`
-  - [ ] 4.5 Add toolbar with "Add Collection" button — opens dialog with title and description fields, calls `SuttaBridge.create_chanting_collection()`, refreshes list
-  - [ ] 4.6 Add "Add Chant" toolbar button — enabled when a collection is selected, opens dialog, calls `SuttaBridge.create_chanting_chant()`, refreshes list
-  - [ ] 4.7 Add "Add Section" toolbar button — enabled when a chant is selected, opens dialog with title and content_pali (multiline) fields, calls `SuttaBridge.create_chanting_section()`, refreshes list
-  - [ ] 4.8 Add "Edit" toolbar button — opens dialog pre-filled with selected item's data, calls appropriate update function
-  - [ ] 4.9 Add "Remove" toolbar button — shows confirmation dialog, calls appropriate delete function, refreshes list
-  - [ ] 4.10 Register `ChantingTreeList.qml` in `bridges/build.rs` qml_files list
-  - [ ] 4.11 Verify `make build -B` compiles successfully
+- [x] 4.0 ChantingPracticeWindow QML
+  - [x] 4.1 Create `assets/qml/ChantingTreeList.qml` — a reusable tree list component (following BooksList.qml pattern) that takes a JSON model of collections/chants/sections and renders 3-level expand/collapse tree
+  - [x] 4.2 Implement ChantingPracticeWindow.qml: ApplicationWindow with ThemeHelper, mobile support (is_mobile, top_bar_margin), standard window flags
+  - [x] 4.3 Add Component.onCompleted to load data via `SuttaBridge.get_all_chanting_collections_json()` and parse into the tree model
+  - [x] 4.4 Wire section item click to call `SuttaBridge.open_chanting_review_window(section_uid)`
+  - [x] 4.5 Add toolbar with "Add Collection" button — opens dialog with title and description fields, calls `SuttaBridge.create_chanting_collection()`, refreshes list
+  - [x] 4.6 Add "Add Chant" toolbar button — enabled when a collection is selected, opens dialog, calls `SuttaBridge.create_chanting_chant()`, refreshes list
+  - [x] 4.7 Add "Add Section" toolbar button — enabled when a chant is selected, opens dialog with title and content_pali (multiline) fields, calls `SuttaBridge.create_chanting_section()`, refreshes list
+  - [x] 4.8 Add "Edit" toolbar button — opens dialog pre-filled with selected item's data, calls appropriate update function
+  - [x] 4.9 Add "Remove" toolbar button — shows confirmation dialog, calls appropriate delete function, refreshes list
+  - [x] 4.10 Register `ChantingTreeList.qml` in `bridges/build.rs` qml_files list
+  - [x] 4.11 Verify `make build -B` compiles successfully
 
-- [ ] 5.0 Menu Integration & Build Configuration
-  - [ ] 5.1 In `CMakeLists.txt`, add `Qt::Multimedia` to the qt_modules list and `Multimedia` to CXXQT_QTCOMPONENTS
-  - [ ] 5.2 In `android/AndroidManifest.xml`, add `<uses-permission android:name="android.permission.RECORD_AUDIO" />`
-  - [ ] 5.3 Register all new QML files in `bridges/build.rs` qml_files list: `ChantingPracticeWindow.qml`, `ChantingPracticeReviewWindow.qml`, `RecordingPlaybackItem.qml`, `ChantingTreeList.qml`
-  - [ ] 5.4 In `SuttaSearchWindow.qml`, add "Chanting Practice..." menu item in the Windows menu after action_topic_index, triggering `SuttaBridge.open_chanting_practice_window()`
-  - [ ] 5.5 Add new C++ files to CMakeLists.txt sources: `chanting_practice_window.cpp`, `chanting_review_window.cpp`
-  - [ ] 5.6 Verify `make build -B` compiles and the full window chain is wired (menu → bridge → FFI → C++ → QML)
+- [x] 5.0 Menu Integration & Build Configuration
+  - [x] 5.1 In `CMakeLists.txt`, add `Qt::Multimedia` to the qt_modules list and `Multimedia` to CXXQT_QTCOMPONENTS
+  - [x] 5.2 In `android/AndroidManifest.xml`, add `<uses-permission android:name="android.permission.RECORD_AUDIO" />`
+  - [x] 5.3 Register all new QML files in `bridges/build.rs` qml_files list: `ChantingPracticeWindow.qml`, `ChantingPracticeReviewWindow.qml`, `RecordingPlaybackItem.qml`, `ChantingTreeList.qml`
+  - [x] 5.4 In `SuttaSearchWindow.qml`, add "Chanting Practice..." menu item in the Windows menu after action_topic_index, triggering `SuttaBridge.open_chanting_practice_window()`
+  - [x] 5.5 Add new C++ files to CMakeLists.txt sources: `chanting_practice_window.cpp`, `chanting_review_window.cpp`
+  - [x] 5.6 Verify `make build -B` compiles and the full window chain is wired (menu → bridge → FFI → C++ → QML)
 
-- [ ] 6.0 RecordingPlaybackItem — Basic Record & Playback
-  - [ ] 6.1 Create `assets/qml/RecordingPlaybackItem.qml` with required properties: `recording_uid`, `file_path`, `label`, `recording_type`, `is_new_recording` (bool)
-  - [ ] 6.2 Add audio playback using MediaPlayer + AudioOutput: play/pause/stop buttons, source bound to file_path
-  - [ ] 6.3 Add scrubber Slider bound to `player.position` / `player.duration` with seek-on-drag, and time display (`MM:SS / MM:SS`)
-  - [ ] 6.4 Add audio recording using CaptureSession + AudioInput + MediaRecorder: record/stop button, OGG/Opus format, output to chanting-recordings directory
-  - [ ] 6.5 Add Android runtime permission check using MicrophonePermission (Qt 6.5+) before starting recording; show user-facing message if denied
-  - [ ] 6.6 Add recording state UI: pulsing red indicator and elapsed time during recording
-  - [ ] 6.7 Add header row with recording label and close button (x), emit `closed()` signal
-  - [ ] 6.8 On recording stop, emit signal with file path so the parent can call `SuttaBridge.create_chanting_recording()` to persist to database
-  - [ ] 6.9 Verify `make build -B` compiles successfully
+- [x] 6.0 RecordingPlaybackItem — Basic Record & Playback
+  - [x] 6.1 Create `assets/qml/RecordingPlaybackItem.qml` with required properties: `recording_uid`, `file_path`, `label`, `recording_type`, `is_new_recording` (bool)
+  - [x] 6.2 Add audio playback using MediaPlayer + AudioOutput: play/pause/stop buttons, source bound to file_path
+  - [x] 6.3 Add scrubber Slider bound to `player.position` / `player.duration` with seek-on-drag, and time display (`MM:SS / MM:SS`)
+  - [x] 6.4 Add audio recording using CaptureSession + AudioInput + MediaRecorder: record/stop button, OGG/Opus format, output to chanting-recordings directory
+  - [x] 6.5 Add Android runtime permission check using MicrophonePermission (Qt 6.5+) before starting recording; show user-facing message if denied
+  - [x] 6.6 Add recording state UI: pulsing red indicator and elapsed time during recording
+  - [x] 6.7 Add header row with recording label and close button (x), emit `closed()` signal
+  - [x] 6.8 On recording stop, emit signal with file path so the parent can call `SuttaBridge.create_chanting_recording()` to persist to database
+  - [x] 6.9 Verify `make build -B` compiles successfully
 
-- [ ] 7.0 ChantingPracticeReviewWindow QML
-  - [ ] 7.1 Implement ChantingPracticeReviewWindow.qml: ApplicationWindow with ThemeHelper, mobile support, receives `section_uid` context property
-  - [ ] 7.2 On Component.onCompleted, call `SuttaBridge.get_chanting_section_detail_json(section_uid)` and parse response into section data + recordings list
-  - [ ] 7.3 Add header showing section title, parent chant title, and collection title
-  - [ ] 7.4 Add scrollable Pali text area displaying `content_pali` in a readable font
-  - [ ] 7.5 Add recording list panel grouped by type (Reference / User recordings), each with an "Open" button and delete button (user recordings only, non-bundled references)
-  - [ ] 7.6 Add "New Recording" button that creates a RecordingPlaybackItem in recording mode (is_new_recording: true) and adds it to the playback area
-  - [ ] 7.7 Add "Add Reference Recording" button with file picker dialog — copies selected audio file to chanting-recordings dir, creates database record, refreshes list
-  - [ ] 7.8 Add scrollable playback area (ColumnLayout inside ScrollView) that holds dynamically created RecordingPlaybackItem instances
-  - [ ] 7.9 Wire "Open" button on each recording list item to instantiate a RecordingPlaybackItem with the recording's file path and add it to the playback area
-  - [ ] 7.10 Wire RecordingPlaybackItem close signal to remove the instance from the playback area
-  - [ ] 7.11 Wire RecordingPlaybackItem recording-complete signal to persist the new recording via bridge and refresh the recording list
-  - [ ] 7.12 Verify `make build -B` compiles successfully
+- [x] 7.0 ChantingPracticeReviewWindow QML
+  - [x] 7.1 Implement ChantingPracticeReviewWindow.qml: ApplicationWindow with ThemeHelper, mobile support, receives `section_uid` context property
+  - [x] 7.2 On Component.onCompleted, call `SuttaBridge.get_chanting_section_detail_json(section_uid)` and parse response into section data + recordings list
+  - [x] 7.3 Add header showing section title, parent chant title, and collection title
+  - [x] 7.4 Add scrollable Pali text area displaying `content_pali` in a readable font
+  - [x] 7.5 Add recording list panel grouped by type (Reference / User recordings), each with an "Open" button and delete button (user recordings only, non-bundled references)
+  - [x] 7.6 Add "New Recording" button that creates a RecordingPlaybackItem in recording mode (is_new_recording: true) and adds it to the playback area
+  - [x] 7.7 Add "Add Reference Recording" button with file picker dialog — copies selected audio file to chanting-recordings dir, creates database record, refreshes list
+  - [x] 7.8 Add scrollable playback area (ColumnLayout inside ScrollView) that holds dynamically created RecordingPlaybackItem instances
+  - [x] 7.9 Wire "Open" button on each recording list item to instantiate a RecordingPlaybackItem with the recording's file path and add it to the playback area
+  - [x] 7.10 Wire RecordingPlaybackItem close signal to remove the instance from the playback area
+  - [x] 7.11 Wire RecordingPlaybackItem recording-complete signal to persist the new recording via bridge and refresh the recording list
+  - [x] 7.12 Verify `make build -B` compiles successfully
 
 - [ ] 8.0 RecordingPlaybackItem — Markers & Enhanced Playback
   - [ ] 8.1 Add marker data model: parse `markers_json` from recording into a ListModel of position and range markers

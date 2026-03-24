@@ -12,6 +12,8 @@ class SuttaLanguagesWindow;
 class LibraryWindow;
 class ReferenceSearchWindow;
 class TopicIndexWindow;
+class ChantingPracticeWindow;
+class ChantingReviewWindow;
 
 class WindowManager : public QObject {
         Q_OBJECT
@@ -26,6 +28,8 @@ class WindowManager : public QObject {
         LibraryWindow* create_library_window();
         ReferenceSearchWindow* create_reference_search_window();
         TopicIndexWindow* create_topic_index_window();
+        ChantingPracticeWindow* create_chanting_practice_window();
+        ChantingReviewWindow* create_chanting_review_window(const QString& section_uid);
 
         static WindowManager *m_instance;
         QApplication* m_app;
@@ -36,6 +40,8 @@ class WindowManager : public QObject {
         QList<LibraryWindow*> library_windows;
         QList<ReferenceSearchWindow*> reference_search_windows;
         QList<TopicIndexWindow*> topic_index_windows;
+        QList<ChantingPracticeWindow*> chanting_practice_windows;
+        QList<ChantingReviewWindow*> chanting_review_windows;
 
     private:
         WindowManager(QApplication* app, QObject *parent = nullptr);

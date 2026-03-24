@@ -617,6 +617,440 @@ impl AppdataDbHandle {
                 .map(|_| ())
         })
     }
+
+    // === Chanting CRUD operations ===
+
+    /// Get all chanting collections with nested chants and sections as a JSON-serializable tree
+    pub fn get_all_chanting_collections(&self) -> Result<Vec<ChantingCollectionJson>> {
+        use crate::db::appdata_schema::chanting_collections::dsl as col_dsl;
+        use crate::db::appdata_schema::chanting_chants::dsl as chant_dsl;
+        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+
+        let collections: Vec<ChantingCollection> = self.do_read(|db_conn| {
+            col_dsl::chanting_collections
+                .select(ChantingCollection::as_select())
+                .order(col_dsl::sort_index.asc())
+                .load(db_conn)
+        })?;
+
+        let chants: Vec<ChantingChant> = self.do_read(|db_conn| {
+            chant_dsl::chanting_chants
+                .select(ChantingChant::as_select())
+                .order(chant_dsl::sort_index.asc())
+                .load(db_conn)
+        })?;
+
+        let sections: Vec<ChantingSection> = self.do_read(|db_conn| {
+            sec_dsl::chanting_sections
+                .select(ChantingSection::as_select())
+                .order(sec_dsl::sort_index.asc())
+                .load(db_conn)
+        })?;
+
+        // Build the tree structure
+        let result: Vec<ChantingCollectionJson> = collections.into_iter().map(|col| {
+            let col_chants: Vec<ChantingChantJson> = chants.iter()
+                .filter(|c| c.collection_uid == col.uid)
+                .map(|chant| {
+                    let chant_sections: Vec<ChantingSectionJson> = sections.iter()
+                        .filter(|s| s.chant_uid == chant.uid)
+                        .map(|sec| ChantingSectionJson {
+                            uid: sec.uid.clone(),
+                            chant_uid: sec.chant_uid.clone(),
+                            title: sec.title.clone(),
+                            content_pali: sec.content_pali.clone(),
+                            sort_index: sec.sort_index,
+                            is_user_added: sec.is_user_added,
+                            metadata_json: sec.metadata_json.clone(),
+                            recordings: Vec::new(),
+                        })
+                        .collect();
+
+                    ChantingChantJson {
+                        uid: chant.uid.clone(),
+                        collection_uid: chant.collection_uid.clone(),
+                        title: chant.title.clone(),
+                        description: chant.description.clone(),
+                        sort_index: chant.sort_index,
+                        is_user_added: chant.is_user_added,
+                        metadata_json: chant.metadata_json.clone(),
+                        sections: chant_sections,
+                    }
+                })
+                .collect();
+
+            ChantingCollectionJson {
+                uid: col.uid.clone(),
+                title: col.title.clone(),
+                description: col.description.clone(),
+                language: col.language.clone(),
+                sort_index: col.sort_index,
+                is_user_added: col.is_user_added,
+                metadata_json: col.metadata_json.clone(),
+                chants: col_chants,
+            }
+        }).collect();
+
+        Ok(result)
+    }
+
+    /// Get section detail with all associated recordings
+    pub fn get_chanting_section_detail(&self, section_uid_param: &str) -> Result<Option<ChantingSectionJson>> {
+        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+        use crate::db::appdata_schema::chanting_recordings::dsl as rec_dsl;
+
+        let section: Option<ChantingSection> = self.do_read(|db_conn| {
+            sec_dsl::chanting_sections
+                .filter(sec_dsl::uid.eq(section_uid_param))
+                .select(ChantingSection::as_select())
+                .first(db_conn)
+                .optional()
+        })?;
+
+        match section {
+            Some(sec) => {
+                let recordings: Vec<ChantingRecording> = self.do_read(|db_conn| {
+                    rec_dsl::chanting_recordings
+                        .filter(rec_dsl::section_uid.eq(section_uid_param))
+                        .select(ChantingRecording::as_select())
+                        .load(db_conn)
+                })?;
+
+                let recording_jsons: Vec<ChantingRecordingJson> = recordings.into_iter().map(|r| {
+                    ChantingRecordingJson {
+                        uid: r.uid,
+                        section_uid: r.section_uid,
+                        file_name: r.file_name,
+                        recording_type: r.recording_type,
+                        label: r.label,
+                        duration_ms: r.duration_ms,
+                        markers_json: r.markers_json,
+                        volume: r.volume,
+                        playback_position_ms: r.playback_position_ms,
+                    }
+                }).collect();
+
+                Ok(Some(ChantingSectionJson {
+                    uid: sec.uid,
+                    chant_uid: sec.chant_uid,
+                    title: sec.title,
+                    content_pali: sec.content_pali,
+                    sort_index: sec.sort_index,
+                    is_user_added: sec.is_user_added,
+                    metadata_json: sec.metadata_json,
+                    recordings: recording_jsons,
+                }))
+            }
+            None => Ok(None),
+        }
+    }
+
+    // --- Collection CRUD ---
+
+    pub fn create_chanting_collection(&self, data: &ChantingCollectionJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_collections::dsl::*;
+
+        let new = NewChantingCollection {
+            uid: &data.uid,
+            title: &data.title,
+            description: data.description.as_deref(),
+            language: &data.language,
+            sort_index: data.sort_index,
+            is_user_added: data.is_user_added,
+            metadata_json: data.metadata_json.as_deref(),
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(chanting_collections)
+                .values(&new)
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_chanting_collection(&self, data: &ChantingCollectionJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_collections::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_collections.filter(uid.eq(&data.uid)))
+                .set((
+                    title.eq(&data.title),
+                    description.eq(&data.description),
+                    language.eq(&data.language),
+                    sort_index.eq(data.sort_index),
+                    metadata_json.eq(&data.metadata_json),
+                ))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn delete_chanting_collection(&self, collection_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_collections::dsl::*;
+
+        // Delete recordings files for all sections in all chants of this collection
+        self.delete_recording_files_for_collection(collection_uid_param)?;
+
+        // CASCADE will handle deleting chants, sections, and recordings rows
+        self.do_write(|db_conn| {
+            diesel::delete(chanting_collections.filter(uid.eq(collection_uid_param)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    // --- Chant CRUD ---
+
+    pub fn create_chanting_chant(&self, data: &ChantingChantJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_chants::dsl::*;
+
+        let new = NewChantingChant {
+            uid: &data.uid,
+            collection_uid: &data.collection_uid,
+            title: &data.title,
+            description: data.description.as_deref(),
+            sort_index: data.sort_index,
+            is_user_added: data.is_user_added,
+            metadata_json: data.metadata_json.as_deref(),
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(chanting_chants)
+                .values(&new)
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_chanting_chant(&self, data: &ChantingChantJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_chants::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_chants.filter(uid.eq(&data.uid)))
+                .set((
+                    title.eq(&data.title),
+                    description.eq(&data.description),
+                    sort_index.eq(data.sort_index),
+                    metadata_json.eq(&data.metadata_json),
+                ))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn delete_chanting_chant(&self, chant_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_chants::dsl::*;
+
+        self.delete_recording_files_for_chant(chant_uid_param)?;
+
+        self.do_write(|db_conn| {
+            diesel::delete(chanting_chants.filter(uid.eq(chant_uid_param)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    // --- Section CRUD ---
+
+    pub fn create_chanting_section(&self, data: &ChantingSectionJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_sections::dsl::*;
+
+        let new = NewChantingSection {
+            uid: &data.uid,
+            chant_uid: &data.chant_uid,
+            title: &data.title,
+            content_pali: &data.content_pali,
+            sort_index: data.sort_index,
+            is_user_added: data.is_user_added,
+            metadata_json: data.metadata_json.as_deref(),
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(chanting_sections)
+                .values(&new)
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_chanting_section(&self, data: &ChantingSectionJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_sections::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_sections.filter(uid.eq(&data.uid)))
+                .set((
+                    title.eq(&data.title),
+                    content_pali.eq(&data.content_pali),
+                    sort_index.eq(data.sort_index),
+                    metadata_json.eq(&data.metadata_json),
+                ))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn delete_chanting_section(&self, section_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_sections::dsl::*;
+
+        self.delete_recording_files_for_section(section_uid_param)?;
+
+        self.do_write(|db_conn| {
+            diesel::delete(chanting_sections.filter(uid.eq(section_uid_param)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    // --- Recording CRUD ---
+
+    pub fn create_chanting_recording(&self, data: &ChantingRecordingJson) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        let new = NewChantingRecording {
+            uid: &data.uid,
+            section_uid: &data.section_uid,
+            file_name: &data.file_name,
+            recording_type: &data.recording_type,
+            label: data.label.as_deref(),
+            duration_ms: data.duration_ms,
+            markers_json: data.markers_json.as_deref(),
+            volume: data.volume,
+            playback_position_ms: data.playback_position_ms,
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(chanting_recordings)
+                .values(&new)
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn delete_chanting_recording(&self, recording_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        // Get the recording to find its file_name before deleting
+        let recording: Option<ChantingRecording> = self.do_read(|db_conn| {
+            chanting_recordings
+                .filter(uid.eq(recording_uid_param))
+                .select(ChantingRecording::as_select())
+                .first(db_conn)
+                .optional()
+        })?;
+
+        if let Some(rec) = &recording {
+            self.delete_recording_file(&rec.file_name);
+        }
+
+        self.do_write(|db_conn| {
+            diesel::delete(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_recording_markers(&self, recording_uid_param: &str, new_markers_json: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .set(markers_json.eq(Some(new_markers_json)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_recording_volume(&self, recording_uid_param: &str, new_volume: f32) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .set(volume.eq(new_volume))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_recording_playback_position(&self, recording_uid_param: &str, position_ms: i32) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .set(playback_position_ms.eq(position_ms))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    // --- Recording file cleanup helpers ---
+
+    fn delete_recording_file(&self, file_name: &str) {
+        let recordings_dir = crate::get_chanting_recordings_dir();
+        let file_path = recordings_dir.join(file_name);
+
+        match file_path.try_exists() {
+            Ok(true) => {
+                if let Err(e) = std::fs::remove_file(&file_path) {
+                    error(&format!("Failed to delete recording file {:?}: {}", file_path, e));
+                }
+            }
+            Ok(false) => {} // File doesn't exist, nothing to do
+            Err(e) => {
+                error(&format!("Failed to check recording file {:?}: {}", file_path, e));
+            }
+        }
+    }
+
+    fn delete_recording_files_for_section(&self, section_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl as rec_dsl;
+
+        let recordings: Vec<ChantingRecording> = self.do_read(|db_conn| {
+            rec_dsl::chanting_recordings
+                .filter(rec_dsl::section_uid.eq(section_uid_param))
+                .select(ChantingRecording::as_select())
+                .load(db_conn)
+        })?;
+
+        for rec in &recordings {
+            self.delete_recording_file(&rec.file_name);
+        }
+
+        Ok(())
+    }
+
+    fn delete_recording_files_for_chant(&self, chant_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+
+        let sections: Vec<ChantingSection> = self.do_read(|db_conn| {
+            sec_dsl::chanting_sections
+                .filter(sec_dsl::chant_uid.eq(chant_uid_param))
+                .select(ChantingSection::as_select())
+                .load(db_conn)
+        })?;
+
+        for sec in &sections {
+            self.delete_recording_files_for_section(&sec.uid)?;
+        }
+
+        Ok(())
+    }
+
+    fn delete_recording_files_for_collection(&self, collection_uid_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_chants::dsl as chant_dsl;
+
+        let chants: Vec<ChantingChant> = self.do_read(|db_conn| {
+            chant_dsl::chanting_chants
+                .filter(chant_dsl::collection_uid.eq(collection_uid_param))
+                .select(ChantingChant::as_select())
+                .load(db_conn)
+        })?;
+
+        for chant in &chants {
+            self.delete_recording_files_for_chant(&chant.uid)?;
+        }
+
+        Ok(())
+    }
 }
 
 pub fn delete_sutta() {

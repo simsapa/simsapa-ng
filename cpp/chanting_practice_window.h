@@ -1,0 +1,23 @@
+#ifndef CHANTING_PRACTICE_WINDOW_H
+#define CHANTING_PRACTICE_WINDOW_H
+
+#include <QObject>
+#include <QApplication>
+#include <QQmlApplicationEngine>
+
+class ChantingPracticeWindow : public QObject {
+    Q_OBJECT
+
+public:
+    explicit ChantingPracticeWindow(QApplication* app, QObject* parent = nullptr);
+    ~ChantingPracticeWindow();
+
+    QApplication* m_app;
+    QObject* m_root;
+    QQmlApplicationEngine *m_engine;
+
+private:
+    void setup_qml();
+};
+
+#endif

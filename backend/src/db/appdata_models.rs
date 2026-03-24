@@ -280,6 +280,194 @@ pub struct NewBookResource<'a> {
     pub content_data: Option<&'a [u8]>,
 }
 
+// Chanting models
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[diesel(table_name = chanting_collections)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct ChantingCollection {
+    pub id: i32,
+    pub uid: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub language: String,
+    pub sort_index: i32,
+    pub is_user_added: bool,
+    pub metadata_json: Option<String>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = chanting_collections)]
+pub struct NewChantingCollection<'a> {
+    pub uid: &'a str,
+    pub title: &'a str,
+    pub description: Option<&'a str>,
+    pub language: &'a str,
+    pub sort_index: i32,
+    pub is_user_added: bool,
+    pub metadata_json: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[diesel(table_name = chanting_chants)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct ChantingChant {
+    pub id: i32,
+    pub uid: String,
+    pub collection_uid: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub sort_index: i32,
+    pub is_user_added: bool,
+    pub metadata_json: Option<String>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = chanting_chants)]
+pub struct NewChantingChant<'a> {
+    pub uid: &'a str,
+    pub collection_uid: &'a str,
+    pub title: &'a str,
+    pub description: Option<&'a str>,
+    pub sort_index: i32,
+    pub is_user_added: bool,
+    pub metadata_json: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[diesel(table_name = chanting_sections)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct ChantingSection {
+    pub id: i32,
+    pub uid: String,
+    pub chant_uid: String,
+    pub title: String,
+    pub content_pali: String,
+    pub sort_index: i32,
+    pub is_user_added: bool,
+    pub metadata_json: Option<String>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = chanting_sections)]
+pub struct NewChantingSection<'a> {
+    pub uid: &'a str,
+    pub chant_uid: &'a str,
+    pub title: &'a str,
+    pub content_pali: &'a str,
+    pub sort_index: i32,
+    pub is_user_added: bool,
+    pub metadata_json: Option<&'a str>,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[diesel(table_name = chanting_recordings)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct ChantingRecording {
+    pub id: i32,
+    pub uid: String,
+    pub section_uid: String,
+    pub file_name: String,
+    pub recording_type: String,
+    pub label: Option<String>,
+    pub duration_ms: i32,
+    pub markers_json: Option<String>,
+    pub volume: f32,
+    pub playback_position_ms: i32,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = chanting_recordings)]
+pub struct NewChantingRecording<'a> {
+    pub uid: &'a str,
+    pub section_uid: &'a str,
+    pub file_name: &'a str,
+    pub recording_type: &'a str,
+    pub label: Option<&'a str>,
+    pub duration_ms: i32,
+    pub markers_json: Option<&'a str>,
+    pub volume: f32,
+    pub playback_position_ms: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChantingCollectionJson {
+    pub uid: String,
+    pub title: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default = "default_pali")]
+    pub language: String,
+    #[serde(default)]
+    pub sort_index: i32,
+    #[serde(default)]
+    pub is_user_added: bool,
+    #[serde(default)]
+    pub metadata_json: Option<String>,
+    #[serde(default)]
+    pub chants: Vec<ChantingChantJson>,
+}
+
+fn default_pali() -> String {
+    "pali".to_string()
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChantingChantJson {
+    pub uid: String,
+    pub collection_uid: String,
+    pub title: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub sort_index: i32,
+    #[serde(default)]
+    pub is_user_added: bool,
+    #[serde(default)]
+    pub metadata_json: Option<String>,
+    #[serde(default)]
+    pub sections: Vec<ChantingSectionJson>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChantingSectionJson {
+    pub uid: String,
+    pub chant_uid: String,
+    pub title: String,
+    #[serde(default)]
+    pub content_pali: String,
+    #[serde(default)]
+    pub sort_index: i32,
+    #[serde(default)]
+    pub is_user_added: bool,
+    #[serde(default)]
+    pub metadata_json: Option<String>,
+    #[serde(default)]
+    pub recordings: Vec<ChantingRecordingJson>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChantingRecordingJson {
+    pub uid: String,
+    pub section_uid: String,
+    pub file_name: String,
+    pub recording_type: String,
+    #[serde(default)]
+    pub label: Option<String>,
+    #[serde(default)]
+    pub duration_ms: i32,
+    #[serde(default)]
+    pub markers_json: Option<String>,
+    #[serde(default = "default_volume")]
+    pub volume: f32,
+    #[serde(default)]
+    pub playback_position_ms: i32,
+}
+
+fn default_volume() -> f32 {
+    1.0
+}
+
 /// Represents a navigation point from EPUB table of contents
 /// Mirrors the structure of epub::doc::NavPoint for JSON serialization
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

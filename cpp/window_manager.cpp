@@ -5,6 +5,8 @@
 #include "library_window.h"
 #include "reference_search_window.h"
 #include "topic_index_window.h"
+#include "chanting_practice_window.h"
+#include "chanting_review_window.h"
 #include <QVariant>
 
 WindowManager* WindowManager::m_instance = nullptr;
@@ -58,6 +60,16 @@ WindowManager::~WindowManager() {
         auto w = topic_index_windows.takeFirst();
         w->deleteLater();
     }
+
+    while (!chanting_practice_windows.isEmpty()) {
+        auto w = chanting_practice_windows.takeFirst();
+        w->deleteLater();
+    }
+
+    while (!chanting_review_windows.isEmpty()) {
+        auto w = chanting_review_windows.takeFirst();
+        w->deleteLater();
+    }
 }
 
 SuttaSearchWindow* WindowManager::create_sutta_search_window() {
@@ -95,6 +107,18 @@ ReferenceSearchWindow* WindowManager::create_reference_search_window() {
 TopicIndexWindow* WindowManager::create_topic_index_window() {
     TopicIndexWindow* w = new TopicIndexWindow(this->m_app);
     topic_index_windows.append(w);
+    return w;
+}
+
+ChantingPracticeWindow* WindowManager::create_chanting_practice_window() {
+    ChantingPracticeWindow* w = new ChantingPracticeWindow(this->m_app);
+    chanting_practice_windows.append(w);
+    return w;
+}
+
+ChantingReviewWindow* WindowManager::create_chanting_review_window(const QString& section_uid) {
+    ChantingReviewWindow* w = new ChantingReviewWindow(this->m_app, section_uid);
+    chanting_review_windows.append(w);
     return w;
 }
 

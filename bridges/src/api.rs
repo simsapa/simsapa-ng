@@ -160,6 +160,8 @@ pub mod ffi {
         fn callback_show_sutta_from_reference_search(window_id: QString, result_data_json: QString);
         fn callback_toggle_reading_mode(window_id: QString, is_active: bool);
         fn callback_open_in_lookup_window(result_data_json: QString);
+        fn callback_open_chanting_practice_window();
+        fn callback_open_chanting_review_window(section_uid: QString);
     }
 }
 
