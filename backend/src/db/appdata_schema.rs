@@ -187,6 +187,7 @@ diesel::table! {
         markers_json -> Nullable<Text>,
         volume -> Float,
         playback_position_ms -> Integer,
+        waveform_json -> Nullable<Text>,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }

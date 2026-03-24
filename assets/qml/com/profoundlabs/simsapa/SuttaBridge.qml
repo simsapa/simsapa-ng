@@ -897,6 +897,11 @@ Item {
         return '{"ok": true}';
     }
 
+    signal waveformDataReady(recording_uid: string, waveform_json: string)
+
+    function generate_waveform_data(recording_uid: string, file_path: string, num_bars: int) {
+    }
+
     // Logger functions
     function log_debug(message: string) {
         console.log("[DEBUG]", message);

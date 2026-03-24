@@ -28,6 +28,7 @@ pub mod update_checker;
 pub mod topic_index;
 pub mod snowball;
 pub mod search;
+pub mod waveform;
 
 use std::env;
 use std::io::{self, Read, Write};

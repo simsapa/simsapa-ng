@@ -297,6 +297,7 @@ fn test_create_and_read_chanting_recording() {
         markers_json: None,
         volume: 1.0,
         playback_position_ms: 0,
+        waveform_json: None,
     };
     app_data.dbm.appdata.create_chanting_recording(&rec_data).expect("create recording");
 
@@ -365,6 +366,7 @@ fn test_cascade_delete_collection_removes_chants_and_sections() {
         markers_json: None,
         volume: 1.0,
         playback_position_ms: 0,
+        waveform_json: None,
     };
     app_data.dbm.appdata.create_chanting_recording(&rec_data).expect("create");
 
@@ -519,6 +521,7 @@ fn test_update_recording_markers() {
         markers_json: None,
         volume: 1.0,
         playback_position_ms: 0,
+        waveform_json: None,
     };
     app_data.dbm.appdata.create_chanting_recording(&rec_data).expect("create");
 

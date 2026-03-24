@@ -48,6 +48,16 @@ ApplicationWindow {
         load_section_data();
     }
 
+    // Stop all playback and save state when window is closed
+    onClosing: {
+        for (let i = 0; i < playback_repeater.count; i++) {
+            let item = playback_repeater.itemAt(i);
+            if (item && item.cleanup) {
+                item.cleanup();
+            }
+        }
+    }
+
     function load_section_data() {
         let json_str = SuttaBridge.get_chanting_section_detail_json(root.current_section_uid);
         if (json_str === "null" || json_str === "") {
@@ -97,7 +107,8 @@ ApplicationWindow {
                 "duration_ms": rec.duration_ms,
                 "markers_json": rec.markers_json || "[]",
                 "volume": rec.volume !== undefined ? rec.volume : 1.0,
-                "playback_position_ms": rec.playback_position_ms || 0
+                "playback_position_ms": rec.playback_position_ms || 0,
+                "waveform_json": rec.waveform_json || ""
             };
             if (rec.recording_type === "reference") {
                 reference_model.append(item);
@@ -113,12 +124,80 @@ ApplicationWindow {
         load_section_data();
     }
 
+    // Check if a recording is already open in the playback area
+    function is_recording_open(uid: string): bool {
+        for (let i = 0; i < playback_items_model.count; i++) {
+            if (playback_items_model.get(i).model_recording_uid === uid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Close an open playback item by recording uid
+    function close_playback_item(uid: string) {
+        for (let i = 0; i < playback_items_model.count; i++) {
+            if (playback_items_model.get(i).model_recording_uid === uid) {
+                playback_items_model.remove(i);
+                return;
+            }
+        }
+    }
+
+    // Format duration in ms to a readable string like "2:06"
+    function format_duration(ms: int): string {
+        if (ms <= 0) return "";
+        let total_secs = Math.floor(ms / 1000);
+        let mins = Math.floor(total_secs / 60);
+        let secs = total_secs % 60;
+        return mins + ":" + String(secs).padStart(2, '0');
+    }
+
+    // Format a recording label with date and duration
+    function format_recording_info(label: string, duration_ms: int): string {
+        let parts = [];
+        if (label) parts.push(label);
+        if (duration_ms > 0) parts.push(format_duration(duration_ms));
+        return parts.join("  —  ");
+    }
+
     // Models for recording lists
     ListModel { id: reference_model }
     ListModel { id: user_model }
 
     // Model for open playback items in the playback area
     ListModel { id: playback_items_model }
+
+    // Update recording list models when waveform data is generated
+    Connections {
+        target: SuttaBridge
+        function onWaveformDataReady(recording_uid: string, waveform_json: string) {
+            function update_model(model: ListModel) {
+                for (let i = 0; i < model.count; i++) {
+                    if (model.get(i).uid === recording_uid) {
+                        model.setProperty(i, "waveform_json", waveform_json);
+                        return;
+                    }
+                }
+            }
+            update_model(reference_model);
+            update_model(user_model);
+        }
+    }
+
+    // Confirmation dialog for deleting a recording
+    MessageDialog {
+        id: delete_confirm_dialog
+        title: "Delete Recording"
+        text: "Are you sure you want to delete this recording? This cannot be undone."
+        buttons: MessageDialog.Cancel | MessageDialog.Ok
+        property string target_uid: ""
+        onAccepted: {
+            root.close_playback_item(delete_confirm_dialog.target_uid);
+            SuttaBridge.delete_chanting_recording(delete_confirm_dialog.target_uid);
+            load_section_data();
+        }
+    }
 
     // File dialog for adding reference recordings (7.7)
     FileDialog {
@@ -284,11 +363,13 @@ ApplicationWindow {
                         playback_items_model.append({
                             "model_recording_uid": uid,
                             "model_file_path": "",
-                            "model_label": "New Recording — " + new Date().toLocaleDateString(),
+                            "model_label": "Recording — " + new Date().toLocaleString(undefined, {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}),
                             "model_recording_type": "user",
                             "model_is_new_recording": true,
                             "model_volume": 1.0,
-                            "model_playback_position_ms": 0
+                            "model_playback_position_ms": 0,
+                            "model_markers_json": "[]",
+                            "model_waveform_json": ""
                         });
                     }
                 }
@@ -321,29 +402,33 @@ ApplicationWindow {
 
                 Repeater {
                     model: reference_model
-                    delegate: RowLayout {
+                    delegate: Frame {
                         id: ref_delegate
                         Layout.fillWidth: true
-                        spacing: 4
 
                         required property int index
                         required property string uid
                         required property string file_name
                         required property string label
                         required property int duration_ms
+                        required property string markers_json
                         required property real volume
                         required property int playback_position_ms
+                        required property string waveform_json
 
-                        Label {
-                            text: ref_delegate.label
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                        property bool is_open: root.is_recording_open(ref_delegate.uid)
+
+                        background: Rectangle {
+                            color: ref_delegate.is_open ? palette.highlight : palette.base
+                            border.color: palette.mid
+                            border.width: 1
+                            radius: 4
                         }
 
-                        // 7.9 Open button
-                        Button {
-                            text: "Open"
-                            onClicked: {
+                        function toggle_open() {
+                            if (ref_delegate.is_open) {
+                                root.close_playback_item(ref_delegate.uid);
+                            } else {
                                 let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
                                 let fp = ref_delegate.file_name.startsWith("/")
                                     ? ref_delegate.file_name
@@ -355,8 +440,33 @@ ApplicationWindow {
                                     "model_recording_type": "reference",
                                     "model_is_new_recording": false,
                                     "model_volume": ref_delegate.volume,
-                                    "model_playback_position_ms": ref_delegate.playback_position_ms
+                                    "model_playback_position_ms": ref_delegate.playback_position_ms,
+                                    "model_markers_json": ref_delegate.markers_json,
+                                    "model_waveform_json": ref_delegate.waveform_json
                                 });
+                            }
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            spacing: 4
+
+                            Label {
+                                text: root.format_recording_info(ref_delegate.label, ref_delegate.duration_ms)
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                                color: ref_delegate.is_open ? palette.highlightedText : palette.text
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: ref_delegate.toggle_open()
+                                }
+                            }
+
+                            Button {
+                                text: ref_delegate.is_open ? "Close" : "Open"
+                                onClicked: ref_delegate.toggle_open()
                             }
                         }
                     }
@@ -378,29 +488,33 @@ ApplicationWindow {
 
                 Repeater {
                     model: user_model
-                    delegate: RowLayout {
+                    delegate: Frame {
                         id: user_delegate
                         Layout.fillWidth: true
-                        spacing: 4
 
                         required property int index
                         required property string uid
                         required property string file_name
                         required property string label
                         required property int duration_ms
+                        required property string markers_json
                         required property real volume
                         required property int playback_position_ms
+                        required property string waveform_json
 
-                        Label {
-                            text: user_delegate.label
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                        property bool is_open: root.is_recording_open(user_delegate.uid)
+
+                        background: Rectangle {
+                            color: user_delegate.is_open ? palette.highlight : palette.base
+                            border.color: palette.mid
+                            border.width: 1
+                            radius: 4
                         }
 
-                        // 7.9 Open button
-                        Button {
-                            text: "Open"
-                            onClicked: {
+                        function toggle_open() {
+                            if (user_delegate.is_open) {
+                                root.close_playback_item(user_delegate.uid);
+                            } else {
                                 let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
                                 let fp = user_delegate.file_name.startsWith("/")
                                     ? user_delegate.file_name
@@ -412,18 +526,45 @@ ApplicationWindow {
                                     "model_recording_type": "user",
                                     "model_is_new_recording": false,
                                     "model_volume": user_delegate.volume,
-                                    "model_playback_position_ms": user_delegate.playback_position_ms
+                                    "model_playback_position_ms": user_delegate.playback_position_ms,
+                                    "model_markers_json": user_delegate.markers_json,
+                                    "model_waveform_json": user_delegate.waveform_json
                                 });
                             }
                         }
 
-                        // Delete button (user recordings only)
-                        Button {
-                            text: "✕"
-                            implicitWidth: 32
-                            onClicked: {
-                                SuttaBridge.delete_chanting_recording(user_delegate.uid);
-                                load_section_data();
+                        RowLayout {
+                            anchors.fill: parent
+                            spacing: 4
+
+                            Label {
+                                text: root.format_recording_info(user_delegate.label, user_delegate.duration_ms)
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                                color: user_delegate.is_open ? palette.highlightedText : palette.text
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: user_delegate.toggle_open()
+                                }
+                            }
+
+                            Button {
+                                id: user_open_close_btn
+                                text: user_delegate.is_open ? "Close" : "Open"
+                                onClicked: user_delegate.toggle_open()
+                            }
+
+                            // Delete button (user recordings only)
+                            Button {
+                                icon.source: "icons/32x32/ion--trash-outline.png"
+                                implicitHeight: user_open_close_btn.implicitHeight
+                                implicitWidth: implicitHeight
+                                onClicked: {
+                                    delete_confirm_dialog.target_uid = user_delegate.uid;
+                                    delete_confirm_dialog.open();
+                                }
                             }
                         }
                     }
@@ -450,6 +591,7 @@ ApplicationWindow {
                     spacing: 8
 
                     Repeater {
+                        id: playback_repeater
                         model: playback_items_model
                         delegate: RecordingPlaybackItem {
                             id: playback_delegate
@@ -463,6 +605,8 @@ ApplicationWindow {
                             required property bool model_is_new_recording
                             required property real model_volume
                             required property int model_playback_position_ms
+                            required property string model_markers_json
+                            required property string model_waveform_json
 
                             recording_uid: playback_delegate.model_recording_uid
                             file_path: playback_delegate.model_file_path
@@ -471,6 +615,8 @@ ApplicationWindow {
                             is_new_recording: playback_delegate.model_is_new_recording
                             volume: playback_delegate.model_volume
                             playback_position_ms: playback_delegate.model_playback_position_ms
+                            markers_json: playback_delegate.model_markers_json
+                            waveform_json: playback_delegate.model_waveform_json
 
                             // 7.10 Close removes from playback area
                             onClosed: {

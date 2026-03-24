@@ -167,6 +167,10 @@ pub mod qobject {
         #[cxx_name = "debugQueryReady"]
         fn debug_query_ready(self: Pin<&mut SuttaBridge>, debug_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "waveformDataReady"]
+        fn waveform_data_ready(self: Pin<&mut SuttaBridge>, recording_uid: QString, waveform_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -671,6 +675,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn update_recording_playback_position(self: &SuttaBridge, recording_uid: &QString, position_ms: i32) -> QString;
+
+        #[qinvokable]
+        fn generate_waveform_data(self: Pin<&mut SuttaBridge>, recording_uid: &QString, file_path: &QString, num_bars: i32);
 
         // Logger functions
         #[qinvokable]
@@ -3398,6 +3405,38 @@ impl qobject::SuttaBridge {
             Ok(_) => QString::from("{\"ok\": true}"),
             Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
         }
+    }
+
+    pub fn generate_waveform_data(self: Pin<&mut Self>, recording_uid: &QString, file_path: &QString, num_bars: i32) {
+        let uid_str = recording_uid.to_string();
+        let path_str = file_path.to_string();
+        let bars = if num_bars > 0 { num_bars as usize } else { 200 };
+        let qt_thread = self.qt_thread();
+
+        thread::spawn(move || {
+            let waveform_json = match simsapa_backend::waveform::get_waveform_peaks(&path_str, bars) {
+                Ok(peaks) => {
+                    serde_json::to_string(&peaks).unwrap_or_else(|_| "[]".to_string())
+                }
+                Err(e) => {
+                    warn(&format!("generate_waveform_data error: {}", e));
+                    "[]".to_string()
+                }
+            };
+
+            // Save to database
+            let app_data = get_app_data();
+            if let Err(e) = app_data.dbm.appdata.update_recording_waveform(&uid_str, &waveform_json) {
+                warn(&format!("Failed to save waveform data: {}", e));
+            }
+
+            // Emit signal back to QML
+            let uid_qstr = QString::from(&uid_str);
+            let json_qstr = QString::from(&waveform_json);
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().waveform_data_ready(uid_qstr, json_qstr);
+            }).unwrap();
+        });
     }
 
     // =========================================================================

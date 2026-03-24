@@ -66,6 +66,7 @@ fn main() {
         "../assets/qml/ChantingPracticeReviewWindow.qml",
         "../assets/qml/ChantingTreeList.qml",
         "../assets/qml/RecordingPlaybackItem.qml",
+        "../assets/qml/WaveformView.qml",
     ];
 
     let builder = CxxQtBuilder::new()

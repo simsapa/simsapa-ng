@@ -24,14 +24,23 @@ Item {
     signal recording_completed(string recorded_file_path)
     signal remove_requested(string recording_uid)
 
+    // Markers data (JSON array of marker objects)
+    property string markers_json: "[]"
+    property var markers: []
+
+    // Cached waveform data from database (set by parent)
+    property string waveform_json: ""
+
     // Internal state
     property bool is_recording: false
     property int recording_elapsed_ms: 0
     property bool file_not_found: false
     property string error_message: ""
+    property var waveform_data: []
+    property bool waveform_loading: false
+    property bool pending_recording_stop: false
 
     implicitHeight: main_column.implicitHeight + 16
-    implicitWidth: parent ? parent.width : 400
 
     Rectangle {
         anchors.fill: parent
@@ -57,11 +66,67 @@ Item {
         }
     }
 
-    onFile_pathChanged: check_file()
+    onFile_pathChanged: {
+        check_file();
+        load_waveform();
+    }
+
+    onMarkers_jsonChanged: {
+        try {
+            root.markers = JSON.parse(root.markers_json);
+        } catch (e) {
+            root.markers = [];
+        }
+    }
 
     Component.onCompleted: {
         // Delay check slightly to ensure all properties are bound
         Qt.callLater(check_file);
+        Qt.callLater(load_waveform);
+        // Parse initial markers
+        try {
+            root.markers = JSON.parse(root.markers_json);
+        } catch (e) {
+            root.markers = [];
+        }
+    }
+
+    function load_waveform() {
+        if (root.file_path === "" || root.file_not_found) {
+            root.waveform_data = [];
+            root.waveform_loading = false;
+            return;
+        }
+
+        // Use cached data from database if available
+        if (root.waveform_json !== "" && root.waveform_json !== "[]") {
+            try {
+                root.waveform_data = JSON.parse(root.waveform_json);
+                root.waveform_loading = false;
+                return;
+            } catch (e) {
+                // Fall through to generate
+            }
+        }
+
+        // Generate in background
+        root.waveform_loading = true;
+        SuttaBridge.generate_waveform_data(root.recording_uid, root.file_path, 200);
+    }
+
+    // Handle async waveform data from background thread
+    Connections {
+        target: SuttaBridge
+        function onWaveformDataReady(recording_uid: string, waveform_json: string) {
+            if (recording_uid !== root.recording_uid) return;
+            root.waveform_loading = false;
+            root.waveform_json = waveform_json;
+            try {
+                root.waveform_data = JSON.parse(waveform_json);
+            } catch (e) {
+                root.waveform_data = [];
+            }
+        }
     }
 
     // Audio playback (6.2) — only set source if file exists
@@ -84,6 +149,9 @@ Item {
         }
     }
 
+    // Used to re-detect the current default audio input when starting a recording
+    MediaDevices { id: media_devices }
+
     // Audio recording (6.4) — no hardcoded format, let system pick best available
     CaptureSession {
         id: capture_session
@@ -93,6 +161,14 @@ Item {
         recorder: MediaRecorder {
             id: recorder
             quality: MediaRecorder.NormalQuality
+
+            onRecorderStateChanged: {
+                // File is fully finalized only when state transitions to StoppedState
+                if (recorderState === MediaRecorder.StoppedState && root.pending_recording_stop) {
+                    root.pending_recording_stop = false;
+                    root.finalize_recording();
+                }
+            }
         }
     }
 
@@ -124,6 +200,20 @@ Item {
         }
     }
 
+    // Stop playback/recording and persist volume + position
+    function cleanup() {
+        if (root.is_recording) {
+            stop_recording();
+        }
+        if (player.playbackState === MediaPlayer.PlayingState) {
+            player.stop();
+        }
+        save_position();
+        if (root.recording_uid !== "") {
+            SuttaBridge.update_recording_volume(root.recording_uid, root.volume);
+        }
+    }
+
     // Timer for recording elapsed time (6.6)
     Timer {
         id: recording_timer
@@ -145,8 +235,9 @@ Item {
 
     ColumnLayout {
         id: main_column
-        anchors.fill: parent
-        anchors.margins: 8
+        x: 8
+        y: 8
+        width: root.width - 16
         spacing: 6
 
         // Header row with label and close button (6.7)
@@ -289,6 +380,61 @@ Item {
             }
         }
 
+        // Waveform placeholder while loading
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found && root.waveform_loading && root.waveform_data.length === 0
+            color: palette.base
+            border.color: palette.mid
+            border.width: 1
+            radius: 2
+
+            Label {
+                anchors.centerIn: parent
+                text: "Loading waveform..."
+                color: palette.placeholderText
+                font.pointSize: 10
+            }
+        }
+
+        // Waveform visualization — above the scrubber
+        WaveformView {
+            id: waveform_view
+            Layout.fillWidth: true
+            Layout.preferredHeight: 60
+            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found && root.waveform_data.length > 0
+
+            waveform_data: root.waveform_data
+            duration_ms: player.duration
+            playback_position_ms: player.position
+            is_playing: player.playbackState === MediaPlayer.PlayingState
+            markers: root.markers
+
+            onSeek_requested: function(position_ms) {
+                player.position = position_ms;
+                position_save_timer.restart();
+            }
+
+            onRange_selected: function(start_ms, end_ms) {
+                // Add a new range marker
+                let new_markers = root.markers.slice();
+                let new_id = "range_" + Date.now();
+                new_markers.push({
+                    "id": new_id,
+                    "type": "range",
+                    "label": "Range",
+                    "start_ms": start_ms,
+                    "end_ms": end_ms
+                });
+                root.markers = new_markers;
+                root.markers_json = JSON.stringify(new_markers);
+                if (root.recording_uid !== "") {
+                    SuttaBridge.update_recording_markers(root.recording_uid, root.markers_json);
+                }
+            }
+        }
+
         // Scrubber slider (6.3) — hidden when file not found
         Slider {
             id: scrubber
@@ -353,6 +499,10 @@ Item {
             return;
         }
 
+        // Re-detect the current default audio input device so that OS-level
+        // changes made after the app started are picked up.
+        audio_input.device = media_devices.defaultAudioInput;
+
         // Generate output file path
         let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
         let timestamp = Date.now();
@@ -365,15 +515,20 @@ Item {
     }
 
     function stop_recording() {
-        recorder.stop();
+        root.pending_recording_stop = true;
         root.is_recording = false;
+        recorder.stop();
+        // File finalization happens async — see recorder.onRecorderStateChanged
+    }
 
+    function finalize_recording() {
         let recorded_path = recorder.actualLocation.toString().replace("file://", "");
         if (recorded_path !== "") {
             root.file_path = recorded_path;
             root.file_not_found = false;
             root.error_message = "";
             player.source = recorder.actualLocation;
+            load_waveform();
             root.recording_completed(recorded_path);
         }
     }

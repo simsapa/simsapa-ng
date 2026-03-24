@@ -374,6 +374,7 @@ pub struct ChantingRecording {
     pub markers_json: Option<String>,
     pub volume: f32,
     pub playback_position_ms: i32,
+    pub waveform_json: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -388,6 +389,7 @@ pub struct NewChantingRecording<'a> {
     pub markers_json: Option<&'a str>,
     pub volume: f32,
     pub playback_position_ms: i32,
+    pub waveform_json: Option<&'a str>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -462,6 +464,8 @@ pub struct ChantingRecordingJson {
     pub volume: f32,
     #[serde(default)]
     pub playback_position_ms: i32,
+    #[serde(default)]
+    pub waveform_json: Option<String>,
 }
 
 fn default_volume() -> f32 {

@@ -727,6 +727,7 @@ impl AppdataDbHandle {
                         markers_json: r.markers_json,
                         volume: r.volume,
                         playback_position_ms: r.playback_position_ms,
+                        waveform_json: r.waveform_json,
                     }
                 }).collect();
 
@@ -916,6 +917,7 @@ impl AppdataDbHandle {
             markers_json: data.markers_json.as_deref(),
             volume: data.volume,
             playback_position_ms: data.playback_position_ms,
+            waveform_json: data.waveform_json.as_deref(),
         };
 
         self.do_write(|db_conn| {
@@ -977,6 +979,17 @@ impl AppdataDbHandle {
         self.do_write(|db_conn| {
             diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
                 .set(playback_position_ms.eq(position_ms))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_recording_waveform(&self, recording_uid_param: &str, new_waveform_json: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .set(waveform_json.eq(Some(new_waveform_json)))
                 .execute(db_conn)
                 .map(|_| ())
         })
