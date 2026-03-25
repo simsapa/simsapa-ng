@@ -37,6 +37,7 @@ Item {
     property bool file_not_found: false
     property string error_message: ""
     property var waveform_data: []
+    property int waveform_num_bars: 0  // total number of bars stored in cached waveform
     property bool waveform_loading: false
     property bool pending_recording_stop: false
 
@@ -111,9 +112,26 @@ Item {
         }
     }
 
+    // Parse waveform JSON, handling both new object format and legacy plain array
+    function parse_waveform_json(json_str: string) {
+        let parsed = JSON.parse(json_str);
+        if (Array.isArray(parsed)) {
+            // Legacy format: plain array of peaks, derive num_bars from length
+            root.waveform_data = parsed;
+            root.waveform_num_bars = parsed.length;
+        } else if (parsed && typeof parsed === "object" && Array.isArray(parsed.peaks)) {
+            root.waveform_data = parsed.peaks;
+            root.waveform_num_bars = parsed.num_bars || parsed.peaks.length;
+        } else {
+            root.waveform_data = [];
+            root.waveform_num_bars = 0;
+        }
+    }
+
     function load_waveform() {
         if (root.file_path === "" || root.file_not_found) {
             root.waveform_data = [];
+            root.waveform_num_bars = 0;
             root.waveform_loading = false;
             return;
         }
@@ -121,7 +139,7 @@ Item {
         // Use cached data from database if available
         if (root.waveform_json !== "" && root.waveform_json !== "[]") {
             try {
-                root.waveform_data = JSON.parse(root.waveform_json);
+                parse_waveform_json(root.waveform_json);
                 root.waveform_loading = false;
                 return;
             } catch (e) {
@@ -142,9 +160,10 @@ Item {
             root.waveform_loading = false;
             root.waveform_json = waveform_json;
             try {
-                root.waveform_data = JSON.parse(waveform_json);
+                parse_waveform_json(waveform_json);
             } catch (e) {
                 root.waveform_data = [];
+                root.waveform_num_bars = 0;
             }
         }
     }
@@ -627,6 +646,81 @@ Item {
 
                 ToolTip.visible: hovered
                 ToolTip.text: "When checked, range playback repeats automatically"
+            }
+
+            Button {
+                id: resample_button
+                text: "Resample"
+                enabled: root.waveform_data.length > 0 && !root.waveform_loading && player.duration > 0
+                onClicked: {
+                    // Calculate current samples per second from num_bars and duration
+                    let duration_secs = player.duration / 1000.0;
+                    let current_sps = duration_secs > 0
+                        ? Math.round(root.waveform_num_bars / duration_secs)
+                        : 10;
+                    resample_dialog.current_samples_per_second = current_sps;
+                    resample_spinbox.value = current_sps;
+                    resample_dialog.open();
+                }
+
+                ToolTip.visible: hovered
+                ToolTip.text: "Regenerate waveform with a different sample rate"
+            }
+        }
+
+        // Resample dialog
+        Dialog {
+            id: resample_dialog
+            title: "Resample Waveform"
+            parent: Overlay.overlay
+            anchors.centerIn: parent
+            modal: true
+            standardButtons: Dialog.Ok | Dialog.Cancel
+
+            property int current_samples_per_second: 0
+
+            ColumnLayout {
+                spacing: 12
+
+                Label {
+                    text: "Current: " + resample_dialog.current_samples_per_second + " samples/sec"
+                        + " (" + root.waveform_num_bars + " total)"
+                    wrapMode: Text.Wrap
+                }
+
+                RowLayout {
+                    spacing: 8
+
+                    Label { text: "New rate:" }
+
+                    SpinBox {
+                        id: resample_spinbox
+                        from: 1
+                        to: 500
+                        stepSize: 1
+                        value: 10
+                        editable: true
+                    }
+
+                    Label { text: "samples/sec" }
+                }
+
+                Label {
+                    text: "Higher values show more detail but use more memory."
+                    font.pointSize: 9
+                    color: palette.placeholderText
+                    wrapMode: Text.Wrap
+                }
+            }
+
+            onAccepted: {
+                let sps = resample_spinbox.value;
+                let duration_secs = player.duration / 1000.0;
+                let num_bars = Math.max(10, Math.round(sps * duration_secs));
+                root.waveform_loading = true;
+                root.waveform_data = [];
+                root.waveform_num_bars = 0;
+                SuttaBridge.generate_waveform_data(root.recording_uid, root.file_path, num_bars);
             }
         }
 

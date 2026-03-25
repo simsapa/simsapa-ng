@@ -3416,7 +3416,12 @@ impl qobject::SuttaBridge {
         thread::spawn(move || {
             let waveform_json = match simsapa_backend::waveform::get_waveform_peaks(&path_str, bars) {
                 Ok(peaks) => {
-                    serde_json::to_string(&peaks).unwrap_or_else(|_| "[]".to_string())
+                    // Store as object with num_bars metadata
+                    let obj = serde_json::json!({
+                        "num_bars": bars,
+                        "peaks": peaks
+                    });
+                    serde_json::to_string(&obj).unwrap_or_else(|_| "[]".to_string())
                 }
                 Err(e) => {
                     warn(&format!("generate_waveform_data error: {}", e));
