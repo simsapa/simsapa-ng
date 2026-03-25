@@ -447,8 +447,7 @@ ApplicationWindow {
                             }
                         }
 
-                        RowLayout {
-                            anchors.fill: parent
+                        contentItem: RowLayout {
                             spacing: 4
 
                             Label {
@@ -456,18 +455,20 @@ ApplicationWindow {
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                                 color: ref_delegate.is_open ? palette.highlightedText : palette.text
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: ref_delegate.toggle_open()
-                                }
                             }
 
                             Button {
                                 text: ref_delegate.is_open ? "Close" : "Open"
                                 onClicked: ref_delegate.toggle_open()
                             }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: ref_delegate.toggle_open()
+                            // Behind the contentItem so buttons still receive clicks
+                            z: -1
                         }
                     }
                 }
@@ -533,8 +534,7 @@ ApplicationWindow {
                             }
                         }
 
-                        RowLayout {
-                            anchors.fill: parent
+                        contentItem: RowLayout {
                             spacing: 4
 
                             Label {
@@ -542,12 +542,6 @@ ApplicationWindow {
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                                 color: user_delegate.is_open ? palette.highlightedText : palette.text
-
-                                MouseArea {
-                                    anchors.fill: parent
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: user_delegate.toggle_open()
-                                }
                             }
 
                             Button {
@@ -566,6 +560,13 @@ ApplicationWindow {
                                     delete_confirm_dialog.open();
                                 }
                             }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: user_delegate.toggle_open()
+                            z: -1
                         }
                     }
                 }

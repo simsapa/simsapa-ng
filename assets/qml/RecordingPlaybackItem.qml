@@ -40,6 +40,26 @@ Item {
     property bool waveform_loading: false
     property bool pending_recording_stop: false
 
+    // Range playback state (8.8, 8.9)
+    property bool loop_enabled: false
+    property string active_range_id: ""  // ID of range marker currently being played
+    property int active_range_start_ms: 0
+    property int active_range_end_ms: 0
+    property bool range_seek_pending: false  // Guard against premature end-detection after seek
+    // Last position we explicitly seeked to. Used as the display position
+    // when the player is NOT playing, because player.position is unreliable
+    // after an async seek while paused.  Set to -1 when no pending seek.
+    property int visual_position_override: -1
+    property int effective_position: {
+        // While playing, player.position updates continuously and is reliable.
+        if (player.playbackState === MediaPlayer.PlayingState)
+            return player.position;
+        // While paused/stopped, prefer our explicit seek target if set.
+        if (visual_position_override >= 0)
+            return visual_position_override;
+        return player.position;
+    }
+
     implicitHeight: main_column.implicitHeight + 16
 
     Rectangle {
@@ -172,6 +192,32 @@ Item {
         }
     }
 
+    // Resumes playback after a brief pause-seek cycle.
+    Timer {
+        id: seek_resume_timer
+        interval: 80
+        repeat: false
+        onTriggered: {
+            player.position = root.visual_position_override;
+            root.visual_position_override = -1;
+            player.play();
+        }
+    }
+
+    // Seek to a position reliably.  While playing, Qt often ignores a bare
+    // `player.position = X`, so we pause → seek → short delay → resume.
+    function seek_to(position_ms: int) {
+        let was_playing = (player.playbackState === MediaPlayer.PlayingState);
+        if (was_playing) {
+            player.pause();
+        }
+        root.visual_position_override = position_ms;
+        player.position = position_ms;
+        if (was_playing) {
+            seek_resume_timer.restart();
+        }
+    }
+
     // Debounce timer for persisting volume changes
     Timer {
         id: volume_save_timer
@@ -202,15 +248,72 @@ Item {
 
     // Stop playback/recording and persist volume + position
     function cleanup() {
+        seek_resume_timer.stop();
         if (root.is_recording) {
             stop_recording();
         }
         if (player.playbackState === MediaPlayer.PlayingState) {
             player.stop();
         }
+        root.visual_position_override = -1;
         save_position();
         if (root.recording_uid !== "") {
             SuttaBridge.update_recording_volume(root.recording_uid, root.volume);
+        }
+    }
+
+    // One-shot timer: after seeking to range start, pause briefly then play.
+    // This gives Qt MediaPlayer time to honour the position change before
+    // playback resumes.
+    Timer {
+        id: range_seek_timer
+        interval: 80
+        repeat: false
+        onTriggered: {
+            // Re-assert the seek position in case the first assignment was
+            // swallowed, then start playback.
+            player.position = root.active_range_start_ms;
+            root.visual_position_override = -1;
+            player.play();
+        }
+    }
+
+    // Range playback polling timer (8.8, 8.9) — checks if player reached end_ms
+    Timer {
+        id: range_playback_timer
+        interval: 50
+        repeat: true
+        running: root.active_range_id !== "" && player.playbackState === MediaPlayer.PlayingState
+        onTriggered: {
+            // After a seek (play_range or loop-back), wait until the player
+            // position is near the range start before checking for the end.
+            // "Near" = within 500 ms of start, to tolerate seek imprecision
+            // while avoiding false-clear when paused in the middle of the range.
+            if (root.range_seek_pending) {
+                let tolerance = Math.min(500, (root.active_range_end_ms - root.active_range_start_ms) / 2);
+                if (player.position >= root.active_range_start_ms
+                    && player.position <= root.active_range_start_ms + tolerance) {
+                    root.range_seek_pending = false;
+                }
+                return;
+            }
+
+            if (player.position >= root.active_range_end_ms) {
+                if (root.loop_enabled) {
+                    root.range_seek_pending = true;
+                    root.visual_position_override = root.active_range_start_ms;
+                    player.pause();
+                    player.position = root.active_range_start_ms;
+                    range_seek_timer.restart();
+                } else {
+                    let end_pos = root.active_range_end_ms;
+                    player.pause();
+                    player.position = end_pos;
+                    stop_range_playback();
+                    // Set override AFTER stop_range_playback (which clears it)
+                    root.visual_position_override = end_pos;
+                }
+            }
         }
     }
 
@@ -354,6 +457,13 @@ Item {
                         player.pause();
                         position_save_timer.restart();
                     } else {
+                        // If the user seeked while paused (waveform click or
+                        // scrubber drag), re-assert that position before playing
+                        // because Qt may not have processed the seek yet.
+                        if (root.visual_position_override >= 0) {
+                            player.position = root.visual_position_override;
+                        }
+                        root.visual_position_override = -1;
                         player.play();
                     }
                 }
@@ -365,7 +475,11 @@ Item {
                 enabled: !root.is_recording && player.playbackState !== MediaPlayer.StoppedState
                 implicitWidth: 40
                 onClicked: {
+                    seek_resume_timer.stop();
+                    root.stop_range_playback();
                     player.stop();
+                    player.position = 0;
+                    root.visual_position_override = 0;
                     position_save_timer.restart();
                 }
             }
@@ -374,7 +488,7 @@ Item {
 
             // Time display (6.3)
             Label {
-                text: root.format_time(player.position) + " / " + root.format_time(player.duration)
+                text: root.format_time(root.effective_position) + " / " + root.format_time(player.duration)
                 font.family: "monospace"
                 visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
             }
@@ -407,31 +521,18 @@ Item {
 
             waveform_data: root.waveform_data
             duration_ms: player.duration
-            playback_position_ms: player.position
+            playback_position_ms: root.effective_position
             is_playing: player.playbackState === MediaPlayer.PlayingState
             markers: root.markers
 
             onSeek_requested: function(position_ms) {
-                player.position = position_ms;
+                root.stop_range_playback();
+                root.seek_to(position_ms);
                 position_save_timer.restart();
             }
 
             onRange_selected: function(start_ms, end_ms) {
-                // Add a new range marker
-                let new_markers = root.markers.slice();
-                let new_id = "range_" + Date.now();
-                new_markers.push({
-                    "id": new_id,
-                    "type": "range",
-                    "label": "Range",
-                    "start_ms": start_ms,
-                    "end_ms": end_ms
-                });
-                root.markers = new_markers;
-                root.markers_json = JSON.stringify(new_markers);
-                if (root.recording_uid !== "") {
-                    SuttaBridge.update_recording_markers(root.recording_uid, root.markers_json);
-                }
+                root.add_range_marker(start_ms, end_ms);
             }
         }
 
@@ -442,10 +543,11 @@ Item {
             visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
             from: 0
             to: player.duration > 0 ? player.duration : 1
-            value: player.position
+            value: root.effective_position
 
             onMoved: {
-                player.position = value;
+                root.stop_range_playback();
+                root.seek_to(Math.round(value));
                 position_save_timer.restart();
             }
         }
@@ -484,6 +586,281 @@ Item {
                 horizontalAlignment: Text.AlignRight
             }
         }
+
+        // Marker controls row (8.2, 8.3, 8.9)
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 6
+            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
+
+            Button {
+                text: "＋ Position"
+                enabled: player.duration > 0
+                onClicked: root.add_position_marker()
+
+                ToolTip.visible: hovered
+                ToolTip.text: "Add a position marker at the current playback time"
+            }
+
+            Button {
+                text: "＋ Range"
+                enabled: player.duration > 0
+                onClicked: {
+                    // Create a range marker around the current position (±2 seconds)
+                    let pos = Math.round(player.position);
+                    let start = Math.max(0, pos - 2000);
+                    let end = Math.min(player.duration, pos + 2000);
+                    root.add_range_marker(start, end);
+                }
+
+                ToolTip.visible: hovered
+                ToolTip.text: "Add a range marker around the current position (drag on waveform for precise ranges)"
+            }
+
+            Item { Layout.fillWidth: true }
+
+            CheckBox {
+                id: loop_checkbox
+                text: "Loop"
+                checked: root.loop_enabled
+                onCheckedChanged: root.loop_enabled = checked
+
+                ToolTip.visible: hovered
+                ToolTip.text: "When checked, range playback repeats automatically"
+            }
+        }
+
+        // Marker list (8.6, 8.7, 8.8, 8.10, 8.11)
+        ColumnLayout {
+            id: marker_list_column
+            Layout.fillWidth: true
+            spacing: 2
+            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found && root.markers.length > 0
+
+            // Sorted copy: position markers by position_ms, range markers by start_ms
+            property var sorted_markers: {
+                let arr = root.markers.slice();
+                arr.sort(function(a, b) {
+                    let a_time = a.type === "position" ? a.position_ms : a.start_ms;
+                    let b_time = b.type === "position" ? b.position_ms : b.start_ms;
+                    return a_time - b_time;
+                });
+                return arr;
+            }
+
+            Label {
+                text: "Markers"
+                font.bold: true
+                font.pointSize: 10
+            }
+
+            Repeater {
+                model: marker_list_column.sorted_markers.length
+
+                RowLayout {
+                    id: marker_row
+
+                    required property int index
+
+                    property var marker: index < marker_list_column.sorted_markers.length ? marker_list_column.sorted_markers[index] : null
+                    property bool is_position: marker !== null && marker.type === "position"
+                    property bool is_active_range: marker !== null && marker.id === root.active_range_id
+
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    // Type indicator
+                    Rectangle {
+                        width: 8
+                        height: 8
+                        radius: marker_row.is_position ? 4 : 1
+                        color: marker_row.is_position ? "red" : palette.highlight
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    // Editable label (8.10)
+                    TextInput {
+                        id: label_edit
+                        text: marker_row.marker !== null ? marker_row.marker.label : ""
+                        Layout.preferredWidth: 80
+                        Layout.alignment: Qt.AlignVCenter
+                        selectByMouse: true
+                        color: palette.text
+                        selectionColor: palette.highlight
+                        selectedTextColor: palette.highlightedText
+
+                        onEditingFinished: {
+                            if (marker_row.marker !== null) {
+                                root.update_marker_label(marker_row.marker.id, text);
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: -2
+                            color: "transparent"
+                            border.color: label_edit.activeFocus ? palette.highlight : palette.mid
+                            border.width: label_edit.activeFocus ? 1 : 0
+                            radius: 2
+                            z: -1
+                        }
+                    }
+
+                    // Time display
+                    Label {
+                        text: {
+                            if (marker_row.marker === null) return "";
+                            if (marker_row.is_position) {
+                                return root.format_time(marker_row.marker.position_ms);
+                            } else {
+                                return root.format_time(marker_row.marker.start_ms) + " – " + root.format_time(marker_row.marker.end_ms);
+                            }
+                        }
+                        font.family: "monospace"
+                        font.pointSize: 9
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Item { Layout.fillWidth: true }
+
+                    // Seek / Play button (8.7, 8.8)
+                    Button {
+                        text: marker_row.is_position ? "⏵" : (marker_row.is_active_range ? "⏹" : "⏵")
+                        implicitWidth: 32
+                        implicitHeight: 28
+                        font.pointSize: 10
+                        onClicked: {
+                            if (marker_row.marker === null) return;
+                            if (marker_row.is_position) {
+                                root.stop_range_playback();
+                                root.seek_to(marker_row.marker.position_ms);
+                                // Always start playback from the marker position
+                                if (player.playbackState !== MediaPlayer.PlayingState && !seek_resume_timer.running) {
+                                    root.visual_position_override = -1;
+                                    player.position = marker_row.marker.position_ms;
+                                    player.play();
+                                }
+                                position_save_timer.restart();
+                            } else {
+                                if (marker_row.is_active_range) {
+                                    player.pause();
+                                    root.stop_range_playback();
+                                } else {
+                                    root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
+                                }
+                            }
+                        }
+
+                        ToolTip.visible: hovered
+                        ToolTip.text: marker_row.is_position ? "Seek to this position" : (marker_row.is_active_range ? "Stop range playback" : "Play this range")
+                    }
+
+                    // Delete button (8.11)
+                    Button {
+                        text: "✕"
+                        implicitWidth: 28
+                        implicitHeight: 28
+                        font.pointSize: 9
+                        onClicked: {
+                            if (marker_row.marker !== null) {
+                                root.delete_marker(marker_row.marker.id);
+                            }
+                        }
+
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Delete this marker"
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Marker management functions (8.2, 8.3, 8.11) ---
+
+    function save_markers() {
+        root.markers_json = JSON.stringify(root.markers);
+        if (root.recording_uid !== "") {
+            SuttaBridge.update_recording_markers(root.recording_uid, root.markers_json);
+        }
+    }
+
+    function add_position_marker() {
+        let new_markers = root.markers.slice();
+        new_markers.push({
+            "id": "pos_" + Date.now(),
+            "type": "position",
+            "label": "Mark",
+            "position_ms": Math.round(player.position)
+        });
+        root.markers = new_markers;
+        save_markers();
+    }
+
+    function add_range_marker(start_ms: int, end_ms: int) {
+        let new_markers = root.markers.slice();
+        new_markers.push({
+            "id": "range_" + Date.now(),
+            "type": "range",
+            "label": "Range",
+            "start_ms": start_ms,
+            "end_ms": end_ms
+        });
+        root.markers = new_markers;
+        save_markers();
+    }
+
+    function delete_marker(marker_id: string) {
+        let new_markers = [];
+        for (let i = 0; i < root.markers.length; i++) {
+            if (root.markers[i].id !== marker_id) {
+                new_markers.push(root.markers[i]);
+            }
+        }
+        root.markers = new_markers;
+        // Stop range playback if the active range was deleted
+        if (root.active_range_id === marker_id) {
+            stop_range_playback();
+        }
+        save_markers();
+    }
+
+    function update_marker_label(marker_id: string, new_label: string) {
+        let new_markers = root.markers.slice();
+        for (let i = 0; i < new_markers.length; i++) {
+            if (new_markers[i].id === marker_id) {
+                new_markers[i] = Object.assign({}, new_markers[i], {"label": new_label});
+                break;
+            }
+        }
+        root.markers = new_markers;
+        save_markers();
+    }
+
+    // Range playback (8.8)
+    function play_range(marker_id: string, start_ms: int, end_ms: int) {
+        root.active_range_id = marker_id;
+        root.active_range_start_ms = start_ms;
+        root.active_range_end_ms = end_ms;
+        root.range_seek_pending = true;
+        // Immediately move the visual cursor so the user sees no jump
+        // to the old position.
+        root.visual_position_override = start_ms;
+
+        if (player.playbackState === MediaPlayer.PlayingState) {
+            player.pause();
+        }
+        player.position = start_ms;
+        range_seek_timer.restart();
+    }
+
+    function stop_range_playback() {
+        root.active_range_id = "";
+        root.active_range_start_ms = 0;
+        root.active_range_end_ms = 0;
+        root.range_seek_pending = false;
+        root.visual_position_override = -1;
+        range_seek_timer.stop();
+        range_playback_timer.stop();
     }
 
     // Android runtime permission check (6.5)
