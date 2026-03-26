@@ -130,6 +130,69 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    chanting_collections (id) {
+        id -> Integer,
+        uid -> Text,
+        title -> Text,
+        description -> Nullable<Text>,
+        language -> Text,
+        sort_index -> Integer,
+        is_user_added -> Bool,
+        metadata_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    chanting_chants (id) {
+        id -> Integer,
+        uid -> Text,
+        collection_uid -> Text,
+        title -> Text,
+        description -> Nullable<Text>,
+        sort_index -> Integer,
+        is_user_added -> Bool,
+        metadata_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    chanting_sections (id) {
+        id -> Integer,
+        uid -> Text,
+        chant_uid -> Text,
+        title -> Text,
+        content_pali -> Text,
+        sort_index -> Integer,
+        is_user_added -> Bool,
+        metadata_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    chanting_recordings (id) {
+        id -> Integer,
+        uid -> Text,
+        section_uid -> Text,
+        file_name -> Text,
+        recording_type -> Text,
+        label -> Nullable<Text>,
+        duration_ms -> Integer,
+        markers_json -> Nullable<Text>,
+        volume -> Float,
+        playback_position_ms -> Integer,
+        waveform_json -> Nullable<Text>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
 diesel::joinable!(sutta_variants -> suttas (sutta_id));
 diesel::joinable!(sutta_comments -> suttas (sutta_id));
 diesel::joinable!(sutta_glosses -> suttas (sutta_id));
@@ -145,4 +208,8 @@ diesel::allow_tables_to_appear_in_same_query!(
     books,
     book_spine_items,
     book_resources,
+    chanting_collections,
+    chanting_chants,
+    chanting_sections,
+    chanting_recordings,
 );

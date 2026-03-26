@@ -44,6 +44,9 @@ markup5ever = "0.12"
 base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 tantivy = "0.25"
+symphonia = { version = "0.5", features = ["all"] }
+tempfile = "3"
+zip = { version = "2", default-features = false, features = ["deflate"] }
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15"

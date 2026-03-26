@@ -1336,6 +1336,9 @@ impl AppData {
         // Export user-imported books to import-me folder
         self.export_user_books(&import_dir)?;
 
+        // Export user chanting data and recordings to import-me folder
+        self.export_user_chanting_data(&import_dir)?;
+
         info("export_user_data_to_assets(): Export completed successfully");
         Ok(())
     }
@@ -1560,6 +1563,11 @@ impl AppData {
             // Continue with cleanup even if books import fails
         }
 
+        // Import user chanting data and recordings
+        if let Err(e) = self.import_user_chanting_data(&import_dir) {
+            error(&format!("Failed to import user chanting data: {}", e));
+        }
+
         // Clean up: remove the import-me folder
         if let Err(e) = std::fs::remove_dir_all(&import_dir) {
             error(&format!("Failed to remove import-me folder: {}", e));
@@ -1740,6 +1748,246 @@ impl AppData {
         }
 
         info(&format!("Successfully imported {} user books", import_books.len()));
+        Ok(())
+    }
+
+    /// Export user chanting data and all recordings to the import-me folder.
+    ///
+    /// Creates `appdata-chanting.sqlite3` containing user-added collections/chants/sections
+    /// and ALL recordings (including those on pre-shipped sections).
+    /// Copies the entire `chanting-recordings/` directory into the import folder.
+    fn export_user_chanting_data(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::chanting_collections::dsl as col_dsl;
+        use crate::db::appdata_schema::chanting_chants::dsl as chant_dsl;
+        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+        use crate::db::appdata_schema::chanting_recordings::dsl as rec_dsl;
+        use crate::db::chanting_export::create_chanting_sqlite;
+
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection for chanting export")?;
+
+        // Query user-added collections, chants, sections
+        let user_collections: Vec<ChantingCollection> = col_dsl::chanting_collections
+            .filter(col_dsl::is_user_added.eq(true))
+            .select(ChantingCollection::as_select())
+            .load(db_conn)
+            .context("Failed to load user chanting collections")?;
+
+        let user_chants: Vec<ChantingChant> = chant_dsl::chanting_chants
+            .filter(chant_dsl::is_user_added.eq(true))
+            .select(ChantingChant::as_select())
+            .load(db_conn)
+            .context("Failed to load user chanting chants")?;
+
+        let user_sections: Vec<ChantingSection> = sec_dsl::chanting_sections
+            .filter(sec_dsl::is_user_added.eq(true))
+            .select(ChantingSection::as_select())
+            .load(db_conn)
+            .context("Failed to load user chanting sections")?;
+
+        // Query ALL recordings (user recordings may exist for both user-added and pre-shipped sections)
+        let all_recordings: Vec<ChantingRecording> = rec_dsl::chanting_recordings
+            .select(ChantingRecording::as_select())
+            .load(db_conn)
+            .context("Failed to load chanting recordings")?;
+
+        if user_collections.is_empty() && all_recordings.is_empty() {
+            info("No user chanting data or recordings to export");
+            return Ok(());
+        }
+
+        info(&format!(
+            "Exporting chanting data: {} user collections, {} user chants, {} user sections, {} recordings",
+            user_collections.len(), user_chants.len(), user_sections.len(), all_recordings.len()
+        ));
+
+        // Create the chanting SQLite database in import-me folder
+        let sqlite_path = import_dir.join("appdata-chanting.sqlite3");
+        create_chanting_sqlite(
+            &sqlite_path,
+            &user_collections,
+            &user_chants,
+            &user_sections,
+            &all_recordings,
+        )?;
+
+        // Copy the entire chanting-recordings directory to import-me
+        let recordings_src = crate::get_chanting_recordings_dir();
+        let recordings_dest = import_dir.join("chanting-recordings");
+
+        match recordings_src.try_exists() {
+            Ok(true) => {
+                std::fs::create_dir_all(&recordings_dest)
+                    .context("Failed to create chanting-recordings dir in import-me")?;
+
+                if let Ok(entries) = std::fs::read_dir(&recordings_src) {
+                    for entry in entries.flatten() {
+                        let src_file = entry.path();
+                        if src_file.is_file() {
+                            let dest_file = recordings_dest.join(entry.file_name());
+                            if let Err(e) = std::fs::copy(&src_file, &dest_file) {
+                                warn(&format!(
+                                    "Failed to copy recording file {}: {}",
+                                    src_file.display(), e
+                                ));
+                            }
+                        }
+                    }
+                }
+
+                info(&format!("Copied chanting recordings to {}", recordings_dest.display()));
+            }
+            _ => {
+                info("No chanting-recordings directory to copy");
+            }
+        }
+
+        info("export_user_chanting_data(): completed");
+        Ok(())
+    }
+
+    /// Import user chanting data and recordings from the import-me folder.
+    ///
+    /// Reads `appdata-chanting.sqlite3`, inserts user-added items with original UIDs preserved
+    /// (since the target DB is fresh after upgrade), and copies audio files back.
+    fn import_user_chanting_data(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+        use crate::db::chanting_export::read_chanting_from_sqlite;
+
+        let sqlite_path = import_dir.join("appdata-chanting.sqlite3");
+        match sqlite_path.try_exists() {
+            Ok(true) => {}
+            _ => {
+                info("No appdata-chanting.sqlite3 found in import-me folder");
+                return Ok(());
+            }
+        }
+
+        info(&format!("Importing user chanting data from {}", sqlite_path.display()));
+
+        let (collections, chants, sections, recordings) =
+            read_chanting_from_sqlite(&sqlite_path)?;
+
+        info(&format!(
+            "Found chanting data: {} collections, {} chants, {} sections, {} recordings",
+            collections.len(), chants.len(), sections.len(), recordings.len()
+        ));
+
+        // Insert user-added collections/chants/sections with original UIDs preserved
+        for col in &collections {
+            let data = ChantingCollectionJson {
+                uid: col.uid.clone(),
+                title: col.title.clone(),
+                description: col.description.clone(),
+                language: col.language.clone(),
+                sort_index: col.sort_index,
+                is_user_added: col.is_user_added,
+                metadata_json: col.metadata_json.clone(),
+                chants: Vec::new(),
+            };
+            if let Err(e) = self.dbm.appdata.create_chanting_collection(&data) {
+                warn(&format!("Failed to import collection {}: {}", col.uid, e));
+            }
+        }
+
+        for chant in &chants {
+            let data = ChantingChantJson {
+                uid: chant.uid.clone(),
+                collection_uid: chant.collection_uid.clone(),
+                title: chant.title.clone(),
+                description: chant.description.clone(),
+                sort_index: chant.sort_index,
+                is_user_added: chant.is_user_added,
+                metadata_json: chant.metadata_json.clone(),
+                sections: Vec::new(),
+            };
+            if let Err(e) = self.dbm.appdata.create_chanting_chant(&data) {
+                warn(&format!("Failed to import chant {}: {}", chant.uid, e));
+            }
+        }
+
+        for sec in &sections {
+            let data = ChantingSectionJson {
+                uid: sec.uid.clone(),
+                chant_uid: sec.chant_uid.clone(),
+                title: sec.title.clone(),
+                content_pali: sec.content_pali.clone(),
+                sort_index: sec.sort_index,
+                is_user_added: sec.is_user_added,
+                metadata_json: sec.metadata_json.clone(),
+                recordings: Vec::new(),
+            };
+            if let Err(e) = self.dbm.appdata.create_chanting_section(&data) {
+                warn(&format!("Failed to import section {}: {}", sec.uid, e));
+            }
+        }
+
+        // For recordings: check if the referenced section_uid exists in the new database
+        for rec in &recordings {
+            // Check if the section exists (either re-shipped or just imported)
+            let section_exists = self.dbm.appdata.do_read(|db_conn| {
+                sec_dsl::chanting_sections
+                    .filter(sec_dsl::uid.eq(&rec.section_uid))
+                    .count()
+                    .get_result::<i64>(db_conn)
+            });
+
+            match section_exists {
+                Ok(count) if count > 0 => {
+                    let data = ChantingRecordingJson {
+                        uid: rec.uid.clone(),
+                        section_uid: rec.section_uid.clone(),
+                        file_name: rec.file_name.clone(),
+                        recording_type: rec.recording_type.clone(),
+                        label: rec.label.clone(),
+                        duration_ms: rec.duration_ms,
+                        markers_json: rec.markers_json.clone(),
+                        volume: rec.volume,
+                        playback_position_ms: rec.playback_position_ms,
+                        waveform_json: rec.waveform_json.clone(),
+                    };
+                    if let Err(e) = self.dbm.appdata.create_chanting_recording(&data) {
+                        warn(&format!("Failed to import recording {}: {}", rec.uid, e));
+                    }
+                }
+                _ => {
+                    warn(&format!(
+                        "Skipping recording {}: section {} no longer exists in database",
+                        rec.uid, rec.section_uid
+                    ));
+                }
+            }
+        }
+
+        // Copy audio files from import-me/chanting-recordings/ back to the app's recordings dir
+        let recordings_src = import_dir.join("chanting-recordings");
+        match recordings_src.try_exists() {
+            Ok(true) => {
+                let recordings_dest = crate::get_chanting_recordings_dir();
+
+                if let Ok(entries) = std::fs::read_dir(&recordings_src) {
+                    for entry in entries.flatten() {
+                        let src_file = entry.path();
+                        if src_file.is_file() {
+                            let dest_file = recordings_dest.join(entry.file_name());
+                            if let Err(e) = std::fs::copy(&src_file, &dest_file) {
+                                warn(&format!(
+                                    "Failed to copy recording file {}: {}",
+                                    src_file.display(), e
+                                ));
+                            }
+                        }
+                    }
+                }
+
+                info(&format!("Copied chanting recordings from {}", recordings_src.display()));
+            }
+            _ => {
+                info("No chanting-recordings directory found in import-me");
+            }
+        }
+
+        info("import_user_chanting_data(): completed");
         Ok(())
     }
 }

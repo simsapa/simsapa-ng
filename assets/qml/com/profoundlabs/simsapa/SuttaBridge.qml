@@ -812,6 +812,104 @@ Item {
         console.log("open_topic_index_window()");
     }
 
+    // Chanting Practice functions
+    function open_chanting_practice_window() {
+        console.log("open_chanting_practice_window()");
+    }
+
+    function open_chanting_review_window(section_uid: string) {
+        console.log("open_chanting_review_window():", section_uid);
+    }
+
+    function get_all_chanting_collections_json(): string {
+        return '[]';
+    }
+
+    function get_chanting_section_detail_json(section_uid: string): string {
+        return 'null';
+    }
+
+    function get_chanting_recordings_dir(): string {
+        return '';
+    }
+
+    function export_chanting_data(json_selected_uids: string, dest_path: string): string {
+        return '{"ok": true}';
+    }
+
+    function import_chanting_data(zip_path: string): string {
+        return '{"ok": true}';
+    }
+
+    function copy_file_to_chanting_recordings(source_path: string, dest_filename: string): string {
+        return '{"ok": true, "dest_path": ""}';
+    }
+
+    function check_file_exists(file_path: string): bool {
+        return false;
+    }
+
+    function create_chanting_collection(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function update_chanting_collection(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function delete_chanting_collection(collection_uid: string): string {
+        return '{"ok": true}';
+    }
+
+    function create_chanting_chant(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function update_chanting_chant(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function delete_chanting_chant(chant_uid: string): string {
+        return '{"ok": true}';
+    }
+
+    function create_chanting_section(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function update_chanting_section(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function delete_chanting_section(section_uid: string): string {
+        return '{"ok": true}';
+    }
+
+    function create_chanting_recording(json: string): string {
+        return '{"ok": true}';
+    }
+
+    function delete_chanting_recording(recording_uid: string): string {
+        return '{"ok": true}';
+    }
+
+    function update_recording_markers(recording_uid: string, markers_json: string): string {
+        return '{"ok": true}';
+    }
+
+    function update_recording_volume(recording_uid: string, volume: real): string {
+        return '{"ok": true}';
+    }
+
+    function update_recording_playback_position(recording_uid: string, position_ms: int): string {
+        return '{"ok": true}';
+    }
+
+    signal waveformDataReady(recording_uid: string, waveform_json: string)
+
+    function generate_waveform_data(recording_uid: string, file_path: string, num_bars: int) {
+    }
+
     // Logger functions
     function log_debug(message: string) {
         console.log("[DEBUG]", message);

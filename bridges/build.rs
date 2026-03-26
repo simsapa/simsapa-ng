@@ -62,6 +62,11 @@ fn main() {
         "../assets/qml/UpdateNotificationDialog.qml",
         "../assets/qml/KeybindingCaptureDialog.qml",
         "../assets/qml/ShortcutConflictDialog.qml",
+        "../assets/qml/ChantingPracticeWindow.qml",
+        "../assets/qml/ChantingPracticeReviewWindow.qml",
+        "../assets/qml/ChantingTreeList.qml",
+        "../assets/qml/RecordingPlaybackItem.qml",
+        "../assets/qml/WaveformView.qml",
     ];
 
     let builder = CxxQtBuilder::new()

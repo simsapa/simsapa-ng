@@ -920,6 +920,16 @@ ${query_text}`;
                     }
                 }
             }
+
+            CMenuItem {
+                action: Action {
+                    id: action_chanting_practice
+                    text: "&Chanting Practice..."
+                    onTriggered: {
+                        SuttaBridge.open_chanting_practice_window()
+                    }
+                }
+            }
         }
 
         Menu {
@@ -2274,13 +2284,13 @@ ${query_text}`;
                                 Layout.fillHeight: true
                             }
 
-                            QueryTab {
-                                id: query_tab
-                                window_id: root.window_id
-                                is_dark: root.is_dark
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-                            }
+                            /* QueryTab { */
+                            /*     id: query_tab */
+                            /*     window_id: root.window_id */
+                            /*     is_dark: root.is_dark */
+                            /*     Layout.fillWidth: true */
+                            /*     Layout.fillHeight: true */
+                            /* } */
 
                             // History Tab
                             // ColumnLayout {

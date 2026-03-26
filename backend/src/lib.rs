@@ -28,6 +28,7 @@ pub mod update_checker;
 pub mod topic_index;
 pub mod snowball;
 pub mod search;
+pub mod waveform;
 
 use std::env;
 use std::io::{self, Read, Write};
@@ -617,6 +618,26 @@ pub fn get_create_simsapa_app_assets_path() -> PathBuf {
 
 pub fn get_create_simsapa_appdata_db_path() -> PathBuf {
     get_create_simsapa_app_assets_path().join("appdata.sqlite3")
+}
+
+pub fn get_chanting_recordings_dir() -> PathBuf {
+    let p = get_create_simsapa_app_assets_path().join("chanting-recordings");
+
+    match p.try_exists() {
+        Ok(r) => if !r {
+            match create_dir_all(&p) {
+                Ok(_) => {},
+                Err(e) => {
+                    error(&format!("get_chanting_recordings_dir(): {}", e));
+                },
+            };
+        }
+        Err(e) => {
+            error(&format!("get_chanting_recordings_dir(): {}", e));
+        },
+    }
+
+    p
 }
 
 #[unsafe(no_mangle)]

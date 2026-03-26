@@ -1,6 +1,7 @@
 pub mod appdata;
 pub mod appdata_models;
 pub mod appdata_schema;
+pub mod chanting_export;
 pub mod dictionaries;
 pub mod dictionaries_models;
 pub mod dictionaries_schema;
@@ -22,7 +23,7 @@ use dotenvy::dotenv;
 use parking_lot::Mutex;
 use anyhow::{Context, Result, Error as AnyhowError};
 
-use crate::logger::{info, error};
+use crate::logger::{info, warn, error};
 use crate::db::appdata::AppdataDbHandle;
 use crate::db::appdata_models::AppSetting;
 use crate::db::dictionaries::DictionariesDbHandle;
@@ -138,8 +139,19 @@ impl DbManager {
                 .with_context(|| format!("Failed to initialize database at '{}'", g.paths.dict_database_url))?;
         }
 
+        let appdata = DatabaseHandle::new(&g.paths.appdata_database_url)?;
+
+        // Run schema upgrades on the appdata database.
+        // The appdata db is pre-built outside Diesel's migration system,
+        // so we apply incremental ALTER statements idempotently.
+        {
+            let mut db_conn = appdata.get_conn()
+                .context("Failed to get appdata connection for schema upgrades")?;
+            upgrade_appdata_schema(&mut db_conn);
+        }
+
         Ok(Self {
-            appdata: DatabaseHandle::new(&g.paths.appdata_database_url)?,
+            appdata,
             userdata: DatabaseHandle::new(&g.paths.userdata_database_url)?,
             dictionaries: DatabaseHandle::new(&g.paths.dict_database_url)?,
             dpd: DatabaseHandle::new(&g.paths.dpd_database_url)?,
@@ -262,6 +274,39 @@ fn run_appdata_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
     db_conn.run_pending_migrations(APPDATA_MIGRATIONS)
            .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
     Ok(())
+}
+
+/// Apply incremental schema upgrades to the appdata database.
+/// Each statement is idempotent — errors from "already exists" / "duplicate column" are ignored.
+fn upgrade_appdata_schema(db_conn: &mut SqliteConnection) {
+    use diesel::connection::SimpleConnection;
+
+    info("upgrade_appdata_schema()");
+
+    let statements = [
+        // 2026-03-24: chanting tables
+        include_str!("../../migrations/appdata/2026-03-24-000000_create_chanting_tables/up.sql"),
+        // 2026-03-24: recording volume column
+        include_str!("../../migrations/appdata/2026-03-24-100000_add_recording_volume/up.sql"),
+        // 2026-03-24: recording waveform cache
+        include_str!("../../migrations/appdata/2026-03-24-200000_add_recording_waveform/up.sql"),
+    ];
+
+    for sql in &statements {
+        for statement in sql.split(';') {
+            let trimmed = statement.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            if let Err(e) = db_conn.batch_execute(trimmed) {
+                let msg = e.to_string();
+                // Ignore "already exists" / "duplicate column" — means upgrade already applied
+                if !msg.contains("already exists") && !msg.contains("duplicate column") {
+                    warn(&format!("upgrade_appdata_schema warning: {}", msg));
+                }
+            }
+        }
+    }
 }
 
 fn run_dictionaries_migrations(db_conn: &mut SqliteConnection) -> Result<()> {

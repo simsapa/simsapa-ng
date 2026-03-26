@@ -167,6 +167,10 @@ pub mod qobject {
         #[cxx_name = "debugQueryReady"]
         fn debug_query_ready(self: Pin<&mut SuttaBridge>, debug_json: QString);
 
+        #[qsignal]
+        #[cxx_name = "waveformDataReady"]
+        fn waveform_data_ready(self: Pin<&mut SuttaBridge>, recording_uid: QString, waveform_json: QString);
+
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
 
@@ -607,6 +611,79 @@ pub mod qobject {
 
         #[qinvokable]
         fn open_topic_index_window(self: &SuttaBridge);
+
+        // Chanting Practice functions
+        #[qinvokable]
+        fn open_chanting_practice_window(self: &SuttaBridge);
+
+        #[qinvokable]
+        fn open_chanting_review_window(self: &SuttaBridge, section_uid: &QString);
+
+        #[qinvokable]
+        fn get_all_chanting_collections_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_chanting_section_detail_json(self: &SuttaBridge, section_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn get_chanting_recordings_dir(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn copy_file_to_chanting_recordings(self: &SuttaBridge, source_path: &QString, dest_filename: &QString) -> QString;
+
+        #[qinvokable]
+        fn check_file_exists(self: &SuttaBridge, file_path: &QString) -> bool;
+
+        #[qinvokable]
+        fn create_chanting_collection(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn update_chanting_collection(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn delete_chanting_collection(self: &SuttaBridge, collection_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn create_chanting_chant(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn update_chanting_chant(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn delete_chanting_chant(self: &SuttaBridge, chant_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn create_chanting_section(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn update_chanting_section(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn delete_chanting_section(self: &SuttaBridge, section_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn create_chanting_recording(self: &SuttaBridge, json: &QString) -> QString;
+
+        #[qinvokable]
+        fn delete_chanting_recording(self: &SuttaBridge, recording_uid: &QString) -> QString;
+
+        #[qinvokable]
+        fn update_recording_markers(self: &SuttaBridge, recording_uid: &QString, markers_json: &QString) -> QString;
+
+        #[qinvokable]
+        fn update_recording_volume(self: &SuttaBridge, recording_uid: &QString, volume: f32) -> QString;
+
+        #[qinvokable]
+        fn update_recording_playback_position(self: &SuttaBridge, recording_uid: &QString, position_ms: i32) -> QString;
+
+        #[qinvokable]
+        fn generate_waveform_data(self: Pin<&mut SuttaBridge>, recording_uid: &QString, file_path: &QString, num_bars: i32);
+
+        #[qinvokable]
+        fn export_chanting_data(self: &SuttaBridge, json_selected_uids: &QString, dest_path: &QString) -> QString;
+
+        #[qinvokable]
+        fn import_chanting_data(self: &SuttaBridge, zip_path: &QString) -> QString;
 
         // Logger functions
         #[qinvokable]
@@ -3077,6 +3154,368 @@ impl qobject::SuttaBridge {
     pub fn open_topic_index_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_topic_index_window();
+    }
+
+    // =========================================================================
+    // Chanting Practice Functions
+    // =========================================================================
+
+    pub fn open_chanting_practice_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_chanting_practice_window();
+    }
+
+    pub fn open_chanting_review_window(&self, section_uid: &QString) {
+        use crate::api::ffi;
+        ffi::callback_open_chanting_review_window(section_uid.clone());
+    }
+
+    pub fn get_all_chanting_collections_json(&self) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.get_all_chanting_collections() {
+            Ok(collections) => {
+                let json = serde_json::to_string(&collections).unwrap_or_else(|_| "[]".to_string());
+                QString::from(&json)
+            }
+            Err(e) => {
+                error(&format!("get_all_chanting_collections_json(): {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    pub fn get_chanting_section_detail_json(&self, section_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        let uid_str = section_uid.to_string();
+        match app_data.dbm.appdata.get_chanting_section_detail(&uid_str) {
+            Ok(Some(detail)) => {
+                let json = serde_json::to_string(&detail).unwrap_or_else(|_| "null".to_string());
+                QString::from(&json)
+            }
+            Ok(None) => QString::from("null"),
+            Err(e) => {
+                error(&format!("get_chanting_section_detail_json(): {}", e));
+                QString::from("null")
+            }
+        }
+    }
+
+    pub fn get_chanting_recordings_dir(&self) -> QString {
+        let dir = simsapa_backend::get_chanting_recordings_dir();
+        // Always return an absolute path for QML (MediaPlayer needs absolute file:// URLs)
+        let abs_dir = if dir.is_absolute() {
+            dir
+        } else {
+            std::env::current_dir().unwrap_or_default().join(&dir)
+        };
+        let canonical = abs_dir.canonicalize().unwrap_or(abs_dir);
+        QString::from(&canonical.to_string_lossy().to_string())
+    }
+
+    pub fn copy_file_to_chanting_recordings(&self, source_path: &QString, dest_filename: &QString) -> QString {
+        let src = std::path::PathBuf::from(source_path.to_string());
+        let recordings_dir = simsapa_backend::get_chanting_recordings_dir();
+
+        // Resolve to absolute path
+        let abs_recordings_dir = if recordings_dir.is_absolute() {
+            recordings_dir
+        } else {
+            std::env::current_dir().unwrap_or_default().join(&recordings_dir)
+        };
+        let dest = abs_recordings_dir.join(dest_filename.to_string());
+
+        match src.try_exists() {
+            Ok(true) => {},
+            Ok(false) => return QString::from(&format!("{{\"error\": \"Source file not found: {}\"}}", src.display())),
+            Err(e) => return QString::from(&format!("{{\"error\": \"Cannot check source file: {}\"}}", e)),
+        }
+
+        match std::fs::copy(&src, &dest) {
+            Ok(_) => {
+                let dest_str = dest.canonicalize()
+                    .unwrap_or(dest.clone())
+                    .to_string_lossy()
+                    .to_string();
+                QString::from(&format!("{{\"ok\": true, \"dest_path\": \"{}\"}}", dest_str))
+            }
+            Err(e) => QString::from(&format!("{{\"error\": \"Copy failed: {}\"}}", e)),
+        }
+    }
+
+    pub fn check_file_exists(&self, file_path: &QString) -> bool {
+        let path = std::path::PathBuf::from(file_path.to_string());
+        // Try as-is first, then resolve relative to recordings dir
+        match path.try_exists() {
+            Ok(true) => return true,
+            _ => {}
+        }
+        // If relative, try resolving against recordings dir
+        if !path.is_absolute() {
+            let recordings_dir = simsapa_backend::get_chanting_recordings_dir();
+            let abs_recordings_dir = if recordings_dir.is_absolute() {
+                recordings_dir
+            } else {
+                std::env::current_dir().unwrap_or_default().join(&recordings_dir)
+            };
+            let resolved = abs_recordings_dir.join(&path);
+            match resolved.try_exists() {
+                Ok(exists) => return exists,
+                Err(_) => return false,
+            }
+        }
+        false
+    }
+
+    pub fn create_chanting_collection(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingCollectionJson;
+        let app_data = get_app_data();
+        let data: ChantingCollectionJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.create_chanting_collection(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_chanting_collection(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingCollectionJson;
+        let app_data = get_app_data();
+        let data: ChantingCollectionJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.update_chanting_collection(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn delete_chanting_collection(&self, collection_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.delete_chanting_collection(&collection_uid.to_string()) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn create_chanting_chant(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingChantJson;
+        let app_data = get_app_data();
+        let data: ChantingChantJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.create_chanting_chant(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_chanting_chant(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingChantJson;
+        let app_data = get_app_data();
+        let data: ChantingChantJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.update_chanting_chant(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn delete_chanting_chant(&self, chant_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.delete_chanting_chant(&chant_uid.to_string()) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn create_chanting_section(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingSectionJson;
+        let app_data = get_app_data();
+        let data: ChantingSectionJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.create_chanting_section(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_chanting_section(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingSectionJson;
+        let app_data = get_app_data();
+        let data: ChantingSectionJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.update_chanting_section(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn delete_chanting_section(&self, section_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.delete_chanting_section(&section_uid.to_string()) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn create_chanting_recording(&self, json: &QString) -> QString {
+        use simsapa_backend::db::appdata_models::ChantingRecordingJson;
+        let app_data = get_app_data();
+        let data: ChantingRecordingJson = match serde_json::from_str(&json.to_string()) {
+            Ok(d) => d,
+            Err(e) => return QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        };
+        match app_data.dbm.appdata.create_chanting_recording(&data) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn delete_chanting_recording(&self, recording_uid: &QString) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.delete_chanting_recording(&recording_uid.to_string()) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_recording_markers(&self, recording_uid: &QString, markers_json: &QString) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.update_recording_markers(&recording_uid.to_string(), &markers_json.to_string()) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_recording_volume(&self, recording_uid: &QString, volume: f32) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.update_recording_volume(&recording_uid.to_string(), volume) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_recording_playback_position(&self, recording_uid: &QString, position_ms: i32) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.update_recording_playback_position(&recording_uid.to_string(), position_ms) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn generate_waveform_data(self: Pin<&mut Self>, recording_uid: &QString, file_path: &QString, num_bars: i32) {
+        let uid_str = recording_uid.to_string();
+        let path_str = file_path.to_string();
+        let bars = if num_bars > 0 { num_bars as usize } else { 200 };
+        let qt_thread = self.qt_thread();
+
+        thread::spawn(move || {
+            let waveform_json = match simsapa_backend::waveform::get_waveform_peaks(&path_str, bars) {
+                Ok(peaks) => {
+                    // Store as object with num_bars metadata
+                    let obj = serde_json::json!({
+                        "num_bars": bars,
+                        "peaks": peaks
+                    });
+                    serde_json::to_string(&obj).unwrap_or_else(|_| "[]".to_string())
+                }
+                Err(e) => {
+                    warn(&format!("generate_waveform_data error: {}", e));
+                    "[]".to_string()
+                }
+            };
+
+            // Save to database
+            let app_data = get_app_data();
+            if let Err(e) = app_data.dbm.appdata.update_recording_waveform(&uid_str, &waveform_json) {
+                warn(&format!("Failed to save waveform data: {}", e));
+            }
+
+            // Emit signal back to QML
+            let uid_qstr = QString::from(&uid_str);
+            let json_qstr = QString::from(&waveform_json);
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().waveform_data_ready(uid_qstr, json_qstr);
+            }).unwrap();
+        });
+    }
+
+    // =========================================================================
+    // Chanting Export / Import
+    // =========================================================================
+
+    pub fn export_chanting_data(&self, json_selected_uids: &QString, dest_path: &QString) -> QString {
+        use simsapa_backend::db::chanting_export::export_chanting_to_zip;
+
+        let json_str = json_selected_uids.to_string();
+        let dest = dest_path.to_string();
+
+        // Parse the JSON: { collections: [...], chants: [...], sections: [...] }
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => return QString::from(&format!("{{\"error\": \"Invalid JSON: {}\"}}", e)),
+        };
+
+        let extract_strings = |key: &str| -> Vec<String> {
+            parsed.get(key)
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default()
+        };
+
+        let collection_uids = extract_strings("collections");
+        let chant_uids = extract_strings("chants");
+        let section_uids = extract_strings("sections");
+
+        let app_data = get_app_data();
+        let dest_path = std::path::Path::new(&dest);
+
+        match export_chanting_to_zip(
+            &app_data.dbm.appdata,
+            collection_uids,
+            chant_uids,
+            section_uids,
+            dest_path,
+        ) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn import_chanting_data(&self, zip_path: &QString) -> QString {
+        use simsapa_backend::db::chanting_export::import_chanting_from_zip;
+
+        let path_str = zip_path.to_string();
+        let zip_path = std::path::Path::new(&path_str);
+        let recordings_dir = simsapa_backend::get_chanting_recordings_dir();
+
+        let app_data = get_app_data();
+
+        match import_chanting_from_zip(&app_data.dbm.appdata, zip_path, &recordings_dir) {
+            Ok(result) => {
+                let json = serde_json::json!({
+                    "ok": true,
+                    "imported": {
+                        "collections": result.collections,
+                        "chants": result.chants,
+                        "sections": result.sections,
+                        "recordings": result.recordings,
+                    }
+                });
+                QString::from(&json.to_string())
+            }
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
     }
 
     // =========================================================================
