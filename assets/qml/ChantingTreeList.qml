@@ -12,11 +12,173 @@ ColumnLayout {
     property string selected_uid: ""
     property string selected_type: "" // "collection", "chant", or "section"
 
+    property bool selection_mode: false
+    property var checked_items: ({})
+
     anchors.fill: parent
     spacing: 5
 
     signal section_clicked(string section_uid)
     signal selection_changed(string uid, string item_type)
+    signal checked_items_changed()
+
+    // === Selection mode helper functions ===
+
+    function toggle_collection(col) {
+        let items = Object.assign({}, root.checked_items);
+        let is_checking = !items[col.uid];
+
+        if (is_checking) {
+            items[col.uid] = true;
+        } else {
+            delete items[col.uid];
+        }
+
+        // Set/unset all child chants and grandchild sections
+        if (col.chants) {
+            for (let i = 0; i < col.chants.length; i++) {
+                let chant = col.chants[i];
+                if (is_checking) {
+                    items[chant.uid] = true;
+                } else {
+                    delete items[chant.uid];
+                }
+                if (chant.sections) {
+                    for (let j = 0; j < chant.sections.length; j++) {
+                        if (is_checking) {
+                            items[chant.sections[j].uid] = true;
+                        } else {
+                            delete items[chant.sections[j].uid];
+                        }
+                    }
+                }
+            }
+        }
+
+        root.checked_items = items;
+        root.checked_items_changed();
+    }
+
+    function toggle_chant(col, chant) {
+        let items = Object.assign({}, root.checked_items);
+        let is_checking = !items[chant.uid];
+
+        if (is_checking) {
+            items[chant.uid] = true;
+            // Also check parent collection
+            items[col.uid] = true;
+        } else {
+            delete items[chant.uid];
+        }
+
+        // Set/unset all child sections
+        if (chant.sections) {
+            for (let j = 0; j < chant.sections.length; j++) {
+                if (is_checking) {
+                    items[chant.sections[j].uid] = true;
+                } else {
+                    delete items[chant.sections[j].uid];
+                }
+            }
+        }
+
+        // Upward auto-deselection: if no sibling chants remain checked, uncheck collection
+        if (!is_checking && col.chants) {
+            let any_chant_checked = false;
+            for (let i = 0; i < col.chants.length; i++) {
+                if (items[col.chants[i].uid]) {
+                    any_chant_checked = true;
+                    break;
+                }
+            }
+            if (!any_chant_checked) {
+                delete items[col.uid];
+            }
+        }
+
+        root.checked_items = items;
+        root.checked_items_changed();
+    }
+
+    function toggle_section(col, chant, section) {
+        let items = Object.assign({}, root.checked_items);
+        let is_checking = !items[section.uid];
+
+        if (is_checking) {
+            items[section.uid] = true;
+            // Upward auto-selection: check parent chant and grandparent collection
+            items[chant.uid] = true;
+            items[col.uid] = true;
+        } else {
+            delete items[section.uid];
+
+            // Upward auto-deselection: if no sibling sections remain checked, uncheck chant
+            if (chant.sections) {
+                let any_section_checked = false;
+                for (let j = 0; j < chant.sections.length; j++) {
+                    if (items[chant.sections[j].uid]) {
+                        any_section_checked = true;
+                        break;
+                    }
+                }
+                if (!any_section_checked) {
+                    delete items[chant.uid];
+
+                    // If no sibling chants remain checked, uncheck collection
+                    if (col.chants) {
+                        let any_chant_checked = false;
+                        for (let i = 0; i < col.chants.length; i++) {
+                            if (items[col.chants[i].uid]) {
+                                any_chant_checked = true;
+                                break;
+                            }
+                        }
+                        if (!any_chant_checked) {
+                            delete items[col.uid];
+                        }
+                    }
+                }
+            }
+        }
+
+        root.checked_items = items;
+        root.checked_items_changed();
+    }
+
+    function get_selected_uids() {
+        let result = { collections: [], chants: [], sections: [] };
+        if (!root.collections_list) return result;
+
+        for (let ci = 0; ci < root.collections_list.length; ci++) {
+            let col = root.collections_list[ci];
+            if (root.checked_items[col.uid]) {
+                result.collections.push(col.uid);
+            }
+            if (col.chants) {
+                for (let chi = 0; chi < col.chants.length; chi++) {
+                    let chant = col.chants[chi];
+                    if (root.checked_items[chant.uid]) {
+                        result.chants.push(chant.uid);
+                    }
+                    if (chant.sections) {
+                        for (let si = 0; si < chant.sections.length; si++) {
+                            if (root.checked_items[chant.sections[si].uid]) {
+                                result.sections.push(chant.sections[si].uid);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    function clear_selection() {
+        root.checked_items = ({});
+        root.checked_items_changed();
+    }
+
+    // === Tree list UI ===
 
     Repeater {
         model: root.collections_list
@@ -58,6 +220,14 @@ ColumnLayout {
                         id: collection_row
                         anchors.fill: parent
                         spacing: 8
+
+                        CheckBox {
+                            visible: root.selection_mode
+                            checked: !!root.checked_items[collection_item.modelData.uid]
+                            onClicked: {
+                                root.toggle_collection(collection_item.modelData);
+                            }
+                        }
 
                         Label {
                             text: collection_item.is_expanded ? "▼" : "▶"
@@ -139,6 +309,14 @@ ColumnLayout {
                                     anchors.fill: parent
                                     spacing: 8
 
+                                    CheckBox {
+                                        visible: root.selection_mode
+                                        checked: !!root.checked_items[chant_item.modelData.uid]
+                                        onClicked: {
+                                            root.toggle_chant(collection_item.modelData, chant_item.modelData);
+                                        }
+                                    }
+
                                     Label {
                                         text: chant_item.is_expanded ? "▼" : "▶"
                                         font.pointSize: root.pointSize - 3
@@ -215,6 +393,14 @@ ColumnLayout {
                                             id: section_row
                                             anchors.fill: parent
                                             spacing: 8
+
+                                            CheckBox {
+                                                visible: root.selection_mode
+                                                checked: !!root.checked_items[section_item.modelData.uid]
+                                                onClicked: {
+                                                    root.toggle_section(collection_item.modelData, chant_item.modelData, section_item.modelData);
+                                                }
+                                            }
 
                                             Rectangle {
                                                 Layout.preferredWidth: 8

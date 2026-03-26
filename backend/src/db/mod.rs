@@ -1,6 +1,7 @@
 pub mod appdata;
 pub mod appdata_models;
 pub mod appdata_schema;
+pub mod chanting_export;
 pub mod dictionaries;
 pub mod dictionaries_models;
 pub mod dictionaries_schema;

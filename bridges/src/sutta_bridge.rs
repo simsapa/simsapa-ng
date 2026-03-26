@@ -679,6 +679,12 @@ pub mod qobject {
         #[qinvokable]
         fn generate_waveform_data(self: Pin<&mut SuttaBridge>, recording_uid: &QString, file_path: &QString, num_bars: i32);
 
+        #[qinvokable]
+        fn export_chanting_data(self: &SuttaBridge, json_selected_uids: &QString, dest_path: &QString) -> QString;
+
+        #[qinvokable]
+        fn import_chanting_data(self: &SuttaBridge, zip_path: &QString) -> QString;
+
         // Logger functions
         #[qinvokable]
         fn log_debug(self: &SuttaBridge, message: &QString);
@@ -3442,6 +3448,74 @@ impl qobject::SuttaBridge {
                 qo.as_mut().waveform_data_ready(uid_qstr, json_qstr);
             }).unwrap();
         });
+    }
+
+    // =========================================================================
+    // Chanting Export / Import
+    // =========================================================================
+
+    pub fn export_chanting_data(&self, json_selected_uids: &QString, dest_path: &QString) -> QString {
+        use simsapa_backend::db::chanting_export::export_chanting_to_zip;
+
+        let json_str = json_selected_uids.to_string();
+        let dest = dest_path.to_string();
+
+        // Parse the JSON: { collections: [...], chants: [...], sections: [...] }
+        let parsed: serde_json::Value = match serde_json::from_str(&json_str) {
+            Ok(v) => v,
+            Err(e) => return QString::from(&format!("{{\"error\": \"Invalid JSON: {}\"}}", e)),
+        };
+
+        let extract_strings = |key: &str| -> Vec<String> {
+            parsed.get(key)
+                .and_then(|v| v.as_array())
+                .map(|arr| arr.iter().filter_map(|v| v.as_str().map(String::from)).collect())
+                .unwrap_or_default()
+        };
+
+        let collection_uids = extract_strings("collections");
+        let chant_uids = extract_strings("chants");
+        let section_uids = extract_strings("sections");
+
+        let app_data = get_app_data();
+        let dest_path = std::path::Path::new(&dest);
+
+        match export_chanting_to_zip(
+            &app_data.dbm.appdata,
+            collection_uids,
+            chant_uids,
+            section_uids,
+            dest_path,
+        ) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn import_chanting_data(&self, zip_path: &QString) -> QString {
+        use simsapa_backend::db::chanting_export::import_chanting_from_zip;
+
+        let path_str = zip_path.to_string();
+        let zip_path = std::path::Path::new(&path_str);
+        let recordings_dir = simsapa_backend::get_chanting_recordings_dir();
+
+        let app_data = get_app_data();
+
+        match import_chanting_from_zip(&app_data.dbm.appdata, zip_path, &recordings_dir) {
+            Ok(result) => {
+                let json = serde_json::json!({
+                    "ok": true,
+                    "imported": {
+                        "collections": result.collections,
+                        "chants": result.chants,
+                        "sections": result.sections,
+                        "recordings": result.recordings,
+                    }
+                });
+                QString::from(&json.to_string())
+            }
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
     }
 
     // =========================================================================

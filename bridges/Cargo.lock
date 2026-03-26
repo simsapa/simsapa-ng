@@ -430,7 +430,7 @@ checksum = "fe6d2e5af09e8c8ad56c969f2157a3d4238cebc7c55f0a517728c38f7b200f81"
 dependencies = [
  "serde",
  "termcolor",
- "unicode-width 0.2.1",
+ "unicode-width 0.1.14",
 ]
 
 [[package]]
@@ -1019,7 +1019,7 @@ dependencies = [
  "regex",
  "thiserror 2.0.17",
  "xml-rs",
- "zip",
+ "zip 3.0.0",
 ]
 
 [[package]]
@@ -3481,12 +3481,14 @@ dependencies = [
  "stardict",
  "symphonia",
  "tantivy",
+ "tempfile",
  "thiserror 2.0.17",
  "time",
  "tinytemplate",
  "tracing",
  "tracing-subscriber",
  "walkdir",
+ "zip 2.4.2",
 ]
 
 [[package]]
@@ -5400,6 +5402,23 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "zip"
+version = "2.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fabe6324e908f85a1c52063ce7aa26b68dcb7eb6dbc83a2d148403c9bc3eba50"
+dependencies = [
+ "arbitrary",
+ "crc32fast",
+ "crossbeam-utils",
+ "displaydoc",
+ "flate2",
+ "indexmap",
+ "memchr",
+ "thiserror 2.0.17",
+ "zopfli",
 ]
 
 [[package]]

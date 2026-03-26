@@ -833,6 +833,14 @@ Item {
         return '';
     }
 
+    function export_chanting_data(json_selected_uids: string, dest_path: string): string {
+        return '{"ok": true}';
+    }
+
+    function import_chanting_data(zip_path: string): string {
+        return '{"ok": true}';
+    }
+
     function copy_file_to_chanting_recordings(source_path: string, dest_filename: string): string {
         return '{"ok": true, "dest_path": ""}';
     }

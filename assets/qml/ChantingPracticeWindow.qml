@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Window
+import QtQuick.Dialogs
 
 import com.profoundlabs.simsapa
 
@@ -25,6 +26,7 @@ ApplicationWindow {
     property string selected_uid: ""
     property string selected_type: ""
     property bool is_dark: theme_helper.is_dark
+    property bool export_selection_mode: false
 
     ThemeHelper {
         id: theme_helper
@@ -49,6 +51,28 @@ ApplicationWindow {
 
     function generate_uid(prefix) {
         return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 8);
+    }
+
+    function file_url_to_path(file_url_str) {
+        if (file_url_str.startsWith("file:///")) {
+            const without_prefix = file_url_str.substring(8);
+            if (Qt.platform.os === "windows" && without_prefix.match(/^[A-Za-z]:/)) {
+                return decodeURIComponent(without_prefix);
+            } else {
+                return "/" + decodeURIComponent(without_prefix);
+            }
+        } else if (file_url_str.startsWith("file://")) {
+            return decodeURIComponent(file_url_str.substring(7));
+        }
+        return file_url_str;
+    }
+
+    function generate_export_filename() {
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, '0');
+        return "chanting-export-" +
+            now.getFullYear() + "-" + pad(now.getMonth() + 1) + "-" + pad(now.getDate()) +
+            "T" + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + ".zip";
     }
 
     // --- Add Collection Dialog ---
@@ -325,6 +349,214 @@ ApplicationWindow {
         }
     }
 
+    // --- Export Selection Info Dialog ---
+
+    Dialog {
+        id: export_info_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 400
+        title: "Export"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "Select the items you want to export, then click the Export button again."
+            font.pointSize: root.pointSize
+            wrapMode: Text.WordWrap
+        }
+
+        onAccepted: {
+            root.export_selection_mode = true;
+        }
+    }
+
+    // --- Export No Selection Warning Dialog ---
+
+    Dialog {
+        id: export_no_selection_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 400
+        title: "Export"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "No items selected for export."
+            font.pointSize: root.pointSize
+            wrapMode: Text.WordWrap
+        }
+    }
+
+    // --- Export Result Dialog ---
+
+    Dialog {
+        id: export_result_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 400
+        title: "Export"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        property string result_message: ""
+
+        Label {
+            text: export_result_dialog.result_message
+            font.pointSize: root.pointSize
+            wrapMode: Text.WordWrap
+        }
+    }
+
+    // --- Import Result Dialog ---
+
+    Dialog {
+        id: import_result_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 400
+        title: "Import"
+        modal: true
+        standardButtons: Dialog.Ok
+
+        property string result_message: ""
+
+        Label {
+            text: import_result_dialog.result_message
+            font.pointSize: root.pointSize
+            wrapMode: Text.WordWrap
+        }
+    }
+
+    // --- Importing Busy Dialog ---
+
+    Dialog {
+        id: importing_dialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        width: 300
+        title: "Import"
+        modal: true
+        closePolicy: Popup.NoClose
+        standardButtons: Dialog.NoButton
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 10
+
+            BusyIndicator {
+                Layout.alignment: Qt.AlignHCenter
+                running: true
+            }
+
+            Label {
+                text: "Importing..."
+                font.pointSize: root.pointSize
+                Layout.alignment: Qt.AlignHCenter
+            }
+        }
+    }
+
+    // --- Export Save FileDialog ---
+
+    FileDialog {
+        id: export_file_dialog
+        title: "Export Chanting Data"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["ZIP files (*.zip)"]
+        currentFile: "file:///" + root.generate_export_filename()
+
+        onAccepted: {
+            let dest_path = root.file_url_to_path(selectedFile.toString());
+
+            // Enforce .zip extension
+            if (!dest_path.toLowerCase().endsWith(".zip")) {
+                dest_path += ".zip";
+            }
+
+            const selected_uids = tree_list.get_selected_uids();
+            const json = JSON.stringify(selected_uids);
+            const result_str = SuttaBridge.export_chanting_data(json, dest_path);
+
+            let result;
+            try {
+                result = JSON.parse(result_str);
+            } catch (e) {
+                result = { error: "Failed to parse result" };
+            }
+
+            // Exit selection mode
+            root.export_selection_mode = false;
+            tree_list.clear_selection();
+
+            if (result.ok) {
+                export_result_dialog.result_message = "Export completed successfully.";
+            } else {
+                export_result_dialog.result_message = "Export failed: " + (result.error || "Unknown error");
+            }
+            export_result_dialog.open();
+        }
+
+        onRejected: {
+            // User cancelled the save dialog, stay in selection mode
+        }
+    }
+
+    // --- Import Open FileDialog ---
+
+    FileDialog {
+        id: import_file_dialog
+        title: "Import Chanting Data"
+        fileMode: FileDialog.OpenFile
+        nameFilters: ["ZIP files (*.zip)"]
+
+        onAccepted: {
+            let file_path = root.file_url_to_path(selectedFile.toString());
+
+            // On Android, handle content:// URIs
+            if (Qt.platform.os === "android" && file_path.startsWith("content://")) {
+                const temp_path = SuttaBridge.copy_content_uri_to_temp(file_path);
+                if (temp_path === "") {
+                    import_result_dialog.result_message = "Error: Failed to access file. Please try again.";
+                    import_result_dialog.open();
+                    return;
+                }
+                file_path = temp_path;
+            }
+
+            importing_dialog.open();
+
+            // Use Qt.callLater to allow the dialog to render before the blocking import call
+            Qt.callLater(function() {
+                const result_str = SuttaBridge.import_chanting_data(file_path);
+
+                importing_dialog.close();
+
+                let result;
+                try {
+                    result = JSON.parse(result_str);
+                } catch (e) {
+                    result = { error: "Failed to parse result" };
+                }
+
+                if (result.ok) {
+                    const imp = result.imported || {};
+                    import_result_dialog.result_message =
+                        "Import completed successfully.\n\n" +
+                        "Collections: " + (imp.collections || 0) + "\n" +
+                        "Chants: " + (imp.chants || 0) + "\n" +
+                        "Sections: " + (imp.sections || 0) + "\n" +
+                        "Recordings: " + (imp.recordings || 0);
+                    root.load_collections();
+                } else {
+                    import_result_dialog.result_message = "Import failed: " + (result.error || "Unknown error");
+                }
+                import_result_dialog.open();
+            });
+        }
+    }
+
     // --- Main Layout ---
 
     ColumnLayout {
@@ -340,23 +572,27 @@ ApplicationWindow {
 
             Button {
                 text: "Add Collection"
+                visible: !root.export_selection_mode
                 onClicked: add_collection_dialog.open()
             }
 
             Button {
                 text: "Add Chant"
+                visible: !root.export_selection_mode
                 enabled: root.selected_type === "collection"
                 onClicked: add_chant_dialog.open()
             }
 
             Button {
                 text: "Add Section"
+                visible: !root.export_selection_mode
                 enabled: root.selected_type === "chant"
                 onClicked: add_section_dialog.open()
             }
 
             Button {
                 text: "Open"
+                visible: !root.export_selection_mode
                 enabled: root.selected_type === "section"
                 onClicked: {
                     SuttaBridge.open_chanting_review_window(root.selected_uid);
@@ -365,6 +601,7 @@ ApplicationWindow {
 
             Button {
                 text: "Edit"
+                visible: !root.export_selection_mode
                 enabled: root.selected_uid !== ""
                 onClicked: {
                     const item = root.find_selected_item();
@@ -382,6 +619,7 @@ ApplicationWindow {
 
             Button {
                 text: "Remove"
+                visible: !root.export_selection_mode
                 enabled: root.selected_uid !== ""
                 onClicked: {
                     const item = root.find_selected_item();
@@ -394,7 +632,45 @@ ApplicationWindow {
             Item { Layout.fillWidth: true }
 
             Button {
-                visible: root.is_desktop
+                text: root.export_selection_mode ? "Export Selected" : "Export"
+                palette.button: root.export_selection_mode ? "#4CAF50" : undefined
+                palette.buttonText: root.export_selection_mode ? "white" : undefined
+
+                onClicked: {
+                    if (!root.export_selection_mode) {
+                        // First click: enter selection mode
+                        export_info_dialog.open();
+                    } else {
+                        // Second click: validate selection and export
+                        const selected_uids = tree_list.get_selected_uids();
+                        if (selected_uids.collections.length === 0 &&
+                            selected_uids.chants.length === 0 &&
+                            selected_uids.sections.length === 0) {
+                            export_no_selection_dialog.open();
+                            return;
+                        }
+                        export_file_dialog.open();
+                    }
+                }
+            }
+
+            Button {
+                text: "Cancel"
+                visible: root.export_selection_mode
+                onClicked: {
+                    root.export_selection_mode = false;
+                    tree_list.clear_selection();
+                }
+            }
+
+            Button {
+                text: "Import"
+                visible: !root.export_selection_mode
+                onClicked: import_file_dialog.open()
+            }
+
+            Button {
+                visible: root.is_desktop && !root.export_selection_mode
                 text: "Close"
                 onClicked: root.close()
             }
@@ -408,8 +684,10 @@ ApplicationWindow {
             clip: true
 
             ChantingTreeList {
+                id: tree_list
                 collections_list: root.collections_list
                 pointSize: root.pointSize
+                selection_mode: root.export_selection_mode
 
                 onSection_clicked: function(section_uid) {
                     SuttaBridge.open_chanting_review_window(section_uid);

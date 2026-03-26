@@ -10,6 +10,7 @@ pub mod buddha_ujja;
 pub mod dpd;
 pub mod completions;
 pub mod library_imports;
+pub mod chanting_practice;
 pub mod parse_cips_index;
 
 use anyhow::{Result, Context};
@@ -34,6 +35,7 @@ pub use nyanadipa::NyanadipaImporter;
 pub use suttacentral::SuttaCentralImporter;
 pub use buddha_ujja::BuddhaUjjaImporter;
 pub use library_imports::LibraryImportsImporter;
+pub use chanting_practice::ChantingPracticeImporter;
 // pub use tipitaka_xml::TipitakaXmlImporter;
 
 pub trait SuttaImporter {
@@ -258,6 +260,27 @@ RELEASE_CHANNEL=development
             match importer.import(&mut conn) {
                 Ok(_) => logger::info("Library imports completed successfully"),
                 Err(e) => logger::error(&format!("Library imports failed: {}", e)),
+            }
+
+            drop(conn);
+        }
+
+        // Import chanting practice data from TOML definition
+        logger::info("=== Bootstrap Chanting Practice ===");
+        {
+            let chanting_practice_dir = bootstrap_assets_dir.join("chanting-practice");
+            let recordings_dest_dir = assets_dir.join("chanting-recordings");
+
+            let mut conn = create_database_connection(&appdata_db_path)?;
+
+            let mut importer = ChantingPracticeImporter::new(
+                chanting_practice_dir,
+                recordings_dest_dir,
+            );
+
+            match importer.import(&mut conn) {
+                Ok(_) => logger::info("Chanting practice import completed successfully"),
+                Err(e) => logger::error(&format!("Chanting practice import failed: {}", e)),
             }
 
             drop(conn);

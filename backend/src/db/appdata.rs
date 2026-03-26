@@ -1048,6 +1048,49 @@ impl AppdataDbHandle {
         Ok(())
     }
 
+    pub fn get_chanting_collections_by_uids(&self, uids: &[String]) -> Result<Vec<ChantingCollection>> {
+        use crate::db::appdata_schema::chanting_collections::dsl::*;
+        self.do_read(|db_conn| {
+            chanting_collections
+                .filter(uid.eq_any(uids))
+                .select(ChantingCollection::as_select())
+                .order(sort_index.asc())
+                .load(db_conn)
+        })
+    }
+
+    pub fn get_chanting_chants_by_uids(&self, uids: &[String]) -> Result<Vec<ChantingChant>> {
+        use crate::db::appdata_schema::chanting_chants::dsl::*;
+        self.do_read(|db_conn| {
+            chanting_chants
+                .filter(uid.eq_any(uids))
+                .select(ChantingChant::as_select())
+                .order(sort_index.asc())
+                .load(db_conn)
+        })
+    }
+
+    pub fn get_chanting_sections_by_uids(&self, uids: &[String]) -> Result<Vec<ChantingSection>> {
+        use crate::db::appdata_schema::chanting_sections::dsl::*;
+        self.do_read(|db_conn| {
+            chanting_sections
+                .filter(uid.eq_any(uids))
+                .select(ChantingSection::as_select())
+                .order(sort_index.asc())
+                .load(db_conn)
+        })
+    }
+
+    pub fn get_chanting_recordings_for_sections(&self, section_uids: &[String]) -> Result<Vec<ChantingRecording>> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+        self.do_read(|db_conn| {
+            chanting_recordings
+                .filter(section_uid.eq_any(section_uids))
+                .select(ChantingRecording::as_select())
+                .load(db_conn)
+        })
+    }
+
     fn delete_recording_files_for_collection(&self, collection_uid_param: &str) -> Result<()> {
         use crate::db::appdata_schema::chanting_chants::dsl as chant_dsl;
 
