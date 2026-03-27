@@ -377,8 +377,8 @@ Morning chanting collection.
       [[collections.chants.sections.recordings]]
       uid = "rec-1"
       file_name = "recordings/namo-tassa.mp3"
-      recording_type = "master"
-      label = "Namo Tassa - Master"
+      recording_type = "reference"
+      label = "Namo Tassa - Reference"
 
     [[collections.chants.sections]]
     uid = "sec-2"
@@ -414,7 +414,7 @@ sort_index = 1
 
         let rec1 = &sec1.recordings[0];
         assert_eq!(rec1.uid, "rec-1");
-        assert_eq!(rec1.recording_type, "master");
+        assert_eq!(rec1.recording_type, "reference");
 
         let sec2 = &chant1.sections[1];
         assert_eq!(sec2.uid, "sec-2");

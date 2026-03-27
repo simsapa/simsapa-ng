@@ -6,7 +6,7 @@ pub mod dhammapada_munindo;
 pub mod dhammapada_tipitaka;
 pub mod nyanadipa;
 pub mod buddha_ujja;
-// pub mod tipitaka_xml; // commented out: tipitaka_xml_parser dependency under development
+pub mod tipitaka_xml;
 pub mod dpd;
 pub mod completions;
 pub mod library_imports;
@@ -36,7 +36,7 @@ pub use suttacentral::SuttaCentralImporter;
 pub use buddha_ujja::BuddhaUjjaImporter;
 pub use library_imports::LibraryImportsImporter;
 pub use chanting_practice::ChantingPracticeImporter;
-// pub use tipitaka_xml::TipitakaXmlImporter;
+pub use tipitaka_xml::TipitakaXmlImporter;
 
 pub trait SuttaImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()>;
@@ -185,11 +185,12 @@ RELEASE_CHANNEL=development
         }
 
         // Import suttas from tipitaka.org (CST4)
-        // {
-        //     let tipitaka_xml_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/");
-        //     let mut importer = TipitakaXmlImporter::new(tipitaka_xml_path);
-        //     importer.import(&mut conn)?;
-        // }
+        {
+            let tipitaka_xml_fragments_db_path = bootstrap_assets_dir.join("tipitaka-xml-data/fragments.sqlite3");
+            let tipitaka_xml_romn_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/romn/");
+            let mut importer = TipitakaXmlImporter::new(tipitaka_xml_fragments_db_path, tipitaka_xml_romn_path);
+            importer.import(&mut conn)?;
+        }
 
         // Import from Dhammatalks.org
         {
