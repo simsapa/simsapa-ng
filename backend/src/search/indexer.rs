@@ -2,7 +2,7 @@ use std::path::Path;
 
 use anyhow::Result;
 use diesel::prelude::*;
-use tantivy::{doc, Index, IndexWriter};
+use tantivy::{doc, Directory, Index, IndexWriter};
 
 use crate::db::DatabaseHandle;
 use crate::db::appdata_models::Sutta;
@@ -95,9 +95,15 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
         indexed_count += 1;
     }
 
+    // Finalize the index:
+    // 1. commit() persists documents and makes them searchable.
+    // 2. wait_merging_threads() blocks until background merges finish. Since it takes 'self',
+    //    it consumes the writer and explicitly releases the INDEX_WRITER_LOCK.
+    // 3. sync_directory() ensures the OS flushes directory metadata, preventing "file changed"
+    //    errors during external archival (tar).
     writer.commit()?;
-    // Drop writer explicitly to release locks
-    drop(writer);
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
 
     info(&format!("Sutta index committed: {} documents for language {}", indexed_count, lang));
 
@@ -166,8 +172,11 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
         indexed_count += 1;
     }
 
+    // Finalize the index:
+    // See build_sutta_index for details on why wait_merging_threads and sync_directory are used.
     writer.commit()?;
-    drop(writer);
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
 
     info(&format!("Dict_words index committed: {} documents for language {}", indexed_count, lang));
 

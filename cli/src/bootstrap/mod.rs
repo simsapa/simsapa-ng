@@ -17,7 +17,7 @@ use anyhow::{Result, Context};
 use chrono::{DateTime, Local};
 
 use std::path::{Path, PathBuf};
-use std::{fs, env};
+use std::{fs, env, thread, time};
 
 use diesel::prelude::*;
 use diesel_migrations::MigrationHarness;
@@ -348,6 +348,10 @@ RELEASE_CHANNEL=development
 
         // Write VERSION file before archiving
         indexer::write_version_file(&paths.index_dir)?;
+
+        // Extra safety: wait for the OS to finalize filesystem metadata writes (mmap flushes)
+        // after the backend has already synced the directory and released the writer lock.
+        thread::sleep(time::Duration::from_millis(500));
 
         // Create index.tar.bz2 from the index/ directory
         logger::info("=== Create index.tar.bz2 ===");
