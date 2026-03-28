@@ -292,7 +292,7 @@ RELEASE_CHANNEL=development
 
         logger::info("=== Create appdata.tar.bz2 ===");
 
-        create_database_archive(&appdata_db_path, &release_dir)?;
+        create_appdata_archive(&assets_dir, &release_dir)?;
 
     } else {
         logger::info("Skipping Appdata initialization and bootstrap");
@@ -682,6 +682,48 @@ pub fn create_database_archive(db_path: &Path, release_dir: &Path) -> Result<()>
     // Move tar archive to release directory
     let tar_src = db_dir.join(&tar_name);
     let tar_dst = release_dir.join(&tar_name);
+    fs::rename(&tar_src, &tar_dst)
+        .with_context(|| format!("Failed to move {} to release directory", tar_name))?;
+
+    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_dir));
+
+    Ok(())
+}
+
+/// Create appdata.tar.bz2 containing the appdata database and any asset directories
+/// (e.g., chanting-recordings/) that need to be distributed alongside it.
+pub fn create_appdata_archive(assets_dir: &Path, release_dir: &Path) -> Result<()> {
+    let tar_name = "appdata.tar.bz2";
+
+    logger::info(&format!("Creating {} archive", tar_name));
+
+    let mut tar_args = vec!["cjf", tar_name, "appdata.sqlite3"];
+
+    // Include chanting-recordings/ directory if it exists
+    let chanting_dir = assets_dir.join("chanting-recordings");
+    match chanting_dir.try_exists() {
+        Ok(true) => {
+            tar_args.push("chanting-recordings");
+            logger::info("Including chanting-recordings/ in appdata archive");
+        }
+        _ => {
+            logger::info("No chanting-recordings/ directory found, skipping");
+        }
+    }
+
+    let tar_result = std::process::Command::new("tar")
+        .args(&tar_args)
+        .current_dir(assets_dir)
+        .status()
+        .context("Failed to execute tar command")?;
+
+    if !tar_result.success() {
+        anyhow::bail!("tar command failed for {}", tar_name);
+    }
+
+    // Move tar archive to release directory
+    let tar_src = assets_dir.join(tar_name);
+    let tar_dst = release_dir.join(tar_name);
     fs::rename(&tar_src, &tar_dst)
         .with_context(|| format!("Failed to move {} to release directory", tar_name))?;
 
