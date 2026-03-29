@@ -237,6 +237,14 @@ impl AppdataDbHandle {
         let re = Regex::new(r"^([^/]+)/.*").expect("Invalid regex");
         let uid_ref = re.replace(sutta_uid, "$1").to_string();
 
+        // Derive the base ref by stripping .att/.tik suffixes.
+        // E.g. "mn1.att" -> "mn1", "mn1.tik" -> "mn1", "mn1" -> "mn1"
+        let base_ref = uid_ref
+            .split(".att").next().unwrap_or(&uid_ref)
+            .split(".tik").next().unwrap_or(&uid_ref);
+
+        let is_commentary = base_ref != uid_ref;
+
         use crate::db::appdata_schema::suttas::dsl::*;
 
         let app_data = get_app_data();
@@ -250,7 +258,25 @@ impl AppdataDbHandle {
             .select(Sutta::as_select())
             .filter(uid.ne(sutta_uid));
 
-        if include_cst4_commentary {
+        if is_commentary {
+            // The opened sutta is a commentary (e.g. mn1.att/pli/cst4).
+            // Always include the mūla translations (base_ref/%).
+            // Include other commentary types based on include_cst4_commentary setting.
+            if include_cst4_commentary {
+                // Include mūla, .att, and .tik variants
+                query = query.filter(
+                    uid.like(format!("{}/%", base_ref))
+                       .or(uid.like(format!("{}.att%/%", base_ref)))
+                       .or(uid.like(format!("{}.tik%/%", base_ref)))
+                );
+            } else {
+                // Include mūla and the same commentary type as the opened sutta
+                query = query.filter(
+                    uid.like(format!("{}/%", base_ref))
+                       .or(uid.like(format!("{}/%", uid_ref)))
+                );
+            }
+        } else if include_cst4_commentary {
             // Match mūla and commentary, including .xml variants (e.g. .att.xml/, .tik.xml/)
             query = query.filter(
                 uid.like(format!("{}/%", uid_ref))
