@@ -72,6 +72,98 @@ impl AppdataDbHandle {
         }
     }
 
+    /// Find a related sutta (commentary, sub-commentary, or root text) for the given sutta UID.
+    ///
+    /// `relation` is one of: "att" (commentary), "tik" (sub-commentary), "mula" (root text).
+    ///
+    /// Returns JSON: `{"found": true, "item_uid": "...", "table_name": "suttas", "sutta_title": "...", "sutta_ref": "..."}`
+    /// or `{"found": false, "sutta_title": "..."}` with the current sutta's title for fallback search.
+    pub fn find_related_sutta_json(&self, sutta_uid: &str, relation: &str) -> String {
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        // Parse the UID: "mn1/pli/ms" -> ref_part="mn1", lang_source="pli/ms"
+        // or "mn1.att/pli/cst4" -> ref_part="mn1.att", lang_source="pli/cst4"
+        let parts: Vec<&str> = sutta_uid.splitn(2, '/').collect();
+        if parts.len() < 2 {
+            return serde_json::json!({"found": false, "sutta_title": ""}).to_string();
+        }
+
+        let ref_part = parts[0]; // e.g. "mn1", "mn1.att", "mn1.tik"
+        let lang_source = parts[1]; // e.g. "pli/ms", "pli/cst4"
+
+        // Get the current sutta's title for fallback search
+        let current_title = self.get_sutta(sutta_uid)
+            .and_then(|s| s.title)
+            .unwrap_or_default();
+
+        // Derive the base ref (strip .att, .tik suffixes to get the mūla ref)
+        let base_ref = ref_part
+            .split(".att").next().unwrap_or(ref_part)
+            .split(".tik").next().unwrap_or(ref_part);
+
+        // Build the target ref based on relation
+        let target_ref = match relation {
+            "att" => format!("{}.att", base_ref),
+            "tik" => format!("{}.tik", base_ref),
+            "mula" => base_ref.to_string(),
+            _ => {
+                return serde_json::json!({"found": false, "sutta_title": current_title}).to_string();
+            }
+        };
+
+        // Try to find the target sutta with the same lang/source first
+        let target_uid = format!("{}/{}", target_ref, lang_source);
+        if let Some(sutta) = self.get_sutta(&target_uid) {
+            return serde_json::json!({
+                "found": true,
+                "item_uid": sutta.uid,
+                "table_name": "suttas",
+                "sutta_title": sutta.title.unwrap_or_default(),
+                "sutta_ref": sutta.sutta_ref,
+            }).to_string();
+        }
+
+        // Try with pli/cst4 source (commentary is typically CST4)
+        let cst4_uid = format!("{}/pli/cst4", target_ref);
+        if cst4_uid != target_uid {
+            if let Some(sutta) = self.get_sutta(&cst4_uid) {
+                return serde_json::json!({
+                    "found": true,
+                    "item_uid": sutta.uid,
+                    "table_name": "suttas",
+                    "sutta_title": sutta.title.unwrap_or_default(),
+                    "sutta_ref": sutta.sutta_ref,
+                }).to_string();
+            }
+        }
+
+        // Try LIKE search for any matching uid with the target ref
+        let like_pattern = format!("{}/%", target_ref);
+        let result = self.do_read(|db_conn| {
+            suttas
+                .filter(uid.like(&like_pattern))
+                .select(Sutta::as_select())
+                .first(db_conn)
+                .optional()
+        });
+
+        if let Ok(Some(sutta)) = result {
+            return serde_json::json!({
+                "found": true,
+                "item_uid": sutta.uid,
+                "table_name": "suttas",
+                "sutta_title": sutta.title.unwrap_or_default(),
+                "sutta_ref": sutta.sutta_ref,
+            }).to_string();
+        }
+
+        // Not found
+        serde_json::json!({
+            "found": false,
+            "sutta_title": current_title,
+        }).to_string()
+    }
+
     pub fn get_full_sutta_uid(&self, partial_uid: &str) -> Option<String> {
         use crate::db::appdata_schema::suttas::dsl::*;
 
@@ -133,12 +225,25 @@ impl AppdataDbHandle {
         }
     }
 
-    pub fn get_translations_data_json_for_sutta_uid(&self, sutta_uid: &str) -> String {
+    pub fn get_translations_data_json_for_sutta_uid(
+        &self,
+        sutta_uid: &str,
+        include_cst4_commentary: bool,
+        include_cst4_mula: bool,
+    ) -> String {
         // See sutta_search_window_state.py::_add_related_tabs()
 
         // Capture the reference before the first '/'
         let re = Regex::new(r"^([^/]+)/.*").expect("Invalid regex");
         let uid_ref = re.replace(sutta_uid, "$1").to_string();
+
+        // Derive the base ref by stripping .att/.tik suffixes.
+        // E.g. "mn1.att" -> "mn1", "mn1.tik" -> "mn1", "mn1" -> "mn1"
+        let base_ref = uid_ref
+            .split(".att").next().unwrap_or(&uid_ref)
+            .split(".tik").next().unwrap_or(&uid_ref);
+
+        let is_commentary = base_ref != uid_ref;
 
         use crate::db::appdata_schema::suttas::dsl::*;
 
@@ -148,18 +253,54 @@ impl AppdataDbHandle {
 
         let mut res: Vec<Sutta> = Vec::new();
 
-        // Find suttas with the same reference code, including atthakatha (.att) and tika (.tik).
-        if let Ok(a) = suttas
+        // Build the uid filter: always include uid_ref/%, optionally include .att/% and .tik/%
+        let mut query = suttas.into_boxed()
             .select(Sutta::as_select())
-            .filter(uid.ne(sutta_uid))
-            .filter(
-                uid.like(format!("{}/%", uid_ref))
-                   .or(uid.like(format!("{}.att/%", uid_ref)))
-                   .or(uid.like(format!("{}.tik/%", uid_ref)))
-            )
-            .load(&mut db_conn) {
-                res.extend(a);
+            .filter(uid.ne(sutta_uid));
+
+        if is_commentary {
+            // The opened sutta is a commentary (e.g. mn1.att/pli/cst4).
+            // Always include the mūla translations (base_ref/%).
+            // Include other commentary types based on include_cst4_commentary setting.
+            if include_cst4_commentary {
+                // Include mūla, .att, and .tik variants
+                query = query.filter(
+                    uid.like(format!("{}/%", base_ref))
+                       .or(uid.like(format!("{}.att%/%", base_ref)))
+                       .or(uid.like(format!("{}.tik%/%", base_ref)))
+                );
+            } else {
+                // Include mūla and the same commentary type as the opened sutta
+                query = query.filter(
+                    uid.like(format!("{}/%", base_ref))
+                       .or(uid.like(format!("{}/%", uid_ref)))
+                );
             }
+        } else if include_cst4_commentary {
+            // Match mūla and commentary, including .xml variants (e.g. .att.xml/, .tik.xml/)
+            query = query.filter(
+                uid.like(format!("{}/%", uid_ref))
+                   .or(uid.like(format!("{}.att%/%", uid_ref)))
+                   .or(uid.like(format!("{}.tik%/%", uid_ref)))
+            );
+        } else {
+            query = query.filter(uid.like(format!("{}/%", uid_ref)));
+        }
+
+        if let Ok(a) = query.load(&mut db_conn) {
+            res.extend(a);
+        }
+
+        // Filter out CST4 mūla records if not included
+        if !include_cst4_mula {
+            res.retain(|s| {
+                // Keep the record unless it's a CST4 mūla (ends with /cst4 and is not commentary)
+                // Note: .mul.xml/pli/cst4 records are mūla and should be excluded
+                !(s.uid.ends_with("/cst4")
+                    && !s.uid.contains(".att")
+                    && !s.uid.contains(".tik"))
+            });
+        }
 
         #[derive(Serialize)]
         struct TranslationData {
@@ -1125,7 +1266,7 @@ pub fn delete_sutta() {
     info(&format!("Deleted {} suttas", num_deleted));
 }
 
-fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
+pub fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
     // Sort Pali ms first as the results.
     // Then add Pali other sources,
     // then the non-Pali items, sorted by language.
@@ -1149,8 +1290,18 @@ fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
         }
     }
 
-    // Sort non-pli by language
-    remaining.sort_by(|a, b| a.language.cmp(&b.language));
+    // Sort pli_others so mūla (e.g. mn1/pli/cst4) comes before
+    // commentary (e.g. mn1.att/pli/cst4, mn1.tik/pli/cst4).
+    // Commentary UIDs contain .att or .tik before the first '/'.
+    pli_others.sort_by(|a, b| {
+        let a_ref = a.uid.split('/').next().unwrap_or("");
+        let b_ref = b.uid.split('/').next().unwrap_or("");
+        let a_is_commentary = a_ref.contains(".att") || a_ref.contains(".tik");
+        let b_is_commentary = b_ref.contains(".att") || b_ref.contains(".tik");
+        a_is_commentary.cmp(&b_is_commentary).then_with(|| a.uid.cmp(&b.uid))
+    });
+    // Sort non-pli by language, then by uid within the same language
+    remaining.sort_by(|a, b| a.language.cmp(&b.language).then_with(|| a.uid.cmp(&b.uid)));
     // Assemble final list
     results.extend(pli_others);
     results.extend(remaining);

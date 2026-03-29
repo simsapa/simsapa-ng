@@ -179,6 +179,13 @@ pub fn sutta_range_from_ref(reference: &str) -> Option<SuttaRange> {
 
     ref_str = ref_str.replace("--", "-");
 
+    // CST4 commentary suffixes: mn1.att -> mn1, mn1.tik -> mn1
+    if ref_str.ends_with(".att") {
+        ref_str = ref_str[..ref_str.len() - 4].to_string();
+    } else if ref_str.ends_with(".tik") {
+        ref_str = ref_str[..ref_str.len() - 4].to_string();
+    }
+
     // FIXME: convert Regex to lazy_static
 
     // sn22.57_a -> sn22.57
@@ -2699,6 +2706,24 @@ mod tests {
         assert_eq!(range.group, "dn");
         assert_eq!(range.start, Some(1));
         assert_eq!(range.end, Some(5));
+
+        // CST4 commentary (.att)
+        let range = sutta_range_from_ref("mn1.att/pli/cst4").unwrap();
+        assert_eq!(range.group, "mn");
+        assert_eq!(range.start, Some(1));
+        assert_eq!(range.end, Some(1));
+
+        // CST4 sub-commentary (.tik)
+        let range = sutta_range_from_ref("sn30.7.tik/pli/cst4").unwrap();
+        assert_eq!(range.group, "sn30");
+        assert_eq!(range.start, Some(7));
+        assert_eq!(range.end, Some(7));
+
+        // Commentary without language suffix
+        let range = sutta_range_from_ref("an4.10.att").unwrap();
+        assert_eq!(range.group, "an4");
+        assert_eq!(range.start, Some(10));
+        assert_eq!(range.end, Some(10));
     }
 
     #[test]

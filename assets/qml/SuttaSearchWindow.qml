@@ -374,6 +374,80 @@ ApplicationWindow {
         prompts_tab.new_prompt(prompt);
     }
 
+    // Open a related sutta (commentary, sub-commentary, or root text) for the current tab.
+    // relation: "att" (commentary), "tik" (sub-commentary), "mula" (root text)
+    function open_related_sutta(relation: string) {
+        const current_key = sutta_html_view_layout.current_key;
+        if (!current_key || !sutta_html_view_layout.items_map[current_key]) {
+            sutta_html_view_layout.show_transient_message("No sutta currently loaded");
+            return;
+        }
+
+        const item_uid = sutta_html_view_layout.items_map[current_key].get_data_value('item_uid');
+        const table_name = sutta_html_view_layout.items_map[current_key].get_data_value('table_name');
+
+        if (!item_uid || table_name !== "suttas") {
+            sutta_html_view_layout.show_transient_message("Not a sutta tab");
+            return;
+        }
+
+        const result_json = SuttaBridge.find_related_sutta_json(item_uid, relation);
+        const result = JSON.parse(result_json);
+
+        if (result.found) {
+            // Determine which model the current tab is in, and the index
+            let target_model = null;
+            let insert_index = -1;
+            let is_pinned = false;
+
+            for (let i = 0; i < tabs_pinned_model.count; i++) {
+                if (tabs_pinned_model.get(i).web_item_key === current_key) {
+                    target_model = tabs_pinned_model;
+                    insert_index = i + 1;
+                    is_pinned = true;
+                    break;
+                }
+            }
+
+            if (!target_model) {
+                for (let i = 0; i < tabs_results_model.count; i++) {
+                    if (tabs_results_model.get(i).web_item_key === current_key) {
+                        target_model = tabs_results_model;
+                        insert_index = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            if (!target_model) {
+                for (let i = 0; i < tabs_translations_model.count; i++) {
+                    if (tabs_translations_model.get(i).web_item_key === current_key) {
+                        target_model = tabs_translations_model;
+                        insert_index = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            if (!target_model) {
+                // Fallback: add as a new results tab
+                target_model = tabs_results_model;
+                insert_index = tabs_results_model.count;
+            }
+
+            let tab_data = root.new_tab_data(result, is_pinned, true);
+            // Generate web_item_key and create webview immediately since we'll focus it
+            tab_data.web_item_key = root.generate_key();
+            sutta_html_view_layout.add_item(tab_data, true);
+            target_model.insert(insert_index, tab_data);
+            root.focus_on_tab_with_id_key(tab_data.id_key);
+        } else {
+            // Not found - show dialog offering to search by title
+            related_sutta_not_found_dialog.search_title = result.sutta_title;
+            related_sutta_not_found_dialog.open();
+        }
+    }
+
     function run_sutta_menu_action(action: string, query_text: string) {
         /* logger.info("run_sutta_menu_action():", action, query_text.slice(0, 30)); */
 
@@ -452,6 +526,18 @@ ${query_text}`;
 
 ${query_text}`;
             root.new_prompt(prompt);
+            break;
+
+        case "open-commentary-text":
+            root.open_related_sutta("att");
+            break;
+
+        case "open-sub-commentary-text":
+            root.open_related_sutta("tik");
+            break;
+
+        case "open-root-text":
+            root.open_related_sutta("mula");
             break;
 
         case "copy-link-sutta":
@@ -1513,6 +1599,42 @@ ${query_text}`;
         }
     }
 
+    Dialog {
+        id: related_sutta_not_found_dialog
+        title: "Related Text Not Found"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 450
+
+        property string search_title: ""
+
+        onAccepted: {
+            // Set search mode to Contains Match and search with the title
+            search_bar_input.search_area = "Suttas";
+            let mode_model = search_bar_input.search_mode_dropdown.model;
+            for (let i = 0; i < mode_model.length; i++) {
+                if (mode_model[i] === "Contains Match") {
+                    search_bar_input.search_mode_dropdown.currentIndex = i;
+                    break;
+                }
+            }
+            search_bar_input.search_input.text = related_sutta_not_found_dialog.search_title;
+            root.handle_query(related_sutta_not_found_dialog.search_title, 1);
+        }
+
+        ColumnLayout {
+            spacing: 10
+            width: parent.width
+
+            Label {
+                text: "The sutta couldn't be found by its uid. Mapping the SuttaCentral sutta references to the correct sections in the CST4 files is work-in-progress.\n\nSearch with the title to find the un-mapped CST xml file?"
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+    }
+
     AppSettingsWindow {
         id: app_settings_window
         top_bar_margin: root.top_bar_margin
@@ -2195,6 +2317,7 @@ ${query_text}`;
                                 padding: 5
                             }
 
+                            // TODO: WIP work in progress, commented out for production build
                             // TabButton {
                             //     text: "Query"
                             //     id: query_tab_btn
@@ -2284,13 +2407,13 @@ ${query_text}`;
                                 Layout.fillHeight: true
                             }
 
-                            // QueryTab {
-                            //     id: query_tab
-                            //     window_id: root.window_id
-                            //     is_dark: root.is_dark
-                            //     Layout.fillWidth: true
-                            //     Layout.fillHeight: true
-                            // }
+                            QueryTab {
+                                id: query_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                            }
 
                             // History Tab
                             // ColumnLayout {

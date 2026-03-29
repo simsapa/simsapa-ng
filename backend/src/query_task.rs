@@ -636,6 +636,44 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
+        // --- CST4 Mūla Filtering ---
+        if !app_data.get_include_cst4_mula_in_search_results() {
+            // Exclude CST4 mūla records: uid ends with /cst4 but is not commentary (.att, .tik)
+            // Note: .mul.xml/pli/cst4 records are mūla and should be excluded
+            query = query.filter(
+                diesel::dsl::not(
+                    uid.like("%/cst4")
+                        .and(uid.not_like("%.att%/cst4"))
+                        .and(uid.not_like("%.tik%/cst4"))
+                )
+            );
+            count_query = count_query.filter(
+                diesel::dsl::not(
+                    uid.like("%/cst4")
+                        .and(uid.not_like("%.att%/cst4"))
+                        .and(uid.not_like("%.tik%/cst4"))
+                )
+            );
+        }
+
+        // --- Commentary Filtering ---
+        if !app_data.get_include_cst4_commentary_in_search_results() {
+            // Exclude commentary records: uid contains .att or .tik before the first /
+            // Matches both .att/ and .att.xml/ patterns
+            query = query.filter(
+                diesel::dsl::not(
+                    uid.like("%.att%/%")
+                    .or(uid.like("%.tik%/%"))
+                )
+            );
+            count_query = count_query.filter(
+                diesel::dsl::not(
+                    uid.like("%.att%/%")
+                    .or(uid.like("%.tik%/%"))
+                )
+            );
+        }
+
         // --- Term Filtering ---
         let terms: Vec<&str> = if self.query_text.contains(" AND ") {
             self.query_text.split(" AND ").map(|s| s.trim()).collect()
@@ -696,38 +734,48 @@ impl<'a> SearchQueryTask<'a> {
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
-        // TODO --- Source Filtering ---
-        // TODO --- Term Filtering ---
-
         let like_pattern = format!("%{}%", self.query_text);
 
         // Determine if we need language filtering
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
 
+        // Build dynamic WHERE clauses for CST4/commentary filtering
+        let mut extra_where = String::new();
+
+        if !app_data.get_include_cst4_mula_in_search_results() {
+            extra_where.push_str(
+                " AND NOT (s.uid LIKE '%/cst4' AND s.uid NOT LIKE '%.att%/cst4' AND s.uid NOT LIKE '%.tik%/cst4')"
+            );
+        }
+
+        if !app_data.get_include_cst4_commentary_in_search_results() {
+            extra_where.push_str(
+                " AND NOT (s.uid LIKE '%.att%/%' OR s.uid LIKE '%.tik%/%')"
+            );
+        }
+
         // --- Count Total Hits ---
-        let count_result: CountResult = if apply_lang_filter {
-            sql_query(
-                r#"
-                SELECT COUNT(*) as count
-                FROM suttas_fts f
-                JOIN suttas s ON f.sutta_id = s.id
-                WHERE f.content_plain LIKE ? AND f.language = ?
-                "#
+        let count_sql = if apply_lang_filter {
+            format!(
+                "SELECT COUNT(*) as count FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ? AND f.language = ?{}",
+                extra_where
             )
-            .bind::<Text, _>(&like_pattern)
-            .bind::<Text, _>(&self.lang)
-            .get_result(db_conn)?
         } else {
-            sql_query(
-                r#"
-                SELECT COUNT(*) as count
-                FROM suttas_fts f
-                JOIN suttas s ON f.sutta_id = s.id
-                WHERE f.content_plain LIKE ?
-                "#
+            format!(
+                "SELECT COUNT(*) as count FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ?{}",
+                extra_where
             )
-            .bind::<Text, _>(&like_pattern)
-            .get_result(db_conn)?
+        };
+
+        let count_result: CountResult = if apply_lang_filter {
+            sql_query(&count_sql)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<Text, _>(&self.lang)
+                .get_result(db_conn)?
+        } else {
+            sql_query(&count_sql)
+                .bind::<Text, _>(&like_pattern)
+                .get_result(db_conn)?
         };
 
         self.db_query_hits_count = count_result.count;
@@ -742,37 +790,31 @@ impl<'a> SearchQueryTask<'a> {
         // Without specifying the ordering, FTS5 results are not ordered and fluctuate.
 
         // --- Execute Query with Pagination ---
-        let db_results: Vec<Sutta> = if apply_lang_filter {
-            sql_query(
-                r#"
-                SELECT s.*
-                FROM suttas_fts f
-                JOIN suttas s ON f.sutta_id = s.id
-                WHERE f.content_plain LIKE ? AND f.language = ?
-                ORDER BY s.id
-                LIMIT ? OFFSET ?
-                "#
+        let select_sql = if apply_lang_filter {
+            format!(
+                "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ? AND f.language = ?{} ORDER BY s.id LIMIT ? OFFSET ?",
+                extra_where
             )
-            .bind::<Text, _>(&like_pattern)
-            .bind::<Text, _>(&self.lang)
-            .bind::<BigInt, _>(limit)
-            .bind::<BigInt, _>(offset)
-            .load(db_conn)?
         } else {
-            sql_query(
-                r#"
-                SELECT s.*
-                FROM suttas_fts f
-                JOIN suttas s ON f.sutta_id = s.id
-                WHERE f.content_plain LIKE ?
-                ORDER BY s.id
-                LIMIT ? OFFSET ?
-                "#
+            format!(
+                "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ?{} ORDER BY s.id LIMIT ? OFFSET ?",
+                extra_where
             )
-            .bind::<Text, _>(&like_pattern)
-            .bind::<BigInt, _>(limit)
-            .bind::<BigInt, _>(offset)
-            .load(db_conn)?
+        };
+
+        let db_results: Vec<Sutta> = if apply_lang_filter {
+            sql_query(&select_sql)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<Text, _>(&self.lang)
+                .bind::<BigInt, _>(limit)
+                .bind::<BigInt, _>(offset)
+                .load(db_conn)?
+        } else {
+            sql_query(&select_sql)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<BigInt, _>(limit)
+                .bind::<BigInt, _>(offset)
+                .load(db_conn)?
         };
 
         // --- Map to SearchResult ---
@@ -1263,6 +1305,40 @@ impl<'a> SearchQueryTask<'a> {
             count_query = count_query.filter(language.eq(&self.lang));
         }
 
+        // --- CST4 Mūla Filtering ---
+        if !app_data.get_include_cst4_mula_in_search_results() {
+            query = query.filter(
+                diesel::dsl::not(
+                    uid.like("%/cst4")
+                        .and(uid.not_like("%.att%/cst4"))
+                        .and(uid.not_like("%.tik%/cst4"))
+                )
+            );
+            count_query = count_query.filter(
+                diesel::dsl::not(
+                    uid.like("%/cst4")
+                        .and(uid.not_like("%.att%/cst4"))
+                        .and(uid.not_like("%.tik%/cst4"))
+                )
+            );
+        }
+
+        // --- Commentary Filtering ---
+        if !app_data.get_include_cst4_commentary_in_search_results() {
+            query = query.filter(
+                diesel::dsl::not(
+                    uid.like("%.att%/%")
+                    .or(uid.like("%.tik%/%"))
+                )
+            );
+            count_query = count_query.filter(
+                diesel::dsl::not(
+                    uid.like("%.att%/%")
+                    .or(uid.like("%.tik%/%"))
+                )
+            );
+        }
+
         // Count total hits
         self.db_query_hits_count = count_query.count().get_result::<i64>(db_conn)?;
         info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
@@ -1726,6 +1802,10 @@ impl<'a> SearchQueryTask<'a> {
             sutta_ref: None,
         };
 
+        let app_data = get_app_data();
+        let include_cst4_mula = app_data.get_include_cst4_mula_in_search_results();
+        let include_cst4_commentary = app_data.get_include_cst4_commentary_in_search_results();
+
         let query_text = self.query_text.clone();
         let page_len = self.page_len;
 
@@ -1736,8 +1816,40 @@ impl<'a> SearchQueryTask<'a> {
             }
             searcher.search_suttas_with_count(&query_text, &filters, page_len)
         }) {
-            Some(Ok((total, results))) => {
-                self.db_query_hits_count = total as i64;
+            Some(Ok((total, mut results))) => {
+                let orig_count = results.len();
+
+                results.retain(|r| {
+                    let u = &r.uid;
+
+                    // CST4 mūla filtering: exclude /cst4 records that are not commentary (.att, .tik)
+                    // Note: .mul.xml/pli/cst4 records are mūla and should be excluded
+                    if !include_cst4_mula
+                        && u.ends_with("/cst4")
+                        && !u.contains(".att")
+                        && !u.contains(".tik")
+                    {
+                        return false;
+                    }
+
+                    // Commentary filtering: matches both .att/ and .att.xml/ patterns
+                    if !include_cst4_commentary {
+                        if u.contains(".att") || u.contains(".tik") {
+                            // Check it's a commentary uid (has .att or .tik before a /)
+                            let before_first_slash = u.split('/').next().unwrap_or("");
+                            if before_first_slash.contains(".att") || before_first_slash.contains(".tik") {
+                                return false;
+                            }
+                        }
+                    }
+
+                    true
+                });
+
+                // Adjust the total hits count by the number of filtered results
+                let filtered_count = orig_count - results.len();
+                let adjusted_total = if total > filtered_count { total - filtered_count } else { 0 };
+                self.db_query_hits_count = adjusted_total as i64;
                 Ok(results)
             }
             Some(Err(e)) => Err(e.into()),

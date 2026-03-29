@@ -3,6 +3,8 @@ mod helpers;
 use serial_test::serial;
 use serde::Deserialize;
 
+use simsapa_backend::db::appdata::sort_suttas;
+use simsapa_backend::db::appdata_models::Sutta;
 use simsapa_backend::search::searcher::{FulltextSearcher, SearchFilters};
 
 #[derive(Debug, Deserialize)]
@@ -94,4 +96,81 @@ fn test_fulltext_search_so_ce_evam_vadeyya() {
                 "Result {}: snippet mismatch for '{}'", i, exp.uid);
         }
     }
+}
+
+/// Helper to build a minimal Sutta for sort testing.
+fn make_sutta(id: i32, uid: &str, language: &str, title: &str) -> Sutta {
+    Sutta {
+        id,
+        uid: uid.to_string(),
+        sutta_ref: String::new(),
+        nikaya: String::new(),
+        language: language.to_string(),
+        group_path: None,
+        group_index: None,
+        order_index: None,
+        sutta_range_group: None,
+        sutta_range_start: None,
+        sutta_range_end: None,
+        title: Some(title.to_string()),
+        title_ascii: None,
+        title_pali: None,
+        title_trans: None,
+        description: None,
+        content_plain: None,
+        content_html: None,
+        content_json: None,
+        content_json_tmpl: None,
+        source_uid: None,
+        source_info: None,
+        source_language: None,
+        message: None,
+        copyright: None,
+        license: None,
+    }
+}
+
+/// Test that sort_suttas() produces the correct ordering:
+///   pli/ms first, then pli others (mūla before commentary), then remaining by language.
+///
+/// Uses realistic UIDs: standard CST4 records use sutta refs (mn1/pli/cst4, mn1.att/pli/cst4),
+/// while XML-sourced records use file-based codes (s0101m.mul.xml/pli/cst4, s0101a.att.xml/pli/cst4).
+/// These two groups have different uid_ref prefixes so they wouldn't normally appear together
+/// in a translation tab query, but they can appear together in search results.
+#[test]
+fn test_sort_suttas_cst4_mula_before_commentary() {
+    // Provide input in a deliberately wrong order
+    let input = vec![
+        make_sutta(1, "mn1.att/pli/cst4",          "pli", "MN 1 Aṭṭhakathā"),
+        make_sutta(2, "mn1/en/sujato",              "en",  "MN 1 Sujato"),
+        make_sutta(3, "s0101t.tik.xml/pli/cst4",    "pli", "S0101 Ṭīkā XML"),
+        make_sutta(4, "mn1/pli/cst4",               "pli", "MN 1 CST4"),
+        make_sutta(5, "s0101a.att.xml/pli/cst4",    "pli", "S0101 Aṭṭhakathā XML"),
+        make_sutta(6, "mn1.tik/pli/cst4",           "pli", "MN 1 Ṭīkā"),
+        make_sutta(7, "mn1/pli/ms",                 "pli", "MN 1 MS"),
+        make_sutta(8, "s0101m.mul.xml/pli/cst4",    "pli", "S0101 Mūla XML"),
+        make_sutta(9, "mn1/en/bodhi",               "en",  "MN 1 Bodhi"),
+    ];
+
+    let sorted = sort_suttas(input);
+    let uids: Vec<&str> = sorted.iter().map(|s| s.uid.as_str()).collect();
+
+    assert_eq!(
+        uids,
+        vec![
+            "mn1/pli/ms",
+            // Mūla records (no .att or .tik in uid ref part), sorted alphabetically
+            "mn1/pli/cst4",
+            "s0101m.mul.xml/pli/cst4",
+            // Commentary records (.att or .tik in uid ref part), sorted alphabetically
+            "mn1.att/pli/cst4",
+            "mn1.tik/pli/cst4",
+            "s0101a.att.xml/pli/cst4",
+            "s0101t.tik.xml/pli/cst4",
+            // Non-pli, sorted by language then uid
+            "mn1/en/bodhi",
+            "mn1/en/sujato",
+        ],
+        "sort_suttas should order: pli/ms, then pli mūla, then pli commentary, then other languages"
+    );
 }
