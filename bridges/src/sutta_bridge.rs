@@ -478,6 +478,30 @@ pub mod qobject {
         fn set_search_as_you_type(self: Pin<&mut SuttaBridge>, enabled: bool);
 
         #[qinvokable]
+        fn get_include_cst4_commentary_in_translations(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_cst4_commentary_in_translations(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn get_include_cst4_mula_in_search_results(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_cst4_mula_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn get_include_cst4_commentary_in_search_results(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_cst4_commentary_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
+        fn get_include_cst4_mula_in_translations(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_cst4_mula_in_translations(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
         fn get_open_find_in_sutta_results(self: &SuttaBridge) -> bool;
 
         #[qinvokable]
@@ -1273,7 +1297,13 @@ impl qobject::SuttaBridge {
 
     pub fn get_translations_data_json_for_sutta_uid(&self, sutta_uid: &QString) -> QString {
         let app_data = get_app_data();
-        let r = app_data.dbm.appdata.get_translations_data_json_for_sutta_uid(&sutta_uid.to_string());
+        let include_cst4_commentary = app_data.get_include_cst4_commentary_in_translations();
+        let include_cst4_mula = app_data.get_include_cst4_mula_in_translations();
+        let r = app_data.dbm.appdata.get_translations_data_json_for_sutta_uid(
+            &sutta_uid.to_string(),
+            include_cst4_commentary,
+            include_cst4_mula,
+        );
         QString::from(r)
     }
 
@@ -2587,6 +2617,46 @@ impl qobject::SuttaBridge {
     pub fn set_search_as_you_type(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_search_as_you_type(enabled);
+    }
+
+    pub fn get_include_cst4_commentary_in_translations(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_cst4_commentary_in_translations()
+    }
+
+    pub fn set_include_cst4_commentary_in_translations(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_cst4_commentary_in_translations(enabled);
+    }
+
+    pub fn get_include_cst4_mula_in_search_results(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_cst4_mula_in_search_results()
+    }
+
+    pub fn set_include_cst4_mula_in_search_results(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_cst4_mula_in_search_results(enabled);
+    }
+
+    pub fn get_include_cst4_commentary_in_search_results(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_cst4_commentary_in_search_results()
+    }
+
+    pub fn set_include_cst4_commentary_in_search_results(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_cst4_commentary_in_search_results(enabled);
+    }
+
+    pub fn get_include_cst4_mula_in_translations(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_cst4_mula_in_translations()
+    }
+
+    pub fn set_include_cst4_mula_in_translations(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_cst4_mula_in_translations(enabled);
     }
 
     pub fn get_open_find_in_sutta_results(&self) -> bool {

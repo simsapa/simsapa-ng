@@ -74,6 +74,14 @@ pub struct AppSettings {
     pub release_channel: Option<String>,
     /// Custom keyboard shortcuts for application actions
     pub app_keybindings: AppKeybindings,
+    /// Include commentary (Aṭṭhakathā .att, Ṭīkā .tik) in translation tab
+    pub include_cst4_commentary_in_translations: bool,
+    /// Include CST4 Mūla Pāli texts in search results
+    pub include_cst4_mula_in_search_results: bool,
+    /// Include commentary records in sutta search results
+    pub include_cst4_commentary_in_search_results: bool,
+    /// Include CST4 Pāli version in translation tab
+    pub include_cst4_mula_in_translations: bool,
 }
 
 impl Default for AppSettings {
@@ -207,6 +215,10 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             notify_about_simsapa_updates: true,
             release_channel: None,
             app_keybindings: AppKeybindings::default(),
+            include_cst4_commentary_in_translations: false,
+            include_cst4_mula_in_search_results: false,
+            include_cst4_commentary_in_search_results: true,
+            include_cst4_mula_in_translations: false,
         }
     }
 }

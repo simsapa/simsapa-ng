@@ -565,6 +565,38 @@ Item {
         console.log("set_search_as_you_type():", enabled);
     }
 
+    function get_include_cst4_commentary_in_translations(): bool {
+        return false;
+    }
+
+    function set_include_cst4_commentary_in_translations(enabled: bool) {
+        console.log("set_include_cst4_commentary_in_translations():", enabled);
+    }
+
+    function get_include_cst4_mula_in_search_results(): bool {
+        return false;
+    }
+
+    function set_include_cst4_mula_in_search_results(enabled: bool) {
+        console.log("set_include_cst4_mula_in_search_results():", enabled);
+    }
+
+    function get_include_cst4_commentary_in_search_results(): bool {
+        return true;
+    }
+
+    function set_include_cst4_commentary_in_search_results(enabled: bool) {
+        console.log("set_include_cst4_commentary_in_search_results():", enabled);
+    }
+
+    function get_include_cst4_mula_in_translations(): bool {
+        return false;
+    }
+
+    function set_include_cst4_mula_in_translations(enabled: bool) {
+        console.log("set_include_cst4_mula_in_translations():", enabled);
+    }
+
     function get_open_find_in_sutta_results(): bool {
         return true;
     }

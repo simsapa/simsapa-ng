@@ -2195,13 +2195,13 @@ ${query_text}`;
                                 padding: 5
                             }
 
-                            TabButton {
-                                text: "Query"
-                                visible: false // TODO: WIP work in progress, hide for production build
-                                id: query_tab_btn
-                                icon.source: root.has_query_error ? "icons/32x32/fa_triangle-exclamation-solid.png" : "icons/32x32/fa_circle-info-solid.png"
-                                padding: 5
-                            }
+                            // TODO: WIP work in progress, commented out for production build
+                            // TabButton {
+                            //     text: "Query"
+                            //     id: query_tab_btn
+                            //     icon.source: root.has_query_error ? "icons/32x32/fa_triangle-exclamation-solid.png" : "icons/32x32/fa_circle-info-solid.png"
+                            //     padding: 5
+                            // }
 
                             // TabButton {
                             //     text: "History"
@@ -2287,7 +2287,6 @@ ${query_text}`;
 
                             QueryTab {
                                 id: query_tab
-                                visible: false // TODO: WIP work in progress, hide for production build
                                 window_id: root.window_id
                                 is_dark: root.is_dark
                                 Layout.fillWidth: true
