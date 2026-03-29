@@ -72,6 +72,98 @@ impl AppdataDbHandle {
         }
     }
 
+    /// Find a related sutta (commentary, sub-commentary, or root text) for the given sutta UID.
+    ///
+    /// `relation` is one of: "att" (commentary), "tik" (sub-commentary), "mula" (root text).
+    ///
+    /// Returns JSON: `{"found": true, "item_uid": "...", "table_name": "suttas", "sutta_title": "...", "sutta_ref": "..."}`
+    /// or `{"found": false, "sutta_title": "..."}` with the current sutta's title for fallback search.
+    pub fn find_related_sutta_json(&self, sutta_uid: &str, relation: &str) -> String {
+        use crate::db::appdata_schema::suttas::dsl::*;
+
+        // Parse the UID: "mn1/pli/ms" -> ref_part="mn1", lang_source="pli/ms"
+        // or "mn1.att/pli/cst4" -> ref_part="mn1.att", lang_source="pli/cst4"
+        let parts: Vec<&str> = sutta_uid.splitn(2, '/').collect();
+        if parts.len() < 2 {
+            return serde_json::json!({"found": false, "sutta_title": ""}).to_string();
+        }
+
+        let ref_part = parts[0]; // e.g. "mn1", "mn1.att", "mn1.tik"
+        let lang_source = parts[1]; // e.g. "pli/ms", "pli/cst4"
+
+        // Get the current sutta's title for fallback search
+        let current_title = self.get_sutta(sutta_uid)
+            .and_then(|s| s.title)
+            .unwrap_or_default();
+
+        // Derive the base ref (strip .att, .tik suffixes to get the mūla ref)
+        let base_ref = ref_part
+            .split(".att").next().unwrap_or(ref_part)
+            .split(".tik").next().unwrap_or(ref_part);
+
+        // Build the target ref based on relation
+        let target_ref = match relation {
+            "att" => format!("{}.att", base_ref),
+            "tik" => format!("{}.tik", base_ref),
+            "mula" => base_ref.to_string(),
+            _ => {
+                return serde_json::json!({"found": false, "sutta_title": current_title}).to_string();
+            }
+        };
+
+        // Try to find the target sutta with the same lang/source first
+        let target_uid = format!("{}/{}", target_ref, lang_source);
+        if let Some(sutta) = self.get_sutta(&target_uid) {
+            return serde_json::json!({
+                "found": true,
+                "item_uid": sutta.uid,
+                "table_name": "suttas",
+                "sutta_title": sutta.title.unwrap_or_default(),
+                "sutta_ref": sutta.sutta_ref,
+            }).to_string();
+        }
+
+        // Try with pli/cst4 source (commentary is typically CST4)
+        let cst4_uid = format!("{}/pli/cst4", target_ref);
+        if cst4_uid != target_uid {
+            if let Some(sutta) = self.get_sutta(&cst4_uid) {
+                return serde_json::json!({
+                    "found": true,
+                    "item_uid": sutta.uid,
+                    "table_name": "suttas",
+                    "sutta_title": sutta.title.unwrap_or_default(),
+                    "sutta_ref": sutta.sutta_ref,
+                }).to_string();
+            }
+        }
+
+        // Try LIKE search for any matching uid with the target ref
+        let like_pattern = format!("{}/%", target_ref);
+        let result = self.do_read(|db_conn| {
+            suttas
+                .filter(uid.like(&like_pattern))
+                .select(Sutta::as_select())
+                .first(db_conn)
+                .optional()
+        });
+
+        if let Ok(Some(sutta)) = result {
+            return serde_json::json!({
+                "found": true,
+                "item_uid": sutta.uid,
+                "table_name": "suttas",
+                "sutta_title": sutta.title.unwrap_or_default(),
+                "sutta_ref": sutta.sutta_ref,
+            }).to_string();
+        }
+
+        // Not found
+        serde_json::json!({
+            "found": false,
+            "sutta_title": current_title,
+        }).to_string()
+    }
+
     pub fn get_full_sutta_uid(&self, partial_uid: &str) -> Option<String> {
         use crate::db::appdata_schema::suttas::dsl::*;
 

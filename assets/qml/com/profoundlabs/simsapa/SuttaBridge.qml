@@ -142,6 +142,10 @@ Item {
         return translations_json;
     }
 
+    function find_related_sutta_json(sutta_uid: string, relation: string): string {
+        return '{"found": false, "sutta_title": ""}';
+    }
+
     function app_data_folder_path(): string {
         return "~/.local/share/simsapa-ng";
     }
