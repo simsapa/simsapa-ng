@@ -270,7 +270,7 @@ impl TipitakaXmlImporter {
             };
 
             let content_html = match xml_to_html(&xml_content) {
-                Ok(html) => html,
+                Ok(html) => consistent_niggahita(Some(html)),
                 Err(e) => {
                     logger::error(&format!("Failed to convert {} to HTML: {}", filename, e));
                     continue;

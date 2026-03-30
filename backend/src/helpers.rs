@@ -645,16 +645,18 @@ lazy_static! {
     static ref RE_UUTI_BEFORE: Regex =  Regex::new(r#"[’'"”]+ūti"#).unwrap();
     static ref RE_UUTI_AFTER: Regex =  Regex::new(r#"ū[’'"”]+ti"#).unwrap();
 
-    // Patterns for normalize_query_text that preserve preceding characters
-    // before the quote mark and not trying to reverse the Pāli sandhi, because
-    // the Sutta.content_plain field which we search in, is also created this
-    // way, i.e. in the n'ti endings simply the apostrophe is replaced with space: n ti.
-    static ref RE_TI_NORMALIZE: Regex = Regex::new(r#"(.)[’'"”]+ti"#).unwrap();
-
     // Don't include parentheses (), interferes with 'contains match' in cst4 texts,
     // see test_sutta_search_contains_match_with_punctuation()
-    static ref RE_PUNCT: Regex = Regex::new(r#"[\.,;:\!\?'‘’"“”…—–-]+"#).unwrap();
-    static ref RE_MANY_SPACES: Regex = Regex::new(r#"  +"#).unwrap();
+    static ref RE_PUNCT_QUOTES: Regex = Regex::new(r#"[\.,;:\!\?'‘’"“”…—–-]+"#).unwrap();
+
+    static ref RE_DASH: Regex = Regex::new(r"—–-+").unwrap();
+
+    // Used in word_uid_sanitize() to also remove parens.
+    static ref RE_PUNCT_PARENS: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
+
+    static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
+
+    static ref RE_MID_WORD_STRAIGHT_QUOTE: Regex = Regex::new(r#"(\w)['"](\w)"#).unwrap();
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -735,24 +737,41 @@ pub fn find_sentence_end(text: &str, char_pos: usize) -> usize {
     text.chars().count()
 }
 
-pub fn preprocess_text_for_word_extraction(text: &str) -> String {
-    lazy_static! {
-        static ref re_nonword: Regex = Regex::new(r"[^\w]+").unwrap();
-        static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
-    }
+pub fn normalize_plain_text(text: &str) -> String {
+    // NOTE: Not removing non-word chars and digits here, should be applied apart from this step where needed.
+    let text = text.to_lowercase();
+    let text = consistent_niggahita(Some(text));
+    let text = normalize_iti_sandhi(&text);
 
-    let text = text.replace("\n", " ");
+    // Replace multiple spaces to one.
+    let text = RE_SPACES.replace_all(&text, " ").to_string();
 
+    text.trim().to_string()
+}
+
+pub fn normalize_iti_sandhi(text: &str) -> String {
+    // NOTE: This step must be applied before replacing quote marks with spaces.
+    //
+    // This normalizes iti sandhi cases, e.g. 'mūlan'ti' → 'mūlaṁ ti',
+    // restoring the original terminating letter and separating the stem form.
+    // Expecting lowercased text input.
+    //
     // Pāli sandhi: dhārayāmi + ti becomes dhārayāmīti, sometimes with apostrophes: dhārayāmī’”ti
     //
     // We are reversing this as:
     // dhārayāmī’ti dhārayāmī’”ti -> dhārayāmi ti
-    //
-    // Not handling the dhārayāmīti case for now.
     let text = RE_IITI_BEFORE.replace_all(&text, "i ti").into_owned();
     let text = RE_IITI_AFTER.replace_all(&text, "i ti").into_owned();
 
+    // There are no -īti verb conjugation endings, but should avoid ambiguity
+    // with īti (fem.) 'calamity'.
+    //
+    // dhārayāmīti -> dhārayāmi ti
+    // asmīti -> asmi ti
+    let text = text.replace("mīti", "mi ti");
+
     // dassanāyā’ti -> dassanāya ti
+    // -āti (no quote mark) is ambiguous with verb endings.
     let text = RE_AATI_BEFORE.replace_all(&text, "a ti").into_owned();
     let text = RE_AATI_AFTER.replace_all(&text, "a ti").into_owned();
 
@@ -760,19 +779,45 @@ pub fn preprocess_text_for_word_extraction(text: &str) -> String {
     let text = RE_UUTI_BEFORE.replace_all(&text, "u ti").into_owned();
     let text = RE_UUTI_AFTER.replace_all(&text, "u ti").into_owned();
 
+    // Ambiguity:
+    // brūti (pr) 'says; tells'
+    // pūti (adj.) 'rotten'
+    // sūti (fem.) 'birth; delivery'
+    // bhūti (fem.) 'beingness; becoming; coming-to-being'
+
+    // Resolve only a specific known case:
+    // bhikkhūti -> bhikkhu ti
+    let text = text.replace("bhikkhūti", "bhikkhu ti");
+
     // Pāli sandhi: gantuṁ + ti, the ṁ becomes n, and written as gantunti, gantun’ti or gantu’nti.
     // One or more closing apostrophes may be added before or after the n.
     //
     // We are reversing this as:
     // gantun’ti gantu’nti gantun’”ti gantu’”nti -> gantuṁ ti
-    //
-    // We are not trying to match the gantunti case because the -nti ending is
-    // ambiguous with the plural verb forms, e.g. gacchanti.
     let text = RE_NTI_BEFORE.replace_all(&text, "ṁ ti").into_owned();
     let text = RE_NTI_AFTER.replace_all(&text, "ṁ ti").into_owned();
+    // gantunti -> gantuṁ ti
+    // We can also handle the specific gantunti case, as there are no -unti verb conjugation endings.
+    let text = text.replace("unti", "uṁ ti");
+
+    // We are not trying to match other -nti endings such as -anti, -enti, etc.
+    // because it is ambiguous with plural verb forms, e.g. gacchanti, denti.
+
+    text.trim().to_string()
+}
+
+pub fn preprocess_text_for_word_extraction(text: &str) -> String {
+    let text = text.replace("\n", " ").replace("\t", " ");
+    let text = normalize_plain_text(&text);
+
+    lazy_static! {
+        static ref re_nonword: Regex = Regex::new(r"[^\w]+").unwrap();
+        static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
+    }
+
     let text = re_nonword.replace_all(&text, " ").into_owned();
     let text = re_digits.replace_all(&text, " ").into_owned();
-    let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
+    let text = RE_SPACES.replace_all(&text, " ").into_owned();
     text.trim().to_string()
 }
 
@@ -1272,7 +1317,7 @@ pub fn extract_words_with_context(text: &str) -> Vec<GlossWordContext> {
         return Vec::new();
     }
 
-    let original_normalized = original_text.replace("\n", " ");
+    let original_normalized = original_text.replace("\n", " ").replace("\t", " ");
     let preprocessed_text = preprocess_text_for_word_extraction(&original_normalized);
     let clean_words = extract_clean_words(&preprocessed_text);
 
@@ -1360,28 +1405,23 @@ pub fn clean_word(word: &str) -> String {
         static ref re_end_nonword: Regex = Regex::new(r"[^\w]+$").unwrap();
     }
 
-    let lowercased = word.to_lowercase();
-    let without_start = re_start_nonword.replace(&lowercased, "");
+    let without_start = re_start_nonword.replace(&word, "");
     let without_end = re_end_nonword.replace(&without_start, "");
     without_end.into_owned()
 }
 
 pub fn normalize_query_text(text: Option<String>) -> String {
-    let text = consistent_niggahita(text);
-    if text.is_empty() {
-        return text;
+    if let Some(text) = text {
+        if text.is_empty() {
+            return text;
+        }
+        if text.starts_with("uid:") {
+            return text;
+        }
+        compact_plain_text(&text)
+    } else {
+        return "".to_string()
     }
-    if text.starts_with("uid:") {
-        return text;
-    }
-
-    let text = clean_word(&text);
-    let text = RE_TI_NORMALIZE.replace_all(&text, "${1} ti").into_owned();
-    let text = text.replace("-", "");
-    let text = RE_PUNCT.replace_all(&text, " ").into_owned();
-    let text = RE_MANY_SPACES.replace_all(&text, " ").into_owned();
-
-    text.trim().to_string()
 }
 
 /// Convert Pāḷi text to ASCII equivalents.
@@ -1409,11 +1449,6 @@ pub fn pali_to_ascii(text: Option<&str>) -> String {
 
 /// Sanitize a word to UID form: remove punctuation, replace spaces with hyphens.
 pub fn word_uid_sanitize(word: &str) -> String {
-    lazy_static! {
-        // Not using the global RE_PUNCT which doesn't include parens.
-        static ref RE_PUNCT_PARENS: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
-        static ref RE_DASH: Regex = Regex::new(r"--+").unwrap();
-    }
     let mut w = RE_PUNCT_PARENS.replace_all(word, " ").to_string();
     w = w.replace("'", "")
          .replace("\"", "")
@@ -1436,25 +1471,25 @@ pub fn remove_punct(text: Option<&str>) -> String {
         None => return String::new(),
     };
 
-    lazy_static! {
-        static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
-    }
-
-    // Replace punctuation marks with space. Removing them can join lines or words.
-    s = RE_PUNCT.replace_all(&s, " ").to_string();
-
-    // Newline and tab to space
-    s = s.replace("\n", " ")
-         .replace("\t", " ");
-
-    // Separate 'ti from the word, avoid joining it when ' is removed
-    s = s.replace("'ti", " ti");
-
-    // Remove remaining quote marks.
+    // Remove single and double straight quote marks from compounds,
+    // i.e. when they occur in mid-word.
+    //
+    // Don't remove smart quotes this way, those could be punctuation 
+    // at the end of quoted speech, sentences, etc. and could result in joining words.
+    // Hence we replace those with space later.
     //
     // Quote marks can occur in compounds: manopubbaṅ'gamā dhammā
-    s = s.replace("'", "")
-         .replace("\"", "");
+    s = RE_MID_WORD_STRAIGHT_QUOTE.replace_all(&s, "$1$2").to_string();
+
+    // Remove hyphens, often used to separate compounds in contemporary text for readability,
+    // but the sutta sources don't use hyphen in compounds.
+    s = s.replace("-", "");
+
+    // Replace remaining punctuation and quote marks with space. Removing them can join lines or words.
+    s = RE_PUNCT_QUOTES.replace_all(&s, " ").to_string();
+
+    // Newline and tab to space
+    s = s.replace("\n", " ").replace("\t", " ");
 
     // Normalize double spaces to single
     s = RE_SPACES.replace_all(&s, " ").to_string();
@@ -1463,20 +1498,11 @@ pub fn remove_punct(text: Option<&str>) -> String {
 }
 
 pub fn compact_plain_text(text: &str) -> String {
-    // NOTE: Don't remove new lines here, useful for matching beginning of lines when setting snippets.
-    // TODO: But remove_punct() removes new lines, is that a problem?
-    lazy_static! {
-        static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
-    }
-    // Replace multiple spaces to one.
-    let mut s = RE_SPACES.replace_all(text, " ").to_string();
-    s = s.replace(['{', '}'], "");
-
-    // Make lowercase and remove punctuation to help matching query strings.
-    s = s.to_lowercase();
-    s = remove_punct(Some(&s));
-    s = consistent_niggahita(Some(s));
-    s.trim().to_string()
+    let text = text.replace(['{', '}'], "");
+    let text = clean_word(&text);
+    let text = normalize_plain_text(&text);
+    let text = remove_punct(Some(&text));
+    text.trim().to_string()
 }
 
 /// Compact rich HTML text: strip tags, normalize, then compact plain.
@@ -1539,7 +1565,6 @@ pub fn strip_html(text: &str) -> String {
         static ref RE_SCRIPT: Regex = Regex::new(r"<script(.*?)</script>").unwrap();
         static ref RE_COMMENT: Regex = Regex::new(r"<!--(.*?)-->").unwrap();
         static ref RE_TAG: Regex = Regex::new(r"</*\w[^>]*>").unwrap();
-        static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
     }
     // Decode HTML entities first (e.g., &amp; -> &)
     let mut s = decode_html_entities(text).to_string();
