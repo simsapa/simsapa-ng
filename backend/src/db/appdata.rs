@@ -82,14 +82,14 @@ impl AppdataDbHandle {
         use crate::db::appdata_schema::suttas::dsl::*;
 
         // Parse the UID: "mn1/pli/ms" -> ref_part="mn1", lang_source="pli/ms"
-        // or "mn1.att/pli/cst4" -> ref_part="mn1.att", lang_source="pli/cst4"
+        // or "mn1.att/pli/cst" -> ref_part="mn1.att", lang_source="pli/cst"
         let parts: Vec<&str> = sutta_uid.splitn(2, '/').collect();
         if parts.len() < 2 {
             return serde_json::json!({"found": false, "sutta_title": ""}).to_string();
         }
 
         let ref_part = parts[0]; // e.g. "mn1", "mn1.att", "mn1.tik"
-        let lang_source = parts[1]; // e.g. "pli/ms", "pli/cst4"
+        let lang_source = parts[1]; // e.g. "pli/ms", "pli/cst"
 
         // Get the current sutta's title for fallback search
         let current_title = self.get_sutta(sutta_uid)
@@ -123,10 +123,10 @@ impl AppdataDbHandle {
             }).to_string();
         }
 
-        // Try with pli/cst4 source (commentary is typically CST4)
-        let cst4_uid = format!("{}/pli/cst4", target_ref);
-        if cst4_uid != target_uid {
-            if let Some(sutta) = self.get_sutta(&cst4_uid) {
+        // Try with pli/cst source (commentary is typically CST)
+        let cst_uid = format!("{}/pli/cst", target_ref);
+        if cst_uid != target_uid {
+            if let Some(sutta) = self.get_sutta(&cst_uid) {
                 return serde_json::json!({
                     "found": true,
                     "item_uid": sutta.uid,
@@ -228,8 +228,8 @@ impl AppdataDbHandle {
     pub fn get_translations_data_json_for_sutta_uid(
         &self,
         sutta_uid: &str,
-        include_cst4_commentary: bool,
-        include_cst4_mula: bool,
+        include_cst_commentary: bool,
+        include_cst_mula: bool,
     ) -> String {
         // See sutta_search_window_state.py::_add_related_tabs()
 
@@ -259,10 +259,10 @@ impl AppdataDbHandle {
             .filter(uid.ne(sutta_uid));
 
         if is_commentary {
-            // The opened sutta is a commentary (e.g. mn1.att/pli/cst4).
+            // The opened sutta is a commentary (e.g. mn1.att/pli/cst).
             // Always include the mūla translations (base_ref/%).
-            // Include other commentary types based on include_cst4_commentary setting.
-            if include_cst4_commentary {
+            // Include other commentary types based on include_cst_commentary setting.
+            if include_cst_commentary {
                 // Include mūla, .att, and .tik variants
                 query = query.filter(
                     uid.like(format!("{}/%", base_ref))
@@ -276,7 +276,7 @@ impl AppdataDbHandle {
                        .or(uid.like(format!("{}/%", uid_ref)))
                 );
             }
-        } else if include_cst4_commentary {
+        } else if include_cst_commentary {
             // Match mūla and commentary, including .xml variants (e.g. .att.xml/, .tik.xml/)
             query = query.filter(
                 uid.like(format!("{}/%", uid_ref))
@@ -291,12 +291,12 @@ impl AppdataDbHandle {
             res.extend(a);
         }
 
-        // Filter out CST4 mūla records if not included
-        if !include_cst4_mula {
+        // Filter out CST mūla records if not included
+        if !include_cst_mula {
             res.retain(|s| {
-                // Keep the record unless it's a CST4 mūla (ends with /cst4 and is not commentary)
-                // Note: .mul.xml/pli/cst4 records are mūla and should be excluded
-                !(s.uid.ends_with("/cst4")
+                // Keep the record unless it's a CST mūla (ends with /cst and is not commentary)
+                // Note: .mul.xml/pli/cst records are mūla and should be excluded
+                !(s.uid.ends_with("/cst")
                     && !s.uid.contains(".att")
                     && !s.uid.contains(".tik"))
             });
@@ -1290,8 +1290,8 @@ pub fn sort_suttas(res: Vec<Sutta>) -> Vec<Sutta> {
         }
     }
 
-    // Sort pli_others so mūla (e.g. mn1/pli/cst4) comes before
-    // commentary (e.g. mn1.att/pli/cst4, mn1.tik/pli/cst4).
+    // Sort pli_others so mūla (e.g. mn1/pli/cst) comes before
+    // commentary (e.g. mn1.att/pli/cst, mn1.tik/pli/cst).
     // Commentary UIDs contain .att or .tik before the first '/'.
     pli_others.sort_by(|a, b| {
         let a_ref = a.uid.split('/').next().unwrap_or("");

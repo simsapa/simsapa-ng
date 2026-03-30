@@ -950,16 +950,16 @@ impl AppData {
         }
     }
 
-    pub fn get_include_cst4_commentary_in_translations(&self) -> bool {
+    pub fn get_include_cst_commentary_in_translations(&self) -> bool {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
-        app_settings.include_cst4_commentary_in_translations
+        app_settings.include_cst_commentary_in_translations
     }
 
-    pub fn set_include_cst4_commentary_in_translations(&self, enabled: bool) {
+    pub fn set_include_cst_commentary_in_translations(&self, enabled: bool) {
         use crate::db::appdata_schema::app_settings;
 
         let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.include_cst4_commentary_in_translations = enabled;
+        app_settings.include_cst_commentary_in_translations = enabled;
 
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
@@ -976,16 +976,16 @@ impl AppData {
         }
     }
 
-    pub fn get_include_cst4_mula_in_search_results(&self) -> bool {
+    pub fn get_include_cst_mula_in_search_results(&self) -> bool {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
-        app_settings.include_cst4_mula_in_search_results
+        app_settings.include_cst_mula_in_search_results
     }
 
-    pub fn set_include_cst4_mula_in_search_results(&self, enabled: bool) {
+    pub fn set_include_cst_mula_in_search_results(&self, enabled: bool) {
         use crate::db::appdata_schema::app_settings;
 
         let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.include_cst4_mula_in_search_results = enabled;
+        app_settings.include_cst_mula_in_search_results = enabled;
 
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
@@ -1002,16 +1002,16 @@ impl AppData {
         }
     }
 
-    pub fn get_include_cst4_commentary_in_search_results(&self) -> bool {
+    pub fn get_include_cst_commentary_in_search_results(&self) -> bool {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
-        app_settings.include_cst4_commentary_in_search_results
+        app_settings.include_cst_commentary_in_search_results
     }
 
-    pub fn set_include_cst4_commentary_in_search_results(&self, enabled: bool) {
+    pub fn set_include_cst_commentary_in_search_results(&self, enabled: bool) {
         use crate::db::appdata_schema::app_settings;
 
         let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.include_cst4_commentary_in_search_results = enabled;
+        app_settings.include_cst_commentary_in_search_results = enabled;
 
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
@@ -1028,16 +1028,16 @@ impl AppData {
         }
     }
 
-    pub fn get_include_cst4_mula_in_translations(&self) -> bool {
+    pub fn get_include_cst_mula_in_translations(&self) -> bool {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
-        app_settings.include_cst4_mula_in_translations
+        app_settings.include_cst_mula_in_translations
     }
 
-    pub fn set_include_cst4_mula_in_translations(&self, enabled: bool) {
+    pub fn set_include_cst_mula_in_translations(&self, enabled: bool) {
         use crate::db::appdata_schema::app_settings;
 
         let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.include_cst4_mula_in_translations = enabled;
+        app_settings.include_cst_mula_in_translations = enabled;
 
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");

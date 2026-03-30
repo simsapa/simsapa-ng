@@ -40,14 +40,14 @@
   - [x] 2.4 For each fragment row, build a `SuttaRecord`:
     - Skip if `sc_code` is `None` (log warning).
     - Determine commentary suffix from `cst_file`: `.att.xml` → `.att`, `.tik.xml` → `.tik`, else none.
-    - Build UID: `<sc_code>[.att|.tik]/pli/cst4`.
+    - Build UID: `<sc_code>[.att|.tik]/pli/cst`.
     - Title: `cst_sutta` field, normalized with `consistent_niggahita()`.
-    - Content HTML: Convert `content_xml` via `xml_to_html()`, wrap in `<div class="cst4">` with header.
+    - Content HTML: Convert `content_xml` via `xml_to_html()`, wrap in `<div class="cst">` with header.
     - Content plain: Derive via `sutta_html_to_plain_text()`.
     - Group path: Deserialize `group_levels` JSON into `Vec<GroupLevel>`, filter out `GroupType::Nikaya` and `GroupType::Sutta`, join titles with ` / `.
     - Nikaya: Use `nikaya` field from fragment row.
     - `sutta_ref`: Use `uid_to_ref()` on the sc_code.
-    - `source_uid`: `"cst4"`.
+    - `source_uid`: `"cst"`.
     - `group_index` / `order_index`: Use enumeration index.
   - [x] 2.5 Track used UIDs in a `HashSet` and skip duplicates (log warning).
 
@@ -58,14 +58,14 @@
     - Read content using `read_xml_file()`.
     - Detect nikaya using `detect_nikaya_structure()` on the XML content.
     - Convert full XML content to HTML using `xml_to_html()`.
-    - Build UID: `<xml_filename>/pli/cst4` (e.g., `s0401m.mul.xml/pli/cst4`).
+    - Build UID: `<xml_filename>/pli/cst` (e.g., `s0401m.mul.xml/pli/cst`).
     - Title: filename without `.xml` extension (e.g., `s0401m.mul`).
-    - Wrap HTML in `<div class="cst4">` with header using filename as title.
+    - Wrap HTML in `<div class="cst">` with header using filename as title.
     - Content plain: Derive via `sutta_html_to_plain_text()`.
     - Nikaya: Use `nikaya_structure.nikaya` from `detect_nikaya_structure()`.
     - `sutta_ref`: Use `uid_to_ref()` on the filename stem.
     - `group_path`, `group_index`, `order_index`: `None`.
-    - `source_uid`: `"cst4"`.
+    - `source_uid`: `"cst"`.
   - [x] 3.4 Skip duplicate UIDs (log warning), continue on errors per file (log error).
 
 - [x] 4.0 Implement shared database insertion logic

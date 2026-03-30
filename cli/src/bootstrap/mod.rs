@@ -184,7 +184,7 @@ RELEASE_CHANNEL=development
             }
         }
 
-        // Import suttas from tipitaka.org (CST4)
+        // Import suttas from tipitaka.org (CST)
         {
             let tipitaka_xml_fragments_db_path = bootstrap_assets_dir.join("tipitaka-xml-data/fragments.sqlite3");
             let tipitaka_xml_romn_path = bootstrap_assets_dir.join("tipitaka-org-vri-cst/tipitaka-xml/romn/");

@@ -469,13 +469,13 @@ fn appdata_stats(db_path: &Path, output_folder: Option<&Path>, write_stats: bool
             .unwrap_or(0);
         stats.insert("Suttas with source_uid 'ms'".to_string(), ms_count.to_string());
 
-        // Count suttas with source_uid 'cst4'
-        let query = "SELECT COUNT(*) as count FROM suttas WHERE source_uid = 'cst4'";
-        let cst4_count: i64 = diesel::sql_query(query)
+        // Count suttas with source_uid 'cst'
+        let query = "SELECT COUNT(*) as count FROM suttas WHERE source_uid = 'cst'";
+        let cst_count: i64 = diesel::sql_query(query)
             .get_result::<CountResult>(&mut conn)
             .map(|r| r.count)
             .unwrap_or(0);
-        stats.insert("Suttas with source_uid 'cst4'".to_string(), cst4_count.to_string());
+        stats.insert("Suttas with source_uid 'cst'".to_string(), cst_count.to_string());
 
         // Count rows per language
         let query = "SELECT language, COUNT(*) as count FROM suttas GROUP BY language ORDER BY count DESC";
@@ -1122,7 +1122,7 @@ enum Commands {
         #[arg(long)]
         lang: Option<String>,
 
-        /// Filter by source UID (e.g., "ms", "cst4")
+        /// Filter by source UID (e.g., "ms", "cst")
         #[arg(long)]
         source: Option<String>,
 

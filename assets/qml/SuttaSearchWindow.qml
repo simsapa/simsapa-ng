@@ -1628,7 +1628,7 @@ ${query_text}`;
             width: parent.width
 
             Label {
-                text: "The sutta couldn't be found by its uid. Mapping the SuttaCentral sutta references to the correct sections in the CST4 files is work-in-progress.\n\nSearch with the title to find the un-mapped CST xml file?"
+                text: "The sutta couldn't be found by its uid. Mapping the SuttaCentral sutta references to the correct sections in the CST files is work-in-progress.\n\nSearch with the title to find the un-mapped CST xml file?"
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }

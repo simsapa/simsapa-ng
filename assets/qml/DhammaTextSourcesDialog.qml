@@ -67,7 +67,7 @@ ApplicationWindow {
     <li>other languages as optional downloads via <code>Windows &gt; Sutta Languages...</code> menu</li>
 </ul>
 </li>
-    <!-- <li><a href="https://tipitaka.org/cst4">tipitaka.org</a> CST4 Chaṭṭha Saṅgāyana Tipiṭaka</li> -->
+    <li><a href="https://tipitaka.org/cst4">tipitaka.org</a> Chaṭṭha Saṅgāyana Tipiṭaka 4</li>
     <li><a href="https://www.dhammatalks.org/">dhammatalks.org</a> Translations by Aj Thanissaro</li>
     <li><a href="https://www.tipitaka.net/tipitaka/dhp/">tipitaka.net</a> The Dhammapada: Verses and Stories Translated by Daw Mya Tin, M.A.</li>
     <li><a href="https://forestsangha.org/teachings/books/a-dhammapada-for-contemplation?language=English">A Dhammapada for Contemplation</a> by Ajahn Munindo</li>

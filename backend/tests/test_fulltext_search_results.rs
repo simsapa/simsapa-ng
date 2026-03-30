@@ -133,22 +133,22 @@ fn make_sutta(id: i32, uid: &str, language: &str, title: &str) -> Sutta {
 /// Test that sort_suttas() produces the correct ordering:
 ///   pli/ms first, then pli others (mūla before commentary), then remaining by language.
 ///
-/// Uses realistic UIDs: standard CST4 records use sutta refs (mn1/pli/cst4, mn1.att/pli/cst4),
-/// while XML-sourced records use file-based codes (s0101m.mul.xml/pli/cst4, s0101a.att.xml/pli/cst4).
+/// Uses realistic UIDs: standard CST records use sutta refs (mn1/pli/cst, mn1.att/pli/cst),
+/// while XML-sourced records use file-based codes (s0101m.mul.xml/pli/cst, s0101a.att.xml/pli/cst).
 /// These two groups have different uid_ref prefixes so they wouldn't normally appear together
 /// in a translation tab query, but they can appear together in search results.
 #[test]
-fn test_sort_suttas_cst4_mula_before_commentary() {
+fn test_sort_suttas_cst_mula_before_commentary() {
     // Provide input in a deliberately wrong order
     let input = vec![
-        make_sutta(1, "mn1.att/pli/cst4",          "pli", "MN 1 Aṭṭhakathā"),
+        make_sutta(1, "mn1.att/pli/cst",          "pli", "MN 1 Aṭṭhakathā"),
         make_sutta(2, "mn1/en/sujato",              "en",  "MN 1 Sujato"),
-        make_sutta(3, "s0101t.tik.xml/pli/cst4",    "pli", "S0101 Ṭīkā XML"),
-        make_sutta(4, "mn1/pli/cst4",               "pli", "MN 1 CST4"),
-        make_sutta(5, "s0101a.att.xml/pli/cst4",    "pli", "S0101 Aṭṭhakathā XML"),
-        make_sutta(6, "mn1.tik/pli/cst4",           "pli", "MN 1 Ṭīkā"),
+        make_sutta(3, "s0101t.tik.xml/pli/cst",    "pli", "S0101 Ṭīkā XML"),
+        make_sutta(4, "mn1/pli/cst",               "pli", "MN 1 CST"),
+        make_sutta(5, "s0101a.att.xml/pli/cst",    "pli", "S0101 Aṭṭhakathā XML"),
+        make_sutta(6, "mn1.tik/pli/cst",           "pli", "MN 1 Ṭīkā"),
         make_sutta(7, "mn1/pli/ms",                 "pli", "MN 1 MS"),
-        make_sutta(8, "s0101m.mul.xml/pli/cst4",    "pli", "S0101 Mūla XML"),
+        make_sutta(8, "s0101m.mul.xml/pli/cst",    "pli", "S0101 Mūla XML"),
         make_sutta(9, "mn1/en/bodhi",               "en",  "MN 1 Bodhi"),
     ];
 
@@ -160,13 +160,13 @@ fn test_sort_suttas_cst4_mula_before_commentary() {
         vec![
             "mn1/pli/ms",
             // Mūla records (no .att or .tik in uid ref part), sorted alphabetically
-            "mn1/pli/cst4",
-            "s0101m.mul.xml/pli/cst4",
+            "mn1/pli/cst",
+            "s0101m.mul.xml/pli/cst",
             // Commentary records (.att or .tik in uid ref part), sorted alphabetically
-            "mn1.att/pli/cst4",
-            "mn1.tik/pli/cst4",
-            "s0101a.att.xml/pli/cst4",
-            "s0101t.tik.xml/pli/cst4",
+            "mn1.att/pli/cst",
+            "mn1.tik/pli/cst",
+            "s0101a.att.xml/pli/cst",
+            "s0101t.tik.xml/pli/cst",
             // Non-pli, sorted by language then uid
             "mn1/en/bodhi",
             "mn1/en/sujato",

@@ -626,7 +626,7 @@ impl<'a> SearchQueryTask<'a> {
 
         // --- Source Filtering ---
         if let Some(ref source_val) = self.source {
-            let pattern = format!("%/{}", source_val); // SQL LIKE pattern, e.g. ".../cst4"
+            let pattern = format!("%/{}", source_val); // SQL LIKE pattern, e.g. ".../cst"
             if self.source_include {
                 query = query.filter(uid.like(pattern.clone()));
                 count_query = count_query.filter(uid.like(pattern.clone()));
@@ -636,28 +636,28 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
-        // --- CST4 Mūla Filtering ---
-        if !app_data.get_include_cst4_mula_in_search_results() {
-            // Exclude CST4 mūla records: uid ends with /cst4 but is not commentary (.att, .tik)
-            // Note: .mul.xml/pli/cst4 records are mūla and should be excluded
+        // --- CST Mūla Filtering ---
+        if !app_data.get_include_cst_mula_in_search_results() {
+            // Exclude CST mūla records: uid ends with /cst but is not commentary (.att, .tik)
+            // Note: .mul.xml/pli/cst records are mūla and should be excluded
             query = query.filter(
                 diesel::dsl::not(
-                    uid.like("%/cst4")
-                        .and(uid.not_like("%.att%/cst4"))
-                        .and(uid.not_like("%.tik%/cst4"))
+                    uid.like("%/cst")
+                        .and(uid.not_like("%.att%/cst"))
+                        .and(uid.not_like("%.tik%/cst"))
                 )
             );
             count_query = count_query.filter(
                 diesel::dsl::not(
-                    uid.like("%/cst4")
-                        .and(uid.not_like("%.att%/cst4"))
-                        .and(uid.not_like("%.tik%/cst4"))
+                    uid.like("%/cst")
+                        .and(uid.not_like("%.att%/cst"))
+                        .and(uid.not_like("%.tik%/cst"))
                 )
             );
         }
 
         // --- Commentary Filtering ---
-        if !app_data.get_include_cst4_commentary_in_search_results() {
+        if !app_data.get_include_cst_commentary_in_search_results() {
             // Exclude commentary records: uid contains .att or .tik before the first /
             // Matches both .att/ and .att.xml/ patterns
             query = query.filter(
@@ -739,16 +739,16 @@ impl<'a> SearchQueryTask<'a> {
         // Determine if we need language filtering
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
 
-        // Build dynamic WHERE clauses for CST4/commentary filtering
+        // Build dynamic WHERE clauses for CST/commentary filtering
         let mut extra_where = String::new();
 
-        if !app_data.get_include_cst4_mula_in_search_results() {
+        if !app_data.get_include_cst_mula_in_search_results() {
             extra_where.push_str(
-                " AND NOT (s.uid LIKE '%/cst4' AND s.uid NOT LIKE '%.att%/cst4' AND s.uid NOT LIKE '%.tik%/cst4')"
+                " AND NOT (s.uid LIKE '%/cst' AND s.uid NOT LIKE '%.att%/cst' AND s.uid NOT LIKE '%.tik%/cst')"
             );
         }
 
-        if !app_data.get_include_cst4_commentary_in_search_results() {
+        if !app_data.get_include_cst_commentary_in_search_results() {
             extra_where.push_str(
                 " AND NOT (s.uid LIKE '%.att%/%' OR s.uid LIKE '%.tik%/%')"
             );
@@ -1305,26 +1305,26 @@ impl<'a> SearchQueryTask<'a> {
             count_query = count_query.filter(language.eq(&self.lang));
         }
 
-        // --- CST4 Mūla Filtering ---
-        if !app_data.get_include_cst4_mula_in_search_results() {
+        // --- CST Mūla Filtering ---
+        if !app_data.get_include_cst_mula_in_search_results() {
             query = query.filter(
                 diesel::dsl::not(
-                    uid.like("%/cst4")
-                        .and(uid.not_like("%.att%/cst4"))
-                        .and(uid.not_like("%.tik%/cst4"))
+                    uid.like("%/cst")
+                        .and(uid.not_like("%.att%/cst"))
+                        .and(uid.not_like("%.tik%/cst"))
                 )
             );
             count_query = count_query.filter(
                 diesel::dsl::not(
-                    uid.like("%/cst4")
-                        .and(uid.not_like("%.att%/cst4"))
-                        .and(uid.not_like("%.tik%/cst4"))
+                    uid.like("%/cst")
+                        .and(uid.not_like("%.att%/cst"))
+                        .and(uid.not_like("%.tik%/cst"))
                 )
             );
         }
 
         // --- Commentary Filtering ---
-        if !app_data.get_include_cst4_commentary_in_search_results() {
+        if !app_data.get_include_cst_commentary_in_search_results() {
             query = query.filter(
                 diesel::dsl::not(
                     uid.like("%.att%/%")
@@ -1803,8 +1803,8 @@ impl<'a> SearchQueryTask<'a> {
         };
 
         let app_data = get_app_data();
-        let include_cst4_mula = app_data.get_include_cst4_mula_in_search_results();
-        let include_cst4_commentary = app_data.get_include_cst4_commentary_in_search_results();
+        let include_cst_mula = app_data.get_include_cst_mula_in_search_results();
+        let include_cst_commentary = app_data.get_include_cst_commentary_in_search_results();
 
         let query_text = self.query_text.clone();
         let page_len = self.page_len;
@@ -1822,10 +1822,10 @@ impl<'a> SearchQueryTask<'a> {
                 results.retain(|r| {
                     let u = &r.uid;
 
-                    // CST4 mūla filtering: exclude /cst4 records that are not commentary (.att, .tik)
-                    // Note: .mul.xml/pli/cst4 records are mūla and should be excluded
-                    if !include_cst4_mula
-                        && u.ends_with("/cst4")
+                    // CST mūla filtering: exclude /cst records that are not commentary (.att, .tik)
+                    // Note: .mul.xml/pli/cst records are mūla and should be excluded
+                    if !include_cst_mula
+                        && u.ends_with("/cst")
                         && !u.contains(".att")
                         && !u.contains(".tik")
                     {
@@ -1833,7 +1833,7 @@ impl<'a> SearchQueryTask<'a> {
                     }
 
                     // Commentary filtering: matches both .att/ and .att.xml/ patterns
-                    if !include_cst4_commentary {
+                    if !include_cst_commentary {
                         if u.contains(".att") || u.contains(".tik") {
                             // Check it's a commentary uid (has .att or .tik before a /)
                             let before_first_slash = u.split('/').next().unwrap_or("");

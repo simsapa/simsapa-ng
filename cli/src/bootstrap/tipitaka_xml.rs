@@ -141,7 +141,7 @@ impl TipitakaXmlImporter {
                     sc_code.clone()
                 };
 
-                let uid = format!("{}/pli/cst4", uid_code);
+                let uid = format!("{}/pli/cst", uid_code);
 
                 // Skip duplicate UIDs
                 if used_uids.contains(&uid) {
@@ -186,7 +186,7 @@ impl TipitakaXmlImporter {
 
                 // Wrap in div with header
                 let full_html = consistent_niggahita(Some(format!(
-                    "<div class=\"cst4\">\n<header>\n<h3>{} {}</h3>\n<h1>{}</h1>\n</header>\n{}</div>",
+                    "<div class=\"cst\">\n<header>\n<h3>{} {}</h3>\n<h1>{}</h1>\n</header>\n{}</div>",
                     nikaya_name,
                     sutta_number,
                     html_escape::encode_text(&normalized_title),
@@ -209,7 +209,7 @@ impl TipitakaXmlImporter {
                     title_pali: Some(normalized_title),
                     content_plain: Some(content_plain),
                     content_html: Some(full_html),
-                    source_uid: Some("cst4".to_string()),
+                    source_uid: Some("cst".to_string()),
                 });
             }
         }
@@ -278,7 +278,7 @@ impl TipitakaXmlImporter {
             };
 
             let title = filename.trim_end_matches(".xml").to_string();
-            let uid = format!("{}/pli/cst4", filename);
+            let uid = format!("{}/pli/cst", filename);
 
             if used_uids.contains(&uid) {
                 logger::warn(&format!("Duplicate UID: {}, skipping", uid));
@@ -287,7 +287,7 @@ impl TipitakaXmlImporter {
             used_uids.insert(uid.clone());
 
             let full_html = format!(
-                "<div class=\"cst4\">\n<header>\n<h1>{}</h1>\n</header>\n{}</div>",
+                "<div class=\"cst\">\n<header>\n<h1>{}</h1>\n</header>\n{}</div>",
                 html_escape::encode_text(&title),
                 content_html
             );
@@ -308,7 +308,7 @@ impl TipitakaXmlImporter {
                 title_pali: Some(title),
                 content_plain: Some(content_plain),
                 content_html: Some(full_html),
-                source_uid: Some("cst4".to_string()),
+                source_uid: Some("cst".to_string()),
             });
         }
 

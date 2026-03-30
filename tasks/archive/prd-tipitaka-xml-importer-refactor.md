@@ -18,7 +18,7 @@ The `TipitakaXmlImporter` in `cli/src/bootstrap/tipitaka_xml.rs` needs to be rew
 ## User Stories
 
 - As a developer running bootstrap, I want the tipitaka XML import to succeed without compilation errors against the updated `tipitaka-xml-parser`.
-- As a user, I want all Pali texts from the CST4 tipitaka XML to be available in the app — checked files with fine-grained sutta records, and unchecked files as whole-file records.
+- As a user, I want all Pali texts from the CST tipitaka XML to be available in the app — checked files with fine-grained sutta records, and unchecked files as whole-file records.
 
 ## Functional Requirements
 
@@ -46,15 +46,15 @@ Main entry point. Performs two phases in order:
 - For each whitelisted filename, query all rows from `xml_fragments` where `cst_file = <filename>` and `frag_type = "Sutta"`.
 - For each fragment row, build a `SuttaRecord`:
   - **UID**: Use the `sc_code` field from the fragment row. Determine commentary type from the `cst_file` name:
-    - `.att.xml` → `<sc_code>.att/pli/cst4`
-    - `.tik.xml` → `<sc_code>.tik/pli/cst4`
-    - `.mul.xml` → `<sc_code>/pli/cst4`
+    - `.att.xml` → `<sc_code>.att/pli/cst`
+    - `.tik.xml` → `<sc_code>.tik/pli/cst`
+    - `.mul.xml` → `<sc_code>/pli/cst`
   - **Title**: Use `cst_sutta` field from the fragment row (apply `consistent_niggahita` normalization).
-  - **Content HTML**: Convert `content_xml` to HTML using `tipitaka_xml_parser::sutta_builder::xml_to_html()`. Wrap in the same `<div class="cst4">` header structure as current code.
+  - **Content HTML**: Convert `content_xml` to HTML using `tipitaka_xml_parser::sutta_builder::xml_to_html()`. Wrap in the same `<div class="cst">` header structure as current code.
   - **Content plain**: Derive from HTML using `sutta_html_to_plain_text()`.
   - **Group path**: Deserialize the `group_levels` JSON field. Build path from levels excluding Nikaya and Sutta types, joined by ` / `.
   - **Nikaya**: Use the `nikaya` field from the fragment row.
-  - **source_uid**: `"cst4"`
+  - **source_uid**: `"cst"`
 - Skip fragments that have no `sc_code` (log a warning).
 - Skip duplicate UIDs (log a warning).
 - Insert all built sutta records into the appdata `suttas` table via Diesel.
@@ -66,12 +66,12 @@ Main entry point. Performs two phases in order:
 - For each remaining XML file:
   - Read the file content using `tipitaka_xml_parser::encoding::read_xml_file()`.
   - Convert full XML content to HTML using `xml_to_html()`.
-  - **UID**: `<xml_filename>/pli/cst4` (e.g., `s0401m.mul.xml/pli/cst4`)
+  - **UID**: `<xml_filename>/pli/cst` (e.g., `s0401m.mul.xml/pli/cst`)
   - **Title**: Use the filename (without `.xml` extension, e.g., `s0401m.mul`).
-  - **Content HTML**: Wrap converted HTML in `<div class="cst4">` with a header using the filename as title.
+  - **Content HTML**: Wrap converted HTML in `<div class="cst">` with a header using the filename as title.
   - **Content plain**: Derive from HTML.
   - **Nikaya**: Detect from filename prefix if possible (e.g., `s01` = digha, `s02` = majjhima), or use `"unknown"`.
-  - **source_uid**: `"cst4"`
+  - **source_uid**: `"cst"`
 - Insert into appdata `suttas` table.
 
 ### 3. `SuttaRecord` struct

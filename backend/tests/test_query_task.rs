@@ -112,15 +112,15 @@ fn test_sutta_search_contains_match_with_punctuation() {
                    "pli-tv-kd7/pli/ms");
     queries.insert("yaṁ jaññā— ‘sakkomi ajjeva gantun’ti.",
                    "pli-tv-kd4/pli/ms");
-    // NOTE: cst4 is not currently included in the bootstrap
+    // NOTE: cst is not currently included in the bootstrap
     // queries.insert("pañca kāladānānī’’ti.",
-    //                "an5.36/pli/cst4");
+    //                "an5.36/pli/cst");
     // queries.insert("saraṇaṁ…pe॰…anusāsanī’’ti?",
-    //                "sn43.14/pli/cst4");
+    //                "sn43.14/pli/cst");
     // queries.insert("katamañca, bhikkhave, nibbānaṁ…pe॰… abyāpajjhañca [abyāpajjhañca (sī॰ syā॰ kaṁ॰ pī॰)] vo, bhikkhave, desessāmi abyāpajjhagāmiñca maggaṁ.",
-    //                "sn43.14/pli/cst4");
+    //                "sn43.14/pli/cst");
     // queries.insert("pāṇina’’nti.. chaṭṭhaṁ.",
-    //                "an5.36/pli/cst4");
+    //                "an5.36/pli/cst");
 
     for (query_text, first_result_uid) in queries.into_iter() {
         let mut query_task = SearchQueryTask::new(
@@ -152,8 +152,8 @@ fn test_sutta_search_contains_match_exact_results() {
     let mut queries: HashMap<&str, Vec<&str>> = HashMap::new();
     // Note: Only one sutta contains this text in the current database
     queries.insert("Anāsavañca vo, bhikkhave, desessāmi",
-                   // FIXME: cst4 is not currently included in the db bootstrap
-                   // vec!["sn43.14-43/pli/ms", "sn43.14/pli/cst4"]
+                   // FIXME: cst is not currently included in the db bootstrap
+                   // vec!["sn43.14-43/pli/ms", "sn43.14/pli/cst"]
                    vec!["sn43.14-43/pli/ms"]
     );
 

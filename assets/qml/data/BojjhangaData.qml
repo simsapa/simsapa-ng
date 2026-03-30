@@ -24,10 +24,10 @@ ListModel {
         score: 7.354579448699951
     }
     ListElement {
-        uid: "sn46.4/pli/cst4"
+        uid: "sn46.4/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vatthasuttaṁ"
         sutta_ref: "SN 46.4"
         nikaya: "['sn']"
@@ -57,10 +57,10 @@ ListModel {
         score: 7.2251877784729
     }
     ListElement {
-        uid: "sn46.49/pli/cst4"
+        uid: "sn46.49/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "ajjhattikaṅgasuttaṁ"
         sutta_ref: "SN 46.49"
         nikaya: "['sn']"
@@ -101,10 +101,10 @@ ListModel {
         score: 7.219498634338379
     }
     ListElement {
-        uid: "sn46.48/pli/cst4"
+        uid: "sn46.48/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "ādiccasuttaṁ"
         sutta_ref: "SN 46.48"
         nikaya: "['sn']"
@@ -112,10 +112,10 @@ ListModel {
         score: 7.216657638549805
     }
     ListElement {
-        uid: "sn46.12/pli/cst4"
+        uid: "sn46.12/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paṭhamasūriyūpamasuttaṁ"
         sutta_ref: "SN 46.12"
         nikaya: "['sn']"
@@ -123,10 +123,10 @@ ListModel {
         score: 7.216657638549805
     }
     ListElement {
-        uid: "sn46.13/pli/cst4"
+        uid: "sn46.13/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyasūriyūpamasuttaṁ"
         sutta_ref: "SN 46.13"
         nikaya: "['sn']"
@@ -145,10 +145,10 @@ ListModel {
         score: 7.213818550109863
     }
     ListElement {
-        uid: "sn46.50/pli/cst4"
+        uid: "sn46.50/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bāhiraṅgasuttaṁ"
         sutta_ref: "SN 46.50"
         nikaya: "['sn']"
@@ -167,10 +167,10 @@ ListModel {
         score: 7.1651482582092285
     }
     ListElement {
-        uid: "sn46.32/pli/cst4"
+        uid: "sn46.32/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyakusalasuttaṁ"
         sutta_ref: "SN 46.32"
         nikaya: "['sn']"
@@ -178,10 +178,10 @@ ListModel {
         score: 7.1651482582092285
     }
     ListElement {
-        uid: "sn46.31/pli/cst4"
+        uid: "sn46.31/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paṭhamakusalasuttaṁ"
         sutta_ref: "SN 46.31"
         nikaya: "['sn']"
@@ -222,10 +222,10 @@ ListModel {
         score: 7.158621311187744
     }
     ListElement {
-        uid: "sn46.7/pli/cst4"
+        uid: "sn46.7/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "kūṭāgārasuttaṁ"
         sutta_ref: "SN 46.7"
         nikaya: "['sn']"
@@ -244,10 +244,10 @@ ListModel {
         score: 7.152106761932373
     }
     ListElement {
-        uid: "sn46.11/pli/cst4"
+        uid: "sn46.11/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "pāṇasuttaṁ"
         sutta_ref: "SN 46.11"
         nikaya: "['sn']"
@@ -266,10 +266,10 @@ ListModel {
         score: 7.145604133605957
     }
     ListElement {
-        uid: "sn46.82/pli/cst4"
+        uid: "sn46.82/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "gaṅgānadīādisuttaṁ"
         sutta_ref: "SN 46.82"
         nikaya: "['sn']"
@@ -288,10 +288,10 @@ ListModel {
         score: 7.145604133605957
     }
     ListElement {
-        uid: "sn46.5/pli/cst4"
+        uid: "sn46.5/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bhikkhusuttaṁ"
         sutta_ref: "SN 46.5"
         nikaya: "['sn']"
@@ -310,10 +310,10 @@ ListModel {
         score: 7.1177802085876465
     }
     ListElement {
-        uid: "sn46.1/pli/cst4"
+        uid: "sn46.1/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "himavantasuttaṁ"
         sutta_ref: "SN 46.1"
         nikaya: "['sn']"
@@ -343,10 +343,10 @@ ListModel {
         score: 7.0636515617370605
     }
     ListElement {
-        uid: "sn46.41/pli/cst4"
+        uid: "sn46.41/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vidhāsuttaṁ"
         sutta_ref: "SN 46.41"
         nikaya: "['sn']"
@@ -365,10 +365,10 @@ ListModel {
         score: 7.049461841583252
     }
     ListElement {
-        uid: "sn46.16/pli/cst4"
+        uid: "sn46.16/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "tatiyagilānasuttaṁ"
         sutta_ref: "SN 46.16"
         nikaya: "['sn']"
@@ -387,10 +387,10 @@ ListModel {
         score: 7.040869235992432
     }
     ListElement {
-        uid: "sn46.38/pli/cst4"
+        uid: "sn46.38/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "āvaraṇanīvaraṇasuttaṁ"
         sutta_ref: "SN 46.38"
         nikaya: "['sn']"
@@ -420,10 +420,10 @@ ListModel {
         score: 6.976550102233887
     }
     ListElement {
-        uid: "sn46.18/pli/cst4"
+        uid: "sn46.18/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "viraddhasuttaṁ"
         sutta_ref: "SN 46.18"
         nikaya: "['sn']"
@@ -431,10 +431,10 @@ ListModel {
         score: 6.976550102233887
     }
     ListElement {
-        uid: "sn46.21/pli/cst4"
+        uid: "sn46.21/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bodhāyasuttaṁ"
         sutta_ref: "SN 46.21"
         nikaya: "['sn']"
@@ -453,10 +453,10 @@ ListModel {
         score: 6.927670001983643
     }
     ListElement {
-        uid: "sn46.6/pli/cst4"
+        uid: "sn46.6/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "kuṇḍaliyasuttaṁ"
         sutta_ref: "SN 46.6"
         nikaya: "['sn']"
@@ -497,10 +497,10 @@ ListModel {
         score: 6.907566547393799
     }
     ListElement {
-        uid: "an10.61/pli/cst4"
+        uid: "an10.61/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "avijjāsuttaṁ"
         sutta_ref: "AN 10.61"
         nikaya: "['an']"
@@ -519,10 +519,10 @@ ListModel {
         score: 6.880354404449463
     }
     ListElement {
-        uid: "sn46.14/pli/cst4"
+        uid: "sn46.14/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paṭhamagilānasuttaṁ"
         sutta_ref: "SN 46.14"
         nikaya: "['sn']"
@@ -530,10 +530,10 @@ ListModel {
         score: 6.880354404449463
     }
     ListElement {
-        uid: "sn46.15/pli/cst4"
+        uid: "sn46.15/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyagilānasuttaṁ"
         sutta_ref: "SN 46.15"
         nikaya: "['sn']"
@@ -574,21 +574,21 @@ ListModel {
         score: 6.8464813232421875
     }
     ListElement {
-        uid: "s0517m.mul/pli/cst4"
+        uid: "s0517m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0517m.mul"
-        sutta_ref: "s0517m.mul/pli/cst4"
+        sutta_ref: "s0517m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "bujjhantīti – <span class='match'>bojjhaṅgā</span> anubujjhantīti – <span class='match'>bojjhaṅgā</span> paṭibujjhantīti – <span class='match'>bojjhaṅgā</span> sambujjhantīti – <span class='match'>bojjhaṅgā</span> bujjhanaṭṭhena <span class='match'>bojjhaṅgā</span> anubujjhanaṭṭhena <span class='match'>bojjhaṅgā</span>"
         score: 6.846087455749512
     }
     ListElement {
-        uid: "sn46.22/pli/cst4"
+        uid: "sn46.22/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bojjhaṅgadesanāsuttaṁ"
         sutta_ref: "SN 46.22"
         nikaya: "['sn']"
@@ -596,10 +596,10 @@ ListModel {
         score: 6.844991207122803
     }
     ListElement {
-        uid: "sn46.56/pli/cst4"
+        uid: "sn46.56/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abhayasuttaṁ"
         sutta_ref: "SN 46.56"
         nikaya: "['sn']"
@@ -629,10 +629,10 @@ ListModel {
         score: 6.8245439529418945
     }
     ListElement {
-        uid: "sn46.52/pli/cst4"
+        uid: "sn46.52/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "pariyāyasuttaṁ"
         sutta_ref: "SN 46.52"
         nikaya: "['sn']"
@@ -651,10 +651,10 @@ ListModel {
         score: 6.802472114562988
     }
     ListElement {
-        uid: "sn46.27/pli/cst4"
+        uid: "sn46.27/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "taṇhānirodhasuttaṁ"
         sutta_ref: "SN 46.27"
         nikaya: "['sn']"
@@ -684,10 +684,10 @@ ListModel {
         score: 6.771271228790283
     }
     ListElement {
-        uid: "an10.102/pli/cst4"
+        uid: "an10.102/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bojjhaṅgasuttaṁ"
         sutta_ref: "AN 10.102"
         nikaya: "['an']"
@@ -706,10 +706,10 @@ ListModel {
         score: 6.742227077484131
     }
     ListElement {
-        uid: "sn46.29/pli/cst4"
+        uid: "sn46.29/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "ekadhammasuttaṁ"
         sutta_ref: "SN 46.29"
         nikaya: "['sn']"
@@ -717,10 +717,10 @@ ListModel {
         score: 6.742227077484131
     }
     ListElement {
-        uid: "an10.62/pli/cst4"
+        uid: "an10.62/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "taṇhāsuttaṁ"
         sutta_ref: "AN 10.62"
         nikaya: "['an']"
@@ -750,10 +750,10 @@ ListModel {
         score: 6.719170093536377
     }
     ListElement {
-        uid: "sn46.28/pli/cst4"
+        uid: "sn46.28/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "nibbedhabhāgiyasuttaṁ"
         sutta_ref: "SN 46.28"
         nikaya: "['sn']"
@@ -761,10 +761,10 @@ ListModel {
         score: 6.719170093536377
     }
     ListElement {
-        uid: "sn46.8/pli/cst4"
+        uid: "sn46.8/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "upavānasuttaṁ"
         sutta_ref: "SN 46.8"
         nikaya: "['sn']"
@@ -794,10 +794,10 @@ ListModel {
         score: 6.684877872467041
     }
     ListElement {
-        uid: "sn54.14/pli/cst4"
+        uid: "sn54.14/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyaānandasuttaṁ"
         sutta_ref: "SN 54.14"
         nikaya: "['sn']"
@@ -816,10 +816,10 @@ ListModel {
         score: 6.673525333404541
     }
     ListElement {
-        uid: "sn54.15/pli/cst4"
+        uid: "sn54.15/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paṭhamabhikkhusuttaṁ"
         sutta_ref: "SN 54.15"
         nikaya: "['sn']"
@@ -849,10 +849,10 @@ ListModel {
         score: 6.65093469619751
     }
     ListElement {
-        uid: "sn45.89/pli/cst4"
+        uid: "sn45.89/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "ākāsasuttaṁ"
         sutta_ref: "SN 45.89"
         nikaya: "['sn']"
@@ -893,10 +893,10 @@ ListModel {
         score: 6.621809005737305
     }
     ListElement {
-        uid: "sn54.13/pli/cst4"
+        uid: "sn54.13/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paṭhamaānandasuttaṁ"
         sutta_ref: "SN 54.13"
         nikaya: "['sn']"
@@ -904,10 +904,10 @@ ListModel {
         score: 6.621809005737305
     }
     ListElement {
-        uid: "sn54.16/pli/cst4"
+        uid: "sn54.16/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyabhikkhusuttaṁ"
         sutta_ref: "SN 54.16"
         nikaya: "['sn']"
@@ -959,10 +959,10 @@ ListModel {
         score: 6.536981582641602
     }
     ListElement {
-        uid: "sn46.53/pli/cst4"
+        uid: "sn46.53/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "aggisuttaṁ"
         sutta_ref: "SN 46.53"
         nikaya: "['sn']"
@@ -992,10 +992,10 @@ ListModel {
         score: 6.522313117980957
     }
     ListElement {
-        uid: "sn46.37/pli/cst4"
+        uid: "sn46.37/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "buddhisuttaṁ"
         sutta_ref: "SN 46.37"
         nikaya: "['sn']"
@@ -1003,10 +1003,10 @@ ListModel {
         score: 6.520284175872803
     }
     ListElement {
-        uid: "sn46.19/pli/cst4"
+        uid: "sn46.19/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "ariyasuttaṁ"
         sutta_ref: "SN 46.19"
         nikaya: "['sn']"
@@ -1036,10 +1036,10 @@ ListModel {
         score: 6.506114959716797
     }
     ListElement {
-        uid: "sn46.9/pli/cst4"
+        uid: "sn46.9/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paṭhama:uppannasuttaṁ"
         sutta_ref: "SN 46.9"
         nikaya: "['sn']"
@@ -1069,10 +1069,10 @@ ListModel {
         score: 6.4940185546875
     }
     ListElement {
-        uid: "sn46.46/pli/cst4"
+        uid: "sn46.46/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "daliddasuttaṁ"
         sutta_ref: "SN 46.46"
         nikaya: "['sn']"
@@ -1080,10 +1080,10 @@ ListModel {
         score: 6.4940185546875
     }
     ListElement {
-        uid: "sn46.47/pli/cst4"
+        uid: "sn46.47/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "adaliddasuttaṁ"
         sutta_ref: "SN 46.47"
         nikaya: "['sn']"
@@ -1113,10 +1113,10 @@ ListModel {
         score: 6.485979080200195
     }
     ListElement {
-        uid: "sn46.10/pli/cst4"
+        uid: "sn46.10/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiya:uppannasuttaṁ"
         sutta_ref: "SN 46.10"
         nikaya: "['sn']"
@@ -1124,10 +1124,10 @@ ListModel {
         score: 6.481967926025391
     }
     ListElement {
-        uid: "sn46.45/pli/cst4"
+        uid: "sn46.45/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "paññavantasuttaṁ"
         sutta_ref: "SN 46.45"
         nikaya: "['sn']"
@@ -1135,10 +1135,10 @@ ListModel {
         score: 6.481967926025391
     }
     ListElement {
-        uid: "sn46.20/pli/cst4"
+        uid: "sn46.20/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "nibbidāsuttaṁ"
         sutta_ref: "SN 46.20"
         nikaya: "['sn']"
@@ -1168,10 +1168,10 @@ ListModel {
         score: 6.473958492279053
     }
     ListElement {
-        uid: "sn46.34/pli/cst4"
+        uid: "sn46.34/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "anupakkilesasuttaṁ"
         sutta_ref: "SN 46.34"
         nikaya: "['sn']"
@@ -1179,10 +1179,10 @@ ListModel {
         score: 6.473958492279053
     }
     ListElement {
-        uid: "sn46.44/pli/cst4"
+        uid: "sn46.44/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "duppaññasuttaṁ"
         sutta_ref: "SN 46.44"
         nikaya: "['sn']"
@@ -1223,10 +1223,10 @@ ListModel {
         score: 6.418442726135254
     }
     ListElement {
-        uid: "sn46.17/pli/cst4"
+        uid: "sn46.17/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "pāraṅgamasuttaṁ"
         sutta_ref: "SN 46.17"
         nikaya: "['sn']"
@@ -1245,10 +1245,10 @@ ListModel {
         score: 6.418442726135254
     }
     ListElement {
-        uid: "sn46.87/pli/cst4"
+        uid: "sn46.87/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "uddhambhāgiyasuttaṁ"
         sutta_ref: "SN 46.87"
         nikaya: "['sn']"
@@ -1256,10 +1256,10 @@ ListModel {
         score: 6.418442726135254
     }
     ListElement {
-        uid: "sn46.40/pli/cst4"
+        uid: "sn46.40/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "nīvaraṇasuttaṁ"
         sutta_ref: "SN 46.40"
         nikaya: "['sn']"
@@ -1311,10 +1311,10 @@ ListModel {
         score: 6.329545021057129
     }
     ListElement {
-        uid: "sn46.26/pli/cst4"
+        uid: "sn46.26/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "taṇhakkhayasuttaṁ"
         sutta_ref: "SN 46.26"
         nikaya: "['sn']"
@@ -1333,10 +1333,10 @@ ListModel {
         score: 6.289024353027344
     }
     ListElement {
-        uid: "an7.71/pli/cst4"
+        uid: "an7.71/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bhāvanāsuttaṁ"
         sutta_ref: "AN 7.71"
         nikaya: "['an']"
@@ -1355,10 +1355,10 @@ ListModel {
         score: 6.259989261627197
     }
     ListElement {
-        uid: "sn47.12/pli/cst4"
+        uid: "sn47.12/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "nālandasuttaṁ"
         sutta_ref: "SN 47.12"
         nikaya: "['sn']"
@@ -1377,10 +1377,10 @@ ListModel {
         score: 6.23512601852417
     }
     ListElement {
-        uid: "sn46.39/pli/cst4"
+        uid: "sn46.39/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "rukkhasuttaṁ"
         sutta_ref: "SN 46.39"
         nikaya: "['sn']"
@@ -1410,10 +1410,10 @@ ListModel {
         score: 6.126277923583984
     }
     ListElement {
-        uid: "mn118/pli/cst4"
+        uid: "mn118/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "ānāpānassatisuttaṁ"
         sutta_ref: "MN 118"
         nikaya: "['mn']"
@@ -1432,10 +1432,10 @@ ListModel {
         score: 6.061988830566406
     }
     ListElement {
-        uid: "mn151/pli/cst4"
+        uid: "mn151/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "piṇḍapātapārisuddhisuttaṁ"
         sutta_ref: "MN 151"
         nikaya: "['mn']"
@@ -1498,10 +1498,10 @@ ListModel {
         score: 5.761325359344482
     }
     ListElement {
-        uid: "sn43.10/pli/cst4"
+        uid: "sn43.10/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "bojjhaṅgasuttaṁ"
         sutta_ref: "SN 43.10"
         nikaya: "['sn']"
@@ -1509,10 +1509,10 @@ ListModel {
         score: 5.758159160614014
     }
     ListElement {
-        uid: "sn46.2/pli/cst4"
+        uid: "sn46.2/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "kāyasuttaṁ"
         sutta_ref: "SN 46.2"
         nikaya: "['sn']"
@@ -1531,10 +1531,10 @@ ListModel {
         score: 5.714199542999268
     }
     ListElement {
-        uid: "sn46.43/pli/cst4"
+        uid: "sn46.43/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "mārasuttaṁ"
         sutta_ref: "SN 46.43"
         nikaya: "['sn']"
@@ -1575,10 +1575,10 @@ ListModel {
         score: 5.707974433898926
     }
     ListElement {
-        uid: "sn46.25/pli/cst4"
+        uid: "sn46.25/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "aparihāniyasuttaṁ"
         sutta_ref: "SN 46.25"
         nikaya: "['sn']"
@@ -1597,10 +1597,10 @@ ListModel {
         score: 5.693120956420898
     }
     ListElement {
-        uid: "sn22.101/pli/cst4"
+        uid: "sn22.101/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vāsijaṭasuttaṁ"
         sutta_ref: "SN 22.101"
         nikaya: "['sn']"
@@ -1630,10 +1630,10 @@ ListModel {
         score: 5.6647748947143555
     }
     ListElement {
-        uid: "an4.242/pli/cst4"
+        uid: "an4.242/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "sappurisānisaṁsasuttaṁ"
         sutta_ref: "AN 4.242"
         nikaya: "['an']"
@@ -1674,10 +1674,10 @@ ListModel {
         score: 5.64646053314209
     }
     ListElement {
-        uid: "an10.112/pli/cst4"
+        uid: "an10.112/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyaasekhasuttaṁ"
         sutta_ref: "AN 10.112"
         nikaya: "['an']"
@@ -1729,10 +1729,10 @@ ListModel {
         score: 5.539012432098389
     }
     ListElement {
-        uid: "an6.57/pli/cst4"
+        uid: "an6.57/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "chaḷabhijātisuttaṁ"
         sutta_ref: "AN 6.57"
         nikaya: "['an']"
@@ -1828,10 +1828,10 @@ ListModel {
         score: 5.208624362945557
     }
     ListElement {
-        uid: "mn149/pli/cst4"
+        uid: "mn149/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "mahāsaḷāyatanikasuttaṁ"
         sutta_ref: "MN 149"
         nikaya: "['mn']"
@@ -1894,10 +1894,10 @@ ListModel {
         score: 5.069564342498779
     }
     ListElement {
-        uid: "mn146/pli/cst4"
+        uid: "mn146/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "nandakovādasuttaṁ"
         sutta_ref: "MN 146"
         nikaya: "['mn']"
@@ -1916,10 +1916,10 @@ ListModel {
         score: 5.048036098480225
     }
     ListElement {
-        uid: "an8.28/pli/cst4"
+        uid: "an8.28/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyabalasuttaṁ"
         sutta_ref: "AN 8.28"
         nikaya: "['an']"
@@ -1938,10 +1938,10 @@ ListModel {
         score: 4.971398830413818
     }
     ListElement {
-        uid: "an10.90/pli/cst4"
+        uid: "an10.90/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "khīṇāsavabalasuttaṁ"
         sutta_ref: "AN 10.90"
         nikaya: "['an']"
@@ -1960,10 +1960,10 @@ ListModel {
         score: 4.960127830505371
     }
     ListElement {
-        uid: "an8.19/pli/cst4"
+        uid: "an8.19/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "pahārādasuttaṁ"
         sutta_ref: "AN 8.19"
         nikaya: "['an']"
@@ -1993,10 +1993,10 @@ ListModel {
         score: 4.960127830505371
     }
     ListElement {
-        uid: "sn46.55/pli/cst4"
+        uid: "sn46.55/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "saṅgāravasuttaṁ"
         sutta_ref: "SN 46.55"
         nikaya: "['sn']"
@@ -2026,12 +2026,12 @@ ListModel {
         score: 4.676769256591797
     }
     ListElement {
-        uid: "s0305a.att/pli/cst4"
+        uid: "s0305a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0305a.att"
-        sutta_ref: "s0305a.att/pli/cst4"
+        sutta_ref: "s0305a.att/pli/cst"
         nikaya: "['s']"
         snippet: "bojjhaṅgāti kenaṭṭhena <span class='match'>bojjhaṅgā</span> bodhāya saṁvattantīti <span class='match'>bojjhaṅgā</span> bujjhantīti <span class='match'>bojjhaṅgā</span> anubujjhantīti <span class='match'>bojjhaṅgā</span> paṭibujjhantīti <span class='match'>bojjhaṅgā</span> sambujjhantīti <span class='match'>bojjhaṅgā</span>"
         score: 4.663653373718262
@@ -2048,10 +2048,10 @@ ListModel {
         score: 4.556363582611084
     }
     ListElement {
-        uid: "sn54.10/pli/cst4"
+        uid: "sn54.10/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "kimilasuttaṁ"
         sutta_ref: "SN 54.10"
         nikaya: "['sn']"
@@ -2103,10 +2103,10 @@ ListModel {
         score: 4.54689359664917
     }
     ListElement {
-        uid: "sn46.3/pli/cst4"
+        uid: "sn46.3/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "sīlasuttaṁ"
         sutta_ref: "SN 46.3"
         nikaya: "['sn']"
@@ -2125,10 +2125,10 @@ ListModel {
         score: 4.49383544921875
     }
     ListElement {
-        uid: "an10.95/pli/cst4"
+        uid: "an10.95/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "uttiyasuttaṁ"
         sutta_ref: "AN 10.95"
         nikaya: "['an']"
@@ -2136,21 +2136,21 @@ ListModel {
         score: 4.49383544921875
     }
     ListElement {
-        uid: "s0305t.tik/pli/cst4"
+        uid: "s0305t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0305t.tik"
-        sutta_ref: "s0305t.tik/pli/cst4"
+        sutta_ref: "s0305t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "bojjhaṅgāti vuttaṁ kāraṇattho aṅgasaddo ti bujjhatīti bodhi bodhiyā eva aṅgāti <span class='match'>bojjhaṅgā</span> ti vuttaṁ bujjhantīti <span class='match'>bojjhaṅgā</span> ti vipassanādīnaṁ kāraṇānaṁ bujjhitabbānaṁ"
         score: 4.471452236175537
     }
     ListElement {
-        uid: "mn104/pli/cst4"
+        uid: "mn104/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "sāmagāmasuttaṁ"
         sutta_ref: "MN 104"
         nikaya: "['mn']"
@@ -2235,10 +2235,10 @@ ListModel {
         score: 4.151966571807861
     }
     ListElement {
-        uid: "an10.28/pli/cst4"
+        uid: "an10.28/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dutiyamahāpañhāsuttaṁ"
         sutta_ref: "AN 10.28"
         nikaya: "['an']"
@@ -2246,10 +2246,10 @@ ListModel {
         score: 4.151966571807861
     }
     ListElement {
-        uid: "sn46.51/pli/cst4"
+        uid: "sn46.51/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "āhārasuttaṁ"
         sutta_ref: "SN 46.51"
         nikaya: "['sn']"
@@ -2257,12 +2257,12 @@ ListModel {
         score: 4.151966571807861
     }
     ListElement {
-        uid: "abh03m3.mul/pli/cst4"
+        uid: "abh03m3.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh03m3.mul"
-        sutta_ref: "abh03m3.mul/pli/cst4"
+        sutta_ref: "abh03m3.mul/pli/cst"
         nikaya: "['abh']"
         snippet: "bhāvitā <span class='match'>bojjhaṅgā</span> bhāvitāti āmantā hañci arahato rāgappahānāya <span class='match'>bojjhaṅgā</span> bhāvitā no ca vata re vattabbe – parihāyati arahā arahattā ti parihāyati arahā arahattāti āmantā"
         score: 4.0965704917907715
@@ -2334,10 +2334,10 @@ ListModel {
         score: 3.7696025371551514
     }
     ListElement {
-        uid: "dn22/pli/cst4"
+        uid: "dn22/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "mahāsatipaṭṭhānasuttaṁ"
         sutta_ref: "DN 22"
         nikaya: "['dn']"
@@ -2356,10 +2356,10 @@ ListModel {
         score: 3.732384204864502
     }
     ListElement {
-        uid: "mn103/pli/cst4"
+        uid: "mn103/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "kintisuttaṁ"
         sutta_ref: "MN 103"
         nikaya: "['mn']"
@@ -2433,12 +2433,12 @@ ListModel {
         score: 3.6377077102661133
     }
     ListElement {
-        uid: "abh03m1.mul/pli/cst4"
+        uid: "abh03m1.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh03m1.mul"
-        sutta_ref: "abh03m1.mul/pli/cst4"
+        sutta_ref: "abh03m1.mul/pli/cst"
         nikaya: "['abh']"
         snippet: "pañcindriyāni (13) pañca balāni (14) satta <span class='match'>bojjhaṅgā</span> (15)ariyo aṭṭhaṅgiko maggo (16) phasso vedanā saññā cetanā cittaṁ adhimokkho manasikāro 3 nayamukhamātikā 3 tīhi saṅgaho"
         score: 3.6000888347625732
@@ -2455,12 +2455,12 @@ ListModel {
         score: 3.380460023880005
     }
     ListElement {
-        uid: "s0501m.mul/pli/cst4"
+        uid: "s0501m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0501m.mul"
-        sutta_ref: "s0501m.mul/pli/cst4"
+        sutta_ref: "s0501m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "vedanā 4 cattāri nāma kiṁ cattāri ariyasaccāni 5 pañca nāma kiṁ pañcupādānakkhandhā 6 cha nāma kiṁ cha ajjhattikāni āyatanāni 7 satta nāma kiṁ satta <span class='match'>bojjhaṅgā</span> 8 aṭṭha"
         score: 3.380460023880005
@@ -2554,23 +2554,23 @@ ListModel {
         score: 3.088718891143799
     }
     ListElement {
-        uid: "e0906n.nrf/pli/cst4"
+        uid: "e0906n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0906n.nrf"
-        sutta_ref: "e0906n.nrf/pli/cst4"
+        sutta_ref: "e0906n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "kathaṁ <span class='match'>bojjhaṅgā</span> vitthārato vibhajitvā desitā vissajjanā – dasame bhante bojjhaṅgavibhaṅge satta <span class='match'>bojjhaṅgā</span> satisambojjhaṅgo dhammavicayasambojjhaṅgo vīriyasambojjhaṅgo"
         score: 3.07759428024292
     }
     ListElement {
-        uid: "s0501a.att/pli/cst4"
+        uid: "s0501a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0501a.att"
-        sutta_ref: "s0501a.att/pli/cst4"
+        sutta_ref: "s0501a.att/pli/cst"
         nikaya: "['s']"
         snippet: "bodhāya saṁvattantīti <span class='match'>bojjhaṅgā</span> bujjhantīti <span class='match'>bojjhaṅgā</span> anubujjhantīti <span class='match'>bojjhaṅgā</span> paṭibujjhantīti <span class='match'>bojjhaṅgā</span> sambujjhantīti <span class='match'>bojjhaṅgā</span> ti (paṭi॰ ma॰ 2 17) imināpi"
         score: 3.0340349674224854
@@ -2609,12 +2609,12 @@ ListModel {
         score: 2.901257038116455
     }
     ListElement {
-        uid: "e0607n.nrf/pli/cst4"
+        uid: "e0607n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0607n.nrf"
-        sutta_ref: "e0607n.nrf/pli/cst4"
+        sutta_ref: "e0607n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "pacayanti 99 paññāṇa kūpa sita paggaha vāyu gāhī saddhā lakāra sahitā sati pota vāhā sampāpayātu bhava sāgara pāra tīra sappattanaṁ varadhane pati patti nāvā 100 <span class='match'>bojjhaṅga</span>"
         score: 2.901257038116455
@@ -2642,23 +2642,23 @@ ListModel {
         score: 2.8019580841064453
     }
     ListElement {
-        uid: "s0515m.mul/pli/cst4"
+        uid: "s0515m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0515m.mul"
-        sutta_ref: "s0515m.mul/pli/cst4"
+        sutta_ref: "s0515m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "bhāvanānuyogassa pañcannaṁ balānaṁ bhāvanānuyogassa sattannaṁ <span class='match'>bojjhaṅgānaṁ</span> bhāvanānuyogassa ariyassa aṭṭhaṅgikassa maggassa bhāvanānuyogassa – imesaṁ kusalānaṁ"
         score: 2.7192187309265137
     }
     ListElement {
-        uid: "s0401a.att/pli/cst4"
+        uid: "s0401a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0401a.att"
-        sutta_ref: "s0401a.att/pli/cst4"
+        sutta_ref: "s0401a.att/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgā</span> bujjhantīti <span class='match'>bojjhaṅgā</span> anubujjhantīti <span class='match'>bojjhaṅgā</span> paṭibujjhantīti <span class='match'>bojjhaṅgā</span> sambujjhantīti <span class='match'>bojjhaṅgā</span> ti iminā paṭisambhidānayenāpi (paṭi॰ ma॰ 2 17"
         score: 2.702739953994751
@@ -2675,23 +2675,23 @@ ListModel {
         score: 2.683704376220703
     }
     ListElement {
-        uid: "s0520m.nrf/pli/cst4"
+        uid: "s0520m.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0520m.nrf"
-        sutta_ref: "s0520m.nrf/pli/cst4"
+        sutta_ref: "s0520m.nrf/pli/cst"
         nikaya: "['s']"
         snippet: "mārassetaṁ pamohanaṁ sattime bhikkhave <span class='match'>bojjhaṅgā</span> – ayaṁ maggo tattha katamāni cattāri ariyasaccāni ye dhammā [mahāva॰ 60] hetuppabhavā tesaṁ hetuṁ tathāgato āha tesañca yo"
         score: 2.662477493286133
     }
     ListElement {
-        uid: "abh02m.mul/pli/cst4"
+        uid: "abh02m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh02m.mul"
-        sutta_ref: "abh02m.mul/pli/cst4"
+        sutta_ref: "abh02m.mul/pli/cst"
         nikaya: "['abh']"
         snippet: "upekkhāsambojjhaṅgo – ayaṁ vuccati upekkhāsambojjhaṅgo ime vuccanti satta <span class='match'>bojjhaṅgā</span> avasesā dhammā sattahi <span class='match'>bojjhaṅgehi</span> sampayuttā 475 satta <span class='match'>bojjhaṅgā</span> – satisambojjhaṅgo pe"
         score: 2.6603667736053467
@@ -2708,12 +2708,12 @@ ListModel {
         score: 2.541046380996704
     }
     ListElement {
-        uid: "abh02a.att/pli/cst4"
+        uid: "abh02a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh02a.att"
-        sutta_ref: "abh02a.att/pli/cst4"
+        sutta_ref: "abh02a.att/pli/cst"
         nikaya: "['abh']"
         snippet: "<span class='match'>bojjhaṅgā</span> bujjhantīti <span class='match'>bojjhaṅgā</span> anubujjhantīti <span class='match'>bojjhaṅgā</span> paṭibujjhantīti <span class='match'>bojjhaṅgā</span> sambujjhantīti <span class='match'>bojjhaṅgā</span> ti iminā paṭisambhidānayenāpi bojjhaṅgattho veditabbo"
         score: 2.540102958679199
@@ -2730,12 +2730,12 @@ ListModel {
         score: 2.5363330841064453
     }
     ListElement {
-        uid: "s0517a.att/pli/cst4"
+        uid: "s0517a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0517a.att"
-        sutta_ref: "s0517a.att/pli/cst4"
+        sutta_ref: "s0517a.att/pli/cst"
         nikaya: "['s']"
         snippet: "bujjhanakassa puggalassa aṅgāti vā <span class='match'>bojjhaṅgā</span> ti apica bojjhaṅgāti kenaṭṭhena <span class='match'>bojjhaṅgā</span> bodhāya saṁvattantīti <span class='match'>bojjhaṅgā</span> tiādinā (paṭi॰ ma॰ 2 17) nayena"
         score: 2.5044431686401367
@@ -2752,12 +2752,12 @@ ListModel {
         score: 2.3925228118896484
     }
     ListElement {
-        uid: "s0508m.mul/pli/cst4"
+        uid: "s0508m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0508m.mul"
-        sutta_ref: "s0508m.mul/pli/cst4"
+        sutta_ref: "s0508m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "chandalakkhaṇānulomaṁ] nando ca sirimā ceva dasa therā mahiddhikāti 3 tatiyavaggo 1 uttarattheragāthā 161 khandhā mayā pariññātā taṇhā me susamūhatā bhāvitā mama <span class='match'>bojjhaṅgā</span>"
         score: 2.315009355545044
@@ -2785,10 +2785,10 @@ ListModel {
         score: 2.2604024410247803
     }
     ListElement {
-        uid: "dn28/pli/cst4"
+        uid: "dn28/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "sampasādanīyasuttaṁ"
         sutta_ref: "DN 28"
         nikaya: "['dn']"
@@ -2807,12 +2807,12 @@ ListModel {
         score: 2.2604024410247803
     }
     ListElement {
-        uid: "s0103a.att/pli/cst4"
+        uid: "s0103a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0103a.att"
-        sutta_ref: "s0103a.att/pli/cst4"
+        sutta_ref: "s0103a.att/pli/cst"
         nikaya: "['s']"
         snippet: "dubbalīkaraṇā ti vuccanti suppatiṭṭhitacittā ti catūsu satipaṭṭhānesu suṭṭhu ṭhapitacittā hutvā satta <span class='match'>bojjhaṅge</span> yathābhūta nti satta <span class='match'>bojjhaṅge</span> yathāsabhāvena bhāvetvā"
         score: 2.146872043609619
@@ -2829,23 +2829,23 @@ ListModel {
         score: 2.142110586166382
     }
     ListElement {
-        uid: "s0503a.att/pli/cst4"
+        uid: "s0503a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0503a.att"
-        sutta_ref: "s0503a.att/pli/cst4"
+        sutta_ref: "s0503a.att/pli/cst"
         nikaya: "['s']"
         snippet: "senaṅgarathaṅgādayo viya tenāhu porāṇā – bujjhanakassa puggalassa aṅgāti <span class='match'>bojjhaṅgā</span> ti bodhiyā saṁvattantīti <span class='match'>bojjhaṅgā</span> tiādinā nayenapi <span class='match'>bojjhaṅgānaṁ</span> bojjhaṅgattho"
         score: 2.1328177452087402
     }
     ListElement {
-        uid: "s0516m.mul/pli/cst4"
+        uid: "s0516m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0516m.mul"
-        sutta_ref: "s0516m.mul/pli/cst4"
+        sutta_ref: "s0516m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgānaṁ</span> ariyassa aṭṭhaṅgikassa maggassāti bhagavā bhāgī vā bhagavā dasannaṁ tathāgatabalānaṁ catunnaṁ vesārajjānaṁ catunnaṁ paṭisambhidānaṁ channaṁ"
         score: 2.112454652786255
@@ -2862,23 +2862,23 @@ ListModel {
         score: 2.035583972930908
     }
     ListElement {
-        uid: "s0509m.mul/pli/cst4"
+        uid: "s0509m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0509m.mul"
-        sutta_ref: "s0509m.mul/pli/cst4"
+        sutta_ref: "s0509m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "abhiṇhaṁ ovadatīti (ka॰)] 2 jentātherīgāthā 21 ye ime satta <span class='match'>bojjhaṅgā</span> maggā nibbānapattiyā bhāvitā te mayā sabbe yathā buddhena desitā 22 diṭṭho hi me so bhagavā antimoyaṁ"
         score: 2.021139621734619
     }
     ListElement {
-        uid: "s0401t.tik/pli/cst4"
+        uid: "s0401t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0401t.tik"
-        sutta_ref: "s0401t.tik/pli/cst4"
+        sutta_ref: "s0401t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "vuttaṁ bujjhantīti <span class='match'>bojjhaṅgā</span> ti vipassanādīnaṁ kāraṇānaṁ bujjhitabbānañca saccānaṁ anurūpaṁ bujjhanato anubujjhantīti <span class='match'>bojjhaṅgā</span> paṭimukhaṁ paccakkhabhāvena"
         score: 2.008920669555664
@@ -2895,32 +2895,32 @@ ListModel {
         score: 1.9391504526138306
     }
     ListElement {
-        uid: "s0404t.tik/pli/cst4"
+        uid: "s0404t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0404t.tik"
-        sutta_ref: "s0404t.tik/pli/cst4"
+        sutta_ref: "s0404t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "anabhibhavanīyato akampiyaṭṭhena sampayuttadhammesu thirabhāvena ca balāni veditabbāni satta <span class='match'>bojjhaṅgā</span> ti bodhiyā bodhissa vā aṅgāti <span class='match'>bojjhaṅgā</span> yā hi esā dhammasāmaggī yāya"
         score: 1.8914730548858643
     }
     ListElement {
-        uid: "abh01a.att/pli/cst4"
+        uid: "abh01a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh01a.att"
-        sutta_ref: "abh01a.att/pli/cst4"
+        sutta_ref: "abh01a.att/pli/cst"
         nikaya: "['abh']"
         snippet: "<span class='match'>bojjhaṅgā</span> bodhāya saṁvattantīti <span class='match'>bojjhaṅgā</span> bujjhantīti <span class='match'>bojjhaṅgā</span> anubujjhantīti <span class='match'>bojjhaṅgā</span> paṭibujjhantīti <span class='match'>bojjhaṅgā</span> sambujjhantīti <span class='match'>bojjhaṅgā</span> ti (paṭi॰ ma॰ 2 17) iminā"
         score: 1.8242655992507935
     }
     ListElement {
-        uid: "dn29/pli/cst4"
+        uid: "dn29/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "pāsādikasuttaṁ"
         sutta_ref: "DN 29"
         nikaya: "['dn']"
@@ -2950,12 +2950,12 @@ ListModel {
         score: 1.7713215351104736
     }
     ListElement {
-        uid: "vin01m.mul/pli/cst4"
+        uid: "vin01m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin01m.mul"
-        sutta_ref: "vin01m.mul/pli/cst4"
+        sutta_ref: "vin01m.mul/pli/cst"
         nikaya: "['vin']"
         snippet: "samāpajjiṁ samāpajjāmi samāpanno sattannaṁ <span class='match'>bojjhaṅgānaṁ</span> lābhīmhi vasīmhi satta <span class='match'>bojjhaṅgā</span> sacchikatā mayāti sampajānamusā bhaṇantassa āpatti pārājikassa tīhākārehi"
         score: 1.7415932416915894
@@ -2972,43 +2972,43 @@ ListModel {
         score: 1.661667823791504
     }
     ListElement {
-        uid: "s0203a.att/pli/cst4"
+        uid: "s0203a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0203a.att"
-        sutta_ref: "s0203a.att/pli/cst4"
+        sutta_ref: "s0203a.att/pli/cst"
         nikaya: "['s']"
         snippet: "lokiyasatipaṭṭhāne paripūrenti lokiyā satipaṭṭhānā lokiye <span class='match'>bojjhaṅge</span> paripūrenti lokiyā <span class='match'>bojjhaṅgā</span> lokuttaraṁ vijjāvimuttiphalanibbānaṁ paripūrenti vijjāvimuttipadena hi idha"
         score: 1.6280725002288818
     }
     ListElement {
-        uid: "s0201a.att/pli/cst4"
+        uid: "s0201a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0201a.att"
-        sutta_ref: "s0201a.att/pli/cst4"
+        sutta_ref: "s0201a.att/pli/cst"
         nikaya: "['s']"
         snippet: "aṭṭhakathācariyā bujjhanakassa puggalassa aṅgāti vā <span class='match'>bojjhaṅgā</span> ti apica bojjhaṅgāti kenaṭṭhena <span class='match'>bojjhaṅgā</span> bodhāya saṁvattantīti <span class='match'>bojjhaṅgā</span> bujjhantīti <span class='match'>bojjhaṅgā</span>"
         score: 1.6272741556167603
     }
     ListElement {
-        uid: "abh09t.nrf/pli/cst4"
+        uid: "abh09t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh09t.nrf"
-        sutta_ref: "abh09t.nrf/pli/cst4"
+        sutta_ref: "abh09t.nrf/pli/cst"
         nikaya: "['abh']"
         snippet: "<span class='match'>bojjhaṅgā</span> ti ettha bodhiyā bodhissa vā aṅgāti <span class='match'>bojjhaṅgā</span> idaṁ vuttaṁ hoti – yāya eva dhammasāmaggiyā maggakkhaṇe uppajjamānāya līnuddhaccādianekesaṁ upaddavānaṁ"
         score: 1.6050145626068115
     }
     ListElement {
-        uid: "dn16/pli/cst4"
+        uid: "dn16/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "mahāparinibbānasuttaṁ"
         sutta_ref: "DN 16"
         nikaya: "['dn']"
@@ -3049,32 +3049,32 @@ ListModel {
         score: 1.4062095880508423
     }
     ListElement {
-        uid: "s0518m.nrf/pli/cst4"
+        uid: "s0518m.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0518m.nrf"
-        sutta_ref: "s0518m.nrf/pli/cst4"
+        sutta_ref: "s0518m.nrf/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgā</span> ti satta kho mahārāja <span class='match'>bojjhaṅgā</span> ti katihi pana bhante <span class='match'>bojjhaṅgehi</span> bujjhatī ti ekena kho mahārāja <span class='match'>bojjhaṅgena</span> bujjhati dhammavicayasambojjhaṅgenā ti atha kissa nu kho bhante"
         score: 1.3857327699661255
     }
     ListElement {
-        uid: "s0515a.att/pli/cst4"
+        uid: "s0515a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0515a.att"
-        sutta_ref: "s0515a.att/pli/cst4"
+        sutta_ref: "s0515a.att/pli/cst"
         nikaya: "['s']"
         snippet: "vuccati tassa bodhissa aṅgātipi <span class='match'>bojjhaṅgā</span> senaṅgarathaṅgādayo viya tenāhu aṭṭhakathācariyā bujjhanakassa puggalassa aṅgāti <span class='match'>bojjhaṅgā</span> ti tesaṁ sattannaṁ <span class='match'>bojjhaṅgānaṁ</span>"
         score: 1.3579472303390503
     }
     ListElement {
-        uid: "dn34/pli/cst4"
+        uid: "dn34/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "dasuttarasuttaṁ"
         sutta_ref: "DN 34"
         nikaya: "['dn']"
@@ -3082,98 +3082,98 @@ ListModel {
         score: 1.3158031702041626
     }
     ListElement {
-        uid: "e0813n.nrf/pli/cst4"
+        uid: "e0813n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0813n.nrf"
-        sutta_ref: "e0813n.nrf/pli/cst4"
+        sutta_ref: "e0813n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "yadi evaṁ bodhi aṅgātīha – yādese iminā suttena dayakārasaṁyogassa jo dhayakārasaṁyogassa jho dvitte – yajjevaṁ <span class='match'>bojjhaṅgā</span> 37 asadisasaṁyoge ekasarūpatā ca pari esanātīha"
         score: 1.3158031702041626
     }
     ListElement {
-        uid: "e0102n.mul/pli/cst4"
+        uid: "e0102n.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0102n.mul"
-        sutta_ref: "e0102n.mul/pli/cst4"
+        sutta_ref: "e0102n.mul/pli/cst"
         nikaya: "['e']"
         snippet: "bujjhanakasattassa pana aṅgabhāvena satiādayo satta <span class='match'>bojjhaṅgā</span> niyyānikaṭṭhena ca sammādiṭṭhiādayo aṭṭha maggaṅgā honti tena vuttaṁ satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko"
         score: 1.2178723812103271
     }
     ListElement {
-        uid: "s0519m.mul/pli/cst4"
+        uid: "s0519m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0519m.mul"
-        sutta_ref: "s0519m.mul/pli/cst4"
+        sutta_ref: "s0519m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "bhāviyamānesu satta <span class='match'>bojjhaṅgā</span> bhāvanāpāripūriṁ gacchanti sattasu <span class='match'>bojjhaṅgesu</span> bhāviyamānesu ariyo aṭṭhaṅgiko maggo bhāvanāpāripūriṁ gacchati sabbeva [sabbe ca (sī॰ ka"
         score: 1.2101645469665527
     }
     ListElement {
-        uid: "s0508a2.att/pli/cst4"
+        uid: "s0508a2.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0508a2.att"
-        sutta_ref: "s0508a2.att/pli/cst4"
+        sutta_ref: "s0508a2.att/pli/cst"
         nikaya: "['s']"
         snippet: "balāni ca <span class='match'>bojjhaṅgāni</span> ca bhāvento viharissāmi kānane 353 āraddhavīriye pahitatte niccaṁ daḷhaparakkame samagge sahite disvā viharissāmi kānane 354 anussaranto sambuddhaṁ aggaṁ"
         score: 1.1737992763519287
     }
     ListElement {
-        uid: "s0504a.att/pli/cst4"
+        uid: "s0504a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0504a.att"
-        sutta_ref: "s0504a.att/pli/cst4"
+        sutta_ref: "s0504a.att/pli/cst"
         nikaya: "['s']"
         snippet: "bhāvanāvidhidassanato tattha katame satta <span class='match'>bojjhaṅgā</span> idha bhikkhu yasmiṁ samaye lokuttaraṁ jhānaṁ bhāveti pe॰ tasmiṁ samaye satta <span class='match'>bojjhaṅgā</span> honti satisambojjhaṅgo pe"
         score: 1.1494721174240112
     }
     ListElement {
-        uid: "s0201t.tik/pli/cst4"
+        uid: "s0201t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0201t.tik"
-        sutta_ref: "s0201t.tik/pli/cst4"
+        sutta_ref: "s0201t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgesu</span> vuccamānesu tadaṅgādivivekadassanavasena vipassanābojjhaṅgādayo vibhajitvā vuccanti na nibbattitalokuttarabojjhaṅgā evāti <span class='match'>bojjhaṅgesu</span> sammoho na hoti"
         score: 1.091452717781067
     }
     ListElement {
-        uid: "s0509a.att/pli/cst4"
+        uid: "s0509a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0509a.att"
-        sutta_ref: "s0509a.att/pli/cst4"
+        sutta_ref: "s0509a.att/pli/cst"
         nikaya: "['s']"
         snippet: "jentātherīgāthāvaṇṇanā ye ime satta <span class='match'>bojjhaṅgā</span> tiādikā jentāya theriyā gāthā tassā atītaṁ paccuppannañca vatthu abhirūpanandāvatthusadisaṁ ayaṁ pana vesāliyaṁ"
         score: 1.0862854719161987
     }
     ListElement {
-        uid: "vin02a3.att/pli/cst4"
+        uid: "vin02a3.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin02a3.att"
-        sutta_ref: "vin02a3.att/pli/cst4"
+        sutta_ref: "vin02a3.att/pli/cst"
         nikaya: "['vin']"
         snippet: "cattāro sammappadhānā cattāro iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko maggoti sattatiṁsa bodhipakkhiyadhammā dhammo nāma tayo satipaṭṭhānā"
         score: 1.0781190395355225
     }
     ListElement {
-        uid: "dn33/pli/cst4"
+        uid: "dn33/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "saṅgītisuttaṁ"
         sutta_ref: "DN 33"
         nikaya: "['dn']"
@@ -3192,34 +3192,34 @@ ListModel {
         score: 1.046644926071167
     }
     ListElement {
-        uid: "s0103t.tik/pli/cst4"
+        uid: "s0103t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0103t.tik"
-        sutta_ref: "s0103t.tik/pli/cst4"
+        sutta_ref: "s0103t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgā</span> ca missakā adhippetāti tato aññathā vattuṁ apicetthā tiādi vuttaṁ missakā ti samathavipassanāmaggavasena missakā catūsu satipaṭṭhānesu suppatiṭṭhitacittā tiādito"
         score: 1.0144914388656616
     }
     ListElement {
-        uid: "vin02m1.mul/pli/cst4"
+        uid: "vin02m1.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin02m1.mul"
-        sutta_ref: "vin02m1.mul/pli/cst4"
+        sutta_ref: "vin02m1.mul/pli/cst"
         nikaya: "['vin']"
         snippet: "jhānaṁ satta ca <span class='match'>bojjhaṅge</span> samāpajjiṁ samāpajjāmi samāpanno paṭhamassa ca jhānassa sattannañca <span class='match'>bojjhaṅgānaṁ</span> lābhimhi vasimhi paṭhamañca jhānaṁ satta ca <span class='match'>bojjhaṅgā</span>"
         score: 0.9949191212654114
     }
     ListElement {
-        uid: "s0508a1.att/pli/cst4"
+        uid: "s0508a1.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0508a1.att"
-        sutta_ref: "s0508a1.att/pli/cst4"
+        sutta_ref: "s0508a1.att/pli/cst"
         nikaya: "['s']"
         snippet: "bhāvitā mama <span class='match'>bojjhaṅgā</span> ti bodhisaṅkhātāya satiādidhammasāmaggiyā taṁsamaṅgino vā bodhisaṅkhātassa ariyapuggalassa aṅgāti <span class='match'>bojjhaṅgā</span>"
         score: 0.9837234616279602
@@ -3236,540 +3236,540 @@ ListModel {
         score: 0.9495280981063843
     }
     ListElement {
-        uid: "e0801n.nrf/pli/cst4"
+        uid: "e0801n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0801n.nrf"
-        sutta_ref: "e0801n.nrf/pli/cst4"
+        sutta_ref: "e0801n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "sace maṁ ālapissatī tiādīsupi vihitāva patidhayoge dutiyā – paṭibhantu taṁ cunda <span class='match'>bojjhaṅgā</span> ti taṁ pati <span class='match'>bojjhaṅgā</span> bhāsantūti attho yadātu dhātunāyutto pati tadā tenā yogā"
         score: 0.9453262090682983
     }
     ListElement {
-        uid: "abh07t.nrf/pli/cst4"
+        uid: "abh07t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh07t.nrf"
-        sutta_ref: "abh07t.nrf/pli/cst4"
+        sutta_ref: "abh07t.nrf/pli/cst"
         nikaya: "['abh']"
         snippet: "bodhissa tassā vā bodhiyā aṅgabhūtā kāraṇabhūtāti <span class='match'>bojjhaṅgā</span> te pana dhammavasena sattavidhāti āha satisambojjhaṅgo tyādi satiyeva sundaro <span class='match'>bojjhaṅgo</span> sundarassa vā bodhissa"
         score: 0.8904853463172913
     }
     ListElement {
-        uid: "s0503m.mul/pli/cst4"
+        uid: "s0503m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0503m.mul"
-        sutta_ref: "s0503m.mul/pli/cst4"
+        sutta_ref: "s0503m.mul/pli/cst"
         nikaya: "['s']"
         snippet: "ratanāni seyyathidaṁ – cattāro satipaṭṭhānā cattāro sammappadhānā cattāro iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko maggo yampi bhikkhave"
         score: 0.8849899768829346
     }
     ListElement {
-        uid: "abh02t.tik/pli/cst4"
+        uid: "abh02t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh02t.tik"
-        sutta_ref: "abh02t.tik/pli/cst4"
+        sutta_ref: "abh02t.tik/pli/cst"
         nikaya: "['abh']"
         snippet: "maggapaṭivedhānulomanato vipassanāya viya pādakajjhānesupi satiādayo <span class='match'>bojjhaṅgā</span> tveva vuccantīti āha nibbedhabhāgiyattā na paṭikkhipitabbo ti evaṁ kasiṇajjhānādīsu <span class='match'>bojjhaṅge</span>"
         score: 0.8749411106109619
     }
     ListElement {
-        uid: "e0902n.nrf/pli/cst4"
+        uid: "e0902n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0902n.nrf"
-        sutta_ref: "e0902n.nrf/pli/cst4"
+        sutta_ref: "e0902n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko maggo tattha sabbeheva samaggehi sammodamānehi avivadamānehi sikkhitabbaṁ evamādinā bhante bhikkhūnaṁ ovādamadāsi"
         score: 0.868903636932373
     }
     ListElement {
-        uid: "e1215n.nrf/pli/cst4"
+        uid: "e1215n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e1215n.nrf"
-        sutta_ref: "e1215n.nrf/pli/cst4"
+        sutta_ref: "e1215n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "khaye ñāṇā laddhā aggaphalaṁ tadā 398 patto nibbāṇanagaraṁ <span class='match'>bojjhaṅga</span> ratanissaro saddhammarājā hutvāna pītivācamudāharī 399 anekajāti saṁsāraṁ sandhāvissaṁ anibbisaṁ"
         score: 0.868903636932373
     }
     ListElement {
-        uid: "abh01m.mul/pli/cst4"
+        uid: "abh01m.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh01m.mul"
-        sutta_ref: "abh01m.mul/pli/cst4"
+        sutta_ref: "abh01m.mul/pli/cst"
         nikaya: "['abh']"
         snippet: "lokuttaraṁ iddhipādaṁ bhāveti pe॰ lokuttaraṁ indriyaṁ bhāveti pe॰ lokuttaraṁ balaṁ bhāveti pe॰ lokuttaraṁ <span class='match'>bojjhaṅgaṁ</span> bhāveti pe॰ lokuttaraṁ saccaṁ bhāveti pe"
         score: 0.8646830916404724
     }
     ListElement {
-        uid: "s0403a.att/pli/cst4"
+        uid: "s0403a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0403a.att"
-        sutta_ref: "s0403a.att/pli/cst4"
+        sutta_ref: "s0403a.att/pli/cst"
         nikaya: "['s']"
         snippet: "ānisaṁsaṁ upāyena pathena paccavekkhitvā satisambojjhaṅgaṁ bhāveti eseva nayo sabbattha <span class='match'>bojjhaṅgānaṁ</span> bhāvanā heṭṭhā vitthāritāva yaṁ hissā ti etesu <span class='match'>bojjhaṅgesu</span>"
         score: 0.8416584134101868
     }
     ListElement {
-        uid: "vin02t.tik/pli/cst4"
+        uid: "vin02t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin02t.tik"
-        sutta_ref: "vin02t.tik/pli/cst4"
+        sutta_ref: "vin02t.tik/pli/cst"
         nikaya: "['vin']"
         snippet: "tadubhayampi bodhiṁ bhagavā ettha pattoti rukkhopi bodhirukkho tveva nāmaṁ labhi atha vā satta <span class='match'>bojjhaṅge</span> bujjhatīti bhagavā bodhi tena bujjhantena sannissitattā so rukkho bodhirukkho ti"
         score: 0.7970572113990784
     }
     ListElement {
-        uid: "e0301n.nrf/pli/cst4"
+        uid: "e0301n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0301n.nrf"
-        sutta_ref: "e0301n.nrf/pli/cst4"
+        sutta_ref: "e0301n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "maggaṅga vasena aṭṭhaṭṭhānikā eko samādhi indriya bala <span class='match'>bojjhaṅga</span> maggaṅga vasena catuṭṭhāniko ekāpaññā iddhipādindriya bala <span class='match'>bojjhaṅga</span> maggaṅga vasena"
         score: 0.7625137567520142
     }
     ListElement {
-        uid: "abh01t.tik/pli/cst4"
+        uid: "abh01t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh01t.tik"
-        sutta_ref: "abh01t.tik/pli/cst4"
+        sutta_ref: "abh01t.tik/pli/cst"
         nikaya: "['abh']"
         snippet: "<span class='match'>bojjhaṅgā</span> hi manokammameva bhajeyyuṁ na ca na sakkā maggabhajāpaneneva tesaṁ bhajāpanaṁ viññātunti kammapathaṁ appattānampi taṁtaṁdvāre saṁsandanaṁ avarodhanaṁ dvārantare"
         score: 0.7584807276725769
     }
     ListElement {
-        uid: "abh04t.nrf/pli/cst4"
+        uid: "abh04t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh04t.nrf"
-        sutta_ref: "abh04t.nrf/pli/cst4"
+        sutta_ref: "abh04t.nrf/pli/cst"
         nikaya: "['abh']"
         snippet: "anussatiṭṭhāna agāravagārava nissāraṇiyadhātu satatavihāra anuttariya nibbedhabhāgiyapaññādi sattaaparihāniyadhamma ariyadhana <span class='match'>bojjhaṅga</span> sappurisadhammanijjaravatthu saññā"
         score: 0.7584807276725769
     }
     ListElement {
-        uid: "s0102t.tik/pli/cst4"
+        uid: "s0102t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0102t.tik"
-        sutta_ref: "s0102t.tik/pli/cst4"
+        sutta_ref: "s0102t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "sammādiṭṭhiādidhammasāmaggiyā aṅgoti <span class='match'>bojjhaṅgo</span> pasattho sundaro vā <span class='match'>bojjhaṅgo</span> sambojjhaṅgo upaṭṭhānalakkhaṇo ti kāyavedanācittadhammānaṁ"
         score: 0.7188953161239624
     }
     ListElement {
-        uid: "s0519a.att/pli/cst4"
+        uid: "s0519a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0519a.att"
-        sutta_ref: "s0519a.att/pli/cst4"
+        sutta_ref: "s0519a.att/pli/cst"
         nikaya: "['s']"
         snippet: "paripūritapāramibhāvaṁ dasseti satipaṭṭhānāni vipassanā <span class='match'>bojjhaṅgo</span> maggo anuttarā sammāsambodhi arahattaṁ satipaṭṭhānāni vā vipassanā <span class='match'>bojjhaṅgā</span> missakā sammāsambodhi"
         score: 0.7078847289085388
     }
     ListElement {
-        uid: "e1208n.nrf/pli/cst4"
+        uid: "e1208n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e1208n.nrf"
-        sutta_ref: "e1208n.nrf/pli/cst4"
+        sutta_ref: "e1208n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "jitindriso yo tatopi buddho bhagavā () 46 yasmā <span class='match'>bojjhaṅgānaṁ</span> ariyassa ṭṭhaṅgikassa maggassāpi tathāgatabalānaṁ yo bhāgi dasannaṁ tatopi buddho bhagavā () 47 catuvesārajjānaṁ"
         score: 0.7026819586753845
     }
     ListElement {
-        uid: "s0519t.tik/pli/cst4"
+        uid: "s0519t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0519t.tik"
-        sutta_ref: "s0519t.tik/pli/cst4"
+        sutta_ref: "s0519t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "pañcagatiparicchedakañāṇāni cha abhiññāñāṇāni satta ariyadhanāni satta <span class='match'>bojjhaṅgā</span> aṭṭha vijjā aṭṭhasu parisāsu akampanañāṇāni aṭṭha vimokkhā nava samādhicariyā"
         score: 0.7026819586753845
     }
     ListElement {
-        uid: "e0103n.att/pli/cst4"
+        uid: "e0103n.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0103n.att"
-        sutta_ref: "e0103n.att/pli/cst4"
+        sutta_ref: "e0103n.att/pli/cst"
         nikaya: "['e']"
         snippet: "akālo ti nakālo ayuttakālo vā satiādidhammasāmaggisaṅkhātāya bodhiyā bujjhati etāyāti katvā taṁsamaṅgino vā bujjhatīti bodhino yogino aṅganti <span class='match'>bojjhaṅgo</span> pasattho sundaro vā"
         score: 0.6936032772064209
     }
     ListElement {
-        uid: "s0203t.tik/pli/cst4"
+        uid: "s0203t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0203t.tik"
-        sutta_ref: "s0203t.tik/pli/cst4"
+        sutta_ref: "s0203t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgā</span> kathitā lokuttarāpīti ettakaṁ gahetvā iti lokiyassa āgataṭṭhāne lokiyaṁ kathita nti ca atthavaṇṇanāvasena aṭṭhakathāyaṁ kathitaṁ thero ti"
         score: 0.6902647018432617
     }
     ListElement {
-        uid: "e0803n.nrf/pli/cst4"
+        uid: "e0803n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0803n.nrf"
-        sutta_ref: "e0803n.nrf/pli/cst4"
+        sutta_ref: "e0803n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "rassavasena ālapanekavacanaṁ icchatha kimatthañca dūraṭṭhassālapane bho purisā iti dīghavasena ālapanekavacanaṁ icchatha nanu taggha bhagavā <span class='match'>bojjhaṅgā</span> taggha sugata <span class='match'>bojjhaṅgā</span>"
         score: 0.6620849370956421
     }
     ListElement {
-        uid: "s0301a.att/pli/cst4"
+        uid: "s0301a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0301a.att"
-        sutta_ref: "s0301a.att/pli/cst4"
+        sutta_ref: "s0301a.att/pli/cst"
         nikaya: "['s']"
         snippet: "kammaṭṭhānaṁ bhāvento saha vipassanāya <span class='match'>bojjhaṅge</span> bhāveti tassa ariyamaggo yaṁ nibbānaṁ ārammaṇaṁ katvā uppajjati so sabbanissaggo ti bhagavā catusaccavasena desanaṁ"
         score: 0.6218515038490295
     }
     ListElement {
-        uid: "s0101a.att/pli/cst4"
+        uid: "s0101a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0101a.att"
-        sutta_ref: "s0101a.att/pli/cst4"
+        sutta_ref: "s0101a.att/pli/cst"
         nikaya: "['s']"
         snippet: "asurā yakkhā mahārājāno tāvatiṁsādayo devā mahābrahmāti evamādayo – <span class='match'>bojjhaṅgā</span> <span class='match'>bojjhaṅgā</span> ti bhante vuccanti nīvaraṇā nīvaraṇā ti bhante vuccanti ime nu kho bhante"
         score: 0.6218515038490295
     }
     ListElement {
-        uid: "e1201n.nrf/pli/cst4"
+        uid: "e1201n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e1201n.nrf"
-        sutta_ref: "e1201n.nrf/pli/cst4"
+        sutta_ref: "e1201n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "<span class='match'>bojjhaṅgā</span> bhāsantūti attho yadā tu dhātunā yutto pati tadā tenāyogā sambandhe chaṭṭhī ca tassa nappaṭi bhātīti akkhe dibbati akkhehi dibbati akkhesu"
         score: 0.6099494695663452
     }
     ListElement {
-        uid: "e0903n.nrf/pli/cst4"
+        uid: "e0903n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0903n.nrf"
-        sutta_ref: "e0903n.nrf/pli/cst4"
+        sutta_ref: "e0903n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "me dukkhā vedanā abhikkamanti no paṭikkamanti abhikkamosānaṁ paññāyati no paṭikkamo ti tasmiṁ bhante vatthusmiṁ sattime kassapa <span class='match'>bojjhaṅgā</span> mayā sammadakkhātā bhāvitā"
         score: 0.6099494695663452
     }
     ListElement {
-        uid: "s0402t.tik/pli/cst4"
+        uid: "s0402t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0402t.tik"
-        sutta_ref: "s0402t.tik/pli/cst4"
+        sutta_ref: "s0402t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "11 dutiyavaggassa paṭhame appaṭisaṅkhāne na kampatīti paṭisaṅkhānabalaṁ upaparikkhanapaññāyetaṁ nāmaṁ vīriyasīsena satta <span class='match'>bojjhaṅge</span> bhāventassa uppannaṁ balaṁ"
         score: 0.5862276554107666
     }
     ListElement {
-        uid: "s0302t.tik/pli/cst4"
+        uid: "s0302t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0302t.tik"
-        sutta_ref: "s0302t.tik/pli/cst4"
+        sutta_ref: "s0302t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "satipaṭṭhānesu patiṭṭhitacittā satta <span class='match'>bojjhaṅge</span> yāthāvato bhāvetvā sammāsambodhiyā abhisambujjhanavasena pavattantīti attho yathā pana tesaṁ paṭhamavipassanābhiniveso hoti"
         score: 0.5826548933982849
     }
     ListElement {
-        uid: "e0201n.nrf/pli/cst4"
+        uid: "e0201n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0201n.nrf"
-        sutta_ref: "e0201n.nrf/pli/cst4"
+        sutta_ref: "e0201n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "najjā najjaṁ suhadassa bhāvo sohajjaṁ vattabbanti vajjaṁ jhānaṁ upasampajja viharati [dha॰ sa॰ 160] upasampajjati ajjhokāso <span class='match'>bojjhaṅgo</span> bojjhā bodhiyā vā bujjhitabbanti bojjhaṁ"
         score: 0.5259659290313721
     }
     ListElement {
-        uid: "e0807n.nrf/pli/cst4"
+        uid: "e0807n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0807n.nrf"
-        sutta_ref: "e0807n.nrf/pli/cst4"
+        sutta_ref: "e0807n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "nadiyaṁtyattho sace maṁ nālapissatīti mayā saddhiṁtyattho vihitāva paṭi yogepi dutiyā paṭibhantu taṁ cunda <span class='match'>bojjhaṅgā</span> tampaṭi <span class='match'>bojjhaṅgā</span> bhāsantūti attho upamā maṁ"
         score: 0.5230882167816162
     }
     ListElement {
-        uid: "e0401n.nrf/pli/cst4"
+        uid: "e0401n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0401n.nrf"
-        sutta_ref: "e0401n.nrf/pli/cst4"
+        sutta_ref: "e0401n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "vohāro siddho ti yojanā dhamma sāmaggipadhāna nti jhānaṭṭhāne jhānaṅga dhammānaṁ maggaṭṭhāne maggaṅga dhammānaṁ bodhiṭṭhāne <span class='match'>bojjhaṅga</span> dhammānaṁ"
         score: 0.476146936416626
     }
     ListElement {
-        uid: "s0102a.att/pli/cst4"
+        uid: "s0102a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0102a.att"
-        sutta_ref: "s0102a.att/pli/cst4"
+        sutta_ref: "s0102a.att/pli/cst"
         nikaya: "['s']"
         snippet: "<span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko maggo ti tena tenākārena ime dhamme vibhajitvā vibhajitvā suttantapiṭakaṁ desitaṁ taṁ sakalampi suttantapiṭakaṁ mayi parinibbute tumhākaṁ"
         score: 0.40143299102783203
     }
     ListElement {
-        uid: "s0402a.att/pli/cst4"
+        uid: "s0402a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0402a.att"
-        sutta_ref: "s0402a.att/pli/cst4"
+        sutta_ref: "s0402a.att/pli/cst"
         nikaya: "['s']"
         snippet: "nissaraṇavivekanissitaṁ satisambojjhaṅgaṁ bhāveti pañcavidhavivekanissitampīti eke te hi na kevalaṁ balavavipassanāmaggaphalakkhaṇesuyeva <span class='match'>bojjhaṅge</span> uddharanti"
         score: 0.40143299102783203
     }
     ListElement {
-        uid: "e0805n.nrf/pli/cst4"
+        uid: "e0805n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0805n.nrf"
-        sutta_ref: "e0805n.nrf/pli/cst4"
+        sutta_ref: "e0805n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "vibbhanto ubbhato dubbhikkhaṁ nibbhayaṁ tabbhāvo catuddhā cabhubbhi chaddhā saddhammo sabbhūto mahaddhano mahabbhayaṁ yavata mādesādīsu – <span class='match'>bojjhaṅgā</span> āsabbhaṁ bujjhitabbaṁ"
         score: 0.4003123939037323
     }
     ListElement {
-        uid: "abh06t.nrf/pli/cst4"
+        uid: "abh06t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "abh06t.nrf"
-        sutta_ref: "abh06t.nrf/pli/cst4"
+        sutta_ref: "abh06t.nrf/pli/cst"
         nikaya: "['abh']"
         snippet: "vīriyapītiyo passaddhekaggatāpekkhā bujjhantassaṅgabhāvato 200 <span class='match'>bojjhaṅgā</span> ti visesena satta dhammā pakāsitā niyyānaṭṭhena maggaṅgā sammādiṭṭhādiaṭṭhadhā 201"
         score: 0.4003123939037323
     }
     ListElement {
-        uid: "vin01t2.tik/pli/cst4"
+        uid: "vin01t2.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin01t2.tik"
-        sutta_ref: "vin01t2.tik/pli/cst4"
+        sutta_ref: "vin01t2.tik/pli/cst"
         nikaya: "['vin']"
         snippet: "satta <span class='match'>bojjhaṅge</span> paripūrenti satta <span class='match'>bojjhaṅgā</span> bhāvitā bahulīkatā vijjāvimuttiṁ paripūrentī ti (ma॰ ni॰ 3 147) apica carimakānaṁ assāsapassāsānaṁ viditabhāvakaraṇatopissā"
         score: 0.3634163439273834
     }
     ListElement {
-        uid: "vin01t1.tik/pli/cst4"
+        uid: "vin01t1.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin01t1.tik"
-        sutta_ref: "vin01t1.tik/pli/cst4"
+        sutta_ref: "vin01t1.tik/pli/cst"
         nikaya: "['vin']"
         snippet: "cattāro iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgāni</span> ariyo aṭṭhaṅgiko maggo ti tena tena vineyyānaṁ ajjhāsayānurūpena pakārena ime sattatiṁsa bodhipakkhiyadhamme"
         score: 0.3634163439273834
     }
     ListElement {
-        uid: "s0301t.tik/pli/cst4"
+        uid: "s0301t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0301t.tik"
-        sutta_ref: "s0301t.tik/pli/cst4"
+        sutta_ref: "s0301t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "saññā cha abhiññā cha asādhāraṇañāṇāni satta aparihāniyā dhammā satta ariyadhammā satta ariyadhanāni satta <span class='match'>bojjhaṅgā</span> satta sappurisadhammā satta nijjaravatthūni satta saññā"
         score: 0.34614861011505127
     }
     ListElement {
-        uid: "s0404a.att/pli/cst4"
+        uid: "s0404a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0404a.att"
-        sutta_ref: "s0404a.att/pli/cst4"
+        sutta_ref: "s0404a.att/pli/cst"
         nikaya: "['s']"
         snippet: "paṭhame sāhāra nti sapaccayaṁ vijjāvimutti nti phalañāṇañceva sesasampayuttadhamme ca <span class='match'>bojjhaṅgā</span> ti maggabojjhaṅgā dutiye bhavataṇhāyā ti bhavapatthanāya evaṁ dvīsupi suttesu"
         score: 0.3436600863933563
     }
     ListElement {
-        uid: "e0101n.mul/pli/cst4"
+        uid: "e0101n.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0101n.mul"
-        sutta_ref: "e0101n.mul/pli/cst4"
+        sutta_ref: "e0101n.mul/pli/cst"
         nikaya: "['e']"
         snippet: "ānāpānassati bhikkhave bhāvitā bahulīkatā cattāro satipaṭṭhāne paripūreti cattāro satipaṭṭhānā bhāvitā bahulīkatā satta <span class='match'>bojjhaṅge</span> paripūrenti satta <span class='match'>bojjhaṅgā</span> bhāvitā"
         score: 0.3242148756980896
     }
     ListElement {
-        uid: "s0501t.nrf/pli/cst4"
+        uid: "s0501t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0501t.nrf"
-        sutta_ref: "s0501t.nrf/pli/cst4"
+        sutta_ref: "s0501t.nrf/pli/cst"
         nikaya: "['s']"
         snippet: "iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> aṭṭha maggaṅgānī ti tecattālīsaṁ bodhipakkhiyadhammā vipassanāvasena paṭipakkho maggo nāma samathavasena katamo"
         score: 0.30489516258239746
     }
     ListElement {
-        uid: "s0403t.tik/pli/cst4"
+        uid: "s0403t.tik/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0403t.tik"
-        sutta_ref: "s0403t.tik/pli/cst4"
+        sutta_ref: "s0403t.tik/pli/cst"
         nikaya: "['s']"
         snippet: "vīriyanti āha vīriyasaṁvarasaṅkhātena vinodanenā ti satta <span class='match'>bojjhaṅgā</span> bhāvitā bahulīkatā vijjāvimuttiyo paripūrentī ti vacanato vijjāvimuttīnaṁ anadhigamo tato ca"
         score: 0.3029627501964569
     }
     ListElement {
-        uid: "e0601n.nrf/pli/cst4"
+        uid: "e0601n.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0601n.nrf"
-        sutta_ref: "e0601n.nrf/pli/cst4"
+        sutta_ref: "e0601n.nrf/pli/cst"
         nikaya: "['e']"
         snippet: "mahante sammappadhāne mahante iddhipāde mahantāni indriyāni mahantāni balāni mahante <span class='match'>bojjhaṅge</span> mahantaṁ ariyaṁ aṭṭhaṅgikaṁ maggaṁ mahantaṁ paramatthaṁ amataṁ nibbānaṁ"
         score: 0.3029627501964569
     }
     ListElement {
-        uid: "s0510a.att/pli/cst4"
+        uid: "s0510a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0510a.att"
-        sutta_ref: "s0510a.att/pli/cst4"
+        sutta_ref: "s0510a.att/pli/cst"
         nikaya: "['s']"
         snippet: "ekāyanamaggo vuccati cattāro satipaṭṭhānā cattāro sammappadhānā cattāro iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko maggo ekāyanaṁ"
         score: 0.263572633266449
     }
     ListElement {
-        uid: "s0302a.att/pli/cst4"
+        uid: "s0302a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0302a.att"
-        sutta_ref: "s0302a.att/pli/cst4"
+        sutta_ref: "s0302a.att/pli/cst"
         nikaya: "['s']"
         snippet: "bhagavantaṁ pana upasaṅkamitvā catasso parisā cattāro vaṇṇā nāgā supaṇṇā gandhabbā asurā yakkhā mahārājāno tāvatiṁsādayo devā mahābrahmāti evamādayo <span class='match'>bojjhaṅgā</span>"
         score: 0.24494777619838715
     }
     ListElement {
-        uid: "s0104t.nrf/pli/cst4"
+        uid: "s0104t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0104t.nrf"
-        sutta_ref: "s0104t.nrf/pli/cst4"
+        sutta_ref: "s0104t.nrf/pli/cst"
         nikaya: "['s']"
         snippet: "ṭhiteneva ca mayā ime cattāro satipaṭṭhānā cattāro sammappadhānā cattāro iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko maggo ti tena tena"
         score: 0.2245945930480957
     }
     ListElement {
-        uid: "e0104n.att/pli/cst4"
+        uid: "e0104n.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "e0104n.att"
-        sutta_ref: "e0104n.att/pli/cst4"
+        sutta_ref: "e0104n.att/pli/cst"
         nikaya: "['e']"
         snippet: "visuddhi॰ 2 699) vuttanayeneva yadaggena indriyānaṁ tikkhataṁ sampādeti tadaggena balāni <span class='match'>bojjhaṅgāni</span> ca paṭutarabhāvaṁ āpādento indriyabalabojjhaṅgāni samodhānetvā"
         score: 0.2064686417579651
     }
     ListElement {
-        uid: "s0512a.att/pli/cst4"
+        uid: "s0512a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "s0512a.att"
-        sutta_ref: "s0512a.att/pli/cst4"
+        sutta_ref: "s0512a.att/pli/cst"
         nikaya: "['s']"
         snippet: "abhiññā cha asādhāraṇañāṇāni satta aparihāniyā dhammā satta ariyadhanāni satta <span class='match'>bojjhaṅgā</span> satta sappurisadhammā satta niddasavatthūni satta saññā satta"
         score: 0.16564735770225525
     }
     ListElement {
-        uid: "vin01a.att/pli/cst4"
+        uid: "vin01a.att/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin01a.att"
-        sutta_ref: "vin01a.att/pli/cst4"
+        sutta_ref: "vin01a.att/pli/cst"
         nikaya: "['vin']"
         snippet: "satipaṭṭhānaṁ sammappadhānaṁ iddhipādaṁ indriyaṁ balaṁ <span class='match'>bojjhaṅgaṁ</span> maggaṁ phalaṁ nibbānaṁ paccakkhāmī ti caturāsītidhammakkhandhasahassesu ekadhammakkhandhassapi"
         score: 0.15608209371566772
     }
     ListElement {
-        uid: "vin02m3.mul/pli/cst4"
+        uid: "vin02m3.mul/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin02m3.mul"
-        sutta_ref: "vin02m3.mul/pli/cst4"
+        sutta_ref: "vin02m3.mul/pli/cst"
         nikaya: "['vin']"
         snippet: "anekaratano tatrimāni ratanāni seyyathidaṁ – cattāro satipaṭṭhānā cattāro sammappadhānā cattāro iddhipādā pañcindriyāni pañca balāni satta <span class='match'>bojjhaṅgā</span> ariyo aṭṭhaṅgiko"
         score: 0.11398471891880035
     }
     ListElement {
-        uid: "vin06t.nrf/pli/cst4"
+        uid: "vin06t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin06t.nrf"
-        sutta_ref: "vin06t.nrf/pli/cst4"
+        sutta_ref: "vin06t.nrf/pli/cst"
         nikaya: "['vin']"
         snippet: "tatiyavijjāya āsavānaṁ khayañāṇāyā ti tadeva dassitaṁ aṭṭhakathāyaṁ pana <span class='match'>bojjhaṅgā</span> ti bodhipakkhiyā dhammā ti ca tattha yasmā catūsu maggesu ñāṇaṁ bodhī ti vuccati"
         score: 0.09674323350191116
     }
     ListElement {
-        uid: "vin11t.nrf/pli/cst4"
+        uid: "vin11t.nrf/pli/cst"
         schema_name: "appdata"
         table_name: "suttas"
-        source_uid: "cst4"
+        source_uid: "cst"
         title: "vin11t.nrf"
-        sutta_ref: "vin11t.nrf/pli/cst4"
+        sutta_ref: "vin11t.nrf/pli/cst"
         nikaya: "['vin']"
         snippet: "paññattāpattiyo sattā ti pārājikādayo paññattāpattiyo satta vuttā sattabojjhaṅgadassinā ti satisambojjhaṅgādayo satta <span class='match'>bojjhaṅge</span> yāthāvato passantena bhagavatā"
         score: 0.07019772380590439

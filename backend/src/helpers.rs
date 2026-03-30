@@ -179,7 +179,7 @@ pub fn sutta_range_from_ref(reference: &str) -> Option<SuttaRange> {
 
     ref_str = ref_str.replace("--", "-");
 
-    // CST4 commentary suffixes: mn1.att -> mn1, mn1.tik -> mn1
+    // CST commentary suffixes: mn1.att -> mn1, mn1.tik -> mn1
     if ref_str.ends_with(".att") {
         ref_str = ref_str[..ref_str.len() - 4].to_string();
     } else if ref_str.ends_with(".tik") {
@@ -615,7 +615,7 @@ pub fn is_complete_word_uid(uid: &str) -> bool {
 pub fn consistent_niggahita(text: Option<String>) -> String {
     // Use only ṁ, both in content and query strings.
     //
-    // CST4 uses ṁ
+    // CST uses ṁ
     // SuttaCentral MS uses ṁ
     // Aj Thanissaro's BMC uses ṁ
     // Uncommon Wisdom uses ṁ
@@ -645,7 +645,7 @@ lazy_static! {
     static ref RE_UUTI_BEFORE: Regex =  Regex::new(r#"[’'"”]+ūti"#).unwrap();
     static ref RE_UUTI_AFTER: Regex =  Regex::new(r#"ū[’'"”]+ti"#).unwrap();
 
-    // Don't include parentheses (), interferes with 'contains match' in cst4 texts,
+    // Don't include parentheses (), interferes with 'contains match' in cst texts,
     // see test_sutta_search_contains_match_with_punctuation()
     static ref RE_PUNCT_QUOTES: Regex = Regex::new(r#"[\.,;:\!\?'‘’"“”…—–-]+"#).unwrap();
 
@@ -2732,14 +2732,14 @@ mod tests {
         assert_eq!(range.start, Some(1));
         assert_eq!(range.end, Some(5));
 
-        // CST4 commentary (.att)
-        let range = sutta_range_from_ref("mn1.att/pli/cst4").unwrap();
+        // CST commentary (.att)
+        let range = sutta_range_from_ref("mn1.att/pli/cst").unwrap();
         assert_eq!(range.group, "mn");
         assert_eq!(range.start, Some(1));
         assert_eq!(range.end, Some(1));
 
-        // CST4 sub-commentary (.tik)
-        let range = sutta_range_from_ref("sn30.7.tik/pli/cst4").unwrap();
+        // CST sub-commentary (.tik)
+        let range = sutta_range_from_ref("sn30.7.tik/pli/cst").unwrap();
         assert_eq!(range.group, "sn30");
         assert_eq!(range.start, Some(7));
         assert_eq!(range.end, Some(7));
