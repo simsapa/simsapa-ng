@@ -377,3 +377,16 @@ fn test_render_pli_tv_bu_vb_pj4_en_brahmali() {
     let expected = load_expected_html(sutta_uid);
     assert_eq!(html, expected, "Rendered HTML mismatch for {}", sutta_uid);
 }
+
+#[test]
+#[serial]
+fn test_previously_failing_suttas_render() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let uids = vec!["dn1/en/sujato", "dn2/en/sujato", "mn1/en/sujato", "mn2/en/sujato", "mn3/en/sujato"];
+    for uid in uids {
+        let sutta = app_data.dbm.appdata.get_sutta(uid).expect(&format!("Can't get sutta {} from db", uid));
+        let result = app_data.render_sutta_content(&sutta, None, None, false);
+        assert!(result.is_ok(), "Rendering failed for {}: {:?}", uid, result.err());
+    }
+}

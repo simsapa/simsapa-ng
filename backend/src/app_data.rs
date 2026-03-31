@@ -56,13 +56,13 @@ impl AppData {
 
         let db_conn = &mut self.dbm.appdata.get_conn().expect("No appdata conn");
 
+        // Only pli/ms suttas have bilara-format content_json needed for line-by-line rendering.
+        // pli/cst suttas never have content_json.
         let res = suttas
             .select(Sutta::as_select())
-            .filter(uid.ne(&sutta.uid))
-            .filter(language.eq("pli"))
-            .filter(uid.like(format!("{}/%", uid_ref)))
+            .filter(uid.eq(format!("{}/pli/ms", uid_ref)))
             .first(db_conn)
-            .optional() // Makes it return Result<Option<USutta>> instead of erroring if not found
+            .optional() // Makes it return Result<Option<Sutta>> instead of erroring if not found
             .context("Database query failed for Pali sutta")?;
 
         Ok(res)
