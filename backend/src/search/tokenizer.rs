@@ -190,8 +190,8 @@ pub fn register_tokenizers(index: &tantivy::Index, lang: &str) {
         .filter(RemoveLongFilter::limit(50))
         .filter(LowerCaser)
         .filter(NiggahitaNormalizer)
-        .filter(StemmerFilter::new(algorithm))
         .filter(AsciiFoldingFilter)
+        .filter(StemmerFilter::new(algorithm))
         .build();
 
     index
@@ -243,8 +243,8 @@ mod tests {
             .filter(RemoveLongFilter::limit(50))
             .filter(LowerCaser)
             .filter(NiggahitaNormalizer)
-            .filter(StemmerFilter::new(algorithm))
             .filter(AsciiFoldingFilter)
+            .filter(StemmerFilter::new(algorithm))
             .build()
     }
 
@@ -330,5 +330,90 @@ mod tests {
         assert_eq!(tokens[1].offset_from, 7);
         // "bhikkhūnaṁ" = 7 ASCII + ū(2 bytes) + na + ṁ(2 bytes) = 13 bytes
         assert_eq!(tokens[1].offset_to, 7 + 13);
+    }
+
+    #[test]
+    fn test_ascii_input_matches_diacritical() {
+        let mut a = pali_stem_analyzer();
+        let ascii_tokens = tokenize(&mut a, "vinnanam");
+        let diacritical_tokens = tokenize(&mut a, "viññāṇaṁ");
+        assert_eq!(ascii_tokens[0].text, diacritical_tokens[0].text,
+            "ASCII 'vinnanam' and diacritical 'viññāṇaṁ' should produce the same stem");
+    }
+
+    #[test]
+    fn test_ascii_stem_anabhijanam() {
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "anabhijanam");
+        assert_eq!(tokens.len(), 1);
+        // anam suffix (a-stem gen pl) is longest match, same as ānaṁ in original
+        assert_eq!(tokens[0].text, "anabhija");
+    }
+
+    #[test]
+    fn test_ascii_stem_bhikkhunam() {
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "bhikkhunam");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].text, "bhikkhu");
+    }
+
+    #[test]
+    fn test_ascii_stem_sattanam() {
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "sattanam");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].text, "satta");
+    }
+
+    #[test]
+    fn test_ascii_stem_nibbanam() {
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "nibbanam");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].text, "nibbana");
+    }
+
+    #[test]
+    fn test_ascii_stem_dhammo() {
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "dhammo");
+        assert_eq!(tokens.len(), 1);
+        assert_eq!(tokens[0].text, "dhamma");
+    }
+
+    // Suffix collision tests: verify correct behavior for merged suffixes
+    #[test]
+    fn test_collision_ayo_uses_a_stem() {
+        // 'ayo' suffix collision: i-stem (<-'i') vs a-stem (<-'a')
+        // Resolved to a-stem. E.g. "kannayo" (kaññāyo, fem nom pl of kaññā)
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "kannayo");
+        assert_eq!(tokens[0].text, "kanna");
+    }
+
+    #[test]
+    fn test_collision_inam_merged() {
+        // 'inam' from both {ii}na{.m} and ina{.m}, both (<- 'i')
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "agginam");
+        assert_eq!(tokens[0].text, "aggi");
+    }
+
+    #[test]
+    fn test_collision_usu_merged() {
+        // 'usu' from both {uu}su and usu, both (<- 'u')
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "bhikkhusu");
+        assert_eq!(tokens[0].text, "bhikkhu");
+    }
+
+    #[test]
+    fn test_identity_noop_prevents_verb_match() {
+        // 'a' <- 'a' is a no-op but prevents verb_suffix from firing
+        // "dhamma" should stay "dhamma", not be incorrectly verb-stemmed
+        let mut a = pali_stem_analyzer();
+        let tokens = tokenize(&mut a, "dhamma");
+        assert_eq!(tokens[0].text, "dhamma");
     }
 }

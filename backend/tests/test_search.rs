@@ -353,7 +353,7 @@ fn test_fulltext_searcher_open_and_search_suttas() {
 
     // Search for stemmed term: "bhikkhu" should match "bhikkhūnaṁ"
     let filters = SearchFilters::default();
-    let results = searcher.search_suttas("bhikkhu", &filters, 10).expect("Search failed");
+    let (_count, results) = searcher.search_suttas_with_count("bhikkhu", &filters, 10).expect("Search failed");
     assert!(!results.is_empty(), "Should find results for stemmed 'bhikkhu'");
     assert_eq!(results[0].uid, "dn1/pli/ms");
 
@@ -368,7 +368,7 @@ fn test_fulltext_searcher_dual_field_boost() {
 
     // Search for "dhammo" - should find results (stemmed to dhamma)
     let filters = SearchFilters::default();
-    let results = searcher.search_suttas("dhammo", &filters, 10).expect("Search failed");
+    let (_count, results) = searcher.search_suttas_with_count("dhammo", &filters, 10).expect("Search failed");
     assert!(!results.is_empty(), "Should find results for 'dhammo'");
 
     let _ = std::fs::remove_dir_all(&base);
@@ -382,7 +382,7 @@ fn test_fulltext_searcher_language_filter() {
 
     // Search all languages
     let filters = SearchFilters::default();
-    let all_results = searcher.search_suttas("DN", &filters, 10).expect("Search failed");
+    let (_count, all_results) = searcher.search_suttas_with_count("DN", &filters, 10).expect("Search failed");
 
     // Search Pali only
     let pli_filters = SearchFilters {
@@ -390,7 +390,7 @@ fn test_fulltext_searcher_language_filter() {
         lang_include: true,
         ..Default::default()
     };
-    let pli_results = searcher.search_suttas("DN", &pli_filters, 10).expect("Search failed");
+    let (_count, pli_results) = searcher.search_suttas_with_count("DN", &pli_filters, 10).expect("Search failed");
 
     // Pali results should be a subset
     assert!(pli_results.len() <= all_results.len(),
@@ -412,7 +412,7 @@ fn test_fulltext_searcher_dict_words() {
     assert!(searcher.has_dict_indexes());
 
     let filters = SearchFilters::default();
-    let results = searcher.search_dict_words("teaching", &filters, 10).expect("Search failed");
+    let (_count, results) = searcher.search_dict_words_with_count("teaching", &filters, 10).expect("Search failed");
     assert!(!results.is_empty(), "Should find dict results for 'teaching'");
     assert_eq!(results[0].table_name, "dict_words");
 
@@ -426,7 +426,7 @@ fn test_fulltext_searcher_snippet_html() {
     let searcher = FulltextSearcher::open(&paths).expect("Failed to open searcher");
 
     let filters = SearchFilters::default();
-    let results = searcher.search_suttas("bhikkhu", &filters, 10).expect("Search failed");
+    let (_count, results) = searcher.search_suttas_with_count("bhikkhu", &filters, 10).expect("Search failed");
     assert!(!results.is_empty());
 
     // Verify snippet uses <span class='match'> instead of <b>
@@ -482,6 +482,6 @@ fn test_fulltext_searcher_empty_indexes() {
     assert!(!searcher.has_dict_indexes());
 
     let filters = SearchFilters::default();
-    let results = searcher.search_suttas("test", &filters, 10).expect("Should return empty");
+    let (_count, results) = searcher.search_suttas_with_count("test", &filters, 10).expect("Should return empty");
     assert!(results.is_empty());
 }
