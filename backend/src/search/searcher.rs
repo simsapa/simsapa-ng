@@ -523,14 +523,14 @@ impl FulltextSearcher {
         &self,
         index: &Index,
         searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        field: tantivy::schema::Field,
         query_text: &str,
         doc: &tantivy::TantivyDocument,
     ) -> Result<String> {
-        let query_parser = QueryParser::for_index(index, vec![content_field]);
+        let query_parser = QueryParser::for_index(index, vec![field]);
         let query = query_parser.parse_query(query_text)?;
 
-        let mut snippet_gen = tantivy::snippet::SnippetGenerator::create(searcher, &query, content_field)?;
+        let mut snippet_gen = tantivy::snippet::SnippetGenerator::create(searcher, &query, field)?;
         snippet_gen.set_max_num_chars(200);
 
         let snippet = snippet_gen.snippet_from_doc(doc);
@@ -706,6 +706,120 @@ mod tests {
         // "bhikkhūnaṁ" should stem differently than normalize
         let result = searcher.debug_query("bhikkhūnaṁ", &filters).unwrap();
         assert!(result.debug_text.contains("Stemming effect: stemmed differs from exact"));
+    }
+
+    #[test]
+    fn test_ascii_query_matches_pali_text() {
+        // ASCII "bhikkhave" should match Pāli "bhikkhave" in the test document
+        let (index, reader) = create_test_index("pli");
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: Some("pli".to_string()),
+            lang_include: true,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
+        // The stemmer now operates on ASCII input, so it stems "sattanam" → "satta"
+        // matching the indexed stem of "sattānaṁ" → fold → "sattanam" → stem → "satta".
+        let (count, results) = searcher.search_suttas_with_count("sattanam", &filters, 10).unwrap();
+        assert!(count > 0, "ASCII query 'sattanam' should match Pāli 'sattānaṁ'");
+        assert!(!results.is_empty());
+        assert_eq!(results[0].uid, "sn12.2/pli/ms");
+    }
+
+    #[test]
+    fn test_ascii_query_jaramaranam() {
+        // "jaramaranam" should match "jarāmaraṇaṁ"
+        let (index, reader) = create_test_index("pli");
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: Some("pli".to_string()),
+            lang_include: true,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10).unwrap();
+        assert!(count > 0, "ASCII query 'jaramaranam' should match Pāli 'jarāmaraṇaṁ'");
+        assert!(!results.is_empty());
+    }
+
+    #[test]
+    fn test_ascii_query_with_declensions() {
+        // "vinnanam" should match documents containing multiple declensions of viññāṇa
+        let lang = "pli";
+        let schema = build_sutta_schema(lang);
+        let index = Index::create_in_ram(schema.clone());
+        register_tokenizers(&index, lang);
+
+        let mut writer = index.writer_with_num_threads(1, 15_000_000).unwrap();
+
+        let uid = schema.get_field("uid").unwrap();
+        let title = schema.get_field("title").unwrap();
+        let language = schema.get_field("language").unwrap();
+        let source_uid = schema.get_field("source_uid").unwrap();
+        let sutta_ref = schema.get_field("sutta_ref").unwrap();
+        let nikaya = schema.get_field("nikaya").unwrap();
+        let content = schema.get_field("content").unwrap();
+        let content_exact = schema.get_field("content_exact").unwrap();
+
+        let text = "viññāṇaṁ viññāṇena viññāṇassa viññāṇānaṁ";
+        writer
+            .add_document(doc!(
+                uid => "sn12.1/pli/ms",
+                title => "Test",
+                language => lang,
+                source_uid => "ms",
+                sutta_ref => "SN 12.1",
+                nikaya => "sn",
+                content => text,
+                content_exact => text
+            ))
+            .unwrap();
+
+        writer.commit().unwrap();
+
+        let reader = index.reader().unwrap();
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+        };
+
+        let filters = SearchFilters {
+            lang: Some("pli".to_string()),
+            lang_include: true,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+        };
+
+        let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10).unwrap();
+        assert!(count > 0, "ASCII query 'vinnanam' should match documents with viññāṇa declensions");
+        assert!(!results.is_empty());
     }
 
     #[test]

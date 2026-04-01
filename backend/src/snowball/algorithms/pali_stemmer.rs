@@ -14,37 +14,38 @@ struct Context {
 }
 
 static A_0: &'static [Among<Context>; 97] = &[
-    Among("arahanta\u{1E41}", -1, 4, None),
-    Among("arahato", -1, 4, None),
-    Among("arahatā", -1, 4, None),
-    Among("arahā", -1, 4, None),
-    Among("attano", -1, 7, None),
-    Among("attanā", -1, 7, None),
-    Among("attā", -1, 7, None),
-    Among("attāna\u{1E41}", 6, 7, None),
-    Among("bhagavanta\u{1E41}", -1, 3, None),
-    Among("bhagavantā", -1, 3, None),
-    Among("bhagavato", -1, 3, None),
-    Among("bhagavatā", -1, 3, None),
-    Among("bhagavā", -1, 3, None),
+    Among("araha", -1, 4, None),
+    Among("arahantam", 0, 4, None),
+    Among("arahata", 0, 4, None),
+    Among("arahato", 0, 4, None),
+    Among("atta", -1, 7, None),
+    Among("attana", 4, 7, None),
+    Among("attanam", 5, 7, None),
+    Among("attano", 4, 7, None),
+    Among("avuso", -1, 19, None),
+    Among("bhagava", -1, 3, None),
+    Among("bhagavanta", 9, 3, None),
+    Among("bhagavantam", 10, 3, None),
+    Among("bhagavata", 9, 3, None),
+    Among("bhagavato", 9, 3, None),
     Among("bhante", -1, 18, None),
-    Among("bhātara\u{1E41}", -1, 16, None),
-    Among("bhātu", -1, 16, None),
-    Among("bhātā", -1, 16, None),
+    Among("bhata", -1, 16, None),
+    Among("bhataram", 15, 16, None),
+    Among("bhatu", -1, 16, None),
+    Among("brahma", -1, 6, None),
+    Among("brahmanam", 18, 6, None),
+    Among("brahmuna", -1, 6, None),
     Among("brahmuno", -1, 6, None),
-    Among("brahmunā", -1, 6, None),
-    Among("brahmā", -1, 6, None),
-    Among("brahmāna\u{1E41}", 19, 6, None),
+    Among("cetasa", -1, 10, None),
     Among("cetase", -1, 10, None),
-    Among("cetasehi", 21, 10, None),
-    Among("cetasesu", 21, 10, None),
+    Among("cetasehi", 23, 10, None),
+    Among("cetasesu", 23, 10, None),
     Among("cetasi", -1, 10, None),
     Among("cetaso", -1, 10, None),
-    Among("cetasā", -1, 10, None),
     Among("ceto", -1, 10, None),
-    Among("dhītara\u{1E41}", -1, 17, None),
-    Among("dhītu", -1, 17, None),
-    Among("dhītā", -1, 17, None),
+    Among("dhita", -1, 17, None),
+    Among("dhitaram", 29, 17, None),
+    Among("dhitu", -1, 17, None),
     Among("hohi", -1, 2, None),
     Among("homa", -1, 2, None),
     Among("homi", -1, 2, None),
@@ -54,194 +55,185 @@ static A_0: &'static [Among<Context>; 97] = &[
     Among("hotha", -1, 2, None),
     Among("hoti", -1, 2, None),
     Among("hotu", -1, 2, None),
+    Among("mananam", -1, 9, None),
+    Among("manasa", -1, 9, None),
     Among("manase", -1, 9, None),
-    Among("manasebhi", 40, 9, None),
-    Among("manasehi", 40, 9, None),
-    Among("manasesu", 40, 9, None),
+    Among("manasebhi", 43, 9, None),
+    Among("manasehi", 43, 9, None),
+    Among("manasesu", 43, 9, None),
     Among("manasi", -1, 9, None),
     Among("manaso", -1, 9, None),
-    Among("manasā", -1, 9, None),
     Among("mano", -1, 9, None),
-    Among("manāna\u{1E41}", -1, 9, None),
-    Among("mātara\u{1E41}", -1, 15, None),
-    Among("mātarehi", -1, 15, None),
-    Among("mātaresu", -1, 15, None),
-    Among("mātarā", -1, 15, None),
-    Among("mātu", -1, 15, None),
-    Among("mātuno", 53, 15, None),
-    Among("mātussa", 53, 15, None),
-    Among("mātā", -1, 15, None),
-    Among("mātūna\u{1E41}", -1, 15, None),
-    Among("mātūsu", -1, 15, None),
-    Among("nibbāna\u{1E41}", -1, 1, None),
-    Among("pitara\u{1E41}", -1, 14, None),
-    Among("pitarehi", -1, 14, None),
-    Among("pitaresu", -1, 14, None),
-    Among("pitarā", -1, 14, None),
+    Among("mata", -1, 15, None),
+    Among("matara", 50, 15, None),
+    Among("mataram", 51, 15, None),
+    Among("matarehi", 50, 15, None),
+    Among("mataresu", 50, 15, None),
+    Among("matu", -1, 15, None),
+    Among("matunam", 55, 15, None),
+    Among("matuno", 55, 15, None),
+    Among("matussa", 55, 15, None),
+    Among("matusu", 55, 15, None),
+    Among("nibbanam", -1, 1, None),
+    Among("pita", -1, 14, None),
+    Among("pitara", 61, 14, None),
+    Among("pitaram", 62, 14, None),
+    Among("pitarehi", 61, 14, None),
+    Among("pitaresu", 61, 14, None),
     Among("pitu", -1, 14, None),
-    Among("pituno", 64, 14, None),
-    Among("pitussa", 64, 14, None),
-    Among("pitā", -1, 14, None),
-    Among("pitūna\u{1E41}", -1, 14, None),
-    Among("pitūsu", -1, 14, None),
-    Among("raññe", -1, 5, None),
-    Among("raññā", -1, 5, None),
-    Among("raññō", -1, 5, None),
-    Among("rājā", -1, 5, None),
-    Among("rājāna\u{1E41}", 73, 5, None),
+    Among("pitunam", 66, 14, None),
+    Among("pituno", 66, 14, None),
+    Among("pitussa", 66, 14, None),
+    Among("pitusu", 66, 14, None),
+    Among("raja", -1, 5, None),
+    Among("rajanam", 71, 5, None),
+    Among("ranna", -1, 5, None),
+    Among("ranne", -1, 5, None),
+    Among("ranno", -1, 5, None),
+    Among("sattha", -1, 8, None),
+    Among("satthanam", 76, 8, None),
+    Among("satthara", 76, 8, None),
+    Among("sattharam", 78, 8, None),
+    Among("sattharasma", 78, 8, None),
+    Among("sattharebhi", 76, 8, None),
+    Among("sattharehi", 76, 8, None),
+    Among("sattharesu", 76, 8, None),
     Among("satthu", -1, 8, None),
-    Among("satthuno", 75, 8, None),
-    Among("satthussa", 75, 8, None),
-    Among("satthā", -1, 8, None),
-    Among("satthāna\u{1E41}", 78, 8, None),
-    Among("satthārasmā", 78, 8, None),
-    Among("satthāra\u{1E41}", 78, 8, None),
-    Among("satthārebhi", 78, 8, None),
-    Among("satthārehi", 78, 8, None),
-    Among("satthāresu", 78, 8, None),
-    Among("satthārā", 78, 8, None),
+    Among("satthuno", 84, 8, None),
+    Among("satthussa", 84, 8, None),
+    Among("tapasa", -1, 11, None),
     Among("tapasi", -1, 11, None),
     Among("tapaso", -1, 11, None),
-    Among("tapasā", -1, 11, None),
     Among("tapo", -1, 11, None),
+    Among("tejasa", -1, 12, None),
     Among("tejaso", -1, 12, None),
-    Among("tejasā", -1, 12, None),
     Among("tejo", -1, 12, None),
+    Among("vacasa", -1, 13, None),
     Among("vacaso", -1, 13, None),
-    Among("vacasā", -1, 13, None),
     Among("vaco", -1, 13, None),
-    Among("āvuso", -1, 19, None),
 ];
 
-static A_1: &'static [Among<Context>; 20] = &[
+static A_1: &'static [Among<Context>; 17] = &[
     Among("tabba", -1, 2, None),
-    Among("amāna", -1, 2, None),
-    Among("emāna", -1, 4, None),
-    Among("omāna", -1, 3, None),
-    Among("anīya", -1, 2, None),
+    Among("amana", -1, 2, None),
+    Among("emana", -1, 4, None),
+    Among("omana", -1, 3, None),
+    Among("tva", -1, 2, None),
+    Among("itva", 4, 2, None),
+    Among("aniya", -1, 2, None),
     Among("iyante", -1, 2, None),
-    Among("īyante", -1, 2, None),
     Among("tave", -1, 2, None),
     Among("iyati", -1, 2, None),
-    Among("īyati", -1, 2, None),
     Among("iyanti", -1, 2, None),
-    Among("īyanti", -1, 2, None),
+    Among("eram", -1, 2, None),
+    Among("vantam", -1, 1, None),
+    Among("tum", -1, 2, None),
+    Among("itum", 13, 2, None),
+    Among("eyyum", -1, 2, None),
     Among("vanto", -1, 1, None),
-    Among("era\u{1E41}", -1, 2, None),
-    Among("vanta\u{1E41}", -1, 1, None),
-    Among("tu\u{1E41}", -1, 2, None),
-    Among("itu\u{1E41}", 15, 2, None),
-    Among("eyyu\u{1E41}", -1, 2, None),
-    Among("tvā", -1, 2, None),
-    Among("itvā", 18, 2, None),
 ];
 
-static A_2: &'static [Among<Context>; 78] = &[
-    Among("ena", -1, 6, None),
-    Among("antena", 0, 1, None),
-    Among("assa", -1, 6, None),
-    Among("issa", -1, 4, None),
-    Among("ussa", -1, 2, None),
-    Among("āya", -1, 7, None),
-    Among("e", -1, 6, None),
-    Among("āse", 6, 6, None),
-    Among("ante", 6, 1, None),
-    Among("ave", 6, 2, None),
-    Among("ebhi", -1, 6, None),
-    Among("antebhi", 10, 1, None),
-    Among("ābhi", -1, 7, None),
-    Among("ībhi", -1, 4, None),
-    Among("ūbhi", -1, 2, None),
-    Among("ehi", -1, 6, None),
-    Among("antehi", 15, 1, None),
-    Among("amhi", -1, 6, None),
-    Among("antamhi", 17, 1, None),
-    Among("imhi", -1, 4, None),
-    Among("umhi", -1, 2, None),
-    Among("āhi", -1, 7, None),
-    Among("īhi", -1, 4, None),
-    Among("ūhi", -1, 2, None),
-    Among("ini", -1, 4, None),
-    Among("āni", -1, 6, None),
-    Among("īni", -1, 4, None),
-    Among("ūni", -1, 2, None),
-    Among("o", -1, 6, None),
-    Among("ino", 28, 4, None),
-    Among("uno", 28, 2, None),
-    Among("ato", 28, 6, None),
-    Among("anto", 28, 1, None),
-    Among("avo", 28, 2, None),
-    Among("ayo", 28, 4, None),
-    Among("iyo", 28, 5, None),
-    Among("antiyo", 35, 1, None),
-    Among("uyo", 28, 3, None),
-    Among("āyo", 28, 7, None),
-    Among("esu", -1, 6, None),
-    Among("antesu", 39, 1, None),
-    Among("isu", -1, 4, None),
-    Among("usu", -1, 2, None),
-    Among("āsu", -1, 7, None),
-    Among("īsu", -1, 4, None),
-    Among("ūsu", -1, 2, None),
-    Among("a\u{1E41}", -1, 6, None),
-    Among("ina\u{1E41}", 46, 4, None),
-    Among("āna\u{1E41}", 46, 6, None),
-    Among("antāna\u{1E41}", 48, 1, None),
-    Among("īna\u{1E41}", 46, 4, None),
-    Among("ūna\u{1E41}", 46, 2, None),
-    Among("anta\u{1E41}", 46, 1, None),
-    Among("iya\u{1E41}", 46, 5, None),
-    Among("uya\u{1E41}", 46, 3, None),
-    Among("āya\u{1E41}", 46, 7, None),
-    Among("i\u{1E41}", -1, 4, None),
-    Among("asmi\u{1E41}", 56, 6, None),
-    Among("antasmi\u{1E41}", 57, 1, None),
-    Among("ismi\u{1E41}", 56, 4, None),
-    Among("usmi\u{1E41}", 56, 2, None),
-    Among("u\u{1E41}", -1, 2, None),
-    Among("ā", -1, 6, None),
-    Among("amhā", 62, 6, None),
-    Among("imhā", 62, 4, None),
-    Among("umhā", 62, 2, None),
-    Among("asmā", 62, 6, None),
-    Among("ismā", 62, 4, None),
-    Among("usmā", 62, 2, None),
-    Among("inā", 62, 4, None),
-    Among("unā", 62, 2, None),
-    Among("antā", 62, 1, None),
-    Among("iyā", 62, 5, None),
-    Among("antiyā", 72, 1, None),
-    Among("uyā", 62, 3, None),
-    Among("ī", -1, 4, None),
-    Among("antī", 75, 1, None),
-    Among("ū", -1, 2, None),
+static A_2: &'static [Among<Context>; 73] = &[
+    Among("a", -1, 4, None),
+    Among("amha", 0, 4, None),
+    Among("imha", 0, 3, None),
+    Among("umha", 0, 2, None),
+    Among("asma", 0, 4, None),
+    Among("isma", 0, 3, None),
+    Among("usma", 0, 2, None),
+    Among("ena", 0, 4, None),
+    Among("antena", 7, 1, None),
+    Among("ina", 0, 3, None),
+    Among("una", 0, 2, None),
+    Among("assa", 0, 4, None),
+    Among("issa", 0, 3, None),
+    Among("ussa", 0, 2, None),
+    Among("anta", 0, 1, None),
+    Among("aya", 0, 4, None),
+    Among("iya", 0, 3, None),
+    Among("antiya", 16, 1, None),
+    Among("uya", 0, 2, None),
+    Among("e", -1, 4, None),
+    Among("ase", 19, 4, None),
+    Among("ante", 19, 1, None),
+    Among("ave", 19, 2, None),
+    Among("i", -1, 3, None),
+    Among("ahi", 23, 4, None),
+    Among("abhi", 23, 4, None),
+    Among("ebhi", 23, 4, None),
+    Among("antebhi", 26, 1, None),
+    Among("ibhi", 23, 3, None),
+    Among("ubhi", 23, 2, None),
+    Among("ehi", 23, 4, None),
+    Among("antehi", 30, 1, None),
+    Among("ihi", 23, 3, None),
+    Among("amhi", 23, 4, None),
+    Among("antamhi", 33, 1, None),
+    Among("imhi", 23, 3, None),
+    Among("umhi", 23, 2, None),
+    Among("uhi", 23, 2, None),
+    Among("ani", 23, 4, None),
+    Among("ini", 23, 3, None),
+    Among("uni", 23, 2, None),
+    Among("anti", 23, 1, None),
+    Among("am", -1, 4, None),
+    Among("anam", 42, 4, None),
+    Among("antanam", 43, 1, None),
+    Among("inam", 42, 3, None),
+    Among("unam", 42, 2, None),
+    Among("antam", 42, 1, None),
+    Among("ayam", 42, 4, None),
+    Among("iyam", 42, 3, None),
+    Among("uyam", 42, 2, None),
+    Among("im", -1, 3, None),
+    Among("asmim", 51, 4, None),
+    Among("antasmim", 52, 1, None),
+    Among("ismim", 51, 3, None),
+    Among("usmim", 51, 2, None),
+    Among("um", -1, 2, None),
+    Among("o", -1, 4, None),
+    Among("ino", 57, 3, None),
+    Among("uno", 57, 2, None),
+    Among("ato", 57, 4, None),
+    Among("anto", 57, 1, None),
+    Among("avo", 57, 2, None),
+    Among("ayo", 57, 4, None),
+    Among("iyo", 57, 3, None),
+    Among("antiyo", 64, 1, None),
+    Among("uyo", 57, 2, None),
+    Among("u", -1, 2, None),
+    Among("asu", 67, 4, None),
+    Among("esu", 67, 4, None),
+    Among("antesu", 69, 1, None),
+    Among("isu", 67, 3, None),
+    Among("usu", 67, 2, None),
 ];
 
-static A_3: &'static [Among<Context>; 70] = &[
+static A_3: &'static [Among<Context>; 68] = &[
     Among("imha", -1, 1, None),
     Among("atha", -1, 1, None),
     Among("issatha", 1, 1, None),
+    Among("eyyatha", 1, 1, None),
     Among("etha", -1, 1, None),
     Among("otha", -1, 3, None),
     Among("ittha", -1, 1, None),
-    Among("eyyātha", -1, 1, None),
+    Among("ama", -1, 1, None),
+    Among("eyyama", 7, 1, None),
     Among("ema", -1, 1, None),
     Among("oma", -1, 3, None),
-    Among("āma", -1, 1, None),
-    Among("eyyāma", 9, 1, None),
     Among("eyya", -1, 1, None),
+    Among("amhe", -1, 1, None),
+    Among("issamhe", 12, 1, None),
+    Among("eyyamhe", 12, 1, None),
     Among("omhe", -1, 3, None),
-    Among("āmhe", -1, 1, None),
-    Among("issāmhe", 13, 1, None),
-    Among("eyyāmhe", 13, 1, None),
     Among("avhe", -1, 1, None),
     Among("issavhe", 16, 1, None),
     Among("ovhe", -1, 3, None),
     Among("ase", -1, 1, None),
     Among("amhase", 19, 1, None),
+    Among("amase", 19, 1, None),
+    Among("issamase", 21, 1, None),
     Among("emase", 19, 1, None),
-    Among("āmase", 19, 1, None),
-    Among("issāmase", 22, 1, None),
     Among("issase", 19, 1, None),
     Among("ose", -1, 3, None),
     Among("ate", -1, 1, None),
@@ -249,17 +241,17 @@ static A_3: &'static [Among<Context>; 70] = &[
     Among("ante", -1, 1, None),
     Among("issante", 28, 1, None),
     Among("onte", -1, 3, None),
+    Among("ahi", -1, 1, None),
     Among("ohi", -1, 3, None),
-    Among("āhi", -1, 1, None),
+    Among("ami", -1, 1, None),
+    Among("issami", 33, 1, None),
+    Among("eyyami", 33, 1, None),
     Among("omi", -1, 3, None),
-    Among("āmi", -1, 1, None),
-    Among("issāmi", 34, 1, None),
-    Among("eyyāmi", 34, 1, None),
     Among("asi", -1, 1, None),
     Among("issasi", 37, 1, None),
+    Among("eyyasi", 37, 1, None),
     Among("esi", -1, 2, None),
     Among("osi", -1, 3, None),
-    Among("eyyāsi", -1, 1, None),
     Among("ati", -1, 1, None),
     Among("issati", 42, 1, None),
     Among("eti", -1, 2, None),
@@ -268,92 +260,44 @@ static A_3: &'static [Among<Context>; 70] = &[
     Among("enti", -1, 2, None),
     Among("onti", -1, 3, None),
     Among("oti", -1, 3, None),
+    Among("issam", -1, 1, None),
+    Among("atam", -1, 1, None),
+    Among("antam", -1, 1, None),
+    Among("eyyam", -1, 1, None),
+    Among("im", -1, 1, None),
+    Among("arum", -1, 1, None),
+    Among("isum", -1, 1, None),
+    Among("eyyatho", -1, 1, None),
     Among("etho", -1, 1, None),
-    Among("eyyātho", -1, 1, None),
     Among("avho", -1, 1, None),
-    Among("eyyavho", 52, 1, None),
-    Among("eyyāvho", -1, 1, None),
+    Among("eyyavho", 59, 1, None),
     Among("emu", -1, 1, None),
+    Among("imsu", -1, 1, None),
     Among("assu", -1, 1, None),
-    Among("i\u{1E41}su", -1, 1, None),
     Among("atu", -1, 1, None),
     Among("antu", -1, 1, None),
     Among("ontu", -1, 3, None),
     Among("otu", -1, 3, None),
-    Among("issa\u{1E41}", -1, 1, None),
-    Among("ata\u{1E41}", -1, 1, None),
-    Among("anta\u{1E41}", -1, 1, None),
-    Among("eyya\u{1E41}", -1, 1, None),
-    Among("i\u{1E41}", -1, 1, None),
-    Among("aru\u{1E41}", -1, 1, None),
-    Among("isu\u{1E41}", -1, 1, None),
-    Among("imhā", -1, 1, None),
 ];
 
 static A_4: &'static [Among<Context>; 3] = &[
-    Among("a\u{1E41}", -1, 1, None),
-    Among("i\u{1E41}", -1, 2, None),
-    Among("u\u{1E41}", -1, 3, None),
+    Among("am", -1, 1, None),
+    Among("im", -1, 2, None),
+    Among("um", -1, 3, None),
 ];
 
-static G_v: &'static [u8; 34] = &[17, 65, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4];
-
-fn r_prelude(env: &mut SnowballEnv, context: &mut Context) -> bool {
-    let v_1 = env.cursor;
-    'lab0: loop {
-        env.bra = env.cursor;
-        if !env.eq_s(&"\u{221A}") {
-            break 'lab0;
-        }
-        env.ket = env.cursor;
-        env.slice_del();
-        break 'lab0;
-    }
-    env.cursor = v_1;
-    let v_2 = env.cursor;
-    'lab1: loop {
-        'replab2: loop{
-            let v_3 = env.cursor;
-            'lab3: for _ in 0..1 {
-                'golab4: loop {
-                    let v_4 = env.cursor;
-                    'lab5: loop {
-                        env.bra = env.cursor;
-                        if !env.eq_s(&"\u{1E43}") {
-                            break 'lab5;
-                        }
-                        env.ket = env.cursor;
-                        env.cursor = v_4;
-                        break 'golab4;
-                    }
-                    env.cursor = v_4;
-                    if env.cursor >= env.limit {
-                        break 'lab3;
-                    }
-                    env.next_char();
-                }
-                env.slice_from("\u{1E41}");
-                continue 'replab2;
-            }
-            env.cursor = v_3;
-            break 'replab2;
-        }
-        break 'lab1;
-    }
-    env.cursor = v_2;
-    return true
-}
+static G_v: &'static [u8; 3] = &[17, 65, 16];
 
 fn r_mark_regions(env: &mut SnowballEnv, context: &mut Context) -> bool {
     let mut i_x : i32;
     context.i_p1 = env.limit;
     let v_1 = env.cursor;
     'lab0: loop {
-        if !env.go_out_grouping(G_v, 97, 363) {
+        if !env.go_out_grouping(G_v, 97, 117) {
             break 'lab0;
         }
         env.next_char();
-        if !env.go_in_grouping(G_v, 97, 363) {
+        if !env.go_in_grouping(G_v, 97, 117) {
             break 'lab0;
         }
         env.next_char();
@@ -382,6 +326,10 @@ fn r_mark_regions(env: &mut SnowballEnv, context: &mut Context) -> bool {
 fn r_exception_list(env: &mut SnowballEnv, context: &mut Context) -> bool {
     let mut among_var;
     env.bra = env.cursor;
+    if (env.cursor + 3 >= env.limit || env.current.as_bytes()[(env.cursor + 3) as usize] as u8 >> 5 != 3 as u8 || ((3720070 as i32 >> (env.current.as_bytes()[(env.cursor + 3) as usize] as u8 & 0x1f)) & 1) == 0) {
+        return false;
+    }
+
     among_var = env.find_among(A_0, context);
     if among_var == 0 {
         return false;
@@ -392,7 +340,7 @@ fn r_exception_list(env: &mut SnowballEnv, context: &mut Context) -> bool {
     }
     match among_var {
         1 => {
-            env.slice_from("nibbāna");
+            env.slice_from("nibbana");
         }
         2 => {
             env.slice_from("hoti");
@@ -404,7 +352,7 @@ fn r_exception_list(env: &mut SnowballEnv, context: &mut Context) -> bool {
             env.slice_from("arahant");
         }
         5 => {
-            env.slice_from("rājan");
+            env.slice_from("rajan");
         }
         6 => {
             env.slice_from("brahman");
@@ -413,7 +361,7 @@ fn r_exception_list(env: &mut SnowballEnv, context: &mut Context) -> bool {
             env.slice_from("attan");
         }
         8 => {
-            env.slice_from("satthā");
+            env.slice_from("sattha");
         }
         9 => {
             env.slice_from("mano");
@@ -431,22 +379,22 @@ fn r_exception_list(env: &mut SnowballEnv, context: &mut Context) -> bool {
             env.slice_from("vaco");
         }
         14 => {
-            env.slice_from("pitā");
+            env.slice_from("pita");
         }
         15 => {
-            env.slice_from("mātā");
+            env.slice_from("mata");
         }
         16 => {
-            env.slice_from("bhātā");
+            env.slice_from("bhata");
         }
         17 => {
-            env.slice_from("dhītā");
+            env.slice_from("dhita");
         }
         18 => {
             env.slice_from("bhante");
         }
         19 => {
-            env.slice_from("āvuso");
+            env.slice_from("avuso");
         }
         _ => ()
     }
@@ -456,6 +404,10 @@ fn r_exception_list(env: &mut SnowballEnv, context: &mut Context) -> bool {
 fn r_participle_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
     let mut among_var;
     env.ket = env.cursor;
+    if (env.cursor - 2 <= env.limit_backward || env.current.as_bytes()[(env.cursor - 1) as usize] as u8 >> 5 != 3 as u8 || ((41506 as i32 >> (env.current.as_bytes()[(env.cursor - 1) as usize] as u8 & 0x1f)) & 1) == 0) {
+        return false;
+    }
+
     among_var = env.find_among_b(A_1, context);
     if among_var == 0 {
         return false;
@@ -482,6 +434,10 @@ fn r_participle_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
 fn r_noun_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
     let mut among_var;
     env.ket = env.cursor;
+    if (env.cursor <= env.limit_backward || env.current.as_bytes()[(env.cursor - 1) as usize] as u8 >> 5 != 3 as u8 || ((2138658 as i32 >> (env.current.as_bytes()[(env.cursor - 1) as usize] as u8 & 0x1f)) & 1) == 0) {
+        return false;
+    }
+
     among_var = env.find_among_b(A_2, context);
     if among_var == 0 {
         return false;
@@ -495,19 +451,10 @@ fn r_noun_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
             env.slice_from("u");
         }
         3 => {
-            env.slice_from("ū");
-        }
-        4 => {
             env.slice_from("i");
         }
-        5 => {
-            env.slice_from("ī");
-        }
-        6 => {
+        4 => {
             env.slice_from("a");
-        }
-        7 => {
-            env.slice_from("ā");
         }
         _ => ()
     }
@@ -517,6 +464,10 @@ fn r_noun_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
 fn r_verb_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
     let mut among_var;
     env.ket = env.cursor;
+    if (env.cursor - 1 <= env.limit_backward || env.current.as_bytes()[(env.cursor - 1) as usize] as u8 >> 5 != 3 as u8 || ((2138658 as i32 >> (env.current.as_bytes()[(env.cursor - 1) as usize] as u8 & 0x1f)) & 1) == 0) {
+        return false;
+    }
+
     among_var = env.find_among_b(A_3, context);
     if among_var == 0 {
         return false;
@@ -540,7 +491,7 @@ fn r_verb_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
 fn r_residual_suffix(env: &mut SnowballEnv, context: &mut Context) -> bool {
     let mut among_var;
     env.ket = env.cursor;
-    if (env.cursor - 3 <= env.limit_backward || env.current.as_bytes()[(env.cursor - 1) as usize] as u8 != 129 as u8) {
+    if (env.cursor - 1 <= env.limit_backward || env.current.as_bytes()[(env.cursor - 1) as usize] as u8 != 109 as u8) {
         return false;
     }
 
@@ -593,7 +544,6 @@ pub fn stem(env: &mut SnowballEnv) -> bool {
             break 'lab0;
         }
         env.cursor = v_1;
-        r_prelude(env, context);
         r_mark_regions(env, context);
         env.limit_backward = env.cursor;
         env.cursor = env.limit;
