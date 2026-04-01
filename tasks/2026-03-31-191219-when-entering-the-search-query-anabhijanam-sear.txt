@@ -1,0 +1,455 @@
+ ▐▛███▜▌   Claude Code v2.1.87
+▝▜█████▛▘  Sonnet 4.6 · Claude Pro
+  ▘▘ ▝▝    ~/prods/apps/simsapa-ng-project/simsapa-ng/backend
+
+❯ When entering the search query 'anabhijanam' (SearchMode::FulltextMatch), it  
+gives no results. Expected first page of results should include:                
+                                                                                
+uid:pli-tv-bu-pm/pli/ms                                                         
+uid:pli-tv-bu-vb-pj4/pli/ms                                                     
+                                                                                
+Because of text contains "Yo pana bhikkhu anabhijānaṁ uttarimanussadhammaṁ"     
+                                                                                
+During the bootstrap process, content_plain is created for the tantivy Pāli     
+stemmer, anabhijānaṁ should be matched as 'anabhijanam' because of              
+AsciiFoldingFilter.                                                             
+                                                                                
+The query for 'vinnanam' expected to match 'viññāṇaṁ' in Pāli texts also        
+returns no results, but the other translated languages return matches for       
+'vinnanam' where the translation includes the word 'viññāṇaṁ'. So the Pāli      
+language index is not created correctly.                                        
+                                                                                
+
+● Explore(Explore Pāli fulltext indexing)
+  ⎿  Done (23 tool uses · 64.2k tokens · 2m 15s)
+  (ctrl+o to expand)
+
+● Let me read the key files to understand the exact issue.
+
+  Read 2 files (ctrl+o to expand)
+
+● Let me check the Pāli stemmer to understand what characters it expects.
+
+  Read 2 files (ctrl+o to expand)
+
+● Now I understand the problem. The pli_stem tokenizer pipeline applies the Pāli
+   stemmer BEFORE ASCII folding. The stemmer uses diacritical characters in its
+  suffix rules (e.g., ānaṁ), so when an ASCII query like anabhijanam passes
+  through the stemmer, it doesn't recognize the ASCII suffixes and produces a
+  different token than what was indexed from anabhijānaṁ.
+
+  The search query requires content (stemmed) to be a Must match, while
+  content_exact (normalized, no stemming) is only Should. Since the stemmed
+  field can't match ASCII queries against Pāli text, no results are returned —
+  even though content_exact would match correctly.
+
+  Fix: Change the boolean logic so that matching EITHER content OR content_exact
+   is sufficient (instead of requiring content to match):
+
+● Update(src/search/searcher.rs)
+  ⎿  Added 12 lines, removed 2 lines
+      353              2.0,
+      354          );
+      355  
+      356 -        let mut subqueries: Vec<(Occur, Box<dyn tantivy::query
+          -::Query>)> = vec![                                            
+      357 -            (Occur::Must, Box::new(content_query)),           
+      356 +        // Use Should for both: in tantivy, when all clauses a
+          +re Should,                                                    
+      357 +        // at least one must match. This allows ASCII queries 
+          +(e.g. "anabhijanam")                                          
+      358 +        // to match Pāli text (e.g. "anabhijānaṁ") via the con
+          +tent_exact field's                                            
+      359 +        // normalize tokenizer, even when the stemmed content 
+          +field doesn't match                                           
+      360 +        // (because the Pāli stemmer operates on diacritical c
+          +haracters that                                                
+      361 +        // aren't present in the ASCII query).                
+      362 +        let match_query = BooleanQuery::new(vec![             
+      363 +            (Occur::Should, Box::new(content_query)),         
+      364              (Occur::Should, Box::new(boosted_exact)),
+      365 +        ]);                                                   
+      366 +                                                              
+      367 +        let mut subqueries: Vec<(Occur, Box<dyn tantivy::query
+          +::Query>)> = vec![                                            
+      368 +            (Occur::Must, Box::new(match_query)),             
+      369          ];
+      370  
+      371          // Add filter term queries
+
+● Now let me add a test that verifies ASCII queries match Pāli text:
+
+  Read 1 file (ctrl+o to expand)
+
+● Now let me add a test for ASCII queries matching Pāli text:
+
+● Update(src/search/searcher.rs)
+  ⎿  Added 56 lines
+      719      }
+      720  
+      721      #[test]
+      722 +    fn test_ascii_query_matches_pali_text() {                 
+      723 +        // ASCII "bhikkhave" should match Pāli "bhikkhave" in 
+          +the test document                                             
+      724 +        let (index, reader) = create_test_index("pli");       
+      725 +        let mut sutta_indexes = HashMap::new();               
+      726 +        sutta_indexes.insert("pli".to_string(), (index, reader
+          +));                                                           
+      727 +                                                              
+      728 +        let searcher = FulltextSearcher {                     
+      729 +            sutta_indexes,                                    
+      730 +            dict_indexes: HashMap::new(),                     
+      731 +        };                                                    
+      732 +                                                              
+      733 +        let filters = SearchFilters {                         
+      734 +            lang: Some("pli".to_string()),                    
+      735 +            lang_include: true,                               
+      736 +            source_uid: None,                                 
+      737 +            source_include: false,                            
+      738 +            nikaya: None,                                     
+      739 +            sutta_ref: None,                                  
+      740 +        };                                                    
+      741 +                                                              
+      742 +        // "sattanam" is the ASCII-folded form of "sattānaṁ" i
+          +n the test document.                                          
+      743 +        // The stemmed content field may not match (stemmer us
+          +es diacritical rules),                                        
+      744 +        // but the content_exact field should match via the no
+          +rmalize tokenizer.                                            
+      745 +        let (count, results) = searcher.search_suttas_with_cou
+          +nt("sattanam", &filters, 10).unwrap();                        
+      746 +        assert!(count > 0, "ASCII query 'sattanam' should matc
+          +h Pāli 'sattānaṁ'");                                          
+      747 +        assert!(!results.is_empty());                         
+      748 +        assert_eq!(results[0].uid, "sn12.2/pli/ms");          
+      749 +    }                                                         
+      750 +                                                              
+      751 +    #[test]                                                   
+      752 +    fn test_ascii_query_jaramaranam() {                       
+      753 +        // "jaramaranam" should match "jarāmaraṇaṁ"           
+      754 +        let (index, reader) = create_test_index("pli");       
+      755 +        let mut sutta_indexes = HashMap::new();               
+      756 +        sutta_indexes.insert("pli".to_string(), (index, reader
+          +));                                                           
+      757 +                                                              
+      758 +        let searcher = FulltextSearcher {                     
+      759 +            sutta_indexes,                                    
+      760 +            dict_indexes: HashMap::new(),                     
+      761 +        };                                                    
+      762 +                                                              
+      763 +        let filters = SearchFilters {                         
+      764 +            lang: Some("pli".to_string()),                    
+      765 +            lang_include: true,                               
+      766 +            source_uid: None,                                 
+      767 +            source_include: false,                            
+      768 +            nikaya: None,                                     
+      769 +            sutta_ref: None,                                  
+      770 +        };                                                    
+      771 +                                                              
+      772 +        let (count, results) = searcher.search_suttas_with_cou
+          +nt("jaramaranam", &filters, 10).unwrap();                     
+      773 +        assert!(count > 0, "ASCII query 'jaramaranam' should m
+          +atch Pāli 'jarāmaraṇaṁ'");                                    
+      774 +        assert!(!results.is_empty());                         
+      775 +    }                                                         
+      776 +                                                              
+      777 +    #[test]                                                   
+      778      fn test_debug_query_no_indexes() {
+      779          let searcher = FulltextSearcher {
+      780              sutta_indexes: HashMap::new(),
+
+● Let me run the tests:
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend &&
+      cargo test search:: 2>&1)
+  ⎿  Error: Exit code 101
+        Compiling simsapa_backend v0.2.0-alpha.1 
+     (/home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend)
+     warning: unused variable: `filename_map`
+        --> src/db/chanting_export.rs:898:56
+         |
+     898 |         let (new_cols, new_chants, new_secs, new_recs, filename_map) 
+     =
+         |                                                        ^^^^^^^^^^^^ 
+     help: if this is intentional, prefix it with an underscore: `_filename_map`
+         |
+         = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by 
+     default
+
+     … +122 lines (ctrl+o to see all)
+
+● The compilation errors are in a separate test file that uses an old
+  search_suttas method name, not related to my change. Let me run just the
+  searcher unit tests:
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend &&
+      cargo test --lib search::searcher 2>&1)
+  ⎿      Blocking waiting for file lock on build directory
+     warning: unused variable: `filename_map`
+        --> src/db/chanting_export.rs:898:56
+     … +25 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+  ⎿  Found 30 new diagnostic issues in 7 files (ctrl+o to expand)
+
+● All 9 tests pass, including the two new ASCII query tests. The existing
+  test_search.rs errors are pre-existing (uses an old search_suttas method name
+  not related to this change).
+
+  Here's the summary of the fix:
+
+  Root cause: The pli_stem tokenizer applies the Pāli Snowball stemmer before
+  ASCII folding. The stemmer's suffix rules use diacritical characters (e.g.,
+  ānaṁ, ūnaṁ), so when an ASCII query like anabhijanam passes through, the
+  stemmer doesn't recognize the ASCII suffix anam and produces a different token
+   than what was indexed from anabhijānaṁ. The search required the stemmed
+  content field to match (Occur::Must), so no results were returned.
+
+  Fix (backend/src/search/searcher.rs:351-365): Changed the boolean query logic
+  from:
+  - content = Must, content_exact = Should (boost only)
+
+  To:
+  - A nested BooleanQuery where both content and content_exact are Should
+  clauses (tantivy requires at least one Should to match), wrapped in a Must in
+  the outer query
+
+  This way, an ASCII query can match via the content_exact field (which uses the
+   {lang}_normalize tokenizer with ASCII folding but no stemming), even when the
+   stemmed content field doesn't match. When both match (e.g., with diacritical
+  queries), the boosted content_exact still improves ranking.
+
+✻ Baked for 5m 55s
+
+❯ A query for 'vinnanam' now does show Pāli sutta results, but there is not     
+highlighted snippet in the Pāli items, while the other languages show           
+'viññāṇaṁ' matched in their content.                                            
+                                                                                
+The 'vinnanam' fulltext query should show highlighted snippets, and include     
+various declensions.                                                            
+                                                                                
+A query for 'vinnana' does show Pāli results with snippet highlights, and       
+includes various declensions in the results.                                    
+                                                                                
+  ⎿  Found 30 new diagnostic issues in 5 files (ctrl+o to expand)
+
+● The snippet generator only uses the content (stemmed) field. When a match
+  comes only through content_exact, no snippet is generated. Let me fix this.
+
+  Read 1 file (ctrl+o to expand)
+
+● I need to pass content_exact_field to the doc_to_result methods and update
+  generate_snippet to try both fields.
+
+● Update(src/search/searcher.rs)
+  ⎿  Added 2 lines, removed 2 lines
+      390              let doc: tantivy::TantivyDocument = searcher.doc(d
+           oc_address)?;
+      391  
+      392              let result = if is_sutta {
+      393 -                self.sutta_doc_to_result(&doc, &schema, score,
+          - query_text, index, &searcher, content_field)?                
+      393 +                self.sutta_doc_to_result(&doc, &schema, score,
+          + query_text, index, &searcher, content_field, content_exact_fi
+          +eld)?                                                         
+      394              } else {
+      395 -                self.dict_doc_to_result(&doc, &schema, score, 
+          -query_text, index, &searcher, content_field)?                 
+      395 +                self.dict_doc_to_result(&doc, &schema, score, 
+          +query_text, index, &searcher, content_field, content_exact_fie
+          +ld)?                                                          
+      396              };
+      397  
+      398              results.push((score, result));
+
+● Now update the sutta_doc_to_result signature and call:
+
+● Update(src/search/searcher.rs)
+  ⎿  Added 2 lines, removed 1 line
+      458          index: &Index,
+      459          searcher: &tantivy::Searcher,
+      460          content_field: tantivy::schema::Field,
+      461 +        content_exact_field: tantivy::schema::Field,          
+      462      ) -> Result<SearchResult> {
+      463          let uid = Self::get_text_field(doc, schema, "uid");
+      464          let title = Self::get_text_field(doc, schema, "title")
+           ;
+     ...
+      467          let sutta_ref = Self::get_text_field(doc, schema, "sut
+           ta_ref");
+      468          let nikaya = Self::get_text_field(doc, schema, "nikaya
+           ");
+      469  
+      469 -        let snippet = self.generate_snippet(index, searcher, c
+          -ontent_field, query_text, doc)?;                              
+      470 +        let snippet = self.generate_snippet_with_fallback(inde
+          +x, searcher, content_field, content_exact_field, query_text, d
+          +oc)?;                                                         
+      471  
+      472          Ok(SearchResult {
+      473              uid,  ⎿  Found 10 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Now update dict_doc_to_result and generate_snippet:
+
+● Update(src/search/searcher.rs)
+  ⎿  Added 2 lines, removed 1 line
+      495          index: &Index,
+      496          searcher: &tantivy::Searcher,
+      497          content_field: tantivy::schema::Field,
+      498 +        content_exact_field: tantivy::schema::Field,          
+      499      ) -> Result<SearchResult> {
+      500          let uid = Self::get_text_field(doc, schema, "uid");
+      501          let word = Self::get_text_field(doc, schema, "word");
+      502          let language = Self::get_text_field(doc, schema, "lang
+           uage");
+      503          let source_uid = Self::get_text_field(doc, schema, "so
+           urce_uid");
+      504  
+      504 -        let snippet = self.generate_snippet(index, searcher, c
+          -ontent_field, query_text, doc)?;                              
+      505 +        let snippet = self.generate_snippet_with_fallback(inde
+          +x, searcher, content_field, content_exact_field, query_text, d
+          +oc)?;                                                         
+      506  
+      507          Ok(SearchResult {
+      508              uid,
+  ⎿  Found 4 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Now replace generate_snippet with the fallback version:
+
+● Update(src/search/searcher.rs)
+  ⎿  Added 32 lines, removed 3 lines
+      531              .to_string()
+      532      }
+      533  
+      534 -    fn generate_snippet(                                      
+      534 +    /// Generate a snippet, trying the stemmed content field f
+          +irst,                                                         
+      535 +    /// falling back to content_exact if the stemmed field pro
+          +duces no highlights.                                          
+      536 +    /// This handles ASCII queries against Pāli text where the
+          + stemmer doesn't                                              
+      537 +    /// recognize ASCII suffixes but the normalize tokenizer m
+          +atches correctly.                                             
+      538 +    fn generate_snippet_with_fallback(                        
+      539          &self,
+      540          index: &Index,
+      541          searcher: &tantivy::Searcher,
+      542          content_field: tantivy::schema::Field,
+      543 +        content_exact_field: tantivy::schema::Field,          
+      544          query_text: &str,
+      545          doc: &tantivy::TantivyDocument,
+      546      ) -> Result<String> {
+      542 -        let query_parser = QueryParser::for_index(index, vec![
+          -content_field]);                                              
+      547 +        // Try stemmed content field first                    
+      548 +        let snippet = self.generate_snippet_for_field(index, s
+          +earcher, content_field, query_text, doc)?;                    
+      549 +        if !snippet.is_empty() && snippet.contains("<span clas
+          +s='match'>") {                                                
+      550 +            return Ok(snippet);                               
+      551 +        }                                                     
+      552 +                                                              
+      553 +        // Fall back to content_exact field (normalize tokeniz
+          +er, no stemming)                                              
+      554 +        let exact_snippet = self.generate_snippet_for_field(in
+          +dex, searcher, content_exact_field, query_text, doc)?;        
+      555 +        if !exact_snippet.is_empty() && exact_snippet.contains
+          +("<span class='match'>") {                                    
+      556 +            return Ok(exact_snippet);                         
+      557 +        }                                                     
+      558 +                                                              
+      559 +        // Return whatever we got (may be empty or without hig
+          +hlights)                                                      
+      560 +        Ok(snippet)                                           
+      561 +    }                                                         
+      562 +                                                              
+      563 +    fn generate_snippet_for_field(                            
+      564 +        &self,                                                
+      565 +        index: &Index,                                        
+      566 +        searcher: &tantivy::Searcher,                         
+      567 +        field: tantivy::schema::Field,                        
+      568 +        query_text: &str,                                     
+      569 +        doc: &tantivy::TantivyDocument,                       
+      570 +    ) -> Result<String> {                                     
+      571 +        let query_parser = QueryParser::for_index(index, vec![
+          +field]);                                                      
+      572          let query = query_parser.parse_query(query_text)?;
+      573  
+      545 -        let mut snippet_gen = tantivy::snippet::SnippetGenerat
+          -or::create(searcher, &query, content_field)?;                 
+      574 +        let mut snippet_gen = tantivy::snippet::SnippetGenerat
+          +or::create(searcher, &query, field)?;                         
+      575          snippet_gen.set_max_num_chars(200);
+      576  
+      577          let snippet = snippet_gen.snippet_from_doc(doc);
+  ⎿  Found 3 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● The diagnostics seem stale. Let me run the tests:
+
+● Bash(cargo test --lib search::searcher 2>&1)
+  ⎿     Compiling simsapa_backend v0.2.0-alpha.1 (/home/gambhiro/prods/apps
+     /simsapa-ng-project/simsapa-ng/backend)
+     warning: unused variable: `filename_map`
+     … +26 lines (ctrl+o to expand)
+  ⎿  (timeout 2m)
+  ⎿  Found 7 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● All 9 tests pass. Now let me also address the declension matching issue. The
+  query vinnana works and shows declensions because the Pāli stemmer reduces
+  forms like viññāṇaṁ, viññāṇānaṁ, etc. to the stem vinnana. But vinnanam
+  doesn't get stemmed correctly because the ASCII stemmer doesn't recognize the
+  am suffix.
+
+  The content_exact field (normalize tokenizer, no stemming) only matches the
+  exact ASCII-folded form. So vinnanam matches viññāṇaṁ but not viññāṇānaṁ
+  (which folds to vinnananam).
+
+  To get declension matching for ASCII queries, the query needs to go through
+  ASCII folding and then the Pāli stemmer. The current pipeline does stemming
+  before folding. Let me check if reordering would work by looking at what the
+  stemmer does with ASCII text:
+
+  Read 1 file (ctrl+o to expand)
+
+● Now I need to understand the deeper issue: vinnanam doesn't match declensions
+  because the Pāli stemmer only recognizes suffixes with diacritics (e.g., aṁ
+  but not am). Let me check if there's a Snowball source file we can modify.
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+● Now I need to address the declension matching. The core issue is that the Pāli
+   stemmer uses diacritical suffixes (e.g., aṁ), so when ASCII text like
+  vinnanam passes through, the stemmer doesn't recognize am as a suffix to
+  strip. I'll add an ASCII fallback filter that activates when the stemmer
+  doesn't change the input.
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  You've hit your limit · resets 6pm (Europe/Lisbon)
+     /upgrade or /extra-usage to finish what you’re working on.
+
+✻ Crunched for 6m 54s
+
+❯ Review what the stemmer and exact content matching issues have been and       
+consider the best way to resolve them.                                          
+                                                                                
+Would it be a better approach to modify the Pāli stemmer, so that it also       
+handles the ascii forms of the words, and thus when 'vinnanam' or 'anabhijanam' 
+ is stemmed, it is indexed the same way as 'viññāṇaṁ' and 'anabhijānaṁ'?        
+                                                                                
+The stemmer project is symlinked in the ./pali-stemmer-in-snowball/ folder.     
+The .sbl file is at pali-stemmer-in-snowball/algorithms/pali.sbl                
+                                                                                
+The ./pali-stemmer-in-snowball/Makefile has a 'compile-stemmer' target to       
+compile the .sbl to Rust.                                                       
+                                                                                
+
+● Let me review the current state and explore the stemmer approach.
+
+  Read 3 files (ctrl+o to expand)
+  ⎿  API Error: 500 
+     {"type":"error","error":{"type":"api_error","message":"Internal server 
+     error"},"request_id":"req_011CZbbkDzBXbax6bVeMP36h"}
+
+✻ Crunched for 3m 7s
