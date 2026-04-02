@@ -45,13 +45,15 @@ fn test_fulltext_search_so_ce_evam_vadeyya() {
         source_include: true,
         nikaya: None,
         sutta_ref: None,
+        include_mula: true,
+        include_commentary: true,
     };
 
     let query = r#""so ce" evaṁ vadeyya"#;
     let limit = 10;
 
     let (total, results) = searcher
-        .search_suttas_with_count(query, &filters, limit)
+        .search_suttas_with_count(query, &filters, limit, 0)
         .expect("Search should succeed");
 
     // Load expected results from test data

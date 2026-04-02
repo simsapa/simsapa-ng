@@ -55,6 +55,8 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
     let nikaya_field = schema.get_field("nikaya").unwrap();
     let content_field = schema.get_field("content").unwrap();
     let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_mula_field = schema.get_field("is_mula").unwrap();
+    let is_commentary_field = schema.get_field("is_commentary").unwrap();
 
     let lang_clone = lang.to_string();
     let sutta_list: Vec<Sutta> = appdata_db.do_read(|db_conn| {
@@ -81,6 +83,10 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
 
         let source = sutta.source_uid.as_deref().unwrap_or("");
 
+        let before_first_slash = sutta.uid.split('/').next().unwrap_or("");
+        let is_commentary = before_first_slash.contains(".att") || before_first_slash.contains(".tik");
+        let is_mula = !is_commentary;
+
         writer.add_document(doc!(
             uid_field => sutta.uid.as_str(),
             title_field => t,
@@ -90,6 +96,8 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
             nikaya_field => sutta.nikaya.as_str(),
             content_field => content_text.as_str(),
             content_exact_field => content_text.as_str(),
+            is_mula_field => is_mula,
+            is_commentary_field => is_commentary,
         ))?;
 
         indexed_count += 1;

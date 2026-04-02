@@ -255,8 +255,9 @@ impl FulltextSearcher {
         query_text: &str,
         filters: &SearchFilters,
         page_len: usize,
+        page_num: usize,
     ) -> Result<(usize, Vec<SearchResult>)> {
-        self.search_indexes(query_text, filters, page_len, &self.sutta_indexes, true, true)
+        self.search_indexes(query_text, filters, page_len, page_num, &self.sutta_indexes, true, true)
     }
 
     /// Search dict_word indexes, returning (total_hits, results).
@@ -265,8 +266,9 @@ impl FulltextSearcher {
         query_text: &str,
         filters: &SearchFilters,
         page_len: usize,
+        page_num: usize,
     ) -> Result<(usize, Vec<SearchResult>)> {
-        self.search_indexes(query_text, filters, page_len, &self.dict_indexes, false, true)
+        self.search_indexes(query_text, filters, page_len, page_num, &self.dict_indexes, false, true)
     }
 
     fn search_indexes(
@@ -274,6 +276,7 @@ impl FulltextSearcher {
         query_text: &str,
         filters: &SearchFilters,
         page_len: usize,
+        page_num: usize,
         indexes: &HashMap<String, (Index, IndexReader)>,
         is_sutta: bool,
         with_count: bool,
@@ -294,13 +297,16 @@ impl FulltextSearcher {
             indexes.keys().collect()
         };
 
+        // Fetch enough results from each index to cover all pages up to the requested one
+        let limit = (page_num + 1) * page_len;
+
         // Collect results from all matching languages with scores
         let mut all_scored: Vec<(f32, SearchResult)> = Vec::new();
         let mut total_hits: usize = 0;
 
         for lang in langs_to_search {
             if let Some((index, reader)) = indexes.get(lang) {
-                match self.search_single_index(query_text, filters, page_len, index, reader, is_sutta, with_count) {
+                match self.search_single_index(query_text, filters, limit, index, reader, is_sutta, with_count) {
                     Ok((count, scored_results)) => {
                         total_hits += count;
                         all_scored.extend(scored_results);
@@ -315,9 +321,10 @@ impl FulltextSearcher {
         // Sort by score descending (interleaved by score, not grouped by language)
         all_scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Truncate to page_len
+        // Extract the correct page
         let results: Vec<SearchResult> = all_scored
             .into_iter()
+            .skip(page_num * page_len)
             .take(page_len)
             .map(|(_, r)| r)
             .collect();
@@ -418,6 +425,30 @@ impl FulltextSearcher {
                 let term = Term::from_field_text(field, sutta_ref);
                 subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
             }
+        }
+
+        // CST mula/commentary filtering: only exclude CST-sourced texts, not all sources.
+        // This matches the SQL behavior in ContainsMatch which filters on uid LIKE '%/cst'.
+        if !filters.include_mula {
+            let is_mula_field = schema.get_field("is_mula")?;
+            let source_field = schema.get_field("source_uid")?;
+            // Build: is_mula=true AND source_uid="cst"
+            let cst_mula_query = BooleanQuery::new(vec![
+                (Occur::Must, Box::new(TermQuery::new(Term::from_field_bool(is_mula_field, true), IndexRecordOption::Basic)) as Box<dyn tantivy::query::Query>),
+                (Occur::Must, Box::new(TermQuery::new(Term::from_field_text(source_field, "cst"), IndexRecordOption::Basic))),
+            ]);
+            subqueries.push((Occur::MustNot, Box::new(cst_mula_query)));
+        }
+
+        if !filters.include_commentary {
+            let is_commentary_field = schema.get_field("is_commentary")?;
+            let source_field = schema.get_field("source_uid")?;
+            // Build: is_commentary=true AND source_uid="cst"
+            let cst_commentary_query = BooleanQuery::new(vec![
+                (Occur::Must, Box::new(TermQuery::new(Term::from_field_bool(is_commentary_field, true), IndexRecordOption::Basic)) as Box<dyn tantivy::query::Query>),
+                (Occur::Must, Box::new(TermQuery::new(Term::from_field_text(source_field, "cst"), IndexRecordOption::Basic))),
+            ]);
+            subqueries.push((Occur::MustNot, Box::new(cst_commentary_query)));
         }
 
         Ok(())
@@ -640,6 +671,8 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
         let result = searcher.debug_query("bhikkhave", &filters).unwrap();
@@ -671,6 +704,8 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
         // Unbalanced quotes should cause a parse error but still return partial results
@@ -701,6 +736,8 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
         // "bhikkhūnaṁ" should stem differently than normalize
@@ -727,12 +764,14 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
         // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
         // The stemmer now operates on ASCII input, so it stems "sattanam" → "satta"
         // matching the indexed stem of "sattānaṁ" → fold → "sattanam" → stem → "satta".
-        let (count, results) = searcher.search_suttas_with_count("sattanam", &filters, 10).unwrap();
+        let (count, results) = searcher.search_suttas_with_count("sattanam", &filters, 10, 0).unwrap();
         assert!(count > 0, "ASCII query 'sattanam' should match Pāli 'sattānaṁ'");
         assert!(!results.is_empty());
         assert_eq!(results[0].uid, "sn12.2/pli/ms");
@@ -757,9 +796,11 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
-        let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10).unwrap();
+        let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10, 0).unwrap();
         assert!(count > 0, "ASCII query 'jaramaranam' should match Pāli 'jarāmaraṇaṁ'");
         assert!(!results.is_empty());
     }
@@ -815,9 +856,11 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
-        let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10).unwrap();
+        let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10, 0).unwrap();
         assert!(count > 0, "ASCII query 'vinnanam' should match documents with viññāṇa declensions");
         assert!(!results.is_empty());
     }
@@ -836,6 +879,8 @@ mod tests {
             source_include: false,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
         let result = searcher.debug_query("test", &filters).unwrap();

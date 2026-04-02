@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::thread;
 
 use core::pin::Pin;
@@ -15,6 +17,21 @@ use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_t
 use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_log_level_str};
 use simsapa_backend::topic_index;
+use simsapa_backend::types::SearchResult;
+
+/// Cache for search result pages to avoid re-querying for previously fetched pages.
+struct ResultsPageCache {
+    /// Serialized query + params identifying this search.
+    cache_key: String,
+    /// Cached pages: page_num → highlighted results.
+    pages: HashMap<usize, Vec<SearchResult>>,
+    /// Total hits for this search.
+    total_hits: i64,
+    /// Configured page size (not the number of results on a given page).
+    page_len: usize,
+}
+
+static RESULTS_PAGE_CACHE: Mutex<Option<ResultsPageCache>> = Mutex::new(None);
 
 /// Convert a QUrl to a local file path string.
 /// Handles Windows paths correctly - QUrl::path() returns "/C:/path" on Windows,
@@ -821,6 +838,8 @@ impl qobject::SuttaBridge {
                     source_include: true,
                     enable_regex: false,
                     fuzzy_distance: 0,
+                    include_cst_mula: true,
+                    include_cst_commentary: true,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1103,21 +1122,44 @@ impl qobject::SuttaBridge {
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            // FIXME: Can't store the query_task on SuttaBridgeRust
-            // because it SearchQueryTask includes &'a DbManager reference.
-            // Store only a connection pool?
-            let app_data = get_app_data();
+            // Build a cache key from the query, search area, and params.
+            // CST mula/commentary settings are included in params_json.
+            let cache_key = format!("{}|{}|{}", query_text, search_area_text, params_json_text);
 
+            // Check cache for a hit
+            {
+                let cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+                if let Some(ref cache) = *cache_guard {
+                    if cache.cache_key == cache_key {
+                        if let Some(cached_results) = cache.pages.get(&page_num) {
+                            info(&format!("Cache hit for page_num={}", page_num));
+                            let results_page = SearchResultPage {
+                                total_hits: cache.total_hits as usize,
+                                page_len: cache.page_len,
+                                page_num,
+                                results: cached_results.clone(),
+                            };
+                            let json = serde_json::to_string(&results_page).unwrap_or_default();
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().results_page_ready(QString::from(json));
+                            }).unwrap();
+                            info("SuttaBridge::results_page() end (cached)");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Cache miss — run the query
+            let app_data = get_app_data();
             let params: SearchParams = serde_json::from_str(&params_json_text).unwrap_or_default();
 
             let search_area_enum = match search_area_text.as_str() {
                 "Dictionary" => SearchArea::Dictionary,
                 "Library" => SearchArea::Library,
-                _ => SearchArea::Suttas, // Default to Suttas for any other value
+                _ => SearchArea::Suttas,
             };
 
-            // FIXME: We have to create a SearchQueryTask for each search until we
-            // can store it on SuttaBridgeRust.
             let mut query_task = SearchQueryTask::new(
                 &app_data.dbm,
                 query_text,
@@ -1137,9 +1179,33 @@ impl qobject::SuttaBridge {
                 }
             };
 
+            let total_hits = query_task.total_hits();
+            let page_len = query_task.page_len as usize;
+
+            // Store results in cache
+            {
+                let mut cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+                let cache = cache_guard.get_or_insert_with(|| ResultsPageCache {
+                    cache_key: String::new(),
+                    pages: HashMap::new(),
+                    total_hits: 0,
+                    page_len,
+                });
+
+                if cache.cache_key != cache_key {
+                    // New search — replace the cache
+                    cache.cache_key = cache_key;
+                    cache.pages.clear();
+                    cache.total_hits = total_hits;
+                    cache.page_len = page_len;
+                }
+
+                cache.pages.insert(page_num, results.clone());
+            }
+
             let results_page = SearchResultPage {
-                total_hits: query_task.total_hits() as usize,
-                page_len: query_task.page_len as usize,
+                total_hits: total_hits as usize,
+                page_len,
                 page_num,
                 results,
             };
@@ -1201,6 +1267,8 @@ impl qobject::SuttaBridge {
                 source_include: params.source_include,
                 nikaya: None,
                 sutta_ref: None,
+                include_mula: true,
+                include_commentary: true,
             };
 
             let result = with_fulltext_searcher(|searcher| {
