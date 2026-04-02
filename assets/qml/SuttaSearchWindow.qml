@@ -352,6 +352,8 @@ ApplicationWindow {
             source_include: true,
             enable_regex: false,
             fuzzy_distance: 0,
+            include_cst_mula: SuttaBridge.get_include_cst_mula_in_search_results(),
+            include_cst_commentary: SuttaBridge.get_include_cst_commentary_in_search_results(),
         };
     }
 

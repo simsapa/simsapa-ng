@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::thread;
 
 use core::pin::Pin;
@@ -15,6 +17,124 @@ use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_t
 use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_log_level_str};
 use simsapa_backend::topic_index;
+use simsapa_backend::types::SearchResult;
+
+/// Cache for search result pages to avoid re-querying for previously fetched pages.
+struct ResultsPageCache {
+    /// Serialized query + params identifying this search.
+    cache_key: String,
+    /// Cached pages: page_num → highlighted results.
+    pages: HashMap<usize, Vec<SearchResult>>,
+    /// Total hits for this search.
+    total_hits: i64,
+    /// Configured page size (not the number of results on a given page).
+    page_len: usize,
+}
+
+static RESULTS_PAGE_CACHE: Mutex<Option<ResultsPageCache>> = Mutex::new(None);
+
+/// Fetch, highlight, and cache a single page of search results.
+/// Returns (results, total_hits, page_len) on success.
+/// If the cache key has changed (new search started), returns None to signal abort.
+fn fetch_and_cache_page(
+    cache_key: &str,
+    query_text: &str,
+    search_area_text: &str,
+    params_json_text: &str,
+    page_num: usize,
+) -> Result<Option<(Vec<SearchResult>, i64, usize)>, String> {
+    // Check if this page is already cached (another prefetch thread may have filled it)
+    {
+        let cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+        if let Some(ref cache) = *cache_guard {
+            if cache.cache_key == cache_key && cache.pages.contains_key(&page_num) {
+                return Ok(Some((cache.pages[&page_num].clone(), cache.total_hits, cache.page_len)));
+            }
+            // If the cache key changed, a new search was started — abort
+            if !cache.cache_key.is_empty() && cache.cache_key != cache_key {
+                return Ok(None);
+            }
+        }
+    }
+
+    let app_data = get_app_data();
+    let params: SearchParams = serde_json::from_str(params_json_text).unwrap_or_default();
+
+    let search_area_enum = match search_area_text {
+        "Dictionary" => SearchArea::Dictionary,
+        "Library" => SearchArea::Library,
+        _ => SearchArea::Suttas,
+    };
+
+    let mut query_task = SearchQueryTask::new(
+        &app_data.dbm,
+        query_text.to_string(),
+        params,
+        search_area_enum,
+    );
+
+    let results = query_task.results_page(page_num).map_err(|e| format!("{}", e))?;
+    let total_hits = query_task.total_hits();
+    let page_len = query_task.page_len as usize;
+
+    // Store in cache (only if cache_key still matches)
+    {
+        let mut cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+        let cache = cache_guard.get_or_insert_with(|| ResultsPageCache {
+            cache_key: String::new(),
+            pages: HashMap::new(),
+            total_hits: 0,
+            page_len,
+        });
+
+        if cache.cache_key != cache_key {
+            // New search started while we were fetching — discard
+            return Ok(None);
+        }
+
+        cache.pages.insert(page_num, results.clone());
+        // Update total_hits and page_len in case they weren't set yet
+        if cache.total_hits == 0 {
+            cache.total_hits = total_hits;
+        }
+        if cache.page_len == 0 {
+            cache.page_len = page_len;
+        }
+    }
+
+    Ok(Some((results, total_hits, page_len)))
+}
+
+/// Spawn a background thread to prefetch pages into RESULTS_PAGE_CACHE.
+fn prefetch_pages(
+    cache_key: String,
+    query_text: String,
+    search_area_text: String,
+    params_json_text: String,
+    start_page: usize,
+    count: usize,
+    total_pages: usize,
+) {
+    thread::spawn(move || {
+        let end_page = (start_page + count).min(total_pages);
+        for p in start_page..end_page {
+            debug(&format!("Prefetching page {}", p));
+            match fetch_and_cache_page(&cache_key, &query_text, &search_area_text, &params_json_text, p) {
+                Ok(None) => {
+                    // Cache key changed (new search), abort prefetch
+                    debug("Prefetch aborted: cache key changed");
+                    return;
+                }
+                Ok(Some(_)) => {
+                    debug(&format!("Prefetched page {} successfully", p));
+                }
+                Err(e) => {
+                    warn(&format!("Prefetch page {} failed: {}", p, e));
+                }
+            }
+        }
+    });
+}
 
 /// Convert a QUrl to a local file path string.
 /// Handles Windows paths correctly - QUrl::path() returns "/C:/path" on Windows,
@@ -821,6 +941,8 @@ impl qobject::SuttaBridge {
                     source_include: true,
                     enable_regex: false,
                     fuzzy_distance: 0,
+                    include_cst_mula: true,
+                    include_cst_commentary: true,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1103,55 +1225,121 @@ impl qobject::SuttaBridge {
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
-            // FIXME: Can't store the query_task on SuttaBridgeRust
-            // because it SearchQueryTask includes &'a DbManager reference.
-            // Store only a connection pool?
-            let app_data = get_app_data();
+            // Build a cache key from the query, search area, and params.
+            // CST mula/commentary settings are included in params_json.
+            let cache_key = format!("{}|{}|{}", query_text, search_area_text, params_json_text);
 
-            let params: SearchParams = serde_json::from_str(&params_json_text).unwrap_or_default();
+            // Check cache for a hit
+            {
+                let cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+                if let Some(ref cache) = *cache_guard {
+                    if cache.cache_key == cache_key {
+                        if let Some(cached_results) = cache.pages.get(&page_num) {
+                            info(&format!("Cache hit for page_num={}", page_num));
+                            let results_page = SearchResultPage {
+                                total_hits: cache.total_hits as usize,
+                                page_len: cache.page_len,
+                                page_num,
+                                results: cached_results.clone(),
+                            };
+                            let json = serde_json::to_string(&results_page).unwrap_or_default();
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().results_page_ready(QString::from(json));
+                            }).unwrap();
 
-            let search_area_enum = match search_area_text.as_str() {
-                "Dictionary" => SearchArea::Dictionary,
-                "Library" => SearchArea::Library,
-                _ => SearchArea::Suttas, // Default to Suttas for any other value
-            };
+                            // If the user reached the highest cached page, prefetch the next 2
+                            let max_cached = cache.pages.keys().max().copied().unwrap_or(0);
+                            let total_pages = if cache.page_len > 0 {
+                                ((cache.total_hits as usize) + cache.page_len - 1) / cache.page_len
+                            } else { 0 };
 
-            // FIXME: We have to create a SearchQueryTask for each search until we
-            // can store it on SuttaBridgeRust.
-            let mut query_task = SearchQueryTask::new(
-                &app_data.dbm,
-                query_text,
-                params,
-                search_area_enum,
-            );
+                            if page_num >= max_cached && max_cached + 1 < total_pages {
+                                prefetch_pages(
+                                    cache_key.clone(),
+                                    query_text.clone(),
+                                    search_area_text.clone(),
+                                    params_json_text.clone(),
+                                    max_cached + 1,
+                                    2,
+                                    total_pages,
+                                );
+                            }
 
-            let results = match query_task.results_page(page_num) {
-                Ok(x) => x,
+                            info("SuttaBridge::results_page() end (cached)");
+                            return;
+                        }
+                    }
+                }
+            }
+
+            // Cache miss — initialize cache for new search
+            {
+                let mut cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+                let needs_reset = match *cache_guard {
+                    Some(ref cache) => cache.cache_key != cache_key,
+                    None => true,
+                };
+                if needs_reset {
+                    *cache_guard = Some(ResultsPageCache {
+                        cache_key: cache_key.clone(),
+                        pages: HashMap::new(),
+                        total_hits: 0,
+                        page_len: 0,
+                    });
+                }
+            }
+
+            // Fetch the requested page
+            match fetch_and_cache_page(&cache_key, &query_text, &search_area_text, &params_json_text, page_num) {
+                Ok(Some((results, total_hits, page_len))) => {
+                    let results_page_data = SearchResultPage {
+                        total_hits: total_hits as usize,
+                        page_len,
+                        page_num,
+                        results,
+                    };
+                    let json = serde_json::to_string(&results_page_data).unwrap_or_default();
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().results_page_ready(QString::from(json));
+                    }).unwrap();
+
+                    // Prefetch: next page immediately (so page+1 is ready), then 2 more in background
+                    let total_pages = if page_len > 0 {
+                        (total_hits as usize + page_len - 1) / page_len
+                    } else { 0 };
+
+                    if page_num + 1 < total_pages {
+                        // Fetch the next page in this thread (so it's ready quickly)
+                        let _ = fetch_and_cache_page(&cache_key, &query_text, &search_area_text, &params_json_text, page_num + 1);
+
+                        // Prefetch 2 more pages in background
+                        if page_num + 2 < total_pages {
+                            prefetch_pages(
+                                cache_key.clone(),
+                                query_text.clone(),
+                                search_area_text.clone(),
+                                params_json_text.clone(),
+                                page_num + 2,
+                                2,
+                                total_pages,
+                            );
+                        }
+                    }
+
+                    info("SuttaBridge::results_page() end");
+                }
+                Ok(None) => {
+                    // Cache key changed during fetch (new search started), do nothing
+                    info("SuttaBridge::results_page() aborted (new search started)");
+                }
                 Err(e) => {
                     error(&format!("{}", e));
                     let error_json = serde_json::json!({"error": format!("{}", e)}).to_string();
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().results_page_ready(QString::from(error_json));
                     }).unwrap();
-                    return;
                 }
-            };
-
-            let results_page = SearchResultPage {
-                total_hits: query_task.total_hits() as usize,
-                page_len: query_task.page_len as usize,
-                page_num,
-                results,
-            };
-
-            let json = serde_json::to_string(&results_page).unwrap_or_default();
-
-            // Emit signal with the results
-            qt_thread.queue(move |mut qo| {
-                qo.as_mut().results_page_ready(QString::from(json));
-            }).unwrap();
-
-            info("SuttaBridge::results_page() end");
+            }
         });
     }
 
@@ -1201,6 +1389,8 @@ impl qobject::SuttaBridge {
                 source_include: params.source_include,
                 nikaya: None,
                 sutta_ref: None,
+                include_mula: true,
+                include_commentary: true,
             };
 
             let result = with_fulltext_searcher(|searcher| {

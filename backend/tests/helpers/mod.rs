@@ -23,6 +23,8 @@ pub fn get_contains_params_with_lang(lang: Option<String>) -> SearchParams {
         source_include: true,
         enable_regex: false,
         fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
     }
 }
 
@@ -37,6 +39,8 @@ pub fn get_uid_params_with_lang(lang: Option<String>) -> SearchParams {
         source_include: true,
         enable_regex: false,
         fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
     }
 }
 
@@ -51,6 +55,8 @@ pub fn get_uid_params() -> SearchParams {
         source_include: true,
         enable_regex: false,
         fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
     }
 }
 
@@ -68,6 +74,8 @@ pub fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQuer
         source_include: false,
         enable_regex: false,
         fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
     };
 
     SearchQueryTask::new(

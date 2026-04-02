@@ -1,5 +1,5 @@
 // use std::any::Any;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::error::Error;
 use std::time::Instant;
 
@@ -32,7 +32,8 @@ pub struct SearchQueryTask<'a> {
     pub lang_include: bool,
     pub source: Option<String>,
     pub source_include: bool,
-    pub highlighted_result_pages: HashMap<usize, Vec<SearchResult>>,
+    pub include_cst_mula: bool,
+    pub include_cst_commentary: bool,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -74,7 +75,8 @@ impl<'a> SearchQueryTask<'a> {
             lang_include: params.lang_include,
             source: params.source,
             source_include: params.source_include,
-            highlighted_result_pages: HashMap::new(),
+            include_cst_mula: params.include_cst_mula,
+            include_cst_commentary: params.include_cst_commentary,
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }
@@ -637,7 +639,7 @@ impl<'a> SearchQueryTask<'a> {
         }
 
         // --- CST Mūla Filtering ---
-        if !app_data.get_include_cst_mula_in_search_results() {
+        if !self.include_cst_mula {
             // Exclude CST mūla records: uid ends with /cst but is not commentary (.att, .tik)
             // Note: .mul.xml/pli/cst records are mūla and should be excluded
             query = query.filter(
@@ -657,7 +659,7 @@ impl<'a> SearchQueryTask<'a> {
         }
 
         // --- Commentary Filtering ---
-        if !app_data.get_include_cst_commentary_in_search_results() {
+        if !self.include_cst_commentary {
             // Exclude commentary records: uid contains .att or .tik before the first /
             // Matches both .att/ and .att.xml/ patterns
             query = query.filter(
@@ -742,13 +744,13 @@ impl<'a> SearchQueryTask<'a> {
         // Build dynamic WHERE clauses for CST/commentary filtering
         let mut extra_where = String::new();
 
-        if !app_data.get_include_cst_mula_in_search_results() {
+        if !self.include_cst_mula {
             extra_where.push_str(
                 " AND NOT (s.uid LIKE '%/cst' AND s.uid NOT LIKE '%.att%/cst' AND s.uid NOT LIKE '%.tik%/cst')"
             );
         }
 
-        if !app_data.get_include_cst_commentary_in_search_results() {
+        if !self.include_cst_commentary {
             extra_where.push_str(
                 " AND NOT (s.uid LIKE '%.att%/%' OR s.uid LIKE '%.tik%/%')"
             );
@@ -1306,7 +1308,7 @@ impl<'a> SearchQueryTask<'a> {
         }
 
         // --- CST Mūla Filtering ---
-        if !app_data.get_include_cst_mula_in_search_results() {
+        if !self.include_cst_mula {
             query = query.filter(
                 diesel::dsl::not(
                     uid.like("%/cst")
@@ -1324,7 +1326,7 @@ impl<'a> SearchQueryTask<'a> {
         }
 
         // --- Commentary Filtering ---
-        if !app_data.get_include_cst_commentary_in_search_results() {
+        if !self.include_cst_commentary {
             query = query.filter(
                 diesel::dsl::not(
                     uid.like("%.att%/%")
@@ -1621,12 +1623,6 @@ impl<'a> SearchQueryTask<'a> {
 
     /// Gets a specific page of search results, performing the query if needed.
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        // Check cache first. If this results page has been calculated before, return it.
-        if let Some(cached_page) = self.highlighted_result_pages.get(&page_num) {
-            return Ok(cached_page.clone()); // Return a clone to avoid borrow issues
-        }
-
-        // Otherwise, run the queries and return the results page.
 
         // --- Perform Search Based on Mode and Area ---
         let results = match self.search_mode {
@@ -1777,15 +1773,12 @@ impl<'a> SearchQueryTask<'a> {
             })
             .collect();
 
-        // --- Cache the highlighted results ---
-        self.highlighted_result_pages.insert(page_num, highlighted_results.clone());
-
         Ok(highlighted_results)
     }
 
     // ===== Fulltext Search Methods =====
 
-    fn fulltext_suttas(&mut self, _page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    fn fulltext_suttas(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::with_fulltext_searcher;
         use crate::search::searcher::SearchFilters;
 
@@ -1800,11 +1793,9 @@ impl<'a> SearchQueryTask<'a> {
             source_include: self.source_include,
             nikaya: None,
             sutta_ref: None,
+            include_mula: self.include_cst_mula,
+            include_commentary: self.include_cst_commentary,
         };
-
-        let app_data = get_app_data();
-        let include_cst_mula = app_data.get_include_cst_mula_in_search_results();
-        let include_cst_commentary = app_data.get_include_cst_commentary_in_search_results();
 
         let query_text = self.query_text.clone();
         let page_len = self.page_len;
@@ -1814,42 +1805,10 @@ impl<'a> SearchQueryTask<'a> {
                 warn("No sutta fulltext indexes available.");
                 return Ok((0, Vec::new()));
             }
-            searcher.search_suttas_with_count(&query_text, &filters, page_len)
+            searcher.search_suttas_with_count(&query_text, &filters, page_len, page_num)
         }) {
-            Some(Ok((total, mut results))) => {
-                let orig_count = results.len();
-
-                results.retain(|r| {
-                    let u = &r.uid;
-
-                    // CST mūla filtering: exclude /cst records that are not commentary (.att, .tik)
-                    // Note: .mul.xml/pli/cst records are mūla and should be excluded
-                    if !include_cst_mula
-                        && u.ends_with("/cst")
-                        && !u.contains(".att")
-                        && !u.contains(".tik")
-                    {
-                        return false;
-                    }
-
-                    // Commentary filtering: matches both .att/ and .att.xml/ patterns
-                    if !include_cst_commentary {
-                        if u.contains(".att") || u.contains(".tik") {
-                            // Check it's a commentary uid (has .att or .tik before a /)
-                            let before_first_slash = u.split('/').next().unwrap_or("");
-                            if before_first_slash.contains(".att") || before_first_slash.contains(".tik") {
-                                return false;
-                            }
-                        }
-                    }
-
-                    true
-                });
-
-                // Adjust the total hits count by the number of filtered results
-                let filtered_count = orig_count - results.len();
-                let adjusted_total = if total > filtered_count { total - filtered_count } else { 0 };
-                self.db_query_hits_count = adjusted_total as i64;
+            Some(Ok((total, results))) => {
+                self.db_query_hits_count = total as i64;
                 Ok(results)
             }
             Some(Err(e)) => Err(e.into()),
@@ -1861,7 +1820,7 @@ impl<'a> SearchQueryTask<'a> {
         }
     }
 
-    fn fulltext_dict_words(&mut self, _page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    fn fulltext_dict_words(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         use crate::with_fulltext_searcher;
         use crate::search::searcher::SearchFilters;
 
@@ -1876,6 +1835,8 @@ impl<'a> SearchQueryTask<'a> {
             source_include: self.source_include,
             nikaya: None,
             sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
         };
 
         let query_text = self.query_text.clone();
@@ -1886,7 +1847,7 @@ impl<'a> SearchQueryTask<'a> {
                 warn("No dict_word fulltext indexes available.");
                 return Ok((0, Vec::new()));
             }
-            searcher.search_dict_words_with_count(&query_text, &filters, page_len)
+            searcher.search_dict_words_with_count(&query_text, &filters, page_len, page_num)
         }) {
             Some(Ok((total, results))) => {
                 self.db_query_hits_count = total as i64;

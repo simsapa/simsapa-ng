@@ -64,6 +64,7 @@ ColumnLayout {
 
         SpinBox {
             id: fulltext_page_input; from: 1; to: 999;
+            visible: false
             editable: true
             Layout.preferredWidth: 50
         }
@@ -112,9 +113,16 @@ ColumnLayout {
             icon.source: "icons/32x32/fa_angles-left-solid.png"
             ToolTip.visible: hovered
             ToolTip.text: "First page of results"
+            enabled: root.page_num > 0
+            onClicked: {
+                fulltext_list.positionViewAtBeginning();
+                root.page_num = 0;
+                root.new_results_page_fn(root.page_num); // qmllint disable use-proper-function
+            }
         }
         Button {
             id: fulltext_last_page_btn
+            visible: false
             Layout.preferredWidth: 40
             icon.source: "icons/32x32/fa_angles-right-solid.png"
             ToolTip.visible: hovered

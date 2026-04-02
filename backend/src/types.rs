@@ -92,6 +92,8 @@ pub struct SearchParams {
     pub source_include: bool,
     pub enable_regex: bool,
     pub fuzzy_distance: i32,
+    pub include_cst_mula: bool,
+    pub include_cst_commentary: bool,
 }
 
 impl Default for SearchParams {
@@ -105,6 +107,8 @@ impl Default for SearchParams {
             source_include: true,
             enable_regex: false,
             fuzzy_distance: 0,
+            include_cst_mula: true,
+            include_cst_commentary: true,
         }
     }
 }

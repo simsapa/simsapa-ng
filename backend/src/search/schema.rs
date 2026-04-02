@@ -1,4 +1,4 @@
-use tantivy::schema::{IndexRecordOption, Schema, TextFieldIndexing, TextOptions};
+use tantivy::schema::{IndexRecordOption, Schema, TextFieldIndexing, TextOptions, INDEXED, STORED};
 
 /// Build the Tantivy schema for sutta indexing with the given language.
 pub fn build_sutta_schema(lang: &str) -> Schema {
@@ -44,6 +44,8 @@ pub fn build_sutta_schema(lang: &str) -> Schema {
     builder.add_text_field("nikaya", raw_opts);
     builder.add_text_field("content", lang_stem_opts);
     builder.add_text_field("content_exact", lang_normalize_opts);
+    builder.add_bool_field("is_mula", INDEXED | STORED);
+    builder.add_bool_field("is_commentary", INDEXED | STORED);
 
     builder.build()
 }

@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::types::{SearchArea, SearchMode};
 
 /// Filters that can be applied to fulltext search.
-#[derive(Debug, Default, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct SearchFilters {
     pub lang: Option<String>,
     pub lang_include: bool,
@@ -11,6 +11,23 @@ pub struct SearchFilters {
     pub source_include: bool,
     pub nikaya: Option<String>,
     pub sutta_ref: Option<String>,
+    pub include_mula: bool,
+    pub include_commentary: bool,
+}
+
+impl Default for SearchFilters {
+    fn default() -> Self {
+        Self {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
+        }
+    }
 }
 
 /// A single step in a composable search pipeline.

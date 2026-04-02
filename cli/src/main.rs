@@ -32,6 +32,8 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
         source_include: true,
         enable_regex: false,
         fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
     };
 
     let mut query_task = SearchQueryTask::new(
@@ -721,11 +723,13 @@ fn fulltext_search(
         source_include: source.is_some(),
         nikaya: None,
         sutta_ref: None,
+        include_mula: true,
+        include_commentary: true,
     };
 
     let (total_hits, results) = match area {
-        SearchArea::Suttas => searcher.search_suttas_with_count(query, &filters, limit),
-        SearchArea::Dictionary => searcher.search_dict_words_with_count(query, &filters, limit),
+        SearchArea::Suttas => searcher.search_suttas_with_count(query, &filters, limit, 0),
+        SearchArea::Dictionary => searcher.search_dict_words_with_count(query, &filters, limit, 0),
         _ => return Err(format!("Fulltext search not supported for area: {:?}", area)),
     }.map_err(|e| format!("Search error: {}", e))?;
 
