@@ -283,6 +283,22 @@ ApplicationWindow {
                             }
                         }
 
+                        Label {
+                            text: "Session"
+                            font.pointSize: root.pointSize + 1
+                            font.bold: true
+                            Layout.topMargin: 10
+                        }
+
+                        CheckBox {
+                            id: restore_last_session_checkbox
+                            text: "Restore Last Session on Startup"
+                            font.pointSize: root.pointSize
+                            onCheckedChanged: {
+                                SuttaBridge.set_restore_last_session(checked);
+                            }
+                        }
+
                         Button {
                             text: "Check for Simsapa Updates..."
                             font.pointSize: root.pointSize
@@ -843,6 +859,7 @@ ApplicationWindow {
 
         // Load initial state for General tab settings
         notify_updates_checkbox.checked = SuttaBridge.get_notify_about_simsapa_updates();
+        restore_last_session_checkbox.checked = SuttaBridge.get_restore_last_session();
 
         // Load initial state for View tab settings
         let theme_name = SuttaBridge.get_theme_name();

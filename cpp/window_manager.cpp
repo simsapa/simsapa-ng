@@ -8,6 +8,9 @@
 #include "chanting_practice_window.h"
 #include "chanting_review_window.h"
 #include <QVariant>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 WindowManager* WindowManager::m_instance = nullptr;
 
@@ -78,6 +81,60 @@ SuttaSearchWindow* WindowManager::create_sutta_search_window() {
     w->m_root->setProperty("window_id", QString("window_%1").arg(this->m_window_id_count));
     this->m_window_id_count++;
     return w;
+}
+
+void WindowManager::restore_last_session() {
+    if (this->sutta_search_windows.length() == 0) {
+        return;
+    }
+
+    // Check if restore is enabled by calling get_restore_last_session on the bridge via QML
+    auto first_window = this->sutta_search_windows.first();
+    if (!first_window->m_root) {
+        return;
+    }
+
+    bool restore_enabled = false;
+    QMetaObject::invokeMethod(first_window->m_root, "get_restore_last_session_setting",
+        Q_RETURN_ARG(bool, restore_enabled));
+
+    if (!restore_enabled) {
+        return;
+    }
+
+    // Get last session data
+    QString session_json;
+    QMetaObject::invokeMethod(first_window->m_root, "get_last_session_json_from_bridge",
+        Q_RETURN_ARG(QString, session_json));
+
+    if (session_json.isEmpty() || session_json == "[]") {
+        return;
+    }
+
+    QJsonDocument doc = QJsonDocument::fromJson(session_json.toUtf8());
+    if (!doc.isArray()) {
+        return;
+    }
+
+    QJsonArray windows = doc.array();
+    for (int i = 0; i < windows.size(); i++) {
+        QJsonObject window_obj = windows[i].toObject();
+        QString window_json = QJsonDocument(window_obj).toJson(QJsonDocument::Compact);
+
+        SuttaSearchWindow* target_window;
+        if (i == 0) {
+            // Restore into the existing first window
+            target_window = first_window;
+        } else {
+            // Create additional windows for remaining session folders
+            target_window = this->create_sutta_search_window();
+        }
+
+        if (target_window && target_window->m_root) {
+            QMetaObject::invokeMethod(target_window->m_root, "restore_last_session",
+                Q_ARG(QString, window_json));
+        }
+    }
 }
 
 DownloadAppdataWindow* WindowManager::create_download_appdata_window() {

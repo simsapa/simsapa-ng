@@ -972,6 +972,68 @@ Item {
         return true;
     }
 
+    // --- Bookmark operations ---
+
+    function get_all_bookmark_folders_json(): string {
+        return '[]';
+    }
+
+    function get_bookmark_items_for_folder_json(folder_id: int): string {
+        return '[]';
+    }
+
+    function create_bookmark_folder(name: string): int {
+        return -1;
+    }
+
+    function create_bookmark_item(folder_id: int, item_json: string): int {
+        return -1;
+    }
+
+    function update_bookmark_folder(folder_id: int, name: string) {
+        console.log("update_bookmark_folder()");
+    }
+
+    function update_bookmark_item(item_id: int, item_json: string) {
+        console.log("update_bookmark_item()");
+    }
+
+    function delete_bookmark_folder(folder_id: int) {
+        console.log("delete_bookmark_folder()");
+    }
+
+    function delete_bookmark_item(item_id: int) {
+        console.log("delete_bookmark_item()");
+    }
+
+    function reorder_bookmark_items(folder_id: int, item_ids_json: string) {
+        console.log("reorder_bookmark_items()");
+    }
+
+    function reorder_bookmark_folders(folder_ids_json: string) {
+        console.log("reorder_bookmark_folders()");
+    }
+
+    function move_bookmark_items_to_folder(item_ids_json: string, target_folder_id: int) {
+        console.log("move_bookmark_items_to_folder()");
+    }
+
+    function save_last_session(windows_json: string) {
+        console.log("save_last_session()");
+    }
+
+    function get_last_session_json(): string {
+        return '[]';
+    }
+
+    function get_restore_last_session(): bool {
+        return true;
+    }
+
+    function set_restore_last_session(value: bool) {
+        console.log("set_restore_last_session():", value);
+    }
+
     Item {
         id: dpd_lookup_data
         visible: false

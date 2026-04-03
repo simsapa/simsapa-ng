@@ -472,6 +472,66 @@ fn default_volume() -> f32 {
     1.0
 }
 
+// Bookmark models
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Serialize, Deserialize)]
+#[diesel(table_name = bookmark_folders)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct BookmarkFolder {
+    pub id: i32,
+    pub name: String,
+    pub sort_order: i32,
+    pub is_last_session: bool,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = bookmark_folders)]
+pub struct NewBookmarkFolder<'a> {
+    pub name: &'a str,
+    pub sort_order: i32,
+    pub is_last_session: bool,
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
+#[diesel(belongs_to(BookmarkFolder, foreign_key = folder_id))]
+#[diesel(table_name = bookmark_items)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct BookmarkItem {
+    pub id: i32,
+    pub folder_id: i32,
+    pub item_uid: String,
+    pub table_name: String,
+    pub title: Option<String>,
+    pub tab_group: String,
+    pub scroll_position: f32,
+    pub find_query: String,
+    pub find_match_index: i32,
+    pub sort_order: i32,
+}
+
+#[derive(Insertable, Deserialize)]
+#[diesel(table_name = bookmark_items)]
+pub struct NewBookmarkItem {
+    pub folder_id: i32,
+    pub item_uid: String,
+    pub table_name: String,
+    pub title: Option<String>,
+    pub tab_group: String,
+    pub scroll_position: f32,
+    pub find_query: String,
+    pub find_match_index: i32,
+    pub sort_order: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BookmarkItemUpdate {
+    pub item_uid: Option<String>,
+    pub title: Option<String>,
+    pub tab_group: Option<String>,
+    pub find_query: Option<String>,
+    pub find_match_index: Option<i32>,
+}
+
 /// Represents a navigation point from EPUB table of contents
 /// Mirrors the structure of epub::doc::NavPoint for JSON serialization
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
