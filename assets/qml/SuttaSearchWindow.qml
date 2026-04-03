@@ -223,6 +223,62 @@ ApplicationWindow {
         return JSON.stringify(items);
     }
 
+    function get_session_data_json(): string {
+        let items = [];
+        let sort_order = 0;
+
+        function collect_from_model(model, tab_group) {
+            for (let i = 0; i < model.count; i++) {
+                let tab = model.get(i);
+                if (tab.item_uid && tab.item_uid !== "Sutta" && tab.item_uid.length > 0) {
+                    items.push({
+                        item_uid: tab.item_uid,
+                        table_name: tab.table_name || "suttas",
+                        title: tab.sutta_title || "",
+                        tab_group: tab_group,
+                        scroll_position: 0.0,
+                        find_query: "",
+                        find_match_index: 0,
+                        sort_order: sort_order,
+                    });
+                    sort_order++;
+                }
+            }
+        }
+
+        collect_from_model(tabs_pinned_model, "pinned");
+        collect_from_model(tabs_results_model, "results");
+        collect_from_model(tabs_translations_model, "translations");
+
+        let session = {
+            name: root.window_id || "window",
+            items: items,
+        };
+
+        return JSON.stringify(session);
+    }
+
+    function save_last_session(windows_json: string) {
+        SuttaBridge.save_last_session(windows_json);
+    }
+
+    function restore_last_session(session_json: string) {
+        let session = JSON.parse(session_json);
+        let items = session.items || [];
+        for (let i = 0; i < items.length; i++) {
+            let focus = (i === 0);
+            root.open_bookmark_in_tab_group(items[i], focus);
+        }
+    }
+
+    function get_restore_last_session_setting(): bool {
+        return SuttaBridge.get_restore_last_session();
+    }
+
+    function get_last_session_json_from_bridge(): string {
+        return SuttaBridge.get_last_session_json();
+    }
+
     // Timer for incremental search debounce
     Timer {
         id: search_timer

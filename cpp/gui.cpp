@@ -15,12 +15,16 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 // #include <QtWebView/QtWebView>
 // #include <QtWebEngineQuick/qtwebenginequickglobal.h>
 
 #include "errors.h"
 #include "window_manager.h"
+#include "sutta_search_window.h"
 
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
@@ -228,6 +232,41 @@ int start(int argc, char* argv[]) {
   // === Create the first app window ===
 
   AppGlobals::manager->create_sutta_search_window();
+
+  // Restore last session if enabled
+  AppGlobals::manager->restore_last_session();
+
+  // Save last session on exit
+  QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+    log_info_c("aboutToQuit: saving last session");
+    QJsonArray all_windows;
+    for (auto w : AppGlobals::manager->sutta_search_windows) {
+      if (w->m_root) {
+        // Only save windows that are still visible (not closed/hidden)
+        QVariant visible = w->m_root->property("visible");
+        if (!visible.isValid() || !visible.toBool()) {
+          continue;
+        }
+        QString session_json;
+        QMetaObject::invokeMethod(w->m_root, "get_session_data_json",
+          Q_RETURN_ARG(QString, session_json));
+        if (!session_json.isEmpty()) {
+          QJsonDocument doc = QJsonDocument::fromJson(session_json.toUtf8());
+          if (!doc.isNull()) {
+            all_windows.append(doc.object());
+          }
+        }
+      }
+    }
+    if (!all_windows.isEmpty() && AppGlobals::manager->sutta_search_windows.length() > 0) {
+      QString windows_json = QJsonDocument(all_windows).toJson(QJsonDocument::Compact);
+      auto first_window = AppGlobals::manager->sutta_search_windows.first();
+      if (first_window->m_root) {
+        QMetaObject::invokeMethod(first_window->m_root, "save_last_session",
+          Q_ARG(QString, windows_json));
+      }
+    }
+  });
 
   log_info_c("app.exec()");
   int status = app.exec();

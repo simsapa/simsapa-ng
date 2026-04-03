@@ -23,6 +23,7 @@ class WindowManager : public QObject {
 
         void create_plain_sutta_search_window();
         SuttaSearchWindow* create_sutta_search_window();
+        void restore_last_session();
         DownloadAppdataWindow* create_download_appdata_window();
         SuttaLanguagesWindow* create_sutta_languages_window();
         LibraryWindow* create_library_window();

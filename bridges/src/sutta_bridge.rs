@@ -4015,9 +4015,25 @@ impl qobject::SuttaBridge {
         let json_str = windows_json.to_string();
 
         #[derive(serde::Deserialize)]
+        struct SessionItem {
+            item_uid: String,
+            table_name: String,
+            title: Option<String>,
+            tab_group: String,
+            #[serde(default)]
+            scroll_position: f32,
+            #[serde(default)]
+            find_query: String,
+            #[serde(default)]
+            find_match_index: i32,
+            #[serde(default)]
+            sort_order: i32,
+        }
+
+        #[derive(serde::Deserialize)]
         struct SessionWindow {
             name: String,
-            items: Vec<simsapa_backend::db::appdata_models::NewBookmarkItem>,
+            items: Vec<SessionItem>,
         }
 
         let windows: Vec<SessionWindow> = match serde_json::from_str(&json_str) {
