@@ -67,6 +67,11 @@ fn main() {
         "../assets/qml/ChantingTreeList.qml",
         "../assets/qml/RecordingPlaybackItem.qml",
         "../assets/qml/WaveformView.qml",
+        "../assets/qml/BookmarksTab.qml",
+        "../assets/qml/BookmarkFolderItem.qml",
+        "../assets/qml/BookmarkListItem.qml",
+        "../assets/qml/BookmarkEditDialog.qml",
+        "../assets/qml/BookmarkFolderDialog.qml",
     ];
 
     let builder = CxxQtBuilder::new()

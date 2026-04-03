@@ -1407,5 +1407,258 @@ impl AppdataDbHandle {
             }
         }
     }
+
+    // --- Bookmark Folder CRUD ---
+
+    pub fn get_all_bookmark_folders(&self) -> Vec<BookmarkFolder> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        let result = self.do_read(|db_conn| {
+            bookmark_folders
+                .order(sort_order.asc())
+                .select(BookmarkFolder::as_select())
+                .load(db_conn)
+        });
+
+        match result {
+            Ok(folders) => folders,
+            Err(e) => {
+                error(&format!("get_all_bookmark_folders(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+
+    pub fn get_bookmark_items_for_folder(&self, folder_id_param: i32) -> Vec<BookmarkItem> {
+        use crate::db::appdata_schema::bookmark_items::dsl::*;
+
+        let result = self.do_read(|db_conn| {
+            bookmark_items
+                .filter(folder_id.eq(folder_id_param))
+                .order(sort_order.asc())
+                .select(BookmarkItem::as_select())
+                .load(db_conn)
+        });
+
+        match result {
+            Ok(items) => items,
+            Err(e) => {
+                error(&format!("get_bookmark_items_for_folder(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+
+    pub fn create_bookmark_folder(&self, name_param: &str, is_last_session_param: bool) -> Result<i32> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        // Get max sort_order
+        let max_order: i32 = self.do_read(|db_conn| {
+            bookmark_folders
+                .select(diesel::dsl::max(sort_order))
+                .first::<Option<i32>>(db_conn)
+        })?.unwrap_or(0);
+
+        let new_folder = NewBookmarkFolder {
+            name: name_param,
+            sort_order: max_order + 1,
+            is_last_session: is_last_session_param,
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(bookmark_folders)
+                .values(&new_folder)
+                .execute(db_conn)?;
+
+            // Get the last inserted row id
+            bookmark_folders
+                .order(id.desc())
+                .select(id)
+                .first::<i32>(db_conn)
+        })
+    }
+
+    pub fn create_bookmark_item(&self, new_item: &NewBookmarkItem) -> Result<i32> {
+        use crate::db::appdata_schema::bookmark_items::dsl::*;
+
+        // Get max sort_order within folder
+        let max_order: i32 = self.do_read(|db_conn| {
+            bookmark_items
+                .filter(folder_id.eq(new_item.folder_id))
+                .select(diesel::dsl::max(sort_order))
+                .first::<Option<i32>>(db_conn)
+        })?.unwrap_or(0);
+
+        let item = NewBookmarkItem {
+            folder_id: new_item.folder_id,
+            item_uid: new_item.item_uid.clone(),
+            table_name: new_item.table_name.clone(),
+            title: new_item.title.clone(),
+            tab_group: new_item.tab_group.clone(),
+            scroll_position: new_item.scroll_position,
+            find_query: new_item.find_query.clone(),
+            find_match_index: new_item.find_match_index,
+            sort_order: max_order + 1,
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(bookmark_items)
+                .values(&item)
+                .execute(db_conn)?;
+
+            bookmark_items
+                .order(id.desc())
+                .select(id)
+                .first::<i32>(db_conn)
+        })
+    }
+
+    pub fn update_bookmark_folder(&self, folder_id_param: i32, name_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(bookmark_folders.find(folder_id_param))
+                .set(name.eq(name_param))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_bookmark_item(&self, item_id_param: i32, item_data: &BookmarkItemUpdate) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_items::dsl::*;
+
+        self.do_write(|db_conn| {
+            if let Some(ref v) = item_data.item_uid {
+                diesel::update(bookmark_items.find(item_id_param))
+                    .set(item_uid.eq(v))
+                    .execute(db_conn)?;
+            }
+            if let Some(ref v) = item_data.title {
+                diesel::update(bookmark_items.find(item_id_param))
+                    .set(title.eq(v))
+                    .execute(db_conn)?;
+            }
+            if let Some(ref v) = item_data.tab_group {
+                diesel::update(bookmark_items.find(item_id_param))
+                    .set(tab_group.eq(v))
+                    .execute(db_conn)?;
+            }
+            if let Some(ref v) = item_data.find_query {
+                diesel::update(bookmark_items.find(item_id_param))
+                    .set(find_query.eq(v))
+                    .execute(db_conn)?;
+            }
+            if let Some(v) = item_data.find_match_index {
+                diesel::update(bookmark_items.find(item_id_param))
+                    .set(find_match_index.eq(v))
+                    .execute(db_conn)?;
+            }
+            Ok(())
+        })
+    }
+
+    pub fn delete_bookmark_folder(&self, folder_id_param: i32) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(bookmark_folders.find(folder_id_param))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn delete_bookmark_item(&self, item_id_param: i32) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_items::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(bookmark_items.find(item_id_param))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn reorder_bookmark_items(&self, folder_id_param: i32, item_ids: &[i32]) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_items::dsl::*;
+
+        self.do_write(|db_conn| {
+            for (idx, item_id_val) in item_ids.iter().enumerate() {
+                diesel::update(
+                    bookmark_items
+                        .filter(id.eq(item_id_val))
+                        .filter(folder_id.eq(folder_id_param))
+                )
+                    .set(sort_order.eq(idx as i32))
+                    .execute(db_conn)?;
+            }
+            Ok(())
+        })
+    }
+
+    pub fn reorder_bookmark_folders(&self, folder_ids: &[i32]) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        self.do_write(|db_conn| {
+            for (idx, folder_id_val) in folder_ids.iter().enumerate() {
+                diesel::update(bookmark_folders.find(*folder_id_val))
+                    .set(sort_order.eq(idx as i32))
+                    .execute(db_conn)?;
+            }
+            Ok(())
+        })
+    }
+
+    pub fn move_bookmark_items_to_folder(&self, item_ids: &[i32], target_folder_id: i32) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_items::dsl::*;
+
+        // Get max sort_order in target folder
+        let max_order: i32 = self.do_read(|db_conn| {
+            bookmark_items
+                .filter(folder_id.eq(target_folder_id))
+                .select(diesel::dsl::max(sort_order))
+                .first::<Option<i32>>(db_conn)
+        })?.unwrap_or(0);
+
+        self.do_write(|db_conn| {
+            for (idx, item_id_val) in item_ids.iter().enumerate() {
+                diesel::update(bookmark_items.find(*item_id_val))
+                    .set((
+                        folder_id.eq(target_folder_id),
+                        sort_order.eq(max_order + 1 + idx as i32),
+                    ))
+                    .execute(db_conn)?;
+            }
+            Ok(())
+        })
+    }
+
+    pub fn delete_last_session_folders(&self) -> Result<()> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(bookmark_folders.filter(is_last_session.eq(true)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn get_last_session_folders(&self) -> Vec<BookmarkFolder> {
+        use crate::db::appdata_schema::bookmark_folders::dsl::*;
+
+        let result = self.do_read(|db_conn| {
+            bookmark_folders
+                .filter(is_last_session.eq(true))
+                .order(sort_order.asc())
+                .select(BookmarkFolder::as_select())
+                .load(db_conn)
+        });
+
+        match result {
+            Ok(folders) => folders,
+            Err(e) => {
+                error(&format!("get_last_session_folders(): {}", e));
+                Vec::new()
+            }
+        }
+    }
 }
 

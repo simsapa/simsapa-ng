@@ -46,6 +46,7 @@ ApplicationWindow {
     property string last_search_area: ""
     property var last_params: null
     property string pending_find_query: ""
+    property real pending_bookmark_scroll: 0.0
 
     // Keybindings loaded from settings
     property var keybindings: ({})
@@ -196,6 +197,30 @@ ApplicationWindow {
 
     function blank_sutta_tab_data(): var {
         return root.new_tab_data({item_uid: "Sutta", sutta_title: "", sutta_ref: ""});
+    }
+
+    function get_open_items_json(): string {
+        let items = [];
+
+        function collect_from_model(model, tab_group) {
+            for (let i = 0; i < model.count; i++) {
+                let tab = model.get(i);
+                if (tab.item_uid && tab.item_uid !== "Sutta" && tab.item_uid.length > 0) {
+                    items.push({
+                        item_uid: tab.item_uid,
+                        table_name: tab.table_name || "suttas",
+                        title: tab.sutta_title || "",
+                        tab_group: tab_group,
+                    });
+                }
+            }
+        }
+
+        collect_from_model(tabs_pinned_model, "pinned");
+        collect_from_model(tabs_results_model, "results");
+        collect_from_model(tabs_translations_model, "translations");
+
+        return JSON.stringify(items);
     }
 
     // Timer for incremental search debounce
@@ -813,6 +838,57 @@ ${query_text}`;
         show_sidebar_btn.checked = true;
         rightside_tabs.setCurrentIndex(1) // idx 1 = Dictionary
         dictionary_tab.word_uid = uid;
+    }
+
+    // Open a bookmark item in the correct tab group, with optional scroll/find restoration.
+    // item_data: {item_uid, table_name, title, tab_group, scroll_position, find_query, find_match_index}
+    // focus: whether to focus on the newly created tab
+    function open_bookmark_in_tab_group(item_data: var, focus: bool) {
+        let result_data = {
+            item_uid: item_data.item_uid,
+            table_name: item_data.table_name || "suttas",
+            sutta_title: item_data.title || "",
+            sutta_ref: "",
+        };
+
+        let tab_group = item_data.tab_group || "results";
+
+        if (tab_group === "pinned") {
+            let tab_data = root.new_tab_data(result_data, true, focus);
+            if (focus) {
+                tab_data.web_item_key = root.generate_key();
+                sutta_html_view_layout.add_item(tab_data, true);
+            }
+            tabs_pinned_model.append(tab_data);
+            if (focus) {
+                root.focus_on_tab_with_id_key(tab_data.id_key);
+            }
+        } else if (tab_group === "translations") {
+            let tab_data = root.new_tab_data(result_data, false, focus);
+            if (focus) {
+                tab_data.web_item_key = root.generate_key();
+                sutta_html_view_layout.add_item(tab_data, true);
+            }
+            tabs_translations_model.append(tab_data);
+            if (focus) {
+                root.focus_on_tab_with_id_key(tab_data.id_key);
+            }
+        } else {
+            // "results" — use the standard function which handles first-tab logic
+            root.show_result_in_html_view(result_data, true);
+        }
+
+        // Schedule scroll position restoration if needed
+        let scroll_pos = item_data.scroll_position || 0.0;
+        if (scroll_pos > 0.0) {
+            root.pending_bookmark_scroll = scroll_pos;
+        }
+
+        // Schedule find query restoration if needed
+        let find_q = item_data.find_query || "";
+        if (find_q.length > 0) {
+            root.pending_find_query = find_q;
+        }
     }
 
     function open_find_in_sutta_with_query(query: string) {
@@ -2238,6 +2314,18 @@ ${query_text}`;
                                     visible: root.webview_visible && suttas_tab_container.visible
 
                                     onPage_loaded: {
+                                        // Restore scroll position from bookmark
+                                        if (root.pending_bookmark_scroll > 0.0) {
+                                            let scroll_ratio = root.pending_bookmark_scroll;
+                                            root.pending_bookmark_scroll = 0.0;
+                                            let html_view = sutta_html_view_layout.get_current_item();
+                                            if (html_view) {
+                                                // Delay slightly to let content render
+                                                let js = `setTimeout(function() { window.scrollTo(0, ${scroll_ratio} * document.documentElement.scrollHeight); }, 200);`;
+                                                html_view.item.web.runJavaScript(js);
+                                            }
+                                        }
+
                                         if (root.pending_find_query.length > 0) {
                                             root.open_find_in_sutta_with_query(root.pending_find_query);
                                             root.pending_find_query = "";
@@ -2284,6 +2372,14 @@ ${query_text}`;
                             anchors.left: parent.left
                             anchors.right: parent.right
 
+                            onCurrentIndexChanged: {
+                                // Refresh bookmarks tab when it becomes visible (index 5)
+                                if (currentIndex === 5) {
+                                    bookmarks_tab.load_open_items();
+                                    bookmarks_tab.load_bookmarks();
+                                }
+                            }
+
                             TabButton {
                                 text: "Results"
                                 id: fulltext_results_tab_btn
@@ -2316,6 +2412,13 @@ ${query_text}`;
                                 text: "TOC"
                                 id: toc_tab_btn
                                 icon.source: "icons/32x32/bxs_book_bookmark.png"
+                                padding: 5
+                            }
+
+                            TabButton {
+                                text: "Bookmarks"
+                                id: bookmarks_tab_btn
+                                icon.source: "icons/32x32/fa_bookmark-solid.png"
                                 padding: 5
                             }
 
@@ -2407,6 +2510,27 @@ ${query_text}`;
                                 is_dark: root.is_dark
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                            }
+
+                            BookmarksTab {
+                                id: bookmarks_tab
+                                window_id: root.window_id
+                                is_dark: root.is_dark
+                                get_open_items_fn: root.get_open_items_json
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+
+                                onOpen_bookmark_item: function(item_data) {
+                                    root.open_bookmark_in_tab_group(item_data, true);
+                                }
+
+                                onOpen_all_folder_items: function(items) {
+                                    for (let i = 0; i < items.length; i++) {
+                                        // Focus only the first item in each tab group
+                                        let focus = (i === 0);
+                                        root.open_bookmark_in_tab_group(items[i], focus);
+                                    }
+                                }
                             }
 
                             QueryTab {

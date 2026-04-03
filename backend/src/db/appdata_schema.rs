@@ -193,11 +193,40 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    bookmark_folders (id) {
+        id -> Integer,
+        name -> Text,
+        sort_order -> Integer,
+        is_last_session -> Bool,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
+diesel::table! {
+    bookmark_items (id) {
+        id -> Integer,
+        folder_id -> Integer,
+        item_uid -> Text,
+        table_name -> Text,
+        title -> Nullable<Text>,
+        tab_group -> Text,
+        scroll_position -> Float,
+        find_query -> Text,
+        find_match_index -> Integer,
+        sort_order -> Integer,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
 diesel::joinable!(sutta_variants -> suttas (sutta_id));
 diesel::joinable!(sutta_comments -> suttas (sutta_id));
 diesel::joinable!(sutta_glosses -> suttas (sutta_id));
 diesel::joinable!(book_spine_items -> books (book_id));
 diesel::joinable!(book_resources -> books (book_id));
+diesel::joinable!(bookmark_items -> bookmark_folders (folder_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     app_settings,
@@ -212,4 +241,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     chanting_chants,
     chanting_sections,
     chanting_recordings,
+    bookmark_folders,
+    bookmark_items,
 );

@@ -850,6 +850,53 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_log_level(self: &SuttaBridge, level: &QString) -> bool;
+
+        // --- Bookmark operations ---
+
+        #[qinvokable]
+        fn get_all_bookmark_folders_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_bookmark_items_for_folder_json(self: &SuttaBridge, folder_id: i32) -> QString;
+
+        #[qinvokable]
+        fn create_bookmark_folder(self: Pin<&mut SuttaBridge>, name: &QString) -> i32;
+
+        #[qinvokable]
+        fn create_bookmark_item(self: Pin<&mut SuttaBridge>, folder_id: i32, item_json: &QString) -> i32;
+
+        #[qinvokable]
+        fn update_bookmark_folder(self: Pin<&mut SuttaBridge>, folder_id: i32, name: &QString);
+
+        #[qinvokable]
+        fn update_bookmark_item(self: Pin<&mut SuttaBridge>, item_id: i32, item_json: &QString);
+
+        #[qinvokable]
+        fn delete_bookmark_folder(self: Pin<&mut SuttaBridge>, folder_id: i32);
+
+        #[qinvokable]
+        fn delete_bookmark_item(self: Pin<&mut SuttaBridge>, item_id: i32);
+
+        #[qinvokable]
+        fn reorder_bookmark_items(self: Pin<&mut SuttaBridge>, folder_id: i32, item_ids_json: &QString);
+
+        #[qinvokable]
+        fn reorder_bookmark_folders(self: Pin<&mut SuttaBridge>, folder_ids_json: &QString);
+
+        #[qinvokable]
+        fn move_bookmark_items_to_folder(self: Pin<&mut SuttaBridge>, item_ids_json: &QString, target_folder_id: i32);
+
+        #[qinvokable]
+        fn save_last_session(self: Pin<&mut SuttaBridge>, windows_json: &QString);
+
+        #[qinvokable]
+        fn get_last_session_json(self: &SuttaBridge) -> QString;
+
+        #[qinvokable]
+        fn get_restore_last_session(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_restore_last_session(self: Pin<&mut SuttaBridge>, value: bool);
     }
 }
 
@@ -3823,5 +3870,227 @@ impl qobject::SuttaBridge {
     /// Returns true if successful, false if the string is not a valid level
     pub fn set_log_level(&self, level: &QString) -> bool {
         set_log_level_str(&level.to_string())
+    }
+
+    // --- Bookmark operations ---
+
+    pub fn get_all_bookmark_folders_json(&self) -> QString {
+        let app_data = get_app_data();
+        let folders = app_data.dbm.appdata.get_all_bookmark_folders();
+        let json = serde_json::to_string(&folders).unwrap_or_else(|_| "[]".to_string());
+        QString::from(json)
+    }
+
+    pub fn get_bookmark_items_for_folder_json(&self, folder_id: i32) -> QString {
+        let app_data = get_app_data();
+        let items = app_data.dbm.appdata.get_bookmark_items_for_folder(folder_id);
+        let json = serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string());
+        QString::from(json)
+    }
+
+    pub fn create_bookmark_folder(self: Pin<&mut Self>, name: &QString) -> i32 {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.create_bookmark_folder(&name.to_string(), false) {
+            Ok(id) => id,
+            Err(e) => {
+                error(&format!("create_bookmark_folder(): {}", e));
+                -1
+            }
+        }
+    }
+
+    pub fn create_bookmark_item(self: Pin<&mut Self>, folder_id: i32, item_json: &QString) -> i32 {
+        use simsapa_backend::db::appdata_models::NewBookmarkItem;
+
+        let json_str = item_json.to_string();
+        let new_item: NewBookmarkItem = match serde_json::from_str(&json_str) {
+            Ok(item) => item,
+            Err(e) => {
+                error(&format!("create_bookmark_item() parse error: {}", e));
+                return -1;
+            }
+        };
+
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.create_bookmark_item(&NewBookmarkItem {
+            folder_id,
+            ..new_item
+        }) {
+            Ok(id) => id,
+            Err(e) => {
+                error(&format!("create_bookmark_item(): {}", e));
+                -1
+            }
+        }
+    }
+
+    pub fn update_bookmark_folder(self: Pin<&mut Self>, folder_id: i32, name: &QString) {
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.update_bookmark_folder(folder_id, &name.to_string()) {
+            error(&format!("update_bookmark_folder(): {}", e));
+        }
+    }
+
+    pub fn update_bookmark_item(self: Pin<&mut Self>, item_id: i32, item_json: &QString) {
+        use simsapa_backend::db::appdata_models::BookmarkItemUpdate;
+
+        let json_str = item_json.to_string();
+        let update: BookmarkItemUpdate = match serde_json::from_str(&json_str) {
+            Ok(u) => u,
+            Err(e) => {
+                error(&format!("update_bookmark_item() parse error: {}", e));
+                return;
+            }
+        };
+
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.update_bookmark_item(item_id, &update) {
+            error(&format!("update_bookmark_item(): {}", e));
+        }
+    }
+
+    pub fn delete_bookmark_folder(self: Pin<&mut Self>, folder_id: i32) {
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.delete_bookmark_folder(folder_id) {
+            error(&format!("delete_bookmark_folder(): {}", e));
+        }
+    }
+
+    pub fn delete_bookmark_item(self: Pin<&mut Self>, item_id: i32) {
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.delete_bookmark_item(item_id) {
+            error(&format!("delete_bookmark_item(): {}", e));
+        }
+    }
+
+    pub fn reorder_bookmark_items(self: Pin<&mut Self>, folder_id: i32, item_ids_json: &QString) {
+        let json_str = item_ids_json.to_string();
+        let item_ids: Vec<i32> = match serde_json::from_str(&json_str) {
+            Ok(ids) => ids,
+            Err(e) => {
+                error(&format!("reorder_bookmark_items() parse error: {}", e));
+                return;
+            }
+        };
+
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.reorder_bookmark_items(folder_id, &item_ids) {
+            error(&format!("reorder_bookmark_items(): {}", e));
+        }
+    }
+
+    pub fn reorder_bookmark_folders(self: Pin<&mut Self>, folder_ids_json: &QString) {
+        let json_str = folder_ids_json.to_string();
+        let folder_ids: Vec<i32> = match serde_json::from_str(&json_str) {
+            Ok(ids) => ids,
+            Err(e) => {
+                error(&format!("reorder_bookmark_folders() parse error: {}", e));
+                return;
+            }
+        };
+
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.reorder_bookmark_folders(&folder_ids) {
+            error(&format!("reorder_bookmark_folders(): {}", e));
+        }
+    }
+
+    pub fn move_bookmark_items_to_folder(self: Pin<&mut Self>, item_ids_json: &QString, target_folder_id: i32) {
+        let json_str = item_ids_json.to_string();
+        let item_ids: Vec<i32> = match serde_json::from_str(&json_str) {
+            Ok(ids) => ids,
+            Err(e) => {
+                error(&format!("move_bookmark_items_to_folder() parse error: {}", e));
+                return;
+            }
+        };
+
+        let app_data = get_app_data();
+        if let Err(e) = app_data.dbm.appdata.move_bookmark_items_to_folder(&item_ids, target_folder_id) {
+            error(&format!("move_bookmark_items_to_folder(): {}", e));
+        }
+    }
+
+    pub fn save_last_session(self: Pin<&mut Self>, windows_json: &QString) {
+        let json_str = windows_json.to_string();
+
+        #[derive(serde::Deserialize)]
+        struct SessionWindow {
+            name: String,
+            items: Vec<simsapa_backend::db::appdata_models::NewBookmarkItem>,
+        }
+
+        let windows: Vec<SessionWindow> = match serde_json::from_str(&json_str) {
+            Ok(w) => w,
+            Err(e) => {
+                error(&format!("save_last_session() parse error: {}", e));
+                return;
+            }
+        };
+
+        let app_data = get_app_data();
+
+        // Delete previous last session folders
+        if let Err(e) = app_data.dbm.appdata.delete_last_session_folders() {
+            error(&format!("save_last_session() delete old session: {}", e));
+            return;
+        }
+
+        // Create new session folders and items
+        for window in &windows {
+            let folder_id = match app_data.dbm.appdata.create_bookmark_folder(&window.name, true) {
+                Ok(id) => id,
+                Err(e) => {
+                    error(&format!("save_last_session() create folder: {}", e));
+                    continue;
+                }
+            };
+
+            for item in &window.items {
+                let new_item = simsapa_backend::db::appdata_models::NewBookmarkItem {
+                    folder_id,
+                    item_uid: item.item_uid.clone(),
+                    table_name: item.table_name.clone(),
+                    title: item.title.clone(),
+                    tab_group: item.tab_group.clone(),
+                    scroll_position: item.scroll_position,
+                    find_query: item.find_query.clone(),
+                    find_match_index: item.find_match_index,
+                    sort_order: item.sort_order,
+                };
+
+                if let Err(e) = app_data.dbm.appdata.create_bookmark_item(&new_item) {
+                    error(&format!("save_last_session() create item: {}", e));
+                }
+            }
+        }
+    }
+
+    pub fn get_last_session_json(&self) -> QString {
+        let app_data = get_app_data();
+        let folders = app_data.dbm.appdata.get_last_session_folders();
+
+        let mut result: Vec<serde_json::Value> = Vec::new();
+        for folder in &folders {
+            let items = app_data.dbm.appdata.get_bookmark_items_for_folder(folder.id);
+            result.push(serde_json::json!({
+                "name": folder.name,
+                "folder_id": folder.id,
+                "items": items,
+            }));
+        }
+
+        let json = serde_json::to_string(&result).unwrap_or_else(|_| "[]".to_string());
+        QString::from(json)
+    }
+
+    pub fn get_restore_last_session(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_restore_last_session()
+    }
+
+    pub fn set_restore_last_session(self: Pin<&mut Self>, value: bool) {
+        let app_data = get_app_data();
+        app_data.set_restore_last_session(value);
     }
 }
