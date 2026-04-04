@@ -181,6 +181,8 @@ Dialog {
                 text: "Select"
                 Layout.fillWidth: true
                 enabled: root.selectedIndex >= 0
+                palette.button: "#4CAF50"
+                palette.buttonText: "white"
 
                 onClicked: {
                     if (root.selectedIndex >= 0) {

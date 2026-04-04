@@ -187,6 +187,7 @@ list(APPEND cpp_files
     cpp/errors.cpp
     cpp/utils.cpp
     cpp/wake_lock.cpp
+    cpp/android_helpers.cpp
     cpp/system_palette.cpp
     cpp/clipboard_manager.cpp
     cpp/gui.cpp
