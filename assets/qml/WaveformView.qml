@@ -19,7 +19,9 @@ Item {
     property color bar_color_range: Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.3)
     property color position_marker_color: "red"
     property color cursor_color: palette.text
-    property int bar_spacing: 1
+    property real bar_spacing: waveform_data.length > 0 && root.width > 0
+        ? Math.min(1, root.width / waveform_data.length * 0.3)
+        : 1
     property int min_bar_height: 2
 
     // Drag state for range selection
@@ -67,6 +69,8 @@ Item {
         return result;
     }
 
+    clip: true
+
     // Background
     Rectangle {
         anchors.fill: parent
@@ -113,7 +117,7 @@ Item {
                 property bool is_played: bar_progress <= playback_progress
 
                 width: root.waveform_data.length > 0
-                    ? Math.max(1, (bars_row.width - (root.waveform_data.length - 1) * root.bar_spacing) / root.waveform_data.length)
+                    ? (bars_row.width - (root.waveform_data.length - 1) * root.bar_spacing) / root.waveform_data.length
                     : 1
                 height: Math.max(root.min_bar_height, amplitude * bars_row.height)
                 y: bars_row.height - height

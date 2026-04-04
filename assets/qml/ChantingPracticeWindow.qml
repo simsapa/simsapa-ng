@@ -565,7 +565,7 @@ ApplicationWindow {
         anchors.topMargin: root.top_bar_margin
 
         // Toolbar
-        RowLayout {
+        Flow {
             Layout.fillWidth: true
             Layout.margins: 10
             spacing: 10
@@ -628,8 +628,6 @@ ApplicationWindow {
                     remove_dialog.open();
                 }
             }
-
-            Item { Layout.fillWidth: true }
 
             Button {
                 text: root.export_selection_mode ? "Export Selected" : "Export"

@@ -375,8 +375,9 @@ Item {
             }
 
             ToolButton {
-                text: "✕"
+                text: "X"
                 font.pointSize: 10
+                font.bold: true
                 implicitWidth: 28
                 implicitHeight: 28
                 onClicked: {
@@ -851,10 +852,11 @@ Item {
 
                     // Delete button (8.11)
                     Button {
-                        text: "✕"
+                        text: "X"
                         implicitWidth: 28
                         implicitHeight: 28
                         font.pointSize: 9
+                        font.bold: true
                         onClicked: {
                             if (marker_row.marker !== null) {
                                 root.delete_marker(marker_row.marker.id);
