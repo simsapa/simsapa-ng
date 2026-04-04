@@ -2597,8 +2597,12 @@ ${query_text}`;
                     }
 
                     Item {
+                        id: sidebar_panel
                         SplitView.preferredWidth: show_sidebar_btn.checked ? (root.is_wide ? (parent.width * 0.5) : parent.width) : 0
                         visible: show_sidebar_btn.checked
+
+                        // Show only icons when the sidebar is too narrow for tab titles
+                        readonly property bool narrow_tabs: !root.is_wide
 
                         // Right side tabs
                         TabBar {
@@ -2619,6 +2623,7 @@ ${query_text}`;
                                 text: "Results"
                                 id: fulltext_results_tab_btn
                                 icon.source: "icons/32x32/bx_search_alt_2.png"
+                                display: sidebar_panel.narrow_tabs ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
                                 padding: 5
                             }
 
@@ -2626,6 +2631,7 @@ ${query_text}`;
                                 text: "Dictionary"
                                 id: dictionary_tab_btn
                                 icon.source: "icons/32x32/bxs_book_content.png"
+                                display: sidebar_panel.narrow_tabs ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
                                 padding: 5
                             }
 
@@ -2633,6 +2639,7 @@ ${query_text}`;
                                 text: "Gloss"
                                 id: gloss_tab_btn
                                 icon.source: "icons/32x32/material-symbols--list-alt-outline.png"
+                                display: sidebar_panel.narrow_tabs ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
                                 padding: 5
                             }
 
@@ -2640,6 +2647,7 @@ ${query_text}`;
                                 text: "Prompts"
                                 id: prompts_tab_btn
                                 icon.source: "icons/32x32/grommet-icons--chat.png"
+                                display: sidebar_panel.narrow_tabs ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
                                 padding: 5
                             }
 
@@ -2647,6 +2655,7 @@ ${query_text}`;
                                 text: "TOC"
                                 id: toc_tab_btn
                                 icon.source: "icons/32x32/bxs_book_bookmark.png"
+                                display: sidebar_panel.narrow_tabs ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
                                 padding: 5
                             }
 
@@ -2654,6 +2663,7 @@ ${query_text}`;
                                 text: "Bookmarks"
                                 id: bookmarks_tab_btn
                                 icon.source: "icons/32x32/fa_bookmark-solid.png"
+                                display: sidebar_panel.narrow_tabs ? AbstractButton.IconOnly : AbstractButton.TextBesideIcon
                                 padding: 5
                             }
 
@@ -2673,11 +2683,25 @@ ${query_text}`;
                             // }
                         }
 
+                        // Tab title shown when tab bar is icon-only (narrow sidebar)
+                        Label {
+                            id: tab_title_label
+                            anchors.top: rightside_tabs.bottom
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.topMargin: 4
+                            anchors.leftMargin: 8
+                            visible: sidebar_panel.narrow_tabs
+                            text: rightside_tabs.currentItem ? rightside_tabs.currentItem.text : ""
+                            font.bold: true
+                            font.pointSize: 12
+                        }
+
                         // Tab content areas
                         StackLayout {
                             id: tab_stack
                             currentIndex: rightside_tabs.currentIndex
-                            anchors.top: rightside_tabs.bottom
+                            anchors.top: sidebar_panel.narrow_tabs ? tab_title_label.bottom : rightside_tabs.bottom
                             anchors.topMargin: 5
                             width: parent.width
                             anchors.bottom: parent.bottom
