@@ -1015,6 +1015,10 @@ Item {
             root.file_not_found = false;
             root.error_message = "";
             player.source = recorder.actualLocation;
+            // Clear cached waveform so it regenerates from the new file
+            root.waveform_json = "";
+            root.waveform_data = [];
+            root.waveform_num_bars = 0;
             load_waveform();
             root.recording_completed(recorded_path);
         }
