@@ -16,6 +16,18 @@ ApplicationWindow {
     visible: true
     color: palette.window
 
+    onClosing: function(close) {
+        if (root.is_mobile) {
+            close.accepted = false;
+            if (root.nav_history_can_go_back()) {
+                root.navigate_back();
+            } else {
+                close_window_dialog.open();
+            }
+        }
+        // Desktop: close.accepted defaults to true, normal close behavior
+    }
+
     property string window_id
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
@@ -47,6 +59,170 @@ ApplicationWindow {
     property var last_params: null
     property string pending_find_query: ""
     property real pending_bookmark_scroll: 0.0
+
+    // === Navigation history stack (mobile back button) ===
+    property var nav_history: []
+    property bool is_navigating_back: false
+
+    function nav_history_push(entry) {
+        if (root.is_navigating_back) return;
+        root.nav_history.push(entry);
+    }
+
+    function nav_history_pop() {
+        if (root.nav_history.length < 2) return null;
+        return root.nav_history.pop();
+    }
+
+    function nav_history_current() {
+        if (root.nav_history.length === 0) return null;
+        return root.nav_history[root.nav_history.length - 1];
+    }
+
+    function nav_history_can_go_back() {
+        return root.nav_history.length >= 2;
+    }
+
+    function get_current_scroll_position(callback) {
+        let html_view = sutta_html_view_layout.get_current_item();
+        if (html_view && html_view.item && html_view.item.web) {
+            html_view.item.web.runJavaScript("window.scrollY", function(result) {
+                callback(result || 0);
+            });
+        } else {
+            callback(0);
+        }
+    }
+
+    function get_tab_model_name_for_id_key(id_key) {
+        for (let i = 0; i < tabs_pinned_model.count; i++) {
+            if (tabs_pinned_model.get(i).id_key === id_key) return "pinned";
+        }
+        for (let i = 0; i < tabs_results_model.count; i++) {
+            if (tabs_results_model.get(i).id_key === id_key) return "results";
+        }
+        for (let i = 0; i < tabs_translations_model.count; i++) {
+            if (tabs_translations_model.get(i).id_key === id_key) return "translations";
+        }
+        return "results";
+    }
+
+    function build_nav_entry(type, id_key, tab_data, scroll_position) {
+        return {
+            type: type,
+            tab_model: root.get_tab_model_name_for_id_key(id_key),
+            id_key: id_key,
+            scroll_position: scroll_position || 0,
+            item_uid: tab_data.item_uid || "",
+            table_name: tab_data.table_name || "",
+            sutta_ref: tab_data.sutta_ref || "",
+            sutta_title: tab_data.sutta_title || "",
+        };
+    }
+
+    function get_model_by_name(model_name) {
+        if (model_name === "pinned") return tabs_pinned_model;
+        if (model_name === "translations") return tabs_translations_model;
+        return tabs_results_model;
+    }
+
+    function restore_scroll_position(scroll_pos) {
+        if (scroll_pos > 0) {
+            let html_view = sutta_html_view_layout.get_current_item();
+            if (html_view && html_view.item && html_view.item.web) {
+                let js = `setTimeout(function() { window.scrollTo(0, ${scroll_pos}); }, 200);`;
+                html_view.item.web.runJavaScript(js);
+            }
+        }
+    }
+
+    function navigate_back() {
+        if (!root.nav_history_can_go_back()) return;
+
+        root.is_navigating_back = true;
+
+        // Pop the current view entry (discard it)
+        root.nav_history_pop();
+
+        // The new top is the view to restore
+        let entry = root.nav_history_current();
+        if (!entry) {
+            root.is_navigating_back = false;
+            return;
+        }
+
+        if (entry.type === "tab_switch") {
+            root.restore_tab_switch(entry);
+        } else if (entry.type === "content_replace") {
+            root.restore_content_replace(entry);
+        }
+
+        root.is_navigating_back = false;
+    }
+
+    function restore_tab_switch(entry) {
+        let tab = root.get_tab_with_id_key(entry.id_key);
+        if (tab) {
+            tab.click();
+            root.restore_scroll_position(entry.scroll_position);
+        } else {
+            // Tab was removed — re-create it in the correct model
+            let model = root.get_model_by_name(entry.tab_model);
+            let is_pinned = (entry.tab_model === "pinned");
+            let result_data = {
+                item_uid: entry.item_uid,
+                table_name: entry.table_name,
+                sutta_ref: entry.sutta_ref,
+                sutta_title: entry.sutta_title,
+            };
+            let tab_data = root.new_tab_data(result_data, is_pinned, true);
+            tab_data.web_item_key = root.generate_key();
+            sutta_html_view_layout.add_item(tab_data, true);
+            model.append(tab_data);
+            root.focus_on_tab_with_id_key(tab_data.id_key);
+            root.restore_scroll_position(entry.scroll_position);
+        }
+    }
+
+    function restore_content_replace(entry) {
+        let tab = root.get_tab_with_id_key(entry.id_key);
+        if (!tab) {
+            // Tab was removed — fall back to tab switch restore which re-creates it
+            root.restore_tab_switch(entry);
+            return;
+        }
+
+        // Focus the tab first
+        tab.click();
+
+        // Find the tab in its model and update its metadata
+        let model = root.get_model_by_name(entry.tab_model);
+        for (let i = 0; i < model.count; i++) {
+            let tab_data = model.get(i);
+            if (tab_data.id_key === entry.id_key) {
+                tab_data.item_uid = entry.item_uid;
+                tab_data.table_name = entry.table_name;
+                tab_data.sutta_ref = entry.sutta_ref;
+                tab_data.sutta_title = entry.sutta_title;
+                model.set(i, tab_data);
+
+                // Update the webview's data_json to trigger content reload
+                let comp = sutta_html_view_layout.get_item(tab_data.web_item_key);
+                if (comp) {
+                    let data = {
+                        item_uid: entry.item_uid,
+                        table_name: entry.table_name,
+                        sutta_ref: entry.sutta_ref,
+                        sutta_title: entry.sutta_title,
+                        anchor: "",
+                    };
+                    comp.data_json = JSON.stringify(data);
+                    root.restore_scroll_position(entry.scroll_position);
+                }
+                break;
+            }
+        }
+    }
 
     // Keybindings loaded from settings
     property var keybindings: ({})
@@ -524,6 +700,23 @@ ApplicationWindow {
             sutta_html_view_layout.add_item(tab_data, true);
             target_model.insert(insert_index, tab_data);
             root.focus_on_tab_with_id_key(tab_data.id_key);
+
+            // Record navigation history for back button
+            if (!root.is_navigating_back) {
+                let model_name = is_pinned ? "pinned"
+                    : (target_model === tabs_translations_model) ? "translations"
+                    : "results";
+                root.nav_history_push({
+                    type: "tab_switch",
+                    tab_model: model_name,
+                    id_key: tab_data.id_key,
+                    scroll_position: 0,
+                    item_uid: tab_data.item_uid || "",
+                    table_name: tab_data.table_name || "",
+                    sutta_ref: tab_data.sutta_ref || "",
+                    sutta_title: tab_data.sutta_title || "",
+                });
+            }
         } else {
             // Not found - show dialog offering to search by title
             related_sutta_not_found_dialog.search_title = result.sutta_title;
@@ -695,6 +888,12 @@ ${query_text}`;
             root.focus_on_tab_with_id_key("ResultsTab_0");
         }
 
+        // Record navigation history for back button (content replacement)
+        if (!root.is_navigating_back) {
+            let focus_id_key = new_tab ? tabs_results_model.get(tab_idx).id_key : "ResultsTab_0";
+            root.nav_history_push(root.build_nav_entry("content_replace", focus_id_key, tab_data, 0));
+        }
+
         // Update TocTab if this is a book chapter
         if (tab_data.table_name === "book_spine_items" && tab_data.item_uid) {
             toc_tab.update_for_spine_item(tab_data.item_uid);
@@ -849,6 +1048,12 @@ ${query_text}`;
         if (root.is_qml_preview) {
             root.qml_preview_state();
         }
+
+        // Push initial history entry for the first view
+        if (tabs_results_model.count > 0) {
+            let tab_data = tabs_results_model.get(0);
+            root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
+        }
     }
 
     function qml_preview_state() {
@@ -918,6 +1123,9 @@ ${query_text}`;
             tabs_pinned_model.append(tab_data);
             if (focus) {
                 root.focus_on_tab_with_id_key(tab_data.id_key);
+                if (!root.is_navigating_back) {
+                    root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
+                }
             }
         } else if (tab_group === "translations") {
             let tab_data = root.new_tab_data(result_data, false, focus);
@@ -928,6 +1136,9 @@ ${query_text}`;
             tabs_translations_model.append(tab_data);
             if (focus) {
                 root.focus_on_tab_with_id_key(tab_data.id_key);
+                if (!root.is_navigating_back) {
+                    root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
+                }
             }
         } else {
             // "results" — use the standard function which handles first-tab logic
@@ -1590,6 +1801,23 @@ ${query_text}`;
         }
     }
 
+    Dialog {
+        id: close_window_dialog
+        title: "Close Window"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        width: 350
+
+        Label {
+            text: "No previous history item. Close the app window?"
+            wrapMode: Text.WordWrap
+            width: parent.width
+        }
+
+        onAccepted: Qt.quit()
+    }
+
     DrawerMenu {
         id: mobile_menu
         window_width: root.width
@@ -1987,6 +2215,16 @@ ${query_text}`;
 
                                     // Scroll the checked tab into view in the tab bar
                                     suttas_tab_bar.scroll_tab_into_view(tab);
+
+                                    // Record navigation history for back button
+                                    if (!root.is_navigating_back) {
+                                        let model_name = (tab_model === tabs_pinned_model) ? "pinned"
+                                            : (tab_model === tabs_translations_model) ? "translations"
+                                            : "results";
+                                        let tab_data_entry = tab_model.get(tab.index);
+                                        root.nav_history_push(root.build_nav_entry("tab_switch", tab_data_entry.id_key, tab_data_entry, 0));
+                                    }
+
                                     // Tab switch completed: webview shown, tab scrolled into view
                                     logger.debug("TAB_CHECK: Tab switch completed");
                                 }
