@@ -59,9 +59,13 @@ ApplicationWindow {
 
     // === Navigation history stack (mobile back button) ===
     property var nav_history: []
+    property bool nav_history_paused: false
     function nav_history_push(entry) {
+        if (root.nav_history_paused) return;
         // Don't record blank/placeholder tabs in history
         if (!entry.item_uid || entry.item_uid === "Sutta" || entry.item_uid === "Word") return;
+        // Skip consecutive duplicates
+        if (root.nav_history.length > 0 && root.nav_history[root.nav_history.length - 1].item_uid === entry.item_uid) return;
         root.nav_history.push(entry);
     }
 
@@ -783,34 +787,25 @@ ${query_text}`;
     }
 
     function clear_all_tabs() {
-        // Remove all webviews from pinned tabs
-        for (let i = 0; i < tabs_pinned_model.count; i++) {
-            let tab_data = tabs_pinned_model.get(i);
-            if (tab_data.web_item_key !== "") {
-                sutta_html_view_layout.delete_item(tab_data.web_item_key);
-            }
+        root.nav_history_paused = true;
+
+        // Close pinned tabs from end to start to avoid index shifting
+        for (let i = tabs_pinned.count - 1; i >= 0; i--) {
+            tabs_pinned.itemAt(i).closeClicked();
         }
-        tabs_pinned_model.clear();
 
-        // Remove all webviews from results tabs
-        for (let i = 0; i < tabs_results_model.count; i++) {
-            let tab_data = tabs_results_model.get(i);
-            if (tab_data.web_item_key !== "") {
-                sutta_html_view_layout.delete_item(tab_data.web_item_key);
-            }
+        // Close translation tabs from end to start
+        for (let i = tabs_translations.count - 1; i >= 0; i--) {
+            tabs_translations.itemAt(i).closeClicked();
         }
-        tabs_results_model.clear();
 
-        // Remove all translation tabs
-        root.clear_translation_tabs();
+        // Close results tabs from end to start
+        // The last remaining results tab's onCloseClicked resets it to blank "Sutta"
+        for (let i = tabs_results.count - 1; i >= 0; i--) {
+            tabs_results.itemAt(i).closeClicked();
+        }
 
-        // Create a default blank "Sutta" tab
-        let tab_data = root.new_tab_data({item_uid: "Sutta", sutta_title: "", sutta_ref: ""});
-        tab_data.id_key = "ResultsTab_0";
-        tab_data.web_item_key = root.generate_key();
-        sutta_html_view_layout.add_item(tab_data, true);
-        tabs_results_model.append(tab_data);
-        root.focus_on_tab_with_id_key("ResultsTab_0");
+        root.nav_history_paused = false;
     }
 
     function show_result_in_html_view_with_json(result_data_json: string, new_tab) {
@@ -2410,6 +2405,19 @@ ${query_text}`;
                                                             old_tab_data.web_item_key
                                                         );
                                                         tabs_results_model.set(0, blank_data);
+
+                                                        // Update the webview to show blank content
+                                                        let comp = sutta_html_view_layout.get_item(old_tab_data.web_item_key);
+                                                        if (comp) {
+                                                            let data = {
+                                                                item_uid: "Sutta",
+                                                                table_name: "",
+                                                                sutta_ref: "",
+                                                                sutta_title: "",
+                                                                anchor: "",
+                                                            };
+                                                            comp.data_json = JSON.stringify(data);
+                                                        }
                                                     } else {
                                                         suttas_tab_bar.remove_tab_and_webview(results_tab_btn, tabs_results_model);
                                                     }
@@ -2468,7 +2476,7 @@ ${query_text}`;
                             Button {
                                 id: tab_list_btn
                                 icon.source: "icons/32x32/mdi--menu.png"
-                                Layout.preferredWidth: 28
+                                Layout.preferredWidth: 36
                                 Layout.preferredHeight: 28 // 32 x 32 creates a gap under the tabs
                                 flat: true
                                 onClicked: tab_list_dialog.open()
@@ -2489,6 +2497,8 @@ ${query_text}`;
                             tabs_results_model: tabs_results_model
                             tabs_translations_model: tabs_translations_model
                             nav_history: root.nav_history
+                            is_wide: root.is_wide
+                            is_tall: root.is_tall
 
                             onTabSelected: function(id_key) {
                                 root.focus_on_tab_with_id_key(id_key);

@@ -11,6 +11,8 @@ Dialog {
     required property var tabs_results_model
     required property var tabs_translations_model
     required property var nav_history
+    required property bool is_wide
+    required property bool is_tall
 
     signal tabSelected(string id_key)
     signal historyItemSelected(string item_uid, string table_name, string sutta_ref, string sutta_title)
@@ -22,8 +24,8 @@ Dialog {
 
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
-    width: Math.min(parent.width * 0.85, 600)
-    height: Math.min(parent.height * 0.7, 400)
+    width: Math.min(parent.width * 0.9, 600)
+    height: control.is_tall ? Math.min(parent.height * 0.7, 400) : Math.min(parent.height * 0.9, 800)
 
     // Track which column is active: "tabs" or "history"
     property string active_column: "tabs"
@@ -116,13 +118,17 @@ Dialog {
         onActivated: control.open_selected_item()
     }
 
-    contentItem: RowLayout {
-        spacing: 8
+    contentItem: GridLayout {
+        columns: control.is_wide ? 3 : 1
+        columnSpacing: 8
+        rowSpacing: 8
 
-        // Left column: Open Tabs
+        // Tabs section
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.preferredWidth: control.is_wide ? 1 : -1
+            Layout.preferredHeight: control.is_wide ? -1 : 1
 
             RowLayout {
                 Layout.fillWidth: true
@@ -226,17 +232,21 @@ Dialog {
             }
         }
 
-        // Vertical separator
+        // Separator
         Rectangle {
-            Layout.fillHeight: true
-            Layout.preferredWidth: 1
+            Layout.fillHeight: control.is_wide
+            Layout.fillWidth: !control.is_wide
+            Layout.preferredWidth: control.is_wide ? 1 : -1
+            Layout.preferredHeight: control.is_wide ? -1 : 1
             color: control.palette.mid
         }
 
-        // Right column: View History
+        // History section
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.preferredWidth: control.is_wide ? 1 : -1
+            Layout.preferredHeight: control.is_wide ? -1 : 1
 
             RowLayout {
                 Layout.fillWidth: true
