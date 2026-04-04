@@ -957,18 +957,34 @@ Item {
         range_playback_timer.stop();
     }
 
+    // Permission helper (instantiated once per RecordingPlaybackItem)
+    AssetManager { id: permission_manager }
+
+    // Tracks whether we're waiting for the async permission result
+    property bool permission_requested: false
+
     // Android runtime permission check (6.5)
     function check_microphone_permission(): bool {
-        // Qt 6.5+ MicrophonePermission is handled declaratively
-        // For now, return true — the actual permission request happens
-        // when CaptureSession starts on Android
-        return true;
+        let status = permission_manager.check_microphone_permission();
+        if (status === "granted") {
+            return true;
+        }
+        if (status === "undetermined" && !root.permission_requested) {
+            root.permission_requested = true;
+            permission_manager.request_microphone_permission();
+            root.error_message = "Microphone permission requested. Please grant it and tap Record again.";
+            return false;
+        }
+        root.error_message = "Microphone permission denied. Please enable it in Android Settings > Apps > Simsapa > Permissions.";
+        return false;
     }
 
     function start_recording() {
         if (!check_microphone_permission()) {
             return;
         }
+
+        root.error_message = "";
 
         // Re-detect the current default audio input device so that OS-level
         // changes made after the app started are picked up.

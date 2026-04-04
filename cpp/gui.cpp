@@ -152,6 +152,15 @@ int start(int argc, char* argv[]) {
   // number.
   create_or_update_linux_desktop_icon_file_ffi();
 
+#ifdef Q_OS_ANDROID
+  // Use the native Android multimedia backend instead of FFmpeg.
+  // The FFmpeg backend's MediaRecorder fails on Android with
+  // "Audio device has invalid preferred format" because
+  // QAudioDevice::preferredFormat() returns an invalid format
+  // (0 sample rate / 0 channels) from Android's AudioManager.
+  qputenv("QT_MEDIA_BACKEND", "android");
+#endif
+
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);
 

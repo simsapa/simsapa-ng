@@ -1,5 +1,8 @@
 #include "android_helpers.h"
 
+#include <QCoreApplication>
+#include <QPermission>
+
 #ifdef Q_OS_ANDROID
 #include <QJniObject>
 #include <QJniEnvironment>
@@ -47,4 +50,33 @@ void open_android_display_settings() {
 #else
     log_info_c("open_android_display_settings() - not on Android platform");
 #endif
+}
+
+QString check_microphone_permission_impl() {
+    QMicrophonePermission micPermission;
+    Qt::PermissionStatus status = qApp->checkPermission(micPermission);
+    switch (status) {
+        case Qt::PermissionStatus::Granted:
+            log_info_c("Microphone permission: granted");
+            return QStringLiteral("granted");
+        case Qt::PermissionStatus::Denied:
+            log_info_c("Microphone permission: denied");
+            return QStringLiteral("denied");
+        case Qt::PermissionStatus::Undetermined:
+        default:
+            log_info_c("Microphone permission: undetermined");
+            return QStringLiteral("undetermined");
+    }
+}
+
+void request_microphone_permission_impl() {
+    log_info_c("Requesting microphone permission...");
+    QMicrophonePermission micPermission;
+    qApp->requestPermission(micPermission, [](const QPermission &permission) {
+        if (permission.status() == Qt::PermissionStatus::Granted) {
+            log_info_c("Microphone permission granted by user");
+        } else {
+            log_info_c("Microphone permission denied by user");
+        }
+    });
 }

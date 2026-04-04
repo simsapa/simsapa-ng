@@ -36,6 +36,14 @@ Item {
         console.log("open_display_settings()");
     }
 
+    function check_microphone_permission(): string {
+        return "granted";
+    }
+
+    function request_microphone_permission() {
+        console.log("request_microphone_permission()");
+    }
+
     function remove_sutta_languages(language_codes: list<string>) {
         console.log("remove_sutta_languages():", language_codes);
     }

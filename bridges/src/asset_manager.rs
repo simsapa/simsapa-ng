@@ -37,6 +37,8 @@ pub mod qobject {
 
         include!("android_helpers.h");
         fn open_android_display_settings();
+        fn check_microphone_permission_impl() -> QString;
+        fn request_microphone_permission_impl();
     }
 
     extern "RustQt" {
@@ -69,6 +71,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn open_display_settings(self: Pin<&mut AssetManager>);
+
+        #[qinvokable]
+        fn check_microphone_permission(self: &AssetManager) -> QString;
+
+        #[qinvokable]
+        fn request_microphone_permission(self: &AssetManager);
 
         #[qinvokable]
         fn remove_sutta_languages(self: Pin<&mut AssetManager>, language_codes: QStringList);
@@ -169,6 +177,14 @@ impl qobject::AssetManager {
 
     fn open_display_settings(self: Pin<&mut Self>) {
         qobject::open_android_display_settings();
+    }
+
+    fn check_microphone_permission(&self) -> QString {
+        qobject::check_microphone_permission_impl()
+    }
+
+    fn request_microphone_permission(&self) {
+        qobject::request_microphone_permission_impl();
     }
 
     /// Get list of available language codes that can be downloaded
