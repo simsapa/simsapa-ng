@@ -10,23 +10,36 @@ Dialog {
     required property var tabs_pinned_model
     required property var tabs_results_model
     required property var tabs_translations_model
+    required property var nav_history
 
     signal tabSelected(string id_key)
+    signal historyItemSelected(string item_uid, string table_name, string sutta_ref, string sutta_title)
+    signal clearAllTabs()
+    signal clearHistory()
 
-    title: "Select a Tab to Focus"
+    // title: "Tabs and History"
     modal: true
 
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
-    width: Math.min(parent.width * 0.6, 500)
+    width: Math.min(parent.width * 0.85, 600)
     height: Math.min(parent.height * 0.7, 400)
+
+    // Track which column is active: "tabs" or "history"
+    property string active_column: "tabs"
 
     footer: DialogButtonBox {
         Button {
             text: "Open"
-            enabled: tab_list_view.currentIndex >= 0
+            enabled: {
+                if (control.active_column === "tabs") {
+                    return tab_list_view.currentIndex >= 0;
+                } else {
+                    return history_list_view.currentIndex >= 0;
+                }
+            }
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-            onClicked: control.open_selected_tab()
+            onClicked: control.open_selected_item()
         }
         Button {
             text: "Close"
@@ -39,10 +52,11 @@ Dialog {
         sequences: ["Up", "K"]
         enabled: control.visible
         onActivated: {
-            if (tab_list_view.currentIndex > 0) {
-                tab_list_view.currentIndex--;
+            let view = control.active_column === "tabs" ? tab_list_view : history_list_view;
+            if (view.currentIndex > 0) {
+                view.currentIndex--;
             } else {
-                tab_list_view.currentIndex = tab_list_view.count - 1;
+                view.currentIndex = view.count - 1;
             }
         }
     }
@@ -51,10 +65,11 @@ Dialog {
         sequences: ["Down", "J"]
         enabled: control.visible
         onActivated: {
-            if (tab_list_view.currentIndex < tab_list_view.count - 1) {
-                tab_list_view.currentIndex++;
+            let view = control.active_column === "tabs" ? tab_list_view : history_list_view;
+            if (view.currentIndex < view.count - 1) {
+                view.currentIndex++;
             } else {
-                tab_list_view.currentIndex = 0;
+                view.currentIndex = 0;
             }
         }
     }
@@ -62,116 +77,279 @@ Dialog {
     Shortcut {
         sequences: ["Home", "G"]
         enabled: control.visible
-        onActivated: tab_list_view.currentIndex = 0
+        onActivated: {
+            let view = control.active_column === "tabs" ? tab_list_view : history_list_view;
+            view.currentIndex = 0;
+        }
     }
 
     Shortcut {
         sequences: ["End", "Shift+G"]
         enabled: control.visible
-        onActivated: tab_list_view.currentIndex = tab_list_view.count - 1
+        onActivated: {
+            let view = control.active_column === "tabs" ? tab_list_view : history_list_view;
+            view.currentIndex = view.count - 1;
+        }
+    }
+
+    Shortcut {
+        sequences: ["Left", "H"]
+        enabled: control.visible
+        onActivated: control.active_column = "tabs"
+    }
+
+    Shortcut {
+        sequences: ["Right", "L"]
+        enabled: control.visible
+        onActivated: control.active_column = "history"
     }
 
     Shortcut {
         sequence: "Return"
         enabled: control.visible
-        onActivated: control.open_selected_tab()
+        onActivated: control.open_selected_item()
     }
 
     Shortcut {
         sequence: "Enter"
         enabled: control.visible
-        onActivated: control.open_selected_tab()
+        onActivated: control.open_selected_item()
     }
 
-    contentItem: ScrollView {
-        ListView {
-            id: tab_list_view
-            clip: true
-            currentIndex: 0
-            highlightFollowsCurrentItem: true
+    contentItem: RowLayout {
+        spacing: 8
 
-            model: ListModel {
-                id: combined_tabs_model
+        // Left column: Open Tabs
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label {
+                    text: "Tabs"
+                    font.bold: true
+                    font.underline: control.active_column === "tabs"
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    text: "Clear"
+                    flat: true
+                    font.pointSize: 9
+                    enabled: combined_tabs_model.count > 0
+                    onClicked: {
+                        control.clearAllTabs();
+                        control.populate_model();
+                    }
+                }
             }
 
-            highlight: Rectangle {
-                color: control.palette.highlight
-                opacity: 0.3
-            }
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
 
-            delegate: ItemDelegate {
-                id: item_delegate
-                required property int index
-                required property string item_uid
-                required property string table_name
-                required property string sutta_title
-                required property string sutta_ref
-                required property string id_key
-                required property string group_label
+                ListView {
+                    id: tab_list_view
+                    clip: true
+                    currentIndex: 0
+                    highlightFollowsCurrentItem: true
 
-                width: ListView.view.width
-                highlighted: ListView.isCurrentItem
-
-                contentItem: RowLayout {
-                    spacing: 8
-
-                    Label {
-                        text: item_delegate.group_label
-                        font.bold: true
-                        Layout.preferredWidth: 60
-                        color: {
-                            if (item_delegate.highlighted) return "white";
-                            if (item_delegate.group_label === "Pinned") return control.palette.link;
-                            if (item_delegate.group_label === "Results") return control.palette.text;
-                            if (item_delegate.group_label === "Trans") return "#2e7d32";
-                            return control.palette.text;
-                        }
+                    model: ListModel {
+                        id: combined_tabs_model
                     }
 
-                    Label {
-                        text: {
-                            if (item_delegate.table_name && item_delegate.table_name === "dpd_headwords") {
-                                return `${item_delegate.sutta_title}/dpd`;
-                            } else {
-                                return item_delegate.item_uid;
+                    highlight: Rectangle {
+                        color: control.palette.highlight
+                        opacity: 0.3
+                        visible: control.active_column === "tabs"
+                    }
+
+                    delegate: ItemDelegate {
+                        id: tab_item_delegate
+                        required property int index
+                        required property string item_uid
+                        required property string table_name
+                        required property string sutta_title
+                        required property string sutta_ref
+                        required property string id_key
+                        required property string group_label
+
+                        width: ListView.view.width
+                        highlighted: ListView.isCurrentItem && control.active_column === "tabs"
+
+                        contentItem: RowLayout {
+                            spacing: 8
+
+                            Label {
+                                text: tab_item_delegate.group_label
+                                font.bold: true
+                                Layout.preferredWidth: 60
+                                color: {
+                                    if (tab_item_delegate.highlighted) return "white";
+                                    if (tab_item_delegate.group_label === "Pinned") return control.palette.link;
+                                    if (tab_item_delegate.group_label === "Results") return control.palette.text;
+                                    if (tab_item_delegate.group_label === "Trans") return "#2e7d32";
+                                    return control.palette.text;
+                                }
+                            }
+
+                            Label {
+                                text: {
+                                    if (tab_item_delegate.table_name && tab_item_delegate.table_name === "dpd_headwords") {
+                                        return `${tab_item_delegate.sutta_title}/dpd`;
+                                    } else {
+                                        return tab_item_delegate.item_uid;
+                                    }
+                                }
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                                color: tab_item_delegate.highlighted ? "white" : control.palette.text
                             }
                         }
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                        color: item_delegate.highlighted ? "white" : control.palette.text
+
+                        onClicked: {
+                            control.active_column = "tabs";
+                            tab_list_view.currentIndex = tab_item_delegate.index;
+                        }
+
+                        onDoubleClicked: {
+                            control.active_column = "tabs";
+                            tab_list_view.currentIndex = tab_item_delegate.index;
+                            control.open_selected_item();
+                        }
+                    }
+
+                    Component.onCompleted: control.populate_model()
+                }
+            }
+        }
+
+        // Vertical separator
+        Rectangle {
+            Layout.fillHeight: true
+            Layout.preferredWidth: 1
+            color: control.palette.mid
+        }
+
+        // Right column: View History
+        ColumnLayout {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label {
+                    text: "History"
+                    font.bold: true
+                    font.underline: control.active_column === "history"
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    text: "Clear"
+                    flat: true
+                    font.pointSize: 9
+                    enabled: history_list_model.count > 0
+                    onClicked: {
+                        control.clearHistory();
+                        control.populate_history_model();
                     }
                 }
-
-                onClicked: {
-                    tab_list_view.currentIndex = item_delegate.index;
-                }
-
-                onDoubleClicked: {
-                    tab_list_view.currentIndex = item_delegate.index;
-                    control.open_selected_tab();
-                }
             }
 
-            Component.onCompleted: control.populate_model()
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                ListView {
+                    id: history_list_view
+                    clip: true
+                    currentIndex: 0
+                    highlightFollowsCurrentItem: true
+
+                    model: ListModel {
+                        id: history_list_model
+                    }
+
+                    highlight: Rectangle {
+                        color: control.palette.highlight
+                        opacity: 0.3
+                        visible: control.active_column === "history"
+                    }
+
+                    delegate: ItemDelegate {
+                        id: history_item_delegate
+                        required property int index
+                        required property string item_uid
+                        required property string table_name
+                        required property string sutta_title
+                        required property string sutta_ref
+
+                        width: ListView.view.width
+                        highlighted: ListView.isCurrentItem && control.active_column === "history"
+
+                        contentItem: Label {
+                            text: {
+                                if (history_item_delegate.table_name && history_item_delegate.table_name === "dpd_headwords") {
+                                    return `${history_item_delegate.sutta_title}/dpd`;
+                                } else {
+                                    return history_item_delegate.item_uid;
+                                }
+                            }
+                            elide: Text.ElideRight
+                            color: history_item_delegate.highlighted ? "white" : control.palette.text
+                        }
+
+                        onClicked: {
+                            control.active_column = "history";
+                            history_list_view.currentIndex = history_item_delegate.index;
+                        }
+
+                        onDoubleClicked: {
+                            control.active_column = "history";
+                            history_list_view.currentIndex = history_item_delegate.index;
+                            control.open_selected_item();
+                        }
+                    }
+                }
+            }
         }
     }
 
-    function open_selected_tab() {
-        if (tab_list_view.currentIndex >= 0) {
-            let item = combined_tabs_model.get(tab_list_view.currentIndex);
-            if (item) {
-                control.tabSelected(item.id_key);
-                control.close();
+    function open_selected_item() {
+        if (control.active_column === "tabs") {
+            if (tab_list_view.currentIndex >= 0) {
+                let item = combined_tabs_model.get(tab_list_view.currentIndex);
+                if (item) {
+                    control.tabSelected(item.id_key);
+                    control.close();
+                }
+            }
+        } else {
+            if (history_list_view.currentIndex >= 0) {
+                let item = history_list_model.get(history_list_view.currentIndex);
+                if (item) {
+                    control.historyItemSelected(item.item_uid, item.table_name, item.sutta_ref, item.sutta_title);
+                    control.close();
+                }
             }
         }
     }
-    
+
+    function is_blank_tab(item_uid) {
+        return !item_uid || item_uid === "Sutta" || item_uid === "Word";
+    }
+
     function populate_model() {
         combined_tabs_model.clear();
-        
+
         // Add pinned tabs
         for (let i = 0; i < tabs_pinned_model.count; i++) {
             let tab_data = tabs_pinned_model.get(i);
+            if (control.is_blank_tab(tab_data.item_uid)) continue;
             combined_tabs_model.append({
                 item_uid: tab_data.item_uid,
                 table_name: tab_data.table_name,
@@ -181,10 +359,11 @@ Dialog {
                 group_label: "Pinned"
             });
         }
-        
+
         // Add results tabs
         for (let i = 0; i < tabs_results_model.count; i++) {
             let tab_data = tabs_results_model.get(i);
+            if (control.is_blank_tab(tab_data.item_uid)) continue;
             combined_tabs_model.append({
                 item_uid: tab_data.item_uid,
                 table_name: tab_data.table_name,
@@ -194,10 +373,11 @@ Dialog {
                 group_label: "Results"
             });
         }
-        
+
         // Add translation tabs
         for (let i = 0; i < tabs_translations_model.count; i++) {
             let tab_data = tabs_translations_model.get(i);
+            if (control.is_blank_tab(tab_data.item_uid)) continue;
             combined_tabs_model.append({
                 item_uid: tab_data.item_uid,
                 table_name: tab_data.table_name,
@@ -208,6 +388,29 @@ Dialog {
             });
         }
     }
-    
-    onAboutToShow: populate_model()
+
+    function populate_history_model() {
+        history_list_model.clear();
+
+        // Iterate nav_history in reverse order (most recent first)
+        for (let i = control.nav_history.length - 1; i >= 0; i--) {
+            let entry = control.nav_history[i];
+            history_list_model.append({
+                item_uid: entry.item_uid || "",
+                table_name: entry.table_name || "",
+                sutta_ref: entry.sutta_ref || "",
+                sutta_title: entry.sutta_title || "",
+            });
+        }
+    }
+
+    onAboutToShow: {
+        populate_model();
+        populate_history_model();
+        active_column = "tabs";
+        tab_list_view.currentIndex = 0;
+        tab_list_view.positionViewAtBeginning();
+        history_list_view.currentIndex = 0;
+        history_list_view.positionViewAtBeginning();
+    }
 }
