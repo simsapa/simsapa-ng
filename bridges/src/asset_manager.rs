@@ -34,6 +34,9 @@ pub mod qobject {
         fn acquire_wake_lock() -> bool;
         fn release_wake_lock();
         fn is_wake_lock_acquired() -> bool;
+
+        include!("android_helpers.h");
+        fn open_android_display_settings();
     }
 
     extern "RustQt" {
@@ -63,6 +66,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn release_wake_lock_rust(self: Pin<&mut AssetManager>);
+
+        #[qinvokable]
+        fn open_display_settings(self: Pin<&mut AssetManager>);
 
         #[qinvokable]
         fn remove_sutta_languages(self: Pin<&mut AssetManager>, language_codes: QStringList);
@@ -159,6 +165,10 @@ impl qobject::AssetManager {
 
     fn release_wake_lock_rust(self: Pin<&mut Self>) {
         qobject::release_wake_lock();
+    }
+
+    fn open_display_settings(self: Pin<&mut Self>) {
+        qobject::open_android_display_settings();
     }
 
     /// Get list of available language codes that can be downloaded

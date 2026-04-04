@@ -16,6 +16,15 @@ ApplicationWindow {
     visible: true
     color: palette.window
 
+    onClosing: function(close) {
+        if (root.is_mobile) {
+            close.accepted = false;
+            show_sidebar_btn.checked = false;
+            tab_list_dialog.open();
+        }
+        // Desktop: close.accepted defaults to true, normal close behavior
+    }
+
     property string window_id
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
@@ -47,6 +56,93 @@ ApplicationWindow {
     property var last_params: null
     property string pending_find_query: ""
     property real pending_bookmark_scroll: 0.0
+
+    // === Navigation history stack (mobile back button) ===
+    property var nav_history: []
+    function nav_history_push(entry) {
+        // Don't record blank/placeholder tabs in history
+        if (!entry.item_uid || entry.item_uid === "Sutta" || entry.item_uid === "Word") return;
+        root.nav_history.push(entry);
+    }
+
+    function nav_history_current() {
+        if (root.nav_history.length === 0) return null;
+        return root.nav_history[root.nav_history.length - 1];
+    }
+
+    function get_current_scroll_position(callback) {
+        let html_view = sutta_html_view_layout.get_current_item();
+        if (html_view && html_view.item && html_view.item.web) {
+            html_view.item.web.runJavaScript("window.scrollY", function(result) {
+                callback(result || 0);
+            });
+        } else {
+            callback(0);
+        }
+    }
+
+    function get_tab_model_name_for_id_key(id_key) {
+        for (let i = 0; i < tabs_pinned_model.count; i++) {
+            if (tabs_pinned_model.get(i).id_key === id_key) return "pinned";
+        }
+        for (let i = 0; i < tabs_results_model.count; i++) {
+            if (tabs_results_model.get(i).id_key === id_key) return "results";
+        }
+        for (let i = 0; i < tabs_translations_model.count; i++) {
+            if (tabs_translations_model.get(i).id_key === id_key) return "translations";
+        }
+        return "results";
+    }
+
+    function build_nav_entry(type, id_key, tab_data, scroll_position) {
+        return {
+            type: type,
+            tab_model: root.get_tab_model_name_for_id_key(id_key),
+            id_key: id_key,
+            scroll_position: scroll_position || 0,
+            item_uid: tab_data.item_uid || "",
+            table_name: tab_data.table_name || "",
+            sutta_ref: tab_data.sutta_ref || "",
+            sutta_title: tab_data.sutta_title || "",
+        };
+    }
+
+    function get_model_by_name(model_name) {
+        if (model_name === "pinned") return tabs_pinned_model;
+        if (model_name === "translations") return tabs_translations_model;
+        return tabs_results_model;
+    }
+
+    function restore_scroll_position(scroll_pos) {
+        if (scroll_pos > 0) {
+            let html_view = sutta_html_view_layout.get_current_item();
+            if (html_view && html_view.item && html_view.item.web) {
+                let js = `setTimeout(function() { window.scrollTo(0, ${scroll_pos}); }, 200);`;
+                html_view.item.web.runJavaScript(js);
+            }
+        }
+    }
+
+    function open_history_item(item_uid, table_name, sutta_ref, sutta_title) {
+        // Check if the item is already open in a tab
+        let models = [tabs_pinned_model, tabs_results_model, tabs_translations_model];
+        for (let m = 0; m < models.length; m++) {
+            for (let i = 0; i < models[m].count; i++) {
+                if (models[m].get(i).item_uid === item_uid) {
+                    root.focus_on_tab_with_id_key(models[m].get(i).id_key);
+                    return;
+                }
+            }
+        }
+
+        let result_data = {
+            item_uid: item_uid,
+            table_name: table_name,
+            sutta_ref: sutta_ref,
+            sutta_title: sutta_title,
+        };
+        root.show_result_in_html_view(result_data, true);
+    }
 
     // Keybindings loaded from settings
     property var keybindings: ({})
@@ -524,6 +620,21 @@ ApplicationWindow {
             sutta_html_view_layout.add_item(tab_data, true);
             target_model.insert(insert_index, tab_data);
             root.focus_on_tab_with_id_key(tab_data.id_key);
+
+            // Record navigation history
+            let model_name = is_pinned ? "pinned"
+                : (target_model === tabs_translations_model) ? "translations"
+                : "results";
+            root.nav_history_push({
+                type: "tab_switch",
+                tab_model: model_name,
+                id_key: tab_data.id_key,
+                scroll_position: 0,
+                item_uid: tab_data.item_uid || "",
+                table_name: tab_data.table_name || "",
+                sutta_ref: tab_data.sutta_ref || "",
+                sutta_title: tab_data.sutta_title || "",
+            });
         } else {
             // Not found - show dialog offering to search by title
             related_sutta_not_found_dialog.search_title = result.sutta_title;
@@ -671,6 +782,37 @@ ${query_text}`;
         tabs_translations_model.clear();
     }
 
+    function clear_all_tabs() {
+        // Remove all webviews from pinned tabs
+        for (let i = 0; i < tabs_pinned_model.count; i++) {
+            let tab_data = tabs_pinned_model.get(i);
+            if (tab_data.web_item_key !== "") {
+                sutta_html_view_layout.delete_item(tab_data.web_item_key);
+            }
+        }
+        tabs_pinned_model.clear();
+
+        // Remove all webviews from results tabs
+        for (let i = 0; i < tabs_results_model.count; i++) {
+            let tab_data = tabs_results_model.get(i);
+            if (tab_data.web_item_key !== "") {
+                sutta_html_view_layout.delete_item(tab_data.web_item_key);
+            }
+        }
+        tabs_results_model.clear();
+
+        // Remove all translation tabs
+        root.clear_translation_tabs();
+
+        // Create a default blank "Sutta" tab
+        let tab_data = root.new_tab_data({item_uid: "Sutta", sutta_title: "", sutta_ref: ""});
+        tab_data.id_key = "ResultsTab_0";
+        tab_data.web_item_key = root.generate_key();
+        sutta_html_view_layout.add_item(tab_data, true);
+        tabs_results_model.append(tab_data);
+        root.focus_on_tab_with_id_key("ResultsTab_0");
+    }
+
     function show_result_in_html_view_with_json(result_data_json: string, new_tab) {
         if (new_tab === undefined) new_tab = false;
         let result_data = JSON.parse(result_data_json);
@@ -694,6 +836,10 @@ ${query_text}`;
             // For updating existing tab, focus on ResultsTab_0
             root.focus_on_tab_with_id_key("ResultsTab_0");
         }
+
+        // Record navigation history (content replacement)
+        let focus_id_key = new_tab ? tabs_results_model.get(tab_idx).id_key : "ResultsTab_0";
+        root.nav_history_push(root.build_nav_entry("content_replace", focus_id_key, tab_data, 0));
 
         // Update TocTab if this is a book chapter
         if (tab_data.table_name === "book_spine_items" && tab_data.item_uid) {
@@ -849,6 +995,12 @@ ${query_text}`;
         if (root.is_qml_preview) {
             root.qml_preview_state();
         }
+
+        // Push initial history entry for the first view
+        if (tabs_results_model.count > 0) {
+            let tab_data = tabs_results_model.get(0);
+            root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
+        }
     }
 
     function qml_preview_state() {
@@ -918,6 +1070,7 @@ ${query_text}`;
             tabs_pinned_model.append(tab_data);
             if (focus) {
                 root.focus_on_tab_with_id_key(tab_data.id_key);
+                root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
             }
         } else if (tab_group === "translations") {
             let tab_data = root.new_tab_data(result_data, false, focus);
@@ -928,6 +1081,7 @@ ${query_text}`;
             tabs_translations_model.append(tab_data);
             if (focus) {
                 root.focus_on_tab_with_id_key(tab_data.id_key);
+                root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
             }
         } else {
             // "results" — use the standard function which handles first-tab logic
@@ -1987,6 +2141,14 @@ ${query_text}`;
 
                                     // Scroll the checked tab into view in the tab bar
                                     suttas_tab_bar.scroll_tab_into_view(tab);
+
+                                    // Record navigation history
+                                    let model_name = (tab_model === tabs_pinned_model) ? "pinned"
+                                        : (tab_model === tabs_translations_model) ? "translations"
+                                        : "results";
+                                    let tab_data_entry = tab_model.get(tab.index);
+                                    root.nav_history_push(root.build_nav_entry("tab_switch", tab_data_entry.id_key, tab_data_entry, 0));
+
                                     // Tab switch completed: webview shown, tab scrolled into view
                                     logger.debug("TAB_CHECK: Tab switch completed");
                                 }
@@ -2304,17 +2466,16 @@ ${query_text}`;
                             }
 
                             Button {
-                                id: tab_overflow_btn
+                                id: tab_list_btn
                                 icon.source: "icons/32x32/mdi--menu.png"
                                 Layout.preferredWidth: 28
                                 Layout.preferredHeight: 28 // 32 x 32 creates a gap under the tabs
                                 flat: true
-                                visible: tabs_flickable.contentWidth > tabs_flickable.width
                                 onClicked: tab_list_dialog.open()
 
                                 background: Rectangle {
                                     color: "transparent"
-                                    border.color: tab_overflow_btn.palette.mid
+                                    border.color: tab_list_btn.palette.mid
                                     border.width: 1
                                     radius: 2
                                 }
@@ -2327,10 +2488,18 @@ ${query_text}`;
                             tabs_pinned_model: tabs_pinned_model
                             tabs_results_model: tabs_results_model
                             tabs_translations_model: tabs_translations_model
+                            nav_history: root.nav_history
 
                             onTabSelected: function(id_key) {
                                 root.focus_on_tab_with_id_key(id_key);
                             }
+
+                            onHistoryItemSelected: function(item_uid, table_name, sutta_ref, sutta_title) {
+                                root.open_history_item(item_uid, table_name, sutta_ref, sutta_title);
+                            }
+
+                            onClearAllTabs: root.clear_all_tabs()
+                            onClearHistory: root.nav_history = []
                         }
 
                         SplitView {

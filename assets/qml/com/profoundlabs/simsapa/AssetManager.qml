@@ -32,6 +32,10 @@ Item {
         console.log("release_wake_lock_rust()");
     }
 
+    function open_display_settings() {
+        console.log("open_display_settings()");
+    }
+
     function remove_sutta_languages(language_codes: list<string>) {
         console.log("remove_sutta_languages():", language_codes);
     }

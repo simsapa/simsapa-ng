@@ -82,7 +82,7 @@ ApplicationWindow {
             // Use Qt.callLater to ensure UI is fully initialized before starting download
             Qt.callLater(function() {
                 if (root.validate_download()) {
-                    views_stack.currentIndex = 2;
+                    views_stack.currentIndex = 3;
                     root.run_download();
                 }
             });
@@ -116,8 +116,8 @@ ApplicationWindow {
         root.raise();
         root.requestActivate();
 
-        // Set to download progress view (idx 2)
-        views_stack.currentIndex = 2;
+        // Set to download progress view (idx 3)
+        views_stack.currentIndex = 3;
 
         // Store URLs in progress frame for potential retry/continuation
         download_progress_frame.pending_download_urls = urls;
@@ -211,7 +211,7 @@ ApplicationWindow {
             // Delegate to the progress frame's centralized retry logic
             if (download_progress_frame.handle_downloads_completed(value)) {
                 // All downloads complete - show completion screen
-                views_stack.currentIndex = 3;
+                views_stack.currentIndex = 4;
             }
         }
     }
@@ -546,10 +546,12 @@ ApplicationWindow {
                     Button {
                         text: "Download"
                         font.pointSize: root.pointSize
+                        palette.button: "#4CAF50"
+                        palette.buttonText: "white"
                         onClicked: {
                             // Validate first, only proceed if validation passes
                             if (root.validate_download()) {
-                                views_stack.currentIndex = 2;
+                                views_stack.currentIndex = 3;
                                 root.run_download();
                             }
                         }
@@ -571,11 +573,12 @@ ApplicationWindow {
                         text: "Download"
                         font.pointSize: root.pointSize
                         Layout.fillWidth: true
+                        palette.button: "#4CAF50"
+                        palette.buttonText: "white"
                         onClicked: {
-                            // Validate first, only proceed if validation passes
+                            // Validate first, then show large download warning screen
                             if (root.validate_download()) {
                                 views_stack.currentIndex = 2;
-                                root.run_download();
                             }
                         }
                     }
@@ -597,7 +600,94 @@ ApplicationWindow {
             }
         }
 
-        // Idx 2: Download progress
+        // Idx 2: Large download warning (mobile)
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                // Centered content area
+                Item {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+
+                    ColumnLayout {
+                        anchors.centerIn: parent
+                        width: parent.width * 0.9
+                        spacing: 15
+
+                        Image {
+                            source: "icons/appicons/simsapa.png"
+                            Layout.preferredWidth: 100
+                            Layout.preferredHeight: 100
+                            Layout.alignment: Qt.AlignCenter
+                        }
+
+                        Text {
+                            text: "Large download warning"
+                            font.pointSize: root.largePointSize
+                            font.bold: true
+                            color: palette.text
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: "The database assets are approx. 700 MB. It is recommended to download using a Wi-Fi connection to not exceed your mobile data quota."
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.fillWidth: true
+                        }
+
+                        Text {
+                            text: "Open <b>Settings > Display > Screen timeout</b> and increase to the maximum available time setting (for the duration of the install process)."
+                            textFormat: Text.RichText
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            wrapMode: Text.WordWrap
+                            horizontalAlignment: Text.AlignHCenter
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
+
+                // Fixed button area at the bottom
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: 60
+                    spacing: 10
+
+                    Button {
+                        text: "Open Settings"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: {
+                            manager.open_display_settings();
+                        }
+                    }
+
+                    Button {
+                        text: "Continue"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        // palette.button: "#4CAF50"
+                        // palette.buttonText: "white"
+                        onClicked: {
+                            views_stack.currentIndex = 3;
+                            root.run_download();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Idx 3: Download progress
         DownloadProgressFrame {
             id: download_progress_frame
             pointSize: root.pointSize
@@ -620,7 +710,7 @@ ApplicationWindow {
             }
         }
 
-        // Idx 3: Completed
+        // Idx 4: Completed
         Frame {
             Layout.fillWidth: true
             Layout.fillHeight: true

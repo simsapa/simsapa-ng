@@ -152,7 +152,7 @@ Frame {
                     visible: root.is_mobile
                     Layout.alignment: Qt.AlignCenter
                     Layout.fillWidth: true
-                    text: "Switching apps or suspend mode (black screen) can interrupt the download and extract process. If you notice this problem, please tap the device periodically to keep it awake."
+                    text: "Switching apps or suspend mode (black screen) can interrupt the download and extract process. Tap the device periodically to keep it awake and prevent screen timeout suspend."
                     font.pointSize: root.pointSize
                     color: palette.text
                     wrapMode: Text.WordWrap
