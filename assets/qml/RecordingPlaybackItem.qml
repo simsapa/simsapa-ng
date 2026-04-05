@@ -474,7 +474,7 @@ Item {
             }
         }
 
-        // Recording state indicator (6.6)
+        // Recording state indicator
         RowLayout {
             Layout.fillWidth: true
             spacing: 6
@@ -967,22 +967,63 @@ Item {
             Repeater {
                 model: marker_list_column.sorted_markers.length
 
-                ColumnLayout {
-                    id: marker_row
+                Rectangle {
+                    id: marker_row_bg
 
                     required property int index
 
-                    property var marker: index < marker_list_column.sorted_markers.length ? marker_list_column.sorted_markers[index] : null
-                    property bool is_position: marker !== null && marker.type === "position"
-                    property bool is_active_range: marker !== null && marker.id === root.active_range_id
-
                     Layout.fillWidth: true
-                    spacing: 2
+                    implicitHeight: marker_row.implicitHeight + 8
+                    color: index % 2 === 0 ? "transparent" : Qt.rgba(palette.text.r, palette.text.g, palette.text.b, 0.06)
+                    radius: 4
 
-                    // Top row: indicator, label, time, play, delete
+                    ColumnLayout {
+                        id: marker_row
+
+                        property var marker: marker_row_bg.index < marker_list_column.sorted_markers.length ? marker_list_column.sorted_markers[marker_row_bg.index] : null
+                        property bool is_position: marker !== null && marker.type === "position"
+                        property bool is_active_range: marker !== null && marker.id === root.active_range_id
+
+                        anchors.fill: parent
+                        anchors.margins: 4
+                        spacing: 2
+
+                    // Top row: play, indicator, label, time, delete
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 4
+
+                        // Seek / Play button
+                        Button {
+                            text: marker_row.is_position ? "▶" : (marker_row.is_active_range ? "⏹" : "▶")
+                            implicitWidth: 32
+                            implicitHeight: 28
+                            font.pointSize: 10
+                            flat: true
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                if (marker_row.is_position) {
+                                    root.stop_range_playback();
+                                    root.seek_to(marker_row.marker.position_ms);
+                                    if (player.playbackState !== MediaPlayer.PlayingState && !seek_resume_timer.running) {
+                                        root.visual_position_override = -1;
+                                        player.position = marker_row.marker.position_ms;
+                                        player.play();
+                                    }
+                                    position_save_timer.restart();
+                                } else {
+                                    if (marker_row.is_active_range) {
+                                        player.pause();
+                                        root.stop_range_playback();
+                                    } else {
+                                        root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
+                                    }
+                                }
+                            }
+
+                            ToolTip.visible: hovered
+                            ToolTip.text: marker_row.is_position ? "Seek to this position" : (marker_row.is_active_range ? "Stop range playback" : "Play this range")
+                        }
 
                         // Type indicator
                         Rectangle {
@@ -993,7 +1034,7 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
 
-                        // Editable label (8.10)
+                        // Editable label
                         TextInput {
                             id: label_edit
                             text: marker_row.marker !== null ? marker_row.marker.label : ""
@@ -1038,38 +1079,7 @@ Item {
 
                         Item { Layout.fillWidth: true }
 
-                        // Seek / Play button (8.7, 8.8)
-                        Button {
-                            text: marker_row.is_position ? "⏵" : (marker_row.is_active_range ? "⏹" : "⏵")
-                            implicitWidth: 32
-                            implicitHeight: 28
-                            font.pointSize: 10
-                            onClicked: {
-                                if (marker_row.marker === null) return;
-                                if (marker_row.is_position) {
-                                    root.stop_range_playback();
-                                    root.seek_to(marker_row.marker.position_ms);
-                                    if (player.playbackState !== MediaPlayer.PlayingState && !seek_resume_timer.running) {
-                                        root.visual_position_override = -1;
-                                        player.position = marker_row.marker.position_ms;
-                                        player.play();
-                                    }
-                                    position_save_timer.restart();
-                                } else {
-                                    if (marker_row.is_active_range) {
-                                        player.pause();
-                                        root.stop_range_playback();
-                                    } else {
-                                        root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
-                                    }
-                                }
-                            }
-
-                            ToolTip.visible: hovered
-                            ToolTip.text: marker_row.is_position ? "Seek to this position" : (marker_row.is_active_range ? "Stop range playback" : "Play this range")
-                        }
-
-                        // Delete button (8.11)
+                        // Delete button
                         Button {
                             icon.source: "icons/32x32/ion--trash-outline.png"
                             implicitWidth: 28
@@ -1118,10 +1128,10 @@ Item {
 
                         // Position marker: single -1s / +1s pair
                         Button {
+                            icon.source: "icons/32x32/fa_angle-left-solid.png"
                             text: "-1s"
-                            implicitWidth: 36
                             implicitHeight: 24
-                            font.pointSize: 8
+                            flat: true
                             visible: marker_row.is_position
                             onClicked: {
                                 if (marker_row.marker === null) return;
@@ -1129,11 +1139,12 @@ Item {
                             }
                         }
                         Button {
+                            icon.source: "icons/32x32/fa_angle-right-solid.png"
                             text: "+1s"
-                            implicitWidth: 36
                             implicitHeight: 24
-                            font.pointSize: 8
+                            flat: true
                             visible: marker_row.is_position
+                            LayoutMirroring.enabled: true
                             onClicked: {
                                 if (marker_row.marker === null) return;
                                 let max_ms = player.duration > 0 ? player.duration : marker_row.marker.position_ms;
@@ -1149,10 +1160,10 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
                         Button {
+                            icon.source: "icons/32x32/fa_angle-left-solid.png"
                             text: "-1s"
-                            implicitWidth: 36
                             implicitHeight: 24
-                            font.pointSize: 8
+                            flat: true
                             visible: !marker_row.is_position
                             onClicked: {
                                 if (marker_row.marker === null) return;
@@ -1160,11 +1171,12 @@ Item {
                             }
                         }
                         Button {
+                            icon.source: "icons/32x32/fa_angle-right-solid.png"
                             text: "+1s"
-                            implicitWidth: 36
                             implicitHeight: 24
-                            font.pointSize: 8
+                            flat: true
                             visible: !marker_row.is_position
+                            LayoutMirroring.enabled: true
                             onClicked: {
                                 if (marker_row.marker === null) return;
                                 let max_ms = marker_row.marker.end_ms - 100;
@@ -1180,10 +1192,10 @@ Item {
                             Layout.alignment: Qt.AlignVCenter
                         }
                         Button {
+                            icon.source: "icons/32x32/fa_angle-left-solid.png"
                             text: "-1s"
-                            implicitWidth: 36
                             implicitHeight: 24
-                            font.pointSize: 8
+                            flat: true
                             visible: !marker_row.is_position
                             onClicked: {
                                 if (marker_row.marker === null) return;
@@ -1192,11 +1204,12 @@ Item {
                             }
                         }
                         Button {
+                            icon.source: "icons/32x32/fa_angle-right-solid.png"
                             text: "+1s"
-                            implicitWidth: 36
                             implicitHeight: 24
-                            font.pointSize: 8
+                            flat: true
                             visible: !marker_row.is_position
+                            LayoutMirroring.enabled: true
                             onClicked: {
                                 if (marker_row.marker === null) return;
                                 let max_ms = player.duration > 0 ? player.duration : marker_row.marker.end_ms;
@@ -1218,6 +1231,7 @@ Item {
                         wrapMode: Text.Wrap
                         font.pointSize: 9
                         color: palette.placeholderText
+                    }
                     }
                 }
             }
