@@ -15,6 +15,9 @@ ColumnLayout {
     property bool selection_mode: false
     property var checked_items: ({})
 
+    // Persistent expanded state keyed by uid (survives model rebuilds)
+    property var expanded_uids: ({})
+
     anchors.fill: parent
     spacing: 5
 
@@ -191,7 +194,7 @@ ColumnLayout {
 
             required property var modelData
             property bool is_selected: root.selected_uid === modelData.uid && root.selected_type === "collection"
-            property bool is_expanded: false
+            property bool is_expanded: !!root.expanded_uids[modelData.uid]
 
             // Collection header
             Frame {
@@ -213,7 +216,13 @@ ColumnLayout {
                         root.selected_uid = collection_item.modelData.uid;
                         root.selected_type = "collection";
                         root.selection_changed(collection_item.modelData.uid, "collection");
-                        collection_item.is_expanded = !collection_item.is_expanded;
+                        let uids = Object.assign({}, root.expanded_uids);
+                        if (uids[collection_item.modelData.uid]) {
+                            delete uids[collection_item.modelData.uid];
+                        } else {
+                            uids[collection_item.modelData.uid] = true;
+                        }
+                        root.expanded_uids = uids;
                     }
 
                     RowLayout {
@@ -279,7 +288,7 @@ ColumnLayout {
 
                         required property var modelData
                         property bool is_selected: root.selected_uid === modelData.uid && root.selected_type === "chant"
-                        property bool is_expanded: false
+                        property bool is_expanded: !!root.expanded_uids[modelData.uid]
 
                         // Chant header
                         Frame {
@@ -301,7 +310,13 @@ ColumnLayout {
                                     root.selected_uid = chant_item.modelData.uid;
                                     root.selected_type = "chant";
                                     root.selection_changed(chant_item.modelData.uid, "chant");
-                                    chant_item.is_expanded = !chant_item.is_expanded;
+                                    let uids = Object.assign({}, root.expanded_uids);
+                                    if (uids[chant_item.modelData.uid]) {
+                                        delete uids[chant_item.modelData.uid];
+                                    } else {
+                                        uids[chant_item.modelData.uid] = true;
+                                    }
+                                    root.expanded_uids = uids;
                                 }
 
                                 RowLayout {

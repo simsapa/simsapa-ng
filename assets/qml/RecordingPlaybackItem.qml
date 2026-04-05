@@ -515,6 +515,38 @@ Item {
                 }
             }
 
+            // Quick seek buttons
+            Button {
+                text: "-5s"
+                enabled: !root.is_recording && root.file_path !== "" && !root.file_not_found
+                implicitWidth: 40
+                onClicked: {
+                    let new_pos = Math.max(0, root.effective_position - 5000);
+                    if (player.playbackState === MediaPlayer.PlayingState) {
+                        player.position = new_pos;
+                    } else {
+                        root.seek_to(new_pos);
+                    }
+                    position_save_timer.restart();
+                }
+            }
+
+            Button {
+                text: "+5s"
+                enabled: !root.is_recording && root.file_path !== "" && !root.file_not_found
+                implicitWidth: 40
+                onClicked: {
+                    let max_pos = player.duration > 0 ? player.duration : root.effective_position;
+                    let new_pos = Math.min(max_pos, root.effective_position + 5000);
+                    if (player.playbackState === MediaPlayer.PlayingState) {
+                        player.position = new_pos;
+                    } else {
+                        root.seek_to(new_pos);
+                    }
+                    position_save_timer.restart();
+                }
+            }
+
             Item { Layout.fillWidth: true }
 
             // Time display (6.3)
@@ -763,7 +795,7 @@ Item {
             Repeater {
                 model: marker_list_column.sorted_markers.length
 
-                RowLayout {
+                ColumnLayout {
                     id: marker_row
 
                     required property int index
@@ -773,109 +805,212 @@ Item {
                     property bool is_active_range: marker !== null && marker.id === root.active_range_id
 
                     Layout.fillWidth: true
-                    spacing: 4
+                    spacing: 2
 
-                    // Type indicator
-                    Rectangle {
-                        width: 8
-                        height: 8
-                        radius: marker_row.is_position ? 4 : 1
-                        color: marker_row.is_position ? "red" : palette.highlight
-                        Layout.alignment: Qt.AlignVCenter
-                    }
+                    // Top row: indicator, label, time, play, delete
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 4
 
-                    // Editable label (8.10)
-                    TextInput {
-                        id: label_edit
-                        text: marker_row.marker !== null ? marker_row.marker.label : ""
-                        Layout.preferredWidth: 80
-                        Layout.alignment: Qt.AlignVCenter
-                        selectByMouse: true
-                        color: palette.text
-                        selectionColor: palette.highlight
-                        selectedTextColor: palette.highlightedText
-
-                        onEditingFinished: {
-                            if (marker_row.marker !== null) {
-                                root.update_marker_label(marker_row.marker.id, text);
-                            }
-                        }
-
+                        // Type indicator
                         Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: -2
-                            color: "transparent"
-                            border.color: label_edit.activeFocus ? palette.highlight : palette.mid
-                            border.width: label_edit.activeFocus ? 1 : 0
-                            radius: 2
-                            z: -1
+                            width: 8
+                            height: 8
+                            radius: marker_row.is_position ? 4 : 1
+                            color: marker_row.is_position ? "green" : palette.highlight
+                            Layout.alignment: Qt.AlignVCenter
                         }
-                    }
 
-                    // Time display
-                    Label {
-                        text: {
-                            if (marker_row.marker === null) return "";
-                            if (marker_row.is_position) {
-                                return root.format_time(marker_row.marker.position_ms);
-                            } else {
-                                return root.format_time(marker_row.marker.start_ms) + " – " + root.format_time(marker_row.marker.end_ms);
+                        // Editable label (8.10)
+                        TextInput {
+                            id: label_edit
+                            text: marker_row.marker !== null ? marker_row.marker.label : ""
+                            Layout.preferredWidth: 80
+                            Layout.alignment: Qt.AlignVCenter
+                            selectByMouse: true
+                            color: palette.text
+                            selectionColor: palette.highlight
+                            selectedTextColor: palette.highlightedText
+
+                            onEditingFinished: {
+                                if (marker_row.marker !== null) {
+                                    root.update_marker_label(marker_row.marker.id, text);
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: -2
+                                color: "transparent"
+                                border.color: label_edit.activeFocus ? palette.highlight : palette.mid
+                                border.width: label_edit.activeFocus ? 1 : 0
+                                radius: 2
+                                z: -1
                             }
                         }
-                        font.family: "monospace"
-                        font.pointSize: 9
-                        Layout.alignment: Qt.AlignVCenter
-                    }
 
-                    Item { Layout.fillWidth: true }
-
-                    // Seek / Play button (8.7, 8.8)
-                    Button {
-                        text: marker_row.is_position ? "⏵" : (marker_row.is_active_range ? "⏹" : "⏵")
-                        implicitWidth: 32
-                        implicitHeight: 28
-                        font.pointSize: 10
-                        onClicked: {
-                            if (marker_row.marker === null) return;
-                            if (marker_row.is_position) {
-                                root.stop_range_playback();
-                                root.seek_to(marker_row.marker.position_ms);
-                                // Always start playback from the marker position
-                                if (player.playbackState !== MediaPlayer.PlayingState && !seek_resume_timer.running) {
-                                    root.visual_position_override = -1;
-                                    player.position = marker_row.marker.position_ms;
-                                    player.play();
-                                }
-                                position_save_timer.restart();
-                            } else {
-                                if (marker_row.is_active_range) {
-                                    player.pause();
-                                    root.stop_range_playback();
+                        // Time display
+                        Label {
+                            text: {
+                                if (marker_row.marker === null) return "";
+                                if (marker_row.is_position) {
+                                    return root.format_time(marker_row.marker.position_ms);
                                 } else {
-                                    root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
+                                    return root.format_time(marker_row.marker.start_ms) + " – " + root.format_time(marker_row.marker.end_ms);
                                 }
                             }
+                            font.family: "monospace"
+                            font.pointSize: 9
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
-                        ToolTip.visible: hovered
-                        ToolTip.text: marker_row.is_position ? "Seek to this position" : (marker_row.is_active_range ? "Stop range playback" : "Play this range")
+                        Item { Layout.fillWidth: true }
+
+                        // Seek / Play button (8.7, 8.8)
+                        Button {
+                            text: marker_row.is_position ? "⏵" : (marker_row.is_active_range ? "⏹" : "⏵")
+                            implicitWidth: 32
+                            implicitHeight: 28
+                            font.pointSize: 10
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                if (marker_row.is_position) {
+                                    root.stop_range_playback();
+                                    root.seek_to(marker_row.marker.position_ms);
+                                    if (player.playbackState !== MediaPlayer.PlayingState && !seek_resume_timer.running) {
+                                        root.visual_position_override = -1;
+                                        player.position = marker_row.marker.position_ms;
+                                        player.play();
+                                    }
+                                    position_save_timer.restart();
+                                } else {
+                                    if (marker_row.is_active_range) {
+                                        player.pause();
+                                        root.stop_range_playback();
+                                    } else {
+                                        root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
+                                    }
+                                }
+                            }
+
+                            ToolTip.visible: hovered
+                            ToolTip.text: marker_row.is_position ? "Seek to this position" : (marker_row.is_active_range ? "Stop range playback" : "Play this range")
+                        }
+
+                        // Delete button (8.11)
+                        Button {
+                            text: "X"
+                            implicitWidth: 28
+                            implicitHeight: 28
+                            font.pointSize: 9
+                            font.bold: true
+                            onClicked: {
+                                if (marker_row.marker !== null) {
+                                    root.delete_marker(marker_row.marker.id);
+                                }
+                            }
+
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Delete this marker"
+                        }
                     }
 
-                    // Delete button (8.11)
-                    Button {
-                        text: "X"
-                        implicitWidth: 28
-                        implicitHeight: 28
-                        font.pointSize: 9
-                        font.bold: true
-                        onClicked: {
-                            if (marker_row.marker !== null) {
-                                root.delete_marker(marker_row.marker.id);
+                    // Adjust buttons row
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 12
+                        spacing: 4
+                        visible: marker_row.marker !== null
+
+                        // Position marker: single -1s / +1s pair
+                        Button {
+                            text: "-1s"
+                            implicitWidth: 36
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            visible: marker_row.is_position
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                root.update_marker_time(marker_row.marker.id, "position_ms", Math.max(0, marker_row.marker.position_ms - 1000));
+                            }
+                        }
+                        Button {
+                            text: "+1s"
+                            implicitWidth: 36
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            visible: marker_row.is_position
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                let max_ms = player.duration > 0 ? player.duration : marker_row.marker.position_ms;
+                                root.update_marker_time(marker_row.marker.id, "position_ms", Math.min(max_ms, marker_row.marker.position_ms + 1000));
                             }
                         }
 
-                        ToolTip.visible: hovered
-                        ToolTip.text: "Delete this marker"
+                        // Range marker: start -1s / +1s, then end -1s / +1s
+                        Label {
+                            text: "Start:"
+                            font.pointSize: 8
+                            visible: !marker_row.is_position
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                        Button {
+                            text: "-1s"
+                            implicitWidth: 36
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            visible: !marker_row.is_position
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                root.update_marker_time(marker_row.marker.id, "start_ms", Math.max(0, marker_row.marker.start_ms - 1000));
+                            }
+                        }
+                        Button {
+                            text: "+1s"
+                            implicitWidth: 36
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            visible: !marker_row.is_position
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                let max_ms = marker_row.marker.end_ms - 100;
+                                root.update_marker_time(marker_row.marker.id, "start_ms", Math.min(max_ms, marker_row.marker.start_ms + 1000));
+                            }
+                        }
+
+                        Label {
+                            text: "End:"
+                            font.pointSize: 8
+                            visible: !marker_row.is_position
+                            Layout.leftMargin: 8
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                        Button {
+                            text: "-1s"
+                            implicitWidth: 36
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            visible: !marker_row.is_position
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                let min_ms = marker_row.marker.start_ms + 100;
+                                root.update_marker_time(marker_row.marker.id, "end_ms", Math.max(min_ms, marker_row.marker.end_ms - 1000));
+                            }
+                        }
+                        Button {
+                            text: "+1s"
+                            implicitWidth: 36
+                            implicitHeight: 24
+                            font.pointSize: 8
+                            visible: !marker_row.is_position
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                let max_ms = player.duration > 0 ? player.duration : marker_row.marker.end_ms;
+                                root.update_marker_time(marker_row.marker.id, "end_ms", Math.min(max_ms, marker_row.marker.end_ms + 1000));
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
                     }
                 }
             }
@@ -936,6 +1071,20 @@ Item {
         for (let i = 0; i < new_markers.length; i++) {
             if (new_markers[i].id === marker_id) {
                 new_markers[i] = Object.assign({}, new_markers[i], {"label": new_label});
+                break;
+            }
+        }
+        root.markers = new_markers;
+        save_markers();
+    }
+
+    function update_marker_time(marker_id: string, field: string, value_ms: int) {
+        let new_markers = root.markers.slice();
+        let update = {};
+        update[field] = value_ms;
+        for (let i = 0; i < new_markers.length; i++) {
+            if (new_markers[i].id === marker_id) {
+                new_markers[i] = Object.assign({}, new_markers[i], update);
                 break;
             }
         }
