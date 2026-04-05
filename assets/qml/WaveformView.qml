@@ -24,6 +24,10 @@ Item {
         : 1
     property int min_bar_height: 2
 
+    // Range creation state (passed from parent)
+    property bool range_create_active: false   // True when in range creation mode
+    property int range_create_pending_ms: -1   // Start position during range creation
+
     // Drag state for range selection
     property bool is_dragging: false
     property real drag_start_x: 0
@@ -143,6 +147,26 @@ Item {
         }
     }
 
+    // Pending range start marker (shown during range creation)
+    Rectangle {
+        visible: root.range_create_pending_ms >= 0
+        x: root.ms_to_x(root.range_create_pending_ms) - 1
+        y: 0
+        width: 2
+        height: root.height
+        color: palette.highlight
+
+        // Triangular indicator at the top
+        Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            width: 8
+            height: 8
+            color: palette.highlight
+            rotation: 45
+        }
+    }
+
     // Playback cursor
     Rectangle {
         id: playback_cursor
@@ -191,8 +215,9 @@ Item {
             let end_x = Math.max(0, Math.min(root.width, mouse.x));
             let drag_distance = Math.abs(end_x - root.drag_start_x);
 
-            if (drag_distance < 5) {
-                // Short click: seek to position
+            if (root.range_create_active || drag_distance < 5) {
+                // During range creation, always treat as a position click.
+                // Otherwise, short click: seek to position.
                 root.seek_requested(root.x_to_ms(end_x));
             } else {
                 // Drag: create range

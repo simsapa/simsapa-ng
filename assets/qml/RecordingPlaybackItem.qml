@@ -24,6 +24,7 @@ Item {
     signal recording_completed(string recorded_file_path)
     signal remove_requested(string recording_uid)
     signal playback_started()
+    signal label_edited(string new_label)
 
     function pause_playback() {
         if (player.playbackState === MediaPlayer.PlayingState) {
@@ -47,6 +48,10 @@ Item {
     property int waveform_num_bars: 0  // total number of bars stored in cached waveform
     property bool waveform_loading: false
     property bool pending_recording_stop: false
+
+    // Range creation state: "idle", "waiting_start", "waiting_end"
+    property string range_create_state: "idle"
+    property int range_create_start_ms: -1
 
     // Range playback state (8.8, 8.9)
     property bool loop_enabled: false
@@ -375,16 +380,56 @@ Item {
         width: root.width - 16
         spacing: 6
 
-        // Header row with label and close button (6.7)
+        // Header row with label, duration, edit and close button (6.7)
         RowLayout {
             Layout.fillWidth: true
             spacing: 8
 
             Label {
-                text: root.label
+                id: title_label
+                text: root.label + (player.duration > 0 ? " (" + root.format_time(player.duration) + ")" : "")
                 font.bold: true
                 elide: Text.ElideRight
                 Layout.fillWidth: true
+                visible: !title_edit_field.visible
+            }
+
+            TextField {
+                id: title_edit_field
+                visible: false
+                text: root.label
+                font.bold: true
+                Layout.fillWidth: true
+                onAccepted: {
+                    root.label = text;
+                    root.label_edited(text);
+                    visible = false;
+                }
+                Keys.onEscapePressed: {
+                    text = root.label;
+                    visible = false;
+                }
+                onActiveFocusChanged: {
+                    if (!activeFocus && visible) {
+                        text = root.label;
+                        visible = false;
+                    }
+                }
+            }
+
+            Button {
+                icon.source: "icons/32x32/fa_pen-to-square-solid.png"
+                Layout.preferredWidth: 24
+                flat: true
+                visible: !title_edit_field.visible
+                onClicked: {
+                    title_edit_field.text = root.label;
+                    title_edit_field.visible = true;
+                    title_edit_field.forceActiveFocus();
+                    title_edit_field.selectAll();
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: "Edit title"
             }
 
             Button {
@@ -587,14 +632,31 @@ Item {
             playback_position_ms: root.effective_position
             is_playing: player.playbackState === MediaPlayer.PlayingState
             markers: root.markers
+            range_create_active: root.range_create_state !== "idle"
+            range_create_pending_ms: root.range_create_start_ms
 
             onSeek_requested: function(position_ms) {
-                root.stop_range_playback();
-                root.seek_to(position_ms);
-                position_save_timer.restart();
+                if (root.range_create_state === "waiting_start") {
+                    root.range_create_start_ms = position_ms;
+                    root.range_create_state = "waiting_end";
+                } else if (root.range_create_state === "waiting_end") {
+                    let start = Math.min(root.range_create_start_ms, position_ms);
+                    let end = Math.max(root.range_create_start_ms, position_ms);
+                    root.add_range_marker(start, end);
+                    root.range_create_state = "idle";
+                    root.range_create_start_ms = -1;
+                } else {
+                    root.stop_range_playback();
+                    root.seek_to(position_ms);
+                    position_save_timer.restart();
+                }
             }
 
             onRange_selected: function(start_ms, end_ms) {
+                if (root.range_create_state !== "idle") {
+                    // During range creation, ignore drag-based range selection
+                    return;
+                }
                 root.add_range_marker(start_ms, end_ms);
             }
         }
@@ -666,18 +728,29 @@ Item {
             }
 
             Button {
-                text: "＋ Range"
+                id: range_create_button
+                text: root.range_create_state === "idle" ? "＋ Range"
+                    : root.range_create_state === "waiting_start" ? "Set Start"
+                    : "Set End"
                 enabled: player.duration > 0
+                highlighted: root.range_create_state !== "idle"
                 onClicked: {
-                    // Create a range marker around the current position (±2 seconds)
-                    let pos = Math.round(player.position);
-                    let start = Math.max(0, pos - 2000);
-                    let end = Math.min(player.duration, pos + 2000);
-                    root.add_range_marker(start, end);
+                    if (root.range_create_state === "idle") {
+                        root.range_create_state = "waiting_start";
+                        root.range_create_start_ms = -1;
+                    } else {
+                        // Cancel range creation on button click
+                        root.range_create_state = "idle";
+                        root.range_create_start_ms = -1;
+                    }
                 }
 
                 ToolTip.visible: hovered
-                ToolTip.text: "Add a range marker around the current position (drag on waveform for precise ranges)"
+                ToolTip.text: root.range_create_state === "idle"
+                    ? "Click to start creating a range by clicking on the waveform"
+                    : root.range_create_state === "waiting_start"
+                    ? "Click on the waveform to set the range start (or click here to cancel)"
+                    : "Click on the waveform to set the range end (or click here to cancel)"
             }
 
             Item { Layout.fillWidth: true }
@@ -765,6 +838,105 @@ Item {
                 root.waveform_data = [];
                 root.waveform_num_bars = 0;
                 SuttaBridge.generate_waveform_data(root.recording_uid, root.file_path, num_bars);
+            }
+        }
+
+        // Marker time edit dialog
+        Dialog {
+            id: marker_time_dialog
+            title: marker_time_dialog.is_position ? "Edit Position" : "Edit Range"
+            standardButtons: Dialog.Ok | Dialog.Cancel
+            anchors.centerIn: parent
+            modal: true
+
+            property string marker_id: ""
+            property bool is_position: true
+
+            function set_time_fields(min_spin: SpinBox, sec_spin: SpinBox, ms_spin: SpinBox, total_ms: int) {
+                let total_secs = Math.floor(total_ms / 1000);
+                min_spin.value = Math.floor(total_secs / 60);
+                sec_spin.value = total_secs % 60;
+                ms_spin.value = total_ms % 1000;
+            }
+
+            function fields_to_ms(min_spin: SpinBox, sec_spin: SpinBox, ms_spin: SpinBox): int {
+                return (min_spin.value * 60 + sec_spin.value) * 1000 + ms_spin.value;
+            }
+
+            ColumnLayout {
+                spacing: 12
+
+                // Position marker fields
+                RowLayout {
+                    visible: marker_time_dialog.is_position
+                    spacing: 4
+
+                    Label { text: "Position:" }
+                    SpinBox { id: pos_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
+                    Label { text: "m" }
+                    SpinBox { id: pos_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
+                    Label { text: "s" }
+                    SpinBox { id: pos_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
+                    Label { text: "ms" }
+                }
+
+                // Range marker fields
+                RowLayout {
+                    visible: !marker_time_dialog.is_position
+                    spacing: 4
+
+                    Label { text: "Start:" }
+                    SpinBox { id: range_start_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
+                    Label { text: "m" }
+                    SpinBox { id: range_start_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
+                    Label { text: "s" }
+                    SpinBox { id: range_start_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
+                    Label { text: "ms" }
+                }
+
+                RowLayout {
+                    visible: !marker_time_dialog.is_position
+                    spacing: 4
+
+                    Label { text: "End:  " }
+                    SpinBox { id: range_end_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
+                    Label { text: "m" }
+                    SpinBox { id: range_end_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
+                    Label { text: "s" }
+                    SpinBox { id: range_end_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
+                    Label { text: "ms" }
+                }
+
+                Label { text: "Comment:" }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 80
+
+                    TextArea {
+                        id: marker_comment_field
+                        placeholderText: "Add a comment..."
+                        wrapMode: TextEdit.Wrap
+                    }
+                }
+            }
+
+            onAccepted: {
+                if (marker_time_dialog.is_position) {
+                    let ms = marker_time_dialog.fields_to_ms(pos_min_spin, pos_sec_spin, pos_ms_spin);
+                    let max_ms = player.duration > 0 ? player.duration : ms;
+                    root.update_marker_time(marker_time_dialog.marker_id, "position_ms", Math.min(max_ms, Math.max(0, ms)));
+                } else {
+                    let start = marker_time_dialog.fields_to_ms(range_start_min_spin, range_start_sec_spin, range_start_ms_spin);
+                    let end = marker_time_dialog.fields_to_ms(range_end_min_spin, range_end_sec_spin, range_end_ms_spin);
+                    // Ensure correct order
+                    let actual_start = Math.min(start, end);
+                    let actual_end = Math.max(start, end);
+                    let max_ms = player.duration > 0 ? player.duration : actual_end;
+                    root.update_marker_time(marker_time_dialog.marker_id, "start_ms", Math.max(0, actual_start));
+                    root.update_marker_time(marker_time_dialog.marker_id, "end_ms", Math.min(max_ms, actual_end));
+                }
+                root.update_marker_field(marker_time_dialog.marker_id, "comment", marker_comment_field.text);
             }
         }
 
@@ -899,11 +1071,10 @@ Item {
 
                         // Delete button (8.11)
                         Button {
-                            text: "X"
+                            icon.source: "icons/32x32/ion--trash-outline.png"
                             implicitWidth: 28
                             implicitHeight: 28
-                            font.pointSize: 9
-                            font.bold: true
+                            flat: true
                             onClicked: {
                                 if (marker_row.marker !== null) {
                                     root.delete_marker(marker_row.marker.id);
@@ -921,6 +1092,29 @@ Item {
                         Layout.leftMargin: 12
                         spacing: 4
                         visible: marker_row.marker !== null
+
+                        // Edit button — opens precise time input dialog
+                        Button {
+                            icon.source: "icons/32x32/fa_pen-to-square-solid.png"
+                            implicitWidth: 28
+                            implicitHeight: 24
+                            flat: true
+                            onClicked: {
+                                if (marker_row.marker === null) return;
+                                marker_time_dialog.marker_id = marker_row.marker.id;
+                                marker_time_dialog.is_position = marker_row.is_position;
+                                if (marker_row.is_position) {
+                                    marker_time_dialog.set_time_fields(pos_min_spin, pos_sec_spin, pos_ms_spin, marker_row.marker.position_ms);
+                                } else {
+                                    marker_time_dialog.set_time_fields(range_start_min_spin, range_start_sec_spin, range_start_ms_spin, marker_row.marker.start_ms);
+                                    marker_time_dialog.set_time_fields(range_end_min_spin, range_end_sec_spin, range_end_ms_spin, marker_row.marker.end_ms);
+                                }
+                                marker_comment_field.text = marker_row.marker.comment !== undefined ? marker_row.marker.comment : "";
+                                marker_time_dialog.open();
+                            }
+                            ToolTip.visible: hovered
+                            ToolTip.text: "Edit timing and comment"
+                        }
 
                         // Position marker: single -1s / +1s pair
                         Button {
@@ -1012,6 +1206,19 @@ Item {
 
                         Item { Layout.fillWidth: true }
                     }
+
+                    // Comment display row
+                    Label {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: 12
+                        visible: marker_row.marker !== null
+                            && marker_row.marker.comment !== undefined
+                            && marker_row.marker.comment !== ""
+                        text: marker_row.marker !== null && marker_row.marker.comment !== undefined ? marker_row.marker.comment : ""
+                        wrapMode: Text.Wrap
+                        font.pointSize: 9
+                        color: palette.placeholderText
+                    }
                 }
             }
         }
@@ -1032,6 +1239,7 @@ Item {
             "id": "pos_" + Date.now(),
             "type": "position",
             "label": "Mark",
+            "comment": "",
             "position_ms": Math.round(player.position)
         });
         root.markers = new_markers;
@@ -1044,6 +1252,7 @@ Item {
             "id": "range_" + Date.now(),
             "type": "range",
             "label": "Range",
+            "comment": "",
             "start_ms": start_ms,
             "end_ms": end_ms
         });
@@ -1082,6 +1291,20 @@ Item {
         let new_markers = root.markers.slice();
         let update = {};
         update[field] = value_ms;
+        for (let i = 0; i < new_markers.length; i++) {
+            if (new_markers[i].id === marker_id) {
+                new_markers[i] = Object.assign({}, new_markers[i], update);
+                break;
+            }
+        }
+        root.markers = new_markers;
+        save_markers();
+    }
+
+    function update_marker_field(marker_id: string, field: string, value: string) {
+        let new_markers = root.markers.slice();
+        let update = {};
+        update[field] = value;
         for (let i = 0; i < new_markers.length; i++) {
             if (new_markers[i].id === marker_id) {
                 new_markers[i] = Object.assign({}, new_markers[i], update);
