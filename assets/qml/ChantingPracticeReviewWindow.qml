@@ -32,6 +32,7 @@ ApplicationWindow {
     property string chant_title: ""
     property string collection_title: ""
     property string content_pali: ""
+    property var section_data: null  // Full section JSON for updates
 
     // Recordings list model
     property var recordings_data: []
@@ -81,6 +82,7 @@ ApplicationWindow {
         }
 
         let data = JSON.parse(json_str);
+        root.section_data = data;
         root.section_title = data.title || "";
         root.content_pali = data.content_pali || "";
 
@@ -306,7 +308,7 @@ ApplicationWindow {
                 color: palette.mid
             }
 
-            // 7.4 Scrollable Pali text area
+            // 7.4 Scrollable Pali text area (editable, auto-saves)
             ScrollView {
                 Layout.fillWidth: true
                 Layout.preferredHeight: Math.min(200, pali_text.implicitHeight + 20)
@@ -316,16 +318,34 @@ ApplicationWindow {
                 TextArea {
                     id: pali_text
                     text: root.content_pali
-                    readOnly: true
                     wrapMode: TextEdit.Wrap
                     font.pointSize: root.pointSize + 2
                     font.family: "serif"
                     background: Rectangle {
                         color: palette.base
-                        border.color: palette.mid
+                        border.color: pali_text.activeFocus ? palette.highlight : palette.mid
                         border.width: 1
                         radius: 4
                     }
+
+                    onTextChanged: {
+                        if (root.section_data !== null && text !== root.content_pali) {
+                            pali_save_timer.restart();
+                        }
+                    }
+                }
+            }
+
+            Timer {
+                id: pali_save_timer
+                interval: 400
+                repeat: false
+                onTriggered: {
+                    if (root.section_data === null) return;
+                    root.content_pali = pali_text.text;
+                    let data = Object.assign({}, root.section_data);
+                    data.content_pali = pali_text.text;
+                    SuttaBridge.update_chanting_section(JSON.stringify(data));
                 }
             }
 
