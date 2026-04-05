@@ -993,9 +993,13 @@ Item {
                         Layout.fillWidth: true
                         spacing: 4
 
-                        // Seek / Play button
+                        // Seek / Play / Pause button
                         Button {
-                            text: marker_row.is_position ? "▶" : (marker_row.is_active_range ? "⏹" : "▶")
+                            property bool is_playing_this: marker_row.is_position
+                                ? (player.playbackState === MediaPlayer.PlayingState && root.active_range_id === "")
+                                : marker_row.is_active_range && player.playbackState === MediaPlayer.PlayingState
+
+                            text: is_playing_this ? "⏸" : "▶"
                             implicitWidth: 32
                             implicitHeight: 28
                             font.pointSize: 10
@@ -1003,18 +1007,23 @@ Item {
                             onClicked: {
                                 if (marker_row.marker === null) return;
                                 if (marker_row.is_position) {
-                                    root.stop_range_playback();
-                                    root.seek_to(marker_row.marker.position_ms);
-                                    if (player.playbackState !== MediaPlayer.PlayingState && !seek_resume_timer.running) {
+                                    if (is_playing_this) {
+                                        player.pause();
+                                        position_save_timer.restart();
+                                    } else {
+                                        root.stop_range_playback();
+                                        root.seek_to(marker_row.marker.position_ms);
                                         root.visual_position_override = -1;
                                         player.position = marker_row.marker.position_ms;
                                         player.play();
+                                        position_save_timer.restart();
                                     }
-                                    position_save_timer.restart();
                                 } else {
-                                    if (marker_row.is_active_range) {
+                                    if (is_playing_this) {
                                         player.pause();
-                                        root.stop_range_playback();
+                                    } else if (marker_row.is_active_range) {
+                                        // Range is active but paused — resume
+                                        player.play();
                                     } else {
                                         root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
                                     }
@@ -1022,7 +1031,7 @@ Item {
                             }
 
                             ToolTip.visible: hovered
-                            ToolTip.text: marker_row.is_position ? "Seek to this position" : (marker_row.is_active_range ? "Stop range playback" : "Play this range")
+                            ToolTip.text: is_playing_this ? "Pause" : (marker_row.is_position ? "Play from this position" : "Play this range")
                         }
 
                         // Type indicator
