@@ -1039,36 +1039,45 @@ Item {
                             width: 8
                             height: 8
                             radius: marker_row.is_position ? 4 : 1
-                            color: marker_row.is_position ? "green" : palette.highlight
+                            color: marker_row.is_position ? "red" : palette.highlight
                             Layout.alignment: Qt.AlignVCenter
                         }
 
                         // Editable label
-                        TextInput {
-                            id: label_edit
+                        // NOTE: Not using the editable feature now, just a plain label.
+                        // TextInput {
+                        //     id: label_edit
+                        //     text: marker_row.marker !== null ? marker_row.marker.label : ""
+                        //     Layout.preferredWidth: 80
+                        //     Layout.alignment: Qt.AlignVCenter
+                        //     selectByMouse: true
+                        //     color: palette.text
+                        //     selectionColor: palette.highlight
+                        //     selectedTextColor: palette.highlightedText
+
+                        //     onEditingFinished: {
+                        //         if (marker_row.marker !== null) {
+                        //             root.update_marker_label(marker_row.marker.id, text);
+                        //         }
+                        //     }
+
+                        //     Rectangle {
+                        //         anchors.fill: parent
+                        //         anchors.margins: -2
+                        //         color: "transparent"
+                        //         border.color: label_edit.activeFocus ? palette.highlight : palette.mid
+                        //         border.width: label_edit.activeFocus ? 1 : 0
+                        //         radius: 2
+                        //         z: -1
+                        //     }
+                        // }
+
+                        // Mark / Range label
+                        Label {
                             text: marker_row.marker !== null ? marker_row.marker.label : ""
                             Layout.preferredWidth: 80
                             Layout.alignment: Qt.AlignVCenter
-                            selectByMouse: true
                             color: palette.text
-                            selectionColor: palette.highlight
-                            selectedTextColor: palette.highlightedText
-
-                            onEditingFinished: {
-                                if (marker_row.marker !== null) {
-                                    root.update_marker_label(marker_row.marker.id, text);
-                                }
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: -2
-                                color: "transparent"
-                                border.color: label_edit.activeFocus ? palette.highlight : palette.mid
-                                border.width: label_edit.activeFocus ? 1 : 0
-                                radius: 2
-                                z: -1
-                            }
                         }
 
                         // Time display
