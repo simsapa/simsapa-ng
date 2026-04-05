@@ -36,6 +36,12 @@ ApplicationWindow {
     // Recordings list model
     property var recordings_data: []
 
+    // UID of a recording that should auto-open after data reload
+    property string auto_open_uid: ""
+
+    // Emitted when a recording starts playing; other items should pause
+    signal pause_other_playback(string playing_uid)
+
     ThemeHelper {
         id: theme_helper
         target_window: root
@@ -50,8 +56,18 @@ ApplicationWindow {
 
     // Stop all playback and save state when window is closed
     onClosing: {
-        for (let i = 0; i < playback_repeater.count; i++) {
-            let item = playback_repeater.itemAt(i);
+        function cleanup_repeater(repeater: Repeater) {
+            for (let i = 0; i < repeater.count; i++) {
+                let item = repeater.itemAt(i);
+                if (item && item.cleanup_playback) {
+                    item.cleanup_playback();
+                }
+            }
+        }
+        cleanup_repeater(ref_repeater);
+        cleanup_repeater(user_repeater);
+        for (let i = 0; i < new_rec_repeater.count; i++) {
+            let item = new_rec_repeater.itemAt(i);
             if (item && item.cleanup) {
                 item.cleanup();
             }
@@ -119,29 +135,8 @@ ApplicationWindow {
     }
 
     function refresh_data() {
-        // Clear open playback items
-        playback_items_model.clear();
+        new_recordings_model.clear();
         load_section_data();
-    }
-
-    // Check if a recording is already open in the playback area
-    function is_recording_open(uid: string): bool {
-        for (let i = 0; i < playback_items_model.count; i++) {
-            if (playback_items_model.get(i).model_recording_uid === uid) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Close an open playback item by recording uid
-    function close_playback_item(uid: string) {
-        for (let i = 0; i < playback_items_model.count; i++) {
-            if (playback_items_model.get(i).model_recording_uid === uid) {
-                playback_items_model.remove(i);
-                return;
-            }
-        }
     }
 
     // Format duration in ms to a readable string like "2:06"
@@ -165,8 +160,8 @@ ApplicationWindow {
     ListModel { id: reference_model }
     ListModel { id: user_model }
 
-    // Model for open playback items in the playback area
-    ListModel { id: playback_items_model }
+    // Model for new recordings not yet saved to DB
+    ListModel { id: new_recordings_model }
 
     // Update recording list models when waveform data is generated
     Connections {
@@ -193,7 +188,6 @@ ApplicationWindow {
         buttons: MessageDialog.Cancel | MessageDialog.Ok
         property string target_uid: ""
         onAccepted: {
-            root.close_playback_item(delete_confirm_dialog.target_uid);
             SuttaBridge.delete_chanting_recording(delete_confirm_dialog.target_uid);
             load_section_data();
         }
@@ -342,260 +336,337 @@ ApplicationWindow {
                 color: palette.mid
             }
 
-            // 7.5 Recording list panel
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 8
-
-                Label {
-                    text: "Recordings"
-                    font.pointSize: root.pointSize + 2
-                    font.bold: true
-                    Layout.fillWidth: true
-                }
-
-                // 7.6 New Recording button
-                Button {
-                    text: "New Recording"
-                    onClicked: {
-                        let uid = root.current_section_uid + "_user_" + Date.now();
-                        let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
-                        playback_items_model.append({
-                            "model_recording_uid": uid,
-                            "model_file_path": "",
-                            "model_label": "Recording — " + new Date().toLocaleString(undefined, {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}),
-                            "model_recording_type": "user",
-                            "model_is_new_recording": true,
-                            "model_volume": 1.0,
-                            "model_playback_position_ms": 0,
-                            "model_markers_json": "[]",
-                            "model_waveform_json": ""
-                        });
-                    }
-                }
-
-                // Add recording from existing file
-                Button {
-                    text: "Add from File"
-                    onClicked: user_file_dialog.open()
-                }
-
-                // 7.7 Add Reference Recording button
-                Button {
-                    text: "Add Reference"
-                    onClicked: reference_file_dialog.open()
-                }
-            }
-
-            // Reference recordings group
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: reference_model.count > 0
-                spacing: 2
-
-                Label {
-                    text: "Reference"
-                    font.pointSize: root.pointSize - 1
-                    font.bold: true
-                    color: palette.placeholderText
-                }
-
-                Repeater {
-                    model: reference_model
-                    delegate: Frame {
-                        id: ref_delegate
-                        Layout.fillWidth: true
-
-                        required property int index
-                        required property string uid
-                        required property string file_name
-                        required property string label
-                        required property int duration_ms
-                        required property string markers_json
-                        required property real volume
-                        required property int playback_position_ms
-                        required property string waveform_json
-
-                        property bool is_open: root.is_recording_open(ref_delegate.uid)
-
-                        background: Rectangle {
-                            color: ref_delegate.is_open ? palette.highlight : palette.base
-                            border.color: palette.mid
-                            border.width: 1
-                            radius: 4
-                        }
-
-                        function toggle_open() {
-                            if (ref_delegate.is_open) {
-                                root.close_playback_item(ref_delegate.uid);
-                            } else {
-                                let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
-                                let fp = ref_delegate.file_name.startsWith("/")
-                                    ? ref_delegate.file_name
-                                    : recordings_dir + "/" + ref_delegate.file_name;
-                                playback_items_model.append({
-                                    "model_recording_uid": ref_delegate.uid,
-                                    "model_file_path": fp,
-                                    "model_label": ref_delegate.label,
-                                    "model_recording_type": "reference",
-                                    "model_is_new_recording": false,
-                                    "model_volume": ref_delegate.volume,
-                                    "model_playback_position_ms": ref_delegate.playback_position_ms,
-                                    "model_markers_json": ref_delegate.markers_json,
-                                    "model_waveform_json": ref_delegate.waveform_json
-                                });
-                            }
-                        }
-
-                        contentItem: RowLayout {
-                            spacing: 4
-
-                            Label {
-                                text: root.format_recording_info(ref_delegate.label, ref_delegate.duration_ms)
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                                color: ref_delegate.is_open ? palette.highlightedText : palette.text
-                            }
-
-                            Button {
-                                text: ref_delegate.is_open ? "Close" : "Open"
-                                onClicked: ref_delegate.toggle_open()
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: ref_delegate.toggle_open()
-                            // Behind the contentItem so buttons still receive clicks
-                            z: -1
-                        }
-                    }
-                }
-            }
-
-            // User recordings group
-            ColumnLayout {
-                Layout.fillWidth: true
-                visible: user_model.count > 0
-                spacing: 2
-
-                Label {
-                    text: "User Recordings"
-                    font.pointSize: root.pointSize - 1
-                    font.bold: true
-                    color: palette.placeholderText
-                }
-
-                Repeater {
-                    model: user_model
-                    delegate: Frame {
-                        id: user_delegate
-                        Layout.fillWidth: true
-
-                        required property int index
-                        required property string uid
-                        required property string file_name
-                        required property string label
-                        required property int duration_ms
-                        required property string markers_json
-                        required property real volume
-                        required property int playback_position_ms
-                        required property string waveform_json
-
-                        property bool is_open: root.is_recording_open(user_delegate.uid)
-
-                        background: Rectangle {
-                            color: user_delegate.is_open ? palette.highlight : palette.base
-                            border.color: palette.mid
-                            border.width: 1
-                            radius: 4
-                        }
-
-                        function toggle_open() {
-                            if (user_delegate.is_open) {
-                                root.close_playback_item(user_delegate.uid);
-                            } else {
-                                let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
-                                let fp = user_delegate.file_name.startsWith("/")
-                                    ? user_delegate.file_name
-                                    : recordings_dir + "/" + user_delegate.file_name;
-                                playback_items_model.append({
-                                    "model_recording_uid": user_delegate.uid,
-                                    "model_file_path": fp,
-                                    "model_label": user_delegate.label,
-                                    "model_recording_type": "user",
-                                    "model_is_new_recording": false,
-                                    "model_volume": user_delegate.volume,
-                                    "model_playback_position_ms": user_delegate.playback_position_ms,
-                                    "model_markers_json": user_delegate.markers_json,
-                                    "model_waveform_json": user_delegate.waveform_json
-                                });
-                            }
-                        }
-
-                        contentItem: RowLayout {
-                            spacing: 4
-
-                            Label {
-                                text: root.format_recording_info(user_delegate.label, user_delegate.duration_ms)
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                                color: user_delegate.is_open ? palette.highlightedText : palette.text
-                            }
-
-                            Button {
-                                id: user_open_close_btn
-                                text: user_delegate.is_open ? "Close" : "Open"
-                                onClicked: user_delegate.toggle_open()
-                            }
-
-                            // Delete button (user recordings only)
-                            Button {
-                                icon.source: "icons/32x32/ion--trash-outline.png"
-                                implicitHeight: user_open_close_btn.implicitHeight
-                                implicitWidth: implicitHeight
-                                onClicked: {
-                                    delete_confirm_dialog.target_uid = user_delegate.uid;
-                                    delete_confirm_dialog.open();
-                                }
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: user_delegate.toggle_open()
-                            z: -1
-                        }
-                    }
-                }
-            }
-
-            // Separator
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: palette.mid
-                visible: playback_items_model.count > 0
-            }
-
-            // 7.8 Scrollable playback area
+            // 7.5 Scrollable recording list with inline playback
             ScrollView {
+                id: recordings_scroll
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                visible: playback_items_model.count > 0
+                contentWidth: availableWidth
 
                 ColumnLayout {
-                    width: parent.width
+                    width: recordings_scroll.availableWidth
                     spacing: 8
 
+                    // Recording list header
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        Label {
+                            text: "Recordings"
+                            font.pointSize: root.pointSize + 2
+                            font.bold: true
+                            Layout.fillWidth: true
+                        }
+
+                        // 7.6 New Recording button
+                        Button {
+                            text: "New Recording"
+                            onClicked: {
+                                let uid = root.current_section_uid + "_user_" + Date.now();
+                                new_recordings_model.append({
+                                    "model_recording_uid": uid,
+                                    "model_file_path": "",
+                                    "model_label": "Recording — " + new Date().toLocaleString(undefined, {year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}),
+                                    "model_recording_type": "user",
+                                    "model_is_new_recording": true,
+                                    "model_volume": 1.0,
+                                    "model_playback_position_ms": 0,
+                                    "model_markers_json": "[]",
+                                    "model_waveform_json": ""
+                                });
+                            }
+                        }
+
+                        // Add recording from existing file
+                        Button {
+                            text: "Add from File"
+                            onClicked: user_file_dialog.open()
+                        }
+
+                        // 7.7 Add Reference Recording button
+                        Button {
+                            text: "Add Reference"
+                            onClicked: reference_file_dialog.open()
+                        }
+                    }
+
+                    // Reference recordings group with inline playback
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: reference_model.count > 0
+                        spacing: 2
+
+                        Label {
+                            text: "Reference"
+                            font.pointSize: root.pointSize - 1
+                            font.bold: true
+                            color: palette.placeholderText
+                        }
+
+                        Repeater {
+                            id: ref_repeater
+                            model: reference_model
+                            delegate: ColumnLayout {
+                                id: ref_delegate
+                                Layout.fillWidth: true
+                                spacing: 4
+
+                                required property int index
+                                required property string uid
+                                required property string file_name
+                                required property string label
+                                required property int duration_ms
+                                required property string markers_json
+                                required property real volume
+                                required property int playback_position_ms
+                                required property string waveform_json
+
+                                property bool is_open: false
+
+                                property string computed_file_path: {
+                                    if (ref_delegate.file_name === "") return "";
+                                    if (ref_delegate.file_name.startsWith("/")) return ref_delegate.file_name;
+                                    return SuttaBridge.get_chanting_recordings_dir() + "/" + ref_delegate.file_name;
+                                }
+
+                                function cleanup_playback() {
+                                    if (ref_delegate.is_open && ref_playback_loader.item && ref_playback_loader.item.cleanup) {
+                                        ref_playback_loader.item.cleanup();
+                                    }
+                                }
+
+                                Frame {
+                                    Layout.fillWidth: true
+
+                                    background: Rectangle {
+                                        color: ref_delegate.is_open ? palette.highlight : Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+                                        border.color: palette.mid
+                                        border.width: 1
+                                        radius: 4
+                                    }
+
+                                    contentItem: RowLayout {
+                                        spacing: 4
+
+                                        Label {
+                                            text: root.format_recording_info(ref_delegate.label, ref_delegate.duration_ms)
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                            color: ref_delegate.is_open ? palette.highlightedText : palette.text
+                                        }
+
+                                        Button {
+                                            text: ref_delegate.is_open ? "Close" : "Open"
+                                            onClicked: ref_delegate.is_open = !ref_delegate.is_open
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: ref_delegate.is_open = !ref_delegate.is_open
+                                        z: -1
+                                    }
+                                }
+
+                                Connections {
+                                    target: root
+                                    function onPause_other_playback(playing_uid: string) {
+                                        if (playing_uid !== ref_delegate.uid && ref_playback_loader.item) {
+                                            ref_playback_loader.item.pause_playback();
+                                        }
+                                    }
+                                }
+
+                                Loader {
+                                    id: ref_playback_loader
+                                    Layout.fillWidth: true
+                                    active: ref_delegate.is_open
+                                    visible: active
+                                    sourceComponent: Component {
+                                        RecordingPlaybackItem {
+                                            width: ref_playback_loader.width
+
+                                            recording_uid: ref_delegate.uid
+                                            file_path: ref_delegate.computed_file_path
+                                            label: ref_delegate.label
+                                            recording_type: "reference"
+                                            is_new_recording: false
+                                            volume: ref_delegate.volume
+                                            playback_position_ms: ref_delegate.playback_position_ms
+                                            markers_json: ref_delegate.markers_json
+                                            waveform_json: ref_delegate.waveform_json
+
+                                            onClosed: {
+                                                ref_delegate.is_open = false;
+                                            }
+
+                                            onRemove_requested: function(rec_uid) {
+                                                root.remove_recording_and_refresh(rec_uid);
+                                            }
+
+                                            onPlayback_started: {
+                                                root.pause_other_playback(ref_delegate.uid);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // User recordings group with inline playback
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        visible: user_model.count > 0
+                        spacing: 2
+
+                        Label {
+                            text: "User Recordings"
+                            font.pointSize: root.pointSize - 1
+                            font.bold: true
+                            color: palette.placeholderText
+                        }
+
+                        Repeater {
+                            id: user_repeater
+                            model: user_model
+                            delegate: ColumnLayout {
+                                id: user_delegate
+                                Layout.fillWidth: true
+                                spacing: 4
+
+                                required property int index
+                                required property string uid
+                                required property string file_name
+                                required property string label
+                                required property int duration_ms
+                                required property string markers_json
+                                required property real volume
+                                required property int playback_position_ms
+                                required property string waveform_json
+
+                                property bool is_open: false
+
+                                Component.onCompleted: {
+                                    if (root.auto_open_uid !== "" && root.auto_open_uid === user_delegate.uid) {
+                                        user_delegate.is_open = true;
+                                        root.auto_open_uid = "";
+                                    }
+                                }
+
+                                property string computed_file_path: {
+                                    if (user_delegate.file_name === "") return "";
+                                    if (user_delegate.file_name.startsWith("/")) return user_delegate.file_name;
+                                    return SuttaBridge.get_chanting_recordings_dir() + "/" + user_delegate.file_name;
+                                }
+
+                                function cleanup_playback() {
+                                    if (user_delegate.is_open && user_playback_loader.item && user_playback_loader.item.cleanup) {
+                                        user_playback_loader.item.cleanup();
+                                    }
+                                }
+
+                                Frame {
+                                    Layout.fillWidth: true
+
+                                    background: Rectangle {
+                                        color: user_delegate.is_open ? palette.highlight : Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+                                        border.color: palette.mid
+                                        border.width: 1
+                                        radius: 4
+                                    }
+
+                                    contentItem: RowLayout {
+                                        spacing: 4
+
+                                        Label {
+                                            text: root.format_recording_info(user_delegate.label, user_delegate.duration_ms)
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                            color: user_delegate.is_open ? palette.highlightedText : palette.text
+                                        }
+
+                                        Button {
+                                            id: user_open_close_btn
+                                            text: user_delegate.is_open ? "Close" : "Open"
+                                            onClicked: user_delegate.is_open = !user_delegate.is_open
+                                        }
+
+                                        // Delete button (user recordings only)
+                                        Button {
+                                            icon.source: "icons/32x32/ion--trash-outline.png"
+                                            implicitHeight: user_open_close_btn.implicitHeight
+                                            implicitWidth: implicitHeight
+                                            onClicked: {
+                                                delete_confirm_dialog.target_uid = user_delegate.uid;
+                                                delete_confirm_dialog.open();
+                                            }
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: user_delegate.is_open = !user_delegate.is_open
+                                        z: -1
+                                    }
+                                }
+
+                                Connections {
+                                    target: root
+                                    function onPause_other_playback(playing_uid: string) {
+                                        if (playing_uid !== user_delegate.uid && user_playback_loader.item) {
+                                            user_playback_loader.item.pause_playback();
+                                        }
+                                    }
+                                }
+
+                                Loader {
+                                    id: user_playback_loader
+                                    Layout.fillWidth: true
+                                    active: user_delegate.is_open
+                                    visible: active
+                                    sourceComponent: Component {
+                                        RecordingPlaybackItem {
+                                            width: user_playback_loader.width
+
+                                            recording_uid: user_delegate.uid
+                                            file_path: user_delegate.computed_file_path
+                                            label: user_delegate.label
+                                            recording_type: "user"
+                                            is_new_recording: false
+                                            volume: user_delegate.volume
+                                            playback_position_ms: user_delegate.playback_position_ms
+                                            markers_json: user_delegate.markers_json
+                                            waveform_json: user_delegate.waveform_json
+
+                                            onClosed: {
+                                                user_delegate.is_open = false;
+                                            }
+
+                                            onRemove_requested: function(rec_uid) {
+                                                root.remove_recording_and_refresh(rec_uid);
+                                            }
+
+                                            onPlayback_started: {
+                                                root.pause_other_playback(user_delegate.uid);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // New recordings (not yet saved to DB)
                     Repeater {
-                        id: playback_repeater
-                        model: playback_items_model
+                        id: new_rec_repeater
+                        model: new_recordings_model
                         delegate: RecordingPlaybackItem {
-                            id: playback_delegate
+                            id: new_rec_delegate
                             Layout.fillWidth: true
 
                             required property int index
@@ -609,52 +680,65 @@ ApplicationWindow {
                             required property string model_markers_json
                             required property string model_waveform_json
 
-                            recording_uid: playback_delegate.model_recording_uid
-                            file_path: playback_delegate.model_file_path
-                            label: playback_delegate.model_label
-                            recording_type: playback_delegate.model_recording_type
-                            is_new_recording: playback_delegate.model_is_new_recording
-                            volume: playback_delegate.model_volume
-                            playback_position_ms: playback_delegate.model_playback_position_ms
-                            markers_json: playback_delegate.model_markers_json
-                            waveform_json: playback_delegate.model_waveform_json
+                            recording_uid: new_rec_delegate.model_recording_uid
+                            file_path: new_rec_delegate.model_file_path
+                            label: new_rec_delegate.model_label
+                            recording_type: new_rec_delegate.model_recording_type
+                            is_new_recording: new_rec_delegate.model_is_new_recording
+                            volume: new_rec_delegate.model_volume
+                            playback_position_ms: new_rec_delegate.model_playback_position_ms
+                            markers_json: new_rec_delegate.model_markers_json
+                            waveform_json: new_rec_delegate.model_waveform_json
 
-                            // 7.10 Close removes from playback area
-                            onClosed: {
-                                playback_items_model.remove(playback_delegate.index);
+                            onPlayback_started: {
+                                root.pause_other_playback(new_rec_delegate.model_recording_uid);
                             }
 
-                            // Remove recording from DB when file not found
+                            Connections {
+                                target: root
+                                function onPause_other_playback(playing_uid: string) {
+                                    if (playing_uid !== new_rec_delegate.model_recording_uid) {
+                                        new_rec_delegate.pause_playback();
+                                    }
+                                }
+                            }
+
+                            onClosed: {
+                                new_recordings_model.remove(new_rec_delegate.index);
+                            }
+
                             onRemove_requested: function(rec_uid) {
                                 root.remove_recording_and_refresh(rec_uid);
-                                playback_items_model.remove(playback_delegate.index);
+                                new_recordings_model.remove(new_rec_delegate.index);
                             }
 
                             // 7.11 Recording complete — persist and refresh
                             onRecording_completed: function(recorded_file_path) {
-                                // Store just the filename for portability
                                 let file_name = recorded_file_path.split("/").pop();
+                                let uid = new_rec_delegate.model_recording_uid;
                                 let rec_json = JSON.stringify({
-                                    "uid": playback_delegate.model_recording_uid,
+                                    "uid": uid,
                                     "section_uid": root.current_section_uid,
                                     "file_name": file_name,
                                     "recording_type": "user",
-                                    "label": playback_delegate.model_label,
+                                    "label": new_rec_delegate.model_label,
                                     "duration_ms": 0,
                                     "markers_json": "[]"
                                 });
                                 SuttaBridge.create_chanting_recording(rec_json);
+                                // Remove from new recordings and auto-open in user list
+                                new_recordings_model.remove(new_rec_delegate.index);
+                                root.auto_open_uid = uid;
                                 root.load_section_data();
                             }
                         }
                     }
-                }
-            }
 
-            // Spacer when no playback items
-            Item {
-                Layout.fillHeight: true
-                visible: playback_items_model.count === 0
+                    // Bottom spacer
+                    Item {
+                        Layout.fillHeight: true
+                    }
+                }
             }
         }
     }

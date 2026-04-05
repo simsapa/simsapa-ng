@@ -23,6 +23,13 @@ Item {
     signal closed()
     signal recording_completed(string recorded_file_path)
     signal remove_requested(string recording_uid)
+    signal playback_started()
+
+    function pause_playback() {
+        if (player.playbackState === MediaPlayer.PlayingState) {
+            player.pause();
+        }
+    }
 
     // Markers data (JSON array of marker objects)
     property string markers_json: "[]"
@@ -184,6 +191,12 @@ Item {
             if (mediaStatus === MediaPlayer.LoadedMedia && root.playback_position_ms > 0) {
                 player.position = root.playback_position_ms;
                 // Stay paused — don't auto-play
+            }
+        }
+
+        onPlaybackStateChanged: {
+            if (playbackState === MediaPlayer.PlayingState) {
+                root.playback_started();
             }
         }
     }
@@ -374,12 +387,10 @@ Item {
                 Layout.fillWidth: true
             }
 
-            ToolButton {
-                text: "X"
-                font.pointSize: 10
-                font.bold: true
-                implicitWidth: 28
-                implicitHeight: 28
+            Button {
+                icon.source: "icons/32x32/mdi--close.png"
+                Layout.preferredWidth: 24
+                flat: true
                 onClicked: {
                     root.save_position();
                     root.closed();
