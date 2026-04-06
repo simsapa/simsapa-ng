@@ -88,12 +88,12 @@ void callback_open_topic_index_window() {
   AppGlobals::manager->create_topic_index_window();
 }
 
-void callback_open_chanting_practice_window() {
-  AppGlobals::manager->create_chanting_practice_window();
+void callback_open_chanting_practice_window(QString window_id) {
+  AppGlobals::manager->create_chanting_practice_window(window_id);
 }
 
-void callback_open_chanting_review_window(QString section_uid) {
-  AppGlobals::manager->create_chanting_review_window(section_uid);
+void callback_open_chanting_review_window(QString window_id, QString section_uid) {
+  AppGlobals::manager->create_chanting_review_window(window_id, section_uid);
 }
 
 void callback_show_chapter_in_sutta_window(QString window_id, QString result_data_json) {

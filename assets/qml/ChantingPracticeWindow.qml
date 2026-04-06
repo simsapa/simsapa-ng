@@ -25,6 +25,7 @@ ApplicationWindow {
     property var collections_list: []
     property string selected_uid: ""
     property string selected_type: ""
+    property string window_id
     property bool is_dark: theme_helper.is_dark
     property bool export_selection_mode: false
 
@@ -595,7 +596,7 @@ ApplicationWindow {
                 visible: !root.export_selection_mode
                 enabled: root.selected_type === "section"
                 onClicked: {
-                    SuttaBridge.open_chanting_review_window(root.selected_uid);
+                    SuttaBridge.open_chanting_review_window(root.window_id, root.selected_uid);
                 }
             }
 
@@ -688,7 +689,7 @@ ApplicationWindow {
                 selection_mode: root.export_selection_mode
 
                 onSection_clicked: function(section_uid) {
-                    SuttaBridge.open_chanting_review_window(section_uid);
+                    SuttaBridge.open_chanting_review_window(root.window_id, section_uid);
                 }
 
                 onSelection_changed: function(uid, item_type) {

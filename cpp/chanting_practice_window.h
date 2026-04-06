@@ -9,12 +9,13 @@ class ChantingPracticeWindow : public QObject {
     Q_OBJECT
 
 public:
-    explicit ChantingPracticeWindow(QApplication* app, QObject* parent = nullptr);
+    explicit ChantingPracticeWindow(QApplication* app, const QString& window_id, QObject* parent = nullptr);
     ~ChantingPracticeWindow();
 
     QApplication* m_app;
     QObject* m_root;
     QQmlApplicationEngine *m_engine;
+    QString m_window_id;
 
 private:
     void setup_qml();

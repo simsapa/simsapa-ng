@@ -22,6 +22,7 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile ? 16 : 12
     property int top_bar_margin: is_mobile ? 24 : 0
 
+    property string window_id
     property bool is_dark: theme_helper.is_dark
 
     // section_uid is set as a context property by C++
@@ -346,6 +347,15 @@ ApplicationWindow {
                     let data = Object.assign({}, root.section_data);
                     data.content_pali = pali_text.text;
                     SuttaBridge.update_chanting_section(JSON.stringify(data));
+                }
+            }
+
+            Button {
+                text: "Gloss Chanting Text"
+                Layout.alignment: Qt.AlignLeft
+                enabled: pali_text.text.trim().length > 0
+                onClicked: {
+                    SuttaBridge.run_gloss_in_sutta_window(root.window_id, pali_text.text);
                 }
             }
 

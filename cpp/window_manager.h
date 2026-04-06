@@ -29,8 +29,8 @@ class WindowManager : public QObject {
         LibraryWindow* create_library_window();
         ReferenceSearchWindow* create_reference_search_window();
         TopicIndexWindow* create_topic_index_window();
-        ChantingPracticeWindow* create_chanting_practice_window();
-        ChantingReviewWindow* create_chanting_review_window(const QString& section_uid);
+        ChantingPracticeWindow* create_chanting_practice_window(const QString& window_id);
+        ChantingReviewWindow* create_chanting_review_window(const QString& window_id, const QString& section_uid);
 
         static WindowManager *m_instance;
         QApplication* m_app;

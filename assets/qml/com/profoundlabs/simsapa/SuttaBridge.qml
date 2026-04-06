@@ -455,6 +455,10 @@ Item {
         return "# Hello Markdown";
     }
 
+    function run_gloss_in_sutta_window(window_id: string, query_text: string) {
+        console.log("run_gloss_in_sutta_window()");
+    }
+
     function open_sutta_search_window() {
         console.log("open_sutta_search_window()");
     }
@@ -849,12 +853,12 @@ Item {
     }
 
     // Chanting Practice functions
-    function open_chanting_practice_window() {
-        console.log("open_chanting_practice_window()");
+    function open_chanting_practice_window(window_id: string) {
+        console.log("open_chanting_practice_window():", window_id);
     }
 
-    function open_chanting_review_window(section_uid: string) {
-        console.log("open_chanting_review_window():", section_uid);
+    function open_chanting_review_window(window_id: string, section_uid: string) {
+        console.log("open_chanting_review_window():", window_id, section_uid);
     }
 
     function get_all_chanting_collections_json(): string {

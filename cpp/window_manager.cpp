@@ -167,14 +167,14 @@ TopicIndexWindow* WindowManager::create_topic_index_window() {
     return w;
 }
 
-ChantingPracticeWindow* WindowManager::create_chanting_practice_window() {
-    ChantingPracticeWindow* w = new ChantingPracticeWindow(this->m_app);
+ChantingPracticeWindow* WindowManager::create_chanting_practice_window(const QString& window_id) {
+    ChantingPracticeWindow* w = new ChantingPracticeWindow(this->m_app, window_id);
     chanting_practice_windows.append(w);
     return w;
 }
 
-ChantingReviewWindow* WindowManager::create_chanting_review_window(const QString& section_uid) {
-    ChantingReviewWindow* w = new ChantingReviewWindow(this->m_app, section_uid);
+ChantingReviewWindow* WindowManager::create_chanting_review_window(const QString& window_id, const QString& section_uid) {
+    ChantingReviewWindow* w = new ChantingReviewWindow(this->m_app, window_id, section_uid);
     chanting_review_windows.append(w);
     return w;
 }
@@ -236,11 +236,9 @@ void WindowManager::run_summary_query(const QString& window_id, const QString& q
 }
 
 void WindowManager::run_sutta_menu_action(const QString& window_id, const QString& action, const QString& query_text) {
-    if (this->sutta_search_windows.length() == 0) {
-        return;
-    }
-
     SuttaSearchWindow* target_window = nullptr;
+
+    // Try to find the window by window_id
     for (auto w : this->sutta_search_windows) {
         QVariant prop = w->m_root->property("window_id");
         if (prop.isValid() && prop.toString() == window_id) {
@@ -249,9 +247,23 @@ void WindowManager::run_sutta_menu_action(const QString& window_id, const QStrin
         }
     }
 
+    // Fallback: use the first available window, or create a new one
     if (target_window == nullptr) {
+        if (this->sutta_search_windows.length() > 0) {
+            target_window = this->sutta_search_windows.first();
+        } else {
+            target_window = this->create_sutta_search_window();
+        }
+    }
+
+    if (target_window == nullptr || target_window->m_root == nullptr) {
         return;
     }
+
+    // Show and raise the window
+    QMetaObject::invokeMethod(target_window->m_root, "show");
+    QMetaObject::invokeMethod(target_window->m_root, "raise");
+    QMetaObject::invokeMethod(target_window->m_root, "requestActivate");
 
     QMetaObject::invokeMethod(target_window->m_root, "run_sutta_menu_action", Q_ARG(QString, action), Q_ARG(QString, query_text));
 }

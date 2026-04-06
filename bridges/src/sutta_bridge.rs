@@ -427,6 +427,9 @@ pub mod qobject {
         fn get_status_bar_height(self: &SuttaBridge) -> i32;
 
         #[qinvokable]
+        fn run_gloss_in_sutta_window(self: &SuttaBridge, window_id: &QString, query_text: &QString);
+
+        #[qinvokable]
         fn open_sutta_search_window(self: &SuttaBridge);
 
         #[qinvokable]
@@ -761,10 +764,10 @@ pub mod qobject {
 
         // Chanting Practice functions
         #[qinvokable]
-        fn open_chanting_practice_window(self: &SuttaBridge);
+        fn open_chanting_practice_window(self: &SuttaBridge, window_id: &QString);
 
         #[qinvokable]
-        fn open_chanting_review_window(self: &SuttaBridge, section_uid: &QString);
+        fn open_chanting_review_window(self: &SuttaBridge, window_id: &QString, section_uid: &QString);
 
         #[qinvokable]
         fn get_all_chanting_collections_json(self: &SuttaBridge) -> QString;
@@ -1961,6 +1964,15 @@ impl qobject::SuttaBridge {
 
     pub fn markdown_to_html(&self, markdown_text: &QString) -> QString {
         QString::from(markdown_to_html(&markdown_text.to_string()))
+    }
+
+    pub fn run_gloss_in_sutta_window(&self, window_id: &QString, query_text: &QString) {
+        use crate::api::ffi;
+        ffi::callback_run_sutta_menu_action(
+            window_id.clone(),
+            QString::from("gloss-selection"),
+            query_text.clone(),
+        );
     }
 
     pub fn open_sutta_search_window(&self) {
@@ -3479,14 +3491,14 @@ impl qobject::SuttaBridge {
     // Chanting Practice Functions
     // =========================================================================
 
-    pub fn open_chanting_practice_window(&self) {
+    pub fn open_chanting_practice_window(&self, window_id: &QString) {
         use crate::api::ffi;
-        ffi::callback_open_chanting_practice_window();
+        ffi::callback_open_chanting_practice_window(window_id.clone());
     }
 
-    pub fn open_chanting_review_window(&self, section_uid: &QString) {
+    pub fn open_chanting_review_window(&self, window_id: &QString, section_uid: &QString) {
         use crate::api::ffi;
-        ffi::callback_open_chanting_review_window(section_uid.clone());
+        ffi::callback_open_chanting_review_window(window_id.clone(), section_uid.clone());
     }
 
     pub fn get_all_chanting_collections_json(&self) -> QString {

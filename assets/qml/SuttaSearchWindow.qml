@@ -1295,7 +1295,7 @@ ${query_text}`;
                     id: action_chanting_practice
                     text: "&Chanting Practice..."
                     onTriggered: {
-                        SuttaBridge.open_chanting_practice_window()
+                        SuttaBridge.open_chanting_practice_window(root.window_id)
                     }
                 }
             }

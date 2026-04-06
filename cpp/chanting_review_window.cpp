@@ -3,10 +3,11 @@
 #include <QUrl>
 #include <QQmlContext>
 
-ChantingReviewWindow::ChantingReviewWindow(QApplication* app, const QString& section_uid, QObject* parent)
+ChantingReviewWindow::ChantingReviewWindow(QApplication* app, const QString& window_id, const QString& section_uid, QObject* parent)
     : QObject(parent)
 {
     this->m_app = app;
+    this->m_window_id = window_id;
     this->m_section_uid = section_uid;
     setup_qml();
 }
@@ -17,6 +18,7 @@ void ChantingReviewWindow::setup_qml() {
     m_engine->rootContext()->setContextProperty("section_uid", m_section_uid);
     m_engine->load(view_qml);
     m_root = m_engine->rootObjects().constFirst();
+    m_root->setProperty("window_id", m_window_id);
 }
 
 ChantingReviewWindow::~ChantingReviewWindow() {
