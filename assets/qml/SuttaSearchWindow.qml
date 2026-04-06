@@ -2773,7 +2773,6 @@ ${query_text}`;
 
                             BookmarksTab {
                                 id: bookmarks_tab
-                                window_id: root.window_id
                                 is_dark: root.is_dark
                                 get_open_items_fn: root.get_open_items_json
                                 Layout.fillWidth: true

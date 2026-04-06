@@ -8,8 +8,7 @@ import com.profoundlabs.simsapa
 
 ColumnLayout {
     id: root
-    property string window_id: ""
-    property bool is_dark: false
+    required property bool is_dark
 
     // Function reference to get open items JSON from the parent window
     property var get_open_items_fn: null
@@ -17,7 +16,6 @@ ColumnLayout {
     signal open_bookmark_item(var item_data)
     signal open_all_folder_items(var items)
 
-    anchors.fill: parent
     spacing: 0
 
     property var bookmark_folders_data: []

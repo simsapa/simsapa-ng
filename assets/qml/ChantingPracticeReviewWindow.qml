@@ -590,6 +590,7 @@ ApplicationWindow {
                                 }
 
                                 Frame {
+                                    id: user_frame
                                     Layout.fillWidth: true
 
                                     background: Rectangle {
