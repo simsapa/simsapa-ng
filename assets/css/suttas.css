@@ -413,7 +413,7 @@ div.btn a, span.btn a {
 .cst .note {
   color: blue;
 }
-.cst .bld {
+.cst .bold, .cst .bld {
   font-weight: bold;
 }
 .cst .paranum {
@@ -451,15 +451,15 @@ div.btn a, span.btn a {
   word-spacing: 1.5pt;
   padding-top: 0.3em;
 }
-.cst .book, .cst .title, .cst .subhead, .cst .subsubhead, .cst .chapter {
+.cst h1.book, .cst h1.title, .cst h1.subhead, .cst h1.subsubhead, .cst h1.chapter, .cst h2.book, .cst h2.title, .cst h2.subhead, .cst h2.subsubhead, .cst h2.chapter, .cst h3.book, .cst h3.title, .cst h3.subhead, .cst h3.subsubhead, .cst h3.chapter, .cst h4.book, .cst h4.title, .cst h4.subhead, .cst h4.subsubhead, .cst h4.chapter, .cst h5.book, .cst h5.title, .cst h5.subhead, .cst h5.subsubhead, .cst h5.chapter, .cst h6.book, .cst h6.title, .cst h6.subhead, .cst h6.subsubhead, .cst h6.chapter {
   font-family: "Abhaya Libre SSP";
   font-weight: 800;
   text-align: center;
 }
-.cst .book {
+.cst h1.book, .cst h2.book, .cst h3.book, .cst h4.book, .cst h5.book, .cst h6.book {
   font-size: 1.6em;
 }
-.cst .title {
+.cst h1.title, .cst h2.title, .cst h3.title, .cst h4.title, .cst h5.title, .cst h6.title {
   font-size: 1.4em;
 }
 .cst .subhead, .cst .subsubhead, .cst .chapter {

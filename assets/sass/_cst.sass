@@ -1,7 +1,8 @@
 .cst
   .note
     color: blue
-  .bld
+  // <span class="bold">Uttarimanussadhammā</span>ti 
+  .bold, .bld
     font-weight: bold
   .paranum
     font-weight: bold
@@ -33,15 +34,18 @@
     word-spacing: 1.5pt
     padding-top: 0.3em
 
-  .book, .title, .subhead, .subsubhead, .chapter
-    font-family: "Abhaya Libre SSP"
-    font-weight: 800
-    text-align: center
+  // Must not match <div class="book" id="dn3">, which wraps the content
+  // A header example: <h2 class="book">Pāthikavaggaṭṭhakathā</h2>
+  h1, h2, h3, h4, h5, h6
+    &.book, &.title, &.subhead, &.subsubhead, &.chapter
+      font-family: "Abhaya Libre SSP"
+      font-weight: 800
+      text-align: center
 
-  .book
-    font-size: 1.6em
-  .title
-    font-size: 1.4em
+    &.book
+      font-size: 1.6em
+    &.title
+      font-size: 1.4em
 
   .subhead, .subsubhead, .chapter
     font-size: 1.2em
