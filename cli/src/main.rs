@@ -835,6 +835,18 @@ fn index_command(cmd: IndexCommands) -> Result<(), String> {
             indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
         }
 
+        (Some(IndexArea::Library), None) => {
+            println!("Building library indexes for all languages...");
+            let langs = indexer::get_library_languages(&app_data.dbm.appdata)
+                .map_err(|e| e.to_string())?;
+            for l in &langs {
+                println!("  Building library index for language: {}", l);
+                indexer::build_library_index(&app_data.dbm.appdata, &paths.library_index_dir, l)
+                    .map_err(|e| e.to_string())?;
+            }
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
+
         // Build a specific language across all areas (or filtered)
         (None, Some(lang_code)) => {
             println!("Building indexes for language: {}", lang_code);
@@ -851,6 +863,14 @@ fn index_command(cmd: IndexCommands) -> Result<(), String> {
             if dict_langs.contains(lang_code) {
                 println!("  Building dict_word index for language: {}", lang_code);
                 indexer::build_dict_index(&app_data.dbm.dictionaries, &paths.dict_words_index_dir, lang_code)
+                    .map_err(|e| e.to_string())?;
+            }
+
+            let library_langs = indexer::get_library_languages(&app_data.dbm.appdata)
+                .map_err(|e| e.to_string())?;
+            if library_langs.contains(lang_code) {
+                println!("  Building library index for language: {}", lang_code);
+                indexer::build_library_index(&app_data.dbm.appdata, &paths.library_index_dir, lang_code)
                     .map_err(|e| e.to_string())?;
             }
             indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
@@ -870,6 +890,13 @@ fn index_command(cmd: IndexCommands) -> Result<(), String> {
                 .map_err(|e| e.to_string())?;
             indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
         }
+
+        (Some(IndexArea::Library), Some(lang_code)) => {
+            println!("Building library index for language: {}", lang_code);
+            indexer::build_library_index(&app_data.dbm.appdata, &paths.library_index_dir, lang_code)
+                .map_err(|e| e.to_string())?;
+            indexer::write_version_file(&paths.index_dir).map_err(|e| e.to_string())?;
+        }
     }
 
     println!("Done.");
@@ -886,12 +913,15 @@ fn delete_index_dirs(
         (None, None) => vec![paths.index_dir.clone()],
         (Some(IndexArea::Suttas), None) => vec![paths.suttas_index_dir.clone()],
         (Some(IndexArea::DictWords), None) => vec![paths.dict_words_index_dir.clone()],
+        (Some(IndexArea::Library), None) => vec![paths.library_index_dir.clone()],
         (None, Some(l)) => vec![
             paths.suttas_index_dir.join(l),
             paths.dict_words_index_dir.join(l),
+            paths.library_index_dir.join(l),
         ],
         (Some(IndexArea::Suttas), Some(l)) => vec![paths.suttas_index_dir.join(l)],
         (Some(IndexArea::DictWords), Some(l)) => vec![paths.dict_words_index_dir.join(l)],
+        (Some(IndexArea::Library), Some(l)) => vec![paths.library_index_dir.join(l)],
     };
 
     for dir in &dirs_to_delete {
@@ -1163,6 +1193,7 @@ enum FulltextSearchArea {
 enum IndexArea {
     Suttas,
     DictWords,
+    Library,
 }
 
 /// Subcommands for the `index` command group.

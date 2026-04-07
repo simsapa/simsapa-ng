@@ -10,7 +10,7 @@ use crate::db::dictionaries_models::DictWord;
 use crate::logger::info;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_dict_schema, build_sutta_schema};
+use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 
 /// Open or create a Tantivy index at the given directory path.
@@ -191,6 +191,119 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     Ok(())
 }
 
+/// Build fulltext index for library book chapters of a given language.
+pub fn build_library_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &str) -> Result<()> {
+    use crate::db::appdata_schema::book_spine_items::dsl as spine_dsl;
+    use crate::db::appdata_schema::books::dsl as books_dsl;
+
+    info(&format!("Building library index for language: {}", lang));
+
+    let lang_index_dir = index_dir.join(lang);
+    let schema = build_library_schema(lang);
+    let index = open_or_create_index(&lang_index_dir, schema, lang)?;
+
+    let mut writer: IndexWriter = index.writer(50_000_000)?;
+
+    // Clear existing documents before rebuilding
+    writer.delete_all_documents()?;
+    writer.commit()?;
+
+    let schema = index.schema();
+    let spine_item_uid_field = schema.get_field("spine_item_uid").unwrap();
+    let book_uid_field = schema.get_field("book_uid").unwrap();
+    let book_title_field = schema.get_field("book_title").unwrap();
+    let author_field = schema.get_field("author").unwrap();
+    let title_field = schema.get_field("title").unwrap();
+    let language_field = schema.get_field("language").unwrap();
+    let content_field = schema.get_field("content").unwrap();
+    let content_exact_field = schema.get_field("content_exact").unwrap();
+
+    // Load all spine items joined with their books
+    let items: Vec<(crate::db::appdata_models::BookSpineItem, crate::db::appdata_models::Book)> = appdata_db.do_read(|db_conn| {
+        spine_dsl::book_spine_items
+            .inner_join(books_dsl::books.on(books_dsl::id.eq(spine_dsl::book_id)))
+            .select((crate::db::appdata_models::BookSpineItem::as_select(), crate::db::appdata_models::Book::as_select()))
+            .load(db_conn)
+    })?;
+
+    info(&format!("Found {} book spine items total", items.len()));
+
+    let mut indexed_count = 0;
+    for (spine_item, book) in &items {
+        // Determine effective language: spine_item.language > book.language > "en"
+        let effective_lang = spine_item.language.as_deref()
+            .filter(|s| !s.is_empty())
+            .or_else(|| book.language.as_deref().filter(|s| !s.is_empty()))
+            .unwrap_or("en")
+            .to_lowercase();
+
+        if effective_lang != lang {
+            continue;
+        }
+
+        let plain = spine_item.content_plain.as_deref().unwrap_or("");
+        if plain.is_empty() {
+            continue;
+        }
+
+        let book_title = book.title.as_deref().unwrap_or("");
+        let chapter_title = spine_item.title.as_deref().unwrap_or("");
+        let author = book.author.as_deref().unwrap_or("");
+
+        // Prepend book_title, chapter title, and author to content for better matching
+        let content_text = format!("{} {} {} {}", book_title, chapter_title, author, plain);
+
+        writer.add_document(doc!(
+            spine_item_uid_field => spine_item.spine_item_uid.as_str(),
+            book_uid_field => spine_item.book_uid.as_str(),
+            book_title_field => book_title,
+            author_field => author,
+            title_field => chapter_title,
+            language_field => effective_lang.as_str(),
+            content_field => content_text.as_str(),
+            content_exact_field => content_text.as_str(),
+        ))?;
+
+        indexed_count += 1;
+    }
+
+    // Finalize the index
+    writer.commit()?;
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
+
+    info(&format!("Library index committed: {} documents for language {}", indexed_count, lang));
+
+    Ok(())
+}
+
+/// Get distinct effective languages across all library book spine items.
+///
+/// Uses the fallback chain: spine_item.language > book.language > "en".
+pub fn get_library_languages(appdata_db: &DatabaseHandle) -> Result<Vec<String>> {
+    use crate::db::appdata_schema::book_spine_items::dsl as spine_dsl;
+    use crate::db::appdata_schema::books::dsl as books_dsl;
+
+    let items: Vec<(Option<String>, Option<String>)> = appdata_db.do_read(|db_conn| {
+        spine_dsl::book_spine_items
+            .inner_join(books_dsl::books.on(books_dsl::id.eq(spine_dsl::book_id)))
+            .select((spine_dsl::language, books_dsl::language))
+            .load(db_conn)
+    })?;
+
+    let mut langs: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for (spine_lang, book_lang) in items {
+        let effective = spine_lang.as_deref()
+            .filter(|s| !s.is_empty())
+            .or_else(|| book_lang.as_deref().filter(|s| !s.is_empty()))
+            .unwrap_or("en")
+            .to_lowercase();
+        langs.insert(effective);
+    }
+
+    Ok(langs.into_iter().collect())
+}
+
 /// Get distinct sutta languages from the appdata database.
 pub fn get_sutta_languages(appdata_db: &DatabaseHandle) -> Result<Vec<String>> {
     use crate::db::appdata_schema::suttas::dsl::*;
@@ -249,6 +362,13 @@ pub fn build_all_indexes(
 
     for lang in &dict_langs {
         build_dict_index(dict_db, &paths.dict_words_index_dir, lang)?;
+    }
+
+    let library_langs = get_library_languages(appdata_db)?;
+    info(&format!("Library languages: {:?}", library_langs));
+
+    for lang in &library_langs {
+        build_library_index(appdata_db, &paths.library_index_dir, lang)?;
     }
 
     write_version_file(&paths.index_dir)?;

@@ -12,9 +12,17 @@ use crate::logger::{info, warn};
 use crate::types::SearchResult;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_dict_schema, build_sutta_schema};
+use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 pub use super::types::SearchFilters;
+
+/// Identifies the type of index for schema selection.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum IndexType {
+    Sutta,
+    Dict,
+    Library,
+}
 
 /// Holds open indexes for fulltext searching.
 pub struct FulltextSearcher {
@@ -22,6 +30,8 @@ pub struct FulltextSearcher {
     sutta_indexes: HashMap<String, (Index, IndexReader)>,
     /// Map of language → (Index, IndexReader) for dict_word indexes
     dict_indexes: HashMap<String, (Index, IndexReader)>,
+    /// Map of language → (Index, IndexReader) for library book chapter indexes
+    library_indexes: HashMap<String, (Index, IndexReader)>,
 }
 
 /// Returned by `FulltextSearcher::debug_query()`: the formatted debug text
@@ -35,37 +45,46 @@ pub struct DebugQueryResult {
 impl FulltextSearcher {
     /// Open all available per-language indexes under the given paths.
     pub fn open(paths: &AppGlobalPaths) -> Result<Self> {
-        let sutta_indexes = Self::open_indexes(&paths.suttas_index_dir, true)?;
-        let dict_indexes = Self::open_indexes(&paths.dict_words_index_dir, false)?;
+        let sutta_indexes = Self::open_indexes(&paths.suttas_index_dir, IndexType::Sutta)?;
+        let dict_indexes = Self::open_indexes(&paths.dict_words_index_dir, IndexType::Dict)?;
+        let library_indexes = Self::open_indexes(&paths.library_index_dir, IndexType::Library)?;
 
         info(&format!(
-            "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes",
+            "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes, {} library language indexes",
             sutta_indexes.len(),
-            dict_indexes.len()
+            dict_indexes.len(),
+            library_indexes.len()
         ));
 
         Ok(Self {
             sutta_indexes,
             dict_indexes,
+            library_indexes,
         })
     }
 
     /// Open indexes from explicit directory paths (without needing AppGlobalPaths).
     ///
     /// Useful for CLI tools or tests that manage index directories directly.
-    /// Pass an empty or non-existent path to skip sutta or dict indexes.
-    pub fn open_from_dirs(suttas_index_dir: &Path, dict_words_index_dir: &Path) -> Result<Self> {
-        let sutta_indexes = Self::open_indexes(suttas_index_dir, true)?;
-        let dict_indexes = Self::open_indexes(dict_words_index_dir, false)?;
+    /// Pass an empty or non-existent path to skip sutta, dict, or library indexes.
+    pub fn open_from_dirs(suttas_index_dir: &Path, dict_words_index_dir: &Path, library_index_dir: Option<&Path>) -> Result<Self> {
+        let sutta_indexes = Self::open_indexes(suttas_index_dir, IndexType::Sutta)?;
+        let dict_indexes = Self::open_indexes(dict_words_index_dir, IndexType::Dict)?;
+        let library_indexes = if let Some(dir) = library_index_dir {
+            Self::open_indexes(dir, IndexType::Library)?
+        } else {
+            HashMap::new()
+        };
 
         Ok(Self {
             sutta_indexes,
             dict_indexes,
+            library_indexes,
         })
     }
 
     /// Scan a directory for per-language subdirectories and open each as a Tantivy index.
-    fn open_indexes(base_dir: &Path, is_sutta: bool) -> Result<HashMap<String, (Index, IndexReader)>> {
+    fn open_indexes(base_dir: &Path, index_type: IndexType) -> Result<HashMap<String, (Index, IndexReader)>> {
         let mut map = HashMap::new();
 
         match base_dir.try_exists() {
@@ -86,7 +105,7 @@ impl FulltextSearcher {
                 None => continue,
             };
 
-            match Self::open_single_index(&path, &lang, is_sutta) {
+            match Self::open_single_index(&path, &lang, index_type) {
                 Ok((index, reader)) => {
                     map.insert(lang.clone(), (index, reader));
                 }
@@ -99,11 +118,11 @@ impl FulltextSearcher {
         Ok(map)
     }
 
-    fn open_single_index(dir: &Path, lang: &str, is_sutta: bool) -> Result<(Index, IndexReader)> {
-        let schema = if is_sutta {
-            build_sutta_schema(lang)
-        } else {
-            build_dict_schema(lang)
+    fn open_single_index(dir: &Path, lang: &str, index_type: IndexType) -> Result<(Index, IndexReader)> {
+        let schema = match index_type {
+            IndexType::Sutta => build_sutta_schema(lang),
+            IndexType::Dict => build_dict_schema(lang),
+            IndexType::Library => build_library_schema(lang),
         };
 
         let mmap_dir = tantivy::directory::MmapDirectory::open(dir)?;
@@ -257,7 +276,7 @@ impl FulltextSearcher {
         page_len: usize,
         page_num: usize,
     ) -> Result<(usize, Vec<SearchResult>)> {
-        self.search_indexes(query_text, filters, page_len, page_num, &self.sutta_indexes, true, true)
+        self.search_indexes(query_text, filters, page_len, page_num, &self.sutta_indexes, IndexType::Sutta, true)
     }
 
     /// Search dict_word indexes, returning (total_hits, results).
@@ -268,7 +287,23 @@ impl FulltextSearcher {
         page_len: usize,
         page_num: usize,
     ) -> Result<(usize, Vec<SearchResult>)> {
-        self.search_indexes(query_text, filters, page_len, page_num, &self.dict_indexes, false, true)
+        self.search_indexes(query_text, filters, page_len, page_num, &self.dict_indexes, IndexType::Dict, true)
+    }
+
+    /// Search library indexes, returning (total_hits, results).
+    pub fn search_library_with_count(
+        &self,
+        query_text: &str,
+        filters: &SearchFilters,
+        page_len: usize,
+        page_num: usize,
+    ) -> Result<(usize, Vec<SearchResult>)> {
+        self.search_indexes(query_text, filters, page_len, page_num, &self.library_indexes, IndexType::Library, true)
+    }
+
+    /// Check if any library indexes are available.
+    pub fn has_library_indexes(&self) -> bool {
+        !self.library_indexes.is_empty()
     }
 
     fn search_indexes(
@@ -278,7 +313,7 @@ impl FulltextSearcher {
         page_len: usize,
         page_num: usize,
         indexes: &HashMap<String, (Index, IndexReader)>,
-        is_sutta: bool,
+        index_type: IndexType,
         with_count: bool,
     ) -> Result<(usize, Vec<SearchResult>)> {
         if indexes.is_empty() {
@@ -306,7 +341,7 @@ impl FulltextSearcher {
 
         for lang in langs_to_search {
             if let Some((index, reader)) = indexes.get(lang) {
-                match self.search_single_index(query_text, filters, limit, index, reader, is_sutta, with_count) {
+                match self.search_single_index(query_text, filters, limit, index, reader, index_type, with_count) {
                     Ok((count, scored_results)) => {
                         total_hits += count;
                         all_scored.extend(scored_results);
@@ -339,7 +374,7 @@ impl FulltextSearcher {
         page_len: usize,
         index: &Index,
         reader: &IndexReader,
-        is_sutta: bool,
+        index_type: IndexType,
         with_count: bool,
     ) -> Result<(usize, Vec<(f32, SearchResult)>)> {
         let searcher = reader.searcher();
@@ -366,10 +401,10 @@ impl FulltextSearcher {
         ];
 
         // Add filter term queries
-        if is_sutta {
-            Self::add_sutta_filters(&mut subqueries, filters, &schema)?;
-        } else {
-            Self::add_dict_filters(&mut subqueries, filters, &schema)?;
+        match index_type {
+            IndexType::Sutta => Self::add_sutta_filters(&mut subqueries, filters, &schema)?,
+            IndexType::Dict => Self::add_dict_filters(&mut subqueries, filters, &schema)?,
+            IndexType::Library => {} // No additional filters for library
         }
 
         let combined_query = BooleanQuery::new(subqueries);
@@ -386,10 +421,10 @@ impl FulltextSearcher {
         for (score, doc_address) in top_docs {
             let doc: tantivy::TantivyDocument = searcher.doc(doc_address)?;
 
-            let result = if is_sutta {
-                self.sutta_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?
-            } else {
-                self.dict_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?
+            let result = match index_type {
+                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
+                IndexType::Dict => self.dict_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
+                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
             };
 
             results.push((score, result));
@@ -540,6 +575,50 @@ impl FulltextSearcher {
         })
     }
 
+    fn library_doc_to_result(
+        &self,
+        doc: &tantivy::TantivyDocument,
+        schema: &tantivy::schema::Schema,
+        score: f32,
+        query_text: &str,
+        index: &Index,
+        searcher: &tantivy::Searcher,
+        content_field: tantivy::schema::Field,
+    ) -> Result<SearchResult> {
+        let uid = Self::get_text_field(doc, schema, "spine_item_uid");
+        let title = Self::get_text_field(doc, schema, "title");
+        let book_title = Self::get_text_field(doc, schema, "book_title");
+        let author = Self::get_text_field(doc, schema, "author");
+        let language = Self::get_text_field(doc, schema, "language");
+
+        // Use book_title as source_uid for display purposes
+        let display_title = if !book_title.is_empty() && !title.is_empty() {
+            format!("{} — {}", book_title, title)
+        } else if !title.is_empty() {
+            title
+        } else {
+            book_title.clone()
+        };
+
+        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+
+        Ok(SearchResult {
+            uid,
+            schema_name: "appdata".to_string(),
+            table_name: "book_spine_items".to_string(),
+            source_uid: Some(book_title).filter(|s| !s.is_empty()),
+            title: display_title,
+            sutta_ref: None,
+            nikaya: None,
+            author: Some(author).filter(|s| !s.is_empty()),
+            lang: Some(language).filter(|s| !s.is_empty()),
+            snippet,
+            page_number: None,
+            score: Some(score),
+            rank: None,
+        })
+    }
+
     fn get_text_field(doc: &tantivy::TantivyDocument, schema: &tantivy::schema::Schema, field_name: &str) -> String {
         schema
             .get_field(field_name)
@@ -662,6 +741,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes,
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {
@@ -695,6 +775,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes,
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {
@@ -727,6 +808,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes,
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {
@@ -755,6 +837,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes,
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {
@@ -787,6 +870,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes,
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {
@@ -847,6 +931,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes,
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {
@@ -870,6 +955,7 @@ mod tests {
         let searcher = FulltextSearcher {
             sutta_indexes: HashMap::new(),
             dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
         };
 
         let filters = SearchFilters {

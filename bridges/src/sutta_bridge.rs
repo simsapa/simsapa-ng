@@ -478,7 +478,7 @@ pub mod qobject {
         fn get_book_uid_for_spine_item(self: &SuttaBridge, spine_item_uid: &QString) -> QString;
 
         #[qinvokable]
-        fn import_document(self: Pin<&mut SuttaBridge>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString);
+        fn import_document(self: Pin<&mut SuttaBridge>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, language: &QString, document_type: &QString, split_tag: &QString);
 
         #[qinvokable]
         fn rebuild_search_index(self: Pin<&mut SuttaBridge>);
@@ -493,7 +493,7 @@ pub mod qobject {
         fn get_book_metadata_json(self: &SuttaBridge, book_uid: &QString) -> QString;
 
         #[qinvokable]
-        fn update_book_metadata(self: Pin<&mut SuttaBridge>, book_uid: &QString, title: &QString, author: &QString, enable_embedded_css: bool);
+        fn update_book_metadata(self: Pin<&mut SuttaBridge>, book_uid: &QString, title: &QString, author: &QString, language: &QString, enable_embedded_css: bool);
 
         #[qinvokable]
         fn set_provider_enabled(self: Pin<&mut SuttaBridge>, provider_name: &QString, enabled: bool);
@@ -641,6 +641,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn get_sutta_language_labels(self: &SuttaBridge) -> QStringList;
+
+        #[qinvokable]
+        fn get_library_language_labels(self: &SuttaBridge) -> QStringList;
 
         #[qinvokable]
         fn get_sutta_language_filter_key(self: &SuttaBridge) -> QString;
@@ -2198,11 +2201,12 @@ impl qobject::SuttaBridge {
         }
     }
 
-    pub fn import_document(self: Pin<&mut Self>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, document_type: &QString, split_tag: &QString) {
+    pub fn import_document(self: Pin<&mut Self>, file_path: &QString, book_uid: &QString, title: &QString, author: &QString, language: &QString, document_type: &QString, split_tag: &QString) {
         let path_str = file_path.to_string();
         let uid_str = book_uid.to_string();
         let title_str = title.to_string();
         let author_str = author.to_string();
+        let language_str = language.to_string();
         let doc_type = document_type.to_string();
         let _split_tag_str = split_tag.to_string();
 
@@ -2226,6 +2230,11 @@ impl qobject::SuttaBridge {
             } else {
                 Some(author_str.as_str())
             };
+            let custom_language = if language_str.trim().is_empty() {
+                None
+            } else {
+                Some(language_str.as_str())
+            };
 
             let result = match doc_type.as_str() {
                 "epub" => {
@@ -2234,7 +2243,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author, None, None)
+                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author, custom_language, None)
                 }
                 "pdf" => {
                     let progress_msg = QString::from("Importing PDF...");
@@ -2242,7 +2251,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author, None, None)
+                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author, custom_language, None)
                 }
                 "html" => {
                     let progress_msg = QString::from("Importing HTML...");
@@ -2252,7 +2261,7 @@ impl qobject::SuttaBridge {
 
                     // TODO: Pass split_tag parameter when html_import supports it
                     // For now, HTML is imported as a single spine item
-                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author, None, None)
+                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author, custom_language, None)
                 }
                 _ => {
                     let error_msg = format!("Unknown document type: {}", doc_type);
@@ -2268,6 +2277,20 @@ impl qobject::SuttaBridge {
             match result {
                 Ok(_) => {
                     info(&format!("Successfully imported {}", &uid_str));
+
+                    // Build library index for the effective language of the imported book
+                    let effective_lang = if language_str.trim().is_empty() { "en".to_string() } else { language_str.to_lowercase() };
+                    let globals = simsapa_backend::get_app_globals();
+                    let library_index_dir = &globals.paths.library_index_dir;
+
+                    if let Err(e) = simsapa_backend::search::indexer::build_library_index(
+                        &app_data.dbm.appdata, library_index_dir, &effective_lang
+                    ) {
+                        warn(&format!("Failed to build library index for language {}: {}", effective_lang, e));
+                    }
+
+                    simsapa_backend::reinit_fulltext_searcher();
+
                     let success_msg = QString::from(format!("Successfully imported '{}'", &title_str));
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().document_import_completed(true, success_msg);
@@ -2399,6 +2422,7 @@ impl qobject::SuttaBridge {
                 let json = serde_json::json!({
                     "title": book.title,
                     "author": book.author,
+                    "language": book.language,
                     "document_type": book.document_type,
                     "enable_embedded_css": book.enable_embedded_css
                 });
@@ -2409,6 +2433,7 @@ impl qobject::SuttaBridge {
                 let json = serde_json::json!({
                     "title": "",
                     "author": "",
+                    "language": "",
                     "document_type": "",
                     "enable_embedded_css": true
                 });
@@ -2419,6 +2444,7 @@ impl qobject::SuttaBridge {
                 let json = serde_json::json!({
                     "title": "",
                     "author": "",
+                    "language": "",
                     "document_type": "",
                     "enable_embedded_css": true
                 });
@@ -2427,18 +2453,50 @@ impl qobject::SuttaBridge {
         }
     }
 
-    pub fn update_book_metadata(self: Pin<&mut Self>, book_uid: &QString, title: &QString, author: &QString, enable_embedded_css: bool) {
+    pub fn update_book_metadata(self: Pin<&mut Self>, book_uid: &QString, title: &QString, author: &QString, language: &QString, enable_embedded_css: bool) {
         let uid = book_uid.to_string();
         let title_str = title.to_string();
         let author_str = author.to_string();
+        let language_str = language.to_string();
 
         let qt_thread = self.qt_thread();
 
         thread::spawn(move || {
             let app_data = get_app_data();
 
-            match app_data.dbm.appdata.update_book_metadata(&uid, &title_str, &author_str, enable_embedded_css) {
+            // Get old language before updating
+            let old_language = match app_data.dbm.appdata.get_book_by_uid(&uid) {
+                Ok(Some(book)) => book.language.unwrap_or_default(),
+                _ => String::new(),
+            };
+
+            match app_data.dbm.appdata.update_book_metadata(&uid, &title_str, &author_str, &language_str, enable_embedded_css) {
                 Ok(_) => {
+                    // Re-index library if language changed
+                    let new_lang = if language_str.is_empty() { "en".to_string() } else { language_str.to_lowercase() };
+                    let old_lang = if old_language.is_empty() { "en".to_string() } else { old_language.to_lowercase() };
+
+                    if old_lang != new_lang {
+                        // Rebuild both old and new language indexes to reflect the change
+                        let globals = simsapa_backend::get_app_globals();
+                        let library_index_dir = &globals.paths.library_index_dir;
+
+                        if let Err(e) = simsapa_backend::search::indexer::build_library_index(
+                            &app_data.dbm.appdata, library_index_dir, &old_lang
+                        ) {
+                            warn(&format!("Failed to rebuild library index for old language {}: {}", old_lang, e));
+                        }
+
+                        if let Err(e) = simsapa_backend::search::indexer::build_library_index(
+                            &app_data.dbm.appdata, library_index_dir, &new_lang
+                        ) {
+                            warn(&format!("Failed to rebuild library index for new language {}: {}", new_lang, e));
+                        }
+
+                        // Reload the fulltext searcher
+                        simsapa_backend::reinit_fulltext_searcher();
+                    }
+
                     let success_msg = QString::from(format!("Successfully updated metadata for '{}'", &title_str));
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().book_metadata_updated(true, success_msg);
@@ -2944,6 +3002,22 @@ impl qobject::SuttaBridge {
     pub fn get_sutta_language_labels(&self) -> QStringList {
         let app_data = get_app_data();
         let languages = app_data.dbm.get_sutta_languages();
+
+        let mut res = QStringList::default();
+        for lang in languages {
+            res.append(QString::from(lang));
+        }
+        res
+    }
+
+    pub fn get_library_language_labels(&self) -> QStringList {
+        use simsapa_backend::search::indexer::get_library_languages;
+
+        let app_data = get_app_data();
+        let languages = match get_library_languages(&app_data.dbm.appdata) {
+            Ok(langs) => langs,
+            Err(_) => Vec::new(),
+        };
 
         let mut res = QStringList::default();
         for lang in languages {

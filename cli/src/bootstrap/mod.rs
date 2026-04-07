@@ -346,6 +346,20 @@ RELEASE_CHANNEL=development
             Err(e) => logger::warn(&format!("Failed to get dict_word languages: {}", e)),
         }
 
+        // Build library indexes for all available languages
+        match indexer::get_library_languages(&app_data.dbm.appdata) {
+            Ok(library_langs) => {
+                for lang in &library_langs {
+                    logger::info(&format!("Building library index for language: {}", lang));
+                    match indexer::build_library_index(&app_data.dbm.appdata, &paths.library_index_dir, lang) {
+                        Ok(_) => {}
+                        Err(e) => logger::warn(&format!("Failed to build library index for {}: {}", lang, e)),
+                    }
+                }
+            }
+            Err(e) => logger::warn(&format!("Failed to get library languages: {}", e)),
+        }
+
         // Write VERSION file before archiving
         indexer::write_version_file(&paths.index_dir)?;
 
