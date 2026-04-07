@@ -180,7 +180,7 @@ Frame {
                     } else if (root.search_area === "Library") {
                         return [
                                 /* "Combined", */
-                                /* "Fulltext Match", */
+                                "Fulltext Match",
                                 "Contains Match",
                                 "Title Match",
                         ];
