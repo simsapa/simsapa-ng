@@ -168,6 +168,16 @@ TopicIndexWindow* WindowManager::create_topic_index_window() {
 }
 
 ChantingPracticeWindow* WindowManager::create_chanting_practice_window(const QString& window_id) {
+    // Reuse existing ChantingPracticeWindow if one exists
+    for (auto w : this->chanting_practice_windows) {
+        if (w->m_root) {
+            QMetaObject::invokeMethod(w->m_root, "show");
+            QMetaObject::invokeMethod(w->m_root, "raise");
+            QMetaObject::invokeMethod(w->m_root, "requestActivate");
+            return w;
+        }
+    }
+
     ChantingPracticeWindow* w = new ChantingPracticeWindow(this->m_app, window_id);
     chanting_practice_windows.append(w);
     return w;
