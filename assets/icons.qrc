@@ -110,5 +110,6 @@
     <file>icons/32x32/fluent--play-circle-24-regular.png</file>
     <file>icons/32x32/fluent--record-24-regular.png</file>
     <file>icons/32x32/fluent--record-stop-24-regular.png</file>
+    <file>icons/32x32/system-uicons--settings.png</file>
   </qresource>
 </RCC>
