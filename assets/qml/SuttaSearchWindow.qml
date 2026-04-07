@@ -1067,6 +1067,9 @@ ${query_text}`;
                 root.focus_on_tab_with_id_key(tab_data.id_key);
                 root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
             }
+            if (tab_data.table_name === "book_spine_items" && tab_data.item_uid) {
+                toc_tab.update_for_spine_item(tab_data.item_uid);
+            }
         } else if (tab_group === "translations") {
             let tab_data = root.new_tab_data(result_data, false, focus);
             if (focus) {
@@ -1077,6 +1080,9 @@ ${query_text}`;
             if (focus) {
                 root.focus_on_tab_with_id_key(tab_data.id_key);
                 root.nav_history_push(root.build_nav_entry("tab_switch", tab_data.id_key, tab_data, 0));
+            }
+            if (tab_data.table_name === "book_spine_items" && tab_data.item_uid) {
+                toc_tab.update_for_spine_item(tab_data.item_uid);
             }
         } else {
             // "results" — use the standard function which handles first-tab logic
@@ -2143,6 +2149,11 @@ ${query_text}`;
                                         : "results";
                                     let tab_data_entry = tab_model.get(tab.index);
                                     root.nav_history_push(root.build_nav_entry("tab_switch", tab_data_entry.id_key, tab_data_entry, 0));
+
+                                    // Update TocTab if switching to a book chapter tab
+                                    if (tab_data_entry.table_name === "book_spine_items" && tab_data_entry.item_uid) {
+                                        toc_tab.update_for_spine_item(tab_data_entry.item_uid);
+                                    }
 
                                     // Tab switch completed: webview shown, tab scrolled into view
                                     logger.debug("TAB_CHECK: Tab switch completed");
