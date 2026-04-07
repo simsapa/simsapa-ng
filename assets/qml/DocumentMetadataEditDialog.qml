@@ -34,6 +34,7 @@ Dialog {
             root.document_type = metadata.document_type || "";
             title_field.text = metadata.title || "";
             author_field.text = metadata.author || "";
+            language_field.text = metadata.language || "";
             enable_embedded_css_checkbox.checked = metadata.enable_embedded_css !== false;
             status_label.text = "";
         } catch (e) {
@@ -47,6 +48,7 @@ Dialog {
         document_type = "";
         title_field.text = "";
         author_field.text = "";
+        language_field.text = "";
         enable_embedded_css_checkbox.checked = true;
         is_saving = false;
         progress_bar.visible = false;
@@ -88,6 +90,23 @@ Dialog {
                 id: author_field
                 Layout.fillWidth: true
                 placeholderText: "Author name (optional)"
+            }
+        }
+
+        // Language field
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Label {
+                text: "Language:"
+                Layout.preferredWidth: 80
+            }
+
+            TextField {
+                id: language_field
+                Layout.fillWidth: true
+                placeholderText: "en"
             }
         }
 
@@ -147,6 +166,7 @@ Dialog {
                         root.book_uid,
                         title_field.text.trim(),
                         author_field.text.trim(),
+                        language_field.text.trim(),
                         enable_embedded_css_checkbox.checked
                     );
                 }

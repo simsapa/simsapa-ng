@@ -28,6 +28,7 @@ Dialog {
         document_type = "";
         title_field.text = "";
         author_field.text = "";
+        language_field.text = "en";
         uid_field.text = "";
         split_chapters_checkbox.checked = false;
         split_tag_dropdown.currentIndex = 0;
@@ -189,6 +190,24 @@ Dialog {
             }
         }
 
+        // Language field
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 10
+
+            Label {
+                text: "Language:"
+                Layout.preferredWidth: 80
+            }
+
+            TextField {
+                id: language_field
+                Layout.fillWidth: true
+                placeholderText: "e.g. en, it, pli, etc."
+                text: "en"
+            }
+        }
+
         // UID field
         RowLayout {
             Layout.fillWidth: true
@@ -306,6 +325,7 @@ Dialog {
                         uid_field.text,
                         title_field.text,
                         author_field.text,
+                        language_field.text.trim(),
                         root.document_type,
                         split_tag
                     );

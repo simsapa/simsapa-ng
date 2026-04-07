@@ -49,23 +49,35 @@ Frame {
         border.width: 0
     }
 
-    Component.onCompleted: {
-        // Load language labels from database for Suttas
-        const lang_labels = SuttaBridge.get_sutta_language_labels();
+    function load_language_labels_for_area(area: string) {
+        let lang_labels;
+        if (area === "Suttas") {
+            lang_labels = SuttaBridge.get_sutta_language_labels();
+        } else if (area === "Library") {
+            lang_labels = SuttaBridge.get_library_language_labels();
+        } else {
+            // Dictionary: language filter not used
+            lang_labels = [];
+        }
         language_filter_dropdown.model = ["Language"].concat(lang_labels);
+        language_filter_dropdown.currentIndex = 0;
+    }
 
-        // Load saved language filter key and find its index
+    Component.onCompleted: {
+        load_language_labels_for_area(search_area);
+
+        // Restore saved language filter key
         const saved_key = SuttaBridge.get_sutta_language_filter_key();
         if (saved_key) {
             const saved_index = language_filter_dropdown.model.indexOf(saved_key);
             if (saved_index !== -1) {
                 language_filter_dropdown.currentIndex = saved_index;
-            } else {
-                language_filter_dropdown.currentIndex = 0;
             }
-        } else {
-            language_filter_dropdown.currentIndex = 0;
         }
+    }
+
+    onSearch_areaChanged: {
+        load_language_labels_for_area(search_area);
     }
 
     function user_typed() {
@@ -180,7 +192,7 @@ Frame {
                     } else if (root.search_area === "Library") {
                         return [
                                 /* "Combined", */
-                                /* "Fulltext Match", */
+                                "Fulltext Match",
                                 "Contains Match",
                                 "Title Match",
                         ];

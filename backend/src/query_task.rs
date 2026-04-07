@@ -1734,9 +1734,7 @@ impl<'a> SearchQueryTask<'a> {
                         self.fulltext_dict_words(page_num)
                     }
                     SearchArea::Library => {
-                        // Fulltext Match not supported for library
-                        self.db_query_hits_count = 0;
-                        Ok(Vec::new())
+                        self.fulltext_library(page_num)
                     }
                 }
             }
@@ -1848,6 +1846,48 @@ impl<'a> SearchQueryTask<'a> {
                 return Ok((0, Vec::new()));
             }
             searcher.search_dict_words_with_count(&query_text, &filters, page_len, page_num)
+        }) {
+            Some(Ok((total, results))) => {
+                self.db_query_hits_count = total as i64;
+                Ok(results)
+            }
+            Some(Err(e)) => Err(e.into()),
+            None => {
+                warn("Fulltext searcher not initialized. Indexes may not exist.");
+                self.db_query_hits_count = 0;
+                Ok(Vec::new())
+            }
+        }
+    }
+
+    fn fulltext_library(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::with_fulltext_searcher;
+        use crate::search::searcher::SearchFilters;
+
+        let filters = SearchFilters {
+            lang: if !self.lang.is_empty() && self.lang != "Language" {
+                Some(self.lang.clone())
+            } else {
+                None
+            },
+            lang_include: self.lang_include,
+            source_uid: None,
+            source_include: false,
+            nikaya: None,
+            sutta_ref: None,
+            include_mula: true,
+            include_commentary: true,
+        };
+
+        let query_text = self.query_text.clone();
+        let page_len = self.page_len;
+
+        match with_fulltext_searcher(|searcher| {
+            if !searcher.has_library_indexes() {
+                warn("No library fulltext indexes available.");
+                return Ok((0, Vec::new()));
+            }
+            searcher.search_library_with_count(&query_text, &filters, page_len, page_num)
         }) {
             Some(Ok((total, results))) => {
                 self.db_query_hits_count = total as i64;

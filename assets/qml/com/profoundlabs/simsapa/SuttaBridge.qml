@@ -252,7 +252,7 @@ Item {
         return '{"title": "", "author": ""}';
     }
 
-    function update_book_metadata(book_uid: string, title: string, author: string, enable_embedded_css: bool) {
+    function update_book_metadata(book_uid: string, title: string, author: string, language: string, enable_embedded_css: bool) {
         // Simulate async behavior
         Qt.callLater(function() {
             bookMetadataUpdated(true, "Metadata updated successfully");
@@ -265,6 +265,9 @@ Item {
 
     function extract_document_metadata(file_path: string): string {
         return '{"title": "", "author": ""}';
+    }
+
+    function import_document(file_path: string, book_uid: string, title: string, author: string, language: string, document_type: string, split_tag: string) {
     }
 
     function copy_content_uri_to_temp(content_uri: string): string {
@@ -679,6 +682,10 @@ Item {
 
     function get_sutta_language_labels(): list<string> {
         return ["en", "pli", "de"];
+    }
+
+    function get_library_language_labels(): list<string> {
+        return ["en"];
     }
 
     function get_sutta_language_labels_with_counts(): list<string> {
