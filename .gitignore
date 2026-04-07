@@ -30,6 +30,7 @@ redist/
 appimage-tools/
 Simsapa.AppDir/
 
+.opencode/
 .qtcreator/
 
 pali-stemmer-in-snowball

@@ -511,7 +511,10 @@ Item {
             // Record button — only for new/user recordings (6.4)
             Button {
                 id: record_button
-                text: root.is_recording ? "⏹ Stop" : "⏺ Record"
+                icon.source: root.is_recording ? "icons/32x32/fluent--record-stop-24-regular.png" : "icons/32x32/fluent--record-24-regular.png"
+                icon.width: 16
+                icon.height: 16
+                text: root.is_recording ? "Stop" : "Record"
                 visible: root.is_new_recording || root.recording_type === "user"
                 enabled: player.playbackState !== MediaPlayer.PlayingState
                 onClicked: {
@@ -525,7 +528,9 @@ Item {
 
             // Play/Pause button
             Button {
-                text: player.playbackState === MediaPlayer.PlayingState ? "⏸" : "▶"
+                icon.source: player.playbackState === MediaPlayer.PlayingState ? "icons/32x32/fluent--pause-circle-24-regular.png" : "icons/32x32/fluent--play-circle-24-regular.png"
+                icon.width: 20
+                icon.height: 20
                 enabled: !root.is_recording && root.file_path !== "" && !root.file_not_found
                 implicitWidth: 40
                 onClicked: {
@@ -547,7 +552,9 @@ Item {
 
             // Stop button
             Button {
-                text: "⏹"
+                icon.source: "icons/32x32/fluent--record-stop-24-regular.png"
+                icon.width: 20
+                icon.height: 20
                 enabled: !root.is_recording && player.playbackState !== MediaPlayer.StoppedState
                 implicitWidth: 40
                 onClicked: {
@@ -999,10 +1006,11 @@ Item {
                                 ? (player.playbackState === MediaPlayer.PlayingState && root.active_range_id === "")
                                 : marker_row.is_active_range && player.playbackState === MediaPlayer.PlayingState
 
-                            text: is_playing_this ? "⏸" : "▶"
+                            icon.source: is_playing_this ? "icons/32x32/fluent--pause-circle-24-regular.png" : "icons/32x32/fluent--play-circle-24-regular.png"
+                            icon.width: 16
+                            icon.height: 16
                             implicitWidth: 32
                             implicitHeight: 28
-                            font.pointSize: 10
                             flat: true
                             onClicked: {
                                 if (marker_row.marker === null) return;

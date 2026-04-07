@@ -151,10 +151,10 @@ ColumnLayout {
                     }
 
                     // Expand/collapse indicator
-                    Label {
-                        text: root.is_expanded ? "▼" : "▶"
-                        font.pointSize: 9
-                        color: palette.text
+                    Image {
+                        source: root.is_expanded ? "icons/32x32/fe--drop-down.png" : "icons/32x32/fe--drop-right.png"
+                        sourceSize.width: 20
+                        sourceSize.height: 20
                     }
 
                     // Folder name

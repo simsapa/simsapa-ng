@@ -187,10 +187,10 @@ ColumnLayout {
                         spacing: 10
 
                     // Expand/collapse indicator
-                    Label {
-                        text: book_item_wrapper.is_expanded ? "▼" : "▶"
-                        font.pointSize: root.pointSize - 2
-                        color: palette.text
+                    Image {
+                        source: book_item_wrapper.is_expanded ? "icons/32x32/fe--drop-down.png" : "icons/32x32/fe--drop-right.png"
+                        sourceSize.width: 20
+                        sourceSize.height: 20
                     }
 
                     // Document type badge

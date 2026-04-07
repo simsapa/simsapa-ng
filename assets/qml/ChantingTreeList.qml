@@ -238,10 +238,11 @@ ColumnLayout {
                             }
                         }
 
-                        Label {
-                            text: collection_item.is_expanded ? "▼" : "▶"
-                            font.pointSize: root.pointSize - 2
-                            color: palette.text
+                        // Expand/collapse indicator
+                        Image {
+                            source: collection_item.is_expanded ? "icons/32x32/fe--drop-down.png" : "icons/32x32/fe--drop-right.png"
+                            sourceSize.width: 20
+                            sourceSize.height: 20
                         }
 
                         Rectangle {
@@ -332,10 +333,11 @@ ColumnLayout {
                                         }
                                     }
 
-                                    Label {
-                                        text: chant_item.is_expanded ? "▼" : "▶"
-                                        font.pointSize: root.pointSize - 3
-                                        color: palette.text
+                                    // Expand/collapse indicator
+                                    Image {
+                                        source: chant_item.is_expanded ? "icons/32x32/fe--drop-down.png" : "icons/32x32/fe--drop-right.png"
+                                        sourceSize.width: 20
+                                        sourceSize.height: 20
                                     }
 
                                     Rectangle {
