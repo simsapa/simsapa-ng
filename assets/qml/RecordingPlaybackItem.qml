@@ -226,6 +226,13 @@ Item {
                     root.finalize_recording();
                 }
             }
+
+            onErrorOccurred: function(error, errorString) {
+                root.is_recording = false;
+                root.pending_recording_stop = false;
+                root.error_message = "Recording error: " + errorString;
+                console.log("MediaRecorder error:", error, errorString);
+            }
         }
     }
 
@@ -1388,7 +1395,7 @@ Item {
     // Tracks whether we're waiting for the async permission result
     property bool permission_requested: false
 
-    // Android runtime permission check (6.5)
+    // Runtime microphone permission check
     function check_microphone_permission(): bool {
         let status = permission_manager.check_microphone_permission();
         if (status === "granted") {
@@ -1400,12 +1407,26 @@ Item {
             root.error_message = "Microphone permission requested. Please grant it and tap Record again.";
             return false;
         }
-        root.error_message = "Microphone permission denied. Please enable it in Android Settings > Apps > Simsapa > Permissions.";
+        if (status === "undetermined" && root.permission_requested) {
+            // Permission dialog was shown but result not yet received; ask user to try again.
+            root.error_message = "Waiting for microphone permission. Please grant it and tap Record again.";
+            return false;
+        }
+        // Permission denied
+        if (Qt.platform.os === "osx") {
+            root.error_message = "Microphone access denied. Enable it in System Settings > Privacy & Security > Microphone.";
+        } else {
+            root.error_message = "Microphone permission denied. Please enable it in Android Settings > Apps > Simsapa > Permissions.";
+        }
         return false;
     }
 
     function start_recording() {
-        if (!check_microphone_permission()) {
+        // On macOS, skip the explicit Qt permission check. The OS triggers the
+        // TCC dialog automatically when CaptureSession accesses the hardware.
+        // Qt's QMicrophonePermission API does not reliably reflect TCC state
+        // for unsigned/ad-hoc signed apps. Failures are caught by onErrorOccurred.
+        if (Qt.platform.os !== "osx" && !check_microphone_permission()) {
             return;
         }
 

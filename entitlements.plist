@@ -31,7 +31,7 @@
     
     <!-- Device info access (if needed) -->
     <key>com.apple.security.device.audio-input</key>
-    <false/>
+    <true/>
     
     <key>com.apple.security.device.camera</key>
     <false/>

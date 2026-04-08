@@ -223,6 +223,22 @@ elseif (APPLE)
 
     qt_add_executable(simsapadhammareader MACOSX_BUNDLE ${app_files} ${app_icon_macos})
 
+    set_target_properties(simsapadhammareader PROPERTIES
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.profoundlabs.simsapa"
+    )
+
+    # Patch NSMicrophoneUsageDescription into the CMake-generated Info.plist
+    # after build. Required for macOS to show the microphone permission dialog.
+    add_custom_command(TARGET simsapadhammareader POST_BUILD
+        COMMAND /usr/libexec/PlistBuddy
+            -c "Add :NSMicrophoneUsageDescription string 'Simsapa needs microphone access for voice recording features.'"
+            "$<TARGET_BUNDLE_CONTENT_DIR:simsapadhammareader>/Info.plist"
+            || /usr/libexec/PlistBuddy
+            -c "Set :NSMicrophoneUsageDescription 'Simsapa needs microphone access for voice recording features.'"
+            "$<TARGET_BUNDLE_CONTENT_DIR:simsapadhammareader>/Info.plist"
+        VERBATIM
+    )
+
 elseif (ANDROID)
     list(APPEND android_files
         android/AndroidManifest.xml
@@ -276,3 +292,11 @@ endif()
 
 # If we are using a statically linked Qt then we need to import any qml plugins
 qt_import_qml_plugins(simsapadhammareader)
+
+# On macOS, explicitly import the Darwin permission plugins for static Qt builds.
+# Without this, QMicrophonePermission always returns Undetermined on static builds.
+if (APPLE AND NOT IOS)
+    qt_import_plugins(simsapadhammareader
+        INCLUDE Qt6::QDarwinMicrophonePermissionPlugin
+    )
+endif()

@@ -191,6 +191,14 @@ update_info_plist() {
     /usr/libexec/PlistBuddy -c "Set :NSHighResolutionCapable true" "$info_plist" 2>/dev/null || \
         /usr/libexec/PlistBuddy -c "Add :NSHighResolutionCapable bool true" "$info_plist"
 
+    # Ensure icon file is set (macdeployqt can clear this)
+    /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile simsapa.icns" "$info_plist" 2>/dev/null || \
+        /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string simsapa.icns" "$info_plist"
+
+    # Ensure microphone usage description is present for macOS permission dialog
+    /usr/libexec/PlistBuddy -c "Set :NSMicrophoneUsageDescription 'Simsapa needs microphone access for voice recording features.'" "$info_plist" 2>/dev/null || \
+        /usr/libexec/PlistBuddy -c "Add :NSMicrophoneUsageDescription string 'Simsapa needs microphone access for voice recording features.'" "$info_plist"
+
     print_status "Info.plist updated successfully"
 }
 
