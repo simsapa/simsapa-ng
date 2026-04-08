@@ -771,7 +771,7 @@ impl<'a> SearchQueryTask<'a> {
         page_num: usize,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         info(&format!("suttas_contains_match_fts5(): page_num: {}", page_num));
-        info(&format!("query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+        info(&format!("query_text: {}, lang filter: {}, include_ms_mula: {}, include_cst_mula: {}, include_cst_commentary: {}", &self.query_text, &self.lang, self.include_ms_mula, self.include_cst_mula, self.include_cst_commentary));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -808,6 +808,8 @@ impl<'a> SearchQueryTask<'a> {
         if !self.include_ms_mula {
             extra_where.push_str(" AND NOT (f.source_uid = 'ms')");
         }
+
+        info(&format!("extra_where: {}", extra_where));
 
         // --- Count Total Hits ---
         let count_sql = if apply_lang_filter {

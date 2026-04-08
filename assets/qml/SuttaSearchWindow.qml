@@ -1905,17 +1905,40 @@ ${query_text}`;
         property string search_title: ""
 
         onAccepted: {
-            // Set search mode to Contains Match and search with the title
-            search_bar_input.search_area = "Suttas";
-            let mode_model = search_bar_input.search_mode_dropdown.model;
-            for (let i = 0; i < mode_model.length; i++) {
-                if (mode_model[i] === "Contains Match") {
-                    search_bar_input.search_mode_dropdown.currentIndex = i;
-                    break;
-                }
+            // Do NOT touch search_bar_input.search_area or search_input.text here.
+            // Changing search_area triggers onSearch_areaChanged → load_language_labels_for_area
+            // → language_filter_dropdown.currentIndex = 0 → onCurrentIndexChanged
+            // → handle_query with old text and wrong UI params. That async search
+            // can complete after ours and overwrite the results with MS Mūla records.
+            //
+            // Build params from scratch: pli language, CST Commentary enabled,
+            // MS Mūla and CST Mūla disabled.
+            let params = {
+                mode: "Contains Match",
+                page_len: 10,
+                lang: "pli",
+                lang_include: true,
+                source: null,
+                source_include: true,
+                enable_regex: false,
+                fuzzy_distance: 0,
+                include_cst_mula: false,
+                include_cst_commentary: true,
+                nikaya_prefix: null,
+                uid_prefix: null,
+                include_ms_mula: false,
+            };
+
+            if (!show_sidebar_btn.checked) {
+                show_sidebar_btn.checked = true;
             }
-            search_bar_input.search_input.text = related_sutta_not_found_dialog.search_title;
-            root.handle_query(related_sutta_not_found_dialog.search_title, 1);
+            rightside_tabs.setCurrentIndex(0);
+
+            root.start_search_query_workers(
+                related_sutta_not_found_dialog.search_title,
+                "Suttas",
+                params,
+            );
         }
 
         ColumnLayout {
@@ -1923,7 +1946,7 @@ ${query_text}`;
             width: parent.width
 
             Label {
-                text: "The sutta couldn't be found by its uid. Mapping the SuttaCentral sutta references to the correct sections in the CST files is work-in-progress.\n\nSearch with the title to find the un-mapped CST xml file?"
+                text: "The sutta couldn't be found by its uid. Mapping the SuttaCentral sutta references to the correct sections in the CST files is work-in-progress.\n\nSearch with the title to find the un-mapped CST xml file?\n\nThis will run a Contains Match query with Mūla texts disabled."
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
