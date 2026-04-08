@@ -9,10 +9,12 @@ pub struct SearchFilters {
     pub lang_include: bool,
     pub source_uid: Option<String>,
     pub source_include: bool,
-    pub nikaya: Option<String>,
+    pub nikaya_prefix: Option<String>,
+    pub uid_prefix: Option<String>,
     pub sutta_ref: Option<String>,
-    pub include_mula: bool,
-    pub include_commentary: bool,
+    pub include_cst_mula: bool,
+    pub include_cst_commentary: bool,
+    pub include_ms_mula: bool,
 }
 
 impl Default for SearchFilters {
@@ -22,10 +24,12 @@ impl Default for SearchFilters {
             lang_include: false,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         }
     }
 }

@@ -43,10 +43,12 @@ fn test_fulltext_search_so_ce_evam_vadeyya() {
         lang_include: true,
         source_uid: Some("ms".to_string()),
         source_include: true,
-        nikaya: None,
+        nikaya_prefix: None,
+        uid_prefix: None,
         sutta_ref: None,
-        include_mula: true,
-        include_commentary: true,
+        include_cst_mula: true,
+        include_cst_commentary: true,
+        include_ms_mula: true,
     };
 
     let query = r#""so ce" evaṁ vadeyya"#;

@@ -14,6 +14,8 @@ CREATE VIRTUAL TABLE suttas_fts USING fts5(
     sutta_id UNINDEXED,  -- Store the reference to original table, but don't index it
     language UNINDEXED,  -- Store language for filtering, but don't index for search
     source_uid UNINDEXED,  -- Store source_uid for filtering, but don't index for search
+    nikaya UNINDEXED,    -- Store nikaya for prefix filtering, but don't index for search
+    uid UNINDEXED,       -- Store uid for prefix filtering, but don't index for search
     content_plain,       -- The field we want to search
     tokenize='trigram', -- Use trigram tokenizer for substring search
     detail='none'       -- Reduce index size
@@ -21,8 +23,8 @@ CREATE VIRTUAL TABLE suttas_fts USING fts5(
 
 -- Populate the FTS table with existing data
 -- Only insert rows where content_plain is not NULL
-INSERT INTO suttas_fts (sutta_id, language, source_uid, content_plain)
-SELECT id, language, source_uid, content_plain
+INSERT INTO suttas_fts (sutta_id, language, source_uid, nikaya, uid, content_plain)
+SELECT id, language, source_uid, nikaya, uid, content_plain
 FROM suttas
 WHERE content_plain IS NOT NULL;
 
@@ -33,8 +35,8 @@ CREATE TRIGGER suttas_fts_insert
 AFTER INSERT ON suttas
 WHEN NEW.content_plain IS NOT NULL
 BEGIN
-    INSERT INTO suttas_fts (sutta_id, language, source_uid, content_plain)
-    VALUES (NEW.id, NEW.language, NEW.source_uid, NEW.content_plain);
+    INSERT INTO suttas_fts (sutta_id, language, source_uid, nikaya, uid, content_plain)
+    VALUES (NEW.id, NEW.language, NEW.source_uid, NEW.nikaya, NEW.uid, NEW.content_plain);
 END;
 
 -- Trigger for UPDATE operations
@@ -45,8 +47,8 @@ BEGIN
     DELETE FROM suttas_fts WHERE sutta_id = OLD.id;
 
     -- Insert new entry if content_plain is not NULL
-    INSERT INTO suttas_fts (sutta_id, language, source_uid, content_plain)
-    SELECT NEW.id, NEW.language, NEW.source_uid, NEW.content_plain
+    INSERT INTO suttas_fts (sutta_id, language, source_uid, nikaya, uid, content_plain)
+    SELECT NEW.id, NEW.language, NEW.source_uid, NEW.nikaya, NEW.uid, NEW.content_plain
     WHERE NEW.content_plain IS NOT NULL;
 END;
 

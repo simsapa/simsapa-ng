@@ -94,6 +94,9 @@ pub struct SearchParams {
     pub fuzzy_distance: i32,
     pub include_cst_mula: bool,
     pub include_cst_commentary: bool,
+    pub nikaya_prefix: Option<String>,
+    pub uid_prefix: Option<String>,
+    pub include_ms_mula: bool,
 }
 
 impl Default for SearchParams {
@@ -109,6 +112,9 @@ impl Default for SearchParams {
             fuzzy_distance: 0,
             include_cst_mula: true,
             include_cst_commentary: true,
+            nikaya_prefix: None,
+            uid_prefix: None,
+            include_ms_mula: true,
         }
     }
 }

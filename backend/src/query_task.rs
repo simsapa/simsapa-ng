@@ -22,6 +22,21 @@ struct CountResult {
     count: i64,
 }
 
+/// Sanitize a user-supplied prefix for direct embedding in a SQL LIKE pattern.
+/// Returns `Some(prefix_lowercase)` if the input is non-empty and contains only
+/// safe characters (alphanumeric, dot, hyphen, underscore, slash); otherwise `None`.
+fn sanitize_uid_like_prefix(input: Option<&str>) -> Option<String> {
+    let s = input?.trim();
+    if s.is_empty() {
+        return None;
+    }
+    if s.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '-' | '_' | '/')) {
+        Some(s.to_lowercase())
+    } else {
+        None
+    }
+}
+
 pub struct SearchQueryTask<'a> {
     pub dbm: &'a DbManager,
     pub query_text: String,
@@ -34,6 +49,9 @@ pub struct SearchQueryTask<'a> {
     pub source_include: bool,
     pub include_cst_mula: bool,
     pub include_cst_commentary: bool,
+    pub nikaya_prefix: Option<String>,
+    pub uid_prefix: Option<String>,
+    pub include_ms_mula: bool,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -77,6 +95,9 @@ impl<'a> SearchQueryTask<'a> {
             source_include: params.source_include,
             include_cst_mula: params.include_cst_mula,
             include_cst_commentary: params.include_cst_commentary,
+            nikaya_prefix: params.nikaya_prefix,
+            uid_prefix: params.uid_prefix,
+            include_ms_mula: params.include_ms_mula,
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }
@@ -676,6 +697,26 @@ impl<'a> SearchQueryTask<'a> {
             );
         }
 
+        // --- Nikaya prefix filtering ---
+        if let Some(prefix) = sanitize_uid_like_prefix(self.nikaya_prefix.as_deref()) {
+            let nikaya_pattern = format!("{}%", prefix);
+            query = query.filter(nikaya.like(nikaya_pattern.clone()));
+            count_query = count_query.filter(nikaya.like(nikaya_pattern));
+        }
+
+        // --- UID prefix filtering ---
+        if let Some(prefix) = sanitize_uid_like_prefix(self.uid_prefix.as_deref()) {
+            let uid_pattern = format!("{}%", prefix);
+            query = query.filter(uid.like(uid_pattern.clone()));
+            count_query = count_query.filter(uid.like(uid_pattern));
+        }
+
+        // --- MS Mūla Filtering ---
+        if !self.include_ms_mula {
+            query = query.filter(diesel::dsl::not(source_uid.eq("ms")));
+            count_query = count_query.filter(diesel::dsl::not(source_uid.eq("ms")));
+        }
+
         // --- Term Filtering ---
         let terms: Vec<&str> = if self.query_text.contains(" AND ") {
             self.query_text.split(" AND ").map(|s| s.trim()).collect()
@@ -754,6 +795,18 @@ impl<'a> SearchQueryTask<'a> {
             extra_where.push_str(
                 " AND NOT (s.uid LIKE '%.att%/%' OR s.uid LIKE '%.tik%/%')"
             );
+        }
+
+        if let Some(prefix) = sanitize_uid_like_prefix(self.nikaya_prefix.as_deref()) {
+            extra_where.push_str(&format!(" AND f.nikaya LIKE '{}%'", prefix));
+        }
+
+        if let Some(prefix) = sanitize_uid_like_prefix(self.uid_prefix.as_deref()) {
+            extra_where.push_str(&format!(" AND f.uid LIKE '{}%'", prefix));
+        }
+
+        if !self.include_ms_mula {
+            extra_where.push_str(" AND NOT (f.source_uid = 'ms')");
         }
 
         // --- Count Total Hits ---
@@ -1341,6 +1394,26 @@ impl<'a> SearchQueryTask<'a> {
             );
         }
 
+        // --- Nikaya prefix filtering ---
+        if let Some(prefix) = sanitize_uid_like_prefix(self.nikaya_prefix.as_deref()) {
+            let nikaya_pattern = format!("{}%", prefix);
+            query = query.filter(nikaya.like(nikaya_pattern.clone()));
+            count_query = count_query.filter(nikaya.like(nikaya_pattern));
+        }
+
+        // --- UID prefix filtering ---
+        if let Some(prefix) = sanitize_uid_like_prefix(self.uid_prefix.as_deref()) {
+            let uid_pattern = format!("{}%", prefix);
+            query = query.filter(uid.like(uid_pattern.clone()));
+            count_query = count_query.filter(uid.like(uid_pattern));
+        }
+
+        // --- MS Mūla Filtering ---
+        if !self.include_ms_mula {
+            query = query.filter(diesel::dsl::not(source_uid.eq("ms")));
+            count_query = count_query.filter(diesel::dsl::not(source_uid.eq("ms")));
+        }
+
         // Count total hits
         self.db_query_hits_count = count_query.count().get_result::<i64>(db_conn)?;
         info(&format!("db_query_hits_count: {}", self.db_query_hits_count));
@@ -1789,10 +1862,12 @@ impl<'a> SearchQueryTask<'a> {
             lang_include: self.lang_include,
             source_uid: self.source.clone(),
             source_include: self.source_include,
-            nikaya: None,
+            nikaya_prefix: self.nikaya_prefix.clone(),
+            uid_prefix: self.uid_prefix.clone(),
             sutta_ref: None,
-            include_mula: self.include_cst_mula,
-            include_commentary: self.include_cst_commentary,
+            include_cst_mula: self.include_cst_mula,
+            include_cst_commentary: self.include_cst_commentary,
+            include_ms_mula: self.include_ms_mula,
         };
 
         let query_text = self.query_text.clone();
@@ -1831,10 +1906,12 @@ impl<'a> SearchQueryTask<'a> {
             lang_include: self.lang_include,
             source_uid: self.source.clone(),
             source_include: self.source_include,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         let query_text = self.query_text.clone();
@@ -1873,10 +1950,12 @@ impl<'a> SearchQueryTask<'a> {
             lang_include: self.lang_include,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         let query_text = self.query_text.clone();

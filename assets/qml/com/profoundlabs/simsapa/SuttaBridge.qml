@@ -608,6 +608,14 @@ Item {
         console.log("set_include_cst_mula_in_translations():", enabled);
     }
 
+    function get_include_ms_mula_in_search_results(): bool {
+        return true;
+    }
+
+    function set_include_ms_mula_in_search_results(enabled: bool) {
+        console.log("set_include_ms_mula_in_search_results():", enabled);
+    }
+
     function get_open_find_in_sutta_results(): bool {
         return true;
     }

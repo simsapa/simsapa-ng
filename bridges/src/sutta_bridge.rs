@@ -628,6 +628,12 @@ pub mod qobject {
         fn set_include_cst_mula_in_translations(self: Pin<&mut SuttaBridge>, enabled: bool);
 
         #[qinvokable]
+        fn get_include_ms_mula_in_search_results(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_ms_mula_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
         fn get_open_find_in_sutta_results(self: &SuttaBridge) -> bool;
 
         #[qinvokable]
@@ -996,6 +1002,9 @@ impl qobject::SuttaBridge {
                     fuzzy_distance: 0,
                     include_cst_mula: true,
                     include_cst_commentary: true,
+                    nikaya_prefix: None,
+                    uid_prefix: None,
+                    include_ms_mula: true,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1440,10 +1449,12 @@ impl qobject::SuttaBridge {
                 lang_include: params.lang_include,
                 source_uid: params.source.clone(),
                 source_include: params.source_include,
-                nikaya: None,
+                nikaya_prefix: params.nikaya_prefix.clone(),
+                uid_prefix: params.uid_prefix.clone(),
                 sutta_ref: None,
-                include_mula: true,
-                include_commentary: true,
+                include_cst_mula: true,
+                include_cst_commentary: true,
+                include_ms_mula: params.include_ms_mula,
             };
 
             let result = with_fulltext_searcher(|searcher| {
@@ -2976,6 +2987,16 @@ impl qobject::SuttaBridge {
     pub fn set_include_cst_mula_in_translations(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_include_cst_mula_in_translations(enabled);
+    }
+
+    pub fn get_include_ms_mula_in_search_results(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_ms_mula_in_search_results()
+    }
+
+    pub fn set_include_ms_mula_in_search_results(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_ms_mula_in_search_results(enabled);
     }
 
     pub fn get_open_find_in_sutta_results(&self) -> bool {
