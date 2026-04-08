@@ -158,62 +158,82 @@ Item {
             Label {
                 id: badge_label
                 anchors.centerIn: parent
-                text: root.item_data.tab_group ? root.item_data.tab_group.toUpperCase() : ""
+                text: root.item_data.tab_group ? root.item_data.tab_group[0].toUpperCase() : ""
                 font.pointSize: 8
                 font.bold: true
                 color: "white"
             }
         }
 
-        // Item info
-        ColumnLayout {
+        // Flow: title and buttons share a row when wide, buttons wrap when narrow
+        Flow {
+            id: info_flow
             Layout.fillWidth: true
-            spacing: 1
+            spacing: 4
 
-            Label {
-                text: root.item_data.title || root.item_data.item_uid
-                font.pointSize: 10
-                font.bold: root.is_dragging
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+            // Width available after the fixed left elements
+            readonly property int buttons_width: buttons_row.implicitWidth
+            readonly property bool single_row: info_flow.width >= (100 + buttons_width + spacing)
+
+            // Title info — takes remaining width when buttons fit alongside, else full width
+            ColumnLayout {
+                width: info_flow.single_row
+                       ? info_flow.width - info_flow.buttons_width - info_flow.spacing
+                       : info_flow.width
+                spacing: 1
+
+                Label {
+                    text: root.item_data.title || root.item_data.item_uid
+                    font.pointSize: 10
+                    font.bold: root.is_dragging
+                    elide: Text.ElideRight
+                    width: parent.width
+                }
+
+                Label {
+                    visible: root.item_data.title && root.item_data.title.length > 0
+                    text: root.item_data.item_uid
+                    font.pointSize: 8
+                    color: palette.mid
+                    elide: Text.ElideRight
+                    width: parent.width
+                }
             }
 
-            Label {
-                visible: root.item_data.title && root.item_data.title.length > 0
-                text: root.item_data.item_uid
-                font.pointSize: 8
-                color: palette.mid
-                elide: Text.ElideRight
-                Layout.fillWidth: true
+            Row {
+                id: buttons_row
+                spacing: 4
+
+                Button {
+                    id: open_btn
+                    text: "Open"
+                    font.pointSize: 9
+                    padding: 4
+                    onClicked: root.open_clicked(root.item_data)
+                }
+
+                Button {
+                    id: edit_btn
+                    icon.source: "icons/32x32/fa_pen-to-square-solid.png"
+                    icon.width: 12
+                    icon.height: 12
+                    padding: 4
+                    implicitWidth: implicitHeight
+                    flat: true
+                    onClicked: root.edit_clicked(root.item_data)
+                }
+
+                Button {
+                    id: delete_btn
+                    icon.source: "icons/32x32/ion--trash-outline.png"
+                    icon.width: 12
+                    icon.height: 12
+                    padding: 4
+                    implicitWidth: implicitHeight
+                    flat: true
+                    onClicked: root.delete_clicked(root.item_data.id)
+                }
             }
-        }
-
-        // Open button
-        Button {
-            text: "Open"
-            font.pointSize: 9
-            padding: 4
-            onClicked: root.open_clicked(root.item_data)
-        }
-
-        // Edit button
-        Button {
-            icon.source: "icons/32x32/fa_pen-to-square-solid.png"
-            icon.width: 12
-            icon.height: 12
-            padding: 4
-            flat: true
-            onClicked: root.edit_clicked(root.item_data)
-        }
-
-        // Delete button
-        Button {
-            icon.source: "icons/32x32/ion--trash-outline.png"
-            icon.width: 12
-            icon.height: 12
-            padding: 4
-            flat: true
-            onClicked: root.delete_clicked(root.item_data.id)
         }
     }
 }

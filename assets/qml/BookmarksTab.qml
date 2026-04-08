@@ -158,6 +158,7 @@ ColumnLayout {
                     required property int index
 
                     width: parent ? parent.width : 200
+                    Layout.fillWidth: true
                     padding: 3
 
                     contentItem: RowLayout {
@@ -194,7 +195,7 @@ ColumnLayout {
                                 anchors.centerIn: parent
                                 text: {
                                     let tg = open_item_delegate.modelData.tab_group || "";
-                                    return tg.toUpperCase();
+                                    return tg.length > 0 ? tg[0].toUpperCase() : "";
                                 }
                                 font.pointSize: 7
                                 font.bold: true
@@ -203,11 +204,25 @@ ColumnLayout {
                         }
 
                         // Item info
-                        Label {
-                            text: open_item_delegate.modelData.title || open_item_delegate.modelData.item_uid
-                            font.pointSize: 9
-                            elide: Text.ElideRight
+                        ColumnLayout {
                             Layout.fillWidth: true
+                            spacing: 1
+
+                            Label {
+                                text: open_item_delegate.modelData.title || open_item_delegate.modelData.item_uid
+                                font.pointSize: 9
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            Label {
+                                visible: open_item_delegate.modelData.title && open_item_delegate.modelData.title.length > 0
+                                text: open_item_delegate.modelData.item_uid
+                                font.pointSize: 8
+                                color: palette.mid
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
                         }
                     }
                 }

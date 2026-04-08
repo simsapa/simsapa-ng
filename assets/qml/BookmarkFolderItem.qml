@@ -157,83 +157,106 @@ ColumnLayout {
                         sourceSize.height: 20
                     }
 
-                    // Folder name
-                    Label {
-                        text: root.folder_data.name
-                        font.pointSize: 11
-                        font.bold: true
+                    // Flow: folder name+count and buttons share a row when wide, buttons wrap when narrow
+                    Flow {
+                        id: header_flow
                         Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
+                        spacing: 4
 
-                    // Item count badge
-                    Label {
-                        text: root.folder_data.items ? root.folder_data.items.length : 0
-                        font.pointSize: 9
-                        color: palette.mid
-                    }
+                        readonly property int buttons_width: folder_buttons_row.implicitWidth
+                        readonly property bool single_row: header_flow.width >= (100 + buttons_width + spacing)
 
-                    // Open All button
-                    Button {
-                        text: "Open All"
-                        font.pointSize: 9
-                        padding: 4
-                        visible: root.folder_data.items && root.folder_data.items.length > 0
-                        onClicked: {
-                            root.open_all(root.folder_data.items);
-                        }
-                    }
+                        // Folder name + item count
+                        RowLayout {
+                            width: header_flow.single_row
+                                   ? header_flow.width - header_flow.buttons_width - header_flow.spacing
+                                   : header_flow.width
+                            spacing: 6
 
-                    // Move Here button (visible when items are selected)
-                    Button {
-                        text: "Move Here"
-                        font.pointSize: 9
-                        font.bold: true
-                        padding: 4
-                        visible: root.show_move_here
+                            Label {
+                                text: root.folder_data.name
+                                font.pointSize: 11
+                                font.bold: true
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
 
-                        background: Rectangle {
-                            color: "#4A90E2"
-                            radius: 4
+                            Label {
+                                text: root.folder_data.items ? root.folder_data.items.length : 0
+                                font.pointSize: 9
+                                color: palette.mid
+                            }
                         }
 
-                        contentItem: Label {
-                            text: "Move Here"
-                            font.pointSize: 9
-                            font.bold: true
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
+                        Row {
+                            id: folder_buttons_row
+                            spacing: 4
 
-                        onClicked: {
-                            root.move_here_clicked(root.folder_data.id);
-                        }
-                    }
+                            // Open All button
+                            Button {
+                                text: "Open All"
+                                font.pointSize: 9
+                                padding: 4
+                                visible: root.folder_data.items && root.folder_data.items.length > 0
+                                onClicked: {
+                                    root.open_all(root.folder_data.items);
+                                }
+                            }
 
-                    // Edit (rename) button
-                    Button {
-                        icon.source: "icons/32x32/fa_pen-to-square-solid.png"
-                        icon.width: 14
-                        icon.height: 14
-                        padding: 4
-                        flat: true
-                        onClicked: {
-                            folder_dialog.folder_id = root.folder_data.id;
-                            folder_dialog.folder_name = root.folder_data.name;
-                            folder_dialog.open();
-                        }
-                    }
+                            // Move Here button (visible when items are selected)
+                            Button {
+                                text: "Move Here"
+                                font.pointSize: 9
+                                font.bold: true
+                                padding: 4
+                                visible: root.show_move_here
 
-                    // Delete button
-                    Button {
-                        icon.source: "icons/32x32/ion--trash-outline.png"
-                        icon.width: 14
-                        icon.height: 14
-                        padding: 4
-                        flat: true
-                        onClicked: {
-                            delete_confirm_dialog.open();
+                                background: Rectangle {
+                                    color: "#4A90E2"
+                                    radius: 4
+                                }
+
+                                contentItem: Label {
+                                    text: "Move Here"
+                                    font.pointSize: 9
+                                    font.bold: true
+                                    color: "white"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    verticalAlignment: Text.AlignVCenter
+                                }
+
+                                onClicked: {
+                                    root.move_here_clicked(root.folder_data.id);
+                                }
+                            }
+
+                            // Edit (rename) button
+                            Button {
+                                icon.source: "icons/32x32/fa_pen-to-square-solid.png"
+                                icon.width: 14
+                                icon.height: 14
+                                padding: 4
+                                implicitWidth: implicitHeight
+                                flat: true
+                                onClicked: {
+                                    folder_dialog.folder_id = root.folder_data.id;
+                                    folder_dialog.folder_name = root.folder_data.name;
+                                    folder_dialog.open();
+                                }
+                            }
+
+                            // Delete button
+                            Button {
+                                icon.source: "icons/32x32/ion--trash-outline.png"
+                                icon.width: 14
+                                icon.height: 14
+                                padding: 4
+                                implicitWidth: implicitHeight
+                                flat: true
+                                onClicked: {
+                                    delete_confirm_dialog.open();
+                                }
+                            }
                         }
                     }
                 }
