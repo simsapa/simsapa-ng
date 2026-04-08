@@ -140,6 +140,17 @@ Frame {
         RowLayout {
             id: search_options_layout
 
+            Button {
+                id: advanced_options_btn
+                checkable: true
+                enabled: root.search_area === "Suttas"
+                icon.source: "icons/32x32/system-uicons--settings.png"
+                Layout.preferredHeight: root.icon_size
+                Layout.preferredWidth: root.icon_size
+                ToolTip.visible: hovered
+                ToolTip.text: "Advanced search options"
+            }
+
             // Search area buttons (S = Suttas, D = Dictionary, L = Library)
             Row {
                 id: search_area_buttons
@@ -183,17 +194,6 @@ Frame {
                     ToolTip.text: "Library"
                     onClicked: root.search_area = "Library"
                 }
-            }
-
-            Button {
-                id: advanced_options_btn
-                checkable: true
-                enabled: root.search_area === "Suttas"
-                icon.source: "icons/32x32/system-uicons--settings.png"
-                Layout.preferredHeight: root.icon_size
-                Layout.preferredWidth: root.icon_size
-                ToolTip.visible: hovered
-                ToolTip.text: "Advanced search options"
             }
 
             ComboBox {
