@@ -36,7 +36,7 @@ pub fn build_sutta_schema(lang: &str) -> Schema {
         )
         .set_stored();
 
-    builder.add_text_field("uid", simple_fold_opts.clone());
+    builder.add_text_field("uid", raw_opts.clone());
     builder.add_text_field("title", simple_fold_opts.clone());
     builder.add_text_field("language", raw_opts.clone());
     builder.add_text_field("source_uid", raw_opts.clone());

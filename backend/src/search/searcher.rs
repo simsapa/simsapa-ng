@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Result;
 use tantivy::collector::{Count, TopDocs};
-use tantivy::query::{BooleanQuery, Occur, QueryParser, TermQuery};
+use tantivy::query::{BooleanQuery, Occur, QueryParser, RegexQuery, TermQuery};
 use tantivy::schema::{IndexRecordOption, Value};
 use tantivy::{Index, IndexReader, Term};
 
@@ -446,11 +446,21 @@ impl FulltextSearcher {
             }
         }
 
-        if let Some(ref nikaya) = filters.nikaya {
+        if let Some(ref nikaya) = filters.nikaya_prefix {
             if !nikaya.is_empty() {
                 let field = schema.get_field("nikaya")?;
-                let term = Term::from_field_text(field, nikaya);
-                subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
+                let pattern = format!("{}.*", regex::escape(&nikaya.to_lowercase()));
+                let regex_query = RegexQuery::from_pattern(&pattern, field)?;
+                subqueries.push((Occur::Must, Box::new(regex_query)));
+            }
+        }
+
+        if let Some(ref uid_prefix) = filters.uid_prefix {
+            if !uid_prefix.is_empty() {
+                let field = schema.get_field("uid")?;
+                let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
+                let regex_query = RegexQuery::from_pattern(&pattern, field)?;
+                subqueries.push((Occur::Must, Box::new(regex_query)));
             }
         }
 
@@ -464,7 +474,7 @@ impl FulltextSearcher {
 
         // CST mula/commentary filtering: only exclude CST-sourced texts, not all sources.
         // This matches the SQL behavior in ContainsMatch which filters on uid LIKE '%/cst'.
-        if !filters.include_mula {
+        if !filters.include_cst_mula {
             let is_mula_field = schema.get_field("is_mula")?;
             let source_field = schema.get_field("source_uid")?;
             // Build: is_mula=true AND source_uid="cst"
@@ -475,7 +485,18 @@ impl FulltextSearcher {
             subqueries.push((Occur::MustNot, Box::new(cst_mula_query)));
         }
 
-        if !filters.include_commentary {
+        // MS Mūla exclusion: exclude is_mula=true AND source_uid="ms" texts.
+        if !filters.include_ms_mula {
+            let is_mula_field = schema.get_field("is_mula")?;
+            let source_field = schema.get_field("source_uid")?;
+            let ms_mula_query = BooleanQuery::new(vec![
+                (Occur::Must, Box::new(TermQuery::new(Term::from_field_bool(is_mula_field, true), IndexRecordOption::Basic)) as Box<dyn tantivy::query::Query>),
+                (Occur::Must, Box::new(TermQuery::new(Term::from_field_text(source_field, "ms"), IndexRecordOption::Basic))),
+            ]);
+            subqueries.push((Occur::MustNot, Box::new(ms_mula_query)));
+        }
+
+        if !filters.include_cst_commentary {
             let is_commentary_field = schema.get_field("is_commentary")?;
             let source_field = schema.get_field("source_uid")?;
             // Build: is_commentary=true AND source_uid="cst"
@@ -749,10 +770,12 @@ mod tests {
             lang_include: false,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         let result = searcher.debug_query("bhikkhave", &filters).unwrap();
@@ -783,10 +806,12 @@ mod tests {
             lang_include: false,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         // Unbalanced quotes should cause a parse error but still return partial results
@@ -816,10 +841,12 @@ mod tests {
             lang_include: false,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         // "bhikkhūnaṁ" should stem differently than normalize
@@ -845,10 +872,12 @@ mod tests {
             lang_include: true,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
@@ -878,10 +907,12 @@ mod tests {
             lang_include: true,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10, 0).unwrap();
@@ -939,10 +970,12 @@ mod tests {
             lang_include: true,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10, 0).unwrap();
@@ -963,10 +996,12 @@ mod tests {
             lang_include: false,
             source_uid: None,
             source_include: false,
-            nikaya: None,
+            nikaya_prefix: None,
+            uid_prefix: None,
             sutta_ref: None,
-            include_mula: true,
-            include_commentary: true,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
         };
 
         let result = searcher.debug_query("test", &filters).unwrap();

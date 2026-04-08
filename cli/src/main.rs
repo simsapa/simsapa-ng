@@ -34,6 +34,9 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
         fuzzy_distance: 0,
         include_cst_mula: true,
         include_cst_commentary: true,
+        nikaya_prefix: None,
+        uid_prefix: None,
+        include_ms_mula: true,
     };
 
     let mut query_task = SearchQueryTask::new(
@@ -721,10 +724,12 @@ fn fulltext_search(
         lang_include: lang.is_some(),
         source_uid: source.map(|s| s.to_string()),
         source_include: source.is_some(),
-        nikaya: None,
+        nikaya_prefix: None,
+        uid_prefix: None,
         sutta_ref: None,
-        include_mula: true,
-        include_commentary: true,
+        include_cst_mula: true,
+        include_cst_commentary: true,
+        include_ms_mula: true,
     };
 
     let (total_hits, results) = match area {

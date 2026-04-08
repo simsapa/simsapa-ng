@@ -524,6 +524,9 @@ ApplicationWindow {
             lang = null;
         }
 
+        const nikaya_prefix = search_bar_input.nikaya_prefix;
+        const uid_prefix = search_bar_input.uid_prefix;
+
         return {
             mode: mode,
             page_len: 10,
@@ -535,6 +538,9 @@ ApplicationWindow {
             fuzzy_distance: 0,
             include_cst_mula: SuttaBridge.get_include_cst_mula_in_search_results(),
             include_cst_commentary: SuttaBridge.get_include_cst_commentary_in_search_results(),
+            nikaya_prefix: nikaya_prefix.length > 0 ? nikaya_prefix : null,
+            uid_prefix: uid_prefix.length > 0 ? uid_prefix : null,
+            include_ms_mula: search_bar_input.include_ms_mula,
         };
     }
 
@@ -2017,6 +2023,11 @@ ${query_text}`;
                 search_as_you_type_checked: app_settings_window.search_as_you_type
                 is_loading: root.is_loading
                 has_query_error: root.has_query_error
+                onAdvanced_options_changed: {
+                    if (search_input.text.length > 0) {
+                        root.handle_query(search_input.text);
+                    }
+                }
             }
 
             Button {

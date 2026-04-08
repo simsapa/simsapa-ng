@@ -594,86 +594,6 @@ ApplicationWindow {
                             Layout.fillWidth: true
                         }
 
-                        // Search Filtering section
-                        Label {
-                            text: "Search Filtering"
-                            font.pointSize: root.pointSize + 1
-                            font.bold: true
-                            Layout.topMargin: 10
-                        }
-
-                        CheckBox {
-                            id: include_cst_commentary_in_search_results_checkbox
-                            text: "Include CST Commentary in Search Results"
-                            font.pointSize: root.pointSize
-                            onCheckedChanged: {
-                                SuttaBridge.set_include_cst_commentary_in_search_results(checked);
-                            }
-                        }
-
-                        Label {
-                            text: "Include commentary (Aṭṭhakathā: .att, Ṭīkā: .tik) records in sutta search results."
-                            font.pointSize: root.pointSize - 2
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                        CheckBox {
-                            id: include_cst_mula_in_search_results_checkbox
-                            text: "Include CST Mūla in Search Results"
-                            font.pointSize: root.pointSize
-                            onCheckedChanged: {
-                                SuttaBridge.set_include_cst_mula_in_search_results(checked);
-                            }
-                        }
-
-                        Label {
-                            text: "Include the CST (Chaṭṭha Saṅgāyana Tipiṭaka 4) Mūla Pāli texts in the search results. By default the Pāli results only include the MS (Mahāsaṅgīti Tipiṭaka Buddhavasse 2500) sources from SuttaCentral, since the CST versions are almost identical, but they can be useful to examine variant spellings and other differences."
-                            font.pointSize: root.pointSize - 2
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                        // Translation Filtering section
-                        Label {
-                            text: "Translation Filtering"
-                            font.pointSize: root.pointSize + 1
-                            font.bold: true
-                            Layout.topMargin: 10
-                        }
-
-                        CheckBox {
-                            id: include_cst_commentary_in_translations_checkbox
-                            text: "Include CST Commentary in Translations"
-                            font.pointSize: root.pointSize
-                            onCheckedChanged: {
-                                SuttaBridge.set_include_cst_commentary_in_translations(checked);
-                            }
-                        }
-
-                        Label {
-                            text: "When loading the translations for the current sutta, include the commentaries (Aṭṭhakathā: .att, Ṭīkā: .tik)."
-                            font.pointSize: root.pointSize - 2
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                        CheckBox {
-                            id: include_cst_mula_in_translations_checkbox
-                            text: "Include CST Mūla in Translations"
-                            font.pointSize: root.pointSize
-                            onCheckedChanged: {
-                                SuttaBridge.set_include_cst_mula_in_translations(checked);
-                            }
-                        }
-
-                        Label {
-                            text: "When loading translations for the current sutta, include the CST Pāli version in addition to the MS Pāli."
-                            font.pointSize: root.pointSize - 2
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
                         Item { Layout.fillHeight: true }
                     }
                 }
@@ -885,10 +805,6 @@ ApplicationWindow {
         // Load initial state for Find tab settings
         search_as_you_type_checkbox.checked = SuttaBridge.get_search_as_you_type();
         open_find_in_results_checkbox.checked = SuttaBridge.get_open_find_in_sutta_results();
-        include_cst_commentary_in_search_results_checkbox.checked = SuttaBridge.get_include_cst_commentary_in_search_results();
-        include_cst_mula_in_search_results_checkbox.checked = SuttaBridge.get_include_cst_mula_in_search_results();
-        include_cst_commentary_in_translations_checkbox.checked = SuttaBridge.get_include_cst_commentary_in_translations();
-        include_cst_mula_in_translations_checkbox.checked = SuttaBridge.get_include_cst_mula_in_translations();
 
         // Load wake lock state (mobile only)
         if (root.is_mobile) {
