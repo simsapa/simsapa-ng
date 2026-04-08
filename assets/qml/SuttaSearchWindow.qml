@@ -540,7 +540,7 @@ ApplicationWindow {
             include_cst_commentary: SuttaBridge.get_include_cst_commentary_in_search_results(),
             nikaya_prefix: nikaya_prefix.length > 0 ? nikaya_prefix : null,
             uid_prefix: uid_prefix.length > 0 ? uid_prefix : null,
-            include_ms_mula: search_bar_input.include_ms_mula,
+            include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
         };
     }
 
