@@ -219,7 +219,6 @@ ColumnLayout {
                                 visible: open_item_delegate.modelData.title && open_item_delegate.modelData.title.length > 0
                                 text: open_item_delegate.modelData.item_uid
                                 font.pointSize: 8
-                                color: palette.mid
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
                             }

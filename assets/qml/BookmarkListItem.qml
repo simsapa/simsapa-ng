@@ -173,7 +173,7 @@ Item {
 
             // Width available after the fixed left elements
             readonly property int buttons_width: buttons_row.implicitWidth
-            readonly property bool single_row: info_flow.width >= (100 + buttons_width + spacing)
+            readonly property bool single_row: info_flow.width >= (150 + buttons_width + spacing)
 
             // Title info — takes remaining width when buttons fit alongside, else full width
             ColumnLayout {
@@ -194,7 +194,6 @@ Item {
                     visible: root.item_data.title && root.item_data.title.length > 0
                     text: root.item_data.item_uid
                     font.pointSize: 8
-                    color: palette.mid
                     elide: Text.ElideRight
                     width: parent.width
                 }

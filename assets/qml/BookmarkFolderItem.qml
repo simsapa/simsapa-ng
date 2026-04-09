@@ -164,7 +164,7 @@ ColumnLayout {
                         spacing: 4
 
                         readonly property int buttons_width: folder_buttons_row.implicitWidth
-                        readonly property bool single_row: header_flow.width >= (100 + buttons_width + spacing)
+                        readonly property bool single_row: header_flow.width >= (150 + buttons_width + spacing)
 
                         // Folder name + item count
                         RowLayout {
