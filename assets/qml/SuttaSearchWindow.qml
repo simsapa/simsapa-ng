@@ -60,6 +60,7 @@ ApplicationWindow {
     // === Navigation history stack (mobile back button) ===
     property var nav_history: []
     property bool nav_history_paused: false
+    property bool is_restoring_session: false
     function nav_history_push(entry) {
         if (root.nav_history_paused) return;
         // Don't record blank/placeholder tabs in history
@@ -365,10 +366,12 @@ ApplicationWindow {
     function restore_last_session(session_json: string) {
         let session = JSON.parse(session_json);
         let items = session.items || [];
+        root.is_restoring_session = true;
         for (let i = 0; i < items.length; i++) {
             let focus = (i === 0);
             root.open_bookmark_in_tab_group(items[i], focus);
         }
+        root.is_restoring_session = false;
     }
 
     function get_restore_last_session_setting(): bool {
@@ -847,9 +850,12 @@ ${query_text}`;
             toc_tab.update_for_spine_item(tab_data.item_uid);
         }
 
-        // Only add translation tabs for sutta results, not dictionary or library results
+        // Only add translation tabs for sutta results, not dictionary or library results.
+        // During session restore, skip loading translations since they are restored directly from saved items.
         if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
-            root.load_translations_for_sutta(tab_data.item_uid);
+            if (!root.is_restoring_session) {
+                root.load_translations_for_sutta(tab_data.item_uid);
+            }
 
             // Only open find bar with search query if:
             // 1. User preference is enabled
