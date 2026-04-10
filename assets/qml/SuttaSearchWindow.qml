@@ -50,7 +50,7 @@ ApplicationWindow {
     // Make sure is_wide is not triggered on iPad portrait mode
     // NOTE: on desktop, 650 width threshold is when the show_sidebar_btn starts to touch the SearchBarInput search_input
     readonly property bool is_wide: is_desktop ? (root.width > 650) : (root.width > 800)
-    readonly property bool is_tall: root.height > 790
+    readonly property bool is_tall: root.height > 810
     readonly property bool is_mac: Qt.platform.os == "osx"
     readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
