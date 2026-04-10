@@ -17,6 +17,7 @@ Frame {
     required property bool db_loaded
     required property var handle_query_fn
     required property Timer search_timer
+    required property DrawerMenu mobile_menu
     required property bool search_as_you_type_checked
     required property bool is_loading
     required property bool has_query_error
@@ -104,6 +105,18 @@ Frame {
              * options can sit beside it. On narrow screens, let it take full
              * width, which will push the options to wrap below. */
             width: root.is_wide ? 600 : parent.width
+
+            // Open/close the drawer menu on mobile
+            Button {
+                id: show_menu
+                visible: root.is_mobile
+                icon.source: "icons/32x32/mdi--menu.png"
+                Layout.preferredHeight: root.icon_size
+                Layout.preferredWidth: root.icon_size
+                ToolTip.visible: hovered
+                ToolTip.text: "Show Menu"
+                onClicked: mobile_menu.open()
+            }
 
             // === Search Input ====
             TextField {

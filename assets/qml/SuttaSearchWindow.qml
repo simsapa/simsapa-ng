@@ -30,10 +30,27 @@ ApplicationWindow {
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     /* readonly property bool is_mobile: true // for qml preview */
     readonly property bool is_desktop: !root.is_mobile
+
+    // QML uses device-independent pixels (dp), not physical pixels.
+    // logical pixels = physical pixels / devicePixelRatio
+    //
+    // Qt uses devicePixelRatio (DPR) to scale between physical and logical pixels.
+    // On most modern Android phones, the DPR is typically 2.75, 3.0, or 3.5.
+    //
+    // Example of two screens, with a DPR of 3.0:
+    // 
+    // Screen 1 — is_tall is false (height <= 800):
+    // Physical: 1080 x 2340
+    // 2340 / 3.0 = 780 logical px → 780 < 800 → false
+    // 
+    // Screen 2 — is_tall is true (height > 800):
+    // Physical: 1080 x 2408
+    // 2408 / 3.0 = 802.6 logical px → 802 > 800 → true
+
     // Make sure is_wide is not triggered on iPad portrait mode
     // NOTE: on desktop, 650 width threshold is when the show_sidebar_btn starts to touch the SearchBarInput search_input
     readonly property bool is_wide: is_desktop ? (root.width > 650) : (root.width > 800)
-    readonly property bool is_tall: root.height > 800
+    readonly property bool is_tall: root.height > 790
     readonly property bool is_mac: Qt.platform.os == "osx"
     readonly property bool is_qml_preview: Qt.application.name === "Qml Runtime"
 
@@ -2025,21 +2042,6 @@ ${query_text}`;
         RowLayout {
             id: search_ui_row
 
-            Button {
-                id: show_menu
-                Layout.alignment: Qt.AlignTop
-                Layout.leftMargin: 10
-                Layout.rightMargin: 0
-                Layout.topMargin: 9
-                visible: root.is_mobile
-                icon.source: "icons/32x32/mdi--menu.png"
-                Layout.preferredHeight: root.icon_size
-                Layout.preferredWidth: root.icon_size
-                ToolTip.visible: hovered
-                ToolTip.text: "Show Menu"
-                onClicked: mobile_menu.open()
-            }
-
             SearchBarInput {
                 id: search_bar_input
                 Layout.alignment: Qt.AlignTop
@@ -2049,6 +2051,7 @@ ${query_text}`;
                 db_loaded: SuttaBridge.db_loaded
                 handle_query_fn: root.handle_query
                 search_timer: search_timer
+                mobile_menu: mobile_menu
                 search_as_you_type_checked: app_settings_window.search_as_you_type
                 is_loading: root.is_loading
                 has_query_error: root.has_query_error
