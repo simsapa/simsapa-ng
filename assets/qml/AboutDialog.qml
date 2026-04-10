@@ -103,7 +103,7 @@ ApplicationWindow {
 
                     ColumnLayout {
                         spacing: 10
-                        Text {
+                        Label {
                             textFormat: Text.RichText
                             font.pointSize: root.pointSize
                             wrapMode: Text.WordWrap
@@ -114,7 +114,7 @@ ApplicationWindow {
                             text: "List Contents"
                             onClicked: data_contents.text = SuttaBridge.app_data_contents_html_table()
                         }
-                        Text {
+                        Label {
                             id: data_contents
                             textFormat: Text.RichText
                             font.pointSize: root.pointSize
