@@ -290,6 +290,8 @@ fn upgrade_appdata_schema(db_conn: &mut SqliteConnection) {
         include_str!("../../migrations/appdata/2026-03-24-100000_add_recording_volume/up.sql"),
         // 2026-03-24: recording waveform cache
         include_str!("../../migrations/appdata/2026-03-24-200000_add_recording_waveform/up.sql"),
+        // 2026-04-02: bookmark tables
+        include_str!("../../migrations/appdata/2026-04-02-120000_create_bookmarks/up.sql"),
     ];
 
     for sql in &statements {

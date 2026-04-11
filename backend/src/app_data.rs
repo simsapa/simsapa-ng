@@ -1492,6 +1492,9 @@ impl AppData {
         // Export user-imported books to import-me folder
         self.export_user_books(&import_dir)?;
 
+        // Export user bookmarks to import-me folder
+        self.export_user_bookmarks(&import_dir)?;
+
         // Export user chanting data and recordings to import-me folder
         self.export_user_chanting_data(&import_dir)?;
 
@@ -1719,6 +1722,11 @@ impl AppData {
             // Continue with cleanup even if books import fails
         }
 
+        // Import user bookmarks
+        if let Err(e) = self.import_user_bookmarks(&import_dir) {
+            error(&format!("Failed to import user bookmarks: {}", e));
+        }
+
         // Import user chanting data and recordings
         if let Err(e) = self.import_user_chanting_data(&import_dir) {
             error(&format!("Failed to import user chanting data: {}", e));
@@ -1904,6 +1912,220 @@ impl AppData {
         }
 
         info(&format!("Successfully imported {} user books", import_books.len()));
+        Ok(())
+    }
+
+    /// Export user bookmarks to a SQLite database in the import-me folder.
+    ///
+    /// Skips the "Last Session" folder (is_last_session = true) since it is
+    /// transient state that should not survive a database upgrade.
+    fn export_user_bookmarks(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::{bookmark_folders, bookmark_items};
+        use crate::db::APPDATA_MIGRATIONS;
+        use diesel::sqlite::SqliteConnection;
+        use diesel_migrations::MigrationHarness;
+
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection for bookmark export")?;
+
+        // Load all non-transient bookmark folders
+        let folders: Vec<BookmarkFolder> = bookmark_folders::table
+            .filter(bookmark_folders::is_last_session.eq(false))
+            .load::<BookmarkFolder>(db_conn)
+            .context("Failed to load bookmark folders")?;
+
+        if folders.is_empty() {
+            info("No bookmark folders to export");
+            return Ok(());
+        }
+
+        info(&format!("Exporting {} bookmark folders", folders.len()));
+
+        let sqlite_path = import_dir.join("appdata-bookmarks.sqlite3");
+        if let Ok(true) = sqlite_path.try_exists() {
+            std::fs::remove_file(&sqlite_path)
+                .with_context(|| format!("Failed to remove existing bookmark export database: {}", sqlite_path.display()))?;
+        }
+
+        let db_url = format!("sqlite://{}", sqlite_path.display());
+        let mut export_conn = SqliteConnection::establish(&db_url)
+            .with_context(|| format!("Failed to create bookmark export database: {}", sqlite_path.display()))?;
+
+        export_conn.run_pending_migrations(APPDATA_MIGRATIONS)
+            .map_err(|e| anyhow!("Failed to run migrations on bookmark export database: {}", e))?;
+
+        let mut total_items = 0usize;
+
+        for folder in &folders {
+            let new_folder = NewBookmarkFolder {
+                name: &folder.name,
+                sort_order: folder.sort_order,
+                is_last_session: false,
+            };
+
+            diesel::insert_into(bookmark_folders::table)
+                .values(&new_folder)
+                .execute(&mut export_conn)
+                .with_context(|| format!("Failed to insert bookmark folder: {}", folder.name))?;
+
+            // Retrieve the newly inserted folder's id (may differ from source)
+            let exported_folder_id: i32 = bookmark_folders::table
+                .order(bookmark_folders::id.desc())
+                .select(bookmark_folders::id)
+                .first(&mut export_conn)
+                .context("Failed to get exported bookmark folder id")?;
+
+            // Load items for this folder
+            let items: Vec<BookmarkItem> = bookmark_items::table
+                .filter(bookmark_items::folder_id.eq(folder.id))
+                .load::<BookmarkItem>(db_conn)
+                .with_context(|| format!("Failed to load bookmark items for folder: {}", folder.name))?;
+
+            total_items += items.len();
+
+            for item in &items {
+                let new_item = NewBookmarkItem {
+                    folder_id: exported_folder_id,
+                    item_uid: item.item_uid.clone(),
+                    table_name: item.table_name.clone(),
+                    title: item.title.clone(),
+                    tab_group: item.tab_group.clone(),
+                    scroll_position: item.scroll_position,
+                    find_query: item.find_query.clone(),
+                    find_match_index: item.find_match_index,
+                    sort_order: item.sort_order,
+                };
+
+                diesel::insert_into(bookmark_items::table)
+                    .values(&new_item)
+                    .execute(&mut export_conn)
+                    .context("Failed to insert bookmark item")?;
+            }
+        }
+
+        info(&format!(
+            "Exported {} bookmark folders with {} items to {}",
+            folders.len(), total_items, sqlite_path.display()
+        ));
+
+        Ok(())
+    }
+
+    /// Import user bookmarks from the import-me folder after database upgrade.
+    ///
+    /// Reads `appdata-bookmarks.sqlite3` and inserts all folders and items into the
+    /// new database, remapping folder ids as needed.
+    fn import_user_bookmarks(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::appdata_schema::{bookmark_folders, bookmark_items};
+        use diesel::sqlite::SqliteConnection;
+
+        let sqlite_path = import_dir.join("appdata-bookmarks.sqlite3");
+        match sqlite_path.try_exists() {
+            Ok(true) => {}
+            _ => {
+                info("No appdata-bookmarks.sqlite3 found in import-me folder");
+                return Ok(());
+            }
+        }
+
+        info(&format!("Importing user bookmarks from {}", sqlite_path.display()));
+
+        let db_url = format!("sqlite://{}", sqlite_path.display());
+        let mut import_conn = SqliteConnection::establish(&db_url)
+            .with_context(|| format!("Failed to open bookmark import database: {}", sqlite_path.display()))?;
+
+        let import_folders: Vec<BookmarkFolder> = bookmark_folders::table
+            .load::<BookmarkFolder>(&mut import_conn)
+            .context("Failed to load bookmark folders from import database")?;
+
+        if import_folders.is_empty() {
+            info("No bookmark folders to import");
+            return Ok(());
+        }
+
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection for bookmark import")?;
+
+        let mut total_items = 0usize;
+
+        for folder in &import_folders {
+            // Skip if a folder with this name already exists to avoid duplicates
+            let existing: Option<i32> = bookmark_folders::table
+                .filter(bookmark_folders::name.eq(&folder.name))
+                .select(bookmark_folders::id)
+                .first(db_conn)
+                .optional()
+                .context("Failed to check for existing bookmark folder")?;
+
+            let new_folder_id: i32 = if let Some(existing_id) = existing {
+                info(&format!("Bookmark folder '{}' already exists, merging items into it", folder.name));
+                existing_id
+            } else {
+                let new_folder = NewBookmarkFolder {
+                    name: &folder.name,
+                    sort_order: folder.sort_order,
+                    is_last_session: false,
+                };
+
+                diesel::insert_into(bookmark_folders::table)
+                    .values(&new_folder)
+                    .execute(db_conn)
+                    .with_context(|| format!("Failed to insert bookmark folder: {}", folder.name))?;
+
+                bookmark_folders::table
+                    .order(bookmark_folders::id.desc())
+                    .select(bookmark_folders::id)
+                    .first::<i32>(db_conn)
+                    .context("Failed to get inserted bookmark folder id")?
+            };
+
+            // Load items from the import database for this source folder
+            let items: Vec<BookmarkItem> = bookmark_items::table
+                .filter(bookmark_items::folder_id.eq(folder.id))
+                .load::<BookmarkItem>(&mut import_conn)
+                .with_context(|| format!("Failed to load bookmark items for folder: {}", folder.name))?;
+
+            total_items += items.len();
+
+            for item in &items {
+                // Skip duplicate items (same item_uid in the same folder)
+                let item_exists: bool = bookmark_items::table
+                    .filter(bookmark_items::folder_id.eq(new_folder_id))
+                    .filter(bookmark_items::item_uid.eq(&item.item_uid))
+                    .select(bookmark_items::id)
+                    .first::<i32>(db_conn)
+                    .optional()
+                    .unwrap_or(None)
+                    .is_some();
+
+                if item_exists {
+                    continue;
+                }
+
+                let new_item = NewBookmarkItem {
+                    folder_id: new_folder_id,
+                    item_uid: item.item_uid.clone(),
+                    table_name: item.table_name.clone(),
+                    title: item.title.clone(),
+                    tab_group: item.tab_group.clone(),
+                    scroll_position: item.scroll_position,
+                    find_query: item.find_query.clone(),
+                    find_match_index: item.find_match_index,
+                    sort_order: item.sort_order,
+                };
+
+                diesel::insert_into(bookmark_items::table)
+                    .values(&new_item)
+                    .execute(db_conn)
+                    .context("Failed to insert bookmark item")?;
+            }
+        }
+
+        info(&format!(
+            "Imported {} bookmark folders with {} items",
+            import_folders.len(), total_items
+        ));
+
         Ok(())
     }
 
