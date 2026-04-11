@@ -4,14 +4,19 @@ all: run
 ifeq ($(shell uname),Darwin)
     QT_PATH ?= $(HOME)/Qt/6.9.3/macos
     BUILD_CMD = cmake -S . -B ./build/simsapadhammareader/ -DCMAKE_PREFIX_PATH=$(QT_PATH) && cmake --build ./build/simsapadhammareader/
+    BUILD_OFFLINE_CMD = CARGO_NET_OFFLINE=true cmake -S . -B ./build/simsapadhammareader/ -DCMAKE_PREFIX_PATH=$(QT_PATH) -DFETCHCONTENT_UPDATES_DISCONNECTED=ON && cmake --build ./build/simsapadhammareader/
     RUN_CMD = ./build/simsapadhammareader/simsapadhammareader.app/Contents/MacOS/simsapadhammareader
 else
     BUILD_CMD = cmake -S . -B ./build/simsapadhammareader/ && cmake --build ./build/simsapadhammareader/
+    BUILD_OFFLINE_CMD = CARGO_NET_OFFLINE=true cmake -S . -B ./build/simsapadhammareader/ -DFETCHCONTENT_UPDATES_DISCONNECTED=ON && cmake --build ./build/simsapadhammareader/
     RUN_CMD = ./build/simsapadhammareader/simsapadhammareader
 endif
 
 build:
 	$(BUILD_CMD)
+
+build-offline:
+	$(BUILD_OFFLINE_CMD)
 
 run: build
 	$(RUN_CMD)

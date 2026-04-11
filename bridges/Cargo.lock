@@ -609,28 +609,11 @@ version = "0.7.2"
 source = "git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f#8a597414623c704a465f55369ff168f01ca4e93f"
 dependencies = [
  "cxx",
- "cxx-qt-build 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "cxx-qt-build",
  "cxx-qt-macro",
- "qt-build-utils 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "qt-build-utils",
  "static_assertions",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "cxx-qt-build"
-version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
-dependencies = [
- "cc",
- "codespan-reporting 0.11.1",
- "cxx-gen",
- "cxx-qt-gen 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6)",
- "proc-macro2",
- "qt-build-utils 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6)",
- "quote",
- "semver",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -641,27 +624,13 @@ dependencies = [
  "cc",
  "codespan-reporting 0.11.1",
  "cxx-gen",
- "cxx-qt-gen 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "cxx-qt-gen",
  "proc-macro2",
- "qt-build-utils 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "qt-build-utils",
  "quote",
  "semver",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "cxx-qt-gen"
-version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
-dependencies = [
- "clang-format",
- "convert_case",
- "cxx-gen",
- "indoc",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -687,11 +656,11 @@ dependencies = [
  "chrono",
  "cxx",
  "cxx-qt",
- "cxx-qt-build 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "cxx-qt-build",
  "http 1.3.1",
  "image 0.24.9",
  "image 0.25.6",
- "qt-build-utils 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "qt-build-utils",
  "rgb",
  "serde",
  "time",
@@ -704,7 +673,7 @@ name = "cxx-qt-macro"
 version = "0.7.2"
 source = "git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f#8a597414623c704a465f55369ff168f01ca4e93f"
 dependencies = [
- "cxx-qt-gen 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "cxx-qt-gen",
  "proc-macro2",
  "quote",
  "syn",
@@ -2652,18 +2621,6 @@ dependencies = [
 [[package]]
 name = "qt-build-utils"
 version = "0.7.2"
-source = "git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6#73b136857e3c19e1758eb9e044e84cfe8ef771a6"
-dependencies = [
- "anyhow",
- "cc",
- "semver",
- "serde",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "qt-build-utils"
-version = "0.7.2"
 source = "git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f#8a597414623c704a465f55369ff168f01ca4e93f"
 dependencies = [
  "anyhow",
@@ -3498,12 +3455,12 @@ dependencies = [
  "bzip2",
  "cxx",
  "cxx-qt",
- "cxx-qt-build 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=73b136857e3c19e1758eb9e044e84cfe8ef771a6)",
+ "cxx-qt-build",
  "cxx-qt-lib",
  "http 1.3.1",
  "include_dir",
  "lazy_static",
- "qt-build-utils 0.7.2 (git+https://github.com/simsapa/cxx-qt.git?rev=8a597414623c704a465f55369ff168f01ca4e93f)",
+ "qt-build-utils",
  "regex",
  "reqwest",
  "rig-core",
