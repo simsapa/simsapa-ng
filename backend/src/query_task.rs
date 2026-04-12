@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::{consistent_niggahita, normalize_query_text, sutta_range_from_ref};
+use crate::helpers::{normalize_plain_text, normalize_query_text, sutta_range_from_ref};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::{Sutta, BookSpineItem};
@@ -68,15 +68,17 @@ impl<'a> SearchQueryTask<'a> {
         let lang_filter = params.lang.clone().unwrap_or_default();
 
         // For UidMatch mode, don't normalize the query text to preserve dots and other characters.
-        // For FulltextMatch mode, only normalize niggahita — tantivy's query parser uses quotes
-        // for phrase queries and should/must controls (e.g. '"so ce" evaṁ +vadeyya') so we must not strip punctuation.
+        // For FulltextMatch mode, apply normalize_plain_text — the same iti-sandhi and niggahita
+        // normalization applied to content_plain — so user query variations (e.g. 'dhovananti',
+        // 'dhovanan’ti') match the stored text. normalize_plain_text does not strip punctuation,
+        // so tantivy's quote/+/-/must operators remain intact.
         // For other modes, normalize to handle punctuation and spacing.
         let query_text = match params.mode {
             SearchMode::UidMatch => {
                 query_text_orig.to_lowercase()
             }
             SearchMode::FulltextMatch => {
-                consistent_niggahita(Some(query_text_orig))
+                normalize_plain_text(&query_text_orig)
             }
             _ => {
                 normalize_query_text(Some(query_text_orig))

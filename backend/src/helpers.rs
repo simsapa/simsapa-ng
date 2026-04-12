@@ -1512,6 +1512,25 @@ pub fn compact_rich_text(text: &str) -> String {
         // Respect word boundaries for <b> <strong> <i> <em> so that dhamm<b>āya</b> becomes dhammāya, not dhamm āya.
         // Also matches corresponding closing tags
         static ref RE_TAG_BOUNDARY: Regex = Regex::new(r"(\w*)<(/?)(b|strong|i|em)([^>]*)>(\w*)").unwrap();
+        // CST HTML marks bold Pāli lemmas with <span class="bold">…</span>, and the
+        // closing tag often lands mid-word (e.g. <span class="bold">dhovana</span>nti).
+        // Collapse the whole pair, keeping adjacent word characters on either side
+        // and the inner text, so the lemma stays as one token in content_plain.
+        //
+        // Kept separate from RE_TAG_BOUNDARY for two class-discrimination reasons:
+        //
+        // 1. <span> is multi-purpose in CST. The source also uses <span class="paranum">,
+        //    <span class="pagebreak">, <span class="dot"> as standalone markers that must
+        //    stay word *separators* (otherwise `<span class="paranum">107</span> sattame`
+        //    collapses to `107sattame`). So we can't just add `span` to the tag-name
+        //    alternation in RE_TAG_BOUNDARY — we need to match only the bold class.
+        //
+        // 2. RE_TAG_BOUNDARY matches one tag at a time (open *or* close). The closing
+        //    tag is bare `</span>` with no class attribute, so a single-tag match can't
+        //    tell whether the closer belonged to a bold lemma or a pagebreak. Matching
+        //    the <span class="bold">…</span> pair as a unit is the only place the class
+        //    information is actually visible.
+        static ref RE_BOLD_SPAN: Regex = Regex::new(r#"(\w*)<span class="bold"[^>]*>([^<]*)</span>(\w*)"#).unwrap();
     }
 
     // All on one line
@@ -1522,6 +1541,10 @@ pub fn compact_rich_text(text: &str) -> String {
 
     s = s.replace("<br>", " ")
          .replace("<br/>", " ");
+
+    s = RE_BOLD_SPAN.replace_all(&s, |caps: &regex::Captures| {
+        format!("{}{}{}", &caps[1], &caps[2], &caps[3])
+    }).to_string();
 
     s = RE_TAG_BOUNDARY.replace_all(&s, |caps: &regex::Captures| {
         format!("{}{}", &caps[1], &caps[5])

@@ -98,6 +98,20 @@ assets/qml/com/profoundlabs/simsapa/PromptManager.qml
 assets/qml/com/profoundlabs/simsapa/qmldir
 ```
 
+## Testing with the Database
+
+**SIMSAPA_DIR** (the runtime data directory) is at:
+```
+/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resources/dist/simsapa-ng
+```
+
+The SQLite database is at:
+```
+/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resources/dist/simsapa-ng/app-assets/appdata.sqlite3
+```
+
+Use this path for any tests or experimental scripts that need to query the actual database or access runtime assets.
+
 ## Build/Test Commands
 
 ### Development Build
