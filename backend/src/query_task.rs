@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::{normalize_plain_text, normalize_query_text, sutta_range_from_ref};
+use crate::helpers::{normalize_plain_text, normalize_query_text, remove_inter_word_hyphens, sutta_range_from_ref};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::{Sutta, BookSpineItem};
@@ -71,14 +71,18 @@ impl<'a> SearchQueryTask<'a> {
         // For FulltextMatch mode, apply normalize_plain_text — the same iti-sandhi and niggahita
         // normalization applied to content_plain — so user query variations (e.g. 'dhovananti',
         // 'dhovanan’ti') match the stored text. normalize_plain_text does not strip punctuation,
-        // so tantivy's quote/+/-/must operators remain intact.
+        // so tantivy's quote/+/-/must operators remain intact. Additionally strip inter-word
+        // hyphens because content_plain was produced by compact_plain_text, which runs
+        // remove_punct and drops them (so `Dhammapada-aṭṭhakathā` is stored as
+        // `dhammapadaaṭṭhakathā`). Only hyphens surrounded by word chars are removed, so
+        // tantivy's `-term` must-not operator is left alone.
         // For other modes, normalize to handle punctuation and spacing.
         let query_text = match params.mode {
             SearchMode::UidMatch => {
                 query_text_orig.to_lowercase()
             }
             SearchMode::FulltextMatch => {
-                normalize_plain_text(&query_text_orig)
+                remove_inter_word_hyphens(&normalize_plain_text(&query_text_orig))
             }
             _ => {
                 normalize_query_text(Some(query_text_orig))

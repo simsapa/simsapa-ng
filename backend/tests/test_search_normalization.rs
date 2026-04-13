@@ -307,6 +307,87 @@ fn fulltext_match_finds_dhovana_sutta() {
     );
 }
 
+// ---------------------------------------------------------------------------
+// Inter-word hyphens: Dhammapada-aṭṭhakathā must match the stored
+// `dhammapadaaṭṭhakathā` (content_plain runs compact_plain_text, which strips
+// hyphens). Regression guard — before the fix, FulltextMatch kept the hyphen
+// and returned no results.
+// ---------------------------------------------------------------------------
+
+#[test]
+#[serial]
+fn fulltext_match_strips_inter_word_hyphen() {
+    h::app_data_setup();
+    let got = normalized_query("Dhammapada-aṭṭhakathā", SearchMode::FulltextMatch);
+    assert_eq!(got, "dhammapadaaṭṭhakathā");
+}
+
+#[test]
+#[serial]
+fn fulltext_match_preserves_minus_operator_with_hyphen_word() {
+    h::app_data_setup();
+    // The must-not operator must survive even when the excluded term contains
+    // an inter-word hyphen elsewhere.
+    let got = normalized_query("foo -bar-baz", SearchMode::FulltextMatch);
+    assert!(got.contains("-barbaz"), "expected `-barbaz` preserved, got {got:?}");
+}
+
+fn search_has_results(query: &str, mode: SearchMode) -> bool {
+    use simsapa_backend::get_app_data;
+    use simsapa_backend::query_task::SearchQueryTask;
+    use simsapa_backend::types::{SearchArea, SearchParams};
+
+    let app_data = get_app_data();
+    let params = SearchParams {
+        mode,
+        page_len: Some(50),
+        lang: Some("pli".to_string()),
+        lang_include: true,
+        source: None,
+        source_include: true,
+        enable_regex: false,
+        fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
+        nikaya_prefix: None,
+        uid_prefix: None,
+        include_ms_mula: true,
+    };
+
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        params,
+        SearchArea::Suttas,
+    );
+
+    match task.results_page(0) {
+        Ok(r) => !r.is_empty(),
+        Err(e) => panic!("search failed: {e}"),
+    }
+}
+
+#[test]
+#[serial]
+fn fulltext_match_finds_dhammapada_atthakatha() {
+    h::app_data_setup();
+    assert!(
+        search_has_results("Dhammapada-aṭṭhakathā", SearchMode::FulltextMatch),
+        "FulltextMatch must return results for `Dhammapada-aṭṭhakathā` — \
+         the inter-word hyphen has to be stripped to match stored content_plain"
+    );
+}
+
+#[test]
+#[serial]
+fn contains_match_finds_dhammapada_atthakatha() {
+    h::app_data_setup();
+    assert!(
+        search_has_results("Dhammapada-aṭṭhakathā", SearchMode::ContainsMatch),
+        "ContainsMatch must return results for `Dhammapada-aṭṭhakathā`"
+    );
+}
+
 #[test]
 #[serial]
 fn contains_match_strips_punct_as_expected() {

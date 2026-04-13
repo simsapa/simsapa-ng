@@ -657,6 +657,28 @@ lazy_static! {
     static ref RE_SPACES: Regex = Regex::new(r" {2,}").unwrap();
 
     static ref RE_MID_WORD_STRAIGHT_QUOTE: Regex = Regex::new(r#"(\w)['"](\w)"#).unwrap();
+
+    // Inter-word hyphen: hyphen with a word character on both sides. Matching
+    // only this shape avoids touching tantivy's `-term` must-not operator,
+    // which always has a non-word character (space or start of string) before
+    // the hyphen.
+    static ref RE_INTER_WORD_HYPHEN: Regex = Regex::new(r"(\w)-(\w)").unwrap();
+}
+
+/// Remove hyphens that sit between word characters, e.g.
+/// `dhammapada-aṭṭhakathā` → `dhammapadaaṭṭhakathā`. Leaves tantivy's
+/// `-term` must-not operator untouched because it has no preceding word char.
+pub fn remove_inter_word_hyphens(text: &str) -> String {
+    // Loop because `(\w)-(\w)` consumes the trailing word char, so a run like
+    // `a-b-c` would otherwise collapse to `ab-c` on the first pass.
+    let mut out = text.to_string();
+    loop {
+        let next = RE_INTER_WORD_HYPHEN.replace_all(&out, "$1$2").into_owned();
+        if next == out {
+            return out;
+        }
+        out = next;
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
