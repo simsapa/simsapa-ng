@@ -1955,16 +1955,40 @@ ${main_text}
                 }
             }
 
-            RowLayout {
+            Flow {
+                spacing: 10
                 Layout.fillWidth: true
 
                 Button {
-                    text: "Cancel"
-                    onClicked: commonWordsDialog.close()
+                    text: "Reload from DB"
+                    onClicked: {
+                        var saved_words = SuttaBridge.get_common_words_json();
+                        if (saved_words) {
+                            try {
+                                var words = JSON.parse(saved_words);
+                                root.common_words = words;
+                                commonWordsTextArea.text = words.join('\n');
+                                root.start_background_all_glosses();
+                            } catch (e) {
+                                logger.error("Failed to parse common words:", e);
+                            }
+                        }
+                    }
                 }
 
                 Button {
-                    text: "Save"
+                    text: "Save Until Window Closed"
+                    onClicked: {
+                        var words = commonWordsTextArea.text.split('\n')
+                            .map(w => w.trim().toLowerCase())
+                            .filter(w => w.length > 0);
+                        root.common_words = words;
+                        root.start_background_all_glosses();
+                    }
+                }
+
+                Button {
+                    text: "Save to DB"
                     onClicked: {
                         var words = commonWordsTextArea.text.split('\n')
                             .map(w => w.trim().toLowerCase())
@@ -1974,6 +1998,11 @@ ${main_text}
                         commonWordsDialog.close();
                         root.start_background_all_glosses();
                     }
+                }
+
+                Button {
+                    text: "Cancel"
+                    onClicked: commonWordsDialog.close()
                 }
             }
         }
