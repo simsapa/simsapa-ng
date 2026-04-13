@@ -278,7 +278,7 @@ async fn handle_deepseek_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = deepseek::Client::<reqwest::Client>::builder()
+    let client = deepseek::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -309,7 +309,7 @@ async fn handle_gemini_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = gemini::Client::<reqwest::Client>::builder()
+    let client = gemini::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -351,7 +351,7 @@ async fn handle_xai_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = xai::Client::<reqwest::Client>::builder()
+    let client = xai::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -382,7 +382,7 @@ async fn handle_anthropic_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = anthropic::Client::<reqwest::Client>::builder()
+    let client = anthropic::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -413,7 +413,7 @@ async fn handle_openai_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = openai::Client::<reqwest::Client>::builder()
+    let client = openai::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -444,7 +444,7 @@ async fn handle_openrouter_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = openrouter::Client::<reqwest::Client>::builder()
+    let client = openrouter::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -475,7 +475,7 @@ async fn handle_mistral_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = mistral::Client::<reqwest::Client>::builder()
+    let client = mistral::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -506,7 +506,7 @@ async fn handle_huggingface_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = huggingface::Client::<reqwest::Client>::builder()
+    let client = huggingface::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
@@ -537,7 +537,7 @@ async fn handle_perplexity_request(
     api_key: &str,
     http_client: reqwest::Client,
 ) -> Result<String, String> {
-    let client = perplexity::Client::<reqwest::Client>::builder()
+    let client = perplexity::Client::builder()
         .http_client(http_client)
         .api_key(api_key)
         .build()
