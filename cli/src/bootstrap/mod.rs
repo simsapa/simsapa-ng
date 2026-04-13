@@ -107,7 +107,8 @@ pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, ski
         );
     }
 
-    let release_dir = PathBuf::from(format!("../../releases/{}-dev/databases/", iso_date));
+    let release_dir = PathBuf::from(format!("../../releases/{}-dev/", iso_date));
+    let release_databases_dir = release_dir.join("databases/");
     let dist_dir = bootstrap_assets_dir.join("dist");
     let sc_data_dir = bootstrap_assets_dir.join("sc-data");
 
@@ -154,7 +155,7 @@ RELEASE_CHANNEL=development
         logger::warn("Skipping .env file creation (already exists). Use --write-new-dotenv to overwrite.");
     }
 
-    clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
+    clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &release_databases_dir, &dist_dir)?;
 
     if !skip_appdata {
         logger::info("=== Create appdata.sqlite3 ===");
@@ -292,7 +293,7 @@ RELEASE_CHANNEL=development
 
         logger::info("=== Create appdata.tar.bz2 ===");
 
-        create_appdata_archive(&assets_dir, &release_dir)?;
+        create_appdata_archive(&assets_dir, &release_databases_dir)?;
 
     } else {
         logger::info("Skipping Appdata initialization and bootstrap");
@@ -305,11 +306,11 @@ RELEASE_CHANNEL=development
 
         logger::info("=== Create dictionaries.tar.bz2 ===");
         let dict_db_path = assets_dir.join("dictionaries.sqlite3");
-        create_database_archive(&dict_db_path, &release_dir)?;
+        create_database_archive(&dict_db_path, &release_databases_dir)?;
 
         logger::info("=== Create dpd.tar.bz2 ===");
         let dpd_db_path = assets_dir.join("dpd.sqlite3");
-        create_database_archive(&dpd_db_path, &release_dir)?;
+        create_database_archive(&dpd_db_path, &release_databases_dir)?;
     } else {
         logger::info("Skipping DPD initialization and bootstrap");
     }
@@ -369,7 +370,7 @@ RELEASE_CHANNEL=development
 
         // Create index.tar.bz2 from the index/ directory
         logger::info("=== Create index.tar.bz2 ===");
-        create_index_archive(&assets_dir, &release_dir)?;
+        create_index_archive(&assets_dir, &release_databases_dir)?;
     }
 
     logger::info("=== Bootstrap Languages from SuttaCentral ===");
@@ -454,7 +455,7 @@ RELEASE_CHANNEL=development
 
                                             // Create archive with database and index directory
                                             let lang_index_dir = globals.paths.suttas_index_dir.join(lang);
-                                            match create_language_archive(&lang_db_path, &lang_index_dir, &assets_dir, &release_dir) {
+                                            match create_language_archive(&lang_db_path, &lang_index_dir, &assets_dir, &release_databases_dir) {
                                                 Ok(_) => {
                                                     logger::info(&format!("Successfully created archive for language: {}", lang));
                                                 }
@@ -536,7 +537,7 @@ RELEASE_CHANNEL=development
 
                 // Create archive with database and index directory
                 let lang_index_dir = globals.paths.suttas_index_dir.join(lang);
-                create_language_archive(&lang_db_path, &lang_index_dir, &assets_dir, &release_dir)?;
+                create_language_archive(&lang_db_path, &lang_index_dir, &assets_dir, &release_databases_dir)?;
             } else {
                 logger::warn(&format!("Buddha Ujja database not found: {:?}", bu_db_path));
                 logger::warn("Skipping Hungarian sutta import");
@@ -607,6 +608,7 @@ pub fn clean_and_create_folders(
     simsapa_dir: &Path,
     assets_dir: &Path,
     release_dir: &Path,
+    release_databases_dir: &Path,
     dist_dir: &Path
 ) -> Result<()> {
     logger::info("=== clean_and_create_folders() ===");
@@ -624,6 +626,9 @@ pub fn clean_and_create_folders(
         fs::create_dir_all(dir)
             .with_context(|| format!("Failed to create directory: {}", dir.display()))?;
     }
+
+    fs::create_dir_all(release_databases_dir)
+        .with_context(|| format!("Failed to create directory: {}", release_databases_dir.display()))?;
 
     // create_app_dirs(); // Not needed yet, we only need simsapa_dir and assets_dir at the moment.
 
@@ -668,7 +673,7 @@ pub fn clean_and_create_folders(
 /// Takes a database path (e.g., "path/to/appdata.sqlite3") and creates a compressed
 /// tar.bz2 archive (e.g., "appdata.tar.bz2") in the same directory, then moves it
 /// to the release directory.
-pub fn create_database_archive(db_path: &Path, release_dir: &Path) -> Result<()> {
+pub fn create_database_archive(db_path: &Path, release_databases_dir: &Path) -> Result<()> {
     let db_name = db_path.file_name()
         .and_then(|n| n.to_str())
         .ok_or_else(|| anyhow::anyhow!("Invalid database filename"))?;
@@ -695,18 +700,18 @@ pub fn create_database_archive(db_path: &Path, release_dir: &Path) -> Result<()>
 
     // Move tar archive to release directory
     let tar_src = db_dir.join(&tar_name);
-    let tar_dst = release_dir.join(&tar_name);
+    let tar_dst = release_databases_dir.join(&tar_name);
     fs::rename(&tar_src, &tar_dst)
         .with_context(|| format!("Failed to move {} to release directory", tar_name))?;
 
-    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_dir));
+    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_databases_dir));
 
     Ok(())
 }
 
 /// Create appdata.tar.bz2 containing the appdata database and any asset directories
 /// (e.g., chanting-recordings/) that need to be distributed alongside it.
-pub fn create_appdata_archive(assets_dir: &Path, release_dir: &Path) -> Result<()> {
+pub fn create_appdata_archive(assets_dir: &Path, release_databases_dir: &Path) -> Result<()> {
     let tar_name = "appdata.tar.bz2";
 
     logger::info(&format!("Creating {} archive", tar_name));
@@ -737,17 +742,17 @@ pub fn create_appdata_archive(assets_dir: &Path, release_dir: &Path) -> Result<(
 
     // Move tar archive to release directory
     let tar_src = assets_dir.join(tar_name);
-    let tar_dst = release_dir.join(tar_name);
+    let tar_dst = release_databases_dir.join(tar_name);
     fs::rename(&tar_src, &tar_dst)
         .with_context(|| format!("Failed to move {} to release directory", tar_name))?;
 
-    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_dir));
+    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_databases_dir));
 
     Ok(())
 }
 
 /// Create index.tar.bz2 from the index/ directory under assets_dir.
-pub fn create_index_archive(assets_dir: &Path, release_dir: &Path) -> Result<()> {
+pub fn create_index_archive(assets_dir: &Path, release_databases_dir: &Path) -> Result<()> {
     let index_dir = assets_dir.join("index");
     match index_dir.try_exists() {
         Ok(true) => {}
@@ -772,11 +777,11 @@ pub fn create_index_archive(assets_dir: &Path, release_dir: &Path) -> Result<()>
     }
 
     let tar_src = assets_dir.join("index.tar.bz2");
-    let tar_dst = release_dir.join("index.tar.bz2");
+    let tar_dst = release_databases_dir.join("index.tar.bz2");
     fs::rename(&tar_src, &tar_dst)
         .with_context(|| format!("Failed to move index.tar.bz2 to release directory"))?;
 
-    logger::info(&format!("Created and moved index.tar.bz2 to {:?}", release_dir));
+    logger::info(&format!("Created and moved index.tar.bz2 to {:?}", release_databases_dir));
 
     Ok(())
 }
@@ -790,7 +795,7 @@ pub fn create_language_archive(
     db_path: &Path,
     lang_index_dir: &Path,
     assets_dir: &Path,
-    release_dir: &Path,
+    release_databases_dir: &Path,
 ) -> Result<()> {
     let db_name = db_path.file_name()
         .and_then(|n| n.to_str())
@@ -823,11 +828,11 @@ pub fn create_language_archive(
     }
 
     let tar_src = assets_dir.join(&tar_name);
-    let tar_dst = release_dir.join(&tar_name);
+    let tar_dst = release_databases_dir.join(&tar_name);
     fs::rename(&tar_src, &tar_dst)
         .with_context(|| format!("Failed to move {} to release directory", tar_name))?;
 
-    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_dir));
+    logger::info(&format!("Created and moved {} to {:?}", tar_name, release_databases_dir));
 
     Ok(())
 }

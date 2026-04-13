@@ -27,6 +27,7 @@ pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
     // The asset folders are one level above simsapa-ng/.
     let bootstrap_assets_dir = PathBuf::from("../../bootstrap-assets-resources");
     let release_dir = PathBuf::from(format!("../../releases/{}-dev", iso_date));
+    let release_databases_dir = release_dir.join("databases/");
     let dist_dir = bootstrap_assets_dir.join("dist");
     let _sc_data_dir = bootstrap_assets_dir.join("sc-data");
 
@@ -71,7 +72,7 @@ RELEASE_CHANNEL=development
         println!("Skipping .env file creation (already exists). Use --write-new-dotenv to overwrite.");
     }
 
-    clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &dist_dir)?;
+    clean_and_create_folders(&simsapa_dir, &assets_dir, &release_dir, &release_databases_dir, &dist_dir)?;
 
     appdata_migrate(&bootstrap_assets_dir, &assets_dir)?;
 
