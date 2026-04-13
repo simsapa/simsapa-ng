@@ -25,6 +25,9 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile? 14 : 12
     required property int top_bar_margin
 
+    readonly property bool is_wide: is_desktop ? (root.width > 650) : (root.width > 800)
+    readonly property bool is_tall: root.height > 810
+
     property var current_providers: []
     property string selected_provider: ""
     property int selected_provider_index: -1
@@ -217,7 +220,7 @@ ApplicationWindow {
         implicitHeight: root.height - 20 - root.top_bar_margin
 
         ColumnLayout {
-            spacing: 15
+            spacing: root.is_wide ? 15 : 8
             anchors.fill: parent
 
             RowLayout {
@@ -248,12 +251,14 @@ ApplicationWindow {
             SplitView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                orientation: Qt.Horizontal
+                orientation: root.is_wide ? Qt.Horizontal : Qt.Vertical
 
                 // Left side - Provider list
                 Item {
                     SplitView.preferredWidth: 250
                     SplitView.minimumWidth: 200
+                    SplitView.preferredHeight: root.is_tall ? 240 : 180
+                    SplitView.minimumHeight: 120
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -262,7 +267,7 @@ ApplicationWindow {
                         Label {
                             text: "AI Providers:"
                             font.bold: true
-                            font.pointSize: root.pointSize
+                            font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                         }
 
                         ListView {
@@ -280,7 +285,7 @@ ApplicationWindow {
                                 required property int provider_index
 
                                 width: provider_list_view.width
-                                height: 60
+                                height: root.is_wide ? 60 : 44
 
                                 highlighted: provider_list_view.currentIndex === index
 
@@ -296,9 +301,9 @@ ApplicationWindow {
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    anchors.leftMargin: 10
-                                    anchors.rightMargin: 10
-                                    spacing: 2
+                                    anchors.leftMargin: root.is_wide ? 10 : 6
+                                    anchors.rightMargin: root.is_wide ? 10 : 6
+                                    spacing: root.is_wide ? 2 : 0
 
                                     RowLayout {
                                         Layout.fillWidth: true
@@ -306,11 +311,19 @@ ApplicationWindow {
 
                                         Text {
                                             text: provider_item.provider_name
-                                            font.pointSize: root.pointSize
+                                            font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                                             font.bold: true
                                             color: provider_item.highlighted ? palette.highlightedText : palette.text
                                             elide: Text.ElideRight
                                             Layout.fillWidth: true
+                                        }
+
+                                        Text {
+                                            visible: !root.is_wide
+                                            text: provider_item.provider_enabled ? "Enabled" : "Disabled"
+                                            font.pointSize: root.pointSize - 3
+                                            color: provider_item.highlighted ? palette.highlightedText : palette.windowText
+                                            opacity: 0.7
                                         }
 
                                         Switch {
@@ -327,6 +340,7 @@ ApplicationWindow {
                                     }
 
                                     Text {
+                                        visible: root.is_wide
                                         text: provider_item.provider_enabled ? "Enabled" : "Disabled"
                                         font.pointSize: root.pointSize - 2
                                         color: provider_item.highlighted ? palette.highlightedText : palette.windowText
@@ -348,6 +362,7 @@ ApplicationWindow {
                 // Right side - Provider details
                 Item {
                     SplitView.fillWidth: true
+                    SplitView.fillHeight: true
 
                     ScrollView {
                         anchors.fill: parent
@@ -472,15 +487,14 @@ ApplicationWindow {
                                     }
 
                                     // Model List
-                                    ScrollView {
+                                    ListView {
+                                        id: model_list_view
                                         Layout.fillWidth: true
                                         Layout.fillHeight: true
                                         clip: true
-
-                                        ListView {
-                                            id: model_list_view
-                                            model: model_list_model
-                                            spacing: 2
+                                        model: model_list_model
+                                        spacing: root.is_wide ? 2 : 1
+                                        boundsBehavior: Flickable.StopAtBounds
 
                                             delegate: ItemDelegate {
                                                 id: model_item
@@ -491,7 +505,7 @@ ApplicationWindow {
                                                 required property int model_index
 
                                                 width: model_list_view.width
-                                                height: 50
+                                                height: root.is_wide ? 50 : 38
 
                                                 background: Rectangle {
                                                     color: {
@@ -513,9 +527,9 @@ ApplicationWindow {
                                                     anchors.left: parent.left
                                                     anchors.right: parent.right
                                                     anchors.verticalCenter: parent.verticalCenter
-                                                    anchors.leftMargin: 10
-                                                    anchors.rightMargin: 10
-                                                    spacing: 10
+                                                    anchors.leftMargin: root.is_wide ? 10 : 6
+                                                    anchors.rightMargin: root.is_wide ? 10 : 6
+                                                    spacing: root.is_wide ? 10 : 5
 
                                                     CheckBox {
                                                         id: model_enabled_checkbox
@@ -527,7 +541,7 @@ ApplicationWindow {
 
                                                     Text {
                                                         text: model_item.model_name
-                                                        font.pointSize: root.pointSize
+                                                        font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                                                         color: palette.text
                                                         elide: Text.ElideRight
                                                         Layout.fillWidth: true
@@ -554,7 +568,7 @@ ApplicationWindow {
                         }
                     }
                 }
-            }
+
 
             RowLayout {
                 spacing: 10

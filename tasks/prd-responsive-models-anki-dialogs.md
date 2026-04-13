@@ -23,8 +23,10 @@ desktop experience.
    usable on narrow mobile screens.
 2. Wide and narrow layouts share a single copy of each panel's content
    (no duplicated sub-trees).
-3. Layout adapts reactively to `is_wide` and `is_tall` properties passed in
-   by the parent window (`SuttaSearchWindow.qml`).
+3. Layout adapts reactively to `is_wide` and `is_tall` properties
+   calculated inside each dialog from its own `root.width` / `root.height`
+   (the dialogs are independent `ApplicationWindow`s and can be resized
+   apart from the parent sutta search window).
 4. The draggable `SplitView` divider behavior is preserved in both
    orientations.
 5. Header rows (Export Format combo, Auto-retry checkbox, etc.) wrap onto
@@ -48,11 +50,15 @@ desktop experience.
 
 ### 4.1 Shared requirements (both dialogs)
 
-1. Each dialog MUST declare `required property bool is_wide` and
-   `required property bool is_tall`.
-2. `SuttaSearchWindow.qml` MUST pass `is_wide: root.is_wide` and
-   `is_tall: root.is_tall` when instantiating `ModelsDialog` and
-   `AnkiExportDialog` (see `SuttaSearchWindow.qml:1795` and `:1800`).
+1. Each dialog MUST declare `readonly property bool is_wide` and
+   `readonly property bool is_tall`, computed from its own window size
+   using the same formula as `SuttaSearchWindow.qml:52-53`:
+   `is_wide: is_desktop ? (root.width > 650) : (root.width > 800)` and
+   `is_tall: root.height > 810`. The dialogs are separate
+   `ApplicationWindow`s and must respond to their own resize events,
+   not the parent's.
+2. `SuttaSearchWindow.qml` MUST NOT pass `is_wide` / `is_tall` to these
+   dialogs — each dialog computes its own values.
 3. The main panel container MUST remain a `SplitView`, with
    `orientation` bound to `control.is_wide ? Qt.Horizontal : Qt.Vertical`.
    The draggable divider MUST continue to work in both orientations.
@@ -105,9 +111,10 @@ desktop experience.
 
 ### 4.4 Integration
 
-14. `SuttaSearchWindow.qml` MUST bind `is_wide` and `is_tall` on the two
-    dialog declarations (pattern already established for `TabListDialog`
-    — see `SuttaSearchWindow.qml:2048-2049`).
+14. `SuttaSearchWindow.qml` does NOT bind `is_wide` / `is_tall` on these
+    two dialogs (unlike `TabListDialog`). Each dialog is an independent
+    `ApplicationWindow` and computes its own responsive flags from its
+    own size.
 
 ## 5. Non-Goals (Out of Scope)
 
@@ -143,9 +150,10 @@ desktop experience.
   follows the same pattern.
 - The outer `Item { x: 10; y: 10 + top_bar_margin; implicitWidth: ... }`
   wrapper in both files remains unchanged.
-- QML `required property` means the parent MUST pass the value — be
-  sure to update the parent (`SuttaSearchWindow.qml`) in the same
-  change, or the dialogs will fail to instantiate.
+- `is_wide` / `is_tall` are `readonly property` bindings computed
+  inside each dialog from its own `root.width` / `root.height`.
+  Because they bind to the dialog's live window size, they update
+  automatically when the user resizes the dialog.
 - No new QML files are created, so `bridges/build.rs` does not need
   updating.
 
