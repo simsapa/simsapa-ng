@@ -67,7 +67,7 @@ impl SuttaCentralData {
             sutta_range_end: self.sutta_range_end,
             title: Some(&self.title),
             title_ascii: Some(&self.title_ascii),
-            title_pali: None,
+            title_pali: if self.language == "pli" { Some(&self.title) } else { None },
             title_trans: None,
             description: None,
             content_plain: Some(&self.content_plain),
