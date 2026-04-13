@@ -323,7 +323,15 @@ if (document.SSP) {
     document.SSP.show_bottom_footnotes = ${show_footnotes};
 }
 `);
-            if (loadRequest.loadProgress === 100) {
+            if (loadRequest.status === WebView.LoadSucceededStatus) {
+                // Skip the spurious initial blank `data:` placeholder load. It fires
+                // before the real URL load and would otherwise consume pending
+                // state (e.g. pending_find_query) on a page where document.SSP
+                // is not loaded.
+                let load_url = loadRequest.url.toString();
+                if (load_url.startsWith("data:")) {
+                    return;
+                }
                 root.page_loaded();
                 // Note: Anchor scrolling is now handled natively by including it in the URL
                 //

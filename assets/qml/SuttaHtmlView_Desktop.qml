@@ -303,6 +303,15 @@ if (document.SSP) {
 }
 `);
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
+                // Skip the initial blank `data:` placeholder load from
+                // Component.onCompleted before data_json is bound. On mobile
+                // this race consumed pending_find_query before document.SSP
+                // was loaded; on desktop the blank load is usually cancelled
+                // by the real URL navigation, but filter defensively to match.
+                let load_url = loadRequest.url.toString();
+                if (load_url.startsWith("data:")) {
+                    return;
+                }
                 root.page_loaded();
                 // Note: Anchor scrolling is now handled natively by including it in the URL
                 //
