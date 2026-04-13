@@ -68,7 +68,9 @@ Frame {
             // Dictionary: language filter not used
             lang_labels = [];
         }
-        language_filter_dropdown.model = ["Language"].concat(lang_labels);
+        // Shorter first label for narrow screens.
+        const first_label = root.is_wide ? "Language" : "Lang";
+        language_filter_dropdown.model = [first_label].concat(lang_labels);
         language_filter_dropdown.currentIndex = 0;
     }
 
@@ -87,6 +89,12 @@ Frame {
 
     onSearch_areaChanged: {
         load_language_labels_for_area(search_area);
+    }
+
+    onIs_wideChanged: {
+        const saved_index = language_filter_dropdown.currentIndex;
+        load_language_labels_for_area(search_area);
+        language_filter_dropdown.currentIndex = saved_index;
     }
 
     function user_typed() {
@@ -212,38 +220,62 @@ Frame {
             ComboBox {
                 id: search_mode_dropdown
                 Layout.preferredHeight: root.icon_size
+                Layout.preferredWidth: root.is_wide ? 120 : 80
+
+                readonly property var search_mode_label_wide: {
+                    "Suttas": [
+                        "Fulltext Match",
+                        "Contains Match",
+                        "Title Match",
+                    ],
+                    "Library": [
+                        "Fulltext Match",
+                        "Contains Match",
+                        "Title Match",
+                    ],
+                    "Dictionary": [
+                        "DPD Lookup",
+                        "Fulltext Match",
+                        "Contains Match",
+                        "Headword Match",
+                    ],
+                }
+
+                // For narrow screen, show shorter label texts.
+                // Value reading uses get_text(), which will return the longer label text,
+                // which is used for the JSON search parameters.
+                readonly property var search_mode_label_narrow: {
+                    "Suttas": [
+                        "Fulltext",
+                        "Contains",
+                        "Title",
+                    ],
+                    "Library": [
+                        "Fulltext",
+                        "Contains",
+                        "Title",
+                    ],
+                    "Dictionary": [
+                        "Lookup",
+                        "Fulltext",
+                        "Contains",
+                        "Headword",
+                    ],
+                }
+
                 model: {
-                    if (root.search_area === "Suttas") {
-                        return [
-                                /* "Combined", */
-                                "Fulltext Match",
-                                "Contains Match",
-                                "Title Match",
-                                /* "RegEx Match", */
-                        ];
-                    } else if (root.search_area === "Library") {
-                        return [
-                                /* "Combined", */
-                                "Fulltext Match",
-                                "Contains Match",
-                                "Title Match",
-                        ];
+                    if (root.is_wide) {
+                        return search_mode_label_wide[root.search_area];
                     } else {
-                        // search_area === "Dictionary"
-                        return [
-                                /* "Combined", */
-                                "DPD Lookup",
-                                "Fulltext Match",
-                                "Contains Match",
-                                "Headword Match",
-                        ];
+                        return search_mode_label_narrow[root.search_area];
                     }
                 }
 
                 onCurrentIndexChanged: root.handle_query_fn(search_input.text) // qmllint disable use-proper-function
 
                 function get_text(): string {
-                    return model[currentIndex];
+                    // Return the value using the wide values which is expected for JSON search parameters.
+                    return search_mode_label_wide[root.search_area][currentIndex];
                 }
             }
 
@@ -260,7 +292,9 @@ Frame {
             ComboBox {
                 id: language_filter_dropdown
                 Layout.preferredHeight: root.icon_size
-                model: ["Language",]
+                Layout.preferredWidth: root.is_wide ? 120 : 80
+                // Shorter first label for narrow screens.
+                model: root.is_wide ? ["Language",] : ["Lang",]
                 enabled: root.search_area === "Suttas" || root.search_area === "Library"
                 onCurrentIndexChanged: {
                     // Save the language filter selection
@@ -277,7 +311,13 @@ Frame {
                 }
 
                 function get_text(): string {
-                    return model[currentIndex];
+                    // Always return "Language" for index 0, because it is a fixed keyword for
+                    // "no language filter is selected".
+                    if (currentIndex === 0) {
+                        return "Language";
+                    } else {
+                        return model[currentIndex];
+                    }
                 }
             }
 
