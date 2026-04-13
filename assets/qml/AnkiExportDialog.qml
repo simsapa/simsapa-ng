@@ -24,6 +24,9 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile? 14 : 12
     required property int top_bar_margin
 
+    readonly property bool is_wide: is_desktop ? (root.width > 650) : (root.width > 800)
+    readonly property bool is_tall: root.height > 810
+
     property var current_templates: ({
         "Front": "",
         "Back": "",
@@ -31,6 +34,9 @@ ApplicationWindow {
         "Cloze Back": ""
     })
     property string selected_template_key: "Front"
+
+    property bool editor_expanded: true
+    property bool preview_expanded: true
     property string current_export_format: "Simple"
     property bool current_include_cloze: true
     property bool is_dark: theme_helper.is_dark
@@ -128,7 +134,7 @@ ApplicationWindow {
         implicitHeight: root.height - 20 - root.top_bar_margin
 
         ColumnLayout {
-            spacing: 10
+            spacing: root.is_wide ? 10 : 6
             anchors.fill: parent
 
             RowLayout {
@@ -145,24 +151,28 @@ ApplicationWindow {
                 }
             }
 
-            RowLayout {
+            Flow {
                 spacing: 10
                 Layout.fillWidth: true
 
-                Label {
-                    text: "Export Format:"
-                    font.pointSize: root.pointSize
-                }
+                Row {
+                    spacing: 10
+                    Label {
+                        text: "Export Format:"
+                        font.pointSize: root.pointSize
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
 
-                ComboBox {
-                    id: format_combo_box
-                    // AnkiExportFormat
-                    model: ["Simple", "Templated", "DataCsv"]
-                    Layout.preferredWidth: 150
+                    ComboBox {
+                        id: format_combo_box
+                        // AnkiExportFormat
+                        model: ["Simple", "Templated", "DataCsv"]
+                        width: 150
 
-                    onActivated: {
-                        root.current_export_format = currentText;
-                        SuttaBridge.set_anki_export_format(currentText);
+                        onActivated: {
+                            root.current_export_format = currentText;
+                            SuttaBridge.set_anki_export_format(currentText);
+                        }
                     }
                 }
 
@@ -181,11 +191,13 @@ ApplicationWindow {
             SplitView {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                orientation: Qt.Horizontal
+                orientation: root.is_wide ? Qt.Horizontal : Qt.Vertical
 
                 Item {
                     SplitView.preferredWidth: 200
                     SplitView.minimumWidth: 150
+                    SplitView.preferredHeight: root.is_tall ? 200 : 140
+                    SplitView.minimumHeight: 100
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -194,7 +206,7 @@ ApplicationWindow {
                         Label {
                             text: "Template:"
                             font.bold: true
-                            font.pointSize: root.pointSize
+                            font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                         }
 
                         ListView {
@@ -210,7 +222,7 @@ ApplicationWindow {
                                 required property string template_key
 
                                 width: template_list_view.width
-                                height: 40
+                                height: root.is_wide ? 40 : 32
 
                                 highlighted: template_list_view.currentIndex === index
 
@@ -225,10 +237,10 @@ ApplicationWindow {
                                     anchors.left: parent.left
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    anchors.leftMargin: 10
-                                    anchors.rightMargin: 10
+                                    anchors.leftMargin: root.is_wide ? 10 : 6
+                                    anchors.rightMargin: root.is_wide ? 10 : 6
                                     text: item_delegate.template_key
-                                    font.pointSize: root.pointSize
+                                    font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                                     color: item_delegate.highlighted ? palette.highlightedText : palette.text
                                     elide: Text.ElideRight
                                 }
@@ -249,38 +261,60 @@ ApplicationWindow {
 
                 Item {
                     SplitView.fillWidth: true
+                    SplitView.fillHeight: root.is_wide || root.editor_expanded
+                    SplitView.minimumHeight: (!root.is_wide && !root.editor_expanded) ? 36 : (root.is_tall ? 240 : 160)
+                    SplitView.preferredHeight: (!root.is_wide && !root.editor_expanded) ? 36 : -1
 
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 5
 
-                        Label {
-                            text: root.selected_template_key ? root.selected_template_key : "Select a template to edit"
-                            font.bold: true
-                            font.pointSize: root.pointSize
-                        }
-
-                        GroupBox {
+                        RowLayout {
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
+                            spacing: 5
 
-                            background: Rectangle {
-                                anchors.fill: parent
-                                color: root.is_dark ? "black" : "white"
-                                border.width: 1
-                                border.color: "#ccc"
-                                radius: 5
+                            Label {
+                                text: root.selected_template_key ? root.selected_template_key : "Select a template to edit"
+                                font.bold: true
+                                font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
 
-                            ScrollView {
-                                anchors.fill: parent
+                            Button {
+                                visible: !root.is_wide
+                                text: root.editor_expanded ? "Hide" : "Show"
+                                font.pointSize: root.pointSize - 2
+                                onClicked: root.editor_expanded = !root.editor_expanded
+                            }
+                        }
 
-                                TextArea {
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: root.is_wide || root.editor_expanded
+                            color: root.is_dark ? "black" : "white"
+                            border.width: 1
+                            border.color: "#ccc"
+                            radius: 5
+
+                            Flickable {
+                                id: template_flickable
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                clip: true
+                                contentWidth: width
+                                contentHeight: template_text_area.implicitHeight
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                                TextArea.flickable: TextArea {
                                     id: template_text_area
                                     placeholderText: "Select a template from the list to edit..."
                                     wrapMode: TextArea.Wrap
                                     selectByMouse: true
-                                    font.pointSize: root.pointSize
+                                    font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                                     font.family: "monospace"
                                     enabled: root.selected_template_key !== ""
                                     background: Rectangle {
@@ -302,38 +336,59 @@ ApplicationWindow {
                 Item {
                     SplitView.preferredWidth: 350
                     SplitView.minimumWidth: 250
+                    SplitView.preferredHeight: (!root.is_wide && !root.preview_expanded) ? 36 : (root.is_tall ? 280 : 200)
+                    SplitView.minimumHeight: (!root.is_wide && !root.preview_expanded) ? 36 : 150
 
                     ColumnLayout {
                         anchors.fill: parent
                         anchors.margins: 5
 
-                        Label {
-                            text: "Preview:"
-                            font.bold: true
-                            font.pointSize: root.pointSize
-                        }
-
-                        GroupBox {
+                        RowLayout {
                             Layout.fillWidth: true
-                            Layout.fillHeight: true
+                            spacing: 5
 
-                            background: Rectangle {
-                                anchors.fill: parent
-                                color: root.is_dark ? "black" : "#f5f5f5"
-                                border.width: 1
-                                border.color: "#ccc"
-                                radius: 5
+                            Label {
+                                text: "Preview"
+                                font.bold: true
+                                font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
                             }
 
-                            ScrollView {
-                                anchors.fill: parent
+                            Button {
+                                visible: !root.is_wide
+                                text: root.preview_expanded ? "Hide" : "Show"
+                                font.pointSize: root.pointSize - 2
+                                onClicked: root.preview_expanded = !root.preview_expanded
+                            }
+                        }
 
-                                TextArea {
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+                            visible: root.is_wide || root.preview_expanded
+                            color: root.is_dark ? "black" : "#f5f5f5"
+                            border.width: 1
+                            border.color: "#ccc"
+                            radius: 5
+
+                            Flickable {
+                                id: preview_flickable
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                clip: true
+                                contentWidth: width
+                                contentHeight: preview_text_area.implicitHeight
+                                boundsBehavior: Flickable.StopAtBounds
+
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                                TextArea.flickable: TextArea {
                                     id: preview_text_area
                                     readOnly: true
                                     wrapMode: TextArea.Wrap
                                     selectByMouse: true
-                                    font.pointSize: root.pointSize
+                                    font.pointSize: root.is_wide ? root.pointSize : root.pointSize - 1
                                     textFormat: Text.RichText
                                     background: Rectangle {
                                         color: "transparent"
