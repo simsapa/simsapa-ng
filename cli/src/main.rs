@@ -1,5 +1,6 @@
 pub mod bootstrap;
 pub mod bootstrap_old;
+pub mod update_provider_models;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -1177,6 +1178,24 @@ enum Commands {
         #[arg(long, value_name = "FILENAME")]
         output: Option<PathBuf>,
     },
+
+    /// Refresh model names in a providers.json by querying each provider's
+    /// public models API (Gemini, OpenRouter, Mistral, Anthropic, OpenAI,
+    /// DeepSeek, xAI, Perplexity). HuggingFace is skipped.
+    ///
+    /// API keys are read from the env var named in each provider entry's
+    /// `api_key_env_var_name` field. Providers whose key is missing or whose
+    /// fetch fails keep their existing model list.
+    #[command(arg_required_else_help = true)]
+    UpdateProviderModels {
+        /// Path to the existing providers.json to read
+        #[arg(long, value_name = "INPUT_PATH")]
+        input: PathBuf,
+
+        /// Path to write the updated providers.json
+        #[arg(long, value_name = "OUTPUT_PATH")]
+        output: PathBuf,
+    },
 }
 
 /// Enum for the different types of queries available.
@@ -1238,7 +1257,7 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } | Commands::ImportLanguage { .. } => {
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } | Commands::ImportLanguage { .. } | Commands::UpdateProviderModels { .. } => {
             // Skip app data initialization for bootstrap, export, stats, suttacentral, import, and parse commands
         }
         _ => {
@@ -1348,6 +1367,11 @@ fn main() {
 
         Commands::Index(subcmd) => {
             index_command(subcmd)
+        }
+
+        Commands::UpdateProviderModels { input, output } => {
+            update_provider_models::update_provider_models(&input, &output)
+                .map_err(|e| e.to_string())
         }
 
         Commands::FulltextSearch { query, limit, snippet, lang, source, format, area, output } => {

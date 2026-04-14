@@ -269,7 +269,53 @@ async fn make_api_request(messages: &[ChatMessage], model: &str, provider_name: 
         ProviderName::Mistral => handle_mistral_request(messages, model, &api_key, http_client).await,
         ProviderName::HuggingFace => handle_huggingface_request(messages, model, &api_key, http_client).await,
         ProviderName::Perplexity => handle_perplexity_request(messages, model, &api_key, http_client).await,
+        ProviderName::NvidiaNim => handle_openai_compatible_request(
+            messages, model, &api_key, http_client,
+            "NVIDIA NIM", "https://integrate.api.nvidia.com/v1",
+        ).await,
+        ProviderName::SambaNova => handle_openai_compatible_request(
+            messages, model, &api_key, http_client,
+            "SambaNova", "https://api.sambanova.ai/v1",
+        ).await,
     }
+}
+
+async fn handle_openai_compatible_request(
+    messages: &[ChatMessage],
+    model: &str,
+    api_key: &str,
+    http_client: reqwest::Client,
+    label: &str,
+    base_url: &str,
+) -> Result<String, String> {
+    // NVIDIA NIM, SambaNova and similar OpenAI-compatible endpoints expose
+    // the traditional `/chat/completions` path but not OpenAI's newer
+    // `/responses` one, so switch away from the default Responses API.
+    let client = openai::Client::builder()
+        .http_client(http_client)
+        .api_key(api_key)
+        .base_url(base_url)
+        .build()
+        .map_err(|e| format!("Failed to build {} client: {}", label, e))?
+        .completions_api();
+
+    let system_prompt = extract_system_prompt(messages);
+
+    let agent = match system_prompt {
+        Some(system_prompt) => {
+            client.agent(model)
+                  .preamble(&system_prompt)
+                  .temperature(0.7)
+                  .build()
+        }
+        None => {
+            client.agent(model)
+                  .temperature(0.7)
+                  .build()
+        }
+    };
+
+    Ok(get_response!(agent, messages, model))
 }
 
 async fn handle_deepseek_request(

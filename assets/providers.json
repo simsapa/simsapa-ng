@@ -7,14 +7,69 @@
         "api_key_value": null,
         "models": [
             {
+                "model_name": "gemini-flash-latest",
+                "enabled": true,
+                "removable": true
+            },
+            {
+                "model_name": "gemini-3.1-pro-preview",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemini-3-pro-preview",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemini-pro-latest",
+                "enabled": false,
+                "removable": true
+            },
+            {
                 "model_name": "gemini-2.5-pro",
                 "enabled": false,
                 "removable": false
             },
             {
+                "model_name": "gemini-3-flash-preview",
+                "enabled": false,
+                "removable": true
+            },
+            {
                 "model_name": "gemini-2.5-flash",
-                "enabled": true,
+                "enabled": false,
                 "removable": false
+            },
+            {
+                "model_name": "gemini-2.0-flash",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemini-2.5-flash-lite",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemini-flash-lite-latest",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemini-2.0-flash-lite",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemma-3-27b-it",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "gemma-3-12b-it",
+                "enabled": false,
+                "removable": true
             }
         ]
     },
@@ -26,32 +81,22 @@
         "api_key_value": null,
         "models": [
             {
-                "model_name": "tngtech/deepseek-r1t2-chimera:free",
+                "model_name": "openai/gpt-oss-120b:free",
                 "enabled": true,
                 "removable": true
             },
             {
-                "model_name": "deepseek/deepseek-r1-0528:free",
+                "model_name": "nousresearch/hermes-3-llama-3.1-405b:free",
                 "enabled": false,
                 "removable": true
             },
             {
-                "model_name": "deepseek/deepseek-chat-v3.1:free",
+                "model_name": "nvidia/nemotron-3-super-120b-a12b:free",
                 "enabled": false,
                 "removable": true
             },
             {
-                "model_name": "google/gemini-2.0-flash-exp:free",
-                "enabled": false,
-                "removable": true
-            },
-            {
-                "model_name": "google/gemma-3-27b-it:free",
-                "enabled": false,
-                "removable": true
-            },
-            {
-                "model_name": "openai/gpt-oss-20b:free",
+                "model_name": "qwen/qwen3-next-80b-a3b-instruct:free",
                 "enabled": false,
                 "removable": true
             },
@@ -61,12 +106,27 @@
                 "removable": true
             },
             {
-                "model_name": "meta-llama/llama-3.1-405b-instruct:free",
+                "model_name": "minimax/minimax-m2.5:free",
                 "enabled": false,
                 "removable": true
             },
             {
-                "model_name": "mistralai/mistral-small-3.2-24b-instruct:free",
+                "model_name": "z-ai/glm-4.5-air:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "arcee-ai/trinity-large-preview:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "google/gemma-3-27b-it:free",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "google/gemma-3-12b-it:free",
                 "enabled": false,
                 "removable": true
             }
@@ -80,12 +140,100 @@
         "api_key_value": null,
         "models": [
             {
+                "model_name": "mistral-medium-latest",
+                "enabled": true,
+                "removable": true
+            },
+            {
+                "model_name": "mistral-large-latest",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "magistral-medium-latest",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "magistral-small-latest",
+                "enabled": false,
+                "removable": true
+            },
+            {
                 "model_name": "mistral-small-latest",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "ministral-14b-latest",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "ministral-8b-latest",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "open-mistral-nemo",
+                "enabled": false,
+                "removable": true
+            }
+        ]
+    },
+    {
+        "name": "SambaNova",
+        "description": "<p>Links: <a href='https://cloud.sambanova.ai/apis'>API Keys</a>, <a href='https://docs.sambanova.ai/cloud/docs/get-started/supported-models'>Models</a> (free tier)</p>",
+        "enabled": false,
+        "api_key_env_var_name": "SAMBANOVA_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "DeepSeek-V3-0324",
                 "enabled": true,
                 "removable": false
             },
             {
-                "model_name": "mistral-large-latest",
+                "model_name": "Meta-Llama-3.3-70B-Instruct",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "Llama-4-Scout-17B-16E-Instruct",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "Qwen3-32B",
+                "enabled": false,
+                "removable": false
+            }
+        ]
+    },
+    {
+        "name": "NvidiaNim",
+        "description": "<p>Links: <a href='https://build.nvidia.com/settings/api-keys'>API Keys</a>, <a href='https://build.nvidia.com/models'>Models</a> (free tier)</p>",
+        "enabled": false,
+        "api_key_env_var_name": "NVIDIA_API_KEY",
+        "api_key_value": null,
+        "models": [
+            {
+                "model_name": "meta/llama-3.3-70b-instruct",
+                "enabled": true,
+                "removable": false
+            },
+            {
+                "model_name": "qwen/qwen3-next-80b-a3b-instruct",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "deepseek-ai/deepseek-r1",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "moonshotai/kimi-k2.5",
                 "enabled": false,
                 "removable": false
             }
@@ -99,14 +247,44 @@
         "api_key_value": null,
         "models": [
             {
-                "model_name": "claude-sonnet-4-0",
+                "model_name": "claude-sonnet-4-6",
                 "enabled": true,
-                "removable": false
+                "removable": true
+            },
+            {
+                "model_name": "claude-opus-4-6",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "claude-opus-4-5-20251101",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "claude-opus-4-1-20250805",
+                "enabled": false,
+                "removable": true
             },
             {
                 "model_name": "claude-opus-4-0",
                 "enabled": false,
                 "removable": false
+            },
+            {
+                "model_name": "claude-sonnet-4-5-20250929",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "claude-sonnet-4-0",
+                "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "claude-haiku-4-5-20251001",
+                "enabled": false,
+                "removable": true
             }
         ]
     },
@@ -124,7 +302,7 @@
             },
             {
                 "model_name": "gpt-4",
-                "enabled": true,
+                "enabled": false,
                 "removable": false
             }
         ]
@@ -137,13 +315,13 @@
         "api_key_value": null,
         "models": [
             {
-                "model_name": "deepseek-chat",
-                "enabled": true,
+                "model_name": "deepseek-reasoner",
+                "enabled": false,
                 "removable": false
             },
             {
-                "model_name": "deepseek-reasoner",
-                "enabled": false,
+                "model_name": "deepseek-chat",
+                "enabled": true,
                 "removable": false
             }
         ]
@@ -184,13 +362,28 @@
         "api_key_value": null,
         "models": [
             {
-                "model_name": "sonar",
-                "enabled": true,
-                "removable": false
+                "model_name": "sonar-deep-research",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "sonar-reasoning-pro",
+                "enabled": false,
+                "removable": true
+            },
+            {
+                "model_name": "sonar-reasoning",
+                "enabled": false,
+                "removable": true
             },
             {
                 "model_name": "sonar-pro",
                 "enabled": false,
+                "removable": false
+            },
+            {
+                "model_name": "sonar",
+                "enabled": true,
                 "removable": false
             }
         ]

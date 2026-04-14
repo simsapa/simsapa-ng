@@ -39,6 +39,8 @@ pub enum ProviderName {
     Mistral,
     HuggingFace,
     Perplexity,
+    NvidiaNim,
+    SambaNova,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

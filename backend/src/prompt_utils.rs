@@ -16,6 +16,16 @@ pub fn clean_prompt(text: &str) -> String {
     // Remove language identifier from ALL code blocks but keep the code block structure
     let processed_text = RE_CODE_BLOCK_WITH_LANG.replace_all(trimmed_text, "```\n$2\n```");
 
+    // If the whole response is wrapped in a single pair of code fences,
+    // strip them. LLMs sometimes wrap their entire markdown reply in a fence
+    // even though the content inside is prose/headers/lists meant to render
+    // as markdown, not as a literal code block.
+    let unfenced = strip_outer_code_fences(&processed_text);
+    let processed_text: std::borrow::Cow<str> = match unfenced {
+        Some(s) => std::borrow::Cow::Owned(s),
+        None => processed_text,
+    };
+
     // Remove wrapping bold/italics syntax if present (only if entire text is wrapped)
     let final_text = {
         let patterns = ["***", "**", "*", "___", "__", "_"];
@@ -34,6 +44,54 @@ pub fn clean_prompt(text: &str) -> String {
 
     // Apply consistent_niggahita to the cleaned text
     consistent_niggahita(Some(final_text.to_string()))
+}
+
+/// If the trimmed text is wrapped in a single pair of triple-backtick code
+/// fences AND the content between them clearly looks like markdown (has
+/// headers, list bullets, table rows, or blockquotes), return the unwrapped
+/// content. Otherwise return None.
+///
+/// We deliberately do NOT strip fences around plain prose/verse — the UI
+/// renders fenced blocks with sans-serif styling as a quoted-content
+/// affordance, and we want to preserve that when the LLM actually intended
+/// a code-block presentation.
+fn strip_outer_code_fences(text: &str) -> Option<String> {
+    let trimmed = text.trim();
+    let mut lines = trimmed.lines();
+    let first = lines.next()?;
+    if !first.trim_end().starts_with("```") {
+        return None;
+    }
+    let rest: Vec<&str> = lines.collect();
+    let (last, middle) = rest.split_last()?;
+    if last.trim() != "```" {
+        return None;
+    }
+    if middle.iter().any(|l| l.trim_start().starts_with("```")) {
+        return None;
+    }
+    let looks_like_markdown = middle.iter().any(|l| {
+        let s = l.trim_start();
+        is_markdown_heading(s)
+            || s.starts_with("- ")
+            || s.starts_with("* ")
+            || s.starts_with("+ ")
+            || s.starts_with('>')
+            || s.starts_with('|')
+    });
+    if !looks_like_markdown {
+        return None;
+    }
+    Some(middle.join("\n"))
+}
+
+fn is_markdown_heading(line: &str) -> bool {
+    if !line.starts_with('#') {
+        return false;
+    }
+    let after_hashes = line.trim_start_matches('#');
+    let hash_count = line.len() - after_hashes.len();
+    (1..=6).contains(&hash_count) && after_hashes.starts_with(' ')
 }
 
 pub fn markdown_to_html(markdown_text: &str) -> String {
@@ -60,10 +118,17 @@ pub fn markdown_to_html(markdown_text: &str) -> String {
 
     match to_html_with_options(processed_text.trim(), &Options::gfm()) {
         Ok(html) => {
-            // LLM responses sometimes use code blocks for verses or quotes,
-            // display them with sans-serif font instead of the default monospace.
-            html.replace("<pre>", "<pre style='font-family: sans-serif;'>")
-                .replace("<code>", "<code style='font-family: sans-serif;'>")
+            // LLM responses sometimes use code blocks for verses or quotes;
+            // display them with sans-serif and wrap long lines so the
+            // paragraph stays readable inside narrow UI panes.
+            html.replace(
+                "<pre>",
+                "<pre style='font-family: sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;'>",
+            )
+            .replace(
+                "<code>",
+                "<code style='font-family: sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;'>",
+            )
         },
         Err(_) => markdown_text.trim().to_string(), // Fallback to plain text on error
     }
@@ -204,6 +269,42 @@ code 4
         // Should convert ṃ to ṁ
         assert!(result.contains("saṁvaro"));
         assert!(!result.contains("saṃvaro"));
+    }
+
+    #[test]
+    fn test_clean_prompt_strips_outer_fence_wrapping_markdown() {
+        // LLMs sometimes wrap the whole reply in a fence even though the
+        // content is markdown meant to render normally.
+        let text = "```\n# Title\n\nSome **bold** text.\n- bullet\n```";
+        let result = clean_prompt(text);
+
+        assert!(result.contains("# Title"));
+        assert!(result.contains("**bold**"));
+        assert!(result.contains("- bullet"));
+        assert!(!result.contains("```"));
+    }
+
+    #[test]
+    fn test_clean_prompt_strips_outer_fence_with_language() {
+        let text = "```markdown\n# Heading\n\nBody text.\n```";
+        let result = clean_prompt(text);
+
+        assert!(result.contains("# Heading"));
+        assert!(result.contains("Body text."));
+        assert!(!result.contains("```"));
+    }
+
+    #[test]
+    fn test_clean_prompt_preserves_multiple_inner_fences() {
+        // Outer fence should NOT be stripped when there's a nested fence —
+        // the content is genuinely a code-surrounded example.
+        let text = "Some intro.\n\n```rust\nfn main() {}\n```\n\nAnd more.";
+        let result = clean_prompt(text);
+
+        // The rust fence should still be present (with lang stripped).
+        assert!(result.contains("```\nfn main() {}\n```"));
+        assert!(result.contains("Some intro."));
+        assert!(result.contains("And more."));
     }
 
     #[test]
