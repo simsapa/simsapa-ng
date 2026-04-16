@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use regex::Regex;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde::Serialize;
 
 use crate::get_app_data;
@@ -344,6 +344,33 @@ impl AppdataDbHandle {
                 AppSettings::default()
             }
         }
+    }
+
+    /// Upsert the `app_settings` row with a freshly serialized `AppSettings::default()`.
+    pub fn reset_app_settings_to_defaults(&self) -> Result<usize> {
+        use crate::db::appdata_schema::app_settings::dsl::*;
+
+        let settings_json = serde_json::to_string(&AppSettings::default())
+            .context("Failed to serialize default AppSettings")?;
+
+        self.do_write(|db_conn| {
+            let existing = app_settings
+                .filter(key.eq("app_settings"))
+                .first::<AppSetting>(db_conn)
+                .optional()?;
+
+            match existing {
+                Some(setting) => diesel::update(app_settings.find(setting.id))
+                    .set(value.eq(Some(settings_json.as_str())))
+                    .execute(db_conn),
+                None => diesel::insert_into(app_settings)
+                    .values(NewAppSetting {
+                        key: "app_settings",
+                        value: Some(settings_json.as_str()),
+                    })
+                    .execute(db_conn),
+            }
+        })
     }
 
     pub fn get_common_words_json(&self) -> String {
@@ -870,6 +897,7 @@ impl AppdataDbHandle {
                         volume: r.volume,
                         playback_position_ms: r.playback_position_ms,
                         waveform_json: r.waveform_json,
+                        is_user_added: r.is_user_added,
                     }
                 }).collect();
 
@@ -1060,6 +1088,7 @@ impl AppdataDbHandle {
             volume: data.volume,
             playback_position_ms: data.playback_position_ms,
             waveform_json: data.waveform_json.as_deref(),
+            is_user_added: data.is_user_added,
         };
 
         self.do_write(|db_conn| {
@@ -1464,6 +1493,7 @@ impl AppdataDbHandle {
             name: name_param,
             sort_order: max_order + 1,
             is_last_session: is_last_session_param,
+            is_user_added: true,
         };
 
         self.do_write(|db_conn| {
@@ -1500,6 +1530,7 @@ impl AppdataDbHandle {
             find_query: new_item.find_query.clone(),
             find_match_index: new_item.find_match_index,
             sort_order: max_order + 1,
+            is_user_added: new_item.is_user_added,
         };
 
         self.do_write(|db_conn| {

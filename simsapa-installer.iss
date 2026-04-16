@@ -131,8 +131,7 @@ end;
 // On Windows, app_dirs2 creates: %LOCALAPPDATA%\{author}\{name}
 // Result: %LOCALAPPDATA%\profound-labs\simsapa-ng
 // This directory contains:
-//   - userdata.sqlite3 (user's personal database)
-//   - app-assets/ (downloaded language databases)
+//   - app-assets/ (appdata.sqlite3, dictionaries, downloaded language databases)
 //   - logs/ (application logs)
 function GetUserDataDir: String;
 begin

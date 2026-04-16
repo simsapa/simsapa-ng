@@ -42,6 +42,7 @@ pub fn import_html_to_db(
     custom_author: Option<&str>,
     custom_language: Option<&str>,
     custom_enable_embedded_css: Option<bool>,
+    is_user_added: bool,
 ) -> Result<()> {
     tracing::info!("Importing HTML from {:?} with UID: {}", html_path, book_uid);
 
@@ -121,6 +122,7 @@ pub fn import_html_to_db(
         metadata_json: Some(&metadata_json),
         enable_embedded_css,
         toc_json: None, // HTML files don't have TOC support yet
+        is_user_added,
     };
 
     diesel::insert_into(books::table)

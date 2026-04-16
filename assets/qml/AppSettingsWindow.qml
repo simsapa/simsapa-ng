@@ -190,6 +190,46 @@ ApplicationWindow {
         }
     }
 
+    // Reset-settings-to-default confirmation dialog
+    Dialog {
+        id: reset_settings_confirm_dialog
+        title: "Reset Settings"
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        Label {
+            text: "Reset all app settings to their default values?"
+            wrapMode: Text.WordWrap
+            width: 400
+        }
+
+        onAccepted: {
+            // The backend emits `appSettingsReset` on success, and our
+            // Connections block below reloads from that signal — don't reload
+            // here too or every control rebinds twice.
+            if (!SuttaBridge.reset_app_settings_to_defaults()) {
+                reset_settings_error_dialog.open();
+            }
+        }
+    }
+
+    Dialog {
+        id: reset_settings_error_dialog
+        title: "Reset Failed"
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: "Failed to reset app settings. See logs for details."
+            wrapMode: Text.WordWrap
+            width: 400
+        }
+    }
+
     // Shortcut conflict dialog
     ShortcutConflictDialog {
         id: shortcut_conflict_dialog
@@ -313,6 +353,13 @@ ApplicationWindow {
                             font.pointSize: root.pointSize + 1
                             font.bold: true
                             Layout.topMargin: 10
+                        }
+
+                        Button {
+                            id: reset_settings_button
+                            text: "Reset Settings to Default"
+                            font.pointSize: root.pointSize
+                            onClicked: reset_settings_confirm_dialog.open()
                         }
 
                         Button {
@@ -774,9 +821,7 @@ ApplicationWindow {
         }
     }
 
-    Component.onCompleted: {
-        theme_helper.apply();
-
+    function reload_settings_from_backend() {
         // Load initial state for General tab settings
         notify_updates_checkbox.checked = SuttaBridge.get_notify_about_simsapa_updates();
         restore_last_session_checkbox.checked = SuttaBridge.get_restore_last_session();
@@ -813,5 +858,24 @@ ApplicationWindow {
 
         // Load keybindings
         root.load_keybindings();
+    }
+
+    Connections {
+        target: SuttaBridge
+        function onAppSettingsReset() {
+            root.reload_settings_from_backend();
+
+            // Live-apply the reset: re-theme this window and notify parents
+            // so other windows update without an app restart.
+            theme_helper.apply();
+            root.themeChanged(SuttaBridge.get_theme_name());
+            root.marginChanged();
+            root.keybindingsChanged();
+        }
+    }
+
+    Component.onCompleted: {
+        theme_helper.apply();
+        root.reload_settings_from_backend();
     }
 }

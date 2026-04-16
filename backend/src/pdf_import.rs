@@ -29,6 +29,7 @@ pub fn import_pdf_to_db(
     custom_author: Option<&str>,
     custom_language: Option<&str>,
     custom_enable_embedded_css: Option<bool>,
+    is_user_added: bool,
 ) -> Result<()> {
     tracing::info!("Importing PDF from {:?} with UID: {}", pdf_path, book_uid);
 
@@ -104,6 +105,7 @@ pub fn import_pdf_to_db(
         metadata_json: None, // PDFs don't have structured metadata like EPUBs
         enable_embedded_css,
         toc_json: None, // PDFs don't have TOC support yet
+        is_user_added,
     };
 
     diesel::insert_into(books::table)

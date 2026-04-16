@@ -101,6 +101,7 @@ pub fn create_chanting_sqlite(
             volume: rec.volume,
             playback_position_ms: rec.playback_position_ms,
             waveform_json: rec.waveform_json.as_deref(),
+            is_user_added: rec.is_user_added,
         };
         diesel::insert_into(rec_dsl::chanting_recordings)
             .values(&new)
@@ -390,6 +391,7 @@ fn remap_uids(
             // Reset playback position and waveform cache for imported recordings
             rec.playback_position_ms = 0;
             rec.waveform_json = None;
+            rec.is_user_added = true;
             rec
         })
         .collect();
@@ -501,6 +503,7 @@ pub fn import_chanting_from_zip(
             volume: rec.volume,
             playback_position_ms: rec.playback_position_ms,
             waveform_json: rec.waveform_json.clone(),
+            is_user_added: true,
         };
         appdata_db.create_chanting_recording(&data)
             .with_context(|| format!("Failed to import recording: {}", rec.uid))?;
@@ -611,6 +614,7 @@ mod tests {
             volume: 1.0,
             playback_position_ms: 0,
             waveform_json: None,
+            is_user_added: true,
         }];
 
         (collections, chants, sections, recordings)
@@ -692,6 +696,7 @@ mod tests {
                 volume: 0.8,
                 playback_position_ms: 100,
                 waveform_json: Some("cached".to_string()),
+                is_user_added: true,
             },
             ChantingRecording {
                 id: 0,
@@ -705,6 +710,7 @@ mod tests {
                 volume: 1.0,
                 playback_position_ms: 500,
                 waveform_json: None,
+                is_user_added: false,
             },
         ];
 
@@ -848,6 +854,7 @@ mod tests {
                 volume: 0.8,
                 playback_position_ms: 0,
                 waveform_json: None,
+                is_user_added: true,
             },
             ChantingRecording {
                 id: 0,
@@ -861,6 +868,7 @@ mod tests {
                 volume: 1.0,
                 playback_position_ms: 500,
                 waveform_json: None,
+                is_user_added: false,
             },
         ];
 

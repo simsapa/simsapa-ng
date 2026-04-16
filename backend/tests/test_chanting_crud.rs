@@ -298,6 +298,7 @@ fn test_create_and_read_chanting_recording() {
         volume: 1.0,
         playback_position_ms: 0,
         waveform_json: None,
+        is_user_added: true,
     };
     app_data.dbm.appdata.create_chanting_recording(&rec_data).expect("create recording");
 
@@ -367,6 +368,7 @@ fn test_cascade_delete_collection_removes_chants_and_sections() {
         volume: 1.0,
         playback_position_ms: 0,
         waveform_json: None,
+        is_user_added: true,
     };
     app_data.dbm.appdata.create_chanting_recording(&rec_data).expect("create");
 
@@ -522,6 +524,7 @@ fn test_update_recording_markers() {
         volume: 1.0,
         playback_position_ms: 0,
         waveform_json: None,
+        is_user_added: true,
     };
     app_data.dbm.appdata.create_chanting_recording(&rec_data).expect("create");
 

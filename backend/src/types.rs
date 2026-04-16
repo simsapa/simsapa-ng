@@ -122,7 +122,7 @@ impl Default for SearchParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SearchResult {
     pub uid: String,
-    // database schema name (appdata or userdata)
+    // database schema name (appdata, dictionaries, or dpd)
     pub schema_name: String,
     // database table name (e.g. suttas or dict_words)
     pub table_name: String,

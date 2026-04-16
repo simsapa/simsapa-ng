@@ -995,7 +995,6 @@ ${query_text}`;
             SuttaBridge.appdata_first_query();
             SuttaBridge.dpd_first_query();
             SuttaBridge.dictionary_first_query();
-            SuttaBridge.userdata_first_query();
 
             // Update top_bar_margin after app data is initialized
             // This will automatically update all child dialogs via property bindings

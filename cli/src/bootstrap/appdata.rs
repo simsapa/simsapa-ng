@@ -46,7 +46,7 @@ impl AppdataBootstrap {
     pub fn initialize_app_settings(&self, conn: &mut SqliteConnection) -> Result<()> {
         logger::info("Initializing app settings with default values");
 
-        // NOTE: Not writing AppSettings to appdata.sqlite3. It will be written to userdata.sqlite3 on the first run.
+        // NOTE: AppSettings row is written to appdata.sqlite3 on the first run.
         let settings = vec![
             NewAppSetting {
                 key: "db_version",

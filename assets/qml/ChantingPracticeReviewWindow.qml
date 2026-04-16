@@ -255,7 +255,8 @@ ApplicationWindow {
             "recording_type": rec_type,
             "label": label_prefix + " — " + original_name,
             "duration_ms": 0,
-            "markers_json": "[]"
+            "markers_json": "[]",
+            "is_user_added": true
         });
         SuttaBridge.create_chanting_recording(rec_json);
         load_section_data();
@@ -754,7 +755,8 @@ ApplicationWindow {
                                     "recording_type": "user",
                                     "label": new_rec_delegate.model_label,
                                     "duration_ms": 0,
-                                    "markers_json": "[]"
+                                    "markers_json": "[]",
+                                    "is_user_added": true
                                 });
                                 SuttaBridge.create_chanting_recording(rec_json);
                                 // Remove from new recordings and auto-open in user list

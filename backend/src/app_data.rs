@@ -1,5 +1,5 @@
 use std::sync::RwLock;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use indexmap::IndexMap;
 
@@ -34,7 +34,7 @@ impl AppData {
     pub fn new() -> Self {
         init_app_globals();
         let dbm = DbManager::new().expect("Can't create DbManager");
-        let app_settings_cache = RwLock::new(dbm.userdata.get_app_settings().clone());
+        let app_settings_cache = RwLock::new(dbm.appdata.get_app_settings().clone());
         let g = get_app_globals();
 
         AppData {
@@ -42,6 +42,19 @@ impl AppData {
             app_settings_cache,
             api_url: g.api_url.clone(),
         }
+    }
+
+    /// Reset the `app_settings` row in `appdata` to `AppSettings::default()` and
+    /// update the in-memory cache so subsequent reads return defaults without a restart.
+    pub fn reset_app_settings_to_defaults(&self) -> Result<()> {
+        {
+            let mut cache = self.app_settings_cache.write().expect("Failed to write app settings");
+            *cache = AppSettings::default();
+        }
+        self.dbm.appdata.reset_app_settings_to_defaults()
+            .context("Failed to reset app_settings row in appdata")?;
+        info("AppData::reset_app_settings_to_defaults() complete");
+        Ok(())
     }
 
     /// Fetches the corresponding Pali sutta for a translated sutta.
@@ -546,7 +559,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -567,7 +580,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -601,7 +614,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -635,7 +648,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -675,7 +688,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -767,7 +780,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -793,7 +806,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -819,7 +832,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -845,7 +858,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -886,7 +899,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -912,7 +925,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -938,7 +951,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -964,7 +977,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -990,7 +1003,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1016,7 +1029,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1042,7 +1055,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1068,7 +1081,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1094,7 +1107,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1120,7 +1133,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1141,7 +1154,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1162,7 +1175,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1183,7 +1196,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1196,24 +1209,24 @@ impl AppData {
     }
 
     /// Import an EPUB document into the database
-    pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>) -> Result<()> {
+    pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
-        crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
+        crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)
     }
 
     /// Import a PDF document into the database
-    pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>) -> Result<()> {
+    pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
-        crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
+        crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)
     }
 
     /// Import an HTML document into the database
-    pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>) -> Result<()> {
+    pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
-        crate::html_import::import_html_to_db(db_conn, html_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
+        crate::html_import::import_html_to_db(db_conn, html_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)
     }
 
     pub fn get_first_time_start(&self) -> bool {
@@ -1230,7 +1243,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1310,7 +1323,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1336,7 +1349,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1387,7 +1400,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1415,7 +1428,7 @@ impl AppData {
             let a = app_settings.clone();
             let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-            let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+            let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
             match diesel::update(app_settings::table)
                 .filter(app_settings::key.eq("app_settings"))
@@ -1438,7 +1451,7 @@ impl AppData {
         let a = app_settings.clone();
         let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
 
-        let db_conn = &mut self.dbm.userdata.get_conn().expect("Can't get db conn");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
 
         match diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1498,7 +1511,89 @@ impl AppData {
         // Export user chanting data and recordings to import-me folder
         self.export_user_chanting_data(&import_dir)?;
 
+        // One-shot legacy bridge: if userdata.sqlite3 still exists (alpha testers
+        // upgrading from the pre-consolidation two-DB layout), pull its user data
+        // into the standard per-table import files and keep a safety-net copy.
+        if self.legacy_userdata_exists() {
+            info("export_user_data_to_assets(): legacy userdata.sqlite3 detected — running one-shot bridge");
+            if let Err(e) = self.export_from_legacy_userdata(&import_dir) {
+                error(&format!("Legacy userdata export failed: {}", e));
+            }
+        }
+
         info("export_user_data_to_assets(): Export completed successfully");
+        Ok(())
+    }
+
+    /// Returns true if the legacy `userdata.sqlite3` file exists in the app assets dir.
+    /// Used only by the one-shot alpha-upgrade bridge.
+    fn legacy_userdata_exists(&self) -> bool {
+        let g = get_app_globals();
+        let path = g.paths.app_assets_dir.join("userdata.sqlite3");
+        matches!(path.try_exists(), Ok(true))
+    }
+
+    fn legacy_userdata_path(&self) -> PathBuf {
+        let g = get_app_globals();
+        g.paths.app_assets_dir.join("userdata.sqlite3")
+    }
+
+    /// One-shot legacy bridge: copies `userdata.sqlite3` into the import-me folder,
+    /// applies idempotent schema upgrades to that copy, extracts `app_settings.json`,
+    /// and aliases the copy under the per-table export filenames so the standard
+    /// importer will pick them up — but only for tables not already exported.
+    fn export_from_legacy_userdata(&self, import_dir: &Path) -> Result<()> {
+        use diesel::sqlite::SqliteConnection;
+        use crate::db::upgrade_appdata_schema;
+        use crate::db::appdata_schema::app_settings;
+
+        let legacy_path = self.legacy_userdata_path();
+
+        // 5.3: safety-net full copy
+        let safety_copy = import_dir.join("legacy-userdata.sqlite3");
+        std::fs::copy(&legacy_path, &safety_copy)
+            .with_context(|| format!("Failed to copy legacy userdata to {}", safety_copy.display()))?;
+        info(&format!("Legacy bridge: copied userdata.sqlite3 to {}", safety_copy.display()));
+
+        // Apply idempotent schema upgrades to the copy so Diesel models can load from it.
+        let copy_url = format!("sqlite://{}", safety_copy.display());
+        let mut legacy_conn = SqliteConnection::establish(&copy_url)
+            .with_context(|| format!("Failed to open legacy userdata copy: {}", safety_copy.display()))?;
+        upgrade_appdata_schema(&mut legacy_conn);
+
+        // Extract app_settings.json from the legacy DB. Overwrites any standard export so
+        // the alpha user's pre-upgrade settings take precedence.
+        let app_settings_out = import_dir.join("app_settings.json");
+        let row: Option<AppSetting> = app_settings::table
+            .filter(app_settings::key.eq("app_settings"))
+            .select(AppSetting::as_select())
+            .first(&mut legacy_conn)
+            .optional()
+            .context("Failed to read legacy app_settings")?;
+        if let Some(setting) = row {
+            if let Some(val) = setting.value {
+                std::fs::write(&app_settings_out, &val)
+                    .context("Failed to write app_settings.json from legacy")?;
+                info("Legacy bridge: exported app_settings.json from legacy userdata");
+            }
+        }
+
+        // Alias the migrated copy under the per-table filenames the standard importer expects,
+        // but only when those files are missing — the standard export from appdata wins.
+        for target_name in ["appdata-bookmarks.sqlite3", "appdata-books.sqlite3", "appdata-chanting.sqlite3"] {
+            let target_path = import_dir.join(target_name);
+            match target_path.try_exists() {
+                Ok(true) => {
+                    info(&format!("Legacy bridge: {} already present — skipping", target_name));
+                }
+                _ => {
+                    std::fs::copy(&safety_copy, &target_path)
+                        .with_context(|| format!("Failed to copy legacy into {}", target_name))?;
+                    info(&format!("Legacy bridge: aliased legacy into {}", target_name));
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -1561,26 +1656,12 @@ impl AppData {
         use diesel::sqlite::SqliteConnection;
         use diesel_migrations::MigrationHarness;
 
-        // UIDs of books in the original dataset
-        let original_book_uids = vec![
-            "buddhadhamma",
-            "bmc",
-            "cbmc",
-            "nibbana-sermons",
-            "bhikkhu-manual",
-            "the-island",
-            "its-essential-meaning",
-            "pali-lessons",
-            "pali-lessons-answerkey",
-            "way-of-meditation",
-        ];
-
-        // Get user-imported books (not in original dataset)
+        // Get user-imported books (filtered by is_user_added)
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get appdata connection")?;
 
         let user_books: Vec<Book> = books::table
-            .filter(books::uid.ne_all(&original_book_uids))
+            .filter(books::is_user_added.eq(true))
             .load::<Book>(db_conn)
             .context("Failed to load user books")?;
 
@@ -1592,7 +1673,7 @@ impl AppData {
         info(&format!("Found {} user-imported books to export", user_books.len()));
 
         // Create export database
-        let export_db_path = import_dir.join("appdata.sqlite3");
+        let export_db_path = import_dir.join("appdata-books.sqlite3");
         if export_db_path.exists() {
             std::fs::remove_file(&export_db_path)
                 .with_context(|| format!("Failed to remove existing export database: {}", export_db_path.display()))?;
@@ -1619,6 +1700,7 @@ impl AppData {
                 metadata_json: book.metadata_json.as_deref(),
                 enable_embedded_css: book.enable_embedded_css,
                 toc_json: book.toc_json.as_deref(),
+                is_user_added: book.is_user_added,
             };
 
             diesel::insert_into(books::table)
@@ -1691,7 +1773,7 @@ impl AppData {
     ///
     /// This reads from the "import-me" folder in the simsapa directory and imports:
     /// - app_settings.json: Restores the application settings
-    /// - appdata.sqlite3: Imports user books back into the new database
+    /// - appdata-books.sqlite3: Imports user books back into the new database
     ///
     /// After successful import, the import-me folder is deleted.
     ///
@@ -1732,6 +1814,18 @@ impl AppData {
             error(&format!("Failed to import user chanting data: {}", e));
         }
 
+        // Defensive tail pass for the one-shot legacy bridge: if legacy-userdata.sqlite3
+        // is present and the current app_settings in appdata still looks like defaults,
+        // re-apply the legacy app_settings. (Bookmark/book/chanting tables already got
+        // aliased copies during export, so the standard importer handled those.)
+        let legacy_copy = import_dir.join("legacy-userdata.sqlite3");
+        if matches!(legacy_copy.try_exists(), Ok(true)) {
+            info("import_user_data_from_assets(): legacy-userdata.sqlite3 present — running defensive tail pass");
+            if let Err(e) = self.defensive_reapply_legacy_app_settings(&legacy_copy) {
+                error(&format!("Defensive legacy app_settings re-apply failed: {}", e));
+            }
+        }
+
         // Clean up: remove the import-me folder
         if let Err(e) = std::fs::remove_dir_all(&import_dir) {
             error(&format!("Failed to remove import-me folder: {}", e));
@@ -1740,6 +1834,59 @@ impl AppData {
         }
 
         info("import_user_data_from_assets(): Import completed");
+        Ok(())
+    }
+
+    /// Defensive tail pass for the one-shot legacy bridge.
+    ///
+    /// Re-reads `app_settings` from the legacy-userdata copy and applies it into appdata
+    /// unconditionally. The standard importer's `app_settings.json` step is usually the
+    /// source of truth, but this pass guards against the JSON extraction failing silently.
+    fn defensive_reapply_legacy_app_settings(&self, legacy_copy: &Path) -> Result<()> {
+        use diesel::sqlite::SqliteConnection;
+        use crate::db::appdata_schema::app_settings;
+
+        let url = format!("sqlite://{}", legacy_copy.display());
+        let mut conn = SqliteConnection::establish(&url)
+            .with_context(|| format!("Failed to open legacy userdata copy: {}", legacy_copy.display()))?;
+
+        let row: Option<AppSetting> = app_settings::table
+            .filter(app_settings::key.eq("app_settings"))
+            .select(AppSetting::as_select())
+            .first(&mut conn)
+            .optional()
+            .context("Failed to read legacy app_settings")?;
+
+        let Some(setting) = row else {
+            info("Defensive tail: legacy app_settings row not found");
+            return Ok(());
+        };
+        let Some(val) = setting.value else {
+            info("Defensive tail: legacy app_settings value is NULL");
+            return Ok(());
+        };
+
+        // Parse once to validate the JSON and to seed the in-memory cache, but
+        // write the original bytes back to the DB — re-serializing would only
+        // reproduce the same content (modulo field ordering) and could drop
+        // any future fields we haven't taught `AppSettings` about yet.
+        let imported: AppSettings = serde_json::from_str(&val)
+            .context("Failed to parse legacy app_settings JSON")?;
+
+        {
+            let mut cache = self.app_settings_cache.write().expect("Failed to write app settings");
+            *cache = imported;
+        }
+
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection")?;
+        diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(val.as_str())))
+            .execute(db_conn)
+            .context("Failed to update app_settings from legacy tail pass")?;
+
+        info("Defensive tail: legacy app_settings re-applied to appdata");
         Ok(())
     }
 
@@ -1771,8 +1918,8 @@ impl AppData {
         let serialized_json = serde_json::to_string(&*cache)
             .context("Failed to serialize app settings to JSON")?;
 
-        let db_conn = &mut self.dbm.userdata.get_conn()
-            .context("Failed to get userdata connection")?;
+        let db_conn = &mut self.dbm.appdata.get_conn()
+            .context("Failed to get appdata connection")?;
 
         diesel::update(app_settings::table)
             .filter(app_settings::key.eq("app_settings"))
@@ -1786,15 +1933,15 @@ impl AppData {
 
     /// Import user books from the export database.
     ///
-    /// Reads books from the import-me/appdata.sqlite3 and inserts them into the new database.
+    /// Reads books from the import-me/appdata-books.sqlite3 and inserts them into the new database.
     fn import_user_books(&self, import_dir: &Path) -> Result<()> {
         use crate::db::appdata_schema::{books, book_spine_items, book_resources};
         use diesel::sqlite::SqliteConnection;
 
-        let import_db_path = import_dir.join("appdata.sqlite3");
+        let import_db_path = import_dir.join("appdata-books.sqlite3");
 
         if !import_db_path.exists() {
-            info("No appdata.sqlite3 found in import-me folder");
+            info("No appdata-books.sqlite3 found in import-me folder");
             return Ok(());
         }
 
@@ -1805,13 +1952,18 @@ impl AppData {
         let mut import_conn = SqliteConnection::establish(&import_db_url)
             .with_context(|| format!("Failed to open import database: {}", import_db_path.display()))?;
 
-        // Get all books from the import database
+        // Filter to user-added rows only. The legacy one-shot bridge aliases
+        // the full userdata.sqlite3 copy as appdata-books.sqlite3, which could
+        // contain bootstrap-seeded rows copied around in earlier alpha builds;
+        // UID collisions would skip them anyway, but the filter keeps the
+        // import contract explicit and avoids touching seeded rows.
         let import_books: Vec<Book> = books::table
+            .filter(books::is_user_added.eq(true))
             .load::<Book>(&mut import_conn)
             .context("Failed to load books from import database")?;
 
         if import_books.is_empty() {
-            info("No books to import from appdata.sqlite3");
+            info("No books to import from appdata-books.sqlite3");
             return Ok(());
         }
 
@@ -1847,6 +1999,7 @@ impl AppData {
                 metadata_json: book.metadata_json.as_deref(),
                 enable_embedded_css: book.enable_embedded_css,
                 toc_json: book.toc_json.as_deref(),
+                is_user_added: book.is_user_added,
             };
 
             diesel::insert_into(books::table)
@@ -1928,9 +2081,10 @@ impl AppData {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get appdata connection for bookmark export")?;
 
-        // Load all non-transient bookmark folders
+        // Load all non-transient, user-added bookmark folders
         let folders: Vec<BookmarkFolder> = bookmark_folders::table
             .filter(bookmark_folders::is_last_session.eq(false))
+            .filter(bookmark_folders::is_user_added.eq(true))
             .load::<BookmarkFolder>(db_conn)
             .context("Failed to load bookmark folders")?;
 
@@ -1961,6 +2115,7 @@ impl AppData {
                 name: &folder.name,
                 sort_order: folder.sort_order,
                 is_last_session: false,
+                is_user_added: folder.is_user_added,
             };
 
             diesel::insert_into(bookmark_folders::table)
@@ -1975,9 +2130,10 @@ impl AppData {
                 .first(&mut export_conn)
                 .context("Failed to get exported bookmark folder id")?;
 
-            // Load items for this folder
+            // Load user-added items for this folder
             let items: Vec<BookmarkItem> = bookmark_items::table
                 .filter(bookmark_items::folder_id.eq(folder.id))
+                .filter(bookmark_items::is_user_added.eq(true))
                 .load::<BookmarkItem>(db_conn)
                 .with_context(|| format!("Failed to load bookmark items for folder: {}", folder.name))?;
 
@@ -1994,6 +2150,7 @@ impl AppData {
                     find_query: item.find_query.clone(),
                     find_match_index: item.find_match_index,
                     sort_order: item.sort_order,
+                    is_user_added: item.is_user_added,
                 };
 
                 diesel::insert_into(bookmark_items::table)
@@ -2034,7 +2191,13 @@ impl AppData {
         let mut import_conn = SqliteConnection::establish(&db_url)
             .with_context(|| format!("Failed to open bookmark import database: {}", sqlite_path.display()))?;
 
+        // Filter defensively: the legacy one-shot bridge aliases the full
+        // userdata.sqlite3 copy as appdata-bookmarks.sqlite3, so the import DB
+        // may contain transient `is_last_session = true` folders and rows that
+        // predate the `is_user_added` column. Mirror the export contract here.
         let import_folders: Vec<BookmarkFolder> = bookmark_folders::table
+            .filter(bookmark_folders::is_last_session.eq(false))
+            .filter(bookmark_folders::is_user_added.eq(true))
             .load::<BookmarkFolder>(&mut import_conn)
             .context("Failed to load bookmark folders from import database")?;
 
@@ -2065,6 +2228,7 @@ impl AppData {
                     name: &folder.name,
                     sort_order: folder.sort_order,
                     is_last_session: false,
+                    is_user_added: folder.is_user_added,
                 };
 
                 diesel::insert_into(bookmark_folders::table)
@@ -2079,9 +2243,12 @@ impl AppData {
                     .context("Failed to get inserted bookmark folder id")?
             };
 
-            // Load items from the import database for this source folder
+            // Load items from the import database for this source folder.
+            // Filter by `is_user_added` to match the export contract — see the
+            // folder-load site above for the legacy-bridge aliasing reason.
             let items: Vec<BookmarkItem> = bookmark_items::table
                 .filter(bookmark_items::folder_id.eq(folder.id))
+                .filter(bookmark_items::is_user_added.eq(true))
                 .load::<BookmarkItem>(&mut import_conn)
                 .with_context(|| format!("Failed to load bookmark items for folder: {}", folder.name))?;
 
@@ -2112,6 +2279,7 @@ impl AppData {
                     find_query: item.find_query.clone(),
                     find_match_index: item.find_match_index,
                     sort_order: item.sort_order,
+                    is_user_added: item.is_user_added,
                 };
 
                 diesel::insert_into(bookmark_items::table)
@@ -2163,20 +2331,22 @@ impl AppData {
             .load(db_conn)
             .context("Failed to load user chanting sections")?;
 
-        // Query ALL recordings (user recordings may exist for both user-added and pre-shipped sections)
-        let all_recordings: Vec<ChantingRecording> = rec_dsl::chanting_recordings
+        // Query user-added recordings only (preserves recording_type: user-added
+        // rows with recording_type='reference' are also carried across).
+        let user_recordings: Vec<ChantingRecording> = rec_dsl::chanting_recordings
+            .filter(rec_dsl::is_user_added.eq(true))
             .select(ChantingRecording::as_select())
             .load(db_conn)
-            .context("Failed to load chanting recordings")?;
+            .context("Failed to load user chanting recordings")?;
 
-        if user_collections.is_empty() && all_recordings.is_empty() {
+        if user_collections.is_empty() && user_recordings.is_empty() {
             info("No user chanting data or recordings to export");
             return Ok(());
         }
 
         info(&format!(
-            "Exporting chanting data: {} user collections, {} user chants, {} user sections, {} recordings",
-            user_collections.len(), user_chants.len(), user_sections.len(), all_recordings.len()
+            "Exporting chanting data: {} user collections, {} user chants, {} user sections, {} user recordings",
+            user_collections.len(), user_chants.len(), user_sections.len(), user_recordings.len()
         ));
 
         // Create the chanting SQLite database in import-me folder
@@ -2186,10 +2356,12 @@ impl AppData {
             &user_collections,
             &user_chants,
             &user_sections,
-            &all_recordings,
+            &user_recordings,
         )?;
 
-        // Copy the entire chanting-recordings directory to import-me
+        // Copy only files referenced by user-added recordings to import-me.
+        // Bootstrap-seeded reference audio files are re-shipped with the new
+        // appdata, so copying them would just overwrite the fresh bundle.
         let recordings_src = crate::get_chanting_recordings_dir();
         let recordings_dest = import_dir.join("chanting-recordings");
 
@@ -2198,11 +2370,11 @@ impl AppData {
                 std::fs::create_dir_all(&recordings_dest)
                     .context("Failed to create chanting-recordings dir in import-me")?;
 
-                if let Ok(entries) = std::fs::read_dir(&recordings_src) {
-                    for entry in entries.flatten() {
-                        let src_file = entry.path();
-                        if src_file.is_file() {
-                            let dest_file = recordings_dest.join(entry.file_name());
+                for rec in &user_recordings {
+                    let src_file = recordings_src.join(&rec.file_name);
+                    match src_file.try_exists() {
+                        Ok(true) => {
+                            let dest_file = recordings_dest.join(&rec.file_name);
                             if let Err(e) = std::fs::copy(&src_file, &dest_file) {
                                 warn(&format!(
                                     "Failed to copy recording file {}: {}",
@@ -2210,10 +2382,16 @@ impl AppData {
                                 ));
                             }
                         }
+                        _ => {
+                            warn(&format!(
+                                "Recording file missing for user recording {}: {}",
+                                rec.uid, rec.file_name
+                            ));
+                        }
                     }
                 }
 
-                info(&format!("Copied chanting recordings to {}", recordings_dest.display()));
+                info(&format!("Copied {} user chanting recordings to {}", user_recordings.len(), recordings_dest.display()));
             }
             _ => {
                 info("No chanting-recordings directory to copy");
@@ -2323,6 +2501,7 @@ impl AppData {
                         volume: rec.volume,
                         playback_position_ms: rec.playback_position_ms,
                         waveform_json: rec.waveform_json.clone(),
+                        is_user_added: rec.is_user_added,
                     };
                     if let Err(e) = self.dbm.appdata.create_chanting_recording(&data) {
                         warn(&format!("Failed to import recording {}: {}", rec.uid, e));

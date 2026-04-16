@@ -118,15 +118,15 @@ impl LibraryImportsImporter {
 
         match doc_type {
             "epub" => {
-                import_epub_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
+                import_epub_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, false)
                     .with_context(|| format!("Failed to import EPUB: {}", entry.filename))?;
             }
             "html" => {
-                import_html_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
+                import_html_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, false)
                     .with_context(|| format!("Failed to import HTML: {}", entry.filename))?;
             }
             "pdf" => {
-                import_pdf_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css)
+                import_pdf_to_db(conn, &file_path, &entry.uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, false)
                     .with_context(|| format!("Failed to import PDF: {}", entry.filename))?;
             }
             _ => unreachable!("Unsupported document type should have been caught earlier"),
