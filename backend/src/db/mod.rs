@@ -62,7 +62,6 @@ pub struct DatabaseHandle {
 #[derive(Debug)]
 pub struct DbManager {
     pub appdata: AppdataDbHandle,
-    pub userdata: AppdataDbHandle,
     pub dictionaries: DictionariesDbHandle,
     pub dpd: DpdDbHandle,
 }
@@ -124,14 +123,6 @@ impl DbManager {
         let _ = check_file_exists_print_err(&g.paths.appdata_db_path);
         let _ = check_file_exists_print_err(&g.paths.dpd_db_path);
 
-        // If userdata doesn't exist, create it with default settings.
-        let userdata_exists = check_file_exists_print_err(&g.paths.userdata_db_path).unwrap_or_default();
-
-        if !userdata_exists {
-            initialize_userdata(&g.paths.userdata_database_url)
-                .with_context(|| format!("Failed to initialize database at '{}'", g.paths.userdata_database_url))?;
-        }
-
         let dictionaries_exists = check_file_exists_print_err(&g.paths.dict_db_path).unwrap_or_default();
 
         if !dictionaries_exists {
@@ -152,14 +143,13 @@ impl DbManager {
 
         Ok(Self {
             appdata,
-            userdata: DatabaseHandle::new(&g.paths.userdata_database_url)?,
             dictionaries: DatabaseHandle::new(&g.paths.dict_database_url)?,
             dpd: DatabaseHandle::new(&g.paths.dpd_database_url)?,
         })
     }
 
     pub fn get_theme_name(&self) -> String {
-        let app_settings = self.userdata.get_app_settings();
+        let app_settings = self.appdata.get_app_settings();
         app_settings.theme_name_as_string()
     }
 
@@ -183,22 +173,6 @@ impl DbManager {
     }
 }
 
-pub fn initialize_userdata(database_url: &str) -> Result<()> {
-    info(&format!("initialize_userdata(): {}", database_url));
-
-    // Create initial connection to create the database file
-    let mut db_conn = SqliteConnection::establish(database_url)
-        .with_context(|| format!("Failed to create initial database connection to '{}'", database_url))?;
-
-    run_appdata_migrations(&mut db_conn)
-        .context("Failed to run database migrations")?;
-
-    insert_default_settings(&mut db_conn)
-        .context("Failed to insert default application settings")?;
-
-    Ok(())
-}
-
 fn initialize_dictionaries(database_url: &str) -> Result<()> {
     info(&format!("initialize_dictionaries(): {}", database_url));
 
@@ -212,35 +186,16 @@ fn initialize_dictionaries(database_url: &str) -> Result<()> {
     Ok(())
 }
 
-fn insert_default_settings(db_conn: &mut SqliteConnection) -> Result<()> {
-    info("insert_default_settings()");
-    use crate::db::appdata_schema::app_settings;
-
-    let settings_json = serde_json::to_string(&AppSettings::default()).expect("Can't encode JSON");
-
-    let value = appdata_models::NewAppSetting {
-        key: "app_settings",
-        value: Some(&settings_json),
-    };
-
-    diesel::insert_into(app_settings::table)
-        .values(value)
-        .execute(db_conn)
-        .context("Failed to insert default settings into database")?;
-
-    Ok(())
-}
-
 pub fn get_app_settings() -> AppSettings {
     info("get_app_settings()");
     use crate::db::appdata_schema::app_settings;
 
     let g = get_app_globals();
 
-    let _ = check_file_exists_print_err(&g.paths.userdata_db_path);
+    let _ = check_file_exists_print_err(&g.paths.appdata_db_path);
 
-    let db_conn = &mut SqliteConnection::establish(&g.paths.userdata_database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", g.paths.userdata_database_url));
+    let db_conn = &mut SqliteConnection::establish(&g.paths.appdata_database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", g.paths.appdata_database_url));
 
     let json = app_settings::table
         .select(AppSetting::as_select())
@@ -269,16 +224,9 @@ pub fn get_app_settings() -> AppSettings {
     }
 }
 
-fn run_appdata_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
-    info("run_appdata_migrations()");
-    db_conn.run_pending_migrations(APPDATA_MIGRATIONS)
-           .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;
-    Ok(())
-}
-
 /// Apply incremental schema upgrades to the appdata database.
 /// Each statement is idempotent — errors from "already exists" / "duplicate column" are ignored.
-fn upgrade_appdata_schema(db_conn: &mut SqliteConnection) {
+pub fn upgrade_appdata_schema(db_conn: &mut SqliteConnection) {
     use diesel::connection::SimpleConnection;
 
     info("upgrade_appdata_schema()");
@@ -292,6 +240,10 @@ fn upgrade_appdata_schema(db_conn: &mut SqliteConnection) {
         include_str!("../../migrations/appdata/2026-03-24-200000_add_recording_waveform/up.sql"),
         // 2026-04-02: bookmark tables
         include_str!("../../migrations/appdata/2026-04-02-120000_create_bookmarks/up.sql"),
+        // 2026-04-14: is_user_added on books / bookmark tables
+        include_str!("../../migrations/appdata/2026-04-14-000000_add_is_user_added/up.sql"),
+        // 2026-04-14: is_user_added on chanting_recordings
+        include_str!("../../migrations/appdata/2026-04-14-000002_add_recordings_is_user_added/up.sql"),
     ];
 
     for sql in &statements {

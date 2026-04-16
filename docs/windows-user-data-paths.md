@@ -61,15 +61,16 @@ C:\Users\{username}\AppData\Local\profound-labs\simsapa-ng
 
 ```
 %LOCALAPPDATA%\profound-labs\simsapa-ng\
-├── userdata.sqlite3          # User's personal database (bookmarks, notes, etc.)
-├── app-assets/               # Downloaded language databases
-│   ├── suttas_lang_en.db
-│   ├── suttas_lang_hu.db
+├── app-assets/               # Application database + downloaded assets
+│   ├── appdata.sqlite3       # Single application database (seeded content + user data)
+│   ├── dpd.sqlite3           # DPD dictionary database
+│   ├── dictionaries.sqlite3  # Other dictionaries
 │   └── ...
-├── logs/                     # Application logs
-│   └── simsapa.log
+├── log.txt                   # Application logs
 └── storage-path.txt          # Only used on mobile platforms
 ```
+
+**Note:** Earlier versions kept user-generated data (bookmarks, chants, imported books, app settings) in a separate `userdata.sqlite3` next to `appdata.sqlite3`. That split has been removed: all user-generated rows now live in `appdata.sqlite3` and are distinguished from seeded rows by the `is_user_added` column. Alpha testers with a pre-existing `userdata.sqlite3` are migrated automatically on first launch via the one-shot legacy bridge (see PROJECT_MAP.md → "One-Shot Legacy Userdata Bridge"), after which the stale file is removed on a subsequent startup.
 
 ## Installer Implementation (Inno Setup)
 
@@ -118,8 +119,7 @@ After installing and running the application, verify the path:
 2. Navigate to: `%LOCALAPPDATA%\profound-labs\simsapa-ng`
    - Or paste in address bar: `C:\Users\YourUsername\AppData\Local\profound-labs\simsapa-ng`
 3. Confirm presence of:
-   - `userdata.sqlite3`
-   - `app-assets/` directory (after downloading languages)
+   - `app-assets/` directory containing `appdata.sqlite3`
    - `logs/` directory
 
 ### Check Installer Behavior

@@ -204,6 +204,7 @@ pub struct Book {
     pub metadata_json: Option<String>,
     pub enable_embedded_css: bool,
     pub toc_json: Option<String>,
+    pub is_user_added: bool,
     // pub created_at: NaiveDateTime,
     // pub updated_at: Option<NaiveDateTime>,
 }
@@ -220,6 +221,7 @@ pub struct NewBook<'a> {
     pub metadata_json: Option<&'a str>,
     pub enable_embedded_css: bool,
     pub toc_json: Option<&'a str>,
+    pub is_user_added: bool,
 }
 
 #[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
@@ -375,6 +377,7 @@ pub struct ChantingRecording {
     pub volume: f32,
     pub playback_position_ms: i32,
     pub waveform_json: Option<String>,
+    pub is_user_added: bool,
 }
 
 #[derive(Insertable)]
@@ -390,6 +393,7 @@ pub struct NewChantingRecording<'a> {
     pub volume: f32,
     pub playback_position_ms: i32,
     pub waveform_json: Option<&'a str>,
+    pub is_user_added: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -466,6 +470,8 @@ pub struct ChantingRecordingJson {
     pub playback_position_ms: i32,
     #[serde(default)]
     pub waveform_json: Option<String>,
+    #[serde(default = "default_true")]
+    pub is_user_added: bool,
 }
 
 fn default_volume() -> f32 {
@@ -482,6 +488,7 @@ pub struct BookmarkFolder {
     pub name: String,
     pub sort_order: i32,
     pub is_last_session: bool,
+    pub is_user_added: bool,
 }
 
 #[derive(Insertable)]
@@ -490,6 +497,7 @@ pub struct NewBookmarkFolder<'a> {
     pub name: &'a str,
     pub sort_order: i32,
     pub is_last_session: bool,
+    pub is_user_added: bool,
 }
 
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations, Serialize, Deserialize)]
@@ -507,6 +515,7 @@ pub struct BookmarkItem {
     pub find_query: String,
     pub find_match_index: i32,
     pub sort_order: i32,
+    pub is_user_added: bool,
 }
 
 #[derive(Insertable, Deserialize)]
@@ -521,6 +530,12 @@ pub struct NewBookmarkItem {
     pub find_query: String,
     pub find_match_index: i32,
     pub sort_order: i32,
+    #[serde(default = "default_true")]
+    pub is_user_added: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

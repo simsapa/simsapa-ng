@@ -26,6 +26,7 @@ Item {
     signal showSuttaFromReferenceSearch(window_id: string, result_data_json: string);
     signal bookMetadataUpdated(success: bool, message: string);
     signal showBottomFootnotesChanged();
+    signal appSettingsReset();
 
     // Update checker signals
     signal appUpdateAvailable(update_info_json: string);
@@ -82,12 +83,8 @@ Item {
         console.log("dictionary_first_query()");
     }
 
-    function userdata_first_query() {
-        console.log("userdata_first_query()");
-    }
-
-    function reset_userdata_database(): bool {
-        console.log("reset_userdata_database()");
+    function reset_app_settings_to_defaults(): bool {
+        console.log("reset_app_settings_to_defaults()");
         return true;
     }
 

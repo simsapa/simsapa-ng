@@ -306,6 +306,7 @@ impl ChantingPracticeImporter {
                             volume: 1.0,
                             playback_position_ms: 0,
                             waveform_json: None,
+                            is_user_added: false,
                         };
 
                         diesel::insert_into(appdata_schema::chanting_recordings::table)

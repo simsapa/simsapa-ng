@@ -237,10 +237,6 @@ pub struct AppGlobalPaths {
     pub appdata_abs_path: PathBuf,
     pub appdata_database_url: String,
 
-    pub userdata_db_path: PathBuf,
-    pub userdata_abs_path: PathBuf,
-    pub userdata_database_url: String,
-
     pub dict_db_path: PathBuf,
     pub dict_abs_path: PathBuf,
     pub dict_database_url: String,
@@ -381,10 +377,6 @@ impl AppGlobalPaths {
         let appdata_abs_path = normalize_path_for_sqlite(fs::canonicalize(appdata_db_path.clone()).unwrap_or(appdata_db_path.clone()));
         let appdata_database_url = format!("sqlite://{}", appdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
 
-        let userdata_db_path = app_assets_dir.join("userdata.sqlite3");
-        let userdata_abs_path = normalize_path_for_sqlite(fs::canonicalize(userdata_db_path.clone()).unwrap_or(userdata_db_path.clone()));
-        let userdata_database_url = format!("sqlite://{}", userdata_abs_path.as_os_str().to_str().expect("os_str Error!"));
-
         let dict_db_path = app_assets_dir.join("dictionaries.sqlite3");
         let dict_abs_path = normalize_path_for_sqlite(fs::canonicalize(dict_db_path.clone()).unwrap_or(dict_db_path.clone()));
         let dict_database_url = format!("sqlite://{}", dict_abs_path.as_os_str().to_str().expect("os_str Error!"));
@@ -415,10 +407,6 @@ impl AppGlobalPaths {
             appdata_db_path,
             appdata_abs_path,
             appdata_database_url,
-
-            userdata_db_path,
-            userdata_abs_path,
-            userdata_database_url,
 
             dict_db_path,
             dict_abs_path,
@@ -663,7 +651,7 @@ pub extern "C" fn dotenv_c() {
 pub extern "C" fn ensure_no_empty_db_files() {
     let g = get_app_globals();
     for p in [g.paths.appdata_db_path.clone(),
-              g.paths.userdata_db_path.clone(),
+              g.paths.app_assets_dir.join("userdata.sqlite3"),
               g.paths.dict_db_path.clone(),
               g.paths.dpd_db_path.clone()] {
         match p.try_exists() {
@@ -713,9 +701,10 @@ pub extern "C" fn check_delete_files_for_upgrade() {
             }
 
             // Delete database files
+            let legacy_userdata_path = g.paths.app_assets_dir.join("userdata.sqlite3");
             let db_paths = [
                 &g.paths.appdata_db_path,
-                &g.paths.userdata_db_path,
+                &legacy_userdata_path,
                 &g.paths.dict_db_path,
                 &g.paths.dpd_db_path,
             ];
@@ -746,6 +735,44 @@ pub extern "C" fn check_delete_files_for_upgrade() {
         Err(e) => {
             error(&format!("Failed to check for upgrade marker file {:?}: {}", marker_path, e));
         }
+    }
+}
+
+/// Silent cleanup of a stale legacy `userdata.sqlite3` file.
+///
+/// If `app_assets_dir/userdata.sqlite3` exists and there is no pending `import-me/`
+/// folder (i.e. the legacy bridge has already completed), remove the stale file.
+/// This handles the case where the bridge ran but the empty/stale userdata file remains.
+#[unsafe(no_mangle)]
+pub extern "C" fn cleanup_stale_legacy_userdata() {
+    let g = get_app_globals();
+    let legacy_path = g.paths.app_assets_dir.join("userdata.sqlite3");
+    let import_dir = g.paths.app_assets_dir.join("import-me");
+
+    match legacy_path.try_exists() {
+        Ok(true) => {},
+        Ok(false) => return,
+        Err(e) => {
+            error(&format!("cleanup_stale_legacy_userdata: try_exists failed for {}: {}", legacy_path.display(), e));
+            return;
+        }
+    }
+
+    match import_dir.try_exists() {
+        Ok(true) => {
+            info("cleanup_stale_legacy_userdata: import-me/ pending — skipping cleanup");
+            return;
+        }
+        Ok(false) => {}
+        Err(e) => {
+            error(&format!("cleanup_stale_legacy_userdata: try_exists failed for {}: {}", import_dir.display(), e));
+            return;
+        }
+    }
+
+    match fs::remove_file(&legacy_path) {
+        Ok(_) => info(&format!("cleanup_stale_legacy_userdata: removed stale {}", legacy_path.display())),
+        Err(e) => error(&format!("cleanup_stale_legacy_userdata: failed to remove {}: {}", legacy_path.display(), e)),
     }
 }
 

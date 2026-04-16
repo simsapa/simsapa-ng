@@ -50,16 +50,16 @@ property var available_languages: []    // List of "code|Name" strings
    - Returns comma-separated language codes
    - Deletes the file after reading
 
-3. `import_suttas_lang_to_userdata(extract_temp_dir, userdata_database_url)`
+3. `import_suttas_lang_to_appdata(extract_temp_dir, appdata_database_url)`
    - Finds `suttas_lang_*.sqlite3` files in extract directory
-   - Imports suttas to userdata database
+   - Imports suttas to appdata database
    - Called after extraction, before moving files to assets
 
-4. `import_suttas_from_db(import_db_path, userdata_database_url)`
-   - Connects to language database and userdata database
+4. `import_suttas_from_db(import_db_path, appdata_database_url)`
+   - Connects to language database and appdata database
    - Reads all suttas from language database
    - Deletes existing suttas with same uid
-   - Inserts new suttas into userdata
+   - Inserts new suttas into appdata
 
 **Type Definition**: `assets/qml/com/profoundlabs/simsapa/AssetManager.qml`
 
@@ -74,7 +74,7 @@ property var available_languages: []    // List of "code|Name" strings
 7. URLs are generated: `https://github.com/simsapa/simsapa-ng-assets/releases/download/{version}/suttas_lang_{lang}.tar.bz2`
 8. AssetManager downloads each tar.bz2 file
 9. AssetManager extracts to temp folder
-10. AssetManager detects `suttas_lang_*.sqlite3` files and imports to userdata
+10. AssetManager detects `suttas_lang_*.sqlite3` files and imports to appdata
 11. AssetManager moves remaining files to app-assets
 12. Download completes
 
@@ -83,10 +83,10 @@ property var available_languages: []    // List of "code|Name" strings
 The import process for language databases:
 
 1. **Detection**: After extracting each archive, check if filename matches `suttas_lang_*.tar.bz2`
-2. **Import**: Call `import_suttas_lang_to_userdata()` before moving files
-3. **Connection**: Establish connections to both language db and userdata db
+2. **Import**: Call `import_suttas_lang_to_appdata()` before moving files
+3. **Connection**: Establish connections to both language db and appdata db
 4. **Read**: Load all suttas from language database
-5. **Replace**: Delete existing suttas with same uid in userdata
+5. **Replace**: Delete existing suttas with same uid in appdata
 6. **Insert**: Insert new suttas (without id, let database auto-generate)
 7. **Cleanup**: Remove language database file after successful import
 
@@ -117,7 +117,7 @@ Language codes follow ISO 639 standards where applicable. The `LANG_CODE_TO_NAME
 
 ### Similarities
 - Same URL format for language databases
-- Same import-to-userdata pattern
+- Same import-to-database pattern (now targets the single `appdata.sqlite3`)
 - Same `download_languages.txt` initialization mechanism
 - Same language filtering (excluding en, pli, san)
 
@@ -138,7 +138,11 @@ To test the language download feature:
 5. Verify the languages list shows available languages
 6. Click Download
 7. Verify downloads and imports complete successfully
-8. Check userdata.sqlite3 for imported suttas
+8. Check appdata.sqlite3 for imported suttas
+
+## Single-Database Architecture
+
+All user-generated and seeded data now lives in a single `appdata.sqlite3`. Rows carry an `is_user_added` boolean so export/import flows can filter user-generated content (default `TRUE` for runtime inserts; bootstrap seeds explicitly set `FALSE`). The legacy `userdata.sqlite3` is no longer created; alpha testers upgrading from it are handled by a one-shot bridge at startup (see PROJECT_MAP.md → "One-Shot Legacy Userdata Bridge").
 
 ## Future Enhancements
 

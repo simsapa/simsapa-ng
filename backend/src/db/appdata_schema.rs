@@ -95,6 +95,7 @@ diesel::table! {
         metadata_json -> Nullable<Text>,
         enable_embedded_css -> Bool,
         toc_json -> Nullable<Text>,
+        is_user_added -> Bool,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }
@@ -188,6 +189,7 @@ diesel::table! {
         volume -> Float,
         playback_position_ms -> Integer,
         waveform_json -> Nullable<Text>,
+        is_user_added -> Bool,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }
@@ -199,6 +201,7 @@ diesel::table! {
         name -> Text,
         sort_order -> Integer,
         is_last_session -> Bool,
+        is_user_added -> Bool,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }
@@ -216,6 +219,7 @@ diesel::table! {
         find_query -> Text,
         find_match_index -> Integer,
         sort_order -> Integer,
+        is_user_added -> Bool,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }

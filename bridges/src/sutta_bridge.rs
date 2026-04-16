@@ -316,10 +316,11 @@ pub mod qobject {
         fn dictionary_first_query(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
-        fn userdata_first_query(self: Pin<&mut SuttaBridge>);
+        fn reset_app_settings_to_defaults(self: Pin<&mut SuttaBridge>) -> bool;
 
-        #[qinvokable]
-        fn reset_userdata_database(self: Pin<&mut SuttaBridge>) -> bool;
+        #[qsignal]
+        #[cxx_name = "appSettingsReset"]
+        fn app_settings_reset(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
         fn query_text_to_uid_field_query(self: &SuttaBridge, query_text: &QString) -> QString;
@@ -1020,7 +1021,19 @@ impl qobject::SuttaBridge {
                             error_message = "Query returned 0 results".to_string();
                             error("Database validation FAILED: Appdata - Query returned 0 results");
                         } else {
-                            info("Database validation: Appdata OK");
+                            // Check 4: app_settings is readable from the same appdata DB.
+                            // A corrupted row / unreadable connection here means the DB is
+                            // compromised even if the sutta query above succeeded.
+                            match app_data.dbm.appdata.get_conn() {
+                                Ok(_) => {
+                                    let _settings = app_data.dbm.appdata.get_app_settings();
+                                    info("Database validation: Appdata OK");
+                                }
+                                Err(e) => {
+                                    error_message = format!("App settings read error: {}", e);
+                                    error(&format!("Database validation FAILED: Appdata - App settings read error: {}", e));
+                                }
+                            }
                         }
                     },
                     Err(e) => {
@@ -1152,105 +1165,17 @@ impl qobject::SuttaBridge {
         });
     }
 
-    pub fn userdata_first_query(self: Pin<&mut Self>) {
-        info("SuttaBridge::userdata_first_query() start");
-
-        let qt_thread = self.qt_thread();
-
-        thread::spawn(move || {
-            let mut error_message = String::new();
-
-            // Check 1: Database file exists (using try_exists() to avoid Android permission crashes)
-            let db_path = get_app_globals().paths.userdata_db_path.clone();
-            match db_path.try_exists() {
-                Ok(true) => {}, // File exists, continue
-                Ok(false) => {
-                    error_message = "Database file not found".to_string();
-                    error("Database validation FAILED: Userdata - Database file not found");
-                },
-                Err(e) => {
-                    error_message = format!("Error checking file existence: {}", e);
-                    error(&format!("Database validation FAILED: Userdata - Error checking file existence: {}", e));
-                }
-            }
-
-            if error_message.is_empty() {
-                // Check 2 & 3: Try to get app_settings - if this succeeds without error,
-                // the database is valid. We can't easily distinguish between default values
-                // and actual database values without more complex queries, but calling
-                // get_app_settings will fail if the database is corrupt or inaccessible.
-                let app_data = get_app_data();
-
-                // Try a simple database operation to validate connectivity
-                match app_data.dbm.userdata.get_conn() {
-                    Ok(_) => {
-                        // Successfully connected, now try to read app_settings
-                        let _settings = app_data.dbm.userdata.get_app_settings();
-                        info("Database validation: Userdata OK");
-                    },
-                    Err(e) => {
-                        error_message = format!("Query error: {}", e);
-                        error(&format!("Database validation FAILED: Userdata - Query error: {}", e));
-                    }
-                }
-            }
-
-            // Always emit signal with result (success or failure)
-            let is_valid = error_message.is_empty();
-            let message = if is_valid {
-                QString::from("OK")
-            } else {
-                QString::from(error_message)
-            };
-
-            qt_thread.queue(move |mut qo| {
-                qo.as_mut().database_validation_result(QString::from("userdata"), is_valid, message);
-            }).unwrap();
-
-            info("SuttaBridge::userdata_first_query() end");
-        });
-    }
-
-    pub fn reset_userdata_database(self: Pin<&mut Self>) -> bool {
-        info("SuttaBridge::reset_userdata_database() start");
-        use simsapa_backend::db::initialize_userdata;
-
-        let g = get_app_globals();
-        let userdata_path = g.paths.userdata_db_path.clone();
-        let userdata_url = g.paths.userdata_database_url.clone();
-
-        // Step 1: Remove the corrupt userdata database
-        match userdata_path.try_exists() {
-            Ok(true) => {
-                info(&format!("Removing userdata database at: {}", userdata_path.display()));
-                match fs::remove_file(&userdata_path) {
-                    Ok(_) => {
-                        info("Userdata database removed successfully");
-                    },
-                    Err(e) => {
-                        error(&format!("Failed to remove userdata database: {}", e));
-                        return false;
-                    }
-                }
-            },
-            Ok(false) => {
-                info("Userdata database doesn't exist, will create new one");
-            },
-            Err(e) => {
-                error(&format!("Error checking userdata database existence: {}", e));
-                return false;
-            }
-        }
-
-        // Step 2: Re-initialize with defaults
-        info("Re-initializing userdata database with defaults...");
-        match initialize_userdata(&userdata_url) {
+    pub fn reset_app_settings_to_defaults(mut self: Pin<&mut Self>) -> bool {
+        info("SuttaBridge::reset_app_settings_to_defaults() start");
+        let app_data = get_app_data();
+        match app_data.reset_app_settings_to_defaults() {
             Ok(_) => {
-                info("SuttaBridge::reset_userdata_database() reset complete");
+                self.as_mut().app_settings_reset();
+                info("SuttaBridge::reset_app_settings_to_defaults() complete");
                 true
-            },
+            }
             Err(e) => {
-                error(&format!("Failed to re-initialize userdata database: {}", e));
+                error(&format!("Failed to reset app settings: {}", e));
                 false
             }
         }
@@ -1925,13 +1850,13 @@ impl qobject::SuttaBridge {
 
     pub fn get_common_words_json(&self) -> QString {
         let app_data = get_app_data();
-        let s = app_data.dbm.userdata.get_common_words_json();
+        let s = app_data.dbm.appdata.get_common_words_json();
         QString::from(s)
     }
 
     pub fn save_common_words_json(&self, words_json: &QString) {
         let app_data = get_app_data();
-        match app_data.dbm.userdata.save_common_words_json(&words_json.to_string()) {
+        match app_data.dbm.appdata.save_common_words_json(&words_json.to_string()) {
             Ok(_) => {},
             Err(e) => error(&format!("{}", e))
         }
@@ -2254,7 +2179,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author, custom_language, None)
+                    app_data.import_epub_to_db(path, &uid_str, custom_title, custom_author, custom_language, None, true)
                 }
                 "pdf" => {
                     let progress_msg = QString::from("Importing PDF...");
@@ -2262,7 +2187,7 @@ impl qobject::SuttaBridge {
                         qo.as_mut().document_import_progress(progress_msg);
                     }).unwrap();
 
-                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author, custom_language, None)
+                    app_data.import_pdf_to_db(path, &uid_str, custom_title, custom_author, custom_language, None, true)
                 }
                 "html" => {
                     let progress_msg = QString::from("Importing HTML...");
@@ -2272,7 +2197,7 @@ impl qobject::SuttaBridge {
 
                     // TODO: Pass split_tag parameter when html_import supports it
                     // For now, HTML is imported as a single spine item
-                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author, custom_language, None)
+                    app_data.import_html_to_db(path, &uid_str, custom_title, custom_author, custom_language, None, true)
                 }
                 _ => {
                     let error_msg = format!("Unknown document type: {}", doc_type);
@@ -4180,6 +4105,7 @@ impl qobject::SuttaBridge {
                     find_query: item.find_query.clone(),
                     find_match_index: item.find_match_index,
                     sort_order: item.sort_order,
+                    is_user_added: true,
                 };
 
                 if let Err(e) = app_data.dbm.appdata.create_bookmark_item(&new_item) {

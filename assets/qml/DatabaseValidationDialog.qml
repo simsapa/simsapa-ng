@@ -31,13 +31,10 @@ ApplicationWindow {
     property bool appdata_failed: false
     property bool dpd_failed: false
     property bool dictionaries_failed: false
-    property bool userdata_failed: false
 
     // Computed properties
     readonly property bool has_downloadable_failures: appdata_failed || dpd_failed || dictionaries_failed
-    readonly property bool has_userdata_failure: userdata_failed
-    readonly property bool has_any_failure: has_downloadable_failures || has_userdata_failure
-    readonly property bool has_both_types: has_downloadable_failures && has_userdata_failure
+    readonly property bool has_any_failure: has_downloadable_failures
 
     // Track if dialog was opened from menu (manual) vs automatic validation failure
     property bool opened_from_menu: false
@@ -49,7 +46,6 @@ ApplicationWindow {
         root.appdata_failed = false;
         root.dpd_failed = false;
         root.dictionaries_failed = false;
-        root.userdata_failed = false;
 
         root.show();
         root.raise();
@@ -66,13 +62,12 @@ ApplicationWindow {
         root.appdata_failed = false;
         root.dpd_failed = false;
         root.dictionaries_failed = false;
-        root.userdata_failed = false;
 
-        // Run the first query checks which will emit validation signals
+        // Run the first query checks which will emit validation signals.
+        // appdata_first_query covers both the sutta query and app_settings read.
         SuttaBridge.appdata_first_query();
         SuttaBridge.dpd_first_query();
         SuttaBridge.dictionary_first_query();
-        SuttaBridge.userdata_first_query();
     }
 
     function show_validation_failure(failed_databases) {
@@ -80,7 +75,6 @@ ApplicationWindow {
         root.appdata_failed = failed_databases.includes("appdata");
         root.dpd_failed = failed_databases.includes("dpd");
         root.dictionaries_failed = failed_databases.includes("dictionaries");
-        root.userdata_failed = failed_databases.includes("userdata");
 
         root.show();
         root.raise();
@@ -94,7 +88,6 @@ ApplicationWindow {
         root.appdata_failed = Boolean(results["appdata"] && !results["appdata"].is_valid);
         root.dpd_failed = Boolean(results["dpd"] && !results["dpd"].is_valid);
         root.dictionaries_failed = Boolean(results["dictionaries"] && !results["dictionaries"].is_valid);
-        root.userdata_failed = Boolean(results["userdata"] && !results["userdata"].is_valid);
     }
 
     function get_failed_downloadable_list() {
@@ -112,13 +105,6 @@ ApplicationWindow {
             failed.push({name: "Dictionaries Database", message: msg});
         }
         return failed;
-    }
-
-    function get_userdata_message() {
-        if (root.validation_results["userdata"]) {
-            return root.validation_results["userdata"].message;
-        }
-        return "";
     }
 
     // Returns true if download was started, false if no databases to download
@@ -166,56 +152,10 @@ ApplicationWindow {
         }
     }
 
-    function handle_reset_userdata() {
-        logger.info("handle_reset_userdata()");
-
-        const success = SuttaBridge.reset_userdata_database();
-
-        if (success) {
-            logger.info("Userdata database reset complete");
-            reset_success_dialog.open();
-        } else {
-            logger.info("ERROR: Failed to reset userdata database");
-            reset_error_dialog.open();
-        }
-    }
-
     function handle_remove_all_and_redownload() {
         logger.info("handle_remove_all_and_redownload()");
         SuttaBridge.prepare_for_database_upgrade();
         remove_all_success_dialog.open();
-    }
-
-    Dialog {
-        id: reset_success_dialog
-        title: "Userdata Reset Complete"
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok
-
-        Label {
-            text: "Userdata has been reset to defaults.\n\nQuit and restart the app."
-            wrapMode: Text.WordWrap
-            width: 400
-        }
-
-        onAccepted: {
-            Qt.quit();
-        }
-    }
-
-    Dialog {
-        id: reset_error_dialog
-        title: "Userdata Reset Failed"
-        anchors.centerIn: parent
-        modal: true
-        standardButtons: Dialog.Ok
-
-        Label {
-            text: "Failed to reset userdata database."
-            wrapMode: Text.WordWrap
-            width: 400
-        }
     }
 
     Dialog {
@@ -257,7 +197,7 @@ ApplicationWindow {
     }
 
     // Expected database names
-    readonly property var expected_databases: ["appdata", "dpd", "dictionaries", "userdata"]
+    readonly property var expected_databases: ["appdata", "dpd", "dictionaries"]
 
     // Function to check if all validations have completed
     function all_validations_completed() {
@@ -417,46 +357,6 @@ ApplicationWindow {
                 }
             }
 
-            // Userdata section
-            ColumnLayout {
-                spacing: 10
-                visible: root.has_userdata_failure
-                Layout.fillWidth: true
-
-                Label {
-                    text: "The userdata database may be corrupted. You can reset it to default settings."
-                    font.pointSize: root.pointSize
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    color: palette.text
-                }
-
-                Label {
-                    text: "  - Userdata Database"
-                    font.pointSize: root.pointSize
-                    font.bold: true
-                    Layout.fillWidth: true
-                }
-
-                Label {
-                    text: "    " + root.get_userdata_message()
-                    font.pointSize: root.pointSize - 1
-                    color: palette.mid
-                    Layout.fillWidth: true
-                    wrapMode: Text.WordWrap
-                    visible: root.get_userdata_message() !== ""
-                }
-
-                Label {
-                    text: "WARNING: Resetting userdata will erase all your bookmarks, notes, and custom settings."
-                    font.pointSize: root.pointSize
-                    font.bold: true
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                    color: "#ff6b6b"
-                }
-            }
-
             Item { Layout.fillHeight: true }
 
             ColumnLayout {
@@ -473,16 +373,6 @@ ApplicationWindow {
                         if (root.handle_redownload()) {
                             root.close();
                         }
-                    }
-                }
-
-                Button {
-                    text: "Reset Userdata"
-                    font.pointSize: root.pointSize
-                    Layout.fillWidth: true
-                    onClicked: {
-                        root.handle_reset_userdata();
-                        root.close();
                     }
                 }
 

@@ -1028,6 +1028,7 @@ fn test_book_uid_query_returns_all_spine_items() {
         metadata_json: None,
         enable_embedded_css: false,
         toc_json: None,
+        is_user_added: true,
     };
 
     diesel::insert_into(books::table)
@@ -1120,6 +1121,7 @@ fn test_book_spine_item_uid_query_returns_single_item() {
         metadata_json: None,
         enable_embedded_css: false,
         toc_json: None,
+        is_user_added: true,
     };
 
     diesel::insert_into(books::table)

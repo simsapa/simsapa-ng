@@ -335,7 +335,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Download Interface:** `cpp/download_appdata_window.cpp`, `assets/qml/DownloadAppdataWindow.qml`
   - **Language Selection:** User can enter comma-separated language codes (e.g., "hu, pt, it") or "*" for all
   - **Language Validation:** Validates entered codes against available languages from LANG_CODE_TO_NAME
-  - **Language Downloads:** Downloads suttas_lang_{lang}.tar.bz2 files and imports into userdata.sqlite3
+  - **Language Downloads:** Downloads suttas_lang_{lang}.tar.bz2 files and imports into appdata.sqlite3
   - **Auto-initialization:** Reads download_languages.txt from app_assets_dir if present
 - **Gloss Tab:** `assets/qml/GlossTab.qml` - Pali text analysis with vocabulary and AI translations
   - **AI Translation Interface:** `assets/qml/AssistantResponses.qml` - Tabbed interface for multiple AI model responses
@@ -349,7 +349,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - **Download & Extract:** `download_urls_and_extract()` - Downloads tar.bz2 files and extracts to app-assets
   - **Language Support:** `get_available_languages()` - Returns list of downloadable language codes from LANG_CODE_TO_NAME
   - **Language Initialization:** `get_init_languages()` - Reads download_languages.txt for pre-configured languages
-  - **Language Import:** `import_suttas_lang_to_userdata()` - Imports suttas from language databases into userdata
+  - **Language Import:** `import_suttas_lang_to_appdata()` - Imports suttas from language databases into appdata
 - **Linux Desktop Launcher:** `backend/src/helpers.rs:910` - Automatic .desktop file creation for AppImage integration
   - **AppImage Detection:** `backend/src/helpers.rs:887` - `is_running_from_appimage()`
   - **Desktop File Creation:** `backend/src/helpers.rs:943` - `create_or_update_linux_desktop_icon_file()`
@@ -368,22 +368,24 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Directory Paths:** `backend/src/lib.rs:131` - `AppGlobalPaths`
 
 ### Database Upgrade Flow
-When the user triggers a database upgrade, the following flow occurs:
+The app uses a single `appdata.sqlite3` for both seeded content and user-generated data. User-generated rows are tagged with `is_user_added = true` (runtime default); bootstrap-seeded rows are inserted with `is_user_added = false`. Export/import filters on that column.
+
+When the user triggers a database upgrade:
 
 1. **Prepare for Upgrade:** `bridges/src/sutta_bridge.rs` - `prepare_for_database_upgrade()`
    - Exports user data via `export_user_data_to_assets()` in `backend/src/app_data.rs`
    - Creates marker files: `delete_files_for_upgrade.txt`, `auto_start_download.txt`, `download_languages.txt`
 
-2. **Export User Data:** `backend/src/app_data.rs:970` - `export_user_data_to_assets()`
+2. **Export User Data:** `backend/src/app_data.rs` - `export_user_data_to_assets()`
    - Creates `import-me/` folder in app_assets_dir
    - Exports `app_settings.json` - user's application settings
    - Exports `download_languages.txt` - selected language codes for re-download
-   - Exports `appdata.sqlite3` - user-imported books (not in original dataset)
+   - Exports per-table SQLite files filtered by `is_user_added = true`: `appdata-books.sqlite3`, `appdata-bookmarks.sqlite3`, `appdata-chanting.sqlite3`
 
 3. **User Restarts App**
 
-4. **Startup Detection:** `cpp/gui.cpp:108` - `check_delete_files_for_upgrade()`
-   - `backend/src/lib.rs:580` - Checks for marker file, deletes old databases
+4. **Startup Detection:** `cpp/gui.cpp` - `check_delete_files_for_upgrade()`
+   - `backend/src/lib.rs` - Checks for marker file, deletes old databases
 
 5. **Download New Databases:** `assets/qml/DownloadAppdataWindow.qml`
    - Auto-starts download if `auto_start_download.txt` marker exists
@@ -391,13 +393,15 @@ When the user triggers a database upgrade, the following flow occurs:
 
 6. **User Restarts After Download**
 
-7. **Import User Data:** `cpp/gui.cpp:203` - `import_user_data_after_upgrade()`
+7. **Import User Data:** `cpp/gui.cpp` - `import_user_data_after_upgrade()`
    - Called after `init_app_data()` on startup
-   - `backend/src/lib.rs:657` - FFI function
-   - `backend/src/app_data.rs:1197` - `import_user_data_from_assets()`
+   - `backend/src/app_data.rs` - `import_user_data_from_assets()`
      - Imports app settings from `import-me/app_settings.json`
-     - Imports user books from `import-me/appdata.sqlite3`
+     - Imports user books, bookmarks, and chanting data from the per-table files
      - Cleans up by removing the `import-me/` folder
+
+### One-Shot Legacy Userdata Bridge (alpha testers)
+Historically the app maintained a separate `userdata.sqlite3`. For alpha testers upgrading from that era, `export_user_data_to_assets()` detects any remaining `userdata.sqlite3` in `app_assets_dir`, runs `upgrade_appdata_schema` on a copy so Diesel models align, extracts `app_settings.json` from the legacy row, and aliases the migrated copy under the per-table filenames consumed by the standard importer. A safety copy is placed at `import-me/legacy-userdata.sqlite3`, and the standard importer runs a defensive tail pass to re-apply legacy `app_settings` if the JSON extraction failed silently. Once imported, `cleanup_stale_legacy_userdata()` in `backend/src/lib.rs` removes any leftover `userdata.sqlite3` on a subsequent startup.
 
 ## Build Commands Quick Reference
 

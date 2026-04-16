@@ -136,6 +136,7 @@ fn test_create_and_read_bookmark_items() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
 
     let item_id = app_data.dbm.appdata.create_bookmark_item(&new_item).expect("create item");
@@ -168,6 +169,7 @@ fn test_update_bookmark_item() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
 
     let item_id = app_data.dbm.appdata.create_bookmark_item(&new_item).expect("create");
@@ -211,6 +213,7 @@ fn test_delete_bookmark_item() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
 
     let item_id = app_data.dbm.appdata.create_bookmark_item(&new_item).expect("create");
@@ -241,6 +244,7 @@ fn test_reorder_bookmark_items() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
 
     let id1 = app_data.dbm.appdata.create_bookmark_item(&make_item("a")).expect("create");
@@ -297,6 +301,7 @@ fn test_move_bookmark_items_to_folder() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
 
     let item_id = app_data.dbm.appdata.create_bookmark_item(&new_item).expect("create");
@@ -332,6 +337,7 @@ fn test_cascade_delete_folder_removes_items() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
 
     let item_id = app_data.dbm.appdata.create_bookmark_item(&new_item).expect("create item");
@@ -371,6 +377,7 @@ fn test_last_session_lifecycle() {
         find_query: "".to_string(),
         find_match_index: 0,
         sort_order: 0,
+        is_user_added: true,
     };
     app_data.dbm.appdata.create_bookmark_item(&new_item).expect("create item");
 
