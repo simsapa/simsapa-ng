@@ -916,6 +916,48 @@ impl AppdataDbHandle {
         }
     }
 
+    // --- Existence checks by uid (used by the post-upgrade import path) ---
+
+    pub fn chanting_collection_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_collections::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_collections.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
+    pub fn chanting_chant_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_chants::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_chants.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
+    pub fn chanting_section_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_sections::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_sections.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
+    pub fn chanting_recording_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_recordings.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
     // --- Collection CRUD ---
 
     pub fn create_chanting_collection(&self, data: &ChantingCollectionJson) -> Result<()> {
@@ -1077,13 +1119,29 @@ impl AppdataDbHandle {
     pub fn create_chanting_recording(&self, data: &ChantingRecordingJson) -> Result<()> {
         use crate::db::appdata_schema::chanting_recordings::dsl::*;
 
+        // Fill in the recording's duration from the audio file itself if the
+        // caller didn't provide one. This keeps the list UI's "label (MM:SS)"
+        // rendering a pure read of the stored row, with no need to wait for
+        // MediaPlayer to load the file.
+        let resolved_duration_ms = if data.duration_ms > 0 {
+            data.duration_ms
+        } else {
+            let recordings_dir = crate::get_chanting_recordings_dir();
+            let abs_path = if std::path::Path::new(&data.file_name).is_absolute() {
+                std::path::PathBuf::from(&data.file_name)
+            } else {
+                recordings_dir.join(&data.file_name)
+            };
+            crate::waveform::get_audio_duration_ms(&abs_path.to_string_lossy())
+        };
+
         let new = NewChantingRecording {
             uid: &data.uid,
             section_uid: &data.section_uid,
             file_name: &data.file_name,
             recording_type: &data.recording_type,
             label: data.label.as_deref(),
-            duration_ms: data.duration_ms,
+            duration_ms: resolved_duration_ms,
             markers_json: data.markers_json.as_deref(),
             volume: data.volume,
             playback_position_ms: data.playback_position_ms,
@@ -1117,6 +1175,17 @@ impl AppdataDbHandle {
 
         self.do_write(|db_conn| {
             diesel::delete(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn update_recording_label(&self, recording_uid_param: &str, new_label: &str) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .set(label.eq(Some(new_label)))
                 .execute(db_conn)
                 .map(|_| ())
         })
@@ -1254,11 +1323,51 @@ impl AppdataDbHandle {
 
     pub fn get_chanting_recordings_for_sections(&self, section_uids: &[String]) -> Result<Vec<ChantingRecording>> {
         use crate::db::appdata_schema::chanting_recordings::dsl::*;
-        self.do_read(|db_conn| {
+        let mut rows: Vec<ChantingRecording> = self.do_read(|db_conn| {
             chanting_recordings
                 .filter(section_uid.eq_any(section_uids))
                 .select(ChantingRecording::as_select())
                 .load(db_conn)
+        })?;
+
+        // Lazily backfill duration_ms for legacy rows whose duration was never
+        // persisted at creation time (pre-duration-probe recordings, imported
+        // rows, etc.), so the list UI can render "label (MM:SS)" straight from
+        // the stored row.
+        let recordings_dir = crate::get_chanting_recordings_dir();
+        for rec in rows.iter_mut() {
+            if rec.duration_ms > 0 || rec.file_name.is_empty() {
+                continue;
+            }
+            let abs_path = if std::path::Path::new(&rec.file_name).is_absolute() {
+                std::path::PathBuf::from(&rec.file_name)
+            } else {
+                recordings_dir.join(&rec.file_name)
+            };
+            let ms = crate::waveform::get_audio_duration_ms(&abs_path.to_string_lossy());
+            if ms > 0 {
+                if let Err(e) = self.update_recording_duration(&rec.uid, ms) {
+                    crate::logger::warn(&format!(
+                        "Failed to backfill duration_ms for recording {}: {}",
+                        rec.uid, e
+                    ));
+                } else {
+                    rec.duration_ms = ms;
+                }
+            }
+        }
+
+        Ok(rows)
+    }
+
+    pub fn update_recording_duration(&self, recording_uid_param: &str, new_duration_ms: i32) -> Result<()> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(chanting_recordings.filter(uid.eq(recording_uid_param)))
+                .set(duration_ms.eq(new_duration_ms))
+                .execute(db_conn)
+                .map(|_| ())
         })
     }
 

@@ -154,8 +154,148 @@ ApplicationWindow {
 
     function handle_remove_all_and_redownload() {
         logger.info("handle_remove_all_and_redownload()");
+        root.upgrade_initiated_here = true;
+        root.export_in_progress = true;
         SuttaBridge.prepare_for_database_upgrade();
-        remove_all_success_dialog.open();
+        // Do not open remove_all_success_dialog eagerly — wait for
+        // SuttaBridge.exportSucceeded (below) or SuttaBridge.exportFailed
+        // (which opens export_failed_dialog instead).
+    }
+
+    // Export-failure state for the dialog shown when SuttaBridge.exportFailed fires.
+    property string export_failed_reason: ""
+    property string export_failed_path: ""
+
+    // Guard: both UpdateNotificationDialog and DatabaseValidationDialog are
+    // siblings in SuttaSearchWindow and both receive SuttaBridge signals.
+    // Only the dialog that initiated the current upgrade should react to
+    // exportFailed / exportSucceeded (see PRD §11.1).
+    property bool upgrade_initiated_here: false
+
+    // Async-export UI: disable + relabel the trigger button while the bridge
+    // is running the export, so the user cannot re-trigger and knows work
+    // is in progress (see PRD §11.2).
+    property bool export_in_progress: false
+
+    // Both UpdateNotificationDialog and DatabaseValidationDialog are siblings
+    // in SuttaSearchWindow and both receive SuttaBridge signals. The
+    // `upgrade_initiated_here` guard ensures only the initiator reacts.
+    Connections {
+        target: SuttaBridge
+        function onExportFailed(reason) {
+            if (!root.upgrade_initiated_here) return;
+            logger.error("SuttaBridge.exportFailed: " + reason);
+            root.export_in_progress = false;
+            root.upgrade_initiated_here = false;
+            root.export_failed_reason = reason;
+            root.export_failed_path = SuttaBridge.get_import_me_dir_path();
+            export_failed_dialog.open();
+        }
+        function onExportSucceeded() {
+            if (!root.upgrade_initiated_here) return;
+            logger.info("SuttaBridge.exportSucceeded");
+            root.export_in_progress = false;
+            root.upgrade_initiated_here = false;
+            remove_all_success_dialog.open();
+        }
+    }
+
+    Dialog {
+        id: export_failed_dialog
+        title: "Errors During User Data Export"
+        anchors.centerIn: parent
+        modal: true
+        width: Math.min(root.width - 40, 560)
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 10
+
+            Label {
+                text: "Exporting user data before database upgrade reported errors:"
+                font.pointSize: root.pointSize
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 200
+                color: root.palette.base
+                border.color: root.palette.mid
+                border.width: 1
+                radius: 4
+
+                ScrollView {
+                    anchors.fill: parent
+                    anchors.margins: 5
+
+                    TextArea {
+                        text: root.export_failed_reason
+                        font.pointSize: root.pointSize - 1
+                        wrapMode: Text.WordWrap
+                        selectByMouse: true
+                        readOnly: true
+                        background: null
+                    }
+                }
+            }
+
+            Label {
+                visible: root.export_failed_path.length > 0
+                text: "Exported data staged at: " + root.export_failed_path
+                font.pointSize: root.pointSize - 1
+                wrapMode: Text.WrapAnywhere
+                Layout.fillWidth: true
+            }
+        }
+
+        footer: DialogButtonBox {
+            Button {
+                text: "Cancel Upgrade"
+                focus: true
+                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+            }
+            Button {
+                text: "Copy Error Message"
+                DialogButtonBox.buttonRole: DialogButtonBox.ActionRole
+                onClicked: validation_clipboard_helper.copy_text(root.export_failed_reason)
+            }
+            Button {
+                text: "Copy Exported Path"
+                enabled: root.export_failed_path.length > 0
+                DialogButtonBox.buttonRole: DialogButtonBox.ActionRole
+                onClicked: validation_clipboard_helper.copy_text(root.export_failed_path)
+            }
+            Button {
+                text: "Continue Anyway"
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                onClicked: {
+                    // Re-arm the guard so this dialog handles the signal that
+                    // force_database_upgrade() emits (exportSucceeded on
+                    // marker-write success, exportFailed on marker I/O error).
+                    root.upgrade_initiated_here = true;
+                    SuttaBridge.force_database_upgrade();
+                }
+            }
+        }
+
+        onRejected: {
+            root.export_failed_reason = "";
+            root.export_failed_path = "";
+        }
+    }
+
+    TextEdit {
+        id: validation_clipboard_helper
+        visible: false
+        width: 0
+        height: 0
+        function copy_text(t) {
+            validation_clipboard_helper.text = t;
+            validation_clipboard_helper.selectAll();
+            validation_clipboard_helper.copy();
+        }
     }
 
     Dialog {
@@ -377,9 +517,10 @@ ApplicationWindow {
                 }
 
                 Button {
-                    text: "Remove All and Re-download"
+                    text: root.export_in_progress ? "Exporting user data…" : "Remove All and Re-download"
                     font.pointSize: root.pointSize
                     Layout.fillWidth: true
+                    enabled: !root.export_in_progress
                     onClicked: {
                         root.handle_remove_all_and_redownload();
                     }

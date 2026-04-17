@@ -680,6 +680,12 @@ pub extern "C" fn ensure_no_empty_db_files() {
 /// - userdata.sqlite3
 /// - dictionaries.sqlite3
 /// - dpd.sqlite3
+/// - index/ (the fulltext search index directory; the next asset download
+///   extracts a fresh index matching the new databases)
+/// - chanting-recordings/ (audio files; the new asset bundle re-ships seeded
+///   reference recordings, and every user recording has already been staged
+///   to `import-me/chanting-recordings/` by the export step, so the live
+///   folder can be wiped to avoid stale orphan audio on disk — see PRD §11.7)
 ///
 /// This is used during database upgrades to force a fresh download of the databases.
 #[unsafe(no_mangle)]
@@ -728,6 +734,60 @@ pub extern "C" fn check_delete_files_for_upgrade() {
             }
 
             info("Database files deleted for upgrade");
+
+            // Remove the stale fulltext search index. A fresh index tree ships
+            // inside the new asset bundle, so leaving the old one in place
+            // would result in Tantivy doc IDs pointing at the previous DB.
+            let index_dir = &g.paths.index_dir;
+            match index_dir.try_exists() {
+                Ok(true) => {
+                    if let Err(e) = fs::remove_dir_all(index_dir) {
+                        error(&format!(
+                            "Failed to remove index directory {}: {}",
+                            index_dir.display(), e
+                        ));
+                    } else {
+                        info(&format!("Removed index directory: {}", index_dir.display()));
+                    }
+                }
+                Ok(false) => {}
+                Err(e) => {
+                    error(&format!(
+                        "Failed to check if index directory exists {}: {}",
+                        index_dir.display(), e
+                    ));
+                }
+            }
+
+            // Remove the stale chanting-recordings/ directory. User-added audio
+            // has already been staged in import-me/chanting-recordings/ by the
+            // export step and will be copied back by the post-download import.
+            // Seeded reference recordings are re-shipped by the new asset
+            // bundle. Wiping the folder here avoids orphan audio files
+            // lingering on disk after the DB is rebuilt. See PRD §11.7.
+            let recordings_dir = get_chanting_recordings_dir();
+            match recordings_dir.try_exists() {
+                Ok(true) => {
+                    if let Err(e) = fs::remove_dir_all(&recordings_dir) {
+                        error(&format!(
+                            "Failed to remove chanting-recordings directory {}: {}",
+                            recordings_dir.display(), e
+                        ));
+                    } else {
+                        info(&format!(
+                            "Removed chanting-recordings directory: {}",
+                            recordings_dir.display()
+                        ));
+                    }
+                }
+                Ok(false) => {}
+                Err(e) => {
+                    error(&format!(
+                        "Failed to check if chanting-recordings directory exists {}: {}",
+                        recordings_dir.display(), e
+                    ));
+                }
+            }
         }
         Ok(false) => {
             // Marker file doesn't exist, nothing to do

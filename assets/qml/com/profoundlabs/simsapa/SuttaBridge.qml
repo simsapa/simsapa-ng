@@ -27,6 +27,8 @@ Item {
     signal bookMetadataUpdated(success: bool, message: string);
     signal showBottomFootnotesChanged();
     signal appSettingsReset();
+    signal exportFailed(reason: string);
+    signal exportSucceeded();
 
     // Update checker signals
     signal appUpdateAvailable(update_info_json: string);
@@ -806,6 +808,15 @@ Item {
         console.log("prepare_for_database_upgrade()");
     }
 
+    function force_database_upgrade() {
+        console.log("force_database_upgrade()");
+    }
+
+    function get_import_me_dir_path(): string {
+        console.log("get_import_me_dir_path()");
+        return "";
+    }
+
     function get_compatible_asset_version_tag(): string {
         console.log("get_compatible_asset_version_tag()");
         return "";
@@ -942,6 +953,10 @@ Item {
     }
 
     function delete_chanting_recording(recording_uid: string): string {
+        return '{"ok": true}';
+    }
+
+    function update_recording_label(recording_uid: string, label: string): string {
         return '{"ok": true}';
     }
 

@@ -13,7 +13,58 @@ use crate::db::appdata::AppdataDbHandle;
 use crate::db::appdata_models::*;
 use crate::db::APPDATA_MIGRATIONS;
 use crate::get_chanting_recordings_dir;
-use crate::logger::info;
+use crate::logger::{info, warn};
+
+/// Deterministic uid for the synthetic "Orphan Recovery" collection used when
+/// a recording's ancestor chain cannot be fully reconstructed from either the
+/// live DB or the exported DB. See PRD §11.4 / §11.5.
+pub const ORPHAN_RECOVERY_COLLECTION_UID: &str = "col-orphan-recovery";
+/// Deterministic uid for the synthetic "Orphan Recovery" chant — parent of any
+/// synthetic recovery section.
+pub const ORPHAN_RECOVERY_CHANT_UID: &str = "chant-orphan-recovery";
+
+/// Build the placeholder "Orphan Recovery" collection.
+pub fn make_orphan_recovery_collection() -> ChantingCollection {
+    ChantingCollection {
+        id: 0,
+        uid: ORPHAN_RECOVERY_COLLECTION_UID.to_string(),
+        title: "Orphan Recovery".to_string(),
+        description: Some("Auto-created to hold recordings whose original parents could not be recovered during upgrade.".to_string()),
+        language: "pali".to_string(),
+        sort_index: 9999,
+        is_user_added: true,
+        metadata_json: None,
+    }
+}
+
+/// Build the placeholder "Orphan Recovery" chant.
+pub fn make_orphan_recovery_chant() -> ChantingChant {
+    ChantingChant {
+        id: 0,
+        uid: ORPHAN_RECOVERY_CHANT_UID.to_string(),
+        collection_uid: ORPHAN_RECOVERY_COLLECTION_UID.to_string(),
+        title: "Orphan Recovery".to_string(),
+        description: None,
+        sort_index: 9999,
+        is_user_added: true,
+        metadata_json: None,
+    }
+}
+
+/// Build a placeholder section whose uid matches the recording's original
+/// `section_uid` so the recording's FK still resolves after import.
+pub fn make_orphan_recovery_section(section_uid: &str, chant_uid: &str) -> ChantingSection {
+    ChantingSection {
+        id: 0,
+        uid: section_uid.to_string(),
+        chant_uid: chant_uid.to_string(),
+        title: format!("Recovered section {}", section_uid),
+        content_pali: String::new(),
+        sort_index: 9999,
+        is_user_added: true,
+        metadata_json: None,
+    }
+}
 
 /// Create a standalone SQLite database containing chanting data.
 /// Runs appdata migrations to create the schema, then inserts the provided rows.
@@ -41,6 +92,16 @@ pub fn create_chanting_sqlite(
     conn.run_pending_migrations(APPDATA_MIGRATIONS)
         .map_err(|e| anyhow::anyhow!("Failed to run migrations on export database: {}", e))?;
 
+    // 1.8: disable foreign-key enforcement on the export connection so that
+    // out-of-order inserts (e.g. a recording whose section has not been
+    // written yet) and seeded ancestors with mismatched flags cannot abort
+    // the whole export.
+    diesel::sql_query("PRAGMA foreign_keys = OFF")
+        .execute(&mut conn)
+        .context("Failed to disable foreign_keys on export connection")?;
+
+    let mut col_ok: usize = 0;
+    let mut col_err: usize = 0;
     for col in collections {
         let new = NewChantingCollection {
             uid: &col.uid,
@@ -51,12 +112,20 @@ pub fn create_chanting_sqlite(
             is_user_added: col.is_user_added,
             metadata_json: col.metadata_json.as_deref(),
         };
-        diesel::insert_into(col_dsl::chanting_collections)
+        match diesel::insert_into(col_dsl::chanting_collections)
             .values(&new)
             .execute(&mut conn)
-            .with_context(|| format!("Failed to insert collection: {}", col.uid))?;
+        {
+            Ok(_) => col_ok += 1,
+            Err(e) => {
+                col_err += 1;
+                warn(&format!("Failed to insert collection {}: {}", col.uid, e));
+            }
+        }
     }
 
+    let mut chant_ok: usize = 0;
+    let mut chant_err: usize = 0;
     for chant in chants {
         let new = NewChantingChant {
             uid: &chant.uid,
@@ -67,12 +136,20 @@ pub fn create_chanting_sqlite(
             is_user_added: chant.is_user_added,
             metadata_json: chant.metadata_json.as_deref(),
         };
-        diesel::insert_into(chant_dsl::chanting_chants)
+        match diesel::insert_into(chant_dsl::chanting_chants)
             .values(&new)
             .execute(&mut conn)
-            .with_context(|| format!("Failed to insert chant: {}", chant.uid))?;
+        {
+            Ok(_) => chant_ok += 1,
+            Err(e) => {
+                chant_err += 1;
+                warn(&format!("Failed to insert chant {}: {}", chant.uid, e));
+            }
+        }
     }
 
+    let mut sec_ok: usize = 0;
+    let mut sec_err: usize = 0;
     for sec in sections {
         let new = NewChantingSection {
             uid: &sec.uid,
@@ -83,12 +160,20 @@ pub fn create_chanting_sqlite(
             is_user_added: sec.is_user_added,
             metadata_json: sec.metadata_json.as_deref(),
         };
-        diesel::insert_into(sec_dsl::chanting_sections)
+        match diesel::insert_into(sec_dsl::chanting_sections)
             .values(&new)
             .execute(&mut conn)
-            .with_context(|| format!("Failed to insert section: {}", sec.uid))?;
+        {
+            Ok(_) => sec_ok += 1,
+            Err(e) => {
+                sec_err += 1;
+                warn(&format!("Failed to insert section {}: {}", sec.uid, e));
+            }
+        }
     }
 
+    let mut rec_ok: usize = 0;
+    let mut rec_err: usize = 0;
     for rec in recordings {
         let new = NewChantingRecording {
             uid: &rec.uid,
@@ -103,17 +188,31 @@ pub fn create_chanting_sqlite(
             waveform_json: rec.waveform_json.as_deref(),
             is_user_added: rec.is_user_added,
         };
-        diesel::insert_into(rec_dsl::chanting_recordings)
+        match diesel::insert_into(rec_dsl::chanting_recordings)
             .values(&new)
             .execute(&mut conn)
-            .with_context(|| format!("Failed to insert recording: {}", rec.uid))?;
+        {
+            Ok(_) => rec_ok += 1,
+            Err(e) => {
+                rec_err += 1;
+                warn(&format!("Failed to insert recording {}: {}", rec.uid, e));
+            }
+        }
     }
 
+    // 1.10: one-line summary with per-table success/failure counts.
     info(&format!(
-        "Created chanting SQLite: {} collections, {} chants, {} sections, {} recordings",
-        collections.len(), chants.len(), sections.len(), recordings.len()
+        "Created chanting SQLite at {}: collections ok={} err={}; chants ok={} err={}; \
+         sections ok={} err={}; recordings ok={} err={}",
+        dest_path.display(),
+        col_ok, col_err,
+        chant_ok, chant_err,
+        sec_ok, sec_err,
+        rec_ok, rec_err
     ));
 
+    // 1.11: function succeeds as long as the file was created and migrations
+    // ran. Per-row insert failures are tolerated.
     Ok(())
 }
 
@@ -1000,6 +1099,140 @@ mod tests {
         assert_eq!(read_cols[0].title, "Original Collection");
         assert_eq!(read_chants[0].title, "First Chant");
         assert_eq!(read_recs[1].label, Some("Guide".to_string()));
+    }
+
+    #[test]
+    fn test_create_chanting_sqlite_preserves_seeded_ancestor_flag() {
+        // Seeded ancestors (is_user_added = false) must round-trip unchanged
+        // when passed alongside user-added recordings.
+        use crate::db::appdata_schema::chanting_collections::dsl as col_dsl;
+        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join("seeded-ancestors.sqlite3");
+
+        let collections = vec![ChantingCollection {
+            id: 0,
+            uid: "col-seeded".to_string(),
+            title: "Seeded Collection".to_string(),
+            description: None,
+            language: "pali".to_string(),
+            sort_index: 0,
+            is_user_added: false,
+            metadata_json: None,
+        }];
+        let chants = vec![ChantingChant {
+            id: 0,
+            uid: "chant-seeded".to_string(),
+            collection_uid: "col-seeded".to_string(),
+            title: "Seeded Chant".to_string(),
+            description: None,
+            sort_index: 0,
+            is_user_added: false,
+            metadata_json: None,
+        }];
+        let sections = vec![ChantingSection {
+            id: 0,
+            uid: "sec-seeded".to_string(),
+            chant_uid: "chant-seeded".to_string(),
+            title: "Seeded Section".to_string(),
+            content_pali: "pali".to_string(),
+            sort_index: 0,
+            is_user_added: false,
+            metadata_json: None,
+        }];
+        let recordings = vec![ChantingRecording {
+            id: 0,
+            uid: "rec-user".to_string(),
+            section_uid: "sec-seeded".to_string(),
+            file_name: "sec-seeded_123.ogg".to_string(),
+            recording_type: "user".to_string(),
+            label: None,
+            duration_ms: 1000,
+            markers_json: None,
+            volume: 1.0,
+            playback_position_ms: 0,
+            waveform_json: None,
+            is_user_added: true,
+        }];
+
+        create_chanting_sqlite(&db_path, &collections, &chants, &sections, &recordings).unwrap();
+
+        let db_url = format!("sqlite://{}", db_path.display());
+        let mut conn = SqliteConnection::establish(&db_url).unwrap();
+
+        let read_cols: Vec<ChantingCollection> = col_dsl::chanting_collections
+            .select(ChantingCollection::as_select())
+            .load(&mut conn)
+            .unwrap();
+        assert_eq!(read_cols.len(), 1);
+        assert!(!read_cols[0].is_user_added, "seeded collection flag must stay false");
+
+        let read_secs: Vec<ChantingSection> = sec_dsl::chanting_sections
+            .select(ChantingSection::as_select())
+            .load(&mut conn)
+            .unwrap();
+        assert_eq!(read_secs.len(), 1);
+        assert!(!read_secs[0].is_user_added, "seeded section flag must stay false");
+    }
+
+    #[test]
+    fn test_create_chanting_sqlite_tolerates_bad_row() {
+        // A per-row failure (here: duplicate uid violating UNIQUE) must not
+        // abort inserts for the remaining rows.
+        use crate::db::appdata_schema::chanting_collections::dsl as col_dsl;
+
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join("bad-row.sqlite3");
+
+        let collections = vec![
+            ChantingCollection {
+                id: 0,
+                uid: "col-dup".to_string(),
+                title: "First".to_string(),
+                description: None,
+                language: "pali".to_string(),
+                sort_index: 0,
+                is_user_added: true,
+                metadata_json: None,
+            },
+            ChantingCollection {
+                id: 0,
+                uid: "col-dup".to_string(), // duplicate uid — expect UNIQUE failure
+                title: "Duplicate".to_string(),
+                description: None,
+                language: "pali".to_string(),
+                sort_index: 1,
+                is_user_added: true,
+                metadata_json: None,
+            },
+            ChantingCollection {
+                id: 0,
+                uid: "col-ok".to_string(),
+                title: "Third".to_string(),
+                description: None,
+                language: "pali".to_string(),
+                sort_index: 2,
+                is_user_added: true,
+                metadata_json: None,
+            },
+        ];
+
+        // Should return Ok even though one row will fail.
+        create_chanting_sqlite(&db_path, &collections, &[], &[], &[]).unwrap();
+
+        let db_url = format!("sqlite://{}", db_path.display());
+        let mut conn = SqliteConnection::establish(&db_url).unwrap();
+        let read_cols: Vec<ChantingCollection> = col_dsl::chanting_collections
+            .select(ChantingCollection::as_select())
+            .load(&mut conn)
+            .unwrap();
+        // Two of three should have been inserted.
+        assert_eq!(read_cols.len(), 2);
+        let uids: std::collections::HashSet<String> =
+            read_cols.iter().map(|c| c.uid.clone()).collect();
+        assert!(uids.contains("col-dup"));
+        assert!(uids.contains("col-ok"));
     }
 
     #[test]
