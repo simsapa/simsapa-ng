@@ -153,10 +153,10 @@ ApplicationWindow {
 
     // Format a recording label with date and duration
     function format_recording_info(label: string, duration_ms: int): string {
-        let parts = [];
-        if (label) parts.push(label);
-        if (duration_ms > 0) parts.push(format_duration(duration_ms));
-        return parts.join("  —  ");
+        if (duration_ms > 0) {
+            return (label || "") + " (" + format_duration(duration_ms) + ")";
+        }
+        return label || "";
     }
 
     // Models for recording lists
@@ -541,6 +541,11 @@ ApplicationWindow {
                                             onPlayback_started: {
                                                 root.pause_other_playback(ref_delegate.uid);
                                             }
+
+                                            onLabel_edited: function(new_label) {
+                                                SuttaBridge.update_recording_label(ref_delegate.uid, new_label);
+                                                reference_model.setProperty(ref_delegate.index, "label", new_label);
+                                            }
                                         }
                                     }
                                 }
@@ -686,6 +691,11 @@ ApplicationWindow {
                                             onPlayback_started: {
                                                 root.pause_other_playback(user_delegate.uid);
                                             }
+
+                                            onLabel_edited: function(new_label) {
+                                                SuttaBridge.update_recording_label(user_delegate.uid, new_label);
+                                                user_model.setProperty(user_delegate.index, "label", new_label);
+                                            }
                                         }
                                     }
                                 }
@@ -742,6 +752,13 @@ ApplicationWindow {
                             onRemove_requested: function(rec_uid) {
                                 root.remove_recording_and_refresh(rec_uid);
                                 new_recordings_model.remove(new_rec_delegate.index);
+                            }
+
+                            // A new recording hasn't been persisted yet, so only
+                            // mirror the edited label back into the model; the
+                            // eventual onRecording_completed insert will pick it up.
+                            onLabel_edited: function(new_label) {
+                                new_recordings_model.setProperty(new_rec_delegate.index, "model_label", new_label);
                             }
 
                             // 7.11 Recording complete — persist and refresh

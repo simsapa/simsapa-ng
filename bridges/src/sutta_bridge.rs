@@ -903,6 +903,9 @@ pub mod qobject {
         fn delete_chanting_recording(self: &SuttaBridge, recording_uid: &QString) -> QString;
 
         #[qinvokable]
+        fn update_recording_label(self: &SuttaBridge, recording_uid: &QString, label: &QString) -> QString;
+
+        #[qinvokable]
         fn update_recording_markers(self: &SuttaBridge, recording_uid: &QString, markers_json: &QString) -> QString;
 
         #[qinvokable]
@@ -3414,47 +3417,61 @@ impl qobject::SuttaBridge {
     ///
     /// The user should quit the app after calling this function and restart it
     /// to begin the database download process.
-    pub fn prepare_for_database_upgrade(mut self: Pin<&mut Self>) {
-        let app_data = get_app_data();
+    pub fn prepare_for_database_upgrade(self: Pin<&mut Self>) {
+        // Run the export on a background thread so the UI thread is free to
+        // repaint button-state/label bindings (e.g. "Exporting user data…")
+        // while the work is in progress. Signals are emitted back on the Qt
+        // thread via `qt_thread.queue`.
+        let qt_thread = self.qt_thread();
 
-        match app_data.export_user_data_to_assets() {
-            Ok(()) => {
-                // Export succeeded; only emit exportSucceeded if marker
-                // files are also on disk (see PRD §11.3 — a silent marker
-                // failure would otherwise produce a no-op upgrade on
-                // restart).
-                match write_upgrade_marker_files() {
-                    Ok(()) => {
-                        if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
-                            *guard = None;
+        thread::spawn(move || {
+            let app_data = get_app_data();
+
+            match app_data.export_user_data_to_assets() {
+                Ok(()) => {
+                    // Export succeeded; only emit exportSucceeded if marker
+                    // files are also on disk (see PRD §11.3 — a silent marker
+                    // failure would otherwise produce a no-op upgrade on
+                    // restart).
+                    match write_upgrade_marker_files() {
+                        Ok(()) => {
+                            if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
+                                *guard = None;
+                            }
+                            qt_thread.queue(|mut qo| {
+                                qo.as_mut().export_succeeded();
+                            }).unwrap();
                         }
-                        self.as_mut().export_succeeded();
-                    }
-                    Err(marker_errors) => {
-                        let reason = format_category_errors(&marker_errors);
-                        error(&format!(
-                            "prepare_for_database_upgrade: marker-file writes failed after successful export:\n{}",
-                            reason
-                        ));
-                        if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
-                            *guard = Some(reason.clone());
+                        Err(marker_errors) => {
+                            let reason = format_category_errors(&marker_errors);
+                            error(&format!(
+                                "prepare_for_database_upgrade: marker-file writes failed after successful export:\n{}",
+                                reason
+                            ));
+                            if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
+                                *guard = Some(reason.clone());
+                            }
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().export_failed(QString::from(&reason));
+                            }).unwrap();
                         }
-                        self.as_mut().export_failed(QString::from(&reason));
                     }
                 }
-            }
-            Err(category_errors) => {
-                let reason = format_category_errors(&category_errors);
-                error(&format!(
-                    "prepare_for_database_upgrade: export failed, not writing marker files:\n{}",
-                    reason
-                ));
-                if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
-                    *guard = Some(reason.clone());
+                Err(category_errors) => {
+                    let reason = format_category_errors(&category_errors);
+                    error(&format!(
+                        "prepare_for_database_upgrade: export failed, not writing marker files:\n{}",
+                        reason
+                    ));
+                    if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
+                        *guard = Some(reason.clone());
+                    }
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().export_failed(QString::from(&reason));
+                    }).unwrap();
                 }
-                self.as_mut().export_failed(QString::from(&reason));
             }
-        }
+        });
     }
 
     /// Proceed with the database upgrade even though the export reported errors.
@@ -3468,42 +3485,53 @@ impl qobject::SuttaBridge {
     /// `exportFailed(reason)` if marker I/O fails (PRD §11.3). Before writing,
     /// the errors the user chose to bypass are logged at `error` level so a
     /// post-mortem bug report can recover the context (PRD §11.6).
-    pub fn force_database_upgrade(mut self: Pin<&mut Self>) {
-        // Log the export errors that the user chose to bypass so they are
-        // available in the log file for later diagnosis.
-        let bypassed_reason: Option<String> = LAST_EXPORT_FAILURE
-            .lock()
-            .ok()
-            .and_then(|guard| guard.clone());
-        if let Some(reason) = &bypassed_reason {
-            error(&format!(
-                "force_database_upgrade(): user is bypassing the following export errors:\n{}",
-                reason
-            ));
-        } else {
-            info("force_database_upgrade(): no stored export-failure reason (called without prior prepare_for_database_upgrade?)");
-        }
-        info("force_database_upgrade(): writing upgrade marker files after user opted to continue past export failure");
+    pub fn force_database_upgrade(self: Pin<&mut Self>) {
+        // Match the threading style of prepare_for_database_upgrade so callers
+        // always observe the same async "button stays disabled until a signal
+        // fires" pattern, even though the marker writes themselves are quick.
+        let qt_thread = self.qt_thread();
 
-        match write_upgrade_marker_files() {
-            Ok(()) => {
-                if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
-                    *guard = None;
-                }
-                self.as_mut().export_succeeded();
-            }
-            Err(marker_errors) => {
-                let reason = format_category_errors(&marker_errors);
+        thread::spawn(move || {
+            // Log the export errors that the user chose to bypass so they are
+            // available in the log file for later diagnosis.
+            let bypassed_reason: Option<String> = LAST_EXPORT_FAILURE
+                .lock()
+                .ok()
+                .and_then(|guard| guard.clone());
+            if let Some(reason) = &bypassed_reason {
                 error(&format!(
-                    "force_database_upgrade: marker-file writes failed:\n{}",
+                    "force_database_upgrade(): user is bypassing the following export errors:\n{}",
                     reason
                 ));
-                if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
-                    *guard = Some(reason.clone());
-                }
-                self.as_mut().export_failed(QString::from(&reason));
+            } else {
+                info("force_database_upgrade(): no stored export-failure reason (called without prior prepare_for_database_upgrade?)");
             }
-        }
+            info("force_database_upgrade(): writing upgrade marker files after user opted to continue past export failure");
+
+            match write_upgrade_marker_files() {
+                Ok(()) => {
+                    if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
+                        *guard = None;
+                    }
+                    qt_thread.queue(|mut qo| {
+                        qo.as_mut().export_succeeded();
+                    }).unwrap();
+                }
+                Err(marker_errors) => {
+                    let reason = format_category_errors(&marker_errors);
+                    error(&format!(
+                        "force_database_upgrade: marker-file writes failed:\n{}",
+                        reason
+                    ));
+                    if let Ok(mut guard) = LAST_EXPORT_FAILURE.lock() {
+                        *guard = Some(reason.clone());
+                    }
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().export_failed(QString::from(&reason));
+                    }).unwrap();
+                }
+            }
+        });
     }
 
     /// Return the absolute path of the `import-me/` folder used to stage user data
@@ -3887,6 +3915,14 @@ impl qobject::SuttaBridge {
     pub fn delete_chanting_recording(&self, recording_uid: &QString) -> QString {
         let app_data = get_app_data();
         match app_data.dbm.appdata.delete_chanting_recording(&recording_uid.to_string()) {
+            Ok(_) => QString::from("{\"ok\": true}"),
+            Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
+        }
+    }
+
+    pub fn update_recording_label(&self, recording_uid: &QString, label: &QString) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.appdata.update_recording_label(&recording_uid.to_string(), &label.to_string()) {
             Ok(_) => QString::from("{\"ok\": true}"),
             Err(e) => QString::from(&format!("{{\"error\": \"{}\"}}", e)),
         }

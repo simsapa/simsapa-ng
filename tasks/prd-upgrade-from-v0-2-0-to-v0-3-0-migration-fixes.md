@@ -253,6 +253,17 @@ Today `force_database_upgrade()` logs only "writing upgrade marker files after u
 - Hold the most recent export-failure reason string on the `SuttaBridge` struct (e.g. `last_export_failure: Mutex<Option<String>>`), set it when `prepare_for_database_upgrade()` emits `export_failed`, and clear it on successful `prepare_for_database_upgrade()`.
 - `force_database_upgrade()` logs the stored reason at `error` level before writing the markers, prefixed with "force_database_upgrade(): user is bypassing the following export errors:". This way the bypass decision and its motivation appear together in a single log file.
 
+### 11.7 Stale `chanting-recordings/` folder survives the upgrade
+
+Manual testing showed that `app-assets/chanting-recordings/` is not deleted during the upgrade, only `appdata.sqlite3` and `index/`. Because the new asset bundle re-ships the seeded reference recordings and every user recording has already been staged into `import-me/chanting-recordings/`, leaving the live folder in place causes two problems:
+
+1. Audio files that existed in v0.2.0 but are no longer referenced by the new bundle (and weren't user-added) survive as orphan files on disk with no DB row, no UI entry, and no way to clean them up from the app.
+2. The live folder's contents become a confusing hybrid of "pre-upgrade state" and "post-extract state" until the post-download import finishes copying user audio back.
+
+**Fix.** Extend `check_delete_files_for_upgrade()` in `backend/src/lib.rs` so that, after the `index/` deletion, it also removes the `chanting-recordings/` directory (resolved via `get_chanting_recordings_dir()`), gated on the same `try_exists() == Ok(true)` check and using `fs::remove_dir_all`. Errors log at `error`; `Ok(false)` is a no-op. Update the function's doc comment to list `chanting-recordings/` alongside the database files and `index/`.
+
+**Timing.** Identical to `index/` (§10.3): deletion is gated on the `delete_files_for_upgrade.txt` marker, which only the happy-path `prepare_for_database_upgrade()` or user-confirmed `force_database_upgrade()` write, so a cancelled upgrade leaves `chanting-recordings/` intact.
+
 ## 12. Post-Implementation Stages
 
 **Stage 6 — Apply fixes from §11.** Each fix must be implemented, built, and tested before moving on; see §13 tasks 6.0 in the task list file.

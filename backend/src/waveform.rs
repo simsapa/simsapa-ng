@@ -10,6 +10,52 @@ use symphonia::core::probe::Hint;
 
 use crate::logger::warn;
 
+/// Read the duration of an audio file in milliseconds from its container
+/// metadata (no full decode). Returns 0 if the file can't be probed or the
+/// codec doesn't expose a frame count + sample rate.
+pub fn get_audio_duration_ms(file_path: &str) -> i32 {
+    let path = Path::new(file_path);
+    let file = match std::fs::File::open(path) {
+        Ok(f) => f,
+        Err(e) => {
+            warn(&format!("get_audio_duration_ms: open failed {}: {}", file_path, e));
+            return 0;
+        }
+    };
+
+    let mss = MediaSourceStream::new(Box::new(file), Default::default());
+
+    let mut hint = Hint::new();
+    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+        hint.with_extension(ext);
+    }
+
+    let probed = match symphonia::default::get_probe()
+        .format(&hint, mss, &FormatOptions::default(), &MetadataOptions::default())
+    {
+        Ok(p) => p,
+        Err(e) => {
+            warn(&format!("get_audio_duration_ms: probe failed {}: {}", file_path, e));
+            return 0;
+        }
+    };
+
+    let track = match probed.format.default_track() {
+        Some(t) => t,
+        None => return 0,
+    };
+
+    let params = &track.codec_params;
+    let sample_rate = params.sample_rate.unwrap_or(0) as u64;
+    let n_frames = params.n_frames.unwrap_or(0);
+    if sample_rate == 0 || n_frames == 0 {
+        return 0;
+    }
+
+    let ms = (n_frames.saturating_mul(1000)) / sample_rate;
+    i32::try_from(ms).unwrap_or(i32::MAX)
+}
+
 /// Extract waveform peak amplitude data from an audio file.
 ///
 /// Decodes the audio file, divides all samples into `num_bars` time buckets,

@@ -956,6 +956,10 @@ Item {
         return '{"ok": true}';
     }
 
+    function update_recording_label(recording_uid: string, label: string): string {
+        return '{"ok": true}';
+    }
+
     function update_recording_markers(recording_uid: string, markers_json: string): string {
         return '{"ok": true}';
     }
