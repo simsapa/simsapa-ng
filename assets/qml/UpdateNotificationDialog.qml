@@ -24,8 +24,23 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile ? 14 : 12
     required property int top_bar_margin
 
-    // Dialog type: "app", "db", "obsolete", "no_updates", "closing"
+    // Dialog type: "app", "db", "obsolete", "no_updates", "closing", "export_failed"
     property string dialog_type: ""
+
+    // Export-failure state (populated when SuttaBridge.exportFailed fires)
+    property string export_failed_reason: ""
+    property string export_failed_path: ""
+
+    // Guard: both UpdateNotificationDialog and DatabaseValidationDialog are
+    // siblings in SuttaSearchWindow and both receive SuttaBridge signals.
+    // Only the dialog that initiated the current upgrade should react to
+    // exportFailed / exportSucceeded (see PRD §11.1).
+    property bool upgrade_initiated_here: false
+
+    // Async-export UI: disable + relabel the trigger button while the bridge
+    // is running the export, so the user cannot re-trigger and knows work
+    // is in progress (see PRD §11.2).
+    property bool export_in_progress: false
 
     // Update info properties (parsed from JSON)
     property string version: ""
@@ -55,6 +70,8 @@ ApplicationWindow {
             return "No Updates Available";
         case "closing":
             return "Restart Required";
+        case "export_failed":
+            return "Errors During User Data Export";
         default:
             return "Update Notification";
         }
@@ -145,6 +162,7 @@ ApplicationWindow {
             case "obsolete": return 2;
             case "no_updates": return 3;
             case "closing": return 4;
+            case "export_failed": return 5;
             default: return 0;
             }
         }
@@ -466,11 +484,13 @@ ApplicationWindow {
                     }
 
                     Button {
-                        text: "Yes"
+                        text: root.export_in_progress ? "Exporting user data…" : "Yes"
                         font.pointSize: root.pointSize
+                        enabled: !root.export_in_progress
                         onClicked: {
+                            root.upgrade_initiated_here = true;
+                            root.export_in_progress = true;
                             SuttaBridge.prepare_for_database_upgrade();
-                            root.dialog_type = "closing";
                         }
                     }
 
@@ -551,11 +571,13 @@ ApplicationWindow {
                     }
 
                     Button {
-                        text: "Download Now"
+                        text: root.export_in_progress ? "Exporting user data…" : "Download Now"
                         font.pointSize: root.pointSize
+                        enabled: !root.export_in_progress
                         onClicked: {
+                            root.upgrade_initiated_here = true;
+                            root.export_in_progress = true;
                             SuttaBridge.prepare_for_database_upgrade();
-                            root.dialog_type = "closing";
                         }
                     }
 
@@ -689,6 +711,193 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
                 }
             }
+        }
+
+        // =====================================================================
+        // Export Failure Dialog
+        // =====================================================================
+        // Shown when SuttaBridge.exportFailed fires during prepare_for_database_upgrade().
+        // Lets the user cancel the upgrade, copy the error / exported path, or
+        // force the upgrade to proceed despite errors.
+        Frame {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            ColumnLayout {
+                spacing: 0
+                anchors.fill: parent
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        width: parent.width
+                        spacing: 10
+
+                        Label {
+                            text: "Errors during user data export"
+                            font.bold: true
+                            font.pointSize: root.pointSize + 4
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "Exporting user data before database upgrade reported errors:"
+                            font.pointSize: root.pointSize
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 240
+                            color: root.palette.base
+                            border.color: root.palette.mid
+                            border.width: 1
+                            radius: 4
+
+                            ScrollView {
+                                anchors.fill: parent
+                                anchors.margins: 5
+
+                                TextArea {
+                                    text: root.export_failed_reason
+                                    font.pointSize: root.pointSize - 1
+                                    wrapMode: Text.WordWrap
+                                    selectByMouse: true
+                                    readOnly: true
+                                    background: null
+                                }
+                            }
+                        }
+
+                        Label {
+                            visible: root.export_failed_path.length > 0
+                            text: "Exported data staged at:"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.topMargin: 10
+                        }
+
+                        Label {
+                            visible: root.export_failed_path.length > 0
+                            text: root.export_failed_path
+                            font.pointSize: root.pointSize - 1
+                            wrapMode: Text.WrapAnywhere
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "Choose Continue Anyway to proceed with the upgrade and ignore these errors. The partial export will still be imported after restart. Choose Cancel Upgrade to abort — the old database stays on disk."
+                            font.pointSize: root.pointSize - 1
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            Layout.topMargin: 10
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+                }
+
+                GridLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 10
+                    Layout.bottomMargin: root.is_mobile ? 60 : 10
+                    columns: 2
+                    rowSpacing: 6
+                    columnSpacing: 6
+
+                    Button {
+                        id: cancel_upgrade_button
+                        text: "Cancel Upgrade"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        focus: true
+                        Keys.onReturnPressed: clicked()
+                        Keys.onEnterPressed: clicked()
+                        onClicked: {
+                            root.export_failed_reason = "";
+                            root.export_failed_path = "";
+                            root.close();
+                        }
+                    }
+
+                    Button {
+                        text: "Copy Error Message"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: clipboard_helper.copy_text(root.export_failed_reason)
+                    }
+
+                    Button {
+                        text: "Copy Exported Path"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        enabled: root.export_failed_path.length > 0
+                        onClicked: clipboard_helper.copy_text(root.export_failed_path)
+                    }
+
+                    Button {
+                        text: "Continue Anyway"
+                        font.pointSize: root.pointSize
+                        Layout.fillWidth: true
+                        onClicked: {
+                            // Re-arm the guard so this dialog handles the
+                            // signal that force_database_upgrade() emits
+                            // (exportSucceeded on marker-write success,
+                            // exportFailed on marker I/O error).
+                            root.upgrade_initiated_here = true;
+                            SuttaBridge.force_database_upgrade();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Hidden TextEdit used as a Clipboard bridge for Copy buttons.
+    TextEdit {
+        id: clipboard_helper
+        visible: false
+        width: 0
+        height: 0
+        function copy_text(t) {
+            clipboard_helper.text = t;
+            clipboard_helper.selectAll();
+            clipboard_helper.copy();
+        }
+    }
+
+    // Both UpdateNotificationDialog and DatabaseValidationDialog are siblings
+    // in SuttaSearchWindow and both receive SuttaBridge signals. The
+    // `upgrade_initiated_here` guard ensures only the initiator reacts.
+    Connections {
+        target: SuttaBridge
+        function onExportFailed(reason) {
+            if (!root.upgrade_initiated_here) return;
+            logger.error("SuttaBridge.exportFailed: " + reason);
+            root.export_in_progress = false;
+            root.upgrade_initiated_here = false;
+            root.export_failed_reason = reason;
+            root.export_failed_path = SuttaBridge.get_import_me_dir_path();
+            root.dialog_type = "export_failed";
+            if (!root.visible) {
+                root.show();
+            }
+            root.raise();
+            root.requestActivate();
+        }
+        function onExportSucceeded() {
+            if (!root.upgrade_initiated_here) return;
+            logger.info("SuttaBridge.exportSucceeded");
+            root.export_in_progress = false;
+            root.upgrade_initiated_here = false;
+            root.dialog_type = "closing";
         }
     }
 }

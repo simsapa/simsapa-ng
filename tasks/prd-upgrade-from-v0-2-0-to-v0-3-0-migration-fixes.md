@@ -173,3 +173,86 @@ Each stage is small enough to build + test before moving on. After every top-lev
 1. **Should `Continue Anyway` delete `import-me/` before writing the marker files?** **No.** Export failure may only affect one data category (e.g. chantings) while the rest of `import-me/` still holds valid user data (bookmarks, books, etc.) that must still be imported. `force_database_upgrade()` must leave `import-me/` untouched — it only writes the two marker files. Successive upgrade attempts still clear `import-me/` at the start of the export step per §4.1, so stale artifacts from a cancelled attempt are not a concern on the happy path.
 2. **Orphan recordings.** Not applicable: per §4.2 #7 the importer creates a parent section (using the exported metadata) whenever a recording's `section_uid` is missing in the live DB. No recording is ever skipped as an orphan, so no sidecar file or recovery tool is needed. The "skipped-orphan" counter referenced in §4.5 / Stage 2 should be renamed to "created-parent-for-orphan" (or equivalent) to reflect the actual behaviour.
 3. **`index/` deletion timing.** The `index/` directory must be removed only on the upgrade-proceed path, never on cancel. Because deletion happens inside `check_delete_files_for_upgrade()` which is gated on the `delete_files_for_upgrade.txt` marker, and because the marker is only written by the happy path (§4.4 #12) or by `force_database_upgrade()` (§4.4 #15), a cancelled upgrade leaves the marker absent and the index intact — the existing gate already gives us the required behaviour. Stage 3 must still audit that no other code path writes the marker or removes `index/` unconditionally.
+
+## 11. Post-Implementation Review — Issues and Planned Fixes
+
+After Stages 1–5 were implemented, a code review surfaced the following defects. They must be fixed before release; see §12 tasks 6.0.
+
+### 11.1 Duplicate dialog reactions across sibling dialogs
+
+Both `UpdateNotificationDialog` and `DatabaseValidationDialog` are instantiated as siblings inside `assets/qml/SuttaSearchWindow.qml` (around lines 1796 and 1806). Each defines its own global `Connections { target: SuttaBridge }` block handling `onExportFailed` and `onExportSucceeded`. Because both live in the QML tree at the same time, **every** emission of `exportFailed` / `exportSucceeded` fires **both** handlers — regardless of which dialog initiated the upgrade. Symptoms:
+
+- Triggering the upgrade from `DatabaseValidationDialog` ("Remove All & Re-Download") also forces `UpdateNotificationDialog` to `show() + raise() + requestActivate()` and display its own failure frame.
+- On success, the DB-validation dialog opens `remove_all_success_dialog` **and** the update dialog transitions to the `closing` state.
+
+**Fix.** Each dialog tracks whether it initiated the current upgrade and only reacts to the bridge signals when it did.
+
+- Add a boolean property `upgrade_initiated_here` (default `false`) to each dialog.
+- Set it to `true` immediately before calling `SuttaBridge.prepare_for_database_upgrade()` at every call site.
+- In the `Connections` handlers for `onExportFailed` / `onExportSucceeded`, return early when `!upgrade_initiated_here`.
+- Reset the flag to `false` once the dialog has acted on the signal (opened the failure dialog, transitioned to `closing`, etc.), or on user cancel.
+- Add a QML comment at the top of each `Connections` block explaining why the guard is required ("both dialogs are siblings in SuttaSearchWindow and both receive the signal; only the initiator should react").
+
+### 11.2 UI dead-time between click and async export signal
+
+In `UpdateNotificationDialog.qml` (the Yes / Download Now buttons at lines ~477 and ~561) the previous eager `root.dialog_type = "closing"` transition was removed so that the dialog waits for `exportSucceeded` / `exportFailed`. During that wait (several seconds for chanting export) nothing visible changes and the user may double-click.
+
+**Fix.**
+
+- While the export is in progress, disable the button and change its label to "Exporting user data…" (or similar). Apply the same pattern to the `DatabaseValidationDialog` "Remove All and Re-Download" button.
+- Use a local QML property `export_in_progress` (default `false`) flipped to `true` on click and flipped back to `false` when either `onExportFailed` or `onExportSucceeded` fires (or on dialog close).
+- Add a QML comment explaining the reason: "we wait for `exportSucceeded`/`exportFailed` from the bridge before transitioning; disable the button and change its label so the user knows work is in progress and cannot re-trigger the export."
+
+### 11.3 Silent marker-file I/O failure falsely reports success
+
+`write_upgrade_marker_files()` in `bridges/src/sutta_bridge.rs` logs marker-write failures but does not return them. `prepare_for_database_upgrade()` then unconditionally emits `export_succeeded` after calling it, so the QML layer proceeds to the "Restart Required" closing dialog even though the marker files are missing — on restart the old DB is not deleted and the upgrade silently does not happen.
+
+**Fix.**
+
+- Change `write_upgrade_marker_files()` to return `Result<(), Vec<(String, String)>>` using the same category-error shape as `export_user_data_to_assets()`. Categories: `marker_delete_files`, `marker_auto_start_download`. Each failed write pushes one entry.
+- `prepare_for_database_upgrade()`:
+  - On successful export, call `write_upgrade_marker_files()`. If **that** fails, emit `export_failed` with the formatted marker errors (not `export_succeeded`). If it succeeds, emit `export_succeeded`.
+  - On failed export, behaviour unchanged (emit `export_failed` without attempting marker writes).
+- `force_database_upgrade()`: if `write_upgrade_marker_files()` returns an error, emit `export_failed` with the marker errors so the user sees the failure instead of restarting into a no-op upgrade.
+- Add a Rust doc comment on `write_upgrade_marker_files` explaining why propagating I/O failure matters ("a silently-missing marker file produces a silently-failed upgrade on restart").
+
+### 11.4 Orphan-repair still drops recordings when ancestors are missing from the exported DB
+
+In `import_user_chanting_data()` the orphan-repair branch sets `orphan_repair_ok = false` and then `continue`s when the *exported* DB lacks the needed section / chant / collection (`warn("Cannot repair orphan recording …")`). This contradicts PRD §10.2 which mandates "no recording is ever skipped as an orphan."
+
+**Fix.** Never drop a recording. When an ancestor is missing from both the live DB and the exported DB, synthesise a placeholder using deterministic values derived from the recording / section uid so repeated imports converge:
+
+- Synthetic collection: `uid = format!("col-orphan-recovery")`, `title = "Orphan Recovery"`, `language = "pali"`, `is_user_added = true`, `sort_index = 9999`.
+- Synthetic chant: `uid = format!("chant-orphan-recovery")`, `collection_uid` pointing at the synthetic or real collection, `title = "Orphan Recovery"`, `is_user_added = true`.
+- Synthetic section: `uid = <the original recording's section_uid>` so the recording's FK still resolves, `chant_uid` pointing at the (real or synthetic) chant, `title = format!("Recovered section {}", section_uid)`, `content_pali = ""`, `is_user_added = true`.
+- Before synthesising, check the live DB for the synthetic uids (skip-if-exists) so subsequent imports reuse the same placeholders.
+
+Count these as `created_parent_for_orphan` and log at `warn` listing the recording uid, missing ancestor uid(s), and the synthetic placeholder(s) used. Remove the `continue` on `!orphan_repair_ok`; every recording must proceed to the insert step.
+
+### 11.5 User-added chants/sections without a user collection get silently dropped on export
+
+`export_user_chanting_data()` early-returns on `user_collections.is_empty() && user_recordings.is_empty()`. A user who has user-added chants or sections (e.g. added under a seeded collection) but zero user-added collections **and** zero user-added recordings would see their data silently dropped.
+
+More generally, the same orphan-tolerance rule from §11.4 must apply on the **export** side: every user-added row must carry its full ancestor chain into the export sqlite, creating placeholders where the live DB lacks ancestors.
+
+**Fix.**
+
+- Relax the early-return condition to `user_collections.is_empty() && user_chants.is_empty() && user_sections.is_empty() && user_recordings.is_empty()`.
+- Extend the seeded-ancestor inclusion logic (§4.1 #1) so that the ancestor load-and-merge is driven not just by `user_recordings.section_uid` but also by:
+  - `user_sections.chant_uid` (to pull ancestor chants)
+  - `user_chants.collection_uid` (to pull ancestor collections)
+- When a live-DB lookup for an ancestor uid returns no row (rare, but possible on a damaged DB), synthesise a placeholder using the same deterministic rule as §11.4 so the exported sqlite always has a complete FK subgraph. Log at `warn`.
+- Apply the same principle on the import side (§11.4): any level of missing ancestor is synthesised so no user-added row is ever dropped.
+
+### 11.6 `force_database_upgrade` does not log the errors the user chose to bypass
+
+Today `force_database_upgrade()` logs only "writing upgrade marker files after user opted to continue past export failure". The category errors emitted by `prepare_for_database_upgrade()` are not re-logged, so a post-mortem from a user bug report cannot recover them.
+
+**Fix.**
+
+- Hold the most recent export-failure reason string on the `SuttaBridge` struct (e.g. `last_export_failure: Mutex<Option<String>>`), set it when `prepare_for_database_upgrade()` emits `export_failed`, and clear it on successful `prepare_for_database_upgrade()`.
+- `force_database_upgrade()` logs the stored reason at `error` level before writing the markers, prefixed with "force_database_upgrade(): user is bypassing the following export errors:". This way the bypass decision and its motivation appear together in a single log file.
+
+## 12. Post-Implementation Stages
+
+**Stage 6 — Apply fixes from §11.** Each fix must be implemented, built, and tested before moving on; see §13 tasks 6.0 in the task list file.

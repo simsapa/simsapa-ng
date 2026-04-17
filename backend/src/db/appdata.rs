@@ -916,6 +916,48 @@ impl AppdataDbHandle {
         }
     }
 
+    // --- Existence checks by uid (used by the post-upgrade import path) ---
+
+    pub fn chanting_collection_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_collections::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_collections.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
+    pub fn chanting_chant_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_chants::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_chants.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
+    pub fn chanting_section_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_sections::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_sections.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
+    pub fn chanting_recording_exists_by_uid(&self, check_uid: &str) -> Result<bool> {
+        use crate::db::appdata_schema::chanting_recordings::dsl::*;
+        self.do_read(|db_conn| {
+            diesel::select(diesel::dsl::exists(
+                chanting_recordings.filter(uid.eq(check_uid)),
+            ))
+            .get_result::<bool>(db_conn)
+        })
+    }
+
     // --- Collection CRUD ---
 
     pub fn create_chanting_collection(&self, data: &ChantingCollectionJson) -> Result<()> {

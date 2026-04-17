@@ -1475,41 +1475,65 @@ impl AppData {
     /// - download_select_sanskrit_bundle.txt: If 'san' language is present
     /// - appdata.sqlite3: A database with user-imported books and their related data
     ///
-    /// User-imported books are those not in the original dataset.
-    ///
-    /// # Returns
-    ///
-    /// * `Ok(())` - If export was successful
-    /// * `Err` - If any error occurred during export
-    pub fn export_user_data_to_assets(&self) -> Result<()> {
+    /// Per-category failures do not short-circuit the remaining exports — every
+    /// category is attempted and errors are collected. Returns `Err(Vec<(category,
+    /// message)>)` if any category failed, `Ok(())` otherwise.
+    pub fn export_user_data_to_assets(&self) -> std::result::Result<(), Vec<(String, String)>> {
+        let mut errors: Vec<(String, String)> = Vec::new();
+
         let globals = get_app_globals();
         let app_assets_dir = &globals.paths.app_assets_dir;
         let import_dir = app_assets_dir.join("import-me");
 
         info(&format!("export_user_data_to_assets(): Creating import-me folder at {}", import_dir.display()));
 
-        // Create import-me folder if it doesn't exist
-        if !import_dir.exists() {
-            std::fs::create_dir_all(&import_dir)
-                .with_context(|| format!("Failed to create import-me directory: {}", import_dir.display()))?;
+        // 1.6: clear any pre-existing import-me/ artifacts from a previous
+        // cancelled upgrade attempt before writing anything new.
+        match import_dir.try_exists() {
+            Ok(true) => {
+                info(&format!(
+                    "Removing pre-existing import-me directory: {}",
+                    import_dir.display()
+                ));
+                if let Err(e) = std::fs::remove_dir_all(&import_dir) {
+                    warn(&format!(
+                        "Failed to remove pre-existing import-me directory {}: {}",
+                        import_dir.display(), e
+                    ));
+                }
+            }
+            _ => {}
         }
 
-        // Export app_settings.json to import-me folder
-        self.export_app_settings_json(&import_dir)?;
+        if let Err(e) = std::fs::create_dir_all(&import_dir) {
+            // Without an import-me directory we cannot run any exports — this
+            // is a fatal setup error, not a per-category failure.
+            errors.push((
+                "setup".to_string(),
+                format!("Failed to create import-me directory {}: {}", import_dir.display(), e),
+            ));
+            return Err(errors);
+        }
 
-        // Export download_languages.txt and download_select_sanskrit_bundle.txt
-        // to app_assets_dir. These are read by DownloadAppdataWindow to auto-fill
-        // language selection during database upgrades.
-        self.export_download_languages()?;
+        if let Err(e) = self.export_app_settings_json(&import_dir) {
+            errors.push(("app_settings".to_string(), format!("{:#}", e)));
+        }
 
-        // Export user-imported books to import-me folder
-        self.export_user_books(&import_dir)?;
+        if let Err(e) = self.export_download_languages() {
+            errors.push(("download_languages".to_string(), format!("{:#}", e)));
+        }
 
-        // Export user bookmarks to import-me folder
-        self.export_user_bookmarks(&import_dir)?;
+        if let Err(e) = self.export_user_books(&import_dir) {
+            errors.push(("books".to_string(), format!("{:#}", e)));
+        }
 
-        // Export user chanting data and recordings to import-me folder
-        self.export_user_chanting_data(&import_dir)?;
+        if let Err(e) = self.export_user_bookmarks(&import_dir) {
+            errors.push(("bookmarks".to_string(), format!("{:#}", e)));
+        }
+
+        if let Err(e) = self.export_user_chanting_data(&import_dir) {
+            errors.push(("chanting".to_string(), format!("{:#}", e)));
+        }
 
         // One-shot legacy bridge: if userdata.sqlite3 still exists (alpha testers
         // upgrading from the pre-consolidation two-DB layout), pull its user data
@@ -1518,11 +1542,19 @@ impl AppData {
             info("export_user_data_to_assets(): legacy userdata.sqlite3 detected — running one-shot bridge");
             if let Err(e) = self.export_from_legacy_userdata(&import_dir) {
                 error(&format!("Legacy userdata export failed: {}", e));
+                errors.push(("legacy_bridge".to_string(), format!("{:#}", e)));
             }
         }
 
-        info("export_user_data_to_assets(): Export completed successfully");
-        Ok(())
+        if errors.is_empty() {
+            info("export_user_data_to_assets(): Export completed successfully");
+            Ok(())
+        } else {
+            for (cat, msg) in &errors {
+                error(&format!("export_user_data_to_assets(): {}: {}", cat, msg));
+            }
+            Err(errors)
+        }
     }
 
     /// Returns true if the legacy `userdata.sqlite3` file exists in the app assets dir.
@@ -2339,29 +2371,242 @@ impl AppData {
             .load(db_conn)
             .context("Failed to load user chanting recordings")?;
 
-        if user_collections.is_empty() && user_recordings.is_empty() {
+        // Collect distinct section_uids referenced by user recordings, and load
+        // the matching sections from appdata regardless of is_user_added. Seeded
+        // ancestors must travel alongside user recordings so that FK targets in
+        // the exported sqlite resolve on a fresh post-upgrade database.
+        let recording_section_uids: std::collections::BTreeSet<String> = user_recordings
+            .iter()
+            .map(|r| r.section_uid.clone())
+            .collect();
+
+        let ancestor_sections: Vec<ChantingSection> = if recording_section_uids.is_empty() {
+            Vec::new()
+        } else {
+            let uid_list: Vec<String> = recording_section_uids.iter().cloned().collect();
+            sec_dsl::chanting_sections
+                .filter(sec_dsl::uid.eq_any(&uid_list))
+                .select(ChantingSection::as_select())
+                .load(db_conn)
+                .context("Failed to load ancestor chanting sections for export")?
+        };
+
+        // 1.2: collect distinct chant_uids from the ancestor sections (plus
+        // user-added sections, since their chants may also be seeded) and load
+        // matching chants regardless of is_user_added.
+        let ancestor_chant_uids: std::collections::BTreeSet<String> = ancestor_sections
+            .iter()
+            .chain(user_sections.iter())
+            .map(|s| s.chant_uid.clone())
+            .collect();
+
+        let ancestor_chants: Vec<ChantingChant> = if ancestor_chant_uids.is_empty() {
+            Vec::new()
+        } else {
+            let uid_list: Vec<String> = ancestor_chant_uids.iter().cloned().collect();
+            chant_dsl::chanting_chants
+                .filter(chant_dsl::uid.eq_any(&uid_list))
+                .select(ChantingChant::as_select())
+                .load(db_conn)
+                .context("Failed to load ancestor chanting chants for export")?
+        };
+
+        // 1.3: collect distinct collection_uids from the ancestor chants (plus
+        // user-added chants) and load matching collections regardless of
+        // is_user_added.
+        let ancestor_collection_uids: std::collections::BTreeSet<String> = ancestor_chants
+            .iter()
+            .chain(user_chants.iter())
+            .map(|c| c.collection_uid.clone())
+            .collect();
+
+        let ancestor_collections: Vec<ChantingCollection> = if ancestor_collection_uids.is_empty() {
+            Vec::new()
+        } else {
+            let uid_list: Vec<String> = ancestor_collection_uids.iter().cloned().collect();
+            col_dsl::chanting_collections
+                .filter(col_dsl::uid.eq_any(&uid_list))
+                .select(ChantingCollection::as_select())
+                .load(db_conn)
+                .context("Failed to load ancestor chanting collections for export")?
+        };
+
+        // 1.4: merge ancestor rows with the user_* vectors, deduplicating by
+        // uid. Keep each row's original is_user_added flag (seeded ancestors
+        // remain false). The user_* rows take precedence when a uid collides.
+        let user_collection_uids: std::collections::HashSet<String> =
+            user_collections.iter().map(|c| c.uid.clone()).collect();
+        let user_chant_uids: std::collections::HashSet<String> =
+            user_chants.iter().map(|c| c.uid.clone()).collect();
+        let user_section_uids: std::collections::HashSet<String> =
+            user_sections.iter().map(|s| s.uid.clone()).collect();
+
+        let seeded_collection_count = ancestor_collections
+            .iter()
+            .filter(|c| !user_collection_uids.contains(&c.uid))
+            .count();
+        let seeded_chant_count = ancestor_chants
+            .iter()
+            .filter(|c| !user_chant_uids.contains(&c.uid))
+            .count();
+        let seeded_section_count = ancestor_sections
+            .iter()
+            .filter(|s| !user_section_uids.contains(&s.uid))
+            .count();
+
+        let mut export_collections: Vec<ChantingCollection> = user_collections.clone();
+        export_collections.extend(
+            ancestor_collections
+                .into_iter()
+                .filter(|c| !user_collection_uids.contains(&c.uid)),
+        );
+
+        let mut export_chants: Vec<ChantingChant> = user_chants.clone();
+        export_chants.extend(
+            ancestor_chants
+                .into_iter()
+                .filter(|c| !user_chant_uids.contains(&c.uid)),
+        );
+
+        let mut export_sections: Vec<ChantingSection> = user_sections.clone();
+        export_sections.extend(
+            ancestor_sections
+                .into_iter()
+                .filter(|s| !user_section_uids.contains(&s.uid)),
+        );
+
+        // 6.5.1: relaxed early-return — a user with user-added chants or
+        // sections but no user-added collections/recordings must still have
+        // their data exported.
+        if user_collections.is_empty()
+            && user_chants.is_empty()
+            && user_sections.is_empty()
+            && user_recordings.is_empty()
+        {
             info("No user chanting data or recordings to export");
             return Ok(());
         }
 
+        // 6.5.3 / PRD §11.5: synthesise placeholders for any ancestor uid
+        // referenced by a user-added row but missing from the live DB.
+        // Without this step the exported sqlite would have dangling FKs and
+        // the import side would have to drop rows.
+        let have_collection_uids: std::collections::HashSet<String> =
+            export_collections.iter().map(|c| c.uid.clone()).collect();
+        let have_chant_uids: std::collections::HashSet<String> =
+            export_chants.iter().map(|c| c.uid.clone()).collect();
+        let have_section_uids: std::collections::HashSet<String> =
+            export_sections.iter().map(|s| s.uid.clone()).collect();
+
+        let missing_collection_uids: Vec<String> = ancestor_collection_uids
+            .iter()
+            .filter(|u| !have_collection_uids.contains(*u))
+            .cloned()
+            .collect();
+        let missing_chant_uids: Vec<String> = ancestor_chant_uids
+            .iter()
+            .filter(|u| !have_chant_uids.contains(*u))
+            .cloned()
+            .collect();
+        let missing_section_uids: Vec<String> = recording_section_uids
+            .iter()
+            .filter(|u| !have_section_uids.contains(*u))
+            .cloned()
+            .collect();
+
+        let mut synthesised_ancestors = 0usize;
+        let mut need_recovery_collection = false;
+        let mut need_recovery_chant = false;
+
+        for missing_uid in &missing_collection_uids {
+            warn(&format!(
+                "export_user_chanting_data(): synthesising placeholder collection for missing ancestor uid {}",
+                missing_uid
+            ));
+            need_recovery_collection = true;
+            synthesised_ancestors += 1;
+        }
+        for missing_uid in &missing_chant_uids {
+            warn(&format!(
+                "export_user_chanting_data(): synthesising placeholder chant for missing ancestor uid {}",
+                missing_uid
+            ));
+            need_recovery_chant = true;
+            need_recovery_collection = true;
+            synthesised_ancestors += 1;
+        }
+        for missing_uid in &missing_section_uids {
+            warn(&format!(
+                "export_user_chanting_data(): synthesising placeholder section for missing section uid {} referenced by user recording(s)",
+                missing_uid
+            ));
+            need_recovery_chant = true;
+            need_recovery_collection = true;
+            synthesised_ancestors += 1;
+        }
+
+        if need_recovery_collection
+            && !have_collection_uids.contains(crate::db::chanting_export::ORPHAN_RECOVERY_COLLECTION_UID)
+        {
+            export_collections.push(crate::db::chanting_export::make_orphan_recovery_collection());
+        }
+        if need_recovery_chant
+            && !have_chant_uids.contains(crate::db::chanting_export::ORPHAN_RECOVERY_CHANT_UID)
+        {
+            export_chants.push(crate::db::chanting_export::make_orphan_recovery_chant());
+        }
+        // Missing sections become placeholder sections attached to the
+        // recovery chant — their uids are preserved so the recording FK
+        // continues to resolve.
+        for missing_uid in &missing_section_uids {
+            export_sections.push(crate::db::chanting_export::make_orphan_recovery_section(
+                missing_uid,
+                crate::db::chanting_export::ORPHAN_RECOVERY_CHANT_UID,
+            ));
+        }
+        // Missing chants: we don't know which sections belong to them, so a
+        // generic recovery-chant placeholder is used and sections whose
+        // parent chant was missing will be re-pointed in the import step.
+        // We only need to guarantee the chant_uid exists in the export file;
+        // for chants referenced by a user_section whose chant_uid is missing,
+        // fix up the user_section's chant_uid on-the-fly when writing.
+        if !missing_chant_uids.is_empty() {
+            // Ensure any section whose chant_uid is in missing_chant_uids
+            // is re-pointed at the recovery chant so the exported sqlite is
+            // FK-consistent.
+            for sec in export_sections.iter_mut() {
+                if missing_chant_uids.contains(&sec.chant_uid) {
+                    sec.chant_uid =
+                        crate::db::chanting_export::ORPHAN_RECOVERY_CHANT_UID.to_string();
+                }
+            }
+        }
+        // Same trick for chants whose collection_uid is missing.
+        if !missing_collection_uids.is_empty() {
+            for chant in export_chants.iter_mut() {
+                if missing_collection_uids.contains(&chant.collection_uid) {
+                    chant.collection_uid =
+                        crate::db::chanting_export::ORPHAN_RECOVERY_COLLECTION_UID.to_string();
+                }
+            }
+        }
+
+        // 1.5 / 6.5.4: per-table counts + any synthesised orphan placeholders.
         info(&format!(
-            "Exporting chanting data: {} user collections, {} user chants, {} user sections, {} user recordings",
-            user_collections.len(), user_chants.len(), user_sections.len(), user_recordings.len()
+            "Exporting chanting data: collections user_added={} seeded_ancestors={} total={}; \
+             chants user_added={} seeded_ancestors={} total={}; \
+             sections user_added={} seeded_ancestors={} total={}; \
+             recordings user_added={} total={}; orphan_placeholders_synthesised={}",
+            user_collections.len(), seeded_collection_count, export_collections.len(),
+            user_chants.len(), seeded_chant_count, export_chants.len(),
+            user_sections.len(), seeded_section_count, export_sections.len(),
+            user_recordings.len(), user_recordings.len(),
+            synthesised_ancestors
         ));
 
-        // Create the chanting SQLite database in import-me folder
-        let sqlite_path = import_dir.join("appdata-chanting.sqlite3");
-        create_chanting_sqlite(
-            &sqlite_path,
-            &user_collections,
-            &user_chants,
-            &user_sections,
-            &user_recordings,
-        )?;
-
-        // Copy only files referenced by user-added recordings to import-me.
-        // Bootstrap-seeded reference audio files are re-shipped with the new
-        // appdata, so copying them would just overwrite the fresh bundle.
+        // 1.7: copy audio files BEFORE building the sqlite file, so that a
+        // failure during file copy does not leave an orphaned sqlite index
+        // referencing missing audio.
         let recordings_src = crate::get_chanting_recordings_dir();
         let recordings_dest = import_dir.join("chanting-recordings");
 
@@ -2398,6 +2643,16 @@ impl AppData {
             }
         }
 
+        // Now build the sqlite file from the merged rows.
+        let sqlite_path = import_dir.join("appdata-chanting.sqlite3");
+        create_chanting_sqlite(
+            &sqlite_path,
+            &export_collections,
+            &export_chants,
+            &export_sections,
+            &user_recordings,
+        )?;
+
         info("export_user_chanting_data(): completed");
         Ok(())
     }
@@ -2406,8 +2661,7 @@ impl AppData {
     ///
     /// Reads `appdata-chanting.sqlite3`, inserts user-added items with original UIDs preserved
     /// (since the target DB is fresh after upgrade), and copies audio files back.
-    fn import_user_chanting_data(&self, import_dir: &Path) -> Result<()> {
-        use crate::db::appdata_schema::chanting_sections::dsl as sec_dsl;
+    pub fn import_user_chanting_data(&self, import_dir: &Path) -> Result<()> {
         use crate::db::chanting_export::read_chanting_from_sqlite;
 
         let sqlite_path = import_dir.join("appdata-chanting.sqlite3");
@@ -2429,92 +2683,186 @@ impl AppData {
             collections.len(), chants.len(), sections.len(), recordings.len()
         ));
 
-        // Insert user-added collections/chants/sections with original UIDs preserved
+        // 2.1: per-table counters.
+        let mut col_inserted: usize = 0;
+        let mut col_skipped: usize = 0;
+        let mut chant_inserted: usize = 0;
+        let mut chant_skipped: usize = 0;
+        let mut sec_inserted: usize = 0;
+        let mut sec_skipped: usize = 0;
+        let mut rec_inserted: usize = 0;
+        let mut rec_skipped: usize = 0;
+        let mut rec_orphan_parents_created: usize = 0;
+
+        // Build lookup maps over the exported rows so that we can synthesize
+        // missing ancestors when a recording's section (or its chant /
+        // collection) is absent from the live DB.
+        let exported_sections: std::collections::HashMap<String, &ChantingSection> =
+            sections.iter().map(|s| (s.uid.clone(), s)).collect();
+        let exported_chants: std::collections::HashMap<String, &ChantingChant> =
+            chants.iter().map(|c| (c.uid.clone(), c)).collect();
+        let exported_collections: std::collections::HashMap<String, &ChantingCollection> =
+            collections.iter().map(|c| (c.uid.clone(), c)).collect();
+
+        // 2.2: collections — skip if the uid already exists in the live DB.
         for col in &collections {
-            let data = ChantingCollectionJson {
-                uid: col.uid.clone(),
-                title: col.title.clone(),
-                description: col.description.clone(),
-                language: col.language.clone(),
-                sort_index: col.sort_index,
-                is_user_added: col.is_user_added,
-                metadata_json: col.metadata_json.clone(),
-                chants: Vec::new(),
-            };
-            if let Err(e) = self.dbm.appdata.create_chanting_collection(&data) {
-                warn(&format!("Failed to import collection {}: {}", col.uid, e));
-            }
-        }
-
-        for chant in &chants {
-            let data = ChantingChantJson {
-                uid: chant.uid.clone(),
-                collection_uid: chant.collection_uid.clone(),
-                title: chant.title.clone(),
-                description: chant.description.clone(),
-                sort_index: chant.sort_index,
-                is_user_added: chant.is_user_added,
-                metadata_json: chant.metadata_json.clone(),
-                sections: Vec::new(),
-            };
-            if let Err(e) = self.dbm.appdata.create_chanting_chant(&data) {
-                warn(&format!("Failed to import chant {}: {}", chant.uid, e));
-            }
-        }
-
-        for sec in &sections {
-            let data = ChantingSectionJson {
-                uid: sec.uid.clone(),
-                chant_uid: sec.chant_uid.clone(),
-                title: sec.title.clone(),
-                content_pali: sec.content_pali.clone(),
-                sort_index: sec.sort_index,
-                is_user_added: sec.is_user_added,
-                metadata_json: sec.metadata_json.clone(),
-                recordings: Vec::new(),
-            };
-            if let Err(e) = self.dbm.appdata.create_chanting_section(&data) {
-                warn(&format!("Failed to import section {}: {}", sec.uid, e));
-            }
-        }
-
-        // For recordings: check if the referenced section_uid exists in the new database
-        for rec in &recordings {
-            // Check if the section exists (either re-shipped or just imported)
-            let section_exists = self.dbm.appdata.do_read(|db_conn| {
-                sec_dsl::chanting_sections
-                    .filter(sec_dsl::uid.eq(&rec.section_uid))
-                    .count()
-                    .get_result::<i64>(db_conn)
-            });
-
-            match section_exists {
-                Ok(count) if count > 0 => {
-                    let data = ChantingRecordingJson {
-                        uid: rec.uid.clone(),
-                        section_uid: rec.section_uid.clone(),
-                        file_name: rec.file_name.clone(),
-                        recording_type: rec.recording_type.clone(),
-                        label: rec.label.clone(),
-                        duration_ms: rec.duration_ms,
-                        markers_json: rec.markers_json.clone(),
-                        volume: rec.volume,
-                        playback_position_ms: rec.playback_position_ms,
-                        waveform_json: rec.waveform_json.clone(),
-                        is_user_added: rec.is_user_added,
+            match self.dbm.appdata.chanting_collection_exists_by_uid(&col.uid) {
+                Ok(true) => {
+                    info(&format!("skipped existing seeded collection {}", col.uid));
+                    col_skipped += 1;
+                }
+                Ok(false) => {
+                    let data = ChantingCollectionJson {
+                        uid: col.uid.clone(),
+                        title: col.title.clone(),
+                        description: col.description.clone(),
+                        language: col.language.clone(),
+                        sort_index: col.sort_index,
+                        is_user_added: col.is_user_added,
+                        metadata_json: col.metadata_json.clone(),
+                        chants: Vec::new(),
                     };
-                    if let Err(e) = self.dbm.appdata.create_chanting_recording(&data) {
-                        warn(&format!("Failed to import recording {}: {}", rec.uid, e));
+                    match self.dbm.appdata.create_chanting_collection(&data) {
+                        Ok(_) => col_inserted += 1,
+                        Err(e) => warn(&format!("Failed to import collection {}: {}", col.uid, e)),
                     }
                 }
-                _ => {
+                Err(e) => {
                     warn(&format!(
-                        "Skipping recording {}: section {} no longer exists in database",
-                        rec.uid, rec.section_uid
+                        "Existence check failed for collection {}: {}",
+                        col.uid, e
                     ));
                 }
             }
         }
+
+        // 2.3: chants — skip if uid already exists.
+        for chant in &chants {
+            match self.dbm.appdata.chanting_chant_exists_by_uid(&chant.uid) {
+                Ok(true) => {
+                    info(&format!("skipped existing seeded chant {}", chant.uid));
+                    chant_skipped += 1;
+                }
+                Ok(false) => {
+                    let data = ChantingChantJson {
+                        uid: chant.uid.clone(),
+                        collection_uid: chant.collection_uid.clone(),
+                        title: chant.title.clone(),
+                        description: chant.description.clone(),
+                        sort_index: chant.sort_index,
+                        is_user_added: chant.is_user_added,
+                        metadata_json: chant.metadata_json.clone(),
+                        sections: Vec::new(),
+                    };
+                    match self.dbm.appdata.create_chanting_chant(&data) {
+                        Ok(_) => chant_inserted += 1,
+                        Err(e) => warn(&format!("Failed to import chant {}: {}", chant.uid, e)),
+                    }
+                }
+                Err(e) => {
+                    warn(&format!(
+                        "Existence check failed for chant {}: {}",
+                        chant.uid, e
+                    ));
+                }
+            }
+        }
+
+        // 2.4: sections — skip if uid already exists.
+        for sec in &sections {
+            match self.dbm.appdata.chanting_section_exists_by_uid(&sec.uid) {
+                Ok(true) => {
+                    info(&format!("skipped existing seeded section {}", sec.uid));
+                    sec_skipped += 1;
+                }
+                Ok(false) => {
+                    let data = ChantingSectionJson {
+                        uid: sec.uid.clone(),
+                        chant_uid: sec.chant_uid.clone(),
+                        title: sec.title.clone(),
+                        content_pali: sec.content_pali.clone(),
+                        sort_index: sec.sort_index,
+                        is_user_added: sec.is_user_added,
+                        metadata_json: sec.metadata_json.clone(),
+                        recordings: Vec::new(),
+                    };
+                    match self.dbm.appdata.create_chanting_section(&data) {
+                        Ok(_) => sec_inserted += 1,
+                        Err(e) => warn(&format!("Failed to import section {}: {}", sec.uid, e)),
+                    }
+                }
+                Err(e) => {
+                    warn(&format!(
+                        "Existence check failed for section {}: {}",
+                        sec.uid, e
+                    ));
+                }
+            }
+        }
+
+        // 2.5: recordings — skip duplicates; create missing parent ancestors
+        // from the exported metadata so no recording is ever dropped.
+        for rec in &recordings {
+            match self.dbm.appdata.chanting_recording_exists_by_uid(&rec.uid) {
+                Ok(true) => {
+                    info(&format!("skipped existing recording {}", rec.uid));
+                    rec_skipped += 1;
+                    continue;
+                }
+                Ok(false) => {}
+                Err(e) => {
+                    warn(&format!(
+                        "Existence check failed for recording {}: {}",
+                        rec.uid, e
+                    ));
+                    continue;
+                }
+            }
+
+            // Ensure the recording's parent section exists in the live DB,
+            // creating any missing collection/chant/section ancestors first.
+            // Prefer exported metadata, then fall back to synthetic
+            // placeholders so no recording is ever dropped (PRD §10.2 /
+            // §11.4).
+            self.ensure_recording_ancestors(
+                rec,
+                &exported_sections,
+                &exported_chants,
+                &exported_collections,
+                &mut rec_orphan_parents_created,
+            );
+
+            let data = ChantingRecordingJson {
+                uid: rec.uid.clone(),
+                section_uid: rec.section_uid.clone(),
+                file_name: rec.file_name.clone(),
+                recording_type: rec.recording_type.clone(),
+                label: rec.label.clone(),
+                duration_ms: rec.duration_ms,
+                markers_json: rec.markers_json.clone(),
+                volume: rec.volume,
+                playback_position_ms: rec.playback_position_ms,
+                waveform_json: rec.waveform_json.clone(),
+                is_user_added: rec.is_user_added,
+            };
+            match self.dbm.appdata.create_chanting_recording(&data) {
+                Ok(_) => rec_inserted += 1,
+                Err(e) => warn(&format!("Failed to import recording {}: {}", rec.uid, e)),
+            }
+        }
+
+        // 2.7: final per-table summary.
+        info(&format!(
+            "Chanting import summary: \
+             collections inserted={} skipped_existing={}; \
+             chants inserted={} skipped_existing={}; \
+             sections inserted={} skipped_existing={}; \
+             recordings inserted={} skipped_existing={} parents_created_for_orphans={}",
+            col_inserted, col_skipped,
+            chant_inserted, chant_skipped,
+            sec_inserted, sec_skipped,
+            rec_inserted, rec_skipped, rec_orphan_parents_created
+        ));
 
         // Copy audio files from import-me/chanting-recordings/ back to the app's recordings dir
         let recordings_src = import_dir.join("chanting-recordings");
@@ -2546,6 +2894,180 @@ impl AppData {
 
         info("import_user_chanting_data(): completed");
         Ok(())
+    }
+
+    /// Ensure the parent-collection/chant/section chain of a recording
+    /// exists in the live appdata DB.
+    ///
+    /// PRD §10.2 / §11.4 require that no recording is ever dropped during
+    /// import. When the exported DB lacks a needed ancestor, a deterministic
+    /// synthetic placeholder (`col-orphan-recovery` / `chant-orphan-recovery`
+    /// / a section whose uid is the recording's original `section_uid`) is
+    /// created so the recording's FK still resolves and its audio stays
+    /// linked to a visible section in the new DB.
+    fn ensure_recording_ancestors(
+        &self,
+        rec: &ChantingRecording,
+        exported_sections: &std::collections::HashMap<String, &ChantingSection>,
+        exported_chants: &std::collections::HashMap<String, &ChantingChant>,
+        exported_collections: &std::collections::HashMap<String, &ChantingCollection>,
+        counter: &mut usize,
+    ) {
+        use crate::db::chanting_export::{
+            make_orphan_recovery_chant, make_orphan_recovery_collection,
+            make_orphan_recovery_section, ORPHAN_RECOVERY_CHANT_UID,
+            ORPHAN_RECOVERY_COLLECTION_UID,
+        };
+
+        // Fast path: parent section already present.
+        if self
+            .dbm
+            .appdata
+            .chanting_section_exists_by_uid(&rec.section_uid)
+            .unwrap_or(false)
+        {
+            return;
+        }
+
+        // Pick the chant/collection we will attach the (possibly-missing)
+        // parent section to. Prefer exported metadata when available;
+        // otherwise fall back to the synthetic recovery placeholders.
+        let (chant_uid, col_uid, sec_from_export) =
+            match exported_sections.get(&rec.section_uid) {
+                Some(sec) => {
+                    let chant_uid = sec.chant_uid.clone();
+                    let col_uid = match exported_chants.get(&chant_uid) {
+                        Some(c) => c.collection_uid.clone(),
+                        None => ORPHAN_RECOVERY_COLLECTION_UID.to_string(),
+                    };
+                    (chant_uid, col_uid, Some(*sec))
+                }
+                None => (
+                    ORPHAN_RECOVERY_CHANT_UID.to_string(),
+                    ORPHAN_RECOVERY_COLLECTION_UID.to_string(),
+                    None,
+                ),
+            };
+
+        // --- Ensure collection ---
+        if !self
+            .dbm
+            .appdata
+            .chanting_collection_exists_by_uid(&col_uid)
+            .unwrap_or(false)
+        {
+            let col_src = exported_collections.get(&col_uid).copied();
+            let col_owned: ChantingCollection = match col_src {
+                Some(c) => c.clone(),
+                None => make_orphan_recovery_collection(),
+            };
+            let data = ChantingCollectionJson {
+                uid: col_owned.uid.clone(),
+                title: col_owned.title.clone(),
+                description: col_owned.description.clone(),
+                language: col_owned.language.clone(),
+                sort_index: col_owned.sort_index,
+                is_user_added: col_owned.is_user_added,
+                metadata_json: col_owned.metadata_json.clone(),
+                chants: Vec::new(),
+            };
+            match self.dbm.appdata.create_chanting_collection(&data) {
+                Ok(()) => {
+                    warn(&format!(
+                        "Created missing parent collection {} for orphan recording {} (source: {})",
+                        col_owned.uid,
+                        rec.uid,
+                        if col_src.is_some() { "exported DB" } else { "synthetic placeholder" }
+                    ));
+                    *counter += 1;
+                }
+                Err(e) => {
+                    warn(&format!(
+                        "Failed to create parent collection {} for orphan recording {}: {}",
+                        col_owned.uid, rec.uid, e
+                    ));
+                }
+            }
+        }
+
+        // --- Ensure chant ---
+        if !self
+            .dbm
+            .appdata
+            .chanting_chant_exists_by_uid(&chant_uid)
+            .unwrap_or(false)
+        {
+            let chant_src = exported_chants.get(&chant_uid).copied();
+            let mut chant_owned: ChantingChant = match chant_src {
+                Some(c) => c.clone(),
+                None => make_orphan_recovery_chant(),
+            };
+            // Re-point chant to the collection we just ensured exists, in
+            // case the exported chant referred to a collection uid that
+            // neither the live DB nor the exported DB had.
+            chant_owned.collection_uid = col_uid.clone();
+            let data = ChantingChantJson {
+                uid: chant_owned.uid.clone(),
+                collection_uid: chant_owned.collection_uid.clone(),
+                title: chant_owned.title.clone(),
+                description: chant_owned.description.clone(),
+                sort_index: chant_owned.sort_index,
+                is_user_added: chant_owned.is_user_added,
+                metadata_json: chant_owned.metadata_json.clone(),
+                sections: Vec::new(),
+            };
+            match self.dbm.appdata.create_chanting_chant(&data) {
+                Ok(()) => {
+                    warn(&format!(
+                        "Created missing parent chant {} for orphan recording {} (source: {})",
+                        chant_owned.uid,
+                        rec.uid,
+                        if chant_src.is_some() { "exported DB" } else { "synthetic placeholder" }
+                    ));
+                    *counter += 1;
+                }
+                Err(e) => {
+                    warn(&format!(
+                        "Failed to create parent chant {} for orphan recording {}: {}",
+                        chant_owned.uid, rec.uid, e
+                    ));
+                }
+            }
+        }
+
+        // --- Ensure section (uid == rec.section_uid so FK resolves) ---
+        let mut sec_owned: ChantingSection = match sec_from_export {
+            Some(sec) => sec.clone(),
+            None => make_orphan_recovery_section(&rec.section_uid, &chant_uid),
+        };
+        sec_owned.chant_uid = chant_uid.clone();
+        let data = ChantingSectionJson {
+            uid: sec_owned.uid.clone(),
+            chant_uid: sec_owned.chant_uid.clone(),
+            title: sec_owned.title.clone(),
+            content_pali: sec_owned.content_pali.clone(),
+            sort_index: sec_owned.sort_index,
+            is_user_added: sec_owned.is_user_added,
+            metadata_json: sec_owned.metadata_json.clone(),
+            recordings: Vec::new(),
+        };
+        match self.dbm.appdata.create_chanting_section(&data) {
+            Ok(()) => {
+                warn(&format!(
+                    "Created missing parent section {} for orphan recording {} (source: {})",
+                    sec_owned.uid,
+                    rec.uid,
+                    if sec_from_export.is_some() { "exported DB" } else { "synthetic placeholder" }
+                ));
+                *counter += 1;
+            }
+            Err(e) => {
+                warn(&format!(
+                    "Failed to create parent section {} for orphan recording {}: {}",
+                    sec_owned.uid, rec.uid, e
+                ));
+            }
+        }
     }
 }
 

@@ -680,6 +680,8 @@ pub extern "C" fn ensure_no_empty_db_files() {
 /// - userdata.sqlite3
 /// - dictionaries.sqlite3
 /// - dpd.sqlite3
+/// - index/ (the fulltext search index directory; the next asset download
+///   extracts a fresh index matching the new databases)
 ///
 /// This is used during database upgrades to force a fresh download of the databases.
 #[unsafe(no_mangle)]
@@ -728,6 +730,30 @@ pub extern "C" fn check_delete_files_for_upgrade() {
             }
 
             info("Database files deleted for upgrade");
+
+            // Remove the stale fulltext search index. A fresh index tree ships
+            // inside the new asset bundle, so leaving the old one in place
+            // would result in Tantivy doc IDs pointing at the previous DB.
+            let index_dir = &g.paths.index_dir;
+            match index_dir.try_exists() {
+                Ok(true) => {
+                    if let Err(e) = fs::remove_dir_all(index_dir) {
+                        error(&format!(
+                            "Failed to remove index directory {}: {}",
+                            index_dir.display(), e
+                        ));
+                    } else {
+                        info(&format!("Removed index directory: {}", index_dir.display()));
+                    }
+                }
+                Ok(false) => {}
+                Err(e) => {
+                    error(&format!(
+                        "Failed to check if index directory exists {}: {}",
+                        index_dir.display(), e
+                    ));
+                }
+            }
         }
         Ok(false) => {
             // Marker file doesn't exist, nothing to do
