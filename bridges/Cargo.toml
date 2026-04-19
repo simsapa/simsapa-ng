@@ -28,12 +28,18 @@ serde_json = "1.0"
 http = "1.3.1"
 ureq = "3.0.10"
 include_dir = "0.7.4"
-reqwest = { version = "0.13", default-features = false, features = ["blocking", "json", "rustls"] }
+# Stay on reqwest 0.12 and rig-core 0.30.x. reqwest 0.13's blocking client
+# stalls indefinitely on Android after the TLS handshake completes (observed
+# against both github.com and pythonanywhere endpoints, with ALPN negotiating
+# either h2 or http/1.1), and configured timeouts never fire. rig-core 0.31+
+# forces reqwest 0.13 transitively, so the rig-core pin is load-bearing too.
+# Retest before bumping either version.
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 tar = "0.4.44"
 bzip2 = "0.6.0"
 regex = "1.0"
 lazy_static = "1.5.0"
-rig-core = { version = "0.34.0" }
+rig-core = { version = "0.30.0", default-features = false, features = ["reqwest-rustls"] }
 tokio = { version = "1.0", features = ["full"] }
 
 [build-dependencies]

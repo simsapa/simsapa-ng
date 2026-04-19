@@ -381,7 +381,25 @@ impl qobject::AssetManager {
                     }
                 }
 
-                let client = Client::new();
+                // Bound the DNS+TCP+TLS phase so a silent network stall surfaces
+                // as a retryable error instead of freezing the UI indefinitely.
+                // No overall timeout — database archives can be large and slow
+                // connections must be allowed to finish the body download.
+                let client = match Client::builder()
+                    .connect_timeout(Duration::from_secs(30))
+                    .build()
+                {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error(&format!("Failed to build HTTP client: {}", e));
+                        let msg = QString::from(&format!("Failed to build HTTP client: {}", e));
+                        qt_thread.queue(move |mut qo| {
+                            qo.as_mut().download_show_msg(msg);
+                        }).unwrap();
+                        cleanup_on_failure(&download_temp_folder, &extract_temp_folder, &app_assets_folder, is_initial_setup, &qt_thread);
+                        return;
+                    }
+                };
 
                 // Retry logic: try up to 5 times with exponential backoff
                 const MAX_RETRIES: u32 = 5;
@@ -389,6 +407,14 @@ impl qobject::AssetManager {
                 let mut resp = None;
 
                 while retry_count < MAX_RETRIES {
+                    let connecting_msg = QString::from(&format!(
+                        "Connecting to download {}... (attempt {}/{})",
+                        &download_file_name, retry_count + 1, MAX_RETRIES
+                    ));
+                    qt_thread.queue(move |mut qo| {
+                        qo.as_mut().download_show_msg(connecting_msg);
+                    }).unwrap();
+
                     match client.get(&url_str).send() {
                         Ok(r) => {
                             resp = Some(r);
