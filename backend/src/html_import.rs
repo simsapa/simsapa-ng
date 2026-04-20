@@ -34,6 +34,7 @@ struct Chapter {
 ///
 /// # Returns
 /// * `Result<()>` - Ok if successful, Err with details if failed
+#[allow(clippy::too_many_arguments)]
 pub fn import_html_to_db(
     db_conn: &mut SqliteConnection,
     html_path: &Path,

@@ -1,3 +1,5 @@
+#![allow(clippy::all)]
+
 pub mod arabic_stemmer;
 pub mod armenian_stemmer;
 pub mod basque_stemmer;

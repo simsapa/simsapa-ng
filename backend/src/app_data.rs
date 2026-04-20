@@ -1209,6 +1209,7 @@ impl AppData {
     }
 
     /// Import an EPUB document into the database
+    #[allow(clippy::too_many_arguments)]
     pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
@@ -1216,6 +1217,7 @@ impl AppData {
     }
 
     /// Import a PDF document into the database
+    #[allow(clippy::too_many_arguments)]
     pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
@@ -1223,6 +1225,7 @@ impl AppData {
     }
 
     /// Import an HTML document into the database
+    #[allow(clippy::too_many_arguments)]
     pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
         let db_conn = &mut self.dbm.appdata.get_conn()
             .context("Failed to get database connection")?;
@@ -1489,20 +1492,17 @@ impl AppData {
 
         // 1.6: clear any pre-existing import-me/ artifacts from a previous
         // cancelled upgrade attempt before writing anything new.
-        match import_dir.try_exists() {
-            Ok(true) => {
-                info(&format!(
-                    "Removing pre-existing import-me directory: {}",
-                    import_dir.display()
+        if let Ok(true) = import_dir.try_exists() {
+            info(&format!(
+                "Removing pre-existing import-me directory: {}",
+                import_dir.display()
+            ));
+            if let Err(e) = std::fs::remove_dir_all(&import_dir) {
+                warn(&format!(
+                    "Failed to remove pre-existing import-me directory {}: {}",
+                    import_dir.display(), e
                 ));
-                if let Err(e) = std::fs::remove_dir_all(&import_dir) {
-                    warn(&format!(
-                        "Failed to remove pre-existing import-me directory {}: {}",
-                        import_dir.display(), e
-                    ));
-                }
             }
-            _ => {}
         }
 
         if let Err(e) = std::fs::create_dir_all(&import_dir) {
@@ -1602,13 +1602,12 @@ impl AppData {
             .first(&mut legacy_conn)
             .optional()
             .context("Failed to read legacy app_settings")?;
-        if let Some(setting) = row {
-            if let Some(val) = setting.value {
+        if let Some(setting) = row
+            && let Some(val) = setting.value {
                 std::fs::write(&app_settings_out, &val)
                     .context("Failed to write app_settings.json from legacy")?;
                 info("Legacy bridge: exported app_settings.json from legacy userdata");
             }
-        }
 
         // Alias the migrated copy under the per-table filenames the standard importer expects,
         // but only when those files are missing — the standard export from appdata wins.

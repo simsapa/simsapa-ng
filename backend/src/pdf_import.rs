@@ -21,6 +21,7 @@ use crate::helpers::compact_rich_text;
 ///
 /// # Returns
 /// * `Result<()>` - Ok if successful, Err with details if failed
+#[allow(clippy::too_many_arguments)]
 pub fn import_pdf_to_db(
     db_conn: &mut SqliteConnection,
     pdf_path: &Path,

@@ -125,6 +125,7 @@ impl AppdataDbHandle {
 
         // Try with pli/cst source (commentary is typically CST)
         let cst_uid = format!("{}/pli/cst", target_ref);
+        #[allow(clippy::collapsible_if)]
         if cst_uid != target_uid {
             if let Some(sutta) = self.get_sutta(&cst_uid) {
                 return serde_json::json!({

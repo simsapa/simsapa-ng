@@ -180,9 +180,7 @@ pub fn sutta_range_from_ref(reference: &str) -> Option<SuttaRange> {
     ref_str = ref_str.replace("--", "-");
 
     // CST commentary suffixes: mn1.att -> mn1, mn1.tik -> mn1
-    if ref_str.ends_with(".att") {
-        ref_str = ref_str[..ref_str.len() - 4].to_string();
-    } else if ref_str.ends_with(".tik") {
+    if ref_str.ends_with(".att") || ref_str.ends_with(".tik") {
         ref_str = ref_str[..ref_str.len() - 4].to_string();
     }
 
@@ -782,7 +780,7 @@ pub fn normalize_iti_sandhi(text: &str) -> String {
     //
     // We are reversing this as:
     // dhārayāmī’ti dhārayāmī’”ti -> dhārayāmi ti
-    let text = RE_IITI_BEFORE.replace_all(&text, "i ti").into_owned();
+    let text = RE_IITI_BEFORE.replace_all(text, "i ti").into_owned();
     let text = RE_IITI_AFTER.replace_all(&text, "i ti").into_owned();
 
     // There are no -īti verb conjugation endings, but should avoid ambiguity
@@ -1427,7 +1425,7 @@ pub fn clean_word(word: &str) -> String {
         static ref re_end_nonword: Regex = Regex::new(r"[^\w]+$").unwrap();
     }
 
-    let without_start = re_start_nonword.replace(&word, "");
+    let without_start = re_start_nonword.replace(word, "");
     let without_end = re_end_nonword.replace(&without_start, "");
     without_end.into_owned()
 }
@@ -1442,7 +1440,7 @@ pub fn normalize_query_text(text: Option<String>) -> String {
         }
         compact_plain_text(&text)
     } else {
-        return "".to_string()
+        String::new()
     }
 }
 
@@ -1723,6 +1721,7 @@ fn generate_reference_anchor(segment_key: &str) -> String {
 }
 
 /// Converts Bilara text JSON data into an IndexMap of processed HTML segments, preserving insertion order.
+#[allow(clippy::too_many_arguments)]
 pub fn bilara_text_to_segments(
     content_json_str: &str,
     tmpl_json_str: Option<&str>,
@@ -1910,6 +1909,7 @@ pub fn bilara_line_by_line_html(
 }
 
 /// Convenience function to convert Bilara text JSON directly to HTML.
+#[allow(clippy::too_many_arguments)]
 pub fn bilara_text_to_html(
     content_json_str: &str,
     tmpl_json_str: &str,

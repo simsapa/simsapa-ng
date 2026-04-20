@@ -175,10 +175,10 @@ pub fn try_get_releases_info() -> Option<ReleasesInfo> {
 /// This is safe to call even if indexes don't exist yet (it will just have no indexes).
 pub fn init_fulltext_searcher() {
     // Only initialize if not already set
-    if let Ok(guard) = FULLTEXT_SEARCHER.read() {
-        if guard.is_some() {
-            return;
-        }
+    if let Ok(guard) = FULLTEXT_SEARCHER.read()
+        && guard.is_some()
+    {
+        return;
     }
 
     reinit_fulltext_searcher();

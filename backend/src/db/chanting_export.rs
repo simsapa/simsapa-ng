@@ -284,16 +284,13 @@ pub fn export_chanting_to_zip(
     // Add recording files
     for rec in &recordings {
         let src = temp_recordings_dir.join(&rec.file_name);
-        match src.try_exists() {
-            Ok(true) => {
-                let zip_entry_name = format!("chanting-recordings/{}", rec.file_name);
-                zip_writer.start_file(zip_entry_name, options)?;
-                let mut rec_file = fs::File::open(&src)?;
-                buf.clear();
-                rec_file.read_to_end(&mut buf)?;
-                zip_writer.write_all(&buf)?;
-            }
-            _ => {} // already warned above
+        if let Ok(true) = src.try_exists() {
+            let zip_entry_name = format!("chanting-recordings/{}", rec.file_name);
+            zip_writer.start_file(zip_entry_name, options)?;
+            let mut rec_file = fs::File::open(&src)?;
+            buf.clear();
+            rec_file.read_to_end(&mut buf)?;
+            zip_writer.write_all(&buf)?;
         }
     }
 
@@ -350,6 +347,7 @@ fn rand_u64() -> u64 {
 }
 
 /// Read all chanting data from a SQLite database file.
+#[allow(clippy::type_complexity)]
 pub fn read_chanting_from_sqlite(
     db_path: &Path,
 ) -> Result<(
@@ -392,6 +390,7 @@ pub fn read_chanting_from_sqlite(
 
 /// Remap all UIDs in the chanting data, updating foreign key references.
 /// Returns the remapped data and a mapping of old filenames to new filenames for recordings.
+#[allow(clippy::type_complexity)]
 fn remap_uids(
     collections: Vec<ChantingCollection>,
     chants: Vec<ChantingChant>,

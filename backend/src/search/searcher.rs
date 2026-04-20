@@ -306,6 +306,7 @@ impl FulltextSearcher {
         !self.library_indexes.is_empty()
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn search_indexes(
         &self,
         query_text: &str,
@@ -367,6 +368,7 @@ impl FulltextSearcher {
         Ok((total_hits, results))
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn search_single_index(
         &self,
         query_text: &str,
@@ -438,38 +440,38 @@ impl FulltextSearcher {
         filters: &SearchFilters,
         schema: &tantivy::schema::Schema,
     ) -> Result<()> {
-        if let Some(ref source) = filters.source_uid {
-            if filters.source_include && !source.is_empty() {
-                let field = schema.get_field("source_uid")?;
-                let term = Term::from_field_text(field, source);
-                subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
-            }
+        if let Some(ref source) = filters.source_uid
+            && filters.source_include && !source.is_empty()
+        {
+            let field = schema.get_field("source_uid")?;
+            let term = Term::from_field_text(field, source);
+            subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
         }
 
-        if let Some(ref nikaya) = filters.nikaya_prefix {
-            if !nikaya.is_empty() {
-                let field = schema.get_field("nikaya")?;
-                let pattern = format!("{}.*", regex::escape(&nikaya.to_lowercase()));
-                let regex_query = RegexQuery::from_pattern(&pattern, field)?;
-                subqueries.push((Occur::Must, Box::new(regex_query)));
-            }
+        if let Some(ref nikaya) = filters.nikaya_prefix
+            && !nikaya.is_empty()
+        {
+            let field = schema.get_field("nikaya")?;
+            let pattern = format!("{}.*", regex::escape(&nikaya.to_lowercase()));
+            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
+            subqueries.push((Occur::Must, Box::new(regex_query)));
         }
 
-        if let Some(ref uid_prefix) = filters.uid_prefix {
-            if !uid_prefix.is_empty() {
-                let field = schema.get_field("uid")?;
-                let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
-                let regex_query = RegexQuery::from_pattern(&pattern, field)?;
-                subqueries.push((Occur::Must, Box::new(regex_query)));
-            }
+        if let Some(ref uid_prefix) = filters.uid_prefix
+            && !uid_prefix.is_empty()
+        {
+            let field = schema.get_field("uid")?;
+            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
+            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
+            subqueries.push((Occur::Must, Box::new(regex_query)));
         }
 
-        if let Some(ref sutta_ref) = filters.sutta_ref {
-            if !sutta_ref.is_empty() {
-                let field = schema.get_field("sutta_ref")?;
-                let term = Term::from_field_text(field, sutta_ref);
-                subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
-            }
+        if let Some(ref sutta_ref) = filters.sutta_ref
+            && !sutta_ref.is_empty()
+        {
+            let field = schema.get_field("sutta_ref")?;
+            let term = Term::from_field_text(field, sutta_ref);
+            subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
         }
 
         // CST mula/commentary filtering: only exclude CST-sourced texts, not all sources.
@@ -515,17 +517,18 @@ impl FulltextSearcher {
         filters: &SearchFilters,
         schema: &tantivy::schema::Schema,
     ) -> Result<()> {
-        if let Some(ref source) = filters.source_uid {
-            if filters.source_include && !source.is_empty() {
-                let field = schema.get_field("source_uid")?;
-                let term = Term::from_field_text(field, source);
-                subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
-            }
+        if let Some(ref source) = filters.source_uid
+            && filters.source_include && !source.is_empty()
+        {
+            let field = schema.get_field("source_uid")?;
+            let term = Term::from_field_text(field, source);
+            subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
         }
 
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn sutta_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
@@ -562,6 +565,7 @@ impl FulltextSearcher {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn dict_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
@@ -596,6 +600,7 @@ impl FulltextSearcher {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn library_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,

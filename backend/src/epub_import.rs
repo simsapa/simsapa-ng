@@ -62,6 +62,7 @@ fn convert_nav_point_to_json(nav_point: &epub::doc::NavPoint) -> NavPointJson {
 ///
 /// # Returns
 /// * `Result<()>` - Ok if successful, Err with details if failed
+#[allow(clippy::too_many_arguments)]
 pub fn import_epub_to_db(
     db_conn: &mut SqliteConnection,
     epub_path: &Path,
