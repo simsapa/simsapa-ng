@@ -34,7 +34,7 @@ pub fn bootstrap(write_new_dotenv: bool, skip_dpd: bool) -> Result<()> {
     // During bootstrap, don't touch the user's Simsapa dir (~/.local/share/simsapa-ng)
     // Create files in the dist/ folder instead.
     // Setting the env var here to override any previous value.
-    unsafe { env::set_var("SIMSAPA_DIR", &dist_dir.join("simsapa-ng")); }
+    unsafe { env::set_var("SIMSAPA_DIR", dist_dir.join("simsapa-ng")); }
 
     let simsapa_dir = get_create_simsapa_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get simsapa directory: {}", e))?;

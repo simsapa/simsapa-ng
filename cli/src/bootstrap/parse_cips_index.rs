@@ -320,9 +320,7 @@ fn parse_custom_locator(locator: &str) -> Option<String> {
         // Split by '/' and get the parts after the domain
         let path_parts: Vec<&str> = url.split('/').collect();
         // Find first non-domain part (should be the sutta ref)
-        path_parts.iter()
-            .skip(1) // Skip domain
-            .next()
+        path_parts.get(1) // Skip domain
             .unwrap_or(&"")
             .to_string()
     } else {
@@ -343,11 +341,10 @@ fn parse_custom_locator(locator: &str) -> Option<String> {
 /// "CUSTOM:Dhp:Title:suttacentral.net/dhp33-43/en/sujato" → "dhp33-43"
 fn parse_sutta_ref(locator: &str) -> String {
     // Check for CUSTOM format first
-    if is_custom_format(locator) {
-        if let Some(sutta_ref) = parse_custom_locator(locator) {
+    if is_custom_format(locator)
+        && let Some(sutta_ref) = parse_custom_locator(locator) {
             return sutta_ref.to_lowercase();
         }
-    }
 
     // Standard format
     locator.to_lowercase()
@@ -364,6 +361,7 @@ fn sutta_ref_to_uid(sutta_ref: &str) -> String {
 }
 
 /// Intermediate structure for building the index
+#[allow(clippy::type_complexity)]
 struct IndexBuilder {
     /// Letter → Headword → Sub-entry → (locators, xrefs)
     data: HashMap<String, HashMap<String, HashMap<String, (Vec<String>, Vec<String>)>>>,
@@ -418,7 +416,7 @@ impl IndexBuilder {
 
             // Sort headwords
             let mut headword_keys: Vec<String> = headword_map.keys().cloned().collect();
-            headword_keys.sort_by(|a, b| get_headword_sort_key(a).cmp(&get_headword_sort_key(b)));
+            headword_keys.sort_by_key(|a| get_headword_sort_key(a));
 
             let mut headwords: Vec<TopicIndexHeadword> = Vec::new();
 
@@ -523,20 +521,18 @@ pub fn validate_index(index: &[TopicIndexLetter]) -> ValidationResult {
             for entry in &headword.entries {
                 for ref_item in &entry.refs {
                     // Validate xref targets exist
-                    if ref_item.ref_type == "xref" {
-                        if let Some(target) = &ref_item.ref_target {
-                            if !all_headwords.contains_key(&target.to_lowercase()) {
+                    if ref_item.ref_type == "xref"
+                        && let Some(target) = &ref_item.ref_target
+                            && !all_headwords.contains_key(&target.to_lowercase()) {
                                 result.warnings.push(format!(
                                     "Cross-reference target not found: '{}' -> '{}'",
                                     headword.headword, target
                                 ));
                             }
-                        }
-                    }
 
                     // Validate sutta reference format
-                    if ref_item.ref_type == "sutta" {
-                        if let Some(sutta_ref) = &ref_item.sutta_ref {
+                    if ref_item.ref_type == "sutta"
+                        && let Some(sutta_ref) = &ref_item.sutta_ref {
                             let book = extract_book(sutta_ref);
                             if book.is_empty() {
                                 result.warnings.push(format!(
@@ -545,7 +541,6 @@ pub fn validate_index(index: &[TopicIndexLetter]) -> ValidationResult {
                                 ));
                             }
                         }
-                    }
                 }
             }
         }

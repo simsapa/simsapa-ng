@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use arangors::{Connection, Database};
 use arangors::client::reqwest::ReqwestClient;
 use serde_json::Value;
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::fs;
@@ -178,22 +179,19 @@ RETURN docs
         // Extract the language pairs from the first result
         let mut lang_pairs: Vec<(String, String)> = vec![];
 
-        if let Some(first) = results.first() {
-            if let Some(arr) = first.as_array() {
+        if let Some(first) = results.first()
+            && let Some(arr) = first.as_array() {
                 for pair in arr {
-                    if let Some(pair_arr) = pair.as_array() {
-                        if pair_arr.len() == 2 {
-                            if let (Some(code), Some(name)) = (
+                    if let Some(pair_arr) = pair.as_array()
+                        && pair_arr.len() == 2
+                            && let (Some(code), Some(name)) = (
                                 pair_arr[0].as_str(),
                                 pair_arr[1].as_str()
                             ) {
                                 lang_pairs.push((code.to_string(), name.to_string()));
                             }
-                        }
-                    }
                 }
             }
-        }
 
         Ok::<Vec<(String, String)>, anyhow::Error>(lang_pairs)
     })?;
@@ -313,9 +311,7 @@ fn bilara_text_uid(doc: &Value) -> Result<String> {
         .collect();
 
     // Remove metadata values
-    let metadata_values = vec![
-        "translation", "root", "reference", "variant", "comment", "html", lang
-    ];
+    let metadata_values = ["translation", "root", "reference", "variant", "comment", "html", lang];
 
     author_candidates.retain(|item| !metadata_values.contains(&item.as_str()));
 
@@ -351,26 +347,24 @@ fn bilara_text_uid(doc: &Value) -> Result<String> {
 /// - HTML templates (muids contains 'html')
 fn res_is_ignored(doc: &Value) -> bool {
     // Check file_path
-    if let Some(file_path) = doc.get("file_path").and_then(|v| v.as_str()) {
-        if file_path.contains("/site/")
+    if let Some(file_path) = doc.get("file_path").and_then(|v| v.as_str())
+        && (file_path.contains("/site/")
             || file_path.contains("/xplayground/")
             || file_path.contains("/sutta/sa/")
             || file_path.contains("/sutta/ma/")
             || file_path.contains("-blurbs_")
-            || file_path.contains("-name_translation")
+            || file_path.contains("-name_translation"))
         {
             return true;
         }
-    }
 
     // Check muids
     if let Some(muids_array) = doc.get("muids").and_then(|v| v.as_array()) {
         for muid in muids_array {
-            if let Some(muid_str) = muid.as_str() {
-                if muid_str == "comment" || muid_str == "html" {
+            if let Some(muid_str) = muid.as_str()
+                && (muid_str == "comment" || muid_str == "html") {
                     return true;
                 }
-            }
         }
     }
 
@@ -530,7 +524,7 @@ fn html_text_to_sutta(doc: &Value, title: &str) -> Result<SuttaCentralData> {
     // Extract UID components
     let full_uid = html_text_uid(doc)?;
     let parts: Vec<&str> = full_uid.split('/').collect();
-    let uid_base = parts.get(0).context("Missing UID base")?.to_string();
+    let uid_base = parts.first().context("Missing UID base")?.to_string();
     let lang = parts.get(1).context("Missing language")?.to_string();
     let author = parts.get(2).context("Missing author")?.to_string();
 
@@ -592,7 +586,7 @@ fn bilara_text_to_sutta(
     // Extract UID components
     let full_uid = bilara_text_uid(doc)?;
     let parts: Vec<&str> = full_uid.split('/').collect();
-    let uid_base = parts.get(0).context("Missing UID base")?.to_string();
+    let uid_base = parts.first().context("Missing UID base")?.to_string();
     let lang = parts.get(1).context("Missing language")?.to_string();
     let author = parts.get(2).context("Missing author")?.to_string();
 
@@ -751,11 +745,14 @@ fn get_suttas(
             // Convert to sutta
             match html_text_to_sutta(&doc, title) {
                 Ok(sutta) => {
-                    if suttas_map.contains_key(&uid) {
-                        known_dup += 1;
-                        logger::info(&format!("Duplicate UID {}, keeping existing", uid));
-                    } else {
-                        suttas_map.insert(uid, sutta);
+                    match suttas_map.entry(uid.clone()) {
+                        Entry::Occupied(_) => {
+                            known_dup += 1;
+                            logger::info(&format!("Duplicate UID {}, keeping existing", uid));
+                        }
+                        Entry::Vacant(entry) => {
+                            entry.insert(sutta);
+                        }
                     }
                 }
                 Err(e) => {
@@ -957,7 +954,7 @@ fn import_sutta_variants(
             };
 
             // Extract source_uid (last component)
-            let source_uid = sutta_uid.split('/').last()
+            let source_uid = sutta_uid.split('/').next_back()
                 .map(|s| s.to_string())
                 .unwrap_or_default();
 
@@ -1067,7 +1064,7 @@ fn import_sutta_comments(
             };
 
             // Extract source_uid (last component)
-            let source_uid = sutta_uid.split('/').last()
+            let source_uid = sutta_uid.split('/').next_back()
                 .map(|s| s.to_string())
                 .unwrap_or_default();
 
@@ -1136,7 +1133,7 @@ impl SuttaCentralImporter {
         logger::info(&format!("Retrieved {} titles", titles.len()));
 
         // Step 2: Get templates (only needed once, for all languages)
-        logger::info(&format!("Step 2: Getting Bilara templates"));
+        logger::info("Step 2: Getting Bilara templates");
         let templates = get_bilara_templates(db, &self.sc_data_dir)?;
         logger::info(&format!("Retrieved {} templates", templates.len()));
 
@@ -1198,7 +1195,7 @@ impl SuttaCentralImporter {
 
 impl SuttaImporter for SuttaCentralImporter {
     fn import(&mut self, conn: &mut SqliteConnection) -> Result<()> {
-        logger::info(&format!("Starting SuttaCentral import"));
+        logger::info("Starting SuttaCentral import");
 
         // Connect to ArangoDB
         let db = connect_to_arangodb()

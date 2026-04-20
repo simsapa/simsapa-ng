@@ -41,15 +41,12 @@ impl DhammapadaMunindoImporter {
             let entry = entry?;
             let path = entry.path();
 
-            if path.is_file() {
-                if let Some(file_name) = path.file_name() {
-                    if let Some(name_str) = file_name.to_str() {
-                        if re.is_match(name_str) {
+            if path.is_file()
+                && let Some(file_name) = path.file_name()
+                    && let Some(name_str) = file_name.to_str()
+                        && re.is_match(name_str) {
                             files.push(path);
                         }
-                    }
-                }
-            }
         }
 
         files.sort();

@@ -634,6 +634,7 @@ fn parse_cips_index_command(csv_path: &Path, json_path: &Path, db_path: Option<&
     }
 
     // Create title lookup function
+    #[allow(clippy::type_complexity)]
     let title_lookup: Box<dyn Fn(&str) -> Option<String>> = if let Some(db) = db_path {
         if !db.exists() {
             return Err(format!("Database file not found: {:?}", db));
@@ -705,6 +706,7 @@ struct FulltextJsonOutput {
 }
 
 /// Run a fulltext (tantivy) search and print results.
+#[allow(clippy::too_many_arguments)]
 fn fulltext_search(
     query: &str,
     area: SearchArea,
@@ -931,12 +933,9 @@ fn delete_index_dirs(
     };
 
     for dir in &dirs_to_delete {
-        match dir.try_exists() {
-            Ok(true) => {
-                println!("  Removing: {}", dir.display());
-                std::fs::remove_dir_all(dir).map_err(|e| format!("Failed to remove {}: {}", dir.display(), e))?;
-            }
-            _ => {}
+        if let Ok(true) = dir.try_exists() {
+            println!("  Removing: {}", dir.display());
+            std::fs::remove_dir_all(dir).map_err(|e| format!("Failed to remove {}: {}", dir.display(), e))?;
         }
     }
 

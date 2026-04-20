@@ -429,11 +429,10 @@ RELEASE_CHANNEL=development
                                         if sutta_count == 0 {
                                             logger::warn(&format!("Language {} has 0 suttas, skipping archive creation and removing database", lang));
                                             // Remove the database file
-                                            if lang_db_path.exists() {
-                                                if let Err(e) = fs::remove_file(&lang_db_path) {
+                                            if lang_db_path.exists()
+                                                && let Err(e) = fs::remove_file(&lang_db_path) {
                                                     logger::error(&format!("Failed to remove empty database for {}: {}", lang, e));
                                                 }
-                                            }
                                         } else {
                                             logger::info(&format!("Language {} has {} suttas", lang, sutta_count));
 
@@ -441,7 +440,7 @@ RELEASE_CHANNEL=development
                                             let globals = get_app_globals();
                                             let lang_db_url = lang_db_path.to_str()
                                                 .ok_or_else(|| anyhow::anyhow!("Invalid lang db path"))
-                                                .and_then(|url| DatabaseHandle::new(url).map_err(|e| e.into()));
+                                                .and_then(DatabaseHandle::new);
 
                                             match lang_db_url {
                                                 Ok(lang_db_handle) => {
@@ -525,7 +524,7 @@ RELEASE_CHANNEL=development
                 let lang_db_url = lang_db_path.to_str()
                     .ok_or_else(|| anyhow::anyhow!("Invalid lang db path"));
 
-                match lang_db_url.and_then(|url| DatabaseHandle::new(url).map_err(|e| e.into())) {
+                match lang_db_url.and_then(DatabaseHandle::new) {
                     Ok(lang_db_handle) => {
                         match indexer::build_sutta_index(&lang_db_handle, &globals.paths.suttas_index_dir, lang) {
                             Ok(_) => logger::info(&format!("Built sutta index for language: {}", lang)),
@@ -647,15 +646,13 @@ pub fn clean_and_create_folders(
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    if extension == "bz2" && path.to_string_lossy().ends_with(".tar.bz2") {
+            if path.is_file()
+                && let Some(extension) = path.extension()
+                    && extension == "bz2" && path.to_string_lossy().ends_with(".tar.bz2") {
                         fs::remove_file(&path)
                             .with_context(|| format!("Failed to remove file: {}", path.display()))?;
                         logger::info(&format!("Removed: {}", path.display()));
                     }
-                }
-            }
         }
     }
 
@@ -779,7 +776,7 @@ pub fn create_index_archive(assets_dir: &Path, release_databases_dir: &Path) -> 
     let tar_src = assets_dir.join("index.tar.bz2");
     let tar_dst = release_databases_dir.join("index.tar.bz2");
     fs::rename(&tar_src, &tar_dst)
-        .with_context(|| format!("Failed to move index.tar.bz2 to release directory"))?;
+        .with_context(|| "Failed to move index.tar.bz2 to release directory".to_string())?;
 
     logger::info(&format!("Created and moved index.tar.bz2 to {:?}", release_databases_dir));
 
@@ -871,9 +868,9 @@ pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
         let entry = entry?;
         let path = entry.path();
 
-        if path.is_file() {
-            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
-                if file_name.starts_with("suttas_lang_") && file_name.ends_with(".sqlite3") {
+        if path.is_file()
+            && let Some(file_name) = path.file_name().and_then(|n| n.to_str())
+                && file_name.starts_with("suttas_lang_") && file_name.ends_with(".sqlite3") {
                     // Extract language code from filename
                     // 'suttas_lang_hu.sqlite3' -> 'hu'
                     let lang_code = file_name
@@ -904,8 +901,6 @@ pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
                         });
                     }
                 }
-            }
-        }
     }
 
     // Sort the language list for consistent output
