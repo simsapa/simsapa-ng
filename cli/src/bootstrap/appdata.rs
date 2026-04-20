@@ -10,6 +10,9 @@ use simsapa_backend::helpers::run_fts5_indexes_sql_script;
 
 use crate::bootstrap::{create_database_connection, run_migrations, ensure_directory_exists};
 
+// Declare database version without the 'v' prefix.
+pub static DB_VERSION: &str = "0.3.0-alpha.1";
+
 pub struct AppdataBootstrap {
     output_path: PathBuf,
 }
@@ -50,7 +53,7 @@ impl AppdataBootstrap {
         let settings = vec![
             NewAppSetting {
                 key: "db_version",
-                value: Some("0.3.0-alpha.1"),
+                value: Some(DB_VERSION),
             },
         ];
 

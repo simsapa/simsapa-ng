@@ -27,7 +27,7 @@ use simsapa_backend::{init_app_data, get_app_data, get_app_globals, get_create_s
 use simsapa_backend::search::indexer;
 
 pub use helpers::SuttaData;
-pub use appdata::AppdataBootstrap;
+pub use appdata::{AppdataBootstrap, DB_VERSION};
 pub use dhammatalks_org::DhammatalksSuttaImporter;
 pub use dhammapada_munindo::DhammapadaMunindoImporter;
 pub use dhammapada_tipitaka::DhammapadaTipitakaImporter;
@@ -914,9 +914,6 @@ pub fn write_release_info(assets_dir: &Path, release_dir: &Path) -> Result<()> {
 
     let suttas_lang = suttas_lang_list.join(", ");
 
-    // Get version from backend Cargo.toml
-    let version = env!("CARGO_PKG_VERSION");
-
     // Format datetime in ISO 8601 format
     let now = Local::now();
     let date = now.format("%Y-%m-%dT%H:%M:%S").to_string();
@@ -932,7 +929,7 @@ title = "Updates"
 description = ""
 "#,
         date,
-        version,
+        DB_VERSION,
         suttas_lang
     );
 
