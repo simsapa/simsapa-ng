@@ -1951,3 +1951,18 @@ html.dark a.sutta-link:hover,
 body.dark a.sutta-link:hover {
   border-bottom-color: #65DBFF;
 }
+
+body.mobile #ssp_content {
+  -webkit-touch-callout: none;
+}
+
+body.mobile #ssp_content .tapped-word {
+  background-color: rgba(255, 200, 60, 0.85);
+  border-radius: 2px;
+}
+
+body.mobile.dark #ssp_content .tapped-word,
+body.dark.mobile #ssp_content .tapped-word {
+  background-color: rgba(255, 200, 60, 0.55);
+  border-radius: 2px;
+}

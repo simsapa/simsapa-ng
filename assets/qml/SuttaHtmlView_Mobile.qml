@@ -44,6 +44,14 @@ Item {
 
     signal page_loaded()
 
+    // Gate page_loaded emission on having seen a LoadStartedStatus since the
+    // last emit. On Android QtWebView, a LoadSucceededStatus fires for the
+    // target URL before the navigation actually starts (the old page's DOM
+    // is still live) — without this gate, page_loaded would fire on the
+    // stale DOM and any consumers (setSearchTerm, bookmark scroll, ...)
+    // would act on the old page before it is replaced.
+    property bool load_in_progress: false
+
     Timer {
         id: scroll_timer
         interval: 300
@@ -305,6 +313,9 @@ if (document.SSP) {
         enabled: root.visible
 
         onLoadingChanged: function(loadRequest) {
+            if (loadRequest.status === WebView.LoadStartedStatus) {
+                root.load_in_progress = true;
+            }
             if (root.is_dark) {
                 web.runJavaScript("document.documentElement.style.colorScheme = 'dark';");
             }
@@ -324,14 +335,20 @@ if (document.SSP) {
 }
 `);
             if (loadRequest.status === WebView.LoadSucceededStatus) {
-                // Skip the spurious initial blank `data:` placeholder load. It fires
-                // before the real URL load and would otherwise consume pending
-                // state (e.g. pending_find_query) on a page where document.SSP
-                // is not loaded.
+                // Skip non-http loads (transient `web.loadHtml()` placeholder
+                // reported as data:/about:blank/empty).
                 let load_url = loadRequest.url.toString();
-                if (load_url.startsWith("data:")) {
+                if (!load_url.startsWith("http://") && !load_url.startsWith("https://")) {
                     return;
                 }
+                // Android QtWebView fires a spurious LoadSucceededStatus for
+                // the target URL BEFORE the real navigation starts (the old
+                // page's DOM is still live). Require a LoadStartedStatus
+                // since the last emit to filter that out.
+                if (!root.load_in_progress) {
+                    return;
+                }
+                root.load_in_progress = false;
                 root.page_loaded();
                 // Note: Anchor scrolling is now handled natively by including it in the URL
                 //
