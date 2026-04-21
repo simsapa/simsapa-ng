@@ -23,6 +23,14 @@ Item {
 
     signal page_loaded()
 
+    // Gate page_loaded emission on having seen a LoadStartedStatus since the
+    // last emit, to filter out spurious LoadSucceededStatus events fired for
+    // a target URL before its navigation actually begins (the previous page's
+    // DOM is still live at that moment). Consumers of page_loaded
+    // (setSearchTerm, bookmark scroll, ...) must not run against the stale
+    // DOM.
+    property bool load_in_progress: false
+
     Timer {
         id: scroll_timer
         interval: 300
@@ -284,6 +292,9 @@ if (document.SSP) {
         enabled: root.visible
 
         onLoadingChanged: function(loadRequest) {
+            if (loadRequest.status === WebEngineView.LoadStartedStatus) {
+                root.load_in_progress = true;
+            }
             if (root.is_dark) {
                 web.runJavaScript("document.documentElement.style.colorScheme = 'dark';");
             }
@@ -303,15 +314,20 @@ if (document.SSP) {
 }
 `);
             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
-                // Skip the initial blank `data:` placeholder load from
-                // Component.onCompleted before data_json is bound. On mobile
-                // this race consumed pending_find_query before document.SSP
-                // was loaded; on desktop the blank load is usually cancelled
-                // by the real URL navigation, but filter defensively to match.
+                // Skip the spurious initial blank placeholder load that fires
+                // from `web.loadHtml()` before the real URL load. It would
+                // otherwise emit page_loaded on a transient DOM that is about
+                // to be replaced, briefly activating the find bar before the
+                // real page load clears it. QtWebEngine reports this load
+                // with a non-http URL (`data:`, `about:blank`, or empty).
                 let load_url = loadRequest.url.toString();
-                if (load_url.startsWith("data:")) {
+                if (!load_url.startsWith("http://") && !load_url.startsWith("https://")) {
                     return;
                 }
+                if (!root.load_in_progress) {
+                    return;
+                }
+                root.load_in_progress = false;
                 root.page_loaded();
                 // Note: Anchor scrolling is now handled natively by including it in the URL
                 //
