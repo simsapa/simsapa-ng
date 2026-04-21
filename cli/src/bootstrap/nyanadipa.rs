@@ -169,13 +169,7 @@ mod tests {
     #[test]
     fn test_markdown_to_html() {
         let md = "# Test Title\n\nSome content[^1]\n\n[^1]: A footnote";
-        let mut options = Options::empty();
-        options.insert(Options::ENABLE_FOOTNOTES);
-        options.insert(Options::ENABLE_SMART_PUNCTUATION);
-
-        let parser = Parser::new_ext(md, options);
-        let mut html_output = String::new();
-        html::push_html(&mut html_output, parser);
+        let html_output = mdbook::utils::render_markdown(md, true);
 
         assert!(html_output.contains("<h1>"));
         assert!(html_output.contains("Test Title"));
