@@ -3,6 +3,10 @@ use simsapa_backend::pts_reference_search::{
 };
 use simsapa_backend::helpers::latinize;
 
+fn setup() {
+    simsapa_backend::init_sutta_references();
+}
+
 #[test]
 fn test_parse_pts_reference_valid() {
     let result = parse_pts_reference("D ii 20");
@@ -43,6 +47,7 @@ fn test_parse_pts_reference_invalid() {
 // Test case 2.2: Search DN 1 by identifier
 #[test]
 fn test_search_dn1_by_identifier() {
+    setup();
     let results = search("DN 1", "sutta_ref");
 
     assert!(!results.is_empty(), "Should find at least one result for DN 1");
@@ -59,6 +64,7 @@ fn test_search_dn1_by_identifier() {
 // Test case 2.3: Search DN 2 by PTS ref (exact match)
 #[test]
 fn test_search_dn2_by_pts_ref_exact() {
+    setup();
     let results = search("D i 47", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for exact PTS ref 'D i 47'");
@@ -74,6 +80,7 @@ fn test_search_dn2_by_pts_ref_exact() {
 // Test case 2.4: Search DN 2 by PTS ref (in-between page)
 #[test]
 fn test_search_dn2_by_pts_ref_in_between() {
+    setup();
     let results = search("D i 50", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for in-between page 'D i 50'");
@@ -90,6 +97,7 @@ fn test_search_dn2_by_pts_ref_in_between() {
 // Test case 2.5: Search DN 14 by PTS ref (exact at volume boundary)
 #[test]
 fn test_search_dn14_by_pts_ref_exact_volume_boundary() {
+    setup();
     let results = search("D ii 1", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for volume boundary 'D ii 1'");
@@ -105,6 +113,7 @@ fn test_search_dn14_by_pts_ref_exact_volume_boundary() {
 // Test case 2.6: Search DN 14 by PTS ref (in-between)
 #[test]
 fn test_search_dn14_by_pts_ref_in_between() {
+    setup();
     let results = search("D ii 20", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for in-between page 'D ii 20'");
@@ -121,6 +130,7 @@ fn test_search_dn14_by_pts_ref_in_between() {
 // Test case 2.7: Search MN by PTS ref (in-between)
 #[test]
 fn test_search_mn_by_pts_ref_in_between() {
+    setup();
     let results = search("M iii 10", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for in-between page 'M iii 10'");
@@ -138,6 +148,7 @@ fn test_search_mn_by_pts_ref_in_between() {
 // Test case 2.8: Search by name (case insensitive)
 #[test]
 fn test_search_by_name_case_insensitive() {
+    setup();
     let results = search("brahmajala", "title_pali");
 
     assert!(!results.is_empty(), "Should find result for 'brahmajala'");
@@ -156,6 +167,7 @@ fn test_search_by_name_case_insensitive() {
 // Test case 2.9: Search KN by DPR reference
 #[test]
 fn test_search_kn_by_dpr_reference() {
+    setup();
     let results = search("KN 1", "dpr_reference");
 
     // This test depends on whether KN entries exist in the JSON data
@@ -173,15 +185,16 @@ fn test_search_kn_by_dpr_reference() {
     }
 }
 
-// Additional test: Verify empty query returns all results
+// Additional test: Verify data is loaded by searching a common prefix
 #[test]
-fn test_search_empty_query_returns_all() {
-    let results = search("", "sutta_ref");
+fn test_search_data_is_loaded() {
+    setup();
+    let results = search("DN", "sutta_ref");
 
-    // Empty query should return all entries (or at least a significant number)
+    // Searching for "DN" should return many results since the data is loaded
     assert!(
         results.len() > 10,
-        "Empty query should return many results, got: {}",
+        "Search for 'DN' should return many results, got: {}",
         results.len()
     );
 }
@@ -189,6 +202,7 @@ fn test_search_empty_query_returns_all() {
 // Additional test: Verify search with diacritics works
 #[test]
 fn test_search_with_diacritics() {
+    setup();
     let results_with_diacritics = search("brahmajāla", "title_pali");
     let results_without_diacritics = search("brahmajala", "title_pali");
 
@@ -203,6 +217,7 @@ fn test_search_with_diacritics() {
 // Additional test: Verify range matching works correctly
 #[test]
 fn test_pts_reference_range_matching() {
+    setup();
     // Test that we can find a sutta by a page number between its start and the next sutta
     let results = search_by_pts_reference("D i 50");
 
@@ -222,6 +237,7 @@ fn test_pts_reference_range_matching() {
 // Debug test to see what data is being loaded
 #[test]
 fn test_debug_data_loading() {
+    setup();
     // First, load all data to check JSON parsing
     use simsapa_backend::app_settings::SUTTA_REFERENCE_CONVERTER_JSON;
     use simsapa_backend::pts_reference_search::ReferenceSearchResult;
@@ -250,6 +266,7 @@ fn test_debug_data_loading() {
 // Additional test: Verify that different volumes don't match
 #[test]
 fn test_pts_reference_volume_boundary() {
+    setup();
     let results_vol_i = search_by_pts_reference("D i 300");
     let results_vol_ii = search_by_pts_reference("D ii 1");
 
@@ -266,6 +283,7 @@ fn test_pts_reference_volume_boundary() {
 // Test case: Search Sutta Nipāta by PTS reference (2-part format)
 #[test]
 fn test_search_snp_by_pts_ref() {
+    setup();
     let results = search("sn 52", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for 'sn 52'");
@@ -291,6 +309,7 @@ fn test_search_snp_by_pts_ref() {
 // Test case: Search Sutta Nipāta by exact start page
 #[test]
 fn test_search_snp_exact_start_page() {
+    setup();
     let results = search("sn 50", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for 'sn 50'");
@@ -303,6 +322,7 @@ fn test_search_snp_exact_start_page() {
 // Test case: Search Sutta Nipāta at page boundary (start of next sutta)
 #[test]
 fn test_search_snp_end_page() {
+    setup();
     let results = search("sn 55", "pts_reference");
 
     assert!(!results.is_empty(), "Should find result for 'sn 55'");

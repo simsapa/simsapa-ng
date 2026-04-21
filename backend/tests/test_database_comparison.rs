@@ -214,19 +214,9 @@ fn test_sutta_comparison(uid_value: &str) {
         assert_eq!(new_sutta.group_index, expected_sutta.group_index, "group_index mismatch for {}", uid_value);
         assert_eq!(new_sutta.order_index, expected_sutta.order_index, "order_index mismatch for {}", uid_value);
 
-        // Note: sutta_range_group, sutta_range_start, and sutta_range_end are expected to be None
-        // in the new database as this is an intentional schema/data change.
-        // Legacy DB had values like Some("sn56"), Some("mn"), etc. but new DB has None.
-        // We verify that new DB has None for these fields.
-        assert_eq!(new_sutta.sutta_range_group, None,
-            "sutta_range_group should be None in new database for {}, but got {:?}",
-            uid_value, new_sutta.sutta_range_group);
-        assert_eq!(new_sutta.sutta_range_start, None,
-            "sutta_range_start should be None in new database for {}, but got {:?}",
-            uid_value, new_sutta.sutta_range_start);
-        assert_eq!(new_sutta.sutta_range_end, None,
-            "sutta_range_end should be None in new database for {}, but got {:?}",
-            uid_value, new_sutta.sutta_range_end);
+        assert_eq!(new_sutta.sutta_range_group, expected_sutta.sutta_range_group, "sutta_range_group mismatch for {}", uid_value);
+        assert_eq!(new_sutta.sutta_range_start, expected_sutta.sutta_range_start, "sutta_range_start mismatch for {}", uid_value);
+        assert_eq!(new_sutta.sutta_range_end, expected_sutta.sutta_range_end, "sutta_range_end mismatch for {}", uid_value);
         assert_eq!(new_sutta.title, expected_sutta.title, "title mismatch for {}", uid_value);
         assert_eq!(new_sutta.title_ascii, expected_sutta.title_ascii, "title_ascii mismatch for {}", uid_value);
         assert_eq!(new_sutta.title_pali, expected_sutta.title_pali, "title_pali mismatch for {}", uid_value);

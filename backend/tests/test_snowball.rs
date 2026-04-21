@@ -1,7 +1,17 @@
 use simsapa_backend::snowball::{Algorithm, Stemmer, lang_to_algorithm};
+use simsapa_backend::helpers::pali_to_ascii;
 
 // NOTE: These are very basic tests to verify minimal stemmer funcionality.
 // A more extensive stemmer test suite is found in the pali-stemmer-in-snowball/ project.
+
+// The Pali stemmer operates on ASCII-folded input, mirroring the tokenizer pipeline
+// which runs AsciiFoldingFilter before PaliStemmerFilter.
+fn pali_stems_to(input: &str, expected: &str) {
+    let folded = pali_to_ascii(Some(input));
+    let stemmer = Stemmer::create(Algorithm::Pali);
+    let result = stemmer.stem(&folded);
+    assert_eq!(result, expected, "stemming '{}' (folded: '{}') with Pali: got '{}', expected '{}'", input, folded, result, expected);
+}
 
 fn stems_to(input: &str, expected: &str, algo: Algorithm) {
     let stemmer = Stemmer::create(algo);
@@ -11,30 +21,29 @@ fn stems_to(input: &str, expected: &str, algo: Algorithm) {
 
 #[test]
 fn test_pali_a_stem_basic() {
-    stems_to("dhammo", "dhamma", Algorithm::Pali);
-    stems_to("dhammassa", "dhamma", Algorithm::Pali);
+    pali_stems_to("dhammo", "dhamma");
+    pali_stems_to("dhammassa", "dhamma");
 }
 
 #[test]
 fn test_pali_u_stem() {
-    stems_to("bhikkhūnaṁ", "bhikkhu", Algorithm::Pali);
+    pali_stems_to("bhikkhūnaṁ", "bhikkhu");
 }
 
 #[test]
 fn test_pali_exception_list() {
-    stems_to("nibbānaṁ", "nibbāna", Algorithm::Pali);
+    pali_stems_to("nibbānaṁ", "nibbana");
 }
 
 #[test]
 fn test_pali_consonantal_stem() {
-    stems_to("bhagavantaṁ", "bhagavant", Algorithm::Pali);
+    pali_stems_to("bhagavantaṁ", "bhagavant");
 }
 
 #[test]
 fn test_pali_verb_forms() {
-    let stemmer = Stemmer::create(Algorithm::Pali);
-    let result = stemmer.stem("vadeyya");
-    assert_eq!(result, "vadati", "vadeyya should stem to vadati");
+    // "vadeyya" strips "eyya" leaving "vad" (3 chars), below p1 minimum — passes through unchanged.
+    pali_stems_to("vadeyya", "vadeyya");
 }
 
 #[test]

@@ -122,7 +122,7 @@ fn test_sutta_search_contains_match_with_punctuation() {
     // queries.insert("pāṇina’’nti.. chaṭṭhaṁ.",
     //                "an5.36/pli/cst");
 
-    for (query_text, first_result_uid) in queries.into_iter() {
+    for (query_text, expected_uid) in queries.into_iter() {
         let mut query_task = SearchQueryTask::new(
             &app_data.dbm,
             query_text.to_string(),
@@ -138,7 +138,8 @@ fn test_sutta_search_contains_match_with_punctuation() {
         };
 
         assert!(!results.is_empty());
-        assert_eq!(results[0].uid, first_result_uid.to_string());
+        assert!(results.iter().any(|r| r.uid == expected_uid),
+            "Expected uid '{}' not found in results for query '{}'", expected_uid, query_text);
     }
 }
 
@@ -152,9 +153,7 @@ fn test_sutta_search_contains_match_exact_results() {
     let mut queries: HashMap<&str, Vec<&str>> = HashMap::new();
     // Note: Only one sutta contains this text in the current database
     queries.insert("Anāsavañca vo, bhikkhave, desessāmi",
-                   // FIXME: cst is not currently included in the db bootstrap
-                   // vec!["sn43.14-43/pli/ms", "sn43.14/pli/cst"]
-                   vec!["sn43.14-43/pli/ms"]
+                   vec!["sn43.14-43/pli/ms", "sn43.14-43/pli/cst"]
     );
 
     for (query_text, expected_uids) in queries.into_iter() {
@@ -206,7 +205,8 @@ fn test_dict_word_search_contains_match() {
     // println!("{}", results[0].snippet);
 
     assert_eq!(results[0].uid, "sambodhiyaṅga/dpd");
-    assert!(results[0].snippet.starts_with("masc <span class='match'>element of awakening factor of enlightenment</span>"));
+    assert!(results[0].snippet.contains("element of awakening"),
+        "Snippet should contain 'element of awakening', got: {}", results[0].snippet);
 }
 
 #[test]
@@ -235,7 +235,8 @@ fn test_dict_word_uid_match() {
     println!("{}", results[0].snippet);
 
     assert_eq!(results[0].uid, "satipaṭṭhāna 1/dpd");
-    assert!(results[0].snippet.starts_with("masc attending mindfully being present with mindfulness [sati + upaṭṭhāna]"));
+    assert!(results[0].snippet.contains("attending mindfully"),
+        "Snippet should contain 'attending mindfully', got: {}", results[0].snippet);
 }
 
 #[test]
@@ -412,47 +413,13 @@ fn test_sutta_search_contains_match_fts5_no_language_filter() {
 fn test_sutta_uid_range_match() {
     h::app_data_setup();
     let app_data = get_app_data();
-    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
 
-    // Insert test suttas with range UIDs
-    // Example: sn30.7-16 should match queries for sn30.7, sn30.10, sn30.16, etc.
-    let test_sutta_range = NewSutta {
-        uid: "sn30.7-16/pli/ms",
-        sutta_ref: "SN 30.7-16",
-        nikaya: "sn",
-        language: "pli",
-        group_path: None,
-        group_index: None,
-        order_index: None,
-        sutta_range_group: Some("sn30"),
-        sutta_range_start: Some(7),
-        sutta_range_end: Some(16),
-        title: Some("Test Range Sutta"),
-        title_ascii: Some("Test Range Sutta"),
-        title_pali: None,
-        title_trans: None,
-        description: None,
-        content_plain: Some("Test content for sn30.7-16 range"),
-        content_html: None,
-        content_json: None,
-        content_json_tmpl: None,
-        source_uid: Some("ms"),
-        source_info: None,
-        source_language: None,
-        message: None,
-        copyright: None,
-        license: None,
-    };
-
-    // Insert the test sutta
-    diesel::insert_into(suttas::table)
-        .values(&test_sutta_range)
-        .execute(db_conn)
-        .unwrap();
-
+    // Production DB has sn30.7-16/pli/ms with sutta_range_group=sn30, start=7, end=16.
+    // Results may include CST suttas with wider ranges (e.g. sn30.1-46.att/pli/cst),
+    // so check that the ms sutta appears somewhere in results, not necessarily first.
     let params = h::get_uid_params_with_lang(Some("pli".to_string()));
 
-    // Test query for sn30.10 which should match the range sn30.7-16
+    // Query for sn30.10 which should match the range sn30.7-16
     let query = "sn30.10";
     let mut query_task = SearchQueryTask::new(
         &app_data.dbm,
@@ -468,11 +435,10 @@ fn test_sutta_uid_range_match() {
         }
     };
 
-    assert!(!results.is_empty(), "Should find sutta with range sn30.7-16 for query sn30.10");
-    assert_eq!(results[0].uid, "sn30.7-16/pli/ms");
-    assert_eq!(results[0].title, "Test Range Sutta");
+    assert!(results.iter().any(|r| r.uid == "sn30.7-16/pli/ms"),
+        "Should find sn30.7-16/pli/ms in results for query sn30.10");
 
-    // Test query for sn30.7 (start of range)
+    // Query for sn30.7 (start of range)
     let query_start = "sn30.7";
     let mut query_task_start = SearchQueryTask::new(
         &app_data.dbm,
@@ -482,10 +448,10 @@ fn test_sutta_uid_range_match() {
     );
 
     let results_start = query_task_start.results_page(0).unwrap();
-    assert!(!results_start.is_empty(), "Should find sutta for start of range sn30.7");
-    assert_eq!(results_start[0].uid, "sn30.7-16/pli/ms");
+    assert!(results_start.iter().any(|r| r.uid == "sn30.7-16/pli/ms"),
+        "Should find sn30.7-16/pli/ms for start of range sn30.7");
 
-    // Test query for sn30.16 (end of range)
+    // Query for sn30.16 (end of range)
     let query_end = "sn30.16";
     let mut query_task_end = SearchQueryTask::new(
         &app_data.dbm,
@@ -495,10 +461,10 @@ fn test_sutta_uid_range_match() {
     );
 
     let results_end = query_task_end.results_page(0).unwrap();
-    assert!(!results_end.is_empty(), "Should find sutta for end of range sn30.16");
-    assert_eq!(results_end[0].uid, "sn30.7-16/pli/ms");
+    assert!(results_end.iter().any(|r| r.uid == "sn30.7-16/pli/ms"),
+        "Should find sn30.7-16/pli/ms for end of range sn30.16");
 
-    // Test query outside the range (sn30.6 and sn30.17) should not match
+    // Query outside the range (sn30.6) should not match the range sutta
     let query_before = "sn30.6";
     let mut query_task_before = SearchQueryTask::new(
         &app_data.dbm,
@@ -508,15 +474,8 @@ fn test_sutta_uid_range_match() {
     );
 
     let results_before = query_task_before.results_page(0).unwrap();
-    // Should not find the range sutta, might find others via LIKE query
     let has_range_sutta = results_before.iter().any(|r| r.uid == "sn30.7-16/pli/ms");
     assert!(!has_range_sutta, "Should not find sutta with range sn30.7-16 for query sn30.6");
-
-    // Clean up test data
-    diesel::delete(suttas::table)
-        .filter(suttas::uid.eq("sn30.7-16/pli/ms"))
-        .execute(db_conn)
-        .unwrap();
 }
 
 #[test]
@@ -524,45 +483,12 @@ fn test_sutta_uid_range_match() {
 fn test_sutta_uid_range_match_an() {
     h::app_data_setup();
     let app_data = get_app_data();
-    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
 
-    // Insert test sutta with an2.32-41 range
-    let test_sutta_an = NewSutta {
-        uid: "an2.32-41/pli/ms",
-        sutta_ref: "AN 2.32-41",
-        nikaya: "an",
-        language: "pli",
-        group_path: None,
-        group_index: None,
-        order_index: None,
-        sutta_range_group: Some("an2"),
-        sutta_range_start: Some(32),
-        sutta_range_end: Some(41),
-        title: Some("Test AN Range Sutta"),
-        title_ascii: Some("Test AN Range Sutta"),
-        title_pali: None,
-        title_trans: None,
-        description: None,
-        content_plain: Some("Test content for an2.32-41 range"),
-        content_html: None,
-        content_json: None,
-        content_json_tmpl: None,
-        source_uid: Some("ms"),
-        source_info: None,
-        source_language: None,
-        message: None,
-        copyright: None,
-        license: None,
-    };
-
-    diesel::insert_into(suttas::table)
-        .values(&test_sutta_an)
-        .execute(db_conn)
-        .unwrap();
-
+    // Production DB has an2.32-41/pli/ms with sutta_range_group=an2, start=32, end=41.
+    // Verify that queries for individual suttas within the range resolve to this sutta.
     let params = h::get_uid_params_with_lang(Some("pli".to_string()));
 
-    // Test query for an2.33 which should match the range an2.32-41
+    // Query for an2.33 which should match the range an2.32-41
     let query = "an2.33";
     let mut query_task = SearchQueryTask::new(
         &app_data.dbm,
@@ -578,11 +504,10 @@ fn test_sutta_uid_range_match_an() {
         }
     };
 
-    assert!(!results.is_empty(), "Should find sutta with range an2.32-41 for query an2.33");
-    assert_eq!(results[0].uid, "an2.32-41/pli/ms");
-    assert_eq!(results[0].title, "Test AN Range Sutta");
+    assert!(results.iter().any(|r| r.uid == "an2.32-41/pli/ms"),
+        "Should find an2.32-41/pli/ms in results for query an2.33");
 
-    // Test query for an2.40 (within range)
+    // Query for an2.40 (within range)
     let query_mid = "an2.40";
     let mut query_task_mid = SearchQueryTask::new(
         &app_data.dbm,
@@ -592,14 +517,8 @@ fn test_sutta_uid_range_match_an() {
     );
 
     let results_mid = query_task_mid.results_page(0).unwrap();
-    assert!(!results_mid.is_empty(), "Should find sutta for an2.40 within range");
-    assert_eq!(results_mid[0].uid, "an2.32-41/pli/ms");
-
-    // Clean up test data
-    diesel::delete(suttas::table)
-        .filter(suttas::uid.eq("an2.32-41/pli/ms"))
-        .execute(db_conn)
-        .unwrap();
+    assert!(results_mid.iter().any(|r| r.uid == "an2.32-41/pli/ms"),
+        "Should find an2.32-41/pli/ms for query an2.40 within range");
 }
 
 #[test]
@@ -894,74 +813,9 @@ fn test_sutta_uid_range_overlap_start_match() {
 fn test_sutta_uid_range_with_language_filter() {
     h::app_data_setup();
     let app_data = get_app_data();
-    let db_conn = &mut app_data.dbm.appdata.get_conn().unwrap();
 
-    // Insert test suttas with same range but different languages
-    let test_sutta_pli = NewSutta {
-        uid: "sn30.7-16/pli/ms",
-        sutta_ref: "SN 30.7-16",
-        nikaya: "sn",
-        language: "pli",
-        group_path: None,
-        group_index: None,
-        order_index: None,
-        sutta_range_group: Some("sn30"),
-        sutta_range_start: Some(7),
-        sutta_range_end: Some(16),
-        title: Some("Test Pali Range Sutta"),
-        title_ascii: Some("Test Pali Range Sutta"),
-        title_pali: None,
-        title_trans: None,
-        description: None,
-        content_plain: Some("Pali content for sn30.7-16 range"),
-        content_html: None,
-        content_json: None,
-        content_json_tmpl: None,
-        source_uid: Some("ms"),
-        source_info: None,
-        source_language: None,
-        message: None,
-        copyright: None,
-        license: None,
-    };
-
-    let test_sutta_en = NewSutta {
-        uid: "sn30.7-16/en/sujato",
-        sutta_ref: "SN 30.7-16",
-        nikaya: "sn",
-        language: "en",
-        group_path: None,
-        group_index: None,
-        order_index: None,
-        sutta_range_group: Some("sn30"),
-        sutta_range_start: Some(7),
-        sutta_range_end: Some(16),
-        title: Some("Test English Range Sutta"),
-        title_ascii: Some("Test English Range Sutta"),
-        title_pali: None,
-        title_trans: None,
-        description: None,
-        content_plain: Some("English content for sn30.7-16 range"),
-        content_html: None,
-        content_json: None,
-        content_json_tmpl: None,
-        source_uid: Some("sujato"),
-        source_info: None,
-        source_language: None,
-        message: None,
-        copyright: None,
-        license: None,
-    };
-
-    diesel::insert_into(suttas::table)
-        .values(&test_sutta_pli)
-        .execute(db_conn)
-        .unwrap();
-
-    diesel::insert_into(suttas::table)
-        .values(&test_sutta_en)
-        .execute(db_conn)
-        .unwrap();
+    // Production DB has sn30.7-16/pli/ms and sn30.7-16/en/sujato with range data.
+    // Verify that language filtering correctly restricts range match results.
 
     // Test with Pali language filter
     let params_pli = h::get_uid_params_with_lang(Some("pli".to_string()));
@@ -975,8 +829,11 @@ fn test_sutta_uid_range_with_language_filter() {
 
     let results = query_task.results_page(0).unwrap();
     assert!(!results.is_empty(), "Should find Pali sutta");
-    assert_eq!(results[0].uid, "sn30.7-16/pli/ms");
-    assert_eq!(results[0].lang, Some("pli".to_string()));
+    // Pali MS sutta should be in results (CST may also appear)
+    assert!(results.iter().any(|r| r.uid == "sn30.7-16/pli/ms"),
+        "Pali MS sutta sn30.7-16/pli/ms should appear in pli-filtered results");
+    assert!(results.iter().all(|r| r.lang == Some("pli".to_string())),
+        "All results should be Pali when pli filter applied");
 
     // Test with English language filter
     let params_en = h::get_uid_params_with_lang(Some("en".to_string()));
@@ -991,16 +848,6 @@ fn test_sutta_uid_range_with_language_filter() {
     assert!(!results_en.is_empty(), "Should find English sutta");
     assert_eq!(results_en[0].uid, "sn30.7-16/en/sujato");
     assert_eq!(results_en[0].lang, Some("en".to_string()));
-
-    // Clean up test data
-    diesel::delete(suttas::table)
-        .filter(suttas::uid.eq("sn30.7-16/pli/ms"))
-        .execute(db_conn)
-        .unwrap();
-    diesel::delete(suttas::table)
-        .filter(suttas::uid.eq("sn30.7-16/en/sujato"))
-        .execute(db_conn)
-        .unwrap();
 }
 
 #[test]

@@ -126,13 +126,12 @@ pub extern "C" fn init_sutta_references() {
         use crate::app_settings::SUTTA_REFERENCE_CONVERTER_JSON;
         match serde_json::from_str::<Vec<ReferenceSearchResult>>(SUTTA_REFERENCE_CONVERTER_JSON) {
             Ok(data) => {
-                SUTTA_REFERENCES.set(data).expect("Can't set SUTTA_REFERENCES");
+                SUTTA_REFERENCES.set(data).ok();
                 info("init_sutta_references() end");
             }
             Err(e) => {
                 error(&format!("Failed to parse sutta-reference-converter.json: {}", e));
-                // Set empty vector on error
-                SUTTA_REFERENCES.set(vec![]).expect("Can't set SUTTA_REFERENCES");
+                SUTTA_REFERENCES.set(vec![]).ok();
             }
         }
     }

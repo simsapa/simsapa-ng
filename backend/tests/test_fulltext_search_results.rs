@@ -1,13 +1,13 @@
 mod helpers;
 
 use serial_test::serial;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use simsapa_backend::db::appdata::sort_suttas;
 use simsapa_backend::db::appdata_models::Sutta;
 use simsapa_backend::search::searcher::{FulltextSearcher, SearchFilters};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct ExpectedResult {
     uid: String,
     title: String,
@@ -17,10 +17,57 @@ struct ExpectedResult {
     snippet_html: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 struct ExpectedOutput {
     total: usize,
     results: Vec<ExpectedResult>,
+}
+
+/// Regenerate the fixture file from the current FTS index.
+/// Run with: cargo test --test test_fulltext_search_results -- --ignored generate_fulltext_fixture
+#[test]
+#[serial]
+#[ignore]
+fn generate_fulltext_fixture() {
+    helpers::app_data_setup();
+    let globals = simsapa_backend::get_app_globals();
+
+    let searcher = FulltextSearcher::open(&globals.paths)
+        .expect("Failed to open fulltext indexes");
+
+    let filters = SearchFilters {
+        lang: Some("pli".to_string()),
+        lang_include: true,
+        source_uid: Some("ms".to_string()),
+        source_include: true,
+        nikaya_prefix: None,
+        uid_prefix: None,
+        sutta_ref: None,
+        include_cst_mula: true,
+        include_cst_commentary: true,
+        include_ms_mula: true,
+    };
+
+    let query = r#""so ce" evaṁ vadeyya"#;
+    let limit = 10;
+
+    let (total, results) = searcher
+        .search_suttas_with_count(query, &filters, limit, 0)
+        .expect("Search should succeed");
+
+    let expected_results: Vec<ExpectedResult> = results.iter().map(|r| ExpectedResult {
+        uid: r.uid.clone(),
+        title: r.title.clone(),
+        language: r.lang.clone().unwrap_or_default(),
+        source_uid: r.source_uid.clone().unwrap_or_default(),
+        score: r.score.unwrap_or(0.0),
+        snippet_html: if r.snippet.is_empty() { None } else { Some(r.snippet.clone()) },
+    }).collect();
+
+    let output = ExpectedOutput { total, results: expected_results };
+    let json = serde_json::to_string_pretty(&output).unwrap();
+    std::fs::write("tests/data/fulltext_search_so_ce_evam_vadeyya.json", json).unwrap();
+    println!("Regenerated fixture with total={}", total);
 }
 
 /// Integration test: fulltext search with phrase query
