@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -1297,6 +1299,7 @@ impl qobject::SuttaBridge {
             // Check cache for a hit
             {
                 let cache_guard = RESULTS_PAGE_CACHE.lock().unwrap();
+                #[allow(clippy::collapsible_if)]
                 if let Some(ref cache) = *cache_guard {
                     if cache.cache_key == cache_key {
                         if let Some(cached_results) = cache.pages.get(&page_num) {
@@ -1315,7 +1318,10 @@ impl qobject::SuttaBridge {
                             // If the user reached the highest cached page, prefetch the next 2
                             let max_cached = cache.pages.keys().max().copied().unwrap_or(0);
                             let total_pages = if cache.page_len > 0 {
-                                ((cache.total_hits as usize) + cache.page_len - 1) / cache.page_len
+                                // Manually:
+                                // ((cache.total_hits as usize) + cache.page_len - 1) / cache.page_len
+                                // Safer with .div_ceil():
+                                (cache.total_hits as usize).div_ceil(cache.page_len)
                             } else { 0 };
 
                             if page_num >= max_cached && max_cached + 1 < total_pages {
@@ -1370,8 +1376,13 @@ impl qobject::SuttaBridge {
 
                     // Prefetch: next page immediately (so page+1 is ready), then 2 more in background
                     let total_pages = if page_len > 0 {
-                        (total_hits as usize + page_len - 1) / page_len
-                    } else { 0 };
+                        // Manually:
+                        // (total_hits as usize + page_len - 1) / page_len
+                        // .div_ceil() implements this and is overflow-safe: 
+                        (total_hits as usize).div_ceil(page_len)
+                    } else {
+                        0
+                    };
 
                     if page_num + 1 < total_pages {
                         // Fetch the next page in this thread (so it's ready quickly)
@@ -1398,7 +1409,7 @@ impl qobject::SuttaBridge {
                     info("SuttaBridge::results_page() aborted (new search started)");
                 }
                 Err(e) => {
-                    error(&format!("{}", e));
+                    error(&e.to_string());
                     let error_json = serde_json::json!({"error": format!("{}", e)}).to_string();
                     qt_thread.queue(move |mut qo| {
                         qo.as_mut().results_page_ready(QString::from(error_json));
@@ -2330,10 +2341,7 @@ impl qobject::SuttaBridge {
         let globals = get_app_globals();
         let index_dir = &globals.paths.index_dir;
 
-        let exists = match index_dir.try_exists() {
-            Ok(true) => true,
-            _ => false,
-        };
+        let exists = matches!(index_dir.try_exists(), Ok(true));
 
         let current = if exists {
             simsapa_backend::search::indexer::is_index_current(index_dir)
@@ -3038,10 +3046,7 @@ impl qobject::SuttaBridge {
         use simsapa_backend::search::indexer::get_library_languages;
 
         let app_data = get_app_data();
-        let languages = match get_library_languages(&app_data.dbm.appdata) {
-            Ok(langs) => langs,
-            Err(_) => Vec::new(),
-        };
+        let languages = get_library_languages(&app_data.dbm.appdata).unwrap_or_default();
 
         let mut res = QStringList::default();
         for lang in languages {
@@ -3776,10 +3781,7 @@ impl qobject::SuttaBridge {
     pub fn check_file_exists(&self, file_path: &QString) -> bool {
         let path = std::path::PathBuf::from(file_path.to_string());
         // Try as-is first, then resolve relative to recordings dir
-        match path.try_exists() {
-            Ok(true) => return true,
-            _ => {}
-        }
+        if let Ok(true) = path.try_exists() { return true }
         // If relative, try resolving against recordings dir
         if !path.is_absolute() {
             let recordings_dir = simsapa_backend::get_chanting_recordings_dir();

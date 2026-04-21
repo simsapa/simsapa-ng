@@ -730,6 +730,7 @@ fn open_sutta_tab(window_id: &str, uid: PathBuf, anchor: Option<&str>, dbm: &Sta
         });
 
         // Add anchor to JSON if present
+        #[allow(clippy::collapsible_if)]
         if let Some(anchor_value) = anchor {
             if let Some(obj) = result_data_json.as_object_mut() {
                 obj.insert("anchor".to_string(), serde_json::Value::String(anchor_value.to_string()));
