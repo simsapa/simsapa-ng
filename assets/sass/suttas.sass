@@ -145,3 +145,29 @@ body.dark a.sutta-link
 
   &:hover
     border-bottom-color: #65DBFF
+
+// Mobile single-tap dictionary lookup: suppress the iOS long-press callout
+// overlay. Text selection is still allowed so long-press-to-select continues
+// to work for the menu's gloss-selection and lookup-selection actions, and
+// for the selectionchange-driven lookup on hyphenated compounds.
+//
+// Note: we intentionally do NOT set `touch-action: manipulation` here.
+// That would disable pinch-zoom on the reading area, which is an
+// accessibility regression — the in-app text-resize controller only steps
+// through preset sizes and does not substitute for pinch-zoom. The iOS
+// 300 ms click delay that `manipulation` would remove is negligible on
+// modern WebViews.
+//
+// TODO: some Android WebView versions may still show the ActionMode toolbar
+// on long-press; if this becomes an issue, a native Qt/Java workaround is needed.
+body.mobile #ssp_content
+  -webkit-touch-callout: none
+
+body.mobile #ssp_content .tapped-word
+  background-color: rgba(255, 200, 60, 0.85)
+  border-radius: 2px
+
+body.mobile.dark #ssp_content .tapped-word,
+body.dark.mobile #ssp_content .tapped-word
+  background-color: rgba(255, 200, 60, 0.55)
+  border-radius: 2px

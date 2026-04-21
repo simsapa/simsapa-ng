@@ -138,3 +138,78 @@ No change. `assets/qml/SuttaHtmlView_Mobile.qml` uses `QtWebView` → native Web
 4. Load an English translation (e.g. DN 22 Sujato) — confirm tap on an English word opens `WordSummary`.
 5. iOS device test: same checklist. Confirm `-webkit-touch-callout: none` suppresses the long-press callout on WKWebView.
 6. `cd backend && cargo test` — no backend changes, tests should pass unchanged.
+
+## Post-Implementation Review: Issues and Planned Fixes
+
+After the initial implementation shipped and was confirmed working on device, a review surfaced the following issues. Fixes are planned below and tracked in the task list as Task 5.0.
+
+### Issue 1 — `touch-action: manipulation` disables pinch-zoom on the reading area
+
+The mobile-scoped rule `touch-action: manipulation` on `body.mobile #ssp_content` was added to remove the iOS 300 ms click delay. As a side effect it also disables pinch-zoom on the main reading area. Since the in-app text resize controller only steps through preset sizes, losing pinch-zoom is an accessibility regression.
+
+**Fix:** Remove `touch-action: manipulation`. The iOS click delay is negligible on modern WebViews and we do not need to suppress other native gestures.
+
+### Issue 2 — Hyphenated compounds and loss of long-press → selection-driven lookup
+
+The word regex `/[\p{L}\p{M}'’]+/gu` excludes `-`, so a tap on a hyphenated Pāli compound (e.g. *anatta-lakkhaṇa*) looks up only one half. More importantly, the original PRD removed the `selectionchange`-based flow entirely, but some users rely on long-press to select a word, then drag the selection handles to extend the selection — the dictionary lookup should follow the selection live (as it did before this PRD).
+
+**Fix:** Restore the `selectionchange` handler **alongside** the single-tap handler. Long-press creates a native selection and triggers `summary_selection()` from the selected text; dragging selection handles extends the selection and updates the lookup. The previous boundary-drag / `word_summary_was_closed` workaround was only needed because a stray selection event could re-open a closed `WordSummary`. With the single-tap path doing the common case, we can keep the `selectionchange` path simple: trigger `summary_selection()` whenever a non-empty selection exists inside the sutta content. Single-tap continues to handle the zero-selection case and the highlight feedback.
+
+### Issue 3 — `parent.normalize()` in the highlight unwrap may invalidate cached text-node references
+
+After the 700 ms highlight timeout, `parent.normalize()` merges adjacent text nodes inside `#ssp_content`. Any other code that caches text-node references (e.g. find-bar match ranges, footnote/comment toggle bindings) could be silently pointing at stale nodes after a tap.
+
+**Fix:** Audit the other JS modules that touch `#ssp_content` (find bar, footnote toggle, comment toggle, chapter navigation) to confirm none cache text-node references across tap events. If any do, either drop the `normalize()` call (the unwrap still works without it — just leaves an extra adjacent text node, which is harmless) or reset the affected caches after normalize.
+
+### Issue 4 — Rapid repeated taps can nest highlight spans
+
+A second tap within the 700 ms highlight window creates a nested `<span class="tapped-word">` inside the first. No functional bug — the nested spans unwind in order — but it's a visible cosmetic artefact on fast repeated taps.
+
+**Fix:** Track the timestamp of the last tap and ignore subsequent taps within a small debounce window (e.g. 250 ms). This is simpler than reference-counting nested spans.
+
+### Issue 5 — Synthetic clicks with `(clientX, clientY) === (0, 0)` can trigger spurious lookups
+
+Synthetic clicks from keyboard activation or accessibility tooling have `event.detail === 0` and `clientX/Y === 0`. They currently resolve to whatever text is at the viewport's top-left, triggering an unintended lookup.
+
+**Fix:** Guard the click handler with `if (event.detail === 0) return;` — synthetic clicks always have `detail === 0`, real taps always have `detail >= 1`.
+
+## Second Post-Implementation Review: Performance and Robustness
+
+After the second batch of fixes shipped (pinch-zoom restored, `selectionchange` lookup re-added, selection auto-clear with `.tapped-word` fallback, persistent highlight, multi-element highlight painting), a further review surfaced performance and robustness issues. Fixes are planned below and tracked in the task list as Task 6.0.
+
+### Issue 6 — `collect_range_text_parts` runs on every `selectionchange`
+
+`selectionchange` fires tens of times per second while the user drags selection handles. Each fire walks all text nodes under the range's `commonAncestorContainer` (possibly the whole `#ssp_content` on a long drag), creating a throwaway `Range` per text node for `compareBoundaryPoints`. On a long sutta this is the dominant cost of a drag.
+
+**Fix:** Defer part collection to the 3-second debounce timer. The `selectionchange` handler does only the O(1) work: capture `last_mobile_selection_text`, call the throttled live lookup, and restart the timer. When the timer fires, it re-reads `document.getSelection().getRangeAt(0)` and calls `collect_range_text_parts` exactly once, then clears the selection and paints the highlight. This also fixes Issue 12 (multi-paragraph paint jank) as a side effect — one computation and one batched DOM write per finished selection.
+
+### Issue 7 — `summary_selection()` fires on every `selectionchange`
+
+Each selectionchange produces a `fetch('/summary_query/...')`. During a long drag this can be dozens of fetches per second.
+
+**Fix:** Throttle the live lookup to ~30 ms so the UI still feels live-follow to the user but the fetch cadence caps at ~33/s. A simple timestamp-based throttle is enough: record `last_live_lookup_ms`, skip the call if `(now - last_live_lookup_ms) < 30`. We keep 30 ms (not a larger value) because the user explicitly wants the `WordSummary` query to track the selection while dragging — a noticeable lag would defeat the purpose.
+
+### Issue 8 — Whitespace-only text nodes between block elements are wrapped
+
+A drag that crosses `<p>` boundaries traverses the whitespace text nodes the browser inserts between blocks. Each becomes a `<span class="tapped-word">` containing just `"\n  "`; with a background colour, that renders as a thin coloured gap.
+
+**Fix:** In `collect_range_text_parts`, filter `(node.nodeValue || "").trim() === ""` before pushing. Lookup unaffected (the text was already empty after trim). Highlight becomes visually clean.
+
+### Issue 9 — `selectionchange` handler has no `try/catch`
+
+If `compareBoundaryPoints` or a Range API throws (for example on a disconnected or mid-mutation range — the page-load code replaces `#ssp_content` innerHTML when navigating suttas), the error propagates and breaks subsequent `selectionchange` handling until the user reloads.
+
+**Fix:** Wrap the handler body in `try/catch` with `log_error(...)`, matching the click handler's defensive pattern.
+
+### Issue 10 — Stale text-node references in `pending_range_parts` across sutta navigation
+
+If the user long-presses, starts the 3-second timer, then navigates to a different sutta within that window, the stored `text_node` references point at nodes that were detached when `#ssp_content` was replaced. The timer still runs and calls `surroundContents` on detached nodes — currently a silent no-op (Range APIs don't throw on detached nodes), so no crash, but the wasted work and the dangling closure retaining the old subtree until the timer fires are untidy.
+
+**Fix:** In the timer callback, check `text_node.isConnected` before including each part. Parts with detached nodes are skipped. Live selection is still cleared (`removeAllRanges()` is harmless on an empty selection). This also keeps the implementation robust against any other DOM-replacing path we add later without needing a navigation hook.
+
+### Non-issues (reviewed, no change needed)
+
+- **Single-tap active-selection guard swallowing taps during the 3-s window** — tested on device: tapping outside the selection clears the native selection, selectionchange fires with empty text, the tap on the new word highlights immediately. Works as intended.
+- **`last_mobile_selection_text` persistence across navigation** — acceptable edge case.
+- **`caretRangeFromPoint` edge-pixel miss** — negligible in practice.
+- **Unwrap safety on subtree detachment** — current code silently skips, which is correct.
