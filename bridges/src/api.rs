@@ -212,6 +212,7 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
                 "wasm" => ContentType::WASM,
                 "pdf" => ContentType::PDF,
                 "map" => ContentType::JSON, // Source maps
+                "ico" => ContentType::Icon,
                 _ => ContentType::from_extension(path_ext).unwrap_or(ContentType::Plain),
             };
 
@@ -227,6 +228,27 @@ fn serve_assets(path: PathBuf, assets: &State<AssetsHandler>) -> (Status, (Conte
 
     } else {
         let s = format!{"404 Not Found: {}", path_str};
+        let ret = Vec::from(s.as_bytes());
+        (Status::NotFound, (ContentType::Plain, ret))
+    }
+}
+
+#[get("/favicon.ico")]
+fn serve_favicon(assets: &State<AssetsHandler>) -> (Status, (ContentType, Vec<u8>)) {
+    let path_str = "icons/appicons/simsapa.ico";
+    let some_entry = assets.files.get_entry(path_str);
+
+    if let Some(entry) = some_entry {
+        if let Some(entry_file) = entry.as_file() {
+            let body = Vec::from(entry_file.contents());
+            (Status::Ok, (ContentType::Icon, body))
+        } else {
+            let s = "404 Not Found: favicon.ico".to_string();
+            let ret = Vec::from(s.as_bytes());
+            (Status::NotFound, (ContentType::Plain, ret))
+        }
+    } else {
+        let s = "404 Not Found: favicon.ico".to_string();
         let ret = Vec::from(s.as_bytes());
         (Status::NotFound, (ContentType::Plain, ret))
     }
@@ -1172,6 +1194,7 @@ pub async extern "C" fn start_webserver() {
             shutdown,
             app_assets_list,
             serve_assets,
+            serve_favicon,
             serve_book_resources,
             logger_route,
             copy_to_clipboard,
