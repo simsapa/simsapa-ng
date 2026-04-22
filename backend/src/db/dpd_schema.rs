@@ -203,6 +203,7 @@ diesel::table! {
         grammar -> Text,
         help -> Text,
         abbrev -> Text,
+        abbrev_other -> Text,
         epd -> Text,
         rpd -> Text,
         other -> Text,
