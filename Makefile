@@ -62,8 +62,10 @@ project-tree:
 bootstrap:
 	cd cli/ && cargo build && cargo run -- bootstrap --write-new-dotenv
 
+# First 'cargo clean' on each module, then build.
 cargo-clean-build:
-	cd backend && cargo clean && cargo build && cd ../bridges && cargo clean && cargo build && cd ../cli && cargo clean && cargo build && cd ..
+	cd backend && cargo clean && cd ../bridges && cargo clean && cd ../cli && cargo clean && cd .. && \
+	cd backend && cargo build && cd ../bridges && cargo build && cd ../cli && cargo build && cd ..
 
 appimage: build
 	./build-appimage.sh
