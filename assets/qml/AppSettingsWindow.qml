@@ -649,6 +649,22 @@ ApplicationWindow {
                         }
 
                         CheckBox {
+                            id: show_line_by_line_checkbox
+                            text: "Show Translation and Pāli Line by Line"
+                            font.pointSize: root.pointSize
+                            onCheckedChanged: {
+                                SuttaBridge.set_show_translation_and_pali_line_by_line(checked);
+                            }
+                        }
+
+                        Label {
+                            text: "When a translation is available in line-by-line format, show it interleaved with the Pāli text. Close and re-open the relevant sutta tabs to see the effect."
+                            font.pointSize: root.pointSize - 2
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        CheckBox {
                             id: show_footnotes_checkbox
                             text: "Show Footnotes Bar"
                             font.pointSize: root.pointSize
@@ -931,6 +947,7 @@ ApplicationWindow {
 
         // Load footnotes setting
         show_footnotes_checkbox.checked = SuttaBridge.get_show_bottom_footnotes();
+        show_line_by_line_checkbox.checked = SuttaBridge.get_show_translation_and_pali_line_by_line();
 
         // Load initial state for Find tab settings
         search_as_you_type_checkbox.checked = SuttaBridge.get_search_as_you_type();
