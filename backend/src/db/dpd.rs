@@ -617,6 +617,7 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
         .context("PRAGMA table_info(bold_definitions) failed")?;
     let has_uid = cols.iter().any(|c| c.name == "uid");
     let has_commentary_plain = cols.iter().any(|c| c.name == "commentary_plain");
+    let has_bold_ascii = cols.iter().any(|c| c.name == "bold_ascii");
 
     if !has_uid {
         sql_query("ALTER TABLE bold_definitions ADD COLUMN uid TEXT NOT NULL DEFAULT ''")
@@ -628,17 +629,23 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
             .execute(&mut conn)
             .context("Failed to ADD COLUMN commentary_plain")?;
     }
+    if !has_bold_ascii {
+        sql_query("ALTER TABLE bold_definitions ADD COLUMN bold_ascii TEXT NOT NULL DEFAULT ''")
+            .execute(&mut conn)
+            .context("Failed to ADD COLUMN bold_ascii")?;
+    }
 
-    // Idempotency: if all rows already have non-empty uid, skip.
+    // Idempotency: if all rows already have non-empty uid AND bold_ascii, skip.
     let missing: Vec<BoldDefCountRow> = sql_query(
-        "SELECT COUNT(*) AS c FROM bold_definitions WHERE uid IS NULL OR uid = ''",
+        "SELECT COUNT(*) AS c FROM bold_definitions \
+         WHERE uid IS NULL OR uid = '' OR bold_ascii IS NULL OR bold_ascii = ''",
     )
     .load(&mut conn)?;
     let total: Vec<BoldDefCountRow> = sql_query("SELECT COUNT(*) AS c FROM bold_definitions").load(&mut conn)?;
     let missing_n = missing.first().map(|r| r.c).unwrap_or(0);
     let total_n = total.first().map(|r| r.c).unwrap_or(0);
     if total_n > 0 && missing_n == 0 {
-        info("bold_definitions.uid already populated; skipping");
+        info("bold_definitions.uid/bold_ascii already populated; skipping");
         return Ok(());
     }
 
@@ -658,7 +665,7 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
     //   count == 1: "{bold}/{ref_code}"
     //   count == N (>=2): "{bold} N/{ref_code}"
     let mut seen: HashMap<(String, String), u32> = HashMap::new();
-    let mut updates: Vec<(i32, String, String)> = Vec::with_capacity(rows.len());
+    let mut updates: Vec<(i32, String, String, String)> = Vec::with_capacity(rows.len());
     for r in &rows {
         let bold_lc = r.bold.to_lowercase();
         let ref_lc = r.ref_code.to_lowercase();
@@ -670,15 +677,19 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
             format!("{} {}/{}", bold_lc, *n, ref_lc)
         };
         let commentary_plain = compact_rich_text(&r.commentary);
-        updates.push((r.id, uid, commentary_plain));
+        let bold_ascii = pali_to_ascii(Some(&bold_lc));
+        updates.push((r.id, uid, commentary_plain, bold_ascii));
     }
 
     // Apply all updates in a single transaction.
     conn.transaction::<_, anyhow::Error, _>(|conn| {
-        for (id, uid, cp) in &updates {
-            sql_query("UPDATE bold_definitions SET uid = ?, commentary_plain = ? WHERE id = ?")
+        for (id, uid, cp, ba) in &updates {
+            sql_query(
+                "UPDATE bold_definitions SET uid = ?, commentary_plain = ?, bold_ascii = ? WHERE id = ?",
+            )
                 .bind::<Text, _>(uid)
                 .bind::<Text, _>(cp)
+                .bind::<Text, _>(ba)
                 .bind::<Integer, _>(*id)
                 .execute(conn)?;
         }

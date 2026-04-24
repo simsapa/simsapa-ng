@@ -284,6 +284,7 @@ pub struct BoldDefinition {
     pub commentary: String,
     pub uid: String,
     pub commentary_plain: String,
+    pub bold_ascii: String,
 }
 
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations, serde::Serialize)]
@@ -592,6 +593,7 @@ pub struct NewBoldDefinition<'a> {
     pub commentary: &'a str,
     pub uid: &'a str,
     pub commentary_plain: &'a str,
+    pub bold_ascii: &'a str,
 }
 
 #[derive(Insertable, Debug)]

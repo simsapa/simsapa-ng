@@ -33,9 +33,10 @@ Frame {
     readonly property var search_area_list: ["Suttas", "Dictionary", "Library"]
 
     // Advanced search options state (ephemeral, per-session)
-    readonly property bool advanced_options_visible: advanced_options_btn.checked && search_area === "Suttas"
+    readonly property bool advanced_options_visible: advanced_options_btn.checked
     readonly property string nikaya_prefix: nikaya_prefix_input.text.trim().toLowerCase()
     readonly property string uid_prefix: uid_prefix_input.text.trim().toLowerCase()
+    readonly property string uid_suffix: uid_suffix_input.text.trim().toLowerCase()
     readonly property bool include_ms_mula: include_ms_mula_checkbox.checked
 
     signal advanced_options_changed()
@@ -164,7 +165,6 @@ Frame {
             Button {
                 id: advanced_options_btn
                 checkable: true
-                enabled: root.search_area === "Suttas"
                 icon.source: "icons/32x32/system-uicons--settings.png"
                 Layout.preferredHeight: root.icon_size
                 Layout.preferredWidth: root.icon_size
@@ -358,6 +358,7 @@ Frame {
 
             RowLayout {
                 spacing: 4
+                visible: root.search_area === "Suttas"
 
                 Label {
                     text: "Nikāya prefix:"
@@ -397,7 +398,28 @@ Frame {
             }
 
             RowLayout {
+                spacing: 4
+
+                Label {
+                    text: "UID suffix:"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: uid_suffix_input
+                    placeholderText: "e.g. /vvt"
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: root.icon_size
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    selectByMouse: true
+                    onTextChanged: advanced_options_debounce_timer.restart()
+                }
+            }
+
+            RowLayout {
                 spacing: 2
+                visible: root.search_area === "Suttas"
 
                 CheckBox {
                     id: include_ms_mula_checkbox
@@ -425,6 +447,7 @@ Frame {
 
             RowLayout {
                 spacing: 2
+                visible: root.search_area === "Suttas"
 
                 CheckBox {
                     id: include_cst_mula_checkbox
@@ -452,6 +475,7 @@ Frame {
 
             RowLayout {
                 spacing: 2
+                visible: root.search_area === "Suttas"
 
                 CheckBox {
                     id: include_cst_commentary_checkbox
@@ -479,6 +503,7 @@ Frame {
 
             RowLayout {
                 spacing: 2
+                visible: root.search_area === "Suttas"
 
                 CheckBox {
                     id: include_cst_commentary_in_translations_checkbox
@@ -505,6 +530,7 @@ Frame {
 
             RowLayout {
                 spacing: 2
+                visible: root.search_area === "Suttas"
 
                 CheckBox {
                     id: include_cst_mula_in_translations_checkbox

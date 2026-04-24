@@ -14,6 +14,7 @@ diesel::table! {
         commentary -> Text,
         uid -> Text,
         commentary_plain -> Text,
+        bold_ascii -> Text,
     }
 }
 

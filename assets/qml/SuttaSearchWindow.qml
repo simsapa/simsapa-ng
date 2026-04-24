@@ -546,6 +546,7 @@ ApplicationWindow {
 
         const nikaya_prefix = search_bar_input.nikaya_prefix;
         const uid_prefix = search_bar_input.uid_prefix;
+        const uid_suffix = search_bar_input.uid_suffix;
 
         return {
             mode: mode,
@@ -560,6 +561,7 @@ ApplicationWindow {
             include_cst_commentary: SuttaBridge.get_include_cst_commentary_in_search_results(),
             nikaya_prefix: nikaya_prefix.length > 0 ? nikaya_prefix : null,
             uid_prefix: uid_prefix.length > 0 ? uid_prefix : null,
+            uid_suffix: uid_suffix.length > 0 ? uid_suffix : null,
             include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
         };
     }
@@ -1862,6 +1864,7 @@ ${query_text}`;
                 include_cst_commentary: true,
                 nikaya_prefix: null,
                 uid_prefix: null,
+                uid_suffix: null,
                 include_ms_mula: false,
             };
 

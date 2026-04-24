@@ -108,12 +108,12 @@ Source PRD: [prd-dpd-bold-definitions-search.md](./prd-dpd-bold-definitions-sear
   - [x] 5.3 Add matching styles to `assets/sass/dictionary.scss` (or existing dictionary sass source) for `.bold-definition-header` (small, muted breadcrumb), `.bold-definition-footer` (small, muted), and ensure `.bold-definition-body .headword` matches existing headword weight. Run `make sass`.
   - [x] 5.4 Confirm `commentary_plain` is not derived from the rendered HTML — it comes only from the raw `commentary` field via the normalization pipeline (already enforced in task 1.4).
 
-- [ ] 6.0 Advanced search UI — "UID suffix" filter (all search areas)
-  - [ ] 6.1 In `assets/qml/SearchBarInput.qml`, widen `advanced_options_visible` at line 36 so the UID prefix, UID suffix, and common filters are visible across all search areas (not just `"Suttas"`). Keep per-area-specific checkboxes (MS Mūla etc.) gated where appropriate.
-  - [ ] 6.2 Add a TextField `uid_suffix_input` immediately after `uid_prefix_input` (~line 389), with placeholder text "UID suffix (e.g. /vvt)". Bind `onTextChanged: advanced_options_debounce_timer.restart()`.
-  - [ ] 6.3 Add a readonly property `uid_suffix: uid_suffix_input.text.trim().toLowerCase()` alongside existing `uid_prefix` (~line 38).
-  - [ ] 6.4 Include `uid_suffix` in the signal payload wired by `advanced_options_changed()` so consumers pick it up.
-  - [ ] 6.5 Propagate `uid_suffix` from the QML search pipeline into `SearchParams` in `bridges/src/sutta_bridge.rs` (both construction sites at ~lines 1094 and 1477).
+- [x] 6.0 Advanced search UI — "UID suffix" filter (all search areas)
+  - [x] 6.1 In `assets/qml/SearchBarInput.qml`, widen `advanced_options_visible` at line 36 so the UID prefix, UID suffix, and common filters are visible across all search areas (not just `"Suttas"`). Keep per-area-specific checkboxes (MS Mūla etc.) gated where appropriate.
+  - [x] 6.2 Add a TextField `uid_suffix_input` immediately after `uid_prefix_input` (~line 389), with placeholder text "UID suffix (e.g. /vvt)". Bind `onTextChanged: advanced_options_debounce_timer.restart()`.
+  - [x] 6.3 Add a readonly property `uid_suffix: uid_suffix_input.text.trim().toLowerCase()` alongside existing `uid_prefix` (~line 38).
+  - [x] 6.4 Include `uid_suffix` in the signal payload wired by `advanced_options_changed()` so consumers pick it up.
+  - [x] 6.5 Propagate `uid_suffix` from the QML search pipeline into `SearchParams` in `bridges/src/sutta_bridge.rs` (both construction sites at ~lines 1094 and 1477).
 
 - [ ] 7.0 Advanced search UI — `include_comm_bold_definitions_checkbox` (with info button)
   - [ ] 7.1 In `backend/src/app_settings.rs`, add a persisted boolean setting `include_comm_bold_definitions_in_search_results` (default `true`).

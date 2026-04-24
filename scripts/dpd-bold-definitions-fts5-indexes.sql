@@ -65,12 +65,13 @@ DROP TABLE IF EXISTS bold_definitions_bold_fts;
 CREATE VIRTUAL TABLE bold_definitions_bold_fts USING fts5(
     bold_definitions_id UNINDEXED,
     bold,
+    bold_ascii,
     tokenize='trigram',
     detail='none'
 );
 
-INSERT INTO bold_definitions_bold_fts (bold_definitions_id, bold)
-SELECT id, bold
+INSERT INTO bold_definitions_bold_fts (bold_definitions_id, bold, bold_ascii)
+SELECT id, bold, bold_ascii
 FROM bold_definitions
 WHERE bold IS NOT NULL AND bold != '';
 
@@ -78,16 +79,16 @@ CREATE TRIGGER bold_definitions_bold_fts_insert
 AFTER INSERT ON bold_definitions
 WHEN NEW.bold IS NOT NULL AND NEW.bold != ''
 BEGIN
-    INSERT INTO bold_definitions_bold_fts (bold_definitions_id, bold)
-    VALUES (NEW.id, NEW.bold);
+    INSERT INTO bold_definitions_bold_fts (bold_definitions_id, bold, bold_ascii)
+    VALUES (NEW.id, NEW.bold, NEW.bold_ascii);
 END;
 
 CREATE TRIGGER bold_definitions_bold_fts_update
 AFTER UPDATE ON bold_definitions
 BEGIN
     DELETE FROM bold_definitions_bold_fts WHERE bold_definitions_id = OLD.id;
-    INSERT INTO bold_definitions_bold_fts (bold_definitions_id, bold)
-    SELECT NEW.id, NEW.bold
+    INSERT INTO bold_definitions_bold_fts (bold_definitions_id, bold, bold_ascii)
+    SELECT NEW.id, NEW.bold, NEW.bold_ascii
     WHERE NEW.bold IS NOT NULL AND NEW.bold != '';
 END;
 

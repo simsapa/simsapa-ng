@@ -1383,16 +1383,35 @@ impl<'a> SearchQueryTask<'a> {
         let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
 
         let like_pattern = format!("%{}%", q);
+        // Match against both the original `bold` (e.g. "suṭṭhu") and the
+        // ASCII-folded `bold_ascii` (e.g. "sutthu") so ASCII queries find
+        // diacritic entries — mirrors the word_ascii lookup path.
+        //
+        // Apply uid_prefix / uid_suffix at the SQL level so the row budget
+        // (LIMIT) is spent on rows that will survive the post-filter. The
+        // filters default to `%` (match anything) when unset so the bind
+        // count is constant.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
+            .unwrap_or_else(|| "%".to_string());
         let sql = r#"
-            SELECT bold_definitions_id
-            FROM bold_definitions_bold_fts
-            WHERE bold LIKE ?
-            ORDER BY bold_definitions_id
-            LIMIT 500
+            SELECT f.bold_definitions_id AS bold_definitions_id
+            FROM bold_definitions_bold_fts f
+            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            WHERE (f.bold LIKE ? OR f.bold_ascii LIKE ?)
+              AND bd.uid LIKE ?
+              AND bd.uid LIKE ?
+            ORDER BY f.bold_definitions_id
         "#;
 
         let rows: Vec<BdId> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
             .load(dpd_conn)?;
 
         let ids: Vec<i32> = rows.iter().map(|r| r.bold_definitions_id).collect();
@@ -1434,16 +1453,28 @@ impl<'a> SearchQueryTask<'a> {
         let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
 
         let like_pattern = format!("%{}%", q);
+        // Push uid_prefix / uid_suffix down to SQL so the LIMIT is spent on
+        // rows that will survive the post-filter. Default patterns are `%`.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
+            .unwrap_or_else(|| "%".to_string());
         let sql = r#"
-            SELECT bold_definitions_id
-            FROM bold_definitions_fts
-            WHERE commentary_plain LIKE ?
-            ORDER BY bold_definitions_id
-            LIMIT 500
+            SELECT f.bold_definitions_id AS bold_definitions_id
+            FROM bold_definitions_fts f
+            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            WHERE f.commentary_plain LIKE ?
+              AND bd.uid LIKE ?
+              AND bd.uid LIKE ?
+            ORDER BY f.bold_definitions_id
         "#;
 
         let rows: Vec<BdId> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
             .load(dpd_conn)?;
 
         let ids: Vec<i32> = rows.iter().map(|r| r.bold_definitions_id).collect();
@@ -1917,11 +1948,11 @@ impl<'a> SearchQueryTask<'a> {
         Ok(search_results)
     }
 
-    /// Gets a specific page of search results, performing the query if needed.
-    pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-
-        // --- Perform Search Based on Mode and Area ---
-        let results = match self.search_mode {
+    /// Dispatches the search to the area/mode-specific function for a page.
+    /// Does not apply post-filters (uid_suffix, uid_prefix-for-non-suttas) or
+    /// highlighting — those are handled by `results_page`.
+    fn run_mode_for_area(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        match self.search_mode {
             SearchMode::DpdLookup => {
                 // DPD Lookup mode - only works for Dictionary search area
                 match self.search_area {
@@ -2043,22 +2074,83 @@ impl<'a> SearchQueryTask<'a> {
                 Ok(Vec::new())
             }
 
-        }?;
+        }
+    }
 
-        // --- UID suffix filter ---
-        // Applied across all search areas and both regular + bold results.
-        let results = if let Some(ref sfx) = self.uid_suffix {
-            let s = sfx.trim().to_lowercase();
-            if s.is_empty() {
-                results
+    /// Returns a lowercased, trimmed string if the option is `Some` and non-empty.
+    fn normalized_filter(opt: &Option<String>) -> Option<String> {
+        opt.as_ref()
+            .map(|s| s.trim().to_lowercase())
+            .filter(|s| !s.is_empty())
+    }
+
+    /// True if results_page must post-filter results (uid_suffix set, or
+    /// uid_prefix set for an area whose SQL path does not already apply it).
+    fn needs_post_filter(&self) -> bool {
+        let has_suffix = Self::normalized_filter(&self.uid_suffix).is_some();
+        let has_prefix = Self::normalized_filter(&self.uid_prefix).is_some();
+        // Suttas search modes already apply uid_prefix at the SQL level; the
+        // Dictionary and Library paths do not, so a post-filter is required
+        // when prefix is set for those areas.
+        let prefix_handled_by_sql = matches!(self.search_area, SearchArea::Suttas);
+        has_suffix || (has_prefix && !prefix_handled_by_sql)
+    }
+
+    fn apply_uid_filters(&self, results: Vec<SearchResult>) -> Vec<SearchResult> {
+        let suffix = Self::normalized_filter(&self.uid_suffix);
+        let prefix = Self::normalized_filter(&self.uid_prefix);
+        let prefix_handled_by_sql = matches!(self.search_area, SearchArea::Suttas);
+        if suffix.is_none() && (prefix.is_none() || prefix_handled_by_sql) {
+            return results;
+        }
+        results
+            .into_iter()
+            .filter(|r| {
+                let uid_lc = r.uid.to_lowercase();
+                if let Some(ref s) = suffix {
+                    if !uid_lc.ends_with(s) {
+                        return false;
+                    }
+                }
+                if !prefix_handled_by_sql {
+                    if let Some(ref p) = prefix {
+                        if !uid_lc.starts_with(p) {
+                            return false;
+                        }
+                    }
+                }
+                true
+            })
+            .collect()
+    }
+
+    /// Gets a specific page of search results, performing the query if needed.
+    pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // --- Perform Search Based on Mode and Area ---
+        //
+        // When a post-filter is required (uid_suffix, or uid_prefix for an
+        // area that doesn't apply it natively in SQL), we must fetch the
+        // full result set, filter it, then paginate — otherwise the
+        // inner mode's pagination strips results before the filter runs
+        // and pages can come back empty even though matching rows exist.
+        let results = if self.needs_post_filter() {
+            let orig_page_len = self.page_len;
+            // Cap the fetch-all size to keep extreme queries bounded.
+            self.page_len = 10_000;
+            let inner_result = self.run_mode_for_area(0);
+            self.page_len = orig_page_len;
+            let all_results = inner_result?;
+            let filtered = self.apply_uid_filters(all_results);
+            self.db_query_hits_count = filtered.len() as i64;
+            let start = page_num * self.page_len;
+            let end = std::cmp::min(start + self.page_len, filtered.len());
+            if start >= filtered.len() {
+                Vec::new()
             } else {
-                results
-                    .into_iter()
-                    .filter(|r| r.uid.to_lowercase().ends_with(&s))
-                    .collect()
+                filtered[start..end].to_vec()
             }
         } else {
-            results
+            self.run_mode_for_area(page_num)?
         };
 
         // --- Apply Highlighting ---
