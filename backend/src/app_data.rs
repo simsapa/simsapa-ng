@@ -342,6 +342,14 @@ impl AppData {
             return blank_page_html;
         }
 
+        // DPD bold-definitions use uids of the form "{bold_lc}/{ref_code_lc}"
+        // (with collision disambiguation) which overlap the dict_word uid
+        // namespace. Check bold_definitions first and route to the dedicated
+        // renderer if matched; otherwise fall through to dict_word rendering.
+        if let Some(bd) = self.dbm.dpd.get_bold_definition_by_uid(word_uid) {
+            return crate::html_content::render_bold_definition(&bd, Some(body_class.clone()));
+        }
+
         // Try to get the word from database
         let word = self.dbm.dictionaries.get_word(word_uid);
 

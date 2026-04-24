@@ -134,6 +134,62 @@ pub fn sutta_html_page_with_nav(content: &str,
     tt.render("page_html", &ctx).unwrap_or_default()
 }
 
+static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
+
+/// Render a DPD bold-definition row as a complete HTML page.
+///
+/// Structure (per PRD §5.1):
+///   header: `.bold-definition-header` — breadcrumb of nikāya/book/ref/title/subhead
+///   body:   `.bold-definition-body`   — `.headword` span + commentary HTML (preserved)
+///   footer: `.bold-definition-footer` — source file name
+pub fn render_bold_definition(
+    bd: &crate::db::dpd_models::BoldDefinition,
+    body_class: Option<String>,
+) -> String {
+    let mut tt = TinyTemplate::new();
+    tt.set_default_formatter(&tinytemplate::format_unescaped);
+    tt.add_template("page_html", PAGE_HTML).expect("Template error in page.html!");
+
+    let header = format!(
+        r#"<div class="bold-definition-header">{} › {} ({}) › {} › {}</div>"#,
+        html_escape::encode_text(&bd.nikaya),
+        html_escape::encode_text(&bd.book),
+        html_escape::encode_text(&bd.ref_code),
+        html_escape::encode_text(&bd.title),
+        html_escape::encode_text(&bd.subhead),
+    );
+    // commentary is raw HTML from the DPD source — preserve it as-is.
+    let body = format!(
+        r#"<div class="bold-definition-body"><span class="headword">{}</span> {}</div>"#,
+        html_escape::encode_text(&bd.bold),
+        bd.commentary,
+    );
+    let footer = format!(
+        r#"<div class="bold-definition-footer">{}</div>"#,
+        html_escape::encode_text(&bd.file_name),
+    );
+
+    let mut ctx = TmplContext {
+        reading_mode_html: "".to_string(),
+        find_html: "".to_string(),
+        text_resize_html: "".to_string(),
+        menu_html: "".to_string(),
+        confirm_modal_html: "".to_string(),
+        footnote_modal_html: "".to_string(),
+        icons_html: "".to_string(),
+        body_class: body_class.unwrap_or_default(),
+        content: format!("{}\n{}\n{}", header, body, footer),
+        ..Default::default()
+    };
+
+    let mut css = String::new();
+    css.push_str(&SUTTAS_CSS.to_string().replace("http://localhost:8000", &ctx.api_url));
+    css.push_str(DICTIONARY_CSS);
+    ctx.css_head = css;
+
+    tt.render("page_html", &ctx).unwrap_or_default()
+}
+
 pub fn blank_html_page(body_class: Option<String>) -> String {
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);

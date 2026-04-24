@@ -12,7 +12,7 @@ use crate::logger::{info, warn};
 use crate::types::SearchResult;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
+use super::schema::{build_bold_definitions_schema, build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 pub use super::types::SearchFilters;
 
@@ -22,6 +22,7 @@ enum IndexType {
     Sutta,
     Dict,
     Library,
+    BoldDefinitions,
 }
 
 /// Holds open indexes for fulltext searching.
@@ -32,6 +33,9 @@ pub struct FulltextSearcher {
     dict_indexes: HashMap<String, (Index, IndexReader)>,
     /// Map of language → (Index, IndexReader) for library book chapter indexes
     library_indexes: HashMap<String, (Index, IndexReader)>,
+    /// Single DPD bold-definitions index (Pāli only), stored at the root of
+    /// `bold_definitions_index_dir` rather than under a per-language subdir.
+    bold_definitions_index: Option<(Index, IndexReader)>,
 }
 
 /// Returned by `FulltextSearcher::debug_query()`: the formatted debug text
@@ -48,18 +52,21 @@ impl FulltextSearcher {
         let sutta_indexes = Self::open_indexes(&paths.suttas_index_dir, IndexType::Sutta)?;
         let dict_indexes = Self::open_indexes(&paths.dict_words_index_dir, IndexType::Dict)?;
         let library_indexes = Self::open_indexes(&paths.library_index_dir, IndexType::Library)?;
+        let bold_definitions_index = Self::open_bold_definitions_index(&paths.bold_definitions_index_dir)?;
 
         info(&format!(
-            "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes, {} library language indexes",
+            "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes, {} library language indexes, bold_definitions={}",
             sutta_indexes.len(),
             dict_indexes.len(),
-            library_indexes.len()
+            library_indexes.len(),
+            bold_definitions_index.is_some(),
         ));
 
         Ok(Self {
             sutta_indexes,
             dict_indexes,
             library_indexes,
+            bold_definitions_index,
         })
     }
 
@@ -80,7 +87,34 @@ impl FulltextSearcher {
             sutta_indexes,
             dict_indexes,
             library_indexes,
+            bold_definitions_index: None,
         })
+    }
+
+    /// Open the single bold-definitions index (stored at the root of its dir,
+    /// not under per-language subdirs since only Pāli is indexed).
+    fn open_bold_definitions_index(dir: &Path) -> Result<Option<(Index, IndexReader)>> {
+        match dir.try_exists() {
+            Ok(true) => {}
+            _ => return Ok(None),
+        }
+
+        // Require the tantivy meta.json to exist before attempting to open —
+        // otherwise `Index::open_or_create` would silently initialise an empty
+        // index against a stale directory.
+        let meta = dir.join("meta.json");
+        match meta.try_exists() {
+            Ok(true) => {}
+            _ => return Ok(None),
+        }
+
+        match Self::open_single_index(dir, "pli", IndexType::BoldDefinitions) {
+            Ok(pair) => Ok(Some(pair)),
+            Err(e) => {
+                warn(&format!("Failed to open bold_definitions index at {}: {}", dir.display(), e));
+                Ok(None)
+            }
+        }
     }
 
     /// Scan a directory for per-language subdirectories and open each as a Tantivy index.
@@ -123,6 +157,7 @@ impl FulltextSearcher {
             IndexType::Sutta => build_sutta_schema(lang),
             IndexType::Dict => build_dict_schema(lang),
             IndexType::Library => build_library_schema(lang),
+            IndexType::BoldDefinitions => build_bold_definitions_schema(lang),
         };
 
         let mmap_dir = tantivy::directory::MmapDirectory::open(dir)?;
@@ -306,6 +341,49 @@ impl FulltextSearcher {
         !self.library_indexes.is_empty()
     }
 
+    /// Check if the bold-definitions index is available.
+    pub fn has_bold_definitions_index(&self) -> bool {
+        self.bold_definitions_index.is_some()
+    }
+
+    /// Search the DPD bold-definitions index, returning `(total_hits, results)`.
+    ///
+    /// Only the Pāli commentary content is indexed, so language filters in
+    /// `filters` are ignored. If no index is available, returns `(0, vec![])`.
+    pub fn search_bold_definitions_with_count(
+        &self,
+        query_text: &str,
+        filters: &SearchFilters,
+        page_len: usize,
+        page_num: usize,
+    ) -> Result<(usize, Vec<SearchResult>)> {
+        let Some((index, reader)) = &self.bold_definitions_index else {
+            return Ok((0, Vec::new()));
+        };
+
+        // Fetch enough results to cover all pages up to the requested one.
+        let limit = (page_num + 1) * page_len;
+
+        let (total_hits, scored) = self.search_single_index(
+            query_text,
+            filters,
+            limit,
+            index,
+            reader,
+            IndexType::BoldDefinitions,
+            true,
+        )?;
+
+        let results: Vec<SearchResult> = scored
+            .into_iter()
+            .skip(page_num * page_len)
+            .take(page_len)
+            .map(|(_, r)| r)
+            .collect();
+
+        Ok((total_hits, results))
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn search_indexes(
         &self,
@@ -407,6 +485,7 @@ impl FulltextSearcher {
             IndexType::Sutta => Self::add_sutta_filters(&mut subqueries, filters, &schema)?,
             IndexType::Dict => Self::add_dict_filters(&mut subqueries, filters, &schema)?,
             IndexType::Library => {} // No additional filters for library
+            IndexType::BoldDefinitions => {} // No additional filters for bold_definitions
         }
 
         let combined_query = BooleanQuery::new(subqueries);
@@ -427,6 +506,7 @@ impl FulltextSearcher {
                 IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
                 IndexType::Dict => self.dict_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
                 IndexType::Library => self.library_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
+                IndexType::BoldDefinitions => self.bold_definition_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
             };
 
             results.push((score, result));
@@ -645,6 +725,43 @@ impl FulltextSearcher {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
+    fn bold_definition_doc_to_result(
+        &self,
+        doc: &tantivy::TantivyDocument,
+        schema: &tantivy::schema::Schema,
+        score: f32,
+        query_text: &str,
+        index: &Index,
+        searcher: &tantivy::Searcher,
+        content_field: tantivy::schema::Field,
+    ) -> Result<SearchResult> {
+        let uid = Self::get_text_field(doc, schema, "uid");
+        let bold = Self::get_text_field(doc, schema, "bold");
+        let ref_code = Self::get_text_field(doc, schema, "ref_code");
+        let nikaya = Self::get_text_field(doc, schema, "nikaya");
+
+        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+
+        Ok(SearchResult {
+            uid,
+            schema_name: "dpd".to_string(),
+            table_name: "bold_definitions".to_string(),
+            // In bold_definitions, the equivalent of source_uid is the ref_code field (e.g. vina, mna, vvt)
+            source_uid: Some(ref_code.clone()),
+            title: bold,
+            // ref_code also serves as the sutta_ref (Vinaya, Majjhima, etc. origin)
+            sutta_ref: Some(ref_code),
+            nikaya: Some(nikaya).filter(|s| !s.is_empty()),
+            author: None,
+            lang: Some("pli".to_string()),
+            snippet,
+            page_number: None,
+            score: Some(score),
+            rank: None,
+        })
+    }
+
     fn get_text_field(doc: &tantivy::TantivyDocument, schema: &tantivy::schema::Schema, field_name: &str) -> String {
         schema
             .get_field(field_name)
@@ -768,6 +885,7 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -804,6 +922,7 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -839,6 +958,7 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -870,6 +990,7 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -905,6 +1026,7 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -968,6 +1090,7 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -994,6 +1117,7 @@ mod tests {
             sutta_indexes: HashMap::new(),
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
+            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {

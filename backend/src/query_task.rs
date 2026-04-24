@@ -37,6 +37,31 @@ fn sanitize_uid_like_prefix(input: Option<&str>) -> Option<String> {
     }
 }
 
+/// Convert a `BoldDefinition` row to a `SearchResult`. The snippet is the
+/// first ~300 chars of `commentary_plain`; final highlighting is applied in
+/// `results_page` via `highlight_query_in_content`.
+fn bold_definition_to_search_result(bd: &crate::db::dpd_models::BoldDefinition) -> SearchResult {
+    const SNIPPET_CHARS: usize = 300;
+    let snippet: String = bd.commentary_plain.chars().take(SNIPPET_CHARS).collect();
+    SearchResult {
+        uid: bd.uid.clone(),
+        schema_name: "dpd".to_string(),
+        table_name: "bold_definitions".to_string(),
+        // In bold_definitions, the equivalent of source_uid is the ref_code field (e.g. vina, mna, vvt)
+        source_uid: Some(bd.ref_code.clone()),
+        title: bd.bold.clone(),
+        // And it also serves as the sutta_ref, since it indicates the Vinaya, Majjhima, etc. origin
+        sutta_ref: Some(bd.ref_code.clone()),
+        nikaya: Some(bd.nikaya.clone()),
+        author: None,
+        lang: Some("pli".to_string()),
+        snippet,
+        page_number: None,
+        score: None,
+        rank: None,
+    }
+}
+
 pub struct SearchQueryTask<'a> {
     pub dbm: &'a DbManager,
     pub query_text: String,
@@ -51,7 +76,9 @@ pub struct SearchQueryTask<'a> {
     pub include_cst_commentary: bool,
     pub nikaya_prefix: Option<String>,
     pub uid_prefix: Option<String>,
+    pub uid_suffix: Option<String>,
     pub include_ms_mula: bool,
+    pub include_comm_bold_definitions: bool,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -103,7 +130,9 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_commentary: params.include_cst_commentary,
             nikaya_prefix: params.nikaya_prefix,
             uid_prefix: params.uid_prefix,
+            uid_suffix: params.uid_suffix,
             include_ms_mula: params.include_ms_mula,
+            include_comm_bold_definitions: params.include_comm_bold_definitions,
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }
@@ -1209,10 +1238,25 @@ impl<'a> SearchQueryTask<'a> {
         };
 
         // Map to SearchResult
-        let search_results = paginated_results
+        let mut search_results: Vec<SearchResult> = paginated_results
             .iter()
             .map(|dict_word| self.db_word_to_result(dict_word))
             .collect();
+
+        // Append bold-definition substring matches on `commentary_plain` for
+        // this page. Normalize the query using the same pipeline that
+        // produced commentary_plain (normalize_plain_text) so accented Pāli
+        // queries match the stored normalized form.
+        if self.include_comm_bold_definitions {
+            let normalized = normalize_plain_text(&self.query_text);
+            let bold_hits = self.query_bold_definitions_commentary_fts5(&normalized)?;
+            let start = page_num * self.page_len;
+            if start < bold_hits.len() {
+                let end = std::cmp::min(start + self.page_len, bold_hits.len());
+                search_results.extend(bold_hits[start..end].iter().cloned());
+            }
+            self.db_query_hits_count += bold_hits.len() as i64;
+        }
 
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
@@ -1311,11 +1355,171 @@ impl<'a> SearchQueryTask<'a> {
         Ok(search_results)
     }
 
+    /// Substring match on bold_definitions.bold using the trigram FTS5 index.
+    /// Used by DPD Lookup and Headword Match.
+    /// The query is lowercased for matching; **not** run through the Pāli
+    /// normalization pipeline (DPD Lookup / Headword Match operate on the
+    /// as-stored bold field). Caller is responsible for gating on
+    /// `include_comm_bold_definitions`.
+    fn query_bold_definitions_bold_fts5(
+        &self,
+        query: &str,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+        use crate::db::dpd_models::BoldDefinition;
+
+        let q = query.trim().to_lowercase();
+        if q.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        #[derive(QueryableByName)]
+        struct BdId {
+            #[diesel(sql_type = diesel::sql_types::Integer)]
+            bold_definitions_id: i32,
+        }
+
+        let app_data = get_app_data();
+        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
+
+        let like_pattern = format!("%{}%", q);
+        let sql = r#"
+            SELECT bold_definitions_id
+            FROM bold_definitions_bold_fts
+            WHERE bold LIKE ?
+            ORDER BY bold_definitions_id
+            LIMIT 500
+        "#;
+
+        let rows: Vec<BdId> = sql_query(sql)
+            .bind::<Text, _>(&like_pattern)
+            .load(dpd_conn)?;
+
+        let ids: Vec<i32> = rows.iter().map(|r| r.bold_definitions_id).collect();
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let bds: Vec<BoldDefinition> = bd_dsl::bold_definitions
+            .filter(bd_dsl::id.eq_any(&ids))
+            .order(bd_dsl::id)
+            .select(BoldDefinition::as_select())
+            .load(dpd_conn)?;
+
+        Ok(bds.iter().map(bold_definition_to_search_result).collect())
+    }
+
+    /// Substring match on bold_definitions.commentary_plain using the trigram
+    /// FTS5 index. Used by Contains Match. Caller is responsible for gating
+    /// on `include_comm_bold_definitions`.
+    fn query_bold_definitions_commentary_fts5(
+        &self,
+        normalized_query: &str,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+        use crate::db::dpd_models::BoldDefinition;
+
+        let q = normalized_query.trim();
+        if q.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        #[derive(QueryableByName)]
+        struct BdId {
+            #[diesel(sql_type = diesel::sql_types::Integer)]
+            bold_definitions_id: i32,
+        }
+
+        let app_data = get_app_data();
+        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
+
+        let like_pattern = format!("%{}%", q);
+        let sql = r#"
+            SELECT bold_definitions_id
+            FROM bold_definitions_fts
+            WHERE commentary_plain LIKE ?
+            ORDER BY bold_definitions_id
+            LIMIT 500
+        "#;
+
+        let rows: Vec<BdId> = sql_query(sql)
+            .bind::<Text, _>(&like_pattern)
+            .load(dpd_conn)?;
+
+        let ids: Vec<i32> = rows.iter().map(|r| r.bold_definitions_id).collect();
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let bds: Vec<BoldDefinition> = bd_dsl::bold_definitions
+            .filter(bd_dsl::id.eq_any(&ids))
+            .order(bd_dsl::id)
+            .select(BoldDefinition::as_select())
+            .load(dpd_conn)?;
+
+        Ok(bds.iter().map(bold_definition_to_search_result).collect())
+    }
+
+    /// BM25-ranked fulltext match against the tantivy bold_definitions index.
+    /// Returns `(total_hits, Vec<(score, result)>)` so the caller can merge
+    /// with regular dict_word fulltext scores by descending BM25 before
+    /// pagination, and add to the aggregate hits count.
+    fn query_bold_definitions_fulltext(
+        &self,
+        normalized_query: &str,
+        page_num: usize,
+    ) -> Result<(usize, Vec<(f32, SearchResult)>), Box<dyn Error>> {
+        use crate::with_fulltext_searcher;
+        use crate::search::searcher::SearchFilters;
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya_prefix: None,
+            uid_prefix: None,
+            sutta_ref: None,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
+        };
+
+        let query_text = normalized_query.to_string();
+        let page_len = self.page_len;
+
+        let out = with_fulltext_searcher(|searcher| {
+            if !searcher.has_bold_definitions_index() {
+                return Ok::<_, anyhow::Error>((0usize, Vec::<SearchResult>::new()));
+            }
+            searcher.search_bold_definitions_with_count(&query_text, &filters, page_len, page_num)
+        });
+
+        match out {
+            Some(Ok((total, results))) => Ok((
+                total,
+                results
+                    .into_iter()
+                    .map(|r| (r.score.unwrap_or(0.0), r))
+                    .collect(),
+            )),
+            Some(Err(e)) => Err(e.into()),
+            None => Ok((0, Vec::new())),
+        }
+    }
+
     pub fn dpd_lookup(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         // DPD is only English, so ignore checking self.lang (which may be "pli", "Language", or empty "").
         // Assume that if the DPD Lookup was selected then stale language settings can be ignored.
         let app_data = get_app_data();
-        let all_results = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
+        let mut all_results = app_data.dbm.dpd.dpd_lookup(&self.query_text, false, true)?;
+
+        // Append bold-definition substring matches on `bold` after the
+        // existing headword results.
+        if self.include_comm_bold_definitions {
+            let bold_hits = self.query_bold_definitions_bold_fts5(&self.query_text)?;
+            all_results.extend(bold_hits);
+        }
 
         // Set total hits count for pagination
         self.db_query_hits_count = all_results.len() as i64;
@@ -1698,6 +1902,17 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
+        // Append bold-definition substring matches on `bold` for this page.
+        if self.include_comm_bold_definitions {
+            let bold_hits = self.query_bold_definitions_bold_fts5(&self.query_text)?;
+            let start = page_num * self.page_len;
+            if start < bold_hits.len() {
+                let end = std::cmp::min(start + self.page_len, bold_hits.len());
+                search_results.extend(bold_hits[start..end].iter().cloned());
+            }
+            self.db_query_hits_count += bold_hits.len() as i64;
+        }
+
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
@@ -1830,6 +2045,22 @@ impl<'a> SearchQueryTask<'a> {
 
         }?;
 
+        // --- UID suffix filter ---
+        // Applied across all search areas and both regular + bold results.
+        let results = if let Some(ref sfx) = self.uid_suffix {
+            let s = sfx.trim().to_lowercase();
+            if s.is_empty() {
+                results
+            } else {
+                results
+                    .into_iter()
+                    .filter(|r| r.uid.to_lowercase().ends_with(&s))
+                    .collect()
+            }
+        } else {
+            results
+        };
+
         // --- Apply Highlighting ---
         // The highlighting is now done *after* fetching and before caching
         let highlighted_results: Vec<SearchResult> = results
@@ -1925,24 +2156,47 @@ impl<'a> SearchQueryTask<'a> {
         let query_text = self.query_text.clone();
         let page_len = self.page_len;
 
-        match with_fulltext_searcher(|searcher| {
+        let dict_outcome = with_fulltext_searcher(|searcher| {
             if !searcher.has_dict_indexes() {
                 warn("No dict_word fulltext indexes available.");
                 return Ok((0, Vec::new()));
             }
             searcher.search_dict_words_with_count(&query_text, &filters, page_len, page_num)
-        }) {
-            Some(Ok((total, results))) => {
-                self.db_query_hits_count = total as i64;
-                Ok(results)
-            }
-            Some(Err(e)) => Err(e.into()),
+        });
+
+        let (dict_total, dict_results) = match dict_outcome {
+            Some(Ok(pair)) => pair,
+            Some(Err(e)) => return Err(e.into()),
             None => {
                 warn("Fulltext searcher not initialized. Indexes may not exist.");
-                self.db_query_hits_count = 0;
-                Ok(Vec::new())
+                (0usize, Vec::<SearchResult>::new())
             }
+        };
+
+        if !self.include_comm_bold_definitions {
+            self.db_query_hits_count = dict_total as i64;
+            return Ok(dict_results);
         }
+
+        // Collect scored bold-definition hits and merge with dict hits by
+        // descending BM25. Inter-index scores are not strictly comparable —
+        // some bias is acceptable per PRD §4.3.12.
+        let (bold_total, bold_scored) = self.query_bold_definitions_fulltext(&query_text, page_num)?;
+
+        let mut merged: Vec<(f32, SearchResult)> = dict_results
+            .into_iter()
+            .map(|r| (r.score.unwrap_or(0.0), r))
+            .chain(bold_scored.into_iter())
+            .collect();
+        merged.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        let final_results: Vec<SearchResult> = merged
+            .into_iter()
+            .take(page_len)
+            .map(|(_, r)| r)
+            .collect();
+
+        self.db_query_hits_count = (dict_total + bold_total) as i64;
+        Ok(final_results)
     }
 
     fn fulltext_library(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {

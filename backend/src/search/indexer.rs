@@ -7,10 +7,11 @@ use tantivy::{doc, Directory, Index, IndexWriter};
 use crate::db::DatabaseHandle;
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
+use crate::db::dpd_models::BoldDefinition;
 use crate::logger::info;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
+use super::schema::{build_bold_definitions_schema, build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 
 /// Open or create a Tantivy index at the given directory path.
@@ -191,6 +192,80 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     Ok(())
 }
 
+/// Build fulltext index for DPD bold-definitions.
+///
+/// Commentary text is Pāli; call sites pass `lang = "pli"` so the index uses
+/// the Pāli tokenizers matching DPD dictionary entries.
+pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, lang: &str) -> Result<()> {
+    use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+
+    info(&format!("Building bold_definitions index for language: {}", lang));
+
+    // Clean the index directory before writing so re-runs start fresh.
+    match index_dir.try_exists() {
+        Ok(true) => {
+            std::fs::remove_dir_all(index_dir)?;
+        }
+        _ => {}
+    }
+
+    let schema = build_bold_definitions_schema(lang);
+    let index = open_or_create_index(index_dir, schema, lang)?;
+
+    let mut writer: IndexWriter = index.writer(50_000_000)?;
+
+    // Clear existing documents before rebuilding (mirrors the other builders).
+    writer.delete_all_documents()?;
+    writer.commit()?;
+
+    let schema = index.schema();
+    let bold_definitions_id_field = schema.get_field("bold_definitions_id").unwrap();
+    let uid_field = schema.get_field("uid").unwrap();
+    let bold_field = schema.get_field("bold").unwrap();
+    let ref_code_field = schema.get_field("ref_code").unwrap();
+    let nikaya_field = schema.get_field("nikaya").unwrap();
+    let content_field = schema.get_field("content").unwrap();
+    let content_exact_field = schema.get_field("content_exact").unwrap();
+
+    let rows: Vec<BoldDefinition> = dpd_db.do_read(|db_conn| {
+        bd_dsl::bold_definitions
+            .select(BoldDefinition::as_select())
+            .load(db_conn)
+    })?;
+
+    info(&format!("Indexing {} bold_definitions rows", rows.len()));
+
+    let mut indexed_count = 0;
+    for row in &rows {
+        let plain = row.commentary_plain.as_str();
+        if plain.is_empty() {
+            continue;
+        }
+
+        writer.add_document(doc!(
+            bold_definitions_id_field => row.id as i64,
+            uid_field => row.uid.as_str(),
+            bold_field => row.bold.as_str(),
+            ref_code_field => row.ref_code.as_str(),
+            nikaya_field => row.nikaya.as_str(),
+            content_field => plain,
+            content_exact_field => plain,
+        ))?;
+
+        indexed_count += 1;
+    }
+
+    // Finalize the index: see build_sutta_index for the rationale behind
+    // wait_merging_threads() and sync_directory().
+    writer.commit()?;
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
+
+    info(&format!("bold_definitions index committed: {} documents", indexed_count));
+
+    Ok(())
+}
+
 /// Build fulltext index for library book chapters of a given language.
 pub fn build_library_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &str) -> Result<()> {
     use crate::db::appdata_schema::book_spine_items::dsl as spine_dsl;
@@ -342,10 +417,11 @@ pub fn get_dict_word_languages(dict_db: &DatabaseHandle) -> Result<Vec<String>> 
         .collect())
 }
 
-/// Build all fulltext indexes for all languages found in both databases.
+/// Build all fulltext indexes for all languages found in the databases.
 pub fn build_all_indexes(
     appdata_db: &DatabaseHandle,
     dict_db: &DatabaseHandle,
+    dpd_db: &DatabaseHandle,
     paths: &AppGlobalPaths,
 ) -> Result<()> {
     info("Building all fulltext indexes...");
@@ -370,6 +446,9 @@ pub fn build_all_indexes(
     for lang in &library_langs {
         build_library_index(appdata_db, &paths.library_index_dir, lang)?;
     }
+
+    // DPD bold-definitions commentary is Pāli only.
+    build_bold_definitions_index(dpd_db, &paths.bold_definitions_index_dir, "pli")?;
 
     write_version_file(&paths.index_dir)?;
 

@@ -1,11 +1,12 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 use diesel::prelude::*;
+use diesel::sql_query;
 use diesel::sql_types::{Text, Integer};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde_json;
 use serde::{Serialize, Deserialize};
 
@@ -13,7 +14,7 @@ use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
 
 use crate::{get_app_data, get_create_simsapa_app_assets_path, normalize_path_for_sqlite};
-use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text};
+use crate::helpers::{compact_rich_text, word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text};
 use crate::pali_stemmer::pali_stem;
 use crate::pali_sort::{pali_sort_key, sort_search_results_natural};
 use crate::types::SearchResult;
@@ -385,6 +386,23 @@ impl DpdDbHandle {
         Ok(results)
     }
 
+    /// Look up a bold-definition row by its computed `uid` (e.g.
+    /// `"dhammo/mn1"` — lowercased bold + "/" + lowercased ref_code, with
+    /// collision disambiguation added by the bootstrap step).
+    pub fn get_bold_definition_by_uid(&self, uid: &str) -> Option<crate::db::dpd_models::BoldDefinition> {
+        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+        use crate::db::dpd_models::BoldDefinition;
+
+        let db_conn = &mut self.get_conn().ok()?;
+        bd_dsl::bold_definitions
+            .filter(bd_dsl::uid.eq(uid))
+            .select(BoldDefinition::as_select())
+            .first::<BoldDefinition>(db_conn)
+            .optional()
+            .ok()
+            .flatten()
+    }
+
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
         match self.dpd_lookup(query, false, true) {
             Ok(res) => {
@@ -544,6 +562,130 @@ pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf
         }
     }
 
+    // Populate derived columns on `bold_definitions` (uid, commentary_plain)
+    // before creating indexes — the B-tree script creates a UNIQUE INDEX on
+    // bold_definitions.uid, which depends on population having run.
+    populate_bold_definitions_derived_columns(&output_path)
+        .map_err(|e| format!("{}", e))?;
+
+    create_dpd_indexes(&output_path).map_err(|e| format!("{}", e))?;
+
+    Ok(())
+}
+
+#[derive(QueryableByName)]
+struct BoldDefColInfo {
+    #[diesel(sql_type = Text)]
+    name: String,
+}
+
+#[derive(QueryableByName)]
+struct BoldDefCountRow {
+    #[diesel(sql_type = Integer)]
+    c: i32,
+}
+
+#[derive(QueryableByName)]
+struct BoldDefRow {
+    #[diesel(sql_type = Integer)]
+    id: i32,
+    #[diesel(sql_type = Text)]
+    bold: String,
+    #[diesel(sql_type = Text)]
+    ref_code: String,
+    #[diesel(sql_type = Text)]
+    commentary: String,
+}
+
+/// Add `uid` and `commentary_plain` columns to `bold_definitions` and
+/// populate them. Idempotent: skipped if all rows already have non-empty uid.
+pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<()> {
+    info("populate_bold_definitions_derived_columns()");
+
+    let abs = fs::canonicalize(dpd_db_path).unwrap_or_else(|_| dpd_db_path.to_path_buf());
+    let database_url = abs
+        .to_str()
+        .context("dpd.sqlite3 path is not valid UTF-8")?
+        .to_string();
+
+    let mut conn = SqliteConnection::establish(&database_url)
+        .with_context(|| format!("Failed to connect to {}", database_url))?;
+
+    // Pre-check column existence (SQLite ADD COLUMN has no IF NOT EXISTS).
+    let cols: Vec<BoldDefColInfo> = sql_query("PRAGMA table_info(bold_definitions)")
+        .load(&mut conn)
+        .context("PRAGMA table_info(bold_definitions) failed")?;
+    let has_uid = cols.iter().any(|c| c.name == "uid");
+    let has_commentary_plain = cols.iter().any(|c| c.name == "commentary_plain");
+
+    if !has_uid {
+        sql_query("ALTER TABLE bold_definitions ADD COLUMN uid TEXT NOT NULL DEFAULT ''")
+            .execute(&mut conn)
+            .context("Failed to ADD COLUMN uid")?;
+    }
+    if !has_commentary_plain {
+        sql_query("ALTER TABLE bold_definitions ADD COLUMN commentary_plain TEXT NOT NULL DEFAULT ''")
+            .execute(&mut conn)
+            .context("Failed to ADD COLUMN commentary_plain")?;
+    }
+
+    // Idempotency: if all rows already have non-empty uid, skip.
+    let missing: Vec<BoldDefCountRow> = sql_query(
+        "SELECT COUNT(*) AS c FROM bold_definitions WHERE uid IS NULL OR uid = ''",
+    )
+    .load(&mut conn)?;
+    let total: Vec<BoldDefCountRow> = sql_query("SELECT COUNT(*) AS c FROM bold_definitions").load(&mut conn)?;
+    let missing_n = missing.first().map(|r| r.c).unwrap_or(0);
+    let total_n = total.first().map(|r| r.c).unwrap_or(0);
+    if total_n > 0 && missing_n == 0 {
+        info("bold_definitions.uid already populated; skipping");
+        return Ok(());
+    }
+
+    // Load all rows in deterministic order.
+    let rows: Vec<BoldDefRow> = sql_query(
+        "SELECT id, bold, ref_code, commentary FROM bold_definitions ORDER BY id",
+    )
+    .load(&mut conn)
+    .context("Failed to load bold_definitions rows")?;
+
+    info(&format!(
+        "Populating uid/commentary_plain for {} bold_definitions rows",
+        rows.len()
+    ));
+
+    // Compute uids with collision disambiguation on lowercased (bold, ref_code):
+    //   count == 1: "{bold}/{ref_code}"
+    //   count == N (>=2): "{bold} N/{ref_code}"
+    let mut seen: HashMap<(String, String), u32> = HashMap::new();
+    let mut updates: Vec<(i32, String, String)> = Vec::with_capacity(rows.len());
+    for r in &rows {
+        let bold_lc = r.bold.to_lowercase();
+        let ref_lc = r.ref_code.to_lowercase();
+        let n = seen.entry((bold_lc.clone(), ref_lc.clone())).or_insert(0);
+        *n += 1;
+        let uid = if *n == 1 {
+            format!("{}/{}", bold_lc, ref_lc)
+        } else {
+            format!("{} {}/{}", bold_lc, *n, ref_lc)
+        };
+        let commentary_plain = compact_rich_text(&r.commentary);
+        updates.push((r.id, uid, commentary_plain));
+    }
+
+    // Apply all updates in a single transaction.
+    conn.transaction::<_, anyhow::Error, _>(|conn| {
+        for (id, uid, cp) in &updates {
+            sql_query("UPDATE bold_definitions SET uid = ?, commentary_plain = ? WHERE id = ?")
+                .bind::<Text, _>(uid)
+                .bind::<Text, _>(cp)
+                .bind::<Integer, _>(*id)
+                .execute(conn)?;
+        }
+        Ok(())
+    })?;
+
+    info(&format!("Updated {} bold_definitions rows", updates.len()));
     Ok(())
 }
 
@@ -741,6 +883,26 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
 
     replace_all_niggahitas(&mut db_conn)?;
 
+    Ok(())
+}
+
+/// Run the DPD index SQL scripts (B-tree then FTS5) against the given DPD
+/// sqlite database. Split from `migrate_dpd` so the CLI bootstrap can defer
+/// index creation until after derived-column population (e.g.
+/// `bold_definitions.uid`), which the scripts depend on.
+pub fn create_dpd_indexes(dpd_db_path: &Path) -> Result<(), diesel::result::Error> {
+    info("create_dpd_indexes()");
+
+    let abs_path = normalize_path_for_sqlite(
+        fs::canonicalize(dpd_db_path).unwrap_or(dpd_db_path.to_path_buf()),
+    );
+    let database_url = format!(
+        "sqlite://{}",
+        abs_path.as_os_str().to_str().expect("os_str Error!")
+    );
+    let mut db_conn = SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+
     // Execute DPD B-tree indexes SQL script
     info("Executing DPD B-tree indexes script...");
     let sql_content = include_str!("../../../scripts/dpd-btree-indexes.sql");
@@ -788,11 +950,25 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
     if let Err(e) = crate::helpers::run_fts5_indexes_sql_script(dpd_db_path, &fts5_script_path) {
         return Err(diesel::result::Error::DatabaseError(
             diesel::result::DatabaseErrorKind::Unknown,
-            Box::new(format!("Failed to run DPD FTS5 indexes script: {}", e))
+            Box::new(format!("Failed to run DPD FTS5 indexes script: {}", e)),
         ));
     }
 
     info("Successfully created DPD FTS5 indexes");
+
+    // Execute DPD bold_definitions FTS5 indexes SQL script using sqlite3 CLI
+    info("Executing DPD bold_definitions FTS5 indexes script using sqlite3 CLI...");
+    // Path is relative to cli/ module folder
+    let bold_defs_fts5_script_path = std::path::PathBuf::from("../scripts/dpd-bold-definitions-fts5-indexes.sql");
+
+    if let Err(e) = crate::helpers::run_fts5_indexes_sql_script(dpd_db_path, &bold_defs_fts5_script_path) {
+        return Err(diesel::result::Error::DatabaseError(
+            diesel::result::DatabaseErrorKind::Unknown,
+            Box::new(format!("Failed to run DPD bold_definitions FTS5 indexes script: {}", e)),
+        ));
+    }
+
+    info("Successfully created DPD bold_definitions FTS5 indexes");
 
     Ok(())
 }

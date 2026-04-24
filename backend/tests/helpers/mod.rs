@@ -27,7 +27,9 @@ pub fn get_contains_params_with_lang(lang: Option<String>) -> SearchParams {
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     }
 }
 
@@ -46,7 +48,9 @@ pub fn get_uid_params_with_lang(lang: Option<String>) -> SearchParams {
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     }
 }
 
@@ -65,7 +69,9 @@ pub fn get_uid_params() -> SearchParams {
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     }
 }
 
@@ -87,7 +93,9 @@ pub fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQuer
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     };
 
     SearchQueryTask::new(

@@ -1091,7 +1091,9 @@ impl qobject::SuttaBridge {
                     include_cst_commentary: true,
                     nikaya_prefix: None,
                     uid_prefix: None,
+                    uid_suffix: None,
                     include_ms_mula: true,
+                    include_comm_bold_definitions: true,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -2400,6 +2402,7 @@ impl qobject::SuttaBridge {
             match simsapa_backend::search::indexer::build_all_indexes(
                 &app_data.dbm.appdata,
                 &app_data.dbm.dictionaries,
+                &app_data.dbm.dpd,
                 paths,
             ) {
                 Ok(()) => {

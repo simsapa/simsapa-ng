@@ -24,3 +24,41 @@ html.dark, body.dark {
 .dark .word-heading .word-title h1 {
   color: #E0E3E9;
 }
+
+/* DPD bold-definition (commentary excerpt) result rendering */
+
+.bold-definition-header {
+  font-size: 0.85rem;
+  color: #6b6b6b;
+  padding: 6pt 0 4pt 0;
+  border-bottom: 1px solid #d9c38a;
+  margin-bottom: 8pt;
+}
+
+.dark .bold-definition-header {
+  color: #9fa6b2;
+  border-bottom-color: #3a4049;
+}
+
+.bold-definition-body {
+  padding: 4pt 0;
+  line-height: 1.5;
+}
+
+.bold-definition-body .headword {
+  font-weight: 700;
+  margin-right: 0.4em;
+}
+
+.bold-definition-footer {
+  font-size: 0.8rem;
+  color: #8a8a8a;
+  padding-top: 8pt;
+  margin-top: 8pt;
+  border-top: 1px solid #d9c38a;
+}
+
+.dark .bold-definition-footer {
+  color: #8a919b;
+  border-top-color: #3a4049;
+}

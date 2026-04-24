@@ -96,7 +96,9 @@ pub struct SearchParams {
     pub include_cst_commentary: bool,
     pub nikaya_prefix: Option<String>,
     pub uid_prefix: Option<String>,
+    pub uid_suffix: Option<String>,
     pub include_ms_mula: bool,
+    pub include_comm_bold_definitions: bool,
 }
 
 impl Default for SearchParams {
@@ -114,7 +116,9 @@ impl Default for SearchParams {
             include_cst_commentary: true,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             include_ms_mula: true,
+            include_comm_bold_definitions: true,
         }
     }
 }

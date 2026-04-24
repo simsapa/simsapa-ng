@@ -347,6 +347,13 @@ RELEASE_CHANNEL=development
             Err(e) => logger::warn(&format!("Failed to get dict_word languages: {}", e)),
         }
 
+        // Build the tantivy fulltext index over bold_definitions.commentary_plain.
+        // Commentary text is Pāli — lang = "pli" (matches DPD dictionary entries).
+        match indexer::build_bold_definitions_index(&app_data.dbm.dpd, &paths.bold_definitions_index_dir, "pli") {
+            Ok(_) => {}
+            Err(e) => logger::warn(&format!("Failed to build bold definitions index: {}", e)),
+        }
+
         // Build library indexes for all available languages
         match indexer::get_library_languages(&app_data.dbm.appdata) {
             Ok(library_langs) => {
