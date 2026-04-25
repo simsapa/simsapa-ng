@@ -84,6 +84,14 @@ pub struct SearchQueryTask<'a> {
     pub include_comm_bold_definitions: bool,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
+    /// Per-call SQL fetch budget. Set by `results_page` based on `page_num`
+    /// and uid_suffix presence: small (`(page_num+1) * page_len + headroom`)
+    /// when only Rust-side slicing is needed, escalates to `SAFETY_LIMIT_SQL`
+    /// when uid_suffix forces a full post-fetch filter.
+    pub fetch_limit_sql: i64,
+    /// Per-call tantivy fetch budget; mirrors `fetch_limit_sql` for tantivy
+    /// `TopDocs::with_limit`.
+    pub fetch_limit_tantivy: usize,
 }
 
 impl<'a> SearchQueryTask<'a> {
@@ -138,6 +146,8 @@ impl<'a> SearchQueryTask<'a> {
             include_comm_bold_definitions: params.include_comm_bold_definitions,
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
+            fetch_limit_sql: SAFETY_LIMIT_SQL,
+            fetch_limit_tantivy: SAFETY_LIMIT_TANTIVY,
         }
     }
 
@@ -427,14 +437,14 @@ impl<'a> SearchQueryTask<'a> {
         // Execute query
         let results = query
             .order(uid.asc()) // Order by uid for consistent pagination
-            .limit(SAFETY_LIMIT_SQL)
+            .limit(self.fetch_limit_sql)
             .select(Sutta::as_select())
             .load::<Sutta>(db_conn)?;
 
-        if results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "uid_sutta_range_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, query_uid
+                "uid_sutta_range_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, query_uid
             ));
         }
 
@@ -467,14 +477,14 @@ impl<'a> SearchQueryTask<'a> {
         // Execute query
         let results = query
             .order(uid.asc()) // Order by uid for consistent pagination
-            .limit(SAFETY_LIMIT_SQL)
+            .limit(self.fetch_limit_sql)
             .select(Sutta::as_select())
             .load::<Sutta>(db_conn)?;
 
-        if results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "uid_sutta_like_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, query_uid
+                "uid_sutta_like_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, query_uid
             ));
         }
 
@@ -640,19 +650,19 @@ impl<'a> SearchQueryTask<'a> {
             sql_query(&select_sql)
                 .bind::<Text, _>(&like_pattern)
                 .bind::<Text, _>(&self.lang)
-                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                .bind::<BigInt, _>(self.fetch_limit_sql)
                 .load(db_conn)?
         } else {
             sql_query(&select_sql)
                 .bind::<Text, _>(&like_pattern)
-                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                .bind::<BigInt, _>(self.fetch_limit_sql)
                 .load(db_conn)?
         };
 
-        if db_results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if db_results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "suttas_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
+                "suttas_contains_match_fts5_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, &self.query_text
             ));
         }
 
@@ -690,13 +700,19 @@ impl<'a> SearchQueryTask<'a> {
         let mut all_results: Vec<DictWord> = Vec::new();
         let mut result_uids: HashSet<String> = HashSet::new();
 
+        // Push uid_prefix down to SQL so the per-phase LIMIT is spent on rows
+        // that will survive `apply_uid_filters`. `'%'` is a no-op pattern.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+
         // Phase 1: Exact matches on DpdHeadword.lemma_clean
         // dpd.lemma_clean has btree index and dpd.lemma_1 has unique constraint and so implicitly indexed.
         for term in &terms {
             let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
                 .filter(dpd_dsl::lemma_clean.eq(term))
                 .order(dpd_dsl::id)
-                .limit(SAFETY_LIMIT_SQL)
+                .limit(self.fetch_limit_sql)
                 .load::<DpdHeadword>(dpd_conn)?;
 
             // Convert DpdHeadword results to DictWord using their UIDs
@@ -721,6 +737,7 @@ impl<'a> SearchQueryTask<'a> {
                     // Match DictWord.word with DpdHeadword.lemma_1
                     let dict_word_result: Result<DictWord, _> = dict_query
                         .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .filter(dict_dsl::uid.like(&uid_prefix_pat))
                         .first::<DictWord>(db_conn);
 
                     if let Ok(dict_word) = dict_word_result {
@@ -755,7 +772,7 @@ impl<'a> SearchQueryTask<'a> {
 
             let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
                 .bind::<Text, _>(&like_pattern)
-                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                .bind::<BigInt, _>(self.fetch_limit_sql)
                 .load::<HeadwordId>(dpd_conn)?;
 
             // Fetch full DpdHeadword records using the IDs
@@ -788,6 +805,7 @@ impl<'a> SearchQueryTask<'a> {
                     // Match DictWord.word with DpdHeadword.lemma_1
                     let dict_word_result: Result<DictWord, _> = dict_query
                         .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .filter(dict_dsl::uid.like(&uid_prefix_pat))
                         .first::<DictWord>(db_conn);
 
                     if let Ok(dict_word) = dict_word_result {
@@ -804,7 +822,9 @@ impl<'a> SearchQueryTask<'a> {
 
             // Build the FTS5 query with source filtering
             // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-            // dict_label is available in the FTS table for filtering
+            // dict_label is available in the FTS table for filtering.
+            // Always include `d.uid LIKE ?` (default '%') so uid_prefix push-down
+            // costs only a constant bind, not a divergent SQL string.
             let fts_query = if self.source.is_some() {
                 if self.source_include {
                     String::from(
@@ -812,7 +832,7 @@ impl<'a> SearchQueryTask<'a> {
                         SELECT d.*
                         FROM dict_words_fts f
                         JOIN dict_words d ON f.dict_word_id = d.id
-                        WHERE f.definition_plain LIKE ? AND f.dict_label = ?
+                        WHERE f.definition_plain LIKE ? AND f.dict_label = ? AND d.uid LIKE ?
                         ORDER BY d.id
                         LIMIT ?
                         "#
@@ -823,7 +843,7 @@ impl<'a> SearchQueryTask<'a> {
                         SELECT d.*
                         FROM dict_words_fts f
                         JOIN dict_words d ON f.dict_word_id = d.id
-                        WHERE f.definition_plain LIKE ? AND f.dict_label != ?
+                        WHERE f.definition_plain LIKE ? AND f.dict_label != ? AND d.uid LIKE ?
                         ORDER BY d.id
                         LIMIT ?
                         "#
@@ -835,7 +855,7 @@ impl<'a> SearchQueryTask<'a> {
                     SELECT d.*
                     FROM dict_words_fts f
                     JOIN dict_words d ON f.dict_word_id = d.id
-                    WHERE f.definition_plain LIKE ?
+                    WHERE f.definition_plain LIKE ? AND d.uid LIKE ?
                     ORDER BY d.id
                     LIMIT ?
                     "#
@@ -846,12 +866,14 @@ impl<'a> SearchQueryTask<'a> {
                 sql_query(&fts_query)
                     .bind::<Text, _>(&like_pattern)
                     .bind::<Text, _>(source_val)
-                    .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                    .bind::<Text, _>(&uid_prefix_pat)
+                    .bind::<BigInt, _>(self.fetch_limit_sql)
                     .load(db_conn)?
             } else {
                 sql_query(&fts_query)
                     .bind::<Text, _>(&like_pattern)
-                    .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                    .bind::<Text, _>(&uid_prefix_pat)
+                    .bind::<BigInt, _>(self.fetch_limit_sql)
                     .load(db_conn)?
             };
 
@@ -872,7 +894,7 @@ impl<'a> SearchQueryTask<'a> {
                 let ascii_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
                     .filter(dpd_dsl::word_ascii.eq(term))
                     .order(dpd_dsl::id)
-                    .limit(SAFETY_LIMIT_SQL)
+                    .limit(self.fetch_limit_sql)
                     .load::<DpdHeadword>(dpd_conn)?;
 
                 for headword in ascii_matches {
@@ -916,7 +938,7 @@ impl<'a> SearchQueryTask<'a> {
 
                     let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
                         .bind::<Text, _>(&like_pattern)
-                        .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                        .bind::<BigInt, _>(self.fetch_limit_sql)
                         .load::<HeadwordId>(dpd_conn)?;
 
                     let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
@@ -954,10 +976,10 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
-        if all_results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if all_results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "dict_words_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
+                "dict_words_contains_match_fts5_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, &self.query_text
             ));
         }
 
@@ -983,6 +1005,13 @@ impl<'a> SearchQueryTask<'a> {
         // Determine if we need language filtering
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
 
+        // Push uid_prefix down to SQL so the LIMIT is spent on rows that will
+        // survive the post-filter. Default '%' matches anything when unset,
+        // keeping the bind count constant.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+
         // --- Execute Query ---
         let db_results: Vec<BookSpineItem> = if apply_lang_filter {
             sql_query(
@@ -990,14 +1019,15 @@ impl<'a> SearchQueryTask<'a> {
                 SELECT b.*
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.content_plain LIKE ? AND f.language = ?
+                WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&self.lang)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(db_conn)?
         } else {
             sql_query(
@@ -1005,20 +1035,21 @@ impl<'a> SearchQueryTask<'a> {
                 SELECT b.*
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.content_plain LIKE ?
+                WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(db_conn)?
         };
 
-        if db_results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if db_results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "book_spine_items_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
+                "book_spine_items_contains_match_fts5_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, &self.query_text
             ));
         }
 
@@ -1084,13 +1115,13 @@ impl<'a> SearchQueryTask<'a> {
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(dpd_conn)?;
 
-        if bds.len() as i64 >= SAFETY_LIMIT_SQL {
+        if bds.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "query_bold_definitions_bold_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, q
+                "query_bold_definitions_bold_fts5 hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, q
             ));
         }
 
@@ -1139,13 +1170,13 @@ impl<'a> SearchQueryTask<'a> {
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(dpd_conn)?;
 
-        if bds.len() as i64 >= SAFETY_LIMIT_SQL {
+        if bds.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "query_bold_definitions_commentary_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, q
+                "query_bold_definitions_commentary_fts5 hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, q
             ));
         }
 
@@ -1227,14 +1258,14 @@ impl<'a> SearchQueryTask<'a> {
         // Execute query
         let db_results: Vec<Sutta> = query
             .order(uid.asc())
-            .limit(SAFETY_LIMIT_SQL)
+            .limit(self.fetch_limit_sql)
             .select(Sutta::as_select())
             .load(db_conn)?;
 
-        if db_results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if db_results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "suttas_title_match_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
+                "suttas_title_match_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, &self.query_text
             ));
         }
 
@@ -1276,7 +1307,7 @@ impl<'a> SearchQueryTask<'a> {
 
         let book_uids: Vec<String> = books_query
             .order(books_dsl::id.asc())
-            .limit(SAFETY_LIMIT_SQL)
+            .limit(self.fetch_limit_sql)
             .select(books_dsl::uid)
             .load(db_conn)?;
 
@@ -1307,7 +1338,7 @@ impl<'a> SearchQueryTask<'a> {
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&self.lang)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(db_conn)?
         } else {
             sql_query(
@@ -1321,7 +1352,7 @@ impl<'a> SearchQueryTask<'a> {
                 "#
             )
             .bind::<Text, _>(&like_pattern)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(db_conn)?
         };
 
@@ -1329,10 +1360,10 @@ impl<'a> SearchQueryTask<'a> {
             all_results.push(self.db_book_spine_item_to_result(&spine_item));
         }
 
-        if all_results.len() as i64 >= SAFETY_LIMIT_SQL {
+        if all_results.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "library_title_match_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
+                "library_title_match_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, &self.query_text
             ));
         }
 
@@ -1374,13 +1405,13 @@ impl<'a> SearchQueryTask<'a> {
 
         let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
             .bind::<Text, _>(&like_pattern)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+            .bind::<BigInt, _>(self.fetch_limit_sql)
             .load::<HeadwordId>(dpd_conn)?;
 
-        if headword_ids.len() as i64 >= SAFETY_LIMIT_SQL {
+        if headword_ids.len() as i64 >= self.fetch_limit_sql {
             warn(&format!(
-                "lemma_1_dpd_headword_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
+                "lemma_1_dpd_headword_match_fts5_all hit fetch_limit_sql={} (query='{}')",
+                self.fetch_limit_sql, &self.query_text
             ));
         }
 
@@ -1398,6 +1429,11 @@ impl<'a> SearchQueryTask<'a> {
         // Convert DpdHeadword results to SearchResults via DictWord
         let mut search_results: Vec<SearchResult> = Vec::new();
 
+        // Push uid_prefix down to SQL; '%' is a no-op pattern.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+
         for headword in headwords {
             // Try to find corresponding DictWord by matching word field to headword.lemma_1
             let mut dict_query = dict_dsl::dict_words.into_boxed();
@@ -1414,6 +1450,7 @@ impl<'a> SearchQueryTask<'a> {
             // Match DictWord.word with DpdHeadword.lemma_1
             let dict_word_result: Result<DictWord, _> = dict_query
                 .filter(dict_dsl::word.eq(&headword.lemma_1))
+                .filter(dict_dsl::uid.like(&uid_prefix_pat))
                 .first::<DictWord>(dict_conn);
 
             if let Ok(dict_word) = dict_word_result {
@@ -1598,6 +1635,29 @@ impl<'a> SearchQueryTask<'a> {
     ///   5. paginate
     ///   6. highlight only the returned page
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // Set per-call fetch budget. When uid_suffix is set, every candidate
+        // row must be materialised to filter in Rust (suffix LIKE '%x' isn't
+        // index-usable). uid_prefix is pushed down to SQL by every handler,
+        // so it doesn't force a full fetch. Otherwise, fetch only
+        // `(page_num + 1) * page_len + headroom` rows — enough to slice this
+        // page from a merged-then-filtered list while preserving Fulltext's
+        // score-merge correctness through page_num.
+        let needs_full_fetch = Self::normalized_filter(&self.uid_suffix).is_some();
+        let (sql_limit, tantivy_limit) = if needs_full_fetch {
+            (SAFETY_LIMIT_SQL, SAFETY_LIMIT_TANTIVY)
+        } else {
+            // Headroom covers the bold-definition append (each side independently
+            // bounded) plus a small buffer for de-dup losses inside handlers.
+            let n = (page_num + 1)
+                .saturating_mul(self.page_len)
+                .saturating_add(self.page_len.max(32));
+            let sql = (n as i64).min(SAFETY_LIMIT_SQL);
+            let tantivy = n.min(SAFETY_LIMIT_TANTIVY);
+            (sql, tantivy)
+        };
+        self.fetch_limit_sql = sql_limit;
+        self.fetch_limit_tantivy = tantivy_limit;
+
         let regular = self.fetch_regular_unpaginated()?;
         let bold = if self.should_fetch_bold() {
             self.fetch_bold_unpaginated()?
@@ -1627,26 +1687,23 @@ impl<'a> SearchQueryTask<'a> {
 
         let highlighted_results: Vec<SearchResult> = page
             .into_iter()
-            .map(|mut result| {
-                // Skip highlighting for DPD results (dpd_headwords, dpd_roots,
-                // dict_words with DPD source) — they already carry formatted
-                // meaning snippets from get_dpd_meaning_snippet().
-                let is_dpd_result = result.table_name == "dpd_headwords"
-                    || result.table_name == "dpd_roots"
-                    || (result.table_name == "dict_words"
-                        && result.source_uid.as_ref().is_some_and(|s| s.to_lowercase().contains("dpd")));
-
-                if !is_dpd_result {
-                    // Re-highlight the snippet based on the full query text
-                    // Note: db_sutta_to_result() already created a basic snippet.
-                    // This step applies the final highlighting spans.
-                    result.snippet = self.highlight_query_in_content(&self.query_text, &result.snippet);
-                }
-                result
-            })
+            .map(|r| self.highlight_row(r))
             .collect();
 
         Ok(highlighted_results)
+    }
+
+    fn highlight_row(&self, mut r: SearchResult) -> SearchResult {
+        let is_dpd_result = r.table_name == "dpd_headwords"
+            || r.table_name == "dpd_roots"
+            || (r.table_name == "dict_words"
+                && r.source_uid.as_ref().is_some_and(|s| s.to_lowercase().contains("dpd")));
+
+        if !is_dpd_result {
+            let q = normalize_plain_text(&self.query_text);
+            r.snippet = self.highlight_query_in_content(&q, &r.snippet);
+        }
+        r
     }
 
     // ===== Fulltext Search Methods =====
@@ -1679,7 +1736,7 @@ impl<'a> SearchQueryTask<'a> {
                 warn("No sutta fulltext indexes available.");
                 return Ok((0, Vec::new()));
             }
-            searcher.search_suttas_with_count(&query_text, &filters, SAFETY_LIMIT_TANTIVY, 0)
+            searcher.search_suttas_with_count(&query_text, &filters, self.fetch_limit_tantivy, 0)
         }) {
             Some(Ok((_total, results))) => results,
             Some(Err(e)) => return Err(e.into()),
@@ -1689,10 +1746,10 @@ impl<'a> SearchQueryTask<'a> {
             }
         };
 
-        if results.len() >= SAFETY_LIMIT_TANTIVY {
+        if results.len() >= self.fetch_limit_tantivy {
             warn(&format!(
-                "fulltext_suttas_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
-                SAFETY_LIMIT_TANTIVY, &self.query_text
+                "fulltext_suttas_all hit fetch_limit_tantivy={} (query='{}')",
+                self.fetch_limit_tantivy, &self.query_text
             ));
         }
 
@@ -1727,7 +1784,7 @@ impl<'a> SearchQueryTask<'a> {
                 warn("No dict_word fulltext indexes available.");
                 return Ok((0, Vec::new()));
             }
-            searcher.search_dict_words_with_count(&query_text, &filters, SAFETY_LIMIT_TANTIVY, 0)
+            searcher.search_dict_words_with_count(&query_text, &filters, self.fetch_limit_tantivy, 0)
         }) {
             Some(Ok((_total, results))) => results,
             Some(Err(e)) => return Err(e.into()),
@@ -1737,10 +1794,10 @@ impl<'a> SearchQueryTask<'a> {
             }
         };
 
-        if results.len() >= SAFETY_LIMIT_TANTIVY {
+        if results.len() >= self.fetch_limit_tantivy {
             warn(&format!(
-                "fulltext_dict_words_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
-                SAFETY_LIMIT_TANTIVY, &self.query_text
+                "fulltext_dict_words_all hit fetch_limit_tantivy={} (query='{}')",
+                self.fetch_limit_tantivy, &self.query_text
             ));
         }
 
@@ -1775,7 +1832,7 @@ impl<'a> SearchQueryTask<'a> {
                 warn("No library fulltext indexes available.");
                 return Ok((0, Vec::new()));
             }
-            searcher.search_library_with_count(&query_text, &filters, SAFETY_LIMIT_TANTIVY, 0)
+            searcher.search_library_with_count(&query_text, &filters, self.fetch_limit_tantivy, 0)
         }) {
             Some(Ok((_total, results))) => results,
             Some(Err(e)) => return Err(e.into()),
@@ -1785,10 +1842,10 @@ impl<'a> SearchQueryTask<'a> {
             }
         };
 
-        if results.len() >= SAFETY_LIMIT_TANTIVY {
+        if results.len() >= self.fetch_limit_tantivy {
             warn(&format!(
-                "fulltext_library_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
-                SAFETY_LIMIT_TANTIVY, &self.query_text
+                "fulltext_library_all hit fetch_limit_tantivy={} (query='{}')",
+                self.fetch_limit_tantivy, &self.query_text
             ));
         }
 
@@ -1836,7 +1893,7 @@ impl<'a> SearchQueryTask<'a> {
                 return Ok::<_, anyhow::Error>((0usize, Vec::<SearchResult>::new()));
             }
             searcher.search_bold_definitions_with_count(
-                &query_text, &filters, SAFETY_LIMIT_TANTIVY, 0,
+                &query_text, &filters, self.fetch_limit_tantivy, 0,
             )
         });
 
@@ -1846,10 +1903,10 @@ impl<'a> SearchQueryTask<'a> {
             None => Vec::new(),
         };
 
-        if results.len() >= SAFETY_LIMIT_TANTIVY {
+        if results.len() >= self.fetch_limit_tantivy {
             warn(&format!(
-                "query_bold_definitions_fulltext_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
-                SAFETY_LIMIT_TANTIVY, normalized_query
+                "query_bold_definitions_fulltext_all hit fetch_limit_tantivy={} (query='{}')",
+                self.fetch_limit_tantivy, normalized_query
             ));
         }
 

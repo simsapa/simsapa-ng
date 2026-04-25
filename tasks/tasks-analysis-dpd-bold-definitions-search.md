@@ -66,10 +66,10 @@ Source: `tasks/analysis-dpd-bold-definitions-search.md` (§7 target design, §7.
   - [x] 4.6 `self.page_len` is read-only outside the two `run_with_safety_cap_*` wrapper helpers (verified by grep — only those helpers assign it, always paired with a save/restore).
   - [x] 4.7 Audit complete. `total_hits()` consumers: `bridges/src/api.rs:897, :987` and `bridges/src/sutta_bridge.rs:140`. All three read `total_hits()` strictly after `results_page()` returns; the new pipeline writes `db_query_hits_count = filtered.len()` exactly once at the end of `results_page`. No mid-flight reads.
 
-- [ ] 5.0 Stage E — Highlight non-DPD snippets with the normalized query (§2.4)
-  - [ ] 5.1 Introduce `highlight_row(&self, r: SearchResult) -> SearchResult` per §7.4 that skips DPD rows (`dpd_headwords`, `dpd_roots`, or `dict_words` with a DPD `source_uid`) and otherwise calls `highlight_query_in_content(&normalize_plain_text(&self.query_text), &r.snippet)`.
-  - [ ] 5.2 Route the Stage-D page through `highlight_row` (replacing the inline `highlight_query_in_content` call site at ~lines 2163–2173).
-  - [ ] 5.3 Confirm `bold_definitions` rows now receive highlighted spans for diacritic queries (manual spot-check against the real DB).
+- [x] 5.0 Stage E — Highlight non-DPD snippets with the normalized query (§2.4)
+  - [x] 5.1 Introduced `highlight_row(&self, r: SearchResult) -> SearchResult` per §7.4 — skips DPD rows and otherwise calls `highlight_query_in_content(&normalize_plain_text(&self.query_text), &r.snippet)`.
+  - [x] 5.2 Replaced the inline closure in `results_page` with `.map(|r| self.highlight_row(r))`.
+  - [ ] 5.3 Confirm `bold_definitions` rows now receive highlighted spans for diacritic queries (manual spot-check against the real DB — pending user verification).
 
 - [ ] 6.0 Stage F — Unified uid prefix/suffix filter (§7.5)
   - [ ] 6.1 Simplify `apply_uid_filters` to the §7.5 form: normalize prefix/suffix once, early-return on both-empty, then filter by lowercased `r.uid`.
