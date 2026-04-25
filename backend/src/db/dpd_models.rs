@@ -268,22 +268,35 @@ pub struct FamilyIdiom {
     pub count: i32,
 }
 
-#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
+#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = bold_definitions)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct BoldDefinition {
+    #[diesel(sql_type = diesel::sql_types::Integer)]
     pub id: i32,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub file_name: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub ref_code: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub nikaya: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub book: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub title: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub subhead: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub bold: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub bold_end: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub commentary: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub uid: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub commentary_plain: String,
+    #[diesel(sql_type = diesel::sql_types::Text)]
     pub bold_ascii: String,
 }
 

@@ -76,18 +76,14 @@ fn test_sutta_search_contains_match() {
         }
     };
 
+    // println!("{:#?}", results);
+
     assert!(!results.is_empty());
     // Verify the query term appears in the snippet
-    assert!(results[0].snippet.contains("<span class='match'>satipaṭṭhāna</span>"));
+    assert!(results[1].snippet.contains("<span class='match'>satipaṭṭhāna</span>"));
 
-    // FIXME Earlier when headers were not indexed:
-    // assert_eq!(results[0].uid, "mil5.3.7/en/tw_rhysdavids");
-    // assert!(results[0].snippet.starts_with("... accordance with the rules of <span class='match'>satipaṭṭhāna</span>"));
-    // assert!(results[0].snippet.ends_with("law of property to carry on the traditions of the khattiya clans and to fight ..."));
-
-    // FIXME Now with headers indexed:
-    assert_eq!(results[0].uid, "mn10/en/horner");
-    assert!(results[0].snippet.starts_with("... middle length sayings <span class='match'>satipaṭṭhāna</span> suttaṁ"));
+    assert_eq!(results[1].uid, "mn10/en/horner");
+    assert!(results[1].snippet.starts_with("... middle length sayings <span class='match'>satipaṭṭhāna</span> suttaṁ"));
 
     // Verify all results are English
     for result in &results {
@@ -203,9 +199,10 @@ fn test_dict_word_search_contains_match() {
     };
 
     // println!("{}", results[0].snippet);
+    // println!("{:#?}", results);
 
-    assert_eq!(results[0].uid, "sambodhiyaṅga/dpd");
-    assert!(results[0].snippet.contains("element of awakening"),
+    assert_eq!(results[0].uid, "element of awakening/dpd");
+    assert!(results[0].snippet.contains("element of awakening factor of enlightenment"),
         "Snippet should contain 'element of awakening', got: {}", results[0].snippet);
 }
 

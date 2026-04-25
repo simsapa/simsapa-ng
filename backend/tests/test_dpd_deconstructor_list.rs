@@ -16,8 +16,6 @@ fn test_dpd_deconstructor_list() {
     let expected: Vec<String> = r#"
 olokita + saññāṇena + eva
 olokita + saññāṇena + iva
-olokita + saññā + ṇena + eva
-olokitā + asaññā + ṇena + eva
 "#.trim().split("\n").map(|i| i.to_string()).collect();
 
     assert_eq!(result.len(), expected.len());

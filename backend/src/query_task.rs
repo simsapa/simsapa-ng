@@ -22,6 +22,15 @@ struct CountResult {
     count: i64,
 }
 
+/// Upper bound on rows materialised by an unpaginated mode handler before
+/// merge/filter/pagination in `results_page`. Applied as `LIMIT` on FTS5
+/// SQL queries. Keep in sync with `SAFETY_LIMIT_TANTIVY`.
+pub(crate) const SAFETY_LIMIT_SQL: i64 = 100_000;
+
+/// Upper bound on tantivy hits returned to `results_page` per index.
+/// Passed to `TopDocs::with_limit`. Keep in sync with `SAFETY_LIMIT_SQL`.
+pub(crate) const SAFETY_LIMIT_TANTIVY: usize = 100_000;
+
 /// Sanitize a user-supplied prefix for direct embedding in a SQL LIKE pattern.
 /// Returns `Some(prefix_lowercase)` if the input is non-empty and contains only
 /// safe characters (alphanumeric, dot, hyphen, underscore, slash); otherwise `None`.
@@ -1365,18 +1374,12 @@ impl<'a> SearchQueryTask<'a> {
         &self,
         query: &str,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
         use crate::db::dpd_models::BoldDefinition;
+        use diesel::sql_types::BigInt;
 
         let q = query.trim().to_lowercase();
         if q.is_empty() {
             return Ok(Vec::new());
-        }
-
-        #[derive(QueryableByName)]
-        struct BdId {
-            #[diesel(sql_type = diesel::sql_types::Integer)]
-            bold_definitions_id: i32,
         }
 
         let app_data = get_app_data();
@@ -1398,32 +1401,30 @@ impl<'a> SearchQueryTask<'a> {
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
         let sql = r#"
-            SELECT f.bold_definitions_id AS bold_definitions_id
+            SELECT bd.*
             FROM bold_definitions_bold_fts f
             JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
             WHERE (f.bold LIKE ? OR f.bold_ascii LIKE ?)
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
-            ORDER BY f.bold_definitions_id
+            ORDER BY bd.id
+            LIMIT ?
         "#;
 
-        let rows: Vec<BdId> = sql_query(sql)
+        let bds: Vec<BoldDefinition> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
+            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
             .load(dpd_conn)?;
 
-        let ids: Vec<i32> = rows.iter().map(|r| r.bold_definitions_id).collect();
-        if ids.is_empty() {
-            return Ok(Vec::new());
+        if bds.len() as i64 >= SAFETY_LIMIT_SQL {
+            warn(&format!(
+                "query_bold_definitions_bold_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, q
+            ));
         }
-
-        let bds: Vec<BoldDefinition> = bd_dsl::bold_definitions
-            .filter(bd_dsl::id.eq_any(&ids))
-            .order(bd_dsl::id)
-            .select(BoldDefinition::as_select())
-            .load(dpd_conn)?;
 
         Ok(bds.iter().map(bold_definition_to_search_result).collect())
     }
@@ -1435,18 +1436,12 @@ impl<'a> SearchQueryTask<'a> {
         &self,
         normalized_query: &str,
     ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
         use crate::db::dpd_models::BoldDefinition;
+        use diesel::sql_types::BigInt;
 
         let q = normalized_query.trim();
         if q.is_empty() {
             return Ok(Vec::new());
-        }
-
-        #[derive(QueryableByName)]
-        struct BdId {
-            #[diesel(sql_type = diesel::sql_types::Integer)]
-            bold_definitions_id: i32,
         }
 
         let app_data = get_app_data();
@@ -1462,31 +1457,29 @@ impl<'a> SearchQueryTask<'a> {
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
         let sql = r#"
-            SELECT f.bold_definitions_id AS bold_definitions_id
+            SELECT bd.*
             FROM bold_definitions_fts f
             JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
             WHERE f.commentary_plain LIKE ?
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
-            ORDER BY f.bold_definitions_id
+            ORDER BY bd.id
+            LIMIT ?
         "#;
 
-        let rows: Vec<BdId> = sql_query(sql)
+        let bds: Vec<BoldDefinition> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
+            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
             .load(dpd_conn)?;
 
-        let ids: Vec<i32> = rows.iter().map(|r| r.bold_definitions_id).collect();
-        if ids.is_empty() {
-            return Ok(Vec::new());
+        if bds.len() as i64 >= SAFETY_LIMIT_SQL {
+            warn(&format!(
+                "query_bold_definitions_commentary_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, q
+            ));
         }
-
-        let bds: Vec<BoldDefinition> = bd_dsl::bold_definitions
-            .filter(bd_dsl::id.eq_any(&ids))
-            .order(bd_dsl::id)
-            .select(BoldDefinition::as_select())
-            .load(dpd_conn)?;
 
         Ok(bds.iter().map(bold_definition_to_search_result).collect())
     }
@@ -2338,6 +2331,183 @@ impl<'a> SearchQueryTask<'a> {
     /// Returns the total number of hits found in the last database query.
     pub fn total_hits(&self) -> i64 {
         self.db_query_hits_count
+    }
+
+    // =====================================================================
+    // Stage B — unpaginated `_all` mode handlers.
+    //
+    // These are transitional wrappers around the paginated handlers above:
+    // they enlarge `self.page_len` to a SAFETY_LIMIT, call the underlying
+    // handler with `page_num = 0`, then restore state. Per task 2.6 they do
+    // NOT own `self.db_query_hits_count` — the original value is preserved
+    // across the call. Stage D inlines these and deletes the paginated
+    // handlers entirely, at which point the wrapper indirection goes away.
+    // =====================================================================
+
+    fn run_with_safety_cap_sql<F>(&mut self, label: &str, mut f: F) -> Result<Vec<SearchResult>, Box<dyn Error>>
+    where
+        F: FnMut(&mut Self) -> Result<Vec<SearchResult>, Box<dyn Error>>,
+    {
+        let saved_page_len = self.page_len;
+        let saved_count = self.db_query_hits_count;
+        self.page_len = SAFETY_LIMIT_SQL as usize;
+        let r = f(self);
+        self.page_len = saved_page_len;
+        self.db_query_hits_count = saved_count;
+        let results = r?;
+        if results.len() as i64 >= SAFETY_LIMIT_SQL {
+            warn(&format!(
+                "{} hit SAFETY_LIMIT_SQL={} (mode={:?}, area={:?}, query='{}')",
+                label, SAFETY_LIMIT_SQL, self.search_mode, self.search_area, self.query_text
+            ));
+        }
+        Ok(results)
+    }
+
+    fn run_with_safety_cap_tantivy<F>(&mut self, label: &str, mut f: F) -> Result<Vec<SearchResult>, Box<dyn Error>>
+    where
+        F: FnMut(&mut Self) -> Result<Vec<SearchResult>, Box<dyn Error>>,
+    {
+        let saved_page_len = self.page_len;
+        let saved_count = self.db_query_hits_count;
+        self.page_len = SAFETY_LIMIT_TANTIVY;
+        let r = f(self);
+        self.page_len = saved_page_len;
+        self.db_query_hits_count = saved_count;
+        let results = r?;
+        if results.len() >= SAFETY_LIMIT_TANTIVY {
+            warn(&format!(
+                "{} hit SAFETY_LIMIT_TANTIVY={} (mode={:?}, area={:?}, query='{}')",
+                label, SAFETY_LIMIT_TANTIVY, self.search_mode, self.search_area, self.query_text
+            ));
+        }
+        Ok(results)
+    }
+
+    fn suttas_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("suttas_contains_match_fts5_all",
+            |this| this.suttas_contains_match_fts5(0))
+    }
+
+    fn suttas_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("suttas_title_match_all",
+            |this| this.suttas_title_match(0))
+    }
+
+    fn dict_words_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("dict_words_contains_match_fts5_all",
+            |this| this.dict_words_contains_match_fts5(0))
+    }
+
+    fn book_spine_items_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("book_spine_items_contains_match_fts5_all",
+            |this| this.book_spine_items_contains_match_fts5(0))
+    }
+
+    fn lemma_1_dpd_headword_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("lemma_1_dpd_headword_match_fts5_all",
+            |this| this.lemma_1_dpd_headword_match_fts5(0))
+    }
+
+    fn library_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("library_title_match_all",
+            |this| this.library_title_match(0))
+    }
+
+    fn uid_sutta_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_sql("uid_sutta_all", |this| this.uid_sutta(0))
+    }
+
+    fn uid_word_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // uid_word does not paginate; preserve db_query_hits_count for Stage D.
+        let saved_count = self.db_query_hits_count;
+        let results = self.uid_word();
+        self.db_query_hits_count = saved_count;
+        results
+    }
+
+    fn uid_book_spine_item_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let saved_count = self.db_query_hits_count;
+        let results = self.uid_book_spine_item();
+        self.db_query_hits_count = saved_count;
+        results
+    }
+
+    pub fn dpd_lookup_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // The underlying dpd_lookup call below paginates over an in-memory
+        // Vec; using SAFETY_LIMIT_SQL as page_len returns everything on page 0.
+        self.run_with_safety_cap_sql("dpd_lookup_all", |this| this.dpd_lookup(0))
+    }
+
+    fn fulltext_suttas_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_tantivy("fulltext_suttas_all",
+            |this| this.fulltext_suttas(0))
+    }
+
+    fn fulltext_dict_words_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_tantivy("fulltext_dict_words_all",
+            |this| this.fulltext_dict_words(0))
+    }
+
+    fn fulltext_library_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.run_with_safety_cap_tantivy("fulltext_library_all",
+            |this| this.fulltext_library(0))
+    }
+
+    /// Stage C helper: returns up to SAFETY_LIMIT_TANTIVY score-sorted bold
+    /// fulltext hits from page 0. The returned `SearchResult.score` is preserved
+    /// for downstream score-aware merging.
+    fn query_bold_definitions_fulltext_all(
+        &self,
+        normalized_query: &str,
+    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        use crate::with_fulltext_searcher;
+        use crate::search::searcher::SearchFilters;
+
+        // Bold fetching deliberately passes uid_prefix/uid_suffix=None and an
+        // empty SearchFilters: uid gating is owned by the unified Rust filter
+        // in Stage F (analysis §7 decision 2.6). Other filters (lang, source,
+        // CST/MS) are not meaningful for bold definitions. Do not "fix" this
+        // by re-pushing filters down — the FTS5 bold helpers retain their
+        // optional `bd.uid LIKE ?` push-down purely as an optimisation.
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya_prefix: None,
+            uid_prefix: None,
+            sutta_ref: None,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
+        };
+
+        let query_text = normalized_query.to_string();
+
+        let out = with_fulltext_searcher(|searcher| {
+            if !searcher.has_bold_definitions_index() {
+                return Ok::<_, anyhow::Error>((0usize, Vec::<SearchResult>::new()));
+            }
+            searcher.search_bold_definitions_with_count(
+                &query_text, &filters, SAFETY_LIMIT_TANTIVY, 0,
+            )
+        });
+
+        let results = match out {
+            Some(Ok((_total, results))) => results,
+            Some(Err(e)) => return Err(e.into()),
+            None => Vec::new(),
+        };
+
+        if results.len() >= SAFETY_LIMIT_TANTIVY {
+            warn(&format!(
+                "query_bold_definitions_fulltext_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
+                SAFETY_LIMIT_TANTIVY, normalized_query
+            ));
+        }
+
+        Ok(results)
     }
 
 }

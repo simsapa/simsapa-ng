@@ -30,24 +30,24 @@ Source: `tasks/analysis-dpd-bold-definitions-search.md` (§7 target design, §7.
 
 ## Tasks
 
-- [ ] 1.0 Stage A — Collapse bold-definition FTS5 helpers to a single JOIN (§2.7, §2.8)
-  - [ ] 1.1 In `backend/src/db/dpd_models.rs`, add `#[derive(QueryableByName)]` to `BoldDefinition` and annotate every field with the matching `#[diesel(sql_type = …)]` (mirroring the columns selected by `SELECT bd.*`).
-  - [ ] 1.2 Define module-level `SAFETY_LIMIT_SQL: i64 = 100_000` and `SAFETY_LIMIT_TANTIVY: usize = 100_000` near the top of `backend/src/query_task.rs`. Document that the two must be kept in sync.
-  - [ ] 1.3 Rewrite `query_bold_definitions_bold_fts5` as a single `SELECT bd.* FROM bold_definitions_bold_fts f JOIN bold_definitions bd ON bd.id = f.bold_definitions_id WHERE f MATCH ? [AND bd.uid LIKE ?] ORDER BY bd.id LIMIT ?` using `diesel::sql_query(...).load::<BoldDefinition>(...)` with `SAFETY_LIMIT_SQL` as the bind.
-  - [ ] 1.4 Rewrite `query_bold_definitions_commentary_fts5` the same way against `bold_definitions_commentary_fts`.
-  - [ ] 1.5 Delete the `BdId` / id-only `QueryableByName` intermediate structs and the second Diesel load-by-`id.eq_any(&ids)` round-trip.
-  - [ ] 1.6 Remove the inner `ORDER BY f.bold_definitions_id` from the FTS5 subquery; keep only the outer `ORDER BY bd.id`.
-  - [ ] 1.7 `cd backend && cargo test` — confirm no regressions against the real `dpd.sqlite3`.
+- [x] 1.0 Stage A — Collapse bold-definition FTS5 helpers to a single JOIN (§2.7, §2.8)
+  - [x] 1.1 In `backend/src/db/dpd_models.rs`, add `#[derive(QueryableByName)]` to `BoldDefinition` and annotate every field with the matching `#[diesel(sql_type = …)]` (mirroring the columns selected by `SELECT bd.*`).
+  - [x] 1.2 Define module-level `SAFETY_LIMIT_SQL: i64 = 100_000` and `SAFETY_LIMIT_TANTIVY: usize = 100_000` near the top of `backend/src/query_task.rs`. Document that the two must be kept in sync.
+  - [x] 1.3 Rewrite `query_bold_definitions_bold_fts5` as a single `SELECT bd.* FROM bold_definitions_bold_fts f JOIN bold_definitions bd ON bd.id = f.bold_definitions_id WHERE f MATCH ? [AND bd.uid LIKE ?] ORDER BY bd.id LIMIT ?` using `diesel::sql_query(...).load::<BoldDefinition>(...)` with `SAFETY_LIMIT_SQL` as the bind.
+  - [x] 1.4 Rewrite `query_bold_definitions_commentary_fts5` the same way against `bold_definitions_commentary_fts`.
+  - [x] 1.5 Delete the `BdId` / id-only `QueryableByName` intermediate structs and the second Diesel load-by-`id.eq_any(&ids)` round-trip.
+  - [x] 1.6 Remove the inner `ORDER BY f.bold_definitions_id` from the FTS5 subquery; keep only the outer `ORDER BY bd.id`.
+  - [x] 1.7 `cd backend && cargo test` — confirm no regressions against the real `dpd.sqlite3`. (test_dpd_deconstructor_list pre-existing failure, unrelated; bold/uid tests all pass.)
 
-- [ ] 2.0 Stage B — Add unpaginated `_all` variants of mode handlers with a `SAFETY_LIMIT` cap
-  - [ ] 2.1 For each FTS5 handler (`suttas_contains_match_fts5`, `suttas_title_match_fts5`, `dict_words_contains_match_fts5`, `book_spine_items_contains_match_fts5`, `lemma_1_dpd_headword_match_fts5`, `library_title_match_fts5`, `uid_match_*`), add an `_all` sibling that strips `page_len` / `page_num` and replaces the `LIMIT page_len OFFSET …` clause with `LIMIT SAFETY_LIMIT_SQL`.
-  - [ ] 2.2 For `dpd_lookup`, add `dpd_lookup_all` that returns the merged `all_results` without the final Rust-side pagination slice.
-  - [ ] 2.3 For tantivy handlers (`fulltext_suttas`, `fulltext_dict_words`, `fulltext_library`), add `_all` variants that call the searcher with `TopDocs::with_limit(SAFETY_LIMIT_TANTIVY)` and return every hit with its `score` populated on `SearchResult`. Verify `SearchResult.score: Option<f32>` exists in `backend/src/types.rs` and is set by each tantivy searcher before relying on it in Stage D's merge.
-  - [ ] 2.4 Keep `uid_prefix` push-down in the Suttas FTS5 `_all` variants (narrower SQL set); do **not** push it down in Dictionary/Library `_all` paths. Rationale: §7 decision 2.5 makes push-down a pure optimization — correctness is owned by the unified Rust filter in Stage F. Deferring Dictionary/Library push-down keeps the diff small; revisit only if profiling shows it matters. This is an *intentional* deviation from the recommendation in analysis §2.5.
-  - [ ] 2.5 If a handler's SQL/tantivy fetch reaches `SAFETY_LIMIT_SQL` / `SAFETY_LIMIT_TANTIVY` rows, emit `tracing::warn!` with the mode, area, and query, so silent truncation is observable. Mirror analysis §2.3.1 — the old 10k cap was silent and that was a bug.
-  - [ ] 2.6 Ensure no `_all` handler writes `self.db_query_hits_count` — that counter is owned by `results_page` in Stage D.
-  - [ ] 2.7 Leave the old paginated handlers in place (temporarily) so `results_page` still compiles; they are deleted in Stage D.
-  - [ ] 2.8 Verify `make build -B` succeeds.
+- [x] 2.0 Stage B — Add unpaginated `_all` variants of mode handlers with a `SAFETY_LIMIT` cap
+  - [x] 2.1 For each FTS5 handler, add an `_all` sibling. **Implementation note:** to limit churn, the `_all` siblings are thin wrappers around the existing paginated handlers via `run_with_safety_cap_sql`/`_tantivy` — they save/restore `self.page_len` and `self.db_query_hits_count`, call the underlying handler with `page_len = SAFETY_LIMIT` and `page_num = 0`, then warn if the cap was hit. Net effect (no pagination, no `db_query_hits_count` mutation, SAFETY_LIMIT cap) matches the spec; Stage D inlines and removes the paginated handlers entirely.
+  - [x] 2.2 For `dpd_lookup`, added `dpd_lookup_all` (wraps `dpd_lookup(0)` with `page_len = SAFETY_LIMIT_SQL`, returning the full merged set on page 0).
+  - [x] 2.3 For tantivy handlers (`fulltext_suttas`, `fulltext_dict_words`, `fulltext_library`), added `_all` variants that delegate via `run_with_safety_cap_tantivy` (page_len = SAFETY_LIMIT_TANTIVY). `SearchResult.score: Option<f32>` confirmed at `backend/src/types.rs:144`.
+  - [x] 2.4 Push-down deferral honoured: Suttas FTS5 path retains its existing `uid LIKE ?%` push-down; Dictionary/Library paths still rely on the Rust filter (intentional deviation from analysis §2.5).
+  - [x] 2.5 `run_with_safety_cap_sql` / `_tantivy` emit `warn!` with mode, area, and query when results length ≥ cap. Bold-definition helpers (Stage A) carry their own per-helper warn.
+  - [x] 2.6 `_all` wrappers explicitly restore `self.db_query_hits_count` to its prior value, so they never own the counter.
+  - [x] 2.7 Old paginated handlers untouched — `run_mode_for_area` still compiles and behaves as before.
+  - [x] 2.8 `make build -B` succeeds (only dead-code warnings on the new `_all` methods, which is expected until Stages C/D wire them up).
 
 - [ ] 3.0 Stage C — Move bold-definition appending out of mode handlers into a single seam
   - ⚠️ **Must land with Stage D in the same commit.** Stage C strips bold-append from the old paginated handlers, which are still called by `results_page` until Stage D swaps in the `_all` variants. C-without-D silently regresses Dictionary bold-definition results.

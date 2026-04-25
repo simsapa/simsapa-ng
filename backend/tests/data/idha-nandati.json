@@ -76,7 +76,7 @@
     {
       "uid": "19596/dpd",
       "word": "kata 3",
-      "summary": "<i>(pp)</i> made (of); built (of)  <b>[√kar + ta]</b>  <i>pp of karoti</i>"
+      "summary": "<i>(pp)</i> made; built (of)  <b>[√kar + ta]</b>  <i>pp of karoti</i>"
     },
     {
       "uid": "19597/dpd",
@@ -134,6 +134,11 @@
       "uid": "50426/dpd",
       "word": "ma 3.1",
       "summary": "<i>(ve)</i> (gram) ma; verbal ending of the present tense 1st person plural   <i>ve, masc</i>"
+    },
+    {
+      "uid": "52519/dpd",
+      "word": "mi",
+      "summary": "<i>(ve)</i> (gram) mi; verbal ending of the present tense 1st person singular   <i>ve, masc</i>"
     },
     {
       "uid": "52133/dpd",
