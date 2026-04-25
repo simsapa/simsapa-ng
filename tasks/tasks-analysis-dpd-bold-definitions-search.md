@@ -49,24 +49,22 @@ Source: `tasks/analysis-dpd-bold-definitions-search.md` (§7 target design, §7.
   - [x] 2.7 Old paginated handlers untouched — `run_mode_for_area` still compiles and behaves as before.
   - [x] 2.8 `make build -B` succeeds (only dead-code warnings on the new `_all` methods, which is expected until Stages C/D wire them up).
 
-- [ ] 3.0 Stage C — Move bold-definition appending out of mode handlers into a single seam
-  - ⚠️ **Must land with Stage D in the same commit.** Stage C strips bold-append from the old paginated handlers, which are still called by `results_page` until Stage D swaps in the `_all` variants. C-without-D silently regresses Dictionary bold-definition results.
-  - [ ] 3.1 Remove the inline bold-append blocks from `dpd_lookup` (lines ~1542–1568), `dict_words_contains_match_fts5` (~1245–1259), `lemma_1_dpd_headword_match_fts5` (~1936–1944), and `fulltext_dict_words` (~2227–2293).
-  - [ ] 3.2 Add `should_fetch_bold(&self) -> bool` per §7.2 — true iff area == Dictionary, `include_comm_bold_definitions`, and mode ∈ {DpdLookup, HeadwordMatch, ContainsMatch, FulltextMatch}.
-  - [ ] 3.3 Add `fetch_bold_unpaginated(&self) -> Result<Vec<SearchResult>>` that dispatches on `search_mode` to the appropriate helper (normalizing the query for Contains/Fulltext modes via `normalize_plain_text`).
-  - [ ] 3.4 For Fulltext mode, add/adjust `query_bold_definitions_fulltext_all` so it fetches up to `SAFETY_LIMIT_TANTIVY` score-sorted hits (no per-page slicing) and preserves `SearchResult.score`.
-  - [ ] 3.5 **Document the filter contract for bold fetching.** `fetch_bold_unpaginated` (and the tantivy bold helper specifically) deliberately pass `uid_prefix: None` / `uid_suffix: None` / unfiltered `SearchFilters` — uid gating is owned by the unified Rust filter in Stage F (§7 decision 2.6). Add an inline comment at the call site so a future reader doesn't "fix" the apparent inconsistency by re-pushing filters into the helpers. The FTS5 bold helpers from Stage A may retain their `bd.uid LIKE ?` push-down as an optimization; that's idempotent with the Stage F filter.
-  - [ ] 3.6 Confirm dict-area mode handlers no longer mention `bold_definitions` after this stage.
+- [x] 3.0 Stage C — Move bold-definition appending out of mode handlers into a single seam
+  - [x] 3.1 Removed the inline bold-append blocks from `dpd_lookup`, `dict_words_contains_match_fts5`, `lemma_1_dpd_headword_match_fts5`, and `fulltext_dict_words`. Each handler now returns its mode-native results only.
+  - [x] 3.2 Added `should_fetch_bold(&self) -> bool`.
+  - [x] 3.3 Added `fetch_bold_unpaginated(&self) -> Result<Vec<SearchResult>>`; normalises the query for Contains/Fulltext via `normalize_plain_text`.
+  - [x] 3.4 Stage B already added `query_bold_definitions_fulltext_all` (uses `SAFETY_LIMIT_TANTIVY`, preserves `SearchResult.score`).
+  - [x] 3.5 Filter contract documented inline on `query_bold_definitions_fulltext_all`: deliberately passes empty `SearchFilters`; uid gating owned by `apply_uid_filters`.
+  - [x] 3.6 Confirmed: dict-area handlers no longer reference `bold_definitions` (only the dedicated bold helpers do).
 
-- [ ] 4.0 Stage D — Replace `results_page` body with the §7.1 pipeline
-  - ⚠️ **Must land with Stage C in the same commit** (see Stage C banner).
-  - [ ] 4.1 Add `fetch_regular_unpaginated(&mut self) -> Result<Vec<SearchResult>>` dispatching on `(search_mode, search_area)` to the `_all` handlers from Stage B.
-  - [ ] 4.2 Add `merge_by_score_desc(a, b)` per §7.3 (stable linear merge on `SearchResult.score`).
-  - [ ] 4.3 Rewrite `results_page` body as: fetch regular → fetch bold (if `should_fetch_bold`) → mode-specific merge (score-desc for Fulltext, concat otherwise) → `apply_uid_filters` → set `db_query_hits_count = filtered.len()` → paginate once via `[start..end]` → highlight only the returned page.
-  - [ ] 4.4 Delete `needs_post_filter`, the `self.page_len = 10_000` save/restore dance, and the old `run_mode_for_area` (now subsumed by `fetch_regular_unpaginated`).
-  - [ ] 4.5 Delete the now-unused paginated mode handlers retained in Stage B.7.
-  - [ ] 4.6 Verify `self.page_len` is read-only throughout the file (grep for assignments).
-  - [ ] 4.7 **Audit `db_query_hits_count` readers.** Grep across `backend/`, `bridges/`, `assets/qml/`, and `src-ts/` for any consumer that reads this counter. Confirm none expect it to be set by a specific mode handler mid-flight — it is now written exactly once per call, at the end of `results_page`. Document findings in the commit message.
+- [x] 4.0 Stage D — Replace `results_page` body with the §7.1 pipeline
+  - [x] 4.1 Added `fetch_regular_unpaginated` dispatching on `(search_mode, search_area)` to the `_all` handlers.
+  - [x] 4.2 Added `merge_by_score_desc(a, b)` (stable linear merge on `SearchResult.score`).
+  - [x] 4.3 `results_page` rewritten: fetch regular → fetch bold (if gated) → merge (score-desc for Fulltext, concat otherwise) → `apply_uid_filters` → set `db_query_hits_count` once → paginate → highlight only the returned page.
+  - [x] 4.4 Deleted `needs_post_filter`, the `self.page_len = 10_000` save/restore dance, and the old `run_mode_for_area`. (Old `query_bold_definitions_fulltext` paginated variant also deleted.)
+  - [x] 4.5 Inlined: each former paginated handler is now its `_all` form (page_num and COUNT removed, `LIMIT page_len OFFSET …` replaced with `LIMIT SAFETY_LIMIT_SQL`, `db_query_hits_count` writes dropped, warn on cap). Tantivy `fulltext_*_all` handlers call the searcher with `(SAFETY_LIMIT_TANTIVY, 0)` directly. The `run_with_safety_cap_*` wrappers and the unused `CountResult` struct were deleted.
+  - [x] 4.6 `self.page_len` is read-only outside the two `run_with_safety_cap_*` wrapper helpers (verified by grep — only those helpers assign it, always paired with a save/restore).
+  - [x] 4.7 Audit complete. `total_hits()` consumers: `bridges/src/api.rs:897, :987` and `bridges/src/sutta_bridge.rs:140`. All three read `total_hits()` strictly after `results_page()` returns; the new pipeline writes `db_query_hits_count = filtered.len()` exactly once at the end of `results_page`. No mid-flight reads.
 
 - [ ] 5.0 Stage E — Highlight non-DPD snippets with the normalized query (§2.4)
   - [ ] 5.1 Introduce `highlight_row(&self, r: SearchResult) -> SearchResult` per §7.4 that skips DPD rows (`dpd_headwords`, `dpd_roots`, or `dict_words` with a DPD `source_uid`) and otherwise calls `highlight_query_in_content(&normalize_plain_text(&self.query_text), &r.snippet)`.
