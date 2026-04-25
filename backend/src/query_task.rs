@@ -18,12 +18,20 @@ use crate::logger::{info, warn, error};
 
 /// Upper bound on rows materialised by an unpaginated mode handler before
 /// merge/filter/pagination in `results_page`. Applied as `LIMIT` on FTS5
-/// SQL queries. Keep in sync with `SAFETY_LIMIT_TANTIVY`.
+/// SQL queries.
 pub(crate) const SAFETY_LIMIT_SQL: i64 = 100_000;
 
 /// Upper bound on tantivy hits returned to `results_page` per index.
-/// Passed to `TopDocs::with_limit`. Keep in sync with `SAFETY_LIMIT_SQL`.
-pub(crate) const SAFETY_LIMIT_TANTIVY: usize = 100_000;
+/// Passed to `TopDocs::with_limit`. Much lower than `SAFETY_LIMIT_SQL`
+/// because each tantivy hit triggers a stored-doc load and a `SnippetGenerator`
+/// scan over the full content field — for ~10 KB sutta content rows this
+/// runs at ~10–50 ms per doc, so the wall-clock cost scales linearly with
+/// this limit on broad queries. The full-fetch path (uid_prefix or
+/// uid_suffix set) caches its result on the task, so only the first page
+/// click pays this cost; subsequent pages slice from the cache. Queries
+/// that retain more than this many candidates after a uid filter get
+/// truncated with a warn — accept that over a multi-second blocking page.
+pub(crate) const SAFETY_LIMIT_TANTIVY: usize = 300;
 
 /// Sanitize a user-supplied prefix for direct embedding in a SQL LIKE pattern.
 /// Returns `Some(prefix_lowercase)` if the input is non-empty and contains only
@@ -92,6 +100,14 @@ pub struct SearchQueryTask<'a> {
     /// Per-call tantivy fetch budget; mirrors `fetch_limit_sql` for tantivy
     /// `TopDocs::with_limit`.
     pub fetch_limit_tantivy: usize,
+    /// Cached merged + uid-filtered result set, populated when
+    /// `results_page` runs the full-fetch path (uid_prefix or uid_suffix set).
+    /// Reused on subsequent `results_page(n)` calls on the same task because
+    /// the underlying fetch is `page_num`-independent. Cleared whenever a
+    /// fetched cache exists but the task's filter inputs would change the
+    /// fetch result — currently we just trust call-site discipline (one task
+    /// = one query) and leave invalidation to task replacement.
+    cached_full_fetch: Option<(Vec<SearchResult>, i64)>,
 }
 
 impl<'a> SearchQueryTask<'a> {
@@ -148,6 +164,7 @@ impl<'a> SearchQueryTask<'a> {
             db_query_hits_count: 0,
             fetch_limit_sql: SAFETY_LIMIT_SQL,
             fetch_limit_tantivy: SAFETY_LIMIT_TANTIVY,
+            cached_full_fetch: None,
         }
     }
 
@@ -441,10 +458,10 @@ impl<'a> SearchQueryTask<'a> {
             .select(Sutta::as_select())
             .load::<Sutta>(db_conn)?;
 
-        if results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(results.len()) {
             warn(&format!(
-                "uid_sutta_range_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, query_uid
+                "uid_sutta_range_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, query_uid
             ));
         }
 
@@ -481,10 +498,10 @@ impl<'a> SearchQueryTask<'a> {
             .select(Sutta::as_select())
             .load::<Sutta>(db_conn)?;
 
-        if results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(results.len()) {
             warn(&format!(
-                "uid_sutta_like_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, query_uid
+                "uid_sutta_like_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, query_uid
             ));
         }
 
@@ -633,6 +650,36 @@ impl<'a> SearchQueryTask<'a> {
 
         info(&format!("extra_where: {}", extra_where));
 
+        // --- Cheap COUNT(*) for true total ---
+        #[derive(QueryableByName)]
+        struct CountRow {
+            #[diesel(sql_type = BigInt)]
+            c: i64,
+        }
+        let count_sql = if apply_lang_filter {
+            format!(
+                "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ? AND f.language = ?{}",
+                extra_where
+            )
+        } else {
+            format!(
+                "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ?{}",
+                extra_where
+            )
+        };
+        let total: i64 = if apply_lang_filter {
+            sql_query(&count_sql)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<Text, _>(&self.lang)
+                .get_result::<CountRow>(db_conn)?
+                .c
+        } else {
+            sql_query(&count_sql)
+                .bind::<Text, _>(&like_pattern)
+                .get_result::<CountRow>(db_conn)?
+                .c
+        };
+
         // --- Execute Query ---
         let select_sql = if apply_lang_filter {
             format!(
@@ -659,10 +706,10 @@ impl<'a> SearchQueryTask<'a> {
                 .load(db_conn)?
         };
 
-        if db_results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(db_results.len()) {
             warn(&format!(
-                "suttas_contains_match_fts5_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, &self.query_text
+                "suttas_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
@@ -672,6 +719,7 @@ impl<'a> SearchQueryTask<'a> {
             .map(|sutta| self.db_sutta_to_result(sutta))
             .collect();
 
+        self.db_query_hits_count = total;
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
@@ -976,12 +1024,16 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
-        if all_results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(all_results.len()) {
             warn(&format!(
-                "dict_words_contains_match_fts5_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, &self.query_text
+                "dict_words_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
+
+        // Use the dedup-union count (matches pre-Stage D semantics). Under-counts
+        // only when the per-phase safety cap is hit on very broad queries.
+        let total = all_results.len() as i64;
 
         // Map to SearchResult
         let search_results: Vec<SearchResult> = all_results
@@ -989,6 +1041,7 @@ impl<'a> SearchQueryTask<'a> {
             .map(|dict_word| self.db_word_to_result(dict_word))
             .collect();
 
+        self.db_query_hits_count = total;
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
@@ -1011,6 +1064,41 @@ impl<'a> SearchQueryTask<'a> {
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
             .unwrap_or_else(|| "%".to_string());
+
+        // --- Cheap COUNT(*) for true total ---
+        #[derive(QueryableByName)]
+        struct CountRow {
+            #[diesel(sql_type = BigInt)]
+            c: i64,
+        }
+        let total: i64 = if apply_lang_filter {
+            sql_query(
+                r#"
+                SELECT COUNT(*) AS c
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&self.lang)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .get_result::<CountRow>(db_conn)?
+            .c
+        } else {
+            sql_query(
+                r#"
+                SELECT COUNT(*) AS c
+                FROM book_spine_items_fts f
+                JOIN book_spine_items b ON f.spine_item_id = b.id
+                WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ?
+                "#
+            )
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .get_result::<CountRow>(db_conn)?
+            .c
+        };
 
         // --- Execute Query ---
         let db_results: Vec<BookSpineItem> = if apply_lang_filter {
@@ -1046,10 +1134,10 @@ impl<'a> SearchQueryTask<'a> {
             .load(db_conn)?
         };
 
-        if db_results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(db_results.len()) {
             warn(&format!(
-                "book_spine_items_contains_match_fts5_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, &self.query_text
+                "book_spine_items_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
@@ -1059,6 +1147,7 @@ impl<'a> SearchQueryTask<'a> {
             .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
             .collect();
 
+        self.db_query_hits_count = total;
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
@@ -1072,13 +1161,13 @@ impl<'a> SearchQueryTask<'a> {
     fn query_bold_definitions_bold_fts5(
         &self,
         query: &str,
-    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::db::dpd_models::BoldDefinition;
         use diesel::sql_types::BigInt;
 
         let q = query.trim().to_lowercase();
         if q.is_empty() {
-            return Ok(Vec::new());
+            return Ok((0, Vec::new()));
         }
 
         let app_data = get_app_data();
@@ -1099,6 +1188,29 @@ impl<'a> SearchQueryTask<'a> {
         let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
+
+        // Cheap COUNT(*) to get true total before LIMIT-bounded fetch.
+        #[derive(QueryableByName)]
+        struct CountRow {
+            #[diesel(sql_type = BigInt)]
+            c: i64,
+        }
+        let count_sql = r#"
+            SELECT COUNT(*) AS c
+            FROM bold_definitions_bold_fts f
+            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            WHERE (f.bold LIKE ? OR f.bold_ascii LIKE ?)
+              AND bd.uid LIKE ?
+              AND bd.uid LIKE ?
+        "#;
+        let total: i64 = sql_query(count_sql)
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
+            .get_result::<CountRow>(dpd_conn)?
+            .c;
+
         let sql = r#"
             SELECT bd.*
             FROM bold_definitions_bold_fts f
@@ -1118,14 +1230,15 @@ impl<'a> SearchQueryTask<'a> {
             .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(dpd_conn)?;
 
-        if bds.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(bds.len()) {
             warn(&format!(
-                "query_bold_definitions_bold_fts5 hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, q
+                "query_bold_definitions_bold_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, q
             ));
         }
 
-        Ok(bds.iter().map(bold_definition_to_search_result).collect())
+        let results: Vec<SearchResult> = bds.iter().map(bold_definition_to_search_result).collect();
+        Ok((total, results))
     }
 
     /// Substring match on bold_definitions.commentary_plain using the trigram
@@ -1134,13 +1247,13 @@ impl<'a> SearchQueryTask<'a> {
     fn query_bold_definitions_commentary_fts5(
         &self,
         normalized_query: &str,
-    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::db::dpd_models::BoldDefinition;
         use diesel::sql_types::BigInt;
 
         let q = normalized_query.trim();
         if q.is_empty() {
-            return Ok(Vec::new());
+            return Ok((0, Vec::new()));
         }
 
         let app_data = get_app_data();
@@ -1155,6 +1268,28 @@ impl<'a> SearchQueryTask<'a> {
         let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
+
+        // Cheap COUNT(*) to get the true total before LIMIT-bounded fetch.
+        #[derive(QueryableByName)]
+        struct CountRow {
+            #[diesel(sql_type = BigInt)]
+            c: i64,
+        }
+        let count_sql = r#"
+            SELECT COUNT(*) AS c
+            FROM bold_definitions_fts f
+            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            WHERE f.commentary_plain LIKE ?
+              AND bd.uid LIKE ?
+              AND bd.uid LIKE ?
+        "#;
+        let total: i64 = sql_query(count_sql)
+            .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
+            .get_result::<CountRow>(dpd_conn)?
+            .c;
+
         let sql = r#"
             SELECT bd.*
             FROM bold_definitions_fts f
@@ -1173,14 +1308,15 @@ impl<'a> SearchQueryTask<'a> {
             .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(dpd_conn)?;
 
-        if bds.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(bds.len()) {
             warn(&format!(
-                "query_bold_definitions_commentary_fts5 hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, q
+                "query_bold_definitions_commentary_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, q
             ));
         }
 
-        Ok(bds.iter().map(bold_definition_to_search_result).collect())
+        let results: Vec<SearchResult> = bds.iter().map(bold_definition_to_search_result).collect();
+        Ok((total, results))
     }
 
     /// DPD Lookup — returns all headword results unpaginated. DPD is only
@@ -1189,11 +1325,13 @@ impl<'a> SearchQueryTask<'a> {
     /// Assume that if the DPD Lookup was selected then stale language settings can be ignored.
     pub fn dpd_lookup_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         let app_data = get_app_data();
-        app_data
+        let results = app_data
             .dbm
             .dpd
-            .dpd_lookup(&self.query_text, false, true)
-            .map_err(Into::into)
+            .dpd_lookup(&self.query_text, false, true)?;
+        // dpd_lookup returns the full naturally-bounded set; no cap involved.
+        self.db_query_hits_count = results.len() as i64;
+        Ok(results)
     }
 
     fn suttas_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
@@ -1262,19 +1400,23 @@ impl<'a> SearchQueryTask<'a> {
             .select(Sutta::as_select())
             .load(db_conn)?;
 
-        if db_results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(db_results.len()) {
             warn(&format!(
-                "suttas_title_match_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, &self.query_text
+                "suttas_title_match_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
         // Map to SearchResult
-        let search_results = db_results
+        let search_results: Vec<SearchResult> = db_results
             .iter()
             .map(|sutta| self.db_sutta_to_result(sutta))
             .collect();
 
+        // Title-match queries are typically narrow; using results.len() as the
+        // total under-counts only when the safety cap is hit. Matches the
+        // historic pre-Stage D semantics for this handler.
+        self.db_query_hits_count = search_results.len() as i64;
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
@@ -1360,13 +1502,14 @@ impl<'a> SearchQueryTask<'a> {
             all_results.push(self.db_book_spine_item_to_result(&spine_item));
         }
 
-        if all_results.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(all_results.len()) {
             warn(&format!(
-                "library_title_match_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, &self.query_text
+                "library_title_match_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
+        self.db_query_hits_count = all_results.len() as i64;
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(all_results)
     }
@@ -1392,6 +1535,26 @@ impl<'a> SearchQueryTask<'a> {
             headword_id: i32,
         }
 
+        // Cheap COUNT(*) for true total. Note: this counts FTS5 lemma_1
+        // matches; some may not resolve to a DictWord, so the count slightly
+        // overstates the final SearchResult count. Matches pre-Stage D
+        // semantics.
+        #[derive(QueryableByName)]
+        struct CountRow {
+            #[diesel(sql_type = BigInt)]
+            c: i64,
+        }
+        let total: i64 = sql_query(
+            r#"
+            SELECT COUNT(*) AS c
+            FROM dpd_headwords_fts
+            WHERE lemma_1 LIKE ?
+            "#
+        )
+        .bind::<Text, _>(&like_pattern)
+        .get_result::<CountRow>(dpd_conn)?
+        .c;
+
         // Get headword IDs from FTS
         let fts_query = String::from(
             r#"
@@ -1408,10 +1571,10 @@ impl<'a> SearchQueryTask<'a> {
             .bind::<BigInt, _>(self.fetch_limit_sql)
             .load::<HeadwordId>(dpd_conn)?;
 
-        if headword_ids.len() as i64 >= self.fetch_limit_sql {
+        if self.hit_sql_safety_cap(headword_ids.len()) {
             warn(&format!(
-                "lemma_1_dpd_headword_match_fts5_all hit fetch_limit_sql={} (query='{}')",
-                self.fetch_limit_sql, &self.query_text
+                "lemma_1_dpd_headword_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
@@ -1419,6 +1582,7 @@ impl<'a> SearchQueryTask<'a> {
         let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
 
         if ids.is_empty() {
+            self.db_query_hits_count = 0;
             return Ok(Vec::new());
         }
 
@@ -1458,6 +1622,7 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
+        self.db_query_hits_count = total;
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok(search_results)
     }
@@ -1466,7 +1631,21 @@ impl<'a> SearchQueryTask<'a> {
     /// full unpaginated result set (capped by SAFETY_LIMIT). Does not apply
     /// uid filters, bold-definition merging, or highlighting — those are
     /// owned by `results_page`.
+    ///
+    /// Each handler is responsible for writing its true total to
+    /// `self.db_query_hits_count`. Handlers that don't write a count leave
+    /// the sentinel `-1` set by this dispatcher; the fallback then uses
+    /// `results.len()` as the count (correct when the safety cap isn't hit).
     fn fetch_regular_unpaginated(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        self.db_query_hits_count = -1;
+        let results = self.fetch_regular_dispatch()?;
+        if self.db_query_hits_count < 0 {
+            self.db_query_hits_count = results.len() as i64;
+        }
+        Ok(results)
+    }
+
+    fn fetch_regular_dispatch(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
         match self.search_mode {
             SearchMode::DpdLookup => match self.search_area {
                 // DPD Lookup mode - only works for Dictionary search area
@@ -1533,7 +1712,7 @@ impl<'a> SearchQueryTask<'a> {
     /// current mode, returning all hits unpaginated (capped by SAFETY_LIMIT).
     /// The Contains/Fulltext modes normalise the query first because the
     /// stored `commentary_plain` is normalised Pāli.
-    fn fetch_bold_unpaginated(&self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    fn fetch_bold_unpaginated(&self) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         match self.search_mode {
             SearchMode::DpdLookup | SearchMode::HeadwordMatch => {
                 self.query_bold_definitions_bold_fts5(&self.query_text)
@@ -1546,7 +1725,7 @@ impl<'a> SearchQueryTask<'a> {
                 let q = normalize_plain_text(&self.query_text);
                 self.query_bold_definitions_fulltext_all(&q)
             }
-            _ => Ok(Vec::new()),
+            _ => Ok((0, Vec::new())),
         }
     }
 
@@ -1587,6 +1766,15 @@ impl<'a> SearchQueryTask<'a> {
         out
     }
 
+    /// True when the per-call SQL fetch budget equals SAFETY_LIMIT_SQL and the
+    /// handler returned at least that many rows — i.e. real silent truncation.
+    /// The smaller per-page budget in non-suffix queries always pegs the
+    /// returned row count to the budget for any sufficiently broad query, so
+    /// using `len >= fetch_limit_sql` directly produces near-constant noise.
+    fn hit_sql_safety_cap(&self, len: usize) -> bool {
+        self.fetch_limit_sql >= SAFETY_LIMIT_SQL && len as i64 >= SAFETY_LIMIT_SQL
+    }
+
     /// Returns a lowercased, trimmed string if the option is `Some` and non-empty.
     fn normalized_filter(opt: &Option<String>) -> Option<String> {
         opt.as_ref()
@@ -1597,30 +1785,21 @@ impl<'a> SearchQueryTask<'a> {
     // (needs_post_filter removed in Stage D — uid filtering is now applied
     // unconditionally inside results_page via apply_uid_filters.)
 
+    /// Applies uid_prefix / uid_suffix uniformly across all areas. SQL-side
+    /// `uid LIKE 'prefix%'` push-downs in mode handlers are pure optimizations:
+    /// rows that already satisfy the prefix pass this filter as a no-op.
     fn apply_uid_filters(&self, results: Vec<SearchResult>) -> Vec<SearchResult> {
-        let suffix = Self::normalized_filter(&self.uid_suffix);
         let prefix = Self::normalized_filter(&self.uid_prefix);
-        let prefix_handled_by_sql = matches!(self.search_area, SearchArea::Suttas);
-        if suffix.is_none() && (prefix.is_none() || prefix_handled_by_sql) {
+        let suffix = Self::normalized_filter(&self.uid_suffix);
+        if prefix.is_none() && suffix.is_none() {
             return results;
         }
         results
             .into_iter()
             .filter(|r| {
-                let uid_lc = r.uid.to_lowercase();
-                if let Some(ref s) = suffix {
-                    if !uid_lc.ends_with(s) {
-                        return false;
-                    }
-                }
-                if !prefix_handled_by_sql {
-                    if let Some(ref p) = prefix {
-                        if !uid_lc.starts_with(p) {
-                            return false;
-                        }
-                    }
-                }
-                true
+                let u = r.uid.to_lowercase();
+                prefix.as_ref().is_none_or(|p| u.starts_with(p))
+                    && suffix.as_ref().is_none_or(|s| u.ends_with(s))
             })
             .collect()
     }
@@ -1635,14 +1814,43 @@ impl<'a> SearchQueryTask<'a> {
     ///   5. paginate
     ///   6. highlight only the returned page
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        // Set per-call fetch budget. When uid_suffix is set, every candidate
-        // row must be materialised to filter in Rust (suffix LIKE '%x' isn't
-        // index-usable). uid_prefix is pushed down to SQL by every handler,
-        // so it doesn't force a full fetch. Otherwise, fetch only
-        // `(page_num + 1) * page_len + headroom` rows — enough to slice this
-        // page from a merged-then-filtered list while preserving Fulltext's
-        // score-merge correctness through page_num.
-        let needs_full_fetch = Self::normalized_filter(&self.uid_suffix).is_some();
+        // Set per-call fetch budget. Any uid filter (prefix or suffix) forces
+        // a full fetch:
+        //   - suffix LIKE '%x' isn't index-usable, so every candidate must
+        //     reach the Rust post-filter.
+        //   - prefix is pushed down where possible (SQL `uid LIKE 'x%'` for
+        //     suttas FTS5 / dict_words / book_spine_items / bold helpers;
+        //     RegexQuery on tantivy uid for fulltext). For tantivy paths
+        //     where uid is tokenized (Dict, Library) the push-down can
+        //     over-match, so the Rust filter is still authoritative for
+        //     correctness and counts. Without a full fetch, the per-page
+        //     headroom budget would clip below the count of true matches.
+        // Otherwise, fetch only `(page_num + 1) * page_len + headroom` rows
+        // — enough to slice this page from a merged-then-filtered list while
+        // preserving Fulltext's score-merge correctness through page_num.
+        let has_prefix = Self::normalized_filter(&self.uid_prefix).is_some();
+        let has_suffix = Self::normalized_filter(&self.uid_suffix).is_some();
+        let needs_full_fetch = has_prefix || has_suffix;
+
+        // Full-fetch path is `page_num`-independent: the same merged+filtered
+        // list serves every page. Reuse a cached run on the same task to
+        // avoid re-issuing the SAFETY_LIMIT-capped tantivy/SQL fetches and,
+        // more importantly, the snippet generation for hundreds-to-thousands
+        // of candidate rows on every page click.
+        if needs_full_fetch && let Some((cached_filtered, cached_total)) = self.cached_full_fetch.take() {
+            self.db_query_hits_count = cached_total;
+            let start = page_num * self.page_len;
+            let end = std::cmp::min(start + self.page_len, cached_filtered.len());
+            let page: Vec<SearchResult> = if start >= cached_filtered.len() {
+                Vec::new()
+            } else {
+                cached_filtered[start..end].to_vec()
+            };
+            // Put the cache back for the next call on this task.
+            self.cached_full_fetch = Some((cached_filtered, cached_total));
+            let highlighted = page.into_iter().map(|r| self.highlight_row(r)).collect();
+            return Ok(highlighted);
+        }
         let (sql_limit, tantivy_limit) = if needs_full_fetch {
             (SAFETY_LIMIT_SQL, SAFETY_LIMIT_TANTIVY)
         } else {
@@ -1659,10 +1867,13 @@ impl<'a> SearchQueryTask<'a> {
         self.fetch_limit_tantivy = tantivy_limit;
 
         let regular = self.fetch_regular_unpaginated()?;
-        let bold = if self.should_fetch_bold() {
+        // Each `_all` handler writes its true total to self.db_query_hits_count;
+        // capture it before the bold fetch overwrites/uses the field.
+        let regular_total: i64 = self.db_query_hits_count;
+        let (bold_total, bold) = if self.should_fetch_bold() {
             self.fetch_bold_unpaginated()?
         } else {
-            Vec::new()
+            (0i64, Vec::new())
         };
 
         let merged = match self.search_mode {
@@ -1675,7 +1886,17 @@ impl<'a> SearchQueryTask<'a> {
         };
 
         let filtered = self.apply_uid_filters(merged);
-        self.db_query_hits_count = filtered.len() as i64;
+        // True total: any uid filter (prefix OR suffix) means the Rust filter
+        // narrowed the candidate set, so `filtered.len()` is the accurate
+        // post-filter count. Without a uid filter, sum the regular + bold
+        // handler totals (each already reflects SQL-pushed source/lang/etc.
+        // filters).
+        let total = if has_prefix || has_suffix {
+            filtered.len() as i64
+        } else {
+            regular_total + bold_total
+        };
+        self.db_query_hits_count = total;
 
         let start = page_num * self.page_len;
         let end = std::cmp::min(start + self.page_len, filtered.len());
@@ -1684,6 +1905,12 @@ impl<'a> SearchQueryTask<'a> {
         } else {
             filtered[start..end].to_vec()
         };
+
+        // Cache the full-fetch run for subsequent pages. Skip caching for the
+        // non-full-fetch path because that path's fetch grows with `page_num`.
+        if needs_full_fetch {
+            self.cached_full_fetch = Some((filtered, total));
+        }
 
         let highlighted_results: Vec<SearchResult> = page
             .into_iter()
@@ -1731,28 +1958,31 @@ impl<'a> SearchQueryTask<'a> {
 
         let query_text = self.query_text.clone();
 
-        let results = match with_fulltext_searcher(|searcher| {
+        let (total, results) = match with_fulltext_searcher(|searcher| {
             if !searcher.has_sutta_indexes() {
                 warn("No sutta fulltext indexes available.");
-                return Ok((0, Vec::new()));
+                return Ok((0usize, Vec::new()));
             }
             searcher.search_suttas_with_count(&query_text, &filters, self.fetch_limit_tantivy, 0)
         }) {
-            Some(Ok((_total, results))) => results,
+            Some(Ok((total, results))) => (total, results),
             Some(Err(e)) => return Err(e.into()),
             None => {
                 warn("Fulltext searcher not initialized. Indexes may not exist.");
-                Vec::new()
+                (0usize, Vec::new())
             }
         };
 
-        if results.len() >= self.fetch_limit_tantivy {
+        if self.fetch_limit_tantivy >= SAFETY_LIMIT_TANTIVY
+            && results.len() >= SAFETY_LIMIT_TANTIVY
+        {
             warn(&format!(
-                "fulltext_suttas_all hit fetch_limit_tantivy={} (query='{}')",
-                self.fetch_limit_tantivy, &self.query_text
+                "fulltext_suttas_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
+                SAFETY_LIMIT_TANTIVY, &self.query_text
             ));
         }
 
+        self.db_query_hits_count = total as i64;
         Ok(results)
     }
 
@@ -1770,7 +2000,10 @@ impl<'a> SearchQueryTask<'a> {
             source_uid: self.source.clone(),
             source_include: self.source_include,
             nikaya_prefix: None,
-            uid_prefix: None,
+            // Push prefix down to tantivy as a narrowing optimization. uid is
+            // tokenized via simple_fold so this can over-match; the Rust-side
+            // `apply_uid_filters` in `results_page` is the source of truth.
+            uid_prefix: self.uid_prefix.clone(),
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1779,28 +2012,33 @@ impl<'a> SearchQueryTask<'a> {
 
         let query_text = self.query_text.clone();
 
-        let results = match with_fulltext_searcher(|searcher| {
+        let (total, results) = match with_fulltext_searcher(|searcher| {
             if !searcher.has_dict_indexes() {
                 warn("No dict_word fulltext indexes available.");
-                return Ok((0, Vec::new()));
+                return Ok((0usize, Vec::new()));
             }
             searcher.search_dict_words_with_count(&query_text, &filters, self.fetch_limit_tantivy, 0)
         }) {
-            Some(Ok((_total, results))) => results,
+            Some(Ok((total, results))) => (total, results),
             Some(Err(e)) => return Err(e.into()),
             None => {
                 warn("Fulltext searcher not initialized. Indexes may not exist.");
-                Vec::new()
+                (0usize, Vec::new())
             }
         };
 
-        if results.len() >= self.fetch_limit_tantivy {
+        // Only warn on true SAFETY_LIMIT exhaustion (silent truncation). Hitting
+        // the per-page headroom budget is normal and not a problem to surface.
+        if self.fetch_limit_tantivy >= SAFETY_LIMIT_TANTIVY
+            && results.len() >= SAFETY_LIMIT_TANTIVY
+        {
             warn(&format!(
-                "fulltext_dict_words_all hit fetch_limit_tantivy={} (query='{}')",
-                self.fetch_limit_tantivy, &self.query_text
+                "fulltext_dict_words_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
+                SAFETY_LIMIT_TANTIVY, &self.query_text
             ));
         }
 
+        self.db_query_hits_count = total as i64;
         Ok(results)
     }
 
@@ -1818,7 +2056,11 @@ impl<'a> SearchQueryTask<'a> {
             source_uid: None,
             source_include: false,
             nikaya_prefix: None,
-            uid_prefix: None,
+            // Push prefix down to tantivy as a narrowing optimization.
+            // spine_item_uid is tokenized via simple_fold so this can
+            // over-match; the Rust-side `apply_uid_filters` in `results_page`
+            // is the source of truth.
+            uid_prefix: self.uid_prefix.clone(),
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1827,28 +2069,31 @@ impl<'a> SearchQueryTask<'a> {
 
         let query_text = self.query_text.clone();
 
-        let results = match with_fulltext_searcher(|searcher| {
+        let (total, results) = match with_fulltext_searcher(|searcher| {
             if !searcher.has_library_indexes() {
                 warn("No library fulltext indexes available.");
-                return Ok((0, Vec::new()));
+                return Ok((0usize, Vec::new()));
             }
             searcher.search_library_with_count(&query_text, &filters, self.fetch_limit_tantivy, 0)
         }) {
-            Some(Ok((_total, results))) => results,
+            Some(Ok((total, results))) => (total, results),
             Some(Err(e)) => return Err(e.into()),
             None => {
                 warn("Fulltext searcher not initialized. Indexes may not exist.");
-                Vec::new()
+                (0usize, Vec::new())
             }
         };
 
-        if results.len() >= self.fetch_limit_tantivy {
+        if self.fetch_limit_tantivy >= SAFETY_LIMIT_TANTIVY
+            && results.len() >= SAFETY_LIMIT_TANTIVY
+        {
             warn(&format!(
-                "fulltext_library_all hit fetch_limit_tantivy={} (query='{}')",
-                self.fetch_limit_tantivy, &self.query_text
+                "fulltext_library_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
+                SAFETY_LIMIT_TANTIVY, &self.query_text
             ));
         }
 
+        self.db_query_hits_count = total as i64;
         Ok(results)
     }
 
@@ -1863,7 +2108,7 @@ impl<'a> SearchQueryTask<'a> {
     fn query_bold_definitions_fulltext_all(
         &self,
         normalized_query: &str,
-    ) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::with_fulltext_searcher;
         use crate::search::searcher::SearchFilters;
 
@@ -1897,20 +2142,22 @@ impl<'a> SearchQueryTask<'a> {
             )
         });
 
-        let results = match out {
-            Some(Ok((_total, results))) => results,
+        let (total, results) = match out {
+            Some(Ok((total, results))) => (total, results),
             Some(Err(e)) => return Err(e.into()),
-            None => Vec::new(),
+            None => (0usize, Vec::new()),
         };
 
-        if results.len() >= self.fetch_limit_tantivy {
+        if self.fetch_limit_tantivy >= SAFETY_LIMIT_TANTIVY
+            && results.len() >= SAFETY_LIMIT_TANTIVY
+        {
             warn(&format!(
-                "query_bold_definitions_fulltext_all hit fetch_limit_tantivy={} (query='{}')",
-                self.fetch_limit_tantivy, normalized_query
+                "query_bold_definitions_fulltext_all hit SAFETY_LIMIT_TANTIVY={} (query='{}')",
+                SAFETY_LIMIT_TANTIVY, normalized_query
             ));
         }
 
-        Ok(results)
+        Ok((total as i64, results))
     }
 
 }

@@ -71,11 +71,11 @@ Source: `tasks/analysis-dpd-bold-definitions-search.md` (§7 target design, §7.
   - [x] 5.2 Replaced the inline closure in `results_page` with `.map(|r| self.highlight_row(r))`.
   - [ ] 5.3 Confirm `bold_definitions` rows now receive highlighted spans for diacritic queries (manual spot-check against the real DB — pending user verification).
 
-- [ ] 6.0 Stage F — Unified uid prefix/suffix filter (§7.5)
-  - [ ] 6.1 Simplify `apply_uid_filters` to the §7.5 form: normalize prefix/suffix once, early-return on both-empty, then filter by lowercased `r.uid`.
-  - [ ] 6.2 Remove any `prefix_handled_by_sql` branching; the Rust filter is idempotent against SQL-prefiltered rows.
-  - [ ] 6.3 Keep the SQL-side `uid LIKE ?%` push-down in suttas FTS5 `_all` variants purely as an optimization; verify it doesn't change semantics.
-  - [ ] 6.4 `cd backend && cargo test test_uid_suffix_and_bold_ascii` to confirm existing coverage still passes.
+- [x] 6.0 Stage F — Unified uid prefix/suffix filter (§7.5)
+  - [x] 6.1 `apply_uid_filters` simplified to §7.5 form: normalize prefix/suffix once, early-return when both empty, then filter by lowercased `r.uid` using `is_none_or` for both checks.
+  - [x] 6.2 Removed `prefix_handled_by_sql` branching. Filter applies uniformly across all areas.
+  - [x] 6.3 SQL-side `uid LIKE 'prefix%'` push-down kept in Suttas FTS5 paths (and now Dictionary/Library + bold helpers from the perf fix). Filter is idempotent against rows that already satisfy it.
+  - [x] 6.4 `cargo test --test test_uid_suffix_and_bold_ascii` — all 5 tests pass.
 
 - [ ] 7.0 Stage G — Sync PRD and existing task list with as-built (§2.9–§2.11)
   - [ ] 7.1 In `tasks/prd-dpd-bold-definitions-search.md` §4.1, add `bold_ascii TEXT NOT NULL` to the `bold_definitions` column list (mirrors `word_ascii`) and note it is populated from `bold` via pali-to-ASCII.

@@ -484,7 +484,7 @@ impl FulltextSearcher {
         match index_type {
             IndexType::Sutta => Self::add_sutta_filters(&mut subqueries, filters, &schema)?,
             IndexType::Dict => Self::add_dict_filters(&mut subqueries, filters, &schema)?,
-            IndexType::Library => {} // No additional filters for library
+            IndexType::Library => Self::add_library_filters(&mut subqueries, filters, &schema)?,
             IndexType::BoldDefinitions => {} // No additional filters for bold_definitions
         }
 
@@ -497,16 +497,29 @@ impl FulltextSearcher {
             (top_docs, 0)
         };
 
-        let mut results = Vec::new();
+        // Build a single SnippetGenerator and reuse across all docs in this
+        // call. Previously we constructed one per doc, which dominated runtime
+        // for queries with hundreds-to-thousands of hits (e.g. fulltext +
+        // suffix-filter where every candidate must be materialized for the
+        // Rust-side post-filter).
+        let snippet_gen = {
+            let parser = QueryParser::for_index(index, vec![content_field]);
+            let parsed = parser.parse_query(query_text)?;
+            let mut g = tantivy::snippet::SnippetGenerator::create(&searcher, &parsed, content_field)?;
+            g.set_max_num_chars(200);
+            g
+        };
+
+        let mut results = Vec::with_capacity(top_docs.len());
 
         for (score, doc_address) in top_docs {
             let doc: tantivy::TantivyDocument = searcher.doc(doc_address)?;
 
             let result = match index_type {
-                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
-                IndexType::Dict => self.dict_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
-                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
-                IndexType::BoldDefinitions => self.bold_definition_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
+                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::Dict => self.dict_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::BoldDefinitions => self.bold_definition_doc_to_result(&doc, &schema, score, &snippet_gen)?,
             };
 
             results.push((score, result));
@@ -605,19 +618,47 @@ impl FulltextSearcher {
             subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
         }
 
+        // uid is tokenized via simple_fold, so this push-down can over-match
+        // (a non-prefix token equal to the search prefix slips through). The
+        // Rust-side `apply_uid_filters` is the source of truth; this filter
+        // is a pure narrowing optimization to keep the candidate set small.
+        if let Some(ref uid_prefix) = filters.uid_prefix
+            && !uid_prefix.is_empty()
+        {
+            let field = schema.get_field("uid")?;
+            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
+            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
+            subqueries.push((Occur::Must, Box::new(regex_query)));
+        }
+
         Ok(())
     }
 
-    #[allow(clippy::too_many_arguments)]
+    fn add_library_filters(
+        subqueries: &mut Vec<(Occur, Box<dyn tantivy::query::Query>)>,
+        filters: &SearchFilters,
+        schema: &tantivy::schema::Schema,
+    ) -> Result<()> {
+        // spine_item_uid is tokenized via simple_fold; same caveat as
+        // add_dict_filters — Rust-side filter remains authoritative.
+        if let Some(ref uid_prefix) = filters.uid_prefix
+            && !uid_prefix.is_empty()
+        {
+            let field = schema.get_field("spine_item_uid")?;
+            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
+            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
+            subqueries.push((Occur::Must, Box::new(regex_query)));
+        }
+
+        Ok(())
+    }
+
     fn sutta_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let title = Self::get_text_field(doc, schema, "title");
@@ -626,7 +667,7 @@ impl FulltextSearcher {
         let sutta_ref = Self::get_text_field(doc, schema, "sutta_ref");
         let nikaya = Self::get_text_field(doc, schema, "nikaya");
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -645,23 +686,19 @@ impl FulltextSearcher {
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn dict_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let word = Self::get_text_field(doc, schema, "word");
         let language = Self::get_text_field(doc, schema, "language");
         let source_uid = Self::get_text_field(doc, schema, "source_uid");
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -680,16 +717,12 @@ impl FulltextSearcher {
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn library_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "spine_item_uid");
         let title = Self::get_text_field(doc, schema, "title");
@@ -706,7 +739,7 @@ impl FulltextSearcher {
             book_title.clone()
         };
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -725,23 +758,19 @@ impl FulltextSearcher {
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn bold_definition_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let bold = Self::get_text_field(doc, schema, "bold");
         let ref_code = Self::get_text_field(doc, schema, "ref_code");
         let nikaya = Self::get_text_field(doc, schema, "nikaya");
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -772,29 +801,19 @@ impl FulltextSearcher {
             .to_string()
     }
 
-    fn generate_snippet(
-        &self,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        field: tantivy::schema::Field,
-        query_text: &str,
+    /// Render a single document's snippet using a pre-built `SnippetGenerator`.
+    /// The generator is constructed once per `search_single_index` call —
+    /// constructing it per-doc dominated runtime for queries returning many
+    /// hits.
+    fn render_snippet(
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
         doc: &tantivy::TantivyDocument,
-    ) -> Result<String> {
-        let query_parser = QueryParser::for_index(index, vec![field]);
-        let query = query_parser.parse_query(query_text)?;
-
-        let mut snippet_gen = tantivy::snippet::SnippetGenerator::create(searcher, &query, field)?;
-        snippet_gen.set_max_num_chars(200);
-
+    ) -> String {
         let snippet = snippet_gen.snippet_from_doc(doc);
-        let html = snippet.to_html();
-
-        // Post-process: <b> → <span class='match'>, </b> → </span>
-        let processed = html
+        snippet
+            .to_html()
             .replace("<b>", "<span class='match'>")
-            .replace("</b>", "</span>");
-
-        Ok(processed)
+            .replace("</b>", "</span>")
     }
 }
 
