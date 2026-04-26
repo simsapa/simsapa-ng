@@ -487,7 +487,12 @@ impl FulltextSearcher {
             IndexType::Sutta => Self::add_sutta_filters(&mut subqueries, filters, &schema)?,
             IndexType::Dict => Self::add_dict_filters(&mut subqueries, filters, &schema)?,
             IndexType::Library => Self::add_library_filters(&mut subqueries, filters, &schema)?,
-            IndexType::BoldDefinitions => {} // No additional filters for bold_definitions
+            IndexType::BoldDefinitions => {
+                // Bold-defs index uses the dict schema (uid + uid_rev), so the
+                // same prefix/suffix push-down applies. Lang/source/CST/MS are
+                // not meaningful for bold rows and not pushed down.
+                Self::add_uid_filters(&mut subqueries, filters, &schema, "uid", "uid_rev")?;
+            }
         }
 
         let combined_query = BooleanQuery::new(subqueries);
