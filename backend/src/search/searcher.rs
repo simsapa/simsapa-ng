@@ -12,7 +12,7 @@ use crate::logger::{info, warn};
 use crate::types::SearchResult;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_bold_definitions_schema, build_dict_schema, build_library_schema, build_sutta_schema};
+use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 pub use super::types::SearchFilters;
 
@@ -157,7 +157,9 @@ impl FulltextSearcher {
             IndexType::Sutta => build_sutta_schema(lang),
             IndexType::Dict => build_dict_schema(lang),
             IndexType::Library => build_library_schema(lang),
-            IndexType::BoldDefinitions => build_bold_definitions_schema(lang),
+            // BoldDefinitions reuses the dict schema; the `is_bold_definition`
+            // bool field stored on each doc distinguishes it from dict_words.
+            IndexType::BoldDefinitions => build_dict_schema(lang),
         };
 
         let mmap_dir = tantivy::directory::MmapDirectory::open(dir)?;
@@ -766,9 +768,9 @@ impl FulltextSearcher {
         snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
-        let bold = Self::get_text_field(doc, schema, "bold");
-        let ref_code = Self::get_text_field(doc, schema, "ref_code");
-        let nikaya = Self::get_text_field(doc, schema, "nikaya");
+        let bold = Self::get_text_field(doc, schema, "word");
+        let ref_code = Self::get_text_field(doc, schema, "source_uid");
+        let group_path = Self::get_text_field(doc, schema, "nikaya_group_path");
 
         let snippet = Self::render_snippet(snippet_gen, doc);
 
@@ -781,7 +783,10 @@ impl FulltextSearcher {
             title: bold,
             // ref_code also serves as the sutta_ref (Vinaya, Majjhima, etc. origin)
             sutta_ref: Some(ref_code),
-            nikaya: Some(nikaya).filter(|s| !s.is_empty()),
+            // The constructed nikaya / book / title / subhead path is surfaced via the
+            // `nikaya` slot for display; the bare nikaya is no longer indexed
+            // separately.
+            nikaya: Some(group_path).filter(|s| !s.is_empty()),
             author: None,
             lang: Some("pli".to_string()),
             snippet,

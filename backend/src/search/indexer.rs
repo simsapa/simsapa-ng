@@ -11,7 +11,7 @@ use crate::db::dpd_models::BoldDefinition;
 use crate::logger::info;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_bold_definitions_schema, build_dict_schema, build_library_schema, build_sutta_schema};
+use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 
 /// Open or create a Tantivy index at the given directory path.
@@ -143,6 +143,7 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     let source_uid_field = schema.get_field("source_uid").unwrap();
     let content_field = schema.get_field("content").unwrap();
     let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
 
     let lang_clone = lang.to_string();
     let word_list: Vec<DictWord> = dict_db.do_read(|db_conn| {
@@ -176,6 +177,7 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
             source_uid_field => dw.dict_label.as_str(),
             content_field => content_text.as_str(),
             content_exact_field => content_text.as_str(),
+            is_bold_definition_field => false,
         ))?;
 
         indexed_count += 1;
@@ -209,7 +211,7 @@ pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, l
         _ => {}
     }
 
-    let schema = build_bold_definitions_schema(lang);
+    let schema = build_dict_schema(lang);
     let index = open_or_create_index(index_dir, schema, lang)?;
 
     let mut writer: IndexWriter = index.writer(50_000_000)?;
@@ -219,13 +221,15 @@ pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, l
     writer.commit()?;
 
     let schema = index.schema();
-    let bold_definitions_id_field = schema.get_field("bold_definitions_id").unwrap();
     let uid_field = schema.get_field("uid").unwrap();
-    let bold_field = schema.get_field("bold").unwrap();
-    let ref_code_field = schema.get_field("ref_code").unwrap();
-    let nikaya_field = schema.get_field("nikaya").unwrap();
+    let word_field = schema.get_field("word").unwrap();
+    let synonyms_field = schema.get_field("synonyms").unwrap();
+    let language_field = schema.get_field("language").unwrap();
+    let source_uid_field = schema.get_field("source_uid").unwrap();
+    let nikaya_group_path_field = schema.get_field("nikaya_group_path").unwrap();
     let content_field = schema.get_field("content").unwrap();
     let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
 
     let rows: Vec<BoldDefinition> = dpd_db.do_read(|db_conn| {
         bd_dsl::bold_definitions
@@ -242,14 +246,28 @@ pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, l
             continue;
         }
 
+        let group_path = [
+            row.nikaya.as_str(),
+            row.book.as_str(),
+            row.title.as_str(),
+            row.subhead.as_str(),
+        ]
+        .iter()
+        .filter(|s| !s.is_empty())
+        .copied()
+        .collect::<Vec<&str>>()
+        .join(" / ");
+
         writer.add_document(doc!(
-            bold_definitions_id_field => row.id as i64,
             uid_field => row.uid.as_str(),
-            bold_field => row.bold.as_str(),
-            ref_code_field => row.ref_code.as_str(),
-            nikaya_field => row.nikaya.as_str(),
+            word_field => row.bold.as_str(),
+            synonyms_field => "",
+            language_field => lang,
+            source_uid_field => row.ref_code.as_str(),
+            nikaya_group_path_field => group_path.as_str(),
             content_field => plain,
             content_exact_field => plain,
+            is_bold_definition_field => true,
         ))?;
 
         indexed_count += 1;
