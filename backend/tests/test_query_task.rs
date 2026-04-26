@@ -80,10 +80,10 @@ fn test_sutta_search_contains_match() {
 
     assert!(!results.is_empty());
     // Verify the query term appears in the snippet
-    assert!(results[1].snippet.contains("<span class='match'>satipaṭṭhāna</span>"));
+    assert!(results[2].snippet.contains("<span class='match'>satipaṭṭhāna</span>"));
 
-    assert_eq!(results[1].uid, "mn10/en/horner");
-    assert!(results[1].snippet.starts_with("... middle length sayings <span class='match'>satipaṭṭhāna</span> suttaṁ"));
+    assert_eq!(results[2].uid, "mn10/en/horner");
+    assert!(results[2].snippet.starts_with("... middle length sayings <span class='match'>satipaṭṭhāna</span> suttaṁ"));
 
     // Verify all results are English
     for result in &results {
@@ -201,8 +201,8 @@ fn test_dict_word_search_contains_match() {
     // println!("{}", results[0].snippet);
     // println!("{:#?}", results);
 
-    assert_eq!(results[0].uid, "element of awakening/dpd");
-    assert!(results[0].snippet.contains("element of awakening factor of enlightenment"),
+    assert_eq!(results[0].uid, "sambodhiyaṅga/dpd");
+    assert!(results[0].snippet.contains("element of awakening; factor of enlightenment"),
         "Snippet should contain 'element of awakening', got: {}", results[0].snippet);
 }
 

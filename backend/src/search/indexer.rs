@@ -14,6 +14,12 @@ use crate::AppGlobalPaths;
 use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
 
+/// Lowercase the input and reverse it character-by-character. Used to populate
+/// the `*_rev` raw fields so a uid suffix query reduces to a prefix regex.
+fn reversed_lowercased(s: &str) -> String {
+    s.to_lowercase().chars().rev().collect()
+}
+
 /// Open or create a Tantivy index at the given directory path.
 pub fn open_or_create_index(dir: &Path, schema: tantivy::schema::Schema, lang: &str) -> Result<Index> {
     match dir.try_exists() {
@@ -49,6 +55,7 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
 
     let schema = index.schema();
     let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
     let title_field = schema.get_field("title").unwrap();
     let language_field = schema.get_field("language").unwrap();
     let source_uid_field = schema.get_field("source_uid").unwrap();
@@ -88,8 +95,11 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
         let is_commentary = before_first_slash.contains(".att") || before_first_slash.contains(".tik");
         let is_mula = !is_commentary;
 
+        let uid_rev = reversed_lowercased(&sutta.uid);
+
         writer.add_document(doc!(
             uid_field => sutta.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
             title_field => t,
             language_field => sutta.language.as_str(),
             source_uid_field => source,
@@ -137,6 +147,7 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
 
     let schema = index.schema();
     let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
     let word_field = schema.get_field("word").unwrap();
     let synonyms_field = schema.get_field("synonyms").unwrap();
     let language_field = schema.get_field("language").unwrap();
@@ -169,8 +180,11 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
 
         let lang_val = dw.language.as_deref().unwrap_or("");
 
+        let uid_rev = reversed_lowercased(&dw.uid);
+
         writer.add_document(doc!(
             uid_field => dw.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
             word_field => w.as_str(),
             synonyms_field => syn,
             language_field => lang_val,
@@ -222,6 +236,7 @@ pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, l
 
     let schema = index.schema();
     let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
     let word_field = schema.get_field("word").unwrap();
     let synonyms_field = schema.get_field("synonyms").unwrap();
     let language_field = schema.get_field("language").unwrap();
@@ -258,8 +273,11 @@ pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, l
         .collect::<Vec<&str>>()
         .join(" / ");
 
+        let uid_rev = reversed_lowercased(&row.uid);
+
         writer.add_document(doc!(
             uid_field => row.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
             word_field => row.bold.as_str(),
             synonyms_field => "",
             language_field => lang,
@@ -303,6 +321,7 @@ pub fn build_library_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: 
 
     let schema = index.schema();
     let spine_item_uid_field = schema.get_field("spine_item_uid").unwrap();
+    let spine_item_uid_rev_field = schema.get_field("spine_item_uid_rev").unwrap();
     let book_uid_field = schema.get_field("book_uid").unwrap();
     let book_title_field = schema.get_field("book_title").unwrap();
     let author_field = schema.get_field("author").unwrap();
@@ -346,8 +365,11 @@ pub fn build_library_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: 
         // Prepend book_title, chapter title, and author to content for better matching
         let content_text = format!("{} {} {} {}", book_title, chapter_title, author, plain);
 
+        let spine_item_uid_rev = reversed_lowercased(&spine_item.spine_item_uid);
+
         writer.add_document(doc!(
             spine_item_uid_field => spine_item.spine_item_uid.as_str(),
+            spine_item_uid_rev_field => spine_item_uid_rev.as_str(),
             book_uid_field => spine_item.book_uid.as_str(),
             book_title_field => book_title,
             author_field => author,

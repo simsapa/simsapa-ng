@@ -24,25 +24,25 @@
 
 ## Tasks
 
-- [ ] 1.0 Stage 1 — Tantivy push-down for uid prefix + suffix (schema + indexer + searcher)
-  - [ ] 1.1 Add a `uid_rev` raw field to `build_sutta_schema` and `build_dict_schema`, and a `spine_item_uid_rev` raw field to `build_library_schema` in `backend/src/search/schema.rs`; use `raw_opts` so terms are stored exactly as written.
-  - [ ] 1.2 In `backend/src/search/indexer.rs`, when emitting each doc, write the lowercased uid into the original field and the character-reversed lowercased uid into the new `*_rev` field for sutta, dict, and library docs (bold-definition docs included, since they live in the dict index).
-  - [ ] 1.3 Re-bootstrap the index once against the updated schema (via the existing bootstrap CLI step) so `uid_rev` / `spine_item_uid_rev` are populated before the searcher starts querying them.
-  - [ ] 1.4 In `backend/src/search/searcher.rs`, introduce a single `add_uid_filters(subqueries, filters, schema, uid_field_name, uid_rev_field_name)` helper implementing the §3.2 push-down: lowercase the input, escape it with `regex::escape`, push `RegexQuery::from_pattern("{prefix}.*", uid_field)` for `uid_prefix`, and `RegexQuery::from_pattern("{reversed_suffix}.*", uid_rev_field)` for `uid_suffix`.
-  - [ ] 1.5 Replace the bodies of `add_sutta_filters`, `add_dict_filters`, and `add_library_filters` to call `add_uid_filters` with the right `(uid_field, uid_rev_field)` pair, keeping any non-uid filtering they already do.
-  - [ ] 1.6 Delete the stale "simple_fold over-match" / "Rust-side `apply_uid_filters` is the source of truth" comments around the old `add_dict_filters` / `add_library_filters` (searcher.rs:625, 645).
-  - [ ] 1.7 Add a unit/integration test that builds a small in-memory tantivy index with mixed uids, runs a query with `uid_prefix = "an"` and `uid_suffix = "1.1"`, and asserts the `Count` collector total equals the expected count (no over-match, no full-corpus pass).
+- [x] 1.0 Stage 1 — Tantivy push-down for uid prefix + suffix (schema + indexer + searcher)
+  - [x] 1.1 Add a `uid_rev` raw field to `build_sutta_schema` and `build_dict_schema`, and a `spine_item_uid_rev` raw field to `build_library_schema` in `backend/src/search/schema.rs`; use `raw_opts` so terms are stored exactly as written.
+  - [x] 1.2 In `backend/src/search/indexer.rs`, when emitting each doc, write the lowercased uid into the original field and the character-reversed lowercased uid into the new `*_rev` field for sutta, dict, and library docs (bold-definition docs included, since they live in the dict index).
+  - [x] 1.3 Re-bootstrap the index once against the updated schema (via the existing bootstrap CLI step) so `uid_rev` / `spine_item_uid_rev` are populated before the searcher starts querying them.
+  - [x] 1.4 In `backend/src/search/searcher.rs`, introduce a single `add_uid_filters(subqueries, filters, schema, uid_field_name, uid_rev_field_name)` helper implementing the §3.2 push-down: lowercase the input, escape it with `regex::escape`, push `RegexQuery::from_pattern("{prefix}.*", uid_field)` for `uid_prefix`, and `RegexQuery::from_pattern("{reversed_suffix}.*", uid_rev_field)` for `uid_suffix`.
+  - [x] 1.5 Replace the bodies of `add_sutta_filters`, `add_dict_filters`, and `add_library_filters` to call `add_uid_filters` with the right `(uid_field, uid_rev_field)` pair, keeping any non-uid filtering they already do.
+  - [x] 1.6 Delete the stale "simple_fold over-match" / "Rust-side `apply_uid_filters` is the source of truth" comments around the old `add_dict_filters` / `add_library_filters` (searcher.rs:625, 645).
+  - [x] 1.7 Add a unit/integration test that builds a small in-memory tantivy index with mixed uids, runs a query with `uid_prefix = "an"` and `uid_suffix = "1.1"`, and asserts the `Count` collector total equals the expected count (no over-match, no full-corpus pass).
 
-- [ ] 2.0 Stage 2 — SQL push-down for uid prefix + suffix in every FTS5 helper, with parallel COUNT
-  - [ ] 2.1 Refactor `suttas_contains_match_fts5` in `backend/src/query_task.rs` to accept `page_num` / `page_len`, append conditional `AND suttas.uid LIKE ?` clauses for prefix and suffix when set, run `LIMIT ? OFFSET ?`, and execute a sibling `SELECT COUNT(*)` with the same predicate; return `(Vec<SearchResult>, total: usize)`.
-  - [ ] 2.2 Apply the same shape to `dict_words_contains_match_fts5` (which previously had no prefix push-down) — both prefix and suffix on `dict_words.uid`, paginated, with parallel COUNT.
-  - [ ] 2.3 Apply the same shape to `book_spine_items_contains_match_fts5` — both prefix and suffix on `book_spine_items.spine_item_uid`, paginated, with parallel COUNT.
-  - [ ] 2.4 Add suffix push-down (and confirm prefix) to `query_bold_definitions_bold_fts5` and `query_bold_definitions_commentary_fts5`; both paginated and counted server-side.
-  - [ ] 2.5 Add prefix + suffix push-down to the SQL backing `dpd_lookup` and `lemma_1_dpd_headword_match_fts5`, paginated and counted; the bold-definition append still flows through the helpers above (which now push everything down themselves).
-  - [ ] 2.6 Add prefix + suffix push-down to the SQL title-match paths (`suttas_title_match_*`, `library_title_match_*`); paginated with parallel COUNT.
-  - [ ] 2.7 Drop the `'%'` no-op pattern hack around the old "results that survive `apply_uid_filters`" comment (query_task.rs:752); helpers no longer need to anticipate a Rust post-filter.
-  - [ ] 2.8 Stop helpers from writing `self.db_query_hits_count` directly; each helper instead returns its `total` to the caller. Keep their `SAFETY_LIMIT_SQL` warning logs for now (Stage 3 reconsiders the cap).
-  - [ ] 2.9 Run `cargo test test_uid_suffix_and_bold_ascii` and `cargo test test_search_filter_pagination` — both must still pass; the pagination test now exercises real per-page SQL rather than slicing a cached set.
+- [x] 2.0 Stage 2 — SQL push-down for uid prefix + suffix in every FTS5 helper, with parallel COUNT
+  - [x] 2.1 Refactor `suttas_contains_match_fts5` in `backend/src/query_task.rs` to accept `page_num` / `page_len`, append conditional `AND suttas.uid LIKE ?` clauses for prefix and suffix when set, run `LIMIT ? OFFSET ?`, and execute a sibling `SELECT COUNT(*)` with the same predicate; return `(Vec<SearchResult>, total: usize)`.
+  - [x] 2.2 Apply the same shape to `dict_words_contains_match_fts5` (which previously had no prefix push-down) — both prefix and suffix on `dict_words.uid`, paginated, with parallel COUNT.
+  - [x] 2.3 Apply the same shape to `book_spine_items_contains_match_fts5` — both prefix and suffix on `book_spine_items.spine_item_uid`, paginated, with parallel COUNT.
+  - [x] 2.4 Add suffix push-down (and confirm prefix) to `query_bold_definitions_bold_fts5` and `query_bold_definitions_commentary_fts5`; both paginated and counted server-side.
+  - [x] 2.5 Add prefix + suffix push-down to the SQL backing `dpd_lookup` and `lemma_1_dpd_headword_match_fts5`, paginated and counted; the bold-definition append still flows through the helpers above (which now push everything down themselves).
+  - [x] 2.6 Add prefix + suffix push-down to the SQL title-match paths (`suttas_title_match_*`, `library_title_match_*`); paginated with parallel COUNT.
+  - [x] 2.7 Drop the `'%'` no-op pattern hack around the old "results that survive `apply_uid_filters`" comment (query_task.rs:752); helpers no longer need to anticipate a Rust post-filter.
+  - [x] 2.8 Stop helpers from writing `self.db_query_hits_count` directly; each helper instead returns its `total` to the caller. Keep their `SAFETY_LIMIT_SQL` warning logs for now (Stage 3 reconsiders the cap).
+  - [x] 2.9 Run `cargo test test_uid_suffix_and_bold_ascii` and `cargo test test_search_filter_pagination` — both must still pass; the pagination test now exercises real per-page SQL rather than slicing a cached set.
 
 - [ ] 3.0 Stage 3 — Pipeline simplification: filter-aware `results_page` dispatch and removal of full-fetch / cache machinery
   - [ ] 3.1 Rewrite `results_page` in `backend/src/query_task.rs` to dispatch on `(SearchMode, SearchArea)` per §3.1, calling per-mode handlers that take `page_num` and return `(Vec<SearchResult>, total: usize)`.

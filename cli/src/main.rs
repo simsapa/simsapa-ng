@@ -731,6 +731,7 @@ fn fulltext_search(
         source_include: source.is_some(),
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         sutta_ref: None,
         include_cst_mula: true,
         include_cst_commentary: true,

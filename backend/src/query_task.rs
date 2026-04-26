@@ -609,16 +609,22 @@ impl<'a> SearchQueryTask<'a> {
         }
     }
 
-    fn suttas_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        info(&format!("suttas_contains_match_fts5_all(): query_text: {}, lang filter: {}, include_ms_mula: {}, include_cst_mula: {}, include_cst_commentary: {}", &self.query_text, &self.lang, self.include_ms_mula, self.include_cst_mula, self.include_cst_commentary));
+    /// Per-page contains-match against suttas_fts. Pushes uid_prefix and
+    /// uid_suffix down as `suttas.uid LIKE ?` clauses, and runs a parallel
+    /// COUNT(*) over the same predicate so the caller has the true post-filter
+    /// hit count without materializing every row.
+    fn suttas_contains_match_fts5(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("suttas_contains_match_fts5(): query_text: {}, lang filter: {}, include_ms_mula: {}, include_cst_mula: {}, include_cst_commentary: {}", &self.query_text, &self.lang, self.include_ms_mula, self.include_cst_mula, self.include_cst_commentary));
         let timer = Instant::now();
 
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
         let like_pattern = format!("%{}%", self.query_text);
-
-        // Determine if we need language filtering
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
 
         // Build dynamic WHERE clauses for CST/commentary filtering
@@ -631,8 +637,9 @@ impl<'a> SearchQueryTask<'a> {
         }
 
         if !self.include_cst_commentary {
+            // There are %.att/pli/cst and %.att.xml/pli/cst, but .att and .tik commentaries are CST so they always end in /cst
             extra_where.push_str(
-                " AND NOT (s.uid LIKE '%.att%/%' OR s.uid LIKE '%.tik%/%')"
+                " AND NOT (s.uid LIKE '%.att%/cst' OR s.uid LIKE '%.tik%/cst')"
             );
         }
 
@@ -640,15 +647,34 @@ impl<'a> SearchQueryTask<'a> {
             extra_where.push_str(&format!(" AND f.nikaya LIKE '{}%'", prefix));
         }
 
-        if let Some(prefix) = sanitize_uid_like_prefix(self.uid_prefix.as_deref()) {
-            extra_where.push_str(&format!(" AND f.uid LIKE '{}%'", prefix));
-        }
-
         if !self.include_ms_mula {
             extra_where.push_str(" AND NOT (f.source_uid = 'ms')");
         }
 
+        // Push uid_prefix and uid_suffix down as parameter-bound LIKE clauses
+        // against suttas.uid (raw, btree-backed for prefix). Unset filters bind
+        // the no-op pattern `%`, keeping the bind count constant — diesel's
+        // `sql_query` chained-bind types prevent conditional binding.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
+            .unwrap_or_else(|| "%".to_string());
+
         info(&format!("extra_where: {}", extra_where));
+
+        let where_clause = if apply_lang_filter {
+            format!(
+                "WHERE f.content_plain LIKE ? AND f.language = ?{} AND s.uid LIKE ? AND s.uid LIKE ?",
+                extra_where
+            )
+        } else {
+            format!(
+                "WHERE f.content_plain LIKE ?{} AND s.uid LIKE ? AND s.uid LIKE ?",
+                extra_where
+            )
+        };
 
         // --- Cheap COUNT(*) for true total ---
         #[derive(QueryableByName)]
@@ -656,76 +682,93 @@ impl<'a> SearchQueryTask<'a> {
             #[diesel(sql_type = BigInt)]
             c: i64,
         }
-        let count_sql = if apply_lang_filter {
-            format!(
-                "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ? AND f.language = ?{}",
-                extra_where
-            )
-        } else {
-            format!(
-                "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ?{}",
-                extra_where
-            )
-        };
+        let count_sql = format!(
+            "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id {}",
+            where_clause
+        );
         let total: i64 = if apply_lang_filter {
             sql_query(&count_sql)
                 .bind::<Text, _>(&like_pattern)
                 .bind::<Text, _>(&self.lang)
+                .bind::<Text, _>(&uid_prefix_pat)
+                .bind::<Text, _>(&uid_suffix_pat)
                 .get_result::<CountRow>(db_conn)?
                 .c
         } else {
             sql_query(&count_sql)
                 .bind::<Text, _>(&like_pattern)
+                .bind::<Text, _>(&uid_prefix_pat)
+                .bind::<Text, _>(&uid_suffix_pat)
                 .get_result::<CountRow>(db_conn)?
                 .c
         };
 
-        // --- Execute Query ---
-        let select_sql = if apply_lang_filter {
-            format!(
-                "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ? AND f.language = ?{} ORDER BY s.id LIMIT ?",
-                extra_where
-            )
-        } else {
-            format!(
-                "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id WHERE f.content_plain LIKE ?{} ORDER BY s.id LIMIT ?",
-                extra_where
-            )
-        };
-
+        // --- Page fetch ---
+        let select_sql = format!(
+            "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id {} ORDER BY s.id LIMIT ? OFFSET ?",
+            where_clause
+        );
+        let offset = (page_num as i64).saturating_mul(page_len as i64);
         let db_results: Vec<Sutta> = if apply_lang_filter {
             sql_query(&select_sql)
                 .bind::<Text, _>(&like_pattern)
                 .bind::<Text, _>(&self.lang)
-                .bind::<BigInt, _>(self.fetch_limit_sql)
+                .bind::<Text, _>(&uid_prefix_pat)
+                .bind::<Text, _>(&uid_suffix_pat)
+                .bind::<BigInt, _>(page_len as i64)
+                .bind::<BigInt, _>(offset)
                 .load(db_conn)?
         } else {
             sql_query(&select_sql)
                 .bind::<Text, _>(&like_pattern)
-                .bind::<BigInt, _>(self.fetch_limit_sql)
+                .bind::<Text, _>(&uid_prefix_pat)
+                .bind::<Text, _>(&uid_suffix_pat)
+                .bind::<BigInt, _>(page_len as i64)
+                .bind::<BigInt, _>(offset)
                 .load(db_conn)?
         };
 
-        if self.hit_sql_safety_cap(db_results.len()) {
+        let search_results: Vec<SearchResult> = db_results
+            .iter()
+            .map(|sutta| self.db_sutta_to_result(sutta))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok((search_results, total as usize))
+    }
+
+    /// Stage 2 transitional wrapper: returns up to `fetch_limit_sql` rows from
+    /// page 0, writing the true total into `self.db_query_hits_count` so the
+    /// existing `results_page` flow still works. Removed in Stage 3 once
+    /// `results_page` consumes the per-page helper directly.
+    fn suttas_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.suttas_contains_match_fts5(0, page_len)?;
+
+        if self.hit_sql_safety_cap(results.len()) {
             warn(&format!(
                 "suttas_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
                 SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
-        // --- Map to SearchResult ---
-        let search_results = db_results
-            .iter()
-            .map(|sutta| self.db_sutta_to_result(sutta))
-            .collect();
-
-        self.db_query_hits_count = total;
-        info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(search_results)
+        self.db_query_hits_count = total as i64;
+        Ok(results)
     }
 
-    fn dict_words_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        info(&format!("dict_words_contains_match_fts5_all(): query_text: {}", &self.query_text));
+    /// Per-page contains-match across DpdHeadword + DictWord. Pushes both
+    /// `uid_prefix` and `uid_suffix` down to SQL at every phase so the
+    /// per-phase fetch_limit_sql cap is spent on rows that survive the
+    /// filter. The multi-phase dedup union is materialised, its length is
+    /// the true post-filter total, and the requested page is then sliced.
+    /// (A single cheap `SELECT COUNT(*)` isn't feasible across the four
+    /// phases without restructuring; the union length is authoritative.)
+    fn dict_words_contains_match_fts5(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("dict_words_contains_match_fts5(): query_text: {}", &self.query_text));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -748,10 +791,14 @@ impl<'a> SearchQueryTask<'a> {
         let mut all_results: Vec<DictWord> = Vec::new();
         let mut result_uids: HashSet<String> = HashSet::new();
 
-        // Push uid_prefix down to SQL so the per-phase LIMIT is spent on rows
-        // that will survive `apply_uid_filters`. `'%'` is a no-op pattern.
+        // Push uid_prefix and uid_suffix down to SQL at every phase. `'%'`
+        // is the no-op pattern when the filter is unset, keeping the bind
+        // count constant.
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
 
         // Phase 1: Exact matches on DpdHeadword.lemma_clean
@@ -786,6 +833,7 @@ impl<'a> SearchQueryTask<'a> {
                     let dict_word_result: Result<DictWord, _> = dict_query
                         .filter(dict_dsl::word.eq(&headword.lemma_1))
                         .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                        .filter(dict_dsl::uid.like(&uid_suffix_pat))
                         .first::<DictWord>(db_conn);
 
                     if let Ok(dict_word) = dict_word_result {
@@ -854,6 +902,7 @@ impl<'a> SearchQueryTask<'a> {
                     let dict_word_result: Result<DictWord, _> = dict_query
                         .filter(dict_dsl::word.eq(&headword.lemma_1))
                         .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                        .filter(dict_dsl::uid.like(&uid_suffix_pat))
                         .first::<DictWord>(db_conn);
 
                     if let Ok(dict_word) = dict_word_result {
@@ -868,11 +917,12 @@ impl<'a> SearchQueryTask<'a> {
         for term in &terms {
             let like_pattern = format!("%{}%", term);
 
-            // Build the FTS5 query with source filtering
+            // Build the FTS5 query with source filtering.
             // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
             // dict_label is available in the FTS table for filtering.
-            // Always include `d.uid LIKE ?` (default '%') so uid_prefix push-down
-            // costs only a constant bind, not a divergent SQL string.
+            // Always bind both uid LIKE clauses (default '%') so uid_prefix /
+            // uid_suffix push-down costs only constant binds, not a divergent
+            // SQL string.
             let fts_query = if self.source.is_some() {
                 if self.source_include {
                     String::from(
@@ -880,7 +930,7 @@ impl<'a> SearchQueryTask<'a> {
                         SELECT d.*
                         FROM dict_words_fts f
                         JOIN dict_words d ON f.dict_word_id = d.id
-                        WHERE f.definition_plain LIKE ? AND f.dict_label = ? AND d.uid LIKE ?
+                        WHERE f.definition_plain LIKE ? AND f.dict_label = ? AND d.uid LIKE ? AND d.uid LIKE ?
                         ORDER BY d.id
                         LIMIT ?
                         "#
@@ -891,7 +941,7 @@ impl<'a> SearchQueryTask<'a> {
                         SELECT d.*
                         FROM dict_words_fts f
                         JOIN dict_words d ON f.dict_word_id = d.id
-                        WHERE f.definition_plain LIKE ? AND f.dict_label != ? AND d.uid LIKE ?
+                        WHERE f.definition_plain LIKE ? AND f.dict_label != ? AND d.uid LIKE ? AND d.uid LIKE ?
                         ORDER BY d.id
                         LIMIT ?
                         "#
@@ -903,7 +953,7 @@ impl<'a> SearchQueryTask<'a> {
                     SELECT d.*
                     FROM dict_words_fts f
                     JOIN dict_words d ON f.dict_word_id = d.id
-                    WHERE f.definition_plain LIKE ? AND d.uid LIKE ?
+                    WHERE f.definition_plain LIKE ? AND d.uid LIKE ? AND d.uid LIKE ?
                     ORDER BY d.id
                     LIMIT ?
                     "#
@@ -915,12 +965,14 @@ impl<'a> SearchQueryTask<'a> {
                     .bind::<Text, _>(&like_pattern)
                     .bind::<Text, _>(source_val)
                     .bind::<Text, _>(&uid_prefix_pat)
+                    .bind::<Text, _>(&uid_suffix_pat)
                     .bind::<BigInt, _>(self.fetch_limit_sql)
                     .load(db_conn)?
             } else {
                 sql_query(&fts_query)
                     .bind::<Text, _>(&like_pattern)
                     .bind::<Text, _>(&uid_prefix_pat)
+                    .bind::<Text, _>(&uid_suffix_pat)
                     .bind::<BigInt, _>(self.fetch_limit_sql)
                     .load(db_conn)?
             };
@@ -961,6 +1013,8 @@ impl<'a> SearchQueryTask<'a> {
 
                         let dict_word_result: Result<DictWord, _> = dict_query
                             .filter(dict_dsl::word.eq(&headword.lemma_1))
+                            .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                            .filter(dict_dsl::uid.like(&uid_suffix_pat))
                             .first::<DictWord>(db_conn);
 
                         if let Ok(dict_word) = dict_word_result {
@@ -1012,6 +1066,8 @@ impl<'a> SearchQueryTask<'a> {
 
                             let dict_word_result: Result<DictWord, _> = dict_query
                                 .filter(dict_dsl::word.eq(&headword.lemma_1))
+                                .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                                .filter(dict_dsl::uid.like(&uid_suffix_pat))
                                 .first::<DictWord>(db_conn);
 
                             if let Ok(dict_word) = dict_word_result {
@@ -1026,28 +1082,52 @@ impl<'a> SearchQueryTask<'a> {
 
         if self.hit_sql_safety_cap(all_results.len()) {
             warn(&format!(
-                "dict_words_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                "dict_words_contains_match_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
                 SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
-        // Use the dedup-union count (matches pre-Stage D semantics). Under-counts
-        // only when the per-phase safety cap is hit on very broad queries.
-        let total = all_results.len() as i64;
+        // The dedup-union length is the true post-filter total. Under-counts
+        // only when a per-phase safety cap is hit on very broad queries.
+        let total = all_results.len();
 
-        // Map to SearchResult
-        let search_results: Vec<SearchResult> = all_results
+        // Slice to the requested page.
+        let offset = page_num.saturating_mul(page_len);
+        let page_slice: Vec<&DictWord> = all_results
             .iter()
+            .skip(offset)
+            .take(page_len)
+            .collect();
+
+        let search_results: Vec<SearchResult> = page_slice
+            .into_iter()
             .map(|dict_word| self.db_word_to_result(dict_word))
             .collect();
 
-        self.db_query_hits_count = total;
         info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(search_results)
+        Ok((search_results, total))
     }
 
-    fn book_spine_items_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        info(&format!("book_spine_items_contains_match_fts5_all(): query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+    /// Stage 2 transitional wrapper: returns up to `fetch_limit_sql` rows from
+    /// page 0, writing the true total into `self.db_query_hits_count`.
+    /// Removed in Stage 3 once `results_page` consumes the per-page helper.
+    fn dict_words_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.dict_words_contains_match_fts5(0, page_len)?;
+        self.db_query_hits_count = total as i64;
+        Ok(results)
+    }
+
+    /// Per-page contains-match against book_spine_items_fts. Pushes uid_prefix
+    /// and uid_suffix down as `book_spine_items.spine_item_uid LIKE ?` clauses,
+    /// and runs a parallel COUNT(*) over the same predicate so the caller has
+    /// the true post-filter hit count without materializing every row.
+    fn book_spine_items_contains_match_fts5(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("book_spine_items_contains_match_fts5(): query_text: {}, lang filter: {}", &self.query_text, &self.lang));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -1058,11 +1138,14 @@ impl<'a> SearchQueryTask<'a> {
         // Determine if we need language filtering
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
 
-        // Push uid_prefix down to SQL so the LIMIT is spent on rows that will
-        // survive the post-filter. Default '%' matches anything when unset,
-        // keeping the bind count constant.
+        // Push uid_prefix and uid_suffix down to SQL so the LIMIT is spent on
+        // rows that survive the filter. Default '%' matches anything when
+        // unset, keeping the bind count constant.
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
 
         // --- Cheap COUNT(*) for true total ---
@@ -1077,12 +1160,13 @@ impl<'a> SearchQueryTask<'a> {
                 SELECT COUNT(*) AS c
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ?
+                WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&self.lang)
             .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
             .get_result::<CountRow>(db_conn)?
             .c
         } else {
@@ -1091,31 +1175,35 @@ impl<'a> SearchQueryTask<'a> {
                 SELECT COUNT(*) AS c
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ?
+                WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
             .get_result::<CountRow>(db_conn)?
             .c
         };
 
-        // --- Execute Query ---
+        // --- Page fetch ---
+        let offset = (page_num as i64).saturating_mul(page_len as i64);
         let db_results: Vec<BookSpineItem> = if apply_lang_filter {
             sql_query(
                 r#"
                 SELECT b.*
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ?
+                WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&self.lang)
             .bind::<Text, _>(&uid_prefix_pat)
-            .bind::<BigInt, _>(self.fetch_limit_sql)
+            .bind::<Text, _>(&uid_suffix_pat)
+            .bind::<BigInt, _>(page_len as i64)
+            .bind::<BigInt, _>(offset)
             .load(db_conn)?
         } else {
             sql_query(
@@ -1123,33 +1211,44 @@ impl<'a> SearchQueryTask<'a> {
                 SELECT b.*
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ?
+                WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
-                LIMIT ?
+                LIMIT ? OFFSET ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
-            .bind::<BigInt, _>(self.fetch_limit_sql)
+            .bind::<Text, _>(&uid_suffix_pat)
+            .bind::<BigInt, _>(page_len as i64)
+            .bind::<BigInt, _>(offset)
             .load(db_conn)?
         };
 
-        if self.hit_sql_safety_cap(db_results.len()) {
+        let search_results: Vec<SearchResult> = db_results
+            .iter()
+            .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok((search_results, total as usize))
+    }
+
+    /// Stage 2 transitional wrapper: returns up to `fetch_limit_sql` rows from
+    /// page 0, writing the true total into `self.db_query_hits_count`.
+    /// Removed in Stage 3 once `results_page` consumes the per-page helper.
+    fn book_spine_items_contains_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.book_spine_items_contains_match_fts5(0, page_len)?;
+
+        if self.hit_sql_safety_cap(results.len()) {
             warn(&format!(
                 "book_spine_items_contains_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
                 SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
-        // --- Map to SearchResult ---
-        let search_results = db_results
-            .iter()
-            .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
-            .collect();
-
-        self.db_query_hits_count = total;
-        info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(search_results)
+        self.db_query_hits_count = total as i64;
+        Ok(results)
     }
 
     /// Substring match on bold_definitions.bold using the trigram FTS5 index.
@@ -1161,6 +1260,8 @@ impl<'a> SearchQueryTask<'a> {
     fn query_bold_definitions_bold_fts5(
         &self,
         query: &str,
+        page_num: usize,
+        page_len: usize,
     ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::db::dpd_models::BoldDefinition;
         use diesel::sql_types::BigInt;
@@ -1178,10 +1279,8 @@ impl<'a> SearchQueryTask<'a> {
         // ASCII-folded `bold_ascii` (e.g. "sutthu") so ASCII queries find
         // diacritic entries — mirrors the word_ascii lookup path.
         //
-        // Apply uid_prefix / uid_suffix at the SQL level so the row budget
-        // (LIMIT) is spent on rows that will survive the post-filter. The
-        // filters default to `%` (match anything) when unset so the bind
-        // count is constant.
+        // Push uid_prefix / uid_suffix down to SQL. Default `%` (match
+        // anything) when unset keeps the bind count constant.
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
             .unwrap_or_else(|| "%".to_string());
@@ -1219,15 +1318,17 @@ impl<'a> SearchQueryTask<'a> {
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
             ORDER BY bd.id
-            LIMIT ?
+            LIMIT ? OFFSET ?
         "#;
 
+        let offset = (page_num as i64).saturating_mul(page_len as i64);
         let bds: Vec<BoldDefinition> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
-            .bind::<BigInt, _>(self.fetch_limit_sql)
+            .bind::<BigInt, _>(page_len as i64)
+            .bind::<BigInt, _>(offset)
             .load(dpd_conn)?;
 
         if self.hit_sql_safety_cap(bds.len()) {
@@ -1247,6 +1348,8 @@ impl<'a> SearchQueryTask<'a> {
     fn query_bold_definitions_commentary_fts5(
         &self,
         normalized_query: &str,
+        page_num: usize,
+        page_len: usize,
     ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::db::dpd_models::BoldDefinition;
         use diesel::sql_types::BigInt;
@@ -1260,8 +1363,7 @@ impl<'a> SearchQueryTask<'a> {
         let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
 
         let like_pattern = format!("%{}%", q);
-        // Push uid_prefix / uid_suffix down to SQL so the LIMIT is spent on
-        // rows that will survive the post-filter. Default patterns are `%`.
+        // Push uid_prefix / uid_suffix down to SQL. Default patterns are `%`.
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
             .unwrap_or_else(|| "%".to_string());
@@ -1298,14 +1400,16 @@ impl<'a> SearchQueryTask<'a> {
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
             ORDER BY bd.id
-            LIMIT ?
+            LIMIT ? OFFSET ?
         "#;
 
+        let offset = (page_num as i64).saturating_mul(page_len as i64);
         let bds: Vec<BoldDefinition> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
-            .bind::<BigInt, _>(self.fetch_limit_sql)
+            .bind::<BigInt, _>(page_len as i64)
+            .bind::<BigInt, _>(offset)
             .load(dpd_conn)?;
 
         if self.hit_sql_safety_cap(bds.len()) {
@@ -1319,110 +1423,170 @@ impl<'a> SearchQueryTask<'a> {
         Ok((total, results))
     }
 
-    /// DPD Lookup — returns all headword results unpaginated. DPD is only
-    /// Pāli-to-English so language filters are ignored. Pagination, bold-definition
-    /// merging, uid filtering, and highlighting are owned by `results_page`.
-    /// Assume that if the DPD Lookup was selected then stale language settings can be ignored.
-    pub fn dpd_lookup_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+    /// Per-page DPD Lookup. The underlying multi-step `dpd_lookup` is
+    /// naturally bounded (a single word resolves to a small grouped set),
+    /// so uid_prefix / uid_suffix are applied as a post-filter on the
+    /// returned `SearchResult.uid` rather than pushed down into each of
+    /// the many SQL sub-queries. The filtered union length is the
+    /// authoritative total; the requested page is then sliced.
+    /// DPD is only Pāli-to-English so language filters are ignored.
+    pub fn dpd_lookup(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
         let app_data = get_app_data();
-        let results = app_data
+        let mut results = app_data
             .dbm
             .dpd
             .dpd_lookup(&self.query_text, false, true)?;
-        // dpd_lookup returns the full naturally-bounded set; no cap involved.
-        self.db_query_hits_count = results.len() as i64;
+
+        if let Some(prefix) = Self::normalized_filter(&self.uid_prefix) {
+            let p = prefix.to_lowercase();
+            results.retain(|r| r.uid.to_lowercase().starts_with(&p));
+        }
+        if let Some(suffix) = Self::normalized_filter(&self.uid_suffix) {
+            let s = suffix.to_lowercase();
+            results.retain(|r| r.uid.to_lowercase().ends_with(&s));
+        }
+
+        let total = results.len();
+        let offset = page_num.saturating_mul(page_len);
+        let page: Vec<SearchResult> = results.into_iter().skip(offset).take(page_len).collect();
+        Ok((page, total))
+    }
+
+    /// Stage 2 transitional wrapper: returns the full filtered set from
+    /// page 0, writing the true total into `self.db_query_hits_count`.
+    /// Removed in Stage 3 once `results_page` consumes the per-page helper.
+    pub fn dpd_lookup_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.dpd_lookup(0, page_len)?;
+        self.db_query_hits_count = total as i64;
         Ok(results)
     }
 
-    fn suttas_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        info(&format!("suttas_title_match_all(): query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+    /// Per-page suttas title-match. Pushes uid_prefix and uid_suffix down to
+    /// `suttas.uid LIKE ?`, plus the existing CST / nikaya / MS-mūla filters.
+    /// A parallel `count()` over the same boxed predicate yields the true
+    /// total without materialising every row.
+    fn suttas_title_match(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("suttas_title_match(): query_text: {}, lang filter: {}", &self.query_text, &self.lang));
         let timer = Instant::now();
 
         use crate::db::appdata_schema::suttas::dsl::*;
+        use diesel::dsl::count_star;
 
         let app_data = get_app_data();
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
         let like_pattern = format!("%{}%", self.query_text);
 
-        // Apply title search filter (search in both title and title_ascii)
-        let mut query = suttas.into_boxed();
-        query = query.filter(
-            title.like(&like_pattern)
-            .or(title_ascii.like(&like_pattern))
-        );
-
-        // Apply language filter if specified
-        if !self.lang.is_empty() && self.lang != "Language" {
-            query = query.filter(language.eq(&self.lang));
-        }
-
-        // --- CST Mūla Filtering ---
-        if !self.include_cst_mula {
+        // Build the predicate twice (once for COUNT, once for the page fetch);
+        // diesel's boxed queries are not cloneable, and the predicate is not
+        // expensive to construct.
+        let build_query = || {
+            let mut query = suttas.into_boxed();
             query = query.filter(
-                diesel::dsl::not(
-                    uid.like("%/cst")
-                        .and(uid.not_like("%.att%/cst"))
-                        .and(uid.not_like("%.tik%/cst"))
-                )
+                title.like(&like_pattern)
+                .or(title_ascii.like(&like_pattern))
             );
-        }
 
-        // --- Commentary Filtering ---
-        if !self.include_cst_commentary {
-            query = query.filter(
-                diesel::dsl::not(
-                    uid.like("%.att%/%")
-                    .or(uid.like("%.tik%/%"))
-                )
-            );
-        }
+            if !self.lang.is_empty() && self.lang != "Language" {
+                query = query.filter(language.eq(&self.lang));
+            }
 
-        // --- Nikaya prefix filtering ---
-        if let Some(prefix) = sanitize_uid_like_prefix(self.nikaya_prefix.as_deref()) {
-            query = query.filter(nikaya.like(format!("{}%", prefix)));
-        }
+            if !self.include_cst_mula {
+                query = query.filter(
+                    diesel::dsl::not(
+                        uid.like("%/cst")
+                            .and(uid.not_like("%.att%/cst"))
+                            .and(uid.not_like("%.tik%/cst"))
+                    )
+                );
+            }
 
-        // --- UID prefix filtering ---
-        if let Some(prefix) = sanitize_uid_like_prefix(self.uid_prefix.as_deref()) {
-            query = query.filter(uid.like(format!("{}%", prefix)));
-        }
+            if !self.include_cst_commentary {
+                query = query.filter(
+                    diesel::dsl::not(
+                        uid.like("%.att%/cst")
+                        .or(uid.like("%.tik%/cst"))
+                    )
+                );
+            }
 
-        // --- MS Mūla Filtering ---
-        if !self.include_ms_mula {
-            query = query.filter(diesel::dsl::not(source_uid.eq("ms")));
-        }
+            if let Some(prefix) = sanitize_uid_like_prefix(self.nikaya_prefix.as_deref()) {
+                query = query.filter(nikaya.like(format!("{}%", prefix)));
+            }
 
-        // Execute query
-        let db_results: Vec<Sutta> = query
+            if let Some(prefix) = Self::normalized_filter(&self.uid_prefix) {
+                query = query.filter(uid.like(format!("{}%", prefix)));
+            }
+            if let Some(suffix) = Self::normalized_filter(&self.uid_suffix) {
+                query = query.filter(uid.like(format!("%{}", suffix)));
+            }
+
+            if !self.include_ms_mula {
+                query = query.filter(diesel::dsl::not(source_uid.eq("ms")));
+            }
+
+            query
+        };
+
+        let total: i64 = build_query()
+            .select(count_star())
+            .first(db_conn)?;
+
+        let offset = (page_num as i64).saturating_mul(page_len as i64);
+        let db_results: Vec<Sutta> = build_query()
             .order(uid.asc())
-            .limit(self.fetch_limit_sql)
+            .limit(page_len as i64)
+            .offset(offset)
             .select(Sutta::as_select())
             .load(db_conn)?;
 
-        if self.hit_sql_safety_cap(db_results.len()) {
+        let search_results: Vec<SearchResult> = db_results
+            .iter()
+            .map(|sutta| self.db_sutta_to_result(sutta))
+            .collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok((search_results, total as usize))
+    }
+
+    /// Stage 2 transitional wrapper: returns up to `fetch_limit_sql` rows from
+    /// page 0, writing the true total into `self.db_query_hits_count`.
+    /// Removed in Stage 3 once `results_page` consumes the per-page helper.
+    fn suttas_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.suttas_title_match(0, page_len)?;
+
+        if self.hit_sql_safety_cap(results.len()) {
             warn(&format!(
                 "suttas_title_match_all hit SAFETY_LIMIT_SQL={} (query='{}')",
                 SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
-        // Map to SearchResult
-        let search_results: Vec<SearchResult> = db_results
-            .iter()
-            .map(|sutta| self.db_sutta_to_result(sutta))
-            .collect();
-
-        // Title-match queries are typically narrow; using results.len() as the
-        // total under-counts only when the safety cap is hit. Matches the
-        // historic pre-Stage D semantics for this handler.
-        self.db_query_hits_count = search_results.len() as i64;
-        info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(search_results)
+        self.db_query_hits_count = total as i64;
+        Ok(results)
     }
 
-    fn library_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        info(&format!("library_title_match_all(): query_text: {}, lang filter: {}", &self.query_text, &self.lang));
+    /// Per-page library title-match: union of books and spine-item title hits.
+    /// uid_prefix and uid_suffix are pushed down on each branch
+    /// (`books.uid` / `book_spine_items.spine_item_uid`); the materialised
+    /// union length is the authoritative total and the requested page is
+    /// then sliced.
+    fn library_title_match(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("library_title_match(): query_text: {}, lang filter: {}", &self.query_text, &self.lang));
         let timer = Instant::now();
 
         use crate::db::appdata_schema::books::dsl as books_dsl;
@@ -1432,16 +1596,26 @@ impl<'a> SearchQueryTask<'a> {
         let db_conn = &mut app_data.dbm.appdata.get_conn()?;
 
         let like_pattern = format!("%{}%", self.query_text);
-
-        // Determine if we need language filtering
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
+        // Push uid_prefix / uid_suffix down on `books.uid` for the books
+        // branch and `b.spine_item_uid` for the spine-items branch. `'%'` is
+        // the no-op pattern when unset.
+        let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
+            .map(|p| format!("{}%", p))
+            .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
+            .unwrap_or_else(|| "%".to_string());
 
         let mut all_results: Vec<SearchResult> = Vec::new();
 
-        // Books: emit one SearchResult per book (first spine item).
-        // Always execute books query
+        // Books branch.
         let mut books_query = books_dsl::books.into_boxed();
         books_query = books_query.filter(books_dsl::title.like(&like_pattern));
+        books_query = books_query
+            .filter(books_dsl::uid.like(&uid_prefix_pat))
+            .filter(books_dsl::uid.like(&uid_suffix_pat));
 
         if apply_lang_filter {
             books_query = books_query.filter(books_dsl::language.eq(&self.lang));
@@ -1453,7 +1627,6 @@ impl<'a> SearchQueryTask<'a> {
             .select(books_dsl::uid)
             .load(db_conn)?;
 
-        // For each book, get the first spine item
         for book_uid in book_uids {
             let first_spine_item: Result<BookSpineItem, _> = spine_dsl::book_spine_items
                 .filter(spine_dsl::book_uid.eq(&book_uid))
@@ -1465,21 +1638,22 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
-        // Spine items: emit one SearchResult per matching spine item.
-        // Always execute spine_items query
+        // Spine items branch.
         let spine_results: Vec<BookSpineItem> = if apply_lang_filter {
             sql_query(
                 r#"
                 SELECT b.*
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.title LIKE ? AND f.language = ?
+                WHERE f.title LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&self.lang)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
             .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(db_conn)?
         } else {
@@ -1488,12 +1662,14 @@ impl<'a> SearchQueryTask<'a> {
                 SELECT b.*
                 FROM book_spine_items_fts f
                 JOIN book_spine_items b ON f.spine_item_id = b.id
-                WHERE f.title LIKE ?
+                WHERE f.title LIKE ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ?
                 "#
             )
             .bind::<Text, _>(&like_pattern)
+            .bind::<Text, _>(&uid_prefix_pat)
+            .bind::<Text, _>(&uid_suffix_pat)
             .bind::<BigInt, _>(self.fetch_limit_sql)
             .load(db_conn)?
         };
@@ -1502,20 +1678,43 @@ impl<'a> SearchQueryTask<'a> {
             all_results.push(self.db_book_spine_item_to_result(&spine_item));
         }
 
-        if self.hit_sql_safety_cap(all_results.len()) {
+        let total = all_results.len();
+        let offset = page_num.saturating_mul(page_len);
+        let page: Vec<SearchResult> = all_results.into_iter().skip(offset).take(page_len).collect();
+
+        info(&format!("Query took: {:?}", timer.elapsed()));
+        Ok((page, total))
+    }
+
+    /// Stage 2 transitional wrapper: returns up to `fetch_limit_sql` rows from
+    /// page 0, writing the true total into `self.db_query_hits_count`.
+    /// Removed in Stage 3 once `results_page` consumes the per-page helper.
+    fn library_title_match_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.library_title_match(0, page_len)?;
+
+        if self.hit_sql_safety_cap(results.len()) {
             warn(&format!(
                 "library_title_match_all hit SAFETY_LIMIT_SQL={} (query='{}')",
                 SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
-        self.db_query_hits_count = all_results.len() as i64;
-        info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(all_results)
+        self.db_query_hits_count = total as i64;
+        Ok(results)
     }
 
-    fn lemma_1_dpd_headword_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
-        info(&format!("lemma_1_dpd_headword_match_fts5_all(): query_text: {}", &self.query_text));
+    /// Per-page Headword Match against `dpd_headwords_fts.lemma_1`. Pushes
+    /// uid_prefix and uid_suffix down to the per-headword DictWord lookup.
+    /// The materialised SearchResult union length is the authoritative total
+    /// (the raw FTS lemma_1 count would overstate by including headwords
+    /// that don't resolve to a DictWord); the requested page is then sliced.
+    fn lemma_1_dpd_headword_match_fts5(
+        &self,
+        page_num: usize,
+        page_len: usize,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("lemma_1_dpd_headword_match_fts5(): query_text: {}", &self.query_text));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -1535,27 +1734,7 @@ impl<'a> SearchQueryTask<'a> {
             headword_id: i32,
         }
 
-        // Cheap COUNT(*) for true total. Note: this counts FTS5 lemma_1
-        // matches; some may not resolve to a DictWord, so the count slightly
-        // overstates the final SearchResult count. Matches pre-Stage D
-        // semantics.
-        #[derive(QueryableByName)]
-        struct CountRow {
-            #[diesel(sql_type = BigInt)]
-            c: i64,
-        }
-        let total: i64 = sql_query(
-            r#"
-            SELECT COUNT(*) AS c
-            FROM dpd_headwords_fts
-            WHERE lemma_1 LIKE ?
-            "#
-        )
-        .bind::<Text, _>(&like_pattern)
-        .get_result::<CountRow>(dpd_conn)?
-        .c;
-
-        // Get headword IDs from FTS
+        // Get headword IDs from FTS, capped at SAFETY_LIMIT_SQL.
         let fts_query = String::from(
             r#"
             SELECT headword_id
@@ -1573,36 +1752,34 @@ impl<'a> SearchQueryTask<'a> {
 
         if self.hit_sql_safety_cap(headword_ids.len()) {
             warn(&format!(
-                "lemma_1_dpd_headword_match_fts5_all hit SAFETY_LIMIT_SQL={} (query='{}')",
+                "lemma_1_dpd_headword_match_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
                 SAFETY_LIMIT_SQL, &self.query_text
             ));
         }
 
-        // Fetch full DpdHeadword records using the IDs
         let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
 
         if ids.is_empty() {
-            self.db_query_hits_count = 0;
-            return Ok(Vec::new());
+            return Ok((Vec::new(), 0));
         }
 
         let headwords: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
             .filter(dpd_dsl::id.eq_any(&ids))
             .load::<DpdHeadword>(dpd_conn)?;
 
-        // Convert DpdHeadword results to SearchResults via DictWord
-        let mut search_results: Vec<SearchResult> = Vec::new();
-
-        // Push uid_prefix down to SQL; '%' is a no-op pattern.
+        // Push uid_prefix and uid_suffix down to the DictWord lookup. `'%'`
+        // is the no-op pattern when the filter is unset.
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
             .unwrap_or_else(|| "%".to_string());
+        let uid_suffix_pat = Self::normalized_filter(&self.uid_suffix)
+            .map(|s| format!("%{}", s))
+            .unwrap_or_else(|| "%".to_string());
 
+        let mut search_results: Vec<SearchResult> = Vec::new();
         for headword in headwords {
-            // Try to find corresponding DictWord by matching word field to headword.lemma_1
             let mut dict_query = dict_dsl::dict_words.into_boxed();
 
-            // Apply source filtering if specified
             if let Some(ref source_val) = self.source {
                 if self.source_include {
                     dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
@@ -1611,10 +1788,10 @@ impl<'a> SearchQueryTask<'a> {
                 }
             }
 
-            // Match DictWord.word with DpdHeadword.lemma_1
             let dict_word_result: Result<DictWord, _> = dict_query
                 .filter(dict_dsl::word.eq(&headword.lemma_1))
                 .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                .filter(dict_dsl::uid.like(&uid_suffix_pat))
                 .first::<DictWord>(dict_conn);
 
             if let Ok(dict_word) = dict_word_result {
@@ -1622,9 +1799,26 @@ impl<'a> SearchQueryTask<'a> {
             }
         }
 
-        self.db_query_hits_count = total;
+        let total = search_results.len();
+        let offset = page_num.saturating_mul(page_len);
+        let page: Vec<SearchResult> = search_results
+            .into_iter()
+            .skip(offset)
+            .take(page_len)
+            .collect();
+
         info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok(search_results)
+        Ok((page, total))
+    }
+
+    /// Stage 2 transitional wrapper: returns up to `fetch_limit_sql` rows from
+    /// page 0, writing the true total into `self.db_query_hits_count`.
+    /// Removed in Stage 3 once `results_page` consumes the per-page helper.
+    fn lemma_1_dpd_headword_match_fts5_all(&mut self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
+        let (results, total) = self.lemma_1_dpd_headword_match_fts5(0, page_len)?;
+        self.db_query_hits_count = total as i64;
+        Ok(results)
     }
 
     /// Dispatches to the area/mode-specific `_all` handler, returning the
@@ -1713,13 +1907,14 @@ impl<'a> SearchQueryTask<'a> {
     /// The Contains/Fulltext modes normalise the query first because the
     /// stored `commentary_plain` is normalised Pāli.
     fn fetch_bold_unpaginated(&self) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
+        let page_len = self.fetch_limit_sql.max(0) as usize;
         match self.search_mode {
             SearchMode::DpdLookup | SearchMode::HeadwordMatch => {
-                self.query_bold_definitions_bold_fts5(&self.query_text)
+                self.query_bold_definitions_bold_fts5(&self.query_text, 0, page_len)
             }
             SearchMode::ContainsMatch => {
                 let q = normalize_plain_text(&self.query_text);
-                self.query_bold_definitions_commentary_fts5(&q)
+                self.query_bold_definitions_commentary_fts5(&q, 0, page_len)
             }
             SearchMode::FulltextMatch => {
                 let q = normalize_plain_text(&self.query_text);
@@ -1950,6 +2145,7 @@ impl<'a> SearchQueryTask<'a> {
             source_include: self.source_include,
             nikaya_prefix: self.nikaya_prefix.clone(),
             uid_prefix: self.uid_prefix.clone(),
+            uid_suffix: self.uid_suffix.clone(),
             sutta_ref: None,
             include_cst_mula: self.include_cst_mula,
             include_cst_commentary: self.include_cst_commentary,
@@ -2000,10 +2196,8 @@ impl<'a> SearchQueryTask<'a> {
             source_uid: self.source.clone(),
             source_include: self.source_include,
             nikaya_prefix: None,
-            // Push prefix down to tantivy as a narrowing optimization. uid is
-            // tokenized via simple_fold so this can over-match; the Rust-side
-            // `apply_uid_filters` in `results_page` is the source of truth.
             uid_prefix: self.uid_prefix.clone(),
+            uid_suffix: self.uid_suffix.clone(),
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -2056,11 +2250,8 @@ impl<'a> SearchQueryTask<'a> {
             source_uid: None,
             source_include: false,
             nikaya_prefix: None,
-            // Push prefix down to tantivy as a narrowing optimization.
-            // spine_item_uid is tokenized via simple_fold so this can
-            // over-match; the Rust-side `apply_uid_filters` in `results_page`
-            // is the source of truth.
             uid_prefix: self.uid_prefix.clone(),
+            uid_suffix: self.uid_suffix.clone(),
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -2125,6 +2316,7 @@ impl<'a> SearchQueryTask<'a> {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,

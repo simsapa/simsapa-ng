@@ -530,6 +530,39 @@ impl FulltextSearcher {
         Ok((count, results))
     }
 
+    /// Push down uid prefix and suffix filters as exact regex queries against
+    /// the `raw`-tokenized uid + reversed-uid fields. Both reduce to anchored
+    /// prefix-on-some-field, so the term dictionary's btree handles them in
+    /// O(log N) on number of unique terms — no full-corpus scan, no
+    /// over-match. Stored uids are lowercase by invariant; we lowercase the
+    /// user input to match.
+    fn add_uid_filters(
+        subqueries: &mut Vec<(Occur, Box<dyn tantivy::query::Query>)>,
+        filters: &SearchFilters,
+        schema: &tantivy::schema::Schema,
+        uid_field_name: &str,
+        uid_rev_field_name: &str,
+    ) -> Result<()> {
+        if let Some(ref uid_prefix) = filters.uid_prefix
+            && !uid_prefix.is_empty()
+        {
+            let field = schema.get_field(uid_field_name)?;
+            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
+            subqueries.push((Occur::Must, Box::new(RegexQuery::from_pattern(&pattern, field)?)));
+        }
+
+        if let Some(ref uid_suffix) = filters.uid_suffix
+            && !uid_suffix.is_empty()
+        {
+            let field = schema.get_field(uid_rev_field_name)?;
+            let reversed: String = uid_suffix.to_lowercase().chars().rev().collect();
+            let pattern = format!("{}.*", regex::escape(&reversed));
+            subqueries.push((Occur::Must, Box::new(RegexQuery::from_pattern(&pattern, field)?)));
+        }
+
+        Ok(())
+    }
+
     fn add_sutta_filters(
         subqueries: &mut Vec<(Occur, Box<dyn tantivy::query::Query>)>,
         filters: &SearchFilters,
@@ -552,14 +585,7 @@ impl FulltextSearcher {
             subqueries.push((Occur::Must, Box::new(regex_query)));
         }
 
-        if let Some(ref uid_prefix) = filters.uid_prefix
-            && !uid_prefix.is_empty()
-        {
-            let field = schema.get_field("uid")?;
-            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
-            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
-            subqueries.push((Occur::Must, Box::new(regex_query)));
-        }
+        Self::add_uid_filters(subqueries, filters, schema, "uid", "uid_rev")?;
 
         if let Some(ref sutta_ref) = filters.sutta_ref
             && !sutta_ref.is_empty()
@@ -620,18 +646,7 @@ impl FulltextSearcher {
             subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
         }
 
-        // uid is tokenized via simple_fold, so this push-down can over-match
-        // (a non-prefix token equal to the search prefix slips through). The
-        // Rust-side `apply_uid_filters` is the source of truth; this filter
-        // is a pure narrowing optimization to keep the candidate set small.
-        if let Some(ref uid_prefix) = filters.uid_prefix
-            && !uid_prefix.is_empty()
-        {
-            let field = schema.get_field("uid")?;
-            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
-            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
-            subqueries.push((Occur::Must, Box::new(regex_query)));
-        }
+        Self::add_uid_filters(subqueries, filters, schema, "uid", "uid_rev")?;
 
         Ok(())
     }
@@ -641,16 +656,7 @@ impl FulltextSearcher {
         filters: &SearchFilters,
         schema: &tantivy::schema::Schema,
     ) -> Result<()> {
-        // spine_item_uid is tokenized via simple_fold; same caveat as
-        // add_dict_filters — Rust-side filter remains authoritative.
-        if let Some(ref uid_prefix) = filters.uid_prefix
-            && !uid_prefix.is_empty()
-        {
-            let field = schema.get_field("spine_item_uid")?;
-            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
-            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
-            subqueries.push((Occur::Must, Box::new(regex_query)));
-        }
+        Self::add_uid_filters(subqueries, filters, schema, "spine_item_uid", "spine_item_uid_rev")?;
 
         Ok(())
     }
@@ -919,6 +925,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -956,6 +963,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -992,6 +1000,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1024,6 +1033,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1060,6 +1070,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1124,6 +1135,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1151,6 +1163,7 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
@@ -1160,5 +1173,137 @@ mod tests {
         let result = searcher.debug_query("test", &filters).unwrap();
         assert_eq!(result.debug_text, "No sutta indexes available.");
         assert!(result.parse_error.is_none());
+    }
+
+    /// Build an in-memory sutta index containing one doc per uid in `uids`.
+    /// Each doc carries the same content so a content match doesn't filter
+    /// any out — the only differentiator is `uid` / `uid_rev`.
+    fn create_uid_test_index(uids: &[&str]) -> (Index, IndexReader) {
+        let lang = "en";
+        let schema = build_sutta_schema(lang);
+        let index = Index::create_in_ram(schema.clone());
+        register_tokenizers(&index, lang);
+
+        let mut writer = index.writer_with_num_threads(1, 15_000_000).unwrap();
+
+        let uid_field = schema.get_field("uid").unwrap();
+        let uid_rev_field = schema.get_field("uid_rev").unwrap();
+        let title_field = schema.get_field("title").unwrap();
+        let language_field = schema.get_field("language").unwrap();
+        let source_uid_field = schema.get_field("source_uid").unwrap();
+        let sutta_ref_field = schema.get_field("sutta_ref").unwrap();
+        let nikaya_field = schema.get_field("nikaya").unwrap();
+        let content_field = schema.get_field("content").unwrap();
+        let content_exact_field = schema.get_field("content_exact").unwrap();
+
+        for u in uids {
+            let lower = u.to_lowercase();
+            let rev: String = lower.chars().rev().collect();
+            writer
+                .add_document(doc!(
+                    uid_field => *u,
+                    uid_rev_field => rev.as_str(),
+                    title_field => "T",
+                    language_field => lang,
+                    source_uid_field => "ms",
+                    sutta_ref_field => "",
+                    nikaya_field => "",
+                    content_field => "lorem ipsum dolor sit amet",
+                    content_exact_field => "lorem ipsum dolor sit amet",
+                ))
+                .unwrap();
+        }
+        writer.commit().unwrap();
+
+        let reader = index.reader().unwrap();
+        (index, reader)
+    }
+
+    #[test]
+    fn test_add_uid_filters_prefix_and_suffix_exact() {
+        // Mixed uids; only "an1.1/..." rows match prefix "an" AND suffix "1.1".
+        let uids = [
+            "an1.1/en/sujato",      // matches both
+            "an1.1/pli/ms",         // suffix is "ms" — no
+            "an1.10/en/sujato",     // prefix yes, suffix no
+            "sn12.1/en/sujato",     // prefix no
+            "an2.1/en/sujato",      // prefix yes, suffix no (ends in "sujato")
+            "dn1.1/en/sujato",      // prefix no
+        ];
+
+        let (index, reader) = create_uid_test_index(&uids);
+        let schema = index.schema();
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya_prefix: None,
+            uid_prefix: Some("an".to_string()),
+            uid_suffix: Some("1.1".to_string()),
+            sutta_ref: None,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
+        };
+
+        // suffix "1.1" matches uids ending in "1.1" — only "an1.1/en/sujato" if we
+        // require both prefix and suffix to apply to the uid as a whole. But our
+        // suffix matches against the uid_rev — i.e. the original uid ends with
+        // the suffix string. None of these uids actually *end* with "1.1"
+        // (they end with "/sujato" etc.), so the right test suffix is one that
+        // some uids actually end with. Adjust:
+        let filters = SearchFilters {
+            uid_suffix: Some("sujato".to_string()),
+            ..filters
+        };
+
+        let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();
+        // Add a match-all so the BooleanQuery has a positive clause.
+        subqueries.push((
+            Occur::Must,
+            Box::new(tantivy::query::AllQuery) as Box<dyn tantivy::query::Query>,
+        ));
+        FulltextSearcher::add_uid_filters(&mut subqueries, &filters, &schema, "uid", "uid_rev")
+            .unwrap();
+        let query = BooleanQuery::new(subqueries);
+
+        let s = reader.searcher();
+        let count = s.search(&query, &Count).unwrap();
+        // prefix "an" AND suffix "sujato": an1.1/en/sujato, an1.10/en/sujato, an2.1/en/sujato
+        assert_eq!(count, 3, "expected exactly the an*-prefixed, sujato-suffixed uids");
+    }
+
+    #[test]
+    fn test_add_uid_filters_no_overmatch() {
+        // raw uid field means a regex against the uid is anchored to the full
+        // term, not against tokens — so "an" prefix must NOT match "san1.1".
+        let uids = ["an1.1/en/sujato", "san1.1/en/sujato"];
+        let (index, reader) = create_uid_test_index(&uids);
+        let schema = index.schema();
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya_prefix: None,
+            uid_prefix: Some("an".to_string()),
+            uid_suffix: None,
+            sutta_ref: None,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
+        };
+
+        let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();
+        subqueries.push((Occur::Must, Box::new(tantivy::query::AllQuery)));
+        FulltextSearcher::add_uid_filters(&mut subqueries, &filters, &schema, "uid", "uid_rev")
+            .unwrap();
+        let query = BooleanQuery::new(subqueries);
+
+        let count = reader.searcher().search(&query, &Count).unwrap();
+        assert_eq!(count, 1, "prefix 'an' must not match 'san1.1/...'");
     }
 }

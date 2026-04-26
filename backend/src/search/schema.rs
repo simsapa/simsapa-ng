@@ -37,6 +37,8 @@ pub fn build_sutta_schema(lang: &str) -> Schema {
         .set_stored();
 
     builder.add_text_field("uid", raw_opts.clone());
+    // Reversed-uid (lowercased uid, character-reversed) for suffix push-down via prefix regex.
+    builder.add_text_field("uid_rev", raw_opts.clone());
     builder.add_text_field("title", simple_fold_opts.clone());
     builder.add_text_field("language", raw_opts.clone());
     builder.add_text_field("source_uid", raw_opts.clone());
@@ -87,6 +89,8 @@ pub fn build_library_schema(lang: &str) -> Schema {
         .set_stored();
 
     builder.add_text_field("spine_item_uid", raw_opts.clone());
+    // Reversed spine_item_uid for suffix push-down via prefix regex.
+    builder.add_text_field("spine_item_uid_rev", raw_opts.clone());
     builder.add_text_field("book_uid", raw_opts.clone());
     builder.add_text_field("book_title", simple_fold_opts.clone());
     builder.add_text_field("author", simple_fold_opts.clone());
@@ -135,6 +139,8 @@ pub fn build_dict_schema(lang: &str) -> Schema {
         .set_stored();
 
     builder.add_text_field("uid", raw_opts.clone());
+    // Reversed-uid (lowercased uid, character-reversed) for suffix push-down via prefix regex.
+    builder.add_text_field("uid_rev", raw_opts.clone());
     // For bold_definitions, 'bold' is the equivalent of 'word'.
     builder.add_text_field("word", simple_fold_opts.clone());
     builder.add_text_field("synonyms", simple_fold_opts);
