@@ -1,14 +1,64 @@
 {
-  "dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast": {
-    "baseline_page_0": 0.058714342,
-    "filtered_pagination": 0.484245421
+  "contains_match_dictionary_buddha_prefix_buddh": {
+    "filtered_page_0": 19.662000033,
+    "filtered_page_n": 21.993998302,
+    "unfiltered_page_0": 13.581432988,
+    "unfiltered_page_n": 14.464754102
   },
-  "library_fulltext_food_prefix_buddha_filters_and_count_matches_pages": {
-    "baseline_page_0": 1.331892158,
-    "filtered_pagination": 1.173280109
+  "contains_match_library_buddha_prefix_bhikkhu_manual": {
+    "filtered_page_0": 0.02444926,
+    "filtered_page_n": 0.012185701,
+    "unfiltered_page_0": 0.035094682,
+    "unfiltered_page_n": 0.051629321
   },
-  "suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast": {
-    "baseline_page_0": 1.820355779,
-    "filtered_pagination": 2.760654831
+  "contains_match_suttas_dhamma_suffix_bodhi": {
+    "filtered_page_0": 0.247719193,
+    "filtered_page_n": 0.235572815,
+    "unfiltered_page_0": 0.247596311,
+    "unfiltered_page_n": 0.256675785
+  },
+  "dpd_lookup_dhamma_prefix_dha": {
+    "filtered_page_0": 0.727641075,
+    "filtered_page_n": 0.729535601,
+    "unfiltered_page_0": 1.011463398,
+    "unfiltered_page_n": 0.728160323
+  },
+  "fulltext_dictionary_sutthu_suffix_mnt": {
+    "filtered_page_0": 0.137827894,
+    "filtered_page_n": 0.132230816,
+    "unfiltered_page_0": 0.010974902,
+    "unfiltered_page_n": 0.031096274
+  },
+  "fulltext_library_food_prefix_buddha": {
+    "filtered_page_0": 0.830363453,
+    "filtered_page_n": 1.147668941,
+    "unfiltered_page_0": 0.403132943,
+    "unfiltered_page_n": 0.596783361
+  },
+  "fulltext_suttas_vinnana_suffix_bodhi": {
+    "filtered_page_0": 0.046176124,
+    "unfiltered_page_0": 0.230184087,
+    "unfiltered_page_n": 1.733891633
+  },
+  "headword_match_dhamma_prefix_dha": {
+    "filtered_page_0": 174.30961021,
+    "filtered_page_n": 170.272399415,
+    "unfiltered_page_0": 137.776206589,
+    "unfiltered_page_n": 140.950478832
+  },
+  "title_match_library_the_prefix_bmc": {
+    "filtered_page_0": 0.018163256,
+    "filtered_page_n": 0.017608619,
+    "unfiltered_page_0": 0.048638028,
+    "unfiltered_page_n": 0.039922975
+  },
+  "title_match_suttas_sutta_prefix_mn": {
+    "filtered_page_0": 0.051519705,
+    "filtered_page_n": 0.044638841,
+    "unfiltered_page_0": 0.038766914,
+    "unfiltered_page_n": 0.037595694
+  },
+  "uid_match_suttas_mn1_suffix_bodhi": {
+    "unfiltered_page_0": 0.085253529
   }
 }
