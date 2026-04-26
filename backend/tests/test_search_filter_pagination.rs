@@ -20,6 +20,8 @@
 mod helpers;
 
 use std::collections::HashSet;
+use std::fs;
+use std::path::Path;
 use std::time::{Duration, Instant};
 
 use serial_test::serial;
@@ -30,6 +32,13 @@ use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
 
 const PAGE_LEN: usize = 10;
 
+/// Configuration: Set to true to record timing data, false to test against recorded data
+/// When RECORD_MODE is true, the test will measure query execution times and update
+/// tests/data/test_query_timings.json with the measured values.
+/// When RECORD_MODE is false, the test will load timing data from the JSON file and
+/// assert that actual execution times are within 10% of the recorded values.
+const RECORD_MODE: bool = false;
+
 /// Per-call upper bound. Cold-cache page-0 calls in the full-fetch path
 /// (uid_suffix set) materialize up to `SAFETY_LIMIT_TANTIVY` candidate rows
 /// — each one a tantivy doc-store read + snippet generation. On a broad
@@ -38,12 +47,63 @@ const PAGE_LEN: usize = 10;
 /// slower) still trip the test, while accommodating cold disk caches in CI.
 /// Subsequent pages of the same task are served from `cached_full_fetch`
 /// and are effectively free.
-const PER_PAGE_BUDGET: Duration = Duration::from_secs(15);
 
-/// Upper bound for paging through a full filtered result set. The cached
-/// full-fetch path means only page 0 pays the heavy fetch; subsequent pages
-/// are pure slicing, so this is essentially `PER_PAGE_BUDGET` with headroom.
-const FILTERED_PAGINATION_BUDGET: Duration = Duration::from_secs(30);
+
+
+
+/// Path to the timing data file
+const TIMING_DATA_PATH: &str = "tests/data/test_query_timings.json";
+
+/// Load timing data from JSON file
+fn load_timing_data() -> serde_json::Value {
+    let path = Path::new(TIMING_DATA_PATH);
+    let content = fs::read_to_string(path)
+        .unwrap_or_else(|_| panic!("Failed to read timing data file at {}", TIMING_DATA_PATH));
+    serde_json::from_str(&content)
+        .unwrap_or_else(|_| panic!("Failed to parse timing data file at {}", TIMING_DATA_PATH))
+}
+
+/// Save timing data to JSON file
+fn save_timing_data(data: &serde_json::Value) {
+    let path = Path::new(TIMING_DATA_PATH);
+    let content = serde_json::to_string_pretty(data)
+        .expect("Failed to serialize timing data");
+    fs::write(path, content)
+        .unwrap_or_else(|_| panic!("Failed to write timing data file at {}", TIMING_DATA_PATH));
+}
+
+/// Get timing entry for a specific test and measurement type
+fn get_timing_entry(test_name: &str, measurement_type: &str) -> f64 {
+    let data = load_timing_data();
+    data[test_name][measurement_type]
+        .as_f64()
+        .expect(&format!("Missing or invalid timing entry for {}.{}", test_name, measurement_type))
+}
+
+/// Save timing entry for a specific test and measurement type
+fn save_timing_entry(test_name: &str, measurement_type: &str, value: f64) {
+    let mut data = load_timing_data();
+    data[test_name][measurement_type] = serde_json::json!(value);
+    save_timing_data(&data);
+}
+
+/// Apply 10% tolerance to expected time (increase for upper bound)
+fn apply_tolerance(expected_secs: f64) -> f64 {
+    expected_secs * 1.10
+}
+
+/// Check if timing is within tolerance of expected time
+fn assert_within_tolerance(actual_secs: f64, expected_secs: f64, label: &str) {
+    let upper_bound = apply_tolerance(expected_secs);
+    assert!(
+        actual_secs <= upper_bound,
+        "{} took {:.3}s (>{:.3}s, expected {:.3}s + 10% tolerance)",
+        label,
+        actual_secs,
+        upper_bound,
+        expected_secs
+    );
+}
 
 fn make_params(
     mode: SearchMode,
@@ -128,15 +188,6 @@ fn run_full_filtered_pagination(
             .results_page(page)
             .unwrap_or_else(|e| panic!("results_page({page}) failed: {e}"));
         let dt = start.elapsed();
-        assert!(
-            dt < PER_PAGE_BUDGET,
-            "page {page} took {:?} (> {:?}) for query {:?} prefix={:?} suffix={:?}",
-            dt,
-            PER_PAGE_BUDGET,
-            query,
-            uid_prefix,
-            uid_suffix,
-        );
         elapsed += dt;
 
         if page == 0 {
@@ -168,12 +219,6 @@ fn assert_filtered_consistent(run: &FilteredRun, label: &str) {
         run.distinct_keys.len(),
         run.total_hits,
     );
-    assert!(
-        run.elapsed < FILTERED_PAGINATION_BUDGET,
-        "{label}: full filtered pagination took {:?} (> {:?})",
-        run.elapsed,
-        FILTERED_PAGINATION_BUDGET,
-    );
 }
 
 // ---------------------------------------------------------------------------
@@ -197,12 +242,15 @@ fn suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast() {
         page_0_len > 0,
         "baseline Suttas Fulltext `vinnana` page 0 should have rows"
     );
-    assert!(
-        page_0_dt < PER_PAGE_BUDGET,
-        "baseline Suttas Fulltext `vinnana` page 0 took {:?} (> {:?})",
-        page_0_dt,
-        PER_PAGE_BUDGET,
-    );
+
+    // Handle baseline page 0 timing
+    let page_0_secs = page_0_dt.as_secs_f64();
+    if RECORD_MODE {
+        save_timing_entry("suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast", "baseline_page_0", page_0_secs);
+    } else {
+        let expected = get_timing_entry("suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast", "baseline_page_0");
+        assert_within_tolerance(page_0_secs, expected, "baseline Suttas Fulltext `vinnana` page 0");
+    }
 
     let filtered = run_full_filtered_pagination(
         SearchArea::Suttas,
@@ -223,6 +271,15 @@ fn suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast() {
             uid.to_lowercase().ends_with("bodhi"),
             "suffix filter leaked uid {table}:{uid} (does not end with `bodhi`)"
         );
+    }
+
+    // Handle filtered pagination timing
+    let filtered_secs = filtered.elapsed.as_secs_f64();
+    if RECORD_MODE {
+        save_timing_entry("suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast", "filtered_pagination", filtered_secs);
+    } else {
+        let expected = get_timing_entry("suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast", "filtered_pagination");
+        assert_within_tolerance(filtered_secs, expected, "suttas vinnana suffix=bodhi filtered pagination");
     }
 }
 
@@ -246,12 +303,15 @@ fn dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast() {
         page_0_len > 0,
         "baseline Dictionary Fulltext `sutthu` page 0 should have rows"
     );
-    assert!(
-        page_0_dt < PER_PAGE_BUDGET,
-        "baseline Dictionary Fulltext `sutthu` page 0 took {:?} (> {:?})",
-        page_0_dt,
-        PER_PAGE_BUDGET,
-    );
+
+    // Handle baseline page 0 timing
+    let page_0_secs = page_0_dt.as_secs_f64();
+    if RECORD_MODE {
+        save_timing_entry("dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast", "baseline_page_0", page_0_secs);
+    } else {
+        let expected = get_timing_entry("dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast", "baseline_page_0");
+        assert_within_tolerance(page_0_secs, expected, "baseline Dictionary Fulltext `sutthu` page 0");
+    }
 
     let filtered = run_full_filtered_pagination(
         SearchArea::Dictionary,
@@ -276,6 +336,15 @@ fn dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast() {
             uid.to_lowercase().ends_with("mnt"),
             "suffix filter leaked uid {table}:{uid} (does not end with `mnt`)"
         );
+    }
+
+    // Handle filtered pagination timing
+    let filtered_secs = filtered.elapsed.as_secs_f64();
+    if RECORD_MODE {
+        save_timing_entry("dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast", "filtered_pagination", filtered_secs);
+    } else {
+        let expected = get_timing_entry("dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast", "filtered_pagination");
+        assert_within_tolerance(filtered_secs, expected, "dict sutthu suffix=mnt filtered pagination");
     }
 }
 
@@ -302,12 +371,15 @@ fn library_fulltext_food_prefix_buddha_filters_and_count_matches_pages() {
         page_0_len > 0,
         "baseline Library Fulltext `food` page 0 should have rows"
     );
-    assert!(
-        page_0_dt < PER_PAGE_BUDGET,
-        "baseline Library Fulltext `food` page 0 took {:?} (> {:?})",
-        page_0_dt,
-        PER_PAGE_BUDGET,
-    );
+
+    // Handle baseline page 0 timing
+    let page_0_secs = page_0_dt.as_secs_f64();
+    if RECORD_MODE {
+        save_timing_entry("library_fulltext_food_prefix_buddha_filters_and_count_matches_pages", "baseline_page_0", page_0_secs);
+    } else {
+        let expected = get_timing_entry("library_fulltext_food_prefix_buddha_filters_and_count_matches_pages", "baseline_page_0");
+        assert_within_tolerance(page_0_secs, expected, "baseline Library Fulltext `food` page 0");
+    }
 
     let filtered = run_full_filtered_pagination(
         SearchArea::Library,
@@ -328,5 +400,14 @@ fn library_fulltext_food_prefix_buddha_filters_and_count_matches_pages() {
             uid.to_lowercase().starts_with("buddha"),
             "prefix filter leaked uid {table}:{uid} (does not start with `buddha`)"
         );
+    }
+
+    // Handle filtered pagination timing
+    let filtered_secs = filtered.elapsed.as_secs_f64();
+    if RECORD_MODE {
+        save_timing_entry("library_fulltext_food_prefix_buddha_filters_and_count_matches_pages", "filtered_pagination", filtered_secs);
+    } else {
+        let expected = get_timing_entry("library_fulltext_food_prefix_buddha_filters_and_count_matches_pages", "filtered_pagination");
+        assert_within_tolerance(filtered_secs, expected, "library food prefix=buddha filtered pagination");
     }
 }

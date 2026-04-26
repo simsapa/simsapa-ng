@@ -1,0 +1,14 @@
+{
+  "dictionary_fulltext_sutthu_suffix_mnt_filters_and_is_fast": {
+    "baseline_page_0": 0.058714342,
+    "filtered_pagination": 0.484245421
+  },
+  "library_fulltext_food_prefix_buddha_filters_and_count_matches_pages": {
+    "baseline_page_0": 1.331892158,
+    "filtered_pagination": 1.173280109
+  },
+  "suttas_fulltext_vinnana_suffix_bodhi_filters_and_is_fast": {
+    "baseline_page_0": 1.820355779,
+    "filtered_pagination": 2.760654831
+  }
+}
