@@ -706,6 +706,12 @@ pub mod qobject {
         fn set_include_ms_mula_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
 
         #[qinvokable]
+        fn get_include_comm_bold_definitions_in_search_results(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_comm_bold_definitions_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
         fn get_open_find_in_sutta_results(self: &SuttaBridge) -> bool;
 
         #[qinvokable]
@@ -3019,6 +3025,16 @@ impl qobject::SuttaBridge {
     pub fn set_include_ms_mula_in_search_results(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_include_ms_mula_in_search_results(enabled);
+    }
+
+    pub fn get_include_comm_bold_definitions_in_search_results(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_comm_bold_definitions_in_search_results()
+    }
+
+    pub fn set_include_comm_bold_definitions_in_search_results(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_comm_bold_definitions_in_search_results(enabled);
     }
 
     pub fn get_open_find_in_sutta_results(&self) -> bool {

@@ -554,6 +554,34 @@ Frame {
                     }
                 }
             }
+
+            RowLayout {
+                spacing: 2
+                visible: root.search_area === "Dictionary"
+
+                CheckBox {
+                    id: include_comm_bold_definitions_checkbox
+                    text: "Commentary Definitions in Search"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: SuttaBridge.get_include_comm_bold_definitions_in_search_results()
+                    onCheckedChanged: {
+                        SuttaBridge.set_include_comm_bold_definitions_in_search_results(checked);
+                        root.advanced_options_changed();
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "Commentary Definitions in Search";
+                        info_dialog.message = "Also search bold-highlighted terms extracted from Pāli commentaries (bold definitions). Turn off for headword-only results.";
+                        info_dialog.open();
+                    }
+                }
+            }
         }
     }
 

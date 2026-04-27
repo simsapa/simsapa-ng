@@ -563,6 +563,7 @@ ApplicationWindow {
             uid_prefix: uid_prefix.length > 0 ? uid_prefix : null,
             uid_suffix: uid_suffix.length > 0 ? uid_suffix : null,
             include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
+            include_comm_bold_definitions: SuttaBridge.get_include_comm_bold_definitions_in_search_results(),
         };
     }
 
@@ -1866,6 +1867,7 @@ ${query_text}`;
                 uid_prefix: null,
                 uid_suffix: null,
                 include_ms_mula: false,
+                include_comm_bold_definitions: false,
             };
 
             if (!show_sidebar_btn.checked) {

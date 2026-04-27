@@ -86,6 +86,9 @@ pub struct AppSettings {
     pub include_cst_mula_in_translations: bool,
     /// Include Mahāsaṅgīti (MS) Mūla Pāli texts in search results
     pub include_ms_mula_in_search_results: bool,
+    /// Include DPD bold-definition (commentary) entries in Dictionary search results
+    #[serde(default = "default_false")]
+    pub include_comm_bold_definitions_in_search_results: bool,
     /// Whether to restore the last session (open tabs) on startup
     #[serde(default = "default_true")]
     pub restore_last_session: bool,
@@ -231,6 +234,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             include_cst_commentary_in_search_results: true,
             include_cst_mula_in_translations: false,
             include_ms_mula_in_search_results: true,
+            include_comm_bold_definitions_in_search_results: false,
             restore_last_session: true,
         }
     }

@@ -115,16 +115,16 @@ Source PRD: [prd-dpd-bold-definitions-search.md](./prd-dpd-bold-definitions-sear
   - [x] 6.4 Include `uid_suffix` in the signal payload wired by `advanced_options_changed()` so consumers pick it up.
   - [x] 6.5 Propagate `uid_suffix` from the QML search pipeline into `SearchParams` in `bridges/src/sutta_bridge.rs` (both construction sites at ~lines 1094 and 1477).
 
-- [ ] 7.0 Advanced search UI — `include_comm_bold_definitions_checkbox` (with info button)
-  - [ ] 7.1 In `backend/src/app_settings.rs`, add a persisted boolean setting `include_comm_bold_definitions_in_search_results` (default `true`).
-  - [ ] 7.2 In `backend/src/app_data.rs`, add `get_include_comm_bold_definitions_in_search_results` and `set_…` wrappers, modelled on the existing `include_ms_mula` pair.
-  - [ ] 7.3 In `bridges/src/sutta_bridge.rs`, add the CXX-Qt bridge fns `get_include_comm_bold_definitions_in_search_results` / `set_…` (mirror lines ~703/706 and ~3009/3014).
-  - [ ] 7.4 In `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml`, add qmllint stubs for both new functions with simple literal return values (per CLAUDE.md convention).
-  - [ ] 7.5 In `assets/qml/SearchBarInput.qml`, inside a `RowLayout { spacing: 2 }` block mirroring the existing `include_ms_mula_checkbox` block (~lines 402–423):
+- [x] 7.0 Advanced search UI — `include_comm_bold_definitions_checkbox` (with info button)
+  - [x] 7.1 In `backend/src/app_settings.rs`, add a persisted boolean setting `include_comm_bold_definitions_in_search_results` (default `true`).
+  - [x] 7.2 In `backend/src/app_data.rs`, add `get_include_comm_bold_definitions_in_search_results` and `set_…` wrappers, modelled on the existing `include_ms_mula` pair.
+  - [x] 7.3 In `bridges/src/sutta_bridge.rs`, add the CXX-Qt bridge fns `get_include_comm_bold_definitions_in_search_results` / `set_…` (mirror lines ~703/706 and ~3009/3014).
+  - [x] 7.4 In `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml`, add qmllint stubs for both new functions with simple literal return values (per CLAUDE.md convention).
+  - [x] 7.5 In `assets/qml/SearchBarInput.qml`, inside a `RowLayout { spacing: 2 }` block mirroring the existing `include_ms_mula_checkbox` block (~lines 402–423):
     - Add a `CheckBox { id: include_comm_bold_definitions_checkbox }` with `text: "Dictionary Commentary Definitions in Search"`, `checked:` initialized from `SuttaBridge.get_include_comm_bold_definitions_in_search_results()`, and `onCheckedChanged` calling the bridge setter + `root.advanced_options_changed()`.
     - Add a sibling flat `Button { icon.source: "icons/32x32/fa_circle-info-solid.png" }` that, on click, sets `info_dialog.title = "Dictionary Commentary Definitions in Search"` and `info_dialog.message = "Also search bold-highlighted terms extracted from Pāli commentaries (DPD bold definitions). Turn off for headword-only results."` and calls `info_dialog.open()`.
-  - [ ] 7.6 Gate the new checkbox's visibility to `search_area === "Dictionary"` (the checkbox is Dictionary-specific; UID prefix/suffix remain visible across areas from task 6.1).
-  - [ ] 7.7 In the `SearchParams` construction sites in `bridges/src/sutta_bridge.rs` (~lines 1094, 1477), read `include_comm_bold_definitions` from the persisted setting rather than using a hard default (covered also by task 4.2).
+  - [x] 7.6 Gate the new checkbox's visibility to `search_area === "Dictionary"` (the checkbox is Dictionary-specific; UID prefix/suffix remain visible across areas from task 6.1).
+  - [x] 7.7 In the `SearchParams` construction sites in `bridges/src/sutta_bridge.rs` (~lines 1094, 1477), read `include_comm_bold_definitions` from the persisted setting rather than using a hard default (covered also by task 4.2).
 
 - [ ] 8.0 Tests & verification
   - [ ] 8.1 Add `backend/tests/test_bold_definitions_migration.rs` against the real migrated `dpd.sqlite3` at `/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resources/dist/simsapa-ng/app-assets/dpd.sqlite3`: assert `COUNT(*) == COUNT(DISTINCT uid)`, every uid is lowercase, every uid contains at least one `/`, row count matches source DPD.
