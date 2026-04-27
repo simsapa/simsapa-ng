@@ -98,6 +98,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_false() -> bool {
+    false
+}
+
 impl Default for AppSettings {
     fn default() -> Self {
         AppSettings {
