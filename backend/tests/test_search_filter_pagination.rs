@@ -30,9 +30,10 @@
 //! and page-N latency should be bounded and broadly comparable — that's what
 //! the timing budgets in `tests/data/test_query_timings.json` pin.
 //!
-//! Timing budget mode: set `RECORD_MODE = true` once to populate or refresh
-//! budgets, then flip back to `false`. Missing keys panic with a record-mode
-//! hint, so a budget absence is loud rather than silently passing.
+//! Timing budget mode: set `TIMING_RECORD_MODE = true` in
+//! `tests/helpers/mod.rs` once to populate or refresh budgets, then flip back
+//! to `false`. Missing keys panic with a record-mode hint, so a budget
+//! absence is loud rather than silently passing.
 //!
 //! These tests share an in-process `app_data` (SQLite pools + tantivy
 //! readers); every test is `#[serial]` so they execute one at a time within
@@ -44,9 +45,7 @@
 mod helpers;
 
 use std::collections::HashSet;
-use std::fs;
-use std::path::Path;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 use serial_test::serial;
 
@@ -54,62 +53,10 @@ use simsapa_backend::get_app_data;
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 
+use helpers::handle_timing;
+
 const PAGE_LEN: usize = 10;
 const PAGE_N: usize = 1;
-
-const RECORD_MODE: bool = false;
-const TIMING_DATA_PATH: &str = "tests/data/test_query_timings.json";
-
-// ---------------------------------------------------------------------------
-// Timing harness
-// ---------------------------------------------------------------------------
-
-fn load_timing_data() -> serde_json::Value {
-    let path = Path::new(TIMING_DATA_PATH);
-    let content = fs::read_to_string(path)
-        .unwrap_or_else(|_| panic!("Failed to read timing data file at {}", TIMING_DATA_PATH));
-    serde_json::from_str(&content)
-        .unwrap_or_else(|_| panic!("Failed to parse timing data file at {}", TIMING_DATA_PATH))
-}
-
-fn save_timing_data(data: &serde_json::Value) {
-    let content = serde_json::to_string_pretty(data).expect("serialize timing data");
-    fs::write(TIMING_DATA_PATH, content)
-        .unwrap_or_else(|_| panic!("Failed to write timing data file at {}", TIMING_DATA_PATH));
-}
-
-fn save_timing_entry(test_name: &str, key: &str, secs: f64) {
-    let mut data = load_timing_data();
-    if !data[test_name].is_object() {
-        data[test_name] = serde_json::json!({});
-    }
-    data[test_name][key] = serde_json::json!(secs);
-    save_timing_data(&data);
-}
-
-fn get_timing_entry(test_name: &str, key: &str) -> Option<f64> {
-    let data = load_timing_data();
-    data[test_name][key].as_f64()
-}
-
-fn handle_timing(test_name: &str, key: &str, dt: Duration) {
-    let secs = dt.as_secs_f64();
-    if RECORD_MODE {
-        save_timing_entry(test_name, key, secs);
-        return;
-    }
-    let expected = get_timing_entry(test_name, key).unwrap_or_else(|| {
-        panic!(
-            "missing timing budget for {test_name}.{key} in {TIMING_DATA_PATH} \
-             (set RECORD_MODE=true and re-run once to capture)"
-        )
-    });
-    let upper = expected * 1.10;
-    assert!(
-        secs <= upper,
-        "{test_name}.{key} took {secs:.3}s (>{upper:.3}s, expected {expected:.3}s + 10% tolerance)"
-    );
-}
 
 // ---------------------------------------------------------------------------
 // Task / assertion helpers
@@ -214,6 +161,20 @@ fn run_pair(
     let dt0 = start.elapsed();
     let total = t0.total_hits();
     assert!(!p0.is_empty(), "{label} page 0 unexpectedly empty (total={total})");
+    assert!(
+        p0.len() <= PAGE_LEN,
+        "{label} page 0 returned {} rows, exceeds page_len={PAGE_LEN} — push-down LIMIT not respected",
+        p0.len()
+    );
+    if (total as usize) > PAGE_LEN {
+        assert_eq!(
+            p0.len(),
+            PAGE_LEN,
+            "{label} page 0 returned {} rows but total={total} > page_len={PAGE_LEN}; \
+             push-down should have filled the page",
+            p0.len()
+        );
+    }
     assert_uid_filter(&p0, uid_prefix, uid_suffix, &format!("{label} page 0"));
     handle_timing(test_name, &format!("{scope}_page_0"), dt0);
 
@@ -228,6 +189,11 @@ fn run_pair(
         assert!(
             !pn.is_empty(),
             "{label} page {PAGE_N} unexpectedly empty (total={total})"
+        );
+        assert!(
+            pn.len() <= PAGE_LEN,
+            "{label} page {PAGE_N} returned {} rows, exceeds page_len={PAGE_LEN} — push-down LIMIT not respected",
+            pn.len()
         );
         assert_uid_filter(&pn, uid_prefix, uid_suffix, &format!("{label} page {PAGE_N}"));
 
