@@ -1,5 +1,32 @@
 # PRD: DPD Bold Definitions in Dictionary Search
 
+> **Status note (2026-04, post-refactor).** Sections marked here as the
+> originally-shipped design were superseded by the refactor described in
+> `tasks/query-pipeline-filtering-strategy-refactor.md`. The user-facing
+> behaviour in this PRD still holds; the storage and search-pipeline shape
+> changed:
+>
+> - The separate `bold_definitions` tantivy index has been **consolidated
+>   into the dict index**. One schema, one index directory per language;
+>   `dict_words` and `bold_definitions` rows coexist in
+>   `dict_words_index_dir`, distinguished by an `is_bold_definition: bool`
+>   field. BM25 is internally consistent — no cross-index merge.
+> - The schema gains an `is_bold_definition` field, a `nikaya_group_path`
+>   raw field used by bold rows, and a `uid_rev` raw field (lowercased uid
+>   reversed character-by-character) used to push uid-suffix filtering down
+>   as an anchored regex query.
+> - `include_comm_bold_definitions = false` now adds an
+>   `Occur::MustNot { is_bold_definition = true }` clause to the dict
+>   tantivy query, instead of gating an append step. Default is `true`, so
+>   no visible change.
+> - DPD Lookup / Headword Match / Contains Match remain SQL-driven and
+>   still append bold-definition rows after regular dict rows, but every
+>   FTS5 helper now pushes `uid LIKE ?%` and `uid LIKE ?%y` down with
+>   parallel `SELECT COUNT(*)` for paginated totals.
+>
+> See §4.2 (item 9), §4.3 (item 12), and §7 below for the corresponding
+> updates inline.
+
 ## 1. Introduction / Overview
 
 The DPD (Digital Pāli Dictionary) database contains a `bold_definitions` table,
@@ -88,14 +115,21 @@ entries.
    created using the **trigram tokenizer**, with `detail='none'`, indexing
    the `bold` field. This mirrors the existing `dpd_headwords_fts` pattern
    and avoids slow leading-wildcard `LIKE` scans across 360k rows.
-9. A tantivy fulltext index over `bold_definitions.commentary_plain`
-   **must** be built during bootstrap, following the same pattern used for
-   suttas. The document schema must include at minimum:
-   `bold_definitions_id` (stored), `uid` (stored), `bold` (stored),
-   `commentary_plain` (indexed + stored for snippets). The index **must**
-   register the same **Pāli tokenizer** used for DPD dictionary entries
-   (pass `lang = "pli"` to `register_tokenizers`), because commentary text
-   is Pāli.
+9. **Updated post-refactor.** Bold-definition rows are appended into the
+   existing **unified dict tantivy index** (`dict_words_index_dir`),
+   distinguished by an `is_bold_definition: bool` field. The dict schema
+   (`build_dict_schema`) covers both `dict_words` and `bold_definitions`
+   rows; bold-only fields (`bold_definitions_id`, `nikaya_group_path`,
+   `ref_code`, `file_name`) live alongside the regular dict fields and
+   are unset/empty for non-bold docs. The unified schema also carries a
+   `uid_rev` raw field (lowercased uid reversed character-by-character)
+   so a uid-suffix filter can be pushed down as
+   `RegexQuery::from_pattern("{reversed}.*", uid_rev_field)`. The Pāli
+   tokenizer (`lang = "pli"`) registers once on the unified index. There
+   is no separate `bold_definitions_index_dir` and no separate
+   `IndexType::BoldDefinitions`. (Originally specified as a stand-alone
+   tantivy index built in parallel with the dict index — that two-index
+   design has been deleted.)
 
 ### 4.3 Search integration — Dictionary search area (`query_task.rs`)
 
@@ -122,18 +156,26 @@ entries.
     `bold` field is stored as-is and matched case-insensitively — the query
     input **must not** be normalized.
 12. Merging of results into the Dictionary result list:
-    - **Fulltext Match:** merged into the same result list as other
-      dictionary results, sorted by BM25 score. BM25 scores from two
-      different tantivy indexes are not strictly comparable (different
-      corpus statistics), so some ranking bias between regular dict entries
-      and bold definitions is acceptable. Both indexes **must** use the
-      same Pāli tokenizer (`lang = "pli"`) to keep analysis consistent.
+    - **Fulltext Match (post-refactor):** dict_words and bold_definitions
+      docs share **one** tantivy index, so a single `BooleanQuery` returns
+      already-ranked, already-paginated results; BM25 is internally
+      consistent. No cross-index merge step. The
+      `include_comm_bold_definitions` flag is realized as
+      `Occur::MustNot { is_bold_definition = true }` when set to `false`;
+      default `true` is a no-op (both kinds participate). Per-doc dispatch
+      in `dict_doc_to_result` peeks at `is_bold_definition` and routes to
+      `bold_definition_doc_to_result` for bold rows. (Originally specified
+      as a merge of two tantivy indexes' BM25 scores — that two-index
+      design has been deleted.)
     - **Contains Match:** bold-definition results **appended** after other
-      dictionary results.
+      dictionary results. Pagination uses the boundary-aware
+      `split_page_across_streams` orchestrator (regular slice ⊕ bold slice
+      with true `LIMIT/OFFSET` SQL, no Rust-side cover-fetch).
     - **DPD Lookup:** bold-definition results **appended** after regular DPD
-      headword results.
+      headword results, with the same boundary-aware orchestrator.
     - **Headword Match:** bold-definition results **appended** after regular
-      dictionary headword results.
+      dictionary headword results, with the same boundary-aware
+      orchestrator.
 13. Bold-definition results **must** be clickable and open an inline detail
     view in the dictionary results area, rendered as in §4.4 below (no
     navigation to the source sutta on click).
@@ -231,12 +273,15 @@ entries.
 - Reference for `commentary_plain` normalization: the sutta `content_plain`
   pipeline — reuse the same normalization function, do not duplicate
   logic.
-- Reference for tantivy index build: the sutta tantivy index builder —
-  reuse the schema/writer factory where feasible; add a new index
-  directory for bold definitions (e.g. `dpd_bold_definitions` tantivy
-  index). Register the Pāli tokenizer (`lang = "pli"`) on the new index
-  the same way `build_sutta_index` / `build_dict_index` do via
-  `register_tokenizers(&index, lang)`.
+- **Tantivy index build (post-refactor).** Bold-definition rows are
+  appended into the unified dict tantivy index by
+  `append_bold_definitions_to_dict_index` (no `delete_all_documents`;
+  opens the existing per-language dict subdir under
+  `dict_words_index_dir`). The bootstrap step runs after the per-language
+  dict build; there is no `bold_definitions_index_dir`. The Pāli
+  tokenizer (`lang = "pli"`) is registered once on the unified index.
+  (Originally specified as a separate `dpd_bold_definitions` index with
+  its own builder — that path has been deleted.)
 - `query_task.rs` changes should keep each search mode's branch readable;
   factor the bold-definitions query into helpers per mode to avoid
   bloating existing branches.

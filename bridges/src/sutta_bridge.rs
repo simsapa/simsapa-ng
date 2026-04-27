@@ -1473,10 +1473,12 @@ impl qobject::SuttaBridge {
                 source_include: params.source_include,
                 nikaya_prefix: params.nikaya_prefix.clone(),
                 uid_prefix: params.uid_prefix.clone(),
+                uid_suffix: params.uid_suffix.clone(),
                 sutta_ref: None,
                 include_cst_mula: true,
                 include_cst_commentary: true,
                 include_ms_mula: params.include_ms_mula,
+                include_bold_definitions: params.include_comm_bold_definitions,
             };
 
             let result = with_fulltext_searcher(|searcher| {

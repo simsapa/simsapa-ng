@@ -347,11 +347,13 @@ RELEASE_CHANNEL=development
             Err(e) => logger::warn(&format!("Failed to get dict_word languages: {}", e)),
         }
 
-        // Build the tantivy fulltext index over bold_definitions.commentary_plain.
-        // Commentary text is Pāli — lang = "pli" (matches DPD dictionary entries).
-        match indexer::build_bold_definitions_index(&app_data.dbm.dpd, &paths.bold_definitions_index_dir, "pli") {
+        // Append DPD bold-definitions into the unified Pāli dict index.
+        // Must run after the "pli" dict index is built since that step
+        // clears the index; bold rows share the dict schema and are
+        // distinguished by `is_bold_definition = true`.
+        match indexer::append_bold_definitions_to_dict_index(&app_data.dbm.dpd, &paths.dict_words_index_dir, "pli") {
             Ok(_) => {}
-            Err(e) => logger::warn(&format!("Failed to build bold definitions index: {}", e)),
+            Err(e) => logger::warn(&format!("Failed to append bold definitions to dict index: {}", e)),
         }
 
         // Build library indexes for all available languages

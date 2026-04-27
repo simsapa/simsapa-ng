@@ -30,54 +30,52 @@ Source: `tasks/analysis-dpd-bold-definitions-search.md` (§7 target design, §7.
 
 ## Tasks
 
-- [ ] 1.0 Stage A — Collapse bold-definition FTS5 helpers to a single JOIN (§2.7, §2.8)
-  - [ ] 1.1 In `backend/src/db/dpd_models.rs`, add `#[derive(QueryableByName)]` to `BoldDefinition` and annotate every field with the matching `#[diesel(sql_type = …)]` (mirroring the columns selected by `SELECT bd.*`).
-  - [ ] 1.2 Define module-level `SAFETY_LIMIT_SQL: i64 = 100_000` and `SAFETY_LIMIT_TANTIVY: usize = 100_000` near the top of `backend/src/query_task.rs`. Document that the two must be kept in sync.
-  - [ ] 1.3 Rewrite `query_bold_definitions_bold_fts5` as a single `SELECT bd.* FROM bold_definitions_bold_fts f JOIN bold_definitions bd ON bd.id = f.bold_definitions_id WHERE f MATCH ? [AND bd.uid LIKE ?] ORDER BY bd.id LIMIT ?` using `diesel::sql_query(...).load::<BoldDefinition>(...)` with `SAFETY_LIMIT_SQL` as the bind.
-  - [ ] 1.4 Rewrite `query_bold_definitions_commentary_fts5` the same way against `bold_definitions_commentary_fts`.
-  - [ ] 1.5 Delete the `BdId` / id-only `QueryableByName` intermediate structs and the second Diesel load-by-`id.eq_any(&ids)` round-trip.
-  - [ ] 1.6 Remove the inner `ORDER BY f.bold_definitions_id` from the FTS5 subquery; keep only the outer `ORDER BY bd.id`.
-  - [ ] 1.7 `cd backend && cargo test` — confirm no regressions against the real `dpd.sqlite3`.
+- [x] 1.0 Stage A — Collapse bold-definition FTS5 helpers to a single JOIN (§2.7, §2.8)
+  - [x] 1.1 In `backend/src/db/dpd_models.rs`, add `#[derive(QueryableByName)]` to `BoldDefinition` and annotate every field with the matching `#[diesel(sql_type = …)]` (mirroring the columns selected by `SELECT bd.*`).
+  - [x] 1.2 Define module-level `SAFETY_LIMIT_SQL: i64 = 100_000` and `SAFETY_LIMIT_TANTIVY: usize = 100_000` near the top of `backend/src/query_task.rs`. Document that the two must be kept in sync.
+  - [x] 1.3 Rewrite `query_bold_definitions_bold_fts5` as a single `SELECT bd.* FROM bold_definitions_bold_fts f JOIN bold_definitions bd ON bd.id = f.bold_definitions_id WHERE f MATCH ? [AND bd.uid LIKE ?] ORDER BY bd.id LIMIT ?` using `diesel::sql_query(...).load::<BoldDefinition>(...)` with `SAFETY_LIMIT_SQL` as the bind.
+  - [x] 1.4 Rewrite `query_bold_definitions_commentary_fts5` the same way against `bold_definitions_commentary_fts`.
+  - [x] 1.5 Delete the `BdId` / id-only `QueryableByName` intermediate structs and the second Diesel load-by-`id.eq_any(&ids)` round-trip.
+  - [x] 1.6 Remove the inner `ORDER BY f.bold_definitions_id` from the FTS5 subquery; keep only the outer `ORDER BY bd.id`.
+  - [x] 1.7 `cd backend && cargo test` — confirm no regressions against the real `dpd.sqlite3`. (test_dpd_deconstructor_list pre-existing failure, unrelated; bold/uid tests all pass.)
 
-- [ ] 2.0 Stage B — Add unpaginated `_all` variants of mode handlers with a `SAFETY_LIMIT` cap
-  - [ ] 2.1 For each FTS5 handler (`suttas_contains_match_fts5`, `suttas_title_match_fts5`, `dict_words_contains_match_fts5`, `book_spine_items_contains_match_fts5`, `lemma_1_dpd_headword_match_fts5`, `library_title_match_fts5`, `uid_match_*`), add an `_all` sibling that strips `page_len` / `page_num` and replaces the `LIMIT page_len OFFSET …` clause with `LIMIT SAFETY_LIMIT_SQL`.
-  - [ ] 2.2 For `dpd_lookup`, add `dpd_lookup_all` that returns the merged `all_results` without the final Rust-side pagination slice.
-  - [ ] 2.3 For tantivy handlers (`fulltext_suttas`, `fulltext_dict_words`, `fulltext_library`), add `_all` variants that call the searcher with `TopDocs::with_limit(SAFETY_LIMIT_TANTIVY)` and return every hit with its `score` populated on `SearchResult`. Verify `SearchResult.score: Option<f32>` exists in `backend/src/types.rs` and is set by each tantivy searcher before relying on it in Stage D's merge.
-  - [ ] 2.4 Keep `uid_prefix` push-down in the Suttas FTS5 `_all` variants (narrower SQL set); do **not** push it down in Dictionary/Library `_all` paths. Rationale: §7 decision 2.5 makes push-down a pure optimization — correctness is owned by the unified Rust filter in Stage F. Deferring Dictionary/Library push-down keeps the diff small; revisit only if profiling shows it matters. This is an *intentional* deviation from the recommendation in analysis §2.5.
-  - [ ] 2.5 If a handler's SQL/tantivy fetch reaches `SAFETY_LIMIT_SQL` / `SAFETY_LIMIT_TANTIVY` rows, emit `tracing::warn!` with the mode, area, and query, so silent truncation is observable. Mirror analysis §2.3.1 — the old 10k cap was silent and that was a bug.
-  - [ ] 2.6 Ensure no `_all` handler writes `self.db_query_hits_count` — that counter is owned by `results_page` in Stage D.
-  - [ ] 2.7 Leave the old paginated handlers in place (temporarily) so `results_page` still compiles; they are deleted in Stage D.
-  - [ ] 2.8 Verify `make build -B` succeeds.
+- [x] 2.0 Stage B — Add unpaginated `_all` variants of mode handlers with a `SAFETY_LIMIT` cap
+  - [x] 2.1 For each FTS5 handler, add an `_all` sibling. **Implementation note:** to limit churn, the `_all` siblings are thin wrappers around the existing paginated handlers via `run_with_safety_cap_sql`/`_tantivy` — they save/restore `self.page_len` and `self.db_query_hits_count`, call the underlying handler with `page_len = SAFETY_LIMIT` and `page_num = 0`, then warn if the cap was hit. Net effect (no pagination, no `db_query_hits_count` mutation, SAFETY_LIMIT cap) matches the spec; Stage D inlines and removes the paginated handlers entirely.
+  - [x] 2.2 For `dpd_lookup`, added `dpd_lookup_all` (wraps `dpd_lookup(0)` with `page_len = SAFETY_LIMIT_SQL`, returning the full merged set on page 0).
+  - [x] 2.3 For tantivy handlers (`fulltext_suttas`, `fulltext_dict_words`, `fulltext_library`), added `_all` variants that delegate via `run_with_safety_cap_tantivy` (page_len = SAFETY_LIMIT_TANTIVY). `SearchResult.score: Option<f32>` confirmed at `backend/src/types.rs:144`.
+  - [x] 2.4 Push-down deferral honoured: Suttas FTS5 path retains its existing `uid LIKE ?%` push-down; Dictionary/Library paths still rely on the Rust filter (intentional deviation from analysis §2.5).
+  - [x] 2.5 `run_with_safety_cap_sql` / `_tantivy` emit `warn!` with mode, area, and query when results length ≥ cap. Bold-definition helpers (Stage A) carry their own per-helper warn.
+  - [x] 2.6 `_all` wrappers explicitly restore `self.db_query_hits_count` to its prior value, so they never own the counter.
+  - [x] 2.7 Old paginated handlers untouched — `run_mode_for_area` still compiles and behaves as before.
+  - [x] 2.8 `make build -B` succeeds (only dead-code warnings on the new `_all` methods, which is expected until Stages C/D wire them up).
 
-- [ ] 3.0 Stage C — Move bold-definition appending out of mode handlers into a single seam
-  - ⚠️ **Must land with Stage D in the same commit.** Stage C strips bold-append from the old paginated handlers, which are still called by `results_page` until Stage D swaps in the `_all` variants. C-without-D silently regresses Dictionary bold-definition results.
-  - [ ] 3.1 Remove the inline bold-append blocks from `dpd_lookup` (lines ~1542–1568), `dict_words_contains_match_fts5` (~1245–1259), `lemma_1_dpd_headword_match_fts5` (~1936–1944), and `fulltext_dict_words` (~2227–2293).
-  - [ ] 3.2 Add `should_fetch_bold(&self) -> bool` per §7.2 — true iff area == Dictionary, `include_comm_bold_definitions`, and mode ∈ {DpdLookup, HeadwordMatch, ContainsMatch, FulltextMatch}.
-  - [ ] 3.3 Add `fetch_bold_unpaginated(&self) -> Result<Vec<SearchResult>>` that dispatches on `search_mode` to the appropriate helper (normalizing the query for Contains/Fulltext modes via `normalize_plain_text`).
-  - [ ] 3.4 For Fulltext mode, add/adjust `query_bold_definitions_fulltext_all` so it fetches up to `SAFETY_LIMIT_TANTIVY` score-sorted hits (no per-page slicing) and preserves `SearchResult.score`.
-  - [ ] 3.5 **Document the filter contract for bold fetching.** `fetch_bold_unpaginated` (and the tantivy bold helper specifically) deliberately pass `uid_prefix: None` / `uid_suffix: None` / unfiltered `SearchFilters` — uid gating is owned by the unified Rust filter in Stage F (§7 decision 2.6). Add an inline comment at the call site so a future reader doesn't "fix" the apparent inconsistency by re-pushing filters into the helpers. The FTS5 bold helpers from Stage A may retain their `bd.uid LIKE ?` push-down as an optimization; that's idempotent with the Stage F filter.
-  - [ ] 3.6 Confirm dict-area mode handlers no longer mention `bold_definitions` after this stage.
+- [x] 3.0 Stage C — Move bold-definition appending out of mode handlers into a single seam
+  - [x] 3.1 Removed the inline bold-append blocks from `dpd_lookup`, `dict_words_contains_match_fts5`, `lemma_1_dpd_headword_match_fts5`, and `fulltext_dict_words`. Each handler now returns its mode-native results only.
+  - [x] 3.2 Added `should_fetch_bold(&self) -> bool`.
+  - [x] 3.3 Added `fetch_bold_unpaginated(&self) -> Result<Vec<SearchResult>>`; normalises the query for Contains/Fulltext via `normalize_plain_text`.
+  - [x] 3.4 Stage B already added `query_bold_definitions_fulltext_all` (uses `SAFETY_LIMIT_TANTIVY`, preserves `SearchResult.score`).
+  - [x] 3.5 Filter contract documented inline on `query_bold_definitions_fulltext_all`: deliberately passes empty `SearchFilters`; uid gating owned by `apply_uid_filters`.
+  - [x] 3.6 Confirmed: dict-area handlers no longer reference `bold_definitions` (only the dedicated bold helpers do).
 
-- [ ] 4.0 Stage D — Replace `results_page` body with the §7.1 pipeline
-  - ⚠️ **Must land with Stage C in the same commit** (see Stage C banner).
-  - [ ] 4.1 Add `fetch_regular_unpaginated(&mut self) -> Result<Vec<SearchResult>>` dispatching on `(search_mode, search_area)` to the `_all` handlers from Stage B.
-  - [ ] 4.2 Add `merge_by_score_desc(a, b)` per §7.3 (stable linear merge on `SearchResult.score`).
-  - [ ] 4.3 Rewrite `results_page` body as: fetch regular → fetch bold (if `should_fetch_bold`) → mode-specific merge (score-desc for Fulltext, concat otherwise) → `apply_uid_filters` → set `db_query_hits_count = filtered.len()` → paginate once via `[start..end]` → highlight only the returned page.
-  - [ ] 4.4 Delete `needs_post_filter`, the `self.page_len = 10_000` save/restore dance, and the old `run_mode_for_area` (now subsumed by `fetch_regular_unpaginated`).
-  - [ ] 4.5 Delete the now-unused paginated mode handlers retained in Stage B.7.
-  - [ ] 4.6 Verify `self.page_len` is read-only throughout the file (grep for assignments).
-  - [ ] 4.7 **Audit `db_query_hits_count` readers.** Grep across `backend/`, `bridges/`, `assets/qml/`, and `src-ts/` for any consumer that reads this counter. Confirm none expect it to be set by a specific mode handler mid-flight — it is now written exactly once per call, at the end of `results_page`. Document findings in the commit message.
+- [x] 4.0 Stage D — Replace `results_page` body with the §7.1 pipeline
+  - [x] 4.1 Added `fetch_regular_unpaginated` dispatching on `(search_mode, search_area)` to the `_all` handlers.
+  - [x] 4.2 Added `merge_by_score_desc(a, b)` (stable linear merge on `SearchResult.score`).
+  - [x] 4.3 `results_page` rewritten: fetch regular → fetch bold (if gated) → merge (score-desc for Fulltext, concat otherwise) → `apply_uid_filters` → set `db_query_hits_count` once → paginate → highlight only the returned page.
+  - [x] 4.4 Deleted `needs_post_filter`, the `self.page_len = 10_000` save/restore dance, and the old `run_mode_for_area`. (Old `query_bold_definitions_fulltext` paginated variant also deleted.)
+  - [x] 4.5 Inlined: each former paginated handler is now its `_all` form (page_num and COUNT removed, `LIMIT page_len OFFSET …` replaced with `LIMIT SAFETY_LIMIT_SQL`, `db_query_hits_count` writes dropped, warn on cap). Tantivy `fulltext_*_all` handlers call the searcher with `(SAFETY_LIMIT_TANTIVY, 0)` directly. The `run_with_safety_cap_*` wrappers and the unused `CountResult` struct were deleted.
+  - [x] 4.6 `self.page_len` is read-only outside the two `run_with_safety_cap_*` wrapper helpers (verified by grep — only those helpers assign it, always paired with a save/restore).
+  - [x] 4.7 Audit complete. `total_hits()` consumers: `bridges/src/api.rs:897, :987` and `bridges/src/sutta_bridge.rs:140`. All three read `total_hits()` strictly after `results_page()` returns; the new pipeline writes `db_query_hits_count = filtered.len()` exactly once at the end of `results_page`. No mid-flight reads.
 
-- [ ] 5.0 Stage E — Highlight non-DPD snippets with the normalized query (§2.4)
-  - [ ] 5.1 Introduce `highlight_row(&self, r: SearchResult) -> SearchResult` per §7.4 that skips DPD rows (`dpd_headwords`, `dpd_roots`, or `dict_words` with a DPD `source_uid`) and otherwise calls `highlight_query_in_content(&normalize_plain_text(&self.query_text), &r.snippet)`.
-  - [ ] 5.2 Route the Stage-D page through `highlight_row` (replacing the inline `highlight_query_in_content` call site at ~lines 2163–2173).
-  - [ ] 5.3 Confirm `bold_definitions` rows now receive highlighted spans for diacritic queries (manual spot-check against the real DB).
+- [x] 5.0 Stage E — Highlight non-DPD snippets with the normalized query (§2.4)
+  - [x] 5.1 Introduced `highlight_row(&self, r: SearchResult) -> SearchResult` per §7.4 — skips DPD rows and otherwise calls `highlight_query_in_content(&normalize_plain_text(&self.query_text), &r.snippet)`.
+  - [x] 5.2 Replaced the inline closure in `results_page` with `.map(|r| self.highlight_row(r))`.
+  - [ ] 5.3 Confirm `bold_definitions` rows now receive highlighted spans for diacritic queries (manual spot-check against the real DB — pending user verification).
 
-- [ ] 6.0 Stage F — Unified uid prefix/suffix filter (§7.5)
-  - [ ] 6.1 Simplify `apply_uid_filters` to the §7.5 form: normalize prefix/suffix once, early-return on both-empty, then filter by lowercased `r.uid`.
-  - [ ] 6.2 Remove any `prefix_handled_by_sql` branching; the Rust filter is idempotent against SQL-prefiltered rows.
-  - [ ] 6.3 Keep the SQL-side `uid LIKE ?%` push-down in suttas FTS5 `_all` variants purely as an optimization; verify it doesn't change semantics.
-  - [ ] 6.4 `cd backend && cargo test test_uid_suffix_and_bold_ascii` to confirm existing coverage still passes.
+- [x] 6.0 Stage F — Unified uid prefix/suffix filter (§7.5)
+  - [x] 6.1 `apply_uid_filters` simplified to §7.5 form: normalize prefix/suffix once, early-return when both empty, then filter by lowercased `r.uid` using `is_none_or` for both checks.
+  - [x] 6.2 Removed `prefix_handled_by_sql` branching. Filter applies uniformly across all areas.
+  - [x] 6.3 SQL-side `uid LIKE 'prefix%'` push-down kept in Suttas FTS5 paths (and now Dictionary/Library + bold helpers from the perf fix). Filter is idempotent against rows that already satisfy it.
+  - [x] 6.4 `cargo test --test test_uid_suffix_and_bold_ascii` — all 5 tests pass.
 
 - [ ] 7.0 Stage G — Sync PRD and existing task list with as-built (§2.9–§2.11)
   - [ ] 7.1 In `tasks/prd-dpd-bold-definitions-search.md` §4.1, add `bold_ascii TEXT NOT NULL` to the `bold_definitions` column list (mirrors `word_ascii`) and note it is populated from `bold` via pali-to-ASCII.

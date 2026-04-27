@@ -118,7 +118,7 @@
     {
       "uid": "34631/dpd",
       "word": "dhamma 1.06",
-      "summary": "<i>(masc)</i> matter; thing; phenomena  <b>[√dhar + ma]</b>  <i>masc, from dharati</i>"
+      "summary": "<i>(masc)</i> matter; thing; phenomenon  <b>[√dhar + ma]</b>  <i>masc, from dharati</i>"
     },
     {
       "uid": "34632/dpd",
@@ -234,12 +234,12 @@
     {
       "uid": "√hi-1/dpd",
       "word": "√hi 1",
-      "summary": "<b>√hi 1</b> send <b>·</b> <i>√hi 4 svādigaṇa + ṇā (send)</i>"
+      "summary": "<b>√hi 1</b> send <b>·</b> <i>√hi 4 svādigaṇa + ṇo, ṇā (send)</i>"
     },
     {
       "uid": "√hi-2/dpd",
       "word": "√hi 2",
-      "summary": "<b>√hi 2</b> impel <b>·</b> <i>√hi×7 tanādigaṇa + o (impel)Base:hinoDhātupātha:hi gatiyaṁ (going) #525Dhātumañjūsa:hi gatimhi (going) #713Saddanīti:hi gati-buddhīsu upatāpe ca (going, knowing and vexation, tormenting)Sanskrit Root:√hi 1, 5 (impel)Pāṇinīya Dhātupāṭha:hi gatau vṛddhau ca (going and cutting off)</i>"
+      "summary": "<b>√hi 2</b> impel <b>·</b> <i>√hi 7 tanādigaṇa + o (impel)Base:hinoDhātupātha:hi gatiyaṁ (going) #525Dhātumañjūsa:hi gatimhi (going) #713Saddanīti:hi gati-buddhīsu upatāpe ca (going, knowing and vexation, tormenting)Sanskrit Root:√hi 1, 5 (impel)Pāṇinīya Dhātupāṭha:hi gatau vṛddhau ca (going and cutting off)</i>"
     }
   ],
   "hissa": [
@@ -336,7 +336,7 @@
     {
       "uid": "20957/dpd",
       "word": "kāma 1",
-      "summary": "<i>(adj)</i> wishing (to); wanting (to); would be delighted (to)  <b>[√kam > kām + *a]</b>  <i>adj, in comps, from kāmeti</i>"
+      "summary": "<i>(adj)</i> wishing; wanting; would be delighted (to)  <b>[√kam > kām + *a]</b>  <i>adj, in comps, from kāmeti</i>"
     },
     {
       "uid": "20958/dpd",
@@ -346,12 +346,12 @@
     {
       "uid": "20959/dpd",
       "word": "kāma 3",
-      "summary": "<i>(masc)</i> sense desire (of); sensual pleasure (of)  <b>[√kam > kām + *a]</b>  <i>masc, from kāmeti</i>"
+      "summary": "<i>(masc)</i> sense desire; sensual pleasure (of)  <b>[√kam > kām + *a]</b>  <i>masc, from kāmeti</i>"
     },
     {
       "uid": "20960/dpd",
       "word": "kāma 4",
-      "summary": "<i>(masc)</i> (objects of) pleasure; sensual pleasure; sexual pleasure  <b>[√kam > kām + *a]</b>  <i>masc, from kāmeti</i>"
+      "summary": "<i>(masc)</i> (objects of) pleasure; sensual pleasure; sexual pleasure; sensual tempation  <b>[√kam > kām + *a]</b>  <i>masc, from kāmeti</i>"
     },
     {
       "uid": "21117/dpd",
@@ -402,12 +402,12 @@
     {
       "uid": "41468/dpd",
       "word": "paṭhamaṁ 1",
-      "summary": "<i>(ind)</i> first; firstly; at first; first of all  <b>[pa + √ṭhā + ma + aṁ], [paṭhama + aṁ]</b>  <i>ind, adv, acc sg of paṭhama</i>"
+      "summary": "<i>(ind)</i> first; firstly; at first; first of all  <b>[pa + tama > ṭhama + aṁ], [paṭhama + aṁ]</b>  <i>ind, adv, acc sg of paṭhama</i>"
     },
     {
       "uid": "41469/dpd",
       "word": "paṭhamaṁ 2",
-      "summary": "<i>(ind)</i> before; recently; newly; just  <b>[pa + √ṭhā + ma + aṁ], [paṭhama + aṁ]</b>  <i>ind, adv, acc sg of paṭhama</i>"
+      "summary": "<i>(ind)</i> before; recently; newly; just  <b>[pa + tama > ṭhama + aṁ], [paṭhama + aṁ]</b>  <i>ind, adv, acc sg of paṭhama</i>"
     },
     {
       "uid": "41150/dpd",
@@ -434,7 +434,7 @@
     {
       "uid": "45303/dpd",
       "word": "pāṭikaṅkha",
-      "summary": "<i>(ptp)</i> to be expected (for); certain (for); can be anticipated  <b>[pati > pāṭi + √kaṅkh + *ya]</b>  <i>ptp of paṭikaṅkhati</i>"
+      "summary": "<i>(ptp)</i> to be expected; certain (for); can be anticipated  <b>[pati > pāṭi + √kaṅkh + *ya]</b>  <i>ptp of paṭikaṅkhati</i>"
     }
   ],
   "pītisukhaṁ": [
@@ -487,7 +487,7 @@
     {
       "uid": "59641/dpd",
       "word": "samādhindriya",
-      "summary": "<i>(nt)</i> power of a collected mind; faculty of mental stability  <b>[samādhi + indriya]</b>  <i>nt, abstr, comp</i>"
+      "summary": "<i>(nt)</i> power of a collected mind; faculty of meditative stability  <b>[samādhi + indriya]</b>  <i>nt, abstr, comp</i>"
     }
   ],
   "samādhiṁ": [
@@ -620,12 +620,12 @@
     {
       "uid": "69661/dpd",
       "word": "viharati 1",
-      "summary": "<i>(pr)</i> lives (in); dwells (in); stays (in)  <b>[vi + hara + ti]</b>  <i>pr</i>"
+      "summary": "<i>(pr)</i> lives; dwells; stays (in)  <b>[vi + hara + ti]</b>  <i>pr</i>"
     },
     {
       "uid": "69662/dpd",
       "word": "viharati 2",
-      "summary": "<i>(pr)</i> stays (in); remains (in); continues (in); dwells (in)  <b>[vi + hara + ti]</b>  <i>pr</i>"
+      "summary": "<i>(pr)</i> stays; remains; continues; dwells (in)  <b>[vi + hara + ti]</b>  <i>pr</i>"
     }
   ],
   "vivekajaṁ": [
@@ -639,7 +639,7 @@
     {
       "uid": "69591/dpd",
       "word": "vivicca",
-      "summary": "<i>(ger)</i> separating (from); aloof (from)  <b>[vi + √vic + ya]</b>  <i>ger of viviccati</i>"
+      "summary": "<i>(ger)</i> separating; aloof (from)  <b>[vi + √vic + ya]</b>  <i>ger of viviccati</i>"
     },
     {
       "uid": "69592/dpd",
@@ -656,7 +656,7 @@
     {
       "uid": "69591/dpd",
       "word": "vivicca",
-      "summary": "<i>(ger)</i> separating (from); aloof (from)  <b>[vi + √vic + ya]</b>  <i>ger of viviccati</i>"
+      "summary": "<i>(ger)</i> separating; aloof (from)  <b>[vi + √vic + ya]</b>  <i>ger of viviccati</i>"
     },
     {
       "uid": "69592/dpd",
@@ -668,7 +668,7 @@
     {
       "uid": "70646/dpd",
       "word": "vossaggārammaṇa",
-      "summary": "<i>(nt)</i> basis of letting go; foundation of complete relinquishment  <b>[vossagga + ārammaṇa]</b>  <i>nt, comp</i>"
+      "summary": "<i>(nt)</i> letting go (is the) object; complete relinquishment is the (object)  <b>[vossagga + ārammaṇa]</b>  <i>nt, comp</i>"
     }
   ],
   "yaṁ": [

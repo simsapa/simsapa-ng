@@ -38,7 +38,12 @@
     {
       "uid": "3018/dpd",
       "word": "addhāna 3",
-      "summary": "<i>(nt)</i> course (of saṁsāra)  <b>[addha + āna]</b>  <i>nt, from addha</i>"
+      "summary": "<i>(nt)</i> course (of saṁsāra); long (cycle of rebirths)  <b>[addha + āna]</b>  <i>nt, from addha</i>"
+    },
+    {
+      "uid": "89084/dpd",
+      "word": "addhāna 4",
+      "summary": "<i>(nt)</i> long time; long duration; lifetime  <b>[addha + āna]</b>  <i>nt, from addha</i>"
     }
   ],
   "āgata": [
@@ -55,7 +60,7 @@
     {
       "uid": "11156/dpd",
       "word": "āgata 3",
-      "summary": "<i>(pp)</i> come (from); arrived (from); returned (from)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+      "summary": "<i>(pp)</i> come; arrived; returned (from)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
     },
     {
       "uid": "11157/dpd",
@@ -65,12 +70,17 @@
     {
       "uid": "11158/dpd",
       "word": "āgata 5",
-      "summary": "<i>(pp)</i> (of scriptures) come down (in); handed down (in)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+      "summary": "<i>(pp)</i> (of scriptures) come down; handed down (in)  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
     },
     {
       "uid": "11159/dpd",
       "word": "āgata 6",
       "summary": "<i>(pp)</i> present; at hand; current  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
+    },
+    {
+      "uid": "89056/dpd",
+      "word": "āgata 7",
+      "summary": "<i>(pp)</i> came to; arrived at; reached  <b>[ā + √gam + ta]</b>  <i>pp of āgacchati</i>"
     }
   ]
 }

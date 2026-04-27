@@ -11,8 +11,14 @@ use crate::db::dpd_models::BoldDefinition;
 use crate::logger::info;
 use crate::AppGlobalPaths;
 
-use super::schema::{build_bold_definitions_schema, build_dict_schema, build_library_schema, build_sutta_schema};
+use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
 use super::tokenizer::register_tokenizers;
+
+/// Lowercase the input and reverse it character-by-character. Used to populate
+/// the `*_rev` raw fields so a uid suffix query reduces to a prefix regex.
+fn reversed_lowercased(s: &str) -> String {
+    s.to_lowercase().chars().rev().collect()
+}
 
 /// Open or create a Tantivy index at the given directory path.
 pub fn open_or_create_index(dir: &Path, schema: tantivy::schema::Schema, lang: &str) -> Result<Index> {
@@ -49,6 +55,7 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
 
     let schema = index.schema();
     let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
     let title_field = schema.get_field("title").unwrap();
     let language_field = schema.get_field("language").unwrap();
     let source_uid_field = schema.get_field("source_uid").unwrap();
@@ -88,8 +95,11 @@ pub fn build_sutta_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: &s
         let is_commentary = before_first_slash.contains(".att") || before_first_slash.contains(".tik");
         let is_mula = !is_commentary;
 
+        let uid_rev = reversed_lowercased(&sutta.uid);
+
         writer.add_document(doc!(
             uid_field => sutta.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
             title_field => t,
             language_field => sutta.language.as_str(),
             source_uid_field => source,
@@ -137,12 +147,14 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
 
     let schema = index.schema();
     let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
     let word_field = schema.get_field("word").unwrap();
     let synonyms_field = schema.get_field("synonyms").unwrap();
     let language_field = schema.get_field("language").unwrap();
     let source_uid_field = schema.get_field("source_uid").unwrap();
     let content_field = schema.get_field("content").unwrap();
     let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
 
     let lang_clone = lang.to_string();
     let word_list: Vec<DictWord> = dict_db.do_read(|db_conn| {
@@ -168,14 +180,18 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
 
         let lang_val = dw.language.as_deref().unwrap_or("");
 
+        let uid_rev = reversed_lowercased(&dw.uid);
+
         writer.add_document(doc!(
             uid_field => dw.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
             word_field => w.as_str(),
             synonyms_field => syn,
             language_field => lang_val,
             source_uid_field => dw.dict_label.as_str(),
             content_field => content_text.as_str(),
             content_exact_field => content_text.as_str(),
+            is_bold_definition_field => false,
         ))?;
 
         indexed_count += 1;
@@ -192,40 +208,45 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     Ok(())
 }
 
-/// Build fulltext index for DPD bold-definitions.
+/// Append DPD bold-definition rows to the unified dict index.
+///
+/// Bold-definition docs share the dict schema (distinguished by
+/// `is_bold_definition = true`) and live in the `lang`-keyed subdir of
+/// `dict_words_index_dir` so a single tantivy query against the dict index
+/// returns both kinds of doc with internally-consistent BM25.
+///
+/// Must be called *after* `build_dict_index` for the same language, since
+/// `build_dict_index` calls `delete_all_documents()` first; this function
+/// only appends and never clears.
 ///
 /// Commentary text is Pāli; call sites pass `lang = "pli"` so the index uses
 /// the Pāli tokenizers matching DPD dictionary entries.
-pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, lang: &str) -> Result<()> {
+pub fn append_bold_definitions_to_dict_index(
+    dpd_db: &DatabaseHandle,
+    dict_words_index_dir: &Path,
+    lang: &str,
+) -> Result<()> {
     use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
 
-    info(&format!("Building bold_definitions index for language: {}", lang));
+    info(&format!("Appending bold_definitions to dict index for language: {}", lang));
 
-    // Clean the index directory before writing so re-runs start fresh.
-    match index_dir.try_exists() {
-        Ok(true) => {
-            std::fs::remove_dir_all(index_dir)?;
-        }
-        _ => {}
-    }
-
-    let schema = build_bold_definitions_schema(lang);
-    let index = open_or_create_index(index_dir, schema, lang)?;
+    let lang_index_dir = dict_words_index_dir.join(lang);
+    let schema = build_dict_schema(lang);
+    let index = open_or_create_index(&lang_index_dir, schema, lang)?;
 
     let mut writer: IndexWriter = index.writer(50_000_000)?;
 
-    // Clear existing documents before rebuilding (mirrors the other builders).
-    writer.delete_all_documents()?;
-    writer.commit()?;
-
     let schema = index.schema();
-    let bold_definitions_id_field = schema.get_field("bold_definitions_id").unwrap();
     let uid_field = schema.get_field("uid").unwrap();
-    let bold_field = schema.get_field("bold").unwrap();
-    let ref_code_field = schema.get_field("ref_code").unwrap();
-    let nikaya_field = schema.get_field("nikaya").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
+    let word_field = schema.get_field("word").unwrap();
+    let synonyms_field = schema.get_field("synonyms").unwrap();
+    let language_field = schema.get_field("language").unwrap();
+    let source_uid_field = schema.get_field("source_uid").unwrap();
+    let nikaya_group_path_field = schema.get_field("nikaya_group_path").unwrap();
     let content_field = schema.get_field("content").unwrap();
     let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
 
     let rows: Vec<BoldDefinition> = dpd_db.do_read(|db_conn| {
         bd_dsl::bold_definitions
@@ -242,14 +263,31 @@ pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, l
             continue;
         }
 
+        let group_path = [
+            row.nikaya.as_str(),
+            row.book.as_str(),
+            row.title.as_str(),
+            row.subhead.as_str(),
+        ]
+        .iter()
+        .filter(|s| !s.is_empty())
+        .copied()
+        .collect::<Vec<&str>>()
+        .join(" / ");
+
+        let uid_rev = reversed_lowercased(&row.uid);
+
         writer.add_document(doc!(
-            bold_definitions_id_field => row.id as i64,
             uid_field => row.uid.as_str(),
-            bold_field => row.bold.as_str(),
-            ref_code_field => row.ref_code.as_str(),
-            nikaya_field => row.nikaya.as_str(),
+            uid_rev_field => uid_rev.as_str(),
+            word_field => row.bold.as_str(),
+            synonyms_field => "",
+            language_field => lang,
+            source_uid_field => row.ref_code.as_str(),
+            nikaya_group_path_field => group_path.as_str(),
             content_field => plain,
             content_exact_field => plain,
+            is_bold_definition_field => true,
         ))?;
 
         indexed_count += 1;
@@ -285,6 +323,7 @@ pub fn build_library_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: 
 
     let schema = index.schema();
     let spine_item_uid_field = schema.get_field("spine_item_uid").unwrap();
+    let spine_item_uid_rev_field = schema.get_field("spine_item_uid_rev").unwrap();
     let book_uid_field = schema.get_field("book_uid").unwrap();
     let book_title_field = schema.get_field("book_title").unwrap();
     let author_field = schema.get_field("author").unwrap();
@@ -328,8 +367,11 @@ pub fn build_library_index(appdata_db: &DatabaseHandle, index_dir: &Path, lang: 
         // Prepend book_title, chapter title, and author to content for better matching
         let content_text = format!("{} {} {} {}", book_title, chapter_title, author, plain);
 
+        let spine_item_uid_rev = reversed_lowercased(&spine_item.spine_item_uid);
+
         writer.add_document(doc!(
             spine_item_uid_field => spine_item.spine_item_uid.as_str(),
+            spine_item_uid_rev_field => spine_item_uid_rev.as_str(),
             book_uid_field => spine_item.book_uid.as_str(),
             book_title_field => book_title,
             author_field => author,
@@ -447,8 +489,9 @@ pub fn build_all_indexes(
         build_library_index(appdata_db, &paths.library_index_dir, lang)?;
     }
 
-    // DPD bold-definitions commentary is Pāli only.
-    build_bold_definitions_index(dpd_db, &paths.bold_definitions_index_dir, "pli")?;
+    // DPD bold-definitions commentary is Pāli only; append into the
+    // unified dict index (under the "pli" lang subdir).
+    append_bold_definitions_to_dict_index(dpd_db, &paths.dict_words_index_dir, "pli")?;
 
     write_version_file(&paths.index_dir)?;
 
