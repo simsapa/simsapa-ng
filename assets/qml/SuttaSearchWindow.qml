@@ -691,7 +691,7 @@ ApplicationWindow {
             const table_name = sutta_html_view_layout.items_map[current_key].get_data_value('table_name');
 
             // Only load translations for sutta results, not dictionary or library results
-            if (table_name === "dict_words" || table_name === "dpd_headwords" || table_name === "book_spine_items") {
+            if (table_name === "dict_words" || table_name === "dpd_headwords" || table_name === "bold_definitions" || table_name === "book_spine_items") {
                 sutta_html_view_layout.show_transient_message("Translations not available");
                 break;
             }
@@ -872,7 +872,7 @@ ${query_text}`;
 
         // Only add translation tabs for sutta results, not dictionary or library results.
         // During session restore, skip loading translations since they are restored directly from saved items.
-        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
+        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "bold_definitions" && tab_data.table_name !== "book_spine_items") {
             if (!root.is_restoring_session) {
                 root.load_translations_for_sutta(tab_data.item_uid);
             }

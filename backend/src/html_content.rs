@@ -144,12 +144,9 @@ static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
 ///   footer: `.bold-definition-footer` — source file name
 pub fn render_bold_definition(
     bd: &crate::db::dpd_models::BoldDefinition,
+    window_id: &str,
     body_class: Option<String>,
 ) -> String {
-    let mut tt = TinyTemplate::new();
-    tt.set_default_formatter(&tinytemplate::format_unescaped);
-    tt.add_template("page_html", PAGE_HTML).expect("Template error in page.html!");
-
     let header = format!(
         r#"<div class="bold-definition-header">{} › {} ({}) › {} › {}</div>"#,
         html_escape::encode_text(&bd.nikaya),
@@ -168,26 +165,26 @@ pub fn render_bold_definition(
         r#"<div class="bold-definition-footer">{}</div>"#,
         html_escape::encode_text(&bd.file_name),
     );
+    let content = format!("{}\n{}\n{}", header, body, footer);
 
-    let mut ctx = TmplContext {
-        reading_mode_html: "".to_string(),
-        find_html: "".to_string(),
-        text_resize_html: "".to_string(),
-        menu_html: "".to_string(),
-        confirm_modal_html: "".to_string(),
-        footnote_modal_html: "".to_string(),
-        icons_html: "".to_string(),
-        body_class: body_class.unwrap_or_default(),
-        content: format!("{}\n{}\n{}", header, body, footer),
-        ..Default::default()
-    };
+    // Route through sutta_html_page so the page picks up suttas.js (double-click
+    // / single-tap / long-press selection lookup hooks, IS_MOBILE, etc.) the
+    // same way sutta and dictionary pages do. Dictionary CSS is layered on top
+    // for `.bold-definition-*` and `.headword` styling.
+    // page.html already declares API_URL from ctx.api_url; only inject WINDOW_ID
+    // here so suttas.js (summary_selection, menu actions) can reach it.
+    let js_extra = format!(
+        " const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;",
+        window_id,
+    );
 
-    let mut css = String::new();
-    css.push_str(&SUTTAS_CSS.to_string().replace("http://localhost:8000", &ctx.api_url));
-    css.push_str(DICTIONARY_CSS);
-    ctx.css_head = css;
-
-    tt.render("page_html", &ctx).unwrap_or_default()
+    sutta_html_page(
+        &content,
+        None,
+        Some(DICTIONARY_CSS.to_string()),
+        Some(js_extra),
+        body_class,
+    )
 }
 
 pub fn blank_html_page(body_class: Option<String>) -> String {

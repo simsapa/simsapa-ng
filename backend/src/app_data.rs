@@ -347,7 +347,7 @@ impl AppData {
         // namespace. Check bold_definitions first and route to the dedicated
         // renderer if matched; otherwise fall through to dict_word rendering.
         if let Some(bd) = self.dbm.dpd.get_bold_definition_by_uid(word_uid) {
-            return crate::html_content::render_bold_definition(&bd, Some(body_class.clone()));
+            return crate::html_content::render_bold_definition(&bd, window_id, Some(body_class.clone()));
         }
 
         // Try to get the word from database
