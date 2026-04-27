@@ -1477,6 +1477,12 @@ pub fn word_uid_sanitize(word: &str) -> String {
     w
 }
 
+/// Sanitize a bold-definition term for UID use: trim quotes, punctuation, and
+/// whitespace from the start and end. Interior characters are preserved.
+pub fn bold_uid_sanitize(word: &str) -> String {
+    word.trim_matches(|c: char| !c.is_alphanumeric()).to_string()
+}
+
 /// Create a UID by combining sanitized word and dictionary label.
 pub fn word_uid(word: &str, dict_label: &str) -> String {
     format!("{}/{}",
