@@ -2019,7 +2019,7 @@ pub fn process_word_for_glossing(
     dpd: &crate::db::dpd::DpdDbHandle,
 ) -> Result<Option<WordProcessingResult>, String> {
     // Call the DPD lookup function directly - much more efficient than JSON serialization
-    let search_results = match dpd.dpd_lookup(&word_info.word.to_lowercase(), false, true) {
+    let search_results = match dpd.dpd_lookup(&word_info.word.to_lowercase(), false, true, None, None) {
         Ok(results) => results,
         Err(e) => return Err(format!("DPD lookup failed: {}", e)),
     };

@@ -44,9 +44,34 @@ impl LookupResult {
     }
 }
 
+/// Build SQL `LIKE` patterns for a uid prefix / suffix filter pair.
+/// Returns `(prefix_pat, suffix_pat)` — either or both may be `None` when the
+/// caller didn't request that filter. Inputs are trimmed and lowercased.
+fn uid_like_patterns(
+    uid_prefix: Option<&str>,
+    uid_suffix: Option<&str>,
+) -> (Option<String>, Option<String>) {
+    let p = uid_prefix
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("{}%", s));
+    let s = uid_suffix
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("%{}", s));
+    (p, s)
+}
+
 impl DpdDbHandle {
-    /// Map an inflected word form to headwords
-    fn inflection_to_pali_words(&self, word_form: &str) -> Result<Vec<DpdHeadword>> {
+    /// Map an inflected word form to headwords. Optionally pushes uid
+    /// prefix / suffix filters into the dpd_headwords lookup so the caller
+    /// doesn't have to post-filter.
+    fn inflection_to_pali_words(
+        &self,
+        word_form: &str,
+        uid_prefix_pat: Option<&str>,
+        uid_suffix_pat: Option<&str>,
+    ) -> Result<Vec<DpdHeadword>> {
         use crate::db::dpd_schema::lookup::dsl as lk;
         use crate::db::dpd_schema::dpd_headwords::dsl as hd;
 
@@ -58,9 +83,16 @@ impl DpdDbHandle {
             .optional()?;
 
         if let Some(i2h) = i2h {
-            let headwords = hd::dpd_headwords
+            let mut q = hd::dpd_headwords
                 .filter(hd::id.eq_any(i2h.headwords_unpack()))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_pat {
+                q = q.filter(hd::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_pat {
+                q = q.filter(hd::uid.like(s.to_string()));
+            }
+            let headwords = q.load::<DpdHeadword>(db_conn)?;
             Ok(headwords)
         } else {
             Ok(Vec::new())
@@ -140,14 +172,22 @@ impl DpdDbHandle {
         }
     }
 
-    /// Convert deconstructor entries to Pāli headwords
-    pub fn dpd_deconstructor_to_pali_words(&self, query_text: &str, exact_only: bool) -> Result<Vec<DpdHeadword>> {
+    /// Convert deconstructor entries to Pāli headwords. Optionally pushes
+    /// uid prefix / suffix filters down to the underlying `inflection_to_pali_words`
+    /// call so caller-side post-filtering is unnecessary.
+    pub fn dpd_deconstructor_to_pali_words(
+        &self,
+        query_text: &str,
+        exact_only: bool,
+        uid_prefix_pat: Option<&str>,
+        uid_suffix_pat: Option<&str>,
+    ) -> Result<Vec<DpdHeadword>> {
         let mut seen: Vec<String> = Vec::new();
         let mut results: Vec<DpdHeadword> = Vec::new();
 
         if let Some(lookup) = self.dpd_deconstructor_query(query_text, exact_only)? {
             for word in lookup.deconstructor_flat().iter() {
-                for hw in self.inflection_to_pali_words(word)? {
+                for hw in self.inflection_to_pali_words(word, uid_prefix_pat, uid_suffix_pat)? {
                     if seen.contains(&hw.lemma_1) {
                         continue;
                     } else {
@@ -161,12 +201,21 @@ impl DpdDbHandle {
         Ok(results)
     }
 
-    /// Recommended defaults: do_pali_sort = false, exact_only = true
+    /// Recommended defaults: do_pali_sort = false, exact_only = true,
+    /// uid_prefix = None, uid_suffix = None.
+    ///
+    /// When `uid_prefix` / `uid_suffix` are set, every per-phase Diesel query
+    /// against `dpd_headwords` / `dpd_roots` adds `AND uid LIKE ?` so the
+    /// filter runs at the storage layer rather than in a Rust post-pass.
+    /// Helper functions (`inflection_to_pali_words`,
+    /// `dpd_deconstructor_to_pali_words`) receive the same patterns.
     pub fn dpd_lookup(
         &self,
         query_text_orig: &str,
         do_pali_sort: bool,
         exact_only: bool,
+        uid_prefix: Option<&str>,
+        uid_suffix: Option<&str>,
     ) -> Result<Vec<SearchResult>> {
         info(&format!("dpd_lookup(): query_text_orig: {}", query_text_orig));
         let timer = Instant::now();
@@ -177,6 +226,10 @@ impl DpdDbHandle {
         let db_conn = &mut self.get_conn().expect("Can't get db conn");
 
         let query_text = normalize_query_text(Some(query_text_orig.to_string()));
+
+        let (uid_prefix_pat, uid_suffix_pat) = uid_like_patterns(uid_prefix, uid_suffix);
+        let uid_prefix_ref = uid_prefix_pat.as_deref();
+        let uid_suffix_ref = uid_suffix_pat.as_deref();
 
         // Collect word results in groups, with more "obvious" results grouped first.
         // Sort within groups by "natural" order to get dict numbers right,
@@ -193,20 +246,32 @@ impl DpdDbHandle {
             // If the remaining reference string is numeric, it is a DpdHeadword
             if ref_str.chars().all(char::is_numeric) {
                 if let Ok(id_val) = ref_str.parse::<i32>() {
-                    let r_opt = dpd_headwords::table
+                    let mut q = dpd_headwords::table
                         .filter(dpd_headwords::id.eq(id_val))
-                        .first::<DpdHeadword>(db_conn)
-                        .optional()?;
+                        .into_boxed();
+                    if let Some(p) = uid_prefix_ref {
+                        q = q.filter(dpd_headwords::uid.like(p.to_string()));
+                    }
+                    if let Some(s) = uid_suffix_ref {
+                        q = q.filter(dpd_headwords::uid.like(s.to_string()));
+                    }
+                    let r_opt = q.first::<DpdHeadword>(db_conn).optional()?;
                     if let Some(r) = r_opt {
                         res_words.push(UDpdWord::Headword(Box::new(r)));
                     }
                 }
             } else {
                 // Else it is a DpdRoot
-                let r_opt = dpd_roots::table
+                let mut q = dpd_roots::table
                     .filter(dpd_roots::uid.eq(&query_text))
-                    .first::<DpdRoot>(db_conn)
-                    .optional()?;
+                    .into_boxed();
+                if let Some(p) = uid_prefix_ref {
+                    q = q.filter(dpd_roots::uid.like(p.to_string()));
+                }
+                if let Some(s) = uid_suffix_ref {
+                    q = q.filter(dpd_roots::uid.like(s.to_string()));
+                }
+                let r_opt = q.first::<DpdRoot>(db_conn).optional()?;
                 if let Some(r) = r_opt {
                     res_words.push(UDpdWord::Root(Box::new(r)));
                 }
@@ -225,10 +290,17 @@ impl DpdDbHandle {
 
         // Word exact match.
         {
-            let r = dpd_headwords::table
+            let mut q = dpd_headwords::table
                 .filter(dpd_headwords::lemma_clean.eq(&query_text)
                         .or(dpd_headwords::word_ascii.eq(&query_text)))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_headwords::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_headwords::uid.like(s.to_string()));
+            }
+            let r = q.load::<DpdHeadword>(db_conn)?;
 
             let mut res_words: Vec<UDpdWord> = Vec::new();
             res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -242,20 +314,44 @@ impl DpdDbHandle {
 
         // For two OR conditions on indexed columns, SQLite can efficiently use the indexes to combine the results.
         // For three OR conditions, it is recommended to split the queries.
-        //
-        // let r = dpd_roots::table
-        //     .filter(dpd_roots::root_clean.eq(&query_text)
-        //             .or(dpd_roots::root_no_sign.eq(&query_text))
-        //             .or(dpd_roots::word_ascii.eq(&query_text)))
-        //     .load::<DpdRoot>(db_conn)?;
-        // res_words.extend(r.into_iter().map(UDpdWord::Root));
 
-        // Instead, use a HashSet to collect results:
-
-        let mut roots = HashSet::new();
-        roots.extend(dpd_roots::table.filter(dpd_roots::root_clean.eq(&query_text)).load::<DpdRoot>(db_conn)?);
-        roots.extend(dpd_roots::table.filter(dpd_roots::root_no_sign.eq(&query_text)).load::<DpdRoot>(db_conn)?);
-        roots.extend(dpd_roots::table.filter(dpd_roots::word_ascii.eq(&query_text)).load::<DpdRoot>(db_conn)?);
+        let mut roots: HashSet<DpdRoot> = HashSet::new();
+        {
+            let mut q = dpd_roots::table
+                .filter(dpd_roots::root_clean.eq(&query_text))
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_roots::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_roots::uid.like(s.to_string()));
+            }
+            roots.extend(q.load::<DpdRoot>(db_conn)?);
+        }
+        {
+            let mut q = dpd_roots::table
+                .filter(dpd_roots::root_no_sign.eq(&query_text))
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_roots::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_roots::uid.like(s.to_string()));
+            }
+            roots.extend(q.load::<DpdRoot>(db_conn)?);
+        }
+        {
+            let mut q = dpd_roots::table
+                .filter(dpd_roots::word_ascii.eq(&query_text))
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_roots::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_roots::uid.like(s.to_string()));
+            }
+            roots.extend(q.load::<DpdRoot>(db_conn)?);
+        }
 
         {
             let mut res_words: Vec<UDpdWord> = Vec::new();
@@ -272,7 +368,7 @@ impl DpdDbHandle {
         // This will include cases such as:
         // - assa: gen. of ima
         // - assa: imp 2nd sg of assati
-        let r = self.inflection_to_pali_words(&query_text)?;
+        let r = self.inflection_to_pali_words(&query_text, uid_prefix_ref, uid_suffix_ref)?;
         {
             let mut res_words: Vec<UDpdWord> = Vec::new();
             res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -287,9 +383,16 @@ impl DpdDbHandle {
         if results.is_empty() {
             // Stem form exact match.
             let stem = pali_stem(&query_text, false);
-            let r = dpd_headwords::table
+            let mut q = dpd_headwords::table
                 .filter(dpd_headwords::stem.eq(&stem))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_headwords::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_headwords::uid.like(s.to_string()));
+            }
+            let r = q.load::<DpdHeadword>(db_conn)?;
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
                 res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -306,10 +409,17 @@ impl DpdDbHandle {
             // If the query contained multiple words, remove spaces to find compound forms.
             if query_text.contains(' ') {
                 let nospace_query = query_text.replace(' ', "");
-                let r = dpd_headwords::table
+                let mut q = dpd_headwords::table
                     .filter(dpd_headwords::lemma_clean.eq(&nospace_query)
                             .or(dpd_headwords::word_ascii.eq(&nospace_query)))
-                    .load::<DpdHeadword>(db_conn)?;
+                    .into_boxed();
+                if let Some(p) = uid_prefix_ref {
+                    q = q.filter(dpd_headwords::uid.like(p.to_string()));
+                }
+                if let Some(s) = uid_suffix_ref {
+                    q = q.filter(dpd_headwords::uid.like(s.to_string()));
+                }
+                let r = q.load::<DpdHeadword>(db_conn)?;
                 {
                     let mut res_words: Vec<UDpdWord> = Vec::new();
                     res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -326,7 +436,7 @@ impl DpdDbHandle {
         if results.is_empty() {
             // i2h result doesn't exist.
             // Lookup query text in dpd_deconstructor.
-            let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only)?;
+            let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only, uid_prefix_ref, uid_suffix_ref)?;
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
                 res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -347,10 +457,17 @@ impl DpdDbHandle {
             // Lookup dpd_headwords which start with the query_text.
 
             // Word starts with.
-            let r = dpd_headwords::table
+            let mut q = dpd_headwords::table
                 .filter(dpd_headwords::lemma_clean.like(format!("{}%", query_text))
                         .or(dpd_headwords::word_ascii.like(format!("{}%", query_text))))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_headwords::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_headwords::uid.like(s.to_string()));
+            }
+            let r = q.load::<DpdHeadword>(db_conn)?;
 
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
@@ -366,9 +483,16 @@ impl DpdDbHandle {
             if results.is_empty() {
                 // Stem form starts with.
                 let stem = pali_stem(&query_text, false);
-                let r = dpd_headwords::table
+                let mut q = dpd_headwords::table
                     .filter(dpd_headwords::stem.like(format!("{}%", stem)))
-                    .load::<DpdHeadword>(db_conn)?;
+                    .into_boxed();
+                if let Some(p) = uid_prefix_ref {
+                    q = q.filter(dpd_headwords::uid.like(p.to_string()));
+                }
+                if let Some(s) = uid_suffix_ref {
+                    q = q.filter(dpd_headwords::uid.like(s.to_string()));
+                }
+                let r = q.load::<DpdHeadword>(db_conn)?;
                 {
                     let mut res_words: Vec<UDpdWord> = Vec::new();
                     res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -404,7 +528,7 @@ impl DpdDbHandle {
     }
 
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
-        match self.dpd_lookup(query, false, true) {
+        match self.dpd_lookup(query, false, true, None, None) {
             Ok(res) => {
                 res.iter().map(|i| format!("<b>{}</b> {}", i.title, i.snippet)).collect()
             }
@@ -417,7 +541,7 @@ impl DpdDbHandle {
     }
 
     pub fn dpd_lookup_json(&self, query: &str) -> String {
-        let list: Vec<LookupResult> = match self.dpd_lookup(query, false, true) {
+        let list: Vec<LookupResult> = match self.dpd_lookup(query, false, true, None, None) {
             Ok(res) => LookupResult::from_search_results(&res),
 
             Err(e) => {

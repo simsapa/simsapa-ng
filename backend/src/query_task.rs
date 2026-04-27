@@ -491,7 +491,7 @@ impl<'a> SearchQueryTask<'a> {
         let ref_str = query_uid.replace("/dpd", "");
         if query_uid.ends_with("/dpd") && ref_str.chars().all(char::is_numeric) {
             // Use dpd_lookup which handles numeric UIDs
-            return Ok(app_data.dbm.dpd.dpd_lookup(&query_uid, false, true)?);
+            return Ok(app_data.dbm.dpd.dpd_lookup(&query_uid, false, true, None, None)?);
         }
 
         let db_conn = &mut app_data.dbm.dictionaries.get_conn()?;
@@ -715,12 +715,31 @@ impl<'a> SearchQueryTask<'a> {
     /// the true post-filter total, and the requested page is then sliced.
     /// (A single cheap `SELECT COUNT(*)` isn't feasible across the four
     /// phases without restructuring; the union length is authoritative.)
+    /// Page-sized variant: builds the full filtered union via
+    /// `dict_words_contains_match_fts5_full` and slices for the requested
+    /// page. Used by the direct (non-bold) ContainsMatch+Dictionary path.
     fn dict_words_contains_match_fts5(
         &self,
         page_num: usize,
         page_len: usize,
     ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
-        info(&format!("dict_words_contains_match_fts5(): query_text: {}", &self.query_text));
+        let (full, total) = self.dict_words_contains_match_fts5_full()?;
+        let offset = page_num.saturating_mul(page_len);
+        let page: Vec<SearchResult> = full.into_iter().skip(offset).take(page_len).collect();
+        Ok((page, total))
+    }
+
+    /// Multi-phase fallback search used by ContainsMatch + Dictionary.
+    /// Phases: DpdHeadword exact lemma → DpdHeadword contains lemma →
+    /// DictWord definition FTS5 → ASCII fallbacks. Each phase pushes uid
+    /// prefix/suffix down to SQL. The returned Vec is the dedup-by-headword
+    /// union; callers slice it. Returning the full union is necessary
+    /// because the per-phase dedup can't be expressed as a single
+    /// `LIMIT/OFFSET` SQL query.
+    fn dict_words_contains_match_fts5_full(
+        &self,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("dict_words_contains_match_fts5_full(): query_text: {}", &self.query_text));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -1043,16 +1062,8 @@ impl<'a> SearchQueryTask<'a> {
         // only when a per-phase safety cap is hit on very broad queries.
         let total = all_results.len();
 
-        // Slice to the requested page.
-        let offset = page_num.saturating_mul(page_len);
-        let page_slice: Vec<&DictWord> = all_results
+        let search_results: Vec<SearchResult> = all_results
             .iter()
-            .skip(offset)
-            .take(page_len)
-            .collect();
-
-        let search_results: Vec<SearchResult> = page_slice
-            .into_iter()
             .map(|dict_word| self.db_word_to_result(dict_word))
             .collect();
 
@@ -1177,11 +1188,17 @@ impl<'a> SearchQueryTask<'a> {
 
     /// Substring match on bold_definitions.bold using the trigram FTS5 index.
     /// Used by DPD Lookup and Headword Match.
+    /// Substring match on `bold_definitions.bold` / `bold_ascii` via the
+    /// FTS5 trigram index. Returns `(total_count, slice)` where the slice
+    /// covers `[offset .. offset+limit)` of the deterministic
+    /// `ORDER BY bd.id` stream. `limit = 0` runs only the COUNT and skips
+    /// the row fetch — useful when the caller only needs the boundary
+    /// total to compute its slice ranges.
     fn query_bold_definitions_bold_fts5(
         &self,
         query: &str,
-        page_num: usize,
-        page_len: usize,
+        offset: usize,
+        limit: usize,
     ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::db::dpd_models::BoldDefinition;
         use diesel::sql_types::BigInt;
@@ -1230,6 +1247,10 @@ impl<'a> SearchQueryTask<'a> {
             .get_result::<CountRow>(dpd_conn)?
             .c;
 
+        if limit == 0 {
+            return Ok((total, Vec::new()));
+        }
+
         let sql = r#"
             SELECT bd.*
             FROM bold_definitions_bold_fts f
@@ -1241,14 +1262,13 @@ impl<'a> SearchQueryTask<'a> {
             LIMIT ? OFFSET ?
         "#;
 
-        let offset = (page_num as i64).saturating_mul(page_len as i64);
         let bds: Vec<BoldDefinition> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
-            .bind::<BigInt, _>(page_len as i64)
-            .bind::<BigInt, _>(offset)
+            .bind::<BigInt, _>(limit as i64)
+            .bind::<BigInt, _>(offset as i64)
             .load(dpd_conn)?;
 
         if (bds.len() as i64) >= SAFETY_LIMIT_SQL {
@@ -1262,13 +1282,16 @@ impl<'a> SearchQueryTask<'a> {
         Ok((total, results))
     }
 
-    /// Substring match on bold_definitions.commentary_plain using the trigram
-    /// FTS5 index. Used by Contains Match + Dictionary.
+    /// Substring match on `bold_definitions.commentary_plain` via the
+    /// trigram FTS5 index. Used by Contains Match + Dictionary. Returns
+    /// `(total_count, slice)` where the slice covers `[offset .. offset+limit)`
+    /// of the deterministic `ORDER BY bd.id` stream. `limit = 0` runs
+    /// only the COUNT.
     fn query_bold_definitions_commentary_fts5(
         &self,
         normalized_query: &str,
-        page_num: usize,
-        page_len: usize,
+        offset: usize,
+        limit: usize,
     ) -> Result<(i64, Vec<SearchResult>), Box<dyn Error>> {
         use crate::db::dpd_models::BoldDefinition;
         use diesel::sql_types::BigInt;
@@ -1311,6 +1334,10 @@ impl<'a> SearchQueryTask<'a> {
             .get_result::<CountRow>(dpd_conn)?
             .c;
 
+        if limit == 0 {
+            return Ok((total, Vec::new()));
+        }
+
         let sql = r#"
             SELECT bd.*
             FROM bold_definitions_fts f
@@ -1322,13 +1349,12 @@ impl<'a> SearchQueryTask<'a> {
             LIMIT ? OFFSET ?
         "#;
 
-        let offset = (page_num as i64).saturating_mul(page_len as i64);
         let bds: Vec<BoldDefinition> = sql_query(sql)
             .bind::<Text, _>(&like_pattern)
             .bind::<Text, _>(&uid_prefix_pat)
             .bind::<Text, _>(&uid_suffix_pat)
-            .bind::<BigInt, _>(page_len as i64)
-            .bind::<BigInt, _>(offset)
+            .bind::<BigInt, _>(limit as i64)
+            .bind::<BigInt, _>(offset as i64)
             .load(dpd_conn)?;
 
         if (bds.len() as i64) >= SAFETY_LIMIT_SQL {
@@ -1342,33 +1368,33 @@ impl<'a> SearchQueryTask<'a> {
         Ok((total, results))
     }
 
-    /// Per-page DPD Lookup. The underlying multi-step `dpd_lookup` is
-    /// naturally bounded (a single word resolves to a small grouped set),
-    /// so uid_prefix / uid_suffix are applied as a post-filter on the
-    /// returned `SearchResult.uid` rather than pushed down into each of
-    /// the many SQL sub-queries. The filtered union length is the
-    /// authoritative total; the requested page is then sliced.
-    /// DPD is only Pāli-to-English so language filters are ignored.
+    /// Fetch the full filtered DPD result set. uid_prefix / uid_suffix are
+    /// pushed down into every per-phase SQL query against `dpd_headwords` /
+    /// `dpd_roots` so the storage layer never returns rows that can't appear
+    /// in the final result. The multi-phase fallback structure of `dpd_lookup`
+    /// (exact match → roots → inflections → stem → compound → deconstructor →
+    /// prefix) means we can't issue a single paginated SQL query, so the full
+    /// filtered union is materialised in memory and the caller slices.
+    fn dpd_lookup_full(&self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        let app_data = get_app_data();
+        let results = app_data.dbm.dpd.dpd_lookup(
+            &self.query_text,
+            false,
+            true,
+            self.uid_prefix.as_deref(),
+            self.uid_suffix.as_deref(),
+        )?;
+        Ok(results)
+    }
+
+    /// Per-page DPD Lookup with SQL-side uid filtering. DPD is only
+    /// Pāli-to-English so language filters are ignored.
     pub fn dpd_lookup(
         &self,
         page_num: usize,
         page_len: usize,
     ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
-        let app_data = get_app_data();
-        let mut results = app_data
-            .dbm
-            .dpd
-            .dpd_lookup(&self.query_text, false, true)?;
-
-        if let Some(prefix) = Self::normalized_filter(&self.uid_prefix) {
-            let p = prefix.to_lowercase();
-            results.retain(|r| r.uid.to_lowercase().starts_with(&p));
-        }
-        if let Some(suffix) = Self::normalized_filter(&self.uid_suffix) {
-            let s = suffix.to_lowercase();
-            results.retain(|r| r.uid.to_lowercase().ends_with(&s));
-        }
-
+        let results = self.dpd_lookup_full()?;
         let total = results.len();
         let offset = page_num.saturating_mul(page_len);
         let page: Vec<SearchResult> = results.into_iter().skip(offset).take(page_len).collect();
@@ -1582,12 +1608,29 @@ impl<'a> SearchQueryTask<'a> {
     /// The materialised SearchResult union length is the authoritative total
     /// (the raw FTS lemma_1 count would overstate by including headwords
     /// that don't resolve to a DictWord); the requested page is then sliced.
+    /// Page-sized variant: builds the full filtered list via
+    /// `lemma_1_dpd_headword_match_fts5_full` and slices for the requested page.
     fn lemma_1_dpd_headword_match_fts5(
         &self,
         page_num: usize,
         page_len: usize,
     ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
-        info(&format!("lemma_1_dpd_headword_match_fts5(): query_text: {}", &self.query_text));
+        let (full, total) = self.lemma_1_dpd_headword_match_fts5_full()?;
+        let offset = page_num.saturating_mul(page_len);
+        let page: Vec<SearchResult> = full.into_iter().skip(offset).take(page_len).collect();
+        Ok((page, total))
+    }
+
+    /// Headword fulltext (lemma_1) match. Issues a single FTS5 query
+    /// against `dpd_headwords_fts`, then resolves matched headword IDs to
+    /// DictWord rows with the uid prefix/suffix push-down inline. Returns
+    /// the full filtered list; callers slice it. The structure is
+    /// "fetch matching IDs → per-row dict join", so a single paginated SQL
+    /// query isn't possible without restructuring the join.
+    fn lemma_1_dpd_headword_match_fts5_full(
+        &self,
+    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+        info(&format!("lemma_1_dpd_headword_match_fts5_full(): query_text: {}", &self.query_text));
         let timer = Instant::now();
 
         let app_data = get_app_data();
@@ -1673,15 +1716,9 @@ impl<'a> SearchQueryTask<'a> {
         }
 
         let total = search_results.len();
-        let offset = page_num.saturating_mul(page_len);
-        let page: Vec<SearchResult> = search_results
-            .into_iter()
-            .skip(offset)
-            .take(page_len)
-            .collect();
 
         info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok((page, total))
+        Ok((search_results, total))
     }
 
     // ===== Per-mode handlers (Stage 3 dispatch) =====
@@ -1826,53 +1863,106 @@ impl<'a> SearchQueryTask<'a> {
         Ok((results, total))
     }
 
-    /// Append bold-definition hits to a regular dictionary handler's full
-    /// (cover-limit) result set, then slice the requested page. `regular_total`
-    /// + `bold_total` is the authoritative combined hit count; both sides
-    /// already have uid prefix/suffix pushed down at their respective storage
-    /// layers. Used by DpdLookup, HeadwordMatch, and ContainsMatch+Dictionary
-    /// when `include_comm_bold_definitions` is set.
-    fn paginate_with_bold(
-        &self,
-        page_num: usize,
-        regular: Vec<SearchResult>,
+    /// Boundary-aware page splitter for two concatenated streams: regular
+    /// rows first (count `regular_total`), then bold-definition rows (count
+    /// `bold_total`). For the requested page `[page_num*page_len .. +page_len)`
+    /// returns the offset/limit pair to apply to each stream so that exactly
+    /// `page_len` rows (or fewer on the last page) are fetched in total.
+    /// Cost is O(page_len) regardless of `page_num` — no cover-fetch.
+    fn split_page_across_streams(
         regular_total: usize,
-        bold: Vec<SearchResult>,
-        bold_total: usize,
-    ) -> (Vec<SearchResult>, usize) {
-        let mut combined = regular;
-        combined.extend(bold);
-        let total = regular_total + bold_total;
-        let start = page_num.saturating_mul(self.page_len);
-        let end = std::cmp::min(start + self.page_len, combined.len());
-        let page: Vec<SearchResult> = if start >= combined.len() {
-            Vec::new()
-        } else {
-            combined[start..end].to_vec()
-        };
-        (page, total)
+        page_num: usize,
+        page_len: usize,
+    ) -> (usize, usize, usize, usize) {
+        let start = page_num.saturating_mul(page_len);
+        let end = start.saturating_add(page_len);
+
+        let reg_offset = start.min(regular_total);
+        let reg_end = end.min(regular_total);
+        let reg_limit = reg_end.saturating_sub(reg_offset);
+
+        let bold_offset = start.saturating_sub(regular_total);
+        let bold_end = end.saturating_sub(regular_total);
+        let bold_limit = bold_end.saturating_sub(bold_offset);
+
+        (reg_offset, reg_limit, bold_offset, bold_limit)
     }
 
+    /// DPD Lookup + bold-definitions append. The DPD lookup is structurally
+    /// multi-phase with per-phase dedup so it's materialised in memory
+    /// (with uid filters pushed down to keep it small); the bold side is
+    /// fetched with a true `LIMIT/OFFSET` SQL query for just the bold slice
+    /// the page needs (or only its COUNT when the page lies entirely inside
+    /// the regular range). No cover-fetch.
     fn dpd_lookup_with_bold(&self, page_num: usize) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
-        let cover = (page_num + 1).saturating_mul(self.page_len);
-        let (regular, regular_total) = self.dpd_lookup(0, cover)?;
-        let (bold_total, bold) = self.query_bold_definitions_bold_fts5(&self.query_text, 0, cover)?;
-        Ok(self.paginate_with_bold(page_num, regular, regular_total, bold, bold_total as usize))
+        let regular_full = self.dpd_lookup_full()?;
+        let regular_total = regular_full.len();
+
+        let (reg_off, reg_lim, bold_off, bold_lim) =
+            Self::split_page_across_streams(regular_total, page_num, self.page_len);
+
+        let reg_slice: Vec<SearchResult> = regular_full
+            .into_iter()
+            .skip(reg_off)
+            .take(reg_lim)
+            .collect();
+
+        let (bold_total, bold_slice) =
+            self.query_bold_definitions_bold_fts5(&self.query_text, bold_off, bold_lim)?;
+
+        let mut page = reg_slice;
+        page.extend(bold_slice);
+        let total = regular_total + bold_total as usize;
+        Ok((page, total))
     }
 
+    /// Headword match + bold-definitions append. Regular side is the
+    /// multi-phase headword-FTS5 result, materialised then sliced; bold
+    /// side is a true paged SQL fetch.
     fn headword_match_with_bold(&self, page_num: usize) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
-        let cover = (page_num + 1).saturating_mul(self.page_len);
-        let (regular, regular_total) = self.lemma_1_dpd_headword_match_fts5(0, cover)?;
-        let (bold_total, bold) = self.query_bold_definitions_bold_fts5(&self.query_text, 0, cover)?;
-        Ok(self.paginate_with_bold(page_num, regular, regular_total, bold, bold_total as usize))
+        let (regular_full, regular_total) = self.lemma_1_dpd_headword_match_fts5_full()?;
+
+        let (reg_off, reg_lim, bold_off, bold_lim) =
+            Self::split_page_across_streams(regular_total, page_num, self.page_len);
+
+        let reg_slice: Vec<SearchResult> = regular_full
+            .into_iter()
+            .skip(reg_off)
+            .take(reg_lim)
+            .collect();
+
+        let (bold_total, bold_slice) =
+            self.query_bold_definitions_bold_fts5(&self.query_text, bold_off, bold_lim)?;
+
+        let mut page = reg_slice;
+        page.extend(bold_slice);
+        let total = regular_total + bold_total as usize;
+        Ok((page, total))
     }
 
+    /// ContainsMatch + Dictionary + bold-definitions append. Same shape:
+    /// multi-phase regular set materialised, bold side fetched only for
+    /// the slice (or only counted) via `LIMIT/OFFSET`.
     fn dict_contains_with_bold(&self, page_num: usize) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
-        let cover = (page_num + 1).saturating_mul(self.page_len);
-        let (regular, regular_total) = self.dict_words_contains_match_fts5(0, cover)?;
+        let (regular_full, regular_total) = self.dict_words_contains_match_fts5_full()?;
+
+        let (reg_off, reg_lim, bold_off, bold_lim) =
+            Self::split_page_across_streams(regular_total, page_num, self.page_len);
+
+        let reg_slice: Vec<SearchResult> = regular_full
+            .into_iter()
+            .skip(reg_off)
+            .take(reg_lim)
+            .collect();
+
         let normalized_q = normalize_plain_text(&self.query_text);
-        let (bold_total, bold) = self.query_bold_definitions_commentary_fts5(&normalized_q, 0, cover)?;
-        Ok(self.paginate_with_bold(page_num, regular, regular_total, bold, bold_total as usize))
+        let (bold_total, bold_slice) =
+            self.query_bold_definitions_commentary_fts5(&normalized_q, bold_off, bold_lim)?;
+
+        let mut page = reg_slice;
+        page.extend(bold_slice);
+        let total = regular_total + bold_total as usize;
+        Ok((page, total))
     }
 
     /// UidMatch handler: the existing `uid_*_all` impls already return

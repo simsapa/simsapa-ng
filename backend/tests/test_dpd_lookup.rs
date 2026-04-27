@@ -89,7 +89,7 @@ pariḷāho na vijjati.
                 continue;
             }
             let word = normalize_query_text(Some(word.to_string()));
-            let res = app_data.dbm.dpd.dpd_lookup(&word, false, true).unwrap();
+            let res = app_data.dbm.dpd.dpd_lookup(&word, false, true, None, None).unwrap();
             lookup_data.insert(word, LookupResult::from_search_results(&res));
         }
 
