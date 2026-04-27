@@ -259,7 +259,9 @@ fn search_finds_uid(query: &str, mode: SearchMode, want_uid: &str) -> bool {
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     };
 
     let mut task = SearchQueryTask::new(
@@ -351,7 +353,9 @@ fn search_has_results(query: &str, mode: SearchMode) -> bool {
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     };
 
     let mut task = SearchQueryTask::new(

@@ -134,6 +134,59 @@ pub fn sutta_html_page_with_nav(content: &str,
     tt.render("page_html", &ctx).unwrap_or_default()
 }
 
+static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
+
+/// Render a DPD bold-definition row as a complete HTML page.
+///
+/// Structure (per PRD §5.1):
+///   header: `.bold-definition-header` — breadcrumb of nikāya/book/ref/title/subhead
+///   body:   `.bold-definition-body`   — `.headword` span + commentary HTML (preserved)
+///   footer: `.bold-definition-footer` — source file name
+pub fn render_bold_definition(
+    bd: &crate::db::dpd_models::BoldDefinition,
+    window_id: &str,
+    body_class: Option<String>,
+) -> String {
+    let header = format!(
+        r#"<div class="bold-definition-header">{} › {} ({}) › {} › {}</div>"#,
+        html_escape::encode_text(&bd.nikaya),
+        html_escape::encode_text(&bd.book),
+        html_escape::encode_text(&bd.ref_code),
+        html_escape::encode_text(&bd.title),
+        html_escape::encode_text(&bd.subhead),
+    );
+    // commentary is raw HTML from the DPD source — preserve it as-is.
+    let body = format!(
+        r#"<div class="bold-definition-body"><span class="headword">{}</span> {}</div>"#,
+        html_escape::encode_text(&bd.bold),
+        bd.commentary,
+    );
+    let footer = format!(
+        r#"<div class="bold-definition-footer">{}</div>"#,
+        html_escape::encode_text(&bd.file_name),
+    );
+    let content = format!("{}\n{}\n{}", header, body, footer);
+
+    // Route through sutta_html_page so the page picks up suttas.js (double-click
+    // / single-tap / long-press selection lookup hooks, IS_MOBILE, etc.) the
+    // same way sutta and dictionary pages do. Dictionary CSS is layered on top
+    // for `.bold-definition-*` and `.headword` styling.
+    // page.html already declares API_URL from ctx.api_url; only inject WINDOW_ID
+    // here so suttas.js (summary_selection, menu actions) can reach it.
+    let js_extra = format!(
+        " const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;",
+        window_id,
+    );
+
+    sutta_html_page(
+        &content,
+        None,
+        Some(DICTIONARY_CSS.to_string()),
+        Some(js_extra),
+        body_class,
+    )
+}
+
 pub fn blank_html_page(body_class: Option<String>) -> String {
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);

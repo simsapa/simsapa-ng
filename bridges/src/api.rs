@@ -879,7 +879,9 @@ fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     };
 
     // Create and execute search task
@@ -967,7 +969,9 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     };
 
     // Create and execute search task

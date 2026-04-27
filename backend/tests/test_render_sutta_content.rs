@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 use serial_test::serial;
 use simsapa_backend::get_app_data;
-use simsapa_backend::html_format::{html_indent, extract_element_by_id_from_indented};
+use simsapa_backend::html_format::{html_indent, extract_element_by_id_from_indented, normalize_attribute_order};
 
 mod helpers;
 use helpers as h;
@@ -48,7 +48,13 @@ fn test_html_en() {
     let expected_html = fs::read_to_string(PathBuf::from("tests/data/dn22_en_thanissaro.main.html"))
         .expect("Failed to read file");
 
-    assert_eq!(main_html, expected_html);
+    // Normalize attribute order: the upstream HTML serializer can emit
+    // attributes in a non-deterministic order (e.g. `class` before/after `id`),
+    // which is semantically equivalent.
+    assert_eq!(
+        normalize_attribute_order(&main_html),
+        normalize_attribute_order(&expected_html),
+    );
 }
 
 #[test]

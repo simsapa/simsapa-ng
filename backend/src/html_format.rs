@@ -1,3 +1,51 @@
+use lazy_static::lazy_static;
+use regex::Regex;
+
+/// Normalizes attribute order within HTML tags by sorting attributes
+/// alphabetically. Tag content (text between tags) is left untouched.
+///
+/// This is useful for comparing rendered HTML in tests where the upstream
+/// HTML serializer may emit attributes in a non-deterministic order.
+pub fn normalize_attribute_order(html: &str) -> String {
+    lazy_static! {
+        // Matches an opening or self-closing tag and captures: tag name, attrs blob, optional trailing slash.
+        // Closing tags (`</tag>`), comments, doctype, etc. are excluded by the leading `[a-zA-Z]`.
+        static ref TAG_RE: Regex = Regex::new(
+            r#"(?s)<([a-zA-Z][a-zA-Z0-9]*)((?:\s+[^\s/>=]+(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?)*)\s*(/?)>"#
+        ).unwrap();
+        // Captures one attribute: name, optional value (with quotes preserved).
+        static ref ATTR_RE: Regex = Regex::new(
+            r#"\s+([^\s/>=]+)(?:\s*=\s*("[^"]*"|'[^']*'|[^\s>]+))?"#
+        ).unwrap();
+    }
+
+    TAG_RE.replace_all(html, |caps: &regex::Captures| {
+        let tag = &caps[1];
+        let attrs_blob = &caps[2];
+        let self_close = &caps[3];
+
+        let mut attrs: Vec<(String, Option<String>)> = ATTR_RE
+            .captures_iter(attrs_blob)
+            .map(|c| (c[1].to_string(), c.get(2).map(|m| m.as_str().to_string())))
+            .collect();
+        attrs.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let mut out = format!("<{}", tag);
+        for (name, value) in attrs {
+            match value {
+                Some(v) => out.push_str(&format!(" {}={}", name, v)),
+                None => out.push_str(&format!(" {}", name)),
+            }
+        }
+        if self_close.is_empty() {
+            out.push('>');
+        } else {
+            out.push_str("/>");
+        }
+        out
+    }).into_owned()
+}
+
 /// Formats an HTML string with proper indentation and newlines
 ///
 /// # Arguments
@@ -476,6 +524,26 @@ function test() {
         let html = r#"<div id="exists">Content</div>"#;
         let result = extract_element_by_id_from_indented(html, "doesnotexist");
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_normalize_attribute_order() {
+        let a = r#"<h2 class="intro" id="toc_1">Hello</h2>"#;
+        let b = r#"<h2 id="toc_1" class="intro">Hello</h2>"#;
+        assert_eq!(normalize_attribute_order(a), normalize_attribute_order(b));
+
+        // Self-closing tags preserved.
+        let img_a = r#"<img src="a.png" alt="x"/>"#;
+        let img_b = r#"<img alt="x" src="a.png"/>"#;
+        assert_eq!(normalize_attribute_order(img_a), normalize_attribute_order(img_b));
+
+        // Closing tags and text are untouched.
+        let nested = r#"<div data-x="1" id="z"><p class="a" id="b">text</p></div>"#;
+        let normalized = normalize_attribute_order(nested);
+        assert!(normalized.contains(r#"<div data-x="1" id="z">"#));
+        assert!(normalized.contains(r#"<p class="a" id="b">"#));
+        assert!(normalized.contains("text"));
+        assert!(normalized.contains("</p></div>"));
     }
 
     #[test]

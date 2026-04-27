@@ -1,11 +1,12 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 use diesel::prelude::*;
+use diesel::sql_query;
 use diesel::sql_types::{Text, Integer};
-use anyhow::Result;
+use anyhow::{Context, Result};
 use serde_json;
 use serde::{Serialize, Deserialize};
 
@@ -13,7 +14,7 @@ use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
 
 use crate::{get_app_data, get_create_simsapa_app_assets_path, normalize_path_for_sqlite};
-use crate::helpers::{word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text};
+use crate::helpers::{compact_rich_text, word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text, bold_uid_sanitize};
 use crate::pali_stemmer::pali_stem;
 use crate::pali_sort::{pali_sort_key, sort_search_results_natural};
 use crate::types::SearchResult;
@@ -43,9 +44,34 @@ impl LookupResult {
     }
 }
 
+/// Build SQL `LIKE` patterns for a uid prefix / suffix filter pair.
+/// Returns `(prefix_pat, suffix_pat)` — either or both may be `None` when the
+/// caller didn't request that filter. Inputs are trimmed and lowercased.
+fn uid_like_patterns(
+    uid_prefix: Option<&str>,
+    uid_suffix: Option<&str>,
+) -> (Option<String>, Option<String>) {
+    let p = uid_prefix
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("{}%", s));
+    let s = uid_suffix
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .map(|s| format!("%{}", s));
+    (p, s)
+}
+
 impl DpdDbHandle {
-    /// Map an inflected word form to headwords
-    fn inflection_to_pali_words(&self, word_form: &str) -> Result<Vec<DpdHeadword>> {
+    /// Map an inflected word form to headwords. Optionally pushes uid
+    /// prefix / suffix filters into the dpd_headwords lookup so the caller
+    /// doesn't have to post-filter.
+    fn inflection_to_pali_words(
+        &self,
+        word_form: &str,
+        uid_prefix_pat: Option<&str>,
+        uid_suffix_pat: Option<&str>,
+    ) -> Result<Vec<DpdHeadword>> {
         use crate::db::dpd_schema::lookup::dsl as lk;
         use crate::db::dpd_schema::dpd_headwords::dsl as hd;
 
@@ -57,9 +83,16 @@ impl DpdDbHandle {
             .optional()?;
 
         if let Some(i2h) = i2h {
-            let headwords = hd::dpd_headwords
+            let mut q = hd::dpd_headwords
                 .filter(hd::id.eq_any(i2h.headwords_unpack()))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_pat {
+                q = q.filter(hd::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_pat {
+                q = q.filter(hd::uid.like(s.to_string()));
+            }
+            let headwords = q.load::<DpdHeadword>(db_conn)?;
             Ok(headwords)
         } else {
             Ok(Vec::new())
@@ -139,14 +172,22 @@ impl DpdDbHandle {
         }
     }
 
-    /// Convert deconstructor entries to Pāli headwords
-    pub fn dpd_deconstructor_to_pali_words(&self, query_text: &str, exact_only: bool) -> Result<Vec<DpdHeadword>> {
+    /// Convert deconstructor entries to Pāli headwords. Optionally pushes
+    /// uid prefix / suffix filters down to the underlying `inflection_to_pali_words`
+    /// call so caller-side post-filtering is unnecessary.
+    pub fn dpd_deconstructor_to_pali_words(
+        &self,
+        query_text: &str,
+        exact_only: bool,
+        uid_prefix_pat: Option<&str>,
+        uid_suffix_pat: Option<&str>,
+    ) -> Result<Vec<DpdHeadword>> {
         let mut seen: Vec<String> = Vec::new();
         let mut results: Vec<DpdHeadword> = Vec::new();
 
         if let Some(lookup) = self.dpd_deconstructor_query(query_text, exact_only)? {
             for word in lookup.deconstructor_flat().iter() {
-                for hw in self.inflection_to_pali_words(word)? {
+                for hw in self.inflection_to_pali_words(word, uid_prefix_pat, uid_suffix_pat)? {
                     if seen.contains(&hw.lemma_1) {
                         continue;
                     } else {
@@ -160,12 +201,21 @@ impl DpdDbHandle {
         Ok(results)
     }
 
-    /// Recommended defaults: do_pali_sort = false, exact_only = true
+    /// Recommended defaults: do_pali_sort = false, exact_only = true,
+    /// uid_prefix = None, uid_suffix = None.
+    ///
+    /// When `uid_prefix` / `uid_suffix` are set, every per-phase Diesel query
+    /// against `dpd_headwords` / `dpd_roots` adds `AND uid LIKE ?` so the
+    /// filter runs at the storage layer rather than in a Rust post-pass.
+    /// Helper functions (`inflection_to_pali_words`,
+    /// `dpd_deconstructor_to_pali_words`) receive the same patterns.
     pub fn dpd_lookup(
         &self,
         query_text_orig: &str,
         do_pali_sort: bool,
         exact_only: bool,
+        uid_prefix: Option<&str>,
+        uid_suffix: Option<&str>,
     ) -> Result<Vec<SearchResult>> {
         info(&format!("dpd_lookup(): query_text_orig: {}", query_text_orig));
         let timer = Instant::now();
@@ -176,6 +226,10 @@ impl DpdDbHandle {
         let db_conn = &mut self.get_conn().expect("Can't get db conn");
 
         let query_text = normalize_query_text(Some(query_text_orig.to_string()));
+
+        let (uid_prefix_pat, uid_suffix_pat) = uid_like_patterns(uid_prefix, uid_suffix);
+        let uid_prefix_ref = uid_prefix_pat.as_deref();
+        let uid_suffix_ref = uid_suffix_pat.as_deref();
 
         // Collect word results in groups, with more "obvious" results grouped first.
         // Sort within groups by "natural" order to get dict numbers right,
@@ -192,20 +246,32 @@ impl DpdDbHandle {
             // If the remaining reference string is numeric, it is a DpdHeadword
             if ref_str.chars().all(char::is_numeric) {
                 if let Ok(id_val) = ref_str.parse::<i32>() {
-                    let r_opt = dpd_headwords::table
+                    let mut q = dpd_headwords::table
                         .filter(dpd_headwords::id.eq(id_val))
-                        .first::<DpdHeadword>(db_conn)
-                        .optional()?;
+                        .into_boxed();
+                    if let Some(p) = uid_prefix_ref {
+                        q = q.filter(dpd_headwords::uid.like(p.to_string()));
+                    }
+                    if let Some(s) = uid_suffix_ref {
+                        q = q.filter(dpd_headwords::uid.like(s.to_string()));
+                    }
+                    let r_opt = q.first::<DpdHeadword>(db_conn).optional()?;
                     if let Some(r) = r_opt {
                         res_words.push(UDpdWord::Headword(Box::new(r)));
                     }
                 }
             } else {
                 // Else it is a DpdRoot
-                let r_opt = dpd_roots::table
+                let mut q = dpd_roots::table
                     .filter(dpd_roots::uid.eq(&query_text))
-                    .first::<DpdRoot>(db_conn)
-                    .optional()?;
+                    .into_boxed();
+                if let Some(p) = uid_prefix_ref {
+                    q = q.filter(dpd_roots::uid.like(p.to_string()));
+                }
+                if let Some(s) = uid_suffix_ref {
+                    q = q.filter(dpd_roots::uid.like(s.to_string()));
+                }
+                let r_opt = q.first::<DpdRoot>(db_conn).optional()?;
                 if let Some(r) = r_opt {
                     res_words.push(UDpdWord::Root(Box::new(r)));
                 }
@@ -224,10 +290,17 @@ impl DpdDbHandle {
 
         // Word exact match.
         {
-            let r = dpd_headwords::table
+            let mut q = dpd_headwords::table
                 .filter(dpd_headwords::lemma_clean.eq(&query_text)
                         .or(dpd_headwords::word_ascii.eq(&query_text)))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_headwords::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_headwords::uid.like(s.to_string()));
+            }
+            let r = q.load::<DpdHeadword>(db_conn)?;
 
             let mut res_words: Vec<UDpdWord> = Vec::new();
             res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -241,20 +314,44 @@ impl DpdDbHandle {
 
         // For two OR conditions on indexed columns, SQLite can efficiently use the indexes to combine the results.
         // For three OR conditions, it is recommended to split the queries.
-        //
-        // let r = dpd_roots::table
-        //     .filter(dpd_roots::root_clean.eq(&query_text)
-        //             .or(dpd_roots::root_no_sign.eq(&query_text))
-        //             .or(dpd_roots::word_ascii.eq(&query_text)))
-        //     .load::<DpdRoot>(db_conn)?;
-        // res_words.extend(r.into_iter().map(UDpdWord::Root));
 
-        // Instead, use a HashSet to collect results:
-
-        let mut roots = HashSet::new();
-        roots.extend(dpd_roots::table.filter(dpd_roots::root_clean.eq(&query_text)).load::<DpdRoot>(db_conn)?);
-        roots.extend(dpd_roots::table.filter(dpd_roots::root_no_sign.eq(&query_text)).load::<DpdRoot>(db_conn)?);
-        roots.extend(dpd_roots::table.filter(dpd_roots::word_ascii.eq(&query_text)).load::<DpdRoot>(db_conn)?);
+        let mut roots: HashSet<DpdRoot> = HashSet::new();
+        {
+            let mut q = dpd_roots::table
+                .filter(dpd_roots::root_clean.eq(&query_text))
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_roots::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_roots::uid.like(s.to_string()));
+            }
+            roots.extend(q.load::<DpdRoot>(db_conn)?);
+        }
+        {
+            let mut q = dpd_roots::table
+                .filter(dpd_roots::root_no_sign.eq(&query_text))
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_roots::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_roots::uid.like(s.to_string()));
+            }
+            roots.extend(q.load::<DpdRoot>(db_conn)?);
+        }
+        {
+            let mut q = dpd_roots::table
+                .filter(dpd_roots::word_ascii.eq(&query_text))
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_roots::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_roots::uid.like(s.to_string()));
+            }
+            roots.extend(q.load::<DpdRoot>(db_conn)?);
+        }
 
         {
             let mut res_words: Vec<UDpdWord> = Vec::new();
@@ -271,7 +368,7 @@ impl DpdDbHandle {
         // This will include cases such as:
         // - assa: gen. of ima
         // - assa: imp 2nd sg of assati
-        let r = self.inflection_to_pali_words(&query_text)?;
+        let r = self.inflection_to_pali_words(&query_text, uid_prefix_ref, uid_suffix_ref)?;
         {
             let mut res_words: Vec<UDpdWord> = Vec::new();
             res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -286,9 +383,16 @@ impl DpdDbHandle {
         if results.is_empty() {
             // Stem form exact match.
             let stem = pali_stem(&query_text, false);
-            let r = dpd_headwords::table
+            let mut q = dpd_headwords::table
                 .filter(dpd_headwords::stem.eq(&stem))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_headwords::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_headwords::uid.like(s.to_string()));
+            }
+            let r = q.load::<DpdHeadword>(db_conn)?;
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
                 res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -305,10 +409,17 @@ impl DpdDbHandle {
             // If the query contained multiple words, remove spaces to find compound forms.
             if query_text.contains(' ') {
                 let nospace_query = query_text.replace(' ', "");
-                let r = dpd_headwords::table
+                let mut q = dpd_headwords::table
                     .filter(dpd_headwords::lemma_clean.eq(&nospace_query)
                             .or(dpd_headwords::word_ascii.eq(&nospace_query)))
-                    .load::<DpdHeadword>(db_conn)?;
+                    .into_boxed();
+                if let Some(p) = uid_prefix_ref {
+                    q = q.filter(dpd_headwords::uid.like(p.to_string()));
+                }
+                if let Some(s) = uid_suffix_ref {
+                    q = q.filter(dpd_headwords::uid.like(s.to_string()));
+                }
+                let r = q.load::<DpdHeadword>(db_conn)?;
                 {
                     let mut res_words: Vec<UDpdWord> = Vec::new();
                     res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -325,7 +436,7 @@ impl DpdDbHandle {
         if results.is_empty() {
             // i2h result doesn't exist.
             // Lookup query text in dpd_deconstructor.
-            let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only)?;
+            let r = self.dpd_deconstructor_to_pali_words(&query_text, exact_only, uid_prefix_ref, uid_suffix_ref)?;
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
                 res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -346,10 +457,17 @@ impl DpdDbHandle {
             // Lookup dpd_headwords which start with the query_text.
 
             // Word starts with.
-            let r = dpd_headwords::table
+            let mut q = dpd_headwords::table
                 .filter(dpd_headwords::lemma_clean.like(format!("{}%", query_text))
                         .or(dpd_headwords::word_ascii.like(format!("{}%", query_text))))
-                .load::<DpdHeadword>(db_conn)?;
+                .into_boxed();
+            if let Some(p) = uid_prefix_ref {
+                q = q.filter(dpd_headwords::uid.like(p.to_string()));
+            }
+            if let Some(s) = uid_suffix_ref {
+                q = q.filter(dpd_headwords::uid.like(s.to_string()));
+            }
+            let r = q.load::<DpdHeadword>(db_conn)?;
 
             {
                 let mut res_words: Vec<UDpdWord> = Vec::new();
@@ -365,9 +483,16 @@ impl DpdDbHandle {
             if results.is_empty() {
                 // Stem form starts with.
                 let stem = pali_stem(&query_text, false);
-                let r = dpd_headwords::table
+                let mut q = dpd_headwords::table
                     .filter(dpd_headwords::stem.like(format!("{}%", stem)))
-                    .load::<DpdHeadword>(db_conn)?;
+                    .into_boxed();
+                if let Some(p) = uid_prefix_ref {
+                    q = q.filter(dpd_headwords::uid.like(p.to_string()));
+                }
+                if let Some(s) = uid_suffix_ref {
+                    q = q.filter(dpd_headwords::uid.like(s.to_string()));
+                }
+                let r = q.load::<DpdHeadword>(db_conn)?;
                 {
                     let mut res_words: Vec<UDpdWord> = Vec::new();
                     res_words.extend(r.into_iter().map(|h| UDpdWord::Headword(Box::new(h))));
@@ -385,8 +510,25 @@ impl DpdDbHandle {
         Ok(results)
     }
 
+    /// Look up a bold-definition row by its computed `uid` (e.g.
+    /// `"dhammo/mn1"` — lowercased bold + "/" + lowercased ref_code, with
+    /// collision disambiguation added by the bootstrap step).
+    pub fn get_bold_definition_by_uid(&self, uid: &str) -> Option<crate::db::dpd_models::BoldDefinition> {
+        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+        use crate::db::dpd_models::BoldDefinition;
+
+        let db_conn = &mut self.get_conn().ok()?;
+        bd_dsl::bold_definitions
+            .filter(bd_dsl::uid.eq(uid))
+            .select(BoldDefinition::as_select())
+            .first::<BoldDefinition>(db_conn)
+            .optional()
+            .ok()
+            .flatten()
+    }
+
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
-        match self.dpd_lookup(query, false, true) {
+        match self.dpd_lookup(query, false, true, None, None) {
             Ok(res) => {
                 res.iter().map(|i| format!("<b>{}</b> {}", i.title, i.snippet)).collect()
             }
@@ -399,7 +541,7 @@ impl DpdDbHandle {
     }
 
     pub fn dpd_lookup_json(&self, query: &str) -> String {
-        let list: Vec<LookupResult> = match self.dpd_lookup(query, false, true) {
+        let list: Vec<LookupResult> = match self.dpd_lookup(query, false, true, None, None) {
             Ok(res) => LookupResult::from_search_results(&res),
 
             Err(e) => {
@@ -544,6 +686,141 @@ pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf
         }
     }
 
+    // Populate derived columns on `bold_definitions` (uid, commentary_plain)
+    // before creating indexes — the B-tree script creates a UNIQUE INDEX on
+    // bold_definitions.uid, which depends on population having run.
+    populate_bold_definitions_derived_columns(&output_path)
+        .map_err(|e| format!("{}", e))?;
+
+    create_dpd_indexes(&output_path).map_err(|e| format!("{}", e))?;
+
+    Ok(())
+}
+
+#[derive(QueryableByName)]
+struct BoldDefColInfo {
+    #[diesel(sql_type = Text)]
+    name: String,
+}
+
+#[derive(QueryableByName)]
+struct BoldDefCountRow {
+    #[diesel(sql_type = Integer)]
+    c: i32,
+}
+
+#[derive(QueryableByName)]
+struct BoldDefRow {
+    #[diesel(sql_type = Integer)]
+    id: i32,
+    #[diesel(sql_type = Text)]
+    bold: String,
+    #[diesel(sql_type = Text)]
+    ref_code: String,
+    #[diesel(sql_type = Text)]
+    commentary: String,
+}
+
+/// Add `uid` and `commentary_plain` columns to `bold_definitions` and
+/// populate them. Idempotent: skipped if all rows already have non-empty uid.
+pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<()> {
+    info("populate_bold_definitions_derived_columns()");
+
+    let abs = fs::canonicalize(dpd_db_path).unwrap_or_else(|_| dpd_db_path.to_path_buf());
+    let database_url = abs
+        .to_str()
+        .context("dpd.sqlite3 path is not valid UTF-8")?
+        .to_string();
+
+    let mut conn = SqliteConnection::establish(&database_url)
+        .with_context(|| format!("Failed to connect to {}", database_url))?;
+
+    // Pre-check column existence (SQLite ADD COLUMN has no IF NOT EXISTS).
+    let cols: Vec<BoldDefColInfo> = sql_query("PRAGMA table_info(bold_definitions)")
+        .load(&mut conn)
+        .context("PRAGMA table_info(bold_definitions) failed")?;
+    let has_uid = cols.iter().any(|c| c.name == "uid");
+    let has_commentary_plain = cols.iter().any(|c| c.name == "commentary_plain");
+    let has_bold_ascii = cols.iter().any(|c| c.name == "bold_ascii");
+
+    if !has_uid {
+        sql_query("ALTER TABLE bold_definitions ADD COLUMN uid TEXT NOT NULL DEFAULT ''")
+            .execute(&mut conn)
+            .context("Failed to ADD COLUMN uid")?;
+    }
+    if !has_commentary_plain {
+        sql_query("ALTER TABLE bold_definitions ADD COLUMN commentary_plain TEXT NOT NULL DEFAULT ''")
+            .execute(&mut conn)
+            .context("Failed to ADD COLUMN commentary_plain")?;
+    }
+    if !has_bold_ascii {
+        sql_query("ALTER TABLE bold_definitions ADD COLUMN bold_ascii TEXT NOT NULL DEFAULT ''")
+            .execute(&mut conn)
+            .context("Failed to ADD COLUMN bold_ascii")?;
+    }
+
+    // Idempotency: if all rows already have non-empty uid AND bold_ascii, skip.
+    let missing: Vec<BoldDefCountRow> = sql_query(
+        "SELECT COUNT(*) AS c FROM bold_definitions \
+         WHERE uid IS NULL OR uid = '' OR bold_ascii IS NULL OR bold_ascii = ''",
+    )
+    .load(&mut conn)?;
+    let total: Vec<BoldDefCountRow> = sql_query("SELECT COUNT(*) AS c FROM bold_definitions").load(&mut conn)?;
+    let missing_n = missing.first().map(|r| r.c).unwrap_or(0);
+    let total_n = total.first().map(|r| r.c).unwrap_or(0);
+    if total_n > 0 && missing_n == 0 {
+        info("bold_definitions.uid/bold_ascii already populated; skipping");
+        return Ok(());
+    }
+
+    // Load all rows in deterministic order.
+    let rows: Vec<BoldDefRow> = sql_query(
+        "SELECT id, bold, ref_code, commentary FROM bold_definitions ORDER BY id",
+    )
+    .load(&mut conn)
+    .context("Failed to load bold_definitions rows")?;
+
+    info(&format!(
+        "Populating uid/commentary_plain for {} bold_definitions rows",
+        rows.len()
+    ));
+
+    // Compute uids with collision disambiguation on lowercased (bold, ref_code):
+    //   count == 1: "{bold}/{ref_code}"
+    //   count == N (>=2): "{bold} N/{ref_code}"
+    let mut seen: HashMap<(String, String), u32> = HashMap::new();
+    let mut updates: Vec<(i32, String, String, String)> = Vec::with_capacity(rows.len());
+    for r in &rows {
+        let bold_lc = bold_uid_sanitize(&r.bold).to_lowercase();
+        let ref_lc = r.ref_code.to_lowercase();
+        let n = seen.entry((bold_lc.clone(), ref_lc.clone())).or_insert(0);
+        *n += 1;
+        let uid = if *n == 1 {
+            format!("{}/{}", bold_lc, ref_lc)
+        } else {
+            format!("{} {}/{}", bold_lc, *n, ref_lc)
+        };
+        let commentary_plain = compact_rich_text(&r.commentary);
+        let bold_ascii = pali_to_ascii(Some(&bold_lc));
+        updates.push((r.id, uid, commentary_plain, bold_ascii));
+    }
+
+    // Apply all updates in a single transaction.
+    conn.transaction::<_, anyhow::Error, _>(|conn| {
+        for (id, uid, cp, ba) in &updates {
+            sql_query(
+                "UPDATE bold_definitions SET uid = ?, commentary_plain = ?, bold_ascii = ? WHERE id = ?",
+            )
+                .bind::<Text, _>(uid)
+                .bind::<Text, _>(cp)
+                .bind::<Text, _>(ba)
+                .bind::<Integer, _>(*id)
+                .execute(conn)?;
+        }
+        Ok(())
+    })?;
+
+    info(&format!("Updated {} bold_definitions rows", updates.len()));
     Ok(())
 }
 
@@ -741,6 +1018,26 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
 
     replace_all_niggahitas(&mut db_conn)?;
 
+    Ok(())
+}
+
+/// Run the DPD index SQL scripts (B-tree then FTS5) against the given DPD
+/// sqlite database. Split from `migrate_dpd` so the CLI bootstrap can defer
+/// index creation until after derived-column population (e.g.
+/// `bold_definitions.uid`), which the scripts depend on.
+pub fn create_dpd_indexes(dpd_db_path: &Path) -> Result<(), diesel::result::Error> {
+    info("create_dpd_indexes()");
+
+    let abs_path = normalize_path_for_sqlite(
+        fs::canonicalize(dpd_db_path).unwrap_or(dpd_db_path.to_path_buf()),
+    );
+    let database_url = format!(
+        "sqlite://{}",
+        abs_path.as_os_str().to_str().expect("os_str Error!")
+    );
+    let mut db_conn = SqliteConnection::establish(&database_url)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url));
+
     // Execute DPD B-tree indexes SQL script
     info("Executing DPD B-tree indexes script...");
     let sql_content = include_str!("../../../scripts/dpd-btree-indexes.sql");
@@ -788,11 +1085,25 @@ pub fn migrate_dpd(dpd_db_path: &PathBuf, dpd_dictionary_id: i32)
     if let Err(e) = crate::helpers::run_fts5_indexes_sql_script(dpd_db_path, &fts5_script_path) {
         return Err(diesel::result::Error::DatabaseError(
             diesel::result::DatabaseErrorKind::Unknown,
-            Box::new(format!("Failed to run DPD FTS5 indexes script: {}", e))
+            Box::new(format!("Failed to run DPD FTS5 indexes script: {}", e)),
         ));
     }
 
     info("Successfully created DPD FTS5 indexes");
+
+    // Execute DPD bold_definitions FTS5 indexes SQL script using sqlite3 CLI
+    info("Executing DPD bold_definitions FTS5 indexes script using sqlite3 CLI...");
+    // Path is relative to cli/ module folder
+    let bold_defs_fts5_script_path = std::path::PathBuf::from("../scripts/dpd-bold-definitions-fts5-indexes.sql");
+
+    if let Err(e) = crate::helpers::run_fts5_indexes_sql_script(dpd_db_path, &bold_defs_fts5_script_path) {
+        return Err(diesel::result::Error::DatabaseError(
+            diesel::result::DatabaseErrorKind::Unknown,
+            Box::new(format!("Failed to run DPD bold_definitions FTS5 indexes script: {}", e)),
+        ));
+    }
+
+    info("Successfully created DPD bold_definitions FTS5 indexes");
 
     Ok(())
 }

@@ -342,6 +342,14 @@ impl AppData {
             return blank_page_html;
         }
 
+        // DPD bold-definitions use uids of the form "{bold_lc}/{ref_code_lc}"
+        // (with collision disambiguation) which overlap the dict_word uid
+        // namespace. Check bold_definitions first and route to the dedicated
+        // renderer if matched; otherwise fall through to dict_word rendering.
+        if let Some(bd) = self.dbm.dpd.get_bold_definition_by_uid(word_uid) {
+            return crate::html_content::render_bold_definition(&bd, window_id, Some(body_class.clone()));
+        }
+
         // Try to get the word from database
         let word = self.dbm.dictionaries.get_word(word_uid);
 
@@ -1018,6 +1026,32 @@ impl AppData {
     pub fn get_include_ms_mula_in_search_results(&self) -> bool {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         app_settings.include_ms_mula_in_search_results
+    }
+
+    pub fn get_include_comm_bold_definitions_in_search_results(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.include_comm_bold_definitions_in_search_results
+    }
+
+    pub fn set_include_comm_bold_definitions_in_search_results(&self, enabled: bool) {
+        use crate::db::appdata_schema::app_settings;
+
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.include_comm_bold_definitions_in_search_results = enabled;
+
+        let a = app_settings.clone();
+        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
+
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
+
+        match diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            Ok(_) => (),
+            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+        }
     }
 
     pub fn set_include_ms_mula_in_search_results(&self, enabled: bool) {

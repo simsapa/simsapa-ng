@@ -546,6 +546,7 @@ ApplicationWindow {
 
         const nikaya_prefix = search_bar_input.nikaya_prefix;
         const uid_prefix = search_bar_input.uid_prefix;
+        const uid_suffix = search_bar_input.uid_suffix;
 
         return {
             mode: mode,
@@ -560,7 +561,9 @@ ApplicationWindow {
             include_cst_commentary: SuttaBridge.get_include_cst_commentary_in_search_results(),
             nikaya_prefix: nikaya_prefix.length > 0 ? nikaya_prefix : null,
             uid_prefix: uid_prefix.length > 0 ? uid_prefix : null,
+            uid_suffix: uid_suffix.length > 0 ? uid_suffix : null,
             include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
+            include_comm_bold_definitions: SuttaBridge.get_include_comm_bold_definitions_in_search_results(),
         };
     }
 
@@ -688,7 +691,7 @@ ApplicationWindow {
             const table_name = sutta_html_view_layout.items_map[current_key].get_data_value('table_name');
 
             // Only load translations for sutta results, not dictionary or library results
-            if (table_name === "dict_words" || table_name === "dpd_headwords" || table_name === "book_spine_items") {
+            if (table_name === "dict_words" || table_name === "dpd_headwords" || table_name === "bold_definitions" || table_name === "book_spine_items") {
                 sutta_html_view_layout.show_transient_message("Translations not available");
                 break;
             }
@@ -869,7 +872,7 @@ ${query_text}`;
 
         // Only add translation tabs for sutta results, not dictionary or library results.
         // During session restore, skip loading translations since they are restored directly from saved items.
-        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "book_spine_items") {
+        if (tab_data.table_name && tab_data.table_name !== "dict_words" && tab_data.table_name !== "dpd_headwords" && tab_data.table_name !== "bold_definitions" && tab_data.table_name !== "book_spine_items") {
             if (!root.is_restoring_session) {
                 root.load_translations_for_sutta(tab_data.item_uid);
             }
@@ -1862,7 +1865,9 @@ ${query_text}`;
                 include_cst_commentary: true,
                 nikaya_prefix: null,
                 uid_prefix: null,
+                uid_suffix: null,
                 include_ms_mula: false,
+                include_comm_bold_definitions: false,
             };
 
             if (!show_sidebar_btn.checked) {

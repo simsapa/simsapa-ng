@@ -12,6 +12,9 @@ diesel::table! {
         bold -> Text,
         bold_end -> Text,
         commentary -> Text,
+        uid -> Text,
+        commentary_plain -> Text,
+        bold_ascii -> Text,
     }
 }
 

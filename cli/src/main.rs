@@ -37,7 +37,9 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
         include_cst_commentary: true,
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         include_ms_mula: true,
+        include_comm_bold_definitions: true,
     };
 
     let mut query_task = SearchQueryTask::new(
@@ -729,10 +731,12 @@ fn fulltext_search(
         source_include: source.is_some(),
         nikaya_prefix: None,
         uid_prefix: None,
+        uid_suffix: None,
         sutta_ref: None,
         include_cst_mula: true,
         include_cst_commentary: true,
         include_ms_mula: true,
+        include_bold_definitions: true,
     };
 
     let (total_hits, results) = match area {
@@ -814,8 +818,13 @@ fn index_command(cmd: IndexCommands) -> Result<(), String> {
         // Build everything
         (None, None) => {
             println!("Building all fulltext indexes...");
-            indexer::build_all_indexes(&app_data.dbm.appdata, &app_data.dbm.dictionaries, paths)
-                .map_err(|e| e.to_string())?;
+            indexer::build_all_indexes(
+                &app_data.dbm.appdata,
+                &app_data.dbm.dictionaries,
+                &app_data.dbm.dpd,
+                paths,
+            )
+            .map_err(|e| e.to_string())?;
         }
 
         // Build all languages for a specific area

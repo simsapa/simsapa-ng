@@ -25,10 +25,15 @@ enum IndexType {
 }
 
 /// Holds open indexes for fulltext searching.
+///
+/// The dict index unifies dict_words rows and DPD bold-definition rows; both
+/// kinds of doc share the dict schema and are distinguished by the
+/// `is_bold_definition: bool` field.
 pub struct FulltextSearcher {
     /// Map of language → (Index, IndexReader) for sutta indexes
     sutta_indexes: HashMap<String, (Index, IndexReader)>,
-    /// Map of language → (Index, IndexReader) for dict_word indexes
+    /// Map of language → (Index, IndexReader) for dict_word indexes (also
+    /// houses bold-definition docs under the "pli" key).
     dict_indexes: HashMap<String, (Index, IndexReader)>,
     /// Map of language → (Index, IndexReader) for library book chapter indexes
     library_indexes: HashMap<String, (Index, IndexReader)>,
@@ -53,7 +58,7 @@ impl FulltextSearcher {
             "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes, {} library language indexes",
             sutta_indexes.len(),
             dict_indexes.len(),
-            library_indexes.len()
+            library_indexes.len(),
         ));
 
         Ok(Self {
@@ -406,7 +411,7 @@ impl FulltextSearcher {
         match index_type {
             IndexType::Sutta => Self::add_sutta_filters(&mut subqueries, filters, &schema)?,
             IndexType::Dict => Self::add_dict_filters(&mut subqueries, filters, &schema)?,
-            IndexType::Library => {} // No additional filters for library
+            IndexType::Library => Self::add_library_filters(&mut subqueries, filters, &schema)?,
         }
 
         let combined_query = BooleanQuery::new(subqueries);
@@ -418,21 +423,82 @@ impl FulltextSearcher {
             (top_docs, 0)
         };
 
-        let mut results = Vec::new();
+        // Build a single SnippetGenerator and reuse across all docs in this
+        // call. Previously we constructed one per doc, which dominated runtime
+        // for queries with hundreds-to-thousands of hits (e.g. fulltext +
+        // suffix-filter where every candidate must be materialized for the
+        // Rust-side post-filter).
+        let snippet_gen = {
+            let parser = QueryParser::for_index(index, vec![content_field]);
+            let parsed = parser.parse_query(query_text)?;
+            let mut g = tantivy::snippet::SnippetGenerator::create(&searcher, &parsed, content_field)?;
+            g.set_max_num_chars(200);
+            g
+        };
+
+        let mut results = Vec::with_capacity(top_docs.len());
 
         for (score, doc_address) in top_docs {
             let doc: tantivy::TantivyDocument = searcher.doc(doc_address)?;
 
             let result = match index_type {
-                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
-                IndexType::Dict => self.dict_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
-                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, query_text, index, &searcher, content_field)?,
+                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::Dict => {
+                    // Dict index unifies dict_words + bold-definition rows;
+                    // dispatch per-doc so bold rows render via their own
+                    // projection (group path, ref_code, etc.).
+                    let is_bold = schema
+                        .get_field("is_bold_definition")
+                        .ok()
+                        .and_then(|f| doc.get_first(f))
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false);
+                    if is_bold {
+                        self.bold_definition_doc_to_result(&doc, &schema, score, &snippet_gen)?
+                    } else {
+                        self.dict_doc_to_result(&doc, &schema, score, &snippet_gen)?
+                    }
+                }
+                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, &snippet_gen)?,
             };
 
             results.push((score, result));
         }
 
         Ok((count, results))
+    }
+
+    /// Push down uid prefix and suffix filters as exact regex queries against
+    /// the `raw`-tokenized uid + reversed-uid fields. Both reduce to anchored
+    /// prefix-on-some-field, so the term dictionary's btree handles them in
+    /// O(log N) on number of unique terms — no full-corpus scan, no
+    /// over-match. Stored uids are lowercase by invariant; we lowercase the
+    /// user input to match.
+    fn add_uid_filters(
+        subqueries: &mut Vec<(Occur, Box<dyn tantivy::query::Query>)>,
+        filters: &SearchFilters,
+        schema: &tantivy::schema::Schema,
+        uid_field_name: &str,
+        uid_rev_field_name: &str,
+    ) -> Result<()> {
+        if let Some(ref uid_prefix) = filters.uid_prefix
+            && !uid_prefix.is_empty()
+        {
+            let field = schema.get_field(uid_field_name)?;
+            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
+            subqueries.push((Occur::Must, Box::new(RegexQuery::from_pattern(&pattern, field)?)));
+        }
+
+        if let Some(ref uid_suffix) = filters.uid_suffix
+            && !uid_suffix.is_empty()
+        {
+            let field = schema.get_field(uid_rev_field_name)?;
+            let reversed: String = uid_suffix.to_lowercase().chars().rev().collect();
+            let pattern = format!("{}.*", regex::escape(&reversed));
+            subqueries.push((Occur::Must, Box::new(RegexQuery::from_pattern(&pattern, field)?)));
+        }
+
+        Ok(())
     }
 
     fn add_sutta_filters(
@@ -457,14 +523,7 @@ impl FulltextSearcher {
             subqueries.push((Occur::Must, Box::new(regex_query)));
         }
 
-        if let Some(ref uid_prefix) = filters.uid_prefix
-            && !uid_prefix.is_empty()
-        {
-            let field = schema.get_field("uid")?;
-            let pattern = format!("{}.*", regex::escape(&uid_prefix.to_lowercase()));
-            let regex_query = RegexQuery::from_pattern(&pattern, field)?;
-            subqueries.push((Occur::Must, Box::new(regex_query)));
-        }
+        Self::add_uid_filters(subqueries, filters, schema, "uid", "uid_rev")?;
 
         if let Some(ref sutta_ref) = filters.sutta_ref
             && !sutta_ref.is_empty()
@@ -525,19 +584,39 @@ impl FulltextSearcher {
             subqueries.push((Occur::Must, Box::new(TermQuery::new(term, IndexRecordOption::Basic))));
         }
 
+        Self::add_uid_filters(subqueries, filters, schema, "uid", "uid_rev")?;
+
+        // Exclude bold-definition rows from dict-index queries when the
+        // caller opts out. Default `true` adds no constraint, so dict_words
+        // and bold rows are ranked together by BM25 in the unified index.
+        if !filters.include_bold_definitions {
+            let field = schema.get_field("is_bold_definition")?;
+            let term = Term::from_field_bool(field, true);
+            subqueries.push((
+                Occur::MustNot,
+                Box::new(TermQuery::new(term, IndexRecordOption::Basic)),
+            ));
+        }
+
         Ok(())
     }
 
-    #[allow(clippy::too_many_arguments)]
+    fn add_library_filters(
+        subqueries: &mut Vec<(Occur, Box<dyn tantivy::query::Query>)>,
+        filters: &SearchFilters,
+        schema: &tantivy::schema::Schema,
+    ) -> Result<()> {
+        Self::add_uid_filters(subqueries, filters, schema, "spine_item_uid", "spine_item_uid_rev")?;
+
+        Ok(())
+    }
+
     fn sutta_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let title = Self::get_text_field(doc, schema, "title");
@@ -546,7 +625,7 @@ impl FulltextSearcher {
         let sutta_ref = Self::get_text_field(doc, schema, "sutta_ref");
         let nikaya = Self::get_text_field(doc, schema, "nikaya");
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -565,23 +644,19 @@ impl FulltextSearcher {
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn dict_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let word = Self::get_text_field(doc, schema, "word");
         let language = Self::get_text_field(doc, schema, "language");
         let source_uid = Self::get_text_field(doc, schema, "source_uid");
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -600,16 +675,12 @@ impl FulltextSearcher {
         })
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn library_doc_to_result(
         &self,
         doc: &tantivy::TantivyDocument,
         schema: &tantivy::schema::Schema,
         score: f32,
-        query_text: &str,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        content_field: tantivy::schema::Field,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "spine_item_uid");
         let title = Self::get_text_field(doc, schema, "title");
@@ -626,7 +697,7 @@ impl FulltextSearcher {
             book_title.clone()
         };
 
-        let snippet = self.generate_snippet(index, searcher, content_field, query_text, doc)?;
+        let snippet = Self::render_snippet(snippet_gen, doc);
 
         Ok(SearchResult {
             uid,
@@ -645,6 +716,42 @@ impl FulltextSearcher {
         })
     }
 
+    fn bold_definition_doc_to_result(
+        &self,
+        doc: &tantivy::TantivyDocument,
+        schema: &tantivy::schema::Schema,
+        score: f32,
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
+    ) -> Result<SearchResult> {
+        let uid = Self::get_text_field(doc, schema, "uid");
+        let bold = Self::get_text_field(doc, schema, "word");
+        let ref_code = Self::get_text_field(doc, schema, "source_uid");
+        let group_path = Self::get_text_field(doc, schema, "nikaya_group_path");
+
+        let snippet = Self::render_snippet(snippet_gen, doc);
+
+        Ok(SearchResult {
+            uid,
+            schema_name: "dpd".to_string(),
+            table_name: "bold_definitions".to_string(),
+            // In bold_definitions, the equivalent of source_uid is the ref_code field (e.g. vina, mna, vvt)
+            source_uid: Some(ref_code.clone()),
+            title: bold,
+            // ref_code also serves as the sutta_ref (Vinaya, Majjhima, etc. origin)
+            sutta_ref: Some(ref_code),
+            // The constructed nikaya / book / title / subhead path is surfaced via the
+            // `nikaya` slot for display; the bare nikaya is no longer indexed
+            // separately.
+            nikaya: Some(group_path).filter(|s| !s.is_empty()),
+            author: None,
+            lang: Some("pli".to_string()),
+            snippet,
+            page_number: None,
+            score: Some(score),
+            rank: None,
+        })
+    }
+
     fn get_text_field(doc: &tantivy::TantivyDocument, schema: &tantivy::schema::Schema, field_name: &str) -> String {
         schema
             .get_field(field_name)
@@ -655,29 +762,19 @@ impl FulltextSearcher {
             .to_string()
     }
 
-    fn generate_snippet(
-        &self,
-        index: &Index,
-        searcher: &tantivy::Searcher,
-        field: tantivy::schema::Field,
-        query_text: &str,
+    /// Render a single document's snippet using a pre-built `SnippetGenerator`.
+    /// The generator is constructed once per `search_single_index` call —
+    /// constructing it per-doc dominated runtime for queries returning many
+    /// hits.
+    fn render_snippet(
+        snippet_gen: &tantivy::snippet::SnippetGenerator,
         doc: &tantivy::TantivyDocument,
-    ) -> Result<String> {
-        let query_parser = QueryParser::for_index(index, vec![field]);
-        let query = query_parser.parse_query(query_text)?;
-
-        let mut snippet_gen = tantivy::snippet::SnippetGenerator::create(searcher, &query, field)?;
-        snippet_gen.set_max_num_chars(200);
-
+    ) -> String {
         let snippet = snippet_gen.snippet_from_doc(doc);
-        let html = snippet.to_html();
-
-        // Post-process: <b> → <span class='match'>, </b> → </span>
-        let processed = html
+        snippet
+            .to_html()
             .replace("<b>", "<span class='match'>")
-            .replace("</b>", "</span>");
-
-        Ok(processed)
+            .replace("</b>", "</span>")
     }
 }
 
@@ -777,10 +874,12 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let result = searcher.debug_query("bhikkhave", &filters).unwrap();
@@ -813,10 +912,12 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // Unbalanced quotes should cause a parse error but still return partial results
@@ -848,10 +949,12 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // "bhikkhūnaṁ" should stem differently than normalize
@@ -879,10 +982,12 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
@@ -914,10 +1019,12 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10, 0).unwrap();
@@ -977,10 +1084,12 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10, 0).unwrap();
@@ -1003,14 +1112,150 @@ mod tests {
             source_include: false,
             nikaya_prefix: None,
             uid_prefix: None,
+            uid_suffix: None,
             sutta_ref: None,
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let result = searcher.debug_query("test", &filters).unwrap();
         assert_eq!(result.debug_text, "No sutta indexes available.");
         assert!(result.parse_error.is_none());
+    }
+
+    /// Build an in-memory sutta index containing one doc per uid in `uids`.
+    /// Each doc carries the same content so a content match doesn't filter
+    /// any out — the only differentiator is `uid` / `uid_rev`.
+    fn create_uid_test_index(uids: &[&str]) -> (Index, IndexReader) {
+        let lang = "en";
+        let schema = build_sutta_schema(lang);
+        let index = Index::create_in_ram(schema.clone());
+        register_tokenizers(&index, lang);
+
+        let mut writer = index.writer_with_num_threads(1, 15_000_000).unwrap();
+
+        let uid_field = schema.get_field("uid").unwrap();
+        let uid_rev_field = schema.get_field("uid_rev").unwrap();
+        let title_field = schema.get_field("title").unwrap();
+        let language_field = schema.get_field("language").unwrap();
+        let source_uid_field = schema.get_field("source_uid").unwrap();
+        let sutta_ref_field = schema.get_field("sutta_ref").unwrap();
+        let nikaya_field = schema.get_field("nikaya").unwrap();
+        let content_field = schema.get_field("content").unwrap();
+        let content_exact_field = schema.get_field("content_exact").unwrap();
+
+        for u in uids {
+            let lower = u.to_lowercase();
+            let rev: String = lower.chars().rev().collect();
+            writer
+                .add_document(doc!(
+                    uid_field => *u,
+                    uid_rev_field => rev.as_str(),
+                    title_field => "T",
+                    language_field => lang,
+                    source_uid_field => "ms",
+                    sutta_ref_field => "",
+                    nikaya_field => "",
+                    content_field => "lorem ipsum dolor sit amet",
+                    content_exact_field => "lorem ipsum dolor sit amet",
+                ))
+                .unwrap();
+        }
+        writer.commit().unwrap();
+
+        let reader = index.reader().unwrap();
+        (index, reader)
+    }
+
+    #[test]
+    fn test_add_uid_filters_prefix_and_suffix_exact() {
+        // Mixed uids; only "an1.1/..." rows match prefix "an" AND suffix "1.1".
+        let uids = [
+            "an1.1/en/sujato",      // matches both
+            "an1.1/pli/ms",         // suffix is "ms" — no
+            "an1.10/en/sujato",     // prefix yes, suffix no
+            "sn12.1/en/sujato",     // prefix no
+            "an2.1/en/sujato",      // prefix yes, suffix no (ends in "sujato")
+            "dn1.1/en/sujato",      // prefix no
+        ];
+
+        let (index, reader) = create_uid_test_index(&uids);
+        let schema = index.schema();
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya_prefix: None,
+            uid_prefix: Some("an".to_string()),
+            uid_suffix: Some("1.1".to_string()),
+            sutta_ref: None,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
+            include_bold_definitions: true,
+        };
+
+        // suffix "1.1" matches uids ending in "1.1" — only "an1.1/en/sujato" if we
+        // require both prefix and suffix to apply to the uid as a whole. But our
+        // suffix matches against the uid_rev — i.e. the original uid ends with
+        // the suffix string. None of these uids actually *end* with "1.1"
+        // (they end with "/sujato" etc.), so the right test suffix is one that
+        // some uids actually end with. Adjust:
+        let filters = SearchFilters {
+            uid_suffix: Some("sujato".to_string()),
+            ..filters
+        };
+
+        let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();
+        // Add a match-all so the BooleanQuery has a positive clause.
+        subqueries.push((
+            Occur::Must,
+            Box::new(tantivy::query::AllQuery) as Box<dyn tantivy::query::Query>,
+        ));
+        FulltextSearcher::add_uid_filters(&mut subqueries, &filters, &schema, "uid", "uid_rev")
+            .unwrap();
+        let query = BooleanQuery::new(subqueries);
+
+        let s = reader.searcher();
+        let count = s.search(&query, &Count).unwrap();
+        // prefix "an" AND suffix "sujato": an1.1/en/sujato, an1.10/en/sujato, an2.1/en/sujato
+        assert_eq!(count, 3, "expected exactly the an*-prefixed, sujato-suffixed uids");
+    }
+
+    #[test]
+    fn test_add_uid_filters_no_overmatch() {
+        // raw uid field means a regex against the uid is anchored to the full
+        // term, not against tokens — so "an" prefix must NOT match "san1.1".
+        let uids = ["an1.1/en/sujato", "san1.1/en/sujato"];
+        let (index, reader) = create_uid_test_index(&uids);
+        let schema = index.schema();
+
+        let filters = SearchFilters {
+            lang: None,
+            lang_include: false,
+            source_uid: None,
+            source_include: false,
+            nikaya_prefix: None,
+            uid_prefix: Some("an".to_string()),
+            uid_suffix: None,
+            sutta_ref: None,
+            include_cst_mula: true,
+            include_cst_commentary: true,
+            include_ms_mula: true,
+            include_bold_definitions: true,
+        };
+
+        let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();
+        subqueries.push((Occur::Must, Box::new(tantivy::query::AllQuery)));
+        FulltextSearcher::add_uid_filters(&mut subqueries, &filters, &schema, "uid", "uid_rev")
+            .unwrap();
+        let query = BooleanQuery::new(subqueries);
+
+        let count = reader.searcher().search(&query, &Count).unwrap();
+        assert_eq!(count, 1, "prefix 'an' must not match 'san1.1/...'");
     }
 }

@@ -16,7 +16,9 @@ pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<(
     // Create FTS5 indexes for dictionaries database
     create_dictionaries_fts5_indexes(assets_dir)?;
 
-    // This requires the DPD dictionary ID already present in dictionaries.sqlite3
+    // Migrate DPD. This requires the DPD dictionary ID already present in dictionaries.sqlite3
+    // `import_migrate_dpd` internally populates bold_definitions
+    // derived columns (uid, commentary_plain) before creating indexes.
     dpd_migrate(bootstrap_assets_dir, assets_dir)?;
 
     Ok(())

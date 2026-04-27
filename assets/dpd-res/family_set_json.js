@@ -104,6 +104,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ba",
+    "letter",
+    "(gram) letter b; 31st letter of the alphabet; labial consonant",
+    "✔"
+   ],
+   [
     "ma 1.1",
     "letter",
     "(gram) letter m; 31st letter of the alphabet; nasal consonant",
@@ -164,7 +170,7 @@ var family_set_json = {
     "◑"
    ]
   ],
-  "count": 27
+  "count": 28
  },
  "grammatical terms": {
   "data": [
@@ -271,6 +277,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "accantasaṃyoga",
+    "masc",
+    "(gram) direct governance of accusative by transitive verb; conjunction concerned with a passage of time",
+    "✔"
+   ],
+   [
     "accantānupapatti",
     "fem",
     "(gram) complete non-appearance; absolute non-accomplishment",
@@ -333,7 +345,13 @@ var family_set_json = {
    [
     "ati",
     "prefix",
-    "too; too much; beyond; in excess",
+    "too; too much; beyond; in excess; extremely; excessively",
+    "✔"
+   ],
+   [
+    "atītakāla 2",
+    "masc",
+    "(gram) past tense",
     "✔"
    ],
    [
@@ -415,10 +433,16 @@ var family_set_json = {
     "✔"
    ],
    [
-    "adhoṭhita",
+    "adhoṭhita 1",
     "adj",
     "(gram) preceding; previous; coming before; lit. stood below",
     "✔"
+   ],
+   [
+    "adhoṭhita 2",
+    "nt",
+    "(gram) final syllable; lit. stood below",
+    "◑"
    ],
    [
     "an 1",
@@ -451,7 +475,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "anantara 4",
+    "anantara 5",
     "adj",
     "(gram) contiguous; adjoining; immediately following; lit. no space in-between",
     "✔"
@@ -493,19 +517,19 @@ var family_set_json = {
     "◑"
    ],
    [
-    "anu 1",
+    "anu 1.1",
     "prefix",
     "(of space) along; beside",
     "✔"
    ],
    [
-    "anu 2",
+    "anu 1.2",
     "prefix",
     "(of time) after; every; following",
     "✔"
    ],
    [
-    "anu 3",
+    "anu 1.3",
     "prefix",
     "more; further; following; after; behind; along",
     "✔"
@@ -531,7 +555,7 @@ var family_set_json = {
    [
     "anuttakāla",
     "masc",
-    "(gram) unspecific time; unstated time; lit. not said time",
+    "(gram) unspecified time; unstated time; lit. not said time",
     "✔"
    ],
    [
@@ -565,7 +589,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "anupasagga",
+    "anupasagga 2",
     "adj",
     "(gram) without a prefix",
     "◑"
@@ -595,6 +619,30 @@ var family_set_json = {
     "◑"
    ],
    [
+    "anusāra 2.1",
+    "masc",
+    "(gram) nasal consonant; niggahīta; letter ṃ; lit. after-sound",
+    "◑"
+   ],
+   [
+    "anusāralopa",
+    "masc",
+    "(gram) niggahīta elision; cutting of the letter ṃ",
+    "◑"
+   ],
+   [
+    "anusvāra",
+    "masc",
+    "(gram) nasal consonant; niggahīta; letter ṃ; lit. after-sound",
+    "✔"
+   ],
+   [
+    "anusvāralopa",
+    "masc",
+    "(gram) niggahīta elision; cutting of the letter ṃ",
+    "✔"
+   ],
+   [
     "anekasara",
     "adj",
     "(gram) having multiple vowels",
@@ -615,7 +663,13 @@ var family_set_json = {
    [
     "anta 9",
     "masc",
-    "(gram) end (of); last letter (of); final syllable (of); final vowel (of)",
+    "(gram) end; last letter; final syllable; final vowel (of)",
+    "✔"
+   ],
+   [
+    "antagata 2",
+    "adj",
+    "(gram) situated at the end (of); lit. gone to the end",
     "✔"
    ],
    [
@@ -691,6 +745,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "aparanāmadheyya",
+    "masc",
+    "(gram) synonym; lit. another name",
+    "◑"
+   ],
+   [
     "apādāna",
     "nt",
     "(gram) separating; ablation; taking away",
@@ -705,13 +765,19 @@ var family_set_json = {
    [
     "appayujjamāna",
     "prp",
-    "(gram) implicit (in); lit. not being employed",
+    "(gram) implicit (in); lit. not actively yoking",
     "✔"
    ],
    [
     "appayogatta",
     "nt",
-    "(gram) unusability; not being in use; lit. not using state",
+    "(gram) unusability; not being in use; lit. not causing to actively yoke state",
+    "✔"
+   ],
+   [
+    "appasadda 3",
+    "masc",
+    "(gram) the word 'little'; lit. little sound",
     "✔"
    ],
    [
@@ -829,6 +895,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "avisada",
+    "adj",
+    "(gram) feminine; lit. not pure",
+    "◑"
+   ],
+   [
+    "avyayībhāva",
+    "masc",
+    "(gram) indeclinable compound; adverbial compound; lit. unchangeable state",
+    "◑"
+   ],
+   [
     "asa 1.1",
     "root",
     "(gram) √as (be)",
@@ -855,7 +933,7 @@ var family_set_json = {
    [
     "asambandhanīya",
     "ptp",
-    "(gram) not constructable; having an unsuitable construction; lit. not to be tied together",
+    "(gram) not constructible; having an unsuitable construction; lit. not to be tied together",
     "◑"
    ],
    [
@@ -999,13 +1077,13 @@ var family_set_json = {
    [
     "ānetabba 2",
     "ptp",
-    "(gram) should be repositioned; lit. to be carried",
+    "(gram) should be repositioned; lit. to be led here",
     "◑"
    ],
    [
     "ānetvā 3",
     "abs",
-    "(gram) having distributed the meaning of a word to other words; lit. having brought",
+    "(gram) having distributed the meaning of a word to other words; lit. having led here",
     "◑"
    ],
    [
@@ -1017,13 +1095,19 @@ var family_set_json = {
    [
     "āpajjate",
     "pr",
-    "(gram) changes (into); becomes; undergoes morphological change (into)",
+    "(gram) changes; becomes; undergoes morphological change (into)",
     "✔"
    ],
    [
     "āpubba",
     "adj",
     "(gram) with the letter ā in front; preceded by the letter ā",
+    "◑"
+   ],
+   [
+    "āmantaṇā 2",
+    "fem",
+    "(gram) vocative case; lit. addressing",
     "◑"
    ],
    [
@@ -1045,6 +1129,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "āyādesa",
+    "masc",
+    "(gram) substitution of -āya-",
+    "◑"
+   ],
+   [
     "āra 2",
     "suffix",
     "(gram) āra; causative suffix added to nouns",
@@ -1059,7 +1149,7 @@ var family_set_json = {
    [
     "ālapana 2",
     "nt",
-    "(gram) vocative case; lit. speaking",
+    "(gram) vocative case; lit. speaking here",
     "✔"
    ],
    [
@@ -1120,6 +1210,12 @@ var family_set_json = {
     "icchattha",
     "masc",
     "(gram) expressing desire; lit. meaning wanting",
+    "✔"
+   ],
+   [
+    "icchitapāṭha",
+    "masc",
+    "(gram) preferred variant; better reading; lit. desired reading",
     "✔"
    ],
    [
@@ -1315,6 +1411,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "upadhā 2",
+    "fem",
+    "(gram) penultimate phoneme; lit. placing near",
+    "◑"
+   ],
+   [
+    "upanta",
+    "nt",
+    "(gram) penultimate phoneme; lit. near the end",
+    "◑"
+   ],
+   [
     "upapanna 4",
     "pp",
     "(gram) achieved; accomplished; lit. went towards",
@@ -1363,6 +1471,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "upasadda",
+    "masc",
+    "(gram) upa- prefix; lit. upa sound",
+    "✔"
+   ],
+   [
+    "ubhayarahita 2",
+    "adj",
+    "(gram) neuter; lit. lacking both",
+    "◑"
+   ],
+   [
     "uṃ",
     "ve",
     "(gram) uṃ; verbal ending of the aorist 3rd person plural",
@@ -1389,7 +1509,13 @@ var family_set_json = {
    [
     "ekatta 7",
     "nt",
-    "(gram) singular number",
+    "(gram) singular number; lit. one state",
+    "✔"
+   ],
+   [
+    "ekavacana 2",
+    "nt",
+    "(gram) singular; singular number; lit. term for one",
     "✔"
    ],
    [
@@ -1431,7 +1557,7 @@ var family_set_json = {
    [
     "etta 2.1",
     "nt",
-    "(gram) letter e; 7th letter of the alphabet; gutturo-palatal vowel; lit. 'e' state",
+    "(gram) letter e; 7th letter of the alphabet; guttural-palatal vowel; lit. 'e' state",
     "✔"
    ],
    [
@@ -1653,7 +1779,7 @@ var family_set_json = {
    [
     "kara 7",
     "masc",
-    "(gram) helping; supporting; promoting",
+    "(gram) helping; supporting; promoting; lit. doing",
     "◑"
    ],
    [
@@ -1678,7 +1804,7 @@ var family_set_json = {
     "karaṇavacana",
     "nt",
     "(gram) instrumental case",
-    "◑"
+    "✔"
    ],
    [
     "kavagga",
@@ -1816,6 +1942,12 @@ var family_set_json = {
     "kiriyāpada",
     "nt",
     "(gram) verb; lit. action word",
+    "✔"
+   ],
+   [
+    "kiriyāvisesa",
+    "masc",
+    "(gram) adverb; lit. verb distinction",
     "◑"
    ],
    [
@@ -1831,13 +1963,13 @@ var family_set_json = {
     "◑"
    ],
    [
-    "ku 1",
+    "ku 1.1",
     "prefix",
     "bad; wrong",
     "✔"
    ],
    [
-    "ku 2",
+    "ku 1.2",
     "prefix",
     "small; mean",
     "✔"
@@ -1852,7 +1984,7 @@ var family_set_json = {
     "kriyapada",
     "nt",
     "(gram) verb; lit. action word",
-    "◑"
+    "✔"
    ],
    [
     "kriyāvisesa",
@@ -1897,7 +2029,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "gaṇa 5",
+    "gaṇa 7",
     "masc",
     "(gram) set; group; collection",
     "✔"
@@ -1911,7 +2043,7 @@ var family_set_json = {
    [
     "gayhati 2",
     "pr",
-    "(gram) is employed (by); is used (by); lit. is grasped",
+    "(gram) is employed; is used (by); lit. is grasped",
     "◑"
    ],
    [
@@ -1939,9 +2071,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "gahetabba 3",
+    "gahetabba 4",
     "ptp",
     "(gram) should be employed; should be used; should be adopted; lit. to be grasped",
+    "✔"
+   ],
+   [
+    "gupa",
+    "root",
+    "(gram) √gup (guard)",
     "✔"
    ],
    [
@@ -2230,7 +2368,7 @@ var family_set_json = {
     "ṇvādi",
     "masc",
     "(gram) chapter on taddhita in Moggallānabyākaraṇa; lit. ṇa etc.",
-    "◑"
+    "✔"
    ],
    [
     "ṇvu",
@@ -2393,6 +2531,12 @@ var family_set_json = {
     "ve",
     "(gram) ti; verbal ending of the present tense 3rd person singular",
     "✔"
+   ],
+   [
+    "tiliṅga",
+    "adj",
+    "(gram) occurring in three genders; i.e. adjective or participle",
+    "◑"
    ],
    [
     "tu 2",
@@ -2563,7 +2707,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dutiya 3",
+    "dutiya 4",
     "masc",
     "(gram) second consonant of each vagga; kh, ch, ṭh, th, ph; lit. second",
     "✔"
@@ -2625,8 +2769,8 @@ var family_set_json = {
    [
     "dvittakāraṇa",
     "nt",
-    "(gram) re-duplication; lit. making double",
-    "◑"
+    "(gram) re-duplication; doubling; lit. causing to make double",
+    "✔"
    ],
    [
     "dvebhāva",
@@ -2656,7 +2800,7 @@ var family_set_json = {
     "dhaṃsu",
     "root",
     "(gram) √dhaṃs (fall down, destroy)",
-    "◑"
+    "✔"
    ],
    [
     "dhā 1",
@@ -2671,14 +2815,14 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dhātu 7",
-    "masc",
+    "dhātu 8",
+    "fem",
     "(gram) verbal root",
     "✔"
    ],
    [
-    "dhātu 8",
-    "fem",
+    "dhātu 9",
+    "masc",
     "(gram) verbal root",
     "✔"
    ],
@@ -2740,7 +2884,7 @@ var family_set_json = {
     "dhū",
     "root",
     "(gram) √dhū (shake, smoke)",
-    "◑"
+    "✔"
    ],
    [
     "na 3",
@@ -2753,6 +2897,12 @@ var family_set_json = {
     "masc",
     "(gram) negative prefix na",
     "✔"
+   ],
+   [
+    "nadī 2",
+    "fem",
+    "(gram) technical term for i, ī, u, ū on feminine stems",
+    "◑"
    ],
    [
     "napuṃsaka 2",
@@ -2787,7 +2937,7 @@ var family_set_json = {
    [
     "nayati 3",
     "pr",
-    "(gram) joins (to); connects (to); lit. leads",
+    "(gram) joins; connects (to); lit. leads",
     "✔"
    ],
    [
@@ -2819,6 +2969,12 @@ var family_set_json = {
     "nt",
     "(gram) noun; substantive; lit. name",
     "✔"
+   ],
+   [
+    "nāma 8",
+    "nt",
+    "(gram) nominal stem; lit. name",
+    "◑"
    ],
    [
     "nāmakappa",
@@ -2937,19 +3093,19 @@ var family_set_json = {
    [
     "nipphanna 3",
     "nt",
-    "(gram) completion; conclusion",
+    "(gram) completion; conclusion; lit. gone out",
     "✔"
    ],
    [
     "nipphādana 2",
     "nt",
-    "(gram) (word) formation; generation; lit. producing",
+    "(gram) (word) formation; generation; lit. causing to go out",
     "◑"
    ],
    [
     "nipphādetabba",
     "ptp",
-    "(gram) could be produced; lit. to cause to be produced",
+    "(gram) could be produced; lit. to cause to be gone out",
     "◑"
    ],
    [
@@ -3009,7 +3165,7 @@ var family_set_json = {
    [
     "netabba 2",
     "ptp",
-    "(gram) should be joined (to); should be connected (to); lit. to be lead",
+    "(gram) should be joined; should be connected (to); lit. to be lead",
     "✔"
    ],
    [
@@ -3021,7 +3177,7 @@ var family_set_json = {
    [
     "pa 2.1",
     "prefix",
-    "forward; towards; forth",
+    "forward; towards; forth; actively",
     "✔"
    ],
    [
@@ -3033,7 +3189,7 @@ var family_set_json = {
    [
     "pakati 5",
     "fem",
-    "(gram) original form; natural state; lit. natural",
+    "(gram) uninflected form of a word; original form; natural state; lit. natural",
     "✔"
    ],
    [
@@ -3117,7 +3273,7 @@ var family_set_json = {
    [
     "paṭibandha 2",
     "adj",
-    "(gram) related (to); connected (to)",
+    "(gram) related; connected (to)",
     "◑"
    ],
    [
@@ -3129,13 +3285,13 @@ var family_set_json = {
    [
     "paṭhama 2",
     "adj",
-    "(gram) 3rd (person); he; she; it; they; lit. first",
+    "(gram) 3rd (person); he; she; it; they; lit. more forward",
     "✔"
    ],
    [
     "paṭhama 3",
     "masc",
-    "(gram) first consonant of each vagga; k, c, ṭ, t, p; lit. first",
+    "(gram) first consonant of each vagga; k, c, ṭ, t, p; lit. more forward",
     "✔"
    ],
    [
@@ -3193,13 +3349,13 @@ var family_set_json = {
     "◑"
    ],
    [
-    "pada 10",
+    "pada 11",
     "nt",
     "(gram) word; part of a word; suffix",
     "✔"
    ],
    [
-    "pada 11",
+    "pada 12",
     "nt",
     "(gram) part of speech",
     "✔"
@@ -3207,14 +3363,14 @@ var family_set_json = {
    [
     "padaccheda 1",
     "masc",
-    "(gram) elision",
+    "(gram) elision; contraction",
     "◑"
    ],
    [
     "padaccheda 2",
     "masc",
-    "(gram) contraction",
-    "◑"
+    "(gram) word breakup; deconstruction of a word; lit. cutting of a word",
+    "✔"
    ],
    [
     "padapāripūrī",
@@ -3265,6 +3421,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "padasiddhi 1",
+    "fem",
+    "(gram) word formation; construction; lit. accomplishment of the word",
+    "✔"
+   ],
+   [
     "payirupa",
     "prefix",
     "around near",
@@ -3273,13 +3435,13 @@ var family_set_json = {
    [
     "payujjamāna",
     "prp",
-    "(gram) explicit (in); related; lit. being employed",
+    "(gram) explicit (in); related; lit. being actively yoked",
     "✔"
    ],
    [
-    "payoga 4",
+    "payoga 5",
     "masc",
-    "(gram) usage; application",
+    "(gram) usage; application; lit. causing to actively yoke",
     "◑"
    ],
    [
@@ -3311,6 +3473,12 @@ var family_set_json = {
     "nt",
     "(gram) following letter; next syllable",
     "✔"
+   ],
+   [
+    "paranayana",
+    "nt",
+    "(gram) joining with sandhi; lit. leading to another",
+    "◑"
    ],
    [
     "parapada",
@@ -3379,6 +3547,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "paribhāsā 2",
+    "fem",
+    "(gram) meta rule; rule which explains other rules; lit. speaking all around",
+    "◑"
+   ],
+   [
     "pariharati 5",
     "pr",
     "(gram) objects; argues; refutes; lit. carries around",
@@ -3409,10 +3583,22 @@ var family_set_json = {
     "✔"
    ],
    [
+    "pāṭipadika 2",
+    "nt",
+    "(gram) base; stem",
+    "◑"
+   ],
+   [
+    "pāṭha 2",
+    "masc",
+    "(gram) passage; text; section for recitation",
+    "✔"
+   ],
+   [
     "pāṭhabheda",
     "masc",
     "(gram) different reading; variant reading",
-    "◑"
+    "✔"
    ],
    [
     "pāṇyaṅga",
@@ -3423,7 +3609,7 @@ var family_set_json = {
    [
     "pāpuṇāti 3",
     "pr",
-    "(gram) becomes; changes into; lit. arrives",
+    "(gram) becomes; changes into; lit. reaches",
     "✔"
    ],
    [
@@ -3439,6 +3625,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "piṭa",
+    "root",
+    "(gram) √piṭ (collect)",
+    "◑"
+   ],
+   [
     "pisadda",
     "masc",
     "(gram) the word 'api'; lit. pi sound",
@@ -3447,7 +3639,13 @@ var family_set_json = {
    [
     "puthakkātabba",
     "ptp",
-    "(gram) should be separated (from); should be disconnected (from); lit. to be made separate",
+    "(gram) should be separated; should be disconnected (from); lit. to be made separate",
+    "✔"
+   ],
+   [
+    "punāgata 2",
+    "adj",
+    "(gram) repeated; lit. come again",
     "✔"
    ],
    [
@@ -3529,6 +3727,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "peyyālī",
+    "masc",
+    "(gram) denoting an elided repetition within a text",
+    "✔"
+   ],
+   [
     "ppa",
     "cs",
     "(gram) ppa; (unattested) conjugational sign of group 6 gahādigaṇa",
@@ -3538,6 +3742,12 @@ var family_set_json = {
     "ppapaccaya",
     "cs",
     "(gram) ppa suffix; (unattested) conjugational sign of group 6 gahādigaṇa",
+    "✔"
+   ],
+   [
+    "ba",
+    "letter",
+    "(gram) letter b; 31st letter of the alphabet; labial consonant",
     "✔"
    ],
    [
@@ -3557,6 +3767,12 @@ var family_set_json = {
     "nt",
     "(gram) plural; lit. term for many",
     "✔"
+   ],
+   [
+    "bāhiratthasamāsa",
+    "masc",
+    "(gram) relative compound; attributive compound; lit. outside meaning compound",
+    "◑"
    ],
    [
     "bindu 5",
@@ -3685,6 +3901,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "bhuvādi",
+    "masc",
+    "(gram) √bhū etc.; group 1 roots which take the conjugational sign a",
+    "◑"
+   ],
+   [
     "bhū 1.2",
     "root",
     "(gram) √bhū (be)",
@@ -3739,7 +3961,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "majjhima 8",
+    "majjhima 9",
     "adj",
     "(gram) 2nd (person) (you; you all); lit. middle",
     "✔"
@@ -3922,7 +4144,7 @@ var family_set_json = {
     "yasu",
     "root",
     "(gram) √yas (strive, struggle)",
-    "◑"
+    "✔"
    ],
    [
     "yu",
@@ -3943,7 +4165,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "yoga 8",
+    "yoga 7",
     "adj",
     "(gram) syntactically dependent on; ruled by; governed by; lit. yoking",
     "✔"
@@ -4119,7 +4341,7 @@ var family_set_json = {
    [
     "lopa 2",
     "masc",
-    "(gram) elision (of); dropping (of); cutting (of)",
+    "(gram) elision; dropping; cutting (of)",
     "✔"
    ],
    [
@@ -4177,7 +4399,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vaṇṇa 1.10",
+    "vaṇṇa 1.11",
     "masc",
     "(gram) letter; phoneme; syllable; lit. cover",
     "✔"
@@ -4264,13 +4486,13 @@ var family_set_json = {
     "vākya 2",
     "nt",
     "(gram) sentence; statement",
-    "◑"
+    "✔"
    ],
    [
     "vākyadvaya",
     "nt",
-    "(gram) double sentence; dual statement",
-    "◑"
+    "(gram) double sentence; dual statement; pair of sentences",
+    "✔"
    ],
    [
     "vācaka 2",
@@ -4293,13 +4515,25 @@ var family_set_json = {
    [
     "vi 1.1",
     "prefix",
-    "away from; not; division; distinctly; apart; negatively",
+    "away from; division; distinctly; apart; separately",
     "✔"
    ],
    [
     "vi 1.2",
     "prefix",
-    "very; intensely; strongly",
+    "very; excessively; intensely; strongly",
+    "◑"
+   ],
+   [
+    "vi 1.3",
+    "prefix",
+    "not; without; negatively",
+    "✔"
+   ],
+   [
+    "vi 1.4",
+    "prefix",
+    "badly; wrongly; negatively",
     "◑"
    ],
    [
@@ -4315,6 +4549,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "vikāra 5",
+    "masc",
+    "(gram) change; alteration; transformation",
+    "◑"
+   ],
+   [
+    "vicchāya",
+    "adj",
+    "(gram) ?? indistinct; lit. without a shadow",
+    "◑"
+   ],
+   [
     "videsapāṭha",
     "masc",
     "(gram) variant reading from a foreign (country); textual variant in a foreign (book)",
@@ -4323,7 +4569,7 @@ var family_set_json = {
    [
     "vidhāyaka 2",
     "adj",
-    "(gram) performing operation",
+    "(gram) performing operation; lit. placing apart",
     "◑"
    ],
    [
@@ -4339,21 +4585,33 @@ var family_set_json = {
     "✔"
    ],
    [
+    "vipallāsa 3",
+    "masc",
+    "(gram) metathesis; lit. throwing completely upside down",
+    "◑"
+   ],
+   [
     "vipubba 2.1",
     "adj",
     "(gram) preceded by the vi- prefix",
     "◑"
    ],
    [
+    "vippakata 2",
+    "nt",
+    "(gram) present participle; lit. interrupted",
+    "◑"
+   ],
+   [
     "vibhatti 2",
     "fem",
-    "(gram) inflection; declension; conjugation; case-ending of a noun; person-ending of a verb; lit. division",
+    "(gram) inflection; declension; conjugation; case-ending of a noun; person-ending of a verb; lit. dividing apart",
     "✔"
    ],
    [
     "vibhattika 2",
     "adj",
-    "(gram) with conjugation; with case inflection; lit. with division",
+    "(gram) with conjugation; with case inflection; lit. with dividing apart",
     "✔"
    ],
    [
@@ -4365,13 +4623,13 @@ var family_set_json = {
    [
     "vibhāga 2",
     "masc",
-    "(gram) classification; dissection; disjunction; lit. division",
+    "(gram) classification; dissection; disjunction; lit. dividing apart",
     "✔"
    ],
    [
     "vibhāgavant",
     "adj",
-    "(gram) classified; dissected; analysed; lit. having division quality",
+    "(gram) classified; dissected; analysed; lit. having dividing apart quality",
     "◑"
    ],
    [
@@ -4389,7 +4647,7 @@ var family_set_json = {
    [
     "viyojayati",
     "pr",
-    "(gram) disjoins (from); detaches (from); disconnects (from); separates (from)",
+    "(gram) disjoins; detaches; disconnects; separates (from); lit. unyokes",
     "✔"
    ],
    [
@@ -4405,15 +4663,27 @@ var family_set_json = {
     "◑"
    ],
    [
+    "visada 4",
+    "adj",
+    "(gram) masculine",
+    "◑"
+   ],
+   [
     "visaya 4",
     "masc",
     "(gram) case; situation; subject",
     "◑"
    ],
    [
+    "visaṃyoga 3",
+    "masc",
+    "(gram) simplification of a consonant cluster; lit. causing to unyoke",
+    "◑"
+   ],
+   [
     "visesana 3",
     "nt",
-    "(gram) adjective; attribute; lit. distinguishing",
+    "(gram) adjective; attribute; lit. distinguishing apart",
     "◑"
    ],
    [
@@ -4425,7 +4695,7 @@ var family_set_json = {
    [
     "visesya",
     "nt",
-    "(gram) substantive noun; lit. to be distinguished",
+    "(gram) substantive noun; lit. to be distinguished apart",
     "◑"
    ],
    [
@@ -4447,9 +4717,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "vutta 2.7",
+    "nt",
+    "(gram) meter; prosody; lit. spoken",
+    "◑"
+   ],
+   [
     "vutti 2",
     "fem",
     "(gram) prosody",
+    "◑"
+   ],
+   [
+    "vutti 3",
+    "fem",
+    "(gram) complex formation; compound; derivative",
     "◑"
    ],
    [
@@ -4507,7 +4789,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saupasagga",
+    "saupasagga 2",
     "adj",
     "(gram) having a prefix",
     "◑"
@@ -4521,8 +4803,8 @@ var family_set_json = {
    [
     "sakkatānurūpa",
     "adj",
-    "?? (gram) conforming to the Sanskrit (spelling or sandhi)",
-    "◑"
+    "(gram) conforming to the Sanskrit (spelling or sandhi)",
+    "✔"
    ],
    [
     "saṅkhyā 4",
@@ -4543,7 +4825,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sañcarati 2",
+    "sañcarati 3",
     "pr",
     "(gram) is used; appears",
     "◑"
@@ -4551,7 +4833,7 @@ var family_set_json = {
    [
     "saññā 5",
     "fem",
-    "(gram) grammatical term; technical term; definition; lit. name",
+    "(gram) grammatical term; technical term; definition; lit. knowing together",
     "✔"
    ],
    [
@@ -4583,6 +4865,12 @@ var family_set_json = {
     "masc",
     "(gram) word; part of a word; the word ' '; lit. sound",
     "✔"
+   ],
+   [
+    "sadda 7",
+    "masc",
+    "(gram) nominal stem; lit. sound",
+    "◑"
    ],
    [
     "saddato",
@@ -4633,7 +4921,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sandhi 6",
+    "sandhi 8",
     "masc",
     "(gram) sandhi; conjunction; euphonic combination; lit. placing together",
     "✔"
@@ -4701,13 +4989,13 @@ var family_set_json = {
    [
     "samānatthanipātapada",
     "nt",
-    "(gram) indeclinable particle with the same meaning",
-    "◑"
+    "(gram) indeclinable word with the same meaning",
+    "✔"
    ],
    [
     "samāsa",
     "masc",
-    "(gram) compound",
+    "(gram) compound; lit. sitting together",
     "✔"
    ],
    [
@@ -4731,7 +5019,7 @@ var family_set_json = {
    [
     "samāhāra 2",
     "masc",
-    "(gram) copulative compound with plural meaning and singular ending; lit. bringing here together",
+    "(gram) copulative compound with plural meaning and singular ending; lit. carrying together here",
     "◑"
    ],
    [
@@ -4761,13 +5049,13 @@ var family_set_json = {
    [
     "sambandha 3",
     "masc",
-    "(gram) relationship; connection",
+    "(gram) relationship; connection; lit. tie together",
     "◑"
    ],
    [
     "sambandha 4",
     "masc",
-    "(gram) construction",
+    "(gram) construction; lit. tie together",
     "◑"
    ],
    [
@@ -4775,6 +5063,12 @@ var family_set_json = {
     "ptp",
     "(gram) constructable; able to be constructed; lit. to be tied together",
     "◑"
+   ],
+   [
+    "sambhava 1.7",
+    "masc",
+    "(gram) derivation; formation; semantics; lit. being together",
+    "✔"
    ],
    [
     "sara 2.3",
@@ -4799,6 +5093,12 @@ var family_set_json = {
     "prefix",
     "together; with",
     "✔"
+   ],
+   [
+    "saṃpubba",
+    "adj",
+    "(gram) with saṃ- prefix",
+    "◑"
    ],
    [
     "saṃyoga 3",
@@ -4831,7 +5131,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sādhana 5",
+    "sādhana 6",
     "nt",
     "(gram) grammatical procedure; lit. accomplishing",
     "✔"
@@ -4921,6 +5221,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "sutta 1.3",
+    "nt",
+    "(gram) grammatical rule",
+    "✔"
+   ],
+   [
     "sudur",
     "prefix",
     "extremely hard; very difficult; lit. well bad",
@@ -4954,6 +5260,12 @@ var family_set_json = {
     "sopasagga",
     "adj",
     "(gram) with a prefix; having a preposition",
+    "✔"
+   ],
+   [
+    "syādi",
+    "masc",
+    "(gram) case ending; lit. si etc.",
     "✔"
    ],
    [
@@ -5047,7 +5359,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "heṭṭhato 2",
+    "heṭṭhato 3",
     "ind",
     "(gram) previously in the text; lit. from below",
     "✔"
@@ -5101,7 +5413,7 @@ var family_set_json = {
     "◑"
    ]
   ],
-  "count": 822
+  "count": 873
  },
  "prefixes": {
   "data": [
@@ -5162,7 +5474,7 @@ var family_set_json = {
    [
     "ati",
     "prefix",
-    "too; too much; beyond; in excess",
+    "too; too much; beyond; in excess; extremely; excessively",
     "✔"
    ],
    [
@@ -5202,19 +5514,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "anu 1",
+    "anu 1.1",
     "prefix",
     "(of space) along; beside",
     "✔"
    ],
    [
-    "anu 2",
+    "anu 1.2",
     "prefix",
     "(of time) after; every; following",
     "✔"
    ],
    [
-    "anu 3",
+    "anu 1.3",
     "prefix",
     "more; further; following; after; behind; along",
     "✔"
@@ -5352,13 +5664,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ku 1",
+    "ku 1.1",
     "prefix",
     "bad; wrong",
     "✔"
    ],
    [
-    "ku 2",
+    "ku 1.2",
     "prefix",
     "small; mean",
     "✔"
@@ -5414,7 +5726,7 @@ var family_set_json = {
    [
     "pa 2.1",
     "prefix",
-    "forward; towards; forth",
+    "forward; towards; forth; actively",
     "✔"
    ],
    [
@@ -5474,13 +5786,25 @@ var family_set_json = {
    [
     "vi 1.1",
     "prefix",
-    "away from; not; division; distinctly; apart; negatively",
+    "away from; division; distinctly; apart; separately",
     "✔"
    ],
    [
     "vi 1.2",
     "prefix",
-    "very; intensely; strongly",
+    "very; excessively; intensely; strongly",
+    "◑"
+   ],
+   [
+    "vi 1.3",
+    "prefix",
+    "not; without; negatively",
+    "✔"
+   ],
+   [
+    "vi 1.4",
+    "prefix",
+    "badly; wrongly; negatively",
     "◑"
    ],
    [
@@ -5526,7 +5850,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 70
+  "count": 72
  },
  "conjugational signs": {
   "data": [
@@ -5719,7 +6043,7 @@ var family_set_json = {
     "udā",
     "abbrev",
     "abbreviation of Udāna",
-    "◑"
+    "✔"
    ],
    [
     "ka 2.1",
@@ -5780,6 +6104,12 @@ var family_set_json = {
     "abbrev",
     "abbreviation of Theragāthā",
     "◑"
+   ],
+   [
+    "therīgā",
+    "abbrev",
+    "abbreviation of Therīgāthā",
+    "✔"
    ],
    [
     "dī",
@@ -5896,6 +6226,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "peṭako",
+    "abbrev",
+    "abbreviation of Peṭakopadesa",
+    "✔"
+   ],
+   [
     "bu",
     "abbrev",
     "abbreviation of Buddha(vaṃsa)",
@@ -5911,6 +6247,12 @@ var family_set_json = {
     "ma 4.2",
     "abbrev",
     "abbreviation of abbreviation of (Paṭisambhidā) Magga",
+    "◑"
+   ],
+   [
+    "mahāṭī",
+    "abbrev",
+    "abbreviation of mahāṭīkā; lit. great sub-commentary",
     "◑"
    ],
    [
@@ -5930,6 +6272,12 @@ var family_set_json = {
     "abbrev",
     "abbreviation of Mahāvagga",
     "✔"
+   ],
+   [
+    "mūlaṭī",
+    "abbrev",
+    "abbreviation of mūlaṭīkā, a sub-commentary on the Abhidhammapiṭaka",
+    "◑"
    ],
    [
     "rū 2",
@@ -6010,7 +6358,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 53
+  "count": 57
  },
  "pronouns": {
   "data": [
@@ -6053,7 +6401,7 @@ var family_set_json = {
    [
     "aññatara 2",
     "pron",
-    "one (of); either one (of)",
+    "one; either one (of)",
     "✔"
    ],
    [
@@ -6075,9 +6423,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aññamañña",
+    "aññamañña 1",
     "pron",
     "mutual; one another; one to another",
+    "✔"
+   ],
+   [
+    "aññamañña 2",
+    "pron",
+    "different from one another; diverse; lit. another another",
     "✔"
    ],
    [
@@ -6267,6 +6621,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "amhehi 6",
+    "pron",
+    "(royal plural) than me; lit. from us",
+    "✔"
+   ],
+   [
     "ayaṃ",
     "pron",
     "this; this person; this thing",
@@ -6293,8 +6653,8 @@ var family_set_json = {
    [
     "asmā 2.1",
     "pron",
-    "to us",
-    "◑"
+    "to us; for us",
+    "✔"
    ],
    [
     "asmā 2.2",
@@ -6537,6 +6897,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ubhinnaṃ 1",
+    "pron",
+    "to both; for both",
+    "✔"
+   ],
+   [
     "ubhinnaṃ 2",
     "pron",
     "of both",
@@ -6588,7 +6954,7 @@ var family_set_json = {
     "etato",
     "pron",
     "than this",
-    "◑"
+    "✔"
    ],
    [
     "etad",
@@ -6744,6 +7110,12 @@ var family_set_json = {
     "ka 1.1",
     "pron",
     "who?; what?; which?",
+    "✔"
+   ],
+   [
+    "ka 1.2",
+    "pron",
+    "where?",
     "✔"
    ],
    [
@@ -7344,7 +7716,7 @@ var family_set_json = {
     "tumhe 3",
     "pron",
     "(royal plural) you; lit. you all",
-    "◑"
+    "✔"
    ],
    [
     "tumhe 4",
@@ -7503,6 +7875,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "dussa 2.1",
+    "pron",
+    "for that; to such and such",
+    "✔"
+   ],
+   [
+    "na kassaci",
+    "idiom",
+    "not to someone; not for anyone; not to anything",
+    "✔"
+   ],
+   [
     "naṃ",
     "pron",
     "him; her; it; one; that",
@@ -7517,7 +7901,7 @@ var family_set_json = {
    [
     "nāñña 2",
     "pron",
-    "nothing other (than); not something other (than)",
+    "nothing other; not something other (than)",
     "✔"
    ],
    [
@@ -7545,6 +7929,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ne 1",
+    "pron",
+    "they; those (subject)",
+    "◑"
+   ],
+   [
     "ne 2",
     "pron",
     "them; those (object)",
@@ -7565,7 +7955,7 @@ var family_set_json = {
    [
     "nete",
     "pron",
-    "these (are) not; they (are) not",
+    "these not; they (are) not",
     "✔"
    ],
    [
@@ -7657,6 +8047,12 @@ var family_set_json = {
     "pron",
     "after that",
     "◑"
+   ],
+   [
+    "parato 4",
+    "ind",
+    "beyond; over",
+    "✔"
    ],
    [
     "parāsaṃ",
@@ -7767,6 +8163,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "mayha 1",
+    "pron",
+    "to me; for me",
+    "✔"
+   ],
+   [
     "mayha 2",
     "pron",
     "my; mine; of me",
@@ -7794,7 +8196,7 @@ var family_set_json = {
     "māmaṃ",
     "pron",
     "me",
-    "◑"
+    "✔"
    ],
    [
     "me 1",
@@ -7841,8 +8243,8 @@ var family_set_json = {
    [
     "yaṅkaci",
     "pron",
-    "whatever; any whatsoever; everything; all",
-    "◑"
+    "whatever; any whatsoever; everything; all; lit. whatever something",
+    "✔"
    ],
    [
     "yaṅkiñci",
@@ -7859,8 +8261,8 @@ var family_set_json = {
    [
     "yadañña",
     "pron",
-    "whichever other person",
-    "◑"
+    "whichever other person; lit. which other",
+    "✔"
    ],
    [
     "yamhā",
@@ -8181,9 +8583,56 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 361
+  "count": 370
  },
- "epithets of devas": {
+ "pureland deities": {
+  "data": [
+   [
+    "akaniṭṭha 1",
+    "masc",
+    "class of devas; ultimate; greatest; lit. not the youngest",
+    "✔"
+   ],
+   [
+    "akaniṭṭha 2",
+    "adj",
+    "ultimate; greatest; epithet of a class of devas; lit. not the youngest",
+    "✔"
+   ],
+   [
+    "atappa",
+    "adj",
+    "epithet of a class of devas; lit. no remorse",
+    "✔"
+   ],
+   [
+    "atappā",
+    "masc",
+    "name of one of the highest classes of devas, second class of pure realm devas; lit. not tormented",
+    "✔"
+   ],
+   [
+    "aviha 2",
+    "adj",
+    "epithet of a class of devas",
+    "✔"
+   ],
+   [
+    "sudassa 2",
+    "adj",
+    "beautiful to look at; epithet of a class of devas",
+    "✔"
+   ],
+   [
+    "sudassī",
+    "adj",
+    "epithet of a class of devas; lit. of excellent vision",
+    "✔"
+   ]
+  ],
+  "count": 7
+ },
+ "types of supernatural beings": {
   "data": [
    [
     "akaniṭṭha 2",
@@ -8198,55 +8647,313 @@ var family_set_json = {
     "✔"
    ],
    [
-    "appamāṇasubha",
-    "adj",
-    "of immeasurable beauty; epithet of a class of devas",
-    "✔"
-   ],
-   [
-    "appamāṇābha",
-    "adj",
-    "of immeasurable radiance; epithet of a class of devas",
-    "✔"
-   ],
-   [
     "aviha 2",
     "adj",
     "epithet of a class of devas",
     "✔"
    ],
    [
-    "ākāsānañcāyatanūpaga",
-    "adj",
-    "gone to the dimension of infinite space; epithet of a class of devas",
+    "asura 1",
+    "masc",
+    "titan; anti-god; enemy of the devas; lit. anti-hero",
     "✔"
    ],
    [
-    "ākiñcaññāyatanūpaga",
-    "adj",
-    "gone to the dimension of nothingness; epithet of a class of devas",
+    "ahināga",
+    "masc",
+    "dragon in snake form",
     "✔"
    ],
    [
-    "ābha",
-    "adj",
-    "radiant; lustrous; luminous; epithet of a class of devas; lit. having light",
+    "kinnara",
+    "masc",
+    "mythical creature with the head of a horse and the body of a man; lit. what kind of man?",
+    "◑"
+   ],
+   [
+    "kinnarī",
+    "fem",
+    "mythical creature with the head of a horse and the body of a woman; lit. what kind of woman?",
     "✔"
    ],
    [
-    "ābhassara",
-    "adj",
-    "radiant; shining; belonging to the radiant heaven; epithet of a class of devas",
+    "kumbhaṇḍa 2",
+    "masc",
+    "type of supernatural being; sprite; lit. pumpkin (belly)",
     "✔"
    ],
    [
-    "manopadosika",
+    "kumbhaṇḍapacāra",
+    "masc",
+    "sprite's attendant",
+    "✔"
+   ],
+   [
+    "kumbhaṇḍapārisajja",
+    "masc",
+    "sprite council member",
+    "✔"
+   ],
+   [
+    "kumbhaṇḍapotaka",
+    "masc",
+    "young sprite",
+    "✔"
+   ],
+   [
+    "kumbhaṇḍapotikā",
+    "fem",
+    "young female sprite",
+    "✔"
+   ],
+   [
+    "kumbhaṇḍamahāmatta",
+    "masc",
+    "chief minister of the sprites",
+    "✔"
+   ],
+   [
+    "kumbhaṇḍī",
+    "fem",
+    "type of female supernatural being; female sprite; lit. pumpkin",
+    "✔"
+   ],
+   [
+    "gandhabba 1",
+    "masc",
+    "demigod; heavenly musician; class of mythological beings",
+    "✔"
+   ],
+   [
+    "gandhabbadevaputta",
+    "masc",
+    "young demigod",
+    "✔"
+   ],
+   [
+    "gandhabbanāgā",
+    "masc",
+    "demigods and dragons",
+    "✔"
+   ],
+   [
+    "gandhabbapacāra",
+    "masc",
+    "demigod's attendant",
+    "✔"
+   ],
+   [
+    "gandhabbapārisajja",
+    "masc",
+    "demigod council member",
+    "✔"
+   ],
+   [
+    "gandhabbaputta",
+    "masc",
+    "young demigod; lit. demigod son",
+    "✔"
+   ],
+   [
+    "gandhabbapotaka",
+    "masc",
+    "young demigod",
+    "✔"
+   ],
+   [
+    "gandhabbapotikā",
+    "fem",
+    "young female demigod",
+    "✔"
+   ],
+   [
+    "gandhabbamahāmatta",
+    "masc",
+    "chief minister of the demigods",
+    "✔"
+   ],
+   [
+    "gandhabbāsurayakkharakkhasā",
+    "masc",
+    "demigods, daemons, supernatural spirits, and goblins",
+    "✔"
+   ],
+   [
+    "gandhabbī",
+    "fem",
+    "female demigod; female heavenly musician",
+    "✔"
+   ],
+   [
+    "garuḷa",
+    "masc",
+    "name of a mythical bird",
+    "✔"
+   ],
+   [
+    "deva 1",
+    "masc",
+    "deity; god",
+    "✔"
+   ],
+   [
+    "devatā",
+    "fem",
+    "deity; god",
+    "✔"
+   ],
+   [
+    "devaputta",
+    "masc",
+    "male deity; lit. son of god",
+    "✔"
+   ],
+   [
+    "nāga 2",
+    "masc",
+    "dragon; drake; supernatural shape-shifting serpent",
+    "✔"
+   ],
+   [
+    "nāgapacāra",
+    "masc",
+    "dragon's attendant",
+    "✔"
+   ],
+   [
+    "nāgapārisajja",
+    "masc",
+    "dragon council member",
+    "✔"
+   ],
+   [
+    "nāgapotaka",
+    "masc",
+    "baby cobra; young dragon",
+    "✔"
+   ],
+   [
+    "nāgapotikā",
+    "fem",
+    "baby female cobra; young female dragon",
+    "✔"
+   ],
+   [
+    "nāgamahāmatta",
+    "masc",
+    "chief minister of the dragons",
+    "✔"
+   ],
+   [
+    "nāgamāṇavikā",
+    "fem",
+    "female dragon; nāga maiden",
+    "✔"
+   ],
+   [
+    "nāgarāja 1",
+    "masc",
+    "serpent king; dragon king",
+    "✔"
+   ],
+   [
+    "nāgī 2",
+    "fem",
+    "female dragon",
+    "✔"
+   ],
+   [
+    "pisāca",
+    "masc",
+    "goblin; evil spirit; daemon; devil",
+    "✔"
+   ],
+   [
+    "pisācaka",
+    "masc",
+    "goblin; evil spirit; daemon; devil",
+    "✔"
+   ],
+   [
+    "pisācinī",
+    "fem",
+    "female goblin; she-devil; daemoness; succubus",
+    "✔"
+   ],
+   [
+    "brahma 1",
+    "masc",
+    "God; creator god",
+    "✔"
+   ],
+   [
+    "brahmapurohita",
+    "masc",
+    "high priest of Brahma",
+    "✔"
+   ],
+   [
+    "yakkha 1",
+    "masc",
+    "(either protective or malevolent) spirit; supernatural being; daemon",
+    "✔"
+   ],
+   [
+    "yakkhapacāra",
+    "masc",
+    "daemon's attendant",
+    "✔"
+   ],
+   [
+    "yakkhapārisajja",
+    "masc",
+    "daemon council member",
+    "✔"
+   ],
+   [
+    "yakkhapotaka",
+    "masc",
+    "young daemon",
+    "✔"
+   ],
+   [
+    "yakkhapotikā",
+    "fem",
+    "young female daemon",
+    "✔"
+   ],
+   [
+    "yakkhamahāmatta",
+    "masc",
+    "chief minister of the daemons",
+    "✔"
+   ],
+   [
+    "rakkhasa",
+    "masc",
+    "daemon; goblin; ogre; spirit guardian; lit. protective",
+    "✔"
+   ],
+   [
+    "sudassa 2",
     "adj",
-    "mentally corrupted; epithet of a class of envious devas",
+    "beautiful to look at; epithet of a class of devas",
+    "✔"
+   ],
+   [
+    "sudassī",
+    "adj",
+    "epithet of a class of devas; lit. of excellent vision",
+    "✔"
+   ],
+   [
+    "supaṇṇa",
+    "masc",
+    "supernatural bird; arch-enemy of the nāgas; lit. beautiful wings",
     "✔"
    ]
   ],
-  "count": 10
+  "count": 53
  },
  "epithets of arahants": {
   "data": [
@@ -8254,6 +8961,12 @@ var family_set_json = {
     "akiñcana",
     "adj",
     "with nothing; is nothing; having no; possession-less; epithet of an arahant",
+    "✔"
+   ],
+   [
+    "agarahiya",
+    "ptp",
+    "blameless; inculpable; innocent; epithet of an arahant; lit. not to be blamed",
     "✔"
    ],
    [
@@ -8266,6 +8979,12 @@ var family_set_json = {
     "anantajina",
     "masc",
     "infinite conqueror; universal victor; Ājīvaka term for an arahant",
+    "✔"
+   ],
+   [
+    "anāgamanadhamma 2",
+    "masc",
+    "non return state; arahantship",
     "✔"
    ],
    [
@@ -8284,6 +9003,18 @@ var family_set_json = {
     "appamāṇavihārī",
     "adj",
     "living a life beyond measure; epithet of an arahant; (comm) living unlimited (by lust etc.)",
+    "✔"
+   ],
+   [
+    "abhiññāvosānapāramippatta",
+    "adj",
+    "attained perfection and mastery of experiential understanding; (comm) attained arahantship",
+    "✔"
+   ],
+   [
+    "asekha 1",
+    "masc",
+    "adept; arahant; lit. not a trainee; beyond training",
     "✔"
    ],
    [
@@ -8350,7 +9081,7 @@ var family_set_json = {
     "dantabhūmimanuppatta",
     "adj",
     "attained the level of mastery; epithet of an arahant",
-    "◑"
+    "✔"
    ],
    [
     "dhutakilesa",
@@ -8368,7 +9099,7 @@ var family_set_json = {
     "pattayogakkhema",
     "adj",
     "reached sanctuary; attained awakening; accomplished spiritual success; epithet of an arahant",
-    "◑"
+    "✔"
    ],
    [
     "parikkhīṇabhavasaññojana",
@@ -8407,6 +9138,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "bhavanettikhīṇa",
+    "adj",
+    "who has worn away the conduit to existence; who has destroyed the channel to becoming",
+    "✔"
+   ],
+   [
     "bhāvitapañña",
     "adj",
     "developed in wisdom; cultivated in understanding; epithet of an arahant",
@@ -8428,6 +9165,12 @@ var family_set_json = {
     "mahānāga 1",
     "masc",
     "great man; epithet of an arahant",
+    "✔"
+   ],
+   [
+    "mutatta",
+    "masc",
+    "who knows; awakened being; epithet of an arahant; lit. understood self",
     "✔"
    ],
    [
@@ -8469,8 +9212,14 @@ var family_set_json = {
    [
     "sappurisatara",
     "masc",
-    "better man; more moral man; more virtuous man; even more superior man; epithet of an arahant",
-    "◑"
+    "better man; more virtuous man; person of greater integrity; epithet of an arahant",
+    "✔"
+   ],
+   [
+    "sabbakammakkhaya",
+    "masc",
+    "exhaustion of all activity; destruction of every action",
+    "✔"
    ],
    [
     "sabbajī",
@@ -8482,7 +9231,7 @@ var family_set_json = {
     "samaṇasukhumāla",
     "masc",
     "refined ascetic; epithet of an arahant",
-    "◑"
+    "✔"
    ],
    [
     "sammaggata 2",
@@ -8497,19 +9246,25 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sīmātiga",
+    "adj",
+    "crossed the boundary; gone over the limit; epithet of an arahant",
+    "✔"
+   ],
+   [
     "suvihita",
     "adj",
-    "who has practiced well; who is properly composed; epithet of an arahant; lit. well arranged",
+    "who has practiced well; who is properly composed; epithet of an arahant; lit. well placed apart",
     "✔"
    ],
    [
     "sottiya 2",
     "masc",
-    "epithet of an arahant",
+    "epithet of an arahant; lit. learned in the Vedas",
     "✔"
    ]
   ],
-  "count": 43
+  "count": 51
  },
  "epithets of Nibbāna": {
   "data": [
@@ -8538,9 +9293,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "accanta 3",
+    "nt",
+    "ultimate; absolute; epithet of Nibbāna; lit. beyond the limit",
+    "◑"
+   ],
+   [
     "accuta 1",
     "pp",
     "everlasting; eternal; stable; epithet of Nibbāna; lit. not fallen",
+    "✔"
+   ],
+   [
+    "acchariya 2",
+    "nt",
+    "(the) wonderful; marvellous; incredible; epithet of Nibbāna; lit. wonderful state",
     "✔"
    ],
    [
@@ -8550,9 +9317,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "anata 1",
+    "anata",
     "pp",
-    "unbent; without inclination; epithet of Nibbāna",
+    "unbent; without inclination; epithet of Nibbāna; lit. not bent",
     "✔"
    ],
    [
@@ -8564,7 +9331,7 @@ var family_set_json = {
    [
     "anālaya 1",
     "masc",
-    "non-clinging; non-attachment; non-reliance; unstuck; epithet of Nibbāna",
+    "non-clinging; non-attachment; non-reliance; unstuck; epithet of Nibbāna; lit. not sticking here",
     "✔"
    ],
    [
@@ -8606,13 +9373,13 @@ var family_set_json = {
    [
     "abyāpajjha 1.1",
     "nt",
-    "freedom from oppressive pain; relief from suffering; epithet of Nibbāna; lit. not to be oppressed",
+    "freedom from oppressive pain; relief from suffering; epithet of Nibbāna; lit. no oppression here state",
     "✔"
    ],
    [
     "amata 1.1",
     "nt",
-    "deathless state; immortality; epithet of Nibbāna; lit. not dead",
+    "deathless state; immortality; freedom from death; epithet of Nibbāna; lit. not dead",
     "✔"
    ],
    [
@@ -8624,7 +9391,7 @@ var family_set_json = {
    [
     "amatapada",
     "nt",
-    "immortality; deathless state; epithet of Nibbāna",
+    "immortality; deathless state; epithet of Nibbāna; (comm) path to the deathless",
     "✔"
    ],
    [
@@ -8634,9 +9401,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "asaṅkhata",
+    "asaṅkhata 1",
     "pp",
     "unconditioned; not created; unformed; unconstructed; epithet of Nibbāna; (comm) not made",
+    "✔"
+   ],
+   [
+    "asaṅkhata 2",
+    "nt",
+    "the unconditioned; the unformed; the unconstructed; epithet of Nibbāna; lit. not made together",
     "✔"
    ],
    [
@@ -8662,6 +9435,18 @@ var family_set_json = {
     "masc",
     "ultimate peace; epithet of Nibbāna; lit. peace",
     "◑"
+   ],
+   [
+    "upādānakkhayārāma",
+    "adj",
+    "talking pleasure in the wearing away of grasping; enjoying the ending of clinging; epithet of Nibbāna",
+    "✔"
+   ],
+   [
+    "kevala 4",
+    "nt",
+    "epithet of Nibbāna; lit. whole",
+    "✔"
    ],
    [
     "khema 2",
@@ -8712,6 +9497,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nirodhadhātu",
+    "fem",
+    "state of cessation; epithet of Nibbāna",
+    "✔"
+   ],
+   [
+    "parāyaṇa 4",
+    "nt",
+    "final destination; ultimate goal; epithet of Nibbāna; lit. final going",
+    "✔"
+   ],
+   [
     "parāyana 2",
     "nt",
     "final destination; ultimate goal; epithet of Nibbāna; (comm) result; support; lit. going beyond",
@@ -8744,8 +9541,8 @@ var family_set_json = {
    [
     "vivaṭṭa 3",
     "nt",
-    "cessation of the round of cyclical existence; epithet of Nibbāna",
-    "◑"
+    "cessation of the round of cyclical existence; epithet of Nibbāna; lit. turning apart",
+    "✔"
    ],
    [
     "saṅkhārūpasama",
@@ -8820,7 +9617,1173 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 51
+  "count": 58
+ },
+ "suttas of Saṃyutta Nikāya 45": {
+  "data": [
+   [
+    "avijjāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.1 (SN45.1); lit. discourse on ignorance",
+    "✔"
+   ],
+   [
+    "upaḍḍhasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.2 (SN45.2); lit. discourse on half",
+    "✔"
+   ],
+   [
+    "sāriputtasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.3 (SN45.3); lit. discourse with Sāriputta",
+    "✔"
+   ],
+   [
+    "jāṇussoṇibrāhmaṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.4 (SN45.4); lit. discourse with Jāṇussoṇi the Brahman",
+    "✔"
+   ],
+   [
+    "paṭhamaaññatarabhikkhusutta",
+    "nt",
+    "Saṃyutta Nikāya 45.6 (SN45.6); lit. first discourse on a certain monk",
+    "✔"
+   ],
+   [
+    "dutiyaaññatarabhikkhusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.7 (SN45.7); lit. second discourse on a certain monk",
+    "✔"
+   ],
+   [
+    "vibhaṅgasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.8 (SN45.8); lit. discourse on analysis",
+    "✔"
+   ],
+   [
+    "sūkasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.9 (SN45.9); lit. discourse on the spike",
+    "✔"
+   ],
+   [
+    "nandiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.10 (SN45.10); lit. discourse with Nandiya",
+    "✔"
+   ],
+   [
+    "paṭhamavihārasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.11 (SN45.11); lit. first discourse on meditation attainment",
+    "✔"
+   ],
+   [
+    "dutiyavihārasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.12 (SN45.12); lit. second discourse on meditation attainment",
+    "✔"
+   ],
+   [
+    "sekkhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.13 (SN45.13); lit. discourse on the trainee",
+    "✔"
+   ],
+   [
+    "paṭhamauppādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.14 (SN45.14); lit. first discourse on arising",
+    "✔"
+   ],
+   [
+    "dutiyauppādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.15 (SN45.15); lit. second discourse on arising",
+    "✔"
+   ],
+   [
+    "paṭhamaparisuddhasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.16 (SN45.16); lit. first discourse on purified",
+    "✔"
+   ],
+   [
+    "dutiyaparisuddhasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.17 (SN45.17); lit. second discourse on purified",
+    "✔"
+   ],
+   [
+    "paṭhamakukkuṭārāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.18 (SN45.18); lit. first discourse at cockerel park monastery",
+    "✔"
+   ],
+   [
+    "dutiyakukkuṭārāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.19 (SN45.19); lit. second discourse at cockerel park monastery",
+    "✔"
+   ],
+   [
+    "tatiyakukkuṭārāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.20 (SN45.20); lit. third discourse on cockerel park monastery",
+    "✔"
+   ],
+   [
+    "micchattasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.21 (SN45.21); lit. discourse on wrongness",
+    "✔"
+   ],
+   [
+    "akusaladhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.22 (SN45.22); lit. discourse on unwholesome states",
+    "✔"
+   ],
+   [
+    "paṭhamapaṭipadāsutta",
+    "nt",
+    "Saṃyutta Nikāya 45.23 (SN45.23); lit. first discourse on the path of practice",
+    "✔"
+   ],
+   [
+    "dutiyapaṭipadāsutta",
+    "nt",
+    "Saṃyutta Nikāya 45.24 (SN45.24); lit. second discourse on the path of practice",
+    "✔"
+   ],
+   [
+    "paṭhamaasappurisasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.25 (SN45.25); lit. first discourse on the person of no integrity",
+    "✔"
+   ],
+   [
+    "dutiyaasappurisasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.26 (SN45.26); lit. second discourse on the person of no integrity",
+    "✔"
+   ],
+   [
+    "kumbhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.27 (SN45.27); lit. discourse on the water pot",
+    "✔"
+   ],
+   [
+    "samādhisutta 4",
+    "nt",
+    "Saṃyutta Nikāya 45.28 (SN45.28); lit. discourse on mental composure",
+    "✔"
+   ],
+   [
+    "vedanāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.29 (SN45.29); lit. discourse on felt experience",
+    "✔"
+   ],
+   [
+    "uttiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.30 (SN45.30); lit. discourse with Uttiya",
+    "✔"
+   ],
+   [
+    "paṭhamapaṭipattisutta",
+    "nt",
+    "Saṃyutta Nikāya 45.31 (SN45.31); lit. first discourse on practice",
+    "✔"
+   ],
+   [
+    "dutiyapaṭipattisutta",
+    "nt",
+    "Saṃyutta Nikāya 45.32 (SN45.32); lit. second discourse on practice",
+    "✔"
+   ],
+   [
+    "viraddhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.33 (SN45.33); lit. discourse on failed",
+    "✔"
+   ],
+   [
+    "pāraṅgamasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.34 (SN45.34); lit. discourse on going to the other shore",
+    "✔"
+   ],
+   [
+    "paṭhamasāmaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.35 (SN45.35); lit. first discourse on monkhood",
+    "✔"
+   ],
+   [
+    "dutiyasāmaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.36 (SN45.36); lit. second discourse on monkhood",
+    "✔"
+   ],
+   [
+    "paṭhamabrahmaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.37 (SN45.37); lit. first discourse on Brahmanhood",
+    "✔"
+   ],
+   [
+    "dutiyabrahmaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.38 (SN45.38); lit. second discourse on Brahmanhood",
+    "✔"
+   ],
+   [
+    "paṭhamabrahmacariyasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.39 (SN45.39); lit. first discourse on the holy life",
+    "✔"
+   ],
+   [
+    "dutiyabrahmacariyasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.40 (SN45.40); lit. second discourse on the holy life",
+    "✔"
+   ],
+   [
+    "rāgavirāgasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.41 (SN45.41); lit. discourse on the fading of desire",
+    "✔"
+   ],
+   [
+    "saṃyojanappahānādisuttachakka",
+    "nt",
+    "Saṃyutta Nikāya 45.42-47 (SN45.42-47); lit. group of six discourses starting with the discourse on abandoning the fetters",
+    "✔"
+   ],
+   [
+    "anupādāparinibbānasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.48 (SN45.48); lit. discourse on complete extinguishing though not grasping",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.49 (SN45.49); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "sīlasampadādisuttapañcaka 1",
+    "nt",
+    "Saṃyutta Nikāya 45.50-54 (SN45.50-54); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "✔"
+   ],
+   [
+    "yonisomanasikārasampadāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.55 (SN45.55); lit. discourse on success in paying proper attention",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 45.56 (SN45.56); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "sīlasampadādisuttapañcaka 2",
+    "nt",
+    "Saṃyutta Nikāya 45.57-61 (SN45.57-61); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "✔"
+   ],
+   [
+    "yonisomanasikārasampadāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.62 (SN45.62); lit. discourse on success in paying proper attention",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 45.63 (SN45.63); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "sīlasampadādisuttapañcaka 3",
+    "nt",
+    "Saṃyutta Nikāya 45.64-68 (SN45.64-68); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "✔"
+   ],
+   [
+    "yonisomanasikārasampadāsutta 3",
+    "nt",
+    "Saṃyutta Nikāya 45.69 (SN45.69); lit. discourse on success in paying proper attention",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 45.70 (SN45.70); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "sīlasampadādisuttapañcaka 4",
+    "nt",
+    "Saṃyutta Nikāya 45.71-75 (SN45.71-75); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "✔"
+   ],
+   [
+    "yonisomanasikārasampadāsutta 4",
+    "nt",
+    "Saṃyutta Nikāya 45.76 (SN45.76); lit. discourse on success in paying proper attention",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 6",
+    "nt",
+    "Saṃyutta Nikāya 45.77 (SN45.77); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "sīlasampadādisuttapañcaka 5",
+    "nt",
+    "Saṃyutta Nikāya 45.78-82 (SN45.78-82); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "✔"
+   ],
+   [
+    "yonisomanasikārasampadāsutta 5",
+    "nt",
+    "Saṃyutta Nikāya 45.83 (SN45.83); lit. discourse on success in paying proper attention",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 7",
+    "nt",
+    "Saṃyutta Nikāya 45.84 (SN45.84); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "sīlasampadādisuttapañcaka 6",
+    "nt",
+    "Saṃyutta Nikāya 45.85-89 (SN45.85-89); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "✔"
+   ],
+   [
+    "yonisomanasikārasampadāsutta 6",
+    "nt",
+    "Saṃyutta Nikāya 45.90 (SN45.90); lit. discourse on success in paying proper attention",
+    "✔"
+   ],
+   [
+    "paṭhamapācīnaninnasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.91 (SN45.91); lit. first discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "dutiyādipācīnaninnasuttacatukka",
+    "nt",
+    "Saṃyutta Nikāya 45.92-95 (SN45.92-95); lit. second group of four discourses starting with the discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "chaṭṭhapācīnaninnasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.96 (SN45.96); lit. sixth discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "paṭhamasamuddaninnasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.97 (SN45.97); lit. first discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "dutiyādisamuddaninnasuttapañcaka 1",
+    "nt",
+    "Saṃyutta Nikāya 45.98-102 (SN45.98-102); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "paṭhamapācīnaninnasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.103 (SN45.103); lit. first discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "dutiyādipācīnaninnasuttapañcaka 1",
+    "nt",
+    "Saṃyutta Nikāya 45.104-108 (SN45.104-108); lit. group of five discourses starting with the second discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "paṭhamasamuddaninnasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.109 (SN45.109); lit. first discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "dutiyādisamuddaninnasuttapañcaka 2",
+    "nt",
+    "Saṃyutta Nikāya 45.110-114 (SN45.110-114); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "paṭhamapācīnaninnasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 45.115 (SN45.115); lit. first discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "dutiyādipācīnaninnasuttapañcaka 2",
+    "nt",
+    "Saṃyutta Nikāya 45.116-120 (SN45.116-120); lit. group of five discourses starting with the second discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "paṭhamasamuddaninnasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 45.121 (SN45.121); lit. first discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "dutiyādisamuddaninnasuttapañcaka 3",
+    "nt",
+    "Saṃyutta Nikāya 45.122-126 (SN45.122-126); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "paṭhamapācīnaninnasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 45.127 (SN45.127); lit. first discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "dutiyādipācīnaninnasuttapañcaka 3",
+    "nt",
+    "Saṃyutta Nikāya 45.128-132 (SN45.128-132); lit. group of five discourses starting with the second discourse on sloping to the east",
+    "✔"
+   ],
+   [
+    "paṭhamasamuddaninnasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 45.133 (SN45.133); lit. first discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "dutiyādisamuddaninnasuttapañcaka 4",
+    "nt",
+    "Saṃyutta Nikāya 45.134-138 (SN45.134-138); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "✔"
+   ],
+   [
+    "tathāgatasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.139 (SN45.139); lit. discourse on the Such Become",
+    "✔"
+   ],
+   [
+    "padasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.140 (SN45.140); lit. discourse on the footprint",
+    "✔"
+   ],
+   [
+    "kūṭādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 45.141-145 (SN45.141-145); lit. group of five discourses starting with the discourse on the peak",
+    "✔"
+   ],
+   [
+    "candimādisuttatatiyaka",
+    "nt",
+    "Saṃyutta Nikāya 45.146-148 (SN45.146-148); lit. group of three discourses starting with the discourse on the moon",
+    "✔"
+   ],
+   [
+    "bījasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.150 (SN45.150); lit. discourse on the seed",
+    "✔"
+   ],
+   [
+    "nāgasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.151 (SN45.151); lit. discourse on the bull elephant",
+    "✔"
+   ],
+   [
+    "rukkhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.152 (SN45.152); lit. discourse on the tree",
+    "✔"
+   ],
+   [
+    "sūkasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.154 (SN45.154); lit. discourse on the spike",
+    "✔"
+   ],
+   [
+    "ākāsasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.155 (SN45.155); lit. discourse on the sky",
+    "✔"
+   ],
+   [
+    "paṭhamameghasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.156 (SN45.156); lit. first discourse on the rain shower",
+    "✔"
+   ],
+   [
+    "dutiyameghasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.157 (SN45.157); lit. second discourse on the rain shower",
+    "✔"
+   ],
+   [
+    "nāvāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.158 (SN45.158); lit. discourse on the ship",
+    "✔"
+   ],
+   [
+    "āgantukasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.159 (SN45.159); lit. discourse on the guest (house)",
+    "✔"
+   ],
+   [
+    "nadīsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.160 (SN45.160); lit. discourse on the river",
+    "✔"
+   ],
+   [
+    "esanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 45.161 (SN45.161); lit. discourse on seeking",
+    "✔"
+   ],
+   [
+    "vidhāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.162 (SN45.162); lit. discourse on distinction",
+    "✔"
+   ],
+   [
+    "āsavasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.163 (SN45.163); lit. discourse on effluents",
+    "✔"
+   ],
+   [
+    "bhavasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.164 (SN45.164); lit. discourse on states of existence",
+    "✔"
+   ],
+   [
+    "dukkhatāsutta",
+    "nt",
+    "Saṃyutta Nikāya 45.165 (SN45.165); lit. discourse on states of suffering",
+    "✔"
+   ],
+   [
+    "khilasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.166 (SN45.166); lit. discourse on hardness",
+    "✔"
+   ],
+   [
+    "malasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.167 (SN45.167); lit. discourse on impurities",
+    "✔"
+   ],
+   [
+    "nīghasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.168 (SN45.168); lit. discourse on trouble",
+    "✔"
+   ],
+   [
+    "vedanāsutta 3",
+    "nt",
+    "Saṃyutta Nikāya 45.169 (SN45.169); lit. discourse on felt experience",
+    "✔"
+   ],
+   [
+    "taṇhāsutta 5",
+    "nt",
+    "Saṃyutta Nikāya 45.170 (SN45.170); lit. discourse on craving",
+    "✔"
+   ],
+   [
+    "tasināsutta",
+    "nt",
+    "Saṃyutta Nikāya 45.171 (SN45.171); lit. discourse on thirst",
+    "✔"
+   ],
+   [
+    "oghasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.172 (SN45.172); lit. discourse on floods",
+    "✔"
+   ],
+   [
+    "yogasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.173 (SN45.173); lit. discourse on yokes",
+    "✔"
+   ],
+   [
+    "upādānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.174 (SN45.174); lit. discourse on grasping",
+    "✔"
+   ],
+   [
+    "ganthasutta",
+    "nt",
+    "Saṃyutta Nikāya 45.175 (SN45.175); lit. discourse on knots",
+    "✔"
+   ],
+   [
+    "anusayasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.176 (SN45.176); lit. discourse on underlying tendencies",
+    "✔"
+   ],
+   [
+    "kāmaguṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 45.177 (SN45.177); lit. discourse on sensual pleasure",
+    "✔"
+   ],
+   [
+    "nīvaraṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.178 (SN45.178); lit. discourse on obstacles",
+    "✔"
+   ],
+   [
+    "upādānakkhandhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.179 (SN45.179); lit. discourse on aggregates that are clung to",
+    "✔"
+   ],
+   [
+    "orambhāgiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.180 (SN45.180); lit. discourse on lower (fetters)",
+    "✔"
+   ],
+   [
+    "uddhambhāgiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 45.181 (SN45.181); lit. discourse on the higher (fetters)",
+    "✔"
+   ],
+   [
+    "pāraṃgama",
+    "adj",
+    "in reference to SN45.34 Pāraṅgamasutta; lit. going to the other shore",
+    "✔"
+   ]
+  ],
+  "count": 113
+ },
+ "suttas of Saṃyutta Nikāya 9": {
+  "data": [
+   [
+    "vivekasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.1 (SN9.1); lit. discourse on seclusion",
+    "✔"
+   ],
+   [
+    "upaṭṭhānasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.2 (SN9.2); lit. discourse on standing near",
+    "✔"
+   ],
+   [
+    "kassapagottasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.3 (SN9.3); lit. discourse with Kassapagotta",
+    "✔"
+   ],
+   [
+    "sambahulasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 9.4 (SN9.4); lit. discourse on many",
+    "✔"
+   ],
+   [
+    "ānandasutta 02",
+    "nt",
+    "Saṃyutta Nikāya 9.5 (SN9.5); lit. discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "anuruddhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 9.6 (SN9.6); lit. discourse with Anuruddha",
+    "✔"
+   ],
+   [
+    "nāgadattasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.7 (SN9.7); lit. discourse with Nāgadatta",
+    "✔"
+   ],
+   [
+    "kulagharaṇīsutta",
+    "nt",
+    "Saṃyutta Nikāya 9.8 (SN9.8); lit. discourse on the housewife",
+    "✔"
+   ],
+   [
+    "vajjiputtasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 9.9 (SN9.9); lit. disourse with the young Vajjian",
+    "✔"
+   ],
+   [
+    "sajjhāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.10 (SN9.10); lit. discourse on recitation",
+    "✔"
+   ],
+   [
+    "akusalavitakkasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.11 (SN9.11); lit. discourse on unwholesome thoughts",
+    "✔"
+   ],
+   [
+    "majjhanhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.12 (SN9.12); lit. discourse about midday",
+    "✔"
+   ],
+   [
+    "pākatindriyasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.13 (SN9.13); lit. discourse on having a vulgar faculties",
+    "✔"
+   ],
+   [
+    "gandhatthenasutta",
+    "nt",
+    "Saṃyutta Nikāya 9.14 (SN9.14); lit. discourse on the scent thief",
+    "✔"
+   ],
+   [
+    "majjhanhikāla",
+    "masc",
+    "in reference to SN9.12 Majjhanhikasutta; lit. midday time",
+    "✔"
+   ],
+   [
+    "padumapuppha 2",
+    "nt",
+    "in reference to SN9.14 Gandhatthenasutta; lit. lotus flower",
+    "✔"
+   ]
+  ],
+  "count": 16
+ },
+ "suttas of Saṃyutta Nikāya 37": {
+  "data": [
+   [
+    "mātugāmasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 37.1 (SN37.1); lit. discourse on a woman",
+    "✔"
+   ],
+   [
+    "purisasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 37.2 (SN37.2); lit. discourse on men",
+    "✔"
+   ],
+   [
+    "āveṇikadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.3 (SN37.3); lit. discourse on specific suffering",
+    "✔"
+   ],
+   [
+    "tīhidhammehisutta",
+    "nt",
+    "Saṃyutta Nikāya 37.4 (SN37.4); lit. discourse on with three qualities",
+    "✔"
+   ],
+   [
+    "kodhanasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.5 (SN37.5); lit. discourse on anger",
+    "✔"
+   ],
+   [
+    "upanāhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.6 (SN37.6); lit. discourse on bearing a grudge",
+    "✔"
+   ],
+   [
+    "issukīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.7 (SN37.7); lit. discourse on jealous",
+    "✔"
+   ],
+   [
+    "maccharīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.8 (SN37.8); lit. discourse on stingy",
+    "✔"
+   ],
+   [
+    "aticārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.9 (SN37.9); lit. discourse on committing adultery",
+    "✔"
+   ],
+   [
+    "dussīlasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 37.10 (SN37.10); lit. discourse on immoral",
+    "✔"
+   ],
+   [
+    "appassutasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.11 (SN37.11); lit. discourse on uneducated",
+    "✔"
+   ],
+   [
+    "kusītasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.12 (SN37.12); lit. discourse on lazy",
+    "✔"
+   ],
+   [
+    "muṭṭhassatisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.13 (SN37.13); lit. discourse on unmindful",
+    "✔"
+   ],
+   [
+    "pañcaverasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.14 (SN37.14); lit. discourse on the five enmities",
+    "✔"
+   ],
+   [
+    "akkodhanasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.15 (SN37.15); lit. discourse on without anger",
+    "✔"
+   ],
+   [
+    "anupanāhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.16 (SN37.16); lit. discourse on not bearing a grudge",
+    "✔"
+   ],
+   [
+    "anissukīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.17 (SN37.17); lit. discourse on not envious",
+    "✔"
+   ],
+   [
+    "amaccharīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.18 (SN37.18); lit. discourse on not stingy",
+    "✔"
+   ],
+   [
+    "anaticārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.19 (SN37.19); lit. discourse on not committing adultery",
+    "✔"
+   ],
+   [
+    "susīlasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.20 (SN37.20); lit. discourse on virtuous",
+    "✔"
+   ],
+   [
+    "bahussutasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.21 (SN37.21); lit. discourse on well educated",
+    "✔"
+   ],
+   [
+    "āraddhavīriyasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.22 (SN37.22); lit. discourse on energetic",
+    "✔"
+   ],
+   [
+    "upaṭṭhitassatisutta",
+    "nt",
+    "Saṃyutta Nikāya 37.23 (SN37.23); lit. discourse on attending mindfully",
+    "✔"
+   ],
+   [
+    "pañcasīlasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.24 (SN37.24); lit. discourse on the five precepts",
+    "✔"
+   ],
+   [
+    "visāradasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.25 (SN37.25); lit. discourse on confident",
+    "✔"
+   ],
+   [
+    "pasayhasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.26 (SN37.26); lit. discourse on overcoming",
+    "✔"
+   ],
+   [
+    "abhibhuyyasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.27 (SN37.27); lit. discourse on conquering",
+    "✔"
+   ],
+   [
+    "ekasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 37.28 (SN37.28); lit. discourse on one (thing)",
+    "✔"
+   ],
+   [
+    "aṅgasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.29 (SN37.29); lit. discourse on factors",
+    "✔"
+   ],
+   [
+    "nāsentisutta",
+    "nt",
+    "Saṃyutta Nikāya 37.30 (SN37.30); lit. discourse on they drive away",
+    "✔"
+   ],
+   [
+    "hetusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 37.31 (SN37.31); lit. discourse on cause",
+    "✔"
+   ],
+   [
+    "ṭhānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 37.32 (SN37.32); lit. discourse on conditions",
+    "✔"
+   ],
+   [
+    "pañcasīlavisāradasutta",
+    "nt",
+    "Saṃyutta Nikāya 37.33 (SN37.33); lit. discourse on five precepts and self-confidence",
+    "✔"
+   ],
+   [
+    "vaḍḍhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 37.34 (SN37.34); lit. discourse on growth",
+    "✔"
+   ],
+   [
+    "pañcavera",
+    "nt",
+    "in reference to SN37.14 Pañcaverasutta; lit. five hatreds",
+    "✔"
+   ],
+   [
+    "vaḍḍhi 7",
+    "masc",
+    "in reference to SN37.34 Vaḍḍhīsutta; lit. increase",
+    "✔"
+   ]
+  ],
+  "count": 36
+ },
+ "suttas of Saṃyutta Nikāya 11": {
+  "data": [
+   [
+    "suvīrasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.1 (SN11.1); lit. discourse with Suvīra",
+    "✔"
+   ],
+   [
+    "susīmasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.2 (SN11.2); lit. discourse with Susīma",
+    "✔"
+   ],
+   [
+    "dhajaggasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.3 (SN11.3); lit. discourse on the crest of a banner",
+    "✔"
+   ],
+   [
+    "vepacittisutta",
+    "nt",
+    "Saṃyutta Nikāya 11.4 (SN11.4); lit. discourse about Vepacitti",
+    "✔"
+   ],
+   [
+    "subhāsitajayasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.5 (SN11.5); lit. discourse on victory by eloquence",
+    "✔"
+   ],
+   [
+    "kulāvakasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.6 (SN11.6); lit. discourse on the nest",
+    "✔"
+   ],
+   [
+    "nadubbhiyasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.7 (SN11.7); lit. discourse on not betraying",
+    "✔"
+   ],
+   [
+    "verocanaasurindasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.8 (SN11.8)",
+    "✔"
+   ],
+   [
+    "araññāyatanaisisutta",
+    "nt",
+    "Saṃyutta Nikāya 11.9 (SN11.9); lit. discourse on seers in the wilderness area",
+    "✔"
+   ],
+   [
+    "samuddakasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.10 (SN11.10); lit. discourse on the ocean",
+    "✔"
+   ],
+   [
+    "vatapadasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.11 (SN11.11); lit. discourse on religious practice",
+    "✔"
+   ],
+   [
+    "sakkanāmasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 11.12 (SN11.12); lit. discourse on Sakka's names",
+    "✔"
+   ],
+   [
+    "mahālisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 11.13 (SN11.13); lit. discourse about Mahāli",
+    "✔"
+   ],
+   [
+    "daliddasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 11.14 (SN11.14); lit. discourse on the poor man",
+    "✔"
+   ],
+   [
+    "rāmaṇeyyakasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.15 (SN11.15); lit. discourse on delightful",
+    "✔"
+   ],
+   [
+    "yajamānasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.16 (SN11.16); lit. discourse on sacrificing",
+    "✔"
+   ],
+   [
+    "buddhavandanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 11.17 (SN11.17); lit. discourse on venerating the Buddha",
+    "✔"
+   ],
+   [
+    "gahaṭṭhavandanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 11.18 (SN11.18); lit. discourse on venerating laypeople",
+    "✔"
+   ],
+   [
+    "satthāravandanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 11.19 (SN11.19); lit. discourse on venerating the teacher",
+    "✔"
+   ],
+   [
+    "saṅghavandanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 11.20 (SN11.20); lit. discourse on venerating the community",
+    "✔"
+   ],
+   [
+    "chetvāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 11.21 (SN11.21); lit. discourse on having cut",
+    "✔"
+   ],
+   [
+    "dubbaṇṇiyasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.22 (SN11.22); lit. discourse on ugly",
+    "✔"
+   ],
+   [
+    "sambarimāyāsutta",
+    "nt",
+    "Saṃyutta Nikāya 11.23 (SN11.23); lit. discourse about the Sambara sorcery",
+    "✔"
+   ],
+   [
+    "accayasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 11.24 (SN11.24); lit. discourse on transgression",
+    "✔"
+   ],
+   [
+    "akkodhasutta",
+    "nt",
+    "Saṃyutta Nikāya 11.25 (SN11.25); lit. discourse on the absence of anger",
+    "✔"
+   ],
+   [
+    "rāmaṇeyyaka 4",
+    "adj",
+    "in reference to SN11.15 Rāmaṇeyyakasutta; lit. to cause to be pleased",
+    "✔"
+   ]
+  ],
+  "count": 26
  },
  "names of Brahmans": {
   "data": [
@@ -8828,7 +10791,13 @@ var family_set_json = {
     "akkosakabhāradvāja",
     "masc",
     "name of a Brahman; one of three brothers; lit. insulter Bhāradvāja",
-    "◑"
+    "✔"
+   ],
+   [
+    "aggikabhāradvāja",
+    "masc",
+    "name of a Brahman, and later arahant monk",
+    "✔"
    ],
    [
     "aggidatta",
@@ -8841,6 +10810,12 @@ var family_set_json = {
     "masc",
     "name of young Brahman; lit. from Bengal; (or) having limbs",
     "✔"
+   ],
+   [
+    "aṅgaṇikabhāradvāja",
+    "masc",
+    "name of an arahant monk; lit. Bharadvāja from Bengal",
+    "◑"
    ],
    [
     "aṅgīrasa 2",
@@ -8876,12 +10851,18 @@ var family_set_json = {
     "asurindakabhāradvāja",
     "masc",
     "name of a Brahman; one of three brothers; lit. lord of the demons Bhāradvāja",
-    "◑"
+    "✔"
    ],
    [
     "assalāyana",
     "masc",
     "name of a young Brahman",
+    "✔"
+   ],
+   [
+    "ahiṃsakabhāradvāja",
+    "masc",
+    "name of Brahman, and later an arahant monk; lit. harmless Bhāradvāja",
     "✔"
    ],
    [
@@ -8899,8 +10880,8 @@ var family_set_json = {
    [
     "uṇṇābha",
     "masc",
-    "name of a Brahman; lit. woolly brow",
-    "◑"
+    "name of a Brahman; lit. woolly brow; (or) spider",
+    "✔"
    ],
    [
     "uttara 2.04",
@@ -8954,13 +10935,13 @@ var family_set_json = {
     "kasikabhāradvāja",
     "masc",
     "name of a Brahman; lit. farmer Bhāradvāja",
-    "◑"
+    "✔"
    ],
    [
     "kasibhāradvāja",
     "masc",
     "name of a Brahman; lit. farmer Bhāradvāja",
-    "◑"
+    "✔"
    ],
    [
     "kassapa 4",
@@ -8999,6 +10980,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "khaṇḍahāla",
+    "masc",
+    "name of a Brahman in a Jātaka story; former birth of Devadatta",
+    "✔"
+   ],
+   [
     "gaṇakamoggallāna",
     "masc",
     "name of a Brahman accountant; lit. Moggallāna the counter",
@@ -9017,13 +11004,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ghoṭamukha",
+    "ghoṭamukha 1",
     "masc",
     "name of a Brahman; lit. horse face; (or) goatee",
     "✔"
    ],
    [
-    "caṅkī",
+    "caṅkī 1",
     "masc",
     "name of a Brahman",
     "✔"
@@ -9032,7 +11019,7 @@ var family_set_json = {
     "jaṭābhāradvāja",
     "masc",
     "name of a Brahman; lit. dreadlocked Bhāradvāja",
-    "◑"
+    "✔"
    ],
    [
     "jatukaṇṇī 2",
@@ -9045,12 +11032,6 @@ var family_set_json = {
     "masc",
     "name of a rich Brahman",
     "✔"
-   ],
-   [
-    "jāṇusoṇī",
-    "masc",
-    "name of a rich Brahman",
-    "◑"
    ],
    [
     "jāṇussoṇi",
@@ -9101,6 +11082,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "tissabhāradvāja",
+    "nt",
+    "names of Kassapa Buddha's pair of chief disciples; Tissa and Bhāradvāja",
+    "✔"
+   ],
+   [
     "tissametteyya",
     "masc",
     "name of a Brahman ascetic",
@@ -9122,7 +11109,7 @@ var family_set_json = {
     "devahita",
     "masc",
     "name of a Brahman; lit. benefactor of the gods",
-    "◑"
+    "✔"
    ],
    [
     "doṇa 2",
@@ -9131,7 +11118,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dhanañjāni",
+    "dhanañjāni 1",
     "masc",
     "name of a Brahman; lit. depriving wealth",
     "✔"
@@ -9157,8 +11144,8 @@ var family_set_json = {
    [
     "navakammikabhāradvāja",
     "masc",
-    "name of a Brahman; lit. related to building Bhāradvāja",
-    "◑"
+    "name of a Brahman; lit. Bhāradvāja the builder",
+    "✔"
    ],
    [
     "nāḷijaṅgha",
@@ -9176,12 +11163,18 @@ var family_set_json = {
     "pārāsiviya",
     "masc",
     "name of a Brahman teacher",
-    "◑"
+    "✔"
    ],
    [
-    "piṅgalakoccha",
+    "piṅgalakoccha 1",
     "masc",
     "name of a Brahman; lit. copper brush",
+    "✔"
+   ],
+   [
+    "piṅgalakoccha 2",
+    "masc",
+    "in reference to MN30 Cūḷasāropamasutta; lit. copper brush",
     "✔"
    ],
    [
@@ -9189,6 +11182,12 @@ var family_set_json = {
     "masc",
     "name of a Brahman",
     "◑"
+   ],
+   [
+    "piṇḍolabhāradvāja",
+    "masc",
+    "name of an arahant monk; lit. almsman Bhāradvāja",
+    "✔"
    ],
    [
     "puṇṇaka 2",
@@ -9211,29 +11210,29 @@ var family_set_json = {
    [
     "bāvarī",
     "masc",
-    "name of a Brahman ascetic",
+    "name of a Brahman ascetic; teacher of the sixteen ascetic in Pārāyanavagga",
     "✔"
    ],
    [
     "bilaṅgika 1",
     "masc",
     "name of a Brahman; one of three brothers; lit. related to sour gruel",
-    "◑"
+    "✔"
    ],
    [
     "bilaṅgikabhāradvāja",
     "masc",
     "name of a Brahman; one of three brothers; lit. vinegar Bhāradvāja",
-    "◑"
+    "✔"
    ],
    [
     "brahmadatta 2",
     "masc",
-    "name of Kassapa Buddha's father; lit. given to god; (or) protected by god",
+    "name of Kassapa Buddha's father; lit. given by god; (or) protected by god",
     "✔"
    ],
    [
-    "brahmāyu",
+    "brahmāyu 1",
     "masc",
     "name of a Brahman; lit. living as long as Brahma",
     "✔"
@@ -9259,19 +11258,31 @@ var family_set_json = {
    [
     "bhāradvāja 2",
     "masc",
-    "name of a Vedic sage",
+    "name of a Vedic sage; lit. descended from Bharadvāja",
     "✔"
    ],
    [
     "bhāradvāja 3",
     "masc",
-    "name of a young Brahman",
+    "name of a young Brahman; lit. descended from Bharadvāja",
+    "✔"
+   ],
+   [
+    "bhāradvāja 5",
+    "masc",
+    "name of an arahant monk; lit. descended from Bharadvāja",
     "✔"
    ],
    [
     "mantāṇī",
     "fem",
     "name of a Brahman woman; mother of Aṅgulimāla",
+    "✔"
+   ],
+   [
+    "mānatthaddha 3",
+    "masc",
+    "name of a Brahman; lit. stiff with conceit",
     "✔"
    ],
    [
@@ -9377,7 +11388,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vessāmitta",
+    "vessāmitta 1",
     "masc",
     "name of a Vedic sage",
     "✔"
@@ -9416,7 +11427,7 @@ var family_set_json = {
     "suddhikabhāradvāja",
     "masc",
     "name of a Brahman; lit. pure Bhāradvāja",
-    "◑"
+    "✔"
    ],
    [
     "sunidhavassakārā",
@@ -9443,9 +11454,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sela 5",
+    "sela 4",
     "masc",
-    "name of a Brahman teacher; lit. rock",
+    "name of a Brahman teacher; name of an arahant monk; lit. rock",
     "✔"
    ],
    [
@@ -9473,7 +11484,150 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 108
+  "count": 116
+ },
+ "suttas of Saṃyutta Nikāya 7": {
+  "data": [
+   [
+    "dhanañjānīsutta",
+    "nt",
+    "Saṃyutta Nikāya 7.1 (SN7.1); lit. discourse with Dhanañjānī",
+    "✔"
+   ],
+   [
+    "akkosasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.2 (SN7.2); lit. discourse on abuse",
+    "✔"
+   ],
+   [
+    "asurindakasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.3 (SN7.3); lit. discourse with Asurindaka",
+    "✔"
+   ],
+   [
+    "bilaṅgikasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.4 (SN7.4); lit. discourse with Bilaṅgika",
+    "✔"
+   ],
+   [
+    "ahiṃsakasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.5 (SN7.5); lit. discourse with Harmless",
+    "✔"
+   ],
+   [
+    "jaṭāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 7.6 (SN7.6); lit. discourse on the tangle",
+    "✔"
+   ],
+   [
+    "suddhikasutta 01",
+    "nt",
+    "Saṃyutta Nikāya 7.7 (SN7.7); lit. discourse with Suddhika",
+    "✔"
+   ],
+   [
+    "aggikasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.8 (SN7.8); lit. discourse with Aggika",
+    "✔"
+   ],
+   [
+    "sundarikasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.9 (SN7.9); lit. discourse with Sundarika",
+    "✔"
+   ],
+   [
+    "bahudhītarasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.10 (SN7.10); lit. discourse on many daughters",
+    "✔"
+   ],
+   [
+    "kasibhāradvājasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 7.11 (SN7.11); lit. discourse with Farmer Bharadvaja",
+    "✔"
+   ],
+   [
+    "udayasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.12 (SN7.12); lit. discourse with Udaya",
+    "✔"
+   ],
+   [
+    "devahitasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.13 (SN7.13); lit. discourse with Devahita",
+    "✔"
+   ],
+   [
+    "mahāsālasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.14 (SN7.14); lit. discourse on very rich",
+    "✔"
+   ],
+   [
+    "mānatthaddhasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.15 (SN7.15); lit. discourse on with Mānatthaddha",
+    "✔"
+   ],
+   [
+    "paccanīkasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.16 (SN7.16); lit. discourse about contradiction",
+    "✔"
+   ],
+   [
+    "navakammikasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.17 (SN7.17); lit. discourse with Builder",
+    "✔"
+   ],
+   [
+    "kaṭṭhahārasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.18 (SN7.18); lit. discourse on gathering wood",
+    "✔"
+   ],
+   [
+    "mātuposakasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.19 (SN7.19); lit. discourse on supporting one's mother",
+    "✔"
+   ],
+   [
+    "bhikkhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.20 (SN7.20); lit. discourse on the beggar",
+    "✔"
+   ],
+   [
+    "saṅgāravasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 7.21 (SN7.21); lit. discourse with Saṅgārava",
+    "✔"
+   ],
+   [
+    "khomadussasutta",
+    "nt",
+    "Saṃyutta Nikāya 7.22 (SN7.22); lit. discourse at Khomadussa",
+    "✔"
+   ],
+   [
+    "bahudhītara",
+    "adj",
+    "in reference to SN7.10 Bahudhītarasutta; lit. having many daughters",
+    "✔"
+   ]
+  ],
+  "count": 23
  },
  "bodyparts": {
   "data": [
@@ -9511,6 +11665,12 @@ var family_set_json = {
     "agganakha",
     "masc",
     "tip of a nail; nail-tip",
+    "✔"
+   ],
+   [
+    "aṅka 2",
+    "masc",
+    "hip",
     "✔"
    ],
    [
@@ -9568,6 +11728,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "aṭṭhiṃmiñja",
+    "nt",
+    "bone marrow",
+    "✔"
+   ],
+   [
     "adduva",
     "masc",
     "knee; knee-cap",
@@ -9583,6 +11749,12 @@ var family_set_json = {
     "aṃsaṭṭhika",
     "nt",
     "shoulder blade",
+    "✔"
+   ],
+   [
+    "ucchaṅga 2",
+    "masc",
+    "lap",
     "✔"
    ],
    [
@@ -9606,7 +11778,7 @@ var family_set_json = {
    [
     "udara 1.1",
     "nt",
-    "stomach; belly",
+    "stomach; belly; lit. breaking up",
     "✔"
    ],
    [
@@ -9628,8 +11800,14 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ūru",
+    "ūru 1",
     "masc",
+    "thigh",
+    "✔"
+   ],
+   [
+    "ūru 2",
+    "fem",
     "thigh",
     "✔"
    ],
@@ -9715,7 +11893,7 @@ var family_set_json = {
     "kucchi 4",
     "fem",
     "stomach; belly",
-    "◑"
+    "✔"
    ],
    [
     "kucchi 5",
@@ -9754,7 +11932,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "koṭṭa",
+    "koṭṭa 1",
     "nt",
     "shoulder",
     "◑"
@@ -9768,7 +11946,7 @@ var family_set_json = {
    [
     "khandha 2",
     "masc",
-    "shoulder; back",
+    "shoulder; back; lit. accumulation",
     "✔"
    ],
    [
@@ -9924,24 +12102,30 @@ var family_set_json = {
    [
     "taca 1",
     "masc",
-    "(of a humna) skin",
-    "✔"
-   ],
-   [
-    "tala 1",
-    "nt",
-    "(of the hand) palm",
+    "(of a human) skin",
     "✔"
    ],
    [
     "tala 2",
     "nt",
-    "(of the foot) sole",
+    "(of the hand) palm; lit. flat",
+    "✔"
+   ],
+   [
+    "tala 3",
+    "nt",
+    "(of the foot) sole; lit. flat",
     "✔"
    ],
    [
     "thana 2",
     "nt",
+    "(of a woman) breast; breasts",
+    "✔"
+   ],
+   [
+    "thana 3",
+    "masc",
     "(of a woman) breast; breasts",
     "✔"
    ],
@@ -10140,7 +12324,7 @@ var family_set_json = {
    [
     "bāhā 1",
     "fem",
-    "arm; forearm",
+    "arm",
     "✔"
    ],
    [
@@ -10252,6 +12436,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sugatta",
+    "adj",
+    "with an elegant body; with a graceful figure; lit. good limbs",
+    "✔"
+   ],
+   [
     "soṇī 2.1",
     "fem",
     "hips; waist; buttocks",
@@ -10306,7 +12496,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 138
+  "count": 144
  },
  "types of monastics": {
   "data": [
@@ -10320,6 +12510,12 @@ var family_set_json = {
     "aṭṭhakathācariya",
     "masc",
     "commentator; lit. commentary teacher",
+    "✔"
+   ],
+   [
+    "āraññaka 2",
+    "masc",
+    "forest monk; forest dwelling ascetic; lit. related to the forest",
     "✔"
    ],
    [
@@ -10373,7 +12569,7 @@ var family_set_json = {
    [
     "ovādaka 1",
     "masc",
-    "advisor; teacher; instructor; encourager",
+    "advisor; teacher; instructor; encourager; lit. who speaks down",
     "✔"
    ],
    [
@@ -10386,6 +12582,12 @@ var family_set_json = {
     "gaṇī",
     "masc",
     "leader of a group; lit. one with a following",
+    "✔"
+   ],
+   [
+    "ganthika",
+    "masc",
+    "bookish monk; who memorizes texts; lit. related to what is tied",
     "✔"
    ],
    [
@@ -10535,11 +12737,11 @@ var family_set_json = {
    [
     "senāsanapaññāpaka",
     "masc",
-    "manager of lodgings; housing appointer; who assigns dwellings",
+    "accommodation manager; who assigns lodgings",
     "✔"
    ]
   ],
-  "count": 38
+  "count": 40
  },
  "occupations": {
   "data": [
@@ -10610,6 +12812,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "annabhāranesādā",
+    "masc",
+    "beggars and fowlers",
+    "✔"
+   ],
+   [
     "amacca 1",
     "masc",
     "colleague; co-worker; associate",
@@ -10646,15 +12854,33 @@ var family_set_json = {
     "✔"
    ],
    [
-    "assāroha 2",
+    "assāroha 1",
     "masc",
     "cavalryman; mounted soldier; lit. horse mounted",
+    "✔"
+   ],
+   [
+    "ahituṇḍika",
+    "masc",
+    "snake catcher; snake charmer; lit. (who plays with a) snake's mouth",
     "✔"
    ],
    [
     "āpādaka",
     "masc",
     "guardian; protector; child-carer",
+    "✔"
+   ],
+   [
+    "āpādikā",
+    "fem",
+    "nurturer; foster mother; who raises a child; lit. causes to go here",
+    "✔"
+   ],
+   [
+    "āpādetar 1",
+    "masc",
+    "who raises a child; who brings up; caregiver (of)",
     "✔"
    ],
    [
@@ -10678,19 +12904,37 @@ var family_set_json = {
    [
     "āruha 1",
     "masc",
-    "rider; driver; lit. ascender",
+    "rider; driver; lit. ascender here",
     "✔"
    ],
    [
     "āroha 1",
     "masc",
-    "rider; driver; lit. ascending",
+    "rider; driver; lit. ascending here",
     "✔"
    ],
    [
     "āḷārika",
     "masc",
     "cook; chef; baker",
+    "✔"
+   ],
+   [
+    "ikkhaṇikā",
+    "fem",
+    "female fortune-teller; lit. seeing woman",
+    "✔"
+   ],
+   [
+    "ikkhaṇitthikā",
+    "fem",
+    "fortune teller; lit. seeing woman",
+    "✔"
+   ],
+   [
+    "iṇāyika 1",
+    "masc",
+    "creditor",
     "✔"
    ],
    [
@@ -10712,15 +12956,27 @@ var family_set_json = {
     "✔"
    ],
    [
+    "īsa",
+    "masc",
+    "lord; ruler; master",
+    "✔"
+   ],
+   [
     "īsī",
     "fem",
     "queen; female ruler",
     "✔"
    ],
    [
-    "ugga 5",
+    "ugga 2.4",
     "masc",
-    "royal; aristocrat; nobleman; lit. going up",
+    "warrior chief",
+    "✔"
+   ],
+   [
+    "udahāra",
+    "masc",
+    "water collector; water-carrier; who draws water",
     "✔"
    ],
    [
@@ -10772,6 +13028,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "kaṭṭhahāra",
+    "masc",
+    "wood collector; who gathers firewood",
+    "✔"
+   ],
+   [
     "kaṭṭhahāraka",
     "masc",
     "wood gatherer",
@@ -10786,19 +13048,19 @@ var family_set_json = {
    [
     "kasi 1",
     "fem",
-    "farming; agriculture; lit. ploughing",
+    "farming; agriculture; lit. dragged",
     "✔"
    ],
    [
     "kasī",
     "fem",
-    "ploughing; farming; agriculture",
+    "ploughing; farming; agriculture; lit. dragging",
     "✔"
    ],
    [
     "kassaka",
     "masc",
-    "farmer; ploughman",
+    "farmer; ploughman; lit. dragger",
     "✔"
    ],
    [
@@ -10816,13 +13078,19 @@ var family_set_json = {
    [
     "kāraṇika",
     "masc",
-    "torturer; lit. causing to do",
-    "◑"
+    "torturer; executioner; lit. causing to do",
+    "✔"
    ],
    [
     "kumbhathūṇika",
     "masc",
     "drummer; player of the kumbha drum",
+    "✔"
+   ],
+   [
+    "kūṭaka",
+    "masc",
+    "cheat; swindler; defrauder; lit. who is crooked",
     "✔"
    ],
    [
@@ -10841,6 +13109,12 @@ var family_set_json = {
     "khattar 1",
     "masc",
     "steward; manager; chamberlain",
+    "✔"
+   ],
+   [
+    "khīranika",
+    "masc",
+    "milker; dairy farmer",
     "✔"
    ],
    [
@@ -10877,6 +13151,12 @@ var family_set_json = {
     "gahakāraka",
     "masc",
     "house builder; mason; carpenter",
+    "✔"
+   ],
+   [
+    "gāmaghāta 2",
+    "masc",
+    "village raider; village looter; village plunderer",
     "✔"
    ],
    [
@@ -10919,6 +13199,12 @@ var family_set_json = {
     "gopālaka",
     "masc",
     "young cowherd; young cowboy",
+    "✔"
+   ],
+   [
+    "gopikā 2",
+    "fem",
+    "female guard; warden; watch-woman",
     "✔"
    ],
    [
@@ -11024,6 +13310,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "cheta",
+    "masc",
+    "hunter; (comm) deer hunter; lit. cutter",
+    "✔"
+   ],
+   [
+    "jaggaka",
+    "masc",
+    "caretaker; who looks after",
+    "✔"
+   ],
+   [
     "jūtakara",
     "masc",
     "gambler; lit. making gambling",
@@ -11033,6 +13331,12 @@ var family_set_json = {
     "ḍāhaka",
     "masc",
     "burner; cremator; who sets on fire",
+    "✔"
+   ],
+   [
+    "ḍāhikā",
+    "fem",
+    "(female) burner; cremator; who sets on fire",
     "✔"
    ],
    [
@@ -11060,6 +13364,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "thapati 1",
+    "masc",
+    "carpenter; master builder; architect",
+    "✔"
+   ],
+   [
+    "thapati 2",
+    "masc",
+    "official; supervisor; governor; commissioner; lit. master of the place",
+    "◑"
+   ],
+   [
     "thena",
     "masc",
     "thief; robber",
@@ -11084,6 +13400,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "duṭṭhabrāhmaṇa",
+    "masc",
+    "corrupt Brahman; evil priest",
+    "✔"
+   ],
+   [
     "dūtakamma",
     "nt",
     "occupation of a messenger",
@@ -11099,6 +13421,12 @@ var family_set_json = {
     "dovārika",
     "masc",
     "doorman; gatekeeper; bouncer",
+    "✔"
+   ],
+   [
+    "dvārapāla",
+    "masc",
+    "doorkeeper; gatekeeper; bouncer; lit. door protector",
     "✔"
    ],
    [
@@ -11126,6 +13454,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nagaraghāta 2",
+    "masc",
+    "city raider; town looter; town plunderer",
+    "✔"
+   ],
+   [
     "nagarasobhinī",
     "fem",
     "town courtesan; prostitute",
@@ -11136,6 +13470,12 @@ var family_set_json = {
     "fem",
     "dancing girl; actress",
     "✔"
+   ],
+   [
+    "navakammika 3",
+    "masc",
+    "builder; construction engineer",
+    "◑"
    ],
    [
     "nahāpaka",
@@ -11174,6 +13514,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nigamaghāta 2",
+    "masc",
+    "town raider; market town looter; town plunderer",
+    "✔"
+   ],
+   [
+    "nekatika 1",
+    "masc",
+    "fraudster; cheat; swindler; counterfeiter",
+    "✔"
+   ],
+   [
     "nettika 2",
     "masc",
     "irrigator; lit. who leads",
@@ -11189,6 +13541,12 @@ var family_set_json = {
     "nevāpika",
     "masc",
     "baiter; catcher; trapper; lit. who throws down",
+    "✔"
+   ],
+   [
+    "nesāda",
+    "masc",
+    "hunter; fisherman; fowler",
     "✔"
    ],
    [
@@ -11224,7 +13582,7 @@ var family_set_json = {
    [
     "paññāpaka",
     "masc",
-    "manager (of); assigner (of); appointer; lit. who causes to know",
+    "manager; assigner (of); appointer; lit. who causes to know",
     "✔"
    ],
    [
@@ -11254,7 +13612,7 @@ var family_set_json = {
    [
     "paricārikā",
     "fem",
-    "personal attendant; handmaiden",
+    "personal attendant; handmaiden; lit. who walks around",
     "✔"
    ],
    [
@@ -11278,7 +13636,7 @@ var family_set_json = {
    [
     "pavesetar",
     "masc",
-    "who allows to enter; bouncer; doorman; gatekeeper; lit. who causes to enter",
+    "who allows to enter; bouncer; doorman; gatekeeper; lit. who causes to enter forward",
     "✔"
    ],
    [
@@ -11297,6 +13655,12 @@ var family_set_json = {
     "paṃsudhovakantevāsī",
     "masc",
     "dirt washer's apprentice; dirt cleaner's assistant",
+    "✔"
+   ],
+   [
+    "pāripanthika 1",
+    "masc",
+    "highwayman; hijacker",
     "✔"
    ],
    [
@@ -11330,7 +13694,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "piṇḍadāyaka 2",
+    "piṇḍadāyaka 1",
     "masc",
     "mess cook; miltary chef; (comm) (or) assault troop; shock troop; lit. lump giver",
     "✔"
@@ -11372,10 +13736,10 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pesaka 2",
+    "pesaka 1",
     "masc",
     "supervisor; organizer; arranger; lit. who sends",
-    "◑"
+    "✔"
    ],
    [
     "pesakāra",
@@ -11411,6 +13775,12 @@ var family_set_json = {
     "posaka 3",
     "masc",
     "raiser; breeder; keeper; who rears",
+    "✔"
+   ],
+   [
+    "posikā",
+    "fem",
+    "caregiver; nurse; nurturer; lit. who causes to take care",
     "✔"
    ],
    [
@@ -11450,9 +13820,15 @@ var family_set_json = {
     "✔"
    ],
    [
+    "bhaṭa 2",
+    "masc",
+    "soldier; police-officer; trooper; lit. supported",
+    "✔"
+   ],
+   [
     "bhaṭaka",
     "masc",
-    "hired worker; wage labourer",
+    "hired worker; wage labourer; lit. who is supported",
     "◑"
    ],
    [
@@ -11464,7 +13840,7 @@ var family_set_json = {
    [
     "bhataka",
     "masc",
-    "hired worker; wage labourer",
+    "hired worker; wage labourer; lit. who is supported",
     "✔"
    ],
    [
@@ -11476,7 +13852,7 @@ var family_set_json = {
    [
     "bhārika 2",
     "masc",
-    "porter; who carries goods",
+    "porter; who carries goods; lit. who supports",
     "◑"
    ],
    [
@@ -11516,9 +13892,27 @@ var family_set_json = {
     "✔"
    ],
    [
+    "macchabandha",
+    "masc",
+    "fisherman; lit. fish capture",
+    "✔"
+   ],
+   [
     "macchika",
     "masc",
     "fisherman",
+    "✔"
+   ],
+   [
+    "mantī 1",
+    "masc",
+    "minister; counsellor; advisor; strategist",
+    "✔"
+   ],
+   [
+    "mallī",
+    "fem",
+    "female wrestler; (comm) wife of a wrestler",
     "✔"
    ],
    [
@@ -11549,6 +13943,12 @@ var family_set_json = {
     "māpaka",
     "masc",
     "measurer; lit. who causes to measure",
+    "✔"
+   ],
+   [
+    "māretar",
+    "masc",
+    "murderer; killer; lit. who causes to die",
     "✔"
    ],
    [
@@ -11642,6 +14042,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "rāsivaḍḍhaka 2",
+    "masc",
+    "treasurer; controller of revenues; lit. heap increaser",
+    "✔"
+   ],
+   [
     "rūpūpajīvinī",
     "fem",
     "prostitute; sex worker; lit. living off her body",
@@ -11669,6 +14075,18 @@ var family_set_json = {
     "lekhavācaka",
     "masc",
     "who reads royal orders; lit. letter speaker",
+    "✔"
+   ],
+   [
+    "lekhācariya",
+    "masc",
+    "scribe; writer; author; lit. teacher of writing",
+    "✔"
+   ],
+   [
+    "lokādhipati",
+    "masc",
+    "ruler of the world; lord of the universe; god",
     "✔"
    ],
    [
@@ -11708,6 +14126,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "vinicchayāmacca",
+    "masc",
+    "judge; magistrate; lit. judgement official",
+    "✔"
+   ],
+   [
     "veṇa",
     "masc",
     "basket weaver; bamboo worker",
@@ -11724,6 +14148,12 @@ var family_set_json = {
     "fem",
     "female basket weaver; bamboo worker woman",
     "◑"
+   ],
+   [
+    "saṅkhāyaka",
+    "masc",
+    "counter; teller",
+    "✔"
    ],
    [
     "saṭha 2",
@@ -11750,6 +14180,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sākuṇiya",
+    "masc",
+    "fowler; bird catcher",
+    "✔"
+   ],
+   [
     "sākuntika",
     "masc",
     "fowler; bird-catcher",
@@ -11765,6 +14201,12 @@ var family_set_json = {
     "sārathi 2",
     "masc",
     "(horse or elephant) trainer",
+    "✔"
+   ],
+   [
+    "sārathī",
+    "masc",
+    "charioteer; driver",
     "✔"
    ],
    [
@@ -11798,15 +14240,39 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sūkarika",
+    "masc",
+    "pig farmer; boar hunter; (comm) pig butcher",
+    "✔"
+   ],
+   [
+    "sūta",
+    "masc",
+    "horse master; horseman; charioteer",
+    "✔"
+   ],
+   [
     "seṭṭhi 1.1",
     "masc",
-    "wealthy man; banker; treasurer; business executive; lit. foremost",
+    "wealthy man; distinguished man; man of authority; lit. foremost",
+    "✔"
+   ],
+   [
+    "seṭṭhitta",
+    "nt",
+    "position of treasurer; office of financier; lit. foremost state",
     "✔"
    ],
    [
     "seṭṭhī",
     "masc",
-    "business executive; treasurer; wealthy man; lit. foremost",
+    "wealthy man; distinguished man; man of authority; lit. foremost",
+    "✔"
+   ],
+   [
+    "sokarika",
+    "masc",
+    "pig farmer; boar hunter; pork butcher; pig dealer; lit. related to pigs",
     "✔"
    ],
    [
@@ -11828,7 +14294,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 214
+  "count": 258
  },
  "tastes": {
   "data": [
@@ -11907,13 +14373,550 @@ var family_set_json = {
   ],
   "count": 12
  },
+ "suttas of Saṃyutta Nikāya 36": {
+  "data": [
+   [
+    "samādhisutta 3",
+    "nt",
+    "Saṃyutta Nikāya 36.1 (SN36.1); lit. discourse on mental composure",
+    "✔"
+   ],
+   [
+    "sukhasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.2 (SN36.2); lit. discourse on ease",
+    "✔"
+   ],
+   [
+    "pahānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 36.3 (SN36.3); lit. discourse on abandoning",
+    "✔"
+   ],
+   [
+    "pātālasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.4 (SN36.4); lit. discourse on the abyss",
+    "✔"
+   ],
+   [
+    "daṭṭhabbasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 36.5 (SN36.5); lit. discourse on should be seen",
+    "✔"
+   ],
+   [
+    "sallasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 36.6 (SN36.6); lit. discourse on the arrow",
+    "✔"
+   ],
+   [
+    "paṭhamagelaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.7 (SN36.7); lit. first discourse on sickness",
+    "✔"
+   ],
+   [
+    "dutiyagelaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.8 (SN36.8); lit. second discourse on illness",
+    "✔"
+   ],
+   [
+    "aniccasutta 6",
+    "nt",
+    "Saṃyutta Nikāya 36.9 (SN36.9); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "phassamūlakasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.10 (SN36.10); lit. discourse on rooted in contact",
+    "✔"
+   ],
+   [
+    "rahogatasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.11 (SN36.11); lit. discourse on gone into seclusion",
+    "✔"
+   ],
+   [
+    "paṭhamaākāsasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.12 (SN36.12); lit. first discourse on the sky",
+    "✔"
+   ],
+   [
+    "dutiyaākāsasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.13 (SN36.13); lit. second discourse on the sky",
+    "✔"
+   ],
+   [
+    "agārasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.14 (SN36.14); lit. discourse on the (guest) house",
+    "✔"
+   ],
+   [
+    "paṭhamaānandasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 36.15 (SN36.15); lit. first discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "dutiyaānandasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 36.16 (SN36.16); lit. second discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "paṭhamasambahulasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.17 (SN36.17); lit. first discourse on many",
+    "✔"
+   ],
+   [
+    "dutiyasambahulasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.18 (SN36.18); lit. second discourse on many",
+    "✔"
+   ],
+   [
+    "pañcakaṅgasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.19 (SN36.19); lit. discourse with Pañcakaṅga",
+    "✔"
+   ],
+   [
+    "sīvakasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.21 (SN36.21); lit. discourse with Sīvaka",
+    "✔"
+   ],
+   [
+    "aṭṭhasatasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.22 (SN36.22); lit. discourse on one hundred and eight",
+    "✔"
+   ],
+   [
+    "aññatarabhikkhusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 36.23 (SN36.23); lit. discourse on a certain monk",
+    "✔"
+   ],
+   [
+    "pubbasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 36.24 (SN36.24); lit. discourse on before",
+    "✔"
+   ],
+   [
+    "ñāṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 36.25 (SN36.25); lit. discourse on understanding",
+    "✔"
+   ],
+   [
+    "sambahulabhikkhusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 36.26 (SN36.26); lit. discourse on many monks",
+    "✔"
+   ],
+   [
+    "paṭhamasamaṇabrāhmaṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 36.27 (SN36.27); lit. first discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "nirāmisasutta",
+    "nt",
+    "Saṃyutta Nikāya 36.31 (SN36.31); lit. discourse on not worldly",
+    "✔"
+   ]
+  ],
+  "count": 27
+ },
+ "suttas of the Dīgha Nikāya": {
+  "data": [
+   [
+    "brahmajālasutta",
+    "nt",
+    "Dīgha Nikāya 1 (DN1); lit. discourse on Brahma's net",
+    "✔"
+   ],
+   [
+    "sāmaññaphalasutta",
+    "nt",
+    "Dīgha Nikāya 2 (DN2); lit. discourse on the fruits of monkhood",
+    "✔"
+   ],
+   [
+    "ambaṭṭhasutta",
+    "nt",
+    "Dīgha Nikāya 3 (DN3); lit. discourse with Ambaṭṭha",
+    "✔"
+   ],
+   [
+    "soṇadaṇḍasutta",
+    "nt",
+    "Dīgha Nikāya 4 (DN4); lit. discourse to Soṇadaṇḍa",
+    "✔"
+   ],
+   [
+    "kūṭadantasutta",
+    "nt",
+    "Dīgha Nikāya 5 (DN5); lit. discourse with Kūṭadanta",
+    "✔"
+   ],
+   [
+    "mahālisutta 1",
+    "nt",
+    "Dīgha Nikāya 6 (DN6); lit. disource to Mahāli",
+    "✔"
+   ],
+   [
+    "jāliyasutta",
+    "nt",
+    "Dīgha Nikāya 7 (DN7); lit. discourse to Jāliya",
+    "✔"
+   ],
+   [
+    "mahāsīhanādasutta 1",
+    "nt",
+    "Dīgha Nikāya 8 (DN8); lit. great lion's roar discourse",
+    "✔"
+   ],
+   [
+    "poṭṭhapādasutta",
+    "nt",
+    "Dīgha Nikāya 9 (DN9); lit. discourse to Poṭṭhapāda",
+    "✔"
+   ],
+   [
+    "subhasutta 1",
+    "nt",
+    "Dīgha Nikāya 10 (DN10); lit. discourse with Subha",
+    "✔"
+   ],
+   [
+    "kevaṭṭasutta",
+    "nt",
+    "Dīgha Nikāya 11 (DN11); lit. discourse to Kevaṭṭa",
+    "✔"
+   ],
+   [
+    "lohiccasutta 1",
+    "nt",
+    "Dīgha Nikāya 12 (DN12); lit. discourse to Lohicca",
+    "✔"
+   ],
+   [
+    "tevijjasutta 1",
+    "nt",
+    "Dīgha Nikāya 13 (DN13); lit. discourse about the three knowledges",
+    "✔"
+   ],
+   [
+    "mahāpadānasutta",
+    "nt",
+    "Dīgha Nikāya 14 (DN14); lit. great hagiography discourse",
+    "✔"
+   ],
+   [
+    "mahānidānasutta",
+    "nt",
+    "Dīgha Nikāya 15 (DN15); lit. great origin discourse",
+    "✔"
+   ],
+   [
+    "mahāparinibbānasutta",
+    "nt",
+    "Dīgha Nikāya 16 (DN16); lit. great discourse on final emancipation",
+    "✔"
+   ],
+   [
+    "mahāsudassanasutta",
+    "nt",
+    "Dīgha Nikāya 17 (DN17); lit. discourse about Mahāsudassana",
+    "✔"
+   ],
+   [
+    "janavasabhasutta",
+    "nt",
+    "Dīgha Nikāya 18 (DN18); lit. discourse to Janavasabha",
+    "✔"
+   ],
+   [
+    "mahāgovindasutta",
+    "nt",
+    "Dīgha Nikāya 19 (DN19); lit. discourse about Mahāgovinda",
+    "✔"
+   ],
+   [
+    "mahāsamayasutta",
+    "nt",
+    "Dīgha Nikāya 20 (DN20); lit. discourse on the great gathering",
+    "✔"
+   ],
+   [
+    "sakkapañhasutta 1",
+    "nt",
+    "Dīgha Nikāya 21 (DN21); lit. discourse on Sakka's questions",
+    "✔"
+   ],
+   [
+    "mahāsatipaṭṭhānasutta 1",
+    "nt",
+    "Dīgha Nikāya 22 (DN22); lit. great discourse on attending mindfully",
+    "✔"
+   ],
+   [
+    "pāyāsisutta",
+    "nt",
+    "Dīgha Nikāya 23 (DN23); lit. discourse with Pāyāsi",
+    "✔"
+   ],
+   [
+    "pāthikasutta",
+    "nt",
+    "Dīgha Nikāya 24 (DN24); lit. discourse to Pāthika",
+    "✔"
+   ],
+   [
+    "udumbarikasutta",
+    "nt",
+    "Dīgha Nikāya 25 (DN25); lit. discourse at Udumbarikā",
+    "✔"
+   ],
+   [
+    "cakkavattisutta 1",
+    "nt",
+    "Dīgha Nikāya 26 (DN26); lit. discourse on the wheel turner",
+    "✔"
+   ],
+   [
+    "aggaññasutta",
+    "nt",
+    "Dīgha Nikāya 27 (DN27); lit. discourse on the origin of the world",
+    "✔"
+   ],
+   [
+    "sampasādanīyasutta",
+    "nt",
+    "Dīgha Nikāya 28 (DN28); lit. discourse which inspires confidence",
+    "✔"
+   ],
+   [
+    "pāsādikasutta",
+    "nt",
+    "Dīgha Nikāya 29 (DN29); lit. inspiring discourse",
+    "✔"
+   ],
+   [
+    "lakkhaṇasutta 1",
+    "nt",
+    "Dīgha Nikāya 30 (DN30); lit. discourse about qualities",
+    "✔"
+   ],
+   [
+    "siṅgālasutta 1",
+    "nt",
+    "Dīgha Nikāya 31 (DN31); lit. discourse to Siṅgāla",
+    "✔"
+   ],
+   [
+    "siṅgālovādasuttanta",
+    "masc",
+    "Dīgha Nikāya 31 (DN 31); lit. discourse on advice to Siṅgāla",
+    "✔"
+   ],
+   [
+    "āṭānāṭiyasutta",
+    "nt",
+    "Dīgha Nikāya 32 (DN32); lit. discourse about Āṭānāṭā",
+    "✔"
+   ],
+   [
+    "saṅgītisutta",
+    "nt",
+    "Dīgha Nikāya 33 (DN33); lit. discourse on group recitation",
+    "✔"
+   ],
+   [
+    "dasuttarasutta",
+    "nt",
+    "Dīgha Nikāya 34 (DN34); lit. discourse increasing (from one) up to ten",
+    "✔"
+   ],
+   [
+    "brahmajāla 2",
+    "nt",
+    "in reference to DN1 Brahmajālasutta; lit. Brahma's net",
+    "✔"
+   ],
+   [
+    "sudassana 6",
+    "nt",
+    "in reference to DN17 Mahāsudassanasutta; lit. seeing clearly",
+    "✔"
+   ],
+   [
+    "sakkapañha",
+    "nt",
+    "in reference to DN21 Sakkapañhasutta; lit. Sakka's questions",
+    "✔"
+   ],
+   [
+    "pāṭika 2",
+    "nt",
+    "in reference to DN24 Pāṭikasutta; lit. name of an ascetic",
+    "✔"
+   ],
+   [
+    "udumbarī 2",
+    "fem",
+    "in reference to DN25 Udumbarikasutta; lit. about Udumbarikā",
+    "✔"
+   ],
+   [
+    "aggaññaka",
+    "nt",
+    "in reference to DN27 Aggaññasutta",
+    "✔"
+   ]
+  ],
+  "count": 41
+ },
+ "noble paths and fruits": {
+  "data": [
+   [
+    "aggaphala 2",
+    "nt",
+    "awakening; arahantship; lit. highest fruit",
+    "✔"
+   ],
+   [
+    "arahattamagga",
+    "masc",
+    "path of arahantship; path to the fully awakened state",
+    "✔"
+   ],
+   [
+    "ariyaphala",
+    "nt",
+    "noble fruit (of stream entry, etc.)",
+    "◑"
+   ],
+   [
+    "aveccappasāda",
+    "masc",
+    "faith founded in understanding; epithet of stream entry",
+    "✔"
+   ],
+   [
+    "dassanasampadā",
+    "fem",
+    "attainment of vision; success in seeing; epithets of stream entry",
+    "✔"
+   ],
+   [
+    "dassanuppāda",
+    "masc",
+    "arising of insight; epithet of stream entry; lit. coming up of vision",
+    "✔"
+   ],
+   [
+    "diṭṭhisampadā",
+    "fem",
+    "right view; successful attainment of view; epithet of stream entry; lit. view attainment",
+    "✔"
+   ],
+   [
+    "paṭhamamagga",
+    "masc",
+    "first path (stream entry)",
+    "◑"
+   ],
+   [
+    "maggasampadā",
+    "fem",
+    "attaining the path; finding the way; (comm) stream entry; lit. path success",
+    "✔"
+   ],
+   [
+    "sakadāgāmiphala",
+    "nt",
+    "fruit of once-returning",
+    "✔"
+   ],
+   [
+    "sakadāgāmiphalasacchikiriyā",
+    "fem",
+    "personal experience of the fruit of once-returner; personal realization of the fruition of once-returner",
+    "✔"
+   ],
+   [
+    "sakadāgāmimagga",
+    "masc",
+    "path of the once-returner",
+    "◑"
+   ],
+   [
+    "sekkhasammuti",
+    "fem",
+    "designation as stream enterers; lit. agreement as trainees",
+    "✔"
+   ],
+   [
+    "sotāpatti",
+    "fem",
+    "stream entry; first stage of the path",
+    "✔"
+   ],
+   [
+    "sotāpattiphalasacchikiriyā",
+    "fem",
+    "personal experience of the fruit of stream entry; personal realization of the fruition of stream entry",
+    "✔"
+   ],
+   [
+    "sotāpattimagga",
+    "masc",
+    "path of stream entry",
+    "◑"
+   ],
+   [
+    "sotāpattisamāpatti",
+    "fem",
+    "attainment of stream entry",
+    "✔"
+   ],
+   [
+    "sotāpanna 3",
+    "masc",
+    "stream entry; first stage of the path; lit. entered the current",
+    "◑"
+   ]
+  ],
+  "count": 18
+ },
  "place names": {
   "data": [
    [
     "aggāḷava",
     "masc",
-    "name of a shrine in Āḷavi",
-    "◑"
+    "name of a shrine in Āḷavī; lit. foremost in Āḷavī",
+    "✔"
+   ],
+   [
+    "ajapālanigrodhamūla",
+    "nt",
+    "foot of the goatherd's banyan tree",
+    "✔"
    ],
    [
     "añjanavana",
@@ -11934,16 +14937,10 @@ var family_set_json = {
     "✔"
    ],
    [
-    "andhavana",
+    "andhavana 1",
     "nt",
     "name of a wood outside Sāvatthī; lit. dark wood; blind wood",
     "✔"
-   ],
-   [
-    "āṭānāṭā",
-    "fem",
-    "name of a heavenly city",
-    "◑"
    ],
    [
     "ānandacetiya",
@@ -11962,12 +14959,6 @@ var family_set_json = {
     "masc",
     "forest thicket of Icchānaṅgala",
     "✔"
-   ],
-   [
-    "indakūṭa",
-    "masc",
-    "name of a mountain; lit. Inda's peak",
-    "◑"
    ],
    [
     "indasālaguhā",
@@ -11996,8 +14987,8 @@ var family_set_json = {
    [
     "ubbhataka",
     "nt",
-    "name of a Mallan council hall; lit. raised up",
-    "◑"
+    "name of a Mallan council hall; lit. carried up",
+    "✔"
    ],
    [
     "ekapuṇḍarīka 1",
@@ -12026,7 +15017,7 @@ var family_set_json = {
    [
     "kalandakanivāpa",
     "masc",
-    "name of a park outside Rājagaha; lit. squirrel fodder",
+    "name of a park in Rājagaha; lit. squirrel fodder",
     "✔"
    ],
    [
@@ -12228,6 +15219,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ṭaṅkitamañca",
+    "masc",
+    "(comm) stone slab mounted on four stone pillars; lit. covered bed",
+    "✔"
+   ],
+   [
     "taṇḍulapālidvāra",
     "nt",
     "(comm) name of one of the smaller entrance gates in Rājagaha; lit. rice row door; rice guard door",
@@ -12266,8 +15263,14 @@ var family_set_json = {
    [
     "dakkhiṇagiri",
     "masc",
-    "southern hills; area south of Rājagaha",
-    "◑"
+    "southern mountains; hills to the south (of Rājagaha)",
+    "✔"
+   ],
+   [
+    "dakkhiṇāgiri",
+    "masc",
+    "southern mountains; hills to the south (of Rājagaha)",
+    "✔"
    ],
    [
     "daṇḍakārañña",
@@ -12309,6 +15312,12 @@ var family_set_json = {
     "nandanavana",
     "nt",
     "name of a wood in Tāvatiṃsa heaven; lit. delighting wood",
+    "✔"
+   ],
+   [
+    "nandamūlaka",
+    "masc",
+    "name of a mountain cave; lit. rooted in delight",
     "✔"
    ],
    [
@@ -12360,6 +15369,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "paṇḍukambala 2",
+    "nt",
+    "name of a flat rock in Tāvatiṃsa heaven; lit. made of pale wool",
+    "✔"
+   ],
+   [
     "paṇḍukambalasilā",
     "fem",
     "name of a place in Tāvatiṃsa heaven; lit. rock spread with a pale coloured woollen cloth",
@@ -12393,13 +15408,13 @@ var family_set_json = {
     "pācīnavaṃsa",
     "masc",
     "previous name of Vepulla mountain; lit. eastern bamboo",
-    "◑"
+    "✔"
    ],
    [
     "pācīnavaṃsadāya",
     "masc",
     "name of a park; lit. eastern bamboo park",
-    "◑"
+    "✔"
    ],
    [
     "pāvāla",
@@ -12486,6 +15501,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "bhagalavatī 1",
+    "fem",
+    "name of a heavenly meeting hall",
+    "✔"
+   ],
+   [
     "bhesakalāvana",
     "nt",
     "name of a wood in the Bhagga country; lit. Bhesakalā's wood",
@@ -12525,7 +15546,7 @@ var family_set_json = {
     "maṇimālika",
     "nt",
     "name of a shrine in Magadha; lit. garland of jewels",
-    "◑"
+    "✔"
    ],
    [
     "maddakucchi",
@@ -12621,7 +15642,7 @@ var family_set_json = {
     "mukheluvana",
     "nt",
     "name of a wood",
-    "◑"
+    "✔"
    ],
    [
     "mejjhārañña",
@@ -12657,7 +15678,7 @@ var family_set_json = {
     "vaṅkaka 2",
     "masc",
     "previous name of Vepulla mountain; lit. small crooked",
-    "◑"
+    "✔"
    ],
    [
     "vaṭaṃsa",
@@ -12746,8 +15767,8 @@ var family_set_json = {
    [
     "sālavatī 1",
     "fem",
-    "name of a heavenly meeting hall",
-    "◑"
+    "name of a heavenly meeting hall; lit. with halls",
+    "✔"
    ],
    [
     "sītavana",
@@ -12777,7 +15798,7 @@ var family_set_json = {
     "sudhammasabhā",
     "fem",
     "name of the meeting hall of the gods; lit. justice hall",
-    "◑"
+    "✔"
    ],
    [
     "sundarikā",
@@ -12789,13 +15810,7 @@ var family_set_json = {
     "supassa",
     "masc",
     "previous name of Vepulla mountain; lit. good slope",
-    "◑"
-   ],
-   [
-    "suphassa",
-    "masc",
-    "previous name of Vepulla mountain",
-    "◑"
+    "✔"
    ],
    [
     "subhagavana",
@@ -12804,10 +15819,16 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sumāgadhā",
+    "fem",
+    "name of a lotus pond",
+    "✔"
+   ],
+   [
     "suveḷuvana",
     "nt",
-    "name of a wood",
-    "◑"
+    "name of a wood; lit. good bamboo grove",
+    "✔"
    ],
    [
     "sūkarakhatā",
@@ -12828,15 +15849,15 @@ var family_set_json = {
     "◑"
    ]
   ],
-  "count": 153
+  "count": 157
  },
  "holy sites": {
   "data": [
    [
     "aggāḷava",
     "masc",
-    "name of a shrine in Āḷavi",
-    "◑"
+    "name of a shrine in Āḷavī; lit. foremost in Āḷavī",
+    "✔"
    ],
    [
     "adhikakka",
@@ -12950,7 +15971,7 @@ var family_set_json = {
     "maṇimālika",
     "nt",
     "name of a shrine in Magadha; lit. garland of jewels",
-    "◑"
+    "✔"
    ],
    [
     "sattamba",
@@ -12985,6122 +16006,15 @@ var family_set_json = {
   ],
   "count": 25
  },
- "types of ascetics": {
-  "data": [
-   [
-    "aggipakkika",
-    "masc",
-    "type of ascetic who subsists on begging alms cooked by fire",
-    "◑"
-   ],
-   [
-    "aggiparicārika",
-    "masc",
-    "fire worshipper; attendant of the sacred fire",
-    "✔"
-   ],
-   [
-    "anaggipakkika",
-    "masc",
-    "type of ascetic subsisting on alms not cooked by fire",
-    "◑"
-   ],
-   [
-    "abbhokāsika",
-    "masc",
-    "ascetic who lives in the open air; open-air dweller",
-    "✔"
-   ],
-   [
-    "ayamuṭṭhika 2",
-    "masc",
-    "type of ascetic who subsists on food acquired with a small stone; lit. with a small iron hammer",
-    "◑"
-   ],
-   [
-    "asāmapāka",
-    "masc",
-    "type of ascetic who subsists on food not cooked by oneself",
-    "◑"
-   ],
-   [
-    "asmamuṭṭhika",
-    "masc",
-    "type of ascetic who subsists on food acquired with a small stone; lit. with a stone hammer",
-    "◑"
-   ],
-   [
-    "ājīvaka",
-    "masc",
-    "Ājīvaka; ascetic; member of a renunciant sect; (comm) naked ascetic; lit. (following a specific code of) livelihood",
-    "✔"
-   ],
-   [
-    "ājīvika",
-    "masc",
-    "ascetic; member of a renunciant sect; (comm) naked ascetic; lit. (following a specific code of) livelihood",
-    "✔"
-   ],
-   [
-    "āthabbaṇika",
-    "masc",
-    "reciter of the Atharva Veda; who knows the Atharva Veda",
-    "✔"
-   ],
-   [
-    "āraññika 1",
-    "masc",
-    "forest monk; forest dwelling ascetic",
-    "✔"
-   ],
-   [
-    "ukkuṭika 2",
-    "masc",
-    "ascetic who remains in the squatting posture; lit. bent up",
-    "✔"
-   ],
-   [
-    "ucchedavādī",
-    "masc",
-    "annihilationist; proponent of the doctrine of annihilation; lit. speaking annihilation",
-    "✔"
-   ],
-   [
-    "udakorohaka",
-    "masc",
-    "bather; ritual bather; lit. who descends into water",
-    "✔"
-   ],
-   [
-    "udakorohanta",
-    "masc",
-    "bather; swimmer; lit. going down into water",
-    "✔"
-   ],
-   [
-    "ubbhaṭṭhaka",
-    "masc",
-    "ascetic who practices continuous standing; ascetic who practices self-immolation by standing upright",
-    "✔"
-   ],
-   [
-    "ekasāṭaka 1",
-    "masc",
-    "ascetic wearing a loin-cloth; one robe ascetic; lit. one cloth",
-    "✔"
-   ],
-   [
-    "ekasāṭikā",
-    "fem",
-    "female ascetic who wears one robe; ascetic dressed in a single cloth; lit. one cloth-er",
-    "◑"
-   ],
-   [
-    "ekāgārika 2.1",
-    "masc",
-    "ascetic who subsists on food from only one house; lit. one house-er",
-    "✔"
-   ],
-   [
-    "ekālopika",
-    "masc",
-    "ascetic who subsists on only one mouthful of food; lit. one morsel-er",
-    "✔"
-   ],
-   [
-    "ekāsanika",
-    "masc",
-    "ascetic who eats once a day; who eats in one sitting",
-    "✔"
-   ],
-   [
-    "kaṇṭakāpassayika",
-    "masc",
-    "ascetic who lies on a thorn bed",
-    "✔"
-   ],
-   [
-    "kesamassulocaka",
-    "masc",
-    "who plucks out hair and beard",
-    "✔"
-   ],
-   [
-    "gaṇī",
-    "masc",
-    "leader of a group; lit. one with a following",
-    "✔"
-   ],
-   [
-    "jaṭilaka",
-    "masc",
-    "ascetic who wears matted hair; dreadlocked ascetic",
-    "✔"
-   ],
-   [
-    "tapassī 1",
-    "masc",
-    "ascetic; lit. who burns",
-    "✔"
-   ],
-   [
-    "titthiyasāvaka",
-    "masc",
-    "disciple of another religious teacher; adherent of another religion",
-    "✔"
-   ],
-   [
-    "dantaluyyaka",
-    "masc",
-    "type of ascetic who subsists on bark town from trees by their teeth; lit. tooth reaper",
-    "◑"
-   ],
-   [
-    "dantavakkalika",
-    "masc",
-    "type of ascetic who subsists on bark torn from trees by their teeth",
-    "◑"
-   ],
-   [
-    "dvāgārika",
-    "masc",
-    "ascetic who subsists on food from only two houses; lit. two house-er",
-    "✔"
-   ],
-   [
-    "dvālopika",
-    "masc",
-    "ascetic who subsists on only two mouthfuls of food; lit. two morsel-er",
-    "✔"
-   ],
-   [
-    "nahātaka",
-    "masc",
-    "graduate; Brahman who has finished their studies and returned home; lit. who has bathed",
-    "✔"
-   ],
-   [
-    "nesajja",
-    "masc",
-    "ascetic who remains in a sitting position; upright sitter",
-    "◑"
-   ],
-   [
-    "nesajjika",
-    "masc",
-    "ascetic who remains in a sitting position; upright sitter",
-    "✔"
-   ],
-   [
-    "paṇḍara 4",
-    "masc",
-    "name of a religious sect; lit. white",
-    "✔"
-   ],
-   [
-    "paṇḍaraṅga",
-    "masc",
-    "name of a Brahmanical sect; lit. white limbs",
-    "✔"
-   ],
-   [
-    "parappavādī",
-    "masc",
-    "proponent of other belief systems; adherent of other doctrines; lit. speaking forward other",
-    "◑"
-   ],
-   [
-    "paribbāja",
-    "masc",
-    "homeless spiritual seeker; wandering monk",
-    "✔"
-   ],
-   [
-    "paribbājaka",
-    "masc",
-    "homeless spiritual seeker; wandering ascetic; lit. who goes around",
-    "✔"
-   ],
-   [
-    "paribbājikā",
-    "fem",
-    "homeless female seeker; wandering female ascetic; lit. who goes around",
-    "✔"
-   ],
-   [
-    "pariyāyabhattika",
-    "masc",
-    "ascetic who eats at intervals; interval faster",
-    "✔"
-   ],
-   [
-    "paṃsukūlika 1",
-    "masc",
-    "ascetic who wears rag robes; rag robe wearer",
-    "✔"
-   ],
-   [
-    "puggalavādī",
-    "masc",
-    "proponent of the doctrine that the individual exists; lit. speaking person",
-    "✔"
-   ],
-   [
-    "brahmacārī 2",
-    "masc",
-    "celibate man; who abstains from sexual intercourse",
-    "✔"
-   ],
-   [
-    "mantajjhāyaka",
-    "masc",
-    "who masters the Vedas; reciter of the Vedas",
-    "✔"
-   ],
-   [
-    "māgaṇḍika",
-    "masc",
-    "follower of Māgaṇḍiya",
-    "◑"
-   ],
-   [
-    "yathāsanthatika",
-    "masc",
-    "ascetic who sleeps on any bed; ascetic who accepts any dwelling; lit. like spread",
-    "✔"
-   ],
-   [
-    "rajojallika",
-    "masc",
-    "ascetic who is covered in dust and mud",
-    "✔"
-   ],
-   [
-    "rukkhamūlika",
-    "masc",
-    "ascetic who lives at the foot of tree; root of a tree dweller",
-    "✔"
-   ],
-   [
-    "lūkhacīvaradhara",
-    "masc",
-    "ascetic who wear a coarse robe",
-    "✔"
-   ],
-   [
-    "saṅghāṭika",
-    "masc",
-    "ascetic who wears a patchwork robe; patchwork robe wearer",
-    "✔"
-   ],
-   [
-    "sattāgārika",
-    "masc",
-    "ascetic who subsists on food from only seven houses; lit. seven house-er",
-    "✔"
-   ],
-   [
-    "sattālopika",
-    "masc",
-    "ascetic who subsists on only seven mouthfuls of food; lit. seven morsel-er",
-    "✔"
-   ],
-   [
-    "samaṇī 2",
-    "fem",
-    "female ascetic; female renunciant",
-    "✔"
-   ],
-   [
-    "sassatavādī",
-    "masc",
-    "eternalist; proponent of the doctrine of an everlasting soul; lit. speaking eternity",
-    "✔"
-   ],
-   [
-    "suññatavādī",
-    "masc",
-    "proponent of the doctrine that everything is empty; Buddhist; lit. speaking emptiness",
-    "✔"
-   ],
-   [
-    "sosānika",
-    "masc",
-    "ascetic who lives in a cemetery; graveyard dweller",
-    "✔"
-   ]
-  ],
-  "count": 57
- },
- "suttas of the Majjhima Nikāya": {
-  "data": [
-   [
-    "aggivacchasutta",
-    "nt",
-    "Majjhima Nikāya 72; Discourse to Vaccha on Fire (MN72)",
-    "✔"
-   ],
-   [
-    "aṅgulimālasutta",
-    "nt",
-    "Majjhima Nikāya 86; Discourse about Aṅgulimāla (MN86)",
-    "✔"
-   ],
-   [
-    "acchariyaabbhutasutta",
-    "nt",
-    "Majjhima Nikāya 123 (MN123)",
-    "◑"
-   ],
-   [
-    "aṭṭhakanāgarasutta 1",
-    "nt",
-    "Majjhima Nikāya 52; Discourse to the (Man from) Aṭṭhaka Town (MN52)",
-    "✔"
-   ],
-   [
-    "anaṅgaṇasutta",
-    "nt",
-    "Majjhima Nikāya 5; Discourse on Being Unblemished (MN5)",
-    "✔"
-   ],
-   [
-    "anupadasutta",
-    "nt",
-    "Majjhima Nikāya 111; The Sequential Discourse (MN111)",
-    "✔"
-   ],
-   [
-    "anumānasutta",
-    "nt",
-    "Majjhima Nikāya 15; Discourse on Inference (MN15)",
-    "◑"
-   ],
-   [
-    "apaṇṇakasutta 1",
-    "nt",
-    "Majjhima Nikāya 60; The Incontrovertible Teaching (MN60)",
-    "✔"
-   ],
-   [
-    "abhayarājakumārasutta",
-    "nt",
-    "Majjhima Nikāya 58; Discourse to Prince Fearless (MN58)",
-    "✔"
-   ],
-   [
-    "ambalaṭṭhikarāhulovādasutta",
-    "nt",
-    "Majjhima Nikāya 61; Discourse to Rāhula at the Young Mango Tree (MN61)",
-    "✔"
-   ],
-   [
-    "ariyapariyesanāsutta",
-    "nt",
-    "Majjhima Nikāya 26; Discourse on the Noble Quest; (or) Discourse on the Heap of Snares (MN26)",
-    "◑"
-   ],
-   [
-    "alagaddūpamasutta",
-    "nt",
-    "Majjhima Nikāya 22; Discourse on the Simile of the Water Snake (MN22)",
-    "✔"
-   ],
-   [
-    "assalāyanasutta",
-    "nt",
-    "Majjhima Nikāya 93; Discourse to Assalāyana (MN93)",
-    "✔"
-   ],
-   [
-    "ākaṅkheyyasutta",
-    "nt",
-    "Majjhima Nikāya 6 (MN6)",
-    "◑"
-   ],
-   [
-    "āneñjasappāyasutta",
-    "nt",
-    "Majjhima Nikāya 106; Discourse On What Is Conducive To The Imperturbable State (MN106)",
-    "✔"
-   ],
-   [
-    "upālisutta 1",
-    "nt",
-    "Majjhima Nikāya 56; Discourse to Upāli (MN56)",
-    "✔"
-   ],
-   [
-    "esukārīsutta",
-    "nt",
-    "Majjhima Nikāya 96; Discourse with Esukārī (MN96)",
-    "✔"
-   ],
-   [
-    "kakacūpamasutta",
-    "nt",
-    "Majjhima Nikāya 21; Discourse on the Simile of the Saw (MN21)",
-    "◑"
-   ],
-   [
-    "kaṇṇakatthalasutta",
-    "nt",
-    "Majjhima Nikāya 90; Discourse in Kaṇṇakatthala (MN90)",
-    "✔"
-   ],
-   [
-    "kandarakasutta",
-    "nt",
-    "Majjhima Nikāya 51; Discourse to Kandaraka (MN51)",
-    "✔"
-   ],
-   [
-    "kintisutta",
-    "nt",
-    "Majjhima Nikāya 103; Discourse on What (Do You Think of Me) (MN103)",
-    "✔"
-   ],
-   [
-    "kīṭāgirisutta",
-    "nt",
-    "Majjhima Nikāya 70; Discourse at Kīṭāgiri (MN70)",
-    "✔"
-   ],
-   [
-    "kukkuravatikasutta",
-    "nt",
-    "Majjhima Nikāya 57; Discourse to the Dog Practice Ascetic (MN57)",
-    "✔"
-   ],
-   [
-    "kosambiyasutta",
-    "nt",
-    "Majjhima Nikāya 48; Discourse in Kosambī (MN48)",
-    "✔"
-   ],
-   [
-    "gaṇakamoggallānasutta",
-    "nt",
-    "Majjhima Nikāya 107; Discourse to Moggallāna the Accountant (MN107)",
-    "✔"
-   ],
-   [
-    "gaṇakamoggallānasuttanta",
-    "masc",
-    "Majjhima Nikāya 107; Discourse to Moggallāna the Accountant (MN107)",
-    "◑"
-   ],
-   [
-    "gopakamoggallānasutta",
-    "nt",
-    "Majjhima Nikāya 108; Discourse with Moggallāna the Guardian (MN108)",
-    "✔"
-   ],
-   [
-    "goliyānisutta",
-    "nt",
-    "Majjhima Nikāya 69; Discourse with Goliyāni (MN69)",
-    "✔"
-   ],
-   [
-    "ghaṭikārasutta",
-    "nt",
-    "Majjhima Nikāya 81; Discourse about Ghaṭikāra (MN81)",
-    "✔"
-   ],
-   [
-    "ghoṭamukhasutta",
-    "nt",
-    "Majjhima Nikāya 94; Discourse with Ghoṭamukha (MN94)",
-    "✔"
-   ],
-   [
-    "caṅkīsutta",
-    "nt",
-    "Majjhima Nikāya 95; Discourse about Caṅkī (MN95)",
-    "✔"
-   ],
-   [
-    "cātumasutta",
-    "nt",
-    "Majjhima Nikāya 67; Discourse at Cātumā (MN67)",
-    "✔"
-   ],
-   [
-    "cūḷaassapurasutta",
-    "nt",
-    "Majjhima Nikāya 40; Short Discourse at Assapura (MN40)",
-    "✔"
-   ],
-   [
-    "cūḷagopālakasutta",
-    "nt",
-    "Majjhima Nikāya 34; Short Discourse on the Cowherd (MN34)",
-    "◑"
-   ],
-   [
-    "cūḷagosiṅga",
-    "nt",
-    "Majjhima Nikāya 31; Shorter Cow-horn Discourse (MN31)",
-    "◑"
-   ],
-   [
-    "cūḷagosiṅgasutta",
-    "nt",
-    "Majjhima Nikāya 31; Shorter Cow-horn Discourse (MN31)",
-    "◑"
-   ],
-   [
-    "cūḷataṇhāsaṅkhayasutta",
-    "nt",
-    "Majjhima Nikāya 37; Short Discourse on the Destruction of Craving (MN37)",
-    "◑"
-   ],
-   [
-    "cūḷadukkhakkhandhasutta",
-    "nt",
-    "Majjhima Nikāya 14; Short Discourse on the Mass of Suffering (MN14)",
-    "◑"
-   ],
-   [
-    "cūḷadhammasamādānasutta",
-    "nt",
-    "Majjhima Nikāya 45; Short Discourse on Undertaking the Teaching (MN45)",
-    "✔"
-   ],
-   [
-    "cūḷapuṇṇamasutta",
-    "nt",
-    "Majjhima Nikāya 110; Shorter Discourse on the Full Moon Night (MN110)",
-    "✔"
-   ],
-   [
-    "cūḷamālukyasutta",
-    "nt",
-    "Majjhima Nikāya 63; The Shorter Discourse to Mālukya (MN63)",
-    "✔"
-   ],
-   [
-    "cūḷavedalla",
-    "nt",
-    "Majjhima Nikāya 44; Short Catechism Discourse (MN44)",
-    "◑"
-   ],
-   [
-    "cūḷavedallasutta",
-    "nt",
-    "Majjhima Nikāya 44; Short Catechism Discourse (MN44)",
-    "✔"
-   ],
-   [
-    "cūḷasakuludāyisutta",
-    "nt",
-    "Majjhima Nikāya 79; Shorter Discourse to Sakuludāyī (MN79)",
-    "✔"
-   ],
-   [
-    "cūḷasaccakasutta",
-    "nt",
-    "Majjhima Nikāya 35; Short Discourse with Saccaka (MN35)",
-    "◑"
-   ],
-   [
-    "cūḷasāropamasutta",
-    "nt",
-    "Majjhima Nikāya 30; Short Discourse on the Simile of the Heartwood (MN30)",
-    "◑"
-   ],
-   [
-    "cūḷasīhanādasutta",
-    "nt",
-    "Majjhima Nikāya 11; Short Discourse on the Lion's Roar (MN11)",
-    "◑"
-   ],
-   [
-    "cūḷahatthipadopama",
-    "nt",
-    "Majjhima Nikāya 27; Short (Discourse) on the Simile of the Elephant's Footprint (MN27)",
-    "◑"
-   ],
-   [
-    "cūḷahatthipadopamasutta",
-    "nt",
-    "Majjhima Nikāya 27; Short Discourse on the Simile of the Elephant's Footprint (MN27)",
-    "◑"
-   ],
-   [
-    "cūḷāssapurasutta",
-    "nt",
-    "Majjhima Nikāya 40; Short Discourse at Assapura (MN40)",
-    "◑"
-   ],
-   [
-    "cetokhilasutta 1",
-    "nt",
-    "Majjhima Nikāya 15; Discourse on Mental Barrenness (MN15)",
-    "◑"
-   ],
-   [
-    "chabbisodhanasutta",
-    "nt",
-    "Majjhima Nikāya 112; Discourse on the Six-fold Purification (MN112)",
-    "✔"
-   ],
-   [
-    "jīvakasutta 1",
-    "nt",
-    "Majjhima Nikāya 55; Discourse to Jīvaka (MN55)",
-    "✔"
-   ],
-   [
-    "tevijjavacchasutta",
-    "nt",
-    "Majjhima Nikāya 71; Discourse to Vaccha on the Three Knowledges (MN71)",
-    "✔"
-   ],
-   [
-    "dīghanakhasutta",
-    "nt",
-    "Majjhima Nikāya 74; Discourse with Long Nails (MN74)",
-    "✔"
-   ],
-   [
-    "devadahasutta 1",
-    "nt",
-    "Majjhima Nikāya 101; Discourse at Devadaha (MN101)",
-    "✔"
-   ],
-   [
-    "dvedhāvitakkasutta",
-    "nt",
-    "Majjhima Nikāya 19; Discourse on Two Kinds of Thoughts (MN19)",
-    "◑"
-   ],
-   [
-    "dhanañjānisutta",
-    "nt",
-    "Majjhima Nikāya 97; Discourse with Dhanañjāni (MN97)",
-    "✔"
-   ],
-   [
-    "dhammacetiyasutta",
-    "nt",
-    "Majjhima Nikāya 89; Discourse about Monuments to the Dhamma (MN89)",
-    "✔"
-   ],
-   [
-    "dhammadāyādasutta",
-    "nt",
-    "Majjhima Nikāya 3; Discourse about Heirs of the Teaching (MN3)",
-    "✔"
-   ],
-   [
-    "naḷakapānasutta",
-    "nt",
-    "Majjhima Nikāya 68; Discourse at Naḷakapāna (MN68)",
-    "✔"
-   ],
-   [
-    "nivāpasutta",
-    "nt",
-    "Majjhima Nikāya 25; Discourse on Bait (MN25)",
-    "◑"
-   ],
-   [
-    "pañcattayasutta",
-    "nt",
-    "Majjhima Nikāya 102; Discourse on Five and Three (MN102)",
-    "✔"
-   ],
-   [
-    "pāsarāsisutta",
-    "nt",
-    "Majjhima Nikāya 26; Discourse on the Heap of Snares; (or) Discourse on the Noble Quest (MN26)",
-    "◑"
-   ],
-   [
-    "piyajātikasutta",
-    "nt",
-    "Majjhima Nikāya 87; Discourse about Born from Love (MN87)",
-    "✔"
-   ],
-   [
-    "potaliyasutta 1",
-    "nt",
-    "Majjhima Nikāya 54; Discourse with Potaliya (MN54)",
-    "✔"
-   ],
-   [
-    "bahuvedanīyasutta",
-    "nt",
-    "Majjhima Nikāya 59; Discourse on Many Things to be Felt (MN59)",
-    "✔"
-   ],
-   [
-    "bāhitikasutta",
-    "nt",
-    "Majjhima Nikāya 88; Discourse about the Cloak (MN88)",
-    "✔"
-   ],
-   [
-    "bodhirājakumārasutta",
-    "nt",
-    "Majjhima Nikāya 85; Discourse to Prince Bodhi (MN85)",
-    "✔"
-   ],
-   [
-    "brahmanimantanikasutta",
-    "nt",
-    "Majjhima Nikāya 49; Discourse on Brahma's Invitation (MN49)",
-    "✔"
-   ],
-   [
-    "brahmāyusutta",
-    "nt",
-    "Majjhima Nikāya 91; Discourse about Brahmāyu (MN91)",
-    "✔"
-   ],
-   [
-    "bhaddālisutta",
-    "nt",
-    "Majjhima Nikāya 65; Discourse to Bhaddāli (MN65)",
-    "✔"
-   ],
-   [
-    "bhaddekarattasutta",
-    "nt",
-    "Majjhima Nikāya 131; Discourse on the Auspicious Single Night (MN131)",
-    "◑"
-   ],
-   [
-    "bhayabheravasutta",
-    "nt",
-    "Majjhima Nikāya 4; Discourse on Fear and Dread (MN4)",
-    "✔"
-   ],
-   [
-    "maghadevasutta",
-    "nt",
-    "Majjhima Nikāya 83; Discourse about Maghadeva (MN83)",
-    "✔"
-   ],
-   [
-    "madhupiṇḍikasutta",
-    "nt",
-    "Majjhima Nikāya 18; Discourse on the Honey Ball (MN18)",
-    "◑"
-   ],
-   [
-    "madhurasutta",
-    "nt",
-    "Majjhima Nikāya 84; Discourse at Madhurā (MN84)",
-    "✔"
-   ],
-   [
-    "mahāassapurasutta",
-    "nt",
-    "Majjhima Nikāya 39; Long Discourse at Assapura (MN39)",
-    "✔"
-   ],
-   [
-    "mahāgopālakasutta",
-    "nt",
-    "Majjhima Nikāya 33; Long Discourse on the Cowherd (MN33)",
-    "◑"
-   ],
-   [
-    "mahāgosiṅgasutta",
-    "nt",
-    "Majjhima Nikāya 32; Long Cow-horn Discourse (MN32)",
-    "◑"
-   ],
-   [
-    "mahātaṇhāsaṅkhayasutta",
-    "nt",
-    "Majjhima Nikāya 38; Long Discourse on the Destruction of Craving (MN38)",
-    "◑"
-   ],
-   [
-    "mahādukkhakkhandhasutta",
-    "nt",
-    "Majjhima Nikāya 13; Great Discourse on the Mass of Suffering (MN13)",
-    "◑"
-   ],
-   [
-    "mahādhammasamādānasutta",
-    "nt",
-    "Majjhima Nikāya 46; Great Discourse on Undertaking the Teaching (MN46)",
-    "✔"
-   ],
-   [
-    "mahāpuṇṇama",
-    "masc",
-    "Majjhima Nikāya 109; Discourse on the Great Full Moon Night (MN109)",
-    "✔"
-   ],
-   [
-    "mahāpuṇṇamasutta",
-    "nt",
-    "Majjhima Nikāya 109; Discourse on the Great Full Moon Night (MN109)",
-    "✔"
-   ],
-   [
-    "mahāmālukyasutta",
-    "nt",
-    "Majjhima Nikāya 64; Great Discourse to Mālukya (MN64)",
-    "✔"
-   ],
-   [
-    "mahārāhulovādasutta",
-    "nt",
-    "Majjhima Nikāya 62; Great Discourse of Advice to Rāhula (MN62)",
-    "✔"
-   ],
-   [
-    "mahāvacchasutta",
-    "nt",
-    "Majjhima Nikāya 73; Long Discourse with Vaccha (MN73)",
-    "✔"
-   ],
-   [
-    "mahāvedalla",
-    "nt",
-    "Majjhima Nikāya 43; Great Catechism Discourse (MN43)",
-    "✔"
-   ],
-   [
-    "mahāvedallasutta",
-    "nt",
-    "Majjhima Nikāya 43; Great Catechism Discourse (MN43)",
-    "✔"
-   ],
-   [
-    "mahāsakuludāyisutta",
-    "nt",
-    "Majjhima Nikāya 77; Long Discourse to Sakuludāyī (MN77)",
-    "✔"
-   ],
-   [
-    "mahāsaccakasutta",
-    "nt",
-    "Majjhima Nikāya 36; Long Discourse with Saccaka (MN36)",
-    "◑"
-   ],
-   [
-    "mahāsatipaṭṭhānasutta 2",
-    "nt",
-    "Majjhima Nikāya 10; Great Discourse on Attending Mindfully (MN10)",
-    "◑"
-   ],
-   [
-    "mahāsāropamasutta",
-    "nt",
-    "Majjhima Nikāya 29; Long Discourse on the Simile of the Heartwood (MN29)",
-    "◑"
-   ],
-   [
-    "mahāsīhanādasutta 2",
-    "nt",
-    "Majjhima Nikāya 12; Great Discourse on the Lion's Roar (MN12)",
-    "◑"
-   ],
-   [
-    "mahāhatthipadopamasutta",
-    "nt",
-    "Majjhima Nikāya 28; Long Discourse on the Simile of the Elephant's Footprint (MN28)",
-    "◑"
-   ],
-   [
-    "māgaṇḍiyasutta 1",
-    "nt",
-    "Majjhima Nikāya 75; Discourse with Māgaṇḍiya (MN75)",
-    "✔"
-   ],
-   [
-    "māratajjanīyasutta",
-    "nt",
-    "Majjhima Nikāya 50; Discourse about Frightening Māra (MN50)",
-    "✔"
-   ],
-   [
-    "mūlapariyāya",
-    "masc",
-    "Majjhima Nikāya 1; (Discourse on the) Root Cause (MN1)",
-    "◑"
-   ],
-   [
-    "mūlapariyāyasutta",
-    "nt",
-    "Majjhima Nikāya 1; Discourse on the Root Cause (MN1)",
-    "◑"
-   ],
-   [
-    "raṭṭhapālasutta",
-    "nt",
-    "Majjhima Nikāya 82; Discourse about Raṭṭhapāla (MN82)",
-    "✔"
-   ],
-   [
-    "rathavinītasutta",
-    "nt",
-    "Majjhima Nikāya 24; Discourse on the Relay Chariots (MN24)",
-    "◑"
-   ],
-   [
-    "laṭukikopamasutta",
-    "nt",
-    "Majjhima Nikāya 66; Discourse on the Simile of the Purple Sunbird (MN66)",
-    "✔"
-   ],
-   [
-    "lomahaṃsanapariyāya",
-    "masc",
-    "hair-raising discourse; in reference to MN12 Mahāsīhanādasutta",
-    "✔"
-   ],
-   [
-    "vatthasutta 1",
-    "nt",
-    "Majjhima Nikāya 7; Discourse on the Cloth (MN7)",
-    "◑"
-   ],
-   [
-    "vanapatthasutta",
-    "nt",
-    "Majjhima Nikāya 17; Discourse on Woodland Plains (MN17)",
-    "◑"
-   ],
-   [
-    "vammikasutta",
-    "nt",
-    "Majjhima Nikāya 23; Discourse on the Anthill (MN23)",
-    "✔"
-   ],
-   [
-    "vāseṭṭhasutta 1",
-    "nt",
-    "Majjhima Nikāya 98; Discourse with Vāseṭṭha (MN98)",
-    "✔"
-   ],
-   [
-    "vitakkasaṇṭhānasutta",
-    "nt",
-    "Majjhima Nikāya 20; Discourse on the Stilling of Thought (MN20)",
-    "✔"
-   ],
-   [
-    "vīmaṃsakasutta",
-    "nt",
-    "Majjhima Nikāya 47; Discourse on Investigating (MN47)",
-    "✔"
-   ],
-   [
-    "vekhanasasutta",
-    "nt",
-    "Majjhima Nikāya 80; Discourse to Vekhanasa (MN80)",
-    "✔"
-   ],
-   [
-    "verañjakasutta",
-    "nt",
-    "Majjhima Nikāya 42; Discourse to the People of Verañjā (MN42)",
-    "✔"
-   ],
-   [
-    "saṅgāravasutta 1",
-    "nt",
-    "Majjhima Nikāya 100; Discourse with Saṅgārava (MN100)",
-    "✔"
-   ],
-   [
-    "satipaṭṭhānasutta 1",
-    "nt",
-    "Majjhima Nikāya 10; Discourse on Attending Mindfully (MN10)",
-    "◑"
-   ],
-   [
-    "sandakasutta",
-    "nt",
-    "Majjhima Nikāya 76; Discourse to Sandaka (MN76)",
-    "✔"
-   ],
-   [
-    "sabbāsavasutta",
-    "nt",
-    "Majjhima Nikāya 2; Discourse on All the Effluents (MN2)",
-    "✔"
-   ],
-   [
-    "samaṇamuṇḍikasutta",
-    "nt",
-    "Majjhima Nikāya 78; Discourse to The Bald Ascetic (MN78)",
-    "✔"
-   ],
-   [
-    "sammādiṭṭhi 3",
-    "fem",
-    "Majjhima Nikāya 9; Discourse on Right View (MN9)",
-    "◑"
-   ],
-   [
-    "sammādiṭṭhisutta 1",
-    "nt",
-    "Majjhima Nikāya 9; Discourse on Right View (MN9)",
-    "◑"
-   ],
-   [
-    "sallekhasutta",
-    "nt",
-    "Majjhima Nikāya 8; Discourse on Effacement (MN8)",
-    "◑"
-   ],
-   [
-    "sāmagāmasutta",
-    "nt",
-    "Majjhima Nikāya 104; Discourse at Sāmagāma (MN104)",
-    "✔"
-   ],
-   [
-    "sāleyyakasutta",
-    "nt",
-    "Majjhima Nikāya 41; Discourse to the People of Sāla (MN41)",
-    "✔"
-   ],
-   [
-    "sunakkhattasutta",
-    "nt",
-    "Majjhima Nikāya 105; Discourse with Sunakkhatta (MN105)",
-    "✔"
-   ],
-   [
-    "subhasutta 1",
-    "nt",
-    "Majjhima Nikāya 99; Discourse with Subha (MN99)",
-    "✔"
-   ],
-   [
-    "sekhasutta 1",
-    "nt",
-    "Majjhima Nikāya 53; Discourse on the Trainee (MN53)",
-    "✔"
-   ],
-   [
-    "selasutta 1",
-    "nt",
-    "Majjhima Nikāya 92; Discourse to Sela (MN92)",
-    "✔"
-   ]
-  ],
-  "count": 126
- },
- "names of laypeople": {
-  "data": [
-   [
-    "aggivessa",
-    "masc",
-    "name of a minister",
-    "✔"
-   ],
-   [
-    "aṅkura 2",
-    "masc",
-    "name of a man in a Petavatthu story; lit. sprout",
-    "✔"
-   ],
-   [
-    "ajita 2",
-    "masc",
-    "name of a Licchavi military general; lit. undefeated",
-    "✔"
-   ],
-   [
-    "atula 1",
-    "masc",
-    "name of a man; lit. immeasurable; uncountable",
-    "✔"
-   ],
-   [
-    "anaggapāka",
-    "masc",
-    "name of a layman; previous incarnation of Raṭṭhapāla; lit. cooking without limit",
-    "◑"
-   ],
-   [
-    "anāthapiṇḍika",
-    "masc",
-    "name of the Buddha's chief lay disciple; lit. feeder of the destitute",
-    "✔"
-   ],
-   [
-    "abhaya 3",
-    "masc",
-    "name of a Licchavi layman; lit. fearless",
-    "✔"
-   ],
-   [
-    "abhipāraka",
-    "masc",
-    "name of the general of king Sivi",
-    "✔"
-   ],
-   [
-    "ambapālī",
-    "fem",
-    "name of a courtesan; lit. row of mangoes",
-    "✔"
-   ],
-   [
-    "asibandhakaputta",
-    "masc",
-    "name of a layman; lit. son of sword strap",
-    "◑"
-   ],
-   [
-    "āgatapāka",
-    "masc",
-    "name of a layman; lit. cooking (for whoever) comes",
-    "◑"
-   ],
-   [
-    "illisa",
-    "masc",
-    "name of a rich man in a Jātaka story",
-    "✔"
-   ],
-   [
-    "isidatta 2",
-    "masc",
-    "name of one of king Pasenadi's architects; lit. given to the sage",
-    "✔"
-   ],
-   [
-    "isidattapurāṇā",
-    "masc",
-    "names of two architects; Isidatta and Purāṇa",
-    "✔"
-   ],
-   [
-    "ugga 3",
-    "masc",
-    "name of a householder; lit. going up",
-    "◑"
-   ],
-   [
-    "ugga 4",
-    "masc",
-    "name of a minister; lit. going up",
-    "✔"
-   ],
-   [
-    "uggasena",
-    "masc",
-    "name of a layman; son of a banker in Rājagaha; lit. with a mighty army",
-    "◑"
-   ],
-   [
-    "uttarānandamātar",
-    "fem",
-    "name of a female lay disciple; foremost among meditators; lit. northern Ānanda's mother",
-    "◑"
-   ],
-   [
-    "upananda 1",
-    "masc",
-    "name of the military general of Magadha; lit. descendent of Nanda",
-    "✔"
-   ],
-   [
-    "upāli 1",
-    "masc",
-    "name of a layman",
-    "✔"
-   ],
-   [
-    "ummadantī",
-    "fem",
-    "name of the daughter of a wealthy banker; lit. becoming crazy",
-    "◑"
-   ],
-   [
-    "oṭṭhaddha",
-    "masc",
-    "name of a Licchavi; lit. half lip; harelip",
-    "✔"
-   ],
-   [
-    "kakudha 5",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "kaṭāhakā",
-    "fem",
-    "name of a female slave; lit. having a small pot",
-    "✔"
-   ],
-   [
-    "kaṭissabha",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "kaṭissaha",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "kaḷibha",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "kāṇamātar",
-    "fem",
-    "name of a lay disciple; lit. mother of blind in one eye",
-    "◑"
-   ],
-   [
-    "kātiyānī",
-    "fem",
-    "name of a female lay disciple; foremost among those with absolute faith; lit. descendent of Kati",
-    "◑"
-   ],
-   [
-    "kāraḷimba",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "kārāyana",
-    "masc",
-    "name of king Pasenadi's charioteer",
-    "✔"
-   ],
-   [
-    "kāliṅga 2",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "kāḷakhemaka",
-    "masc",
-    "name of a Sakyan layman",
-    "◑"
-   ],
-   [
-    "kāḷigodhā",
-    "fem",
-    "name of a Sakyan laywoman; lit. black iguana",
-    "◑"
-   ],
-   [
-    "kāḷimba",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "kāḷī 2",
-    "fem",
-    "name of female slave in Sāvatthī",
-    "✔"
-   ],
-   [
-    "kirapatika",
-    "masc",
-    "name of a layman",
-    "◑"
-   ],
-   [
-    "kukkuṭa 2",
-    "masc",
-    "name of a lay disciple; lit. chicken",
-    "✔"
-   ],
-   [
-    "kukkuṭamitta",
-    "masc",
-    "name of a hunter; lit. chicken's friend ??",
-    "✔"
-   ],
-   [
-    "kuṭumbika",
-    "masc",
-    "name of a layman; lit. head of a family",
-    "✔"
-   ],
-   [
-    "kevaṭṭa 2",
-    "masc",
-    "name of a layman; lit. fisherman",
-    "✔"
-   ],
-   [
-    "kesi",
-    "masc",
-    "name of a horse trainer; lit. with long hair",
-    "✔"
-   ],
-   [
-    "khaṇḍadevi",
-    "fem",
-    "name of a monk's mother",
-    "◑"
-   ],
-   [
-    "khujjuttarā",
-    "fem",
-    "name of a lay disciple; lit. humped northern",
-    "◑"
-   ],
-   [
-    "gandhabba 3",
-    "masc",
-    "name of a minister",
-    "✔"
-   ],
-   [
-    "giridāsa",
-    "masc",
-    "name of a man; lit. moutain savage",
-    "✔"
-   ],
-   [
-    "guttila",
-    "masc",
-    "name of a musician; previous incarnation of the Buddha",
-    "◑"
-   ],
-   [
-    "gopikā",
-    "fem",
-    "name of Sakyan lay disciple; lit. cowherd's wife",
-    "✔"
-   ],
-   [
-    "ghaṭikāra",
-    "masc",
-    "name of a potter; lit. water jar maker",
-    "✔"
-   ],
-   [
-    "cakkana",
-    "masc",
-    "name of a Sri Lankan lay disciple",
-    "✔"
-   ],
-   [
-    "caṇḍa 2",
-    "masc",
-    "name of a chieftain; lit. fierce",
-    "◑"
-   ],
-   [
-    "candanaṅgalika",
-    "masc",
-    "name of a layman",
-    "✔"
-   ],
-   [
-    "cānura",
-    "masc",
-    "name of a wrestler in a Jātaka story",
-    "✔"
-   ],
-   [
-    "cārura",
-    "masc",
-    "name of a wrestler in a Jātaka story; lit. handsome",
-    "✔"
-   ],
-   [
-    "citta 2.4",
-    "masc",
-    "name of a householder lay-disciple; foremost lay disciple in giving Dhamma talks",
-    "✔"
-   ],
-   [
-    "ciravāsimātar",
-    "fem",
-    "name of a lay woman; lit. Ciravāsī's mother",
-    "◑"
-   ],
-   [
-    "ciravāsī",
-    "masc",
-    "name of Bhadraka's son; lit. long living",
-    "◑"
-   ],
-   [
-    "cunda 2",
-    "masc",
-    "name of the lay disciple who gave Buddha his last meal; lit. smith",
-    "✔"
-   ],
-   [
-    "jīvaka",
-    "masc",
-    "name of a doctor; lit. who lives",
-    "✔"
-   ],
-   [
-    "jīvā",
-    "fem",
-    "name of a dead child; lit. living",
-    "✔"
-   ],
-   [
-    "jotika 2",
-    "masc",
-    "name of a householder; lit. having shine",
-    "◑"
-   ],
-   [
-    "tapassa",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "tapassubhallikā",
-    "masc",
-    "name of two laymen; great disciples of the Buddha; foremost in first taking refuge in the Buddha",
-    "◑"
-   ],
-   [
-    "tapussa",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "tapussabhallikā",
-    "masc",
-    "name of two laymen; great disciples of the Buddha; foremost in first taking refuge in the Buddha",
-    "◑"
-   ],
-   [
-    "tambadāṭhika",
-    "masc",
-    "name of an executioner; lit. with copper-coloured teeth",
-    "◑"
-   ],
-   [
-    "tavakaṇṇika",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "tālapuṭa 2",
-    "masc",
-    "name of an actor; lit. palm leaf wrap",
-    "✔"
-   ],
-   [
-    "tissamātar",
-    "fem",
-    "name of a laywoman; lit. Tissa's mother",
-    "◑"
-   ],
-   [
-    "tuṭṭha 2",
-    "masc",
-    "name of a lay disciple; lit. content; satisfied",
-    "✔"
-   ],
-   [
-    "daṇḍapāṇī 2",
-    "masc",
-    "name of a Sakyan layman; lit. with staff in hand",
-    "✔"
-   ],
-   [
-    "dasama 2",
-    "masc",
-    "name of a householder; lit. tenth",
-    "✔"
-   ],
-   [
-    "dārukammika",
-    "masc",
-    "name of a layperson; lit. wood worker; (comm) wood merchant",
-    "◑"
-   ],
-   [
-    "dīghakārāyana",
-    "masc",
-    "name of a general; nephew of Bandhula; commander-in-chief of Pasenadi",
-    "◑"
-   ],
-   [
-    "dīghajāṇu",
-    "masc",
-    "name of a Koliyan man; lit. long knees",
-    "✔"
-   ],
-   [
-    "dīghāvu",
-    "masc",
-    "name of a lay disciple; lit. long life",
-    "◑"
-   ],
-   [
-    "dummukha 2",
-    "masc",
-    "name of a Licchavi; lit. ugly face",
-    "✔"
-   ],
-   [
-    "dhammadinna",
-    "masc",
-    "name of a lay disciple; lit. given to religion",
-    "◑"
-   ],
-   [
-    "nakula 2",
-    "masc",
-    "name of a person whose parents were great disciples; lit. mongoose",
-    "◑"
-   ],
-   [
-    "nakulapitar",
-    "masc",
-    "name of a householder; lit. Nakula's father",
-    "◑"
-   ],
-   [
-    "nakulamātar",
-    "fem",
-    "name of a female lay disciple; foremost among those who are trustworthy; lit. mongoose's mother",
-    "◑"
-   ],
-   [
-    "nandamātar",
-    "fem",
-    "name of an eminent lay disciple; lit. Happy's mother",
-    "✔"
-   ],
-   [
-    "nāvindakī",
-    "masc",
-    "name of a minister",
-    "✔"
-   ],
-   [
-    "nikaṭa 3",
-    "masc",
-    "name of a lay disciple",
-    "✔"
-   ],
-   [
-    "pañcakaṅga",
-    "masc",
-    "name of a layperson; lit. set of five tools",
-    "✔"
-   ],
-   [
-    "paṇḍitakumāraka",
-    "masc",
-    "name of a Licchavi; lit. wise prince",
-    "✔"
-   ],
-   [
-    "pāṭaliya",
-    "masc",
-    "name of chieftain",
-    "◑"
-   ],
-   [
-    "pāyāsi 2",
-    "masc",
-    "name of a young nobleman; lit. went forward",
-    "✔"
-   ],
-   [
-    "pāvārika 2",
-    "masc",
-    "name of a layman who offered a monastery to the Buddha",
-    "✔"
-   ],
-   [
-    "piyaka",
-    "masc",
-    "name of King Muṇḍa's treasurer; lit. dear",
-    "◑"
-   ],
-   [
-    "pukkusa 2",
-    "masc",
-    "name of a young Mallan man",
-    "✔"
-   ],
-   [
-    "pukkusāti 2",
-    "masc",
-    "name of a layman",
-    "✔"
-   ],
-   [
-    "puṇṇavaḍḍhana",
-    "masc",
-    "name of Migāra's son; lit. increasing merit",
-    "◑"
-   ],
-   [
-    "puṇṇikā",
-    "fem",
-    "name of a water-carrying servant girl; lay name of Puṇṇā therī; lit. complete",
-    "✔"
-   ],
-   [
-    "purāṇa 7",
-    "masc",
-    "name of one of king Pasenadi's architects",
-    "✔"
-   ],
-   [
-    "peya",
-    "masc",
-    "name of a layman; lit. to be drunk",
-    "✔"
-   ],
-   [
-    "pessa 2",
-    "masc",
-    "name of a layman; lit. to be sent",
-    "✔"
-   ],
-   [
-    "potaliya",
-    "masc",
-    "name of a householder",
-    "✔"
-   ],
-   [
-    "bandhula",
-    "masc",
-    "name of a general; lit. having bonds",
-    "◑"
-   ],
-   [
-    "bimbī 2",
-    "fem",
-    "name of a lay disciple; lit. doll",
-    "✔"
-   ],
-   [
-    "biḷālapādaka 2",
-    "masc",
-    "name of a wealthy layman; lit. cat's foot (weight)",
-    "◑"
-   ],
-   [
-    "bījaka 3",
-    "masc",
-    "name of Sudinna's son; lit. seedling",
-    "◑"
-   ],
-   [
-    "bījakamātar",
-    "fem",
-    "epithet of Sudinna's ex-wife; lit. Bījaka's mother",
-    "◑"
-   ],
-   [
-    "bhaṭa 3",
-    "masc",
-    "name of a lay disciple; lit. supported",
-    "✔"
-   ],
-   [
-    "bhadda 4",
-    "masc",
-    "name of a lay disciple; lit. lucky",
-    "✔"
-   ],
-   [
-    "bhaddavatiya 1",
-    "masc",
-    "name of a wealthy man; lit. from Bhaddavatī",
-    "◑"
-   ],
-   [
-    "bhaddiya 2",
-    "masc",
-    "name of a Licchavi; lit. lucky; fortunate",
-    "✔"
-   ],
-   [
-    "bhadraka 2",
-    "masc",
-    "name of a chieftain; lit. lucky",
-    "◑"
-   ],
-   [
-    "bhallika",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "bhesika",
-    "masc",
-    "name of a washroom attendant",
-    "✔"
-   ],
-   [
-    "majjha 4",
-    "masc",
-    "name of a wealthy layman; father of Anopamā; lit. middle",
-    "✔"
-   ],
-   [
-    "maṇicūḷaka",
-    "masc",
-    "name of a chieftain; lit. jewelled crest",
-    "◑"
-   ],
-   [
-    "mahānāma 1",
-    "masc",
-    "name of a Sakyan layman; lit. great name",
-    "✔"
-   ],
-   [
-    "mahāli",
-    "masc",
-    "name of a Licchavi man",
-    "✔"
-   ],
-   [
-    "mānadinna",
-    "masc",
-    "name of a lay disciple; lit. give to conceit",
-    "◑"
-   ],
-   [
-    "migava 3",
-    "masc",
-    "name of a park-keeper; lit. deer hunter",
-    "✔"
-   ],
-   [
-    "migasāṇā",
-    "fem",
-    "name of a female lay disciple; lit. deer hemp",
-    "◑"
-   ],
-   [
-    "migasālā",
-    "fem",
-    "name of a female lay disciple; lit. deer hall",
-    "✔"
-   ],
-   [
-    "migāra",
-    "masc",
-    "name of a wealthy layman",
-    "✔"
-   ],
-   [
-    "meṇḍaka 2",
-    "masc",
-    "name of a lay disciple; lit. sheep",
-    "◑"
-   ],
-   [
-    "meṇḍakanattar",
-    "masc",
-    "name of a man; Meṇḍaka's grandson; lit. sheep's grandson",
-    "◑"
-   ],
-   [
-    "medakathālikā 2",
-    "fem",
-    "name of a acrobat; (comm) name of a male acrobat with a female name; lit. pot of lard",
-    "✔"
-   ],
-   [
-    "moggalla",
-    "masc",
-    "name of a minister",
-    "✔"
-   ],
-   [
-    "yamaka 4",
-    "masc",
-    "name of a minister; lit. twin",
-    "✔"
-   ],
-   [
-    "rattapāṇi",
-    "masc",
-    "name of a dyer; lit. red-handed",
-    "✔"
-   ],
-   [
-    "rāsiya",
-    "masc",
-    "name of a chieftain; lit. heaps",
-    "◑"
-   ],
-   [
-    "rosika",
-    "masc",
-    "name of a washroom attendant; lit. angry",
-    "✔"
-   ],
-   [
-    "rohaṇa",
-    "masc",
-    "name of a young layman; lit. ascending",
-    "◑"
-   ],
-   [
-    "rohiṇeyya",
-    "masc",
-    "name of a minister; lit. son of Rohiṇī",
-    "✔"
-   ],
-   [
-    "vajjiyamahita",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "vajjiyamāhita",
-    "masc",
-    "name of a lay disciple; lit. honoured among the Vajjians",
-    "✔"
-   ],
-   [
-    "vappa 2",
-    "masc",
-    "name of a Sakyan; lit. planting",
-    "✔"
-   ],
-   [
-    "vijayamāhika",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "viṭaṭūbha",
-    "masc",
-    "name of king Pasenadi's general",
-    "✔"
-   ],
-   [
-    "viḍūḍabha",
-    "masc",
-    "name of king Pasenadi's general",
-    "✔"
-   ],
-   [
-    "visākha 2",
-    "masc",
-    "name of a lay disciple; lit. Libra",
-    "✔"
-   ],
-   [
-    "visākhā 1",
-    "fem",
-    "name of the Buddha's chief female disciple, foremost female donor to the Saṅgha; lit. Libra",
-    "✔"
-   ],
-   [
-    "vedehikā",
-    "fem",
-    "name of a laywoman in Sāvatthī; lit. from Videha; wise",
-    "✔"
-   ],
-   [
-    "velāma",
-    "masc",
-    "name of the Buddha in a previous incarnation",
-    "◑"
-   ],
-   [
-    "veḷukaṇḍakiyā",
-    "fem",
-    "name of a lay disciple; lit. bamboo thorn",
-    "◑"
-   ],
-   [
-    "veḷukaṇḍakī",
-    "fem",
-    "name of a lay disciple; lit. bamboo thorn",
-    "◑"
-   ],
-   [
-    "sakulā 2",
-    "fem",
-    "name of a laywomen, sister of king Pasenadi's queen; lit. one's own family",
-    "✔"
-   ],
-   [
-    "satulakāyī",
-    "fem",
-    "name of Jotika's wife; lit. with a body like cotton wool ??",
-    "✔"
-   ],
-   [
-    "santuṭṭha 2",
-    "masc",
-    "name of a lay disciple; lit. satisfied",
-    "✔"
-   ],
-   [
-    "sandhāna 1",
-    "masc",
-    "name of a lay disciple; lit. uniting",
-    "✔"
-   ],
-   [
-    "samīti",
-    "masc",
-    "name of a wainwright in Sāvatthī",
-    "✔"
-   ],
-   [
-    "sarakāni",
-    "masc",
-    "name of a Sakyan lay disciple",
-    "◑"
-   ],
-   [
-    "saraṇāni",
-    "masc",
-    "name of a Sakyan lay disciple; lit. refuges",
-    "◑"
-   ],
-   [
-    "sāṇa 1.3",
-    "masc",
-    "name of a layman",
-    "✔"
-   ],
-   [
-    "sādatta",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "sāmā 5",
-    "fem",
-    "name of a courtesan in a Jātaka story; lit. brown",
-    "✔"
-   ],
-   [
-    "sāmāvatī 1",
-    "fem",
-    "name of a female lay disciple; foremost among those living in a state of friendliness; lit. of dark complexion",
-    "◑"
-   ],
-   [
-    "sāragga",
-    "masc",
-    "name of a lay disciple",
-    "◑"
-   ],
-   [
-    "sālavatī 2",
-    "fem",
-    "name of a royal courtesan; lit. with many halls",
-    "◑"
-   ],
-   [
-    "sāḷha 1",
-    "masc",
-    "name of a layman; Visākha's grandson",
-    "✔"
-   ],
-   [
-    "sāḷha 2",
-    "masc",
-    "name of a Licchavi layman",
-    "✔"
-   ],
-   [
-    "sigālaka 2",
-    "masc",
-    "name of a lay disciple; lit. little jackal",
-    "◑"
-   ],
-   [
-    "siṅgālaka 2",
-    "masc",
-    "name of a lay disciple; lit. little jackal",
-    "✔"
-   ],
-   [
-    "sirivaḍḍha 1",
-    "masc",
-    "name of a Kosalan minister; lit. glory increase",
-    "✔"
-   ],
-   [
-    "sirivaḍḍha 2",
-    "masc",
-    "name of a lay disciple; lit. glory increase",
-    "◑"
-   ],
-   [
-    "sirīvaḍḍha",
-    "masc",
-    "name of a lay disciple; lit. glory increase",
-    "◑"
-   ],
-   [
-    "sīha 2",
-    "masc",
-    "name of a military general in Vesālī; lit. lion",
-    "◑"
-   ],
-   [
-    "sujātā 1",
-    "fem",
-    "name of a lay disciple; lit. well born",
-    "✔"
-   ],
-   [
-    "sutanā",
-    "fem",
-    "name of a laywoman",
-    "◑"
-   ],
-   [
-    "sudatta",
-    "masc",
-    "name of Anāthapiṇḍika; father of Saddha; lit. well given",
-    "✔"
-   ],
-   [
-    "sudhanā",
-    "fem",
-    "name of a laywoman; lit. very wealthy",
-    "◑"
-   ],
-   [
-    "supabbā",
-    "fem",
-    "name of a lay disciple; lit. good joints",
-    "◑"
-   ],
-   [
-    "suppabuddha",
-    "masc",
-    "name of a leper; lit. well awakened",
-    "✔"
-   ],
-   [
-    "suppavāsā",
-    "fem",
-    "name of a female lay disciple; foremost among those who offer excellent items; lit. happily living abroad",
-    "◑"
-   ],
-   [
-    "subhaṭa",
-    "masc",
-    "name of a lay disciple; lit. well supported",
-    "✔"
-   ],
-   [
-    "subhadda 3",
-    "masc",
-    "name of a lay disciple; lit. very lucky",
-    "✔"
-   ],
-   [
-    "sūrambaṭṭha",
-    "masc",
-    "name of a lay disciple; foremost among those with absolute faith",
-    "◑"
-   ],
-   [
-    "serivant",
-    "masc",
-    "name of a merchant; lit. having independent quality",
-    "✔"
-   ],
-   [
-    "soṇa 2",
-    "masc",
-    "name of a layman; lit. dog",
-    "✔"
-   ],
-   [
-    "soṇamātar",
-    "fem",
-    "name of a laywoman; lit. Soṇa's mother",
-    "◑"
-   ],
-   [
-    "somā 2",
-    "fem",
-    "name of a laywoman, sister of Pasenadi's queen; lit. soma",
-    "✔"
-   ],
-   [
-    "hatthaka 1",
-    "masc",
-    "name of a layman in Āḷavī; lit. handy",
-    "✔"
-   ],
-   [
-    "haliddikāni",
-    "masc",
-    "name of a householder",
-    "◑"
-   ],
-   [
-    "hārika 2",
-    "masc",
-    "name of an executioner; lit. carrying",
-    "✔"
-   ],
-   [
-    "hāliddakāni",
-    "masc",
-    "name of a householder",
-    "◑"
-   ],
-   [
-    "hāliddika",
-    "masc",
-    "name of a householder",
-    "◑"
-   ],
-   [
-    "hāliddikāni",
-    "masc",
-    "name of a householder",
-    "◑"
-   ]
-  ],
-  "count": 182
- },
- "family names": {
-  "data": [
-   [
-    "aggivessana",
-    "masc",
-    "name of a Brahman family clan; lit. descendant of Aggivessa",
-    "✔"
-   ],
-   [
-    "ākāsa 2.1",
-    "masc",
-    "name of a family clan",
-    "✔"
-   ],
-   [
-    "upamañña",
-    "masc",
-    "name of a clan",
-    "◑"
-   ],
-   [
-    "kaccāna",
-    "masc",
-    "family name; lit. descendant of Kati",
-    "✔"
-   ],
-   [
-    "kaccāyana 1",
-    "masc",
-    "family name; lit. descendant of Kati",
-    "✔"
-   ],
-   [
-    "kaṇhāyana",
-    "masc",
-    "name of a clan; lit. related to black",
-    "✔"
-   ],
-   [
-    "kassapa 3",
-    "masc",
-    "family name; lit. descendant of Kassapa",
-    "✔"
-   ],
-   [
-    "kātiyāna 1",
-    "masc",
-    "family name; lit. descendant of Kati",
-    "✔"
-   ],
-   [
-    "kālāma",
-    "masc",
-    "family names of the Buddha's first teacher; Āḷāra Kālāma",
-    "✔"
-   ],
-   [
-    "kesakambala 1",
-    "masc",
-    "family name of an ascetic teacher; lit. (wearing a) hair blanket",
-    "✔"
-   ],
-   [
-    "koṇḍañña 2",
-    "masc",
-    "name of a family clan",
-    "✔"
-   ],
-   [
-    "kosiya 2",
-    "masc",
-    "family name of Sakka; epithet of Sakka; lit. from a cocoon",
-    "✔"
-   ],
-   [
-    "koḷiya",
-    "masc",
-    "name of a clan neighbouring the Sakyans",
-    "✔"
-   ],
-   [
-    "koḷivisa 1",
-    "masc",
-    "name of a family clan",
-    "✔"
-   ],
-   [
-    "gagga",
-    "masc",
-    "name of the family clan of Aṅgulimāla",
-    "✔"
-   ],
-   [
-    "gotama 1",
-    "masc",
-    "family name of the Buddha; lit. of the Gotama clan",
-    "✔"
-   ],
-   [
-    "gosāla 1",
-    "masc",
-    "family name of a ascetic teacher; Makkhali Gosāla; lit. from a cow shed",
-    "✔"
-   ],
-   [
-    "thūli",
-    "masc",
-    "name of clan who received a portion of the Buddha's relics",
-    "✔"
-   ],
-   [
-    "nāṭaputta",
-    "masc",
-    "family names of Mahavira; leader of the Jains; lit. son of the dance",
-    "✔"
-   ],
-   [
-    "nātaputta",
-    "masc",
-    "family name of Mahavira, leader of the Jains; lit. son of the dance",
-    "✔"
-   ],
-   [
-    "nāthaputta",
-    "masc",
-    "family name of Mahavira; leader of the Jains; lit. son of the lord",
-    "✔"
-   ],
-   [
-    "pilinda",
-    "masc",
-    "name of a family clan",
-    "✔"
-   ],
-   [
-    "buli",
-    "masc",
-    "name of clan who received a portion of the Buddha's relics",
-    "✔"
-   ],
-   [
-    "belaṭṭhaputta",
-    "masc",
-    "name of an ascetic teacher; Sañcaya Belaṭṭhaputta; lit. son of Belaṭṭha",
-    "✔"
-   ],
-   [
-    "bellaṭṭhiputta",
-    "masc",
-    "family name of an ascetic teacher; lit. son of Belaṭṭhi",
-    "✔"
-   ],
-   [
-    "bhaggava 1",
-    "masc",
-    "family name; lit. from Bhaggu",
-    "✔"
-   ],
-   [
-    "mantāṇiputta",
-    "masc",
-    "family name of a Sakyan arahnt monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
-    "✔"
-   ],
-   [
-    "mantāniputta",
-    "masc",
-    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
-    "◑"
-   ],
-   [
-    "moggallāna 2",
-    "masc",
-    "family name; lit. descendent of Muggala",
-    "✔"
-   ],
-   [
-    "moriya",
-    "masc",
-    "name of a high caste clan",
-    "✔"
-   ],
-   [
-    "rāmaputta",
-    "masc",
-    "family names of the Buddha's second teacher; Udaka Rāmaputta; lit. son of Rāma",
-    "✔"
-   ],
-   [
-    "vaccha 1.2",
-    "masc",
-    "family name",
-    "✔"
-   ],
-   [
-    "vacchāyana",
-    "masc",
-    "family name of the wandering ascetic Pilotika; lit. descendent of Vaccha",
-    "✔"
-   ],
-   [
-    "vāseṭṭha 4",
-    "masc",
-    "name of a Brahman family",
-    "✔"
-   ],
-   [
-    "vedehiputta",
-    "masc",
-    "family name of Ajātasattu; lit. son of Vedehi",
-    "✔"
-   ],
-   [
-    "vedhaññā",
-    "masc",
-    "name of a Sakyan family clan",
-    "◑"
-   ],
-   [
-    "verahaccāni",
-    "masc",
-    "name of a Brahman family clan",
-    "◑"
-   ],
-   [
-    "sakya 1",
-    "masc",
-    "name of the family into which the Buddha was born",
-    "✔"
-   ],
-   [
-    "saṅkicca",
-    "masc",
-    "family name of an ascetic; lit. descendent of Saṃkiti",
-    "◑"
-   ],
-   [
-    "saṃkicca 1",
-    "masc",
-    "family name of an ascetic; lit. descendent of Saṃkiti",
-    "✔"
-   ]
-  ],
-  "count": 40
- },
- "names of countries": {
-  "data": [
-   [
-    "aṅga 4",
-    "nt",
-    "name of a country; capital Campā; modern day Bengal",
-    "✔"
-   ],
-   [
-    "aṅguttarāpa",
-    "masc",
-    "name of a country",
-    "◑"
-   ],
-   [
-    "andha 2.1",
-    "masc",
-    "name of a country; modern Andhra Pradesh",
-    "◑"
-   ],
-   [
-    "avanti 2",
-    "fem",
-    "name of a country",
-    "◑"
-   ],
-   [
-    "āḷavī 1",
-    "fem",
-    "name of a country",
-    "✔"
-   ],
-   [
-    "uttarāpa",
-    "masc",
-    "name of a country; lit. northern water",
-    "✔"
-   ],
-   [
-    "kamboja",
-    "masc",
-    "name of a country; part of modern day eastern Afghanistan",
-    "✔"
-   ],
-   [
-    "kaliṅga",
-    "masc",
-    "name of a country",
-    "✔"
-   ],
-   [
-    "kaliṅgaraṭṭha",
-    "nt",
-    "kingdom of Kaliṅga",
-    "✔"
-   ],
-   [
-    "kāsi",
-    "masc",
-    "name of a kingdom",
-    "✔"
-   ],
-   [
-    "kāsikosala",
-    "masc",
-    "kingdoms of Kāsi and Kosala",
-    "✔"
-   ],
-   [
-    "kuru",
-    "masc",
-    "name of a country",
-    "✔"
-   ],
-   [
-    "kosala 1",
-    "masc",
-    "name of a kingdom",
-    "✔"
-   ],
-   [
-    "gandhāra 1",
-    "masc",
-    "name of a country; modern Kandahar",
-    "◑"
-   ],
-   [
-    "ceta",
-    "nt",
-    "name of a country",
-    "◑"
-   ],
-   [
-    "pattuṇṇa 1",
-    "masc",
-    "name of a country",
-    "◑"
-   ],
-   [
-    "bhaddavatiya 2",
-    "nt",
-    "name of a region; lit. around Bhaddavatī",
-    "◑"
-   ],
-   [
-    "bhoja 1.1",
-    "masc",
-    "name of a country",
-    "✔"
-   ],
-   [
-    "magadha",
-    "masc",
-    "name of a country; modern day Bihar",
-    "✔"
-   ],
-   [
-    "madda 2.1",
-    "masc",
-    "name of a country",
-    "✔"
-   ],
-   [
-    "vajjī 3",
-    "masc",
-    "name of a country; capitals Vesali & Mithila",
-    "✔"
-   ],
-   [
-    "videha",
-    "masc",
-    "name of a country; modern day Mithila, Tirhut",
-    "◑"
-   ],
-   [
-    "sindhu 1",
-    "masc",
-    "name of a country around the Indus River",
-    "◑"
-   ],
-   [
-    "sivī 2",
-    "masc",
-    "name of a country",
-    "◑"
-   ],
-   [
-    "sunāparanta",
-    "masc",
-    "name of a country; native land of Puṇṇa",
-    "✔"
-   ]
-  ],
-  "count": 25
- },
- "names of paccekabuddhas": {
-  "data": [
-   [
-    "aṅga 5",
-    "masc",
-    "name of a privately awakened Buddha; lit. Bengali",
-    "◑"
-   ],
-   [
-    "accuta 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. not fallen",
-    "◑"
-   ],
-   [
-    "accutagāmabyāmaka",
-    "masc",
-    "name of two privately awakened Buddhas; Accutagāma and Byāmaka",
-    "◑"
-   ],
-   [
-    "aṭṭhaka 1.6",
-    "masc",
-    "name of a privately awakened Buddha; lit. having eight; related to eight",
-    "✔"
-   ],
-   [
-    "aṭṭhama 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. eighth",
-    "◑"
-   ],
-   [
-    "anāsava 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. free from effluents",
-    "◑"
-   ],
-   [
-    "anīgha 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. free from trembling",
-    "◑"
-   ],
-   [
-    "aparājita 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. undefeated",
-    "◑"
-   ],
-   [
-    "ariṭṭha 1.2",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "ariya 4",
-    "masc",
-    "name of a privately awakened Buddha; lit. noble",
-    "◑"
-   ],
-   [
-    "asayha 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. not to be overcome",
-    "◑"
-   ],
-   [
-    "asita 2.3",
-    "masc",
-    "name of a privately awakened Buddha; lit. untied",
-    "◑"
-   ],
-   [
-    "assumegha",
-    "masc",
-    "name of a privately awakened Buddha; lit. cloud of tears",
-    "✔"
-   ],
-   [
-    "ānanda 3",
-    "masc",
-    "name of four privately awakened Buddhas",
-    "✔"
-   ],
-   [
-    "uccaṅgamāya",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "ujjaya 1",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "uttara 2.07",
-    "masc",
-    "name of a privately awakened Buddha; lit. higher",
-    "◑"
-   ],
-   [
-    "upakāḷa",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "upananda 2",
-    "masc",
-    "name of four privately awakened Buddhas; lit. descendent of Nanda",
-    "✔"
-   ],
-   [
-    "upanīta 7",
-    "masc",
-    "name of a privately awakened Buddha; lit. initiated",
-    "◑"
-   ],
-   [
-    "upanemisa",
-    "masc",
-    "name of a privately awakened Buddha",
-    "✔"
-   ],
-   [
-    "upariṭṭha 2.1",
-    "masc",
-    "name of a privately awakened Buddha; lit. descendent of Ariṭṭha",
-    "✔"
-   ],
-   [
-    "upasikhi",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "upasīdarī",
-    "masc",
-    "name of a privately awakened Buddha; lit. son of Sīdarī",
-    "◑"
-   ],
-   [
-    "upāsabha",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "uposatha 5",
-    "masc",
-    "name of a privately awakened Buddha; lit. living near",
-    "◑"
-   ],
-   [
-    "uppala 4",
-    "masc",
-    "name of a privately awakened Buddha; lit. lotus",
-    "✔"
-   ],
-   [
-    "usabha 4",
-    "masc",
-    "name of a privately awakened Buddha; lit. stud bull",
-    "◑"
-   ],
-   [
-    "kaṇha 4",
-    "masc",
-    "name of a privately awakened Buddha; lit. black",
-    "✔"
-   ],
-   [
-    "kāḷūpakāḷā",
-    "masc",
-    "name of two privately awakened Buddhas; Kāḷa and Upakāḷa",
-    "◑"
-   ],
-   [
-    "ketumant 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. having banner quality",
-    "◑"
-   ],
-   [
-    "ketumbharāga",
-    "masc",
-    "name of a privately awakened Buddha; lit. going carrying a flag; (or) cloud coloured",
-    "✔"
-   ],
-   [
-    "kesī 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. with long hair",
-    "◑"
-   ],
-   [
-    "kosalla 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. from Kosala; (or) skilled",
-    "✔"
-   ],
-   [
-    "khemābhirata",
-    "masc",
-    "name of a privately awakened Buddha; lit. delighting in safety",
-    "◑"
-   ],
-   [
-    "gandhāra 2",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "guttijita",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "jayanta 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. conquering",
-    "✔"
-   ],
-   [
-    "jālī 2.2",
-    "masc",
-    "name of two privately awakened Buddhas; lit. blazing",
-    "✔"
-   ],
-   [
-    "jita 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. conquered",
-    "◑"
-   ],
-   [
-    "jeta",
-    "masc",
-    "name of a privately awakened Buddha; lit. conqueror",
-    "✔"
-   ],
-   [
-    "tagarasikhī",
-    "masc",
-    "name of a privately awakened Buddha; lit. jasmine crest",
-    "◑"
-   ],
-   [
-    "taggarasikhī",
-    "masc",
-    "name of a privately awakened Buddha; lit. jasmine crest",
-    "◑"
-   ],
-   [
-    "tatha 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. truth",
-    "◑"
-   ],
-   [
-    "tadādhimutta",
-    "masc",
-    "name of a privately awakened Buddha; lit. intent on that",
-    "✔"
-   ],
-   [
-    "tissūpatissā",
-    "masc",
-    "name of two privately awakened Buddhas; Tissa and Upatissa",
-    "◑"
-   ],
-   [
-    "dabbila",
-    "masc",
-    "name of a privately awakened Buddha; lit. ladeler",
-    "✔"
-   ],
-   [
-    "durannaya 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. difficult to follow",
-    "◑"
-   ],
-   [
-    "dvārabhāja",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "nanda 5",
-    "masc",
-    "name of a privately awakened Buddha; lit. happy",
-    "◑"
-   ],
-   [
-    "nīta 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. led",
-    "◑"
-   ],
-   [
-    "nemisa",
-    "masc",
-    "name of a privately awakened Buddha",
-    "✔"
-   ],
-   [
-    "paṅga",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "paduma 5",
-    "masc",
-    "name of a privately awakened Buddha; lit. lotus",
-    "✔"
-   ],
-   [
-    "padumuttara 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. ultimate lotus",
-    "✔"
-   ],
-   [
-    "pabbata 4",
-    "masc",
-    "name of a privately awakened Buddha; lit. mountain",
-    "✔"
-   ],
-   [
-    "pavattar 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. proclaimer",
-    "◑"
-   ],
-   [
-    "passi 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. he saw",
-    "◑"
-   ],
-   [
-    "piṇḍola 1",
-    "masc",
-    "name of a privately awakened Buddha; lit. who collects alms",
-    "◑"
-   ],
-   [
-    "piyadassī 1",
-    "masc",
-    "name of a privately awakened Buddha; lit. dear to see; (or) who looks fondly",
-    "✔"
-   ],
-   [
-    "bandhumant 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. having bonds quality",
-    "◑"
-   ],
-   [
-    "bodhi 5",
-    "masc",
-    "name of a privately awakened Buddha; lit. awakening",
-    "◑"
-   ],
-   [
-    "bhāradvāja 4",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "bhāvitatta 1.4",
-    "masc",
-    "name of a privately awakened Buddha; lit. developed self",
-    "◑"
-   ],
-   [
-    "matula",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "manomaya 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. mind made",
-    "◑"
-   ],
-   [
-    "mahānāma 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. great name",
-    "◑"
-   ],
-   [
-    "mātaṅga 3",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "mānacchida 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. who has cut through conceit",
-    "◑"
-   ],
-   [
-    "mānatthaddha 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. stiff with conceit",
-    "✔"
-   ],
-   [
-    "methula",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "yasassī 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. famous",
-    "◑"
-   ],
-   [
-    "rakkhita 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. protected",
-    "✔"
-   ],
-   [
-    "lomahaṃsa 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. goosebumps",
-    "◑"
-   ],
-   [
-    "vijita 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. conquered",
-    "◑"
-   ],
-   [
-    "vimala 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. stainless",
-    "◑"
-   ],
-   [
-    "saṅgha 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. group",
-    "✔"
-   ],
-   [
-    "saccanāma 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. correctly named",
-    "◑"
-   ],
-   [
-    "satthar 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. teacher",
-    "✔"
-   ],
-   [
-    "santacitta 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. calm mind",
-    "✔"
-   ],
-   [
-    "sayha 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. to be endured",
-    "◑"
-   ],
-   [
-    "sarabhaṅga 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. reed breaker",
-    "◑"
-   ],
-   [
-    "sikhari",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "sikhī 4",
-    "masc",
-    "name of a privately awakened Buddha; lit. with a crest",
-    "✔"
-   ],
-   [
-    "sīdarī",
-    "masc",
-    "name of a privately awakened Buddha; lit. from the Sīdā river; (or) cold",
-    "✔"
-   ],
-   [
-    "sutavant 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. having heard quality",
-    "✔"
-   ],
-   [
-    "sudassana 5",
-    "masc",
-    "name of a privately awakened Buddha; lit. seeing clearly",
-    "◑"
-   ],
-   [
-    "sudāṭha",
-    "masc",
-    "name of a privately awakened Buddha; lit. good teeth",
-    "◑"
-   ],
-   [
-    "sundara 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. beautiful",
-    "◑"
-   ],
-   [
-    "supatiṭṭhita 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. well stood back",
-    "◑"
-   ],
-   [
-    "subāhu 1",
-    "masc",
-    "name of a privately awakened Buddha; lit. good arms",
-    "✔"
-   ],
-   [
-    "subha 4",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "sumaṅgala 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. very auspicious",
-    "◑"
-   ],
-   [
-    "sumbha",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "sobhita 3",
-    "masc",
-    "name of a privately awakened Buddha; lit. shone",
-    "✔"
-   ],
-   [
-    "sorata 2",
-    "masc",
-    "name of a privately awakened Buddha; lit. polite",
-    "◑"
-   ],
-   [
-    "hiṅga",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ],
-   [
-    "hiṅgū",
-    "masc",
-    "name of a privately awakened Buddha",
-    "◑"
-   ]
-  ],
-  "count": 98
- },
- "names of monks": {
-  "data": [
-   [
-    "aṅgaṇika",
-    "masc",
-    "name of an arahant monk; lit. from Bengal",
-    "✔"
-   ],
-   [
-    "aṅgaṇikabhāradvāja",
-    "masc",
-    "name of an arahant monk; lit. Bharadvāja from Bengal",
-    "◑"
-   ],
-   [
-    "aṅgulimāla",
-    "masc",
-    "name of an arahant monk; lit. garland of fingers",
-    "✔"
-   ],
-   [
-    "aciravata",
-    "masc",
-    "name of novice",
-    "◑"
-   ],
-   [
-    "ajita 5",
-    "masc",
-    "name of an arahant monk; lit. undefeated",
-    "◑"
-   ],
-   [
-    "ajina 4",
-    "masc",
-    "name of an arahant monk; lit. black antelope hide",
-    "◑"
-   ],
-   [
-    "ajjuka 2",
-    "masc",
-    "name of a monk; lit. basil",
-    "◑"
-   ],
-   [
-    "ajjuna 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "añjanavaniya",
-    "masc",
-    "name of an arahant monk; lit. living in the pitch black forest",
-    "✔"
-   ],
-   [
-    "aññākoṇḍañña",
-    "masc",
-    "name of an arahant monk; the Buddha's first monastic disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
-    "◑"
-   ],
-   [
-    "aññātakoṇḍañña",
-    "masc",
-    "name of the Buddha's first disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
-    "✔"
-   ],
-   [
-    "aññāsikoṇḍañña",
-    "masc",
-    "name of an arahant monk; the Buddha's first monastic disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
-    "✔"
-   ],
-   [
-    "adhimutta 3",
-    "masc",
-    "name of an arahant monk; lit. intent",
-    "◑"
-   ],
-   [
-    "adhimutta 4",
-    "masc",
-    "name of an arahant monk; lit. intent",
-    "◑"
-   ],
-   [
-    "anurādha",
-    "masc",
-    "name of a monk; lit. son of Rādha; (or) born under the constellation of Anurādha",
-    "◑"
-   ],
-   [
-    "anuruddha 1",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost monk in the divine eye; cousin of the Buddha",
-    "✔"
-   ],
-   [
-    "anūpama 2",
-    "masc",
-    "name of an arahant monk; lit. no measuring near",
-    "◑"
-   ],
-   [
-    "abhaya 5",
-    "masc",
-    "name of an arahant monk; lit. fearless",
-    "✔"
-   ],
-   [
-    "abhaya 6",
-    "masc",
-    "name of an arahant monk; lit. fearless",
-    "◑"
-   ],
-   [
-    "abhijika",
-    "masc",
-    "name of a monk; lit. absolute victory",
-    "◑"
-   ],
-   [
-    "abhibhūta 3",
-    "masc",
-    "name of an arahant monk; lit. conqurered",
-    "◑"
-   ],
-   [
-    "abhibhūsambhava",
-    "nt",
-    "names of Sikhī Buddha's pair of chief disciples; Abhibhū and Sambhava",
-    "✔"
-   ],
-   [
-    "ariṭṭha 1.1",
-    "masc",
-    "name of a monk; lit. unhurt",
-    "✔"
-   ],
-   [
-    "asoka 3",
-    "masc",
-    "name of Vipassī Buddha's attendant; lit. without sorrow",
-    "✔"
-   ],
-   [
-    "assaji 1.1",
-    "masc",
-    "name of a monk; Sāriputta's teacher; lit. horse master",
-    "✔"
-   ],
-   [
-    "ātuma 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "ānanda 2",
-    "masc",
-    "name of an arahant monk; attendant of the Buddha; great disciple of the Buddha; foremost disciple in great learning, remembrance, conduct, resoluteness and service; lit. happiness",
-    "✔"
-   ],
-   [
-    "ābhijjika",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "ābhiñjika",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "ārohanta",
-    "masc",
-    "name of a former minister who became a monk; lit. ascending",
-    "◑"
-   ],
-   [
-    "ārohaputta",
-    "masc",
-    "name of an arahant monk; lit. mahout's son",
-    "✔"
-   ],
-   [
-    "iṭṭiyatthera",
-    "masc",
-    "name of a missionary monk",
-    "✔"
-   ],
-   [
-    "isidatta 1",
-    "masc",
-    "name of an arahant monk; lit. given to the sage",
-    "✔"
-   ],
-   [
-    "isidinna",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "ukkhepakatavaccha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "ugga 6",
-    "masc",
-    "name of an arahant monk; lit. going up",
-    "◑"
-   ],
-   [
-    "ujjaya 2",
-    "masc",
-    "name of an arahant monk; lit. victor",
-    "✔"
-   ],
-   [
-    "uttara 2.10",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "uttara 2.11",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "uttarapāla",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "uttiya 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "uttiya 3",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "uttiya 4",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "udāyī 1",
-    "masc",
-    "name of a monk; Kāḷudāyi; lit. going up",
-    "✔"
-   ],
-   [
-    "udāyī 2",
-    "masc",
-    "name of a monk; Paṇḍitaudāyi; lit. going up",
-    "✔"
-   ],
-   [
-    "udena 3",
-    "masc",
-    "name of a monk; lit. going up",
-    "✔"
-   ],
-   [
-    "upacāla",
-    "masc",
-    "name of a monk; lit. son of Cāla",
-    "✔"
-   ],
-   [
-    "upatissa",
-    "masc",
-    "name of Sāriputta; lit. son of Tissa",
-    "✔"
-   ],
-   [
-    "upananda 3",
-    "masc",
-    "name of a Sakyan monk; lit. descendent of Nanda",
-    "✔"
-   ],
-   [
-    "upavāṇa",
-    "masc",
-    "name of an arahant monk; attendant of the Buddha",
-    "✔"
-   ],
-   [
-    "upavāna",
-    "masc",
-    "name of a monk; attendant of the Buddha",
-    "◑"
-   ],
-   [
-    "upavāḷa",
-    "masc",
-    "name of a monk; lit. descendent of wild animal",
-    "✔"
-   ],
-   [
-    "upasanta 2",
-    "masc",
-    "name of Vessabhū Buddha's attendant; lit. calmed",
-    "✔"
-   ],
-   [
-    "upasena",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "upāli 2",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost disciple of those learned in the Vinaya",
-    "✔"
-   ],
-   [
-    "upāli 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "upālitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "uppāla",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "uruvelakassapa",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost in those with a large following; lit. Kassapa from Uruvelā",
-    "◑"
-   ],
-   [
-    "uruveḷakassapa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "usabha 5",
-    "masc",
-    "name of an arahant monk; lit. stud bull",
-    "◑"
-   ],
-   [
-    "usabha 6",
-    "masc",
-    "name of an arahant monk; lit. stud bull",
-    "◑"
-   ],
-   [
-    "ekadhammasavanīya",
-    "masc",
-    "name of an arahant monk; lit. related to hearing one teaching",
-    "◑"
-   ],
-   [
-    "ekadhammika",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "ekavihāriya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "ekudāniya",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "eraka 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "kaṅkhārevata",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost in jhāna; lit. doubting Revata",
-    "✔"
-   ],
-   [
-    "kaccānagotta 2",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "kaṭamodakatissaka",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "kaṭamorakatissaka",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "kaṇṭaka 5",
-    "masc",
-    "name of a novice monk; lit. thorn",
-    "✔"
-   ],
-   [
-    "kaṇhadinna",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "katamodakatissaka",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "katamorakatissaka",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "kappa 1.7",
-    "masc",
-    "name of an arahant monk; lit. suitable",
-    "◑"
-   ],
-   [
-    "kappaṭakura",
-    "masc",
-    "name of an arahant monk; lit. rags rice",
-    "✔"
-   ],
-   [
-    "kappāna",
-    "masc",
-    "name of an arahant monk; Nigrodhakappa",
-    "✔"
-   ],
-   [
-    "kappāyana",
-    "masc",
-    "name of a monk; Nigrodhakappa",
-    "✔"
-   ],
-   [
-    "kappitaka",
-    "masc",
-    "name of a monk; lit. caused to be suitable",
-    "◑"
-   ],
-   [
-    "kappina",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost disciple in instructing the monks",
-    "◑"
-   ],
-   [
-    "kavimbha",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "kassapa 5",
-    "masc",
-    "name of an arahant monk; lit. descendant of Kassapa",
-    "✔"
-   ],
-   [
-    "kassapagotta",
-    "masc",
-    "name of a monk; lit. of the Kassapa family clan",
-    "✔"
-   ],
-   [
-    "kaḷārakhattiya",
-    "masc",
-    "name of a monk; lit. warrior with protruding teeth",
-    "◑"
-   ],
-   [
-    "kaḷimbha 2",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "kātiyāna 2",
-    "masc",
-    "name of an arahant monk; lit. descendant of Kati",
-    "✔"
-   ],
-   [
-    "kāmabhū",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "kāḷakabhikkhu",
-    "masc",
-    "name of a monk; lit. black monk",
-    "✔"
-   ],
-   [
-    "kāḷigodhāputtabhaddiya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "kāḷigodhāyaputta",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost in those from eminent families; lit. son of black iguana",
-    "◑"
-   ],
-   [
-    "kāḷudāyitthera",
-    "masc",
-    "name of a monk; lit. Black Udāyi the Elder",
-    "◑"
-   ],
-   [
-    "kāḷudāyī",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost in those who inspire confidence in families; lit. black Udāyī",
-    "◑"
-   ],
-   [
-    "kimila 1",
-    "masc",
-    "name of an arahant monk; associate of Anuruddha",
-    "✔"
-   ],
-   [
-    "kimila 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "kimbila 1",
-    "masc",
-    "name of an arahant monk; associate of Anuruddha",
-    "✔"
-   ],
-   [
-    "kimbila 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "kuṭikaṇṇa",
-    "masc",
-    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. crooked ear; (comm) earrings worth ten billion",
-    "◑"
-   ],
-   [
-    "kuṭikaṇṇatthera",
-    "masc",
-    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. elder crooked ear; (comm) elder with earrings worth ten billion",
-    "◑"
-   ],
-   [
-    "kuṭikaṇṇathera",
-    "masc",
-    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. elder crooked ear; (comm) elder with earrings worth ten billion",
-    "◑"
-   ],
-   [
-    "kuṭivihāritthera",
-    "masc",
-    "name of an arahant monk; lit. living in a hut elder",
-    "◑"
-   ],
-   [
-    "kuṭivihārī",
-    "masc",
-    "name of an arahant monk; lit. living in a hut",
-    "✔"
-   ],
-   [
-    "kuṇḍadhāna",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "kuṇḍala 3",
-    "masc",
-    "name of an arahant monk; lit. earring",
-    "◑"
-   ],
-   [
-    "kumāputta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "kumāputtatthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "kumāputtasahāyaka",
-    "masc",
-    "name of an arahant monk; lit. Kumāputta's friend",
-    "✔"
-   ],
-   [
-    "kumārakassapa",
-    "masc",
-    "name of an arahant monk; foremost in talking on diverse topics",
-    "✔"
-   ],
-   [
-    "kula 4",
-    "masc",
-    "name of an arahant monk; lit. family",
-    "✔"
-   ],
-   [
-    "kulla 2.2",
-    "masc",
-    "name of an arahant monk; lit. belonging to the home",
-    "◑"
-   ],
-   [
-    "kokālika",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "koṇḍañña 1",
-    "masc",
-    "name of a monk; seniormost of the five ascetics; first monastic disciple of the Buddha",
-    "✔"
-   ],
-   [
-    "koṇḍadhāna",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "kolita",
-    "masc",
-    "Mahāmoggallāna's first name; Kolita Moggallāna",
-    "✔"
-   ],
-   [
-    "kosalavihāritthera",
-    "masc",
-    "name of an arahant monk; lit. elder living in Kosala",
-    "◑"
-   ],
-   [
-    "kosalavihārī",
-    "masc",
-    "name of an arahant monk; lit. living in Kosala",
-    "◑"
-   ],
-   [
-    "kosiya 3",
-    "masc",
-    "name of an arahant monk; lit. from a cocoon",
-    "◑"
-   ],
-   [
-    "koḷivisa 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "khaṇḍa 5",
-    "masc",
-    "name of one of Vipassī Buddha's chief disciples",
-    "✔"
-   ],
-   [
-    "khaṇḍatissa",
-    "nt",
-    "names of Vipassī Buddha's pair of chief disciples; Khaṇḍa and Tissa",
-    "✔"
-   ],
-   [
-    "khaṇḍasumana",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "khadiravaniya 2",
-    "masc",
-    "name of an arahant monk; lit. living in the acacia forest",
-    "◑"
-   ],
-   [
-    "khadiravaniyarevata",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "khitaka 1",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "khitaka 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "khujjasobhita",
-    "masc",
-    "name of an arahant monk; lit. humpbacked shone",
-    "✔"
-   ],
-   [
-    "khemaṅkara 2",
-    "masc",
-    "name of Sikhī Buddha's attendant; lit. who makes safety",
-    "✔"
-   ],
-   [
-    "gaṅgātīriya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "gayākassapa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "gavampati 2",
-    "masc",
-    "name of an arahant monk; lit. lord of the cows",
-    "✔"
-   ],
-   [
-    "gavampatitthera",
-    "masc",
-    "name of an arahant monk; lit. elder lord of the cows",
-    "◑"
-   ],
-   [
-    "gavesī 3",
-    "masc",
-    "name of a monk at the time of Kassapa Buddha; lit. seeking",
-    "◑"
-   ],
-   [
-    "gahvaratīriya",
-    "masc",
-    "name of an arahant monk; lit. living on the bank of an abyss",
-    "✔"
-   ],
-   [
-    "girimānanda",
-    "masc",
-    "name of an arahant monk; lit. happy mountain",
-    "✔"
-   ],
-   [
-    "girimānandatthera",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "gulissāni",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "gotama 2",
-    "masc",
-    "name of an arahant monk; lit. of the Gotama clan",
-    "◑"
-   ],
-   [
-    "gotama 3",
-    "masc",
-    "name of an arahant monk; lit. of the Gotama clan",
-    "◑"
-   ],
-   [
-    "gotama 4",
-    "masc",
-    "name of an arahant monk; lit. of the Gotama clan",
-    "◑"
-   ],
-   [
-    "gotamatthera",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "godatta",
-    "masc",
-    "name of an arahant monk; lit. given to cows",
-    "◑"
-   ],
-   [
-    "godhika",
-    "masc",
-    "name of an arahant monk; lit. lizard; alligator",
-    "◑"
-   ],
-   [
-    "goliyāni",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "gosāla 2",
-    "masc",
-    "name of an arahant monk; lit. cow shed",
-    "✔"
-   ],
-   [
-    "gosālathera",
-    "masc",
-    "name of an arahant monk; lit. elder cow shed",
-    "✔"
-   ],
-   [
-    "cakkhupāla",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "candana 4",
-    "masc",
-    "name of an arahant monk; lit. glowing",
-    "◑"
-   ],
-   [
-    "candikāputta",
-    "masc",
-    "name of a monk; lit. son of moonlight",
-    "✔"
-   ],
-   [
-    "cāla",
-    "masc",
-    "name of a monk; lit. shock",
-    "✔"
-   ],
-   [
-    "cittaka 3",
-    "masc",
-    "name of an arahant monk; lit. decorated",
-    "◑"
-   ],
-   [
-    "cunda 1",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "cunda 3",
-    "masc",
-    "name of a monk; Cunda the Novice; (comm) Sāriputta's youngest brother",
-    "✔"
-   ],
-   [
-    "cundaka",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "cullapanthaka",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost in creating a mind made body",
-    "◑"
-   ],
-   [
-    "cūlaka",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "cūlagavaccha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "cūḷaka 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "cūḷanāga",
-    "masc",
-    "name of a learned Sri Lankan monk; student of Sumana Thera; also known as Tepiṭakacūḷanāgatthera; lit. young dragon",
-    "✔"
-   ],
-   [
-    "cūḷapanthaka",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost in creating a mind made body",
-    "✔"
-   ],
-   [
-    "cūḷavaccha",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "cetaka",
-    "masc",
-    "name of a monk; lit. from Ceta",
-    "✔"
-   ],
-   [
-    "channa 2.3",
-    "masc",
-    "name of an arahant monk who committed suicide",
-    "✔"
-   ],
-   [
-    "jambuka 2",
-    "masc",
-    "name of an arahant monk; lit. jackal; yawner",
-    "◑"
-   ],
-   [
-    "jambugāmikaputta",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "jenta 2",
-    "masc",
-    "name of an arahant monk; lit. conquering",
-    "◑"
-   ],
-   [
-    "jotidāsa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "tālapuṭa 1",
-    "masc",
-    "name of an arahant monk; lit. palm leaf wrap",
-    "◑"
-   ],
-   [
-    "tālaputta",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "tipiṭakacūḷanāgatthera",
-    "masc",
-    "name of a Tipiṭaka teacher quoted by Buddhaghosa",
-    "◑"
-   ],
-   [
-    "tissa 2.2",
-    "masc",
-    "name of one of Vipassī Buddha's chief disciples; lit. constellation of Cancer",
-    "✔"
-   ],
-   [
-    "tissa 2.5",
-    "masc",
-    "name of an arahant monk; lit. constellation of Cancer",
-    "✔"
-   ],
-   [
-    "tissa 2.6",
-    "masc",
-    "name of an arahant monk; lit. constellation of Cancer",
-    "◑"
-   ],
-   [
-    "tissa 2.7",
-    "masc",
-    "name of an arahant monk; lit. constellation of Cancer",
-    "◑"
-   ],
-   [
-    "tissaka",
-    "masc",
-    "name of a monk (in reference to Saṃyutta Nikāya 6.8 Katamodakatissasuttaṃ)",
-    "◑"
-   ],
-   [
-    "tissatthera 1",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "tissatthera 2",
-    "masc",
-    "generic monk's name used in examples; Venerable Tissa",
-    "✔"
-   ],
-   [
-    "tissabhāradvāja",
-    "nt",
-    "names of Kassapa Buddha's pair of chief disciples; Tissa and Bhāradvāja",
-    "✔"
-   ],
-   [
-    "tekicchakāni",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "tekicchakārī",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "telakāni",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "dabba 1.4",
-    "masc",
-    "name of an arahant monk; lit. competent; able",
-    "✔"
-   ],
-   [
-    "daḷhika",
-    "masc",
-    "name of a monk; lit. strong",
-    "◑"
-   ],
-   [
-    "dāsaka 2",
-    "masc",
-    "name of an arahant monk; lit. young slave",
-    "✔"
-   ],
-   [
-    "dutiyakuṭivihāritthera",
-    "masc",
-    "name of an arahant monk; lit. second elder living in a hut",
-    "◑"
-   ],
-   [
-    "dutiyakuṭivihārī",
-    "masc",
-    "name of an arahant monk; lit. second (elder) living in a hut",
-    "◑"
-   ],
-   [
-    "devatthera",
-    "masc",
-    "generic monk's name used in examples; venerable Deva",
-    "✔"
-   ],
-   [
-    "devadatta",
-    "masc",
-    "name of a monk; relative and nemesis of the Buddha",
-    "✔"
-   ],
-   [
-    "devasabha 1",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "devasabha 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "dhaniya 1",
-    "masc",
-    "name of a monk infamous for the second pārājika; lit. having wealth",
-    "◑"
-   ],
-   [
-    "dhaniya 2",
-    "masc",
-    "name of an arahant monk; lit. having wealth",
-    "◑"
-   ],
-   [
-    "dhammapāla",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "dhammarakkhita 2",
-    "masc",
-    "generic monk's name used in vinaya examples; lit. protected by the Dhamma",
-    "◑"
-   ],
-   [
-    "dhammaruci 2",
-    "masc",
-    "name of a monk; lit. who likes the Dhamma",
-    "✔"
-   ],
-   [
-    "dhammasava",
-    "masc",
-    "name of an arahant monk; lit. setting in motion the Dhamma",
-    "✔"
-   ],
-   [
-    "dhammasavapitar",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "dhammika 4",
-    "masc",
-    "name of an arahant monk; lit. according to the Dhamma",
-    "◑"
-   ],
-   [
-    "naṅgalakula",
-    "masc",
-    "name of a monk in a Dhammapada commentary story; lit. family of the plough",
-    "✔"
-   ],
-   [
-    "nadīkassapa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "nanda 3",
-    "masc",
-    "name of a cowherd; lit. happy",
-    "✔"
-   ],
-   [
-    "nanda 6",
-    "masc",
-    "name of an arahant monk; lit. happy",
-    "◑"
-   ],
-   [
-    "nandaka 1",
-    "masc",
-    "name of a arahant monk; great disciple of the Buddha; foremost in admonishing the nuns; lit. rejoicing",
-    "✔"
-   ],
-   [
-    "nandaka 3",
-    "masc",
-    "name of an arahant monk; lit. rejoicing",
-    "◑"
-   ],
-   [
-    "nandaka 4",
-    "masc",
-    "name of an arahant monk; lit. rejoicing",
-    "◑"
-   ],
-   [
-    "nandiya",
-    "masc",
-    "name of an arahant monk; lit. with happiness",
-    "✔"
-   ],
-   [
-    "nāgadatta",
-    "masc",
-    "name of a monk; lit. given by dragons",
-    "◑"
-   ],
-   [
-    "nāgasamāla",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "nāgita",
-    "masc",
-    "name of an arahant monk; attendant of the Buddha for some time",
-    "✔"
-   ],
-   [
-    "nārada 1",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "nigrodha 3",
-    "masc",
-    "name of an arahant monk; lit. banyan tree",
-    "✔"
-   ],
-   [
-    "nigrodhakappa",
-    "masc",
-    "name of a monk; preceptor of Vaṅgīsa",
-    "◑"
-   ],
-   [
-    "nitaka",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "nisabha 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "nīta 4",
-    "masc",
-    "name of an arahant monk; lit. led",
-    "◑"
-   ],
-   [
-    "nhātakamuni",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "nhātakamunitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "nhātamuni",
-    "masc",
-    "name of an arahant monk; lit. ritually purified sage",
-    "✔"
-   ],
-   [
-    "pakkha 7",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "paccaya 4",
-    "masc",
-    "name of an arahant monk; lit. dependent",
-    "◑"
-   ],
-   [
-    "pañcālaputta",
-    "masc",
-    "name of an arahant monk; lit. belonging to the Pañcāla people; (or) Pañcālā's son",
-    "◑"
-   ],
-   [
-    "pañcāliputta",
-    "masc",
-    "name of a monk; lit. Pañcālī's son",
-    "✔"
-   ],
-   [
-    "panthaka",
-    "masc",
-    "name of a monk; lit. traveller",
-    "✔"
-   ],
-   [
-    "paripuṇṇaka",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "paviṭṭha 2",
-    "masc",
-    "name of an arahant monk; lit. entered",
-    "◑"
-   ],
-   [
-    "passika",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "pārāpariya 1",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "pārāpariya 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "pārāsariya 1",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "pārāsariya 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "piṅgaya",
-    "masc",
-    "name of an arahant",
-    "◑"
-   ],
-   [
-    "piṅgiya",
-    "masc",
-    "name of an arahant",
-    "◑"
-   ],
-   [
-    "piṇḍola 3",
-    "masc",
-    "name of monk; lit. who collects alms",
-    "✔"
-   ],
-   [
-    "piṇḍolabhāradvāja",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "piyañjaha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "pilindavaccha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "pilindivaccha",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "puṇṇa 3",
-    "masc",
-    "name of a Sakyan arahnt monk; Puṇṇa Mantāṇiputta; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. full; complete",
-    "✔"
-   ],
-   [
-    "puṇṇa 4",
-    "masc",
-    "name of an arahant monk from Sunāparanta; Puṇṇa Sunāparanta; lit. full; complete",
-    "✔"
-   ],
-   [
-    "puṇṇaji",
-    "masc",
-    "name of an arahant monk; one of the four friends of Yasa",
-    "✔"
-   ],
-   [
-    "puṇṇatthera",
-    "masc",
-    "name of an arahant monk from Sunāparanta; Puṇṇa Sunāparanta; lit. complete elder",
-    "✔"
-   ],
-   [
-    "puṇṇamāsa 1",
-    "masc",
-    "name of an arahant monk; lit. full moon",
-    "✔"
-   ],
-   [
-    "puṇṇamāsa 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "puṇṇiya",
-    "masc",
-    "name of a monk; lit. fulfilled",
-    "✔"
-   ],
-   [
-    "punabbasu 2",
-    "masc",
-    "name of a monk; one of the group of six monks",
-    "◑"
-   ],
-   [
-    "purohitaputta 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "purohitaputtajenta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "poṭiriya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "poṭṭhila",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "posiya",
-    "masc",
-    "name of an arahant monk; lit. to be nurtured",
-    "✔"
-   ],
-   [
-    "phagguna 1",
-    "masc",
-    "name of a monk; Moḷiyaphagguna",
-    "✔"
-   ],
-   [
-    "phussa 2.4",
-    "masc",
-    "name of an arahant monk; lit. constellation of Cancer",
-    "◑"
-   ],
-   [
-    "phussadeva",
-    "masc",
-    "name of a Sri Lankan monk learned in Vinaya, famous for never abandoning his theme of meditation",
-    "✔"
-   ],
-   [
-    "bakkula",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "bandhana 7",
-    "masc",
-    "name of an arahant monk; lit. binding",
-    "◑"
-   ],
-   [
-    "bandhura",
-    "masc",
-    "name of an arahant monk; lit. havong bonds",
-    "✔"
-   ],
-   [
-    "bākula",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bākkula",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bījakapitar",
-    "masc",
-    "epithet of Sudinna; lit. Bījaka's father",
-    "◑"
-   ],
-   [
-    "buddhapiya",
-    "masc",
-    "name of a Tamil monk; author of Rūpasiddhi",
-    "◑"
-   ],
-   [
-    "buddhija",
-    "masc",
-    "name of Kakusandha Buddha's attendant; lit. born from intelligence",
-    "✔"
-   ],
-   [
-    "buddhupaṭṭhāka",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "belaṭṭhasīsa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "belaṭṭhānika",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "belaṭṭhi",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "belaṭṭhisīsa",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "brahmadatta 1",
-    "masc",
-    "name of an ancient king; lit. given to god; (or) protected by god",
-    "✔"
-   ],
-   [
-    "brahmadatta 4",
-    "masc",
-    "name of an arahant monk; lit. given to god; (or) protected by god",
-    "◑"
-   ],
-   [
-    "brahmāli",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhagu 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhagutthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhaṇḍa 2",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "bhaṇḍu 1",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "bhadda 5",
-    "masc",
-    "name of an arahant monk; lit. lucky",
-    "◑"
-   ],
-   [
-    "bhaddaji",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhaddajitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhaddāli",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "bhaddiya 4",
-    "masc",
-    "name of an arahant monk; lit. lucky; fortunate",
-    "✔"
-   ],
-   [
-    "bharata 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhalliya",
-    "masc",
-    "name of an arahant monk; lit. auspicious",
-    "✔"
-   ],
-   [
-    "bhāradvāja 5",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "bhiyyosuttara",
-    "nt",
-    "names of Koṇāgamana Buddha's pair of chief disciples; Bhiyyosa and Uttara",
-    "✔"
-   ],
-   [
-    "bhūta 09",
-    "masc",
-    "name of an arahant monk; lit. become",
-    "◑"
-   ],
-   [
-    "bhūmajaka",
-    "masc",
-    "name of one of the leaders of the notorious group of six monks; lit. born from the earth",
-    "◑"
-   ],
-   [
-    "bhūmija",
-    "masc",
-    "name of a monk; lit. born from the earth",
-    "◑"
-   ],
-   [
-    "mantāniputta",
-    "masc",
-    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
-    "◑"
-   ],
-   [
-    "malitavambha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mahaka",
-    "masc",
-    "name of a monk; lit. venerable; eminent",
-    "✔"
-   ],
-   [
-    "mahākaccāna",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost disciple in explaining a brief instruction in detail; lit. great descendant of Kati",
-    "✔"
-   ],
-   [
-    "mahākaccāyana",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost disciple in explaining a brief instruction in detail; lit. great descendant of Kati",
-    "✔"
-   ],
-   [
-    "mahākappina",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost disciple in instructing the monks; lit. great Kappina",
-    "✔"
-   ],
-   [
-    "mahākassapa",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost disciple in preaching ascetic practices; lit. great Kassapa",
-    "✔"
-   ],
-   [
-    "mahākāḷa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mahākoṭṭhika",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost disciple in analytical understanding; lit. great Koṭṭhika",
-    "✔"
-   ],
-   [
-    "mahākoṭṭhita",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost disciple in analytical understanding; lit. great Koṭṭhita",
-    "◑"
-   ],
-   [
-    "mahāgavaccha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mahācunda",
-    "masc",
-    "name of an arahant monk; lit. great Cunda",
-    "✔"
-   ],
-   [
-    "mahānāga 4",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mahānāga 5",
-    "masc",
-    "name of a Sri Lankan monk; lit. great dragon",
-    "✔"
-   ],
-   [
-    "mahānāma 3",
-    "masc",
-    "name of an arahant monk; lit. great name",
-    "✔"
-   ],
-   [
-    "mahāpanthaka",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost in those skilled in the expansion of perception",
-    "◑"
-   ],
-   [
-    "mahāmoggalāna",
-    "masc",
-    "name of an arahant monk chief disciple; great disciple of the Buddha; foremost disciple in psychic power; lit. great descendent of Muggala",
-    "✔"
-   ],
-   [
-    "mahāmoggallāna",
-    "masc",
-    "name of an arahant monk; chief disciple; great disciple of the Buddha; foremost disciple in psychic power; lit. great descendent of Muggala",
-    "✔"
-   ],
-   [
-    "mahāvaccha",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "mahāsīvatthera",
-    "masc",
-    "name of a eminent commentator frequently quoted by Buddhaghosa",
-    "◑"
-   ],
-   [
-    "māgaṇḍi",
-    "masc",
-    "name of a wandering ascetic; lit. son of a usurer",
-    "◑"
-   ],
-   [
-    "māgaṇḍiya",
-    "masc",
-    "name of a wandering ascetic; lit. son of a usurer",
-    "✔"
-   ],
-   [
-    "māṇava 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mātaṅgaputta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mālukya",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "mālukyaputta",
-    "masc",
-    "name of an arahant monk; lit. son of Mālukya",
-    "✔"
-   ],
-   [
-    "māluṅkyaputta",
-    "masc",
-    "name of an arahant monk; lit. son of Māluṅkya",
-    "✔"
-   ],
-   [
-    "migajāla",
-    "masc",
-    "name of an arahant monk; lit. deer trap",
-    "◑"
-   ],
-   [
-    "migalaṇḍika",
-    "masc",
-    "name of a monk; lit. deer droppings",
-    "◑"
-   ],
-   [
-    "migasira",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mudita 2",
-    "masc",
-    "name of an arahant monk; lit. happy",
-    "◑"
-   ],
-   [
-    "musila",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "musīla",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "mūsila",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "meghiya",
-    "masc",
-    "name of an arahant monk; attendant of the Buddha; lit. from a cloud",
-    "◑"
-   ],
-   [
-    "meṇḍasira",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "mettaji",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "metteyya 2",
-    "masc",
-    "name of young Brahman; lit. friendly",
-    "◑"
-   ],
-   [
-    "metteyyabuddha",
-    "masc",
-    "name of a mythical future Buddha",
-    "◑"
-   ],
-   [
-    "meḷajina",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "moggallāna 1",
-    "masc",
-    "name of a monk; chief disciple; great disciple of the Buddha; foremost disciple in psychic power; lit. descendent of Muggala",
-    "✔"
-   ],
-   [
-    "mogharāja",
-    "masc",
-    "name of an arahant monk; lit. king of emptiness",
-    "◑"
-   ],
-   [
-    "moḷiyaphagguna",
-    "masc",
-    "name of a monk",
-    "✔"
-   ],
-   [
-    "yamaka 2",
-    "masc",
-    "name of a monk; lit. twin",
-    "✔"
-   ],
-   [
-    "yasa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "yasadatta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "yasoja",
-    "masc",
-    "name of an arahant monk; lit. born famous",
-    "✔"
-   ],
-   [
-    "rakkhita 3",
-    "masc",
-    "name of an arahant monk; lit. protected",
-    "◑"
-   ],
-   [
-    "raṭṭhapāla",
-    "masc",
-    "name of an arahant monk; lit. protector of the country",
-    "✔"
-   ],
-   [
-    "ramaṇīyakuṭika",
-    "masc",
-    "name of an arahant monk; lit. with a delightful little hut",
-    "✔"
-   ],
-   [
-    "ramaṇīyavihāritthera",
-    "masc",
-    "name of an arahant monk; lit. elder living in a beautiful monastery",
-    "◑"
-   ],
-   [
-    "ramaṇīyavihārī",
-    "masc",
-    "name of an arahant monk; lit. living in a beautiful monastery",
-    "✔"
-   ],
-   [
-    "rājadatta",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "rādha",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "rāmaṇeyyaka 3",
-    "masc",
-    "name of an arahant monk; lit. pleasing",
-    "◑"
-   ],
-   [
-    "rāhula",
-    "masc",
-    "name of an arahant monk; Buddha's son",
-    "✔"
-   ],
-   [
-    "rāhulabhadda",
-    "masc",
-    "auspicious Rāhula; Rāhula the fortunate",
-    "✔"
-   ],
-   [
-    "revata 1",
-    "masc",
-    "name of a monk; great disciple of the Buddha; foremost disciple in forest dwelling",
-    "✔"
-   ],
-   [
-    "lakuṇḍakabhaddiya",
-    "masc",
-    "name of an arahant monk; lit. lucky dwarf",
-    "◑"
-   ],
-   [
-    "lakuṇḍabhaddiya",
-    "masc",
-    "name of an arahant monk; lit. lucky dwarf",
-    "✔"
-   ],
-   [
-    "lakkhaṇa 6",
-    "masc",
-    "name of an arahant monk; lit. marking",
-    "✔"
-   ],
-   [
-    "lomasakakaṅgiya",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "lomasakaṅgiya",
-    "masc",
-    "name of an arahant monk; lit. having hairy limbs; (or) hairy Bengali",
-    "◑"
-   ],
-   [
-    "lomasakaṃbhiya",
-    "masc",
-    "name of a monk; lit. with even finer hair",
-    "◑"
-   ],
-   [
-    "lomasavaṅgisa",
-    "masc",
-    "name of a monk; lit. hairy Bengali",
-    "◑"
-   ],
-   [
-    "vakkali",
-    "adj",
-    "name of an arahant monk; a former ascetic; lit. dressed in bark cloth",
-    "✔"
-   ],
-   [
-    "vakkalitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vaṅgantaputta",
-    "masc",
-    "name of an arahant monk; lit. Vaṅganta's son",
-    "◑"
-   ],
-   [
-    "vaṅgisa",
-    "masc",
-    "name of a monk; foremost disciple in spontaneous expression",
-    "◑"
-   ],
-   [
-    "vaṅgīsa",
-    "masc",
-    "name of an arahant monk; foremost disciple in spontaneous expression",
-    "◑"
-   ],
-   [
-    "vacchagotta 1",
-    "masc",
-    "name of an ascetic; lit. of the Vaccha family clan",
-    "✔"
-   ],
-   [
-    "vacchagotta 2",
-    "masc",
-    "name of an arahant monk; lit. of the Vaccha family clan",
-    "✔"
-   ],
-   [
-    "vacchapāla",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vajjita 3",
-    "masc",
-    "name of an arahant monk; lit. avoided",
-    "◑"
-   ],
-   [
-    "vajjiputta 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vajjiputta 3",
-    "masc",
-    "name of an arahant monk; lit. young Vajjian",
-    "✔"
-   ],
-   [
-    "vaḍḍha 3",
-    "masc",
-    "name of an arahant monk; lit. increase",
-    "✔"
-   ],
-   [
-    "vaḍḍhamāna 2",
-    "masc",
-    "name of an arahant monk; lit. increasing",
-    "✔"
-   ],
-   [
-    "vanavaccha 1",
-    "masc",
-    "name of an arahant monk; lit. forest tree",
-    "✔"
-   ],
-   [
-    "vanavaccha 2",
-    "masc",
-    "name of an arahant monk; lit. forest tree",
-    "◑"
-   ],
-   [
-    "vappa 4",
-    "masc",
-    "name of an arahant monk; lit. October",
-    "✔"
-   ],
-   [
-    "valliya 1",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "valliya 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "valliya 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vasabha 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vassika 3",
-    "masc",
-    "name of an arahant monk; lit. related to the rainy season",
-    "◑"
-   ],
-   [
-    "vāraṇa 3",
-    "masc",
-    "name of an arahant monk; lit. warding off",
-    "◑"
-   ],
-   [
-    "vāhana 2",
-    "masc",
-    "name of a monk; lit. carrying",
-    "✔"
-   ],
-   [
-    "vijaya 2",
-    "masc",
-    "name of an arahant monk; lit. victory",
-    "◑"
-   ],
-   [
-    "vijitasena",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vidhura",
-    "masc",
-    "name of one of Kakusandha Buddha's chief disciples; lit. without burden; very first",
-    "✔"
-   ],
-   [
-    "vidhurasañjīva",
-    "nt",
-    "Vidhura and Sañjīva; Kakusandha Buddha's pair of chief disciples",
-    "✔"
-   ],
-   [
-    "vimala 4",
-    "masc",
-    "name of an arahant monk; lit. stainless",
-    "✔"
-   ],
-   [
-    "vimala 5",
-    "masc",
-    "name of an arahant monk; lit. stainless",
-    "◑"
-   ],
-   [
-    "vimalakoṇḍañña",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "visākhapañcālaputta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "vītasoka 2",
-    "masc",
-    "name of an arahant monk; lit. without sorrow",
-    "✔"
-   ],
-   [
-    "vīra 3",
-    "masc",
-    "name of an arahant monk; lit. hero",
-    "✔"
-   ],
-   [
-    "veḷaṭṭhasīsa",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "saṅkiccathera",
-    "masc",
-    "name of an arahant monk; lit. elder descendent of Saṃkiti",
-    "◑"
-   ],
-   [
-    "saṅgāmaji 2",
-    "masc",
-    "name of a monk; lit. winner in war; victor in battle",
-    "✔"
-   ],
-   [
-    "saṅgharakkhita 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sañjaya 3",
-    "masc",
-    "name of an arahant monk; lit. victory",
-    "✔"
-   ],
-   [
-    "sañjīva 2",
-    "masc",
-    "name of one of Kakusandha Buddha's chief disciples; lit. revival",
-    "✔"
-   ],
-   [
-    "saddha 3",
-    "masc",
-    "name of a monk; lit. having faith",
-    "✔"
-   ],
-   [
-    "saddha 4",
-    "masc",
-    "name of a monk; son of Sudatta; lit. having faith",
-    "✔"
-   ],
-   [
-    "sandhita",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sappaka",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sappadāsa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sappadāsaka",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "sabbakāmi",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sabbakāmitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sabbamitta 1",
-    "masc",
-    "name of Kassapa Buddha's attendant; lit. friend of all",
-    "✔"
-   ],
-   [
-    "sabbamitta 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sabhiya",
-    "masc",
-    "name of an arahant monk; lit. belonging to good society",
-    "✔"
-   ],
-   [
-    "samitigutta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "samiddhi 2",
-    "masc",
-    "name of an arahant monk; lit. success",
-    "◑"
-   ],
-   [
-    "samiddhitthera",
-    "masc",
-    "name of an arahant monk; lit. elder success",
-    "◑"
-   ],
-   [
-    "samuddadatta",
-    "masc",
-    "name of a monk; lit. given to the ocean",
-    "◑"
-   ],
-   [
-    "sambahulakaccāna",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sambulakaccāna",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sambhūta 2",
-    "masc",
-    "name of an arahant monk; lit. produced",
-    "◑"
-   ],
-   [
-    "sarabhaṅga 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "saviṭṭha",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "sahaka",
-    "masc",
-    "name of a monk in the time of Kassapa Buddha; lit. who endures",
-    "◑"
-   ],
-   [
-    "saṃkicca 2",
-    "masc",
-    "name of an arahant monk; lit. descendent of Saṃkiti",
-    "◑"
-   ],
-   [
-    "saṃkiccathera",
-    "masc",
-    "name of an arahant monk; lit. elder descendent of Saṃkiti",
-    "✔"
-   ],
-   [
-    "sāgata 2",
-    "masc",
-    "name of a monk; foremost in the fire element; lit. well come here",
-    "✔"
-   ],
-   [
-    "sāṭimattiya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sāti",
-    "masc",
-    "name of a monk; lit. the star Arcturus; (or) charioteer",
-    "✔"
-   ],
-   [
-    "sānu 3",
-    "masc",
-    "name of an arahant monk; lit. plateau",
-    "✔"
-   ],
-   [
-    "sānutthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sāmaññakāni",
-    "masc",
-    "name of an arahant monk; lit. monkhood",
-    "✔"
-   ],
-   [
-    "sāmaññakānitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sāmidatta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sāriputta",
-    "masc",
-    "name of an arahant monk; chief disciple; great disciple of the Buddha; foremost disciple in great wisdom; lit. son of Sāri",
-    "✔"
-   ],
-   [
-    "sāriputtamoggallāna",
-    "nt",
-    "names of Buddha's pair of chief disciples; Sāriputta and Moggallāna",
-    "✔"
-   ],
-   [
-    "sāriputtamoggallānā",
-    "masc",
-    "name of a monks; chief disciples; great disciples of the Buddha; Sāriputta and Moggallāna",
-    "✔"
-   ],
-   [
-    "siṅgālapitar",
-    "masc",
-    "name of an arahant monk; lit. jackal's father",
-    "◑"
-   ],
-   [
-    "siṅgālapitika",
-    "masc",
-    "name of an arahant monk; lit. jackal's father",
-    "✔"
-   ],
-   [
-    "sirimaṇḍa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sirimant 2",
-    "masc",
-    "name of an arahant monk; lit. having good fortune quality",
-    "✔"
-   ],
-   [
-    "sirimanda",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sirimitta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sirivaḍḍha 3",
-    "masc",
-    "name of an arahant monk; lit. glory increase",
-    "◑"
-   ],
-   [
-    "sivaka 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sivaka 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sivika",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sīgālapitar",
-    "masc",
-    "name of an arahant monk; lit. jackal's father",
-    "◑"
-   ],
-   [
-    "sītavaniya",
-    "masc",
-    "name of an arahant monk; lit. from the cool wood",
-    "✔"
-   ],
-   [
-    "sīlava",
-    "masc",
-    "name of an arahant monk; lit. having quality of virtue",
-    "✔"
-   ],
-   [
-    "sīvaka 2",
-    "masc",
-    "name of an arahant monk; lit. tailor",
-    "◑"
-   ],
-   [
-    "sīvali",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost in receiving",
-    "◑"
-   ],
-   [
-    "sīvalitthera",
-    "masc",
-    "name of an arahant monk; great disciple of the Buddha; foremost in receiving",
-    "◑"
-   ],
-   [
-    "sīha 3",
-    "masc",
-    "name of an arahant monk; lit. lion",
-    "◑"
-   ],
-   [
-    "sīha 4",
-    "masc",
-    "name of a novice monk; lit. lion",
-    "✔"
-   ],
-   [
-    "sugandha 3",
-    "masc",
-    "name of an arahant monk; lit. good smell",
-    "◑"
-   ],
-   [
-    "sudinna 2",
-    "masc",
-    "name of a monk notorious for the first pārājika",
-    "◑"
-   ],
-   [
-    "sunakkhatta 2",
-    "masc",
-    "name of a former monk; lit. good star sign",
-    "✔"
-   ],
-   [
-    "sunāga",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sunīta 2",
-    "masc",
-    "name of an arahant monk; lit. well trained",
-    "◑"
-   ],
-   [
-    "sundarasamudda",
-    "masc",
-    "name of an arahant monk; lit. beautiful ocean",
-    "◑"
-   ],
-   [
-    "suppiya 2",
-    "masc",
-    "name of an arahant monk; lit. very dear",
-    "✔"
-   ],
-   [
-    "subāhu 2",
-    "masc",
-    "name of an arahant monk; lit. good arms",
-    "✔"
-   ],
-   [
-    "subāhutthera",
-    "masc",
-    "name of an arahant monk; lit. good arms elder",
-    "◑"
-   ],
-   [
-    "subhadda 1",
-    "masc",
-    "name of an arahant monk; last person to get ordained under the Buddha",
-    "✔"
-   ],
-   [
-    "subhadda 2",
-    "masc",
-    "name of a monk who rejoiced news of the Buddha's death",
-    "✔"
-   ],
-   [
-    "subhūta",
-    "masc",
-    "name of an arahant monk; lit. wellbeing",
-    "◑"
-   ],
-   [
-    "subhūti 1",
-    "masc",
-    "name of an arahant monk; lit. wellbeing",
-    "✔"
-   ],
-   [
-    "subhūtitthera",
-    "masc",
-    "name of an arahant monk; lit. elder Wellbeing",
-    "✔"
-   ],
-   [
-    "sumaṅgala 3",
-    "masc",
-    "name of an arahant monk; lit. very auspicious",
-    "✔"
-   ],
-   [
-    "sumana 3",
-    "masc",
-    "name of an arahant monk; lit. good mind",
-    "◑"
-   ],
-   [
-    "sumana 4",
-    "masc",
-    "name of an arahant monk; lit. good mind",
-    "◑"
-   ],
-   [
-    "sumanatthera",
-    "masc",
-    "name of a learned Sri Lankan monk",
-    "✔"
-   ],
-   [
-    "suyāmana",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "surādha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "susārada",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "susima 2",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "susīma 2",
-    "masc",
-    "name of a monk",
-    "◑"
-   ],
-   [
-    "suhemanta",
-    "masc",
-    "name of an arahant monk",
-    "✔"
-   ],
-   [
-    "setuccha",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "senaka 2",
-    "masc",
-    "name of an arahant monk; lit. hawk",
-    "◑"
-   ],
-   [
-    "seyyasaka",
-    "masc",
-    "name of a monk infamous for Saṅghādisesa 1",
-    "✔"
-   ],
-   [
-    "sela 4",
-    "masc",
-    "name of an arahant monk; lit. rock",
-    "◑"
-   ],
-   [
-    "selissariya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "soṇa 1",
-    "masc",
-    "name of a monk; lit. dog",
-    "✔"
-   ],
-   [
-    "soṇa 4",
-    "masc",
-    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. dog",
-    "✔"
-   ],
-   [
-    "soṇakuṭikaṇṇa",
-    "masc",
-    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. dog with a crooked ear",
-    "◑"
-   ],
-   [
-    "soṇakoḷivisa",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "soṇapoṭiriya",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "soṇuttara 1",
-    "nt",
-    "names of Vessabhū Buddha's pair of chief disciples; Soṇa and Uttara",
-    "✔"
-   ],
-   [
-    "sotthija",
-    "masc",
-    "name of Koṇāgamana Buddha's attendant",
-    "✔"
-   ],
-   [
-    "sopāka 2",
-    "masc",
-    "name of an arahant monk; lit. dog-cooker",
-    "✔"
-   ],
-   [
-    "sopāka 3",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "sobhita 4",
-    "masc",
-    "name of an arahant monk; lit. shone",
-    "◑"
-   ],
-   [
-    "somamitta",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "hatthārohaputta 2",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "hārita 2",
-    "masc",
-    "name of an arahant monk; lit. caused to carry",
-    "✔"
-   ],
-   [
-    "hārita 3",
-    "masc",
-    "name of an arahant monk; lit. caused to carry",
-    "◑"
-   ],
-   [
-    "heraññakāni",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ],
-   [
-    "heraññakānitthera",
-    "masc",
-    "name of an arahant monk",
-    "◑"
-   ]
-  ],
-  "count": 485
- },
  "names of arahants": {
   "data": [
    [
+    "aggikabhāradvāja",
+    "masc",
+    "name of a Brahman, and later arahant monk",
+    "✔"
+   ],
+   [
     "aṅgaṇika",
     "masc",
     "name of an arahant monk; lit. from Bengal",
@@ -19113,7 +16027,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "aṅgulimāla",
+    "aṅgulimāla 1",
     "masc",
     "name of an arahant monk; lit. garland of fingers",
     "✔"
@@ -19152,7 +16066,7 @@ var family_set_json = {
     "aññākoṇḍañña",
     "masc",
     "name of an arahant monk; the Buddha's first monastic disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
-    "◑"
+    "✔"
    ],
    [
     "aññātakoṇḍañña",
@@ -19241,7 +16155,7 @@ var family_set_json = {
    [
     "abhibhūta 3",
     "masc",
-    "name of an arahant monk; lit. conqurered",
+    "name of an arahant monk; lit. become higher",
     "◑"
    ],
    [
@@ -19254,6 +16168,12 @@ var family_set_json = {
     "assaji 1.1",
     "masc",
     "name of a monk; Sāriputta's teacher; lit. horse master",
+    "✔"
+   ],
+   [
+    "ahiṃsakabhāradvāja",
+    "masc",
+    "name of Brahman, and later an arahant monk; lit. harmless Bhāradvāja",
     "✔"
    ],
    [
@@ -19299,9 +16219,9 @@ var family_set_json = {
     "◑"
    ],
    [
-    "ugga 6",
+    "ugga 2.5",
     "masc",
-    "name of an arahant monk; lit. going up",
+    "name of an arahant monk",
     "◑"
    ],
    [
@@ -19356,7 +16276,7 @@ var family_set_json = {
     "uttiya 2",
     "masc",
     "name of an arahant monk",
-    "◑"
+    "✔"
    ],
    [
     "uttiya 3",
@@ -19373,13 +16293,13 @@ var family_set_json = {
    [
     "upaka 1",
     "masc",
-    "name of an arahant; lit. approaching",
+    "name of an arahant; lit. going near",
     "✔"
    ],
    [
     "upacālā",
     "fem",
-    "name of an arahant nun; lit. younger sister of Cālā",
+    "name of an arahant nun; Sāriputta's sister; lit. younger sister of Cālā",
     "✔"
    ],
    [
@@ -19397,8 +16317,8 @@ var family_set_json = {
    [
     "upasena",
     "masc",
-    "name of an arahant monk",
-    "◑"
+    "name of an arahant monk; Upasena Vaṅgantaputta",
+    "✔"
    ],
    [
     "upāli 3",
@@ -19488,7 +16408,7 @@ var family_set_json = {
     "kappa 1.7",
     "masc",
     "name of an arahant monk; lit. suitable",
-    "◑"
+    "✔"
    ],
    [
     "kappaṭakura",
@@ -19566,7 +16486,7 @@ var family_set_json = {
     "kisāgotamī",
     "fem",
     "name of an arahant nun; lit. skinny Gotamī",
-    "◑"
+    "✔"
    ],
    [
     "kuṭikaṇṇa",
@@ -19800,19 +16720,19 @@ var family_set_json = {
     "gotama 2",
     "masc",
     "name of an arahant monk; lit. of the Gotama clan",
-    "◑"
+    "✔"
    ],
    [
     "gotama 3",
     "masc",
     "name of an arahant monk; lit. of the Gotama clan",
-    "◑"
+    "✔"
    ],
    [
     "gotama 4",
     "masc",
     "name of an arahant monk; lit. of the Gotama clan",
-    "◑"
+    "✔"
    ],
    [
     "gotamī 2",
@@ -19824,13 +16744,13 @@ var family_set_json = {
     "godatta",
     "masc",
     "name of an arahant monk; lit. given to cows",
-    "◑"
+    "✔"
    ],
    [
     "godhika",
     "masc",
     "name of an arahant monk; lit. lizard; alligator",
-    "◑"
+    "✔"
    ],
    [
     "gosāla 2",
@@ -19871,7 +16791,7 @@ var family_set_json = {
    [
     "cālā",
     "fem",
-    "name of an arahant nun; lit. shaking",
+    "name of an arahant nun; Sāriputta's sister; lit. shaking",
     "✔"
    ],
    [
@@ -19961,19 +16881,19 @@ var family_set_json = {
    [
     "tālapuṭa 1",
     "masc",
-    "name of an arahant monk; lit. palm leaf wrap",
-    "◑"
+    "name of an actor; later, name of an arahant monk; lit. palm leaf wrap",
+    "✔"
    ],
    [
     "tālaputta",
     "masc",
-    "name of a monk",
-    "◑"
+    "name of an actor; later, name of an arahant monk; lit. son of Tāla",
+    "✔"
    ],
    [
     "tissa 2.5",
     "masc",
-    "name of an arahant monk; lit. constellation of Cancer",
+    "name of an arahant monk; cousin of the Buddha; lit. constellation of Cancer",
     "✔"
    ],
    [
@@ -20013,12 +16933,6 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tiṃsamattā",
-    "fem",
-    "group of thirty arahant nuns",
-    "✔"
-   ],
-   [
     "tekicchakāni",
     "masc",
     "name of an arahant monk",
@@ -20043,7 +16957,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dabba 1.4",
+    "dabba 1.2",
     "masc",
     "name of an arahant monk; lit. competent; able",
     "✔"
@@ -20141,8 +17055,8 @@ var family_set_json = {
    [
     "nanda 6",
     "masc",
-    "name of an arahant monk; lit. happy",
-    "◑"
+    "name of an arahant monk; cousin of the Buddha; lit. happy",
+    "✔"
    ],
    [
     "nandaka 1",
@@ -20189,7 +17103,7 @@ var family_set_json = {
    [
     "nāgasamāla",
     "masc",
-    "name of an arahant monk",
+    "name of an arahant monk; personal attendant of the Buddha",
     "✔"
    ],
    [
@@ -20262,7 +17176,7 @@ var family_set_json = {
     "pañcālaputta",
     "masc",
     "name of an arahant monk; lit. belonging to the Pañcāla people; (or) Pañcālā's son",
-    "◑"
+    "✔"
    ],
    [
     "paṭācārā",
@@ -20273,7 +17187,7 @@ var family_set_json = {
    [
     "paripuṇṇaka",
     "masc",
-    "name of an arahant monk",
+    "name of an arahant monk; lit. filled all around",
     "✔"
    ],
    [
@@ -20285,8 +17199,8 @@ var family_set_json = {
    [
     "paviṭṭha 2",
     "masc",
-    "name of an arahant monk; lit. entered",
-    "◑"
+    "name of an arahant monk; lit. entered forward",
+    "✔"
    ],
    [
     "passika",
@@ -20322,19 +17236,19 @@ var family_set_json = {
     "piṅgaya",
     "masc",
     "name of an arahant",
-    "◑"
+    "✔"
    ],
    [
-    "piṅgiya",
+    "piṅgiya 1",
     "masc",
-    "name of an arahant",
-    "◑"
+    "name of an arahant; lit. red brown",
+    "✔"
    ],
    [
     "piṇḍolabhāradvāja",
     "masc",
-    "name of an arahant monk",
-    "◑"
+    "name of an arahant monk; lit. almsman Bhāradvāja",
+    "✔"
    ],
    [
     "piyañjaha",
@@ -20363,13 +17277,13 @@ var family_set_json = {
    [
     "puṇṇa 3",
     "masc",
-    "name of a Sakyan arahnt monk; Puṇṇa Mantāṇiputta; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. full; complete",
+    "name of a Sakyan arahnt monk; Puṇṇa Mantāṇiputta; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. filled",
     "✔"
    ],
    [
     "puṇṇa 4",
     "masc",
-    "name of an arahant monk from Sunāparanta; Puṇṇa Sunāparanta; lit. full; complete",
+    "name of an arahant monk from Sunāparanta; Puṇṇa Sunāparanta; lit. filled",
     "✔"
    ],
    [
@@ -20433,10 +17347,10 @@ var family_set_json = {
     "✔"
    ],
    [
-    "phalagaṇḍa",
+    "phalagaṇḍa 1",
     "masc",
-    "name of an arahant; lit. swelling fruit",
-    "◑"
+    "name of an arahant; lit. carpenter",
+    "✔"
    ],
    [
     "phussa 2.4",
@@ -20453,20 +17367,20 @@ var family_set_json = {
    [
     "bandhura",
     "masc",
-    "name of an arahant monk; lit. havong bonds",
+    "name of an arahant monk; lit. having bonds",
     "✔"
    ],
    [
     "bahudantī",
     "masc",
     "name of an arahant; lit. having many teeth",
-    "◑"
+    "✔"
    ],
    [
-    "bākula",
+    "bākula 1",
     "masc",
     "name of an arahant monk",
-    "◑"
+    "✔"
    ],
    [
     "bākkula",
@@ -20495,8 +17409,8 @@ var family_set_json = {
    [
     "belaṭṭhasīsa",
     "masc",
-    "name of an arahant monk",
-    "◑"
+    "name of an arahant monk; Ānanda's preceptor",
+    "✔"
    ],
    [
     "belaṭṭhānika",
@@ -20513,8 +17427,14 @@ var family_set_json = {
    [
     "brahmadatta 4",
     "masc",
-    "name of an arahant monk; lit. given to god; (or) protected by god",
+    "name of an arahant monk; lit. given by god; (or) protected by god",
     "◑"
+   ],
+   [
+    "brahmadeva",
+    "masc",
+    "name of an arahant monk; lit. Brahma deity",
+    "✔"
    ],
    [
     "brahmāli",
@@ -20526,7 +17446,7 @@ var family_set_json = {
     "bhagu 3",
     "masc",
     "name of an arahant monk",
-    "◑"
+    "✔"
    ],
    [
     "bhagutthera",
@@ -20538,7 +17458,7 @@ var family_set_json = {
     "bhadda 5",
     "masc",
     "name of an arahant monk; lit. lucky",
-    "◑"
+    "✔"
    ],
    [
     "bhaddaji",
@@ -20615,8 +17535,8 @@ var family_set_json = {
    [
     "bhāradvāja 5",
     "masc",
-    "name of an arahant monk",
-    "◑"
+    "name of an arahant monk; lit. descended from Bharadvāja",
+    "✔"
    ],
    [
     "bhiyyosuttara",
@@ -20633,8 +17553,8 @@ var family_set_json = {
    [
     "mantāniputta",
     "masc",
-    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
-    "◑"
+    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantānī",
+    "✔"
    ],
    [
     "malitavambha",
@@ -20676,7 +17596,7 @@ var family_set_json = {
     "mahākoṭṭhita",
     "masc",
     "name of an arahant monk; great disciple of the Buddha; foremost disciple in analytical understanding; lit. great Koṭṭhita",
-    "◑"
+    "✔"
    ],
    [
     "mahāgavaccha",
@@ -20775,7 +17695,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "mālukyaputta",
+    "mālukyaputta 1",
     "masc",
     "name of an arahant monk; lit. son of Mālukya",
     "✔"
@@ -20789,8 +17709,8 @@ var family_set_json = {
    [
     "migajāla",
     "masc",
-    "name of an arahant monk; lit. deer trap",
-    "◑"
+    "name of an arahant monk; son of Visākhā; lit. deer trap",
+    "✔"
    ],
    [
     "migasira",
@@ -20952,7 +17872,7 @@ var family_set_json = {
     "lakuṇḍakabhaddiya",
     "masc",
     "name of an arahant monk; lit. lucky dwarf",
-    "◑"
+    "✔"
    ],
    [
     "lakuṇḍabhaddiya",
@@ -20970,7 +17890,7 @@ var family_set_json = {
     "lomasakaṅgiya",
     "masc",
     "name of an arahant monk; lit. having hairy limbs; (or) hairy Bengali",
-    "◑"
+    "✔"
    ],
    [
     "vakkali",
@@ -20993,8 +17913,8 @@ var family_set_json = {
    [
     "vaṅgīsa",
     "masc",
-    "name of an arahant monk; foremost disciple in spontaneous expression",
-    "◑"
+    "name of an arahant monk; foremost disciple in spontaneous expression; lit. lord of Bengal",
+    "✔"
    ],
    [
     "vacchagotta 1",
@@ -21013,6 +17933,12 @@ var family_set_json = {
     "masc",
     "name of an arahant monk",
     "◑"
+   ],
+   [
+    "vajirā",
+    "fem",
+    "name of an arahant nun; lit. diamond",
+    "✔"
    ],
    [
     "vajjita 3",
@@ -21225,6 +18151,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "saddasaññaka",
+    "masc",
+    "name of an arahant monk; lit. percipient of sounds",
+    "✔"
+   ],
+   [
     "sandhita",
     "masc",
     "name of an arahant monk",
@@ -21281,8 +18213,8 @@ var family_set_json = {
    [
     "samiddhi 2",
     "masc",
-    "name of an arahant monk; lit. success",
-    "◑"
+    "name of an arahant monk; lit. success together",
+    "✔"
    ],
    [
     "samiddhitthera",
@@ -21306,7 +18238,7 @@ var family_set_json = {
     "sambhūta 2",
     "masc",
     "name of an arahant monk; lit. produced",
-    "◑"
+    "✔"
    ],
    [
     "sarabhaṅga 3",
@@ -21477,7 +18409,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sīvali",
+    "sīvali 1",
     "masc",
     "name of an arahant monk; great disciple of the Buddha; foremost in receiving",
     "◑"
@@ -21491,7 +18423,7 @@ var family_set_json = {
    [
     "sīsūpacālā",
     "fem",
-    "name of an arahant nun",
+    "name of an arahant nun; Sāriputta's sister",
     "✔"
    ],
    [
@@ -21660,7 +18592,7 @@ var family_set_json = {
     "surādha",
     "masc",
     "name of an arahant monk",
-    "◑"
+    "✔"
    ],
    [
     "susārada",
@@ -21689,8 +18621,8 @@ var family_set_json = {
    [
     "sela 4",
     "masc",
-    "name of an arahant monk; lit. rock",
-    "◑"
+    "name of a Brahman teacher; name of an arahant monk; lit. rock",
+    "✔"
    ],
    [
     "selā",
@@ -21807,7 +18739,8650 @@ var family_set_json = {
     "◑"
    ]
   ],
-  "count": 451
+  "count": 455
+ },
+ "names of monks": {
+  "data": [
+   [
+    "aggikabhāradvāja",
+    "masc",
+    "name of a Brahman, and later arahant monk",
+    "✔"
+   ],
+   [
+    "aṅgaṇika",
+    "masc",
+    "name of an arahant monk; lit. from Bengal",
+    "✔"
+   ],
+   [
+    "aṅgaṇikabhāradvāja",
+    "masc",
+    "name of an arahant monk; lit. Bharadvāja from Bengal",
+    "◑"
+   ],
+   [
+    "aṅgulimāla 1",
+    "masc",
+    "name of an arahant monk; lit. garland of fingers",
+    "✔"
+   ],
+   [
+    "aciravata 1",
+    "masc",
+    "name of novice; lit. not long",
+    "✔"
+   ],
+   [
+    "ajita 5",
+    "masc",
+    "name of an arahant monk; lit. undefeated",
+    "◑"
+   ],
+   [
+    "ajina 4",
+    "masc",
+    "name of an arahant monk; lit. black antelope hide",
+    "◑"
+   ],
+   [
+    "ajjuka 2",
+    "masc",
+    "name of a monk; lit. basil",
+    "◑"
+   ],
+   [
+    "ajjuna 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "añjanavaniya",
+    "masc",
+    "name of an arahant monk; lit. living in the pitch black forest",
+    "✔"
+   ],
+   [
+    "aññākoṇḍañña",
+    "masc",
+    "name of an arahant monk; the Buddha's first monastic disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
+    "✔"
+   ],
+   [
+    "aññātakoṇḍañña",
+    "masc",
+    "name of the Buddha's first disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
+    "✔"
+   ],
+   [
+    "aññāsikoṇḍañña",
+    "masc",
+    "name of an arahant monk; the Buddha's first monastic disciple; first person to realise the Buddha's teaching; lit. Koṇḍañña understood",
+    "✔"
+   ],
+   [
+    "adhimutta 3",
+    "masc",
+    "name of an arahant monk; lit. intent",
+    "◑"
+   ],
+   [
+    "adhimutta 4",
+    "masc",
+    "name of an arahant monk; lit. intent",
+    "◑"
+   ],
+   [
+    "anurādha",
+    "masc",
+    "name of a monk; lit. son of Rādha; (or) born under the constellation of Anurādha",
+    "✔"
+   ],
+   [
+    "anuruddha 1",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost monk in the divine eye; cousin of the Buddha",
+    "✔"
+   ],
+   [
+    "anūpama 2",
+    "masc",
+    "name of an arahant monk; lit. no measuring near",
+    "◑"
+   ],
+   [
+    "abhaya 5",
+    "masc",
+    "name of an arahant monk; lit. fearless",
+    "✔"
+   ],
+   [
+    "abhaya 6",
+    "masc",
+    "name of an arahant monk; lit. fearless",
+    "◑"
+   ],
+   [
+    "abhijika",
+    "masc",
+    "name of a monk; lit. absolute victory",
+    "✔"
+   ],
+   [
+    "abhibhūta 3",
+    "masc",
+    "name of an arahant monk; lit. become higher",
+    "◑"
+   ],
+   [
+    "abhibhūsambhava",
+    "nt",
+    "names of Sikhī Buddha's pair of chief disciples; Abhibhū and Sambhava",
+    "✔"
+   ],
+   [
+    "ariṭṭha 1.1",
+    "masc",
+    "name of a monk; lit. unhurt",
+    "✔"
+   ],
+   [
+    "asoka 3",
+    "masc",
+    "name of Vipassī Buddha's attendant; lit. without sorrow",
+    "✔"
+   ],
+   [
+    "assaji 1.1",
+    "masc",
+    "name of a monk; Sāriputta's teacher; lit. horse master",
+    "✔"
+   ],
+   [
+    "ahiṃsakabhāradvāja",
+    "masc",
+    "name of Brahman, and later an arahant monk; lit. harmless Bhāradvāja",
+    "✔"
+   ],
+   [
+    "ātuma 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "ānanda 2",
+    "masc",
+    "name of an arahant monk; attendant of the Buddha; great disciple of the Buddha; foremost disciple in great learning, remembrance, conduct, resoluteness and service; lit. happiness",
+    "✔"
+   ],
+   [
+    "ānandatthera",
+    "masc",
+    "name of an arahant monk; Ānanda the elder",
+    "◑"
+   ],
+   [
+    "ābhijjika",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "ābhiñjika",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "ārohanta",
+    "masc",
+    "name of a former minister who became a monk; lit. ascending here",
+    "◑"
+   ],
+   [
+    "ārohaputta",
+    "masc",
+    "name of an arahant monk; lit. mahout's son",
+    "✔"
+   ],
+   [
+    "iṭṭiyatthera",
+    "masc",
+    "name of a missionary monk",
+    "✔"
+   ],
+   [
+    "isidatta 1",
+    "masc",
+    "name of an arahant monk; lit. given to the sage",
+    "✔"
+   ],
+   [
+    "isidinna",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "ukkhepakatavaccha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "ugga 2.5",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "ujjaya 2",
+    "masc",
+    "name of an arahant monk; lit. victor",
+    "✔"
+   ],
+   [
+    "uttara 2.10",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "uttara 2.11",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "uttarapāla",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "uttiya 2",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "uttiya 3",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "uttiya 4",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "udāyī 1",
+    "masc",
+    "name of a monk; Kāḷudāyi; lit. going up",
+    "✔"
+   ],
+   [
+    "udāyī 2",
+    "masc",
+    "name of a monk; Paṇḍitaudāyi; lit. going up",
+    "✔"
+   ],
+   [
+    "udena 3",
+    "masc",
+    "name of a monk; lit. going up",
+    "✔"
+   ],
+   [
+    "upacāla",
+    "masc",
+    "name of a monk; lit. son of Cāla",
+    "✔"
+   ],
+   [
+    "upatissa",
+    "masc",
+    "name of Sāriputta; lit. son of Tissa",
+    "✔"
+   ],
+   [
+    "upananda 3",
+    "masc",
+    "name of a Sakyan monk; lit. descendent of Nanda",
+    "✔"
+   ],
+   [
+    "upavāṇa",
+    "masc",
+    "name of an arahant monk; attendant of the Buddha",
+    "✔"
+   ],
+   [
+    "upavāṇatthera",
+    "masc",
+    "name of an arahant monk; Upavāṇa the elder",
+    "✔"
+   ],
+   [
+    "upavāna",
+    "masc",
+    "name of a monk; attendant of the Buddha",
+    "◑"
+   ],
+   [
+    "upavāḷa",
+    "masc",
+    "name of a monk; lit. descendent of wild animal",
+    "✔"
+   ],
+   [
+    "upasanta 2",
+    "masc",
+    "name of Vessabhū Buddha's attendant; lit. calmed",
+    "✔"
+   ],
+   [
+    "upasena",
+    "masc",
+    "name of an arahant monk; Upasena Vaṅgantaputta",
+    "✔"
+   ],
+   [
+    "upāli 2",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost disciple of those learned in the Vinaya",
+    "✔"
+   ],
+   [
+    "upāli 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "upālitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "uppāla",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "uruvelakassapa",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost in those with a large following; lit. Kassapa from Uruvelā",
+    "◑"
+   ],
+   [
+    "uruveḷakassapa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "usabha 5",
+    "masc",
+    "name of an arahant monk; lit. stud bull",
+    "◑"
+   ],
+   [
+    "usabha 6",
+    "masc",
+    "name of an arahant monk; lit. stud bull",
+    "◑"
+   ],
+   [
+    "ekadhammasavanīya",
+    "masc",
+    "name of an arahant monk; lit. related to hearing one teaching",
+    "◑"
+   ],
+   [
+    "ekadhammika",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "ekavihāriya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "ekudāniya",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "eraka 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "kaṅkhārevata",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost in jhāna; lit. doubting Revata",
+    "✔"
+   ],
+   [
+    "kaccānagotta 2",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "kaṭamodakatissaka",
+    "masc",
+    "name of a monk",
+    "◑"
+   ],
+   [
+    "kaṭamorakatissaka",
+    "masc",
+    "name of a monk",
+    "◑"
+   ],
+   [
+    "kaṇṭaka 5",
+    "masc",
+    "name of a novice monk; lit. thorn",
+    "✔"
+   ],
+   [
+    "kaṇhadinna",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "katamodakatissaka",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "katamorakatissaka",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "kappa 1.7",
+    "masc",
+    "name of an arahant monk; lit. suitable",
+    "✔"
+   ],
+   [
+    "kappaṭakura",
+    "masc",
+    "name of an arahant monk; lit. rags rice",
+    "✔"
+   ],
+   [
+    "kappāna",
+    "masc",
+    "name of an arahant monk; Nigrodhakappa",
+    "✔"
+   ],
+   [
+    "kappāyana",
+    "masc",
+    "name of a monk; Nigrodhakappa",
+    "✔"
+   ],
+   [
+    "kappitaka",
+    "masc",
+    "name of a monk; lit. caused to be suitable",
+    "◑"
+   ],
+   [
+    "kappina",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost disciple in instructing the monks",
+    "✔"
+   ],
+   [
+    "kavimbha",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "kassapa 5",
+    "masc",
+    "name of an arahant monk; lit. descendant of Kassapa",
+    "✔"
+   ],
+   [
+    "kassapagotta",
+    "masc",
+    "name of a monk; lit. of the Kassapa family clan",
+    "✔"
+   ],
+   [
+    "kaḷārakhattiya",
+    "masc",
+    "name of a monk; lit. warrior with protruding teeth",
+    "✔"
+   ],
+   [
+    "kaḷimbha 2",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "kātiyāna 2",
+    "masc",
+    "name of an arahant monk; lit. descendant of Kati",
+    "✔"
+   ],
+   [
+    "kāmabhū",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "kāḷakabhikkhu",
+    "masc",
+    "name of a monk; lit. black monk",
+    "✔"
+   ],
+   [
+    "kāḷigodhāputtabhaddiya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "kāḷigodhāyaputta",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost in those from eminent families; lit. son of black iguana",
+    "◑"
+   ],
+   [
+    "kāḷudāyitthera",
+    "masc",
+    "name of a monk; lit. Black Udāyi the Elder",
+    "◑"
+   ],
+   [
+    "kāḷudāyī",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost in those who inspire confidence in families; lit. black Udāyī",
+    "◑"
+   ],
+   [
+    "kimila 1",
+    "masc",
+    "name of an arahant monk; associate of Anuruddha",
+    "✔"
+   ],
+   [
+    "kimila 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "kimbila 1",
+    "masc",
+    "name of an arahant monk; associate of Anuruddha",
+    "✔"
+   ],
+   [
+    "kimbila 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "kuṭikaṇṇa",
+    "masc",
+    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. crooked ear; (comm) earrings worth ten billion",
+    "◑"
+   ],
+   [
+    "kuṭikaṇṇatthera",
+    "masc",
+    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. elder crooked ear; (comm) elder with earrings worth ten billion",
+    "◑"
+   ],
+   [
+    "kuṭikaṇṇathera",
+    "masc",
+    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. elder crooked ear; (comm) elder with earrings worth ten billion",
+    "◑"
+   ],
+   [
+    "kuṭivihāritthera",
+    "masc",
+    "name of an arahant monk; lit. living in a hut elder",
+    "◑"
+   ],
+   [
+    "kuṭivihārī",
+    "masc",
+    "name of an arahant monk; lit. living in a hut",
+    "✔"
+   ],
+   [
+    "kuṇḍadhāna",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "kuṇḍala 3",
+    "masc",
+    "name of an arahant monk; lit. earring",
+    "◑"
+   ],
+   [
+    "kumāputta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "kumāputtatthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "kumāputtasahāyaka",
+    "masc",
+    "name of an arahant monk; lit. Kumāputta's friend",
+    "✔"
+   ],
+   [
+    "kumārakassapa",
+    "masc",
+    "name of an arahant monk; foremost in talking on diverse topics",
+    "✔"
+   ],
+   [
+    "kula 4",
+    "masc",
+    "name of an arahant monk; lit. family",
+    "✔"
+   ],
+   [
+    "kulla 2.2",
+    "masc",
+    "name of an arahant monk; lit. belonging to the home",
+    "◑"
+   ],
+   [
+    "kokālika",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "koṇḍañña 1",
+    "masc",
+    "name of a monk; seniormost of the five ascetics; first monastic disciple of the Buddha",
+    "✔"
+   ],
+   [
+    "koṇḍadhāna",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "kolita",
+    "masc",
+    "Mahāmoggallāna's first name; Kolita Moggallāna",
+    "✔"
+   ],
+   [
+    "kosalavihāritthera",
+    "masc",
+    "name of an arahant monk; lit. elder living in Kosala",
+    "◑"
+   ],
+   [
+    "kosalavihārī",
+    "masc",
+    "name of an arahant monk; lit. living in Kosala",
+    "◑"
+   ],
+   [
+    "kosiya 3",
+    "masc",
+    "name of an arahant monk; lit. from a cocoon",
+    "◑"
+   ],
+   [
+    "koḷivisa 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "khaṇḍa 5",
+    "masc",
+    "name of one of Vipassī Buddha's chief disciples",
+    "✔"
+   ],
+   [
+    "khaṇḍatissa",
+    "nt",
+    "names of Vipassī Buddha's pair of chief disciples; Khaṇḍa and Tissa",
+    "✔"
+   ],
+   [
+    "khaṇḍasumana",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "khadiravaniya 2",
+    "masc",
+    "name of an arahant monk; lit. living in the acacia forest",
+    "◑"
+   ],
+   [
+    "khadiravaniyarevata",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "khitaka 1",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "khitaka 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "khujjasobhita",
+    "masc",
+    "name of an arahant monk; lit. humpbacked shone",
+    "✔"
+   ],
+   [
+    "khemaṅkara 2",
+    "masc",
+    "name of Sikhī Buddha's attendant; lit. who makes safety",
+    "✔"
+   ],
+   [
+    "gaṅgātīriya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "gayākassapa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "gavampati 2",
+    "masc",
+    "name of an arahant monk; lit. lord of the cows",
+    "✔"
+   ],
+   [
+    "gavampatitthera",
+    "masc",
+    "name of an arahant monk; lit. elder lord of the cows",
+    "◑"
+   ],
+   [
+    "gavesī 3",
+    "masc",
+    "name of a monk at the time of Kassapa Buddha; lit. seeking",
+    "◑"
+   ],
+   [
+    "gahvaratīriya",
+    "masc",
+    "name of an arahant monk; lit. living on the bank of an abyss",
+    "✔"
+   ],
+   [
+    "girimānanda",
+    "masc",
+    "name of an arahant monk; lit. happy mountain",
+    "✔"
+   ],
+   [
+    "girimānandatthera",
+    "masc",
+    "name of a monk",
+    "◑"
+   ],
+   [
+    "gulissāni",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "gotama 2",
+    "masc",
+    "name of an arahant monk; lit. of the Gotama clan",
+    "✔"
+   ],
+   [
+    "gotama 3",
+    "masc",
+    "name of an arahant monk; lit. of the Gotama clan",
+    "✔"
+   ],
+   [
+    "gotama 4",
+    "masc",
+    "name of an arahant monk; lit. of the Gotama clan",
+    "✔"
+   ],
+   [
+    "gotamatthera",
+    "masc",
+    "name of a monk",
+    "◑"
+   ],
+   [
+    "godatta",
+    "masc",
+    "name of an arahant monk; lit. given to cows",
+    "✔"
+   ],
+   [
+    "godhika",
+    "masc",
+    "name of an arahant monk; lit. lizard; alligator",
+    "✔"
+   ],
+   [
+    "goliyāni",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "golissāni",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "gosāla 2",
+    "masc",
+    "name of an arahant monk; lit. cow shed",
+    "✔"
+   ],
+   [
+    "gosālathera",
+    "masc",
+    "name of an arahant monk; lit. elder cow shed",
+    "✔"
+   ],
+   [
+    "cakkhupāla",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "candana 4",
+    "masc",
+    "name of an arahant monk; lit. glowing",
+    "◑"
+   ],
+   [
+    "candikāputta",
+    "masc",
+    "name of a monk; lit. son of moonlight",
+    "✔"
+   ],
+   [
+    "cāla",
+    "masc",
+    "name of a monk; lit. shock",
+    "✔"
+   ],
+   [
+    "cittaka 3",
+    "masc",
+    "name of an arahant monk; lit. decorated",
+    "◑"
+   ],
+   [
+    "cunda 1",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "cunda 3",
+    "masc",
+    "name of a monk; Cunda the Novice; (comm) Sāriputta's youngest brother",
+    "✔"
+   ],
+   [
+    "cundaka",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "cullapanthaka",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost in creating a mind made body",
+    "◑"
+   ],
+   [
+    "cūlaka",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "cūlagavaccha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "cūḷaka 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "cūḷanāga",
+    "masc",
+    "name of a learned Sri Lankan monk; student of Sumana Thera; also known as Tepiṭakacūḷanāgatthera; lit. young dragon",
+    "✔"
+   ],
+   [
+    "cūḷapanthaka",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost in creating a mind made body",
+    "✔"
+   ],
+   [
+    "cūḷavaccha",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "cetaka",
+    "masc",
+    "name of a monk; lit. from Ceta",
+    "✔"
+   ],
+   [
+    "channa 2.3",
+    "masc",
+    "name of an arahant monk who committed suicide",
+    "✔"
+   ],
+   [
+    "jambuka 2",
+    "masc",
+    "name of an arahant monk; lit. jackal; yawner",
+    "◑"
+   ],
+   [
+    "jambugāmikaputta",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "jenta 2",
+    "masc",
+    "name of an arahant monk; lit. conquering",
+    "◑"
+   ],
+   [
+    "jotidāsa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "tālapuṭa 1",
+    "masc",
+    "name of an actor; later, name of an arahant monk; lit. palm leaf wrap",
+    "✔"
+   ],
+   [
+    "tālaputta",
+    "masc",
+    "name of an actor; later, name of an arahant monk; lit. son of Tāla",
+    "✔"
+   ],
+   [
+    "tipiṭakacūḷanāgatthera",
+    "masc",
+    "name of a Tipiṭaka teacher quoted by Buddhaghosa",
+    "◑"
+   ],
+   [
+    "tissa 2.2",
+    "masc",
+    "name of one of Vipassī Buddha's chief disciples; lit. constellation of Cancer",
+    "✔"
+   ],
+   [
+    "tissa 2.5",
+    "masc",
+    "name of an arahant monk; cousin of the Buddha; lit. constellation of Cancer",
+    "✔"
+   ],
+   [
+    "tissa 2.6",
+    "masc",
+    "name of an arahant monk; lit. constellation of Cancer",
+    "◑"
+   ],
+   [
+    "tissa 2.7",
+    "masc",
+    "name of an arahant monk; lit. constellation of Cancer",
+    "◑"
+   ],
+   [
+    "tissatthera 1",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "tissatthera 2",
+    "masc",
+    "generic monk's name used in examples; Tissa the elder",
+    "✔"
+   ],
+   [
+    "tissabhāradvāja",
+    "nt",
+    "names of Kassapa Buddha's pair of chief disciples; Tissa and Bhāradvāja",
+    "✔"
+   ],
+   [
+    "tekicchakāni",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "tekicchakārī",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "telakāni",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "dabba 1.2",
+    "masc",
+    "name of an arahant monk; lit. competent; able",
+    "✔"
+   ],
+   [
+    "daḷhika",
+    "masc",
+    "name of a monk; lit. strong",
+    "◑"
+   ],
+   [
+    "dāsaka 2",
+    "masc",
+    "name of an arahant monk; lit. young slave",
+    "✔"
+   ],
+   [
+    "dutiyakuṭivihāritthera",
+    "masc",
+    "name of an arahant monk; lit. second elder living in a hut",
+    "◑"
+   ],
+   [
+    "dutiyakuṭivihārī",
+    "masc",
+    "name of an arahant monk; lit. second (elder) living in a hut",
+    "◑"
+   ],
+   [
+    "devatthera",
+    "masc",
+    "generic monk's name used in examples; Deva the elder",
+    "✔"
+   ],
+   [
+    "devadatta",
+    "masc",
+    "name of a monk; relative and nemesis of the Buddha",
+    "✔"
+   ],
+   [
+    "devasabha 1",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "devasabha 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "dhaniya 1",
+    "masc",
+    "name of a monk infamous for the second pārājika; lit. having wealth",
+    "◑"
+   ],
+   [
+    "dhaniya 2",
+    "masc",
+    "name of an arahant monk; lit. having wealth",
+    "◑"
+   ],
+   [
+    "dhammapāla",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "dhammarakkhita 2",
+    "masc",
+    "generic monk's name used in vinaya examples; lit. protected by the Dhamma",
+    "◑"
+   ],
+   [
+    "dhammaruci 2",
+    "masc",
+    "name of a monk; lit. who likes the Dhamma",
+    "✔"
+   ],
+   [
+    "dhammasava",
+    "masc",
+    "name of an arahant monk; lit. setting in motion the Dhamma",
+    "✔"
+   ],
+   [
+    "dhammasavapitar",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "dhammika 4",
+    "masc",
+    "name of an arahant monk; lit. according to the Dhamma",
+    "◑"
+   ],
+   [
+    "naṅgalakula",
+    "masc",
+    "name of a monk in a Dhammapada commentary story; lit. family of the plough",
+    "✔"
+   ],
+   [
+    "nadīkassapa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "nanda 3",
+    "masc",
+    "name of a cowherd; lit. happy",
+    "✔"
+   ],
+   [
+    "nanda 6",
+    "masc",
+    "name of an arahant monk; cousin of the Buddha; lit. happy",
+    "✔"
+   ],
+   [
+    "nandaka 1",
+    "masc",
+    "name of a arahant monk; great disciple of the Buddha; foremost in admonishing the nuns; lit. rejoicing",
+    "✔"
+   ],
+   [
+    "nandaka 3",
+    "masc",
+    "name of an arahant monk; lit. rejoicing",
+    "◑"
+   ],
+   [
+    "nandaka 4",
+    "masc",
+    "name of an arahant monk; lit. rejoicing",
+    "◑"
+   ],
+   [
+    "nandiya",
+    "masc",
+    "name of an arahant monk; lit. with happiness",
+    "✔"
+   ],
+   [
+    "nāgatthera",
+    "masc",
+    "name of a monk; Nāga the elder",
+    "◑"
+   ],
+   [
+    "nāgadatta",
+    "masc",
+    "name of a monk; lit. given by dragons",
+    "✔"
+   ],
+   [
+    "nāgasamāla",
+    "masc",
+    "name of an arahant monk; personal attendant of the Buddha",
+    "✔"
+   ],
+   [
+    "nāgita",
+    "masc",
+    "name of an arahant monk; attendant of the Buddha for some time",
+    "✔"
+   ],
+   [
+    "nārada 1",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "nigrodha 3",
+    "masc",
+    "name of an arahant monk; lit. banyan tree",
+    "✔"
+   ],
+   [
+    "nigrodhakappa",
+    "masc",
+    "name of a monk; preceptor of Vaṅgīsa; lit. banyan Kappa",
+    "✔"
+   ],
+   [
+    "nitaka",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "nisabha 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "nīta 4",
+    "masc",
+    "name of an arahant monk; lit. led",
+    "◑"
+   ],
+   [
+    "nhātakamuni",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "nhātakamunitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "nhātamuni",
+    "masc",
+    "name of an arahant monk; lit. ritually purified sage",
+    "✔"
+   ],
+   [
+    "pakkha 7",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "paccaya 4",
+    "masc",
+    "name of an arahant monk; lit. dependent",
+    "◑"
+   ],
+   [
+    "pañcālaputta",
+    "masc",
+    "name of an arahant monk; lit. belonging to the Pañcāla people; (or) Pañcālā's son",
+    "✔"
+   ],
+   [
+    "pañcāliputta",
+    "masc",
+    "name of a monk; lit. Pañcālī's son",
+    "✔"
+   ],
+   [
+    "panthaka",
+    "masc",
+    "name of a monk; lit. traveller",
+    "✔"
+   ],
+   [
+    "paripuṇṇaka",
+    "masc",
+    "name of an arahant monk; lit. filled all around",
+    "✔"
+   ],
+   [
+    "paviṭṭha 2",
+    "masc",
+    "name of an arahant monk; lit. entered forward",
+    "✔"
+   ],
+   [
+    "passika",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "pārāpariya 1",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "pārāpariya 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "pārāsariya 1",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "pārāsariya 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "piṅgaya",
+    "masc",
+    "name of an arahant",
+    "✔"
+   ],
+   [
+    "piṅgiya 1",
+    "masc",
+    "name of an arahant; lit. red brown",
+    "✔"
+   ],
+   [
+    "piṇḍola 3",
+    "masc",
+    "name of monk; lit. who collects alms",
+    "✔"
+   ],
+   [
+    "piṇḍolabhāradvāja",
+    "masc",
+    "name of an arahant monk; lit. almsman Bhāradvāja",
+    "✔"
+   ],
+   [
+    "piyañjaha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "pilindavaccha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "pilindivaccha",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "puṇṇa 3",
+    "masc",
+    "name of a Sakyan arahnt monk; Puṇṇa Mantāṇiputta; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. filled",
+    "✔"
+   ],
+   [
+    "puṇṇa 4",
+    "masc",
+    "name of an arahant monk from Sunāparanta; Puṇṇa Sunāparanta; lit. filled",
+    "✔"
+   ],
+   [
+    "puṇṇaji",
+    "masc",
+    "name of an arahant monk; one of the four friends of Yasa",
+    "✔"
+   ],
+   [
+    "puṇṇatthera",
+    "masc",
+    "name of an arahant monk from Sunāparanta; Puṇṇa Sunāparanta; lit. complete elder",
+    "✔"
+   ],
+   [
+    "puṇṇamāsa 1",
+    "masc",
+    "name of an arahant monk; lit. full moon",
+    "✔"
+   ],
+   [
+    "puṇṇamāsa 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "puṇṇiya",
+    "masc",
+    "name of a monk; lit. fulfilled",
+    "✔"
+   ],
+   [
+    "punabbasu 2",
+    "masc",
+    "name of a monk; one of the group of six monks",
+    "◑"
+   ],
+   [
+    "purohitaputta 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "purohitaputtajenta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "poṭiriya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "poṭṭhila",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "posiya",
+    "masc",
+    "name of an arahant monk; lit. to be nurtured",
+    "✔"
+   ],
+   [
+    "phagguna 1",
+    "masc",
+    "name of a monk; Moḷiyaphagguna",
+    "✔"
+   ],
+   [
+    "phussa 2.4",
+    "masc",
+    "name of an arahant monk; lit. constellation of Cancer",
+    "◑"
+   ],
+   [
+    "phussadeva",
+    "masc",
+    "name of a Sri Lankan monk learned in Vinaya, famous for never abandoning his theme of meditation",
+    "✔"
+   ],
+   [
+    "bakkula",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "bandhana 7",
+    "masc",
+    "name of an arahant monk; lit. binding",
+    "◑"
+   ],
+   [
+    "bandhura",
+    "masc",
+    "name of an arahant monk; lit. having bonds",
+    "✔"
+   ],
+   [
+    "bākula 1",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "bākkula",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "bījakapitar",
+    "masc",
+    "epithet of Sudinna; lit. Bījaka's father",
+    "◑"
+   ],
+   [
+    "buddhapiya",
+    "masc",
+    "name of a Tamil monk; author of Rūpasiddhi",
+    "◑"
+   ],
+   [
+    "buddhija",
+    "masc",
+    "name of Kakusandha Buddha's attendant; lit. born from intelligence",
+    "✔"
+   ],
+   [
+    "buddhupaṭṭhāka",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "belaṭṭhasīsa",
+    "masc",
+    "name of an arahant monk; Ānanda's preceptor",
+    "✔"
+   ],
+   [
+    "belaṭṭhānika",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "belaṭṭhi",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "belaṭṭhisīsa",
+    "masc",
+    "name of an arahant monk; Ānanda's preceptor",
+    "✔"
+   ],
+   [
+    "brahmadatta 1",
+    "masc",
+    "name of an ancient king; lit. given by god; (or) protected by god",
+    "✔"
+   ],
+   [
+    "brahmadatta 4",
+    "masc",
+    "name of an arahant monk; lit. given by god; (or) protected by god",
+    "◑"
+   ],
+   [
+    "brahmadeva",
+    "masc",
+    "name of an arahant monk; lit. Brahma deity",
+    "✔"
+   ],
+   [
+    "brahmāli",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "bhagu 3",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "bhagutthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "bhaṇḍa 2",
+    "masc",
+    "name of a monk; lit. goods",
+    "✔"
+   ],
+   [
+    "bhaṇḍu 1",
+    "masc",
+    "name of a monk; lit. shaven-headed",
+    "✔"
+   ],
+   [
+    "bhadda 5",
+    "masc",
+    "name of an arahant monk; lit. lucky",
+    "✔"
+   ],
+   [
+    "bhaddaji",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "bhaddajitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "bhaddāli",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "bhaddiya 4",
+    "masc",
+    "name of an arahant monk; lit. lucky; fortunate",
+    "✔"
+   ],
+   [
+    "bharata 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "bhalliya",
+    "masc",
+    "name of an arahant monk; lit. auspicious",
+    "✔"
+   ],
+   [
+    "bhāradvāja 5",
+    "masc",
+    "name of an arahant monk; lit. descended from Bharadvāja",
+    "✔"
+   ],
+   [
+    "bhiyyosuttara",
+    "nt",
+    "names of Koṇāgamana Buddha's pair of chief disciples; Bhiyyosa and Uttara",
+    "✔"
+   ],
+   [
+    "bhūta 09",
+    "masc",
+    "name of an arahant monk; lit. become",
+    "◑"
+   ],
+   [
+    "bhūmajaka",
+    "masc",
+    "name of one of the leaders of the notorious group of six monks; lit. born from the earth",
+    "◑"
+   ],
+   [
+    "bhūmija",
+    "masc",
+    "name of a monk; lit. born from the earth",
+    "✔"
+   ],
+   [
+    "mantāniputta",
+    "masc",
+    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantānī",
+    "✔"
+   ],
+   [
+    "malitavambha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mahaka",
+    "masc",
+    "name of a monk; lit. venerable; eminent",
+    "✔"
+   ],
+   [
+    "mahākaccāna",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost disciple in explaining a brief instruction in detail; lit. great descendant of Kati",
+    "✔"
+   ],
+   [
+    "mahākaccāyana",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost disciple in explaining a brief instruction in detail; lit. great descendant of Kati",
+    "✔"
+   ],
+   [
+    "mahākappina",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost disciple in instructing the monks; lit. great Kappina",
+    "✔"
+   ],
+   [
+    "mahākassapa",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost disciple in preaching ascetic practices; lit. great Kassapa",
+    "✔"
+   ],
+   [
+    "mahākāḷa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mahākoṭṭhika",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost disciple in analytical understanding; lit. great Koṭṭhika",
+    "✔"
+   ],
+   [
+    "mahākoṭṭhita",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost disciple in analytical understanding; lit. great Koṭṭhita",
+    "✔"
+   ],
+   [
+    "mahāgavaccha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mahācunda",
+    "masc",
+    "name of an arahant monk; lit. great Cunda",
+    "✔"
+   ],
+   [
+    "mahādatta 2",
+    "masc",
+    "name of an eminient Sri Lankan monk; lit. great given",
+    "✔"
+   ],
+   [
+    "mahānāga 4",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mahānāga 5",
+    "masc",
+    "name of a Sri Lankan monk; lit. great dragon",
+    "✔"
+   ],
+   [
+    "mahānāma 3",
+    "masc",
+    "name of an arahant monk; lit. great name",
+    "✔"
+   ],
+   [
+    "mahāpanthaka",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost in those skilled in the expansion of perception",
+    "◑"
+   ],
+   [
+    "mahāmoggalāna",
+    "masc",
+    "name of an arahant monk chief disciple; great disciple of the Buddha; foremost disciple in psychic power; lit. great descendent of Muggala",
+    "✔"
+   ],
+   [
+    "mahāmoggallāna",
+    "masc",
+    "name of an arahant monk; chief disciple; great disciple of the Buddha; foremost disciple in psychic power; lit. great descendent of Muggala",
+    "✔"
+   ],
+   [
+    "mahāvaccha",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "mahāsīvatthera",
+    "masc",
+    "name of a eminent commentator frequently quoted by Buddhaghosa",
+    "◑"
+   ],
+   [
+    "mahāsumatthera",
+    "masc",
+    "name of a vinayadhara monk in Sri Lanka; Mahāsuma the elder",
+    "✔"
+   ],
+   [
+    "māgaṇḍi",
+    "masc",
+    "name of a wandering ascetic; lit. son of a usurer",
+    "◑"
+   ],
+   [
+    "māgaṇḍiya",
+    "masc",
+    "name of a wandering ascetic; lit. son of a usurer",
+    "✔"
+   ],
+   [
+    "māṇava 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mātaṅgaputta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mālukya",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "mālukyaputta 1",
+    "masc",
+    "name of an arahant monk; lit. son of Mālukya",
+    "✔"
+   ],
+   [
+    "māluṅkyaputta",
+    "masc",
+    "name of an arahant monk; lit. son of Māluṅkya",
+    "✔"
+   ],
+   [
+    "migajāla",
+    "masc",
+    "name of an arahant monk; son of Visākhā; lit. deer trap",
+    "✔"
+   ],
+   [
+    "migalaṇḍika",
+    "masc",
+    "name of a monk; lit. deer droppings",
+    "◑"
+   ],
+   [
+    "migasira",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mudita 2",
+    "masc",
+    "name of an arahant monk; lit. happy",
+    "◑"
+   ],
+   [
+    "musila",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "musīla",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "mūsila",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "meghiya",
+    "masc",
+    "name of an arahant monk; attendant of the Buddha; lit. from a cloud",
+    "◑"
+   ],
+   [
+    "meṇḍasira",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "mettaji",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "metteyya 2",
+    "masc",
+    "name of young Brahman; lit. friendly",
+    "◑"
+   ],
+   [
+    "metteyyabuddha",
+    "masc",
+    "name of a mythical future Buddha",
+    "◑"
+   ],
+   [
+    "meḷajina",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "moggallāna 1",
+    "masc",
+    "name of a monk; chief disciple; great disciple of the Buddha; foremost disciple in psychic power; lit. descendent of Muggala",
+    "✔"
+   ],
+   [
+    "mogharāja",
+    "masc",
+    "name of an arahant monk; lit. king of emptiness",
+    "◑"
+   ],
+   [
+    "moḷiyaphagguna",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "yamaka 2",
+    "masc",
+    "name of a monk; lit. twin",
+    "✔"
+   ],
+   [
+    "yasa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "yasadatta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "yasoja",
+    "masc",
+    "name of an arahant monk; lit. born famous",
+    "✔"
+   ],
+   [
+    "rakkhita 3",
+    "masc",
+    "name of an arahant monk; lit. protected",
+    "◑"
+   ],
+   [
+    "raṭṭhapāla",
+    "masc",
+    "name of an arahant monk; lit. protector of the country",
+    "✔"
+   ],
+   [
+    "ramaṇīyakuṭika",
+    "masc",
+    "name of an arahant monk; lit. with a delightful little hut",
+    "✔"
+   ],
+   [
+    "ramaṇīyavihāritthera",
+    "masc",
+    "name of an arahant monk; lit. elder living in a beautiful monastery",
+    "◑"
+   ],
+   [
+    "ramaṇīyavihārī",
+    "masc",
+    "name of an arahant monk; lit. living in a beautiful monastery",
+    "✔"
+   ],
+   [
+    "rājadatta",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "rādha",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "rāmaṇeyyaka 3",
+    "masc",
+    "name of an arahant monk; lit. pleasing",
+    "◑"
+   ],
+   [
+    "rāhula",
+    "masc",
+    "name of an arahant monk; Buddha's son",
+    "✔"
+   ],
+   [
+    "rāhulabhadda",
+    "masc",
+    "auspicious Rāhula; Rāhula the fortunate",
+    "✔"
+   ],
+   [
+    "revata 1",
+    "masc",
+    "name of a monk; great disciple of the Buddha; foremost disciple in forest dwelling",
+    "✔"
+   ],
+   [
+    "lakuṇḍakabhaddiya",
+    "masc",
+    "name of an arahant monk; lit. lucky dwarf",
+    "✔"
+   ],
+   [
+    "lakuṇḍabhaddiya",
+    "masc",
+    "name of an arahant monk; lit. lucky dwarf",
+    "✔"
+   ],
+   [
+    "lakkhaṇa 6",
+    "masc",
+    "name of an arahant monk; lit. marking",
+    "✔"
+   ],
+   [
+    "lāḷudāyī",
+    "masc",
+    "name of a monk; lit. dribbling Udāyī",
+    "✔"
+   ],
+   [
+    "lomasakaṅgiya",
+    "masc",
+    "name of an arahant monk; lit. having hairy limbs; (or) hairy Bengali",
+    "✔"
+   ],
+   [
+    "lomasakaṃbhiya",
+    "masc",
+    "name of a monk; lit. with even finer hair",
+    "◑"
+   ],
+   [
+    "lomasavaṅgisa",
+    "masc",
+    "name of a monk; lit. hairy Bengali",
+    "◑"
+   ],
+   [
+    "vakkali",
+    "adj",
+    "name of an arahant monk; a former ascetic; lit. dressed in bark cloth",
+    "✔"
+   ],
+   [
+    "vakkalitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vaṅgantaputta",
+    "masc",
+    "name of an arahant monk; lit. Vaṅganta's son",
+    "◑"
+   ],
+   [
+    "vaṅgisa",
+    "masc",
+    "name of a monk; foremost disciple in spontaneous expression",
+    "◑"
+   ],
+   [
+    "vaṅgīsa",
+    "masc",
+    "name of an arahant monk; foremost disciple in spontaneous expression; lit. lord of Bengal",
+    "✔"
+   ],
+   [
+    "vacchagotta 1",
+    "masc",
+    "name of an ascetic; lit. of the Vaccha family clan",
+    "✔"
+   ],
+   [
+    "vacchagotta 2",
+    "masc",
+    "name of an arahant monk; lit. of the Vaccha family clan",
+    "✔"
+   ],
+   [
+    "vacchapāla",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vajjita 3",
+    "masc",
+    "name of an arahant monk; lit. avoided",
+    "◑"
+   ],
+   [
+    "vajjiputta 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vajjiputta 3",
+    "masc",
+    "name of an arahant monk; lit. young Vajjian",
+    "✔"
+   ],
+   [
+    "vaḍḍha 3",
+    "masc",
+    "name of an arahant monk; lit. increase",
+    "✔"
+   ],
+   [
+    "vaḍḍhamāna 2",
+    "masc",
+    "name of an arahant monk; lit. increasing",
+    "✔"
+   ],
+   [
+    "vanavaccha 1",
+    "masc",
+    "name of an arahant monk; lit. forest tree",
+    "✔"
+   ],
+   [
+    "vanavaccha 2",
+    "masc",
+    "name of an arahant monk; lit. forest tree",
+    "◑"
+   ],
+   [
+    "vappa 4",
+    "masc",
+    "name of an arahant monk; lit. October",
+    "✔"
+   ],
+   [
+    "valliya 1",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "valliya 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "valliya 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vasabha 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vassika 3",
+    "masc",
+    "name of an arahant monk; lit. related to the rainy season",
+    "◑"
+   ],
+   [
+    "vāraṇa 3",
+    "masc",
+    "name of an arahant monk; lit. warding off",
+    "◑"
+   ],
+   [
+    "vāhana 2",
+    "masc",
+    "name of a monk; lit. carrying",
+    "✔"
+   ],
+   [
+    "vijaya 2",
+    "masc",
+    "name of an arahant monk; lit. victory",
+    "◑"
+   ],
+   [
+    "vijitasena",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vidhura",
+    "masc",
+    "name of one of Kakusandha Buddha's chief disciples; lit. without burden; very first",
+    "✔"
+   ],
+   [
+    "vidhurasañjīva",
+    "nt",
+    "Vidhura and Sañjīva; Kakusandha Buddha's pair of chief disciples",
+    "✔"
+   ],
+   [
+    "vimala 4",
+    "masc",
+    "name of an arahant monk; lit. stainless",
+    "✔"
+   ],
+   [
+    "vimala 5",
+    "masc",
+    "name of an arahant monk; lit. stainless",
+    "◑"
+   ],
+   [
+    "vimalakoṇḍañña",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "visākhapañcālaputta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "vītasoka 2",
+    "masc",
+    "name of an arahant monk; lit. without sorrow",
+    "✔"
+   ],
+   [
+    "vīra 3",
+    "masc",
+    "name of an arahant monk; lit. hero",
+    "✔"
+   ],
+   [
+    "veḷaṭṭhasīsa",
+    "masc",
+    "name of a monk",
+    "◑"
+   ],
+   [
+    "saṅkiccathera",
+    "masc",
+    "name of an arahant monk; lit. elder descendent of Saṃkiti",
+    "◑"
+   ],
+   [
+    "saṅgāmaji 2",
+    "masc",
+    "name of a monk; lit. winner in war; victor in battle",
+    "✔"
+   ],
+   [
+    "saṅgharakkhita 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sañjaya 3",
+    "masc",
+    "name of an arahant monk; lit. victory",
+    "✔"
+   ],
+   [
+    "sañjīva 2",
+    "masc",
+    "name of one of Kakusandha Buddha's chief disciples; lit. revival",
+    "✔"
+   ],
+   [
+    "saddasaññaka",
+    "masc",
+    "name of an arahant monk; lit. percipient of sounds",
+    "✔"
+   ],
+   [
+    "saddha 3",
+    "masc",
+    "name of a monk; lit. placing the heart",
+    "✔"
+   ],
+   [
+    "saddha 4",
+    "masc",
+    "name of a monk; son of Sudatta; lit. placing the heart",
+    "✔"
+   ],
+   [
+    "sandhita",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sappaka",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sappadāsa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sappadāsaka",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "sabbakāmi",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sabbakāmitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sabbamitta 1",
+    "masc",
+    "name of Kassapa Buddha's attendant; lit. friend of all",
+    "✔"
+   ],
+   [
+    "sabbamitta 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sabhiya",
+    "masc",
+    "name of an arahant monk; lit. belonging to good society",
+    "✔"
+   ],
+   [
+    "samitigutta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "samiddhi 2",
+    "masc",
+    "name of an arahant monk; lit. success together",
+    "✔"
+   ],
+   [
+    "samiddhitthera",
+    "masc",
+    "name of an arahant monk; lit. elder success",
+    "◑"
+   ],
+   [
+    "samuddadatta",
+    "masc",
+    "name of a monk; lit. given to the ocean",
+    "◑"
+   ],
+   [
+    "sambahulakaccāna",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sambulakaccāna",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sambhūta 2",
+    "masc",
+    "name of an arahant monk; lit. produced",
+    "✔"
+   ],
+   [
+    "sarabhaṅga 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "saviṭṭha",
+    "masc",
+    "name of a monk",
+    "✔"
+   ],
+   [
+    "sahaka",
+    "masc",
+    "name of a monk in the time of Kassapa Buddha; lit. who endures",
+    "◑"
+   ],
+   [
+    "saṃkicca 2",
+    "masc",
+    "name of an arahant monk; lit. descendent of Saṃkiti",
+    "◑"
+   ],
+   [
+    "saṃkiccathera",
+    "masc",
+    "name of an arahant monk; lit. elder descendent of Saṃkiti",
+    "✔"
+   ],
+   [
+    "sāgata 2",
+    "masc",
+    "name of a monk; foremost in the fire element; lit. well come here",
+    "✔"
+   ],
+   [
+    "sāṭimattiya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sāti",
+    "masc",
+    "name of a monk; lit. the star Arcturus; (or) charioteer",
+    "✔"
+   ],
+   [
+    "sānu 3",
+    "masc",
+    "name of an arahant monk; lit. plateau",
+    "✔"
+   ],
+   [
+    "sānutthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sāmaññakāni",
+    "masc",
+    "name of an arahant monk; lit. monkhood",
+    "✔"
+   ],
+   [
+    "sāmaññakānitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sāmidatta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sāriputta",
+    "masc",
+    "name of an arahant monk; chief disciple; great disciple of the Buddha; foremost disciple in great wisdom; lit. son of Sāri",
+    "✔"
+   ],
+   [
+    "sāriputtamoggallāna",
+    "nt",
+    "names of Buddha's pair of chief disciples; Sāriputta and Moggallāna",
+    "✔"
+   ],
+   [
+    "sāriputtamoggallānā",
+    "masc",
+    "name of a monks; chief disciples; great disciples of the Buddha; Sāriputta and Moggallāna",
+    "✔"
+   ],
+   [
+    "siṅgālapitar",
+    "masc",
+    "name of an arahant monk; lit. jackal's father",
+    "◑"
+   ],
+   [
+    "siṅgālapitika",
+    "masc",
+    "name of an arahant monk; lit. jackal's father",
+    "✔"
+   ],
+   [
+    "sirimaṇḍa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sirimant 2",
+    "masc",
+    "name of an arahant monk; lit. having good fortune quality",
+    "✔"
+   ],
+   [
+    "sirimanda",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sirimitta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sirivaḍḍha 3",
+    "masc",
+    "name of an arahant monk; lit. glory increase",
+    "◑"
+   ],
+   [
+    "sivaka 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sivaka 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sivika",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sīgālapitar",
+    "masc",
+    "name of an arahant monk; lit. jackal's father",
+    "◑"
+   ],
+   [
+    "sītavaniya",
+    "masc",
+    "name of an arahant monk; lit. from the cool wood",
+    "✔"
+   ],
+   [
+    "sīlava",
+    "masc",
+    "name of an arahant monk; lit. having quality of virtue",
+    "✔"
+   ],
+   [
+    "sīvaka 2",
+    "masc",
+    "name of an arahant monk; lit. tailor",
+    "◑"
+   ],
+   [
+    "sīvali 1",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost in receiving",
+    "◑"
+   ],
+   [
+    "sīvalitthera",
+    "masc",
+    "name of an arahant monk; great disciple of the Buddha; foremost in receiving",
+    "◑"
+   ],
+   [
+    "sīha 3",
+    "masc",
+    "name of an arahant monk; lit. lion",
+    "◑"
+   ],
+   [
+    "sīha 4",
+    "masc",
+    "name of a novice monk; lit. lion",
+    "✔"
+   ],
+   [
+    "sugandha 3",
+    "masc",
+    "name of an arahant monk; lit. good smell",
+    "◑"
+   ],
+   [
+    "sudinna 2",
+    "masc",
+    "name of a monk notorious for the first pārājika",
+    "◑"
+   ],
+   [
+    "sunakkhatta 2",
+    "masc",
+    "name of a former monk; lit. good star sign",
+    "✔"
+   ],
+   [
+    "sunāga",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sunīta 2",
+    "masc",
+    "name of an arahant monk; lit. well trained",
+    "◑"
+   ],
+   [
+    "sundarasamudda",
+    "masc",
+    "name of an arahant monk; lit. beautiful ocean",
+    "◑"
+   ],
+   [
+    "suppiya 2",
+    "masc",
+    "name of an arahant monk; lit. very dear",
+    "✔"
+   ],
+   [
+    "subāhu 2",
+    "masc",
+    "name of an arahant monk; lit. good arms",
+    "✔"
+   ],
+   [
+    "subāhutthera",
+    "masc",
+    "name of an arahant monk; lit. good arms elder",
+    "◑"
+   ],
+   [
+    "subhadda 1",
+    "masc",
+    "name of an arahant monk; last person to get ordained under the Buddha",
+    "✔"
+   ],
+   [
+    "subhadda 2",
+    "masc",
+    "name of a monk who rejoiced news of the Buddha's death",
+    "✔"
+   ],
+   [
+    "subhūta",
+    "masc",
+    "name of an arahant monk; lit. wellbeing",
+    "◑"
+   ],
+   [
+    "subhūti 1",
+    "masc",
+    "name of an arahant monk; lit. wellbeing",
+    "✔"
+   ],
+   [
+    "subhūtitthera",
+    "masc",
+    "name of an arahant monk; lit. elder Wellbeing",
+    "✔"
+   ],
+   [
+    "sumaṅgala 3",
+    "masc",
+    "name of an arahant monk; lit. very auspicious",
+    "✔"
+   ],
+   [
+    "sumana 3",
+    "masc",
+    "name of an arahant monk; lit. good mind",
+    "◑"
+   ],
+   [
+    "sumana 4",
+    "masc",
+    "name of an arahant monk; lit. good mind",
+    "◑"
+   ],
+   [
+    "sumanatthera",
+    "masc",
+    "name of a learned Sri Lankan monk",
+    "✔"
+   ],
+   [
+    "suyāmana",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "surādha",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "susārada",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "susima 2",
+    "masc",
+    "name of a monk, former wandering ascetic",
+    "✔"
+   ],
+   [
+    "susīma 2",
+    "masc",
+    "name of a monk, former wandering ascetic",
+    "✔"
+   ],
+   [
+    "suhemanta",
+    "masc",
+    "name of an arahant monk",
+    "✔"
+   ],
+   [
+    "setuccha",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "senaka 2",
+    "masc",
+    "name of an arahant monk; lit. hawk",
+    "◑"
+   ],
+   [
+    "seyyasaka",
+    "masc",
+    "name of a monk infamous for Saṅghādisesa 1",
+    "✔"
+   ],
+   [
+    "sela 4",
+    "masc",
+    "name of a Brahman teacher; name of an arahant monk; lit. rock",
+    "✔"
+   ],
+   [
+    "selissariya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "soṇa 1",
+    "masc",
+    "name of a monk; lit. dog",
+    "✔"
+   ],
+   [
+    "soṇa 4",
+    "masc",
+    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. dog",
+    "✔"
+   ],
+   [
+    "soṇakuṭikaṇṇa",
+    "masc",
+    "name of an arahant monk; Soṇa Kuṭikaṇṇa; great disciple of the Buddha; foremost in eloquence; lit. dog with a crooked ear",
+    "◑"
+   ],
+   [
+    "soṇakoḷivisa",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "soṇapoṭiriya",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "soṇuttara 1",
+    "nt",
+    "names of Vessabhū Buddha's pair of chief disciples; Soṇa and Uttara",
+    "✔"
+   ],
+   [
+    "sotthija",
+    "masc",
+    "name of Koṇāgamana Buddha's attendant",
+    "✔"
+   ],
+   [
+    "sopāka 2",
+    "masc",
+    "name of an arahant monk; lit. dog-cooker",
+    "✔"
+   ],
+   [
+    "sopāka 3",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "sobhita 4",
+    "masc",
+    "name of an arahant monk; lit. shone",
+    "◑"
+   ],
+   [
+    "somamitta",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "hatthārohaputta 2",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "hārita 2",
+    "masc",
+    "name of an arahant monk; lit. caused to carry",
+    "✔"
+   ],
+   [
+    "hārita 3",
+    "masc",
+    "name of an arahant monk; lit. caused to carry",
+    "◑"
+   ],
+   [
+    "heraññakāni",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ],
+   [
+    "heraññakānitthera",
+    "masc",
+    "name of an arahant monk",
+    "◑"
+   ]
+  ],
+  "count": 494
+ },
+ "types of ascetics": {
+  "data": [
+   [
+    "aggipakkika",
+    "masc",
+    "type of ascetic who subsists on begging alms cooked by fire",
+    "◑"
+   ],
+   [
+    "aggiparicārika",
+    "masc",
+    "fire worshipper; attendant of the sacred fire",
+    "✔"
+   ],
+   [
+    "addhariya",
+    "masc",
+    "sacrificing priest; name of a group of Brahmans",
+    "✔"
+   ],
+   [
+    "anaggipakkika",
+    "masc",
+    "type of ascetic subsisting on alms not cooked by fire",
+    "◑"
+   ],
+   [
+    "abbhokāsika",
+    "masc",
+    "ascetic who lives in the open air; open-air dweller",
+    "✔"
+   ],
+   [
+    "ayamuṭṭhika 2",
+    "masc",
+    "type of ascetic who subsists on food acquired with a small stone; lit. with a small iron hammer",
+    "◑"
+   ],
+   [
+    "asāmapāka",
+    "masc",
+    "type of ascetic who subsists on food not cooked by oneself",
+    "◑"
+   ],
+   [
+    "asmamuṭṭhika",
+    "masc",
+    "type of ascetic who subsists on food acquired with a small stone; lit. with a stone hammer",
+    "◑"
+   ],
+   [
+    "ājīvaka",
+    "masc",
+    "Ājīvaka; ascetic; member of a renunciant sect; (comm) naked ascetic; lit. (following a specific code of) livelihood",
+    "✔"
+   ],
+   [
+    "ājīvika",
+    "masc",
+    "ascetic; member of a renunciant sect; (comm) naked ascetic; lit. (following a specific code of) livelihood",
+    "✔"
+   ],
+   [
+    "āthabbaṇika",
+    "masc",
+    "reciter of the Atharva Veda; who knows the Atharva Veda",
+    "✔"
+   ],
+   [
+    "āraññaka 2",
+    "masc",
+    "forest monk; forest dwelling ascetic; lit. related to the forest",
+    "✔"
+   ],
+   [
+    "āraññika 1",
+    "masc",
+    "forest monk; forest dwelling ascetic",
+    "✔"
+   ],
+   [
+    "ukkuṭika 2",
+    "masc",
+    "ascetic who remains in the squatting posture; lit. bent up",
+    "✔"
+   ],
+   [
+    "ucchedavādī",
+    "masc",
+    "annihilationist; proponent of the doctrine of annihilation; lit. speaking annihilation",
+    "✔"
+   ],
+   [
+    "udakorohaka",
+    "masc",
+    "bather; ritual bather; lit. who descends into water",
+    "✔"
+   ],
+   [
+    "udakorohanta",
+    "masc",
+    "bather; swimmer; lit. going down into water",
+    "✔"
+   ],
+   [
+    "ubbhaṭṭhaka",
+    "masc",
+    "ascetic who practices continuous standing; ascetic who practices self-immolation by standing upright",
+    "✔"
+   ],
+   [
+    "ekasāṭaka 1",
+    "masc",
+    "ascetic wearing a loin-cloth; one robe ascetic; lit. one cloth",
+    "✔"
+   ],
+   [
+    "ekasāṭikā",
+    "fem",
+    "female ascetic who wears one robe; ascetic dressed in a single cloth; lit. one cloth-er",
+    "◑"
+   ],
+   [
+    "ekāgārika 2.1",
+    "masc",
+    "ascetic who subsists on food from only one house; lit. one house-er",
+    "✔"
+   ],
+   [
+    "ekālopika",
+    "masc",
+    "ascetic who subsists on only one mouthful of food; lit. one morsel-er",
+    "✔"
+   ],
+   [
+    "ekāsanika",
+    "masc",
+    "ascetic who eats once a day; who eats in one sitting",
+    "✔"
+   ],
+   [
+    "kaṇṭakāpassayika",
+    "masc",
+    "ascetic who lies on a thorn bed",
+    "✔"
+   ],
+   [
+    "kesamassulocaka",
+    "masc",
+    "who plucks out hair and beard",
+    "✔"
+   ],
+   [
+    "gaṇī",
+    "masc",
+    "leader of a group; lit. one with a following",
+    "✔"
+   ],
+   [
+    "chandoka",
+    "masc",
+    "chief priest; name of a group of Brahmans",
+    "✔"
+   ],
+   [
+    "jaṭilaka",
+    "masc",
+    "ascetic who wears matted hair; dreadlocked ascetic",
+    "✔"
+   ],
+   [
+    "jhāyaka",
+    "masc",
+    "meditator",
+    "✔"
+   ],
+   [
+    "tapassī 1",
+    "masc",
+    "ascetic; lit. who burns",
+    "✔"
+   ],
+   [
+    "tittiriya",
+    "masc",
+    "name of a group of Brahmans; lit. from Tittiri",
+    "✔"
+   ],
+   [
+    "titthiyasāvaka",
+    "masc",
+    "disciple of another religious teacher; adherent of another religion",
+    "✔"
+   ],
+   [
+    "dantaluyyaka",
+    "masc",
+    "type of ascetic who subsists on bark town from trees by their teeth; lit. tooth reaper",
+    "◑"
+   ],
+   [
+    "dantavakkalika",
+    "masc",
+    "type of ascetic who subsists on bark torn from trees by their teeth",
+    "◑"
+   ],
+   [
+    "dvāgārika",
+    "masc",
+    "ascetic who subsists on food from only two houses; lit. two house-er",
+    "✔"
+   ],
+   [
+    "dvālopika",
+    "masc",
+    "ascetic who subsists on only two mouthfuls of food; lit. two morsel-er",
+    "✔"
+   ],
+   [
+    "nahātaka",
+    "masc",
+    "graduate; Brahman who has finished their studies and returned home; lit. who has bathed",
+    "✔"
+   ],
+   [
+    "nesajja",
+    "masc",
+    "ascetic who remains in a sitting position; upright sitter",
+    "◑"
+   ],
+   [
+    "nesajjika",
+    "masc",
+    "ascetic who remains in a sitting position; upright sitter",
+    "✔"
+   ],
+   [
+    "paṇḍara 4",
+    "masc",
+    "name of a religious sect; lit. white",
+    "✔"
+   ],
+   [
+    "paṇḍaraṅga",
+    "masc",
+    "name of a Brahmanical sect; lit. white limbs",
+    "✔"
+   ],
+   [
+    "parappavādī",
+    "masc",
+    "proponent of other belief systems; adherent of other doctrines; lit. speaking forward other",
+    "◑"
+   ],
+   [
+    "paramahaṃsa",
+    "masc",
+    "(Brahman) ascetic of the highest order; lit. great soul",
+    "◑"
+   ],
+   [
+    "paribbāja",
+    "masc",
+    "homeless spiritual seeker; wandering monk",
+    "✔"
+   ],
+   [
+    "paribbājaka",
+    "masc",
+    "homeless spiritual seeker; wandering ascetic; lit. who goes around",
+    "✔"
+   ],
+   [
+    "paribbājikā",
+    "fem",
+    "homeless female seeker; wandering female ascetic; lit. who goes around",
+    "✔"
+   ],
+   [
+    "pariyāyabhattika",
+    "masc",
+    "ascetic who eats at intervals; interval faster",
+    "✔"
+   ],
+   [
+    "paṃsukūlika 1",
+    "masc",
+    "ascetic who wears rag robes; rag robe wearer",
+    "✔"
+   ],
+   [
+    "pāpabhikkhunī",
+    "fem",
+    "evil nun; wicked nun",
+    "✔"
+   ],
+   [
+    "pāpasāmaṇera",
+    "masc",
+    "evil novice; wicked apprentice monk",
+    "✔"
+   ],
+   [
+    "pāpasāmaṇerī",
+    "fem",
+    "evil female novice; wicked apprentice nun",
+    "✔"
+   ],
+   [
+    "pāpasikkhamānā",
+    "fem",
+    "evil nun-in-training; wicked female probationer",
+    "✔"
+   ],
+   [
+    "puggalavādī",
+    "masc",
+    "proponent of the doctrine that the individual exists; lit. speaking person",
+    "✔"
+   ],
+   [
+    "bavhārijjhā",
+    "masc",
+    "name of a group of Brahmans",
+    "✔"
+   ],
+   [
+    "brahmacārī 2",
+    "masc",
+    "celibate man; who abstains from sexual intercourse",
+    "✔"
+   ],
+   [
+    "mantajjhāyaka",
+    "masc",
+    "who masters the Vedas; reciter of the Vedas",
+    "✔"
+   ],
+   [
+    "māgaṇḍika",
+    "masc",
+    "follower of Māgaṇḍiya",
+    "◑"
+   ],
+   [
+    "yathāsanthatika",
+    "masc",
+    "ascetic who sleeps on any bed; ascetic who accepts any dwelling; lit. like spread",
+    "✔"
+   ],
+   [
+    "rajojallika",
+    "masc",
+    "ascetic who is covered in dust and mud",
+    "✔"
+   ],
+   [
+    "rukkhamūlika",
+    "masc",
+    "ascetic who lives at the foot of tree; root of a tree dweller",
+    "✔"
+   ],
+   [
+    "lūkhacīvaradhara",
+    "masc",
+    "ascetic who wear a coarse robe",
+    "✔"
+   ],
+   [
+    "saṅghāṭika",
+    "masc",
+    "ascetic who wears a patchwork robe; patchwork robe wearer",
+    "✔"
+   ],
+   [
+    "sattāgārika",
+    "masc",
+    "ascetic who subsists on food from only seven houses; lit. seven house-er",
+    "✔"
+   ],
+   [
+    "sattālopika",
+    "masc",
+    "ascetic who subsists on only seven mouthfuls of food; lit. seven morsel-er",
+    "✔"
+   ],
+   [
+    "samaṇapaduma",
+    "masc",
+    "lotus ascetic; epithet of a once returner",
+    "✔"
+   ],
+   [
+    "samaṇapuṇḍarīka",
+    "masc",
+    "white lotus ascetic; epithet of a non returner",
+    "✔"
+   ],
+   [
+    "samaṇī 2",
+    "fem",
+    "female ascetic; female renunciant",
+    "✔"
+   ],
+   [
+    "sassatavādī",
+    "masc",
+    "eternalist; proponent of the doctrine of an everlasting soul; lit. speaking eternity",
+    "✔"
+   ],
+   [
+    "sāmaṇerikā",
+    "fem",
+    "female novice; female apprentice nun",
+    "✔"
+   ],
+   [
+    "suññatavādī",
+    "masc",
+    "proponent of the doctrine that everything is empty; Buddhist; lit. speaking emptiness",
+    "✔"
+   ],
+   [
+    "sosānika 1",
+    "masc",
+    "ascetic who lives in a cemetery; graveyard dweller",
+    "✔"
+   ]
+  ],
+  "count": 71
+ },
+ "suttas of the Majjhima Nikāya": {
+  "data": [
+   [
+    "mūlapariyāyasutta",
+    "nt",
+    "Majjhima Nikāya 1 (MN1); lit. discourse on the root cause",
+    "✔"
+   ],
+   [
+    "sabbāsavasutta",
+    "nt",
+    "Majjhima Nikāya 2 (MN2); lit. discourse on all the effluents",
+    "✔"
+   ],
+   [
+    "dhammadāyādasutta",
+    "nt",
+    "Majjhima Nikāya 3 (MN3); lit. discourse about heirs of the teaching",
+    "✔"
+   ],
+   [
+    "bhayabheravasutta",
+    "nt",
+    "Majjhima Nikāya 4 (MN4); lit. discourse on fear and dread",
+    "✔"
+   ],
+   [
+    "anaṅgaṇasutta",
+    "nt",
+    "Majjhima Nikāya 5 (MN5); lit. discourse on being unblemished",
+    "✔"
+   ],
+   [
+    "ākaṅkheyyasutta",
+    "nt",
+    "Majjhima Nikāya 6 (MN6); lit. discourse on 'one may wish'",
+    "✔"
+   ],
+   [
+    "vatthasutta 1",
+    "nt",
+    "Majjhima Nikāya 7 (MN7); lit. discourse on the cloth",
+    "✔"
+   ],
+   [
+    "sallekhasutta",
+    "nt",
+    "Majjhima Nikāya 8 (MN8); lit. discourse on effacement",
+    "✔"
+   ],
+   [
+    "sammādiṭṭhi 3",
+    "fem",
+    "Majjhima Nikāya 9 (MN9); lit. (discourse on) right view",
+    "◑"
+   ],
+   [
+    "sammādiṭṭhisutta 1",
+    "nt",
+    "Majjhima Nikāya 9 (MN9); lit. discourse on right view",
+    "✔"
+   ],
+   [
+    "mahāsatipaṭṭhānasutta 2",
+    "nt",
+    "Majjhima Nikāya 10 (MN10); lit. longer discourse on attending mindfully",
+    "✔"
+   ],
+   [
+    "satipaṭṭhānasutta 1",
+    "nt",
+    "Majjhima Nikāya 10 (MN10); lit. discourse on attending mindfully",
+    "✔"
+   ],
+   [
+    "cūḷasīhanādasutta",
+    "nt",
+    "Majjhima Nikāya 11 (MN11); lit. shorter discourse on the lion's roar",
+    "✔"
+   ],
+   [
+    "mahāsīhanādasutta 2",
+    "nt",
+    "Majjhima Nikāya 12 (MN12); lit. longer discourse on the lion's roar",
+    "✔"
+   ],
+   [
+    "mahādukkhakkhandhasutta",
+    "nt",
+    "Majjhima Nikāya 13 (MN13); lit. longer discourse on the mass of suffering",
+    "✔"
+   ],
+   [
+    "cūḷadukkhakkhandhasutta",
+    "nt",
+    "Majjhima Nikāya 14 (MN14); lit. shorter discourse on the mass of suffering",
+    "✔"
+   ],
+   [
+    "anumānasutta",
+    "nt",
+    "Majjhima Nikāya 15 (MN15); lit. discourse on inference",
+    "✔"
+   ],
+   [
+    "cetokhilasutta 1",
+    "nt",
+    "Majjhima Nikāya 16 (MN16); lit. discourse on mental barrenness",
+    "✔"
+   ],
+   [
+    "vanapatthasutta",
+    "nt",
+    "Majjhima Nikāya 17 (MN17); lit. discourse on woodland plains",
+    "✔"
+   ],
+   [
+    "madhupiṇḍikasutta",
+    "nt",
+    "Majjhima Nikāya 18 (MN18); lit. discourse on the honey ball",
+    "✔"
+   ],
+   [
+    "dvedhāvitakkasutta",
+    "nt",
+    "Majjhima Nikāya 19 (MN19); lit. discourse on two kinds of thoughts",
+    "✔"
+   ],
+   [
+    "vitakkasaṇṭhānasutta",
+    "nt",
+    "Majjhima Nikāya 20 (MN20); lit. discourse on the stilling of thought",
+    "✔"
+   ],
+   [
+    "kakacūpamasutta",
+    "nt",
+    "Majjhima Nikāya 21 (MN21); lit. discourse on the simile of the saw",
+    "✔"
+   ],
+   [
+    "alagaddūpamasutta",
+    "nt",
+    "Majjhima Nikāya 22 (MN22); lit. discourse on the simile of the water snake",
+    "✔"
+   ],
+   [
+    "vammikasutta",
+    "nt",
+    "Majjhima Nikāya 23 (MN23); lit. discourse on the anthill",
+    "✔"
+   ],
+   [
+    "rathavinītasutta",
+    "nt",
+    "Majjhima Nikāya 24 (MN24); lit. discourse on the relay chariots",
+    "✔"
+   ],
+   [
+    "nivāpasutta",
+    "nt",
+    "Majjhima Nikāya 25 (MN25); lit. discourse on bait",
+    "✔"
+   ],
+   [
+    "ariyapariyesanāsutta",
+    "nt",
+    "Majjhima Nikāya 26 (MN26); lit. discourse on the noble quest (or) discourse on the heap of snares",
+    "◑"
+   ],
+   [
+    "pāsarāsisutta",
+    "nt",
+    "Majjhima Nikāya 26 (MN26); lit. discourse on the heap of snares",
+    "✔"
+   ],
+   [
+    "cūḷahatthipadopama",
+    "nt",
+    "Majjhima Nikāya 27 (MN27); lit. shorter (discourse) on the simile of the elephant's footprint",
+    "✔"
+   ],
+   [
+    "cūḷahatthipadopamasutta",
+    "nt",
+    "Majjhima Nikāya 27 (MN27); lit. shorter discourse on the simile of the elephant's footprint",
+    "✔"
+   ],
+   [
+    "mahāhatthipadopamasutta",
+    "nt",
+    "Majjhima Nikāya 28 (MN28); lit. longer discourse on the simile of the elephant's footprint",
+    "✔"
+   ],
+   [
+    "mahāsāropamasutta",
+    "nt",
+    "Majjhima Nikāya 29 (MN29); lit. long discourse on the simile of the heartwood",
+    "✔"
+   ],
+   [
+    "cūḷasāropamasutta",
+    "nt",
+    "Majjhima Nikāya 30 (MN30); lit. shorter discourse on the simile of the heartwood",
+    "✔"
+   ],
+   [
+    "cūḷagosiṅga",
+    "nt",
+    "Majjhima Nikāya 31 (MN31); lit. shorter (discourse) at Cow-horn",
+    "✔"
+   ],
+   [
+    "cūḷagosiṅgasutta",
+    "nt",
+    "Majjhima Nikāya 31 (MN31); lit. shorter discourse at Cow-horn",
+    "✔"
+   ],
+   [
+    "mahāgosiṅgasutta",
+    "nt",
+    "Majjhima Nikāya 32 (MN32); lit. longer discourse at Cow-horn",
+    "✔"
+   ],
+   [
+    "mahāgopālakasutta",
+    "nt",
+    "Majjhima Nikāya 33 (MN33); lit. longer discourse on the cowherd",
+    "✔"
+   ],
+   [
+    "cūḷagopālakasutta",
+    "nt",
+    "Majjhima Nikāya 34 (MN34); lit. shorter discourse on the cowherd",
+    "✔"
+   ],
+   [
+    "cūḷasaccakasutta",
+    "nt",
+    "Majjhima Nikāya 35 (MN35); lit. shorter discourse with Saccaka",
+    "✔"
+   ],
+   [
+    "mahāsaccakasutta",
+    "nt",
+    "Majjhima Nikāya 36 (MN36); lit. longer discourse with Saccaka",
+    "✔"
+   ],
+   [
+    "cūḷataṇhāsaṅkhayasutta",
+    "nt",
+    "Majjhima Nikāya 37 (MN37); lit. shorter discourse on the destruction of craving",
+    "✔"
+   ],
+   [
+    "mahātaṇhāsaṅkhayasutta",
+    "nt",
+    "Majjhima Nikāya 38 (MN38); lit. longer discourse on the destruction of craving",
+    "✔"
+   ],
+   [
+    "mahāassapurasutta",
+    "nt",
+    "Majjhima Nikāya 39 (MN39); lit. longer discourse at Assapura",
+    "✔"
+   ],
+   [
+    "cūḷaassapurasutta",
+    "nt",
+    "Majjhima Nikāya 40 (MN40); lit. shorter discourse at Assapura",
+    "✔"
+   ],
+   [
+    "cūḷāssapurasutta",
+    "nt",
+    "Majjhima Nikāya 40 (MN40); lit. shorter discourse at Assapura",
+    "◑"
+   ],
+   [
+    "sāleyyakasutta",
+    "nt",
+    "Majjhima Nikāya 41 (MN41); lit. discourse to the people of Sāla",
+    "✔"
+   ],
+   [
+    "verañjakasutta",
+    "nt",
+    "Majjhima Nikāya 42 (MN42); lit. discourse to the people of Verañjā",
+    "✔"
+   ],
+   [
+    "mahāvedalla",
+    "nt",
+    "Majjhima Nikāya 43 (MN43); lit. longer catechism (discourse)",
+    "✔"
+   ],
+   [
+    "mahāvedallasutta",
+    "nt",
+    "Majjhima Nikāya 43 (MN43); lit. longer catechism discourse",
+    "✔"
+   ],
+   [
+    "cūḷavedalla",
+    "nt",
+    "Majjhima Nikāya 44 (MN44); lit. shorter catechism",
+    "◑"
+   ],
+   [
+    "cūḷavedallasutta",
+    "nt",
+    "Majjhima Nikāya 44 (MN44); lit. shorter catechism discourse",
+    "✔"
+   ],
+   [
+    "cūḷadhammasamādānasutta",
+    "nt",
+    "Majjhima Nikāya 45 (MN45); lit. shorter discourse on undertaking the teaching",
+    "✔"
+   ],
+   [
+    "mahādhammasamādānasutta",
+    "nt",
+    "Majjhima Nikāya 46 (MN46); lit. longer discourse on undertaking the teaching",
+    "✔"
+   ],
+   [
+    "vīmaṃsakasutta",
+    "nt",
+    "Majjhima Nikāya 47 (MN47); lit. discourse on investigating",
+    "✔"
+   ],
+   [
+    "kosambiyasutta",
+    "nt",
+    "Majjhima Nikāya 48 (MN48); lit. discourse in Kosambī",
+    "✔"
+   ],
+   [
+    "brahmanimantanikasutta",
+    "nt",
+    "Majjhima Nikāya 49 (MN49); lit. discourse on Brahma's invitation",
+    "✔"
+   ],
+   [
+    "māratajjanīyasutta",
+    "nt",
+    "Majjhima Nikāya 50 (MN50); lit. discourse about frightening Māra",
+    "✔"
+   ],
+   [
+    "kandarakasutta",
+    "nt",
+    "Majjhima Nikāya 51 (MN51); lit. discourse to Kandaraka",
+    "✔"
+   ],
+   [
+    "aṭṭhakanāgarasutta 1",
+    "nt",
+    "Majjhima Nikāya 52 (MN52); lit. discourse to the (man from) Aṭṭhaka town",
+    "✔"
+   ],
+   [
+    "sekhasutta 1",
+    "nt",
+    "Majjhima Nikāya 53 (MN53); lit. discourse on the trainee",
+    "✔"
+   ],
+   [
+    "potaliyasutta 1",
+    "nt",
+    "Majjhima Nikāya 54 (MN54); lit. discourse with Potaliya",
+    "✔"
+   ],
+   [
+    "jīvakasutta 1",
+    "nt",
+    "Majjhima Nikāya 55 (MN55); lit. discourse to Jīvaka",
+    "✔"
+   ],
+   [
+    "upālisutta 1",
+    "nt",
+    "Majjhima Nikāya 56 (MN56); lit. discourse to Upāli",
+    "✔"
+   ],
+   [
+    "kukkuravatikasutta",
+    "nt",
+    "Majjhima Nikāya 57 (MN57); lit. discourse to the dog practice ascetic",
+    "✔"
+   ],
+   [
+    "abhayarājakumārasutta",
+    "nt",
+    "Majjhima Nikāya 58 (MN58); lit. discourse to prince Fearless",
+    "✔"
+   ],
+   [
+    "bahuvedanīyasutta",
+    "nt",
+    "Majjhima Nikāya 59 (MN59); lit. discourse on many things to be felt",
+    "✔"
+   ],
+   [
+    "apaṇṇakasutta 1",
+    "nt",
+    "Majjhima Nikāya 60 (MN60); lit. discourse on the incontrovertible",
+    "✔"
+   ],
+   [
+    "ambalaṭṭhikarāhulovādasutta",
+    "nt",
+    "Majjhima Nikāya 61 (MN61); lit. discourse to Rāhula at young mango tree",
+    "✔"
+   ],
+   [
+    "mahārāhulovādasutta",
+    "nt",
+    "Majjhima Nikāya 62 (MN62); lit. longer discourse of advice to Rāhula",
+    "✔"
+   ],
+   [
+    "cūḷamālukyasutta",
+    "nt",
+    "Majjhima Nikāya 63 (MN63); lit. shorter discourse to Mālukya",
+    "✔"
+   ],
+   [
+    "mahāmālukyasutta",
+    "nt",
+    "Majjhima Nikāya 64 (MN64); lit. longer discourse to Mālukya",
+    "✔"
+   ],
+   [
+    "bhaddālisutta",
+    "nt",
+    "Majjhima Nikāya 65 (MN65); lit. discourse to Bhaddāli",
+    "✔"
+   ],
+   [
+    "laṭukikopamasutta",
+    "nt",
+    "Majjhima Nikāya 66 (MN66); lit. discourse on the simile of the purple sunbird",
+    "✔"
+   ],
+   [
+    "cātumasutta",
+    "nt",
+    "Majjhima Nikāya 67 (MN67); lit. discourse at Cātumā",
+    "✔"
+   ],
+   [
+    "naḷakapānasutta",
+    "nt",
+    "Majjhima Nikāya 68 (MN68); lit. discourse at Naḷakapāna",
+    "✔"
+   ],
+   [
+    "goliyānisutta",
+    "nt",
+    "Majjhima Nikāya 69 (MN69); lit. discourse with Goliyāni",
+    "✔"
+   ],
+   [
+    "kīṭāgirisutta",
+    "nt",
+    "Majjhima Nikāya 70 (MN70); lit. discourse at Kīṭāgiri",
+    "✔"
+   ],
+   [
+    "tevijjavacchasutta",
+    "nt",
+    "Majjhima Nikāya 71 (MN71); lit. discourse to Vaccha on the three knowledges",
+    "✔"
+   ],
+   [
+    "aggivacchasutta",
+    "nt",
+    "Majjhima Nikāya 72 (MN72); lit. discourse to Vaccha on fire",
+    "✔"
+   ],
+   [
+    "mahāvacchasutta",
+    "nt",
+    "Majjhima Nikāya 73 (MN73); lit. longer discourse with Vaccha",
+    "✔"
+   ],
+   [
+    "dīghanakhasutta",
+    "nt",
+    "Majjhima Nikāya 74 (MN74); lit. discourse with Long Nails",
+    "✔"
+   ],
+   [
+    "māgaṇḍiyasutta 1",
+    "nt",
+    "Majjhima Nikāya 75 (MN75); lit. discourse with Māgaṇḍiya",
+    "✔"
+   ],
+   [
+    "sandakasutta",
+    "nt",
+    "Majjhima Nikāya 76 (MN76); lit. discourse to Sandaka",
+    "✔"
+   ],
+   [
+    "mahāsakuludāyisutta",
+    "nt",
+    "Majjhima Nikāya 77 (MN77); lit. longer discourse to Sakuludāyī",
+    "✔"
+   ],
+   [
+    "samaṇamuṇḍikasutta",
+    "nt",
+    "Majjhima Nikāya 78 (MN78); lit. discourse to the bald ascetic",
+    "✔"
+   ],
+   [
+    "cūḷasakuludāyisutta",
+    "nt",
+    "Majjhima Nikāya 79 (MN79); lit. shorter discourse to Sakuludāyī",
+    "✔"
+   ],
+   [
+    "vekhanasasutta",
+    "nt",
+    "Majjhima Nikāya 80 (MN80); lit. discourse to Vekhanasa",
+    "✔"
+   ],
+   [
+    "ghaṭikārasutta",
+    "nt",
+    "Majjhima Nikāya 81 (MN81); lit. discourse about Ghaṭikāra",
+    "✔"
+   ],
+   [
+    "raṭṭhapālasutta",
+    "nt",
+    "Majjhima Nikāya 82 (MN82); lit. discourse about Raṭṭhapāla",
+    "✔"
+   ],
+   [
+    "maghadevasutta",
+    "nt",
+    "Majjhima Nikāya 83 (MN83); lit. discourse about Maghadeva",
+    "✔"
+   ],
+   [
+    "madhurasutta",
+    "nt",
+    "Majjhima Nikāya 84 (MN84); lit. discourse at Madhurā",
+    "✔"
+   ],
+   [
+    "bodhirājakumārasutta",
+    "nt",
+    "Majjhima Nikāya 85 (MN85); lit. discourse to Prince Bodhi",
+    "✔"
+   ],
+   [
+    "aṅgulimālasutta",
+    "nt",
+    "Majjhima Nikāya 86 (MN86); lit. discourse about Aṅgulimāla",
+    "✔"
+   ],
+   [
+    "piyajātikasutta",
+    "nt",
+    "Majjhima Nikāya 87 (MN87); lit. discourse about born from love",
+    "✔"
+   ],
+   [
+    "bāhitikasutta",
+    "nt",
+    "Majjhima Nikāya 88 (MN88); lit. discourse about the cloak",
+    "✔"
+   ],
+   [
+    "dhammacetiyasutta",
+    "nt",
+    "Majjhima Nikāya 89 (MN89); lit. discourse about monuments to the Dhamma",
+    "✔"
+   ],
+   [
+    "kaṇṇakatthalasutta",
+    "nt",
+    "Majjhima Nikāya 90 (MN90); lit. discourse in Kaṇṇakatthala",
+    "✔"
+   ],
+   [
+    "brahmāyusutta",
+    "nt",
+    "Majjhima Nikāya 91 (MN91); lit. discourse about Brahmāyu",
+    "✔"
+   ],
+   [
+    "selasutta 1",
+    "nt",
+    "Majjhima Nikāya 92 (MN92); lit. discourse to Sela",
+    "✔"
+   ],
+   [
+    "assalāyanasutta",
+    "nt",
+    "Majjhima Nikāya 93 (MN93); lit. discourse to Assalāyana",
+    "✔"
+   ],
+   [
+    "ghoṭamukhasutta",
+    "nt",
+    "Majjhima Nikāya 94 (MN94); lit. discourse with Ghoṭamukha",
+    "✔"
+   ],
+   [
+    "caṅkīsutta",
+    "nt",
+    "Majjhima Nikāya 95 (MN95); lit. discourse about Caṅkī",
+    "✔"
+   ],
+   [
+    "esukārīsutta",
+    "nt",
+    "Majjhima Nikāya 96 (MN96); lit. discourse with Esukārī",
+    "✔"
+   ],
+   [
+    "dhanañjānisutta",
+    "nt",
+    "Majjhima Nikāya 97 (MN97); lit. discourse with Dhanañjāni",
+    "✔"
+   ],
+   [
+    "vāseṭṭhasutta 1",
+    "nt",
+    "Majjhima Nikāya 98 (MN98); lit. discourse with Vāseṭṭha",
+    "✔"
+   ],
+   [
+    "subhasutta 2",
+    "nt",
+    "Majjhima Nikāya 99 (MN99); lit. discourse with Subha",
+    "✔"
+   ],
+   [
+    "saṅgāravasutta 1",
+    "nt",
+    "Majjhima Nikāya 100 (MN100); lit. discourse with Saṅgārava",
+    "✔"
+   ],
+   [
+    "devadahasutta 1",
+    "nt",
+    "Majjhima Nikāya 101 (MN101); lit. discourse at Devadaha",
+    "✔"
+   ],
+   [
+    "pañcattayasutta",
+    "nt",
+    "Majjhima Nikāya 102 (MN102); lit. discourse on five and three",
+    "✔"
+   ],
+   [
+    "kintisutta",
+    "nt",
+    "Majjhima Nikāya 103 (MN103); lit. discourse on what (do you think of me)",
+    "✔"
+   ],
+   [
+    "sāmagāmasutta",
+    "nt",
+    "Majjhima Nikāya 104 (MN104); lit. discourse at Sāmagāma",
+    "✔"
+   ],
+   [
+    "sunakkhattasutta",
+    "nt",
+    "Majjhima Nikāya 105 (MN105); lit. discourse with Sunakkhatta",
+    "✔"
+   ],
+   [
+    "āneñjasappāyasutta",
+    "nt",
+    "Majjhima Nikāya 106 (MN106); lit. discourse on what is conducive to the imperturbable state",
+    "✔"
+   ],
+   [
+    "gaṇakamoggallānasutta",
+    "nt",
+    "Majjhima Nikāya 107 (MN107); lit. discourse to Moggallāna the accountant",
+    "✔"
+   ],
+   [
+    "gaṇakamoggallānasuttanta",
+    "masc",
+    "Majjhima Nikāya 107 (MN107); lit. discourse to Moggallāna the accountant",
+    "✔"
+   ],
+   [
+    "gopakamoggallānasutta",
+    "nt",
+    "Majjhima Nikāya 108 (MN108); lit. discourse with Moggallāna the guardian",
+    "✔"
+   ],
+   [
+    "mahāpuṇṇama",
+    "masc",
+    "Majjhima Nikāya 109 (MN109); lit. longer (discourse) on the full moon night",
+    "✔"
+   ],
+   [
+    "mahāpuṇṇamasutta",
+    "nt",
+    "Majjhima Nikāya 109 (MN109); lit. longer discourse on the full moon night",
+    "✔"
+   ],
+   [
+    "cūḷapuṇṇamasutta",
+    "nt",
+    "Majjhima Nikāya 110 (MN110); lit. shorter discourse on the full moon night",
+    "✔"
+   ],
+   [
+    "anupadasutta",
+    "nt",
+    "Majjhima Nikāya 111 (MN111); lit. sequential discourse",
+    "✔"
+   ],
+   [
+    "chabbisodhanasutta",
+    "nt",
+    "Majjhima Nikāya 112 (MN112); lit. discourse on the six-fold purification",
+    "✔"
+   ],
+   [
+    "sappurisasutta 1",
+    "nt",
+    "Majjhima Nikāya 113 (MN113); lit. discourse on the moral man",
+    "✔"
+   ],
+   [
+    "sevitabbāsevitabbasutta",
+    "nt",
+    "Majjhima Nikāya 114 (MN114); lit. discourse on to be and not to be assocaited with",
+    "✔"
+   ],
+   [
+    "bahudhātukasutta",
+    "nt",
+    "Majjhima Nikāya 115 (MN115); lit. discource on many elements",
+    "✔"
+   ],
+   [
+    "isigilisutta",
+    "nt",
+    "Majjhima Nikāya 116 (MN116); lit. discourse on the seers' mountain",
+    "✔"
+   ],
+   [
+    "mahācattārīsakasutta",
+    "nt",
+    "Majjhima Nikāya 117 (MN117); lit. discourse on the great forty",
+    "✔"
+   ],
+   [
+    "ānāpānassatisutta",
+    "nt",
+    "Majjhima Nikāya 118 (MN118); lit. discourse on in and out breathing",
+    "✔"
+   ],
+   [
+    "kāyagatāsatisutta 1",
+    "nt",
+    "Majjhima Nikāya 119 (MN119); lit. discourse on mindfulness immersed in the body",
+    "✔"
+   ],
+   [
+    "saṅkhārupapattisutta",
+    "nt",
+    "Majjhima Nikāya 120 (MN120); lit. discourse on intentional rebirth",
+    "✔"
+   ],
+   [
+    "cūḷasuññatasutta",
+    "nt",
+    "Majjhima Nikāya 121 (MN121); lit. shorter discourse on emptiness",
+    "✔"
+   ],
+   [
+    "mahāsuññatasutta",
+    "nt",
+    "Majjhima Nikāya 122 (MN122); lit. longer discourse on emptiness",
+    "✔"
+   ],
+   [
+    "acchariyaabbhutasutta",
+    "nt",
+    "Majjhima Nikāya 123 (MN123); lit. discourse on wonderful and marvellous",
+    "✔"
+   ],
+   [
+    "acchariyābbhutasutta",
+    "nt",
+    "Majjhima Nikāya 123 (MN123); lit. discourse on wonderful and marvellous",
+    "◑"
+   ],
+   [
+    "bākulasutta",
+    "nt",
+    "Majjhima Nikāya 124 (MN124); lit. discourse about Bākula",
+    "✔"
+   ],
+   [
+    "dantabhūmisutta",
+    "nt",
+    "Majjhima Nikāya 125 (MN125); lit. discourse on levels of tamed",
+    "✔"
+   ],
+   [
+    "bhūmijasutta 1",
+    "nt",
+    "Majjhima Nikāya 126 (MN126); lit. discourse about Bhūmija",
+    "✔"
+   ],
+   [
+    "anuruddhasutta 1",
+    "nt",
+    "Majjhima Nikāya 127 (MN127); lit. discourse with Anuruddha",
+    "✔"
+   ],
+   [
+    "upakkilesasutta 1",
+    "nt",
+    "Majjhima Nikāya 128 (MN128); lit. discourse about imperfections",
+    "✔"
+   ],
+   [
+    "bālapaṇḍitasutta 1",
+    "nt",
+    "Majjhima Nikāya 129 (MN129); lit. discourse about the foolish and wise",
+    "✔"
+   ],
+   [
+    "devadūtasutta 1",
+    "nt",
+    "Majjhima Nikāya 130 (MN130); lit. discourse about divine messengers",
+    "✔"
+   ],
+   [
+    "bhaddekarattasutta",
+    "nt",
+    "Majjhima Nikāya 131 (MN131); lit. discourse on an auspicious single night",
+    "✔"
+   ],
+   [
+    "ānandabhaddekarattasutta",
+    "nt",
+    "Majjhima Nikāya 132 (MN132); lit. discourse to Ānanda on an auspicious single night",
+    "✔"
+   ],
+   [
+    "mahākaccānabhaddekarattasutta",
+    "nt",
+    "Majjhima Nikāya 133 (MN133); lit. discourse by Mahākaccāna on an auspicious single night",
+    "✔"
+   ],
+   [
+    "lomasakaṅgiyabhaddekarattasutta",
+    "nt",
+    "Majjhima Nikāya 134 (MN134); lit. discourse to Lomasakaṅgiya on an auspicious single night",
+    "✔"
+   ],
+   [
+    "cūḷakammavibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 135 (MN135); lit. shorter discourse on the analysis of action",
+    "✔"
+   ],
+   [
+    "subhasutta 3",
+    "nt",
+    "Majjhima Nikāya 135 (MN135); lit. discourse with Subha",
+    "✔"
+   ],
+   [
+    "mahākammavibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 136 (MN136); lit. longer discourse on the analysis of action",
+    "✔"
+   ],
+   [
+    "saḷāyatanavibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 137 (MN137); lit. discourse on the analysis of the six senses",
+    "✔"
+   ],
+   [
+    "uddesavibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 138 (MN138); lit. discourse with detailed analysis of a brief statement",
+    "✔"
+   ],
+   [
+    "araṇavibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 139 (MN139); lit. discourse on the detailed analysis of non-conflict",
+    "✔"
+   ],
+   [
+    "dhātuvibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 140 (MN140); lit. discourse on the analysis of states",
+    "✔"
+   ],
+   [
+    "saccavibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 141 (MN141); lit. discourse on the analysis of (the noble) truths",
+    "✔"
+   ],
+   [
+    "dakkhiṇāvibhaṅgasutta",
+    "nt",
+    "Majjhima Nikāya 142 (MN142); lit. discourse on the analysis of gifts",
+    "✔"
+   ],
+   [
+    "anāthapiṇḍikovādasutta",
+    "nt",
+    "Majjhima Nikāya 143 (MN143); lit. discourse on advice to Anāthapiṇḍika",
+    "✔"
+   ],
+   [
+    "channovādasutta",
+    "nt",
+    "Majjhima Nikāya 144 (MN144); lit. discourse on advice to Channa",
+    "✔"
+   ],
+   [
+    "puṇṇovādasutta",
+    "nt",
+    "Majjhima Nikāya 145 (MN145); lit. discourse on advice to Puṇṇa",
+    "✔"
+   ],
+   [
+    "nandakovādasutta",
+    "nt",
+    "Majjhima Nikāya 146 (MN146); lit. discourse on advice to Nandaka",
+    "✔"
+   ],
+   [
+    "cūḷarāhulovāda",
+    "masc",
+    "Majjhima Nikāya 147 (MN147); lit. shorter (discourse) on advice to Rāhula",
+    "◑"
+   ],
+   [
+    "cūḷarāhulovādasutta",
+    "nt",
+    "Majjhima Nikāya 147 (MN147); lit. shorter discourse on advice to Rāhula",
+    "✔"
+   ],
+   [
+    "chachakkasutta",
+    "nt",
+    "Majjhima Nikāya 148 (MN148); lit. discourse on six sets of six",
+    "✔"
+   ],
+   [
+    "mahāsaḷāyatanikasutta",
+    "nt",
+    "Majjhima Nikāya 149 (MN149); lit. longer discourse on the six sense fields",
+    "✔"
+   ],
+   [
+    "nagaravindeyyasutta",
+    "nt",
+    "Majjhima Nikāya 150 (MN150); lit. discourse about Nagaravinda",
+    "✔"
+   ],
+   [
+    "piṇḍapātapārisuddhisutta",
+    "nt",
+    "Majjhima Nikāya 151 (MN151); lit. discourse on purification of (walking for) alms food",
+    "✔"
+   ],
+   [
+    "indriyabhāvanāsutta",
+    "nt",
+    "Majjhima Nikāya 152 (MN152); lit. discourse on development of the sense faculties",
+    "✔"
+   ],
+   [
+    "mūlasusaṃvaradhammadāyādā",
+    "masc",
+    "in reference to MN1 Mūlapariyāyasutta , MN2 Sabbāsavasutta, MN3 Dhammadāyādasutta",
+    "✔"
+   ],
+   [
+    "bheravānaṅgaṇākaṅkheyyavattha",
+    "nt",
+    "in reference to MN4 Bhayabheravasutta, MN5 Anaṅgaṇasutta, MN6 Ākaṅkheyyasutta, MN7 Vatthasutta",
+    "✔"
+   ],
+   [
+    "sallekhasammādiṭṭhisatipaṭṭha",
+    "nt",
+    "in reference to MN8 Sallekhasutta, MN9 Sammādiṭṭhisutta, MN10 Mahāsatipaṭṭhānasutta",
+    "✔"
+   ],
+   [
+    "cūḷasīhanādalomahaṃsavara",
+    "masc",
+    "in reference to MN11 Cūḷasīhanādasutta and MN12 Mahāsīhanādasutta; lit. smaller lion's roar and excellent goosebumps",
+    "✔"
+   ],
+   [
+    "lomahaṃsanapariyāya",
+    "masc",
+    "in reference to MN12 Mahāsīhanādasutta; lit. hair-raising discourse",
+    "✔"
+   ],
+   [
+    "mahācūḷadukkhakkhandhaanumānikasutta",
+    "nt",
+    "in reference to MN13 Mahādukkhakkhandhasutta, MN14 Cūḷadukkhakkhandhasutta, MN15 Anumānasutta; lit. great and lesser mass of suffering, and discourse on inference",
+    "✔"
+   ],
+   [
+    "moḷiyaphaggunariṭṭha",
+    "masc",
+    "in reference to MN21 Kakacūpamasutta and MN22 Alagaddūpamasutta; lit. Moḷiyaphagguna and Ariṭṭho",
+    "✔"
+   ],
+   [
+    "moḷiyaphaggunariṭṭhañca",
+    "sandhi",
+    "in reference to MN21 Kakacūpamasutta and MN22 Alagaddūpamasutta; lit. Moḷiyaphagguna and Ariṭṭha",
+    "✔"
+   ],
+   [
+    "andhavana 2",
+    "nt",
+    "in reference to MN23 Vammikasutta; lit. dark wood; blind wood",
+    "✔"
+   ],
+   [
+    "nivāpa 4",
+    "masc",
+    "in reference to MN25 Nivāpasutta; lit. throwing down",
+    "✔"
+   ],
+   [
+    "giñjakasālavana",
+    "nt",
+    "in reference to MN31 Cūḷagosiṅgasutta and MN32 Mahāgosiṅgasutta; lit. brick hall forest",
+    "✔"
+   ],
+   [
+    "pariharituṃ 2",
+    "inf",
+    "in reference to MN33 Mahāgopālakasutta; lit. to carry around",
+    "✔"
+   ],
+   [
+    "verañjaduve",
+    "card",
+    "in reference to MN42 Verañjakasutta, MN43 Mahāvedallasutta, and MN44 Cūḷavedallasutta; lit. Verañja and the two",
+    "✔"
+   ],
+   [
+    "vīmaṃsakā",
+    "masc",
+    "in reference to MN47 Vīmaṃsakasutta; lit. investigators",
+    "✔"
+   ],
+   [
+    "kosambi",
+    "nt",
+    "in reference to MN48 Kosambiyasutta",
+    "✔"
+   ],
+   [
+    "brāhmaṇa 4",
+    "masc",
+    "in reference to MN49 Brahmanimantanikasutta",
+    "✔"
+   ],
+   [
+    "kandaranāgarasekhavant",
+    "masc",
+    "in reference to MN51 Kandarakasutta, MN52 Aṭṭhakanāgarasutta, and MN53 Sekhasutta",
+    "✔"
+   ],
+   [
+    "potaliya 2",
+    "masc",
+    "in reference to MN54 Potaliyasutta",
+    "✔"
+   ],
+   [
+    "jīvakabhacca",
+    "masc",
+    "in reference to MN55 Jīvakasutta; lit. Jīvaka the paediatrician",
+    "✔"
+   ],
+   [
+    "upālidamatha",
+    "masc",
+    "in reference to MN56 Upālisutta; lit. taming of Upāli",
+    "✔"
+   ],
+   [
+    "kuñjararāhulasassataloka",
+    "masc",
+    "in reference to MN61 Ambalaṭṭhikarāhulovādasutta, MN62 Mahārāhulovādasutta, MN63 Cūḷamālukyasutta; lit. elephant, Rāhula and the world is eternal",
+    "✔"
+   ],
+   [
+    "mālukyaputta 2",
+    "masc",
+    "in reference to MN64 Mahāmālukyasutta; lit. son of Mālukya",
+    "✔"
+   ],
+   [
+    "khuddadijāthasahampatiyāca",
+    "nt",
+    "in reference to MN66 Laṭukikopamasutta and MN67 Cātumasutta; lit. small, twice born and Sahampati's request",
+    "✔"
+   ],
+   [
+    "puṇḍarīaggisahakathināma",
+    "masc",
+    "in reference to MN71 Tevijjavacchasuttaṃ, MN72 Aggivacchasutta, and MN73 Mahāvacchasuttaṃ; lit. white lotus, fire, and called talking together",
+    "✔"
+   ],
+   [
+    "dīghanakha 2",
+    "masc",
+    "in reference to MN74 Dīghanakhasutta; lit. long nails",
+    "✔"
+   ],
+   [
+    "bhāradvājagotta 2",
+    "masc",
+    "in reference to MN75 Māgaṇḍiyasutta; lit. belonging to the Bhāradvāja family clan",
+    "✔"
+   ],
+   [
+    "aṅgulimāla 2",
+    "masc",
+    "in reference to MN86 Aṅgulimālasutta; lit. garland of fingers",
+    "✔"
+   ],
+   [
+    "brahmāyu 2",
+    "masc",
+    "in reference to MN91 Brahmāyusutta; lit. living as long as Brahma",
+    "✔"
+   ],
+   [
+    "selassalāyana",
+    "masc",
+    "in reference to MN92 Selasutta and MN93 Assalāyanasutta; lit. Sela and Assalāyana",
+    "✔"
+   ],
+   [
+    "ghoṭamukha 2",
+    "masc",
+    "in reference to MN94 Ghoṭamukhasutta; lit. horse face; (or) goatee",
+    "✔"
+   ],
+   [
+    "caṅkī 2",
+    "masc",
+    "in reference to MN95 Caṅkīsutta",
+    "✔"
+   ],
+   [
+    "esu",
+    "masc",
+    "in reference to MN96 Esukārīsutta",
+    "✔"
+   ],
+   [
+    "dhanañjāni 2",
+    "masc",
+    "in reference to MN97 Dhanañjānisutta; lit. depriving wealth",
+    "✔"
+   ],
+   [
+    "vāseṭṭha 5",
+    "masc",
+    "in reference to MN98 Vāseṭṭhasutta",
+    "✔"
+   ],
+   [
+    "subhagārava",
+    "masc",
+    "in reference to MN99 Subhasutta and MN100 Saṅgāravasutta",
+    "✔"
+   ],
+   [
+    "pañcattaya 2",
+    "masc",
+    "in reference to MN102 Pañcattayasutta; lit. five and three",
+    "✔"
+   ],
+   [
+    "kinti 2",
+    "nt",
+    "in reference to MN103 Kintisuttaṃ; lit. how then?",
+    "✔"
+   ],
+   [
+    "sāma 1.4",
+    "nt",
+    "in reference to MN104 Sāmagāmasutta",
+    "✔"
+   ],
+   [
+    "sunakkhatta 3",
+    "nt",
+    "in reference to MN105 Sunakkhattasutta; lit. good star sign",
+    "✔"
+   ],
+   [
+    "sappāya 3",
+    "nt",
+    "in reference to MN106 Āneñjasappāyasutta; lit. beneficial",
+    "✔"
+   ],
+   [
+    "gaṇa 5",
+    "masc",
+    "in reference to MN107 Gaṇakamoggallānasutta; lit. group",
+    "✔"
+   ],
+   [
+    "gopaka 5",
+    "nt",
+    "in reference to MN108 Gopakamoggallānasutta; lit. guardian",
+    "✔"
+   ],
+   [
+    "mahāpuṇṇa",
+    "nt",
+    "in reference to MN109 Mahāpuṇṇamasuttaṃ; lit. great full (moon discourse)",
+    "✔"
+   ],
+   [
+    "cūḷapuṇṇa",
+    "nt",
+    "in reference to MN110 Cūḷapuṇṇamasutta; lit. shorter full (moon discourse)",
+    "✔"
+   ],
+   [
+    "anupāda 2",
+    "nt",
+    "in reference to MN111 Anupadasutta; lit. sequence",
+    "✔"
+   ],
+   [
+    "sodhana 3",
+    "nt",
+    "in reference to MN112 Chabbisodhanasutta; lit. causing to be pure",
+    "✔"
+   ],
+   [
+    "sevitabba 4",
+    "nt",
+    "in reference to MN114 Sevitabbāsevitabbasutta; lit. to be associated",
+    "✔"
+   ],
+   [
+    "bahudhātu 2",
+    "nt",
+    "in reference to MN115 Bahudhātukasutta; lit. many states",
+    "✔"
+   ],
+   [
+    "kittināma",
+    "nt",
+    "in reference to MN116 Isigilisuttaṃ; lit. famous names; celebrated names",
+    "✔"
+   ],
+   [
+    "cattārīsa",
+    "nt",
+    "in reference to MN117 Mahācattārīsakasuttaṃ; lit. consisting of forty",
+    "✔"
+   ],
+   [
+    "ānāpāna 3",
+    "masc",
+    "in reference to MN118 Ānāpānassatisuttaṃ; lit. breathing in and out",
+    "✔"
+   ],
+   [
+    "kāyagata 2",
+    "masc",
+    "in reference to MN119 Kāyagatāsatisutta; lit. gone to the body",
+    "✔"
+   ],
+   [
+    "devadūta 3",
+    "nt",
+    "in reference to MN120 Devadūtasutta; lit. messenger of the gods",
+    "✔"
+   ],
+   [
+    "upapatti 4",
+    "fem",
+    "in reference to MN120 Saṅkhārupapattisutta; lit. going near",
+    "✔"
+   ],
+   [
+    "suññatā 2",
+    "fem",
+    "in reference to MN121 Cūḷasuññatasutta and MN122 Mahāsuññatasutta; lit. empty state",
+    "✔"
+   ],
+   [
+    "abbhutadhamma 3",
+    "nt",
+    "in reference to MN123 Acchariyaabbhutasutta; lit. marvellous qualities",
+    "✔"
+   ],
+   [
+    "bākula 2",
+    "nt",
+    "in reference to MN124 Bākulasutta",
+    "✔"
+   ],
+   [
+    "aciravata 2",
+    "nt",
+    "in reference to MN125 Dantabhūmisutta",
+    "✔"
+   ],
+   [
+    "bhūmijanāma",
+    "masc",
+    "in reference to MN126 Bhūmijasutta; lit. called born from the earth",
+    "✔"
+   ],
+   [
+    "anuruddha 3",
+    "nt",
+    "in reference to MN128 Anuruddhasutta; lit. favoured",
+    "✔"
+   ],
+   [
+    "upakkilesa 2",
+    "nt",
+    "in reference to MN128 Upakkilesasutta; lit. imperfection",
+    "✔"
+   ],
+   [
+    "bālapaṇḍita 2",
+    "adj",
+    "in reference to MN129 Bālapaṇḍitasutta; lit. foolish and wise",
+    "✔"
+   ],
+   [
+    "bhaddeka",
+    "adj",
+    "in reference to MN131 Bhaddekarattasutta; lit. single auspicious (night)",
+    "✔"
+   ],
+   [
+    "bhaddekānandakaccāna",
+    "masc",
+    "in reference to MN131 Bhaddekarattasutta, MN132 Ānandabhaddekarattasutta and MN133 Mahākaccānabhaddekarattasutta",
+    "✔"
+   ],
+   [
+    "lomasakaṅgiyāsubha",
+    "masc",
+    "in reference to MN134 Lomasakaṅgiyabhaddekarattasutta and MN135 Cūḷakammavibhaṅgasutta",
+    "✔"
+   ],
+   [
+    "mahākammasaḷāyatanavibhaṅgā",
+    "masc",
+    "in reference to MN136 Mahākammavibhaṅgasutta and MN137 Saḷāyatanavibhaṅgasutta",
+    "✔"
+   ],
+   [
+    "uddesaaraṇā",
+    "masc",
+    "in reference to MN138 Uddesavibhaṅgasutta and MN139 Araṇavibhaṅgasutta; lit. summary and non-conflict",
+    "✔"
+   ],
+   [
+    "dhātu 7",
+    "fem",
+    "in reference to MN140 Dhātuvibhaṅgasutta; lit. state",
+    "✔"
+   ],
+   [
+    "sacca 3",
+    "nt",
+    "in reference to MN141 Saccavibhaṅgasutta; lit. truth",
+    "✔"
+   ],
+   [
+    "anāthapiṇḍika 2",
+    "masc",
+    "in reference to MN143 Anāthapiṇḍikovādasutta; lit. feeder of the destitute",
+    "✔"
+   ],
+   [
+    "channa 2.4",
+    "masc",
+    "in reference to MN144 Channovādasutta",
+    "✔"
+   ],
+   [
+    "puṇṇa 5",
+    "masc",
+    "in reference to MN145 Puṇṇovādasutta; lit. filled",
+    "✔"
+   ],
+   [
+    "nandakarāhulā",
+    "masc",
+    "in reference to MN146 Nandakovādasutta and MN147 Cūḷarāhulovādasutta; lit. Nandaka and Rāhula",
+    "✔"
+   ],
+   [
+    "chachakka",
+    "nt",
+    "in reference to MN148 Chachakkasutta; lit. six sets of six",
+    "✔"
+   ],
+   [
+    "saḷāyatanika 2",
+    "nt",
+    "in reference to MN149 Mahāsaḷāyatanikasutta; lit. with six sense fields",
+    "✔"
+   ],
+   [
+    "nagaravindeyyasuddhikā",
+    "masc",
+    "in reference to MN150 Nagaravindeyyasutta and MN151 Piṇḍapātapārisuddhisutta; lit. from Nagaravinda and pure",
+    "✔"
+   ],
+   [
+    "indriyabhāvanā 2",
+    "fem",
+    "in reference to MN152 Indriyabhāvanāsutta; lit. development of the sense faculties",
+    "✔"
+   ],
+   [
+    "paññavant 2",
+    "adj",
+    "in refrence to MN34 Cūḷagopālakasutta; lit. having wisdom quality",
+    "✔"
+   ],
+   [
+    "bahuvedanīyāpaṇṇakata",
+    "masc",
+    "in refrence to MN59 Bahuvedanīyasutta and MN60 Apaṇṇakasutta",
+    "✔"
+   ]
+  ],
+  "count": 244
+ },
+ "names of laypeople": {
+  "data": [
+   [
+    "aggivessa",
+    "masc",
+    "name of a minister",
+    "✔"
+   ],
+   [
+    "aṅkura 2",
+    "masc",
+    "name of a man in a Petavatthu story; lit. sprout",
+    "✔"
+   ],
+   [
+    "ajita 2",
+    "masc",
+    "name of a Licchavi military general; lit. undefeated",
+    "✔"
+   ],
+   [
+    "atula 1",
+    "masc",
+    "name of a man; lit. immeasurable; uncountable",
+    "✔"
+   ],
+   [
+    "anaggapāka",
+    "masc",
+    "name of a layman; previous incarnation of Raṭṭhapāla; lit. cooking without limit",
+    "◑"
+   ],
+   [
+    "anāthapiṇḍika 1",
+    "masc",
+    "name of the Buddha's chief lay disciple; lit. feeder of the destitute",
+    "✔"
+   ],
+   [
+    "abhaya 3",
+    "masc",
+    "name of a Licchavi layman; lit. fearless",
+    "✔"
+   ],
+   [
+    "abhipāraka",
+    "masc",
+    "name of the general of king Sivi",
+    "✔"
+   ],
+   [
+    "ambapālī",
+    "fem",
+    "name of a courtesan; lit. row of mangoes",
+    "✔"
+   ],
+   [
+    "alampāyana",
+    "masc",
+    "name of a snake-charmer in a Jātaka story",
+    "✔"
+   ],
+   [
+    "asibandhakaputta",
+    "masc",
+    "name of a layman; Asibandhaka's son; lit. son of sword strap",
+    "✔"
+   ],
+   [
+    "āgatapāka",
+    "masc",
+    "name of a layman; lit. cooking (for whoever) comes",
+    "◑"
+   ],
+   [
+    "illisa",
+    "masc",
+    "name of a rich man in a Jātaka story",
+    "✔"
+   ],
+   [
+    "isidatta 2",
+    "masc",
+    "name of one of king Pasenadi's architects; lit. given to the sage",
+    "✔"
+   ],
+   [
+    "isidattapurāṇā",
+    "masc",
+    "names of two architects; Isidatta and Purāṇa",
+    "✔"
+   ],
+   [
+    "ugga 2.2",
+    "masc",
+    "name of a householder",
+    "✔"
+   ],
+   [
+    "ugga 2.3",
+    "masc",
+    "name of a minister",
+    "✔"
+   ],
+   [
+    "uggasena",
+    "masc",
+    "name of a layman; son of a banker in Rājagaha; lit. with a mighty army",
+    "◑"
+   ],
+   [
+    "uttarānandamātar",
+    "fem",
+    "name of a female lay disciple; foremost among meditators; lit. northern Ānanda's mother",
+    "◑"
+   ],
+   [
+    "upananda 1",
+    "masc",
+    "name of the military general of Magadha; lit. descendent of Nanda",
+    "✔"
+   ],
+   [
+    "upāli 1",
+    "masc",
+    "name of a layman",
+    "✔"
+   ],
+   [
+    "ummādantī",
+    "fem",
+    "name of the daughter of a wealthy banker in commentary stories; lit. causing intoxication",
+    "◑"
+   ],
+   [
+    "oṭṭhaddha",
+    "masc",
+    "name of a Licchavi; lit. half lip; harelip",
+    "✔"
+   ],
+   [
+    "kakudha 5",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "kaṭāhakā",
+    "fem",
+    "name of a female slave; lit. having a small pot",
+    "✔"
+   ],
+   [
+    "kaṭissabha",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "kaṭissaha",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "kaḷibha",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "kāṇamātar",
+    "fem",
+    "name of a lay disciple; lit. mother of blind in one eye",
+    "◑"
+   ],
+   [
+    "kātiyānī",
+    "fem",
+    "name of a female lay disciple; foremost among those with absolute faith; lit. descendent of Kati",
+    "◑"
+   ],
+   [
+    "kāraḷimba",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "kārāyana",
+    "masc",
+    "name of king Pasenadi's charioteer",
+    "✔"
+   ],
+   [
+    "kāliṅga 2",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "kāḷakhemaka",
+    "masc",
+    "name of a Sakyan layman; lit. black Khemaka",
+    "✔"
+   ],
+   [
+    "kāḷigodhā",
+    "fem",
+    "name of a Sakyan laywoman; lit. black iguana",
+    "◑"
+   ],
+   [
+    "kāḷimba",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "kāḷī 2",
+    "fem",
+    "name of female slave in Sāvatthī",
+    "✔"
+   ],
+   [
+    "kirapatika",
+    "masc",
+    "name of a layman",
+    "◑"
+   ],
+   [
+    "kukkuṭa 2",
+    "masc",
+    "name of a lay disciple; lit. chicken",
+    "✔"
+   ],
+   [
+    "kukkuṭamitta",
+    "masc",
+    "name of a hunter; lit. chicken's friend ??",
+    "✔"
+   ],
+   [
+    "kuṭumbika 1",
+    "masc",
+    "name of a layman; lit. head of a family",
+    "✔"
+   ],
+   [
+    "kevaṭṭa 2",
+    "masc",
+    "name of a layman; lit. fisherman",
+    "✔"
+   ],
+   [
+    "kesi",
+    "masc",
+    "name of a horse trainer; lit. with long hair",
+    "✔"
+   ],
+   [
+    "khaṇḍadevi",
+    "fem",
+    "name of a monk's mother",
+    "◑"
+   ],
+   [
+    "khujjuttarā",
+    "fem",
+    "name of a lay disciple; great disciple of the Buddha; foremost female lay disciple in great learning; lit. humped northern",
+    "✔"
+   ],
+   [
+    "gandhabba 3",
+    "masc",
+    "name of a minister",
+    "✔"
+   ],
+   [
+    "giridāsa",
+    "masc",
+    "name of a man; lit. moutain savage",
+    "✔"
+   ],
+   [
+    "guttila",
+    "masc",
+    "name of a musician; previous incarnation of the Buddha",
+    "◑"
+   ],
+   [
+    "gopikā 1",
+    "fem",
+    "name of Sakyan lay disciple; lit. cowherd's wife",
+    "✔"
+   ],
+   [
+    "ghaṭā 3.1",
+    "fem",
+    "name of Sakyan laywoman; lit. water-pot",
+    "✔"
+   ],
+   [
+    "ghaṭikāra",
+    "masc",
+    "name of a potter; lit. water jar maker",
+    "✔"
+   ],
+   [
+    "cakkana",
+    "masc",
+    "name of a Sri Lankan lay disciple",
+    "✔"
+   ],
+   [
+    "caṇḍa 2",
+    "masc",
+    "name of a chieftain; lit. fierce",
+    "✔"
+   ],
+   [
+    "candanaṅgalika",
+    "masc",
+    "name of a layman",
+    "✔"
+   ],
+   [
+    "cānura",
+    "masc",
+    "name of a wrestler in a Jātaka story",
+    "✔"
+   ],
+   [
+    "cārura",
+    "masc",
+    "name of a wrestler in a Jātaka story; lit. handsome",
+    "✔"
+   ],
+   [
+    "citta 2.4",
+    "masc",
+    "name of a householder lay-disciple; foremost lay disciple in giving Dhamma talks",
+    "✔"
+   ],
+   [
+    "ciravāsimātar",
+    "fem",
+    "name of Bhadraka's wife; lit. Ciravāsī's mother",
+    "✔"
+   ],
+   [
+    "ciravāsī",
+    "masc",
+    "name of Bhadraka's son; lit. long living",
+    "✔"
+   ],
+   [
+    "cunda 2",
+    "masc",
+    "name of the lay disciple who gave Buddha his last meal; lit. smith",
+    "✔"
+   ],
+   [
+    "cūḷantevāsika",
+    "masc",
+    "name of a man in a Jātaka story; lit. young apprentice",
+    "✔"
+   ],
+   [
+    "jīvaka",
+    "masc",
+    "name of a doctor; lit. who lives",
+    "✔"
+   ],
+   [
+    "jīvā",
+    "fem",
+    "name of a dead child; lit. living",
+    "✔"
+   ],
+   [
+    "jotika 2",
+    "masc",
+    "name of a householder; lit. having shine",
+    "◑"
+   ],
+   [
+    "tapassa",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "tapassubhallikā",
+    "masc",
+    "name of two laymen; great disciples of the Buddha; foremost in first taking refuge in the Buddha",
+    "◑"
+   ],
+   [
+    "tapussa",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "tapussabhallikā",
+    "masc",
+    "name of two laymen; great disciples of the Buddha; foremost in first taking refuge in the Buddha",
+    "◑"
+   ],
+   [
+    "tambadāṭhika",
+    "masc",
+    "name of an executioner; lit. with copper-coloured teeth",
+    "◑"
+   ],
+   [
+    "tavakaṇṇika",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "tālapuṭa 2",
+    "masc",
+    "name of an actor; lit. palm leaf wrap",
+    "✔"
+   ],
+   [
+    "tissamātar",
+    "fem",
+    "name of a laywoman; lit. Tissa's mother",
+    "◑"
+   ],
+   [
+    "tuṭṭha 2",
+    "masc",
+    "name of a lay disciple; lit. content; satisfied",
+    "✔"
+   ],
+   [
+    "daṇḍapāṇī 2",
+    "masc",
+    "name of a Sakyan layman; lit. with staff in hand",
+    "✔"
+   ],
+   [
+    "dasama 2",
+    "masc",
+    "name of a householder; lit. tenth",
+    "✔"
+   ],
+   [
+    "dārukammika",
+    "masc",
+    "name of a layperson; lit. wood worker; (comm) wood merchant",
+    "◑"
+   ],
+   [
+    "dīghakārāyana",
+    "masc",
+    "name of a general; nephew of Bandhula; commander-in-chief of Pasenadi",
+    "◑"
+   ],
+   [
+    "dīghajāṇu",
+    "masc",
+    "name of a Koliyan man; lit. long knees",
+    "✔"
+   ],
+   [
+    "dīghāvu 1",
+    "masc",
+    "name of a lay disciple; lit. long life",
+    "◑"
+   ],
+   [
+    "dummukha 1",
+    "masc",
+    "name of a Licchavi; lit. ugly face",
+    "✔"
+   ],
+   [
+    "dhammadinna",
+    "masc",
+    "name of a lay disciple; lit. given to religion",
+    "◑"
+   ],
+   [
+    "nakula 2",
+    "masc",
+    "name of a person whose parents were great disciples; lit. mongoose",
+    "◑"
+   ],
+   [
+    "nakulapitar",
+    "masc",
+    "name of a householder; lit. Nakula's father",
+    "✔"
+   ],
+   [
+    "nakulamātar",
+    "fem",
+    "name of a female lay disciple; foremost among those who are trustworthy; lit. mongoose's mother",
+    "◑"
+   ],
+   [
+    "nandamātar",
+    "fem",
+    "name of an eminent lay disciple; lit. Happy's mother",
+    "✔"
+   ],
+   [
+    "nāvindakī",
+    "masc",
+    "name of a minister",
+    "✔"
+   ],
+   [
+    "nikaṭa 3",
+    "masc",
+    "name of a lay disciple",
+    "✔"
+   ],
+   [
+    "pañcakaṅga",
+    "masc",
+    "name of a layperson; lit. set of five tools",
+    "✔"
+   ],
+   [
+    "paṇḍitakumāraka",
+    "masc",
+    "name of a Licchavi; lit. wise prince",
+    "✔"
+   ],
+   [
+    "pāṭaliya",
+    "masc",
+    "name of chieftain; lit. trumpet-flower",
+    "✔"
+   ],
+   [
+    "pāyāsi 2",
+    "masc",
+    "name of a young nobleman; lit. went forward",
+    "✔"
+   ],
+   [
+    "pāvārika 2",
+    "masc",
+    "name of a layman who offered a monastery to the Buddha",
+    "✔"
+   ],
+   [
+    "piyaka",
+    "masc",
+    "name of King Muṇḍa's treasurer; lit. dear",
+    "◑"
+   ],
+   [
+    "pukkusa 2",
+    "masc",
+    "name of a young Mallan man",
+    "✔"
+   ],
+   [
+    "pukkusāti 2",
+    "masc",
+    "name of a layman",
+    "✔"
+   ],
+   [
+    "puṇṇavaḍḍhana",
+    "masc",
+    "name of Migāra's son; lit. increasing merit",
+    "◑"
+   ],
+   [
+    "puṇṇikā",
+    "fem",
+    "name of a water-carrying servant girl; lay name of Puṇṇā therī; lit. complete",
+    "✔"
+   ],
+   [
+    "purāṇa 7",
+    "masc",
+    "name of one of king Pasenadi's architects",
+    "✔"
+   ],
+   [
+    "peya",
+    "masc",
+    "name of a layman; lit. to be drunk",
+    "✔"
+   ],
+   [
+    "pessa 2",
+    "masc",
+    "name of a layman; lit. to be sent",
+    "✔"
+   ],
+   [
+    "potaliya 1",
+    "masc",
+    "name of a householder",
+    "✔"
+   ],
+   [
+    "bandhula",
+    "masc",
+    "name of a general; lit. having bonds",
+    "◑"
+   ],
+   [
+    "bimbī 2",
+    "fem",
+    "name of a lay disciple; lit. doll",
+    "✔"
+   ],
+   [
+    "biḷālapādaka 2",
+    "masc",
+    "name of a wealthy layman; lit. cat's foot (weight)",
+    "◑"
+   ],
+   [
+    "bījaka 3",
+    "masc",
+    "name of Sudinna's son; lit. seedling",
+    "◑"
+   ],
+   [
+    "bījakamātar",
+    "fem",
+    "epithet of Sudinna's ex-wife; lit. Bījaka's mother",
+    "◑"
+   ],
+   [
+    "bhaṭa 3",
+    "masc",
+    "name of a lay disciple; lit. supported",
+    "✔"
+   ],
+   [
+    "bhadda 4",
+    "masc",
+    "name of a lay disciple; lit. lucky",
+    "✔"
+   ],
+   [
+    "bhaddavatiya 1",
+    "masc",
+    "name of a wealthy man; lit. from Bhaddavatī",
+    "◑"
+   ],
+   [
+    "bhaddiya 2",
+    "masc",
+    "name of a Licchavi; lit. lucky; fortunate",
+    "✔"
+   ],
+   [
+    "bhadraka 2",
+    "masc",
+    "name of a chieftain; lit. lucky",
+    "✔"
+   ],
+   [
+    "bhallika",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "bhesika",
+    "masc",
+    "name of a washroom attendant",
+    "✔"
+   ],
+   [
+    "majjha 4",
+    "masc",
+    "name of a wealthy layman; father of Anopamā; lit. middle",
+    "✔"
+   ],
+   [
+    "maṇicūḷaka",
+    "masc",
+    "name of a chieftain; lit. jewelled crest",
+    "✔"
+   ],
+   [
+    "mahādatta 1",
+    "masc",
+    "name of a military general; lit. great given",
+    "✔"
+   ],
+   [
+    "mahānāma 1",
+    "masc",
+    "name of a Sakyan layman; lit. great name",
+    "✔"
+   ],
+   [
+    "mahāli",
+    "masc",
+    "name of a Licchavi man",
+    "✔"
+   ],
+   [
+    "mānadinna",
+    "masc",
+    "name of a lay disciple; lit. give to conceit",
+    "◑"
+   ],
+   [
+    "migava 3",
+    "masc",
+    "name of a park-keeper; lit. deer hunter",
+    "✔"
+   ],
+   [
+    "migasāṇā",
+    "fem",
+    "name of a female lay disciple; lit. deer hemp",
+    "◑"
+   ],
+   [
+    "migasālā",
+    "fem",
+    "name of a female lay disciple; lit. deer hall",
+    "✔"
+   ],
+   [
+    "migāra",
+    "masc",
+    "name of a wealthy layman",
+    "✔"
+   ],
+   [
+    "meṇḍaka 2",
+    "masc",
+    "name of a lay disciple; lit. sheep",
+    "◑"
+   ],
+   [
+    "meṇḍakanattar",
+    "masc",
+    "name of a man; Meṇḍaka's grandson; lit. sheep's grandson",
+    "◑"
+   ],
+   [
+    "medakathālikā 2",
+    "fem",
+    "name of a acrobat; (comm) name of a male acrobat with a female name; lit. pot of lard",
+    "✔"
+   ],
+   [
+    "moggalla",
+    "masc",
+    "name of a minister",
+    "✔"
+   ],
+   [
+    "yamaka 4",
+    "masc",
+    "name of a minister; lit. twin",
+    "✔"
+   ],
+   [
+    "rattapāṇi",
+    "masc",
+    "name of a dyer; lit. red-handed",
+    "✔"
+   ],
+   [
+    "rāsiya",
+    "masc",
+    "name of a chieftain; lit. with heaps",
+    "✔"
+   ],
+   [
+    "revatī",
+    "fem",
+    "name of a woman in a Vimānavatthu story",
+    "✔"
+   ],
+   [
+    "rosika",
+    "masc",
+    "name of a washroom attendant; lit. angry",
+    "✔"
+   ],
+   [
+    "rohaṇa",
+    "masc",
+    "name of a young layman; lit. ascending",
+    "◑"
+   ],
+   [
+    "rohiṇeyya",
+    "masc",
+    "name of a minister; lit. son of Rohiṇī",
+    "✔"
+   ],
+   [
+    "lakhumā",
+    "fem",
+    "name of female lay disciple",
+    "✔"
+   ],
+   [
+    "vajjiyamahita",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "vajjiyamāhita",
+    "masc",
+    "name of a lay disciple; lit. honoured among the Vajjians",
+    "✔"
+   ],
+   [
+    "vappa 2",
+    "masc",
+    "name of a Sakyan; lit. planting",
+    "✔"
+   ],
+   [
+    "vijayamāhika",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "viṭaṭūbha",
+    "masc",
+    "name of king Pasenadi's general",
+    "✔"
+   ],
+   [
+    "viḍūḍabha",
+    "masc",
+    "name of king Pasenadi's general",
+    "✔"
+   ],
+   [
+    "visākha 2",
+    "masc",
+    "name of a lay disciple; lit. Libra",
+    "✔"
+   ],
+   [
+    "visākhā 1",
+    "fem",
+    "name of the Buddha's chief female disciple, foremost female donor to the Saṅgha; lit. Libra",
+    "✔"
+   ],
+   [
+    "vedehikā",
+    "fem",
+    "name of a laywoman in Sāvatthī; lit. from Videha; wise",
+    "✔"
+   ],
+   [
+    "velāma",
+    "masc",
+    "name of the Buddha in a previous incarnation",
+    "◑"
+   ],
+   [
+    "veḷukaṇḍakiyā",
+    "fem",
+    "name of a lay disciple; lit. bamboo thorn",
+    "✔"
+   ],
+   [
+    "veḷukaṇḍakī",
+    "fem",
+    "name of a lay disciple; lit. bamboo thorn",
+    "✔"
+   ],
+   [
+    "sakulā 2",
+    "fem",
+    "name of a laywomen, sister of king Pasenadi's queen; lit. one's own family",
+    "✔"
+   ],
+   [
+    "satadhamma",
+    "masc",
+    "name of a man in a Jātaka story; lit. one hundred qualities",
+    "✔"
+   ],
+   [
+    "satulakāyī",
+    "fem",
+    "name of Jotika's wife; lit. with a body like cotton wool ??",
+    "✔"
+   ],
+   [
+    "santuṭṭha 2",
+    "masc",
+    "name of a lay disciple; lit. satisfied",
+    "✔"
+   ],
+   [
+    "sandhāna 1",
+    "masc",
+    "name of a lay disciple; lit. placing together",
+    "✔"
+   ],
+   [
+    "samīti",
+    "masc",
+    "name of a wainwright in Sāvatthī",
+    "✔"
+   ],
+   [
+    "sarakāni",
+    "masc",
+    "name of a Sakyan lay disciple",
+    "◑"
+   ],
+   [
+    "saraṇāni",
+    "masc",
+    "name of a Sakyan lay disciple; lit. refuges",
+    "◑"
+   ],
+   [
+    "sāṇa 1.3",
+    "masc",
+    "name of a layman",
+    "✔"
+   ],
+   [
+    "sādatta",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "sānu 2",
+    "masc",
+    "name of a boy possessed by a daemon; lit. plateau",
+    "✔"
+   ],
+   [
+    "sāmā 5",
+    "fem",
+    "name of a courtesan in a Jātaka story; lit. brown",
+    "✔"
+   ],
+   [
+    "sāmāvatī 1",
+    "fem",
+    "name of a female lay disciple; foremost among those living in a state of friendliness; lit. of dark complexion",
+    "◑"
+   ],
+   [
+    "sāragga",
+    "masc",
+    "name of a lay disciple",
+    "◑"
+   ],
+   [
+    "sālavatī 2",
+    "fem",
+    "name of a royal courtesan; lit. with many halls",
+    "◑"
+   ],
+   [
+    "sāḷha 1",
+    "masc",
+    "name of a layman; Visākha's grandson",
+    "✔"
+   ],
+   [
+    "sāḷha 2",
+    "masc",
+    "name of a Licchavi layman",
+    "✔"
+   ],
+   [
+    "sigālaka 2",
+    "masc",
+    "name of a lay disciple; lit. little jackal",
+    "✔"
+   ],
+   [
+    "siṅgālaka 2",
+    "masc",
+    "name of a lay disciple; lit. little jackal",
+    "✔"
+   ],
+   [
+    "sirivaḍḍha 1",
+    "masc",
+    "name of a Kosalan minister; lit. glory increase",
+    "✔"
+   ],
+   [
+    "sirivaḍḍha 2",
+    "masc",
+    "name of a lay disciple; lit. glory increase",
+    "◑"
+   ],
+   [
+    "sirīvaḍḍha",
+    "masc",
+    "name of a lay disciple; lit. glory increase",
+    "◑"
+   ],
+   [
+    "sīha 2",
+    "masc",
+    "name of a military general in Vesālī; lit. lion",
+    "✔"
+   ],
+   [
+    "sujātā 1",
+    "fem",
+    "name of a lay disciple; lit. well born",
+    "✔"
+   ],
+   [
+    "sutanā",
+    "fem",
+    "name of a laywoman",
+    "◑"
+   ],
+   [
+    "sudatta",
+    "masc",
+    "name of Anāthapiṇḍika; father of Saddha; lit. well given",
+    "✔"
+   ],
+   [
+    "sudhanā",
+    "fem",
+    "name of a laywoman; lit. very wealthy",
+    "◑"
+   ],
+   [
+    "supabbā",
+    "fem",
+    "name of a lay disciple; lit. good joints",
+    "◑"
+   ],
+   [
+    "suppabuddha",
+    "masc",
+    "name of a leper; lit. well awakened",
+    "✔"
+   ],
+   [
+    "suppavāsā",
+    "fem",
+    "name of a female lay disciple; foremost among those who offer excellent items; lit. happily living abroad",
+    "◑"
+   ],
+   [
+    "subhaṭa",
+    "masc",
+    "name of a lay disciple; lit. well supported",
+    "✔"
+   ],
+   [
+    "subhadda 3",
+    "masc",
+    "name of a lay disciple; lit. very lucky",
+    "✔"
+   ],
+   [
+    "sūrambaṭṭha",
+    "masc",
+    "name of a lay disciple; foremost among those with absolute faith",
+    "◑"
+   ],
+   [
+    "serivant",
+    "masc",
+    "name of a merchant; lit. having independent quality",
+    "✔"
+   ],
+   [
+    "soṇa 2",
+    "masc",
+    "name of a layman; lit. dog",
+    "✔"
+   ],
+   [
+    "soṇamātar",
+    "fem",
+    "name of a laywoman; lit. Soṇa's mother",
+    "◑"
+   ],
+   [
+    "somā 2",
+    "fem",
+    "name of a laywoman, sister of Pasenadi's queen; lit. soma",
+    "✔"
+   ],
+   [
+    "hatthaka 1",
+    "masc",
+    "name of a layman in Āḷavī; lit. handy",
+    "✔"
+   ],
+   [
+    "haliddikāni",
+    "masc",
+    "name of a householder; lit. dyed yellow; (or) dealing in turmeric",
+    "✔"
+   ],
+   [
+    "hārika 2",
+    "masc",
+    "name of an executioner; lit. carrying",
+    "✔"
+   ],
+   [
+    "hāliddakāni",
+    "masc",
+    "name of a householder; lit. dyed yellow; (or) dealing in turmeric",
+    "✔"
+   ],
+   [
+    "hāliddikāni",
+    "masc",
+    "name of a householder; lit. dyed yellow; (or) dealing in turmeric",
+    "✔"
+   ]
+  ],
+  "count": 189
+ },
+ "family names": {
+  "data": [
+   [
+    "aggivessana",
+    "masc",
+    "name of a Brahman family clan; lit. descendant of Aggivessa",
+    "✔"
+   ],
+   [
+    "ākāsa 2.1",
+    "masc",
+    "name of a family clan",
+    "✔"
+   ],
+   [
+    "upamañña",
+    "masc",
+    "name of a clan",
+    "✔"
+   ],
+   [
+    "kaccāna",
+    "masc",
+    "family name; lit. descendant of Kati",
+    "✔"
+   ],
+   [
+    "kaccānagotta 1",
+    "nt",
+    "name of a respected family clan",
+    "✔"
+   ],
+   [
+    "kaccāyana 1",
+    "masc",
+    "family name; lit. descendant of Kati",
+    "✔"
+   ],
+   [
+    "kaṇhāyana",
+    "masc",
+    "name of a clan; lit. related to black",
+    "✔"
+   ],
+   [
+    "kassapa 3",
+    "masc",
+    "family name; lit. descendant of Kassapa",
+    "✔"
+   ],
+   [
+    "kātiyāna 1",
+    "masc",
+    "family name; lit. descendant of Kati",
+    "✔"
+   ],
+   [
+    "kālāma",
+    "masc",
+    "family names of the Buddha's first teacher; Āḷāra Kālāma",
+    "✔"
+   ],
+   [
+    "kesakambala 1",
+    "masc",
+    "family name of an ascetic teacher; lit. (wearing a) hair blanket",
+    "✔"
+   ],
+   [
+    "koṇḍañña 2",
+    "masc",
+    "name of a family clan",
+    "✔"
+   ],
+   [
+    "kosiya 2",
+    "masc",
+    "family name of Sakka; epithet of Sakka; lit. from a cocoon",
+    "✔"
+   ],
+   [
+    "koḷiya",
+    "masc",
+    "name of a clan neighbouring the Sakyans",
+    "✔"
+   ],
+   [
+    "koḷivisa 1",
+    "masc",
+    "name of a family clan",
+    "✔"
+   ],
+   [
+    "gagga",
+    "masc",
+    "name of the family clan of Aṅgulimāla",
+    "✔"
+   ],
+   [
+    "gotama 1",
+    "masc",
+    "family name of the Buddha; lit. of the Gotama clan",
+    "✔"
+   ],
+   [
+    "gosāla 1",
+    "masc",
+    "family name of a ascetic teacher; Makkhali Gosāla; lit. from a cow shed",
+    "✔"
+   ],
+   [
+    "thūli",
+    "masc",
+    "name of clan who received a portion of the Buddha's relics",
+    "✔"
+   ],
+   [
+    "nāṭaputta",
+    "masc",
+    "family names of Mahavira; leader of the Jains; lit. son of the dance",
+    "✔"
+   ],
+   [
+    "nātaputta",
+    "masc",
+    "family name of Mahavira, leader of the Jains; lit. son of the dance",
+    "✔"
+   ],
+   [
+    "nāthaputta",
+    "masc",
+    "family name of Mahavira; leader of the Jains; lit. son of the lord",
+    "✔"
+   ],
+   [
+    "pilinda",
+    "masc",
+    "name of a family clan",
+    "✔"
+   ],
+   [
+    "buli",
+    "masc",
+    "name of clan who received a portion of the Buddha's relics",
+    "✔"
+   ],
+   [
+    "belaṭṭhaputta",
+    "masc",
+    "name of an ascetic teacher; Sañcaya Belaṭṭhaputta; lit. son of Belaṭṭha",
+    "✔"
+   ],
+   [
+    "bellaṭṭhiputta",
+    "masc",
+    "family name of an ascetic teacher; lit. son of Belaṭṭhi",
+    "✔"
+   ],
+   [
+    "bhaggava 1",
+    "masc",
+    "family name; lit. from Bhaggu",
+    "✔"
+   ],
+   [
+    "mantāṇiputta",
+    "masc",
+    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
+    "✔"
+   ],
+   [
+    "mantāniputta",
+    "masc",
+    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantānī",
+    "✔"
+   ],
+   [
+    "moggallāna 2",
+    "masc",
+    "family name; lit. descendent of Muggala",
+    "✔"
+   ],
+   [
+    "moriya",
+    "masc",
+    "name of a high caste clan",
+    "✔"
+   ],
+   [
+    "rāmaputta",
+    "masc",
+    "family names of the Buddha's second teacher; Udaka Rāmaputta; lit. son of Rāma",
+    "✔"
+   ],
+   [
+    "vaccha 1.2",
+    "masc",
+    "family name",
+    "✔"
+   ],
+   [
+    "vacchāyana",
+    "masc",
+    "family name of the wandering ascetic Pilotika; lit. descendent of Vaccha",
+    "✔"
+   ],
+   [
+    "vāseṭṭha 4",
+    "masc",
+    "name of a Brahman family",
+    "✔"
+   ],
+   [
+    "vedehiputta",
+    "masc",
+    "family name of Ajātasattu; lit. son of Vedehi",
+    "✔"
+   ],
+   [
+    "vedhaññā",
+    "masc",
+    "name of a Sakyan family clan",
+    "✔"
+   ],
+   [
+    "verahaccānigotta",
+    "adj",
+    "belonging to the Verahaccāni family clan",
+    "✔"
+   ],
+   [
+    "sakya 1",
+    "masc",
+    "name of the family into which the Buddha was born",
+    "✔"
+   ],
+   [
+    "saṅkicca",
+    "masc",
+    "family name of an ascetic; Kisa Saṅkicca; lit. descendent of Saṃkiti",
+    "✔"
+   ],
+   [
+    "saṃkicca 1",
+    "masc",
+    "family name of an ascetic; Kisa Saṃkicca; lit. descendent of Saṃkiti",
+    "✔"
+   ]
+  ],
+  "count": 41
+ },
+ "suttas of Saṃyutta Nikāya 22": {
+  "data": [
+   [
+    "nakulapitusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.1 (SN22.1); lit. discourse Nakula's father",
+    "✔"
+   ],
+   [
+    "devadahasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.2 (SN22.2); lit. discourse at Devadaha",
+    "✔"
+   ],
+   [
+    "hāliddikānisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.3 (SN22.3); lit. discourse with Hāliddikāni",
+    "✔"
+   ],
+   [
+    "dutiyahāliddikānisutta",
+    "nt",
+    "Saṃyutta Nikāya 22.4 (SN22.4); lit. second discourse with Hāliddikāni",
+    "✔"
+   ],
+   [
+    "samādhisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.5 (SN22.5); lit. discourse on mental composure",
+    "✔"
+   ],
+   [
+    "paṭisallāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.6 (SN22.6); lit. discourse on seclusion",
+    "✔"
+   ],
+   [
+    "upādāparitassanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 22.7 (SN22.7); lit. discourse on agitation through clinging",
+    "✔"
+   ],
+   [
+    "dutiyaupādāparitassanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 22.8 (SN22.8); lit. second discourse on agitation through clinging",
+    "✔"
+   ],
+   [
+    "kālattayaaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.9 (SN22.9); lit. discourse on impermanence in the three periods of time",
+    "✔"
+   ],
+   [
+    "kālattayadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.10 (SN22.10); lit. discourse on suffering in the three periods of time",
+    "✔"
+   ],
+   [
+    "kālattayaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.11 (SN22.11); lit. discourse on no self in the three periods of time",
+    "✔"
+   ],
+   [
+    "aniccasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.12 (SN22.12); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "dukkhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.13 (SN22.13); lit. discourse on suffering",
+    "✔"
+   ],
+   [
+    "anattasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.14 (SN22.14); lit. discourse on not oneself",
+    "✔"
+   ],
+   [
+    "yadaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.15 (SN22.15); lit. discourse on what is impermanent",
+    "✔"
+   ],
+   [
+    "yaṃdukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.16 (SN22.16); lit. discourse on whatever is suffering",
+    "✔"
+   ],
+   [
+    "yadanattāsutta",
+    "nt",
+    "Saṃyutta Nikāya 22.17 (SN22.17); lit. discourse on whastver is not oneself",
+    "✔"
+   ],
+   [
+    "sahetuaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.18 (SN22.18); lit. discourse on impermanence together with causes",
+    "✔"
+   ],
+   [
+    "sahetudukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.19 (SN22.19); lit. discourse on suffering together with causes",
+    "✔"
+   ],
+   [
+    "sahetuanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.20 (SN22.20); lit. discourse on non-self together with causes",
+    "✔"
+   ],
+   [
+    "bhārasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.22 (SN22.22)",
+    "✔"
+   ],
+   [
+    "pariññasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.23 (SN22.23); lit. discourse on complete comprehension",
+    "✔"
+   ],
+   [
+    "abhijānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.24 (SN22.24); lit. discourse on directly knowing",
+    "✔"
+   ],
+   [
+    "chandarāgasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.25 (SN22.25); lit. discourse on interest and passion",
+    "✔"
+   ],
+   [
+    "assādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.26 (SN22.26); lit. discourse on gratification",
+    "✔"
+   ],
+   [
+    "dutiyaassādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.27 (SN22.27); lit. second discourse on gratification",
+    "✔"
+   ],
+   [
+    "tatiyaassādasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.28 (SN22.28); lit. third discourse on gratification",
+    "✔"
+   ],
+   [
+    "abhinandanasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.29 (SN22.29); lit. discourse on taking delight",
+    "✔"
+   ],
+   [
+    "uppādasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.30 (SN22.30); lit. discourse on arising",
+    "✔"
+   ],
+   [
+    "aghamūlasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.31 (SN22.31); lit. discourse on the root of misery",
+    "✔"
+   ],
+   [
+    "pabhaṅgusutta",
+    "nt",
+    "Saṃyutta Nikāya 22.32 (SN22.32); lit. discourse on brittle",
+    "✔"
+   ],
+   [
+    "natumhākaṃsutta",
+    "nt",
+    "Saṃyutta Nikāya 22.33 (SN22.33); lit. discourse on not yours",
+    "✔"
+   ],
+   [
+    "dutiyanatumhākaṃsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.34 (SN22.34); lit. second discourse on not yours",
+    "✔"
+   ],
+   [
+    "aññatarabhikkhusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.35 (SN22.35); lit. discourse on a certain monk",
+    "✔"
+   ],
+   [
+    "dutiyaaññatarabhikkhusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.36 (SN22.36); lit. second discourse on a certain monk",
+    "✔"
+   ],
+   [
+    "dutiyaānandasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.38 (SN22.38); lit. second discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "anudhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.39 (SN22.39); lit. discourse on according to Dhamma",
+    "✔"
+   ],
+   [
+    "dutiyaanudhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.40 (SN22.40); lit. second discourse on according to Dhamma",
+    "✔"
+   ],
+   [
+    "tatiyaanudhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.41 (SN22.41); lit. third discourse on according to Dhamma",
+    "✔"
+   ],
+   [
+    "catutthaanudhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.42 (SN22.42); lit. fourth discourse on according to Dhamma",
+    "✔"
+   ],
+   [
+    "attadīpasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.43 (SN22.43); lit. discourse on self-reliant",
+    "✔"
+   ],
+   [
+    "paṭipadāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.44 (SN22.44); lit. discourse on the path of practice",
+    "✔"
+   ],
+   [
+    "aniccasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.45 (SN22.45); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "dutiyaaniccasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.46 (SN22.46); lit. second discourse on impermanence",
+    "✔"
+   ],
+   [
+    "samanupassanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 22.47 (SN22.47); lit. discourse on modes of seeing",
+    "✔"
+   ],
+   [
+    "khandhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.48 (SN22.48); lit. discourse on the aggregates",
+    "✔"
+   ],
+   [
+    "soṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.49 (SN22.49); lit. discourse with Soṇa",
+    "✔"
+   ],
+   [
+    "dutiyasoṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.50 (SN22.50); lit. second discourse with Soṇa",
+    "✔"
+   ],
+   [
+    "nandikkhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.51 (SN22.51); lit. discourse on the destruction of delight",
+    "✔"
+   ],
+   [
+    "dutiyanandikkhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.52 (SN22.52); lit. second discourse on the destruction of delight",
+    "✔"
+   ],
+   [
+    "upayasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.53 (SN22.53); lit. discourse on engagement",
+    "✔"
+   ],
+   [
+    "bījasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.54 (SN22.54); lit. discourse on the seed",
+    "✔"
+   ],
+   [
+    "udānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.55 (SN22.55); lit. discourse on an inspired saying",
+    "✔"
+   ],
+   [
+    "upādānaparipavattasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.56 (SN22.56); lit. discourse on the occurrences of grasping",
+    "✔"
+   ],
+   [
+    "sattaṭṭhānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.57 (SN22.57); lit. discourse on seven aspects",
+    "✔"
+   ],
+   [
+    "sammāsambuddhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.58 (SN22.58); lit. discourse on the perfectly awakened Buddha",
+    "✔"
+   ],
+   [
+    "anattalakkhaṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.59 (SN22.59); lit. discourse on the characteristic of non-self",
+    "✔"
+   ],
+   [
+    "mahālisutta 3",
+    "nt",
+    "Saṃyutta Nikāya 22.60 (SN22.60); lit. discourse with Mahāli",
+    "✔"
+   ],
+   [
+    "ādittasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.61 (SN22.61); lit. discourse on burning",
+    "✔"
+   ],
+   [
+    "niruttipathasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.62 (SN22.62); lit. discourse on ways of speech",
+    "✔"
+   ],
+   [
+    "upādiyamānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.63 (SN22.63); lit. discourse on grasping",
+    "✔"
+   ],
+   [
+    "maññamānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.64 (SN22.64); lit. discourse on thikning",
+    "✔"
+   ],
+   [
+    "abhinandamānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.65 (SN22.65); lit. discourse on delighting",
+    "✔"
+   ],
+   [
+    "aniccasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 22.66 (SN22.66); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "anattasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.68 (SN22.68); lit. discourse on not oneself",
+    "✔"
+   ],
+   [
+    "anattaniyasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.69 (SN22.69); lit. discourse on not belonging to a self",
+    "✔"
+   ],
+   [
+    "rajanīyasaṇṭhitasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.70 (SN22.70); lit. discourse on appearing desirable",
+    "✔"
+   ],
+   [
+    "rādhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.71 (SN22.71); lit. discourse on with Rādha",
+    "✔"
+   ],
+   [
+    "surādhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.72 (SN22.72); lit. discourse with Surādha",
+    "✔"
+   ],
+   [
+    "assādasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.73 (SN22.73); lit. discourse on gratification",
+    "✔"
+   ],
+   [
+    "samudayasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.74 (SN22.74); lit. discourse on the origin",
+    "✔"
+   ],
+   [
+    "dutiyasamudayasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.75 (SN22.75); lit. second discourse on the origin",
+    "✔"
+   ],
+   [
+    "arahantasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.76 (SN22.76); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "dutiyaarahantasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.77 (SN22.77); lit. second discourse on the arahant",
+    "✔"
+   ],
+   [
+    "sīhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.78 (SN22.78); lit. discourse on the lion",
+    "✔"
+   ],
+   [
+    "khajjanīyasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.79 (SN22.79); lit. discourse on edible",
+    "✔"
+   ],
+   [
+    "piṇḍolyasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.80 (SN22.80); lit. discourse on living by means of alms",
+    "✔"
+   ],
+   [
+    "pālileyyasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.81 (SN22.81); lit. discourse at Pālileyya",
+    "✔"
+   ],
+   [
+    "puṇṇamasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.82 (SN22.82); lit. discourse on the full moon",
+    "✔"
+   ],
+   [
+    "tissasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.84 (SN22.84); lit. discourse with Tissa",
+    "✔"
+   ],
+   [
+    "yamakasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.85 (SN22.85); lit. discourse with Yamaka",
+    "✔"
+   ],
+   [
+    "anurādhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.86 (SN22.86); lit. discourse with Anurādha",
+    "✔"
+   ],
+   [
+    "vakkalisutta",
+    "nt",
+    "Saṃyutta Nikāya 22.87 (SN22.87); lit. discourse with Vakkali",
+    "✔"
+   ],
+   [
+    "assajisutta",
+    "nt",
+    "Saṃyutta Nikāya 22.88 (SN22.88); lit. discourse with Assaji",
+    "✔"
+   ],
+   [
+    "khemakasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.89 (SN22.89); lit. discourse with Khemaka",
+    "✔"
+   ],
+   [
+    "channasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.90 (SN22.90); lit. discourse with Channa",
+    "✔"
+   ],
+   [
+    "rāhulasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.91 (SN22.91); lit. discourse with Rāhula",
+    "✔"
+   ],
+   [
+    "dutiyarāhulasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.92 (SN22.92); lit. second discourse with Rāhula",
+    "✔"
+   ],
+   [
+    "nadīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.93 (SN22.93); lit. discourse on the river",
+    "✔"
+   ],
+   [
+    "pupphasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.94 (SN22.94); lit. discourse on the flower",
+    "✔"
+   ],
+   [
+    "pheṇapiṇḍūpamasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.95 (SN22.95); lit. discourse on the simile of the lump of foam",
+    "✔"
+   ],
+   [
+    "gomayapiṇḍasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.96 (SN22.96); lit. discourse on the lump of cow-dung",
+    "✔"
+   ],
+   [
+    "nakhasikhāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.97 (SN22.97); lit. disourse on the tip of the nail",
+    "✔"
+   ],
+   [
+    "suddhikasutta 02",
+    "nt",
+    "Saṃyutta Nikāya 22.98 (SN22.98); lit. clean (version of the) discourse",
+    "✔"
+   ],
+   [
+    "gaddulabaddhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.99 (SN22.99); lit. discourse on tied with a leash",
+    "✔"
+   ],
+   [
+    "dutiyagaddulabaddhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.100 (SN22.100); lit. second discourse on tied with a leash",
+    "✔"
+   ],
+   [
+    "vāsijaṭasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.101 (SN22.101); lit. discourse on the axe-handle",
+    "✔"
+   ],
+   [
+    "aniccasaññāsutta",
+    "nt",
+    "Saṃyutta Nikāya 22.102 (SN22.102); lit. discourse on perception of impermanence",
+    "✔"
+   ],
+   [
+    "antasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.103 (SN22.103); lit. discourse on extremes",
+    "✔"
+   ],
+   [
+    "sakkāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.105 (SN22.105); lit. discourse on individual identity",
+    "✔"
+   ],
+   [
+    "pariññeyyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.106 (SN22.106); lit. discourse on what should be completely comprehended",
+    "✔"
+   ],
+   [
+    "samaṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.107 (SN22.107); lit. discourse on the ascetic",
+    "✔"
+   ],
+   [
+    "dutiyasamaṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.108 (SN22.108); lit. second discourse on the ascetic",
+    "✔"
+   ],
+   [
+    "sotāpannasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.109 (SN22.109); lit. discourse on reached the stream",
+    "✔"
+   ],
+   [
+    "arahantasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 22.110 (SN22.110); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "chandappahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.111 (SN22.111); lit. discourse on giving up interest",
+    "✔"
+   ],
+   [
+    "dutiyachandappahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.112 (SN22.112); lit. second discourse on giving up interest",
+    "✔"
+   ],
+   [
+    "avijjāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.113 (SN22.113); lit. discourse on ignorance",
+    "✔"
+   ],
+   [
+    "vijjāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.114 (SN22.114); lit. discourse on understanding",
+    "✔"
+   ],
+   [
+    "dhammakathikasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.115 (SN22.115); lit. discourse on the Dhamma preacher",
+    "✔"
+   ],
+   [
+    "dutiyadhammakathikasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.116 (SN22.116); lit. second discourse on the Dhamma preacher",
+    "✔"
+   ],
+   [
+    "bandhanasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 22.117 (SN22.117); lit. discourse on bondage",
+    "✔"
+   ],
+   [
+    "paripucchitasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.118 (SN22.118); lit. discourse on questioning",
+    "✔"
+   ],
+   [
+    "dutiyaparipucchitasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.119 (SN22.119); lit. second discourse on the questioner",
+    "✔"
+   ],
+   [
+    "saṃyojaniyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.120 (SN22.120); lit. discourse on what can bind",
+    "✔"
+   ],
+   [
+    "upādāniyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.121 (SN22.121); lit. discourse on what can be clung to",
+    "✔"
+   ],
+   [
+    "sīlavantasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.122 (SN22.122); lit. discourse on a virtuous monk",
+    "✔"
+   ],
+   [
+    "sutavantasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.123 (SN22.123); lit. discourse on an educated monk",
+    "✔"
+   ],
+   [
+    "kappasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.124 (SN22.124); lit. discourse with Kappa",
+    "✔"
+   ],
+   [
+    "dutiyakappasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.125 (SN22.125); lit. second discourse with Kappa",
+    "✔"
+   ],
+   [
+    "samudayadhammasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.126 (SN22.126); lit. discourse on having the nature to arise",
+    "✔"
+   ],
+   [
+    "dutiyasamudayadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.127 (SN22.127); lit. second discourse on having the nature to arise",
+    "✔"
+   ],
+   [
+    "tatiyasamudayadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.128 (SN22.128); lit. third discourse on having the nature to arise",
+    "✔"
+   ],
+   [
+    "assādasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 22.129 (SN22.129); lit. discourse on gratification",
+    "✔"
+   ],
+   [
+    "dutiyaassādasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.130 (SN22.130); lit. second discourse on gratification",
+    "✔"
+   ],
+   [
+    "samudayasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.131 (SN22.131); lit. discourse on the origin",
+    "✔"
+   ],
+   [
+    "dutiyasamudayasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.132 (SN22.132); lit. second discourse on the origin",
+    "✔"
+   ],
+   [
+    "koṭṭhikasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.133 (SN22.133); lit. discourse with Koṭṭhika",
+    "✔"
+   ],
+   [
+    "dutiyakoṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.134 (SN22.134); lit. second discourse with Koṭṭhika",
+    "✔"
+   ],
+   [
+    "tatiyakoṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.135 (SN22.135); lit. third discourse with Koṭṭhika",
+    "✔"
+   ],
+   [
+    "kukkuḷasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.136 (SN22.136); lit. discourse on hot ashes",
+    "✔"
+   ],
+   [
+    "aniccasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 22.137 (SN22.137); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "dutiyaaniccasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 22.138 (SN22.138); lit. second discourse on impermanence",
+    "✔"
+   ],
+   [
+    "tatiyaaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.139 (SN22.139); lit. third discourse on impermanence",
+    "✔"
+   ],
+   [
+    "dutiyadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.141 (SN22.141); lit. second discourse on suffering",
+    "✔"
+   ],
+   [
+    "tatiyadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.142 (SN22.142); lit. third discourse on suffering",
+    "✔"
+   ],
+   [
+    "anattasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 22.143 (SN22.143); lit. discourse on not oneself",
+    "✔"
+   ],
+   [
+    "dutiyaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.144 (SN22.144); lit. second discourse on not oneself",
+    "✔"
+   ],
+   [
+    "tatiyaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.145 (SN22.145); lit. third discourse on not oneself",
+    "✔"
+   ],
+   [
+    "nibbidābahulasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.146 (SN22.146); lit. discourse on full of dis-enchantment",
+    "✔"
+   ],
+   [
+    "aniccānupassīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.147 (SN22.147); lit. discourse on observing impermanence",
+    "✔"
+   ],
+   [
+    "dukkhānupassīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.148 (SN22.148); lit. discourse on observing suffering",
+    "✔"
+   ],
+   [
+    "anattānupassīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.149 (SN22.149); lit. discourse on seeing non-self",
+    "✔"
+   ],
+   [
+    "ajjhattasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.150 (SN22.150); lit. discourse on internal",
+    "✔"
+   ],
+   [
+    "etaṃmamasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.151 (SN22.151); lit. discourse on this is mine",
+    "✔"
+   ],
+   [
+    "soattāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.152 (SN22.152); lit. discourse on this is my self",
+    "✔"
+   ],
+   [
+    "nocamesiyāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.153 (SN22.153); lit. discourse on it might not be mine",
+    "✔"
+   ],
+   [
+    "micchādiṭṭhisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 22.154 (SN22.154); lit. discourse on wrong view",
+    "✔"
+   ],
+   [
+    "sakkāyadiṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 22.155 (SN22.155); lit. discourse on the view of self-identity",
+    "✔"
+   ],
+   [
+    "attānudiṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 22.156 (SN22.156); lit. discourse on the view of self",
+    "✔"
+   ],
+   [
+    "abhinivesasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.157 (SN22.157); lit. discourse on adherence",
+    "✔"
+   ],
+   [
+    "dutiyaabhinivesasutta",
+    "nt",
+    "Saṃyutta Nikāya 22.158 (SN22.158); lit. second discourse on adherence",
+    "✔"
+   ],
+   [
+    "natumhāka",
+    "adj",
+    "in reference to SN22.33 Natumhākasutta and SN22.34 Dutiyanatumhākasutta; lit. not yours",
+    "✔"
+   ],
+   [
+    "anattanīya",
+    "nt",
+    "in reference to SN22.69 Anattaniyasutta; lit. not belonging to a self",
+    "✔"
+   ],
+   [
+    "pālileyya",
+    "masc",
+    "in reference to SN22.81 Pālileyyasutta; lit. name of a town near Kosambī",
+    "✔"
+   ]
+  ],
+  "count": 155
+ },
+ "names of countries": {
+  "data": [
+   [
+    "aṅga 4",
+    "nt",
+    "name of a country; capital Campā; modern day Bengal",
+    "✔"
+   ],
+   [
+    "aṅguttarāpa",
+    "masc",
+    "name of a country",
+    "◑"
+   ],
+   [
+    "andha 2.1",
+    "masc",
+    "name of a country; modern Andhra Pradesh",
+    "◑"
+   ],
+   [
+    "avanti 1",
+    "fem",
+    "name of a country",
+    "✔"
+   ],
+   [
+    "āḷavī 1",
+    "fem",
+    "name of a country; lit. wilderness",
+    "✔"
+   ],
+   [
+    "uttarāpa",
+    "masc",
+    "name of a country; lit. northern water",
+    "✔"
+   ],
+   [
+    "kamboja",
+    "masc",
+    "name of a country; part of modern day eastern Afghanistan",
+    "✔"
+   ],
+   [
+    "kaliṅga",
+    "masc",
+    "name of a country",
+    "✔"
+   ],
+   [
+    "kaliṅgaraṭṭha",
+    "nt",
+    "kingdom of Kaliṅga",
+    "✔"
+   ],
+   [
+    "kāsi",
+    "masc",
+    "name of a kingdom",
+    "✔"
+   ],
+   [
+    "kāsikosala",
+    "masc",
+    "kingdoms of Kāsi and Kosala",
+    "✔"
+   ],
+   [
+    "kuru",
+    "masc",
+    "name of a country",
+    "✔"
+   ],
+   [
+    "kekaka",
+    "masc",
+    "name of a country",
+    "✔"
+   ],
+   [
+    "kosala 1",
+    "masc",
+    "name of a kingdom",
+    "✔"
+   ],
+   [
+    "kosalaraṭṭha",
+    "nt",
+    "kingdom of Kosala",
+    "✔"
+   ],
+   [
+    "gandhāra 1",
+    "masc",
+    "name of a country; modern Kandahar",
+    "◑"
+   ],
+   [
+    "cīna",
+    "masc",
+    "China",
+    "✔"
+   ],
+   [
+    "ceta",
+    "nt",
+    "name of a country",
+    "◑"
+   ],
+   [
+    "pattuṇṇa 1",
+    "masc",
+    "name of a country",
+    "◑"
+   ],
+   [
+    "bhaddavatiya 2",
+    "nt",
+    "name of a region; lit. around Bhaddavatī",
+    "◑"
+   ],
+   [
+    "bhoja 1.1",
+    "masc",
+    "name of a country",
+    "✔"
+   ],
+   [
+    "magadha",
+    "masc",
+    "name of a country; modern day Bihar",
+    "✔"
+   ],
+   [
+    "madda 2.1",
+    "masc",
+    "name of a country",
+    "✔"
+   ],
+   [
+    "laṅkā",
+    "fem",
+    "Sri Lanka",
+    "✔"
+   ],
+   [
+    "laṅkādīpa",
+    "masc",
+    "island of Lanka; Sri Lanka",
+    "✔"
+   ],
+   [
+    "vajjī 3",
+    "masc",
+    "name of a country; capitals Vesali & Mithila",
+    "✔"
+   ],
+   [
+    "videha",
+    "masc",
+    "name of a country; modern day Mithila, Tirhut",
+    "◑"
+   ],
+   [
+    "sindhu 1",
+    "masc",
+    "name of a country around the Indus River",
+    "◑"
+   ],
+   [
+    "sindhusovīrabhūmi",
+    "fem",
+    "lands of Sindh and Sovīra",
+    "✔"
+   ],
+   [
+    "sivī 2",
+    "masc",
+    "name of a country",
+    "◑"
+   ],
+   [
+    "sunāparanta",
+    "masc",
+    "name of a country; native land of Puṇṇa",
+    "✔"
+   ],
+   [
+    "sovīra 2",
+    "masc",
+    "name of a country in the lower Indus Valley; modern day Northern Sindh and Southern Punjab; lit. very heroic",
+    "✔"
+   ]
+  ],
+  "count": 32
+ },
+ "names of paccekabuddhas": {
+  "data": [
+   [
+    "aṅga 5",
+    "masc",
+    "name of a privately awakened Buddha; lit. Bengali",
+    "✔"
+   ],
+   [
+    "accuta 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. not fallen",
+    "✔"
+   ],
+   [
+    "accutagāmabyāmaka",
+    "masc",
+    "name of two privately awakened Buddhas; Accutagāma and Byāmaka",
+    "✔"
+   ],
+   [
+    "aṭṭhaka 1.6",
+    "masc",
+    "name of a privately awakened Buddha; lit. having eight; related to eight",
+    "✔"
+   ],
+   [
+    "aṭṭhama 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. eighth",
+    "✔"
+   ],
+   [
+    "anāsava 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. free from effluents",
+    "✔"
+   ],
+   [
+    "anīgha 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. free from trembling",
+    "✔"
+   ],
+   [
+    "aparājita 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. undefeated",
+    "✔"
+   ],
+   [
+    "ariṭṭha 1.2",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "ariya 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. noble",
+    "✔"
+   ],
+   [
+    "asayha 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. not to be overcome",
+    "✔"
+   ],
+   [
+    "asita 2.3",
+    "masc",
+    "name of a privately awakened Buddha; lit. untied",
+    "✔"
+   ],
+   [
+    "assumegha",
+    "masc",
+    "name of a privately awakened Buddha; lit. cloud of tears",
+    "✔"
+   ],
+   [
+    "ānanda 3",
+    "masc",
+    "name of four privately awakened Buddhas",
+    "✔"
+   ],
+   [
+    "uccaṅgamāya",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "ujjaya 1",
+    "masc",
+    "name of a privately awakened Buddha; lit. victor",
+    "✔"
+   ],
+   [
+    "uttara 2.07",
+    "masc",
+    "name of a privately awakened Buddha; lit. higher",
+    "✔"
+   ],
+   [
+    "upakāḷa",
+    "masc",
+    "name of a privately awakened Buddha",
+    "◑"
+   ],
+   [
+    "upananda 2",
+    "masc",
+    "name of four privately awakened Buddhas; lit. descendent of Nanda",
+    "✔"
+   ],
+   [
+    "upanīta 7",
+    "masc",
+    "name of a privately awakened Buddha; lit. initiated",
+    "◑"
+   ],
+   [
+    "upanemisa",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "upariṭṭha 2.1",
+    "masc",
+    "name of a privately awakened Buddha; lit. descendent of Ariṭṭha",
+    "✔"
+   ],
+   [
+    "upasikhi",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "upasīdarī",
+    "masc",
+    "name of a privately awakened Buddha; lit. son of Sīdarī",
+    "✔"
+   ],
+   [
+    "upāsabha",
+    "masc",
+    "name of a privately awakened Buddha; lit. descendent of Usabha",
+    "✔"
+   ],
+   [
+    "uposatha 5",
+    "masc",
+    "name of a privately awakened Buddha; lit. living near",
+    "✔"
+   ],
+   [
+    "uppala 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. lotus",
+    "✔"
+   ],
+   [
+    "usabha 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. stud bull",
+    "✔"
+   ],
+   [
+    "kaṇha 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. black",
+    "✔"
+   ],
+   [
+    "kāḷūpakāḷā 1",
+    "masc",
+    "name of two privately awakened Buddhas; Kāḷa and Upakāḷa",
+    "✔"
+   ],
+   [
+    "ketumant 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. having banner quality",
+    "✔"
+   ],
+   [
+    "ketumbharāga",
+    "masc",
+    "name of a privately awakened Buddha; lit. going carrying a flag; (or) cloud coloured",
+    "✔"
+   ],
+   [
+    "kesī 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. with long hair",
+    "✔"
+   ],
+   [
+    "kosalla 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. from Kosala; (or) skilled",
+    "✔"
+   ],
+   [
+    "khemābhirata",
+    "masc",
+    "name of a privately awakened Buddha; lit. delighting in safety",
+    "✔"
+   ],
+   [
+    "gandhāra 2",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "guttijita",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "jayanta 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. conquering",
+    "✔"
+   ],
+   [
+    "jālī 2.2",
+    "masc",
+    "name of two privately awakened Buddhas; lit. blazing",
+    "✔"
+   ],
+   [
+    "jita 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. conquered",
+    "✔"
+   ],
+   [
+    "jeta",
+    "masc",
+    "name of a privately awakened Buddha; lit. conqueror",
+    "✔"
+   ],
+   [
+    "tagarasikhī",
+    "masc",
+    "name of a privately awakened Buddha; lit. jasmine crest",
+    "✔"
+   ],
+   [
+    "taggarasikhī",
+    "masc",
+    "name of a privately awakened Buddha; lit. rhododendron crest",
+    "✔"
+   ],
+   [
+    "tatha 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. truth",
+    "✔"
+   ],
+   [
+    "tadādhimutta",
+    "masc",
+    "name of a privately awakened Buddha; lit. intent on that",
+    "✔"
+   ],
+   [
+    "tissūpatissā",
+    "masc",
+    "name of two privately awakened Buddhas; Tissa and Upatissa",
+    "✔"
+   ],
+   [
+    "dabbila",
+    "masc",
+    "name of a privately awakened Buddha; lit. ladeler",
+    "✔"
+   ],
+   [
+    "durannaya 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. difficult to follow",
+    "✔"
+   ],
+   [
+    "dvārabhāja",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "nanda 5",
+    "masc",
+    "name of a privately awakened Buddha; lit. happy",
+    "✔"
+   ],
+   [
+    "nīta 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. led",
+    "✔"
+   ],
+   [
+    "nemisa",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "paṅga",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "paduma 5",
+    "masc",
+    "name of a privately awakened Buddha; lit. lotus",
+    "✔"
+   ],
+   [
+    "padumuttara 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. ultimate lotus",
+    "✔"
+   ],
+   [
+    "pabbata 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. mountain",
+    "✔"
+   ],
+   [
+    "pavattar 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. proclaimer",
+    "✔"
+   ],
+   [
+    "passi 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. he saw",
+    "✔"
+   ],
+   [
+    "piṇḍola 1",
+    "masc",
+    "name of a privately awakened Buddha; lit. who collects alms",
+    "✔"
+   ],
+   [
+    "piyadassī 1",
+    "masc",
+    "name of a privately awakened Buddha; lit. dear to see; (or) who looks fondly",
+    "✔"
+   ],
+   [
+    "bandhumant 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. having bonds quality",
+    "✔"
+   ],
+   [
+    "bodhi 5",
+    "masc",
+    "name of a privately awakened Buddha; lit. awakening",
+    "✔"
+   ],
+   [
+    "bhāradvāja 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. descended from Bharadvāja",
+    "✔"
+   ],
+   [
+    "bhāvitatta 1.3",
+    "masc",
+    "name of a privately awakened Buddha; lit. developed self",
+    "✔"
+   ],
+   [
+    "maṅgala 8",
+    "masc",
+    "name of a privately awakened Buddha; lit. auspicious",
+    "✔"
+   ],
+   [
+    "matula",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "manomaya 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. mind made",
+    "✔"
+   ],
+   [
+    "mahānāma 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. great name",
+    "✔"
+   ],
+   [
+    "mātaṅga 3",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "mānatthaddha 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. stiff with conceit",
+    "✔"
+   ],
+   [
+    "munina",
+    "masc",
+    "name of a privately awakened Buddha; lit. sage",
+    "✔"
+   ],
+   [
+    "methula",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "yasassī 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. famous",
+    "✔"
+   ],
+   [
+    "rakkhita 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. protected",
+    "✔"
+   ],
+   [
+    "lomahaṃsa 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. goosebumps",
+    "✔"
+   ],
+   [
+    "vijita 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. conquered",
+    "✔"
+   ],
+   [
+    "vimala 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. stainless",
+    "✔"
+   ],
+   [
+    "saṅgha 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. group",
+    "✔"
+   ],
+   [
+    "saccanāma 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. correctly named",
+    "✔"
+   ],
+   [
+    "satthar 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. teacher",
+    "✔"
+   ],
+   [
+    "santacitta 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. calm mind",
+    "✔"
+   ],
+   [
+    "sayha 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. to be endured",
+    "✔"
+   ],
+   [
+    "sarabhaṅga 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. reed breaker",
+    "✔"
+   ],
+   [
+    "sikhari",
+    "masc",
+    "name of a privately awakened Buddha; lit. crested",
+    "✔"
+   ],
+   [
+    "sikhī 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. with a crest",
+    "✔"
+   ],
+   [
+    "sīdarī",
+    "masc",
+    "name of a privately awakened Buddha; lit. from the Sīdā river; (or) cold",
+    "✔"
+   ],
+   [
+    "sutavant 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. having heard quality",
+    "✔"
+   ],
+   [
+    "sudassana 5",
+    "masc",
+    "name of a privately awakened Buddha; lit. seeing clearly",
+    "✔"
+   ],
+   [
+    "sudāṭha",
+    "masc",
+    "name of a privately awakened Buddha; lit. good teeth",
+    "✔"
+   ],
+   [
+    "sundara 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. beautiful",
+    "✔"
+   ],
+   [
+    "supatiṭṭhita 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. well stood back",
+    "✔"
+   ],
+   [
+    "subāhu 1",
+    "masc",
+    "name of a privately awakened Buddha; lit. good arms",
+    "✔"
+   ],
+   [
+    "subha 4",
+    "masc",
+    "name of a privately awakened Buddha; lit. beautiful",
+    "✔"
+   ],
+   [
+    "sumaṅgala 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. very auspicious",
+    "✔"
+   ],
+   [
+    "sumbha",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "sobhita 3",
+    "masc",
+    "name of a privately awakened Buddha; lit. shone",
+    "✔"
+   ],
+   [
+    "sorata 2",
+    "masc",
+    "name of a privately awakened Buddha; lit. polite",
+    "✔"
+   ],
+   [
+    "hiṅga",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ],
+   [
+    "hiṅgū",
+    "masc",
+    "name of a privately awakened Buddha",
+    "✔"
+   ]
+  ],
+  "count": 99
+ },
+ "names of royalty": {
+  "data": [
+   [
+    "aṅgati",
+    "masc",
+    "name of a king in a Jātaka story",
+    "✔"
+   ],
+   [
+    "ajātasattu",
+    "masc",
+    "name of a prince; later king of Magadha; son of Bimbisāra; lit. unborn enemy",
+    "✔"
+   ],
+   [
+    "ajātasattukumāra",
+    "masc",
+    "name of a prince; later king of Magadha; son of Bimbisāra; lit. prince unborn enemy",
+    "✔"
+   ],
+   [
+    "ajjuna 2",
+    "masc",
+    "name of a prince in a Jātaka story",
+    "✔"
+   ],
+   [
+    "aṇīkadatta",
+    "masc",
+    "name of a king; lit. given to the army",
+    "✔"
+   ],
+   [
+    "anīkaratta",
+    "masc",
+    "name of a king; lit. infatuated with the army; (or) red squadron",
+    "✔"
+   ],
+   [
+    "abhaya 4",
+    "masc",
+    "name of a prince; king Bimbisāra's son; lit. fearless",
+    "✔"
+   ],
+   [
+    "aruṇa 3",
+    "masc",
+    "name of Sikhī Buddha's father; lit. dawn",
+    "✔"
+   ],
+   [
+    "aruṇavant",
+    "masc",
+    "name of a king; lit. having dawn quality",
+    "✔"
+   ],
+   [
+    "alīnacitta 3",
+    "masc",
+    "name of a prince; lit. not sticky mind",
+    "✔"
+   ],
+   [
+    "alīnasatta",
+    "masc",
+    "name of a prince",
+    "✔"
+   ],
+   [
+    "avantiputta",
+    "masc",
+    "name of a king of Madhurā; lit. son of Avanti",
+    "◑"
+   ],
+   [
+    "aḷaka",
+    "masc",
+    "name of a kingdom; lit. with a claw",
+    "✔"
+   ],
+   [
+    "ukkāka",
+    "masc",
+    "name of a king",
+    "✔"
+   ],
+   [
+    "ukkāmukha 2",
+    "masc",
+    "name of one of the sons of king Okkāka; lit. furnace",
+    "✔"
+   ],
+   [
+    "utena",
+    "masc",
+    "name of a king",
+    "✔"
+   ],
+   [
+    "udayabhadda",
+    "masc",
+    "name of a prince; Ajātasattu's son",
+    "✔"
+   ],
+   [
+    "udāyibhadda",
+    "masc",
+    "name of a prince; Ajātasattu's son",
+    "✔"
+   ],
+   [
+    "udumbarikā",
+    "fem",
+    "name of a queen who built a park for wandering ascetics",
+    "✔"
+   ],
+   [
+    "udena 1",
+    "masc",
+    "name of a king; lit. going up",
+    "✔"
+   ],
+   [
+    "esukārī 2",
+    "masc",
+    "name of a king",
+    "◑"
+   ],
+   [
+    "eḷeyya",
+    "masc",
+    "name of a king",
+    "✔"
+   ],
+   [
+    "okkāka",
+    "masc",
+    "name of a king",
+    "✔"
+   ],
+   [
+    "okkākarāja",
+    "masc",
+    "king Okkāka",
+    "✔"
+   ],
+   [
+    "okkāmukha",
+    "masc",
+    "name of one of the sons of king Okkāka; lit. furnace",
+    "✔"
+   ],
+   [
+    "kaṇhājinā",
+    "fem",
+    "name of a princess; daughter of Vessantara",
+    "✔"
+   ],
+   [
+    "karakaṇḍa",
+    "masc",
+    "name of one of the sons of king Okkāka",
+    "✔"
+   ],
+   [
+    "karakaṇḍu",
+    "masc",
+    "name of one of the sons of king Okkāka",
+    "✔"
+   ],
+   [
+    "kaḷārajanaka",
+    "masc",
+    "name of a king; son of king Nimi; lit. bucktoothed producer",
+    "✔"
+   ],
+   [
+    "kāḷīgodhā",
+    "fem",
+    "name of a Sakyan princess; lit. black iguana",
+    "✔"
+   ],
+   [
+    "kikī 2",
+    "masc",
+    "name of the reigning king of Kāsi at the time of Kassapa Buddha",
+    "✔"
+   ],
+   [
+    "kī 1.1",
+    "masc",
+    "name of the reigning king at the time of Kassapa Buddha",
+    "✔"
+   ],
+   [
+    "kūṭakaṇṇa",
+    "masc",
+    "name of an ancient Sri Lankan king who reigned from 42 to 20 BCE; lit. crooked ear",
+    "✔"
+   ],
+   [
+    "korabya 1",
+    "masc",
+    "name of a King; lit. of the Kurus",
+    "✔"
+   ],
+   [
+    "khema 5",
+    "masc",
+    "name of the reigning king at the time of Kakusandha Buddha; lit. safety",
+    "✔"
+   ],
+   [
+    "khemaka 3",
+    "masc",
+    "name of a Sakyan king; lit. safety",
+    "✔"
+   ],
+   [
+    "khemiyā 2",
+    "fem",
+    "name of a queen",
+    "✔"
+   ],
+   [
+    "gajabāhu",
+    "masc",
+    "name of an ancient Sri Lankan king who reigned from 113 to 135 CE; lit. arms like an elephant (trunk)",
+    "◑"
+   ],
+   [
+    "caṇḍapajjota",
+    "masc",
+    "name of a king; lit. fierce light",
+    "◑"
+   ],
+   [
+    "candakumāra",
+    "masc",
+    "name of a prince; previous incarnation of Sāriputta; lit. prince moon",
+    "✔"
+   ],
+   [
+    "cundī",
+    "fem",
+    "name of a princess",
+    "◑"
+   ],
+   [
+    "cūḷanīputta",
+    "masc",
+    "name of a prince; lit. son of Cūḷanī",
+    "✔"
+   ],
+   [
+    "jayasena",
+    "masc",
+    "name of a prince; lit. victorious army",
+    "✔"
+   ],
+   [
+    "jālī 2.3",
+    "masc",
+    "name of a prince; lit. blazing",
+    "✔"
+   ],
+   [
+    "jetar 1",
+    "masc",
+    "name of a prince; lit. conqueror; victor",
+    "✔"
+   ],
+   [
+    "daḷhanemi",
+    "masc",
+    "name of a mythological king; lit. with a strong rim",
+    "✔"
+   ],
+   [
+    "disampati 1",
+    "masc",
+    "name of a king; lit. lord of the directions",
+    "✔"
+   ],
+   [
+    "dīghāyu 2",
+    "masc",
+    "name of prince; son of king Dīghīti; lit. long life",
+    "◑"
+   ],
+   [
+    "dīghāvu 2",
+    "masc",
+    "name of prince; son of king Dīghīti; lit. long life",
+    "✔"
+   ],
+   [
+    "duṭṭhagāmaṇi",
+    "masc",
+    "name of a renowned ancient king in Sri Lanka who reigned from 161 to 137 BCE; lit. corrupt chief",
+    "✔"
+   ],
+   [
+    "dhataraṭṭha 2",
+    "masc",
+    "name of two of the seven Bharata kings",
+    "✔"
+   ],
+   [
+    "dhanañcaya",
+    "masc",
+    "name of a Kuru king; lit. heap of wealth",
+    "✔"
+   ],
+   [
+    "nimi",
+    "masc",
+    "name of a king; previous incarnation of the Buddha",
+    "✔"
+   ],
+   [
+    "pacetana",
+    "masc",
+    "name of a king; lit. inspiring",
+    "◑"
+   ],
+   [
+    "pajjota 3",
+    "masc",
+    "name of a king, friend of Bimbisāra; lit. light",
+    "✔"
+   ],
+   [
+    "pañcālī",
+    "fem",
+    "name of a queen; (comm) the king of Pañcala's daughter",
+    "◑"
+   ],
+   [
+    "paṇḍuvāsudeva",
+    "masc",
+    "name of a Sri Lankan king who ruled from 504 BC to 474 BC; lit. white Vishnu",
+    "✔"
+   ],
+   [
+    "pabhāvatī",
+    "fem",
+    "name of Sikhī Buddha's mother; lit. radiant",
+    "✔"
+   ],
+   [
+    "pasenadi",
+    "masc",
+    "name of the king of Kosala",
+    "✔"
+   ],
+   [
+    "bandhumatī 1",
+    "fem",
+    "name of Vipassī Buddha's mother",
+    "✔"
+   ],
+   [
+    "bandhumant 3",
+    "masc",
+    "name of Vipassī Buddha's father; lit. having bonds quality",
+    "✔"
+   ],
+   [
+    "ballika",
+    "masc",
+    "name of a king; lit. powerful",
+    "✔"
+   ],
+   [
+    "bimbisāra",
+    "masc",
+    "name of a Magadhan king",
+    "✔"
+   ],
+   [
+    "bodhi 4",
+    "masc",
+    "name of a prince; lit. awakening",
+    "✔"
+   ],
+   [
+    "brahmadatta 3",
+    "masc",
+    "name of one the seven Bharata kings; lit. given by god; (or) protected by god",
+    "✔"
+   ],
+   [
+    "bhaddasena",
+    "masc",
+    "name of a prince in a Jātaka story; son of king Ekarāja; previous incarnation of Moggallāna; lit. having a good army",
+    "✔"
+   ],
+   [
+    "bharata 1",
+    "masc",
+    "name of one the seven Bharata kings",
+    "✔"
+   ],
+   [
+    "bhāradha",
+    "masc",
+    "name of a royal family",
+    "✔"
+   ],
+   [
+    "maghadeva 1",
+    "masc",
+    "name of a king; previous incarnation of Sakka; lit. bountiful king",
+    "✔"
+   ],
+   [
+    "maddarūpī",
+    "fem",
+    "name of king Okkāka's daughter",
+    "✔"
+   ],
+   [
+    "maddī",
+    "fem",
+    "name of a princess; daughter of king Madda",
+    "✔"
+   ],
+   [
+    "mandhātar",
+    "masc",
+    "name of a king",
+    "✔"
+   ],
+   [
+    "mallikā 2",
+    "fem",
+    "name of a queen; wife of King Pasenadi; lit. jasmine",
+    "✔"
+   ],
+   [
+    "mahāpanāda",
+    "masc",
+    "name of a king of Mithilā",
+    "✔"
+   ],
+   [
+    "mahāvijita",
+    "masc",
+    "name of a legendary king; lit. with great conquered land",
+    "✔"
+   ],
+   [
+    "mahāsammata",
+    "masc",
+    "name of a mythical king; first king of the present age; lit. great elected",
+    "✔"
+   ],
+   [
+    "māyā 4",
+    "fem",
+    "name of the Buddha's mother; lit. illusion",
+    "✔"
+   ],
+   [
+    "milidarāja",
+    "masc",
+    "name of a king; Menander",
+    "◑"
+   ],
+   [
+    "milinda",
+    "masc",
+    "name of a king; Menander",
+    "✔"
+   ],
+   [
+    "yasavatī",
+    "fem",
+    "name of Vessabhū Buddha's mother; lit. famous",
+    "✔"
+   ],
+   [
+    "yudhiṭṭhila",
+    "masc",
+    "name of a king in a Jātaka story",
+    "✔"
+   ],
+   [
+    "reṇu 3",
+    "masc",
+    "name of a king; son of king Disampati; lit. dust",
+    "✔"
+   ],
+   [
+    "reṇu 4",
+    "masc",
+    "name of one the seven Bharata kings; lit. dust",
+    "✔"
+   ],
+   [
+    "vajirī",
+    "fem",
+    "name of a princess; daughter of king Pasenadi; lit. diamond",
+    "✔"
+   ],
+   [
+    "vassavatī",
+    "fem",
+    "name of Vessabhū Buddha's mother; lit. rainy",
+    "✔"
+   ],
+   [
+    "vāmagotta",
+    "masc",
+    "name of a prince in a Jātaka story; previous incarnation of Mahākassapa",
+    "✔"
+   ],
+   [
+    "vāsabhā",
+    "fem",
+    "name of a king Pasenadi's second queen; lit. belonging to the stud bull",
+    "✔"
+   ],
+   [
+    "vāsuladattā",
+    "fem",
+    "name of a queen",
+    "◑"
+   ],
+   [
+    "vijayabāhu",
+    "masc",
+    "name of an ancient king in Sri Lanka who reigned from 1055 to 1110 CE; lit. victory arm",
+    "◑"
+   ],
+   [
+    "vessantara 2",
+    "masc",
+    "name of a prince; previous incarnation of the Buddha; lit. crossing the universe; overcoming everything",
+    "◑"
+   ],
+   [
+    "vessabhū 2",
+    "masc",
+    "name of one the seven Bharata kings",
+    "✔"
+   ],
+   [
+    "saṅkha 3",
+    "masc",
+    "name of a mythological future king",
+    "✔"
+   ],
+   [
+    "sacetana 2",
+    "masc",
+    "name of a king; lit. having the intention",
+    "◑"
+   ],
+   [
+    "sattabhū",
+    "masc",
+    "name of one the seven Bharata kings",
+    "✔"
+   ],
+   [
+    "sāmāvatī 2",
+    "fem",
+    "name of King Udena's first queen; lit. of dark complexion",
+    "✔"
+   ],
+   [
+    "sinipura",
+    "masc",
+    "name of one of the sons of king Okkāka",
+    "✔"
+   ],
+   [
+    "sinisūra",
+    "masc",
+    "name of one of the sons of king Okkāka",
+    "✔"
+   ],
+   [
+    "sirī 2",
+    "masc",
+    "name of a former king; lit. fortune",
+    "✔"
+   ],
+   [
+    "sivī 1",
+    "masc",
+    "name of a king; lit. safe",
+    "◑"
+   ],
+   [
+    "sīvali 2",
+    "fem",
+    "name of a queen",
+    "✔"
+   ],
+   [
+    "suddhodana",
+    "masc",
+    "name of the Buddha's father; king of the Sakyans; lit. white rice",
+    "✔"
+   ],
+   [
+    "suppatita",
+    "masc",
+    "name of Vessabhū Buddha's father; lit. well fallen; well landed",
+    "✔"
+   ],
+   [
+    "suppatīta 1",
+    "masc",
+    "name of Vessabhū Buddha's father; lit. well pleased",
+    "✔"
+   ],
+   [
+    "subhaddā 1",
+    "fem",
+    "name of a queen; wife of king Mahāsudassana; lit. very fortunate",
+    "✔"
+   ],
+   [
+    "sumanā 2",
+    "fem",
+    "name of a princess; lit. happy",
+    "◑"
+   ],
+   [
+    "sūriyakumāra",
+    "masc",
+    "name of a prince; previous incarnation of Ānanda; lit. prince sun",
+    "✔"
+   ],
+   [
+    "sobha 2",
+    "masc",
+    "name of the reigning king at the time of Koṇāgamana Buddha",
+    "✔"
+   ],
+   [
+    "hatthinika",
+    "masc",
+    "name of one of the sons of king Okkāka",
+    "✔"
+   ]
+  ],
+  "count": 108
  },
  "people": {
   "data": [
@@ -21828,12 +27403,6 @@ var family_set_json = {
     "masc",
     "name of the people of Aṅguttarāpa; Aṅguttarāpans",
     "✔"
-   ],
-   [
-    "appiyā",
-    "masc",
-    "name of the people previously living on Vepulla mountain",
-    "◑"
    ],
    [
     "avantī",
@@ -21946,8 +27515,8 @@ var family_set_json = {
    [
     "tivarā",
     "masc",
-    "name of the people previously living on Vepulla mountain",
-    "◑"
+    "name of the people previously living on Vepulla mountain; lit. three turns",
+    "✔"
    ],
    [
     "thūlū",
@@ -21959,7 +27528,7 @@ var family_set_json = {
     "dasārahā",
     "masc",
     "name of a people",
-    "◑"
+    "✔"
    ],
    [
     "pañcālā",
@@ -22040,6 +27609,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "milakkha",
+    "masc",
+    "barbarian; non-Indo-Aryan speaker",
+    "✔"
+   ],
+   [
+    "milakkhaka 1",
+    "masc",
+    "barbarian; non-Indo-Aryan speaker",
+    "✔"
+   ],
+   [
     "yonakambojā",
     "masc",
     "Bactrians and Kambojans",
@@ -22054,8 +27635,8 @@ var family_set_json = {
    [
     "rohitassā",
     "masc",
-    "name of the people previously living on Vepulla mountain",
-    "◑"
+    "name of the people previously living on Vepulla mountain; lit. having red horses",
+    "✔"
    ],
    [
     "licchavi",
@@ -22102,8 +27683,8 @@ var family_set_json = {
    [
     "suppiyā",
     "masc",
-    "name of the people previously living on Vepulla mountain",
-    "◑"
+    "name of the people previously living on Vepulla mountain; lit. very dear",
+    "✔"
    ],
    [
     "sumbhā",
@@ -22136,7 +27717,24 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 54
+  "count": 55
+ },
+ "suttas of Saṃyutta Nikāya 55": {
+  "data": [
+   [
+    "aṅgasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 55.50 (SN55.50); lit. discourse on factors",
+    "✔"
+   ],
+   [
+    "sagāthakasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 55.51 (SN55.51); lit. discourse with verses",
+    "✔"
+   ]
+  ],
+  "count": 2
  },
  "epithets of the Buddha": {
   "data": [
@@ -22249,6 +27847,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nāganāga",
+    "masc",
+    "greatest of the great; giant among giants; epithet of the Buddha",
+    "✔"
+   ],
+   [
     "pabhaṅkara 1",
     "masc",
     "illuminator; epithet of the Buddha; lit. light maker",
@@ -22258,6 +27862,12 @@ var family_set_json = {
     "purisuttama",
     "masc",
     "best of men; highest of men; ultimate man; epithet of the Buddha",
+    "✔"
+   ],
+   [
+    "brahma 5",
+    "masc",
+    "epithet of the Buddha; lit. god",
     "✔"
    ],
    [
@@ -22288,12 +27898,18 @@ var family_set_json = {
     "mahāsakyamuni",
     "masc",
     "great Sakyan sage; epithet of the Buddha",
-    "◑"
+    "✔"
    ],
    [
     "mahāsamaṇa",
     "masc",
     "great ascetic; epithet of the Buddha",
+    "✔"
+   ],
+   [
+    "mahesi",
+    "masc",
+    "great sage; mighty seer; epithet of the Buddha",
     "✔"
    ],
    [
@@ -22330,6 +27946,12 @@ var family_set_json = {
     "vimala 2",
     "masc",
     "stainless one; immaculate one; unblemished being; epithet of the Buddha",
+    "✔"
+   ],
+   [
+    "sakyapuṅgava",
+    "masc",
+    "Sakyan bull; Sakyan noble; epithet of the Buddha",
     "✔"
    ],
    [
@@ -22381,22 +28003,10 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 40
+  "count": 44
  },
  "books of the Suttapiṭaka": {
   "data": [
-   [
-    "aṅguttaranikāya",
-    "masc",
-    "Book 4 of the Sutta Piṭaka; Numerical Discourses; lit. one part more collection",
-    "✔"
-   ],
-   [
-    "khuddakanikāya",
-    "masc",
-    "Book 5 of the Sutta Piṭaka; Collection of Short Discourses; (comm) all books except the four nikāyas; lit. short collection",
-    "✔"
-   ],
    [
     "dīghanikāya",
     "masc",
@@ -22412,7 +28022,7 @@ var family_set_json = {
    [
     "saṃyuttaka",
     "nt",
-    "Book 3 of the Sutta Piṭaka; Connected Discourses; lit. connected",
+    "Book 3 of the Sutta Piṭaka; Connected Discourses; lit. yoked together",
     "◑"
    ],
    [
@@ -22420,9 +28030,27 @@ var family_set_json = {
     "masc",
     "Book 3 of the Sutta Piṭaka; Connected Discourses",
     "✔"
+   ],
+   [
+    "aṅguttara 2",
+    "masc",
+    "Book 4 of the Sutta Piṭaka; Numerical Discourses",
+    "✔"
+   ],
+   [
+    "aṅguttaranikāya",
+    "masc",
+    "Book 4 of the Sutta Piṭaka; Numerical Discourses; lit. one part more collection",
+    "✔"
+   ],
+   [
+    "khuddakanikāya",
+    "masc",
+    "Book 5 of the Sutta Piṭaka; Collection of Short Discourses; (comm) all books except the four nikāyas; lit. short collection",
+    "✔"
    ]
   ],
-  "count": 6
+  "count": 7
  },
  "measures of length": {
   "data": [
@@ -22465,7 +28093,7 @@ var family_set_json = {
    [
     "gāvutaḍḍhayojanamattā",
     "fem",
-    "distance of a quarter or half a yojana",
+    "distance of a quarter or half a yojana; approximately five to ten kilometres",
     "◑"
    ],
    [
@@ -22505,6 +28133,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "paññāsayojana",
+    "nt",
+    "fifty yojanas; approximately one thousand kilometres",
+    "✔"
+   ],
+   [
     "yugamatta",
     "nt",
     "length of a yoke; short distance; (comm) four cubits",
@@ -22519,7 +28153,7 @@ var family_set_json = {
    [
     "yojanagaṇana",
     "nt",
-    "hundreds of miles; a great distance; a long way; lit. counting yojanas",
+    "great distance; long way; lit. counting yojanas",
     "✔"
    ],
    [
@@ -22565,7 +28199,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 23
+  "count": 24
  },
  "bhikkhupātimokkha rules": {
   "data": [
@@ -22986,7 +28620,7 @@ var family_set_json = {
    [
     "chandaṃadatvāgamanasikkhāpada",
     "nt",
-    "rule about leaving (a  legal action) without giving consent; Pācittiya 80",
+    "rule about leaving (a legal action) without giving consent; Pācittiya 80",
     "◑"
    ],
    [
@@ -23178,7 +28812,7 @@ var family_set_json = {
    [
     "dutiyapavāraṇāsikkhāpada",
     "nt",
-    "second rule about invitations; Pācittiya 36",
+    "second rule about refusing further food; Pācittiya 36",
     "◑"
    ],
    [
@@ -23316,7 +28950,7 @@ var family_set_json = {
    [
     "paṭhamapavāraṇāsikkhāpada",
     "nt",
-    "first rule about invitations; Pācittiya 35",
+    "first rule about refusing further food; Pācittiya 35",
     "◑"
    ],
    [
@@ -23981,6 +29615,424 @@ var family_set_json = {
   ],
   "count": 18
  },
+ "suttas of Saṃyutta Nikāya 14": {
+  "data": [
+   [
+    "dhātunānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.1 (SN14.1); lit. discourse on the diversity of states",
+    "✔"
+   ],
+   [
+    "phassanānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.2 (SN14.2); lit. discourse on diversity of sense experiences",
+    "✔"
+   ],
+   [
+    "nophassanānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.3 (SN14.3); lit. discourse on no diversity of sense experiences",
+    "✔"
+   ],
+   [
+    "vedanānānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.4 (SN14.4); lit. diversity of felt experiences",
+    "✔"
+   ],
+   [
+    "dutiyavedanānānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.5 (SN14.5); lit. second discourse o the diversity of felt experiences",
+    "✔"
+   ],
+   [
+    "bāhiradhātunānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.6 (SN14.6); lit. discourse on the diversity of external states",
+    "✔"
+   ],
+   [
+    "saññānānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.7 (SN14.7); lit. discourse on diversity of perceptions",
+    "✔"
+   ],
+   [
+    "nopariyesanānānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.8 (SN14.8); lit. discourse on no diversity of searches",
+    "✔"
+   ],
+   [
+    "bāhiraphassanānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.9 (SN14.9); lit. discourse on the diversity of external sense experiences",
+    "✔"
+   ],
+   [
+    "dutiyabāhiraphassanānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.10 (SN14.10); lit. second discourse on the diversity of external sense experiences",
+    "✔"
+   ],
+   [
+    "sattadhātusutta",
+    "nt",
+    "Saṃyutta Nikāya 14.11 (SN14.11); lit. discourse on seven states",
+    "✔"
+   ],
+   [
+    "sanidānasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.12 (SN14.12); lit. discourse on with a basis",
+    "✔"
+   ],
+   [
+    "giñjakāvasathasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.13 (SN14.13); lit. discourse at the brick house",
+    "✔"
+   ],
+   [
+    "hīnādhimuttikasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.14 (SN14.14); lit. discourse on those of inferior disposition",
+    "✔"
+   ],
+   [
+    "caṅkamasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 14.15 (SN14.15); lit. discourse on walking",
+    "✔"
+   ],
+   [
+    "sagāthāsutta",
+    "nt",
+    "Saṃyutta Nikāya 14.16 (SN14.16); lit. discourse with verses",
+    "✔"
+   ],
+   [
+    "assaddhasaṃsandanasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.17 (SN14.17); lit. discourse on interacting with the faithless",
+    "✔"
+   ],
+   [
+    "assaddhamūlakasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.18 (SN14.18); lit. discourse on rooted in lack of faith",
+    "✔"
+   ],
+   [
+    "ahirikamūlakasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.19 (SN14.19); lit. discourse on rooted in lack of conscience",
+    "✔"
+   ],
+   [
+    "anottappamūlakasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.20 (SN14.20); lit. discourse on rooted in lack of shame in wrongdoing",
+    "✔"
+   ],
+   [
+    "appassutamūlakasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.21 (SN14.21); lit. discourse on rooted in those of little learning",
+    "✔"
+   ],
+   [
+    "kusītamūlakasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.22 (SN14.22); lit. discourse on rooted in the lazy",
+    "✔"
+   ],
+   [
+    "asamāhitasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.23 (SN14.23); lit. discourse on not meditatively composed",
+    "✔"
+   ],
+   [
+    "dussīlasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 14.24 (SN14.24); lit. discourse on the immoral",
+    "✔"
+   ],
+   [
+    "pañcasikkhāpadasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.25 (SN14.25); lit. discourse on the five precepts",
+    "✔"
+   ],
+   [
+    "sattakammapathasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.26 (SN14.26); lit. discourse on seven courses of action",
+    "✔"
+   ],
+   [
+    "dasakammapathasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.27 (SN14.27); lit. discourse on ten courses of action",
+    "✔"
+   ],
+   [
+    "aṭṭhaṅgikasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 14.28 (SN14.28); lit. discourse on the eightfold (path)",
+    "✔"
+   ],
+   [
+    "dasaṅgasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.29 (SN14.29); lit. discourse on the tenfold (path)",
+    "✔"
+   ],
+   [
+    "catudhātusutta",
+    "nt",
+    "Saṃyutta Nikāya 14.30 (SN14.30); lit. discourse on the four elements",
+    "✔"
+   ],
+   [
+    "pubbesambodhasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.31 (SN14.31); lit. discourse on before awakening",
+    "✔"
+   ],
+   [
+    "acariṃsutta",
+    "nt",
+    "Saṃyutta Nikāya 14.32 (SN14.32); lit. discourse on I made",
+    "✔"
+   ],
+   [
+    "nocedaṃsutta",
+    "nt",
+    "Saṃyutta Nikāya 14.33 (SN14.33); lit. discourse on if there (would) not (be)",
+    "✔"
+   ],
+   [
+    "ekantadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.34 (SN14.34); lit. discourse on exclusively painful",
+    "✔"
+   ],
+   [
+    "abhinandasutta",
+    "nt",
+    "Saṃyutta Nikāya 14.35 (SN14.35); lit. discourse on delight",
+    "✔"
+   ],
+   [
+    "uppādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 14.36 (SN14.36); lit. discourse on arising",
+    "✔"
+   ],
+   [
+    "dutiyasamaṇabrāhmaṇasutta 03",
+    "nt",
+    "Saṃyutta Nikāya 14.38 (SN14.38); lit. second discourse on ascetics and Brahmans",
+    "✔"
+   ],
+   [
+    "tatiyasamaṇabrāhmaṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 14.39 (SN14.39); lit. third discourse on ascetics and Brahmans",
+    "✔"
+   ]
+  ],
+  "count": 38
+ },
+ "suttas of Saṃyutta Nikāya 17": {
+  "data": [
+   [
+    "dāruṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.1 (SN17.1); lit. discourse on brutal",
+    "✔"
+   ],
+   [
+    "baḷisasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.2 (SN17.2); lit. discourse on the fishing hook",
+    "✔"
+   ],
+   [
+    "kummasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.3 (SN17.3); lit. discourse on the turtle",
+    "✔"
+   ],
+   [
+    "dīghalomikasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.4 (SN17.4); lit. discouse on the woolly",
+    "✔"
+   ],
+   [
+    "mīḷhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.5 (SN17.5); lit. discourse on the female dung-beetle",
+    "✔"
+   ],
+   [
+    "asanisutta",
+    "nt",
+    "Saṃyutta Nikāya 17.6 (SN17.6); lit. discourse on the thunderbolt",
+    "✔"
+   ],
+   [
+    "diddhasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.7 (SN17.7); lit. discourse on smeared (with poison)",
+    "✔"
+   ],
+   [
+    "siṅgālasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 17.8 (SN17.8); lit. discourse on the jackal",
+    "✔"
+   ],
+   [
+    "verambhasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.9 (SN17.9); lit. discourse on gale force (wind)",
+    "✔"
+   ],
+   [
+    "sagāthakasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 17.10 (SN17.10); lit. discourse with verses",
+    "✔"
+   ],
+   [
+    "suvaṇṇapātisutta",
+    "nt",
+    "Saṃyutta Nikāya 17.11 (SN17.11); lit. discourse on the golded bowl",
+    "✔"
+   ],
+   [
+    "rūpiyapātisutta",
+    "nt",
+    "Saṃyutta Nikāya 17.12 (SN17.12); lit. discourse on the solver bowl",
+    "✔"
+   ],
+   [
+    "suvaṇṇanikkhasuttādiaṭṭhaka",
+    "nt",
+    "Saṃyutta Nikāya 17.13-20 (SN17.13-20); lit. eight discourses on the gold coin, etc.",
+    "✔"
+   ],
+   [
+    "mātugāmasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 17.21 (SN17.21); lit. discourse on a woman",
+    "✔"
+   ],
+   [
+    "kalyāṇīsutta",
+    "nt",
+    "Saṃyutta Nikāya 17.22 (SN17.22); lit. discourse on the beautiful woman",
+    "✔"
+   ],
+   [
+    "ekaputtakasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 17.23 (SN17.23); lit. discourse on having one son",
+    "✔"
+   ],
+   [
+    "ekadhītusutta",
+    "nt",
+    "Saṃyutta Nikāya 17.24 (SN17.24); lit. discourse on having one daughter",
+    "✔"
+   ],
+   [
+    "dutiyasamaṇabrāhmaṇasutta 04",
+    "nt",
+    "Saṃyutta Nikāya 17.26 (SN17.26); lit. second discourse on ascetics and Brahmans",
+    "✔"
+   ],
+   [
+    "chavisutta",
+    "nt",
+    "Saṃyutta Nikāya 17.28 (SN17.28); lit. discourse on skin",
+    "✔"
+   ],
+   [
+    "rajjusutta",
+    "nt",
+    "Saṃyutta Nikāya 17.29 (SN17.29); lit. discourse on the rope",
+    "✔"
+   ],
+   [
+    "bhikkhusutta 02",
+    "nt",
+    "Saṃyutta Nikāya 17.30 (SN17.30); lit. discourse on a monk",
+    "✔"
+   ],
+   [
+    "bhindisutta",
+    "nt",
+    "Saṃyutta Nikāya 17.31 (SN17.31); lit. discourse on he split",
+    "✔"
+   ],
+   [
+    "kusalamūlasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.32 (SN17.32); lit. discourse on the wholesome root",
+    "✔"
+   ],
+   [
+    "kusaladhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.33 (SN17.33); lit. discourse on wholesome qualities",
+    "✔"
+   ],
+   [
+    "sukkadhammasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 17.34 (SN17.34); lit. discourse on good qualities",
+    "✔"
+   ],
+   [
+    "acirapakkantasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.35 (SN17.35); lit. discourse on recently departed",
+    "✔"
+   ],
+   [
+    "pañcarathasatasutta",
+    "nt",
+    "Saṃyutta Nikāya 17.36 (SN17.36); lit. discourse on five hundred vehicles",
+    "✔"
+   ],
+   [
+    "mātusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 17.37 (SN17.37); lit. discourse on mothers",
+    "✔"
+   ],
+   [
+    "pitusuttādichakka",
+    "nt",
+    "Saṃyutta Nikāya 17.38-43 (SN17.38-43); lit. group of six discourses starting with the discourse on the father",
+    "✔"
+   ],
+   [
+    "sagāthaka 2",
+    "nt",
+    "in reference to SN17.10 Sagāthakasutta; lit. with verses",
+    "✔"
+   ]
+  ],
+  "count": 30
+ },
  "names of rivers": {
   "data": [
    [
@@ -23996,6 +30048,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "anomā",
+    "fem",
+    "name of a river; lit. not lower",
+    "◑"
+   ],
+   [
     "aparacchā",
     "fem",
     "name of a river",
@@ -24004,8 +30062,8 @@ var family_set_json = {
    [
     "eṇī",
     "fem",
-    "name of a river",
-    "◑"
+    "name of a river; lit. black antelope",
+    "✔"
    ],
    [
     "kakudhā",
@@ -24236,7 +30294,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 42
+  "count": 43
  },
  "names of ascetics": {
   "data": [
@@ -24244,7 +30302,7 @@ var family_set_json = {
     "acelakassapa",
     "masc",
     "name of a naked ascetic; lit. naked Kassapa",
-    "◑"
+    "✔"
    ],
    [
     "ajita 1",
@@ -24315,7 +30373,7 @@ var family_set_json = {
    [
     "upaka 2",
     "masc",
-    "name of an ascetic; first person the Buddha met after his awakening; lit. approaching",
+    "name of an ascetic; first person the Buddha met after his awakening; lit. going near",
     "✔"
    ],
    [
@@ -24373,6 +30431,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "kesava",
+    "masc",
+    "name of a man in a Petavatthu story; lit. with long hair",
+    "✔"
+   ],
+   [
     "kokanuda",
     "masc",
     "name of a wandering ascetic",
@@ -24381,7 +30445,7 @@ var family_set_json = {
    [
     "korakkhattiya",
     "masc",
-    "name of a naked ascetic; lit. lame man of the ruling caste",
+    "name of a naked ascetic; lit. lame man of the warrior caste",
     "✔"
    ],
    [
@@ -24393,13 +30457,19 @@ var family_set_json = {
    [
     "jambukhādaka",
     "masc",
-    "name of a wandering ascetic; lit. rose-apple muncher",
-    "◑"
+    "name of a wandering ascetic; lit. easter of rose-apples",
+    "✔"
    ],
    [
     "jāliya",
     "masc",
     "name of an ascetic's student; lit. having a net",
+    "✔"
+   ],
+   [
+    "timbaruka",
+    "masc",
+    "name of a wandering ascetic; lit. related to gaub fruit",
     "✔"
    ],
    [
@@ -24433,7 +30503,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dīghanakha",
+    "dīghanakha 1",
     "masc",
     "name of a wandering ascetic; lit. long nails",
     "✔"
@@ -24469,9 +30539,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nigaṇṭhanāṭaputta",
+    "masc",
+    "Nāṭaputta the Jain; Mahāvīra",
+    "◑"
+   ],
+   [
     "nigrodha 2",
     "masc",
     "name of a wandering ascetic",
+    "✔"
+   ],
+   [
+    "pakuddha 1",
+    "masc",
+    "name of an ascetic teacher; Pakuddha Kaccāyana; lit. angered",
     "✔"
    ],
    [
@@ -24499,10 +30581,10 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pāṭika",
+    "pāṭika 1",
     "masc",
     "name of a wandering ascetic",
-    "◑"
+    "✔"
    ],
    [
     "pāṭikaputta",
@@ -24523,9 +30605,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "puṇṇa 5",
+    "puṇṇa 6",
     "masc",
-    "name of a Koliyan ascetic who performed the cow practice; lit. full; complete",
+    "name of a Koliyan ascetic who performed the cow practice; lit. filled",
     "✔"
    ],
    [
@@ -24544,7 +30626,7 @@ var family_set_json = {
     "potaliputta",
     "masc",
     "name of a wandering ascetic",
-    "◑"
+    "✔"
    ],
    [
     "bāhiya",
@@ -24555,7 +30637,7 @@ var family_set_json = {
    [
     "brahmadatta 5",
     "masc",
-    "name of a wandering ascetic; student of Suppiya; lit. given to god; (or) protected by god",
+    "name of a wandering ascetic; student of Suppiya; lit. given by god; (or) protected by god",
     "✔"
    ],
    [
@@ -24596,6 +30678,12 @@ var family_set_json = {
    ],
    [
     "māgaṇḍiya",
+    "masc",
+    "name of a wandering ascetic; lit. son of a usurer",
+    "✔"
+   ],
+   [
+    "māgandiya",
     "masc",
     "name of a wandering ascetic; lit. son of a usurer",
     "✔"
@@ -24736,13 +30824,13 @@ var family_set_json = {
     "sāmaṇḍaka",
     "masc",
     "name of a wandering ascetic",
-    "◑"
+    "✔"
    ],
    [
     "sāmaṇḍakāni",
     "masc",
     "name of a wandering ascetic",
-    "◑"
+    "✔"
    ],
    [
     "sīvaka 1",
@@ -24777,7 +30865,7 @@ var family_set_json = {
    [
     "seniya 2",
     "masc",
-    "name of an ascetic who performed the dog practice",
+    "name of an ascetic who performed the dog practice; name of an arahant monk",
     "✔"
    ],
    [
@@ -24787,7 +30875,515 @@ var family_set_json = {
     "◑"
    ]
   ],
-  "count": 91
+  "count": 96
+ },
+ "suttas of Saṃyutta Nikāya 12": {
+  "data": [
+   [
+    "paṭiccasamuppādasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.1 (SN12.1); lit. discourse on dependent origination",
+    "✔"
+   ],
+   [
+    "vibhaṅgasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.2 (SN12.2); lit. discourse on analysis",
+    "✔"
+   ],
+   [
+    "paṭipadāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.3 (SN12.3); lit. discourse on the path of practice",
+    "✔"
+   ],
+   [
+    "vipassīsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.4 (SN12.4); lit. discourse on Vipassī",
+    "✔"
+   ],
+   [
+    "sikhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.5 (SN12.5); lit. discourse on Sikhī",
+    "✔"
+   ],
+   [
+    "vessabhūsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.6 (SN12.6); lit. discourse on Vessabhū",
+    "✔"
+   ],
+   [
+    "kakusandhasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.7 (SN12.7); lit. discourse on Kakusandha",
+    "✔"
+   ],
+   [
+    "koṇāgamanasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.8 (SN12.8); lit. discourse on Koṇāgamana",
+    "✔"
+   ],
+   [
+    "kassapasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.9 (SN12.9); lit. discourse on Kassapa",
+    "✔"
+   ],
+   [
+    "gotamasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.10 (SN12.10); lit. discourse on Gotama",
+    "✔"
+   ],
+   [
+    "āhārasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.11 (SN12.11); lit. discourse on sustenance",
+    "✔"
+   ],
+   [
+    "moḷiyaphaggunasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.12 (SN12.12); lit. discourse with Moḷiyaphagguna",
+    "✔"
+   ],
+   [
+    "samaṇabrāhmaṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.13 (SN12.13); lit. discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "dutiyasamaṇabrāhmaṇasutta 01",
+    "nt",
+    "Saṃyutta Nikāya 12.14 (SN12.14); lit. second discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "kaccānagottasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.15 (SN12.15); lit. discourse with Kaccānagotta",
+    "✔"
+   ],
+   [
+    "dhammakathikasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.16 (SN12.16); lit. discourse on the Dhamma preacher",
+    "✔"
+   ],
+   [
+    "acelakassapasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.17 (SN12.17); lit. discourse with naked Kassapa",
+    "✔"
+   ],
+   [
+    "timbarukasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.18 (SN12.18); lit. discourse with Timbaruka",
+    "✔"
+   ],
+   [
+    "bālapaṇḍitasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 12.19 (SN12.19); lit. discourse on foolish and the wise",
+    "✔"
+   ],
+   [
+    "paccayasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.20 (SN12.20); lit. discourse on conditions",
+    "✔"
+   ],
+   [
+    "dasabalasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.21 (SN12.21); lit. discourse on ten powers",
+    "✔"
+   ],
+   [
+    "dutiyadasabalasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.22 (SN12.22); lit. second discourse on ten powers",
+    "✔"
+   ],
+   [
+    "upanisasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.23 (SN12.23); lit. discourse on preconditions",
+    "✔"
+   ],
+   [
+    "aññatitthiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.24 (SN12.24); lit. discourse on followers of other religion",
+    "✔"
+   ],
+   [
+    "bhūmijasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 12.25 (SN12.25); lit. discourse with Bhūmija",
+    "✔"
+   ],
+   [
+    "upavāṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.26 (SN12.26); lit. discourse with Upavāṇa",
+    "✔"
+   ],
+   [
+    "paccayasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 12.27 (SN12.27); lit. discourse on conditions",
+    "✔"
+   ],
+   [
+    "bhikkhusutta 01",
+    "nt",
+    "Saṃyutta Nikāya 12.28 (SN12.28); lit. discourse on a monk",
+    "✔"
+   ],
+   [
+    "samaṇabrāhmaṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 12.29 (SN12.29); lit. discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "dutiyasamaṇabrāhmaṇasutta 02",
+    "nt",
+    "Saṃyutta Nikāya 12.30 (SN12.30); lit. second discourse on ascetics and Brahmans",
+    "✔"
+   ],
+   [
+    "bhūtasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.31 (SN12.31); lit. discourse on become",
+    "✔"
+   ],
+   [
+    "kaḷārasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.32 (SN12.32); lit. discourse with Kaḷāra",
+    "✔"
+   ],
+   [
+    "ñāṇavatthusutta",
+    "nt",
+    "Saṃyutta Nikāya 12.33 (SN12.33); lit. discourse on the grounds for knowledge",
+    "✔"
+   ],
+   [
+    "dutiyañāṇavatthusutta",
+    "nt",
+    "Saṃyutta Nikāya 12.34 (SN12.34); lit. second discourse on the grounds for knowledge",
+    "✔"
+   ],
+   [
+    "avijjāpaccayasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.35 (SN12.35); lit. discourse on dependent on ignorance",
+    "✔"
+   ],
+   [
+    "dutiyaavijjāpaccayasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.36 (SN12.36); lit. second discourse on dependent on ignorance",
+    "✔"
+   ],
+   [
+    "natumhasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.37 (SN12.37); lit. discourse on not you",
+    "✔"
+   ],
+   [
+    "cetanāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.38 (SN12.38); lit. discourse on intending",
+    "✔"
+   ],
+   [
+    "dutiyacetanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.39 (SN12.39); lit. second discourse on intending",
+    "✔"
+   ],
+   [
+    "tatiyacetanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.40 (SN12.40); lit. third discourse on intending",
+    "✔"
+   ],
+   [
+    "pañcaverabhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.41 (SN12.41); lit. discourse on five fears and enmities",
+    "✔"
+   ],
+   [
+    "dutiyapañcaverabhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.42 (SN12.42); lit. second discourse on five fears and enmities",
+    "✔"
+   ],
+   [
+    "dukkhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.43 (SN12.43); lit. discourse on suffering",
+    "✔"
+   ],
+   [
+    "ñātikasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.45 (SN12.45); lit. discourse at Ñātika",
+    "✔"
+   ],
+   [
+    "aññatarabrāhmaṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.46 (SN12.46); lit. discourse on a certain Brahman",
+    "✔"
+   ],
+   [
+    "jāṇussoṇisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.47 (SN12.47); lit. discourse with Jāṇussoṇi",
+    "✔"
+   ],
+   [
+    "lokāyatikasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.48 (SN12.48); lit. discourse on natural philosophy",
+    "✔"
+   ],
+   [
+    "ariyasāvakasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.49 (SN12.49); lit. discourse on the disciple of the noble ones",
+    "✔"
+   ],
+   [
+    "dutiyaariyasāvakasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.50 (SN12.50); lit. second discourse on the disciple of the noble ones",
+    "✔"
+   ],
+   [
+    "parivīmaṃsanasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.51 (SN12.51); lit. discourse on investigating",
+    "✔"
+   ],
+   [
+    "upādānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.52 (SN12.52); lit. discourse on grasping",
+    "✔"
+   ],
+   [
+    "dutiyasaṃyojanasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.54 (SN12.54); lit. second discourse on fetters",
+    "✔"
+   ],
+   [
+    "mahārukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.55 (SN12.55); lit. discourse on the big tree",
+    "✔"
+   ],
+   [
+    "dutiyamahārukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.56 (SN12.56); lit. second discourse on the big tree",
+    "✔"
+   ],
+   [
+    "taruṇarukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.57 (SN12.57); lit. discourse on the young tree",
+    "✔"
+   ],
+   [
+    "nāmarūpasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.58 (SN12.58); lit. discourse on name and form",
+    "✔"
+   ],
+   [
+    "viññāṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.59 (SN12.59); lit. discourse on consciousness",
+    "✔"
+   ],
+   [
+    "nidānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 12.60 (SN12.60); lit. discourse on the origin",
+    "✔"
+   ],
+   [
+    "assutavāsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.61 (SN12.61); lit. discourse on the unlearned",
+    "✔"
+   ],
+   [
+    "dutiyaassutavāsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.62 (SN12.62); lit. second discourse on the unlearned",
+    "✔"
+   ],
+   [
+    "puttamaṃsūpamasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.63 (SN12.63); lit. discourse with the simile of the son's flesh",
+    "✔"
+   ],
+   [
+    "atthirāgasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.64 (SN12.64); lit. discourse on (if) there is desire",
+    "✔"
+   ],
+   [
+    "nagarasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.65 (SN12.65); lit. discourse on the town",
+    "✔"
+   ],
+   [
+    "sammasasutta",
+    "nt",
+    "Saṃyutta Nikāya 12.66 (SN12.66); lit. discourse on understanding",
+    "✔"
+   ],
+   [
+    "naḷakalāpīsutta",
+    "nt",
+    "Saṃyutta Nikāya 12.67 (SN12.67); lit. discourse on the bundle of reeds",
+    "✔"
+   ],
+   [
+    "kosambisutta",
+    "nt",
+    "Saṃyutta Nikāya 12.68 (SN12.68); lit. discourse on Kosambī",
+    "✔"
+   ],
+   [
+    "upayantisutta",
+    "nt",
+    "Saṃyutta Nikāya 12.69 (SN12.69); lit. discourse on surging",
+    "✔"
+   ],
+   [
+    "susimasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 12.70 (SN12.70); lit. discourse with Susima",
+    "✔"
+   ],
+   [
+    "jarāmaraṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 12.71 (SN12.71); lit. discourse on old age and death",
+    "✔"
+   ],
+   [
+    "jātisuttādidasaka",
+    "nt",
+    "Saṃyutta Nikāya 12.72-81 (SN12.72-81); lit. group of ten discourses beginning with the discourse on birth",
+    "✔"
+   ],
+   [
+    "satthusutta",
+    "nt",
+    "Saṃyutta Nikāya 12.82 (SN12.82); lit. discourse on the teacher",
+    "✔"
+   ],
+   [
+    "dutiyasatthusuttādidasaka",
+    "nt",
+    "Saṃyutta Nikāya 12.83-92 (SN12.83-92); lit. ten discourses starting with the second discourse about the teacher",
+    "✔"
+   ],
+   [
+    "sikkhāsuttādipeyyālaekādasaka",
+    "nt",
+    "Saṃyutta Nikāya 12.93-103 (SN12.93-103); lit. group of eleven elided discourses starting with the discourse on training",
+    "✔"
+   ]
+  ],
+  "count": 73
+ },
+ "suttas of Saṃyutta Nikāya 41": {
+  "data": [
+   [
+    "paṭhamaisidattasutta",
+    "nt",
+    "Saṃyutta Nikāya 41.2 (SN41.2); lit. first discourse on Isidatta",
+    "✔"
+   ],
+   [
+    "dutiyaisidattasutta",
+    "nt",
+    "Saṃyutta Nikāya 41.3 (SN41.3); lit. second discourse on Isidatta",
+    "✔"
+   ],
+   [
+    "mahakapāṭihāriyasutta",
+    "nt",
+    "Saṃyutta Nikāya 41.4 (SN41.4); lit. discourse on Mahaka's miracle",
+    "✔"
+   ],
+   [
+    "paṭhamakāmabhūsutta",
+    "nt",
+    "Saṃyutta Nikāya 41.5 (SN41.5); lit. first discourse with Kāmabhū",
+    "✔"
+   ],
+   [
+    "dutiyakāmabhūsutta",
+    "nt",
+    "Saṃyutta Nikāya 41.6 (SN41.6); lit. second discourse with Kāmabhū",
+    "✔"
+   ],
+   [
+    "godattasutta",
+    "nt",
+    "Saṃyutta Nikāya 41.7 (SN41.7); lit. discourse with Godatta",
+    "✔"
+   ],
+   [
+    "nigaṇṭhanāṭaputtasutta",
+    "nt",
+    "Saṃyutta Nikāya 41.8 (SN41.8); lit. discourse with Mahāvīra",
+    "✔"
+   ],
+   [
+    "acelakassapasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 41.9 (SN41.9); lit. discourse with naked Kassapa",
+    "✔"
+   ],
+   [
+    "gilānadassanasutta",
+    "nt",
+    "Saṃyutta Nikāya 41.10 (SN41.10); lit. discourse on visiting the sick",
+    "✔"
+   ],
+   [
+    "gilānadassana",
+    "nt",
+    "in reference to SN41.10 Gilānadassanasutta; lit. visiting the sick",
+    "✔"
+   ]
+  ],
+  "count": 10
  },
  "names of deities": {
   "data": [
@@ -24806,7 +31402,7 @@ var family_set_json = {
    [
     "ajakalāpaka 2",
     "masc",
-    "name of a spirit; lit. small herd of goats",
+    "name of a daemon; lit. small herd of goats",
     "✔"
    ],
    [
@@ -24824,7 +31420,13 @@ var family_set_json = {
    [
     "abhibhū 2",
     "masc",
-    "overlord; supreme being",
+    "overlord; supreme being; lit. being higher",
+    "✔"
+   ],
+   [
+    "ariṭṭha 1.3",
+    "masc",
+    "name of a daemon",
     "✔"
    ],
    [
@@ -24854,7 +31456,7 @@ var family_set_json = {
    [
     "ākoṭaka",
     "masc",
-    "name of a deity; lit. beater; pounder",
+    "name of a deity; lit. who beats here",
     "✔"
    ],
    [
@@ -24872,8 +31474,8 @@ var family_set_json = {
    [
     "indaka",
     "masc",
-    "name of a spirit",
-    "◑"
+    "name of a daemon; lit. related to Inda",
+    "✔"
    ],
    [
     "issarā 2",
@@ -24896,14 +31498,20 @@ var family_set_json = {
    [
     "uttarā 3",
     "fem",
-    "name of a young female spirit; lit. northern; higher",
-    "◑"
+    "name of a young female daemon; lit. northern; higher",
+    "✔"
+   ],
+   [
+    "uttarikā",
+    "fem",
+    "name of a young female daemon; lit. little northern; higher",
+    "✔"
    ],
    [
     "ojasi",
     "masc",
-    "name of a deity",
-    "◑"
+    "name of a daemon; lit. possessing vigour",
+    "✔"
    ],
    [
     "odātagayhā",
@@ -24938,8 +31546,8 @@ var family_set_json = {
    [
     "karatiya 1",
     "masc",
-    "name of a supernatural being; name of a daemon",
-    "◑"
+    "name of a daemon; lit. cowpea",
+    "✔"
    ],
    [
     "karambhā",
@@ -25008,6 +31616,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "kāḷūpakāḷā 2",
+    "masc",
+    "name of two hell wardens",
+    "✔"
+   ],
+   [
     "kinnighaṇḍu",
     "masc",
     "name of a deity",
@@ -25068,6 +31682,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "guḷa 4",
+    "masc",
+    "name of a daemon; lit. ball",
+    "✔"
+   ],
+   [
     "gopaka 4",
     "masc",
     "name of a deity; lit. cowherd",
@@ -25076,8 +31696,8 @@ var family_set_json = {
    [
     "gopāla 2",
     "masc",
-    "name of a spirit; lit. cow guard",
-    "◑"
+    "name of a daemon; lit. cow guard",
+    "✔"
    ],
    [
     "ghaṭīkāra",
@@ -25101,19 +31721,13 @@ var family_set_json = {
     "candima 2",
     "masc",
     "name of a deity who lives in the moon; lit. bright",
-    "◑"
+    "✔"
    ],
    [
     "candimasa",
     "masc",
     "name of a deity; lit. from the moon",
     "✔"
-   ],
-   [
-    "candimāsa",
-    "masc",
-    "name of a deity; lit. from the moon",
-    "◑"
    ],
    [
     "cittasena",
@@ -25125,7 +31739,7 @@ var family_set_json = {
     "cullakokanadā",
     "fem",
     "name of a goddess; lit. smaller red lotus",
-    "◑"
+    "✔"
    ],
    [
     "cūḷakokanadā",
@@ -25172,26 +31786,26 @@ var family_set_json = {
    [
     "tatojasī",
     "masc",
-    "name of a deity",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
-    "tatotalā",
+    "tatotala",
     "masc",
-    "name of a group of deities",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
-    "tatolā",
+    "tatola",
     "masc",
-    "name of a group of deities",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
-    "tattalā",
+    "tattala",
     "masc",
-    "name of a group of deities",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
     "tāyana 1",
@@ -25202,20 +31816,20 @@ var family_set_json = {
    [
     "timbarū",
     "masc",
-    "name of a demigod king; lit. strychnine",
+    "name of a demigod king",
     "✔"
    ],
    [
     "tudu",
     "masc",
-    "name of a independent Brahma",
-    "◑"
+    "name of a solitary Brahma",
+    "✔"
    ],
    [
     "turū",
     "masc",
-    "name of a independent Brahma",
-    "◑"
+    "name of a solitary Brahma",
+    "✔"
    ],
    [
     "tusitā",
@@ -25226,14 +31840,14 @@ var family_set_json = {
    [
     "tejasi",
     "masc",
-    "name of a deity",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
     "dadhimukha",
     "masc",
-    "name of a spirit; lit. curd mouth",
-    "◑"
+    "name of a daemon; lit. curd mouth",
+    "✔"
    ],
    [
     "dānaveghasā",
@@ -25250,7 +31864,7 @@ var family_set_json = {
    [
     "dīgha 2",
     "masc",
-    "name of a spirit",
+    "name of a daemon",
     "✔"
    ],
    [
@@ -25292,17 +31906,17 @@ var family_set_json = {
    [
     "namuci",
     "masc",
-    "name of Māra; lit. does not free",
+    "name of Māra; lit. does not release",
     "✔"
    ],
    [
     "namucī",
     "masc",
-    "name of Māra; lit. does not free",
+    "name of Māra; lit. does not release",
     "✔"
    ],
    [
-    "naḷa 3",
+    "naḷa 2",
     "masc",
     "name of a deity; lit. reed",
     "✔"
@@ -25310,7 +31924,7 @@ var family_set_json = {
    [
     "naḷeru",
     "masc",
-    "(comm) name of a spirit; (or) growing in the hollow of a tree; (or) growing in a thicket of reeds",
+    "(comm) name of a daemon; (or) growing in the hollow of a tree; (or) growing in a thicket of reeds",
     "◑"
    ],
    [
@@ -25329,7 +31943,7 @@ var family_set_json = {
     "nika",
     "masc",
     "name of a deity",
-    "◑"
+    "✔"
    ],
    [
     "niṅka",
@@ -25350,9 +31964,27 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pajjunna",
+    "netti 1.5",
+    "masc",
+    "name of a daemon; lit. guide",
+    "✔"
+   ],
+   [
+    "nemi 3",
+    "masc",
+    "name of a daemon; lit. rim",
+    "✔"
+   ],
+   [
+    "pajjunna 1",
     "masc",
     "name of a deity; god of rain; rain cloud",
+    "✔"
+   ],
+   [
+    "pajjunna 2",
+    "masc",
+    "name of a daemon; lit. rain cloud",
     "✔"
    ],
    [
@@ -25362,9 +31994,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pañcālacaṇḍa",
+    "pañcālacaṇḍa 1",
     "masc",
     "name of a deity; lit. fierce Pañcāla",
+    "✔"
+   ],
+   [
+    "pañcālacaṇḍa 2",
+    "masc",
+    "name of a daemon; lit. fierce Pañcāla",
     "✔"
    ],
    [
@@ -25440,6 +32078,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "pāyāsidevaputta",
+    "masc",
+    "young deity Pāyāsi",
+    "✔"
+   ],
+   [
     "pāragā",
     "masc",
     "name of a group of deities; lit. gone beyond",
@@ -25448,32 +32092,38 @@ var family_set_json = {
    [
     "piyaṅkara",
     "masc",
-    "name of a spirit; lit. endearing",
-    "◑"
+    "name of a young daemon; lit. making dear",
+    "✔"
    ],
    [
     "piyaṅkaramātar",
     "fem",
-    "name of a female spirit; lit. Piyaṅkara's mother",
-    "◑"
+    "name of a female daemon; lit. Piyaṅkara's mother",
+    "✔"
    ],
    [
     "puṇṇaka 1",
     "masc",
-    "name of a deity; lit. who is full",
+    "name of a daemon; lit. who is full",
     "✔"
    ],
    [
     "punabbasu 1",
     "masc",
-    "name of a spirit",
-    "◑"
+    "name of a young daemon",
+    "✔"
    ],
    [
     "punabbasumātar",
     "fem",
-    "name of a female spirit; lit. Punabbasu's mother",
-    "◑"
+    "name of a female daemon; lit. Punabbasu's mother",
+    "✔"
+   ],
+   [
+    "pokkhara 5",
+    "masc",
+    "name of a deity",
+    "✔"
    ],
    [
     "baka 1",
@@ -25482,10 +32132,16 @@ var family_set_json = {
     "✔"
    ],
    [
+    "bakabrahma",
+    "masc",
+    "name of a god; lit. crane god",
+    "✔"
+   ],
+   [
     "begabbhari",
     "masc",
     "name of a deity; lit. carrying force",
-    "◑"
+    "✔"
    ],
    [
     "brahmāsahampati",
@@ -25494,7 +32150,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "bhagalavatī",
+    "bhagalavatī 2",
     "fem",
     "name of a deity",
     "◑"
@@ -25526,8 +32182,8 @@ var family_set_json = {
    [
     "maṇi 2",
     "masc",
-    "name of a spirit; lit. jewel",
-    "◑"
+    "name of a daemon; lit. jewel",
+    "✔"
    ],
    [
     "maṇikaṇṭha",
@@ -25538,8 +32194,8 @@ var family_set_json = {
    [
     "maṇibhadda",
     "masc",
-    "name of a spirit; lit. lucky jewel",
-    "◑"
+    "name of a daemon; lit. auspicious jewel",
+    "✔"
    ],
    [
     "manopadosikā",
@@ -25562,8 +32218,8 @@ var family_set_json = {
    [
     "mandiya 2",
     "masc",
-    "name of a deity; lit. drunkenness",
-    "◑"
+    "name of a daemon; lit. intoxicated",
+    "✔"
    ],
    [
     "mahāpāragā",
@@ -25604,8 +32260,8 @@ var family_set_json = {
    [
     "māṇivara",
     "masc",
-    "name of a spirit; lit. excellent jewel",
-    "◑"
+    "name of a daemon; lit. with an excellent jewel",
+    "✔"
    ],
    [
     "mātalī",
@@ -25616,8 +32272,8 @@ var family_set_json = {
    [
     "mānicara",
     "masc",
-    "name of a spirit",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
     "mānusā",
@@ -25644,6 +32300,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "mucalinda 4",
+    "masc",
+    "name of a daemon",
+    "✔"
+   ],
+   [
+    "mucalinda 5",
+    "masc",
+    "name of a dragon king",
+    "✔"
+   ],
+   [
     "yāmā",
     "masc",
     "name of a group of deities",
@@ -25653,6 +32321,18 @@ var family_set_json = {
     "yāmunā",
     "masc",
     "name of a group of deities; lit. from the Yamunā river",
+    "✔"
+   ],
+   [
+    "yugandhara 2",
+    "masc",
+    "name of a daemon; lit. bearing the yoke",
+    "✔"
+   ],
+   [
+    "rāja 3",
+    "masc",
+    "names of a daemon; lit. king",
     "✔"
    ],
    [
@@ -25833,13 +32513,13 @@ var family_set_json = {
     "veghanasā",
     "masc",
     "name of a group of deities",
-    "◑"
+    "✔"
    ],
    [
     "veṭambarī",
     "masc",
     "name of a deity",
-    "◑"
+    "✔"
    ],
    [
     "veṭeṇḍu",
@@ -25863,7 +32543,13 @@ var family_set_json = {
     "veṇhu",
     "masc",
     "name of a deity; Vishnu",
-    "◑"
+    "✔"
+   ],
+   [
+    "veṇhū",
+    "masc",
+    "name of a group of deities; lit. of Vishnu",
+    "✔"
    ],
    [
     "venateyya",
@@ -25896,6 +32582,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "vessāmitta 2",
+    "masc",
+    "name of a daemon",
+    "✔"
+   ],
+   [
     "vessāmittā",
     "masc",
     "name of a group of daemons; lit. from Vessāmitta mountain",
@@ -25911,6 +32603,12 @@ var family_set_json = {
     "sakka 2",
     "masc",
     "name of the king of the Devas; Sakka",
+    "✔"
+   ],
+   [
+    "sakkanāmaka",
+    "masc",
+    "name of a daemon; lit. called Sakka",
     "✔"
    ],
    [
@@ -25932,6 +32630,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "santusita 2",
+    "masc",
+    "name of a deity; lord of Tusita heaven; lit. satisfied; pleased; content",
+    "✔"
+   ],
+   [
     "santussita 1",
     "masc",
     "name of a deity; lit. contented",
@@ -25947,7 +32651,7 @@ var family_set_json = {
     "sambara",
     "masc",
     "name of an asura lord",
-    "◑"
+    "✔"
    ],
    [
     "sahadhammā",
@@ -25982,7 +32686,7 @@ var family_set_json = {
    [
     "sātāgira 2",
     "masc",
-    "name of a supernatural being; name of daemon; lit. pleasing speech; (or) nice mountain",
+    "name of a daemon; lit. pleasing speech; (or) nice mountain",
     "✔"
    ],
    [
@@ -25990,12 +32694,6 @@ var family_set_json = {
     "masc",
     "name of a group of daemons; lit. from nice mountain; (or) of pleasant speech",
     "✔"
-   ],
-   [
-    "sānu 2",
-    "masc",
-    "name of a spirit; lit. plateau",
-    "◑"
    ],
    [
     "sikhaṇḍī 3",
@@ -26012,8 +32710,14 @@ var family_set_json = {
    [
     "sivaka 1",
     "masc",
-    "name of a deity",
-    "◑"
+    "name of a daemon",
+    "✔"
+   ],
+   [
+    "sīvaka 3",
+    "masc",
+    "name of a daemon; lit. tailor",
+    "✔"
    ],
    [
     "sukkā 1",
@@ -26028,15 +32732,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sudassa 2",
-    "adj",
-    "beautiful to look at; epithet of a class of devas",
-    "✔"
-   ],
-   [
-    "sudassī",
-    "adj",
-    "epithet of a class of devas; lit. of excellent vision",
+    "sujā 2.1",
+    "fem",
+    "name of Sakka's wife; lit. well born woman",
     "✔"
    ],
    [
@@ -26048,19 +32746,25 @@ var family_set_json = {
    [
     "suppagedha",
     "masc",
-    "name of a spirit",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
     "supparodha",
     "masc",
-    "name of a spirit",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
     "subrahma 1",
     "masc",
     "name of a deity; lit. good god",
+    "✔"
+   ],
+   [
+    "subrahma 2",
+    "masc",
+    "name of a god; lit. good god",
     "✔"
    ],
    [
@@ -26070,9 +32774,27 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sumana 6",
+    "masc",
+    "name of a daemon; lit. good mind",
+    "✔"
+   ],
+   [
+    "sumukha 2",
+    "adj",
+    "name of a daemon; lit. handsome",
+    "✔"
+   ],
+   [
     "suyāma",
     "masc",
     "name of a deity; lord of the Yāma deities",
+    "✔"
+   ],
+   [
+    "suriya 2",
+    "masc",
+    "name of the sun deity; lit. shining",
     "✔"
    ],
    [
@@ -26085,7 +32807,7 @@ var family_set_json = {
     "suvīra",
     "masc",
     "name of a deity; lit. very heroic",
-    "◑"
+    "✔"
    ],
    [
     "susima 1",
@@ -26097,7 +32819,7 @@ var family_set_json = {
     "susīma 1",
     "masc",
     "name of a deity",
-    "◑"
+    "✔"
    ],
    [
     "sūciloma 2",
@@ -26106,9 +32828,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sūriya 1",
+    "sūra 4",
     "masc",
-    "sun; lit. shining",
+    "name of a daemon; lit. hero",
     "✔"
    ],
    [
@@ -26150,8 +32872,8 @@ var family_set_json = {
    [
     "serīsaka 2",
     "masc",
-    "name of a spirit",
-    "◑"
+    "name of a daemon",
+    "✔"
    ],
    [
     "harayo",
@@ -26178,6 +32900,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "hiri 2",
+    "fem",
+    "name of a daemon; lit. shame",
+    "✔"
+   ],
+   [
     "hemavata 1",
     "masc",
     "name of a daemon king",
@@ -26188,15 +32916,512 @@ var family_set_json = {
     "masc",
     "name of a group of daemons; lit. from the Himalayas",
     "✔"
-   ],
-   [
-    "hevamata",
-    "masc",
-    "name of a spirit",
-    "◑"
    ]
   ],
-  "count": 234
+  "count": 255
+ },
+ "suttas of Saṃyutta Nikāya 1": {
+  "data": [
+   [
+    "oghataraṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.1 (SN1.1); lit. discourse on crossing the flood",
+    "✔"
+   ],
+   [
+    "nimokkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.2 (SN1.2); lit. discourse on release",
+    "✔"
+   ],
+   [
+    "upanīyasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.3 (SN1.3); lit. discourse on being carried away",
+    "✔"
+   ],
+   [
+    "accentisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.4 (SN1.4); lit. discourse on they pass by",
+    "✔"
+   ],
+   [
+    "katichindasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.5 (SN1.5); lit. discourse on cut how many",
+    "✔"
+   ],
+   [
+    "jāgarasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.6 (SN1.6); lit. discourse on being awake",
+    "✔"
+   ],
+   [
+    "appaṭividitasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.7 (SN1.7); lit. discourse on not understood",
+    "✔"
+   ],
+   [
+    "susammuṭṭhasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.8 (SN1.8); lit. discourse on completely confused",
+    "✔"
+   ],
+   [
+    "mānakāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.9 (SN1.9); lit. discourse on fond of conceit",
+    "✔"
+   ],
+   [
+    "araññasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.10 (SN1.10); lit. discourse on the forest",
+    "✔"
+   ],
+   [
+    "nandanasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.11 (SN1.11); lit. discourse on Nandana grove",
+    "✔"
+   ],
+   [
+    "nandatisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.12 (SN1.12); lit. discourse on one rejoices",
+    "✔"
+   ],
+   [
+    "natthiputtasamasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.13 (SN1.13); lit. discourse on not equal to one's children",
+    "✔"
+   ],
+   [
+    "khattiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.14 (SN1.14); lit. discourse on the warrior",
+    "✔"
+   ],
+   [
+    "saṇamānasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.15 (SN1.15); lit. discourse on making a noise",
+    "✔"
+   ],
+   [
+    "niddātandīsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.16 (SN1.16); lit. discourse on sleep and laziness",
+    "✔"
+   ],
+   [
+    "dukkarasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.17 (SN1.17); lit. discourse on difficult to do",
+    "✔"
+   ],
+   [
+    "hirīsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.18 (SN1.18); lit. discourse on conscience",
+    "✔"
+   ],
+   [
+    "kuṭikāsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.19 (SN1.19); lit. discourse on the little hut",
+    "✔"
+   ],
+   [
+    "samiddhisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.20 (SN1.20); lit. discourse with Samiddhi",
+    "✔"
+   ],
+   [
+    "sattisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.21 (SN1.21); lit. discourse on the spear",
+    "✔"
+   ],
+   [
+    "phusatisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.22 (SN1.22); lit. discourse on it affects",
+    "✔"
+   ],
+   [
+    "jaṭāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.23 (SN1.23); lit. discourse on the tangle",
+    "✔"
+   ],
+   [
+    "manonivāraṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.24 (SN1.24); lit. discourse on mental obstruction",
+    "✔"
+   ],
+   [
+    "arahantasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.25 (SN1.25); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "pajjotasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.26 (SN1.26); lit. discourse on the lamp",
+    "✔"
+   ],
+   [
+    "sarasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.27 (SN1.27); lit. discourse on streams",
+    "✔"
+   ],
+   [
+    "mahaddhanasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.28 (SN1.28); lit. discourse on great wealth",
+    "✔"
+   ],
+   [
+    "catucakkasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.29 (SN1.29); lit. discourse on having four wheels",
+    "✔"
+   ],
+   [
+    "eṇijaṅghasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.30 (SN1.30); lit. discourse on having calves like an antelope",
+    "✔"
+   ],
+   [
+    "sabbhisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.31 (SN1.31); lit. discourse on with the wise",
+    "✔"
+   ],
+   [
+    "maccharisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.32 (SN1.32); lit. discourse on the miser",
+    "✔"
+   ],
+   [
+    "sādhusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.33 (SN1.33); lit. discourse on good",
+    "✔"
+   ],
+   [
+    "nasantisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.34 (SN1.34); lit. discourse on they do not exist",
+    "✔"
+   ],
+   [
+    "ujjhānasaññisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.35 (SN1.35); lit. discourse on perceiving fault",
+    "✔"
+   ],
+   [
+    "saddhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.36 (SN1.36); lit. discourse on faith",
+    "✔"
+   ],
+   [
+    "samayasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.37 (SN1.37); lit. discourse on the gathering",
+    "✔"
+   ],
+   [
+    "sakalikasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.38 (SN1.38); lit. discourse on the splinter",
+    "✔"
+   ],
+   [
+    "paṭhamapajjunnadhītusutta",
+    "nt",
+    "Saṃyutta Nikāya 1.39 (SN1.39); lit. first discourse with Pajjunna's daughter",
+    "✔"
+   ],
+   [
+    "dutiyapajjunnadhītusutta",
+    "nt",
+    "Saṃyutta Nikāya 1.40 (SN1.40); lit. second discourse with Pajjunna's daughter",
+    "✔"
+   ],
+   [
+    "ādittasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.41 (SN1.41); lit. discourse on burning",
+    "✔"
+   ],
+   [
+    "kiṃdadasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.42 (SN1.42); lit. discourse on giving what",
+    "✔"
+   ],
+   [
+    "annasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.43 (SN1.43); lit. discourse on food",
+    "✔"
+   ],
+   [
+    "ekamūlasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.44 (SN1.44); lit. discourse on having one root",
+    "✔"
+   ],
+   [
+    "anomasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.45 (SN1.45); lit. discourse on supreme",
+    "✔"
+   ],
+   [
+    "accharāsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.46 (SN1.46); lit. discourse on the nymphs",
+    "✔"
+   ],
+   [
+    "vanaropasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.47 (SN1.47); lit. discourse on the planter of forests",
+    "✔"
+   ],
+   [
+    "jetavanasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.48 (SN1.48); lit. discourse n Victor's wood",
+    "✔"
+   ],
+   [
+    "maccharisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 1.49 (SN1.49); lit. discourse on stingy",
+    "✔"
+   ],
+   [
+    "ghaṭīkārasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.50 (SN1.50); lit. discourse with Ghaṭīkāra",
+    "✔"
+   ],
+   [
+    "jarāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.51 (SN1.51); lit. discourse on old age",
+    "✔"
+   ],
+   [
+    "ajarasāsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.52 (SN1.52); lit. discourse on not deteriorating",
+    "✔"
+   ],
+   [
+    "mittasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.53 (SN1.53); lit. discourse on the friend",
+    "✔"
+   ],
+   [
+    "vatthusutta",
+    "nt",
+    "Saṃyutta Nikāya 1.54 (SN1.54); lit. discourse on the basis",
+    "✔"
+   ],
+   [
+    "paṭhamajanasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.55 (SN1.55); lit. first discourse on people",
+    "✔"
+   ],
+   [
+    "dutiyajanasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.56 (SN1.56); lit. second discourse on people",
+    "✔"
+   ],
+   [
+    "tatiyajanasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.57 (SN1.57); lit. third discourse on people",
+    "✔"
+   ],
+   [
+    "uppathasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.58 (SN1.58); lit. discourse on the wrong path",
+    "✔"
+   ],
+   [
+    "dutiyasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 1.59 (SN1.59); lit. second discourse",
+    "✔"
+   ],
+   [
+    "kavisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.60 (SN1.60); lit. discourse on poets",
+    "✔"
+   ],
+   [
+    "nāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.61 (SN1.61); lit. discourse on name",
+    "✔"
+   ],
+   [
+    "cittasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.62 (SN1.62); lit. discourse on the mind",
+    "✔"
+   ],
+   [
+    "taṇhāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.63 (SN1.63); lit. discourse on craving",
+    "✔"
+   ],
+   [
+    "bandhanasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.65 (SN1.65); lit. discourse on bonds",
+    "✔"
+   ],
+   [
+    "attahatasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.66 (SN1.66); lit. discourse on beaten",
+    "✔"
+   ],
+   [
+    "uḍḍitasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.67 (SN1.67); lit. discourse on ensnared",
+    "✔"
+   ],
+   [
+    "pihitasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.68 (SN1.68); lit. discourse on shut off",
+    "✔"
+   ],
+   [
+    "icchāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.69 (SN1.69); lit. discourse on desire",
+    "✔"
+   ],
+   [
+    "lokasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.70 (SN1.70); lit. discourse on the world",
+    "✔"
+   ],
+   [
+    "chetvāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.71 (SN1.71); lit. discourse on having cut",
+    "✔"
+   ],
+   [
+    "rathasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.72 (SN1.72); lit. discourse on the chariot",
+    "✔"
+   ],
+   [
+    "vittasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.73 (SN1.73); lit. discourse on wealth",
+    "✔"
+   ],
+   [
+    "vuṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.74 (SN1.74); lit. discourse on rain",
+    "✔"
+   ],
+   [
+    "bhītāsutta",
+    "nt",
+    "Saṃyutta Nikāya 1.75 (SN1.75); lit. discourse on afraid",
+    "✔"
+   ],
+   [
+    "najīratisutta",
+    "nt",
+    "Saṃyutta Nikāya 1.76 (SN1.76); lit. discourse on does not age",
+    "✔"
+   ],
+   [
+    "issariyasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.77 (SN1.77); lit. discourse on dominion",
+    "✔"
+   ],
+   [
+    "kāmasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 1.78 (SN1.78); lit. discourse on desire",
+    "✔"
+   ],
+   [
+    "pātheyyasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.79 (SN1.79); lit. discourse on provisions for a journey",
+    "✔"
+   ],
+   [
+    "pajjotasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 1.80 (SN1.80); lit. discourse on the lamp",
+    "✔"
+   ],
+   [
+    "araṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 1.81 (SN1.81); lit. sutta on not conflicting",
+    "✔"
+   ],
+   [
+    "katichindi",
+    "aor",
+    "in reference to SN1.5 Katichindasutta; lit. cut how many?",
+    "✔"
+   ],
+   [
+    "manonivāraṇa",
+    "nt",
+    "in reference to SN1.24 Manonivāraṇasutta; lit. mental obstruction",
+    "✔"
+   ],
+   [
+    "mānakāmī",
+    "adj",
+    "in reference to SN 1.9 Mānakāmasutta; lit. fond of conceit",
+    "✔"
+   ]
+  ],
+  "count": 83
  },
  "animals": {
   "data": [
@@ -26207,10 +33432,22 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ajagara",
+    "masc",
+    "Indian python; Python molurus; lit. goat swallower",
+    "✔"
+   ],
+   [
     "aṇḍaja 2",
     "masc",
     "bird; lit. egg born",
     "✔"
+   ],
+   [
+    "aṇḍaja 4",
+    "masc",
+    "fish; lit. egg born",
+    "◑"
    ],
    [
     "anusabha",
@@ -26243,6 +33480,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "uppāṭaka",
+    "masc",
+    "biting insect; lit. causing to split up",
+    "✔"
+   ],
+   [
     "uraṇa",
     "masc",
     "ram; billy goat",
@@ -26261,6 +33504,24 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ūkā 1",
+    "fem",
+    "louse; lice; Pediculus humanus capitis",
+    "✔"
+   ],
+   [
+    "eḷakā",
+    "fem",
+    "ewe; female goat; nanny-goat",
+    "✔"
+   ],
+   [
+    "oṭṭhavacittaka",
+    "masc",
+    "name of a bird",
+    "✔"
+   ],
+   [
     "kakuṭa",
     "masc",
     "dove; pigeon; wood-pigeon",
@@ -26276,6 +33537,24 @@ var family_set_json = {
     "karavīka",
     "masc",
     "Indian cuckoo; Cuculus micropterus",
+    "✔"
+   ],
+   [
+    "kākola",
+    "masc",
+    "raven; Corvus corax",
+    "✔"
+   ],
+   [
+    "kukutthaka",
+    "masc",
+    "wild cock; red junglefowl; Gallus gallus",
+    "✔"
+   ],
+   [
+    "kukkuṭaka 2",
+    "masc",
+    "wild cock; red junglefowl; Gallus gallus",
     "✔"
    ],
    [
@@ -26300,6 +33579,24 @@ var family_set_json = {
     "kulala",
     "masc",
     "bird of prey; eagle; hawk; osprey",
+    "✔"
+   ],
+   [
+    "kuḷīra",
+    "masc",
+    "crab",
+    "✔"
+   ],
+   [
+    "kuḷīraka",
+    "masc",
+    "type of bird; kingfisher; Coraciiformes; lit. crab (eater)",
+    "✔"
+   ],
+   [
+    "kesarī 1",
+    "masc",
+    "lion; maned lion; lit. having a mane",
     "✔"
    ],
    [
@@ -26417,9 +33714,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "jalūkā",
+    "fem",
+    "leech; lit. who's home is in water",
+    "✔"
+   ],
+   [
     "jāti 4",
     "fem",
     "type; kind; category (of)",
+    "✔"
+   ],
+   [
+    "jīvañjīvaka",
+    "masc",
+    "names of a bird; pheasant-tailed jacana; Hydrophasianus chirurgus; lit. live! live!",
     "✔"
    ],
    [
@@ -26438,6 +33747,12 @@ var family_set_json = {
     "tittirī",
     "fem",
     "partridge",
+    "✔"
+   ],
+   [
+    "tuliya 2",
+    "masc",
+    "flying fox; greater Indian fruit bat; Pteropus medius",
     "✔"
    ],
    [
@@ -26483,9 +33798,27 @@ var family_set_json = {
     "✔"
    ],
    [
+    "pannaga",
+    "masc",
+    "serpent; snake; lit. going lowered",
+    "✔"
+   ],
+   [
+    "pasada",
+    "masc",
+    "spotted antelope; Chital; Axis Deer; Axis axis; lit. spotted; speckled",
+    "✔"
+   ],
+   [
     "pādudara",
     "masc",
     "snake; lit. belly for feet",
+    "✔"
+   ],
+   [
+    "pārāvata",
+    "masc",
+    "pigeon; dove; lit. having remote quality",
     "✔"
    ],
    [
@@ -26501,10 +33834,10 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pokkharasātakā",
-    "fem",
+    "pokkharasātaka",
+    "masc",
     "name of a bird; lit. lotus cloak",
-    "◑"
+    "✔"
    ],
    [
     "balibadda",
@@ -26534,6 +33867,12 @@ var family_set_json = {
     "byaggha",
     "masc",
     "tiger",
+    "✔"
+   ],
+   [
+    "bhaṇḍu 3",
+    "masc",
+    "type of bird",
     "✔"
    ],
    [
@@ -26567,6 +33906,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "maṅkula",
+    "masc",
+    "bed bug; Cimex",
+    "✔"
+   ],
+   [
     "maṅgura 2",
     "masc",
     "walking catfish; Clarias batrachus",
@@ -26579,6 +33924,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "majjāra",
+    "masc",
+    "cat",
+    "✔"
+   ],
+   [
     "maṇḍūka",
     "masc",
     "frog",
@@ -26588,6 +33939,12 @@ var family_set_json = {
     "mayūra",
     "masc",
     "peacock",
+    "✔"
+   ],
+   [
+    "mahisa",
+    "masc",
+    "buffalo",
     "✔"
    ],
    [
@@ -26612,6 +33969,12 @@ var family_set_json = {
     "migā",
     "fem",
     "doe",
+    "✔"
+   ],
+   [
+    "mīḷhakā",
+    "fem",
+    "female dung-beetle",
     "✔"
    ],
    [
@@ -26651,6 +34014,18 @@ var family_set_json = {
     "◑"
    ],
    [
+    "saddūla",
+    "masc",
+    "leopard",
+    "✔"
+   ],
+   [
+    "sāḷikā",
+    "fem",
+    "myna bird; Indian myna; Acridotheres tristis",
+    "✔"
+   ],
+   [
     "sigāla",
     "masc",
     "jackal",
@@ -26666,6 +34041,12 @@ var family_set_json = {
     "sīha 1",
     "masc",
     "lion",
+    "✔"
+   ],
+   [
+    "suka",
+    "masc",
+    "parrot",
     "✔"
    ],
    [
@@ -26687,13 +34068,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "susumāra",
+    "susumāra 1",
     "masc",
     "crocodile; alligator; lit. child killer",
     "✔"
    ],
    [
-    "hatthi",
+    "susumāra 2",
+    "masc",
+    "Ganges river dolphin; Platanista gangetica; lit. child killer",
+    "✔"
+   ],
+   [
+    "hatthi 1.1",
     "masc",
     "elephant; lit. having a hand; i.e. trunk",
     "✔"
@@ -26711,594 +34098,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 85
- },
- "names of royalty": {
-  "data": [
-   [
-    "ajātasattu",
-    "masc",
-    "name of the king of Magadha; son of Bimbisāra; lit. unborn enemy",
-    "✔"
-   ],
-   [
-    "ajātasattukumāra",
-    "masc",
-    "name of a prince; later king of Magadha; son of Bimbisāra",
-    "◑"
-   ],
-   [
-    "aṇīkadatta",
-    "masc",
-    "name of a king; lit. given to the army",
-    "✔"
-   ],
-   [
-    "anīkaratta",
-    "masc",
-    "name of a king; lit. infatuated with the army; (or) red squadron",
-    "✔"
-   ],
-   [
-    "abhaya 4",
-    "masc",
-    "name of a prince; king Bimbisāra's son; lit. fearless",
-    "✔"
-   ],
-   [
-    "aruṇa 3",
-    "masc",
-    "name of Sikhī Buddha's father; lit. dawn",
-    "✔"
-   ],
-   [
-    "aruṇavant",
-    "masc",
-    "name of a king; lit. having dawn quality",
-    "◑"
-   ],
-   [
-    "alīnacitta 3",
-    "masc",
-    "name of a prince; lit. not sticky mind",
-    "✔"
-   ],
-   [
-    "alīnasatta",
-    "masc",
-    "name of a prince",
-    "✔"
-   ],
-   [
-    "avantiputta",
-    "masc",
-    "name of a king of Madhurā; lit. son of Avanti",
-    "◑"
-   ],
-   [
-    "aḷaka",
-    "masc",
-    "name of a kingdom; lit. with a claw",
-    "✔"
-   ],
-   [
-    "ukkāka",
-    "masc",
-    "name of a king",
-    "✔"
-   ],
-   [
-    "ukkāmukha 2",
-    "masc",
-    "name of one of the sons of king Okkāka; lit. furnace",
-    "✔"
-   ],
-   [
-    "utena",
-    "masc",
-    "name of a king",
-    "✔"
-   ],
-   [
-    "udayabhadda",
-    "masc",
-    "name of a prince; Ajātasattu's son",
-    "✔"
-   ],
-   [
-    "udāyibhadda",
-    "masc",
-    "name of a prince; Ajātasattu's son",
-    "✔"
-   ],
-   [
-    "udumbarikā",
-    "fem",
-    "name of a queen who built a park for wandering ascetics",
-    "✔"
-   ],
-   [
-    "esukārī 2",
-    "masc",
-    "name of a king",
-    "◑"
-   ],
-   [
-    "eḷeyya",
-    "masc",
-    "name of a king",
-    "✔"
-   ],
-   [
-    "okkāka",
-    "masc",
-    "name of a king",
-    "✔"
-   ],
-   [
-    "okkākarāja",
-    "masc",
-    "king Okkāka",
-    "✔"
-   ],
-   [
-    "okkāmukha",
-    "masc",
-    "name of one of the sons of king Okkāka; lit. furnace",
-    "✔"
-   ],
-   [
-    "kaṇhājinā",
-    "fem",
-    "name of a princess; daughter of Vessantara",
-    "✔"
-   ],
-   [
-    "karakaṇḍa",
-    "masc",
-    "name of one of the sons of king Okkāka",
-    "✔"
-   ],
-   [
-    "karakaṇḍu",
-    "masc",
-    "name of one of the sons of king Okkāka",
-    "✔"
-   ],
-   [
-    "kaḷārajanaka",
-    "masc",
-    "name of a king; son of king Nimi; lit. bucktoothed producer",
-    "✔"
-   ],
-   [
-    "kāḷīgodhā",
-    "fem",
-    "name of a Sakyan princess; lit. black iguana",
-    "✔"
-   ],
-   [
-    "kikī 2",
-    "masc",
-    "name of the reigning king of Kāsi at the time of Kassapa Buddha",
-    "✔"
-   ],
-   [
-    "kī 1.1",
-    "masc",
-    "name of the reigning king at the time of Kassapa Buddha",
-    "✔"
-   ],
-   [
-    "kūṭakaṇṇa",
-    "masc",
-    "name of an ancient Sri Lankan king who reigned from 42 to 20 BCE; lit. crooked ear",
-    "✔"
-   ],
-   [
-    "korabya 1",
-    "masc",
-    "name of a King; lit. of the Kurus",
-    "✔"
-   ],
-   [
-    "khema 5",
-    "masc",
-    "name of the reigning king at the time of Kakusandha Buddha; lit. safety",
-    "✔"
-   ],
-   [
-    "khemaka 3",
-    "masc",
-    "name of a Sakyan king; lit. safety",
-    "✔"
-   ],
-   [
-    "khemiyā 2",
-    "fem",
-    "name of a queen",
-    "✔"
-   ],
-   [
-    "gajabāhu",
-    "masc",
-    "name of an ancient Sri Lankan king who reigned from 113 to 135 CE; lit. arms like an elephant (trunk)",
-    "◑"
-   ],
-   [
-    "caṇḍapajjota",
-    "masc",
-    "name of a king; lit. fierce light",
-    "◑"
-   ],
-   [
-    "candakumāra",
-    "masc",
-    "name of a prince; previous incarnation of Sāriputta; lit. prince moon",
-    "✔"
-   ],
-   [
-    "cundī",
-    "fem",
-    "name of a princess",
-    "◑"
-   ],
-   [
-    "cūḷanīputta",
-    "masc",
-    "name of a prince; lit. son of Cūḷanī",
-    "✔"
-   ],
-   [
-    "jayasena",
-    "masc",
-    "name of a prince; lit. victorious army",
-    "◑"
-   ],
-   [
-    "jālī 2.3",
-    "masc",
-    "name of a prince; lit. blazing",
-    "✔"
-   ],
-   [
-    "jetar 1",
-    "masc",
-    "name of a prince; lit. conqueror; victor",
-    "✔"
-   ],
-   [
-    "daḷhanemi",
-    "masc",
-    "name of a mythological king; lit. with a strong rim",
-    "◑"
-   ],
-   [
-    "disampati 1",
-    "masc",
-    "name of a king; lit. lord of the directions",
-    "✔"
-   ],
-   [
-    "duṭṭhagāmaṇi",
-    "masc",
-    "name of a renowned ancient king in Sri Lanka who reigned from 161 to 137 BCE; lit. corrupt chief",
-    "✔"
-   ],
-   [
-    "dhataraṭṭha 2",
-    "masc",
-    "name of two of the seven Bharata kings",
-    "✔"
-   ],
-   [
-    "dhanañcaya",
-    "masc",
-    "name of a Kuru king; lit. heap of wealth",
-    "✔"
-   ],
-   [
-    "nimi",
-    "masc",
-    "name of a king; previous incarnation of the Buddha",
-    "✔"
-   ],
-   [
-    "pacetana",
-    "masc",
-    "name of a king; lit. inspiring",
-    "◑"
-   ],
-   [
-    "pajjota 3",
-    "masc",
-    "name of a king, friend of Bimbisāra; lit. light",
-    "✔"
-   ],
-   [
-    "pañcālī",
-    "fem",
-    "name of a queen; (comm) the king of Pañcala's daughter",
-    "◑"
-   ],
-   [
-    "pabhāvatī",
-    "fem",
-    "name of Sikhī Buddha's mother; lit. radiant",
-    "✔"
-   ],
-   [
-    "pasenadi",
-    "masc",
-    "name of the king of Kosala",
-    "✔"
-   ],
-   [
-    "bandhumatī 1",
-    "fem",
-    "name of Vipassī Buddha's mother",
-    "✔"
-   ],
-   [
-    "bandhumant 3",
-    "masc",
-    "name of Vipassī Buddha's father; lit. having bonds quality",
-    "✔"
-   ],
-   [
-    "ballika",
-    "masc",
-    "name of a king; lit. powerful",
-    "✔"
-   ],
-   [
-    "bimbisāra",
-    "masc",
-    "name of a Magadhan king",
-    "✔"
-   ],
-   [
-    "bodhi 4",
-    "masc",
-    "name of a prince; lit. awakening",
-    "✔"
-   ],
-   [
-    "brahmadatta 3",
-    "masc",
-    "name of one the seven Bharata kings; lit. given to god; (or) protected by god",
-    "✔"
-   ],
-   [
-    "bhaddasena",
-    "masc",
-    "name of a prince in a Jātaka story; son of king Ekarāja; previous incarnation of Moggallāna; lit. having a good army",
-    "✔"
-   ],
-   [
-    "bharata 1",
-    "masc",
-    "name of one the seven Bharata kings",
-    "✔"
-   ],
-   [
-    "bhāradha",
-    "masc",
-    "name of a royal family",
-    "✔"
-   ],
-   [
-    "maghadeva 1",
-    "masc",
-    "name of a king; previous incarnation of Sakka; lit. bountiful king",
-    "✔"
-   ],
-   [
-    "maddarūpī",
-    "fem",
-    "name of king Okkāka's daughter",
-    "✔"
-   ],
-   [
-    "maddī",
-    "fem",
-    "name of a princess; daughter of king Madda",
-    "✔"
-   ],
-   [
-    "mandhātar",
-    "masc",
-    "name of a king",
-    "✔"
-   ],
-   [
-    "mallikā 2",
-    "fem",
-    "name of a queen; wife of King Pasenadi; lit. jasmine",
-    "✔"
-   ],
-   [
-    "mahāpanāda",
-    "masc",
-    "name of a king of Mithilā",
-    "◑"
-   ],
-   [
-    "mahāvijita",
-    "masc",
-    "name of a legendary king; lit. with great conquered land",
-    "✔"
-   ],
-   [
-    "mahāsammata",
-    "masc",
-    "name of a mythical king; first king of the present age",
-    "◑"
-   ],
-   [
-    "māyā 4",
-    "fem",
-    "name of the Buddha's mother; lit. illusion",
-    "✔"
-   ],
-   [
-    "yasavatī",
-    "fem",
-    "name of Vessabhū Buddha's mother; lit. famous",
-    "✔"
-   ],
-   [
-    "reṇu 3",
-    "masc",
-    "name of a king; son of king Disampati; lit. dust",
-    "✔"
-   ],
-   [
-    "reṇu 4",
-    "masc",
-    "name of one the seven Bharata kings; lit. dust",
-    "✔"
-   ],
-   [
-    "vajirī",
-    "fem",
-    "name of a princess; daughter of king Pasenadi; lit. diamond",
-    "✔"
-   ],
-   [
-    "vassavatī",
-    "fem",
-    "name of Vessabhū Buddha's mother; lit. rainy",
-    "✔"
-   ],
-   [
-    "vāmagotta",
-    "masc",
-    "name of a prince in a Jātaka story; previous incarnation of Mahākassapa",
-    "✔"
-   ],
-   [
-    "vāsabhā",
-    "fem",
-    "name of a king Pasenadi's second queen; lit. belonging to the stud bull",
-    "✔"
-   ],
-   [
-    "vāsuladattā",
-    "fem",
-    "name of a queen",
-    "◑"
-   ],
-   [
-    "vijayabāhu",
-    "masc",
-    "name of an ancient king in Sri Lanka who reigned from 1055 to 1110 CE; lit. victory arm",
-    "◑"
-   ],
-   [
-    "vessantara 2",
-    "masc",
-    "name of a prince; previous incarnation of the Buddha; lit. crossing the universe; overcoming everything",
-    "◑"
-   ],
-   [
-    "vessabhū 2",
-    "masc",
-    "name of one the seven Bharata kings",
-    "✔"
-   ],
-   [
-    "sacetana 2",
-    "masc",
-    "name of a king; lit. having the intention",
-    "◑"
-   ],
-   [
-    "sattabhū",
-    "masc",
-    "name of one the seven Bharata kings",
-    "✔"
-   ],
-   [
-    "sāmāvatī 2",
-    "fem",
-    "name of King Udena's first queen; lit. of dark complexion",
-    "✔"
-   ],
-   [
-    "sinipura",
-    "masc",
-    "name of one of the sons of king Okkāka",
-    "✔"
-   ],
-   [
-    "sinisūra",
-    "masc",
-    "name of one of the sons of king Okkāka",
-    "✔"
-   ],
-   [
-    "sirī 2",
-    "masc",
-    "name of a former king; lit. fortune",
-    "✔"
-   ],
-   [
-    "sivī 1",
-    "masc",
-    "name of a king; lit. safe",
-    "◑"
-   ],
-   [
-    "suddhodana",
-    "masc",
-    "name of the Buddha's father; king of the Sakyans; lit. white rice",
-    "✔"
-   ],
-   [
-    "suppatita",
-    "masc",
-    "name of Vessabhū Buddha's father; lit. well fallen; well landed",
-    "✔"
-   ],
-   [
-    "suppatīta 1",
-    "masc",
-    "name of Vessabhū Buddha's father; lit. well pleased",
-    "✔"
-   ],
-   [
-    "subhaddā 1",
-    "fem",
-    "name of a queen; wife of king Mahāsudassana; lit. very fortunate",
-    "✔"
-   ],
-   [
-    "sumanā 2",
-    "fem",
-    "name of a princess; lit. happy",
-    "◑"
-   ],
-   [
-    "sūriyakumāra",
-    "masc",
-    "name of a prince; previous incarnation of Ānanda; lit. prince sun",
-    "✔"
-   ],
-   [
-    "sobha 2",
-    "masc",
-    "name of the reigning king at the time of Koṇāgamana Buddha",
-    "✔"
-   ],
-   [
-    "hatthinika",
-    "masc",
-    "name of one of the sons of king Okkāka",
-    "✔"
-   ]
-  ],
-  "count": 97
+  "count": 112
  },
  "six ascetic teachers": {
   "data": [
@@ -27342,6 +34142,12 @@ var family_set_json = {
     "nāthaputta",
     "masc",
     "family name of Mahavira; leader of the Jains; lit. son of the lord",
+    "✔"
+   ],
+   [
+    "pakuddha 1",
+    "masc",
+    "name of an ascetic teacher; Pakuddha Kaccāyana; lit. angered",
     "✔"
    ],
    [
@@ -27411,7 +34217,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 18
+  "count": 19
  },
  "doctrines": {
   "data": [
@@ -27440,6 +34246,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "amarāvikkhepavāda",
+    "masc",
+    "doctrine of endless equivocation; lit. doctrine of eel wriggling",
+    "✔"
+   ],
+   [
+    "asaññīvāda 1",
+    "masc",
+    "doctrine of impercipient (post-mortem existence)",
+    "✔"
+   ],
+   [
     "ahetuvāda",
     "masc",
     "(proponent of) doctrine of non-causality; theory that nothing has a reason",
@@ -27448,7 +34266,7 @@ var family_set_json = {
    [
     "ucchedavāda",
     "masc",
-    "(proponent of the) doctrine of annihilation; annihilationist view",
+    "(proponent of the) doctrine of annihilation; annihilationist view; lit. having cutting up doctrine",
     "✔"
    ],
    [
@@ -27458,9 +34276,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ekaccasassatavāda 1",
+    "masc",
+    "doctrine of partial eternalism; view that some things are eternal",
+    "◑"
+   ],
+   [
+    "ekaccasassatavāda 2",
+    "adj",
+    "holding the doctrine of partial eternalism; having the view that some things are eternal",
+    "✔"
+   ],
+   [
     "kammavāda 1",
     "masc",
-    "(proponent of) doctrine of causality; who hold the view that actions have consequences",
+    "(proponent of the) doctrine of causality; who hold the view that actions have consequences",
     "◑"
    ],
    [
@@ -27470,9 +34300,51 @@ var family_set_json = {
     "✔"
    ],
    [
+    "khantivāda 1",
+    "adj",
+    "professing a doctrine of peace",
+    "✔"
+   ],
+   [
+    "diṭṭhadhammanibbānavāda 1",
+    "masc",
+    "doctrine of total emancipation in this life itself",
+    "✔"
+   ],
+   [
+    "nigaṇṭhanāṭaputtavāda",
+    "masc",
+    "doctrine of Nigaṇṭha Nātaputta",
+    "✔"
+   ],
+   [
+    "nevasaññīnāsaññīvāda 1",
+    "masc",
+    "doctrine of neither percipient nor impercipient (post-mortem existence)",
+    "✔"
+   ],
+   [
+    "pakudhakaccāyanavāda",
+    "masc",
+    "doctrine of Pakudha Kaccāyana",
+    "✔"
+   ],
+   [
     "puggalavādī",
     "masc",
     "proponent of the doctrine that the individual exists; lit. speaking person",
+    "✔"
+   ],
+   [
+    "pūraṇakassapavāda",
+    "masc",
+    "doctrine of Pūraṇa Kassapa",
+    "✔"
+   ],
+   [
+    "makkhaligosālavāda",
+    "masc",
+    "doctrine of Makkhali Gosāla",
     "✔"
    ],
    [
@@ -27491,7 +34363,7 @@ var family_set_json = {
     "saññīvāda 1",
     "masc",
     "doctrine of percipient (post-mortem existence)",
-    "◑"
+    "✔"
    ],
    [
     "sassatavāda 1",
@@ -27518,7 +34390,30 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 17
+  "count": 28
+ },
+ "suttas of the Sutta Nipāta": {
+  "data": [
+   [
+    "ajitapañha",
+    "nt",
+    "in reference to SNP5.1 (SNP56) Ajitamāṇavapucchā; lit. Ajita's question",
+    "✔"
+   ],
+   [
+    "viyuha",
+    "masc",
+    "in reference to SNP50 Cūḷabyūhasutta and SNP51 Mahābyūhasutta; lit. carried apart",
+    "✔"
+   ],
+   [
+    "māgaṇḍiyapañha",
+    "nt",
+    "in refrence to SN4.9 (SNP47) Māgaṇḍiyasutta; lit. Māgaṇḍiya's question",
+    "✔"
+   ]
+  ],
+  "count": 3
  },
  "plants": {
   "data": [
@@ -27527,6 +34422,12 @@ var family_set_json = {
     "nt",
     "wild basil; Ocimum gratissimum",
     "✔"
+   ],
+   [
+    "ajjuna 1",
+    "masc",
+    "arjuna tree; Terminalia arjuna",
+    "◑"
    ],
    [
     "atimuttaka 1",
@@ -27550,6 +34451,12 @@ var family_set_json = {
     "adhimuttaka",
     "masc",
     "a kind of white flower; lit. beyond pearls",
+    "✔"
+   ],
+   [
+    "anojaka",
+    "masc",
+    "ashoka tree; Saraca asoca",
     "✔"
    ],
    [
@@ -27589,10 +34496,22 @@ var family_set_json = {
     "✔"
    ],
    [
+    "assattha 2",
+    "nt",
+    "fig; fruit of the Bodhi tree; lit. inhalation; relief; (or) under which horses stand",
+    "✔"
+   ],
+   [
     "assamāraka",
     "masc",
     "oleander; Nerium oleander; lit. horse killer",
     "◑"
+   ],
+   [
+    "āmaṇḍa 1",
+    "nt",
+    "castor bean; Ricinus communis",
+    "✔"
    ],
    [
     "āmala",
@@ -27604,7 +34523,7 @@ var family_set_json = {
     "āmalaka 1",
     "nt",
     "fruit of emblic myrobalan; amla; nellie; Phyllanthus Emblica",
-    "◑"
+    "✔"
    ],
    [
     "āmalakī",
@@ -27625,13 +34544,19 @@ var family_set_json = {
     "◑"
    ],
    [
-    "udumbara",
+    "udumbara 1",
     "masc",
     "cluster fig; Ficus racemosa",
     "✔"
    ],
    [
-    "udumbarī",
+    "udumbara 2",
+    "nt",
+    "cluster fig fruit; Ficus racemosa",
+    "◑"
+   ],
+   [
+    "udumbarī 1",
     "fem",
     "cluster fig; Ficus racemosa",
     "◑"
@@ -27685,9 +34610,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "eḷagalā",
+    "eḷagalā 1",
     "fem",
-    "Cassia Tora",
+    "Senna tora; (or) Senna alata",
+    "◑"
+   ],
+   [
+    "eḷagalā 2",
+    "fem",
+    "golden shower; Cassia fistula",
     "✔"
    ],
    [
@@ -27721,6 +34652,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "kacchu 3",
+    "masc",
+    "monkey tamarind; velvet bean; Mucana pruritus; lit. itch",
+    "✔"
+   ],
+   [
     "kaṭukarohiṇī",
     "fem",
     "Helleborus; lit. pungent red one",
@@ -27745,6 +34682,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "kaṇṇikārapuppha",
+    "nt",
+    "yellow flower of the kanak champa tree",
+    "✔"
+   ],
+   [
     "kadali 1",
     "fem",
     "plantain tree; banana tree",
@@ -27757,9 +34700,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "kadalī",
+    "fem",
+    "plantain tree; banana tree",
+    "✔"
+   ],
+   [
     "kandula",
     "masc",
     "name of a tree; Momordica charantia",
+    "✔"
+   ],
+   [
+    "kapiṭṭha",
+    "masc",
+    "wood apple tree; Aegle marmelos",
     "✔"
    ],
    [
@@ -27775,6 +34730,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "karatiya 2",
+    "masc",
+    "cowpea; Vigna unguiculata",
+    "✔"
+   ],
+   [
     "karavīra",
     "masc",
     "oleander; Nerium oleander",
@@ -27784,6 +34745,24 @@ var family_set_json = {
     "kareri",
     "masc",
     "karira tree; Capparis decidua",
+    "✔"
+   ],
+   [
+    "kalambakā",
+    "fem",
+    "bindweed; Convolvulus",
+    "✔"
+   ],
+   [
+    "kalambukā",
+    "fem",
+    "bindweed; Convolvulus",
+    "✔"
+   ],
+   [
+    "kalāya",
+    "masc",
+    "chickpea; Cicer arietinum",
     "✔"
    ],
    [
@@ -27856,7 +34835,7 @@ var family_set_json = {
     "kudrūsaka",
     "masc",
     "finger millet; Eleusine coracana",
-    "◑"
+    "✔"
    ],
    [
     "kulattha",
@@ -27868,6 +34847,18 @@ var family_set_json = {
     "kusa 1.1",
     "masc",
     "kusa grass; Desmostachya bipinnata",
+    "✔"
+   ],
+   [
+    "kusaka",
+    "masc",
+    "(comm) palm tree; coconut tree; lit. like kusa grass",
+    "✔"
+   ],
+   [
+    "kusatiṇa",
+    "nt",
+    "kusa grass",
     "✔"
    ],
    [
@@ -27895,9 +34886,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "koviḷāra",
+    "koviḷāra 1",
     "masc",
     "name of tree; Bauhinia variegata",
+    "◑"
+   ],
+   [
+    "koviḷāra 2",
+    "masc",
+    "coral tree; Erythrina",
     "✔"
    ],
    [
@@ -27910,7 +34907,7 @@ var family_set_json = {
     "kosātakī",
     "fem",
     "loofah gourd; angled gourd; Luffa acutangula",
-    "◑"
+    "✔"
    ],
    [
     "koḷikā",
@@ -27923,6 +34920,12 @@ var family_set_json = {
     "masc",
     "acacia tree; Acacia catechu",
     "◑"
+   ],
+   [
+    "khīrarukkha",
+    "masc",
+    "latex-producing tree; tree with milky sap",
+    "✔"
    ],
    [
     "khoma 2",
@@ -27991,6 +34994,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "jiñjuka",
+    "masc",
+    "wild liquorice; Abrus precatorius",
+    "✔"
+   ],
+   [
     "takkārī",
     "fem",
     "Egyptian riverhemp; pea tree; Sesbania sesban",
@@ -27999,7 +35008,13 @@ var family_set_json = {
    [
     "tagara",
     "nt",
-    "crape jasmine; milk flower; flower of Tabernaemontana divaricata",
+    "crape jasmine; milk flower; flower of Tabernaemontana divaricata; (or) oleander; Nerium oleander",
+    "✔"
+   ],
+   [
+    "taggara",
+    "nt",
+    "Rhododendron",
     "✔"
    ],
    [
@@ -28029,20 +35044,20 @@ var family_set_json = {
    [
     "tiṇḍuka 1",
     "masc",
-    "Malabar Ebony tree; Diospyros Malabarica",
+    "Malabar Ebony tree; Diospyros malabarica",
     "◑"
    ],
    [
     "tiṇḍuka 2",
     "nt",
-    "fruit of the Malabar Ebony tree; Diospyros Malabarica",
+    "fruit of the Malabar Ebony tree; Diospyros malabarica",
     "✔"
    ],
    [
     "tittakalābu",
     "nt",
     "bitter gourd; bitter melon; Mamordica charantia",
-    "◑"
+    "✔"
    ],
    [
     "tittakālābu 1",
@@ -28054,19 +35069,37 @@ var family_set_json = {
     "tittakālābu 2",
     "masc",
     "bitter gourd; bitter melon; Mamordica charantia",
-    "◑"
+    "✔"
    ],
    [
     "tinduka",
     "masc",
-    "Malabar Ebony tree; Diospyros Malabarica",
+    "Malabar Ebony tree; Diospyros malabarica",
     "✔"
    ],
    [
-    "timbaru",
-    "masc",
-    "fruit of Strychnos nux-vomica or Malabar ebony; Diospyros malabarica",
+    "timbaru 1",
+    "nt",
+    "gaub fruit; fruit of the Malabar ebony; Diospyros malabarica",
     "✔"
+   ],
+   [
+    "timbaru 2",
+    "masc",
+    "fruit of Strychnos nux-vomica",
+    "◑"
+   ],
+   [
+    "timbarūsaka 1",
+    "masc",
+    "gaub tree; Malabar ebony; Diospyros malabarica",
+    "✔"
+   ],
+   [
+    "timbarūsaka 2",
+    "nt",
+    "gaub fruit; Malabar ebony; Diospyros malabarica",
+    "◑"
    ],
    [
     "tirīṭa",
@@ -28085,6 +35118,12 @@ var family_set_json = {
     "masc",
     "Bermuda grass; Cynodon dactylon",
     "◑"
+   ],
+   [
+    "dabbatiṇa",
+    "nt",
+    "Bermuda grass; Cynodon dactylon",
+    "✔"
    ],
    [
     "dālima",
@@ -28165,9 +35204,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "paṭṭī",
+    "fem",
+    "Jute mallow; Corchorus olitorius",
+    "✔"
+   ],
+   [
     "paṇaka",
     "nt",
     "aquatic plant; water lettuce; Pistia",
+    "✔"
+   ],
+   [
+    "padumapuppha 1",
+    "nt",
+    "lotus flower",
     "✔"
    ],
    [
@@ -28187,6 +35238,12 @@ var family_set_json = {
     "masc",
     "water plant; Hedyotis burmanniana or Mollugo pentaphylla",
     "◑"
+   ],
+   [
+    "pappaṭaka 2",
+    "masc",
+    "mushroom",
+    "✔"
    ],
    [
     "pabbaja",
@@ -28209,13 +35266,13 @@ var family_set_json = {
    [
     "pāṭalī 2",
     "masc",
-    "trumpet-flower tree",
+    "trumpet-flower tree; Stereospermum chelonides",
     "✔"
    ],
    [
     "pāṭalī 3",
     "fem",
-    "trumpet flower",
+    "trumpet flower; Stereospermum chelonides",
     "◑"
    ],
    [
@@ -28225,9 +35282,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "pāricchattaka",
+    "pāricchattaka 1",
     "masc",
     "coral tree; Erythrina indica",
+    "✔"
+   ],
+   [
+    "pāricchattaka 2",
+    "masc",
+    "name of a tree in tree in Tāvatiṃsa heaven; lit. coral tree",
     "✔"
    ],
    [
@@ -28353,8 +35416,14 @@ var family_set_json = {
    [
     "babbaja 1",
     "masc",
-    "reed; bulrush; cat's-tail; coarse grass; Eleusine Indica; lit. born from joint",
-    "◑"
+    "reed; bulrush; cat's-tail; coarse grass; Eleusine Indica; lit. born from a joint",
+    "✔"
+   ],
+   [
+    "bimba 3",
+    "nt",
+    "fruit of the bhimb; Cephalandra indica",
+    "✔"
    ],
    [
     "bimbijāla",
@@ -28651,6 +35720,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "saddula",
+    "masc",
+    "Bermuda grass; Cynodon dactylon",
+    "✔"
+   ],
+   [
     "salaḷa",
     "nt",
     "Indian frankincense tree; Boswellia serrata",
@@ -28771,9 +35846,21 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sepaṇṇī",
+    "fem",
+    "name of a tree; Premna serratifolia",
+    "◑"
+   ],
+   [
     "sevāla",
     "masc",
     "aquatic plant (used to make garlands); Vallisneria",
+    "✔"
+   ],
+   [
+    "sogandhiya",
+    "nt",
+    "water-lily; lit. good smelling",
     "✔"
    ],
    [
@@ -28792,7 +35879,13 @@ var family_set_json = {
     "haritakī",
     "fem",
     "green myrobalan; Terminalia chebula",
-    "◑"
+    "✔"
+   ],
+   [
+    "harītaka 2",
+    "nt",
+    "fresh vegetables",
+    "✔"
    ],
    [
     "hareṇuka",
@@ -28819,13 +35912,1877 @@ var family_set_json = {
     "✔"
    ],
    [
+    "hiṅgu",
+    "nt",
+    "Asafoetida; devil's dung",
+    "✔"
+   ],
+   [
     "hirivera",
     "nt",
     "vetiver; Chrysopogon zizanioides",
     "✔"
    ]
   ],
-  "count": 217
+  "count": 251
+ },
+ "trees": {
+  "data": [
+   [
+    "ajjuna 1",
+    "masc",
+    "arjuna tree; Terminalia arjuna",
+    "◑"
+   ],
+   [
+    "anojaka",
+    "masc",
+    "ashoka tree; Saraca asoca",
+    "✔"
+   ],
+   [
+    "amba 1",
+    "masc",
+    "mango tree; Mangifera indica",
+    "✔"
+   ],
+   [
+    "assattha 1",
+    "masc",
+    "Bodhi tree; Ficus religiosa; lit. inhalation; relief; (or) under which horses stand",
+    "✔"
+   ],
+   [
+    "assattha 2",
+    "nt",
+    "fig; fruit of the Bodhi tree; lit. inhalation; relief; (or) under which horses stand",
+    "✔"
+   ],
+   [
+    "āmalakī",
+    "fem",
+    "emblic myrobalan; Phyllanthus Emblica",
+    "✔"
+   ],
+   [
+    "udumbara 1",
+    "masc",
+    "cluster fig; Ficus racemosa",
+    "✔"
+   ],
+   [
+    "udumbara 2",
+    "nt",
+    "cluster fig fruit; Ficus racemosa",
+    "◑"
+   ],
+   [
+    "eḷagalā 2",
+    "fem",
+    "golden shower; Cassia fistula",
+    "✔"
+   ],
+   [
+    "kakudha 2",
+    "masc",
+    "arjuna tree; Terminalia arjuna",
+    "✔"
+   ],
+   [
+    "kacchaka",
+    "masc",
+    "red cedar; Indian cedar; Toona ciliata",
+    "✔"
+   ],
+   [
+    "kacchu 3",
+    "masc",
+    "monkey tamarind; velvet bean; Mucana pruritus; lit. itch",
+    "✔"
+   ],
+   [
+    "kaṭṭhaka",
+    "masc",
+    "bamboo",
+    "✔"
+   ],
+   [
+    "kaṇikāra",
+    "masc",
+    "Pterospermum acerifolium; kanak champa; bayur tree",
+    "✔"
+   ],
+   [
+    "kadali 1",
+    "fem",
+    "plantain tree; banana tree",
+    "✔"
+   ],
+   [
+    "kadalī",
+    "fem",
+    "plantain tree; banana tree",
+    "✔"
+   ],
+   [
+    "kandula",
+    "masc",
+    "name of a tree; Momordica charantia",
+    "✔"
+   ],
+   [
+    "kapiṭṭha",
+    "masc",
+    "wood apple tree; Aegle marmelos",
+    "✔"
+   ],
+   [
+    "kapitthana 1",
+    "masc",
+    "portia tree; Thespesia populnea",
+    "✔"
+   ],
+   [
+    "karañja",
+    "masc",
+    "Indian Beech; Pongamia galbra; Millettia pinnata",
+    "◑"
+   ],
+   [
+    "kareri",
+    "masc",
+    "karira tree; Capparis decidua",
+    "✔"
+   ],
+   [
+    "kiṃsuka",
+    "masc",
+    "Bastard Teak; Parrot tree; Butea Monosperma",
+    "✔"
+   ],
+   [
+    "kūṭasimbalī",
+    "masc",
+    "thorny red cotton tree; Bombax ceiba; lit. crooked silk cotton tree",
+    "◑"
+   ],
+   [
+    "koṭasimbali",
+    "masc",
+    "thorny red cotton tree; Bombax ceiba; lit. crooked silk cotton tree",
+    "◑"
+   ],
+   [
+    "kolarukkha",
+    "masc",
+    "jujube tree; Ziziphus jujuba",
+    "◑"
+   ],
+   [
+    "koviḷāra 1",
+    "masc",
+    "name of tree; Bauhinia variegata",
+    "◑"
+   ],
+   [
+    "koviḷāra 2",
+    "masc",
+    "coral tree; Erythrina",
+    "✔"
+   ],
+   [
+    "kosamba",
+    "masc",
+    "Himalayan mango; Mangifera sylvatica; lit. sheath mango",
+    "✔"
+   ],
+   [
+    "khadira",
+    "masc",
+    "acacia tree; Acacia catechu",
+    "◑"
+   ],
+   [
+    "khīrarukkha",
+    "masc",
+    "latex-producing tree; tree with milky sap",
+    "✔"
+   ],
+   [
+    "candana 3",
+    "masc",
+    "sandal-wood tree; lit. glowing",
+    "✔"
+   ],
+   [
+    "campaka",
+    "masc",
+    "tree with fragrant flowers; Magnolia champaca",
+    "◑"
+   ],
+   [
+    "jambu",
+    "fem",
+    "rose-apple tree; Syzygium jambos",
+    "✔"
+   ],
+   [
+    "jambū",
+    "fem",
+    "rose-apple tree; Syzygium jambos",
+    "✔"
+   ],
+   [
+    "takkārī",
+    "fem",
+    "Egyptian riverhemp; pea tree; Sesbania sesban",
+    "✔"
+   ],
+   [
+    "tāla 1.1",
+    "masc",
+    "palm tree; Palmyra",
+    "✔"
+   ],
+   [
+    "tiṇḍuka 1",
+    "masc",
+    "Malabar Ebony tree; Diospyros malabarica",
+    "◑"
+   ],
+   [
+    "tiṇḍuka 2",
+    "nt",
+    "fruit of the Malabar Ebony tree; Diospyros malabarica",
+    "✔"
+   ],
+   [
+    "tinduka",
+    "masc",
+    "Malabar Ebony tree; Diospyros malabarica",
+    "✔"
+   ],
+   [
+    "timbaru 1",
+    "nt",
+    "gaub fruit; fruit of the Malabar ebony; Diospyros malabarica",
+    "✔"
+   ],
+   [
+    "timbaru 2",
+    "masc",
+    "fruit of Strychnos nux-vomica",
+    "◑"
+   ],
+   [
+    "timbarūsaka 1",
+    "masc",
+    "gaub tree; Malabar ebony; Diospyros malabarica",
+    "✔"
+   ],
+   [
+    "tirīṭa",
+    "nt",
+    "cloth made from the bark of lodhra trees; Symplocos racemosa",
+    "✔"
+   ],
+   [
+    "dālima",
+    "masc",
+    "pomegranate tree; Punica granatum",
+    "✔"
+   ],
+   [
+    "dhava 1",
+    "masc",
+    "axle-wood tree; Anogeissus latifolia",
+    "✔"
+   ],
+   [
+    "nāga 7",
+    "masc",
+    "huge tree",
+    "✔"
+   ],
+   [
+    "nāḷikera 1",
+    "masc",
+    "coconut tree; Cocos nucifera",
+    "◑"
+   ],
+   [
+    "nigrodha 1",
+    "masc",
+    "banyan tree; lit. growing down",
+    "✔"
+   ],
+   [
+    "nicula",
+    "masc",
+    "tree; Barringtonia acutangula",
+    "✔"
+   ],
+   [
+    "nimba",
+    "masc",
+    "neem tree; margosa tree; Azadirachta Lindica",
+    "✔"
+   ],
+   [
+    "paṭṭī",
+    "fem",
+    "Jute mallow; Corchorus olitorius",
+    "✔"
+   ],
+   [
+    "panasa 1",
+    "masc",
+    "jack tree",
+    "◑"
+   ],
+   [
+    "panasa 2",
+    "nt",
+    "jackfruit",
+    "✔"
+   ],
+   [
+    "palāsa 1.2",
+    "masc",
+    "bastard teak; Butea frondosa",
+    "✔"
+   ],
+   [
+    "pāṭalī 2",
+    "masc",
+    "trumpet-flower tree; Stereospermum chelonides",
+    "✔"
+   ],
+   [
+    "pāṭalī 3",
+    "fem",
+    "trumpet flower; Stereospermum chelonides",
+    "◑"
+   ],
+   [
+    "pāricchatta",
+    "masc",
+    "coral tree; Erythrina indica",
+    "◑"
+   ],
+   [
+    "pāricchattaka 1",
+    "masc",
+    "coral tree; Erythrina indica",
+    "✔"
+   ],
+   [
+    "pāricchattaka 2",
+    "masc",
+    "name of a tree in tree in Tāvatiṃsa heaven; lit. coral tree",
+    "✔"
+   ],
+   [
+    "pārichatta",
+    "masc",
+    "orchid tree; Bauhinia variegata; lit. sunshade all around",
+    "✔"
+   ],
+   [
+    "pārichattaka 1",
+    "masc",
+    "name of a type of tree; Bauhinia variegata; lit. umbrella all around",
+    "✔"
+   ],
+   [
+    "pārichattaka 2",
+    "masc",
+    "name of a tree in Tāvatiṃsa heaven; lit. umbrella all around",
+    "✔"
+   ],
+   [
+    "pāripuppha",
+    "nt",
+    "orchid tree flower",
+    "✔"
+   ],
+   [
+    "pilakkha",
+    "masc",
+    "white fig; Ficus virens",
+    "✔"
+   ],
+   [
+    "pucimanda",
+    "masc",
+    "Neem tree; margosa; Azadirachta indica",
+    "✔"
+   ],
+   [
+    "puṇḍarīka 2",
+    "nt",
+    "fragrant mango tree; white mango; Mangifera indica",
+    "✔"
+   ],
+   [
+    "punnāga",
+    "masc",
+    "Alexandrian Laurel tree; Calophyllum inophyllum",
+    "✔"
+   ],
+   [
+    "phandana 3",
+    "masc",
+    "kind of tree; lit. trembling",
+    "✔"
+   ],
+   [
+    "badarī",
+    "fem",
+    "jujube tree; Ziziphus jujuba",
+    "◑"
+   ],
+   [
+    "bimbijāla",
+    "masc",
+    "tree under which the Buddha Dhammadassī was awakened",
+    "◑"
+   ],
+   [
+    "beluva 1",
+    "masc",
+    "wood apple tree; bael tree; Aegle marmelos",
+    "✔"
+   ],
+   [
+    "beluvalaṭṭhikā",
+    "fem",
+    "wood apple sapling; young bael tree",
+    "✔"
+   ],
+   [
+    "beḷuva 2",
+    "masc",
+    "wood apple tree; bael tree; Aegle marmelos",
+    "◑"
+   ],
+   [
+    "beḷuva 3",
+    "nt",
+    "wood apple fruit; bael; Aegle marmelos",
+    "✔"
+   ],
+   [
+    "bodhi 3",
+    "fem",
+    "Bodhi tree; Ficus religiosia; lit. awakening",
+    "✔"
+   ],
+   [
+    "bodhirukkha",
+    "masc",
+    "Bodhi tree; Ficus religiosia",
+    "✔"
+   ],
+   [
+    "madhu 4",
+    "nt",
+    "Butter tree; Mahua; Bassia latifolia",
+    "✔"
+   ],
+   [
+    "madhuka",
+    "masc",
+    "Butter tree; Mahua; Bassia latifolia",
+    "✔"
+   ],
+   [
+    "mandārava",
+    "masc",
+    "coral tree",
+    "✔"
+   ],
+   [
+    "mahānāma 4",
+    "masc",
+    "name of a tree; lit. great name",
+    "◑"
+   ],
+   [
+    "mucalinda 1",
+    "masc",
+    "type of tree; Barringtonia Acutangula",
+    "◑"
+   ],
+   [
+    "mucalinda 3",
+    "masc",
+    "type of tree; Pterospermum suberifolium; Pterospermum acerifolium",
+    "◑"
+   ],
+   [
+    "rājāyatana",
+    "masc",
+    "charoli nut tree; Buchanania cochinchinensis; lit. realm of kings",
+    "◑"
+   ],
+   [
+    "labuja",
+    "masc",
+    "breadfruit tree; Artocarpus Lacucha; Artocarpus altilis",
+    "✔"
+   ],
+   [
+    "vaṭa 3",
+    "masc",
+    "banyan tree",
+    "◑"
+   ],
+   [
+    "vaṭarukkha",
+    "masc",
+    "banyan tree",
+    "◑"
+   ],
+   [
+    "vaṃsa 1",
+    "masc",
+    "bamboo",
+    "✔"
+   ],
+   [
+    "sattapaṇṇī",
+    "masc",
+    "name of a tree; Alstonia scholaris; lit. seven leaves",
+    "✔"
+   ],
+   [
+    "salaḷa",
+    "nt",
+    "Indian frankincense tree; Boswellia serrata",
+    "✔"
+   ],
+   [
+    "sallakī",
+    "fem",
+    "Indian frankincense tree; Boswellia serrata",
+    "✔"
+   ],
+   [
+    "saḷala",
+    "masc",
+    "Indian frankincense tree; Boswellia serrata",
+    "✔"
+   ],
+   [
+    "sāka 2",
+    "nt",
+    "teak tree; Tectona grandis",
+    "✔"
+   ],
+   [
+    "sāla 1.1",
+    "masc",
+    "sal tree; Shorea robusta",
+    "✔"
+   ],
+   [
+    "sālarukkha",
+    "masc",
+    "sal tree; Shorea robusta",
+    "◑"
+   ],
+   [
+    "simbalī",
+    "masc",
+    "silk-cotton tree; Bombax ceiba",
+    "✔"
+   ],
+   [
+    "sirīsa",
+    "masc",
+    "woman's tongue tree; Albizia lebbeck",
+    "✔"
+   ],
+   [
+    "sirīsaka",
+    "masc",
+    "name of a tree; Acacia sirissa",
+    "✔"
+   ],
+   [
+    "siṃsapā",
+    "fem",
+    "Simsapa tree; Dalbergia tree; Indian Rosewood",
+    "✔"
+   ],
+   [
+    "sīsapā",
+    "fem",
+    "Simsapa tree; Dalbergia tree; Indian Rosewood",
+    "✔"
+   ],
+   [
+    "sepaṇṇī",
+    "fem",
+    "name of a tree; Premna serratifolia",
+    "◑"
+   ],
+   [
+    "haricandana",
+    "nt",
+    "yellow sandalwood; golden coloured sandalwood",
+    "✔"
+   ]
+  ],
+  "count": 101
+ },
+ "suttas of Saṃyutta Nikāya 35": {
+  "data": [
+   [
+    "ajjhattāniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.1 (SN35.1); lit. discourse on internal and impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.2 (SN35.2); lit. discourse on internal and suffering",
+    "✔"
+   ],
+   [
+    "ajjhattānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.3 (SN35.3); lit. discourse on internal and not oneself",
+    "✔"
+   ],
+   [
+    "bāhirāniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.4 (SN35.4); lit. discourse on external and impermanent",
+    "✔"
+   ],
+   [
+    "bāhiradukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.5 (SN35.5); lit. discourse on external and uncomfortable",
+    "✔"
+   ],
+   [
+    "bāhirānattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.6 (SN35.6); lit. discourse on external and not oneself",
+    "✔"
+   ],
+   [
+    "ajjhattāniccātītānāgatasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.7 (SN35.7); lit. discourse on internal and impersonal in the past and future",
+    "✔"
+   ],
+   [
+    "ajjhattadukkhātītānāgatasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.8 (SN35.8); lit. discourse on internal and suffering in the past and future",
+    "✔"
+   ],
+   [
+    "ajjhattānattātītānāgatasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.9 (SN35.9); lit. discourse on internal and not oneself in the past and future",
+    "✔"
+   ],
+   [
+    "bāhirāniccātītānāgatasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.10 (SN35.10); lit. discourse on external and impermanent in the past and future",
+    "✔"
+   ],
+   [
+    "bāhiradukkhātītānāgatasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.11 (SN35.11); lit. discourse on external and suffering in the past and future",
+    "✔"
+   ],
+   [
+    "bāhirānattātītānāgatasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.12 (SN35.12); lit. discourse on external and nonself in the past and future",
+    "✔"
+   ],
+   [
+    "paṭhamapubbesambodhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.13 (SN35.13); lit. first discourse on before awakening",
+    "✔"
+   ],
+   [
+    "dutiyapubbesambodhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.14 (SN35.14); lit. second discourse on before awakening",
+    "✔"
+   ],
+   [
+    "paṭhamaassādapariyesanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.15 (SN35.15); lit. first discourse on the quest for gratification",
+    "✔"
+   ],
+   [
+    "dutiyaassādapariyesanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.16 (SN35.16); lit. second discourse on the quest for gratification",
+    "✔"
+   ],
+   [
+    "paṭhamanoceassādasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.17 (SN35.17); lit. first discourse on if there were no gratification",
+    "✔"
+   ],
+   [
+    "dutiyanoceassādasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.18 (SN35.18); lit. second discourse on if there were no gratification",
+    "✔"
+   ],
+   [
+    "paṭhamābhinandasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.19 (SN35.19); lit. first discourse on delight",
+    "✔"
+   ],
+   [
+    "dutiyābhinandasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.20 (SN35.20); lit. second discourse on delight",
+    "✔"
+   ],
+   [
+    "paṭhamadukkhuppādasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.21 (SN35.21); lit. first discourse on the arising of suffering",
+    "✔"
+   ],
+   [
+    "dutiyadukkhuppādasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.22 (SN35.22); lit. second discourse on the arising of suffering",
+    "✔"
+   ],
+   [
+    "sabbasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.23 (SN35.23); lit. discourse on everything",
+    "✔"
+   ],
+   [
+    "pahānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.24 (SN35.24); lit. discourse on abandoning",
+    "✔"
+   ],
+   [
+    "abhiññāpariññāpahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.25 (SN35.25); lit. discourse on abandoning by direct knowledge and complete comprehension",
+    "✔"
+   ],
+   [
+    "paṭhamaaparijānanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.26 (SN35.26); lit. first discourse on not completely understanding",
+    "✔"
+   ],
+   [
+    "dutiyaaparijānanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.27 (SN35.27); lit. second discourse on not completely understanding",
+    "✔"
+   ],
+   [
+    "ādittasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 35.28 (SN35.28); lit. discourse on burning",
+    "✔"
+   ],
+   [
+    "addhabhūtasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.29 (SN35.29); lit. discourse on overpowered",
+    "✔"
+   ],
+   [
+    "samugghātasāruppasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.30 (SN35.30); lit. discourse on suitable for eradicating",
+    "✔"
+   ],
+   [
+    "paṭhamasamugghātasappāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.31 (SN35.31); lit. first discourse on suitable for eradicating",
+    "✔"
+   ],
+   [
+    "dutiyasamugghātasappāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.32 (SN35.32); lit. second discourse on suitable for eradicating",
+    "✔"
+   ],
+   [
+    "jātidhammādisuttadasaka",
+    "nt",
+    "Saṃyutta Nikāya 35.33-42 (SN35.33-42); lit. group of ten discourses starting with the discourse on liable to birth",
+    "✔"
+   ],
+   [
+    "aniccādisuttanavaka",
+    "nt",
+    "Saṃyutta Nikāya 35.43-51 (SN35.43-51); lit. group of nine discourses starting with the discourse on impermanence",
+    "✔"
+   ],
+   [
+    "upassaṭṭhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.52 (SN35.52); lit. discourse on afflicted",
+    "✔"
+   ],
+   [
+    "avijjāpahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.53 (SN35.53); lit. discourse on the abandoning of ignorance",
+    "✔"
+   ],
+   [
+    "saṃyojanapahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.54 (SN35.54); lit. discourse on abandoning fetters",
+    "✔"
+   ],
+   [
+    "saṃyojanasamugghātasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.55 (SN35.55); lit. discourse on the eradication of the fetters",
+    "✔"
+   ],
+   [
+    "āsavapahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.56 (SN35.56); lit. discourse on the destruction of the effluents",
+    "✔"
+   ],
+   [
+    "āsavasamugghātasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.57 (SN35.57); lit. discourse on eradication of the effluents",
+    "✔"
+   ],
+   [
+    "anusayapahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.58 (SN35.58); lit. discourse on abandoning the underlying tendency",
+    "✔"
+   ],
+   [
+    "anusayasamugghātasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.59 (SN35.59); lit. discourse on eradication of the underlying tendencies",
+    "✔"
+   ],
+   [
+    "sabbupādānapariññāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.60 (SN35.60); lit. discourse on the complete comprehension of all identification",
+    "✔"
+   ],
+   [
+    "paṭhamasabbupādānapariyādānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.61 (SN35.61); lit. first discourse on exhausting all acquisition",
+    "✔"
+   ],
+   [
+    "dutiyasabbupādānapariyādānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.62 (SN35.62); lit. second discourse on exhausting all acquisition",
+    "✔"
+   ],
+   [
+    "paṭhamamigajālasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.63 (SN35.63); lit. first discourse Migajāla",
+    "✔"
+   ],
+   [
+    "dutiyamigajālasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.64 (SN35.64); lit. second discourse with Migajāla",
+    "✔"
+   ],
+   [
+    "paṭhamasamiddhimārapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.65 (SN35.65); lit. first discourse on Samiddhi's question about Māra",
+    "✔"
+   ],
+   [
+    "samiddhisattapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.66 (SN35.66); lit. discourse on Samiddhi's question about being",
+    "✔"
+   ],
+   [
+    "samiddhidukkhapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.67 (SN35.67); lit. discourse on Samiddhi's question about suffering",
+    "✔"
+   ],
+   [
+    "samiddhilokapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.68 (SN35.68); lit. discourse on Samiddhi's question about the world",
+    "✔"
+   ],
+   [
+    "upasenaāsīvisasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.69 (SN35.69); lit. discourse on Upasena and the venomous snake",
+    "✔"
+   ],
+   [
+    "upavāṇasandiṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.70 (SN35.70); lit. discourse with Upavāna on directly visible",
+    "✔"
+   ],
+   [
+    "paṭhamachaphassāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.71 (SN35.71); lit. first discourse on the six fields of sense experience",
+    "✔"
+   ],
+   [
+    "dutiyachaphassāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.72 (SN35.72); lit. second discourse on the six fields of sense experience",
+    "✔"
+   ],
+   [
+    "tatiyachaphassāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.73 (SN35.73); lit. third discourse on the six fields of sense experience",
+    "✔"
+   ],
+   [
+    "paṭhamagilānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.74 (SN35.74); lit. first discourse on the sick monk",
+    "✔"
+   ],
+   [
+    "dutiyagilānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.75 (SN35.75); lit. second discourse on the sick monk",
+    "✔"
+   ],
+   [
+    "rādhaaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.76 (SN35.76); lit. discourse with Rādha on impermanence",
+    "✔"
+   ],
+   [
+    "rādhadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.77 (SN35.77); lit. discourse with Rādha on suffering",
+    "✔"
+   ],
+   [
+    "rādhaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.78 (SN35.78); lit. discourse with Rādha on not oneself",
+    "✔"
+   ],
+   [
+    "paṭhamaavijjāpahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.79 (SN35.79); lit. first discourse on the abandoning of ignorance",
+    "✔"
+   ],
+   [
+    "dutiyaavijjāpahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.80 (SN35.80); lit. second discourse on the abandoning of ignorance",
+    "✔"
+   ],
+   [
+    "sambahulabhikkhusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.81 (SN35.81); lit. discourse on many monks",
+    "✔"
+   ],
+   [
+    "lokapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.82 (SN35.82); lit. discourse on the question about the world",
+    "✔"
+   ],
+   [
+    "phaggunapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.83 (SN35.83); lit. discourse on Phagguna's question",
+    "✔"
+   ],
+   [
+    "palokadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.84 (SN35.84); lit. discourse on liable to fall apart",
+    "✔"
+   ],
+   [
+    "suññatalokasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.85 (SN35.85); lit. discourse on the world is empty",
+    "✔"
+   ],
+   [
+    "saṃkhittadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.86 (SN35.86); lit. discourse on the concise teaching",
+    "✔"
+   ],
+   [
+    "channasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.87 (SN35.87); lit. discourse with Channa",
+    "✔"
+   ],
+   [
+    "puṇṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.88 (SN35.88); lit. discourse with Puṇṇa",
+    "✔"
+   ],
+   [
+    "bāhiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.89 (SN35.89); lit. discourse with Bāhiya",
+    "✔"
+   ],
+   [
+    "paṭhamaejāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.90 (SN35.90); lit. first discourse on perturbance",
+    "✔"
+   ],
+   [
+    "dutiyaejāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.91 (SN35.91); lit. second discourse on perturbance",
+    "✔"
+   ],
+   [
+    "paṭhamadvayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.92 (SN35.92); lit. first discourse on the duality",
+    "✔"
+   ],
+   [
+    "dutiyadvayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.93 (SN35.93); lit. second discourse on the duality",
+    "✔"
+   ],
+   [
+    "adantaaguttasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.94 (SN35.94); lit. discourse on untamed and unguarded",
+    "✔"
+   ],
+   [
+    "mālukyaputtasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.95 (SN35.95); lit. discourse with Mālukyaputta",
+    "✔"
+   ],
+   [
+    "parihānadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.96 (SN35.96); lit. discourse on liable to decline",
+    "✔"
+   ],
+   [
+    "pamādavihārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.97 (SN35.97); lit. discourse on dwelling negligently",
+    "✔"
+   ],
+   [
+    "saṃvarasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.98 (SN35.98); lit. discourse on restraint",
+    "✔"
+   ],
+   [
+    "samādhisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.99 (SN35.99); lit. discourse on mental composure",
+    "✔"
+   ],
+   [
+    "paṭisallānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.100 (SN35.100); lit. discourse on seclusion",
+    "✔"
+   ],
+   [
+    "paṭhamanatumhākaṃsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.101 (SN35.101); lit. first discourse on not yours",
+    "✔"
+   ],
+   [
+    "dutiyanatumhākaṃsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.102 (SN35.102); lit. second discourse on not yours",
+    "✔"
+   ],
+   [
+    "udakasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.103 (SN35.103); lit. discourse on water",
+    "✔"
+   ],
+   [
+    "yogakkhemisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.104 (SN35.104); lit. discourse on secure from bondage",
+    "✔"
+   ],
+   [
+    "upādāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.105 (SN35.105); lit. discourse on grasping",
+    "✔"
+   ],
+   [
+    "dukkhasamudayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.106 (SN35.106); lit. discourse on the origin of suffering",
+    "✔"
+   ],
+   [
+    "lokasamudayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.107 (SN35.107); lit. discourse on the origin of the world",
+    "✔"
+   ],
+   [
+    "seyyohamasmisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.108 (SN35.108); lit. discourse on I am better",
+    "✔"
+   ],
+   [
+    "saṃyojaniyasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.109 (SN35.109); lit. discourse on what can bind",
+    "✔"
+   ],
+   [
+    "upādāniyasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.110 (SN35.110); lit. discourse on what can be clung to",
+    "✔"
+   ],
+   [
+    "ajjhattikāyatanaparijānanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.111 (SN35.111); lit. discourse on completely comprehending the internal sense bases",
+    "✔"
+   ],
+   [
+    "bāhirāyatanaparijānanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.112 (SN35.112); lit. discourse on completely comprehending the external sense fields",
+    "✔"
+   ],
+   [
+    "upassutisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.113 (SN35.113); lit. discourse on overhearing",
+    "✔"
+   ],
+   [
+    "paṭhamamārapāsasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.114 (SN35.114); lit. first discourse on Mara's snare",
+    "✔"
+   ],
+   [
+    "dutiyamārapāsasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.115 (SN35.115); lit. second discourse on Mara's snare",
+    "✔"
+   ],
+   [
+    "lokantagamanasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.116 (SN35.116); lit. discourse on going to the end of the world",
+    "✔"
+   ],
+   [
+    "kāmaguṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.117 (SN35.117); lit. discourse on sensual pleasure",
+    "✔"
+   ],
+   [
+    "sakkapañhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.118 (SN35.118); lit. discourse on Sakka's questions",
+    "✔"
+   ],
+   [
+    "pañcasikhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.119 (SN35.119); lit. discourse with Pañcasikha",
+    "✔"
+   ],
+   [
+    "sāriputtasaddhivihārikasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.120 (SN35.120); lit. discourse on Sāriputta and the co-resident",
+    "✔"
+   ],
+   [
+    "rāhulovādasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.121 (SN35.121); lit. discourse on advice to Rāhula",
+    "✔"
+   ],
+   [
+    "saṃyojaniyadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.122 (SN35.122); lit. discourse on things which fetter",
+    "✔"
+   ],
+   [
+    "upādāniyadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.123 (SN35.123); lit. discourse on things to be clung to",
+    "✔"
+   ],
+   [
+    "vesālīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.124 (SN35.124); lit. discourse at Vesālī",
+    "✔"
+   ],
+   [
+    "vajjīsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.125 (SN35.125); lit. discourse among the Vajjī",
+    "✔"
+   ],
+   [
+    "nāḷandasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.126 (SN35.126); lit. discourse at Nāḷandā",
+    "✔"
+   ],
+   [
+    "bhāradvājasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.127 (SN35.127); lit. discourse with Bhāradvāja",
+    "✔"
+   ],
+   [
+    "soṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.128 (SN35.128); lit. discourse with Soṇa",
+    "✔"
+   ],
+   [
+    "ghositasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.129 (SN35.129); lit. discourse with Ghosita",
+    "✔"
+   ],
+   [
+    "hāliddikānisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.130 (SN35.130); lit. discourse with Hāliddikāni",
+    "✔"
+   ],
+   [
+    "nakulapitusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.131 (SN35.131); lit. discourse with Nakula's father",
+    "✔"
+   ],
+   [
+    "lohiccasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.132 (SN35.132); lit. discourse with Lohicca",
+    "✔"
+   ],
+   [
+    "verahaccānisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.133 (SN35.133); lit. discourse with Verahaccāni",
+    "✔"
+   ],
+   [
+    "devadahasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 35.134 (SN35.134); lit. discourse at Devadaha",
+    "✔"
+   ],
+   [
+    "khaṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.135 (SN35.135); lit. discourse on the opportunity",
+    "✔"
+   ],
+   [
+    "paṭhamarūpārāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.136 (SN35.136); lit. first discourse on enjoying sights",
+    "✔"
+   ],
+   [
+    "dutiyarūpārāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.137 (SN35.137); lit. second discourse on enjoying sights",
+    "✔"
+   ],
+   [
+    "paṭhamanatumhākaṃsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.138 (SN35.138); lit. first discourse on not yours",
+    "✔"
+   ],
+   [
+    "dutiyanatumhākaṃsutta 3",
+    "nt",
+    "Saṃyutta Nikāya 35.139 (SN35.139); lit. second discourse on not yours",
+    "✔"
+   ],
+   [
+    "ajjhattāniccahetusutta",
+    "nt",
+    "Saṃyutta Nikāya 35.140 (SN35.140); lit. discourse on the internal impermanent cause",
+    "✔"
+   ],
+   [
+    "ajjhattadukkhahetusutta",
+    "nt",
+    "Saṃyutta Nikāya 35.141 (SN35.141); lit. discourse on the internal uncomfortable cause",
+    "✔"
+   ],
+   [
+    "ajjhattānattahetusutta",
+    "nt",
+    "Saṃyutta Nikāya 35.142 (SN35.142); lit. discourse on the internal impersonal cause",
+    "✔"
+   ],
+   [
+    "bāhirāniccahetusutta",
+    "nt",
+    "Saṃyutta Nikāya 35.143 (SN35.143); lit. discourse on the external impermanent cause",
+    "✔"
+   ],
+   [
+    "bāhiradukkhahetusutta",
+    "nt",
+    "Saṃyutta Nikāya 35.144 (SN35.144); lit. discourse on the external uncomfortable cause",
+    "✔"
+   ],
+   [
+    "bāhirānattahetusutta",
+    "nt",
+    "Saṃyutta Nikāya 35.145 (SN35.145); lit. discourse on the external impersonal cause",
+    "✔"
+   ],
+   [
+    "kammanirodhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.146 (SN35.146); lit. discourse on the cessation of action",
+    "✔"
+   ],
+   [
+    "aniccanibbānasappāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.147 (SN35.147); lit. discourse on the impermanent being conducive to complete quenching",
+    "✔"
+   ],
+   [
+    "dukkhanibbānasappāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.148 (SN35.148); lit. discourse on the uncomfortable being conducive to complete quenching",
+    "✔"
+   ],
+   [
+    "anattanibbānasappāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.149 (SN35.149); lit. discourse on the impersonal being conducive to complete quenching",
+    "✔"
+   ],
+   [
+    "nibbānasappāyapaṭipadāsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.150 (SN35.150); lit. discourse on the practice conducive to complete quenching",
+    "✔"
+   ],
+   [
+    "antevāsikasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.151 (SN35.151); lit. discourse on the student",
+    "✔"
+   ],
+   [
+    "kimatthiyabrahmacariyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.152 (SN35.152); lit. discourse on for what purpose is the holy life",
+    "✔"
+   ],
+   [
+    "atthinukhopariyāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.153 (SN35.153); lit. discourse on is there a way",
+    "✔"
+   ],
+   [
+    "indriyasampannasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.154 (SN35.154); lit. discourse on accomplished in the sense faculties",
+    "✔"
+   ],
+   [
+    "dhammakathikapucchasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.155 (SN35.155); lit. discourse on the question about the Dhamma teacher",
+    "✔"
+   ],
+   [
+    "ajjhattanandikkhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.156 (SN35.156); lit. discourse on the internal destruction of delight",
+    "✔"
+   ],
+   [
+    "bāhiranandikkhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.157 (SN35.157); lit. discourse on the external destruction of delight",
+    "✔"
+   ],
+   [
+    "ajjhattaaniccanandikkhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.158 (SN35.158); lit. discourse on internal, impermanent, and the destruction of delight",
+    "✔"
+   ],
+   [
+    "bāhiraaniccanandikkhayasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.159 (SN35.159); lit. discourse on external, impermanent destruction of delight",
+    "✔"
+   ],
+   [
+    "jīvakambavanasamādhisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.160 (SN35.160); lit. discourse on mental composure in Jīvaka's mango grove",
+    "✔"
+   ],
+   [
+    "jīvakambavanapaṭisallānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.161 (SN35.161); lit. discourse on seclusion in Jīvaka's mango grove",
+    "✔"
+   ],
+   [
+    "koṭṭhikaaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.162 (SN35.162); lit. discourse with Koṭṭhita in the impermanent",
+    "✔"
+   ],
+   [
+    "koṭṭhikadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.163 (SN35.163); lit. discourse with Koṭṭhita on the uncomfortable",
+    "✔"
+   ],
+   [
+    "koṭṭhikaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.164 (SN35.164); lit. discourse with Koṭṭhita on the impersonal",
+    "✔"
+   ],
+   [
+    "micchādiṭṭhipahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.165 (SN35.165); lit. discourse on the abandoning of wrong view",
+    "✔"
+   ],
+   [
+    "sakkāyadiṭṭhipahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.166 (SN35.166); lit. discourse on abandoning belief in self-identity",
+    "✔"
+   ],
+   [
+    "attānudiṭṭhipahānasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.167 (SN35.167); lit. discourse on abandoning the concept of self",
+    "✔"
+   ],
+   [
+    "ajjhattaaniccachandasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.168 (SN35.168); lit. discourse on desire for the internal and impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattaaniccarāgasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.169 (SN35.169); lit. discourse on lust for the internal and impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattaaniccachandarāgasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.170 (SN35.170); lit. discourse on desire and lust for the internal and impermanent",
+    "✔"
+   ],
+   [
+    "dukkhachandādisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.171-173 (SN35.171-173); lit. discourse on desire for the uncomfortable, etc.",
+    "✔"
+   ],
+   [
+    "anattachandādisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.174-176 (SN35.174-176); lit. discourse on desire for the impersonal, etc.",
+    "✔"
+   ],
+   [
+    "bāhirāniccachandādisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.177-179 (SN35.177-179); lit. discourse on desire for the external and impermanent, etc.",
+    "✔"
+   ],
+   [
+    "bāhiradukkhachandādisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.180-182 (SN35.180-182); lit. discourse on desire for the external and uncomfortable, etc.",
+    "✔"
+   ],
+   [
+    "bāhirānattachandādisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.183-185 (SN35.183-185); lit. discourse on desire for the external and impersonal, etc.",
+    "✔"
+   ],
+   [
+    "ajjhattātītāniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.186 (SN35.186); lit. discourse on internal, past and impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattānāgatāniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.187 (SN35.187); lit. discourse on the internal, future and impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattapaccuppannāniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.188 (SN35.188); lit. discourse on the internal, present and impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattātītādidukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.189-191 (SN35.189-191); lit. discourse on the internal, past, etc. and uncomfortable",
+    "✔"
+   ],
+   [
+    "ajjhattātītādianattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.192-194 (SN35.192-194); lit. discourse on the internal, past, etc. and impersonal",
+    "✔"
+   ],
+   [
+    "bāhirātītādianiccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.195-197 (SN35.195-197); lit. discourse on the external, past, etc. and impermanent",
+    "✔"
+   ],
+   [
+    "bāhirātītādidukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.198-200 (SN35.198-200); lit. discourse on the external, past, etc. and uncomfortable",
+    "✔"
+   ],
+   [
+    "bāhirātītādianattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.201-203 (SN35.201-203); lit. discourse on the external, past, etc. and impersonal",
+    "✔"
+   ],
+   [
+    "ajjhattātītayadaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.204 (SN35.204); lit. discourse on internal, past and what is impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattānāgatayadaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.205 (SN35.205); lit. discourse on internal, future and what is impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattapaccuppannayadaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.206 (SN35.206); lit. discourse on internal, present and what is impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattātītādiyaṃdukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.207-209 (SN35.207-209); lit. discourse on internal, past, etc. and what is uncomfortable",
+    "✔"
+   ],
+   [
+    "ajjhattātītādiyadanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.210-212 (SN35.210-212); lit. discourse on the internal, past, etc. and whatever is not oneself",
+    "✔"
+   ],
+   [
+    "bāhirātītādiyadaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.213-215 (SN35.213-215); lit. discourse on the external, past, etc. and whatever is impermanent",
+    "✔"
+   ],
+   [
+    "bāhirātītādiyaṃdukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.216-218 (SN35.216-218); lit. discourse on the external, past, etc. and whatever suffering",
+    "✔"
+   ],
+   [
+    "bāhirātītādiyadanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.219-221 (SN35.219-221); lit. discourse on external, past, etc. and whatever is impersonal",
+    "✔"
+   ],
+   [
+    "ajjhattāyatanaaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.222 (SN35.222); lit. discourse on the internal sense bases are impermanent",
+    "✔"
+   ],
+   [
+    "ajjhattāyatanadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.223 (SN35.223); lit. discourse on the internal sense bases are uncomfortable",
+    "✔"
+   ],
+   [
+    "ajjhattāyatanaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.224 (SN35.224); lit. discourse on the internal sense bases are impersonal",
+    "✔"
+   ],
+   [
+    "bāhirāyatanaaniccasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.225 (SN35.225); lit. discourse on the external sense fields are impermanent",
+    "✔"
+   ],
+   [
+    "bāhirāyatanadukkhasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.226 (SN35.226); lit. discourse on the external sense fields are uncomfortable",
+    "✔"
+   ],
+   [
+    "bāhirāyatanaanattasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.227 (SN35.227); lit. discourse on the external sense fields are impersonal",
+    "✔"
+   ],
+   [
+    "paṭhamasamuddasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.228 (SN35.228); lit. first discourse on the ocean",
+    "✔"
+   ],
+   [
+    "dutiyasamuddasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.229 (SN35.229); lit. second discourse on the ocean",
+    "✔"
+   ],
+   [
+    "bāḷisikopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.230 (SN35.230); lit. discourse on the simile of the fisherman",
+    "✔"
+   ],
+   [
+    "khīrarukkhopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.231 (SN35.231); lit. discourse on the tree with milky sap",
+    "✔"
+   ],
+   [
+    "koṭṭhikasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.232 (SN35.232); lit. discourse with Koṭṭhika",
+    "✔"
+   ],
+   [
+    "kāmabhūsutta",
+    "nt",
+    "Saṃyutta Nikāya 35.233 (SN35.233); lit. discourse with Kāmabhū",
+    "✔"
+   ],
+   [
+    "udāyīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 35.234 (SN35.234); lit. discourse with Udāyī",
+    "✔"
+   ],
+   [
+    "ādittapariyāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.235 (SN35.235); lit. discourse on the teaching about on fire",
+    "✔"
+   ],
+   [
+    "paṭhamahatthapādopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.236 (SN35.236); lit. first discourse on the simile of hands and feet",
+    "✔"
+   ],
+   [
+    "dutiyahatthapādopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.237 (SN35.237); lit. second discourse on the simile of hands and feet",
+    "✔"
+   ],
+   [
+    "āsīvisopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.238 (SN35.238); lit. discourse on the simile of the poisonous snake",
+    "✔"
+   ],
+   [
+    "rathopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.239 (SN35.239); lit. discourse on the simile of the chariot",
+    "✔"
+   ],
+   [
+    "kummopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.240 (SN35.240); lit. discourse on the simile of the turtle",
+    "✔"
+   ],
+   [
+    "paṭhamadārukkhandhopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.241 (SN35.241); lit. first discourse on the log of wood",
+    "✔"
+   ],
+   [
+    "dutiyadārukkhandhopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.242 (SN35.242); lit. second discourse on the log of wood",
+    "✔"
+   ],
+   [
+    "avassutapariyāyasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.243 (SN35.243); lit. discourse on the teaching about seeping (with defilements)",
+    "✔"
+   ],
+   [
+    "avassutasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.243 (SN35.243); lit. discourse on oozing",
+    "✔"
+   ],
+   [
+    "dukkhadhammasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 35.244 (SN35.244); lit. discourse on uncomfortable in nature",
+    "✔"
+   ],
+   [
+    "kiṃsukopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.245 (SN35.245); lit. discourse on the simile of the kiṃsuka tree",
+    "✔"
+   ],
+   [
+    "vīṇopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.246 (SN35.246); lit. discourse on the simile of lute",
+    "✔"
+   ],
+   [
+    "chappāṇakopamasutta",
+    "nt",
+    "Saṃyutta Nikāya 35.247 (SN35.247); lit. discourse on the simile of the six animals",
+    "✔"
+   ],
+   [
+    "yavakalāpisutta",
+    "nt",
+    "Saṃyutta Nikāya 35.248 (SN35.248); lit. discourse on the bundle of barley",
+    "✔"
+   ],
+   [
+    "hāliddika",
+    "masc",
+    "in reference to SN22.3 Hāliddikānisutta; lit. dealing in turmeric",
+    "✔"
+   ],
+   [
+    "eja",
+    "nt",
+    "in reference to SN35.90 Paṭhamaejāsutta & SN35.91 Dutiyaejāsutta; lit. perturbance",
+    "✔"
+   ],
+   [
+    "verahaccāni",
+    "masc",
+    "in reference to SN35.133 Verahaccānisutta",
+    "✔"
+   ],
+   [
+    "devadaha 2",
+    "masc",
+    "in reference to SN35.134 Devadahasutta; lit. lake of the gods",
+    "✔"
+   ],
+   [
+    "chappāṇā",
+    "masc",
+    "in reference to SN35.247 Chappāṇakopamasutta; lit. six animals",
+    "✔"
+   ]
+  ],
+  "count": 207
  },
  "names of animals": {
   "data": [
@@ -28878,6 +37835,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "pālileyyaka 2",
+    "masc",
+    "name of an elephant that served the Buddha in a Dhammapada story",
+    "✔"
+   ],
+   [
+    "puṇḍarīka 6",
+    "masc",
+    "name of an elephant in a Dhammapada story; lit. white lotus",
+    "✔"
+   ],
+   [
     "buddharakkhita 2",
     "masc",
     "name of a young parrot who practiced Satipaṭṭhāna meditation; lit. protected by the Buddha",
@@ -28896,6 +37865,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "valāha 2",
+    "masc",
+    "name of a horse in a Jātaka story; lit. cloud",
+    "✔"
+   ],
+   [
     "valāhaka 2",
     "masc",
     "name of a king Mahāsudassana's royal steed; lit. Thundercloud",
@@ -28908,13 +37883,167 @@ var family_set_json = {
     "✔"
    ],
    [
+    "suphassā",
+    "fem",
+    "name of a crow in a Jātaka story; lit. good touch",
+    "✔"
+   ],
+   [
     "seta 3",
     "masc",
     "name of King Pasenadi's elephant; lit. white",
     "✔"
    ]
   ],
-  "count": 14
+  "count": 18
+ },
+ "suttas of Saṃyutta Nikāya 6": {
+  "data": [
+   [
+    "brahmāyācanasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.1 (SN6.1); lit. discourse about Brahmā's imploring",
+    "✔"
+   ],
+   [
+    "gāravasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.2 (SN6.2); lit. discourse on respect",
+    "✔"
+   ],
+   [
+    "brahmadevasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.3 (SN6.3); lit. discourse about Brahmadeva",
+    "✔"
+   ],
+   [
+    "bakabrahmasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.4 (SN6.4); lit. discourse about Baka Brahma",
+    "✔"
+   ],
+   [
+    "aññatarabrahmasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.5 (SN6.5); lit. discourse about a certain brahma",
+    "✔"
+   ],
+   [
+    "brahmalokasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.6 (SN6.6); lit. discourse about the brahma world",
+    "✔"
+   ],
+   [
+    "kokālikasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 6.7 (SN6.7); lit. discourse with Kokālika",
+    "✔"
+   ],
+   [
+    "katamodakatissasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.8 (SN6.8); lit. discourse to Katamodakatissa",
+    "✔"
+   ],
+   [
+    "turūbrahmasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.9 (SN6.9); lit. discourse with Turūbrahma",
+    "✔"
+   ],
+   [
+    "kokālikasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 6.10 (SN6.10); lit. discourse with Kokālika",
+    "✔"
+   ],
+   [
+    "sanaṅkumārasutta",
+    "nt",
+    "Saṃyutta Nikāya 6.11 (SN6.11); lit. discourse with Sanaṅkumāra",
+    "✔"
+   ],
+   [
+    "devadattasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 6.12 (SN6.12); lit. discourse about Devadatta",
+    "✔"
+   ],
+   [
+    "andhakavindasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 6.13 (SN6.13); lit. discourse at Andhakavinda",
+    "✔"
+   ],
+   [
+    "aruṇavatīsutta",
+    "nt",
+    "Saṃyutta Nikāya 6.14 (SN6.14); lit. discourse about Aruṇavatī",
+    "✔"
+   ],
+   [
+    "parinibbānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 6.15 (SN6.15); lit. discourse on Parinibbāna",
+    "✔"
+   ],
+   [
+    "tissaka",
+    "masc",
+    "in reference to SN6.8 Katamodakatissasutta; lit. about Tissa",
+    "✔"
+   ],
+   [
+    "andhakavinda 2",
+    "masc",
+    "in reference to SN6.13 Andhakavindasuttaṃ; lit. name of a town",
+    "✔"
+   ]
+  ],
+  "count": 17
+ },
+ "suttas of Saṃyutta Nikāya 47": {
+  "data": [
+   [
+    "bāhiyasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 47.15 (SN47.15); lit. discourse with Bāhiya",
+    "✔"
+   ],
+   [
+    "aññatarabrāhmaṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 47.25 (SN47.25); lit. discourse on a certain brahmin",
+    "✔"
+   ],
+   [
+    "viraddhasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 47.33 (SN47.33); lit. discourse on failed",
+    "✔"
+   ],
+   [
+    "vibhaṅgasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 47.40 (SN47.40); lit. discourse on analysis",
+    "✔"
+   ],
+   [
+    "samudayasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 47.42 (SN47.42); lit. discourse on the origin",
+    "✔"
+   ],
+   [
+    "vedanāsutta 4",
+    "nt",
+    "Saṃyutta Nikāya 47.49 (SN47.49); lit. discourse on felt experience",
+    "✔"
+   ]
+  ],
+  "count": 6
  },
  "names of nuns": {
   "data": [
@@ -28969,8 +38098,8 @@ var family_set_json = {
    [
     "āḷavikā",
     "fem",
-    "name of a nun; lit. from Āḷavi",
-    "◑"
+    "name of a nun; lit. from Āḷavī",
+    "✔"
    ],
    [
     "isidāsī",
@@ -29005,7 +38134,7 @@ var family_set_json = {
    [
     "upacālā",
     "fem",
-    "name of an arahant nun; lit. younger sister of Cālā",
+    "name of an arahant nun; Sāriputta's sister; lit. younger sister of Cālā",
     "✔"
    ],
    [
@@ -29042,7 +38171,7 @@ var family_set_json = {
     "kisāgotamī",
     "fem",
     "name of an arahant nun; lit. skinny Gotamī",
-    "◑"
+    "✔"
    ],
    [
     "kuṇḍalakesā",
@@ -29055,12 +38184,6 @@ var family_set_json = {
     "fem",
     "name of an arahant nun; lit. safe",
     "✔"
-   ],
-   [
-    "khemātherī",
-    "fem",
-    "name of a nun; lit. Khemā the senior nun",
-    "◑"
    ],
    [
     "guttā",
@@ -29095,13 +38218,19 @@ var family_set_json = {
    [
     "cālā",
     "fem",
-    "name of an arahant nun; lit. shaking",
+    "name of an arahant nun; Sāriputta's sister; lit. shaking",
     "✔"
    ],
    [
     "cittā",
     "fem",
     "name of an arahant nun; lit. adorned",
+    "✔"
+   ],
+   [
+    "cīrā",
+    "fem",
+    "name of a nun; lit. wearing bark cloth",
     "✔"
    ],
    [
@@ -29135,22 +38264,16 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tiṃsamattā",
-    "fem",
-    "group of thirty arahant nuns",
-    "✔"
-   ],
-   [
     "thullatissā",
     "fem",
     "name of a nun; lit. fat Tissā",
-    "◑"
+    "✔"
    ],
    [
     "thullanandā",
     "fem",
     "name of a notorious nun; lit. fat happy",
-    "◑"
+    "✔"
    ],
    [
     "dantikā",
@@ -29329,8 +38452,8 @@ var family_set_json = {
    [
     "vajirā",
     "fem",
-    "name of a nun; lit. diamond",
-    "◑"
+    "name of an arahant nun; lit. diamond",
+    "✔"
    ],
    [
     "vaḍḍhamātar",
@@ -29419,13 +38542,13 @@ var family_set_json = {
    [
     "sīsupacālā",
     "fem",
-    "name of a nun",
-    "◑"
+    "name of an arahant nun; Sāriputta's sister",
+    "✔"
    ],
    [
     "sīsūpacālā",
     "fem",
-    "name of an arahant nun",
+    "name of an arahant nun; Sāriputta's sister",
     "✔"
    ],
    [
@@ -29519,88 +38642,409 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 100
+  "count": 99
+ },
+ "vaggas of the Saṃyutta Nikāya 45": {
+  "data": [
+   [
+    "avijjāvagga 3",
+    "masc",
+    "Chapter 1 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on ignorance",
+    "✔"
+   ],
+   [
+    "vihāravagga",
+    "masc",
+    "Chapter 2 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on meditation attainment",
+    "✔"
+   ],
+   [
+    "micchattavagga",
+    "masc",
+    "Chapter 3 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on wrongness",
+    "✔"
+   ],
+   [
+    "paṭipattivagga",
+    "masc",
+    "Chapter 4 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on practice",
+    "✔"
+   ],
+   [
+    "aññatitthiyapeyyālavagga",
+    "masc",
+    "Chapter 5 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on followers of other religions with elided repetitions",
+    "✔"
+   ],
+   [
+    "sūriyapeyyālavagga",
+    "masc",
+    "Chapter 6 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the sun with elided repetitions",
+    "✔"
+   ],
+   [
+    "ekadhammapeyyālavagga",
+    "masc",
+    "Chapter 7 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on one thing with elided repetitions",
+    "✔"
+   ],
+   [
+    "dutiyaekadhammapeyyālavagga",
+    "masc",
+    "Chapter 8 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. second chapter on one thing with elided repetitions",
+    "✔"
+   ],
+   [
+    "gaṅgāpeyyālavagga 01",
+    "masc",
+    "Chapter 9 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "dutiyagaṅgāpeyyālavagga",
+    "masc",
+    "Chapter 10 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. second chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "appamādapeyyālavagga",
+    "masc",
+    "Chapter 11 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on carefulness with elided repetitions",
+    "✔"
+   ],
+   [
+    "balakaraṇīyavagga 1",
+    "masc",
+    "Chapter 12 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "✔"
+   ],
+   [
+    "esanāvagga 1",
+    "masc",
+    "Chapter 13 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "✔"
+   ],
+   [
+    "oghavagga 01",
+    "masc",
+    "Chapter 15 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 14
+ },
+ "suttas of Saṃyutta Nikāya 24": {
+  "data": [
+   [
+    "vātasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 24.1 (SN24.1); lit. discourse on winds",
+    "✔"
+   ],
+   [
+    "etaṃmamasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 24.2 (SN24.2); lit. discourse on this is mine",
+    "✔"
+   ],
+   [
+    "soattāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 24.3 (SN24.3); lit. discourse on this is my self",
+    "✔"
+   ],
+   [
+    "nocamesiyāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 24.4 (SN24.4); lit. discourse on it might not be mine",
+    "✔"
+   ],
+   [
+    "natthidinnasutta",
+    "nt",
+    "Saṃyutta Nikāya 24.5 (SN24.5); lit. discourse on nothing is given",
+    "✔"
+   ],
+   [
+    "karotosutta",
+    "nt",
+    "Saṃyutta Nikāya 24.6 (SN24.6); lit. discourse on making",
+    "✔"
+   ],
+   [
+    "hetusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 24.7 (SN24.7); lit. discourse on cause",
+    "✔"
+   ],
+   [
+    "mahādiṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 24.8 (SN24.8); lit. discourse on the great view",
+    "✔"
+   ],
+   [
+    "sassatadiṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 24.9 (SN24.9); lit. discourse on the view of eternalism",
+    "✔"
+   ],
+   [
+    "asassatadiṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 24.10 (SN24.10); lit. discourse on the view of non-eternalism",
+    "✔"
+   ],
+   [
+    "antavāsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.11 (SN24.11); lit. discourse on finite",
+    "✔"
+   ],
+   [
+    "anantavāsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.12 (SN24.12); lit. discourse on infinite",
+    "✔"
+   ],
+   [
+    "taṃjīvaṃtaṃsarīraṃsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.13 (SN24.13); lit. discourse on the soul and body are identical",
+    "✔"
+   ],
+   [
+    "aññaṃjīvaṃaññaṃsarīraṃsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.14 (SN24.14); lit. discourse on the soul is one thing, the body is another",
+    "✔"
+   ],
+   [
+    "hotitathāgatosutta",
+    "nt",
+    "Saṃyutta Nikāya 24.15 (SN24.15); lit. discourse on the realised one exists (after death)",
+    "✔"
+   ],
+   [
+    "nahotitathāgatosutta",
+    "nt",
+    "Saṃyutta Nikāya 24.16 (SN24.16); lit. discourse on the realised one does not exist (after death)",
+    "✔"
+   ],
+   [
+    "hoticanacahotitathāgatosutta",
+    "nt",
+    "Saṃyutta Nikāya 24.17 (SN24.17); lit. discourse on the realised one does and does not exist (after death)",
+    "✔"
+   ],
+   [
+    "nevahotinanahotitathāgatosutta",
+    "nt",
+    "Saṃyutta Nikāya 24.18 (SN24.18); lit. discourse on the realised one neither exists nor does not exist (after death)",
+    "✔"
+   ],
+   [
+    "vātasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 24.19-35 (SN24.19-35); lit. discourse on winds",
+    "✔"
+   ],
+   [
+    "nevahotinanahotisutta",
+    "nt",
+    "Saṃyutta Nikāya 24.36 (SN24.36); lit. discourse on neither is nor is not",
+    "✔"
+   ],
+   [
+    "rūpīattāsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.37 (SN24.37); lit. discourse on the self has form",
+    "✔"
+   ],
+   [
+    "arūpīattāsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.38 (SN24.38); lit. discourse on the self is formless",
+    "✔"
+   ],
+   [
+    "rūpīcaarūpīcaattāsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.39 (SN24.39); lit. discourse on the self with form and without form",
+    "✔"
+   ],
+   [
+    "nevarūpīnārūpīattāsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.40 (SN24.40); lit. discourse on the self neither has form nor is formless",
+    "✔"
+   ],
+   [
+    "ekantasukhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.41 (SN24.41); lit. discourse on completely comfortable",
+    "✔"
+   ],
+   [
+    "ekantadukkhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.42 (SN24.42); lit. discourse on entirely uncomfortable",
+    "✔"
+   ],
+   [
+    "sukhadukkhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 24.43 (SN24.43); lit. discourse on experiencing ease and discomfort",
+    "✔"
+   ],
+   [
+    "adukkhamasukhīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 24.44 (SN24.44); lit. discourse on experiencing neither ease nor discomfort",
+    "✔"
+   ],
+   [
+    "navātasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 24.45 (SN24.45); lit. discourse on winds do not (blow)",
+    "✔"
+   ],
+   [
+    "adukkhamasukhīsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 24.70 (SN24.70); lit. discourse on experiencing neither ease nor discomfort",
+    "✔"
+   ],
+   [
+    "navātasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 24.71-95 (SN24.71-95); lit. discourse on no winds",
+    "✔"
+   ],
+   [
+    "adukkhamasukhīsutta 3",
+    "nt",
+    "Saṃyutta Nikāya 24.96 (SN24.96); lit. discourse on experiencing neither ease nor discomfort",
+    "✔"
+   ]
+  ],
+  "count": 32
+ },
+ "names of hells": {
+  "data": [
+   [
+    "aṭaṭa 1",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay an aṭaṭa-count in duration",
+    "✔"
+   ],
+   [
+    "ababa 1",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay an ababa-count in duration",
+    "✔"
+   ],
+   [
+    "abbuda 5",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay an abbuda-count in duration",
+    "✔"
+   ],
+   [
+    "avīci 2",
+    "fem",
+    "name of one of the great hells; lit. without waves; without an interval; uninterrupted",
+    "✔"
+   ],
+   [
+    "ahaha 2",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay an ahaha-count in duration",
+    "✔"
+   ],
+   [
+    "kukkulaniraya",
+    "masc",
+    "hot ash hell; burning ember hell; lit. hot coal hell",
+    "✔"
+   ],
+   [
+    "kukkuḷa 2",
+    "masc",
+    "name of a hell; (comm) the heat of household life; lit. hot ashes",
+    "✔"
+   ],
+   [
+    "kumuda 2",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay a kumuda-count in duration",
+    "✔"
+   ],
+   [
+    "gūthaniraya",
+    "masc",
+    "excrement hell; hell of feces",
+    "✔"
+   ],
+   [
+    "chaphassāyatanika 1",
+    "masc",
+    "hell of the six sense fields; epithet of the great hell; lit. connected with the six sense fields",
+    "✔"
+   ],
+   [
+    "nirabbudaniraya",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay a nirabbuda-count in duration",
+    "✔"
+   ],
+   [
+    "paccattavedaniya",
+    "masc",
+    "hell to be personally experienced; epithet of the great hell",
+    "✔"
+   ],
+   [
+    "paduma 2",
+    "masc",
+    "(comm) part of the Avīci hell where one must stay a paduma-count in duration; lit. pink lotus",
+    "✔"
+   ],
+   [
+    "pahāsa 1",
+    "masc",
+    "name of a hell; lit. causing to laugh",
+    "✔"
+   ],
+   [
+    "mahāroruva",
+    "masc",
+    "name of a hell; lit. great intense howling",
+    "✔"
+   ],
+   [
+    "roruva",
+    "masc",
+    "name of a hell; lit. intense howling",
+    "✔"
+   ],
+   [
+    "saṅkusamāhata",
+    "masc",
+    "hell of the iron stakes being struck together; epithet of the great hell",
+    "✔"
+   ],
+   [
+    "sañjīva 1",
+    "masc",
+    "name of a hell where one cannot die; lit. revival",
+    "◑"
+   ]
+  ],
+  "count": 18
  },
  "cardinal numbers": {
   "data": [
-   [
-    "aṭṭha 1.1",
-    "card",
-    "eight (8)",
-    "✔"
-   ],
-   [
-    "aṭṭhacattālīsā",
-    "card",
-    "forty-eight (48)",
-    "✔"
-   ],
-   [
-    "aṭṭhatiṃsati",
-    "card",
-    "thirty-eight (38)",
-    "✔"
-   ],
-   [
-    "aṭṭhatiṃsā",
-    "card",
-    "thirty-eight (38)",
-    "◑"
-   ],
-   [
-    "aṭṭhannaṃ 1",
-    "card",
-    "of eight",
-    "✔"
-   ],
-   [
-    "aṭṭhannaṃ 2",
-    "card",
-    "to eight; for eight",
-    "◑"
-   ],
-   [
-    "aṭṭhavīsati",
-    "card",
-    "twenty-eight (28)",
-    "✔"
-   ],
-   [
-    "aṭṭhasaṭṭhi",
-    "card",
-    "sixty-eight (68)",
-    "✔"
-   ],
-   [
-    "aṭṭhasata",
-    "card",
-    "one hundred and eight (108)",
-    "✔"
-   ],
-   [
-    "aṭṭhahi",
-    "card",
-    "with eight",
-    "✔"
-   ],
-   [
-    "aṭṭhārasa 1",
-    "card",
-    "eighteen (18)",
-    "✔"
-   ],
-   [
-    "abbuda 1",
-    "card",
-    "10⁵⁶",
-    "✔"
-   ],
-   [
-    "asīti 1.1",
-    "card",
-    "eighty (80)",
-    "✔"
-   ],
    [
     "eka 1",
     "card",
@@ -29608,291 +39052,33 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ekacattālīsā",
+    "duve",
     "card",
-    "forty-one (41)",
+    "two (2)",
     "✔"
    ],
    [
-    "ekatiṃsā",
+    "dvatti",
     "card",
-    "thirty-one (31)",
-    "◑"
-   ],
-   [
-    "ekanavuti",
-    "card",
-    "ninety-one (91)",
+    "two or three (2 or 3)",
     "✔"
    ],
    [
-    "ekavīsati",
+    "dvi",
     "card",
-    "twenty-one (21)",
+    "two (2)",
     "✔"
    ],
    [
-    "ekādasa 1",
+    "dve 1",
     "card",
-    "eleven (11)",
+    "two (2)",
     "✔"
    ],
    [
-    "ekāya",
+    "dveti",
     "card",
-    "with one (woman)",
-    "✔"
-   ],
-   [
-    "ekissā",
-    "card",
-    "with one; by one",
-    "✔"
-   ],
-   [
-    "ekūnatiṃsā",
-    "card",
-    "twenty-nine (29)",
-    "◑"
-   ],
-   [
-    "ekūnapaññāsā",
-    "card",
-    "forty-nine (49)",
-    "✔"
-   ],
-   [
-    "ekūnavīsati",
-    "card",
-    "nineteen (19)",
-    "✔"
-   ],
-   [
-    "ekena",
-    "card",
-    "by one; with one",
-    "✔"
-   ],
-   [
-    "koṭi 1",
-    "card",
-    "ten million (10 000 000)",
-    "✔"
-   ],
-   [
-    "koṭisahassa",
-    "card",
-    "ten billion (10 000 000 000)",
-    "◑"
-   ],
-   [
-    "catasso",
-    "card",
-    "four (4)",
-    "✔"
-   ],
-   [
-    "catu",
-    "card",
-    "four (4)",
-    "✔"
-   ],
-   [
-    "catucattālīsā",
-    "card",
-    "forty-four (44)",
-    "✔"
-   ],
-   [
-    "catuttālīsā",
-    "card",
-    "forty (40)",
-    "◑"
-   ],
-   [
-    "catunnaṃ 1",
-    "card",
-    "for four; to four",
-    "✔"
-   ],
-   [
-    "catunnaṃ 2",
-    "card",
-    "of four",
-    "✔"
-   ],
-   [
-    "catupaṇṇāsā",
-    "card",
-    "fifty-four (54)",
-    "✔"
-   ],
-   [
-    "catubbhi",
-    "card",
-    "with four; by four",
-    "✔"
-   ],
-   [
-    "caturāsīti",
-    "card",
-    "eighty-four (84)",
-    "✔"
-   ],
-   [
-    "caturo",
-    "card",
-    "four (4)",
-    "✔"
-   ],
-   [
-    "catusaṭṭhi",
-    "card",
-    "sixty four (64)",
-    "✔"
-   ],
-   [
-    "catusattati",
-    "card",
-    "seventy four (74)",
-    "✔"
-   ],
-   [
-    "catuhi",
-    "card",
-    "with four; by four",
-    "✔"
-   ],
-   [
-    "catūhi 1",
-    "card",
-    "with four; by four",
-    "✔"
-   ],
-   [
-    "catūhi 2",
-    "card",
-    "from four",
-    "✔"
-   ],
-   [
-    "cattāri 1",
-    "card",
-    "four (4)",
-    "✔"
-   ],
-   [
-    "cattāri 2",
-    "card",
-    "four (4)",
-    "✔"
-   ],
-   [
-    "cattārīsā",
-    "card",
-    "forty (40)",
-    "✔"
-   ],
-   [
-    "cattāro",
-    "card",
-    "four (4)",
-    "✔"
-   ],
-   [
-    "cattālīsā",
-    "card",
-    "forty (40)",
-    "✔"
-   ],
-   [
-    "cuddasa 1",
-    "card",
-    "fourteen (14)",
-    "✔"
-   ],
-   [
-    "cullāsīti",
-    "card",
-    "eighty-four (84)",
-    "✔"
-   ],
-   [
-    "cūḷāsīti",
-    "card",
-    "eighty-four (84)",
-    "✔"
-   ],
-   [
-    "cha 2.1",
-    "card",
-    "six (6)",
-    "✔"
-   ],
-   [
-    "chacattālīsā",
-    "card",
-    "forty-six (46)",
-    "◑"
-   ],
-   [
-    "chattiṃsati",
-    "card",
-    "thirty-six (36)",
-    "✔"
-   ],
-   [
-    "chattiṃsā",
-    "card",
-    "thirty-six (36)",
-    "✔"
-   ],
-   [
-    "channavuti",
-    "card",
-    "ninety-six (96)",
-    "◑"
-   ],
-   [
-    "channaṃ 1",
-    "card",
-    "for six",
-    "✔"
-   ],
-   [
-    "channaṃ 2",
-    "card",
-    "of six",
-    "✔"
-   ],
-   [
-    "chappañca",
-    "card",
-    "five or six; lit. six or five",
-    "✔"
-   ],
-   [
-    "chabbhi",
-    "card",
-    "with six",
-    "✔"
-   ],
-   [
-    "chasattati",
-    "card",
-    "seventy-six (76)",
-    "✔"
-   ],
-   [
-    "chasu",
-    "card",
-    "in six",
-    "✔"
-   ],
-   [
-    "chassu",
-    "card",
-    "in six",
+    "two or three (2 or 3)",
     "✔"
    ],
    [
@@ -29908,27 +39094,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tālīsā",
-    "card",
-    "forty (40)",
-    "◑"
-   ],
-   [
     "ti 1",
     "card",
     "three (3)",
-    "✔"
-   ],
-   [
-    "tiṇṇaṃ",
-    "card",
-    "of three",
-    "✔"
-   ],
-   [
-    "tisata",
-    "card",
-    "three hundred (300)",
     "✔"
    ],
    [
@@ -29936,6 +39104,288 @@ var family_set_json = {
     "card",
     "three (3)",
     "✔"
+   ],
+   [
+    "tīṇi",
+    "card",
+    "three (3)",
+    "✔"
+   ],
+   [
+    "te 3",
+    "card",
+    "three (3)",
+    "✔"
+   ],
+   [
+    "catasso",
+    "card",
+    "four (4)",
+    "✔"
+   ],
+   [
+    "catu",
+    "card",
+    "four (4)",
+    "✔"
+   ],
+   [
+    "caturo",
+    "card",
+    "four (4)",
+    "✔"
+   ],
+   [
+    "cattāri 1",
+    "card",
+    "four (4)",
+    "✔"
+   ],
+   [
+    "cattāri 2",
+    "card",
+    "four (4)",
+    "✔"
+   ],
+   [
+    "cattāro",
+    "card",
+    "four (4)",
+    "✔"
+   ],
+   [
+    "chappañca",
+    "card",
+    "five or six (5 or 6); lit. six or five",
+    "✔"
+   ],
+   [
+    "pañca",
+    "card",
+    "five (5)",
+    "✔"
+   ],
+   [
+    "paṇṇa 2.1",
+    "card",
+    "five (5)",
+    "◑"
+   ],
+   [
+    "cha 2.1",
+    "card",
+    "six (6)",
+    "✔"
+   ],
+   [
+    "aḍḍhaṭṭha",
+    "card",
+    "seven and a half (7.5); lit. eight (minus) half",
+    "✔"
+   ],
+   [
+    "satta 1.1",
+    "card",
+    "seven (7)",
+    "✔"
+   ],
+   [
+    "aṭṭha 1.1",
+    "card",
+    "eight (8)",
+    "✔"
+   ],
+   [
+    "aṭṭha 1.2",
+    "card",
+    "eight (8)",
+    "✔"
+   ],
+   [
+    "nava 2.1",
+    "card",
+    "nine (9)",
+    "✔"
+   ],
+   [
+    "dasa 1.1",
+    "card",
+    "ten (10)",
+    "✔"
+   ],
+   [
+    "ekādasa 1",
+    "card",
+    "eleven (11)",
+    "✔"
+   ],
+   [
+    "doḷasa",
+    "card",
+    "twelve (12)",
+    "◑"
+   ],
+   [
+    "dvādasa 1",
+    "card",
+    "twelve (12)",
+    "✔"
+   ],
+   [
+    "terasa 1",
+    "card",
+    "thirteen (13)",
+    "✔"
+   ],
+   [
+    "telasa",
+    "card",
+    "thirteen (13)",
+    "◑"
+   ],
+   [
+    "teḷasa",
+    "card",
+    "thirteen (13)",
+    "✔"
+   ],
+   [
+    "catuddasa",
+    "card",
+    "fourteen (14)",
+    "✔"
+   ],
+   [
+    "cuddasa 1",
+    "card",
+    "fourteen (14)",
+    "✔"
+   ],
+   [
+    "paṇṇarasa 1.2",
+    "card",
+    "fifteen (15)",
+    "◑"
+   ],
+   [
+    "pannarasa 1",
+    "card",
+    "fifteen (15)",
+    "✔"
+   ],
+   [
+    "soḷasa 1",
+    "card",
+    "sixteen (16)",
+    "✔"
+   ],
+   [
+    "sattarasa 1",
+    "card",
+    "seventeen (17)",
+    "✔"
+   ],
+   [
+    "aṭṭhārasa 1",
+    "card",
+    "eighteen (18)",
+    "✔"
+   ],
+   [
+    "ekūnavīsati",
+    "card",
+    "nineteen (19)",
+    "✔"
+   ],
+   [
+    "vīsati",
+    "card",
+    "twenty (20)",
+    "✔"
+   ],
+   [
+    "vīsatiṃsā",
+    "card",
+    "twenty or thirty (20 or 30)",
+    "◑"
+   ],
+   [
+    "vīsaṃ",
+    "card",
+    "twenty (20)",
+    "✔"
+   ],
+   [
+    "vīsā",
+    "card",
+    "twenty (20)",
+    "✔"
+   ],
+   [
+    "vīse",
+    "card",
+    "twenty (20)",
+    "✔"
+   ],
+   [
+    "ekavīsati",
+    "card",
+    "twenty-one (21)",
+    "✔"
+   ],
+   [
+    "bāvīsati",
+    "card",
+    "twenty-two (22)",
+    "✔"
+   ],
+   [
+    "bāvīsā",
+    "card",
+    "twenty-two (22)",
+    "◑"
+   ],
+   [
+    "catubbīsati",
+    "card",
+    "twenty four (24)",
+    "✔"
+   ],
+   [
+    "pañcavīsati",
+    "card",
+    "twenty five (25)",
+    "✔"
+   ],
+   [
+    "paṇṇavīsati",
+    "card",
+    "twenty-five (25)",
+    "✔"
+   ],
+   [
+    "chabbīsā",
+    "card",
+    "twenty-six (26)",
+    "✔"
+   ],
+   [
+    "sattabbīsā",
+    "card",
+    "twenty-seven (27)",
+    "◑"
+   ],
+   [
+    "aṭṭhavīsati",
+    "card",
+    "twenty-eight (28)",
+    "✔"
+   ],
+   [
+    "ekūnatiṃsā",
+    "card",
+    "twenty-nine (29)",
+    "◑"
    ],
    [
     "tiṃsa 1",
@@ -29968,9 +39418,717 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tīṇi",
+    "ekatiṃsā",
     "card",
-    "three (3)",
+    "thirty-one (31)",
+    "◑"
+   ],
+   [
+    "dvattiṃsati",
+    "card",
+    "thirty-two (32)",
+    "✔"
+   ],
+   [
+    "dvattiṃsā",
+    "card",
+    "thirty-two (32)",
+    "✔"
+   ],
+   [
+    "dvittiṃsā",
+    "card",
+    "thirty-two (32)",
+    "✔"
+   ],
+   [
+    "bāttiṃsā",
+    "card",
+    "thirty-two (32)",
+    "✔"
+   ],
+   [
+    "tettiṃsā",
+    "card",
+    "thirty-three (33)",
+    "✔"
+   ],
+   [
+    "chattiṃsati",
+    "card",
+    "thirty-six (36)",
+    "✔"
+   ],
+   [
+    "chattiṃsā",
+    "card",
+    "thirty-six (36)",
+    "✔"
+   ],
+   [
+    "aṭṭhatiṃsati",
+    "card",
+    "thirty-eight (38)",
+    "✔"
+   ],
+   [
+    "aṭṭhatiṃsā",
+    "card",
+    "thirty-eight (38)",
+    "◑"
+   ],
+   [
+    "aṭṭhattiṃsā",
+    "card",
+    "thirty-eight (38)",
+    "✔"
+   ],
+   [
+    "cattārīsā",
+    "card",
+    "forty (40)",
+    "✔"
+   ],
+   [
+    "cattālīsati",
+    "card",
+    "forty (40)",
+    "◑"
+   ],
+   [
+    "cattālīsā",
+    "card",
+    "forty (40)",
+    "✔"
+   ],
+   [
+    "tālīsā",
+    "card",
+    "forty (40)",
+    "✔"
+   ],
+   [
+    "ekacattālīsā",
+    "card",
+    "forty-one (41)",
+    "✔"
+   ],
+   [
+    "ekatālīsā",
+    "card",
+    "forty-one (41)",
+    "◑"
+   ],
+   [
+    "dvācattālīsā",
+    "card",
+    "forty-two (42)",
+    "✔"
+   ],
+   [
+    "dvecattālīsā",
+    "card",
+    "forty-two (42)",
+    "✔"
+   ],
+   [
+    "tecattālīsā",
+    "card",
+    "forty three (43)",
+    "✔"
+   ],
+   [
+    "catucattārīsā",
+    "card",
+    "forty-four (44)",
+    "✔"
+   ],
+   [
+    "catucattālīsā",
+    "card",
+    "forty-four (44)",
+    "✔"
+   ],
+   [
+    "catuttālīsā",
+    "card",
+    "forty-four (44)",
+    "✔"
+   ],
+   [
+    "pañcatālīsā",
+    "card",
+    "forty-five (45)",
+    "✔"
+   ],
+   [
+    "chacattālīsā",
+    "card",
+    "forty-six (46)",
+    "◑"
+   ],
+   [
+    "aṭṭhacattālīsā",
+    "card",
+    "forty-eight (48)",
+    "✔"
+   ],
+   [
+    "ekūnapaññāsā",
+    "card",
+    "forty-nine (49)",
+    "✔"
+   ],
+   [
+    "paññāsā",
+    "card",
+    "fifty (50)",
+    "✔"
+   ],
+   [
+    "paṇṇāsā",
+    "card",
+    "fifty (50)",
+    "✔"
+   ],
+   [
+    "paropaññāsā",
+    "card",
+    "more than fifty; fifty plus (50+)",
+    "✔"
+   ],
+   [
+    "catupaṇṇāsā",
+    "card",
+    "fifty-four (54)",
+    "✔"
+   ],
+   [
+    "pañcapaññāsā",
+    "card",
+    "fifty-five (55)",
+    "◑"
+   ],
+   [
+    "sattapaññāsā",
+    "card",
+    "fifty-seven (57)",
+    "◑"
+   ],
+   [
+    "aṭṭhapaññāsā",
+    "card",
+    "fifty-eight (58)",
+    "◑"
+   ],
+   [
+    "saṭṭhi 1.1",
+    "card",
+    "sixty (60)",
+    "✔"
+   ],
+   [
+    "dvaṭṭhi",
+    "card",
+    "sixty two (62)",
+    "✔"
+   ],
+   [
+    "dvāsaṭṭhi",
+    "card",
+    "sixty-two (62)",
+    "✔"
+   ],
+   [
+    "catusaṭṭhi",
+    "card",
+    "sixty four (64)",
+    "✔"
+   ],
+   [
+    "aṭṭhasaṭṭhi",
+    "card",
+    "sixty-eight (68)",
+    "✔"
+   ],
+   [
+    "sattati",
+    "card",
+    "seventy (70)",
+    "✔"
+   ],
+   [
+    "sattatimhi",
+    "card",
+    "in seventy (70)",
+    "✔"
+   ],
+   [
+    "sattari",
+    "card",
+    "seventy (70)",
+    "✔"
+   ],
+   [
+    "dvāsattati",
+    "card",
+    "seventy-two (72)",
+    "✔"
+   ],
+   [
+    "tesattati",
+    "card",
+    "seventy-three (73)",
+    "◑"
+   ],
+   [
+    "catusattati",
+    "card",
+    "seventy four (74)",
+    "✔"
+   ],
+   [
+    "chasattati",
+    "card",
+    "seventy-six (76)",
+    "✔"
+   ],
+   [
+    "sattasattati",
+    "card",
+    "seventy seven (77)",
+    "◑"
+   ],
+   [
+    "sattasattari",
+    "card",
+    "seventy-seven (77)",
+    "✔"
+   ],
+   [
+    "asīti 1.1",
+    "card",
+    "eighty (80)",
+    "✔"
+   ],
+   [
+    "dvāsīti",
+    "card",
+    "eighty-two (82)",
+    "✔"
+   ],
+   [
+    "dveasīti",
+    "card",
+    "eighty-two (82)",
+    "◑"
+   ],
+   [
+    "caturāsīti",
+    "card",
+    "eighty-four (84)",
+    "✔"
+   ],
+   [
+    "cullāsīti",
+    "card",
+    "eighty-four (84)",
+    "✔"
+   ],
+   [
+    "cūḷāsīti",
+    "card",
+    "eighty-four (84)",
+    "✔"
+   ],
+   [
+    "aṭṭhāsīti",
+    "card",
+    "eighty-eight (88)",
+    "◑"
+   ],
+   [
+    "atirekanavuti",
+    "card",
+    "more than ninety (90+)",
+    "◑"
+   ],
+   [
+    "navuti",
+    "card",
+    "ninety (90)",
+    "✔"
+   ],
+   [
+    "sādhikanavuti",
+    "card",
+    "more than ninety (90+)",
+    "◑"
+   ],
+   [
+    "ekanavuti",
+    "card",
+    "ninety-one (91)",
+    "✔"
+   ],
+   [
+    "dvenavuti",
+    "card",
+    "ninety-two (92)",
+    "✔"
+   ],
+   [
+    "channavuti",
+    "card",
+    "ninety-six (96)",
+    "◑"
+   ],
+   [
+    "ekasata 1",
+    "card",
+    "one hundred (100)",
+    "✔"
+   ],
+   [
+    "sata 2.1",
+    "card",
+    "one hundred (100)",
+    "✔"
+   ],
+   [
+    "sate",
+    "card",
+    "one hundred (100)",
+    "✔"
+   ],
+   [
+    "chasaṭṭhisata",
+    "card",
+    "one hundred and sixty-six (106)",
+    "◑"
+   ],
+   [
+    "aṭṭhasata 1",
+    "card",
+    "one hundred and eight (108)",
+    "✔"
+   ],
+   [
+    "vīsuttarasata",
+    "card",
+    "one hundred and twenty (120); lit. twenty more than one hundred",
+    "✔"
+   ],
+   [
+    "diyaḍḍhasata",
+    "card",
+    "one hundred and fifty (150); lit. one and a half hundred",
+    "✔"
+   ],
+   [
+    "tisata",
+    "card",
+    "three hundred (300)",
+    "✔"
+   ],
+   [
+    "catussata",
+    "card",
+    "four hundred (400)",
+    "◑"
+   ],
+   [
+    "sattasata",
+    "card",
+    "seven hundred (700)",
+    "✔"
+   ],
+   [
+    "aṭṭhasata 2",
+    "card",
+    "eight hundred (800)",
+    "✔"
+   ],
+   [
+    "parosahassa",
+    "card",
+    "more than one thousand (1000+)",
+    "✔"
+   ],
+   [
+    "sahassa 1",
+    "card",
+    "one thousand (1000)",
+    "✔"
+   ],
+   [
+    "diyaḍḍhasahassa",
+    "card",
+    "one thousand five hundred (1 500); lit. one and a half thousand",
+    "◑"
+   ],
+   [
+    "dvisahassa 1",
+    "card",
+    "two thousand (2 000)",
+    "◑"
+   ],
+   [
+    "tisahassa 1",
+    "card",
+    "three thousand (3000)",
+    "✔"
+   ],
+   [
+    "chasahassa",
+    "card",
+    "six thousand (6000)",
+    "✔"
+   ],
+   [
+    "sattasahassa",
+    "card",
+    "seven thousand (7000)",
+    "✔"
+   ],
+   [
+    "ekanahuta",
+    "card",
+    "one myriad; ten thousand (10 000)",
+    "✔"
+   ],
+   [
+    "dasasahassa 1",
+    "card",
+    "ten thousand (10 000)",
+    "✔"
+   ],
+   [
+    "nahuta 1",
+    "card",
+    "ten thousand (10 000)",
+    "✔"
+   ],
+   [
+    "soḷasasahassa",
+    "card",
+    "sixteen thousand (16000)",
+    "✔"
+   ],
+   [
+    "vīsatisahassa",
+    "card",
+    "twenty thousand (20 000)",
+    "◑"
+   ],
+   [
+    "caturāsītisahassa",
+    "card",
+    "eighty-four thousand (84 000)",
+    "✔"
+   ],
+   [
+    "cullāsītisahassa",
+    "card",
+    "eighty-four thousand (84 000)",
+    "✔"
+   ],
+   [
+    "cūḷāsītisahassa",
+    "card",
+    "eighty-four thousand (84 000)",
+    "✔"
+   ],
+   [
+    "satasahassa 1",
+    "card",
+    "one hundred thousand (100 000)",
+    "✔"
+   ],
+   [
+    "ekādasanahuta",
+    "card",
+    "eleven myriads; one hundred and ten thousand (110 000)",
+    "✔"
+   ],
+   [
+    "aṭṭhasatasahassa",
+    "card",
+    "eight hundred thousand (800 000)",
+    "✔"
+   ],
+   [
+    "catuvīsatisatasahassa",
+    "card",
+    "two million four hundred thousand (2 400 000)",
+    "✔"
+   ],
+   [
+    "koṭi 1",
+    "card",
+    "ten million (10 000 000)",
+    "✔"
+   ],
+   [
+    "koṭisata",
+    "card",
+    "one billion (1 000 000 000); one hundred crore",
+    "✔"
+   ],
+   [
+    "koṭisahassa",
+    "card",
+    "ten billion (10 000 000 000)",
+    "◑"
+   ],
+   [
+    "koṭisatasahassa",
+    "card",
+    "one billion (EU); one trillion (US) (1 000 000 000 000)",
+    "✔"
+   ],
+   [
+    "aṭṭhannaṃ 1",
+    "card",
+    "of eight",
+    "✔"
+   ],
+   [
+    "aṭṭhannaṃ 2",
+    "card",
+    "to eight; for eight",
+    "◑"
+   ],
+   [
+    "aṭṭhahi",
+    "card",
+    "with eight",
+    "✔"
+   ],
+   [
+    "abbuda 1",
+    "card",
+    "10⁵⁶",
+    "✔"
+   ],
+   [
+    "ūnakadveti",
+    "card",
+    "less than two or three",
+    "✔"
+   ],
+   [
+    "ekā 1",
+    "card",
+    "one; first one",
+    "✔"
+   ],
+   [
+    "ekāya",
+    "card",
+    "with one (woman)",
+    "✔"
+   ],
+   [
+    "ekissā",
+    "card",
+    "with one; by one",
+    "✔"
+   ],
+   [
+    "ekena",
+    "card",
+    "by one; with one",
+    "✔"
+   ],
+   [
+    "kappanahuta",
+    "card",
+    "myriads of eons; ten thousand ages",
+    "✔"
+   ],
+   [
+    "catunnaṃ 1",
+    "card",
+    "for four; to four",
+    "✔"
+   ],
+   [
+    "catunnaṃ 2",
+    "card",
+    "of four",
+    "✔"
+   ],
+   [
+    "catubbhi",
+    "card",
+    "with four; by four",
+    "✔"
+   ],
+   [
+    "catuhi",
+    "card",
+    "with four; by four",
+    "✔"
+   ],
+   [
+    "catūsu",
+    "card",
+    "in four; among four",
+    "✔"
+   ],
+   [
+    "catūhi 1",
+    "card",
+    "with four; by four",
+    "✔"
+   ],
+   [
+    "catūhi 2",
+    "card",
+    "from four",
+    "✔"
+   ],
+   [
+    "cālīsaka",
+    "nt",
+    "group of forty; set of forty",
+    "✔"
+   ],
+   [
+    "channaṃ 1",
+    "card",
+    "for six",
+    "✔"
+   ],
+   [
+    "channaṃ 2",
+    "card",
+    "of six",
+    "✔"
+   ],
+   [
+    "chabbhi",
+    "card",
+    "with six",
+    "✔"
+   ],
+   [
+    "chasu",
+    "card",
+    "in six",
+    "✔"
+   ],
+   [
+    "chassu",
+    "card",
+    "in six",
+    "✔"
+   ],
+   [
+    "tiṇṇaṃ",
+    "card",
+    "of three",
     "✔"
    ],
    [
@@ -29986,30 +40144,6 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tettiṃsā",
-    "card",
-    "thirty-three (33)",
-    "✔"
-   ],
-   [
-    "terasa 1",
-    "card",
-    "thirteen (13)",
-    "✔"
-   ],
-   [
-    "tesattati",
-    "card",
-    "seventy-three (73)",
-    "◑"
-   ],
-   [
-    "dasa 1.1",
-    "card",
-    "ten (10)",
-    "✔"
-   ],
-   [
     "dasannaṃ 1",
     "card",
     "for ten; to ten",
@@ -30022,12 +40156,6 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dasasahassa 1",
-    "card",
-    "ten thousand (10 000)",
-    "✔"
-   ],
-   [
     "dasahi 1",
     "card",
     "with ten; by ten",
@@ -30037,60 +40165,6 @@ var family_set_json = {
     "dasahi 2",
     "card",
     "from ten",
-    "✔"
-   ],
-   [
-    "duve",
-    "card",
-    "two (2)",
-    "✔"
-   ],
-   [
-    "doḷasa",
-    "card",
-    "twelve (12)",
-    "◑"
-   ],
-   [
-    "dvaṭṭhi",
-    "card",
-    "sixty two (62)",
-    "✔"
-   ],
-   [
-    "dvattiṃsati",
-    "card",
-    "thirty-two (32)",
-    "✔"
-   ],
-   [
-    "dvattiṃsā",
-    "card",
-    "thirty-two (32)",
-    "✔"
-   ],
-   [
-    "dvādasa 1",
-    "card",
-    "twelve (12)",
-    "✔"
-   ],
-   [
-    "dvāsaṭṭhi",
-    "card",
-    "sixty-two (62)",
-    "◑"
-   ],
-   [
-    "dvi",
-    "card",
-    "two (2)",
-    "✔"
-   ],
-   [
-    "dvittiṃsā",
-    "card",
-    "thirty-two (32)",
     "✔"
    ],
    [
@@ -30118,51 +40192,27 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dve 1",
-    "card",
-    "two (2)",
+    "dve 2",
+    "masc",
+    "couple; pair",
     "✔"
    ],
    [
-    "dveasīti",
+    "dvetayo",
     "card",
-    "eighty-two (82)",
-    "◑"
-   ],
-   [
-    "dvenavuti",
-    "card",
-    "ninety-two (92)",
+    "two or three",
     "✔"
    ],
    [
-    "nava 2.1",
+    "dvetisso",
     "card",
-    "nine (9)",
-    "✔"
-   ],
-   [
-    "navuti",
-    "card",
-    "ninety (90)",
-    "✔"
-   ],
-   [
-    "nahuta 1",
-    "card",
-    "ten thousand (10 000)",
+    "two or three",
     "✔"
    ],
    [
     "nirabbuda 1",
     "card",
     "10⁶³",
-    "✔"
-   ],
-   [
-    "pañca",
-    "card",
-    "five (5)",
     "✔"
    ],
    [
@@ -30184,99 +40234,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pañcapaññāsā",
-    "card",
-    "fifty-five (55)",
-    "◑"
-   ],
-   [
-    "pañcavīsati",
-    "card",
-    "twenty five (25)",
-    "✔"
-   ],
-   [
     "pañcasu",
     "card",
     "in five; among five",
     "✔"
    ],
    [
-    "paññāsā",
-    "card",
-    "fifty (50)",
-    "✔"
-   ],
-   [
-    "paṇṇa 2.1",
-    "card",
-    "five (5)",
-    "◑"
-   ],
-   [
-    "paṇṇāsā",
-    "card",
-    "fifty (50)",
-    "✔"
-   ],
-   [
-    "pannarasa 1",
-    "card",
-    "fifteen (15)",
-    "✔"
-   ],
-   [
-    "parosahassa",
-    "card",
-    "more than one thousand",
-    "✔"
-   ],
-   [
-    "bāttiṃsā",
-    "card",
-    "thirty-two (32)",
-    "✔"
-   ],
-   [
-    "bāvīsā",
-    "card",
-    "twenty-two (22)",
-    "◑"
-   ],
-   [
-    "vīsati",
-    "card",
-    "twenty (20)",
-    "✔"
-   ],
-   [
-    "vīsatiṃsā",
-    "card",
-    "twenty or thirty",
-    "◑"
-   ],
-   [
-    "vīsaṃ",
-    "card",
-    "twenty (20)",
-    "✔"
-   ],
-   [
-    "vīsā",
-    "card",
-    "twenty (20)",
-    "✔"
-   ],
-   [
-    "vīse",
-    "card",
-    "twenty (20)",
-    "✔"
-   ],
-   [
-    "saṭṭhi 1.1",
-    "card",
-    "sixty (60)",
+    "lakkha 4",
+    "masc",
+    "one hundred thousand; lit. mark",
     "✔"
    ],
    [
@@ -30284,42 +40250,6 @@ var family_set_json = {
     "card",
     "(comm) six",
     "◑"
-   ],
-   [
-    "sata 2.1",
-    "card",
-    "one hundred (100)",
-    "✔"
-   ],
-   [
-    "satasahassa 1",
-    "card",
-    "one hundred thousand (100 000)",
-    "✔"
-   ],
-   [
-    "sate",
-    "card",
-    "one hundred (100)",
-    "✔"
-   ],
-   [
-    "satta 1.1",
-    "card",
-    "seven (7)",
-    "✔"
-   ],
-   [
-    "sattati",
-    "card",
-    "seventy (70)",
-    "✔"
-   ],
-   [
-    "sattatimhi",
-    "card",
-    "in seventy (70)",
-    "✔"
    ],
    [
     "sattannaṃ 1",
@@ -30332,39 +40262,9 @@ var family_set_json = {
     "card",
     "of seven",
     "✔"
-   ],
-   [
-    "sattapaññāsā",
-    "card",
-    "fifty-seven (57)",
-    "◑"
-   ],
-   [
-    "sattasata",
-    "card",
-    "seven hundred",
-    "✔"
-   ],
-   [
-    "sattasattati",
-    "card",
-    "seventy seven (77)",
-    "◑"
-   ],
-   [
-    "sahassa 1",
-    "card",
-    "one thousand (1000)",
-    "✔"
-   ],
-   [
-    "soḷasa 1",
-    "card",
-    "sixteen (16)",
-    "✔"
    ]
   ],
-  "count": 140
+  "count": 203
  },
  "villages, towns and cities": {
   "data": [
@@ -30396,7 +40296,7 @@ var family_set_json = {
     "andhakavinda 1",
     "nt",
     "name of a town",
-    "◑"
+    "✔"
    ],
    [
     "ambagāma",
@@ -30417,6 +40317,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "ambaraambaravatiya",
+    "masc",
+    "name of a heavenly city",
+    "✔"
+   ],
+   [
     "ambasaṇḍā",
     "fem",
     "name of a village; lit. mango grove",
@@ -30431,7 +40337,13 @@ var family_set_json = {
    [
     "ayojjhā",
     "fem",
-    "name of a town; lit. unfightable",
+    "name of a town; lit. not fightable",
+    "✔"
+   ],
+   [
+    "arimaddana",
+    "nt",
+    "name of a town in Myanmar; Pagan; lit. crushing enemies",
     "◑"
    ],
    [
@@ -30447,7 +40359,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "avanti 1",
+    "avanti 2",
     "fem",
     "name of a city",
     "◑"
@@ -30456,6 +40368,12 @@ var family_set_json = {
     "assapura",
     "nt",
     "name of a town in Aṅga; lit. horse town",
+    "✔"
+   ],
+   [
+    "āṭānāṭā",
+    "fem",
+    "name of a heavenly city",
     "✔"
    ],
    [
@@ -30480,6 +40398,12 @@ var family_set_json = {
     "āḷakamandā",
     "fem",
     "name of a heavenly capital city",
+    "✔"
+   ],
+   [
+    "āḷavī 2",
+    "fem",
+    "name of a town; lit. wilderness",
     "✔"
    ],
    [
@@ -30513,7 +40437,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ujuññā 1",
+    "ujuññā",
     "fem",
     "name of a town in Kosala",
     "✔"
@@ -30531,10 +40455,10 @@ var family_set_json = {
     "✔"
    ],
    [
-    "upavajjita",
-    "nt",
-    "name of a Vajjian village",
-    "◑"
+    "udaññā",
+    "fem",
+    "name of a town in Kosala",
+    "✔"
    ],
    [
     "uruññā",
@@ -30546,7 +40470,7 @@ var family_set_json = {
     "uruvelakappa",
     "nt",
     "name of a Mallan town",
-    "◑"
+    "✔"
    ],
    [
     "uruvelā",
@@ -30564,7 +40488,7 @@ var family_set_json = {
     "ekanāḷā",
     "fem",
     "name of a Brahman village in Magadha; lit. one stem; one stalk",
-    "◑"
+    "✔"
    ],
    [
     "ekasālā",
@@ -30597,12 +40521,6 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kajjaṅgalā",
-    "fem",
-    "name of a town",
-    "◑"
-   ],
-   [
     "kaṭṭhanagara",
     "nt",
     "name of a town; lit. log town; (or) ploughed town",
@@ -30630,7 +40548,7 @@ var family_set_json = {
     "kapivanta",
     "masc",
     "name of a heavenly city; lit. full of monkeys",
-    "◑"
+    "✔"
    ],
    [
     "kammāsadamma",
@@ -30666,13 +40584,13 @@ var family_set_json = {
     "kasivanta",
     "masc",
     "name of a heavenly city; lit. with good agriculture",
-    "◑"
+    "✔"
    ],
    [
     "kāmaṇḍā",
     "fem",
     "name of a town",
-    "◑"
+    "✔"
    ],
    [
     "kāsipura",
@@ -30690,13 +40608,13 @@ var family_set_json = {
     "kimbilā",
     "fem",
     "name of a town",
-    "◑"
+    "✔"
    ],
    [
     "kimmilā",
     "fem",
     "name of a town",
-    "◑"
+    "✔"
    ],
    [
     "kīṭāgiri",
@@ -30726,7 +40644,7 @@ var family_set_json = {
     "kuraraghara",
     "nt",
     "name of a town in Avanti; lit. eagle's home",
-    "◑"
+    "✔"
    ],
    [
     "kururaghara",
@@ -30750,7 +40668,7 @@ var family_set_json = {
     "kusināṭā",
     "fem",
     "name of a heavenly city",
-    "◑"
+    "✔"
    ],
    [
     "kusinārā",
@@ -30761,8 +40679,8 @@ var family_set_json = {
    [
     "ketumatī",
     "fem",
-    "name of a future capital city; lit. adorned with banners",
-    "◑"
+    "name of a future capital city; present day Varanasi; lit. adorned with banners",
+    "✔"
    ],
    [
     "kesaputta",
@@ -30810,13 +40728,13 @@ var family_set_json = {
     "khomadussa 2",
     "nt",
     "name of a Sakyan village; lit. flax cloth",
-    "◑"
+    "✔"
    ],
    [
     "gajaṅgalā",
     "fem",
-    "name of a town",
-    "◑"
+    "name of a town; lit. bad wasteland",
+    "✔"
    ],
    [
     "gayā 1",
@@ -30888,7 +40806,7 @@ var family_set_json = {
     "janogha",
     "masc",
     "name of a heavenly city; lit. flood of people",
-    "◑"
+    "✔"
    ],
    [
     "jantugāma",
@@ -30900,6 +40818,12 @@ var family_set_json = {
     "jambugāma",
     "masc",
     "name of a village; lit. rose-apple village",
+    "✔"
+   ],
+   [
+    "ñātika",
+    "masc",
+    "name of a village; lit. kinsman",
     "✔"
    ],
    [
@@ -30917,8 +40841,8 @@ var family_set_json = {
    [
     "toraṇavatthu",
     "nt",
-    "name of a town",
-    "◑"
+    "name of a town located between Sāvatthī and Sāketa; lit. archway place",
+    "✔"
    ],
    [
     "thullakoṭṭhika 1",
@@ -30963,7 +40887,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "devadaha",
+    "devadaha 1",
     "nt",
     "name of a Sakyan town; lit. lake of the gods; (or) fire of the gods",
     "✔"
@@ -30978,13 +40902,13 @@ var family_set_json = {
     "nagaravinda",
     "nt",
     "name of a Kosalan village",
-    "◑"
+    "✔"
    ],
    [
     "navanavutiya",
     "masc",
     "name of a heavenly city; lit. ninety nine",
-    "◑"
+    "✔"
    ],
    [
     "naḷakapāna",
@@ -31002,25 +40926,25 @@ var family_set_json = {
     "nāgaraka",
     "nt",
     "name of a town; lit. small town",
-    "◑"
+    "✔"
    ],
    [
     "nāṭapariyā",
     "fem",
     "name of a heavenly city",
-    "◑"
+    "✔"
    ],
    [
     "nāṭapuriyā",
     "fem",
     "name of a heavenly city",
-    "◑"
+    "✔"
    ],
    [
     "nāṭasuriyā",
     "fem",
     "name of a heavenly city",
-    "◑"
+    "✔"
    ],
    [
     "nātika",
@@ -31043,7 +40967,7 @@ var family_set_json = {
    [
     "nāḷandā",
     "fem",
-    "name of a town near Rājagaha",
+    "name of a town near Rājagaha; modern day Nalanda",
     "✔"
    ],
    [
@@ -31077,12 +41001,6 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pappajitañhita",
-    "nt",
-    "name of a Vajjian village",
-    "◑"
-   ],
-   [
     "payāgapatiṭṭhāna",
     "nt",
     "name of a town",
@@ -31092,13 +41010,13 @@ var family_set_json = {
     "parakusiṭanāṭā",
     "fem",
     "name of a heavenly city",
-    "◑"
+    "✔"
    ],
    [
     "parakusināṭā",
     "fem",
     "name of a heavenly city",
-    "◑"
+    "✔"
    ],
    [
     "pāṭaligāma",
@@ -31122,16 +41040,10 @@ var family_set_json = {
     "pārileyyaka",
     "nt",
     "name of a town near Kosambī",
-    "◑"
+    "✔"
    ],
    [
-    "pālileyya",
-    "masc",
-    "name of a town near Kosambī",
-    "◑"
-   ],
-   [
-    "pālileyyaka",
+    "pālileyyaka 1",
     "nt",
     "name of a town near Kosambī",
     "✔"
@@ -31152,25 +41064,13 @@ var family_set_json = {
     "pubbajira",
     "nt",
     "name of a Vajjian village",
-    "◑"
-   ],
-   [
-    "pubbavicira",
-    "nt",
-    "name of a Vajjian village",
-    "◑"
+    "✔"
    ],
    [
     "pubbavijjana",
     "nt",
     "name of a Vajjian village",
-    "◑"
-   ],
-   [
-    "pubbavijjhana",
-    "nt",
-    "name of a Vajjian village",
-    "◑"
+    "✔"
    ],
    [
     "potana",
@@ -31200,13 +41100,19 @@ var family_set_json = {
     "bālakaloṇakagāma",
     "masc",
     "name of a village; lit. young salty village",
-    "◑"
+    "✔"
    ],
    [
     "bālakaloṇakāragāma",
     "masc",
     "name of a village; lit. young salt makers village",
-    "◑"
+    "✔"
+   ],
+   [
+    "bāveru",
+    "masc",
+    "Babylon; city of Babylon; kingdom of Babylon",
+    "✔"
    ],
    [
     "beluvagāmaka",
@@ -31217,7 +41123,7 @@ var family_set_json = {
    [
     "beḷuvagāmaka",
     "masc",
-    "small village of Beḷuva; lit. wood apple small village",
+    "name of a village; small village of Beḷuva; lit. wood apple small village",
     "✔"
    ],
    [
@@ -31259,7 +41165,7 @@ var family_set_json = {
    [
     "bhārukaccha",
     "masc",
-    "name of a town; modern Broach",
+    "name of a town; modern Bharuch",
     "✔"
    ],
    [
@@ -31272,13 +41178,13 @@ var family_set_json = {
     "makkarakaṭa",
     "nt",
     "name of a town; lit. made of cane",
-    "◑"
+    "✔"
    ],
    [
     "makkarakata",
     "nt",
     "name of a town; lit. made of cane",
-    "◑"
+    "✔"
    ],
    [
     "mathurā",
@@ -31332,18 +41238,12 @@ var family_set_json = {
     "migapathaka",
     "masc",
     "name of a village; lit. deer path",
-    "◑"
+    "✔"
    ],
    [
     "mithilā",
     "fem",
     "name of a town; capital of the Videha country",
-    "✔"
-   ],
-   [
-    "metaḷūpa",
-    "nt",
-    "name of a Sakyan town",
     "✔"
    ],
    [
@@ -31353,9 +41253,15 @@ var family_set_json = {
     "✔"
    ],
    [
+    "rammavatī",
+    "fem",
+    "name of a town where Dīpaṅkara Buddha was born; lit. having enjoyment quality",
+    "◑"
+   ],
+   [
     "rājagaha",
     "nt",
-    "name of a city; capital of Magadha; lit. king's house",
+    "name of a city; capital of Magadha; modern day Rajgir; lit. king's house",
     "✔"
    ],
    [
@@ -31407,6 +41313,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "visāṇā",
+    "fem",
+    "name of a royal capital",
+    "✔"
+   ],
+   [
     "vekaḷiṅga",
     "masc",
     "name of a village",
@@ -31443,28 +41355,16 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vebhaḷiṅga",
-    "masc",
-    "name of a village",
-    "◑"
-   ],
-   [
     "verañjā",
     "fem",
     "name of a town",
-    "◑"
+    "✔"
    ],
    [
     "vesālī",
     "fem",
     "name of a city; capital of the Licchavis",
     "✔"
-   ],
-   [
-    "vehaḷiṅga",
-    "masc",
-    "name of a village",
-    "◑"
    ],
    [
     "veḷukaṇḍaka",
@@ -31608,7 +41508,7 @@ var family_set_json = {
     "silāvati",
     "fem",
     "name of a Sakyan village; lit. rocky",
-    "◑"
+    "✔"
    ],
    [
     "suppāraka",
@@ -31626,7 +41526,7 @@ var family_set_json = {
     "suṃsumāragira",
     "masc",
     "name of the capital city of Bhagga; lit. crocodile's call",
-    "◑"
+    "✔"
    ],
    [
     "setabyā",
@@ -31670,124 +41570,28 @@ var family_set_json = {
  "ordinal numbers": {
   "data": [
    [
-    "aṭṭhattiṃsa",
+    "paṭhama 1",
     "ordin",
-    "thirty-eighth (38th)",
+    "first (1st); prime; lit. more forward",
     "✔"
    ],
    [
-    "aṭṭhama 1",
+    "paṭhamadutiya",
     "ordin",
-    "eighth (8th)",
+    "first and second (1st & 2nd)",
     "✔"
    ],
    [
-    "aṭṭharasama",
+    "dutiya 1",
     "ordin",
-    "eighteenth (18th)",
-    "◑"
-   ],
-   [
-    "aṭṭhavīsa",
-    "ordin",
-    "twenty-eighth (28th)",
+    "second (2nd)",
     "✔"
    ],
    [
-    "aṭṭhārasa 2",
+    "dutīya",
     "ordin",
-    "eighteenth (18th)",
-    "◑"
-   ],
-   [
-    "ekatiṃsa",
-    "ordin",
-    "thirty-first (31st)",
+    "second (2nd)",
     "✔"
-   ],
-   [
-    "ekattiṃsatima",
-    "ordin",
-    "thirty-first (31st)",
-    "◑"
-   ],
-   [
-    "ekanavuta",
-    "ordin",
-    "ninety-first (91st)",
-    "✔"
-   ],
-   [
-    "ekavīsa",
-    "ordin",
-    "twenty-first (21st)",
-    "◑"
-   ],
-   [
-    "ekādasa 2",
-    "ordin",
-    "eleventh (11th)",
-    "✔"
-   ],
-   [
-    "ekādasama",
-    "ordin",
-    "eleventh (11th)",
-    "✔"
-   ],
-   [
-    "ekūnatiṃsa",
-    "ordin",
-    "twenty-ninth (29th)",
-    "✔"
-   ],
-   [
-    "ekūnavīsa",
-    "ordin",
-    "nineteenth (19th)",
-    "✔"
-   ],
-   [
-    "catuttha 1",
-    "ordin",
-    "fourth (4th)",
-    "✔"
-   ],
-   [
-    "catutthiṃ",
-    "ordin",
-    "fourth (4th)",
-    "✔"
-   ],
-   [
-    "catuvīsa",
-    "ordin",
-    "twenty-fourth (24th)",
-    "◑"
-   ],
-   [
-    "cuddasa 2",
-    "ordin",
-    "fourteenth (14th)",
-    "◑"
-   ],
-   [
-    "cuddasama",
-    "ordin",
-    "fourteenth (14th)",
-    "✔"
-   ],
-   [
-    "chaṭṭha",
-    "ordin",
-    "sixth (6th)",
-    "✔"
-   ],
-   [
-    "chabbīsa",
-    "ordin",
-    "twenty-sixth (26th)",
-    "◑"
    ],
    [
     "tatiya 1.1",
@@ -31808,28 +41612,58 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tiṃsa 2",
+    "catuttha 1",
     "ordin",
-    "thirtieth (30th)",
-    "◑"
-   ],
-   [
-    "terasa 2",
-    "ordin",
-    "thirteenth (13th)",
+    "fourth (4th)",
     "✔"
    ],
    [
-    "terasama",
+    "catutthiṃ",
     "ordin",
-    "thirteenth (13th)",
+    "fourth (4th)",
+    "✔"
+   ],
+   [
+    "pañcama 1",
+    "ordin",
+    "fifth (5th)",
+    "✔"
+   ],
+   [
+    "pañcamaka 1",
+    "ordin",
+    "fifth (5th)",
+    "✔"
+   ],
+   [
+    "chaṭṭha",
+    "ordin",
+    "sixth (6th)",
+    "✔"
+   ],
+   [
+    "sattama 1.1",
+    "ordin",
+    "seventh (7th)",
+    "✔"
+   ],
+   [
+    "sattamaṭṭhama",
+    "ordin",
+    "seventh and eighth (7th & 8th)",
     "◑"
    ],
    [
-    "tevīsa",
+    "aṭṭhama 1",
     "ordin",
-    "twenty-third (23rd)",
-    "◑"
+    "eighth (8th)",
+    "✔"
+   ],
+   [
+    "navama",
+    "ordin",
+    "ninth (9th)",
+    "✔"
    ],
    [
     "dasama 1",
@@ -31838,22 +41672,16 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dutiya 1",
+    "ekādasa 2",
     "ordin",
-    "second (2nd)",
+    "eleventh (11th)",
     "✔"
    ],
    [
-    "dutīya",
+    "ekādasama",
     "ordin",
-    "second (2nd)",
+    "eleventh (11th)",
     "✔"
-   ],
-   [
-    "dvācattālīsatima",
-    "ordin",
-    "forty-second (42nd)",
-    "◑"
    ],
    [
     "dvādasa 2",
@@ -31868,75 +41696,33 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dvādasasatima",
+    "terasa 2",
     "ordin",
-    "one hundred and twelfth (112th)",
+    "thirteenth (13th)",
+    "✔"
+   ],
+   [
+    "terasama",
+    "ordin",
+    "thirteenth (13th)",
+    "✔"
+   ],
+   [
+    "cuddasa 2",
+    "ordin",
+    "fourteenth (14th)",
     "◑"
    ],
    [
-    "dvāvīsa",
+    "cuddasama",
     "ordin",
-    "twenty-second (22nd)",
-    "◑"
-   ],
-   [
-    "dvenavuta",
-    "ordin",
-    "ninety second (92nd)",
+    "fourteenth (14th)",
     "✔"
    ],
    [
-    "navama",
+    "pañcadasama",
     "ordin",
-    "ninth (9th)",
-    "✔"
-   ],
-   [
-    "navuta",
-    "ordin",
-    "ninetieth (90th)",
-    "✔"
-   ],
-   [
-    "pañcama",
-    "ordin",
-    "fifth (5th)",
-    "✔"
-   ],
-   [
-    "pañcamaka 1",
-    "ordin",
-    "fifth (5th)",
-    "✔"
-   ],
-   [
-    "pañcamaka 2",
-    "adj",
-    "having (something) as the fifth component",
-    "✔"
-   ],
-   [
-    "pañcavīsa",
-    "ordin",
-    "twenty-fifth (25th)",
-    "◑"
-   ],
-   [
-    "pañcavīsatima",
-    "ordin",
-    "twenty-fifth (25th)",
-    "◑"
-   ],
-   [
-    "paṭhama 1",
-    "ordin",
-    "first (1st); prime",
-    "✔"
-   ],
-   [
-    "paṭhamadutiya",
-    "ordin",
-    "first and second (1st & 2nd)",
+    "fifteenth (15th)",
     "✔"
    ],
    [
@@ -31952,28 +41738,16 @@ var family_set_json = {
     "◑"
    ],
    [
-    "vīsa",
+    "soḷasa 2",
     "ordin",
-    "twentieth (20th)",
+    "sixteenth (16th)",
     "◑"
    ],
    [
-    "satima 2",
+    "soḷasama",
     "ordin",
-    "one hundredth (100th)",
-    "◑"
-   ],
-   [
-    "sattama 1.1",
-    "ordin",
-    "seventh (7th)",
+    "sixteenth (16th)",
     "✔"
-   ],
-   [
-    "sattamaṭṭhama",
-    "ordin",
-    "seventh and eighth (7th & 8th)",
-    "◑"
    ],
    [
     "sattarasa 2",
@@ -31991,7 +41765,109 @@ var family_set_json = {
     "sattarasama",
     "ordin",
     "seventeenth (17th)",
+    "✔"
+   ],
+   [
+    "aṭṭharasama",
+    "ordin",
+    "eighteenth (18th)",
+    "✔"
+   ],
+   [
+    "aṭṭhārasa 2",
+    "ordin",
+    "eighteenth (18th)",
     "◑"
+   ],
+   [
+    "ekūnavīsa",
+    "ordin",
+    "nineteenth (19th)",
+    "✔"
+   ],
+   [
+    "ekūnavīsatima",
+    "ordin",
+    "nineteenth (19th)",
+    "✔"
+   ],
+   [
+    "vīsa",
+    "ordin",
+    "twentieth (20th)",
+    "◑"
+   ],
+   [
+    "ekavīsa",
+    "ordin",
+    "twenty-first (21st)",
+    "◑"
+   ],
+   [
+    "ekavīsatima",
+    "ordin",
+    "twenty-first (21st)",
+    "✔"
+   ],
+   [
+    "dvāvīsa",
+    "ordin",
+    "twenty-second (22nd)",
+    "◑"
+   ],
+   [
+    "bāvīsatima",
+    "ordin",
+    "twenty-second (22nd)",
+    "✔"
+   ],
+   [
+    "tevīsa",
+    "ordin",
+    "twenty-third (23rd)",
+    "◑"
+   ],
+   [
+    "tevīsatima",
+    "ordin",
+    "twenty-third (23rd)",
+    "✔"
+   ],
+   [
+    "catuvīsa",
+    "ordin",
+    "twenty-fourth (24th)",
+    "◑"
+   ],
+   [
+    "catuvīsatima",
+    "ordin",
+    "twenty-fourth (24th)",
+    "✔"
+   ],
+   [
+    "pañcavīsa",
+    "ordin",
+    "twenty-fifth (25th)",
+    "◑"
+   ],
+   [
+    "pañcavīsatima",
+    "ordin",
+    "twenty-fifth (25th)",
+    "✔"
+   ],
+   [
+    "chabbīsa",
+    "ordin",
+    "twenty-sixth (26th)",
+    "◑"
+   ],
+   [
+    "chabbīsatima",
+    "ordin",
+    "twenty-sixth (26th)",
+    "✔"
    ],
    [
     "sattavīsa",
@@ -32000,19 +41876,803 @@ var family_set_json = {
     "◑"
    ],
    [
-    "soḷasa 2",
+    "aṭṭhavīsa",
     "ordin",
-    "sixteenth (16th)",
+    "twenty-eighth (28th)",
+    "✔"
+   ],
+   [
+    "aṭṭhavīsatima",
+    "ordin",
+    "twenty-eighth (28th)",
+    "✔"
+   ],
+   [
+    "ekūnatiṃsa",
+    "ordin",
+    "twenty-ninth (29th)",
+    "✔"
+   ],
+   [
+    "tiṃsa 2",
+    "ordin",
+    "thirtieth (30th)",
     "◑"
    ],
    [
-    "soḷasama",
+    "tiṃsatima",
     "ordin",
-    "sixteenth (16th)",
+    "thirtieth (30th)",
+    "✔"
+   ],
+   [
+    "ekatiṃsa",
+    "ordin",
+    "thirty-first (31st)",
+    "✔"
+   ],
+   [
+    "ekattiṃsatima",
+    "ordin",
+    "thirty-first (31st)",
+    "◑"
+   ],
+   [
+    "bāttiṃsatima",
+    "ordin",
+    "thirty-second (32nd)",
+    "✔"
+   ],
+   [
+    "tettiṃsatima",
+    "ordin",
+    "thirty-third (33rd)",
+    "✔"
+   ],
+   [
+    "pañcatiṃsatima",
+    "ordin",
+    "thirty-fifth (35th)",
+    "✔"
+   ],
+   [
+    "aṭṭhattiṃsa",
+    "ordin",
+    "thirty-eighth (38th)",
+    "✔"
+   ],
+   [
+    "cattālīsama",
+    "ordin",
+    "fortieth (40th)",
+    "✔"
+   ],
+   [
+    "ekacattālīsama",
+    "ordin",
+    "forty-first (41st)",
+    "✔"
+   ],
+   [
+    "dvācattālīsatima",
+    "ordin",
+    "forty-second (42nd)",
+    "◑"
+   ],
+   [
+    "pañcacattālīsama",
+    "ordin",
+    "forty-fifth (45th)",
+    "✔"
+   ],
+   [
+    "chacattālīsama",
+    "ordin",
+    "forty-sixth (46th)",
+    "✔"
+   ],
+   [
+    "sattacattālīsama",
+    "ordin",
+    "forty-seventh (47th)",
+    "✔"
+   ],
+   [
+    "aṭṭhacattālīsama",
+    "ordin",
+    "forty-eighth (48th)",
+    "✔"
+   ],
+   [
+    "ekūnapaññāsama",
+    "ordin",
+    "forty-ninth (49th)",
+    "✔"
+   ],
+   [
+    "paññāsama 2.1",
+    "ordin",
+    "fiftieth (50th)",
+    "✔"
+   ],
+   [
+    "ekapaññāsama",
+    "ordin",
+    "fifty-first (51st)",
+    "✔"
+   ],
+   [
+    "dvepaññāsama",
+    "ordin",
+    "fifty-second (52nd)",
+    "✔"
+   ],
+   [
+    "tepaññāsama",
+    "ordin",
+    "fifty-third (53rd)",
+    "✔"
+   ],
+   [
+    "catupaññāsama",
+    "ordin",
+    "fifty-fourth (54th)",
+    "✔"
+   ],
+   [
+    "pañcapaññāsama",
+    "ordin",
+    "fifty-fifth (55th)",
+    "✔"
+   ],
+   [
+    "chappaññāsama",
+    "ordin",
+    "fifty-sixth (56th)",
+    "✔"
+   ],
+   [
+    "sattapaññāsama",
+    "ordin",
+    "fifty-seventh (57th)",
+    "✔"
+   ],
+   [
+    "asītima",
+    "ordin",
+    "eightieth (80th)",
+    "✔"
+   ],
+   [
+    "navuta",
+    "ordin",
+    "ninetieth (90th)",
+    "✔"
+   ],
+   [
+    "ekanavuta",
+    "ordin",
+    "ninety-first (91st)",
+    "✔"
+   ],
+   [
+    "dvenavuta",
+    "ordin",
+    "ninety second (92nd)",
+    "✔"
+   ],
+   [
+    "satima 2",
+    "ordin",
+    "one hundredth (100th)",
+    "◑"
+   ],
+   [
+    "dvādasasatima",
+    "ordin",
+    "one hundred and twelfth (112th)",
+    "✔"
+   ],
+   [
+    "catutthaka",
+    "ordin",
+    "fourth",
+    "✔"
+   ],
+   [
+    "pañcamaka 2",
+    "adj",
+    "having (something) as the fifth component",
     "✔"
    ]
   ],
-  "count": 57
+  "count": 86
+ },
+ "measures of time": {
+  "data": [
+   [
+    "aṭṭhaddhamāsasata",
+    "nt",
+    "eight hundred fortnights; lit. eight hundred half months",
+    "✔"
+   ],
+   [
+    "aṭṭhamāsa",
+    "masc",
+    "eight months",
+    "✔"
+   ],
+   [
+    "aṭṭhāha",
+    "nt",
+    "eight days; period of eight days",
+    "✔"
+   ],
+   [
+    "aḍḍhateyyamāsa",
+    "masc",
+    "two and a half months",
+    "✔"
+   ],
+   [
+    "aḍḍhamāsa 2.1",
+    "masc",
+    "half a month; fortnight; 14 or 15 days",
+    "✔"
+   ],
+   [
+    "aḍḍhamāsika",
+    "adj",
+    "for a fortnight; two weeks long; lit. half monthly",
+    "✔"
+   ],
+   [
+    "aḍḍhamāsikaṃ",
+    "ind",
+    "once every fortnight; once every two weeks",
+    "✔"
+   ],
+   [
+    "atirekacātumāsaṃ",
+    "ind",
+    "for more than one season; for period of more than four months",
+    "✔"
+   ],
+   [
+    "atirekaddhamāsa",
+    "masc",
+    "more than half a month; lit. surplus half month",
+    "✔"
+   ],
+   [
+    "atirekamāsa",
+    "masc",
+    "more than one month",
+    "✔"
+   ],
+   [
+    "addhamāsa",
+    "masc",
+    "half a month; fortnight; 14 or 15 days",
+    "✔"
+   ],
+   [
+    "addhamāsasata",
+    "nt",
+    "one hundred fortnights; lit. one hundred half months",
+    "✔"
+   ],
+   [
+    "addhamāsika",
+    "adj",
+    "lasting half a month; for a fortnight; for 14 or 15 days; once a fortnight",
+    "✔"
+   ],
+   [
+    "antomajjhanhika",
+    "masc",
+    "(time) before noon; before midday",
+    "◑"
+   ],
+   [
+    "antomāsa",
+    "masc",
+    "within a month; less than a month",
+    "✔"
+   ],
+   [
+    "anvaḍḍhamāsaṃ",
+    "ind",
+    "every half a month; every fortnight; every 14 or 15 days",
+    "◑"
+   ],
+   [
+    "anvaddhamāsaṃ",
+    "ind",
+    "every fortnight; after half a month",
+    "✔"
+   ],
+   [
+    "aha 1.2",
+    "masc",
+    "day",
+    "✔"
+   ],
+   [
+    "ahikaṃ",
+    "ind",
+    "every x days; with x days in between",
+    "✔"
+   ],
+   [
+    "ahu 2.1",
+    "nt",
+    "day",
+    "✔"
+   ],
+   [
+    "aho 1.1",
+    "ind",
+    "day",
+    "✔"
+   ],
+   [
+    "ahoratta",
+    "nt",
+    "day and night; days and nights; time",
+    "✔"
+   ],
+   [
+    "ūnakaddhamāsa",
+    "masc",
+    "less than half a month",
+    "✔"
+   ],
+   [
+    "ūnakaddhamāsaṃ",
+    "ind",
+    "within less than half a month",
+    "✔"
+   ],
+   [
+    "ūnakamāsa",
+    "masc",
+    "less than a month",
+    "✔"
+   ],
+   [
+    "ekamāsa",
+    "masc",
+    "one month; single month",
+    "✔"
+   ],
+   [
+    "ekādasamāsa",
+    "masc",
+    "eleven months",
+    "✔"
+   ],
+   [
+    "ekādasāha",
+    "nt",
+    "eleven days",
+    "✔"
+   ],
+   [
+    "ekāha",
+    "nt",
+    "one day",
+    "✔"
+   ],
+   [
+    "ekāhaṃ 2",
+    "ind",
+    "for one day; for a single day",
+    "✔"
+   ],
+   [
+    "ekāhikaṃ",
+    "ind",
+    "once a day; (comm) with one day in-between",
+    "✔"
+   ],
+   [
+    "omakacātumāsaṃ",
+    "ind",
+    "for less than four months; for a period of less than one season",
+    "✔"
+   ],
+   [
+    "orenaḍḍhamāsa",
+    "masc",
+    "interval of less than a fortnight; earlier than half a month",
+    "✔"
+   ],
+   [
+    "orenaddhamāsa",
+    "adj",
+    "less than a fortnight (remaining of)",
+    "✔"
+   ],
+   [
+    "orenaddhamāsaṃ",
+    "ind",
+    "sooner than a fortnight; within less than half a month",
+    "✔"
+   ],
+   [
+    "katipāha",
+    "nt",
+    "few days; some time",
+    "◑"
+   ],
+   [
+    "katipāhakaṃ",
+    "ind",
+    "for a few days; for some time",
+    "✔"
+   ],
+   [
+    "katipāhaccayena",
+    "ind",
+    "after a few days; in a few days' time; lit. with the passing of some days",
+    "✔"
+   ],
+   [
+    "katipāhena",
+    "ind",
+    "after a few days; after some time",
+    "◑"
+   ],
+   [
+    "katiha",
+    "nt",
+    "how many days?; how long?",
+    "✔"
+   ],
+   [
+    "kappasatasahassa",
+    "nt",
+    "one hundred thousand aeons",
+    "✔"
+   ],
+   [
+    "kappasahassa",
+    "nt",
+    "one thousand aeons",
+    "✔"
+   ],
+   [
+    "catumāsa",
+    "nt",
+    "season; four months",
+    "✔"
+   ],
+   [
+    "catummāsa",
+    "nt",
+    "season; four months",
+    "◑"
+   ],
+   [
+    "catūha",
+    "nt",
+    "four days",
+    "✔"
+   ],
+   [
+    "cātumāsa",
+    "nt",
+    "time of one season; period of four months",
+    "✔"
+   ],
+   [
+    "cuddasāha",
+    "nt",
+    "fourteen days; two weeks",
+    "✔"
+   ],
+   [
+    "chāha",
+    "nt",
+    "six days",
+    "◑"
+   ],
+   [
+    "tadahu",
+    "nt",
+    "that very day; same day",
+    "✔"
+   ],
+   [
+    "tāvatīhaṃ",
+    "ind",
+    "for that many days; for so many days",
+    "✔"
+   ],
+   [
+    "tīha",
+    "nt",
+    "three days",
+    "✔"
+   ],
+   [
+    "temāsa",
+    "nt",
+    "period of three months",
+    "✔"
+   ],
+   [
+    "temāsaccayena",
+    "ind",
+    "after three months; lit. with the passing of three months",
+    "✔"
+   ],
+   [
+    "temāsika",
+    "adj",
+    "related to three months; three monthly",
+    "✔"
+   ],
+   [
+    "terasāha",
+    "nt",
+    "thirteen days",
+    "✔"
+   ],
+   [
+    "dasamāsa",
+    "masc",
+    "ten months",
+    "✔"
+   ],
+   [
+    "dasāha",
+    "nt",
+    "ten days",
+    "✔"
+   ],
+   [
+    "dvādasaka 2",
+    "nt",
+    "twelve days",
+    "✔"
+   ],
+   [
+    "dvādasāha",
+    "nt",
+    "twelve days",
+    "✔"
+   ],
+   [
+    "dvīha",
+    "nt",
+    "two days",
+    "✔"
+   ],
+   [
+    "dvemāsa",
+    "nt",
+    "two months; duration of two months",
+    "✔"
+   ],
+   [
+    "dvemāsaṃ",
+    "ind",
+    "for two months; for a period of two months",
+    "✔"
+   ],
+   [
+    "nattamaha",
+    "nt",
+    "night and day",
+    "✔"
+   ],
+   [
+    "nattamahaṃ",
+    "ind",
+    "all night and day; day and night; continuously; continually",
+    "✔"
+   ],
+   [
+    "navāha",
+    "masc",
+    "nine days",
+    "◑"
+   ],
+   [
+    "pañcamāsa",
+    "masc",
+    "five months",
+    "✔"
+   ],
+   [
+    "pañcāha",
+    "masc",
+    "five days",
+    "✔"
+   ],
+   [
+    "pañcāhika",
+    "adj",
+    "five-day; of five days; lit. related to five days",
+    "✔"
+   ],
+   [
+    "māsa 1.1",
+    "masc",
+    "month",
+    "✔"
+   ],
+   [
+    "māsa 1.2",
+    "nt",
+    "month",
+    "✔"
+   ],
+   [
+    "māsaḍḍhamāsa",
+    "masc",
+    "month and fortnight; lit. month and half month",
+    "✔"
+   ],
+   [
+    "māsadivasa",
+    "masc",
+    "month and day; date",
+    "✔"
+   ],
+   [
+    "māsaddhamāsa",
+    "masc",
+    "month and fortnight; lit. month and half month",
+    "✔"
+   ],
+   [
+    "māsaparamatā",
+    "fem",
+    "maximum of one month; one month at the most",
+    "✔"
+   ],
+   [
+    "māsaparamaṃ",
+    "ind",
+    "for a month at the most; for a maximum of one month",
+    "✔"
+   ],
+   [
+    "māsapubba",
+    "adj",
+    "before one month",
+    "◑"
+   ],
+   [
+    "māsasata",
+    "nt",
+    "one hundred months",
+    "✔"
+   ],
+   [
+    "māsaṃ",
+    "ind",
+    "for a month; for a period of one month",
+    "✔"
+   ],
+   [
+    "māsātikkanta",
+    "adj",
+    "(kept) more than a month; lit. exceeding a month",
+    "✔"
+   ],
+   [
+    "māsānatikkanta",
+    "adj",
+    "not (kept) more than a month; lit. not exceeding a month",
+    "◑"
+   ],
+   [
+    "māsika 1",
+    "adj",
+    "occurring monthly; related to a month",
+    "✔"
+   ],
+   [
+    "yāvatīhaṃ",
+    "ind",
+    "for however many days; for as many days",
+    "✔"
+   ],
+   [
+    "rattamahaṃ",
+    "ind",
+    "day and night; continuously; continually",
+    "✔"
+   ],
+   [
+    "sattamāsa",
+    "masc",
+    "seven months",
+    "✔"
+   ],
+   [
+    "sattamāsāni",
+    "nt",
+    "seven months",
+    "✔"
+   ],
+   [
+    "sattāha 1",
+    "nt",
+    "seven days; week",
+    "✔"
+   ],
+   [
+    "sattāha 2",
+    "masc",
+    "seven days; week",
+    "✔"
+   ],
+   [
+    "sattāhaṃ 1",
+    "ind",
+    "for a week; for seven days",
+    "✔"
+   ],
+   [
+    "sattāhaṃ 2",
+    "ind",
+    "within seven days",
+    "◑"
+   ],
+   [
+    "sattāhika",
+    "adj",
+    "seven-day; of seven days",
+    "✔"
+   ],
+   [
+    "sattāhikaṃ",
+    "ind",
+    "once every seven days; once a week; (comm) with seven days in-between",
+    "✔"
+   ],
+   [
+    "sabbamahorattaṃ",
+    "ind",
+    "all day and all night; all the time",
+    "✔"
+   ],
+   [
+    "sabbamahorattiṃ",
+    "ind",
+    "throughout the day and night; continuously; all the time; lit. entire day and night",
+    "✔"
+   ]
+  ],
+  "count": 93
+ },
+ "vaggas of the Saṃyutta Nikāya 36": {
+  "data": [
+   [
+    "sagāthāvagga 2",
+    "masc",
+    "Chapter 1 of the Vedanāsaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter with verses",
+    "✔"
+   ],
+   [
+    "rahogatavagga 1",
+    "masc",
+    "Chapter 2 of the Vedanāsaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on gone into seclusion",
+    "✔"
+   ],
+   [
+    "aṭṭhasatapariyāyavagga",
+    "masc",
+    "Chapter 3 of the Vedanāsaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the one hundred and eight ways",
+    "✔"
+   ]
+  ],
+  "count": 3
  },
  "commentaries": {
   "data": [
@@ -32033,6 +42693,12 @@ var family_set_json = {
     "fem",
     "ancient commentary referenced by Buddhaghosa",
     "◑"
+   ],
+   [
+    "cariyāpiṭakaaṭṭhakathā",
+    "fem",
+    "commentary to the Cariyāpiṭaka",
+    "✔"
    ],
    [
     "dutiyasuttavaṇṇanā",
@@ -32061,8 +42727,8 @@ var family_set_json = {
    [
     "pāsarāsisuttavaṇṇanā",
     "fem",
-    "commentary on the Discourse on the Heap of Snares",
-    "◑"
+    "commentary on MN26 Pāsarāsisutta; lit. commentary on the discourse on the heap of snares",
+    "✔"
    ],
    [
     "posālamāṇavapucchāniddesa",
@@ -32104,7 +42770,7 @@ var family_set_json = {
     "vajirabuddhi",
     "fem",
     "name of a Vinaya sub-commentary; Vajirabuddhiṭīkā; lit. diamond intelligence",
-    "◑"
+    "✔"
    ],
    [
     "vibhaṅgaṭṭhakathā",
@@ -32116,7 +42782,7 @@ var family_set_json = {
     "sakkapañhasuttaṭīkā",
     "fem",
     "sub-commentary to the Discourse on Sakka's Question",
-    "◑"
+    "✔"
    ],
    [
     "satipaṭṭhānavaṇṇanā",
@@ -32140,7 +42806,7 @@ var family_set_json = {
     "saṃghabhedasikkhāpadaṭīkā",
     "fem",
     "sub-commentary to the rule on schism in the monastic order",
-    "◑"
+    "✔"
    ],
    [
     "sāmaññaphalavaṇṇanā",
@@ -32158,22 +42824,308 @@ var family_set_json = {
     "sāratthadīpanīṭīkā",
     "fem",
     "sub-commentary on Vinaya, commenting on Buddhaghosa's Samantapāsādikā; lit. explaining the essence of the meaning sub-commentary",
-    "◑"
+    "✔"
    ],
    [
     "sumaṅgalavilāsinī",
     "fem",
-    "commentary on the Dīgha Nikāya compiled by Buddhaghosa; lit. Very Auspicious and Charming",
-    "◑"
+    "commentary on the Dīgha Nikāya compiled by Buddhaghosa; lit. very auspicious and charming",
+    "✔"
    ],
    [
     "syāaṭṭhakathā",
     "fem",
     "Thai commentary",
-    "◑"
+    "✔"
    ]
   ],
-  "count": 26
+  "count": 27
+ },
+ "suttas of Saṃyutta Nikāya 19": {
+  "data": [
+   [
+    "aṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 19.1 (SN19.1); lit. discourse on bones",
+    "✔"
+   ],
+   [
+    "pesisutta",
+    "nt",
+    "Saṃyutta Nikāya 19.2 (SN19.2); lit. discourse on the lump of meat",
+    "✔"
+   ],
+   [
+    "piṇḍasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 19.3 (SN19.3); lit. discourse on the lump",
+    "✔"
+   ],
+   [
+    "nicchavisutta",
+    "nt",
+    "Saṃyutta Nikāya 19.4 (SN19.4); lit. discourse on skinless",
+    "✔"
+   ],
+   [
+    "asilomasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.5 (SN19.5); lit. discourse on swords for hair",
+    "✔"
+   ],
+   [
+    "sattisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 19.6 (SN19.6); lit. discourse on spears (for hair)",
+    "✔"
+   ],
+   [
+    "usulomasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.7 (SN19.7); lit. discourse on having arrows as hair",
+    "✔"
+   ],
+   [
+    "sūcilomasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 19.8 (SN19.8); lit. discourse on having needles as hair",
+    "✔"
+   ],
+   [
+    "dutiyasūcilomasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.9 (SN19.9); lit. second discourse on having needles as hair",
+    "✔"
+   ],
+   [
+    "kumbhaṇḍasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.10 (SN19.10); lit. discourse on pumpkin size testicles",
+    "✔"
+   ],
+   [
+    "sasīsakasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.11 (SN19.11); lit. discourse on over one's head",
+    "✔"
+   ],
+   [
+    "gūthakhādasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.12 (SN19.12); lit. discourse on the eating excrement",
+    "✔"
+   ],
+   [
+    "nicchavitthisutta",
+    "nt",
+    "Saṃyutta Nikāya 19.13 (SN19.13); lit. discourse on the skinless woman",
+    "✔"
+   ],
+   [
+    "maṅgulitthisutta",
+    "nt",
+    "Saṃyutta Nikāya 19.14 (SN19.14); lit. discourse on the hideously ugly woman",
+    "✔"
+   ],
+   [
+    "okilinīsutta",
+    "nt",
+    "Saṃyutta Nikāya 19.15 (SN19.15); lit. discourse on discharging",
+    "✔"
+   ],
+   [
+    "asīsakasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.16 (SN19.16); lit. discourse on without a head",
+    "✔"
+   ],
+   [
+    "pāpabhikkhusutta",
+    "nt",
+    "Saṃyutta Nikāya 19.17 (SN19.17); lit. discourse on the evil monk",
+    "✔"
+   ],
+   [
+    "pāpabhikkhunīsutta",
+    "nt",
+    "Saṃyutta Nikāya 19.18 (SN19.18); lit. discourse on the evil nun",
+    "✔"
+   ],
+   [
+    "pāpasikkhamānasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.19 (SN19.19); lit. discourse on the evil nun-in-training",
+    "✔"
+   ],
+   [
+    "pāpasāmaṇerasutta",
+    "nt",
+    "Saṃyutta Nikāya 19.20 (SN19.20); lit. discourse on the evil novice",
+    "✔"
+   ],
+   [
+    "pāpasāmaṇerīsutta",
+    "nt",
+    "Saṃyutta Nikāya 19.21 (SN19.21); lit. discourse on the evil female novice",
+    "✔"
+   ]
+  ],
+  "count": 21
+ },
+ "suttas of Saṃyutta Nikāya 3": {
+  "data": [
+   [
+    "daharasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.1 (SN3.1); lit. discourse on young",
+    "✔"
+   ],
+   [
+    "purisasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.2 (SN3.2); lit. discourse on the man",
+    "✔"
+   ],
+   [
+    "jarāmaraṇasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.3 (SN3.3); lit. discourse on aging and death",
+    "✔"
+   ],
+   [
+    "piyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.4 (SN3.4); lit. discourse on the dear",
+    "✔"
+   ],
+   [
+    "attarakkhitasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.5 (SN3.5); lit. discourse on protected by oneself",
+    "✔"
+   ],
+   [
+    "appakasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.6 (SN3.6); lit. discourse on few",
+    "✔"
+   ],
+   [
+    "aḍḍakaraṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.7 (SN3.7); lit. discourse on passing judgement",
+    "✔"
+   ],
+   [
+    "mallikāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.8 (SN3.8); lit. discourse about Mallikā",
+    "✔"
+   ],
+   [
+    "yaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.9 (SN3.9); lit. discourse about sacrifice",
+    "✔"
+   ],
+   [
+    "bandhanasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 3.10 (SN3.10); lit. discourse on bondage",
+    "✔"
+   ],
+   [
+    "sattajaṭilasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.11 (SN3.11); lit. discourse on seven dreadlocked ascetics",
+    "✔"
+   ],
+   [
+    "pañcarājasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.12 (SN3.12); lit. discourse on five kings",
+    "✔"
+   ],
+   [
+    "doṇapākasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.13 (SN3.13); lit. discourse about a bucketful of cooked food",
+    "✔"
+   ],
+   [
+    "paṭhamasaṅgāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.14 (SN3.14); lit. first discourse about battle",
+    "✔"
+   ],
+   [
+    "dutiyasaṅgāmasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.15 (SN3.15); lit. second discourse about battle",
+    "✔"
+   ],
+   [
+    "mallikāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 3.16 (SN3.16); lit. discourse about Mallikā",
+    "✔"
+   ],
+   [
+    "appamādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.17 (SN3.17); lit. discourse on heedfulness",
+    "✔"
+   ],
+   [
+    "kalyāṇamittasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.18 (SN3.18); lit. discourse about good friends",
+    "✔"
+   ],
+   [
+    "paṭhamaaputtakasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.19 (SN3.19)",
+    "✔"
+   ],
+   [
+    "dutiyaaputtakasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.20 (SN3.20); lit. second discourse on without a son",
+    "✔"
+   ],
+   [
+    "puggalasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 3.21 (SN3.21); lit. discourse on the person",
+    "✔"
+   ],
+   [
+    "ayyikāsutta",
+    "nt",
+    "Saṃyutta Nikāya 3.22 (SN3.22); lit. discourse about grandmother",
+    "✔"
+   ],
+   [
+    "issattasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.24 (SN3.24); lit. discourse on archery",
+    "✔"
+   ],
+   [
+    "pabbatūpamasutta",
+    "nt",
+    "Saṃyutta Nikāya 3.25 (SN3.25); lit. discourse about the simile of the mountain",
+    "✔"
+   ],
+   [
+    "pabbatūpamā",
+    "fem",
+    "in reference to SN3.25 Pabbatūpamasutta; lit. simile of the mountain",
+    "✔"
+   ]
+  ],
+  "count": 25
  },
  "astronomical terms": {
   "data": [
@@ -32263,12 +43215,6 @@ var family_set_json = {
    ],
    [
     "orenaḍḍhamāsa",
-    "masc",
-    "interval of less than a fortnight; earlier than half a month",
-    "✔"
-   ],
-   [
-    "orenaddhamāsa",
     "masc",
     "interval of less than a fortnight; earlier than half a month",
     "✔"
@@ -32490,6 +43436,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "māsaḍḍhamāsa",
+    "masc",
+    "month and fortnight; lit. month and half month",
+    "✔"
+   ],
+   [
     "ravivāra",
     "masc",
     "Sunday; lit. day of the Sun",
@@ -32633,6 +43585,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nekkha",
+    "nt",
+    "golden ornament; golden coin; lit. made of gold",
+    "✔"
+   ],
+   [
     "pañcamāsaka",
     "masc",
     "five coins of low value",
@@ -32705,7 +43663,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 23
+  "count": 24
  },
  "measures of volume": {
   "data": [
@@ -32718,7 +43676,7 @@ var family_set_json = {
    [
     "aḍḍhāḷhakodana",
     "nt",
-    "half measure of boiled rice",
+    "half an āḷhaka measure of boiled rice",
     "✔"
    ],
    [
@@ -32740,7 +43698,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tumba 2",
+    "ekapattha",
+    "masc",
+    "one pattha measure",
+    "✔"
+   ],
+   [
+    "khārī",
+    "fem",
+    "measure of volume",
+    "✔"
+   ],
+   [
+    "tumba 3",
     "masc",
     "measure used for rice and grain; lit. gourd",
     "✔"
@@ -32750,6 +43720,12 @@ var family_set_json = {
     "nt",
     "measure of volume; bucket; trough; vat",
     "✔"
+   ],
+   [
+    "nāḷi 2",
+    "fem",
+    "measure of volume",
+    "◑"
    ],
    [
     "nāḷikā 1",
@@ -32764,16 +43740,28 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nāḷikodanamattā",
+    "fem",
+    "one bamboo measure of boiled rice",
+    "✔"
+   ],
+   [
     "pattha 2",
     "masc",
-    "measure of volume",
+    "measure of volume; lit. standing forward",
     "✔"
    ],
    [
     "pasata",
     "masc",
-    "cupped palm of the hand; handful",
-    "◑"
+    "cupped palm of the hand; handful; lit. went forward",
+    "✔"
+   ],
+   [
+    "pasataṃ",
+    "ind",
+    "by handful; lit. went forward",
+    "✔"
    ],
    [
     "pāda 9",
@@ -32782,13 +43770,19 @@ var family_set_json = {
     "✔"
    ],
    [
+    "mānikā",
+    "fem",
+    "measure of volume; lit. measuring",
+    "✔"
+   ],
+   [
     "vāha 4",
     "masc",
-    "cart-load; wagon-load",
+    "cart-load; wagon-load; lit. carrying",
     "✔"
    ]
   ],
-  "count": 13
+  "count": 19
  },
  "four modes of generation": {
   "data": [
@@ -32819,6 +43813,327 @@ var family_set_json = {
   ],
   "count": 4
  },
+ "suttas of Saṃyutta Nikāya 29": {
+  "data": [
+   [
+    "suddhikasutta 03",
+    "nt",
+    "Saṃyutta Nikāya 29.1 (SN29.1); lit. clean (version of the) discourse",
+    "✔"
+   ],
+   [
+    "paṇītatarasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.2 (SN29.2); lit. discourse on more excellent",
+    "✔"
+   ],
+   [
+    "uposathasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 29.3 (SN29.3); lit. discourse on the observance day",
+    "✔"
+   ],
+   [
+    "dutiyauposathasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.4 (SN29.4); lit. second discourse on the observance day",
+    "✔"
+   ],
+   [
+    "tatiyauposathasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.5 (SN29.5); lit. third discourse on the observance day",
+    "✔"
+   ],
+   [
+    "catutthauposathasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.6 (SN29.6); lit. fourth discourse on the observance day",
+    "✔"
+   ],
+   [
+    "sutasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 29.7 (SN29.7); lit. discourse on heard",
+    "✔"
+   ],
+   [
+    "dutiyasutasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.8 (SN29.8); lit. second discourse on heard",
+    "✔"
+   ],
+   [
+    "tatiyasutasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.9 (SN29.9); lit. third discourse on heard",
+    "✔"
+   ],
+   [
+    "catutthasutasutta",
+    "nt",
+    "Saṃyutta Nikāya 29.10 (SN29.10); lit. fourth discourse on heard",
+    "✔"
+   ],
+   [
+    "aṇḍajadānūpakārasuttadasaka 1",
+    "nt",
+    "Saṃyutta Nikāya 29.11-20 (SN29.11-20); lit. set of ten discourses on how giving supports becoming an oviparous (nāga)",
+    "✔"
+   ],
+   [
+    "jalābujādidānūpakārasuttattiṃsaka",
+    "nt",
+    "Saṃyutta Nikāya 29.21-50 (SN29.21-50); lit. group of thirty suttas starting with the discourse on how giving supports becoming a viviparous (nāga)",
+    "✔"
+   ]
+  ],
+  "count": 12
+ },
+ "suttas of Saṃyutta Nikāya 30": {
+  "data": [
+   [
+    "suddhikasutta 04",
+    "nt",
+    "Saṃyutta Nikāya 30.1 (SN30.1); lit. clean (version of the) discourse",
+    "✔"
+   ],
+   [
+    "harantisutta",
+    "nt",
+    "Saṃyutta Nikāya 30.2 (SN30.2); lit. discourse on they carry away",
+    "✔"
+   ],
+   [
+    "dvayakārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 30.3 (SN30.3); lit. discourse on doing both",
+    "✔"
+   ],
+   [
+    "dutiyādidvayakārīsuttattika",
+    "nt",
+    "Saṃyutta Nikāya 30.4-6 (SN30.4-6); lit. group of three discourses starting with the second discourse on doing both",
+    "✔"
+   ],
+   [
+    "aṇḍajadānūpakārasuttadasaka 2",
+    "nt",
+    "Saṃyutta Nikāya 30.7-16 (SN30.7-16); lit. group of ten discourses on how giving supports becoming an oviparous (nāga)",
+    "✔"
+   ],
+   [
+    "jalābujādidānūpakārasuttatiṃsaka",
+    "nt",
+    "Saṃyutta Nikāya 30.17-46 (SN30.17-46); lit. group of thirty discourses starting with the discourse on how giving supports becoming a viviparous (nāga)",
+    "✔"
+   ]
+  ],
+  "count": 6
+ },
+ "epithets of stream entry": {
+  "data": [
+   [
+    "atiracchānagāmī",
+    "adj",
+    "not destined for animal rebirth; epithet of stream entry; lit. not going to animal",
+    "✔"
+   ],
+   [
+    "aparappaccaya",
+    "adj",
+    "independent of others; not relying on another (wrt)",
+    "✔"
+   ],
+   [
+    "abhisami",
+    "aor",
+    "completely realised; completely understood; fully grasped",
+    "✔"
+   ],
+   [
+    "abhisamita",
+    "pp",
+    "realised; understood; penetrated",
+    "✔"
+   ],
+   [
+    "aveccappasanna",
+    "adj",
+    "with unwavering confidence; having absolute faith",
+    "✔"
+   ],
+   [
+    "aveccappasāda",
+    "masc",
+    "faith founded in understanding; epithet of stream entry",
+    "✔"
+   ],
+   [
+    "āgataphala",
+    "adj",
+    "who has reached the fruit; epithet of a stream enterer",
+    "✔"
+   ],
+   [
+    "ekabījī",
+    "adj",
+    "(of a stream enterer) who has one remaining human life; lit. one seed-er",
+    "✔"
+   ],
+   [
+    "kāyasakkhi",
+    "adj",
+    "liberated through the experience of jhāna and the formless attainments; epithet of a steam-enterer or higher; lit. body-witness",
+    "✔"
+   ],
+   [
+    "kāyasakkhī",
+    "adj",
+    "liberated through the experience of jhāna and the formless attainments; epithet of a steam-enterer or higher; lit. body-witness",
+    "✔"
+   ],
+   [
+    "kolaṃkola",
+    "masc",
+    "stream enterer who returns to the human state two or three times; lit. family to family",
+    "✔"
+   ],
+   [
+    "gihisotāpanna",
+    "masc",
+    "lay stream enterer",
+    "◑"
+   ],
+   [
+    "tiṇṇavicikiccha",
+    "adj",
+    "crossed beyond doubt; overcome uncertainty",
+    "✔"
+   ],
+   [
+    "dassanasampadā",
+    "fem",
+    "attainment of vision; success in seeing; epithets of stream entry",
+    "✔"
+   ],
+   [
+    "dassanasampanna",
+    "adj",
+    "endowed with insight; who has vision; wise; epithet of a stream enterer",
+    "✔"
+   ],
+   [
+    "dassanuppāda",
+    "masc",
+    "arising of insight; epithet of stream entry; lit. coming up of vision",
+    "✔"
+   ],
+   [
+    "diṭṭhadhamma 2",
+    "adj",
+    "who has seen the Dhamma; who has perceived reality",
+    "✔"
+   ],
+   [
+    "diṭṭhappatta",
+    "adj",
+    "who has attained vision (of Nibbāna); epithet of a stream enterer",
+    "◑"
+   ],
+   [
+    "diṭṭhippatta",
+    "adj",
+    "attained understanding; (or) attained through view; epithet of a steam-enterer or higher",
+    "✔"
+   ],
+   [
+    "diṭṭhisampadā",
+    "fem",
+    "right view; successful attainment of view; epithet of stream entry; lit. view attainment",
+    "✔"
+   ],
+   [
+    "dhammacakkhu",
+    "nt",
+    "insight into the nature of reality; spiritual insight; understanding of the way things are; lit. Dhamma eye",
+    "✔"
+   ],
+   [
+    "pattadhamma",
+    "adj",
+    "who has attained the Dhamma",
+    "✔"
+   ],
+   [
+    "pariyogāḷhadhamma",
+    "adj",
+    "who has deeply penetrated the Dhamma",
+    "✔"
+   ],
+   [
+    "maggasampadā",
+    "fem",
+    "attaining the path; finding the way; (comm) stream entry; lit. path success",
+    "✔"
+   ],
+   [
+    "vigatakathaṅkatha",
+    "adj",
+    "without doubt; free from confusion; lit. without asking how?",
+    "✔"
+   ],
+   [
+    "vigatakathaṃkatha",
+    "adj",
+    "without doubt; free from confusion; lit. without asking how?",
+    "✔"
+   ],
+   [
+    "viditadhamma",
+    "adj",
+    "who has understood the Dhamma",
+    "✔"
+   ],
+   [
+    "vesārajjappatta",
+    "adj",
+    "confident (in); self-assured; lit. attained confidence",
+    "✔"
+   ],
+   [
+    "sattakkhattuparama",
+    "masc",
+    "stream enterer who has seven more lives at the most; lit. seven time at most-er",
+    "✔"
+   ],
+   [
+    "saddhāvimutta",
+    "adj",
+    "liberated through faith; attained through confidence; epithet of a stream enterer or higher",
+    "✔"
+   ],
+   [
+    "samaṇamacala",
+    "masc",
+    "stable ascetic; epithet of a stream enterer; lit. unshaking ascetic",
+    "✔"
+   ],
+   [
+    "sekkhasammata",
+    "adj",
+    "designated as stream enterers; (comm) where faith is increasing and wealth is decreasing; lit. agreed upon as trainees",
+    "✔"
+   ],
+   [
+    "sekkhasammatasaññī",
+    "adj",
+    "perceiving (a family) as designated stream enterers",
+    "◑"
+   ]
+  ],
+  "count": 33
+ },
  "types of suttas": {
   "data": [
    [
@@ -32848,24 +44163,101 @@ var family_set_json = {
   ],
   "count": 4
  },
+ "vaggas of the Saṃyutta Nikāya 22": {
+  "data": [
+   [
+    "nakulapituvagga",
+    "masc",
+    "Chapter 1 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on Nakulapita",
+    "✔"
+   ],
+   [
+    "aniccavagga 1",
+    "masc",
+    "Chapter 2 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on impermanence",
+    "✔"
+   ],
+   [
+    "bhāravagga",
+    "masc",
+    "Chapter 3 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on the burder",
+    "✔"
+   ],
+   [
+    "natumhākaṃvagga",
+    "masc",
+    "Chapter 4 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on not yours",
+    "✔"
+   ],
+   [
+    "attadīpavagga",
+    "masc",
+    "Chapter 5 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on self-reliant",
+    "✔"
+   ],
+   [
+    "upayavagga",
+    "masc",
+    "Chapter 6 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on engagement",
+    "✔"
+   ],
+   [
+    "khajjanīyavagga",
+    "masc",
+    "Chapter 8 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on edible",
+    "✔"
+   ],
+   [
+    "theravagga 1",
+    "masc",
+    "Chapter 9 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on elders",
+    "✔"
+   ],
+   [
+    "pupphavagga 1",
+    "masc",
+    "Chapter 10 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on flowers",
+    "✔"
+   ],
+   [
+    "antavagga",
+    "masc",
+    "Chapter 11 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on extremes",
+    "✔"
+   ],
+   [
+    "dhammakathikavagga",
+    "masc",
+    "Chapter 12 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on the Dhamma preacher",
+    "✔"
+   ],
+   [
+    "avijjāvagga 1",
+    "masc",
+    "Chapter 13 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on ignorance",
+    "✔"
+   ],
+   [
+    "kukkuḷavagga",
+    "masc",
+    "Chapter 14 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on hot ashes",
+    "✔"
+   ],
+   [
+    "diṭṭhivagga",
+    "masc",
+    "Chapter 15 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on views",
+    "✔"
+   ]
+  ],
+  "count": 14
+ },
  "previous Buddhas": {
   "data": [
    [
-    "atthadassī 2",
+    "dīghāyuka 2",
     "masc",
-    "name of the 11th previous Buddha; lit. who sees the goal",
-    "✔"
-   ],
-   [
-    "anomadassī 2",
-    "masc",
-    "name of the 18th previous Buddha; lit. superior vision",
-    "✔"
-   ],
-   [
-    "kakusandha",
-    "masc",
-    "name of the 3rd previous Buddha",
+    "name of an unknown Buddha coming between Kassapa and Gotama; lit. long life",
     "✔"
    ],
    [
@@ -32881,15 +44273,33 @@ var family_set_json = {
     "✔"
    ],
    [
-    "koṇḍañña 3",
+    "kakusandha",
     "masc",
-    "name of the 23rd previous Buddha",
+    "name of the 3rd previous Buddha",
     "✔"
    ],
    [
-    "taṇhaṅkara",
+    "vessabhū 1",
     "masc",
-    "name of the 27th previous Buddha",
+    "name of the 4th previous Buddha",
+    "✔"
+   ],
+   [
+    "sikhī 3",
+    "masc",
+    "name of the 5th previous Buddha; lit. with a crest",
+    "✔"
+   ],
+   [
+    "vipassī 1",
+    "masc",
+    "name of the 6th previous Buddha; lit. insightful; who sees distinctly",
+    "✔"
+   ],
+   [
+    "phussa 2.5",
+    "masc",
+    "name of the 7th previous Buddha; lit. constellation of Cancer",
     "✔"
    ],
    [
@@ -32899,15 +44309,45 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dīpaṅkara",
+    "siddhattha 4",
     "masc",
-    "name of the 24th previous Buddha; lit. illuminator; making light",
+    "name of the 9th previous Buddha; lit. who has accomplished the goal",
     "✔"
    ],
    [
-    "dhammadassī",
+    "dhammadassī 1",
     "masc",
     "name of the 10th previous Buddha; lit. who sees the nature of things",
+    "✔"
+   ],
+   [
+    "atthadassī 2",
+    "masc",
+    "name of the 11th previous Buddha; lit. who sees the goal",
+    "✔"
+   ],
+   [
+    "piyadassī 2",
+    "masc",
+    "name of the 12th previous Buddha; lit. dear to see; (or) who looks fondly",
+    "✔"
+   ],
+   [
+    "sujāta 3",
+    "masc",
+    "name of the 13th previous Buddha; lit. well born",
+    "✔"
+   ],
+   [
+    "sumedha 4",
+    "masc",
+    "name of the 14th previous Buddha; lit. good wisdom",
+    "✔"
+   ],
+   [
+    "padumuttara 1",
+    "masc",
+    "name of the 15th previous Buddha; lit. ultimate lotus",
     "✔"
    ],
    [
@@ -32923,33 +44363,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "padumuttara 1",
+    "anomadassī 2",
     "masc",
-    "name of the 15th previous Buddha; lit. ultimate lotus",
+    "name of the 18th previous Buddha; lit. superior vision",
     "✔"
    ],
    [
-    "piyadassī 2",
+    "sobhita 5",
     "masc",
-    "name of the 12th previous Buddha; lit. dear to see; (or) who looks fondly",
-    "✔"
-   ],
-   [
-    "phussa 2.5",
-    "masc",
-    "name of the 7th previous Buddha; lit. constellation of Cancer",
-    "✔"
-   ],
-   [
-    "maṅgala 7",
-    "masc",
-    "name of the 22nd previous Buddha; lit. auspicious",
-    "✔"
-   ],
-   [
-    "medhaṅkara",
-    "masc",
-    "name of the 26th previous Buddha; lit. making wisdom; (or) performing the sacrifice",
+    "name of the 19th previous Buddha; lit. shone",
     "✔"
    ],
    [
@@ -32959,15 +44381,27 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vipassī 1",
+    "sumana 5",
     "masc",
-    "name of the 6th previous Buddha; lit. insightful; who sees distinctly",
+    "name of the 21st previous Buddha; lit. good mind",
     "✔"
    ],
    [
-    "vessabhū 1",
+    "maṅgala 7",
     "masc",
-    "name of the 4th previous Buddha",
+    "name of the 22nd previous Buddha; lit. auspicious",
+    "✔"
+   ],
+   [
+    "koṇḍañña 3",
+    "masc",
+    "name of the 23rd previous Buddha",
+    "✔"
+   ],
+   [
+    "dīpaṅkara",
+    "masc",
+    "name of the 24th previous Buddha; lit. illuminator; making light",
     "✔"
    ],
    [
@@ -32977,43 +44411,96 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sikhī 3",
+    "medhaṅkara",
     "masc",
-    "name of the 5th previous Buddha; lit. with a crest",
+    "name of the 26th previous Buddha; lit. making wisdom; (or) performing the sacrifice",
     "✔"
    ],
    [
-    "siddhattha 4",
+    "taṇhaṅkara",
     "masc",
-    "name of the 9th previous Buddha; lit. who has accomplished the goal",
-    "✔"
-   ],
-   [
-    "sujāta 3",
-    "masc",
-    "name of the 13th previous Buddha; lit. well born",
-    "✔"
-   ],
-   [
-    "sumana 5",
-    "masc",
-    "name of the 21st previous Buddha; lit. good mind",
-    "✔"
-   ],
-   [
-    "sumedha 4",
-    "masc",
-    "name of the 14th previous Buddha; lit. good wisdom",
-    "✔"
-   ],
-   [
-    "sobhita 5",
-    "masc",
-    "name of the 19th previous Buddha; lit. shone",
+    "name of the 27th previous Buddha",
     "✔"
    ]
   ],
-  "count": 27
+  "count": 28
+ },
+ "suttas of Saṃyutta Nikāya 13": {
+  "data": [
+   [
+    "nakhasikhāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 13.1 (SN13.1); lit. disourse on the tip of the nail",
+    "✔"
+   ],
+   [
+    "pokkharaṇīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 13.2 (SN13.2); lit. discourse on the water lily pond",
+    "✔"
+   ],
+   [
+    "sambhejjaudakasutta",
+    "nt",
+    "Saṃyutta Nikāya 13.3 (SN13.3); lit. discourse on the water confluence",
+    "✔"
+   ],
+   [
+    "dutiyasambhejjaudakasutta",
+    "nt",
+    "Saṃyutta Nikāya 13.4 (SN13.4); lit. second discourse on the water confluence",
+    "✔"
+   ],
+   [
+    "pathavīsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 13.5 (SN13.5); lit. discourse on the earth",
+    "✔"
+   ],
+   [
+    "dutiyapathavīsutta",
+    "nt",
+    "Saṃyutta Nikāya 13.6 (SN13.6); lit. second discourse on the earth",
+    "✔"
+   ],
+   [
+    "samuddasutta",
+    "nt",
+    "Saṃyutta Nikāya 13.7 (SN13.7); lit. discourse on the ocean",
+    "✔"
+   ],
+   [
+    "dutiyasamuddasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 13.8 (SN13.8); lit. second discourse on the ocean",
+    "✔"
+   ],
+   [
+    "pabbatasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 13.9 (SN13.9); lit. discourse on the mountain",
+    "✔"
+   ],
+   [
+    "dutiyapabbatasutta",
+    "nt",
+    "Saṃyutta Nikāya 13.10 (SN13.10); lit. second discourse on the mountain",
+    "✔"
+   ],
+   [
+    "tatiyapabbatasutta",
+    "nt",
+    "Saṃyutta Nikāya 13.11 (SN13.11); lit. third discourse on the mountain",
+    "✔"
+   ],
+   [
+    "atthirāga",
+    "masc",
+    "in reference to SN12.64 Atthirāgasutta; lit. (if) there is lust",
+    "✔"
+   ]
+  ],
+  "count": 12
  },
  "indeclinables": {
   "data": [
@@ -33027,7 +44514,7 @@ var family_set_json = {
     "addhaṃ",
     "ind",
     "most certainly!; for sure!; definitely!",
-    "◑"
+    "✔"
    ],
    [
     "addhā 1",
@@ -33164,13 +44651,25 @@ var family_set_json = {
    [
     "āma 1.1",
     "ind",
-    "yes; certainly",
+    "yes; certainly; indeed",
+    "✔"
+   ],
+   [
+    "āmo",
+    "ind",
+    "yes; certainly; indeed",
     "✔"
    ],
    [
     "āvi",
     "ind",
     "openly; in full view; face to face",
+    "✔"
+   ],
+   [
+    "āvī",
+    "ind",
+    "openly; publicly; manifestly; evidently",
     "✔"
    ],
    [
@@ -33198,15 +44697,33 @@ var family_set_json = {
     "✔"
    ],
    [
+    "upari 4",
+    "ind",
+    "further; in addition; lit. above",
+    "◑"
+   ],
+   [
     "ubbha",
     "ind",
     "above; up; on top",
     "✔"
    ],
    [
+    "ubbhaṃ",
+    "ind",
+    "upwards; in an upward direction",
+    "✔"
+   ],
+   [
     "eva 1",
     "ind",
     "only; just; merely; exclusively",
+    "✔"
+   ],
+   [
+    "eva 4",
+    "ind",
+    "indeed; really; certainly; absolutely",
     "✔"
    ],
    [
@@ -33372,6 +44889,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "nuna",
+    "ind",
+    "indeed; surely; surely not; truly",
+    "✔"
+   ],
+   [
     "nūna 1",
     "ind",
     "indeed; surely; surely not; truly",
@@ -33476,7 +44999,7 @@ var family_set_json = {
    [
     "bahi 2",
     "ind",
-    "beyond; more (than)",
+    "beyond; more (than); lit. outside",
     "✔"
    ],
    [
@@ -33506,7 +45029,7 @@ var family_set_json = {
    [
     "yāva 1",
     "ind",
-    "as long as; as far as; so much so; up to; until; from … to",
+    "as long as; as far as; so much so; up to; until; from… to",
     "✔"
    ],
    [
@@ -33756,7 +45279,1298 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 123
+  "count": 129
+ },
+ "vaggas of the Saṃyutta Nikāya 1": {
+  "data": [
+   [
+    "naḷavagga",
+    "masc",
+    "Chapter 1 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.1); lit. reed section",
+    "✔"
+   ],
+   [
+    "nandanavagga",
+    "masc",
+    "Chapter 2 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.11-20); lit. chapter starting with Nandana",
+    "✔"
+   ],
+   [
+    "sattivagga",
+    "masc",
+    "Chapter 3 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.21-30); lit. chapter starting with spear",
+    "✔"
+   ],
+   [
+    "satullapakāyikavagga",
+    "masc",
+    "Chapter 4 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.31-40); lit. chapter with one hundred Ullāpa devas",
+    "✔"
+   ],
+   [
+    "ādittavagga",
+    "masc",
+    "Chapter 5 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.41); lit. chapter on burning",
+    "✔"
+   ],
+   [
+    "jarāvagga 1",
+    "masc",
+    "Chapter 6 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on old age",
+    "✔"
+   ],
+   [
+    "addhavagga",
+    "masc",
+    "Chapter 7 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter starting with overpowered",
+    "✔"
+   ],
+   [
+    "anvavagga",
+    "masc",
+    "Chapter 7 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on expereinced",
+    "✔"
+   ],
+   [
+    "chetvāvagga",
+    "masc",
+    "Chapter 8 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on having cut",
+    "✔"
+   ]
+  ],
+  "count": 9
+ },
+ "suttas of Saṃyutta Nikāya 43": {
+  "data": [
+   [
+    "kāyagatāsatisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 43.1 (SN43.1); lit. discourse on mindfulness immersed in the body",
+    "✔"
+   ],
+   [
+    "samathavipassanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 43.2 (SN43.2); lit. discourse on calm and insight",
+    "✔"
+   ],
+   [
+    "savitakkasavicārasutta",
+    "nt",
+    "Saṃyutta Nikāya 43.3 (SN43.3); lit. discourse on accompanied by thought and examination",
+    "✔"
+   ],
+   [
+    "suññatasamādhisutta",
+    "nt",
+    "Saṃyutta Nikāya 43.4 (SN43.4); lit. discourse on emptiness mental composure",
+    "✔"
+   ],
+   [
+    "satipaṭṭhānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 43.5 (SN43.5); lit. discourse on attending mindfully",
+    "✔"
+   ],
+   [
+    "sammappadhānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 43.6 (SN43.6); lit. discourse on the correct application of effort",
+    "✔"
+   ],
+   [
+    "iddhipādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 43.7 (SN43.7); lit. discourse on the basis for spiritual power",
+    "✔"
+   ],
+   [
+    "indriyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 43.8 (SN43.8); lit. discourse on the (five) faculties",
+    "✔"
+   ],
+   [
+    "balasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 43.9 (SN43.9); lit. discourse on the powers",
+    "✔"
+   ],
+   [
+    "bojjhaṅgasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 43.10 (SN43.10); lit. discourse on the elements of awakening",
+    "✔"
+   ],
+   [
+    "maggaṅgasutta",
+    "nt",
+    "Saṃyutta Nikāya 43.11 (SN43.11); lit. discourse on the path factors",
+    "✔"
+   ],
+   [
+    "asaṅkhatasutta",
+    "nt",
+    "Saṃyutta Nikāya 43.12 (SN43.12); lit. discourse on the unconditioned",
+    "✔"
+   ],
+   [
+    "anatasutta",
+    "nt",
+    "Saṃyutta Nikāya 43.13 (SN43.13); lit. discourse on without inclination",
+    "✔"
+   ],
+   [
+    "anāsavādisutta",
+    "nt",
+    "Saṃyutta Nikāya 43.14-43 (SN43.14-43); lit. discourse on free from the effluents, etc.",
+    "✔"
+   ],
+   [
+    "parāyanasutta",
+    "nt",
+    "Saṃyutta Nikāya 43.44 (SN43.44); lit. discourse on the final destination",
+    "✔"
+   ]
+  ],
+  "count": 15
+ },
+ "suttas of Saṃyutta Nikāya 23": {
+  "data": [
+   [
+    "mārasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 23.1 (SN23.1); lit. discourse on Māra",
+    "✔"
+   ],
+   [
+    "sattasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.2 (SN23.2); lit. discourse on the living being",
+    "✔"
+   ],
+   [
+    "bhavanettisutta",
+    "nt",
+    "Saṃyutta Nikāya 23.3 (SN23.3); lit. discourse on the conduit to existence",
+    "✔"
+   ],
+   [
+    "pariññeyyasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.4 (SN23.4); lit. discourse on what should be completely comprehended",
+    "✔"
+   ],
+   [
+    "samaṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.5 (SN23.5); lit. discourse on ascetics",
+    "✔"
+   ],
+   [
+    "dutiyasamaṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.6 (SN23.6); lit. second discourse on the ascetic",
+    "✔"
+   ],
+   [
+    "sotāpannasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.7 (SN23.7); lit. discourse on reached the stream",
+    "✔"
+   ],
+   [
+    "arahantasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 23.8 (SN23.8); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "chandarāgasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.9 (SN23.9); lit. discourse on interest and passion",
+    "✔"
+   ],
+   [
+    "dutiyachandarāgasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.10 (SN23.10); lit. second discourse on interest and passion",
+    "✔"
+   ],
+   [
+    "mārasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.11 (SN23.11); lit. discourse on Māra",
+    "✔"
+   ],
+   [
+    "māradhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.12 (SN23.12); lit. discourse on subject to death",
+    "✔"
+   ],
+   [
+    "aniccasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 23.13 (SN23.13); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "aniccadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.14 (SN23.14); lit. discourse on impermanent in nature",
+    "✔"
+   ],
+   [
+    "dukkhadhammasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 23.16 (SN23.16); lit. discourse on uncomfortable in nature",
+    "✔"
+   ],
+   [
+    "anattasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 23.17 (SN23.17); lit. discourse on not oneself",
+    "✔"
+   ],
+   [
+    "anattadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.18 (SN23.18); lit. discourse on impersonal in nature",
+    "✔"
+   ],
+   [
+    "khayadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.19 (SN23.19); lit. discourse on liable to decay",
+    "✔"
+   ],
+   [
+    "vayadhammasutta",
+    "nt",
+    "Saṃyutta Nikāya 23.20 (SN23.20); lit. discourse on liable to disappear",
+    "✔"
+   ],
+   [
+    "samudayadhammasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.21 (SN23.21); lit. discourse on having the nature to arise",
+    "✔"
+   ],
+   [
+    "nirodhadhammasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 23.22 (SN23.22); lit. discourse on liable to end",
+    "✔"
+   ],
+   [
+    "mārādisuttaekādasaka 1",
+    "nt",
+    "Saṃyutta Nikāya 23.23-33 (SN23.23-33); lit. group of eleven discourses starting with the discourse on Māra",
+    "✔"
+   ],
+   [
+    "nirodhadhammasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 23.34 (SN23.34); lit. discourse on liable to end",
+    "✔"
+   ],
+   [
+    "mārādisuttaekādasaka 2",
+    "nt",
+    "Saṃyutta Nikāya 23.35-45 (SN23.35-45); lit. group of eleven discourses starting with the discourse on Māra",
+    "✔"
+   ],
+   [
+    "nirodhadhammasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 23.46 (SN23.46); lit. discourse on liable to end",
+    "✔"
+   ]
+  ],
+  "count": 25
+ },
+ "suttas of Saṃyutta Nikāya 46": {
+  "data": [
+   [
+    "himavantasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 46.1 (SN46.1); lit. discourse on the Himalayas",
+    "✔"
+   ],
+   [
+    "kāyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 46.2 (SN46.2); lit. discourse on the body",
+    "✔"
+   ],
+   [
+    "sīlasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 46.3 (SN46.3); lit. discourse on ethical conduct",
+    "✔"
+   ],
+   [
+    "paṭhamagilānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.14 (SN46.14); lit. first discourse on the sick monk",
+    "✔"
+   ],
+   [
+    "dutiyagilānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.15 (SN46.15); lit. second discourse on the sick monk",
+    "✔"
+   ],
+   [
+    "pāraṅgamasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.17 (SN46.17); lit. discourse on going to the other shore",
+    "✔"
+   ],
+   [
+    "viraddhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.18 (SN46.18); lit. discourse on failed",
+    "✔"
+   ],
+   [
+    "vidhāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.41 (SN46.41); lit. discourse on distinction",
+    "✔"
+   ],
+   [
+    "mārasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 46.43 (SN46.43); lit. discourse on Māra",
+    "✔"
+   ],
+   [
+    "daliddasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.46 (SN46.46)",
+    "✔"
+   ],
+   [
+    "āhārasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.51 (SN46.51); lit. discourse on fuel",
+    "✔"
+   ],
+   [
+    "saṅgāravasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 46.55 (SN46.55); lit. discourse with Saṅgārava",
+    "✔"
+   ],
+   [
+    "upekkhāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 46.65 (SN46.65); lit. discourse on equanimity",
+    "✔"
+   ],
+   [
+    "aniccasutta 7",
+    "nt",
+    "Saṃyutta Nikāya 46.71 (SN46.71); lit. discourse on impermanence",
+    "✔"
+   ],
+   [
+    "anattasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 46.73 (SN46.73); lit. discourse on not oneself",
+    "✔"
+   ],
+   [
+    "pahānasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 46.74 (SN46.74); lit. discourse on abandoning",
+    "✔"
+   ]
+  ],
+  "count": 16
+ },
+ "types of ariyas": {
+  "data": [
+   [
+    "anāgantar 2",
+    "masc",
+    "non-returner; who does not come back (to); lit. who does not come here",
+    "✔"
+   ],
+   [
+    "anāgamanadhamma 2",
+    "masc",
+    "non return state; arahantship",
+    "✔"
+   ],
+   [
+    "anāgāmī 1",
+    "adj",
+    "who does not return; non-returning; lit. not coming here",
+    "✔"
+   ],
+   [
+    "anāvaṭṭī",
+    "adj",
+    "who does not return (to); who does not come back (to); who turns one's back (on)",
+    "✔"
+   ],
+   [
+    "anāvattidhamma",
+    "adj",
+    "not destined to return; lit. non-returning nature",
+    "✔"
+   ],
+   [
+    "anāvattidhammasambodhiparāyaṇa",
+    "adj",
+    "not returning and destined for full awakening",
+    "✔"
+   ],
+   [
+    "anāvattī",
+    "adj",
+    "non-returning; who does not come back",
+    "✔"
+   ],
+   [
+    "anuppattasadattha",
+    "adj",
+    "who has achieved the highest goal; who has attained one's purpose; epithet of an arahant",
+    "✔"
+   ],
+   [
+    "appaṭikujjhanta",
+    "prp",
+    "not getting angry back; not being upset in return",
+    "✔"
+   ],
+   [
+    "arahattamaggasamāpanna",
+    "adj",
+    "entered the path to the fully awakened state; attained the path of arahantship",
+    "✔"
+   ],
+   [
+    "ariya 3",
+    "masc",
+    "awakened being; enlightened one; arahant",
+    "✔"
+   ],
+   [
+    "āgataphala",
+    "adj",
+    "who has reached the fruit; epithet of a stream enterer",
+    "✔"
+   ],
+   [
+    "ekabījī",
+    "adj",
+    "(of a stream enterer) who has one remaining human life; lit. one seed-er",
+    "✔"
+   ],
+   [
+    "kolaṃkola",
+    "masc",
+    "stream enterer who returns to the human state two or three times; lit. family to family",
+    "✔"
+   ],
+   [
+    "gihisotāpanna",
+    "masc",
+    "lay stream enterer",
+    "◑"
+   ],
+   [
+    "dassanasampanna",
+    "adj",
+    "endowed with insight; who has vision; wise; epithet of a stream enterer",
+    "✔"
+   ],
+   [
+    "diṭṭhappatta",
+    "adj",
+    "who has attained vision (of Nibbāna); epithet of a stream enterer",
+    "◑"
+   ],
+   [
+    "dhammānusārī 1",
+    "masc",
+    "who has attained the path of stream entry through understanding the teaching; lit. following the Dhamma",
+    "✔"
+   ],
+   [
+    "dhammānusārī 2",
+    "adj",
+    "who has attained the path of stream entry through understanding the teaching; lit. following the Dhamma",
+    "✔"
+   ],
+   [
+    "puthujjanakalyāṇaka",
+    "masc",
+    "virtuous common person; good man aiming for stream entry",
+    "✔"
+   ],
+   [
+    "sakadāgāmitā",
+    "fem",
+    "fact of being a once-returner; state of being someone who has attained the second stage of the path; lit. once returner state",
+    "✔"
+   ],
+   [
+    "sakadāgāmipatta",
+    "adj",
+    "become a once-returner; lit. reached one return",
+    "◑"
+   ],
+   [
+    "sakadāgāmisatta",
+    "masc",
+    "once-returning being",
+    "◑"
+   ],
+   [
+    "sakadāgāmī 1",
+    "adj",
+    "returning (only) once; who has attained the second stage of the path",
+    "✔"
+   ],
+   [
+    "sakadāgāmī 2",
+    "fem",
+    "woman who returns (only) once; who has attained the second stage of the path",
+    "✔"
+   ],
+   [
+    "sattakkhattuparama",
+    "masc",
+    "stream enterer who has seven more lives at the most; lit. seven time at most-er",
+    "✔"
+   ],
+   [
+    "saddhānusārī 1",
+    "masc",
+    "who has attained the path of stream entry through faith; lit. faith follower",
+    "✔"
+   ],
+   [
+    "saddhānusārī 2",
+    "adj",
+    "who has attained the path of stream entry though faith",
+    "✔"
+   ],
+   [
+    "saddhāvimutta",
+    "adj",
+    "liberated through faith; attained through confidence; epithet of a stream enterer or higher",
+    "✔"
+   ],
+   [
+    "samaṇapaduma",
+    "masc",
+    "lotus ascetic; epithet of a once returner",
+    "✔"
+   ],
+   [
+    "samaṇapuṇḍarīka",
+    "masc",
+    "white lotus ascetic; epithet of a non returner",
+    "✔"
+   ],
+   [
+    "samaṇamacala",
+    "masc",
+    "stable ascetic; epithet of a stream enterer; lit. unshaking ascetic",
+    "✔"
+   ],
+   [
+    "samaṇasukhumāla",
+    "masc",
+    "refined ascetic; epithet of an arahant",
+    "✔"
+   ],
+   [
+    "sekkhasammata",
+    "adj",
+    "designated as stream enterers; (comm) where faith is increasing and wealth is decreasing; lit. agreed upon as trainees",
+    "✔"
+   ],
+   [
+    "sekkhasammatasaññī",
+    "adj",
+    "perceiving (a family) as designated stream enterers",
+    "◑"
+   ],
+   [
+    "sotāpattiphalasamannāgata",
+    "adj",
+    "possessing the fruit of stream entry; having the fruition of stream entry",
+    "✔"
+   ],
+   [
+    "sotāpanna 1",
+    "adj",
+    "who has entered the stream; entered the first stage of the path; lit. entered the current",
+    "✔"
+   ],
+   [
+    "sotāpanna 2",
+    "masc",
+    "stream-enterer; lit. entered the current",
+    "✔"
+   ],
+   [
+    "sotāpannatta",
+    "nt",
+    "fact of being a stream enterer",
+    "◑"
+   ],
+   [
+    "sotāpannapuggala",
+    "masc",
+    "person who is a stream enterer",
+    "◑"
+   ],
+   [
+    "sotāpannasakadāgāmī",
+    "adj",
+    "who are stream enterers and once returners",
+    "◑"
+   ]
+  ],
+  "count": 41
+ },
+ "vaggas of the Saṃyutta Nikāya 2": {
+  "data": [
+   [
+    "paṭhamavagga 01",
+    "masc",
+    "Chapter 1 of the Devaputtasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN2.1); lit. first chapter",
+    "✔"
+   ],
+   [
+    "anāthapiṇḍikavagga",
+    "masc",
+    "Chapter 2 of the Devaputtasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN2.11); lit. chapter on Anāthapiṇḍika",
+    "✔"
+   ],
+   [
+    "nānātitthiyavagga",
+    "masc",
+    "Chapter 3 of the Devaputtasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN2.21); lit. chapter on  various religious sects",
+    "✔"
+   ]
+  ],
+  "count": 3
+ },
+ "suttas of Saṃyutta Nikāya 2": {
+  "data": [
+   [
+    "paṭhamakassapasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.1 (SN2.1); lit. first discourse with Kassapa",
+    "✔"
+   ],
+   [
+    "dutiyakassapasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.2 (SN2.2); lit. second discourse with Kassapa",
+    "✔"
+   ],
+   [
+    "māghasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 2.3 (SN2.3); lit. discourse with Māgha",
+    "✔"
+   ],
+   [
+    "māgadhasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.4 (SN2.4); lit. discourse with Māgadha",
+    "✔"
+   ],
+   [
+    "dāmalisutta",
+    "nt",
+    "Saṃyutta Nikāya 2.5 (SN2.5); lit. discourse with Dāmali",
+    "✔"
+   ],
+   [
+    "kāmadasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.6 (SN2.6); lit. discourse with Kāmada",
+    "✔"
+   ],
+   [
+    "pañcālacaṇḍasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.7 (SN2.7); lit. discourse with Pañcālacaṇḍa",
+    "✔"
+   ],
+   [
+    "tāyanasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.8 (SN2.8); lit. discourse with Tāyana",
+    "✔"
+   ],
+   [
+    "candimasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.9 (SN2.9); lit. discourse with the moon",
+    "✔"
+   ],
+   [
+    "sūriyasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.10 (SN2.10); lit. discourse with the sun",
+    "✔"
+   ],
+   [
+    "candimasasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.11 (SN2.11); lit. discourse with Candimasa",
+    "✔"
+   ],
+   [
+    "veṇḍusutta",
+    "nt",
+    "Saṃyutta Nikāya 2.12 (SN2.12); lit. discourse with Vishnu",
+    "✔"
+   ],
+   [
+    "dīghalaṭṭhisutta",
+    "nt",
+    "Saṃyutta Nikāya 2.13 (SN2.13); lit. discourse with Long Staff",
+    "✔"
+   ],
+   [
+    "nandanasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 2.14 (SN2.14); lit. discourse with Nandana",
+    "✔"
+   ],
+   [
+    "candanasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 2.15 (SN2.15); lit. discourse with Candana",
+    "✔"
+   ],
+   [
+    "vāsudattasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.16 (SN2.16); lit. discourse to Vāsudatta",
+    "✔"
+   ],
+   [
+    "subrahmasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.17 (SN2.17); lit. discourse with Subrahma",
+    "✔"
+   ],
+   [
+    "kakudhasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.18 (SN2.18); lit. discourse with Kakudha",
+    "✔"
+   ],
+   [
+    "uttarasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.19 (SN2.19); lit. discourse with Uttara",
+    "✔"
+   ],
+   [
+    "anāthapiṇḍikasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.20 (SN2.20); lit. discourse with Anāthapiṇḍika",
+    "✔"
+   ],
+   [
+    "sivasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.21 (SN2.21); lit. discourse with Siva",
+    "✔"
+   ],
+   [
+    "khemasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 2.22 (SN2.22); lit. discourse with Khema",
+    "✔"
+   ],
+   [
+    "serīsutta",
+    "nt",
+    "Saṃyutta Nikāya 2.23 (SN2.23); lit. discourse with Serī",
+    "✔"
+   ],
+   [
+    "ghaṭīkārasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 2.24 (SN2.24); lit. discourse with Ghaṭīkāra",
+    "✔"
+   ],
+   [
+    "jantusutta",
+    "nt",
+    "Saṃyutta Nikāya 2.25 (SN2.25); lit. discourse about Jantu",
+    "✔"
+   ],
+   [
+    "rohitassasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 2.26 (SN2.26); lit. discourse with Rohitassa",
+    "✔"
+   ],
+   [
+    "nandasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 2.27 (SN2.27); lit. discourse with Nanda",
+    "✔"
+   ],
+   [
+    "nandivisālasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.28 (SN2.28); lit. discourse with Nandivisāla",
+    "✔"
+   ],
+   [
+    "susimasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 2.29 (SN2.29); lit. discourse with Susima",
+    "✔"
+   ],
+   [
+    "nānātitthiyasāvakasutta",
+    "nt",
+    "Saṃyutta Nikāya 2.30 (SN2.30); lit. discourse with followers of various sects",
+    "✔"
+   ],
+   [
+    "ghaṭī",
+    "masc",
+    "in reference to SN2.24 Ghaṭīkārasutta; lit. potter",
+    "✔"
+   ]
+  ],
+  "count": 31
+ },
+ "vaggas of the Saṃyutta Nikāya 35": {
+  "data": [
+   [
+    "aniccavagga 2",
+    "masc",
+    "Chapter 1 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on impermanence",
+    "✔"
+   ],
+   [
+    "yamakavagga 1",
+    "masc",
+    "Chapter 2 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on pairs",
+    "✔"
+   ],
+   [
+    "sabbavagga",
+    "masc",
+    "Chapter 3 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on all",
+    "✔"
+   ],
+   [
+    "jātidhammavagga",
+    "masc",
+    "Chapter 4 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on liable to birth",
+    "✔"
+   ],
+   [
+    "sabbaaniccavagga",
+    "masc",
+    "Chapter 5 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on everything is impermanent",
+    "✔"
+   ],
+   [
+    "avijjāvagga 2",
+    "masc",
+    "Chapter 6 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on ignorance",
+    "✔"
+   ],
+   [
+    "migajālavagga",
+    "masc",
+    "Chapter 7 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on Migajāla",
+    "✔"
+   ],
+   [
+    "channavagga",
+    "masc",
+    "Chapter 9 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on Channa",
+    "✔"
+   ],
+   [
+    "saḷavagga",
+    "masc",
+    "Chapter 10 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on",
+    "✔"
+   ],
+   [
+    "yogakkhemivagga",
+    "masc",
+    "Chapter 11 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on secure from bondage",
+    "✔"
+   ],
+   [
+    "lokakāmaguṇavagga",
+    "masc",
+    "Chapter 12 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on worldly sensual pleasures",
+    "✔"
+   ],
+   [
+    "devadahavagga 2",
+    "masc",
+    "Chapter 14 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on Devadaha",
+    "✔"
+   ],
+   [
+    "navapurāṇavagga",
+    "masc",
+    "Chapter 15 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on new and old",
+    "✔"
+   ],
+   [
+    "nandikkhayavagga",
+    "masc",
+    "Chapter 16 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the destruction of delight",
+    "✔"
+   ],
+   [
+    "saṭṭhipeyyālavagga",
+    "masc",
+    "Chapter 17 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter with sixty elided repetitions",
+    "✔"
+   ],
+   [
+    "samuddavagga",
+    "masc",
+    "Chapter 18 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the ocean",
+    "✔"
+   ],
+   [
+    "āsīvisavagga",
+    "masc",
+    "Chapter 19 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the poisonous snake",
+    "✔"
+   ]
+  ],
+  "count": 17
+ },
+ "suttas of Saṃyutta Nikāya 40": {
+  "data": [
+   [
+    "paṭhamajhānapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.1 (SN40.1); lit. discourse on the question about the first jhāna",
+    "✔"
+   ],
+   [
+    "dutiyajhānapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.2 (SN40.2); lit. discourse on the question about the second jhāna",
+    "✔"
+   ],
+   [
+    "tatiyajhānapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.3 (SN40.3); lit. discourse on the question about the third jhāna",
+    "✔"
+   ],
+   [
+    "catutthajhānapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.4 (SN40.4); lit. discourse on the question about the fourth jhāna",
+    "✔"
+   ],
+   [
+    "ākāsānañcāyatanapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.5 (SN40.5); lit. discourse on the question about the dimension of infinite space",
+    "✔"
+   ],
+   [
+    "viññāṇañcāyatanapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.6 (SN40.6); lit. discourse on the question about the dimension of infinite consciousness",
+    "✔"
+   ],
+   [
+    "ākiñcaññāyatanapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.7 (SN40.7); lit. discourse on the question about the dimension of nothingness",
+    "✔"
+   ],
+   [
+    "nevasaññānāsaññāyatanapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.8 (SN40.8); lit. discourse on the question about the dimension of neither perception nor non-perception",
+    "✔"
+   ],
+   [
+    "animittapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 40.9 (SN40.9); lit. discourse on the question about signless",
+    "✔"
+   ],
+   [
+    "sakkasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 40.10 (SN40.10); lit. discourse with Sakka",
+    "✔"
+   ],
+   [
+    "candanasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 40.11 (SN40.11); lit. discourse with Candana",
+    "✔"
+   ],
+   [
+    "savitakkāvitakka",
+    "nt",
+    "in reference to SN40.1 Paṭhamajhānapañhāsutta and SN40.2 Dutiyajhānapañhāsutta; lit. with and without thought",
+    "✔"
+   ]
+  ],
+  "count": 12
+ },
+ "chapters of the Majjhima Nikāya": {
+  "data": [
+   [
+    "mūlapariyāyavagga",
+    "masc",
+    "Chapter 1 of the Majjhima Nikāya (MN1-10); lit. chapter on the root cause",
+    "✔"
+   ],
+   [
+    "sīhanādavagga 1",
+    "masc",
+    "Chapter 2 of the Majjhima Nikāya (MN10-20); lit. chapter on the lion's roar",
+    "✔"
+   ],
+   [
+    "opammavagga",
+    "masc",
+    "Chapter 3 of the Majjhima Nikāya (MN21-30); lit. chapter on similes",
+    "✔"
+   ],
+   [
+    "mahāyamakavagga",
+    "masc",
+    "Chapter 4 of the Majjhima Nikāya (MN31-40); lit. great chapter on pairs",
+    "✔"
+   ],
+   [
+    "cūḷayamakavagga",
+    "masc",
+    "Chapter 5 of the Majjhima Nikāya (MN41-50); lit. lesser chapter on pairs",
+    "✔"
+   ],
+   [
+    "sāleyyavagga",
+    "masc",
+    "Chapter 5 of the Majjhima Nikāya (MN41-50); lit. chapter on Sālā",
+    "✔"
+   ],
+   [
+    "gahapativagga 1",
+    "masc",
+    "Chapter 6 of the Majjhima Nikāya (MN51-60); lit. chapter on householders",
+    "✔"
+   ],
+   [
+    "bhikkhuvagga 1",
+    "masc",
+    "Chapter 7 of the Majjhima Nikāya (MN61-70); lit. chapter on monks",
+    "✔"
+   ],
+   [
+    "paribbājakavagga",
+    "masc",
+    "Chapter 8 of the Majjhima Nikāya (MN71-80); lit. chapter on wanderers",
+    "✔"
+   ],
+   [
+    "rājavagga 1",
+    "masc",
+    "Chapter 9 of the Majjhima Nikāya (MN81-90); lit. chapter on kings",
+    "✔"
+   ],
+   [
+    "brāhmaṇavagga 1",
+    "masc",
+    "Chapter 10 of the Majjhima Nikāya (MN91-100); lit. chapter on Brahmans",
+    "✔"
+   ],
+   [
+    "devadahavagga 1",
+    "masc",
+    "Chapter 11 of the Majjhima Nikāya (MN101-110); lit. chapter on Devadaha",
+    "✔"
+   ],
+   [
+    "anupadavagga",
+    "masc",
+    "Chapter 12 of the Majjhima Nikāya (MN111-120); lit. sequential chapter",
+    "✔"
+   ],
+   [
+    "suññatavagga",
+    "masc",
+    "Chapter 13 of the Majjhima Nikāya (MN121-130); lit. chapter on emptiness",
+    "✔"
+   ],
+   [
+    "vibhaṅgavagga",
+    "masc",
+    "Chapter 14 of the Majjhima Nikāya (MN131-142); lit. chapter on analysis",
+    "✔"
+   ],
+   [
+    "saḷāyatanavagga 1",
+    "masc",
+    "Chapter 15 of the Majjhima Nikāya (MN143-152); lit. chapter on the six sense fields",
+    "✔"
+   ],
+   [
+    "sāleyya",
+    "adj",
+    "in reference to Cūḷayamakavagga, Chapter 5 of the Majjhima Nikāya (MN41-50); lit. about the town of Sālā; regarding Sālā",
+    "✔"
+   ],
+   [
+    "devadahonupada",
+    "masc",
+    "in reference to Devadahavagga and Anupadavagga, Chapters 11 and 12 of the Majjhima Nikāya (MN101-120); lit. Devadaha and sequential",
+    "✔"
+   ],
+   [
+    "gosiṅga 2",
+    "masc",
+    "in reference to Mahāyamakavagga, Chapter 4 of the Majjhima Nikāya (MN31-40); lit. cow's horn",
+    "✔"
+   ],
+   [
+    "mūlapariyāya",
+    "masc",
+    "in reference to Mūlapariyāyavagga, Chapter 1 of the Majjhima Nikāya (MN1-10); lit. root cause",
+    "✔"
+   ],
+   [
+    "kakaca 2",
+    "masc",
+    "in reference to Opammavagga, Chapter 3 of the Majjhima Nikāya (MN21-30); lit. saw",
+    "✔"
+   ],
+   [
+    "paribbājakanāmaka",
+    "adj",
+    "in reference to Paribbājakavagga, Chapter 8 of the Majjhima Nikāya (MN71-80); lit. called wanderer",
+    "✔"
+   ],
+   [
+    "saḷāyatana 2",
+    "masc",
+    "in reference to Saḷāyatanavagga, Chapter 15 of the Majjhima Nikāya (MN143-152); lit. six fields",
+    "✔"
+   ],
+   [
+    "sīhanāda 3",
+    "masc",
+    "in reference to Sīhanādavagga, Chapter 2 of the Majjhima Nikāya (MN10-20); lit. lion's roar",
+    "✔"
+   ],
+   [
+    "suññata 2",
+    "masc",
+    "in reference to Suññatavagga, Chapter 13 of the Majjhima Nikāya (MN121-130); lit. empty",
+    "✔"
+   ],
+   [
+    "vibhaṅgaka 2",
+    "masc",
+    "in reference to Vibhaṅgavagga, Chapter 14 of the Majjhima Nikāya (MN131-142); lit. breaking apart",
+    "✔"
+   ]
+  ],
+  "count": 26
+ },
+ "suttas of Saṃyutta Nikāya 44": {
+  "data": [
+   [
+    "khemāsutta",
+    "nt",
+    "Saṃyutta Nikāya 44.1 (SN44.1); lit. discourse with Khemā",
+    "✔"
+   ],
+   [
+    "anurādhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 44.2 (SN44.2); lit. discourse with Anurādha",
+    "✔"
+   ],
+   [
+    "paṭhamasāriputtakoṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 44.3 (SN44.3); lit. first discourse with Sāriputta and Koṭṭhika",
+    "✔"
+   ],
+   [
+    "dutiyasāriputtakoṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 44.4 (SN44.4); lit. second discourse with Sāriputta and Koṭṭhika",
+    "✔"
+   ],
+   [
+    "tatiyasāriputtakoṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 44.5 (SN44.5); lit. third second discourse with Sāriputta and Koṭṭhika",
+    "✔"
+   ],
+   [
+    "catutthasāriputtakoṭṭhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 44.6 (SN44.6); lit. fourth discourse with Sāriputta and Koṭṭhika",
+    "✔"
+   ],
+   [
+    "moggallānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 44.7 (SN44.7); lit. discourse with Moggallāna",
+    "✔"
+   ],
+   [
+    "vacchagottasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 44.8 (SN44.8); lit. discourse with Vacchagotta",
+    "✔"
+   ],
+   [
+    "kutūhalasālāsutta",
+    "nt",
+    "Saṃyutta Nikāya 44.9 (SN44.9); lit. discourse on the debating hall",
+    "✔"
+   ],
+   [
+    "sabhiyakaccānasutta",
+    "nt",
+    "Saṃyutta Nikāya 44.11 (SN44.11); lit. discourse with Sabhiya Kaccāna",
+    "✔"
+   ],
+   [
+    "khemātherī",
+    "fem",
+    "in reference to SN44.1 Khemāsutta; lit. Khemā the senior nun",
+    "✔"
+   ]
+  ],
+  "count": 11
  },
  "great disciples": {
   "data": [
@@ -33806,7 +46620,7 @@ var family_set_json = {
     "kappina",
     "masc",
     "name of a monk; great disciple of the Buddha; foremost disciple in instructing the monks",
-    "◑"
+    "✔"
    ],
    [
     "kātiyānī",
@@ -33848,6 +46662,12 @@ var family_set_json = {
     "kumārakassapa",
     "masc",
     "name of an arahant monk; foremost in talking on diverse topics",
+    "✔"
+   ],
+   [
+    "khujjuttarā",
+    "fem",
+    "name of a lay disciple; great disciple of the Buddha; foremost female lay disciple in great learning; lit. humped northern",
     "✔"
    ],
    [
@@ -33907,7 +46727,7 @@ var family_set_json = {
    [
     "puṇṇa 3",
     "masc",
-    "name of a Sakyan arahnt monk; Puṇṇa Mantāṇiputta; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. full; complete",
+    "name of a Sakyan arahnt monk; Puṇṇa Mantāṇiputta; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. filled",
     "✔"
    ],
    [
@@ -33925,14 +46745,14 @@ var family_set_json = {
    [
     "mantāṇiputta",
     "masc",
-    "family name of a Sakyan arahnt monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
+    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
     "✔"
    ],
    [
     "mantāniputta",
     "masc",
-    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantāṇī",
-    "◑"
+    "family name of a Sakyan arahant monk; great disciple of the Buddha; foremost disciple in giving Dhamma talks; lit. son of Mantānī",
+    "✔"
    ],
    [
     "mahākaccāna",
@@ -33968,7 +46788,7 @@ var family_set_json = {
     "mahākoṭṭhita",
     "masc",
     "name of an arahant monk; great disciple of the Buddha; foremost disciple in analytical understanding; lit. great Koṭṭhita",
-    "◑"
+    "✔"
    ],
    [
     "mahāpanthaka",
@@ -34009,8 +46829,8 @@ var family_set_json = {
    [
     "vaṅgīsa",
     "masc",
-    "name of an arahant monk; foremost disciple in spontaneous expression",
-    "◑"
+    "name of an arahant monk; foremost disciple in spontaneous expression; lit. lord of Bengal",
+    "✔"
    ],
    [
     "visākhā 1",
@@ -34055,7 +46875,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sīvali",
+    "sīvali 1",
     "masc",
     "name of an arahant monk; great disciple of the Buddha; foremost in receiving",
     "◑"
@@ -34091,7 +46911,314 @@ var family_set_json = {
     "◑"
    ]
   ],
-  "count": 55
+  "count": 56
+ },
+ "suttas of Saṃyutta Nikāya 54": {
+  "data": [
+   [
+    "mahākappinasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 54.7 (SN54.7); lit. discourse on Mahākappina",
+    "✔"
+   ],
+   [
+    "vesālīsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 54.9 (SN54.9); lit. discourse at Vesālī",
+    "✔"
+   ],
+   [
+    "dutiyaānandasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 54.14 (SN54.14); lit. second discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "anusayasamugghātasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 54.18 (SN54.18); lit. discourse on eradication of the underlying tendencies",
+    "✔"
+   ]
+  ],
+  "count": 4
+ },
+ "suttas of Saṃyutta Nikāya 18": {
+  "data": [
+   [
+    "cakkhusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.1 (SN18.1); lit. discourse on the eye",
+    "✔"
+   ],
+   [
+    "rūpasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.2 (SN18.2); lit. discourse on forms",
+    "✔"
+   ],
+   [
+    "viññāṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 18.3 (SN18.3); lit. discourse on consciousness",
+    "✔"
+   ],
+   [
+    "samphassasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.4 (SN18.4); lit. discourse on sense experience",
+    "✔"
+   ],
+   [
+    "vedanāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.5 (SN18.5); lit. discourse on felt experience",
+    "✔"
+   ],
+   [
+    "saññāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.6 (SN18.6); lit. discourse on perception",
+    "✔"
+   ],
+   [
+    "sañcetanāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.7 (SN18.7); lit. discourse on intention",
+    "✔"
+   ],
+   [
+    "dhātusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.9 (SN18.9); lit. discourse on states",
+    "✔"
+   ],
+   [
+    "khandhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.10 (SN18.10); lit. discourse on the aggregates",
+    "✔"
+   ],
+   [
+    "cakkhusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 18.11 (SN18.11); lit. discourse on the eye",
+    "✔"
+   ],
+   [
+    "rūpādisuttanavaka",
+    "nt",
+    "Saṃyutta Nikāya 18.12-20 (SN18.12-20); lit. group of nine discourses beginning with the discourse on sights",
+    "✔"
+   ],
+   [
+    "anusayasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 18.21 (SN18.21); lit. discourse on underlying tendencies",
+    "✔"
+   ],
+   [
+    "apagatasutta",
+    "nt",
+    "Saṃyutta Nikāya 18.22 (SN18.22); lit. discourse on free from",
+    "✔"
+   ]
+  ],
+  "count": 13
+ },
+ "suttas of Saṃyutta Nikāya 48": {
+  "data": [
+   [
+    "dutiyaarahantasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 48.5 (SN48.5); lit. second discourse on the arahant",
+    "✔"
+   ],
+   [
+    "paṭhamasamaṇabrāhmaṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 48.6 (SN48.6); lit. first discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "daṭṭhabbasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 48.8 (SN48.8); lit. discourse on should be seen",
+    "✔"
+   ],
+   [
+    "sotāpannasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 48.26 (SN48.26); lit. discourse on reached the stream",
+    "✔"
+   ],
+   [
+    "arahantasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 48.27 (SN48.27); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "paṭhamasamaṇabrāhmaṇasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 48.29 (SN48.29); lit. first discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "sotāpannasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 48.32 (SN48.32); lit. discourse on reached the stream",
+    "✔"
+   ],
+   [
+    "arahantasutta 6",
+    "nt",
+    "Saṃyutta Nikāya 48.33 (SN48.33); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "paṭhamasamaṇabrāhmaṇasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 48.34 (SN48.34); lit. first discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "padasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 48.54 (SN48.54); lit. discourse on the footprint",
+    "✔"
+   ],
+   [
+    "paṭhamauppādasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 48.59 (SN48.59); lit. first discourse on arising",
+    "✔"
+   ],
+   [
+    "dutiyauppādasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 48.60 (SN48.60); lit. second discourse on arising",
+    "✔"
+   ],
+   [
+    "saṃyojanasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 48.61 (SN48.61); lit. discourse on fetters",
+    "✔"
+   ],
+   [
+    "anusayasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 48.62 (SN48.62); lit. discourse on underlying tendencies",
+    "✔"
+   ]
+  ],
+  "count": 14
+ },
+ "Sanskritisms": {
+  "data": [
+   [
+    "anusvāra",
+    "masc",
+    "(gram) nasal consonant; niggahīta; letter ṃ; lit. after-sound",
+    "✔"
+   ],
+   [
+    "suvāminī",
+    "fem",
+    "mistress; lady; lit. owner's wife",
+    "✔"
+   ],
+   [
+    "suvāmī",
+    "masc",
+    "owner",
+    "✔"
+   ]
+  ],
+  "count": 3
+ },
+ "suttas of Saṃyutta Nikāya 16": {
+  "data": [
+   [
+    "santuṭṭhasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.1 (SN16.1); lit. discourse on content",
+    "✔"
+   ],
+   [
+    "anottappīsutta",
+    "nt",
+    "Saṃyutta Nikāya 16.2 (SN16.2); lit. discourse on shameless",
+    "✔"
+   ],
+   [
+    "candūpamasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.3 (SN16.3); lit. discourse on like the moon",
+    "✔"
+   ],
+   [
+    "kulūpakasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 16.4 (SN16.4); lit. discourse on approaching families",
+    "✔"
+   ],
+   [
+    "jiṇṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.5 (SN16.5); lit. discourse on old",
+    "✔"
+   ],
+   [
+    "ovādasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 16.6 (SN16.6); lit. discourse on advice",
+    "✔"
+   ],
+   [
+    "dutiyaovādasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.7 (SN16.7); lit. second discourse on advice",
+    "✔"
+   ],
+   [
+    "tatiyaovādasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.8 (SN16.8); lit. third discourse on advice",
+    "✔"
+   ],
+   [
+    "jhānābhiññasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.9 (SN16.9); lit. discourse on meditation and higher understanding",
+    "✔"
+   ],
+   [
+    "upassayasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.10 (SN16.10); lit. discourse on the residence",
+    "✔"
+   ],
+   [
+    "cīvarasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 16.11 (SN16.11); lit. discourse on the robe",
+    "✔"
+   ],
+   [
+    "paraṃmaraṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.12 (SN16.12); lit. discourse on after death",
+    "✔"
+   ],
+   [
+    "saddhammappatirūpakasutta",
+    "nt",
+    "Saṃyutta Nikāya 16.13 (SN16.13); lit. discourse on the counterfeit of the good teaching",
+    "✔"
+   ]
+  ],
+  "count": 13
  },
  "diseases": {
   "data": [
@@ -34102,13 +47229,223 @@ var family_set_json = {
     "✔"
    ],
    [
+    "apamāra",
+    "masc",
+    "epilepsy; petit mal; lit. away memory",
+    "✔"
+   ],
+   [
+    "aṃsā",
+    "fem",
+    "piles; hemorrhoids",
+    "✔"
+   ],
+   [
+    "ukkaṇṇaka",
+    "masc",
+    "mange; skin inflammation; lit. up ears",
+    "✔"
+   ],
+   [
+    "oṭṭharoga",
+    "masc",
+    "disease of the lips",
+    "✔"
+   ],
+   [
+    "kacchu 1",
+    "fem",
+    "scab; itch; pox; skin disease",
+    "✔"
+   ],
+   [
+    "kaṇḍu",
+    "fem",
+    "itch; rash; sore; (comm) small pimples",
+    "✔"
+   ],
+   [
+    "kaṇṇaroga",
+    "masc",
+    "disease of the outer ear; ear infection; ear ache",
+    "✔"
+   ],
+   [
+    "kāyaroga",
+    "masc",
+    "disease of the body",
+    "✔"
+   ],
+   [
+    "kāsa 2.1",
+    "masc",
+    "cough",
+    "✔"
+   ],
+   [
+    "kāsa 2.2",
+    "masc",
+    "consumption; tuberculosis; lit. cough",
+    "✔"
+   ],
+   [
     "kilāsa",
     "masc",
     "vitiligo",
     "✔"
+   ],
+   [
+    "kucchiroga",
+    "masc",
+    "disease of the stomach; stomach pain",
+    "✔"
+   ],
+   [
+    "kuṭṭha 1",
+    "nt",
+    "leprosy; severe skin inflammation",
+    "✔"
+   ],
+   [
+    "gaṇḍa 1",
+    "masc",
+    "boil; abscess; lit. swelling",
+    "✔"
+   ],
+   [
+    "ghānaroga",
+    "masc",
+    "disease of the nose; nasal infection",
+    "✔"
+   ],
+   [
+    "cakkhuroga",
+    "masc",
+    "disease of the eye",
+    "✔"
+   ],
+   [
+    "ḍāha",
+    "masc",
+    "heat; burning; fever",
+    "✔"
+   ],
+   [
+    "daddu",
+    "fem",
+    "ringworm; cutaneous disease",
+    "✔"
+   ],
+   [
+    "daddupīḷakā",
+    "fem",
+    "leprotic pustules",
+    "◑"
+   ],
+   [
+    "dantaroga",
+    "masc",
+    "toothache; disease of the teeth",
+    "✔"
+   ],
+   [
+    "dunnāmaka",
+    "nt",
+    "piles; haemorrhoids; lit. bad name",
+    "◑"
+   ],
+   [
+    "nakhasā",
+    "fem",
+    "?? psoriasis; (comm) disease in the place scratched by the nails",
+    "✔"
+   ],
+   [
+    "pitta 1.1",
+    "nt",
+    "bile",
+    "✔"
+   ],
+   [
+    "pināsa",
+    "masc",
+    "catarrh; blocked nose",
+    "✔"
+   ],
+   [
+    "piḷakā",
+    "fem",
+    "pimple; pustule",
+    "✔"
+   ],
+   [
+    "madhumeha",
+    "masc",
+    "diabetes; lit. sugar urine",
+    "✔"
+   ],
+   [
+    "mukharoga",
+    "masc",
+    "disease of the mouth; (or) facial disease",
+    "✔"
+   ],
+   [
+    "mucchā 2",
+    "fem",
+    "fainting; swooning; falling unconscious; lit. thickening",
+    "✔"
+   ],
+   [
+    "vitacchikā",
+    "fem",
+    "scabies; lit. scratching",
+    "✔"
+   ],
+   [
+    "visūcikā",
+    "fem",
+    "cholera; lit. very impure",
+    "✔"
+   ],
+   [
+    "sāsa",
+    "masc",
+    "asthma; lit. breathing",
+    "✔"
+   ],
+   [
+    "sīsaroga",
+    "masc",
+    "disease of the head; headache",
+    "✔"
+   ],
+   [
+    "sūlā",
+    "fem",
+    "colic; stomach cramps; lit. spike",
+    "✔"
+   ],
+   [
+    "sotaroga",
+    "masc",
+    "disease of the ear; ear infection",
+    "✔"
+   ],
+   [
+    "sosa",
+    "masc",
+    "pulmonary tuberculosis; consumption; lit. drying up",
+    "✔"
+   ],
+   [
+    "sosabyādhi",
+    "masc",
+    "consumption; lit. drying disease",
+    "◑"
    ]
   ],
-  "count": 2
+  "count": 37
  },
  "verbal endings": {
   "data": [
@@ -34214,9 +47551,21 @@ var family_set_json = {
  "books of the Khuddaka Nikāya": {
   "data": [
    [
-    "apadāna 1.3",
+    "khuddakapāṭha",
+    "masc",
+    "Book 1 of the Khuddaka Nikāya; lit. small text",
+    "✔"
+   ],
+   [
+    "dhammapada 3",
     "nt",
-    "Books 10 and 11 of the Khuddakanikāya; Therāpadāna and Therīapadāna; lit. legend",
+    "Book 2 of the Khuddaka Nikāya; lit. Dhamma verses",
+    "✔"
+   ],
+   [
+    "udāna 2",
+    "masc",
+    "Book 3 of the Khuddaka Nikāya; lit. breathing up",
     "✔"
    ],
    [
@@ -34232,21 +47581,99 @@ var family_set_json = {
     "✔"
    ],
    [
-    "udāna 2",
+    "suttanipāta",
     "masc",
-    "Book 3 of the Khuddaka Nikāya; lit. inspired utterance; breathing up; sigh",
+    "Book 5 of the Khuddaka Nikāya; lit. irregular discourses",
     "✔"
    ],
    [
-    "khuddakapāṭha",
+    "vimānavatthu",
+    "nt",
+    "Book 6 of the Khuddaka Nikāya; lit. stories about heavenly mansions",
+    "✔"
+   ],
+   [
+    "petavatthu",
+    "nt",
+    "Book 7 of the Khuddaka Nikāya; lit. ghost stories",
+    "✔"
+   ],
+   [
+    "theragāthā",
+    "fem",
+    "Book 8 of the Khuddaka Nikāya; lit. verses of the elder monks",
+    "✔"
+   ],
+   [
+    "theragāthāpāḷi",
+    "fem",
+    "Book 8 of the Khuddaka Nikāya; lit. canonical text of the verses of the elder monks",
+    "◑"
+   ],
+   [
+    "therigāthā",
+    "fem",
+    "Book 9 of the Khuddaka Nikāya; lit. verses of the elder nuns",
+    "◑"
+   ],
+   [
+    "therīgāthāpāḷi",
+    "fem",
+    "Book 9 of the Khuddaka Nikāya; lit. canonical text of the verses of the elder nuns",
+    "◑"
+   ],
+   [
+    "therīgāthā",
+    "fem",
+    "Book 9 of the Khuddaka Nikāya; Verses of the Elder Nuns",
+    "✔"
+   ],
+   [
+    "therāpadāna",
+    "nt",
+    "Book 10 of the Khuddaka Nikāya; lit. legends of the elder monks",
+    "◑"
+   ],
+   [
+    "therīapadāna",
+    "nt",
+    "Book 11 of the Khuddaka Nikāya; lit. legends of the elder nuns",
+    "◑"
+   ],
+   [
+    "buddhavaṃsa",
     "masc",
-    "Book 1 of the Khuddaka Nikāya; lit. small text",
+    "Book 12 of the Khuddaka Nikāya; lit. lineage of Buddhas",
     "✔"
    ],
    [
     "cariyāpiṭaka",
     "nt",
     "Book 13 of the Khuddaka Nikāya; lit. basket of conduct",
+    "✔"
+   ],
+   [
+    "paṭisambhidā 2",
+    "fem",
+    "Book 18 of the Khuddaka Nikāya; lit. (path of) penetrating insight",
+    "◑"
+   ],
+   [
+    "paṭisambhidāmagga",
+    "masc",
+    "Book 18 of the Khuddaka Nikāya; lit. path to penetrating insight; way to analytical knowledge",
+    "✔"
+   ],
+   [
+    "nettipāḷi",
+    "fem",
+    "Book 19 of the Khuddaka Nikāya; lit. canonical text of the guide (book)",
+    "◑"
+   ],
+   [
+    "apadāna 1.3",
+    "nt",
+    "Books 10 and 11 of the Khuddakanikāya; Therāpadāna and Therīapadāna; lit. legend",
     "✔"
    ],
    [
@@ -34262,105 +47689,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "theragāthā",
-    "fem",
-    "Book 8 of the Khuddaka Nikāya; lit. verses of the elder monks",
-    "✔"
-   ],
-   [
-    "theragāthāpāḷi",
-    "fem",
-    "Book 8 of the Khuddaka Nikāya; lit. canonical text of the verses of the elder monks",
-    "◑"
-   ],
-   [
-    "therāpadāna",
-    "nt",
-    "Book 10 of the Khuddaka Nikāya; lit. legends of the elder monks",
-    "◑"
-   ],
-   [
-    "therigāthā",
-    "fem",
-    "Book 9 of the Khuddaka Nikāya; lit. verses of the elder nuns",
-    "◑"
-   ],
-   [
-    "therīapadāna",
-    "nt",
-    "Book 11 of the Khuddaka Nikāya; lit. legends of the elder nuns",
-    "◑"
-   ],
-   [
-    "therīgāthā",
-    "fem",
-    "Book 9 of the Khuddaka Nikāya; Verses of the Elder Nuns",
-    "✔"
-   ],
-   [
-    "therīgāthāpāḷi",
-    "fem",
-    "Book 9 of the Khuddaka Nikāya; lit. canonical text of the verses of the elder nuns",
-    "◑"
-   ],
-   [
-    "dhammapada 3",
-    "nt",
-    "Book 2 of the Khuddaka Nikāya; lit. Dhamma verses",
-    "✔"
-   ],
-   [
     "niddesa 2",
     "masc",
-    "Books 14 and 15 of the Khuddaka Nikāya; Mahāniddesa and Cūḷaniddesa; lit. pointing out",
-    "✔"
-   ],
-   [
-    "nettipāḷi",
-    "fem",
-    "Book 19 of the Khuddaka Nikāya; lit. canonical text of the guide (book)",
-    "◑"
-   ],
-   [
-    "paṭisambhidā 2",
-    "fem",
-    "Book 18 of the Khuddaka Nikāya; lit. (path of) penetrating insight",
-    "◑"
-   ],
-   [
-    "paṭisambhidāmagga",
-    "masc",
-    "Book 18 of the Khuddaka Nikāya; lit. path to penetrating insight; way to analytical knowledge",
-    "✔"
-   ],
-   [
-    "petavatthu",
-    "nt",
-    "Book 7 of the Khuddaka Nikāya; lit. ghost stories",
-    "✔"
-   ],
-   [
-    "buddhavaṃsa",
-    "masc",
-    "Book 12 of the Khuddaka Nikāya; lit. lineage of Buddhas",
+    "Books 14 and 15 of the Khuddaka Nikāya; Mahāniddesa and Cūḷaniddesa; lit. pointing away",
     "✔"
    ],
    [
     "milindapañha",
     "masc",
     "Books 20 of the Khuddaka Nikāya; lit. Milinda's questions",
-    "✔"
-   ],
-   [
-    "vimānavatthu",
-    "nt",
-    "Book 6 of the Khuddaka Nikāya; lit. stories about heavenly mansions",
-    "✔"
-   ],
-   [
-    "suttanipāta",
-    "masc",
-    "Book 5 of the Khuddaka Nikāya; lit. irregular discourses",
     "✔"
    ]
   ],
@@ -34395,208 +47732,105 @@ var family_set_json = {
   ],
   "count": 4
  },
- "epithets of stream entry": {
+ "epithets of devas": {
   "data": [
    [
-    "aparappaccaya",
+    "appamāṇasubha",
     "adj",
-    "independent of others (wrt); not relying on another (wrt)",
+    "of immeasurable beauty; epithet of a class of devas",
     "✔"
    ],
    [
-    "abhisami",
-    "aor",
-    "completely realised; completely understood; fully grasped",
-    "✔"
-   ],
-   [
-    "abhisamita",
-    "pp",
-    "realised; understood; penetrated",
-    "✔"
-   ],
-   [
-    "aveccappasanna",
+    "appamāṇābha",
     "adj",
-    "with unwavering confidence; having absolute faith",
+    "of immeasurable radiance; epithet of a class of devas",
     "✔"
    ],
    [
-    "aveccappasāda",
-    "masc",
-    "perfect clarity; absolute faith; epithet of stream entry",
-    "✔"
-   ],
-   [
-    "āgataphala",
+    "ākāsānañcāyatanūpaga",
     "adj",
-    "who has reached the fruit; epithet of a stream enterer",
+    "gone to the dimension of infinite space; epithet of a class of devas",
     "✔"
    ],
    [
-    "ekabījī",
+    "ākiñcaññāyatanūpaga",
     "adj",
-    "(of a stream enterer) who has one remaining human life; lit. one seed-er",
+    "gone to the dimension of nothingness; epithet of a class of devas",
     "✔"
    ],
    [
-    "kāyasakkhi",
+    "ābha",
     "adj",
-    "liberated through the experience of jhāna and the formless attainments; epithet of a steam-enterer or higher; lit. body-witness",
+    "radiant; lustrous; luminous; epithet of a class of devas; lit. having light",
     "✔"
    ],
    [
-    "kāyasakkhī",
+    "ābhassara",
     "adj",
-    "liberated through the experience of jhāna and the formless attainments; epithet of a steam-enterer or higher; lit. body-witness",
+    "radiant; shining; belonging to the radiant heaven; epithet of a class of devas",
     "✔"
    ],
    [
-    "kolaṃkola",
-    "masc",
-    "stream enterer who returns to the human state two or three times; lit. family to family",
-    "✔"
-   ],
-   [
-    "gihisotāpanna",
-    "masc",
-    "lay stream enterer",
-    "◑"
-   ],
-   [
-    "tiṇṇavicikiccha",
+    "manopadosika",
     "adj",
-    "crossed beyond doubt; overcome uncertainty",
+    "mentally corrupted; epithet of a class of envious devas",
     "✔"
-   ],
-   [
-    "dassanasampadā",
-    "fem",
-    "attainment of vision; success in seeing; epithets of stream entry",
-    "✔"
-   ],
-   [
-    "dassanasampanna",
-    "adj",
-    "endowed with insight; who has vision; wise; epithet of a stream enterer",
-    "✔"
-   ],
-   [
-    "dassanuppāda",
-    "masc",
-    "arising of insight; epithet of stream entry; lit. coming up of vision",
-    "✔"
-   ],
-   [
-    "diṭṭhadhamma 2",
-    "adj",
-    "who has seen the Dhamma; who has perceived reality",
-    "✔"
-   ],
-   [
-    "diṭṭhappatta",
-    "adj",
-    "who has attained vision (of Nibbāna); epithet of a stream enterer",
-    "◑"
-   ],
-   [
-    "diṭṭhippatta",
-    "adj",
-    "attained understanding; (or) attained through view; epithet of a steam-enterer or higher",
-    "✔"
-   ],
-   [
-    "diṭṭhisampadā",
-    "fem",
-    "successful attainment of view; epithet of stream entry",
-    "◑"
-   ],
-   [
-    "dhammacakkhu",
-    "nt",
-    "insight into the nature of reality; spiritual insight; understanding of the way things are; lit. Dhamma eye",
-    "✔"
-   ],
-   [
-    "dhammānusārī 1",
-    "masc",
-    "stream enterer through understanding the teaching; lit. Dhamma follower",
-    "✔"
-   ],
-   [
-    "dhammānusārī 2",
-    "adj",
-    "who has attained stream entry through understanding the teaching; lit. following the Dhamma",
-    "✔"
-   ],
-   [
-    "pattadhamma",
-    "adj",
-    "who has attained the Dhamma",
-    "✔"
-   ],
-   [
-    "pariyogāḷhadhamma",
-    "adj",
-    "who has deeply penetrated the Dhamma",
-    "✔"
-   ],
-   [
-    "maggasampadā",
-    "fem",
-    "attaining the path; finding the way; (comm) stream entry; lit. path success",
-    "✔"
-   ],
-   [
-    "vigatakathaṃkatha",
-    "adj",
-    "without doubt; free from confusion; lit. without asking how?",
-    "✔"
-   ],
-   [
-    "viditadhamma",
-    "adj",
-    "who has understood the Dhamma",
-    "✔"
-   ],
-   [
-    "vesārajjappatta",
-    "adj",
-    "confident (in); self-assured; lit. attained confidence",
-    "✔"
-   ],
-   [
-    "sattakkhattuparama",
-    "masc",
-    "stream enterer who has seven more lives at the most; lit. seven time at most-er",
-    "✔"
-   ],
-   [
-    "saddhānusārī 1",
-    "masc",
-    "who has attained stream enterer through faith; lit. faith follower",
-    "✔"
-   ],
-   [
-    "saddhānusārī 2",
-    "adj",
-    "who has attained stream entry though faith",
-    "✔"
-   ],
-   [
-    "saddhāvimutta",
-    "adj",
-    "liberated through faith; attained through confidence; epithet of a stream enterer or higher",
-    "✔"
-   ],
-   [
-    "samaṇamacala",
-    "masc",
-    "stable ascetic; epithet of a stream enterer",
-    "◑"
    ]
   ],
-  "count": 33
+  "count": 7
+ },
+ "suttas of Saṃyutta Nikāya 32": {
+  "data": [
+   [
+    "sucaritasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 32.2 (SN32.2); lit. discourse on good conduct",
+    "✔"
+   ],
+   [
+    "sītavalāhakadānūpakārasuttadasaka",
+    "nt",
+    "Saṃyutta Nikāya 32.3-12 (SN32.3-12); lit. group of ten discourses on how giving supports (rebirth among the gods living in) cool thunderclouds",
+    "✔"
+   ],
+   [
+    "uṇhavalāhakadānūpakārasuttacālīsaka",
+    "nt",
+    "Saṃyutta Nikāya 32.13-52 (SN32.13-52); lit. group of forty discourses on how giving supports (rebirth among the gods living in) warm clouds",
+    "✔"
+   ],
+   [
+    "sītavalāhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 32.53 (SN32.53); lit. discourse on (deities living in) cool clouds",
+    "✔"
+   ],
+   [
+    "uṇhavalāhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 32.54 (SN32.54); lit. discourse on (deities living in) warm clouds",
+    "✔"
+   ],
+   [
+    "abbhavalāhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 32.55 (SN32.55); lit. discourse on (deities living in) thunderclouds",
+    "✔"
+   ],
+   [
+    "vātavalāhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 32.56 (SN32.56); lit. discourse on (deities living in) wind clouds",
+    "✔"
+   ],
+   [
+    "vassavalāhakasutta",
+    "nt",
+    "Saṃyutta Nikāya 32.57 (SN32.57); lit. discourse on (deities living in) rain clouds",
+    "✔"
+   ]
+  ],
+  "count": 8
  },
  "nine types of suttas": {
   "data": [
@@ -34615,7 +47849,7 @@ var family_set_json = {
    [
     "udāna 1",
     "masc",
-    "inspired saying; exclamation; one of the nine kinds of suttas; lit. breath up; sigh",
+    "inspired saying; exclamation; one of the nine kinds of suttas; lit. breathing up",
     "✔"
    ],
    [
@@ -34649,7 +47883,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sutta 2.1",
+    "sutta 1.1",
     "nt",
     "scripture; discourse; sacred text; lit. thread",
     "✔"
@@ -34662,7 +47896,7 @@ var family_set_json = {
    [
     "abhinīlanetta",
     "adj",
-    "with extremely blue eyes; with deep indigo eyes; twenty-ninth of the thirty-two marks of a great man",
+    "with extremely dark eyes; with deep indigo eyes; twenty-ninth of the thirty-two marks of a great man",
     "✔"
    ],
    [
@@ -34680,7 +47914,7 @@ var family_set_json = {
    [
     "uṇhīsasīsa",
     "adj",
-    "with a head shaped like a turban; with a protuberence on the head; thirty-second of the thirty-two marks of a great man",
+    "with a head shaped like a turban; with a protuberance on the head; thirty-second of the thirty-two marks of a great man",
     "✔"
    ],
    [
@@ -34848,6 +48082,173 @@ var family_set_json = {
   ],
   "count": 31
  },
+ "suttas of Saṃyutta Nikāya 34": {
+  "data": [
+   [
+    "samādhimūlakasamāpattisutta",
+    "nt",
+    "Saṃyutta Nikāya 34.1 (SN34.1); lit. discourse on meditation attainment based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakaṭhitisutta",
+    "nt",
+    "Saṃyutta Nikāya 34.2 (SN34.2); lit. discourse on stability based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakavuṭṭhānasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.3 (SN34.3); lit. discourse on transcending based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakakallitasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.4 (SN34.4); lit. discourse on ability based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakaārammaṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.5 (SN34.5); lit. discourse on meditation theme founded on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakagocarasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.6 (SN34.6); lit. discourse on environment based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakaabhinīhārasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.7 (SN34.7); lit. discourse on aspiration based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakasakkaccakārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 34.8 (SN34.8); lit. discourse on acting properly based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakasātaccakārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 34.9 (SN34.9); lit. discourse on persevering based on mental composure",
+    "✔"
+   ],
+   [
+    "samādhimūlakasappāyakārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 34.10 (SN34.10); lit. discourse on doing what is suitable based on mental composure",
+    "✔"
+   ],
+   [
+    "samāpattimūlakaṭhitisutta",
+    "nt",
+    "Saṃyutta Nikāya 34.11 (SN34.11); lit. discourse on stability based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakavuṭṭhānasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.12 (SN34.12); lit. discourse on transcending based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakakallitasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.13 (SN34.13); lit. discourse on ability based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakaārammaṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.14 (SN34.14); lit. discourse on meditation theme based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakagocarasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.15 (SN34.15); lit. discourse on environment based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakaabhinīhārasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.16 (SN34.16); lit. discourse on aspiration based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakasakkaccasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.17 (SN34.17); lit. discourse on meditation attainment based on respect",
+    "✔"
+   ],
+   [
+    "samāpattimūlakasātaccasutta",
+    "nt",
+    "Saṃyutta Nikāya 34.18 (SN34.18); lit. discourse on perseverance based on meditation attainment",
+    "✔"
+   ],
+   [
+    "samāpattimūlakasappāyakārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 34.19 (SN34.19); lit. discourse on doing what is suitable based on meditation attainment",
+    "✔"
+   ],
+   [
+    "ṭhitimūlakavuṭṭhānasuttādiaṭṭhaka",
+    "nt",
+    "Saṃyutta Nikāya 34.20-27 (SN34.20-27); lit. group of eight discourses starting with the discourse on  transcending based on stability",
+    "✔"
+   ],
+   [
+    "vuṭṭhānamūlakakallitasuttādisattaka",
+    "nt",
+    "Saṃyutta Nikāya 34.28-34 (SN34.28-34); lit. group of seven discourses starting with the discourse on ability based on transcending",
+    "✔"
+   ],
+   [
+    "kallitamūlakaārammaṇasuttādichakka",
+    "nt",
+    "Saṃyutta Nikāya 34.35-40 (SN34.35-40); lit. group of six discourses starting with the discourse on meditation theme based on ability",
+    "✔"
+   ],
+   [
+    "ārammaṇamūlakagocarasuttādipañcaka",
+    "nt",
+    "Saṃyutta Nikāya 34.41-45 (SN34.41-45); lit. group of five discourses starting with the discourse on environment based on meditation theme",
+    "✔"
+   ],
+   [
+    "gocaramūlakaabhinīhārasuttādicatukka",
+    "nt",
+    "Saṃyutta Nikāya 34.46-49 (SN34.46-49); lit. group of four discourses starting with the discourse on discourse on aspiration based on environment",
+    "✔"
+   ],
+   [
+    "abhinīhāramūlakasakkaccasuttāditika",
+    "nt",
+    "Saṃyutta Nikāya 34.50-52 (SN34.50-52); lit. group of three discourses starting with the discourse on respect based on aspiration",
+    "✔"
+   ],
+   [
+    "sakkaccamūlakasātaccakārīsuttādiduka",
+    "nt",
+    "Saṃyutta Nikāya 34.53-54 (SN34.53-54); lit. group of two discourses starting with the discourse on persevering based on respect",
+    "✔"
+   ],
+   [
+    "sātaccamūlakasappāyakārīsutta",
+    "nt",
+    "Saṃyutta Nikāya 34.55 (SN34.55)Saṃyutta Nikāya 34.55 (SN34.55); lit. discourse on doing what is suitable based on perseverance",
+    "✔"
+   ]
+  ],
+  "count": 27
+ },
  "weapons": {
   "data": [
    [
@@ -34914,7 +48315,7 @@ var family_set_json = {
     "jiya",
     "masc",
     "bow string",
-    "◑"
+    "✔"
    ],
    [
     "jiyā",
@@ -35013,13 +48414,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sūla",
+    "sūla 1",
     "nt",
+    "stake; spike; spear; pike; sharp pointy thing",
+    "✔"
+   ],
+   [
+    "sūla 2",
+    "masc",
     "stake; spike; spear; pike; sharp pointy thing",
     "✔"
    ]
   ],
-  "count": 28
+  "count": 29
  },
  "five Mārā": {
   "data": [
@@ -35052,562 +48459,6 @@ var family_set_json = {
     "masc",
     "Māra in the sense of death",
     "◑"
-   ]
-  ],
-  "count": 5
- },
- "trees": {
-  "data": [
-   [
-    "amba 1",
-    "masc",
-    "mango tree; Mangifera indica",
-    "✔"
-   ],
-   [
-    "assattha 1",
-    "masc",
-    "Bodhi tree; Ficus religiosa; lit. inhalation; relief; (or) under which horses stand",
-    "✔"
-   ],
-   [
-    "āmalakī",
-    "fem",
-    "emblic myrobalan; Phyllanthus Emblica",
-    "✔"
-   ],
-   [
-    "udumbara",
-    "masc",
-    "cluster fig; Ficus racemosa",
-    "✔"
-   ],
-   [
-    "kakudha 2",
-    "masc",
-    "arjuna tree; Terminalia arjuna",
-    "✔"
-   ],
-   [
-    "kacchaka",
-    "masc",
-    "red cedar; Indian cedar; Toona ciliata",
-    "✔"
-   ],
-   [
-    "kaṭṭhaka",
-    "masc",
-    "bamboo",
-    "✔"
-   ],
-   [
-    "kaṇikāra",
-    "masc",
-    "Pterospermum acerifolium; kanak champa; bayur tree",
-    "✔"
-   ],
-   [
-    "kadali 1",
-    "fem",
-    "plantain tree; banana tree",
-    "✔"
-   ],
-   [
-    "kandula",
-    "masc",
-    "name of a tree; Momordica charantia",
-    "✔"
-   ],
-   [
-    "kapitthana 1",
-    "masc",
-    "portia tree; Thespesia populnea",
-    "✔"
-   ],
-   [
-    "karañja",
-    "masc",
-    "Indian Beech; Pongamia galbra; Millettia pinnata",
-    "◑"
-   ],
-   [
-    "kareri",
-    "masc",
-    "karira tree; Capparis decidua",
-    "✔"
-   ],
-   [
-    "kiṃsuka",
-    "masc",
-    "Bastard Teak; Parrot tree; Butea Monosperma",
-    "✔"
-   ],
-   [
-    "kūṭasimbalī",
-    "masc",
-    "thorny red cotton tree; Bombax ceiba; lit. crooked silk cotton tree",
-    "◑"
-   ],
-   [
-    "koṭasimbali",
-    "masc",
-    "thorny red cotton tree; Bombax ceiba; lit. crooked silk cotton tree",
-    "◑"
-   ],
-   [
-    "kolarukkha",
-    "masc",
-    "jujube tree; Ziziphus jujuba",
-    "◑"
-   ],
-   [
-    "koviḷāra",
-    "masc",
-    "name of tree; Bauhinia variegata",
-    "✔"
-   ],
-   [
-    "kosamba",
-    "masc",
-    "Himalayan mango; Mangifera sylvatica; lit. sheath mango",
-    "✔"
-   ],
-   [
-    "khadira",
-    "masc",
-    "acacia tree; Acacia catechu",
-    "◑"
-   ],
-   [
-    "candana 3",
-    "masc",
-    "sandal-wood tree; lit. glowing",
-    "✔"
-   ],
-   [
-    "campaka",
-    "masc",
-    "tree with fragrant flowers; Magnolia champaca",
-    "◑"
-   ],
-   [
-    "jambu",
-    "fem",
-    "rose-apple tree; Syzygium jambos",
-    "✔"
-   ],
-   [
-    "jambū",
-    "fem",
-    "rose-apple tree; Syzygium jambos",
-    "✔"
-   ],
-   [
-    "takkārī",
-    "fem",
-    "Egyptian riverhemp; pea tree; Sesbania sesban",
-    "✔"
-   ],
-   [
-    "tāla 1.1",
-    "masc",
-    "palm tree; Palmyra",
-    "✔"
-   ],
-   [
-    "tiṇḍuka 1",
-    "masc",
-    "Malabar Ebony tree; Diospyros Malabarica",
-    "◑"
-   ],
-   [
-    "tiṇḍuka 2",
-    "nt",
-    "fruit of the Malabar Ebony tree; Diospyros Malabarica",
-    "✔"
-   ],
-   [
-    "tinduka",
-    "masc",
-    "Malabar Ebony tree; Diospyros Malabarica",
-    "✔"
-   ],
-   [
-    "timbaru",
-    "masc",
-    "fruit of Strychnos nux-vomica or Malabar ebony; Diospyros malabarica",
-    "✔"
-   ],
-   [
-    "tirīṭa",
-    "nt",
-    "cloth made from the bark of lodhra trees; Symplocos racemosa",
-    "✔"
-   ],
-   [
-    "dālima",
-    "masc",
-    "pomegranate tree; Punica granatum",
-    "✔"
-   ],
-   [
-    "dhava 1",
-    "masc",
-    "axle-wood tree; Anogeissus latifolia",
-    "✔"
-   ],
-   [
-    "nāga 7",
-    "masc",
-    "huge tree",
-    "✔"
-   ],
-   [
-    "nāḷikera 1",
-    "masc",
-    "coconut tree; Cocos nucifera",
-    "◑"
-   ],
-   [
-    "nigrodha 1",
-    "masc",
-    "banyan tree; lit. growing down",
-    "✔"
-   ],
-   [
-    "nicula",
-    "masc",
-    "tree; Barringtonia acutangula",
-    "✔"
-   ],
-   [
-    "nimba",
-    "masc",
-    "neem tree; margosa tree; Azadirachta Lindica",
-    "✔"
-   ],
-   [
-    "panasa 1",
-    "masc",
-    "jack tree",
-    "◑"
-   ],
-   [
-    "panasa 2",
-    "nt",
-    "jackfruit",
-    "✔"
-   ],
-   [
-    "palāsa 1.2",
-    "masc",
-    "bastard teak; Butea frondosa",
-    "✔"
-   ],
-   [
-    "pāṭalī 2",
-    "masc",
-    "trumpet-flower tree",
-    "✔"
-   ],
-   [
-    "pāṭalī 3",
-    "fem",
-    "trumpet flower",
-    "◑"
-   ],
-   [
-    "pāricchatta",
-    "masc",
-    "coral tree; Erythrina indica",
-    "◑"
-   ],
-   [
-    "pāricchattaka",
-    "masc",
-    "coral tree; Erythrina indica",
-    "✔"
-   ],
-   [
-    "pārichatta",
-    "masc",
-    "orchid tree; Bauhinia variegata; lit. sunshade all around",
-    "✔"
-   ],
-   [
-    "pārichattaka 1",
-    "masc",
-    "name of a type of tree; Bauhinia variegata; lit. umbrella all around",
-    "✔"
-   ],
-   [
-    "pārichattaka 2",
-    "masc",
-    "name of a tree in Tāvatiṃsa heaven; lit. umbrella all around",
-    "✔"
-   ],
-   [
-    "pāripuppha",
-    "nt",
-    "orchid tree flower",
-    "✔"
-   ],
-   [
-    "pilakkha",
-    "masc",
-    "white fig; Ficus virens",
-    "✔"
-   ],
-   [
-    "pucimanda",
-    "masc",
-    "Neem tree; margosa; Azadirachta indica",
-    "✔"
-   ],
-   [
-    "puṇḍarīka 2",
-    "nt",
-    "fragrant mango tree; white mango; Mangifera indica",
-    "✔"
-   ],
-   [
-    "punnāga",
-    "masc",
-    "Alexandrian Laurel tree; Calophyllum inophyllum",
-    "✔"
-   ],
-   [
-    "phandana 3",
-    "masc",
-    "kind of tree; lit. trembling",
-    "✔"
-   ],
-   [
-    "badarī",
-    "fem",
-    "jujube tree; Ziziphus jujuba",
-    "◑"
-   ],
-   [
-    "bimbijāla",
-    "masc",
-    "tree under which the Buddha Dhammadassī was awakened",
-    "◑"
-   ],
-   [
-    "beluva 1",
-    "masc",
-    "wood apple tree; bael tree; Aegle marmelos",
-    "✔"
-   ],
-   [
-    "beluvalaṭṭhikā",
-    "fem",
-    "wood apple sapling; young bael tree",
-    "✔"
-   ],
-   [
-    "beḷuva 2",
-    "masc",
-    "wood apple tree; bael tree; Aegle marmelos",
-    "◑"
-   ],
-   [
-    "beḷuva 3",
-    "nt",
-    "wood apple fruit; bael; Aegle marmelos",
-    "✔"
-   ],
-   [
-    "bodhi 3",
-    "fem",
-    "Bodhi tree; Ficus religiosia; lit. awakening",
-    "✔"
-   ],
-   [
-    "bodhirukkha",
-    "masc",
-    "Bodhi tree; Ficus religiosia",
-    "✔"
-   ],
-   [
-    "madhu 4",
-    "nt",
-    "Butter tree; Mahua; Bassia latifolia",
-    "✔"
-   ],
-   [
-    "madhuka",
-    "masc",
-    "Butter tree; Mahua; Bassia latifolia",
-    "✔"
-   ],
-   [
-    "mandārava",
-    "masc",
-    "coral tree",
-    "✔"
-   ],
-   [
-    "mahānāma 4",
-    "masc",
-    "name of a tree; lit. great name",
-    "◑"
-   ],
-   [
-    "mucalinda 1",
-    "masc",
-    "type of tree; Barringtonia Acutangula",
-    "◑"
-   ],
-   [
-    "mucalinda 3",
-    "masc",
-    "type of tree; Pterospermum suberifolium; Pterospermum acerifolium",
-    "◑"
-   ],
-   [
-    "rājāyatana",
-    "masc",
-    "charoli nut tree; Buchanania cochinchinensis; lit. realm of kings",
-    "◑"
-   ],
-   [
-    "labuja",
-    "masc",
-    "breadfruit tree; Artocarpus Lacucha; Artocarpus altilis",
-    "✔"
-   ],
-   [
-    "vaṭa 3",
-    "masc",
-    "banyan tree",
-    "◑"
-   ],
-   [
-    "vaṭarukkha",
-    "masc",
-    "banyan tree",
-    "◑"
-   ],
-   [
-    "vaṃsa 1",
-    "masc",
-    "bamboo",
-    "✔"
-   ],
-   [
-    "sattapaṇṇī",
-    "masc",
-    "name of a tree; Alstonia scholaris; lit. seven leaves",
-    "✔"
-   ],
-   [
-    "salaḷa",
-    "nt",
-    "Indian frankincense tree; Boswellia serrata",
-    "✔"
-   ],
-   [
-    "sallakī",
-    "fem",
-    "Indian frankincense tree; Boswellia serrata",
-    "✔"
-   ],
-   [
-    "saḷala",
-    "masc",
-    "Indian frankincense tree; Boswellia serrata",
-    "✔"
-   ],
-   [
-    "sāka 2",
-    "nt",
-    "teak tree; Tectona grandis",
-    "✔"
-   ],
-   [
-    "sāla 1.1",
-    "masc",
-    "sal tree; Shorea robusta",
-    "✔"
-   ],
-   [
-    "sālarukkha",
-    "masc",
-    "sal tree; Shorea robusta",
-    "◑"
-   ],
-   [
-    "simbalī",
-    "masc",
-    "silk-cotton tree; Bombax ceiba",
-    "✔"
-   ],
-   [
-    "sirīsa",
-    "masc",
-    "woman's tongue tree; Albizia lebbeck",
-    "✔"
-   ],
-   [
-    "sirīsaka",
-    "masc",
-    "name of a tree; Acacia sirissa",
-    "✔"
-   ],
-   [
-    "siṃsapā",
-    "fem",
-    "Simsapa tree; Dalbergia tree; Indian Rosewood",
-    "✔"
-   ],
-   [
-    "sīsapā",
-    "fem",
-    "Simsapa tree; Dalbergia tree; Indian Rosewood",
-    "✔"
-   ],
-   [
-    "haricandana",
-    "nt",
-    "yellow sandalwood; golden coloured sandalwood",
-    "✔"
-   ]
-  ],
-  "count": 86
- },
- "names of heavens": {
-  "data": [
-   [
-    "ambaraambaravatiya",
-    "masc",
-    "name of a heavenly city",
-    "◑"
-   ],
-   [
-    "aviha 1",
-    "masc",
-    "name of a heavenly realm",
-    "✔"
-   ],
-   [
-    "vehapphala 1",
-    "masc",
-    "name of a heavenly realm; name of a class of heavenly beings; lit. sky fruit",
-    "✔"
-   ],
-   [
-    "suddhāvāsa 1",
-    "masc",
-    "name of five heavens in the Brahma realm; lit. pure land",
-    "✔"
-   ],
-   [
-    "subhakiṇha 1",
-    "masc",
-    "name of a heavenly realm; name of a class of deities; lit. total beauty",
-    "✔"
    ]
   ],
   "count": 5
@@ -35726,7 +48577,7 @@ var family_set_json = {
     "tapoda 2",
     "masc",
     "name of monastery; lit. hot spring",
-    "◑"
+    "✔"
    ],
    [
     "tapodārāma",
@@ -35783,12 +48634,6 @@ var family_set_json = {
     "✔"
    ],
    [
-    "magghadevaambavana",
-    "nt",
-    "name of a monastery; lit. Magghadeva's mango grove",
-    "◑"
-   ],
-   [
     "maghadevaambavana",
     "nt",
     "name of a monastery; lit. Maghadeva's mango grove",
@@ -35810,7 +48655,7 @@ var family_set_json = {
     "rājakārāma",
     "masc",
     "name of a monastery; lit. royal park",
-    "◑"
+    "✔"
    ],
    [
     "vaṭajālikā",
@@ -35837,7 +48682,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 37
+  "count": 36
  },
  "foodstuff": {
   "data": [
@@ -35851,6 +48696,12 @@ var family_set_json = {
     "kaṅgu",
     "fem",
     "millet; Panicum indicum",
+    "✔"
+   ],
+   [
+    "kalāya",
+    "masc",
+    "chickpea; Cicer arietinum",
     "✔"
    ],
    [
@@ -35869,7 +48720,7 @@ var family_set_json = {
     "kudrūsaka",
     "masc",
     "finger millet; Eleusine coracana",
-    "◑"
+    "✔"
    ],
    [
     "kulatthayūsa",
@@ -36004,7 +48855,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 27
+  "count": 28
  },
  "family members": {
   "data": [
@@ -36051,10 +48902,22 @@ var family_set_json = {
     "✔"
    ],
    [
+    "cūḷamātuputta",
+    "masc",
+    "maternal cousin; lit. small mother's son",
+    "✔"
+   ],
+   [
     "jananī 2",
     "fem",
     "mother; lit. creating",
     "◑"
+   ],
+   [
+    "jāmātar",
+    "masc",
+    "son-in-law",
+    "✔"
    ],
    [
     "jeṭṭhabhaginī",
@@ -36114,6 +48977,12 @@ var family_set_json = {
     "pitāmaha 1",
     "masc",
     "paternal grandfather",
+    "✔"
+   ],
+   [
+    "pitāmahī",
+    "fem",
+    "paternal grandmother; father's mother",
     "✔"
    ],
    [
@@ -36219,6 +49088,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "mātāmaha",
+    "masc",
+    "maternal grandfather; mother's father",
+    "✔"
+   ],
+   [
+    "mātāmahī",
+    "fem",
+    "maternal grandmother; mother's mother; lit. honoured mother",
+    "✔"
+   ],
+   [
     "māti",
     "fem",
     "mother; maternal lineage",
@@ -36228,6 +49109,12 @@ var family_set_json = {
     "mātucchā",
     "fem",
     "maternal aunt; mother's sister",
+    "✔"
+   ],
+   [
+    "mātucchāputta",
+    "masc",
+    "maternal cousin; lit. mother's sister's son",
     "✔"
    ],
    [
@@ -36285,7 +49172,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 46
+  "count": 52
  },
  "onomatopoeia": {
   "data": [
@@ -36302,7 +49189,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kakaca",
+    "kakaca 1",
     "masc",
     "saw",
     "✔"
@@ -36398,6 +49285,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "ghuru",
+    "ind",
+    "wheezing sound; puffing sound",
+    "✔"
+   ],
+   [
     "capucapu",
     "ind",
     "chomping sound; munching sound; lip-smacking sound",
@@ -36434,6 +49327,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "jīvañjīvaka",
+    "masc",
+    "names of a bird; pheasant-tailed jacana; Hydrophasianus chirurgus; lit. live! live!",
+    "✔"
+   ],
+   [
     "taṭataṭa",
     "ind",
     "rat-a-tat-tat sound; thumping sound",
@@ -36461,6 +49360,24 @@ var family_set_json = {
     "daddari",
     "fem",
     "type of drum",
+    "✔"
+   ],
+   [
+    "duddubha",
+    "masc",
+    "booming sound; loud thud",
+    "◑"
+   ],
+   [
+    "duddubhati",
+    "pr",
+    "makes a loud thudding sound; booms",
+    "✔"
+   ],
+   [
+    "duddubhāyati",
+    "pr",
+    "booms; thuds; makes a racket",
     "✔"
    ],
    [
@@ -36502,8 +49419,14 @@ var family_set_json = {
    [
     "biḷibiḷikā",
     "fem",
-    "chitter-chatter; blah-blah; blibber-blabber; yak-yak; jaw-jabber",
-    "◑"
+    "chitter-chatter; blah-blah; blibber-blabber; yak-yak; jaw-jabber; (comm) meaningless sound",
+    "✔"
+   ],
+   [
+    "bulubulu",
+    "masc",
+    "splooshing sound; noise of splashing",
+    "✔"
    ],
    [
     "bhabbhara",
@@ -36515,6 +49438,12 @@ var family_set_json = {
     "bharabhara",
     "masc",
     "crinkling sound; crackling sound",
+    "✔"
+   ],
+   [
+    "bhuṃ",
+    "ind",
+    "bark; woof",
     "✔"
    ],
    [
@@ -36578,7 +49507,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 48
+  "count": 55
  },
  "three daughters of Mara": {
   "data": [
@@ -36608,6 +49537,397 @@ var family_set_json = {
    ]
   ],
   "count": 4
+ },
+ "suttas of Saṃyutta Nikāya 8": {
+  "data": [
+   [
+    "nikkhantasutta",
+    "nt",
+    "Saṃyutta Nikāya 8.1 (SN8.1); lit. discourse on renounced",
+    "✔"
+   ],
+   [
+    "aratisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 8.2 (SN8.2); lit. discourse on boredom",
+    "✔"
+   ],
+   [
+    "pesalasutta",
+    "nt",
+    "Saṃyutta Nikāya 8.3 (SN8.3); lit. discourse on goods monks",
+    "✔"
+   ],
+   [
+    "ānandasutta 01",
+    "nt",
+    "Saṃyutta Nikāya 8.4 (SN8.4); lit. discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "subhāsitasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 8.5 (SN8.5); lit. discourse on well spoken",
+    "✔"
+   ],
+   [
+    "sāriputtasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 8.6 (SN8.6); lit. discourse with Sāriputta",
+    "✔"
+   ],
+   [
+    "pavāraṇāsutta",
+    "nt",
+    "Saṃyutta Nikāya 8.7 (SN8.7); lit. discourse about the invitation ceremony",
+    "✔"
+   ],
+   [
+    "parosahassasutta",
+    "nt",
+    "Saṃyutta Nikāya 8.8 (SN8.8); lit. discourse on more than a thousand",
+    "✔"
+   ],
+   [
+    "koṇḍaññasutta",
+    "nt",
+    "Saṃyutta Nikāya 8.9 (SN8.9); lit. discourse with Koṇḍañña",
+    "✔"
+   ],
+   [
+    "moggallānasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 8.10 (SN8.10); lit. discourse with Moggallāna",
+    "✔"
+   ],
+   [
+    "gaggarāsutta",
+    "nt",
+    "Saṃyutta Nikāya 8.11 (SN8.11); lit. discourse at Gaggarā",
+    "✔"
+   ],
+   [
+    "vaṅgīsasutta",
+    "nt",
+    "Saṃyutta Nikāya 8.12 (SN8.12); lit. discourse about Vaṅgīsa",
+    "✔"
+   ]
+  ],
+  "count": 12
+ },
+ "suttas of Saṃyutta Nikāya 38": {
+  "data": [
+   [
+    "nibbānapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.1 (SN38.1); lit. discourse on the question about Nibbāna",
+    "✔"
+   ],
+   [
+    "arahattapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.2 (SN38.2); lit. discourse on the question about arahantship",
+    "✔"
+   ],
+   [
+    "dhammavādīpañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.3 (SN38.3); lit. discourse on the question about speaking of Dhamma",
+    "✔"
+   ],
+   [
+    "kimatthiyasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 38.4 (SN38.4); lit. discourse on what's the purpose",
+    "✔"
+   ],
+   [
+    "assāsappattasutta",
+    "nt",
+    "Saṃyutta Nikāya 38.5 (SN38.5); lit. discourse on gained relief",
+    "✔"
+   ],
+   [
+    "paramassāsappattasutta",
+    "nt",
+    "Saṃyutta Nikāya 38.6 (SN38.6); lit. discourse on gained the ultimate relief",
+    "✔"
+   ],
+   [
+    "vedanāpañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.7 (SN38.7); lit. discourse on the question about feeling tone",
+    "✔"
+   ],
+   [
+    "āsavapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.8 (SN38.8); lit. discourse on the question about the effluents",
+    "✔"
+   ],
+   [
+    "avijjāpañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.9 (SN38.9); lit. discourse on the question about ignorance",
+    "✔"
+   ],
+   [
+    "taṇhāpañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.10 (SN38.10); lit. discourse on the question about craving",
+    "✔"
+   ],
+   [
+    "oghapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.11 (SN38.11); lit. discourse on the question about floods",
+    "✔"
+   ],
+   [
+    "upādānapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.12 (SN38.12); lit. discourse on the question about grasping",
+    "✔"
+   ],
+   [
+    "bhavapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.13 (SN38.13); lit. discourse on the question about being",
+    "✔"
+   ],
+   [
+    "dukkhapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.14 (SN38.14); lit. discourse on the question about suffering",
+    "✔"
+   ],
+   [
+    "sakkāyapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.15 (SN38.15); lit. discourse on the question about self-identity",
+    "✔"
+   ],
+   [
+    "dukkarapañhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 38.16 (SN38.16); lit. discourse on the question about difficult to do",
+    "✔"
+   ]
+  ],
+  "count": 16
+ },
+ "vaggas of the Saṃyutta Nikāya 7": {
+  "data": [
+   [
+    "arahantavagga 1",
+    "masc",
+    "Chapter 1 of the Brāhmaṇasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on arahants",
+    "✔"
+   ],
+   [
+    "upāsakavagga 1",
+    "masc",
+    "Chapter 2 of the Brāhmaṇasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on disciples",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "suttas of Saṃyutta Nikāya 56": {
+  "data": [
+   [
+    "samādhisutta 5",
+    "nt",
+    "Saṃyutta Nikāya 56.1 (SN56.1); lit. discourse on mental composure",
+    "✔"
+   ],
+   [
+    "paṭisallānasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 56.2 (SN56.2); lit. discourse on seclusion",
+    "✔"
+   ],
+   [
+    "paṭhamasamaṇabrāhmaṇasutta 6",
+    "nt",
+    "Saṃyutta Nikāya 56.5 (SN56.5); lit. first discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "tathāgatasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 56.12 (SN56.12); lit. discourse on the Such Become",
+    "✔"
+   ],
+   [
+    "khandhasutta 6",
+    "nt",
+    "Saṃyutta Nikāya 56.13 (SN56.13); lit. discourse on the aggregates",
+    "✔"
+   ],
+   [
+    "avijjāsutta 3",
+    "nt",
+    "Saṃyutta Nikāya 56.17 (SN56.17); lit. discourse on ignorance",
+    "✔"
+   ],
+   [
+    "vijjāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 56.18 (SN56.18); lit. discourse on understanding",
+    "✔"
+   ],
+   [
+    "sammāsambuddhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 56.23 (SN56.23); lit. discourse on the perfectly awakened Buddha",
+    "✔"
+   ],
+   [
+    "arahantasutta 7",
+    "nt",
+    "Saṃyutta Nikāya 56.24 (SN56.24); lit. discourse on the arahant",
+    "✔"
+   ],
+   [
+    "mittasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 56.26 (SN56.26); lit. discourse on friends",
+    "✔"
+   ],
+   [
+    "lokasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 56.28 (SN56.28); lit. discourse on the world",
+    "✔"
+   ],
+   [
+    "pariññeyyasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 56.29 (SN56.29); lit. discourse on what should be completely comprehended",
+    "✔"
+   ],
+   [
+    "daṇḍasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 56.33 (SN56.33); lit. discourse on the stick",
+    "✔"
+   ],
+   [
+    "nakhasikhasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 56.51 (SN56.51); lit. discourse on the tip of the nail",
+    "✔"
+   ],
+   [
+    "pokkharaṇīsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 56.52 (SN56.52); lit. discourse on the water lily pond",
+    "✔"
+   ]
+  ],
+  "count": 15
+ },
+ "medicines": {
+  "data": [
+   [
+    "ariṭṭha 2.4",
+    "nt",
+    "medicinal spirit; fermented herbal decoction",
+    "✔"
+   ],
+   [
+    "āmala",
+    "masc",
+    "emblic myrobalan tree; Phyllanthus Emblica",
+    "✔"
+   ],
+   [
+    "āmalaka 1",
+    "nt",
+    "fruit of emblic myrobalan; amla; nellie; Phyllanthus Emblica",
+    "✔"
+   ],
+   [
+    "eraṇḍatela",
+    "nt",
+    "castor oil",
+    "✔"
+   ],
+   [
+    "kuṭaja",
+    "masc",
+    "medicinal tree; Wrightia antidysenterica; Holarrhena antidysenterica; vermicide",
+    "✔"
+   ],
+   [
+    "goṭṭha 2",
+    "nt",
+    "mountain pomegranate; emetic nut; Catunaregam spinosa; lit. cow place",
+    "✔"
+   ],
+   [
+    "tulasī",
+    "fem",
+    "holy basil; tulsi; Ocimum sanctum",
+    "✔"
+   ],
+   [
+    "tela",
+    "nt",
+    "(sesame) oil; lit. from sesame",
+    "✔"
+   ],
+   [
+    "bilaṅga 2",
+    "masc",
+    "false black pepper; white-flowered embelia; Embelia ribes",
+    "✔"
+   ],
+   [
+    "madhukatela",
+    "nt",
+    "Mahua oil",
+    "✔"
+   ],
+   [
+    "marica",
+    "nt",
+    "black pepper; Piper nigrum",
+    "✔"
+   ],
+   [
+    "maricacuṇṇa",
+    "nt",
+    "black pepper powder",
+    "✔"
+   ],
+   [
+    "loṇasovīraka",
+    "masc",
+    "name of a medicinal tonic; lit. salty sour gruel",
+    "✔"
+   ],
+   [
+    "sulasipaṇṇa",
+    "nt",
+    "holy basil leaf; tulsi leaves; leaves of Ocimum sanctum",
+    "✔"
+   ],
+   [
+    "sulasī",
+    "masc",
+    "holy basil; tulsi; Ocimum sanctum",
+    "✔"
+   ],
+   [
+    "hiṅgu",
+    "nt",
+    "Asafoetida; devil's dung",
+    "✔"
+   ]
+  ],
+  "count": 16
  },
  "three realms of existence": {
   "data": [
@@ -36929,64 +50249,105 @@ var family_set_json = {
   ],
   "count": 4
  },
- "names of hells": {
+ "suttas of Saṃyutta Nikāya 28": {
   "data": [
    [
-    "avīci 2",
-    "fem",
-    "name of one of the great hells; lit. without waves; without an interval; uninterrupted",
+    "vivekajasutta",
+    "nt",
+    "Saṃyutta Nikāya 28.1 (SN28.1); lit. discourse on born from seclusion",
     "✔"
    ],
    [
-    "kukkulaniraya",
-    "masc",
-    "name of a hell; lit. hot coal hell",
-    "◑"
-   ],
-   [
-    "kukkuḷa 2",
-    "masc",
-    "name of hell; lit. hot ashes",
-    "◑"
-   ],
-   [
-    "chaphassāyatanika 1",
-    "masc",
-    "hell of the six sense fields; epithet of the great hell; lit. connected with the six sense fields",
+    "avitakkasutta",
+    "nt",
+    "Saṃyutta Nikāya 28.2 (SN28.2); lit. discourse on without thought",
     "✔"
    ],
    [
-    "paccattavedaniya",
-    "masc",
-    "hell to be personally experienced; epithet of the great hell",
+    "pītisutta 1",
+    "nt",
+    "Saṃyutta Nikāya 28.3 (SN28.3); lit. discourse on heartfelt joy",
     "✔"
    ],
    [
-    "mahāroruva",
-    "masc",
-    "name of a hell; lit. great intense howling",
-    "◑"
-   ],
-   [
-    "roruva",
-    "masc",
-    "name of a hell; lit. intense howling",
+    "upekkhāsutta 1",
+    "nt",
+    "Saṃyutta Nikāya 28.4 (SN28.4); lit. discourse on equanimity",
     "✔"
    ],
    [
-    "saṅkusamāhata",
-    "masc",
-    "hell of the iron stakes being struck together; epithet of the great hell",
+    "ākāsānañcāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 28.5 (SN28.5); lit. discourse on the base of infinite space",
     "✔"
    ],
    [
-    "sañjīva 1",
-    "masc",
-    "name of a hell where one cannot die; lit. revival",
-    "◑"
+    "viññāṇañcāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 28.6 (SN28.6); lit. discourse on the dimension of infinite consciousness",
+    "✔"
+   ],
+   [
+    "ākiñcaññāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 28.7 (SN28.7); lit. discourse on the dimension of nothingness",
+    "✔"
+   ],
+   [
+    "nevasaññānāsaññāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 28.8 (SN28.8); lit. discourse on the dimension of neither perception nor non-perception",
+    "✔"
+   ],
+   [
+    "nirodhasamāpattisutta",
+    "nt",
+    "Saṃyutta Nikāya 28.9 (SN28.9); lit. discourse on the attainment of cessation",
+    "✔"
+   ],
+   [
+    "sūcimukhīsutta",
+    "nt",
+    "Saṃyutta Nikāya 28.10 (SN28.10); lit. discourse with Sucimukhī",
+    "✔"
    ]
   ],
-  "count": 9
+  "count": 10
+ },
+ "names of heavens": {
+  "data": [
+   [
+    "aviha 1",
+    "masc",
+    "name of a heavenly realm",
+    "✔"
+   ],
+   [
+    "tidasa 3",
+    "nt",
+    "Tavatimsa heaven; lit. thirty (three)",
+    "✔"
+   ],
+   [
+    "vehapphala 1",
+    "masc",
+    "name of a heavenly realm; name of a class of heavenly beings; lit. sky fruit",
+    "✔"
+   ],
+   [
+    "suddhāvāsa 1",
+    "masc",
+    "name of five heavens in the Brahma realm; lit. pure land",
+    "✔"
+   ],
+   [
+    "subhakiṇha 1",
+    "masc",
+    "name of a heavenly realm; name of a class of deities; lit. total beauty",
+    "✔"
+   ]
+  ],
+  "count": 5
  },
  "types of lightning": {
   "data": [
@@ -37029,7 +50390,7 @@ var family_set_json = {
    [
     "vicakkā",
     "fem",
-    "name of a type of lightning",
+    "name of a type of lightning; forked lightning",
     "✔"
    ],
    [
@@ -37171,118 +50532,88 @@ var family_set_json = {
   ],
   "count": 3
  },
- "types of supernatural beings": {
+ "suttas of Saṃyutta Nikāya 42": {
   "data": [
    [
-    "asura 1",
-    "masc",
-    "titan; anti-god; enemy of the devas; lit. anti-hero",
+    "caṇḍasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.1 (SN42.1); lit. discourse with Caṇḍa",
     "✔"
    ],
    [
-    "kinnara",
-    "masc",
-    "mythical creature with the head of a horse and the body of a man; lit. what kind of man?",
-    "◑"
-   ],
-   [
-    "kinnarī",
-    "fem",
-    "mythical creature with the head of a horse and the body of a woman; lit. what kind of woman?",
+    "tālapuṭasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.2 (SN42.2); lit. discourse with Tālapuṭa",
     "✔"
    ],
    [
-    "kumbhaṇḍa 2",
-    "masc",
-    "type of supernatural being; daemon; lit. (with testicles lika a) pumpkin",
+    "yodhājīvasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 42.3 (SN42.3); lit. discourse on the warrior",
     "✔"
    ],
    [
-    "gandhabba 1",
-    "masc",
-    "demigod; heavenly musician; class of mythological beings",
+    "hatthārohasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.4 (SN42.4); lit. discourse on the elephant cavalryman",
     "✔"
    ],
    [
-    "garuḷa",
-    "masc",
-    "name of a mythical bird",
+    "assārohasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.5 (SN42.5); lit. discourse on the horse cavalryman",
     "✔"
    ],
    [
-    "deva 1",
-    "masc",
-    "deity; god",
+    "asibandhakaputtasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.6 (SN42.6); lit. discourse with Asibandhaka's son",
     "✔"
    ],
    [
-    "devatā",
-    "fem",
-    "deity; god",
+    "khettūpamasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.7 (SN42.7); lit. discourse on the simile of the field",
     "✔"
    ],
    [
-    "devaputta",
-    "masc",
-    "young deity; minor god; lit. child of god",
+    "saṅkhadhamasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.8 (SN42.8); lit. discourse on the conch blower",
     "✔"
    ],
    [
-    "nāga 2",
-    "masc",
-    "dragon; drake; supernatural shape-shifting serpent",
+    "kulasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 42.9 (SN42.9); lit. discourse on families",
     "✔"
    ],
    [
-    "pisāca",
-    "masc",
-    "goblin; evil spirit; daemon; devil",
+    "maṇicūḷakasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.10 (SN42.10); lit. discourse with Maṇicūḷaka",
     "✔"
    ],
    [
-    "pisācaka",
-    "masc",
-    "goblin; evil spirit; daemon; devil",
+    "bhadrakasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.11 (SN42.11); lit. discourse with Bhadraka",
     "✔"
    ],
    [
-    "pisācinī",
-    "fem",
-    "female goblin; she-devil; daemoness; succubus",
+    "rāsiyasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.12 (SN42.12); lit. discourse with Rāsiya",
     "✔"
    ],
    [
-    "brahma 1",
-    "masc",
-    "God; creator god",
-    "✔"
-   ],
-   [
-    "brahmapurohita",
-    "masc",
-    "high priest of Brahma",
-    "✔"
-   ],
-   [
-    "yakkha 1",
-    "masc",
-    "(either protective or malevolent) spirit; supernatural being; daemon",
-    "✔"
-   ],
-   [
-    "rakkhasa",
-    "masc",
-    "daemon; goblin; ogre; spirit guardian; lit. protective",
-    "✔"
-   ],
-   [
-    "supaṇṇa",
-    "masc",
-    "supernatural bird; arch-enemy of the nāgas; lit. beautiful wings",
+    "pāṭaliyasutta",
+    "nt",
+    "Saṃyutta Nikāya 42.13 (SN42.13); lit. discourse with Pāṭaliya",
     "✔"
    ]
   ],
-  "count": 18
+  "count": 13
  },
  "seven treasures": {
   "data": [
@@ -37330,6 +50661,137 @@ var family_set_json = {
    ]
   ],
   "count": 7
+ },
+ "suttas of Saṃyutta Nikāya 15": {
+  "data": [
+   [
+    "tiṇakaṭṭhasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.1 (SN15.1); lit. grass and twigs",
+    "✔"
+   ],
+   [
+    "pathavīsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 15.2 (SN15.2); lit. discourse on the earth",
+    "✔"
+   ],
+   [
+    "assusutta",
+    "nt",
+    "Saṃyutta Nikāya 15.3 (SN15.3); lit. discourse on tears",
+    "✔"
+   ],
+   [
+    "khīrasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.4 (SN15.4); lit. discourse on milk",
+    "✔"
+   ],
+   [
+    "pabbatasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 15.5 (SN15.5); lit. discourse on the mountain",
+    "✔"
+   ],
+   [
+    "sāsapasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.6 (SN15.6); lit. discourse on the mustard seed",
+    "✔"
+   ],
+   [
+    "sāvakasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.7 (SN15.7); lit. discourse on the disciple",
+    "✔"
+   ],
+   [
+    "gaṅgāsutta",
+    "nt",
+    "Saṃyutta Nikāya 15.8 (SN15.8); lit. discourse on the Ganges",
+    "✔"
+   ],
+   [
+    "daṇḍasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 15.9 (SN15.9); lit. discourse on the stick",
+    "✔"
+   ],
+   [
+    "puggalasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 15.10 (SN15.10); lit. discourse about a person",
+    "✔"
+   ],
+   [
+    "duggatasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.11 (SN15.11); lit. discourse on faring badly",
+    "✔"
+   ],
+   [
+    "sukhitasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.12 (SN15.12); lit. discourse on the comfortable",
+    "✔"
+   ],
+   [
+    "tiṃsamattasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.13 (SN15.13); lit. discourse on thirty in number",
+    "✔"
+   ],
+   [
+    "mātusutta 1",
+    "nt",
+    "Saṃyutta Nikāya 15.14 (SN15.14); lit. discourse on mothers",
+    "✔"
+   ],
+   [
+    "pitusutta",
+    "nt",
+    "Saṃyutta Nikāya 15.15 (SN15.15); lit. discourse on fathers",
+    "✔"
+   ],
+   [
+    "bhātusutta",
+    "nt",
+    "Saṃyutta Nikāya 15.16 (SN15.16); lit. discourse on brothers",
+    "✔"
+   ],
+   [
+    "bhaginisutta",
+    "nt",
+    "Saṃyutta Nikāya 15.17 (SN15.17); lit. discourse on sisters",
+    "✔"
+   ],
+   [
+    "puttasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 15.18 (SN15.18); lit. discourse on sons",
+    "✔"
+   ],
+   [
+    "dhītusutta",
+    "nt",
+    "Saṃyutta Nikāya 15.19 (SN15.19); lit. discourse on daughters",
+    "✔"
+   ],
+   [
+    "vepullapabbatasutta",
+    "nt",
+    "Saṃyutta Nikāya 15.20 (SN15.20); lit. discourse on Vepulla mountain",
+    "✔"
+   ],
+   [
+    "mātāpita",
+    "masc",
+    "in reference to SN15.14 Mātusutta and SN15.15 Pitusutta; lit. mother and father",
+    "✔"
+   ]
+  ],
+  "count": 21
  },
  "formless attainments": {
   "data": [
@@ -37418,6 +50880,83 @@ var family_set_json = {
    ]
   ],
   "count": 9
+ },
+ "suttas of Saṃyutta Nikāya 20": {
+  "data": [
+   [
+    "kūṭasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 20.1 (SN20.1); lit. discourse on the ridge",
+    "✔"
+   ],
+   [
+    "nakhasikhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 20.2 (SN20.2); lit. discourse on the tip of the nail",
+    "✔"
+   ],
+   [
+    "kulasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 20.3 (SN20.3); lit. discourse on families",
+    "✔"
+   ],
+   [
+    "okkhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 20.4 (SN20.4); lit. discourse on the cauldron",
+    "✔"
+   ],
+   [
+    "sattisutta 3",
+    "nt",
+    "Saṃyutta Nikāya 20.5 (SN20.5); lit. discourse on the spear",
+    "✔"
+   ],
+   [
+    "dhanuggahasutta",
+    "nt",
+    "Saṃyutta Nikāya 20.6 (SN20.6); lit. discourse on the archer",
+    "✔"
+   ],
+   [
+    "āṇisutta",
+    "nt",
+    "Saṃyutta Nikāya 20.7 (SN20.7); lit. discourse on the pin",
+    "✔"
+   ],
+   [
+    "kaliṅgarasutta",
+    "nt",
+    "Saṃyutta Nikāya 20.8 (SN20.8); lit. discourse on wooded blocks",
+    "✔"
+   ],
+   [
+    "nāgasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 20.9 (SN20.9); lit. discourse on the bull elephant",
+    "✔"
+   ],
+   [
+    "biḷārasutta",
+    "nt",
+    "Saṃyutta Nikāya 20.10 (SN20.10); lit. discourse on the cat",
+    "✔"
+   ],
+   [
+    "siṅgālasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 20.11 (SN20.11); lit. discourse on the jackal",
+    "✔"
+   ],
+   [
+    "dutiyasiṅgālasutta",
+    "nt",
+    "Saṃyutta Nikāya 20.12 (SN20.12); lit. second discourse on the jackal",
+    "✔"
+   ]
+  ],
+  "count": 12
  },
  "musical instruments": {
   "data": [
@@ -37514,94 +51053,229 @@ var family_set_json = {
   ],
   "count": 15
  },
- "medicines": {
+ "vaggas of the Saṃyutta Nikāya 23": {
   "data": [
    [
-    "āmala",
+    "paṭhamavagga 10",
     "masc",
-    "emblic myrobalan tree; Phyllanthus Emblica",
+    "Chapter 1 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya (SN23.1-10)",
     "✔"
    ],
    [
-    "āmalaka 1",
-    "nt",
-    "fruit of emblic myrobalan; amla; nellie; Phyllanthus Emblica",
-    "◑"
-   ],
-   [
-    "eraṇḍatela",
-    "nt",
-    "castor oil",
-    "✔"
-   ],
-   [
-    "kuṭaja",
+    "dutiyavagga 10",
     "masc",
-    "medicinal tree; Wrightia antidysenterica; Holarrhena antidysenterica; vermicide",
+    "Chapter 2 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya (SN23.11-22)",
     "✔"
    ],
    [
-    "goṭṭha 2",
-    "nt",
-    "mountain pomegranate; emetic nut; Catunaregam spinosa; lit. cow place",
-    "✔"
-   ],
-   [
-    "tulasī",
-    "fem",
-    "holy basil; tulsi; Ocimum sanctum",
-    "✔"
-   ],
-   [
-    "tela",
-    "nt",
-    "(sesame) oil; lit. from sesame",
-    "✔"
-   ],
-   [
-    "bilaṅga 2",
+    "āyācanavagga 1",
     "masc",
-    "false black pepper; white-flowered embelia; Embelia ribes",
+    "Chapter 3 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on imploring",
     "✔"
    ],
    [
-    "madhukatela",
-    "nt",
-    "Mahua oil",
-    "✔"
-   ],
-   [
-    "marica",
-    "nt",
-    "black pepper; Piper nigrum",
-    "✔"
-   ],
-   [
-    "maricacuṇṇa",
-    "nt",
-    "black pepper powder",
-    "✔"
-   ],
-   [
-    "loṇasovīraka",
+    "upanisinnavagga",
     "masc",
-    "name of a medicinal tonic; lit. salty sour gruel",
-    "✔"
-   ],
-   [
-    "sulasipaṇṇa",
-    "nt",
-    "holy basil leaf; tulsi leaves; leaves of Ocimum sanctum",
-    "✔"
-   ],
-   [
-    "sulasī",
-    "masc",
-    "holy basil; tulsi; Ocimum sanctum",
+    "Chapter 4 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on sitting nearby",
     "✔"
    ]
   ],
-  "count": 14
+  "count": 4
+ },
+ "vaggas of the Saṃyutta Nikāya 12": {
+  "data": [
+   [
+    "buddhavagga 1",
+    "masc",
+    "Chapter 1 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on the Buddha",
+    "✔"
+   ],
+   [
+    "āhāravagga",
+    "masc",
+    "Chapter 2 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on nutriment",
+    "✔"
+   ],
+   [
+    "dasabalavagga",
+    "masc",
+    "Chapter 3 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on ten powers",
+    "✔"
+   ],
+   [
+    "kaḷārakhattiyavagga",
+    "masc",
+    "Chapter 4 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on Kaḷārakhattiya",
+    "✔"
+   ],
+   [
+    "gahapativagga 2",
+    "masc",
+    "Chapter 5 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on householders",
+    "✔"
+   ],
+   [
+    "dukkhavagga",
+    "masc",
+    "Chapter 6 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on suffering",
+    "✔"
+   ],
+   [
+    "mahāvagga 04",
+    "masc",
+    "Chapter 7 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. great chapter",
+    "✔"
+   ],
+   [
+    "samaṇabrāhmaṇavagga",
+    "masc",
+    "Chapter 8 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on ascetics and Brahmans",
+    "✔"
+   ]
+  ],
+  "count": 8
+ },
+ "suttas of Saṃyutta Nikāya 10": {
+  "data": [
+   [
+    "indakasutta",
+    "nt",
+    "Saṃyutta Nikāya 10.1 (SN10.1); lit. discourse with Indaka",
+    "✔"
+   ],
+   [
+    "sakkanāmasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 10.2 (SN10.2); lit. discourse on called Sakka",
+    "✔"
+   ],
+   [
+    "sūcilomasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 10.3 (SN10.3); lit. discourse on having needles as hair",
+    "✔"
+   ],
+   [
+    "maṇibhaddasutta",
+    "nt",
+    "Saṃyutta Nikāya 10.4 (SN10.4); lit. discourse with Auspicious Jewel",
+    "✔"
+   ],
+   [
+    "sānusutta",
+    "nt",
+    "Saṃyutta Nikāya 10.5 (SN10.5); lit. disourse with Sānu",
+    "✔"
+   ],
+   [
+    "piyaṅkarasutta",
+    "nt",
+    "Saṃyutta Nikāya 10.6 (SN10.6); lit. discourse with Piyaṅkara",
+    "✔"
+   ],
+   [
+    "punabbasusutta",
+    "nt",
+    "Saṃyutta Nikāya 10.7 (SN10.7); lit. discourse with Punabbasu",
+    "✔"
+   ],
+   [
+    "sudattasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 10.8 (SN10.8); lit. discourse about Sudatta",
+    "✔"
+   ],
+   [
+    "paṭhamasukkāsutta",
+    "nt",
+    "Saṃyutta Nikāya 10.9 (SN10.9); lit. first discourse with Sukkā",
+    "✔"
+   ],
+   [
+    "dutiyasukkāsutta",
+    "nt",
+    "Saṃyutta Nikāya 10.10 (SN10.10); lit. second discourse with Sukkā",
+    "✔"
+   ],
+   [
+    "cīrāsutta",
+    "nt",
+    "Saṃyutta Nikāya 10.11 (SN10.11); lit. discourse with Cīrā",
+    "✔"
+   ],
+   [
+    "āḷavakasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 10.12 (SN10.12); lit. discourse with Āḷavaka",
+    "✔"
+   ]
+  ],
+  "count": 12
+ },
+ "suttas of Saṃyutta Nikāya 5": {
+  "data": [
+   [
+    "āḷavikāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.1 (SN5.1); lit. discourse about Āḷavikā",
+    "✔"
+   ],
+   [
+    "somāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.2 (SN5.2); lit. discourse about Somā",
+    "✔"
+   ],
+   [
+    "kisāgotamīsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.3 (SN5.3); lit. discourse about Skinny Gotamī",
+    "✔"
+   ],
+   [
+    "vijayāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.4 (SN5.4); lit. discourse about Vijayā",
+    "✔"
+   ],
+   [
+    "uppalavaṇṇāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.5 (SN5.5); lit. discourse about Uppalavaṇṇā",
+    "✔"
+   ],
+   [
+    "cālāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.6 (SN5.6); lit. discourse about Cālā",
+    "✔"
+   ],
+   [
+    "upacālāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.7 (SN5.7); lit. discourse about Upacālā",
+    "✔"
+   ],
+   [
+    "sīsupacālāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.8 (SN5.8); lit. discourse about Sīsupacālā",
+    "✔"
+   ],
+   [
+    "selāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.9 (SN5.9); lit. discourse about Selā",
+    "✔"
+   ],
+   [
+    "vajirāsutta",
+    "nt",
+    "Saṃyutta Nikāya 5.10 (SN5.10); lit. discourse about Vajirā",
+    "✔"
+   ]
+  ],
+  "count": 10
  },
  "Sri Lanka": {
   "data": [
@@ -37715,7 +51389,19 @@ var family_set_json = {
    [
     "itibhavābhavakathā",
     "fem",
-    "such talk about existence or nonexistence; discussion about this or that state of existence",
+    "such talk about existence or nonexistence; discussion about this or that state of existence; (comm) (or) such talk about gain and loss; (or) such talk about sensual pleasure and self-mortification",
+    "✔"
+   ],
+   [
+    "khaṇḍākhaṇḍa",
+    "masc",
+    "bits and pieces; small fragments",
+    "✔"
+   ],
+   [
+    "khaṇḍākhaṇḍika",
+    "adj",
+    "split in pieces; fragmented",
     "✔"
    ],
    [
@@ -37723,12 +51409,24 @@ var family_set_json = {
     "ind",
     "into bits and pieces; into small fragments",
     "✔"
+   ],
+   [
+    "bhavābhava 1",
+    "masc",
+    "any state of existence; repeated existence",
+    "✔"
    ]
   ],
-  "count": 3
+  "count": 6
  },
  "names of mountains": {
   "data": [
+   [
+    "indakūṭa",
+    "masc",
+    "name of a mountain; lit. Inda's peak",
+    "✔"
+   ],
    [
     "ujjuhāna",
     "masc",
@@ -37820,6 +51518,12 @@ var family_set_json = {
     "◑"
    ],
    [
+    "dakkhiṇāgiri",
+    "masc",
+    "southern mountains; hills to the south (of Rājagaha)",
+    "✔"
+   ],
+   [
     "nesādaka",
     "masc",
     "name of a mountain",
@@ -37844,6 +51548,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "pācīnavaṃsa",
+    "masc",
+    "previous name of Vepulla mountain; lit. eastern bamboo",
+    "✔"
+   ],
+   [
     "mahāmeru",
     "masc",
     "name of a mountain; lit. great mount Meru",
@@ -37853,6 +51563,12 @@ var family_set_json = {
     "meru",
     "masc",
     "mythical mountain at the centre of the universe",
+    "✔"
+   ],
+   [
+    "vaṅkaka 2",
+    "masc",
+    "previous name of Vepulla mountain; lit. small crooked",
     "✔"
    ],
    [
@@ -37871,6 +51587,12 @@ var family_set_json = {
     "vepulla 2",
     "masc",
     "name of a mountain near to Rājagaha; lit. massive",
+    "✔"
+   ],
+   [
+    "vepullapabbata",
+    "masc",
+    "mount Vepulla; lit. massive mountain",
     "✔"
    ],
    [
@@ -37898,13 +51620,19 @@ var family_set_json = {
     "✔"
    ],
    [
+    "supassa",
+    "masc",
+    "previous name of Vepulla mountain; lit. good slope",
+    "✔"
+   ],
+   [
     "seta 2",
     "masc",
     "name of a mountain peak in the Himalayas; lit. white",
     "✔"
    ]
   ],
-  "count": 29
+  "count": 35
  },
  "seasons": {
   "data": [
@@ -37951,7 +51679,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ghamma",
+    "ghamma 1",
     "nt",
     "heat; hot season",
     "✔"
@@ -37965,7 +51693,7 @@ var family_set_json = {
    [
     "pāvusa 1",
     "masc",
-    "rainy season; monsoon",
+    "rainy season; monsoon; lit. actively raining",
     "✔"
    ],
    [
@@ -37983,13 +51711,13 @@ var family_set_json = {
    [
     "vappakāla",
     "masc",
-    "planting season; October-November; lit. sowing time",
+    "time for sowing; planting season; October-November; lit. sowing time",
     "✔"
    ],
    [
     "vappanakāla",
     "masc",
-    "sowing season",
+    "time when sowing; planting season",
     "✔"
    ],
    [
@@ -38070,6 +51798,12 @@ var family_set_json = {
  "five hindrances": {
   "data": [
    [
+    "uddhaccakukuccanīvaraṇa",
+    "nt",
+    "obstacle of restlessness and fidgetiness; hindrance of agitation and edginess",
+    "✔"
+   ],
+   [
     "uddhaccakukkuccanīvaraṇa",
     "nt",
     "obstacle of restlessness and fidgetiness; hindrance of agitation and edginess",
@@ -38078,7 +51812,13 @@ var family_set_json = {
    [
     "kāmacchandanīvaraṇa",
     "nt",
-    "obstacle of interest in sensual pleasure; hindrance of sensual interest",
+    "obstacle that is interest in sensual pleasure; hindrance of sensual interest",
+    "✔"
+   ],
+   [
+    "thinamiddhanīvaraṇa",
+    "nt",
+    "obstacle that is dullness and drowsiness; hindrance of sloth and torpor",
     "✔"
    ],
    [
@@ -38090,31 +51830,172 @@ var family_set_json = {
    [
     "byāpādanīvaraṇa",
     "nt",
-    "obstacle of ill-will; hindrance of disliking",
+    "obstacle that is ill-will; hindrance of disliking",
     "✔"
    ],
    [
     "vicikicchānīvaraṇa",
     "nt",
-    "obstacle of doubt; hindrance of uncertainty",
+    "obstacle that is doubt; hindrance of uncertainty",
     "✔"
    ]
   ],
-  "count": 5
+  "count": 7
+ },
+ "suttas of Saṃyutta Nikāya 21": {
+  "data": [
+   [
+    "kolitasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.1 (SN21.1); lit. discourse with Kolita",
+    "✔"
+   ],
+   [
+    "upatissasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.2 (SN21.2); lit. discourse with Upatissa",
+    "✔"
+   ],
+   [
+    "ghaṭasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.3 (SN21.3); lit. discourse on the earthen jar",
+    "✔"
+   ],
+   [
+    "navasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.4 (SN21.4); lit. discourse on the junior monk",
+    "✔"
+   ],
+   [
+    "sujātasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.5 (SN21.5); lit. discourse with Sujāta",
+    "✔"
+   ],
+   [
+    "lakuṇḍakabhaddiyasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.6 (SN21.6); lit. discourse on the lucky dwarf",
+    "✔"
+   ],
+   [
+    "visākhasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 21.7 (SN21.7); lit. discourse with Visākha",
+    "✔"
+   ],
+   [
+    "nandasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 21.8 (SN21.8); lit. discourse with Nanda",
+    "✔"
+   ],
+   [
+    "tissasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 21.9 (SN21.9); lit. discourse with Tissa",
+    "✔"
+   ],
+   [
+    "theranāmakasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.10 (SN21.10); lit. discourse on a monk called senior",
+    "✔"
+   ],
+   [
+    "mahākappinasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 21.11 (SN21.11); lit. discourse with Mahākappina",
+    "✔"
+   ],
+   [
+    "sahāyakasutta",
+    "nt",
+    "Saṃyutta Nikāya 21.12 (SN21.12); lit. discourse on friends",
+    "✔"
+   ],
+   [
+    "ghaṭa 1.2",
+    "masc",
+    "in reference to SN21.2 Ghaṭasutta; lit. earthen jar",
+    "✔"
+   ],
+   [
+    "theranāma",
+    "masc",
+    "in reference to SN21.10 Theranāmakasutta; lit. called senior",
+    "✔"
+   ]
+  ],
+  "count": 14
+ },
+ "books of the Majjhima Nikāya": {
+  "data": [
+   [
+    "mūlapaṇṇāsaka 1",
+    "nt",
+    "Book 1 of the Majjhima Nikāya; MN1-50; lit. root fifty",
+    "◑"
+   ],
+   [
+    "mūlapaṇṇāsapāḷi",
+    "fem",
+    "Book 1 of the Majjhima Nikāya; MN1-50; lit. canonical text of the root fifty",
+    "✔"
+   ],
+   [
+    "majjhimapaṇṇāsaka 1",
+    "nt",
+    "Book 2 of the Majjhima Nikāya; MN51-100; lit. middle fifty",
+    "◑"
+   ],
+   [
+    "majjhimapaṇṇāsapāḷi",
+    "fem",
+    "Book 2 of the Majjhima Nikāya; MN51-100; lit. canonical text of the middle fifty",
+    "✔"
+   ],
+   [
+    "uparipaṇṇāsaka 1",
+    "nt",
+    "Book 3 of the Majjhima Nikāya; MN101-152; lit. last fifty",
+    "✔"
+   ],
+   [
+    "uparipaṇṇāsapāḷi",
+    "fem",
+    "Book 3 of the Majjhima Nikāya; MN101-152; lit. canonical text of the last fifty",
+    "✔"
+   ]
+  ],
+  "count": 6
+ },
+ "vaggas of the Aṅguttara Nikāya 5": {
+  "data": [
+   [
+    "upāsakavagga 2",
+    "masc",
+    "Chapter 18 of Pañcakanipāta, Aṅguttara Nikāya 5.171-180",
+    "✔"
+   ]
+  ],
+  "count": 1
  },
  "types of elephants": {
   "data": [
    [
     "uposatha 4",
     "nt",
-    "name of a types of elephant; lit. living near",
-    "◑"
+    "name of a type of elephant; lit. living near",
+    "✔"
    ],
    [
     "uposathachaddanta",
     "nt",
     "names of two types of elephants; lit. observance and six-tusked",
-    "◑"
+    "✔"
    ],
    [
     "kaṇerukā",
@@ -38126,7 +52007,7 @@ var family_set_json = {
     "kālāvaka",
     "nt",
     "name of a type of elephant; (comm) normal species of elephant",
-    "◑"
+    "✔"
    ],
    [
     "kāḷārikā",
@@ -38137,8 +52018,8 @@ var family_set_json = {
    [
     "gaṅgeyya 1",
     "nt",
-    "name of a type of elephant; lit. living long the Ganges river",
-    "◑"
+    "name of a type of elephant; lit. from the Ganges river",
+    "✔"
    ],
    [
     "gandha 3",
@@ -38150,7 +52031,7 @@ var family_set_json = {
     "gandhamaṅgalahema",
     "nt",
     "name of three types of elephants; lit. fragrant, auspicious and gold",
-    "◑"
+    "✔"
    ],
    [
     "gandhahatthī",
@@ -38162,7 +52043,7 @@ var family_set_json = {
     "chaddanta 2",
     "nt",
     "name of a type of elephant; lit. with six tusks",
-    "◑"
+    "✔"
    ],
    [
     "tamba 1",
@@ -38173,8 +52054,8 @@ var family_set_json = {
    [
     "tambapiṅgala",
     "nt",
-    "names of two type of elephants; lit. copper and tawny",
-    "◑"
+    "names of two types of elephants; lit. copper and tawny",
+    "✔"
    ],
    [
     "pakatihatthikula",
@@ -38186,7 +52067,7 @@ var family_set_json = {
     "paṇḍara 3",
     "nt",
     "name of a type of elephant; lit. white; pale",
-    "◑"
+    "✔"
    ],
    [
     "piṅgala 2",
@@ -38222,30 +52103,65 @@ var family_set_json = {
     "hema 2",
     "nt",
     "name of a type of elephant; lit. gold",
-    "◑"
+    "✔"
    ]
   ],
   "count": 20
  },
+ "musical notes": {
+  "data": [
+   [
+    "usabha 7",
+    "masc",
+    "second of the seven primary musical notes",
+    "◑"
+   ],
+   [
+    "gandhāra 3",
+    "masc",
+    "third of the seven primary musical notes",
+    "◑"
+   ],
+   [
+    "chajja",
+    "masc",
+    "first of the seven primary musical notes",
+    "◑"
+   ],
+   [
+    "dhevata",
+    "masc",
+    "sixth of the seven primary musical notes",
+    "◑"
+   ],
+   [
+    "nisāda",
+    "masc",
+    "seventh of the seven primary musical notes; lit. sitting",
+    "◑"
+   ],
+   [
+    "pañcama 2",
+    "masc",
+    "fifth of the seven primary musical notes; lit. fifth",
+    "◑"
+   ],
+   [
+    "majjhima 8",
+    "masc",
+    "fourth of the seven primary musical notes",
+    "◑"
+   ]
+  ],
+  "count": 7
+ },
  "books of the Aṅguttara Nikāya": {
   "data": [
    [
-    "ekādasakanipāta 1",
+    "tikaṅguttara",
     "masc",
-    "Book 11 of the Aṅguttara Nikāya; Book of Elevens",
-    "◑"
-   ],
-   [
-    "catukkaṅguttara",
-    "masc",
-    "Book 4 of the Aṅguttara Nikāya; Book of Fours",
-    "◑"
-   ],
-   [
-    "catukkanipāta 1",
-    "masc",
-    "Book 4 of the Aṅguttara Nikāya; Book of Fours",
-    "◑"
+    "Book 3 of the Aṅguttara Nikāya; lit. three incremental",
+    "✔"
    ],
    [
     "tikanipāta 1",
@@ -38254,13 +52170,37 @@ var family_set_json = {
     "✔"
    ],
    [
+    "catukkaṅguttara",
+    "masc",
+    "Book 4 of the Aṅguttara Nikāya; Book of Fours; lit. four-group incremental",
+    "✔"
+   ],
+   [
+    "catukkanipāta 1",
+    "masc",
+    "Book 4 of the Aṅguttara Nikāya; Book of Fours",
+    "◑"
+   ],
+   [
     "sattakanipāta 4",
     "masc",
     "Book 7 of the Aṅguttara Nikāya; Book of Sevens",
     "◑"
+   ],
+   [
+    "navaṅguttara",
+    "masc",
+    "Book 9 of the Aṅguttara Nikāya; Book of Nines",
+    "✔"
+   ],
+   [
+    "ekādasakanipāta 1",
+    "masc",
+    "Book 11 of the Aṅguttara Nikāya; Book of Elevens",
+    "◑"
    ]
   ],
-  "count": 5
+  "count": 7
  },
  "tortures": {
   "data": [
@@ -38374,6 +52314,209 @@ var family_set_json = {
   ],
   "count": 4
  },
+ "vaggas of the Saṃyutta Nikāya 46": {
+  "data": [
+   [
+    "pabbatavagga",
+    "masc",
+    "Chapter 1 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the mountain",
+    "✔"
+   ],
+   [
+    "gilānavagga 2",
+    "masc",
+    "Chapter 2 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on illness",
+    "✔"
+   ],
+   [
+    "gaṅgāpeyyālavagga 02",
+    "masc",
+    "Chapter 9 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "balakaraṇīyavagga 2",
+    "masc",
+    "Chapter 11 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "✔"
+   ],
+   [
+    "esanāvagga 2",
+    "masc",
+    "Chapter 12 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "✔"
+   ],
+   [
+    "oghavagga 02",
+    "masc",
+    "Chapter 13 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 6
+ },
+ "vaggas of the Saṃyutta Nikāya 47": {
+  "data": [
+   [
+    "gaṅgāpeyyālavagga 03",
+    "masc",
+    "Chapter 6 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "balakaraṇīyavagga 3",
+    "masc",
+    "Chapter 8 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "✔"
+   ],
+   [
+    "esanāvagga 3",
+    "masc",
+    "Chapter 9 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "✔"
+   ],
+   [
+    "oghavagga 03",
+    "masc",
+    "Chapter 10 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 4
+ },
+ "vaggas of the Saṃyutta Nikāya 49": {
+  "data": [
+   [
+    "gaṅgāpeyyālavagga 06",
+    "masc",
+    "Chapter 1 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "balakaraṇīyavagga 4",
+    "masc",
+    "Chapter 3 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "✔"
+   ],
+   [
+    "esanāvagga 4",
+    "masc",
+    "Chapter 4 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "✔"
+   ],
+   [
+    "oghavagga 06",
+    "masc",
+    "Chapter 5 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 4
+ },
+ "vaggas of the Saṃyutta Nikāya 50": {
+  "data": [
+   [
+    "gaṅgāpeyyālavagga 07",
+    "masc",
+    "Chapter 1 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "oghavagga 07",
+    "masc",
+    "Chapter 5 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ],
+   [
+    "gaṅgāpeyyālavagga 08",
+    "masc",
+    "Chapter 6 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "esanāvagga 5",
+    "masc",
+    "Chapter 9 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "✔"
+   ],
+   [
+    "oghavagga 08",
+    "masc",
+    "Chapter 10 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 5
+ },
+ "vaggas of the Saṃyutta Nikāya 48": {
+  "data": [
+   [
+    "jarāvagga 2",
+    "masc",
+    "Chapter 5 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya (SN48.41)",
+    "✔"
+   ],
+   [
+    "gaṅgāpeyyālavagga 04",
+    "masc",
+    "Chapter 8 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "oghavagga 04",
+    "masc",
+    "Chapter 12 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ],
+   [
+    "gaṅgāpeyyālavagga 05",
+    "masc",
+    "Chapter 13 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "oghavagga 05",
+    "masc",
+    "Chapter 17 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 5
+ },
+ "vaggas of the Saṃyutta Nikāya 51": {
+  "data": [
+   [
+    "gaṅgāpeyyālavagga 09",
+    "masc",
+    "Chapter 4 of the Iddhipādasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "oghavagga 09",
+    "masc",
+    "Chapter 8 of the Iddhipādasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 34": {
+  "data": [
+   [
+    "gaṅgāpeyyālavagga 10",
+    "masc",
+    "Chapter 1 of the Jhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "✔"
+   ],
+   [
+    "oghavagga 10",
+    "masc",
+    "Chapter 5 of the Jhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
  "colours": {
   "data": [
    [
@@ -38427,19 +52570,19 @@ var family_set_json = {
    [
     "mañjiṭṭhaka",
     "adj",
-    "crimson red; pink",
+    "crimson red; magenta",
     "✔"
    ],
    [
     "mañjeṭṭhaka",
     "adj",
-    "crimson red; pink",
+    "crimson red; magenta",
     "✔"
    ],
    [
     "mañjeṭṭhika",
     "adj",
-    "crimson red; pink",
+    "crimson red; magenta",
     "✔"
    ],
    [
@@ -38457,7 +52600,7 @@ var family_set_json = {
    [
     "lohitaka 1",
     "adj",
-    "red",
+    "red; reddish",
     "✔"
    ],
    [
@@ -38465,6 +52608,12 @@ var family_set_json = {
     "adj",
     "red; red in colour; lit. bloody",
     "◑"
+   ],
+   [
+    "vinīla",
+    "adj",
+    "dark blue; purple; livid; (comm) white and red mixed with blue",
+    "✔"
    ],
    [
     "sukka 5",
@@ -38485,72 +52634,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 18
- },
- "chapters of the Majjhima Nikāya": {
-  "data": [
-   [
-    "opammavagga",
-    "masc",
-    "Chapter 3 of the Majjhima Nikāya; Chapter on Similes (MN21-30)",
-    "◑"
-   ],
-   [
-    "gahapativagga 1",
-    "masc",
-    "Chapter 6 of the Majjhima Nikāya; Chapter on Householders (MN51-60)",
-    "◑"
-   ],
-   [
-    "cūḷayamakavagga",
-    "masc",
-    "Chapter 5 of the Majjhima Nikāya; Lesser Chapter on Pairs (MN41-50)",
-    "✔"
-   ],
-   [
-    "bhikkhuvagga 1",
-    "masc",
-    "Chapter 7 of the Majjhima Nikāya; Chapter on Monks (MN61-70)",
-    "◑"
-   ],
-   [
-    "mahāyamakavagga",
-    "masc",
-    "Chapter 4 of the Majjhima Nikāya; Great Chapter on Pairs (MN31-40)",
-    "◑"
-   ],
-   [
-    "mūlapariyāyavagga",
-    "masc",
-    "Chapter 1 of the Majjhima Nikāya; Chapter on the Root Cause (MN1-10)",
-    "◑"
-   ],
-   [
-    "rājavagga 1",
-    "masc",
-    "Chapter 9 of the Majjhima Nikāya (MN81-90)",
-    "✔"
-   ],
-   [
-    "vibhaṅgavagga",
-    "masc",
-    "Chapter 14 of the Majjhima Nikāya; Chapter on Analysis (MN131-142)",
-    "◑"
-   ],
-   [
-    "sāleyyavagga",
-    "masc",
-    "Chapter 5 of the Majjhima Nikāya; Chapter about Sālā (MN41-50)",
-    "◑"
-   ],
-   [
-    "sīhanādavagga 1",
-    "masc",
-    "Chapter 2 of the Majjhima Nikāya; Chapter on the Lion's Roar (MN1-20)",
-    "◑"
-   ]
-  ],
-  "count": 10
+  "count": 19
  },
  "ten kinds of wives": {
   "data": [
@@ -38697,6 +52781,18 @@ var family_set_json = {
     "✔"
    ],
    [
+    "cariyāpiṭakaaṭṭhakathā",
+    "fem",
+    "commentary to the Cariyāpiṭaka",
+    "✔"
+   ],
+   [
+    "dīghamajjhimā",
+    "masc",
+    "Dīgha Nikāya and Majjhima Nikāya",
+    "✔"
+   ],
+   [
     "padarūpasiddhi",
     "fem",
     "name of grammatical treatise by Buddhappiya in the Kaccāyana tradition; lit. completion of the final form of the word",
@@ -38730,7 +52826,7 @@ var family_set_json = {
     "moggallāna 3",
     "nt",
     "name of an eminent grammatical treatise",
-    "◑"
+    "✔"
    ],
    [
     "moggallānabyākaraṇa",
@@ -38748,7 +52844,7 @@ var family_set_json = {
     "vajirabuddhi",
     "fem",
     "name of a Vinaya sub-commentary; Vajirabuddhiṭīkā; lit. diamond intelligence",
-    "◑"
+    "✔"
    ],
    [
     "vedallapiṭaka",
@@ -38784,16 +52880,16 @@ var family_set_json = {
     "sāratthadīpanīṭīkā",
     "fem",
     "sub-commentary on Vinaya, commenting on Buddhaghosa's Samantapāsādikā; lit. explaining the essence of the meaning sub-commentary",
-    "◑"
+    "✔"
    ],
    [
     "sumaṅgalavilāsinī",
     "fem",
-    "commentary on the Dīgha Nikāya compiled by Buddhaghosa; lit. Very Auspicious and Charming",
-    "◑"
+    "commentary on the Dīgha Nikāya compiled by Buddhaghosa; lit. very auspicious and charming",
+    "✔"
    ]
   ],
-  "count": 20
+  "count": 22
  },
  "seven grains": {
   "data": [
@@ -38813,7 +52909,7 @@ var family_set_json = {
     "kudrūsaka",
     "masc",
     "finger millet; Eleusine coracana",
-    "◑"
+    "✔"
    ],
    [
     "godhūma",
@@ -38878,7 +52974,7 @@ var family_set_json = {
     "moggallāna 3",
     "nt",
     "name of an eminent grammatical treatise",
-    "◑"
+    "✔"
    ],
    [
     "moggallānabyākaraṇa",
@@ -38925,7 +53021,7 @@ var family_set_json = {
     "pamattabandhu",
     "masc",
     "epithet of Māra; lit. relative of the careless",
-    "◑"
+    "✔"
    ],
    [
     "pāpimant 3",
@@ -38939,12 +53035,6 @@ var family_set_json = {
  "books of the Abhidhamma": {
   "data": [
    [
-    "kathāvatthu 3",
-    "nt",
-    "Book 5 of the Abhidhamma; Basis of the Argument",
-    "◑"
-   ],
-   [
     "dhammasaṅgaṇī",
     "fem",
     "Book 1 of the Abhidhamma; Enumeration of Phenomena",
@@ -38957,15 +53047,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "paṭṭhāna 2",
-    "nt",
-    "Book 7 of the Abhidhamma; Causes; lit. standing forward",
-    "◑"
-   ],
-   [
     "puggalapaññatti",
     "fem",
     "Book 4 of the Abhidhamma; Designation of Individuals",
+    "◑"
+   ],
+   [
+    "kathāvatthu 3",
+    "nt",
+    "Book 5 of the Abhidhamma; Basis of the Argument",
     "◑"
    ],
    [
@@ -38973,9 +53063,32 @@ var family_set_json = {
     "nt",
     "Book 6 of the Abhidhamma; Pairs",
     "◑"
+   ],
+   [
+    "paṭṭhāna 2",
+    "nt",
+    "Book 7 of the Abhidhamma; Causes; lit. standing forward",
+    "◑"
    ]
   ],
   "count": 6
+ },
+ "sections of the Vinaya": {
+  "data": [
+   [
+    "kathinakkhandhaka",
+    "masc",
+    "section on kathina",
+    "✔"
+   ],
+   [
+    "saṃghabhedakakkhandhaka",
+    "masc",
+    "section on schism in the monastic order",
+    "✔"
+   ]
+  ],
+  "count": 2
  },
  "six types of robe cloth": {
   "data": [
@@ -39017,6 +53130,190 @@ var family_set_json = {
    ]
   ],
   "count": 6
+ },
+ "vaggas of the Saṃyutta Nikāya 14": {
+  "data": [
+   [
+    "nānattavagga",
+    "masc",
+    "Chapter 1 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on diversity",
+    "✔"
+   ],
+   [
+    "dutiyavagga 05",
+    "masc",
+    "Chapter 2 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN14.11-22); lit. second chapter",
+    "✔"
+   ],
+   [
+    "kammapathavagga 1",
+    "masc",
+    "Chapter 3 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on courses of action",
+    "✔"
+   ],
+   [
+    "catutthavagga 1",
+    "masc",
+    "Chapter 4 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. fourth chapter",
+    "✔"
+   ]
+  ],
+  "count": 4
+ },
+ "suttas of Saṃyutta Nikāya 4": {
+  "data": [
+   [
+    "tapokammasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.1 (SN4.1); lit. discourse on ascetic practice",
+    "✔"
+   ],
+   [
+    "hatthirājavaṇṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.2 (SN4.2); lit. discourse about (appearing in) the form of an elephant king",
+    "✔"
+   ],
+   [
+    "subhasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 4.3 (SN4.3); lit. discourse with Subha",
+    "✔"
+   ],
+   [
+    "paṭhamamārapāsasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 4.4 (SN4.4); lit. first discourse on Mara's snare",
+    "✔"
+   ],
+   [
+    "dutiyamārapāsasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 4.5 (SN4.5); lit. second discourse on Māra's snare",
+    "✔"
+   ],
+   [
+    "sappasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.6 (SN4.6); lit. discourse about the snake",
+    "✔"
+   ],
+   [
+    "supatisutta",
+    "nt",
+    "Saṃyutta Nikāya 4.7 (SN4.7); lit. discourse about he sleeps",
+    "✔"
+   ],
+   [
+    "nandatisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 4.8 (SN4.8); lit. discourse on one rejoices",
+    "✔"
+   ],
+   [
+    "paṭhamaāyusutta",
+    "nt",
+    "Saṃyutta Nikāya 4.9 (SN4.9); lit. first discourse about life",
+    "✔"
+   ],
+   [
+    "dutiyaāyusutta",
+    "nt",
+    "Saṃyutta Nikāya 4.10 (SN4.10); lit. second discourse about life",
+    "✔"
+   ],
+   [
+    "pāsāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.11 (SN4.11); lit. discourse about the stone",
+    "✔"
+   ],
+   [
+    "kinnusīhasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.12 (SN4.12); lit. discourse on didn't the lion",
+    "✔"
+   ],
+   [
+    "sakalikasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 4.13 (SN4.13); lit. discourse on the splinter",
+    "✔"
+   ],
+   [
+    "patirūpasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.14 (SN4.14); lit. discourse on appropriate",
+    "✔"
+   ],
+   [
+    "mānasasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.15 (SN4.15); lit. discourse on mental",
+    "✔"
+   ],
+   [
+    "pattasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.16 (SN4.16); lit. discourse about the bowl",
+    "✔"
+   ],
+   [
+    "chaphassāyatanasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.17 (SN4.17); lit. discourse on the six fields of sense experience",
+    "✔"
+   ],
+   [
+    "piṇḍasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 4.18 (SN4.18); lit. discourse on alms-food",
+    "✔"
+   ],
+   [
+    "kassakasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.19 (SN4.19); lit. discourse on the farmer",
+    "✔"
+   ],
+   [
+    "rajjasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.20 (SN4.20); lit. discourse on kingship",
+    "✔"
+   ],
+   [
+    "sambahulasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 4.21 (SN4.21); lit. discourse on many",
+    "✔"
+   ],
+   [
+    "samiddhisutta 2",
+    "nt",
+    "Saṃyutta Nikāya 4.22 (SN4.22); lit. discourse about Samiddhi",
+    "✔"
+   ],
+   [
+    "godhikasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.23 (SN4.23); lit. discourse about Godhika",
+    "✔"
+   ],
+   [
+    "sattavassānubandhasutta",
+    "nt",
+    "Saṃyutta Nikāya 4.24 (SN4.24); lit. discourse about following for seven years",
+    "✔"
+   ],
+   [
+    "māradhītusutta",
+    "nt",
+    "Saṃyutta Nikāya 4.25 (SN4.25); lit. discourse on Māra's daughters",
+    "✔"
+   ]
+  ],
+  "count": 25
  },
  "materials": {
   "data": [
@@ -39146,6 +53443,12 @@ var family_set_json = {
     "✔"
    ],
    [
+    "bhuvādi",
+    "masc",
+    "(gram) √bhū etc.; group 1 roots which take the conjugational sign a",
+    "◑"
+   ],
+   [
     "bhūvādi",
     "masc",
     "(gram) √bhū etc.; group 1 roots which take the conjugational sign a",
@@ -39182,7 +53485,78 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 16
+  "count": 17
+ },
+ "collections of the Saṃyutta Nikāya": {
+  "data": [
+   [
+    "devatāsaṃyutta",
+    "nt",
+    "Chapter 1 of the Saṃyutta Nikāya; lit. connected with deities",
+    "✔"
+   ],
+   [
+    "dhātusaṃyutta",
+    "nt",
+    "Chapter 14 of the Saṃyutta Nikāya; lit. connected with elements",
+    "✔"
+   ],
+   [
+    "sāriputtasaṃyutta",
+    "nt",
+    "Chapter 28 of the Saṃyutta Nikāya; lit. connected wtih Sāriputta",
+    "✔"
+   ],
+   [
+    "jhānasaṃyutta 1",
+    "nt",
+    "Chapter 34 of the Saṃyutta Nikāya; lit. connected with jhāna",
+    "✔"
+   ],
+   [
+    "samādhisaṃyutta",
+    "nt",
+    "Chapter 34 of the Saṃyutta Nikāya; lit. connected with samādhi",
+    "✔"
+   ],
+   [
+    "vedanāsaṃyutta",
+    "nt",
+    "Chapter 36 of the Saṃyutta Nikāya; lit. connected with feeling",
+    "✔"
+   ],
+   [
+    "jhānasaṃyutta 2",
+    "nt",
+    "Chapter 53 of the Saṃyutta Nikāya; lit. connected with jhāna",
+    "✔"
+   ],
+   [
+    "devaputtasaṃyutta",
+    "nt",
+    "Saṃyutta Nikāya 2 (SN2); lit. connected with sons of god",
+    "✔"
+   ],
+   [
+    "kosalasaṃyutta",
+    "nt",
+    "Saṃyutta Nikāya 3 (SN3); lit. connected with Kosala",
+    "✔"
+   ],
+   [
+    "mārasaṃyutta",
+    "nt",
+    "Saṃyutta Nikāya 4 (SN4); lit. connected with Māra",
+    "✔"
+   ],
+   [
+    "valāha 1",
+    "masc",
+    "in reference to SN32 Valāhakasaṃyutta; lit. cloud",
+    "✔"
+   ]
+  ],
+  "count": 11
  },
  "epithets of Sakka": {
   "data": [
@@ -39202,6 +53576,12 @@ var family_set_json = {
     "devarāja",
     "masc",
     "king of the gods; divine ruler; epithet of Sakka",
+    "✔"
+   ],
+   [
+    "devaseṭṭha",
+    "masc",
+    "foremost among the deities; best of the gods; supreme deity; epithet of Sakka",
     "✔"
    ],
    [
@@ -39225,8 +53605,8 @@ var family_set_json = {
    [
     "magha 2",
     "masc",
-    "name of Sakka during a human life",
-    "◑"
+    "name of Sakka during a human life; epithet of Sakka; lit. bounty",
+    "✔"
    ],
    [
     "maghadeva 2",
@@ -39265,16 +53645,34 @@ var family_set_json = {
     "✔"
    ],
    [
+    "sahassakkha",
+    "masc",
+    "epithet of Sakka; lit. with a thousand eyes",
+    "✔"
+   ],
+   [
+    "sahassanetta",
+    "masc",
+    "epithet of Sakka; lit. with a thousand eyes",
+    "✔"
+   ],
+   [
     "sujampati",
     "masc",
     "epithet of Sakka; lit. Sujā's husband",
     "✔"
    ]
   ],
-  "count": 14
+  "count": 17
  },
  "books of the Vinayapiṭaka": {
   "data": [
+   [
+    "mahāvagga 01",
+    "masc",
+    "Book 3 of the Vinaya Piṭaka; lit. great section",
+    "✔"
+   ],
    [
     "khandhakaparivāra",
     "masc",
@@ -39284,26 +53682,56 @@ var family_set_json = {
    [
     "cūḷavagga 1",
     "masc",
-    "Book 4 of the Vinaya Piṭaka",
-    "◑"
+    "Book 4 of the Vinaya Piṭaka; lit. little section",
+    "✔"
    ],
    [
     "parivāra 4",
     "masc",
-    "Book 5 of the Vinaya Piṭaka; summary of the vinaya; lit. accessory",
-    "◑"
-   ],
-   [
-    "mahāvagga 01",
-    "masc",
-    "Book 3 of the Vinaya Piṭaka",
+    "Book 5 of the Vinaya Piṭaka; summary of the vinaya; lit. covering all around",
     "◑"
    ]
   ],
   "count": 4
  },
- "books of the Saṃyutta Nikāya": {
+ "parts of the Saṃyutta Nikāya": {
   "data": [
+   [
+    "sagāthāvagga 1",
+    "masc",
+    "Book 1 of the Saṃyutta Nikāya; lit. book of verses",
+    "✔"
+   ],
+   [
+    "sagāthāvaggasaṃyuttapāḷi",
+    "fem",
+    "Book 1 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, section with verses",
+    "✔"
+   ],
+   [
+    "nidānavagga",
+    "masc",
+    "Book 2 of the Saṃyutta Nikāya; lit. causation section",
+    "✔"
+   ],
+   [
+    "nidānavaggasaṃyuttapāḷi",
+    "fem",
+    "Book 2 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, the section on cause",
+    "✔"
+   ],
+   [
+    "khandhavagga",
+    "masc",
+    "Book 3 of the Saṃyutta Nikāya; lit. aggregates section",
+    "✔"
+   ],
+   [
+    "khandhavaggasaṃyuttapāḷi",
+    "fem",
+    "Book 3 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, the section on aggregates",
+    "✔"
+   ],
    [
     "khandhakavagga",
     "masc",
@@ -39311,51 +53739,16 @@ var family_set_json = {
     "◑"
    ],
    [
-    "khandhavagga",
-    "masc",
-    "Book 3 of the Saṃyutta Nikāya; Book of the Aggregates",
-    "◑"
-   ],
-   [
-    "nidānavagga",
-    "masc",
-    "Book 2 of the Saṃyutta Nikāya; Book of Causation",
-    "◑"
-   ],
-   [
-    "mahāvagga 03",
-    "masc",
-    "Book 5 of the Saṃyutta Nikāya; Great Book",
-    "◑"
-   ],
-   [
-    "sagāthāvagga 1",
-    "masc",
-    "Book 1 of the Saṃyutta Nikāya; Book of Verses",
-    "◑"
-   ],
-   [
     "saḷāyatanavagga 2",
     "masc",
-    "Book 4 of the Saṃyutta Nikāya; Book of the Six Sense Fields",
-    "◑"
-   ]
-  ],
-  "count": 6
- },
- "sections of the Saṃyutta Nikāya": {
-  "data": [
-   [
-    "khandhavaggasaṃyuttapāḷi",
-    "fem",
-    "Book 3 of the Saṃyutta Nikāya",
-    "◑"
+    "Book 4 of the Saṃyutta Nikāya; lit. section on the six sense fields",
+    "✔"
    ],
    [
-    "nidānavaggasaṃyuttapāḷi",
+    "saḷāyatanavaggasaṃyuttapāḷi",
     "fem",
-    "Book 2 of the Saṃyutta Nikāya",
-    "◑"
+    "Book 4 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, section on the six senses",
+    "✔"
    ],
    [
     "mahāvaggasaṃyuttapāḷi",
@@ -39364,38 +53757,143 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sagāthāvaggasaṃyuttapāḷi",
-    "fem",
-    "Book 1 of the Saṃyutta Nikāya",
-    "◑"
-   ],
-   [
-    "saḷāyatanavaggasaṃyuttapāḷi",
-    "fem",
-    "Book 4 of the Saṃyutta Nikāya",
+    "mahāvagga 03",
+    "masc",
+    "Book 5 of the Saṃyutta Nikāya; Great Book",
     "◑"
    ]
   ],
-  "count": 5
+  "count": 11
+ },
+ "suttas of Saṃyutta Nikāya 25": {
+  "data": [
+   [
+    "rūpasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 25.2 (SN25.2); lit. discourse on sights",
+    "✔"
+   ],
+   [
+    "samphassasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 25.4 (SN25.4); lit. discourse on sense experience",
+    "✔"
+   ],
+   [
+    "samphassajāsutta",
+    "nt",
+    "Saṃyutta Nikāya 25.5 (SN25.5); lit. discourse on born from experience",
+    "✔"
+   ],
+   [
+    "rūpasaññāsutta",
+    "nt",
+    "Saṃyutta Nikāya 25.6 (SN25.6); lit. discourse on perception of form",
+    "✔"
+   ],
+   [
+    "rūpasañcetanāsutta",
+    "nt",
+    "Saṃyutta Nikāya 25.7 (SN25.7); lit. discourse on intention about sights",
+    "✔"
+   ],
+   [
+    "rūpataṇhāsutta",
+    "nt",
+    "Saṃyutta Nikāya 25.8 (SN25.8); lit. discourse on craving for sights",
+    "✔"
+   ],
+   [
+    "pathavīdhātusutta",
+    "nt",
+    "Saṃyutta Nikāya 25.9 (SN25.9); lit. discourse on the solid state",
+    "✔"
+   ],
+   [
+    "khandhasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 25.10 (SN25.10); lit. discourse on the aggregates",
+    "✔"
+   ]
+  ],
+  "count": 8
+ },
+ "suttas of Saṃyutta Nikāya 26": {
+  "data": [
+   [
+    "samphassasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 26.4 (SN26.4); lit. discourse on sense experience",
+    "✔"
+   ],
+   [
+    "samphassajasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 26.5 (SN26.5); lit. discourse on born from experience",
+    "✔"
+   ],
+   [
+    "saññāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 26.6 (SN26.6); lit. discourse on perception",
+    "✔"
+   ],
+   [
+    "sañcetanāsutta 2",
+    "nt",
+    "Saṃyutta Nikāya 26.7 (SN26.7); lit. discourse on intention",
+    "✔"
+   ],
+   [
+    "dhātusutta 2",
+    "nt",
+    "Saṃyutta Nikāya 26.9 (SN26.9); lit. discourse on states",
+    "✔"
+   ],
+   [
+    "khandhasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 26.10 (SN26.10); lit. discourse on the aggregates",
+    "✔"
+   ]
+  ],
+  "count": 6
+ },
+ "suttas of Saṃyutta Nikāya 27": {
+  "data": [
+   [
+    "samphassasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 27.4 (SN27.4); lit. discourse on sense experience",
+    "✔"
+   ],
+   [
+    "samphassajasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 27.5 (SN27.5); lit. discourse on born from experience",
+    "✔"
+   ],
+   [
+    "sañcetanāsutta 3",
+    "nt",
+    "Saṃyutta Nikāya 27.7 (SN27.7); lit. discourse on intention",
+    "✔"
+   ],
+   [
+    "khandhasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 27.10 (SN27.10); lit. discourse on the aggregates",
+    "✔"
+   ]
+  ],
+  "count": 4
  },
  "days of the week": {
   "data": [
    [
-    "guruvāra",
-    "masc",
-    "Thursday; lit. day of Jupiter",
-    "◑"
-   ],
-   [
     "candavāra",
     "masc",
     "Monday; lit. day of the Moon",
-    "◑"
-   ],
-   [
-    "budhavāra",
-    "masc",
-    "Wednesday; lit. day of Mercury",
     "◑"
    ],
    [
@@ -39405,9 +53903,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "ravivāra",
+    "budhavāra",
     "masc",
-    "Sunday; lit. day of the Sun",
+    "Wednesday; lit. day of Mercury",
+    "◑"
+   ],
+   [
+    "guruvāra",
+    "masc",
+    "Thursday; lit. day of Jupiter",
     "◑"
    ],
    [
@@ -39421,44 +53925,213 @@ var family_set_json = {
     "masc",
     "Saturday; lit. day of Saturn",
     "◑"
+   ],
+   [
+    "ravivāra",
+    "masc",
+    "Sunday; lit. day of the Sun",
+    "◑"
    ]
   ],
   "count": 7
  },
- "suttas of the Saṃyutta Nikāya": {
+ "vaggas of the Saṃyutta Nikāya 24": {
   "data": [
    [
-    "ghaṭī",
+    "sotāpattivagga",
     "masc",
-    "in reference to Ghaṭīkārasutta (SN2.24)",
+    "Chapter 1 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on stream entry",
     "✔"
    ],
    [
-    "dutiyaaputtakasutta",
-    "nt",
-    "Saṃyutta Nikāya 3.20 (SN3.20)",
-    "◑"
-   ],
-   [
-    "paṭhamaaputtakasutta",
-    "nt",
-    "Saṃyutta Nikāya 3.19 (SN3.19)",
+    "dutiyagamanavagga",
+    "masc",
+    "Chapter 2 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. second chapter on the round",
     "✔"
    ],
    [
-    "bhārasutta",
-    "nt",
-    "Saṃyutta Nikāya 22.22 (SN22.22)",
+    "tatiyagamanavagga",
+    "masc",
+    "Chapter 3 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. third chapter on the round",
     "✔"
    ],
    [
-    "verocanaasurindasutta",
-    "nt",
-    "Saṃyutta Nikāya 11.8 (SN11.8)",
+    "catutthagamanavagga",
+    "masc",
+    "Chapter 4 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. fourth chapter on the round",
     "✔"
    ]
   ],
-  "count": 5
+  "count": 4
+ },
+ "vaggas of the Saṃyutta Nikāya 17": {
+  "data": [
+   [
+    "paṭhamavagga 07",
+    "masc",
+    "Chapter 1 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN17.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 07",
+    "masc",
+    "Chapter 2 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya SN17.11-20; lit. second chapter",
+    "✔"
+   ],
+   [
+    "tatiyavagga 4",
+    "masc",
+    "Chapter 3 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN17.21-30); lit. third chapter",
+    "✔"
+   ],
+   [
+    "catutthavagga 2",
+    "masc",
+    "Chapter 4 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. fourth chapter",
+    "✔"
+   ]
+  ],
+  "count": 4
+ },
+ "suttas of Saṃyutta Nikāya 51": {
+  "data": [
+   [
+    "viraddhasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 51.2 (SN51.2); lit. discourse on failed",
+    "✔"
+   ],
+   [
+    "ñāṇasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 51.9 (SN51.9); lit. discourse on understanding",
+    "✔"
+   ],
+   [
+    "pubbasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 51.11 (SN51.11); lit. discourse on before",
+    "✔"
+   ],
+   [
+    "moggallānasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 51.14 (SN51.14); lit. discourse with Moggallāna",
+    "✔"
+   ],
+   [
+    "paṭhamasamaṇabrāhmaṇasutta 5",
+    "nt",
+    "Saṃyutta Nikāya 51.16 (SN51.16); lit. first discourse on ascetics and brahmins",
+    "✔"
+   ],
+   [
+    "vibhaṅgasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 51.20 (SN51.20); lit. discourse on analysis",
+    "✔"
+   ],
+   [
+    "suddhikasutta 10",
+    "nt",
+    "Saṃyutta Nikāya 51.24 (SN51.24); lit. clean (version of the) discourse",
+    "✔"
+   ],
+   [
+    "paṭhamaānandasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 51.27 (SN51.27); lit. first discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "dutiyaānandasutta 3",
+    "nt",
+    "Saṃyutta Nikāya 51.28 (SN51.28); lit. second discourse with Ānanda",
+    "✔"
+   ],
+   [
+    "moggallānasutta 4",
+    "nt",
+    "Saṃyutta Nikāya 51.31 (SN51.31); lit. discourse with Moggallāna",
+    "✔"
+   ],
+   [
+    "tathāgatasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 51.32 (SN51.32); lit. discourse on the Such Become",
+    "✔"
+   ]
+  ],
+  "count": 11
+ },
+ "vaggas of the Saṃyutta Nikāya 3": {
+  "data": [
+   [
+    "paṭhamavagga 02",
+    "masc",
+    "Chapter 1 of the Kosalasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN3.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 01",
+    "masc",
+    "Chapter 2 of the Kosalasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN3.11-20); lit. second chapter",
+    "✔"
+   ],
+   [
+    "tatiyavagga 1",
+    "masc",
+    "Chapter 3 of the Kosalasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN3.21-25); lit. third chapter",
+    "✔"
+   ]
+  ],
+  "count": 3
+ },
+ "vaggas of the Saṃyutta Nikāya 4": {
+  "data": [
+   [
+    "paṭhamavagga 03",
+    "masc",
+    "Chapter 1 of the Mārasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN4.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 02",
+    "masc",
+    "Chapter 2 of the Mārasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN4.11-20); lit. second chapter",
+    "✔"
+   ],
+   [
+    "tatiyavagga 2",
+    "masc",
+    "Chapter 3 of the Mārasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN4.21-25); lit. third chapter",
+    "✔"
+   ]
+  ],
+  "count": 3
+ },
+ "vaggas of the Saṃyutta Nikāya 11": {
+  "data": [
+   [
+    "paṭhamavagga 05",
+    "masc",
+    "Chapter 1 of the Sakkasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN11.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 04",
+    "masc",
+    "Chapter 2 of the Sakkasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN11.11-20); lit. second chapter",
+    "✔"
+   ],
+   [
+    "tatiyavagga 3",
+    "masc",
+    "Chapter 3 of the Sakkasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN11.21-25); lit. third chapter",
+    "✔"
+   ]
+  ],
+  "count": 3
  },
  "five liberations": {
   "data": [
@@ -39518,7 +54191,19 @@ var family_set_json = {
    [
     "mañjiṭṭhā 1",
     "fem",
-    "crimson red dye; pink paint",
+    "crimson red dye; magenta paint",
+    "✔"
+   ],
+   [
+    "mañjeṭṭhā",
+    "fem",
+    "crimson red dye; magenta paint",
+    "✔"
+   ],
+   [
+    "mañjeṭṭhī",
+    "fem",
+    "crimson red dye; magenta paint",
     "✔"
    ],
    [
@@ -39546,7 +54231,7 @@ var family_set_json = {
     "✔"
    ]
   ],
-  "count": 8
+  "count": 10
  },
  "three eyes": {
   "data": [
@@ -39600,25 +54285,201 @@ var family_set_json = {
   ],
   "count": 4
  },
- "chapters of the Saṃyutta Nikāya": {
+ "suttas of Saṃyutta Nikāya 39": {
   "data": [
    [
-    "dhātusaṃyutta",
+    "sāmaṇḍakasutta",
     "nt",
-    "Chapter 14 of the Saṃyutta Nikāya; Connected Discourses on Elements",
+    "Saṃyutta Nikāya 39.1 (SN39.1); lit. discourse with Sāmaṇḍaka",
+    "✔"
+   ],
+   [
+    "dukkarasutta 2",
+    "nt",
+    "Saṃyutta Nikāya 39.2 (SN39.2); lit. discourse on difficult to do",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 37": {
+  "data": [
+   [
+    "paṭhamapeyyālavagga",
+    "masc",
+    "Chapter 1 of the Mātugāmasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. first chapter of elided repetitions",
+    "✔"
+   ],
+   [
+    "dutiyapeyyālavagga",
+    "masc",
+    "Chapter 2 of the Mātugāmasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. second chapter with elided repetitions",
+    "✔"
+   ],
+   [
+    "balavagga 1",
+    "masc",
+    "Chapter 3 of the Mātugāmasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on strengths",
+    "✔"
+   ]
+  ],
+  "count": 3
+ },
+ "vaggas of the Saṃyutta Nikāya 6": {
+  "data": [
+   [
+    "paṭhamavagga 04",
+    "masc",
+    "Chapter 1 of the Brahmasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN6.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 03",
+    "masc",
+    "Chapter 2 of the Brahmasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN6.11-15); lit. second chapter",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 15": {
+  "data": [
+   [
+    "paṭhamavagga 06",
+    "masc",
+    "Chapter 1 of the Anamataggasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN15.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 06",
+    "masc",
+    "Chapter 2 of the Anamataggasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN15.11-20); lit. second chapter",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 18": {
+  "data": [
+   [
+    "paṭhamavagga 08",
+    "masc",
+    "Chapter 1 of the Rāhulasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN18.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 08",
+    "masc",
+    "Chapter 2 of the Rāhulasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN18.11-22); lit. second chapter",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 19": {
+  "data": [
+   [
+    "paṭhamavagga 09",
+    "masc",
+    "Chapter 1 of the Lakkhaṇasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN19.1-10); lit. first chapter",
+    "✔"
+   ],
+   [
+    "dutiyavagga 09",
+    "masc",
+    "Chapter 2 of the Lakkhaṇasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN19.11-21); lit. second chapter",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 43": {
+  "data": [
+   [
+    "paṭhamavagga 11",
+    "masc",
+    "Chapter 1 of the Asaṅkhatasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya (SN43.1-11)",
+    "✔"
+   ],
+   [
+    "dutiyavagga 11",
+    "masc",
+    "Chapter 2 of the Asaṅkhatasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya (SN43.12-44)",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 52": {
+  "data": [
+   [
+    "rahogatavagga 2",
+    "masc",
+    "Chapter 1 of the Anuruddhasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on gone into seclusion",
+    "✔"
+   ],
+   [
+    "dutiyavagga 12",
+    "masc",
+    "Chapter 2 of the Anuruddhasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya (SN52.11-24)",
+    "✔"
+   ]
+  ],
+  "count": 2
+ },
+ "vaggas of the Saṃyutta Nikāya 54": {
+  "data": [
+   [
+    "dutiyavagga 13",
+    "masc",
+    "Chapter 2 of the Ānāpānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya (SN54.11-20)",
+    "✔"
+   ]
+  ],
+  "count": 1
+ },
+ "vaggas of the Aṅguttara Nikāya 1": {
+  "data": [
+   [
+    "dutiyavagga 14",
+    "masc",
+    "Chapter 15 of Ekakanipāta, Aṅguttara Nikāya 1.198-208",
+    "✔"
+   ],
+   [
+    "dutiyavagga 15",
+    "masc",
+    "Chapter 22 of Ekakanipāta, Aṅguttara Nikāya 1.278-286",
+    "✔"
+   ],
+   [
+    "dutiyavagga 16",
+    "masc",
+    "Chapter 25 of Ekakanipāta, Aṅguttara Nikāya 1.298-307",
+    "✔"
+   ]
+  ],
+  "count": 3
+ },
+ "measures of weight": {
+  "data": [
+   [
+    "pala",
+    "nt",
+    "metal weight; measure of metal",
+    "✔"
+   ],
+   [
+    "biḷālapādaka 1",
+    "masc",
+    "name of a small weight; lit. cat's foot",
     "◑"
    ],
    [
-    "vedanāsaṃyutta",
-    "nt",
-    "Chapter 36 of the Saṃyutta Nikāya; Connected Discourses on Feeling",
-    "◑"
-   ],
-   [
-    "sāriputtasaṃyutta",
-    "nt",
-    "Chapter 28 of the Saṃyutta Nikāya; Connected Discourses about Sāriputta",
-    "◑"
+    "rājikā 1",
+    "fem",
+    "(of gold) weight; grain; (comm) with inscribed lines",
+    "✔"
    ]
   ],
   "count": 3
@@ -39658,7 +54519,7 @@ var family_set_json = {
    [
     "muttā 1",
     "fem",
-    "pearl; lit. set free",
+    "pearl; lit. released",
     "✔"
    ],
    [
@@ -39687,6 +54548,17 @@ var family_set_json = {
    ]
   ],
   "count": 10
+ },
+ "suttas of the Aṅguttara Nikāya 3": {
+  "data": [
+   [
+    "paṃsudhovakasutta",
+    "nt",
+    "Aṅguttara Nikāya 3.102 (AN3.102); lit. discourse about the dirt washer",
+    "✔"
+   ]
+  ],
+  "count": 1
  },
  "vinaya offences": {
   "data": [
@@ -39720,16 +54592,16 @@ var family_set_json = {
  "books of the Dīgha Nikāka": {
   "data": [
    [
-    "pāthikavagga",
-    "masc",
-    "Book 3 of the Dīgha Nikāya; Book of Travellers",
-    "◑"
+    "sīlakkhandhavaggapāḷi",
+    "fem",
+    "Book 1 of the Dīgha Nikāya; lit. canonical text of the book of virtuous conduct",
+    "✔"
    ],
    [
-    "pāthikavaggapāḷi",
-    "fem",
-    "Book 3 of the Dīgha Nikāya; lit. canonical text of the book of travellers",
-    "◑"
+    "sīlakkhandhavagga",
+    "masc",
+    "Book 1 of the Dīgha Nikāya; Book of Virtuous Conduct",
+    "✔"
    ],
    [
     "mahāvagga 02",
@@ -39741,73 +54613,33 @@ var family_set_json = {
     "mahāvaggapāḷi",
     "fem",
     "Book 2 of the Dīgha Nikāya; Canonical Text of the Great Book",
-    "◑"
-   ],
-   [
-    "sīlakkhandhavagga",
-    "masc",
-    "Book 1 of the Dīgha Nikāya; Book of Virtuous Conduct",
     "✔"
    ],
    [
-    "sīlakkhandhavaggapāḷi",
+    "pāthikavagga",
+    "masc",
+    "Book 3 of the Dīgha Nikāya; lit. chapter on travellers",
+    "✔"
+   ],
+   [
+    "pāthikavaggapāḷi",
     "fem",
-    "Book 1 of the Dīgha Nikāya; Canonical Text of the Book of Virtuous Conduct",
-    "◑"
+    "Book 3 of the Dīgha Nikāya; lit. canonical text of the book of travellers",
+    "✔"
    ]
   ],
   "count": 6
  },
- "suttas of the Dīgha Nikāya": {
+ "chapters of the Sutta Nipāta": {
   "data": [
    [
-    "pāthikasutta",
+    "pārāyaṇa",
     "nt",
-    "Dīgha Nikāya 24 (DN24); lit. discourse to Pāthika",
+    "Way to the Far Shore; Way to the Beyond; last chapter of the Sutta Nipāta (SNP 56, KN5.56); lit. going beyond",
     "✔"
-   ],
-   [
-    "sudassana 6",
-    "nt",
-    "in reference to DN17 Mahāsudassanasutta; lit. seeing clearly",
-    "✔"
-   ]
-  ],
-  "count": 2
- },
- "measures of weight": {
-  "data": [
-   [
-    "biḷālapādaka 1",
-    "masc",
-    "name of a small weight; lit. cat's foot",
-    "◑"
    ]
   ],
   "count": 1
- },
- "books of the Majjhima Nikāya": {
-  "data": [
-   [
-    "majjhimapaṇṇāsapāḷi",
-    "fem",
-    "Section 2 of the Majjhima Nikāya; Canonical Text of the Middle Fifty",
-    "◑"
-   ],
-   [
-    "mūlapaṇṇāsaka 1",
-    "nt",
-    "Section 1 of the Majjhima Nikāya; lit. root fifty",
-    "◑"
-   ],
-   [
-    "mūlapaṇṇāsapāḷi",
-    "fem",
-    "Section 1 of the Majjhima Nikāya; Canonical Text of the Root Fifty",
-    "◑"
-   ]
-  ],
-  "count": 3
  },
  "vaggas of the Aṅguttara Nikāya 3": {
   "data": [
@@ -39820,7 +54652,42 @@ var family_set_json = {
   ],
   "count": 1
  },
- "vaggas of the Saṃyutta Nikāya 4": {
+ "suttas of Saṃyutta Nikāya 31": {
+  "data": [
+   [
+    "sucaritasutta 1",
+    "nt",
+    "Saṃyutta Nikāya 31.2 (SN31.2); lit. discourse on good conduct",
+    "✔"
+   ],
+   [
+    "mūlagandhadātāsutta",
+    "nt",
+    "Saṃyutta Nikāya 31.3 (SN31.3); lit. discourse on the giver of fragrant roots",
+    "✔"
+   ],
+   [
+    "sāragandhādidātāsuttanavaka",
+    "nt",
+    "Saṃyutta Nikāya 31.4-12 (SN31.4-12); lit. group of nine discourses starting with the discourse on the giver of fragrant hardwood",
+    "✔"
+   ],
+   [
+    "mūlagandhadānūpakārasuttadasaka",
+    "nt",
+    "Saṃyutta Nikāya 31.13-22 (SN31.13-22); lit. group of ten discourses on how giving supports (rebirth among the gods living in) fragrant roots",
+    "✔"
+   ],
+   [
+    "sāragandhādidānūpakārasuttanavutika",
+    "nt",
+    "Saṃyutta Nikāya 31.23-112 (SN31.23-112); lit. group of ninety discourses starting with the discourse on how giving supports (rebirth among the gods living in) fragrant hardwood",
+    "✔"
+   ]
+  ],
+  "count": 5
+ },
+ "vaggas of the Saṃyutta Nikāya 40": {
   "data": [
    [
     "moggallānavagga",
@@ -39848,7 +54715,7 @@ var family_set_json = {
    [
     "vedanā 1",
     "fem",
-    "(pleasant, unpleasant or neutral) felt experience; feeling; feeling tone; sensation; second of the five aggregates; lit. causing to know",
+    "(pleasant, unpleasant or neutral) felt experience; feeling; feeling tone; hedonic tone; second of the five aggregates; lit. causing to know",
     "✔"
    ],
    [
@@ -39860,11 +54727,123 @@ var family_set_json = {
    [
     "saññā 1",
     "fem",
-    "perception; conception; recognition; third of the five aggregates",
+    "perception; conception; recognition; third of the five aggregates; lit. knowing together",
     "✔"
    ]
   ],
   "count": 5
+ },
+ "suttas of Saṃyutta Nikāya 33": {
+  "data": [
+   [
+    "rūpaaññāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 33.1 (SN33.1); lit. discourse on ignorance about form",
+    "✔"
+   ],
+   [
+    "vedanāaññāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 33.2 (SN33.2); lit. discourse on not knowing feeling",
+    "✔"
+   ],
+   [
+    "saññāaññāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 33.3 (SN33.3); lit. discourse on not knowing perception",
+    "✔"
+   ],
+   [
+    "saṅkhāraaññāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 33.4 (SN33.4); lit. discourse on not knowing activities",
+    "✔"
+   ],
+   [
+    "viññāṇaaññāṇasutta",
+    "nt",
+    "Saṃyutta Nikāya 33.5 (SN33.5); lit. discourse on not knowing consciousness",
+    "✔"
+   ],
+   [
+    "rūpaadassanādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.6-10 (SN33.6-10); lit. group of five discourses starting with the discourse on not seeing form",
+    "✔"
+   ],
+   [
+    "rūpaanabhisamayādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.11-15 (SN33.11-15); lit. group of five discourses starting with the discourse on not comprehending form",
+    "✔"
+   ],
+   [
+    "rūpaananubodhādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.16-20 (SN33.16-20); lit. group of five discourses starting with the discourse on not understanding form",
+    "✔"
+   ],
+   [
+    "rūpaappaṭivedhādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.21-25 (SN33.21-25); lit. group of five discourses starting with the discourse on not penetrating form",
+    "✔"
+   ],
+   [
+    "rūpaasallakkhaṇādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.26-30 (SN33.26-30); lit. group of five discourses starting with the discourse on not distinguishing form",
+    "✔"
+   ],
+   [
+    "rūpaanupalakkhaṇādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.31-35 (SN33.31-35); lit. group of five discourses starting with the discourse on not observing form",
+    "✔"
+   ],
+   [
+    "rūpaappaccupalakkhaṇādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.36-40 (SN33.36-40); lit. group of five discourses starting with the discourse on not differentiating form",
+    "✔"
+   ],
+   [
+    "rūpaasamapekkhaṇādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.41-45 (SN33.41-45); lit. group of five discourses starting with the discourse on not considering form properly",
+    "✔"
+   ],
+   [
+    "rūpaappaccupekkhaṇādisuttapañcaka",
+    "nt",
+    "Saṃyutta Nikāya 33.46-50 (SN33.46-50); lit. group of five discourses starting with the discourse on not reviewing form",
+    "✔"
+   ],
+   [
+    "rūpaappaccakkhakammādisuttacatukka",
+    "nt",
+    "Saṃyutta Nikāya 33.51-55 (SN33.51-55); lit. group of four discourses starting with the discourse on not making form clear",
+    "✔"
+   ],
+   [
+    "viññāṇaappaccakkhakammasutta",
+    "nt",
+    "Saṃyutta Nikāya 33.56 (SN33.56); lit. discourse on not making consciousness evident",
+    "✔"
+   ]
+  ],
+  "count": 16
+ },
+ "suttas of the Aṅguttara Nikāya 9": {
+  "data": [
+   [
+    "vajjiputta 1",
+    "masc",
+    "in reference to SN9.9 Vajjiputtasutta; lit. son of the Vajjians",
+    "✔"
+   ]
+  ],
+  "count": 1
  },
  "chief disciples": {
   "data": [
@@ -39894,5 +54873,39 @@ var family_set_json = {
    ]
   ],
   "count": 4
+ },
+ "suttas of the Aṅguttara Nikāya 4": {
+  "data": [
+   [
+    "saṅkhittasutta 1",
+    "nt",
+    "Aṅguttara Nikāya 4.161 (AN4.161)",
+    "◑"
+   ]
+  ],
+  "count": 1
+ },
+ "fractions": {
+  "data": [
+   [
+    "satasahassima",
+    "adj",
+    "one hundred thousandth (1/100000th)",
+    "✔"
+   ],
+   [
+    "satima 1",
+    "adj",
+    "one hundredth (1/100th)",
+    "✔"
+   ],
+   [
+    "sahassima",
+    "adj",
+    "one thousandth (1/1000th)",
+    "✔"
+   ]
+  ],
+  "count": 3
  }
 }

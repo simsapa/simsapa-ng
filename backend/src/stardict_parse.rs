@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::Path;
 
 use diesel::prelude::*;
@@ -157,6 +158,40 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
                 // Decide whether to stop or continue; here we continue
             }
         }
+    }
+
+    // Disambiguate colliding uids. Two stardict index entries can produce the
+    // same uid when they differ only in characters normalized away by
+    // `consistent_niggahita` (ṃ/ṁ/ŋ) or by `.trim()` in db_entries(). The
+    // 2026 DPD goldendict bundle introduced such collisions; older bundles
+    // had none.
+    //
+    // Convention: append ` N` before the `/{label}` suffix for the 2nd, 3rd,
+    // … occurrence — same shape DPD itself uses for multi-meaning headwords
+    // (e.g. `dhamma 1.01/dpd`), and matched by the user-query disambiguator
+    // at helpers.rs:85.
+    let label_suffix = format!("/{}", new_dict_label);
+    let mut seen: HashMap<String, u32> = HashMap::with_capacity(words_to_insert.len());
+    let mut collisions: u32 = 0;
+    for nw in words_to_insert.iter_mut() {
+        let count = seen.entry(nw.uid.clone()).or_insert(0);
+        *count += 1;
+        if *count > 1 {
+            collisions += 1;
+            let base = nw.uid.strip_suffix(&label_suffix).unwrap_or(&nw.uid).to_string();
+            let new_uid = format!("{} {}{}", base, *count, label_suffix);
+            warn(&format!(
+                "Stardict uid collision: '{}' (occurrence {}) -> '{}'",
+                nw.uid, *count, new_uid
+            ));
+            nw.uid = new_uid;
+        }
+    }
+    if collisions > 0 {
+        info(&format!(
+            "Disambiguated {} colliding stardict uid(s) for '{}'",
+            collisions, new_dict_label
+        ));
     }
 
     words_to_insert

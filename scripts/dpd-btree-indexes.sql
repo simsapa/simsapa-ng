@@ -7,6 +7,11 @@ CREATE INDEX IF NOT EXISTS idx_dpd_roots_root_clean ON dpd_roots(root_clean);
 CREATE INDEX IF NOT EXISTS idx_dpd_roots_root_no_sign ON dpd_roots(root_no_sign);
 CREATE INDEX IF NOT EXISTS idx_dpd_roots_word_ascii ON dpd_roots(word_ascii);
 
+-- Unique index on bold_definitions.uid. Column is populated by the CLI
+-- bootstrap step populate_bold_definitions_derived_columns; this line is a
+-- no-op on re-run.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_bold_definitions_uid ON bold_definitions(uid);
+
 -- VACUUM to optimize database file size and performance
 VACUUM;
 

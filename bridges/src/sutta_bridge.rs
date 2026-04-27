@@ -706,6 +706,12 @@ pub mod qobject {
         fn set_include_ms_mula_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
 
         #[qinvokable]
+        fn get_include_comm_bold_definitions_in_search_results(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_include_comm_bold_definitions_in_search_results(self: Pin<&mut SuttaBridge>, enabled: bool);
+
+        #[qinvokable]
         fn get_open_find_in_sutta_results(self: &SuttaBridge) -> bool;
 
         #[qinvokable]
@@ -1091,7 +1097,9 @@ impl qobject::SuttaBridge {
                     include_cst_commentary: true,
                     nikaya_prefix: None,
                     uid_prefix: None,
+                    uid_suffix: None,
                     include_ms_mula: true,
+                    include_comm_bold_definitions: true,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1471,10 +1479,12 @@ impl qobject::SuttaBridge {
                 source_include: params.source_include,
                 nikaya_prefix: params.nikaya_prefix.clone(),
                 uid_prefix: params.uid_prefix.clone(),
+                uid_suffix: params.uid_suffix.clone(),
                 sutta_ref: None,
                 include_cst_mula: true,
                 include_cst_commentary: true,
                 include_ms_mula: params.include_ms_mula,
+                include_bold_definitions: params.include_comm_bold_definitions,
             };
 
             let result = with_fulltext_searcher(|searcher| {
@@ -2400,6 +2410,7 @@ impl qobject::SuttaBridge {
             match simsapa_backend::search::indexer::build_all_indexes(
                 &app_data.dbm.appdata,
                 &app_data.dbm.dictionaries,
+                &app_data.dbm.dpd,
                 paths,
             ) {
                 Ok(()) => {
@@ -3014,6 +3025,16 @@ impl qobject::SuttaBridge {
     pub fn set_include_ms_mula_in_search_results(self: Pin<&mut Self>, enabled: bool) {
         let app_data = get_app_data();
         app_data.set_include_ms_mula_in_search_results(enabled);
+    }
+
+    pub fn get_include_comm_bold_definitions_in_search_results(&self) -> bool {
+        let app_data = get_app_data();
+        app_data.get_include_comm_bold_definitions_in_search_results()
+    }
+
+    pub fn set_include_comm_bold_definitions_in_search_results(self: Pin<&mut Self>, enabled: bool) {
+        let app_data = get_app_data();
+        app_data.set_include_comm_bold_definitions_in_search_results(enabled);
     }
 
     pub fn get_open_find_in_sutta_results(&self) -> bool {
