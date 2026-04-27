@@ -168,6 +168,13 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 │   │   ├── pali_sort.rs
 │   │   ├── pali_stemmer.rs
 │   │   ├── query_task.rs
+│   │   ├── search
+│   │   │   ├── indexer.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── schema.rs
+│   │   │   ├── searcher.rs
+│   │   │   ├── tokenizer.rs
+│   │   │   └── types.rs
 │   │   ├── stardict_parse.rs
 │   │   ├── theme_colors_dark.json
 │   │   ├── theme_colors_light.json
@@ -188,7 +195,8 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - `src/db/` - Database models, connections, and queries (Diesel ORM + SQLite)
   - `src/app_data.rs` - Central data management and caching
   - `src/lookup.rs` - Dictionary and word lookup functionality
-  - `src/query_task.rs` - Search query processing and filtering
+  - `src/query_task.rs` - Search query processing and filtering; `results_page` dispatch, FTS5 helpers with uid prefix/suffix push-down + parallel `SELECT COUNT(*)`, and the boundary-aware `split_page_across_streams` orchestrator for regular ⊕ bold pagination
+  - `src/search/` - Tantivy schema, indexer, searcher, and tokenizer for the unified dict (incl. bold-definitions), sutta, and library indexes
   - `src/html_content.rs` - HTML template rendering for content display
   - `src/pali_stemmer.rs` - Pali language stemming for better search
   - `src/stardict_parse.rs` - StarDict dictionary format parser
@@ -323,6 +331,9 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Word Lookup:** `backend/src/lookup.rs`
 - **Pali Stemming:** `backend/src/pali_stemmer.rs`
 - **Dictionary Parsing:** `backend/src/stardict_parse.rs`
+- **Query Pipeline:** `backend/src/query_task.rs` — `SearchQueryTask` and the unified `results_page(page_num)` dispatch over `(SearchMode, SearchArea)`. Each per-mode handler returns `(Vec<SearchResult>, total: usize)`; `db_query_hits_count` is written exactly once per call from the storage-layer total. Multi-phase modes (DPD Lookup, Headword Match, Contains+Dictionary) use `split_page_across_streams` for boundary-aware regular ⊕ bold pagination — true SQL `LIMIT/OFFSET` per stream, no Rust-side cover-fetch.
+- **Tantivy Schema & Indexer:** `backend/src/search/schema.rs` (sutta / dict / library schemas), `backend/src/search/indexer.rs` (writers; `append_bold_definitions_to_dict_index` appends bold-definition rows into the unified Pāli `dict_words_index_dir`). Schemas store uid as a `raw` field plus a `uid_rev` raw field (lowercased uid reversed character-by-character) so a uid-suffix filter pushes down as `RegexQuery::from_pattern("{reversed}.*", uid_rev)`. Library uses `spine_item_uid` / `spine_item_uid_rev`. The dict schema also carries `is_bold_definition: bool` and `nikaya_group_path` for bold rows; there is no separate `bold_definitions_index_dir` and no `IndexType::BoldDefinitions`.
+- **Tantivy Searcher:** `backend/src/search/searcher.rs` — `FulltextSearcher` opens per-language `dict_indexes` / `sutta_indexes` / `library_indexes`. `search_single_index` builds a single `BooleanQuery` (content + content_exact + filters), runs `TopDocs::with_limit(page_len)` paired with `Count`, and constructs `SnippetGenerator` once per call (snippet cost bounded to `page_len`). `add_uid_filters` is the one push-down helper used by sutta/dict/library; bold rows are gated via `Occur::MustNot { is_bold_definition = true }` when `include_comm_bold_definitions = false`. Per-doc dispatch in the dict arm peeks at `is_bold_definition` and routes bold rows to `bold_definition_doc_to_result`.
 
 ### Content Rendering  
 - **HTML Generation:** `backend/src/html_content.rs`

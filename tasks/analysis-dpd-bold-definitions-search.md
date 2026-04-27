@@ -1,5 +1,18 @@
 # Analysis: DPD Bold Definitions in Dictionary Search — branch review
 
+> **§7 superseded (2026-04).** The §7 target design — Rust-side
+> `apply_uid_filters` post-pass over a SAFETY-capped full fetch, with
+> `cached_full_fetch` to amortise pagination — has been **replaced** by
+> push-down filtering at the storage layer plus native pagination. See
+> [`tasks/query-pipeline-filtering-strategy-refactor.md`](./query-pipeline-filtering-strategy-refactor.md)
+> for the current pipeline (uniform `raw` uid fields, `uid_rev` for
+> suffix push-down, unified dict tantivy index that absorbs
+> `bold_definitions`, `Occur::MustNot { is_bold_definition }` to gate
+> bold rows, no `cached_full_fetch`, no `SAFETY_LIMIT_TANTIVY`). The
+> earlier §1–§6 findings (DB index coverage, full-fetch costs,
+> simple_fold over-match) remain accurate as historical context for *why*
+> the refactor was needed.
+
 Source branch: `bold-definitions-search` (commits `61e29b3`, `b656e94`, `97e9c8b`).
 Reviewer scope: db indexes for uid prefix/suffix filtering across search areas, and
 a close read of `backend/src/query_task.rs` for conceptual issues in the refactor
