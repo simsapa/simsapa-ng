@@ -208,31 +208,33 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     Ok(())
 }
 
-/// Build fulltext index for DPD bold-definitions.
+/// Append DPD bold-definition rows to the unified dict index.
+///
+/// Bold-definition docs share the dict schema (distinguished by
+/// `is_bold_definition = true`) and live in the `lang`-keyed subdir of
+/// `dict_words_index_dir` so a single tantivy query against the dict index
+/// returns both kinds of doc with internally-consistent BM25.
+///
+/// Must be called *after* `build_dict_index` for the same language, since
+/// `build_dict_index` calls `delete_all_documents()` first; this function
+/// only appends and never clears.
 ///
 /// Commentary text is Pāli; call sites pass `lang = "pli"` so the index uses
 /// the Pāli tokenizers matching DPD dictionary entries.
-pub fn build_bold_definitions_index(dpd_db: &DatabaseHandle, index_dir: &Path, lang: &str) -> Result<()> {
+pub fn append_bold_definitions_to_dict_index(
+    dpd_db: &DatabaseHandle,
+    dict_words_index_dir: &Path,
+    lang: &str,
+) -> Result<()> {
     use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
 
-    info(&format!("Building bold_definitions index for language: {}", lang));
+    info(&format!("Appending bold_definitions to dict index for language: {}", lang));
 
-    // Clean the index directory before writing so re-runs start fresh.
-    match index_dir.try_exists() {
-        Ok(true) => {
-            std::fs::remove_dir_all(index_dir)?;
-        }
-        _ => {}
-    }
-
+    let lang_index_dir = dict_words_index_dir.join(lang);
     let schema = build_dict_schema(lang);
-    let index = open_or_create_index(index_dir, schema, lang)?;
+    let index = open_or_create_index(&lang_index_dir, schema, lang)?;
 
     let mut writer: IndexWriter = index.writer(50_000_000)?;
-
-    // Clear existing documents before rebuilding (mirrors the other builders).
-    writer.delete_all_documents()?;
-    writer.commit()?;
 
     let schema = index.schema();
     let uid_field = schema.get_field("uid").unwrap();
@@ -487,8 +489,9 @@ pub fn build_all_indexes(
         build_library_index(appdata_db, &paths.library_index_dir, lang)?;
     }
 
-    // DPD bold-definitions commentary is Pāli only.
-    build_bold_definitions_index(dpd_db, &paths.bold_definitions_index_dir, "pli")?;
+    // DPD bold-definitions commentary is Pāli only; append into the
+    // unified dict index (under the "pli" lang subdir).
+    append_bold_definitions_to_dict_index(dpd_db, &paths.dict_words_index_dir, "pli")?;
 
     write_version_file(&paths.index_dir)?;
 

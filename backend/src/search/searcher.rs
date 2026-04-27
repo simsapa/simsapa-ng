@@ -22,20 +22,21 @@ enum IndexType {
     Sutta,
     Dict,
     Library,
-    BoldDefinitions,
 }
 
 /// Holds open indexes for fulltext searching.
+///
+/// The dict index unifies dict_words rows and DPD bold-definition rows; both
+/// kinds of doc share the dict schema and are distinguished by the
+/// `is_bold_definition: bool` field.
 pub struct FulltextSearcher {
     /// Map of language → (Index, IndexReader) for sutta indexes
     sutta_indexes: HashMap<String, (Index, IndexReader)>,
-    /// Map of language → (Index, IndexReader) for dict_word indexes
+    /// Map of language → (Index, IndexReader) for dict_word indexes (also
+    /// houses bold-definition docs under the "pli" key).
     dict_indexes: HashMap<String, (Index, IndexReader)>,
     /// Map of language → (Index, IndexReader) for library book chapter indexes
     library_indexes: HashMap<String, (Index, IndexReader)>,
-    /// Single DPD bold-definitions index (Pāli only), stored at the root of
-    /// `bold_definitions_index_dir` rather than under a per-language subdir.
-    bold_definitions_index: Option<(Index, IndexReader)>,
 }
 
 /// Returned by `FulltextSearcher::debug_query()`: the formatted debug text
@@ -52,21 +53,18 @@ impl FulltextSearcher {
         let sutta_indexes = Self::open_indexes(&paths.suttas_index_dir, IndexType::Sutta)?;
         let dict_indexes = Self::open_indexes(&paths.dict_words_index_dir, IndexType::Dict)?;
         let library_indexes = Self::open_indexes(&paths.library_index_dir, IndexType::Library)?;
-        let bold_definitions_index = Self::open_bold_definitions_index(&paths.bold_definitions_index_dir)?;
 
         info(&format!(
-            "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes, {} library language indexes, bold_definitions={}",
+            "FulltextSearcher opened: {} sutta language indexes, {} dict language indexes, {} library language indexes",
             sutta_indexes.len(),
             dict_indexes.len(),
             library_indexes.len(),
-            bold_definitions_index.is_some(),
         ));
 
         Ok(Self {
             sutta_indexes,
             dict_indexes,
             library_indexes,
-            bold_definitions_index,
         })
     }
 
@@ -87,34 +85,7 @@ impl FulltextSearcher {
             sutta_indexes,
             dict_indexes,
             library_indexes,
-            bold_definitions_index: None,
         })
-    }
-
-    /// Open the single bold-definitions index (stored at the root of its dir,
-    /// not under per-language subdirs since only Pāli is indexed).
-    fn open_bold_definitions_index(dir: &Path) -> Result<Option<(Index, IndexReader)>> {
-        match dir.try_exists() {
-            Ok(true) => {}
-            _ => return Ok(None),
-        }
-
-        // Require the tantivy meta.json to exist before attempting to open —
-        // otherwise `Index::open_or_create` would silently initialise an empty
-        // index against a stale directory.
-        let meta = dir.join("meta.json");
-        match meta.try_exists() {
-            Ok(true) => {}
-            _ => return Ok(None),
-        }
-
-        match Self::open_single_index(dir, "pli", IndexType::BoldDefinitions) {
-            Ok(pair) => Ok(Some(pair)),
-            Err(e) => {
-                warn(&format!("Failed to open bold_definitions index at {}: {}", dir.display(), e));
-                Ok(None)
-            }
-        }
     }
 
     /// Scan a directory for per-language subdirectories and open each as a Tantivy index.
@@ -157,9 +128,6 @@ impl FulltextSearcher {
             IndexType::Sutta => build_sutta_schema(lang),
             IndexType::Dict => build_dict_schema(lang),
             IndexType::Library => build_library_schema(lang),
-            // BoldDefinitions reuses the dict schema; the `is_bold_definition`
-            // bool field stored on each doc distinguishes it from dict_words.
-            IndexType::BoldDefinitions => build_dict_schema(lang),
         };
 
         let mmap_dir = tantivy::directory::MmapDirectory::open(dir)?;
@@ -343,49 +311,6 @@ impl FulltextSearcher {
         !self.library_indexes.is_empty()
     }
 
-    /// Check if the bold-definitions index is available.
-    pub fn has_bold_definitions_index(&self) -> bool {
-        self.bold_definitions_index.is_some()
-    }
-
-    /// Search the DPD bold-definitions index, returning `(total_hits, results)`.
-    ///
-    /// Only the Pāli commentary content is indexed, so language filters in
-    /// `filters` are ignored. If no index is available, returns `(0, vec![])`.
-    pub fn search_bold_definitions_with_count(
-        &self,
-        query_text: &str,
-        filters: &SearchFilters,
-        page_len: usize,
-        page_num: usize,
-    ) -> Result<(usize, Vec<SearchResult>)> {
-        let Some((index, reader)) = &self.bold_definitions_index else {
-            return Ok((0, Vec::new()));
-        };
-
-        // Fetch enough results to cover all pages up to the requested one.
-        let limit = (page_num + 1) * page_len;
-
-        let (total_hits, scored) = self.search_single_index(
-            query_text,
-            filters,
-            limit,
-            index,
-            reader,
-            IndexType::BoldDefinitions,
-            true,
-        )?;
-
-        let results: Vec<SearchResult> = scored
-            .into_iter()
-            .skip(page_num * page_len)
-            .take(page_len)
-            .map(|(_, r)| r)
-            .collect();
-
-        Ok((total_hits, results))
-    }
-
     #[allow(clippy::too_many_arguments)]
     fn search_indexes(
         &self,
@@ -487,12 +412,6 @@ impl FulltextSearcher {
             IndexType::Sutta => Self::add_sutta_filters(&mut subqueries, filters, &schema)?,
             IndexType::Dict => Self::add_dict_filters(&mut subqueries, filters, &schema)?,
             IndexType::Library => Self::add_library_filters(&mut subqueries, filters, &schema)?,
-            IndexType::BoldDefinitions => {
-                // Bold-defs index uses the dict schema (uid + uid_rev), so the
-                // same prefix/suffix push-down applies. Lang/source/CST/MS are
-                // not meaningful for bold rows and not pushed down.
-                Self::add_uid_filters(&mut subqueries, filters, &schema, "uid", "uid_rev")?;
-            }
         }
 
         let combined_query = BooleanQuery::new(subqueries);
@@ -524,9 +443,23 @@ impl FulltextSearcher {
 
             let result = match index_type {
                 IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, &snippet_gen)?,
-                IndexType::Dict => self.dict_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::Dict => {
+                    // Dict index unifies dict_words + bold-definition rows;
+                    // dispatch per-doc so bold rows render via their own
+                    // projection (group path, ref_code, etc.).
+                    let is_bold = schema
+                        .get_field("is_bold_definition")
+                        .ok()
+                        .and_then(|f| doc.get_first(f))
+                        .and_then(|v| v.as_bool())
+                        .unwrap_or(false);
+                    if is_bold {
+                        self.bold_definition_doc_to_result(&doc, &schema, score, &snippet_gen)?
+                    } else {
+                        self.dict_doc_to_result(&doc, &schema, score, &snippet_gen)?
+                    }
+                }
                 IndexType::Library => self.library_doc_to_result(&doc, &schema, score, &snippet_gen)?,
-                IndexType::BoldDefinitions => self.bold_definition_doc_to_result(&doc, &schema, score, &snippet_gen)?,
             };
 
             results.push((score, result));
@@ -652,6 +585,18 @@ impl FulltextSearcher {
         }
 
         Self::add_uid_filters(subqueries, filters, schema, "uid", "uid_rev")?;
+
+        // Exclude bold-definition rows from dict-index queries when the
+        // caller opts out. Default `true` adds no constraint, so dict_words
+        // and bold rows are ranked together by BM25 in the unified index.
+        if !filters.include_bold_definitions {
+            let field = schema.get_field("is_bold_definition")?;
+            let term = Term::from_field_bool(field, true);
+            subqueries.push((
+                Occur::MustNot,
+                Box::new(TermQuery::new(term, IndexRecordOption::Basic)),
+            ));
+        }
 
         Ok(())
     }
@@ -920,7 +865,6 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -935,6 +879,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let result = searcher.debug_query("bhikkhave", &filters).unwrap();
@@ -958,7 +903,6 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -973,6 +917,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // Unbalanced quotes should cause a parse error but still return partial results
@@ -995,7 +940,6 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -1010,6 +954,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // "bhikkhūnaṁ" should stem differently than normalize
@@ -1028,7 +973,6 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -1043,6 +987,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
@@ -1065,7 +1010,6 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -1080,6 +1024,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10, 0).unwrap();
@@ -1130,7 +1075,6 @@ mod tests {
             sutta_indexes,
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -1145,6 +1089,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10, 0).unwrap();
@@ -1158,7 +1103,6 @@ mod tests {
             sutta_indexes: HashMap::new(),
             dict_indexes: HashMap::new(),
             library_indexes: HashMap::new(),
-            bold_definitions_index: None,
         };
 
         let filters = SearchFilters {
@@ -1173,6 +1117,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let result = searcher.debug_query("test", &filters).unwrap();
@@ -1251,6 +1196,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         // suffix "1.1" matches uids ending in "1.1" — only "an1.1/en/sujato" if we
@@ -1300,6 +1246,7 @@ mod tests {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();

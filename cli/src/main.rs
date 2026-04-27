@@ -736,6 +736,7 @@ fn fulltext_search(
         include_cst_mula: true,
         include_cst_commentary: true,
         include_ms_mula: true,
+        include_bold_definitions: true,
     };
 
     let (total_hits, results) = match area {

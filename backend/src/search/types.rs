@@ -16,7 +16,15 @@ pub struct SearchFilters {
     pub include_cst_mula: bool,
     pub include_cst_commentary: bool,
     pub include_ms_mula: bool,
+    /// When `false`, the dict-index search excludes documents with
+    /// `is_bold_definition = true` via `Occur::MustNot`. Default `true`
+    /// means bold-definition rows participate alongside dict_words in the
+    /// unified dict index. Only consulted by the dict path.
+    #[serde(default = "default_true")]
+    pub include_bold_definitions: bool,
 }
+
+fn default_true() -> bool { true }
 
 impl Default for SearchFilters {
     fn default() -> Self {
@@ -32,6 +40,7 @@ impl Default for SearchFilters {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         }
     }
 }

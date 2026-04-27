@@ -1710,6 +1710,7 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_mula: self.include_cst_mula,
             include_cst_commentary: self.include_cst_commentary,
             include_ms_mula: self.include_ms_mula,
+            include_bold_definitions: true,
         };
 
         let query_text = self.query_text.clone();
@@ -1732,12 +1733,13 @@ impl<'a> SearchQueryTask<'a> {
         Ok((results, total))
     }
 
-    /// Fulltext + Dictionary handler. While the bold-definitions index is
-    /// still a separate tantivy directory (Stage 4 collapses it), bold rows
-    /// are fetched and score-merged here when
-    /// `include_comm_bold_definitions` is set. After Stage 4 this becomes a
-    /// single tantivy call with `Occur::MustNot { is_bold_definition }`
-    /// controlled by the same flag.
+    /// Fulltext + Dictionary handler. The dict index is unified: dict_words
+    /// rows and DPD bold-definition rows live together, distinguished by the
+    /// `is_bold_definition` field. A single tantivy call returns the page
+    /// directly — no cover-fetch, no Rust-side merge. When
+    /// `include_comm_bold_definitions == false`, bold rows are excluded via
+    /// `Occur::MustNot` at the query stage. BM25 is internally consistent
+    /// across both kinds.
     fn fulltext_dict(&self, page_num: usize) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
         use crate::with_fulltext_searcher;
         use crate::search::searcher::SearchFilters;
@@ -1758,26 +1760,17 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: self.include_comm_bold_definitions,
         };
 
         let query_text = self.query_text.clone();
 
-        // To merge two ranked streams correctly through page_num, each side
-        // needs (page_num + 1) * page_len rows; without that headroom a
-        // higher-page click could miss bold rows that should have appeared
-        // earlier in the merged ranking.
-        let cover_limit = (page_num + 1).saturating_mul(self.page_len);
-
-        let (dict_total, dict_results) = match with_fulltext_searcher(|searcher| {
+        let (total, results) = match with_fulltext_searcher(|searcher| {
             if !searcher.has_dict_indexes() {
                 warn("No dict_word fulltext indexes available.");
                 return Ok((0usize, Vec::new()));
             }
-            if self.include_comm_bold_definitions {
-                searcher.search_dict_words_with_count(&query_text, &filters, cover_limit, 0)
-            } else {
-                searcher.search_dict_words_with_count(&query_text, &filters, self.page_len, page_num)
-            }
+            searcher.search_dict_words_with_count(&query_text, &filters, self.page_len, page_num)
         }) {
             Some(Ok(x)) => x,
             Some(Err(e)) => return Err(e.into()),
@@ -1787,51 +1780,7 @@ impl<'a> SearchQueryTask<'a> {
             }
         };
 
-        if !self.include_comm_bold_definitions {
-            return Ok((dict_results, dict_total));
-        }
-
-        // Bold-defs index is Pāli-only and doesn't carry lang/source/CST.
-        // uid filters are still meaningful and pushed down at the tantivy
-        // level via SearchFilters.
-        let bold_filters = SearchFilters {
-            lang: None,
-            lang_include: false,
-            source_uid: None,
-            source_include: false,
-            nikaya_prefix: None,
-            uid_prefix: self.uid_prefix.clone(),
-            uid_suffix: self.uid_suffix.clone(),
-            sutta_ref: None,
-            include_cst_mula: true,
-            include_cst_commentary: true,
-            include_ms_mula: true,
-        };
-        let normalized_q = normalize_plain_text(&query_text);
-
-        let (bold_total, bold_results) = match with_fulltext_searcher(|searcher| {
-            if !searcher.has_bold_definitions_index() {
-                return Ok::<_, anyhow::Error>((0usize, Vec::<SearchResult>::new()));
-            }
-            searcher.search_bold_definitions_with_count(&normalized_q, &bold_filters, cover_limit, 0)
-        }) {
-            Some(Ok(x)) => x,
-            Some(Err(e)) => return Err(e.into()),
-            None => (0usize, Vec::new()),
-        };
-
-        let merged = Self::merge_by_score_desc(dict_results, bold_results);
-        let total = dict_total + bold_total;
-
-        let start = page_num.saturating_mul(self.page_len);
-        let end = std::cmp::min(start + self.page_len, merged.len());
-        let page: Vec<SearchResult> = if start >= merged.len() {
-            Vec::new()
-        } else {
-            merged[start..end].to_vec()
-        };
-
-        Ok((page, total))
+        Ok((results, total))
     }
 
     fn fulltext_library(&self, page_num: usize) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
@@ -1854,6 +1803,7 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_mula: true,
             include_cst_commentary: true,
             include_ms_mula: true,
+            include_bold_definitions: true,
         };
 
         let query_text = self.query_text.clone();
@@ -1945,43 +1895,6 @@ impl<'a> SearchQueryTask<'a> {
         opt.as_ref()
             .map(|s| s.trim().to_lowercase())
             .filter(|s| !s.is_empty())
-    }
-
-    /// Stable linear merge of two score-sorted vectors. Each input is
-    /// assumed to already be sorted by descending `SearchResult.score`; the
-    /// output preserves that ordering and never drops items. Inter-index
-    /// BM25 scores are not strictly comparable so the relative bias between
-    /// indexes is acceptable per PRD §4.3.12.
-    fn merge_by_score_desc(
-        a: Vec<SearchResult>,
-        b: Vec<SearchResult>,
-    ) -> Vec<SearchResult> {
-        let mut out = Vec::with_capacity(a.len() + b.len());
-        let mut ai = a.into_iter().peekable();
-        let mut bi = b.into_iter().peekable();
-        loop {
-            match (ai.peek(), bi.peek()) {
-                (Some(x), Some(y)) => {
-                    let sx = x.score.unwrap_or(0.0);
-                    let sy = y.score.unwrap_or(0.0);
-                    if sx >= sy {
-                        out.push(ai.next().unwrap());
-                    } else {
-                        out.push(bi.next().unwrap());
-                    }
-                }
-                (Some(_), None) => {
-                    out.extend(ai);
-                    break;
-                }
-                (None, Some(_)) => {
-                    out.extend(bi);
-                    break;
-                }
-                (None, None) => break,
-            }
-        }
-        out
     }
 
     /// Filter-aware mode dispatch. Each per-mode handler pushes its filters

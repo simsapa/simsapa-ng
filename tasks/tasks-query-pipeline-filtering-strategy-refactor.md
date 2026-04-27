@@ -54,15 +54,15 @@
   - [x] 3.7 Kept `SAFETY_LIMIT_SQL` as a defensive ceiling, lowered to 50_000 and documented as defense-in-depth against pathological multi-phase intermediate fetches. Real per-page bounding is now `LIMIT page_len OFFSET …` directly.
   - [x] 3.8 `make build -B` succeeds end-to-end after the deletions. Two dead-code warnings on `query_bold_definitions_bold_fts5` / `query_bold_definitions_commentary_fts5` / `bold_definition_to_search_result` are silenced with `#[allow(dead_code)]` — they remain as scaffolding for any future SQL bold-append revival.
 
-- [ ] 4.0 Stage 4 — Remove dead two-index plumbing for bold definitions; unify under the dict index
-  - [ ] 4.1 In `backend/src/search/indexer.rs`, route bold-definition rows into the unified `dict_words_index_dir` writer (with `is_bold_definition = true`); delete `build_bold_definitions_index` and the `bold_definitions_index_dir` path entry.
-  - [ ] 4.2 In `cli/src/bootstrap/`, drop the separate bold-definitions indexing step from the bootstrap pipeline.
-  - [ ] 4.3 Remove `IndexType::BoldDefinitions` (`backend/src/search/types.rs`) and every match arm referencing it in `backend/src/search/searcher.rs` (lines 111, 162, 375, 487-490, 524) and elsewhere.
-  - [ ] 4.4 Remove the `bold_index` / `bold_indexes` fields on `Searcher`, the `BoldDefinitions` arm of `open_single_index`, and any `pli`-only special-casing it carried.
-  - [ ] 4.5 Implement the unified `fulltext_dict` handler: one tantivy call against `dict_indexes`; when `filters.include_comm_bold_definitions == false`, attach `Occur::MustNot` over `is_bold_definition = true`; default `true` adds no constraint.
-  - [ ] 4.6 In `dict_doc_to_result`, peek at `is_bold_definition` and dispatch to `bold_definition_doc_to_result` per-doc, so bold rows render with their own snippet/path projection.
-  - [ ] 4.7 Delete `query_bold_definitions_fulltext_all` and the hard-coded `SearchFilters { ..bold defaults }` block that supported the dual-index merge.
-  - [ ] 4.8 Verify with `cargo test test_search` and `cargo test test_fulltext_search_results` that dict + bold rows mix correctly under one query and BM25 ordering is sane.
+- [x] 4.0 Stage 4 — Remove dead two-index plumbing for bold definitions; unify under the dict index
+  - [x] 4.1 In `backend/src/search/indexer.rs`, route bold-definition rows into the unified `dict_words_index_dir` writer (with `is_bold_definition = true`); renamed `build_bold_definitions_index` → `append_bold_definitions_to_dict_index` (no `delete_all_documents`, opens existing per-language dict subdir), removed `bold_definitions_index_dir` from `AppGlobalPaths`.
+  - [x] 4.2 In `cli/src/bootstrap/`, the bold-definitions step now appends into the unified Pāli dict index after the per-language dict build.
+  - [x] 4.3 Removed `IndexType::BoldDefinitions` from the searcher's private `IndexType` enum and every match arm referencing it (`open_single_index`, `search_single_index` filter dispatch, doc-to-result dispatch).
+  - [x] 4.4 Removed `bold_definitions_index` field, `open_bold_definitions_index`, `has_bold_definitions_index`, `search_bold_definitions_with_count` from `FulltextSearcher`. The searcher no longer carries any "pli"-only special-casing.
+  - [x] 4.5 Unified `fulltext_dict` is now a single tantivy call against `dict_indexes`. New `SearchFilters.include_bold_definitions` (default true, serde-defaulted to true) gates `Occur::MustNot { is_bold_definition = true }` inside `add_dict_filters`; `fulltext_dict` passes `self.include_comm_bold_definitions` through. No cover-fetch, no Rust merge — first page = `TopDocs::with_limit(page_len)`.
+  - [x] 4.6 In `search_single_index`'s `IndexType::Dict` arm, peek at `is_bold_definition` per doc and dispatch to `bold_definition_doc_to_result` for bold rows, otherwise `dict_doc_to_result`.
+  - [x] 4.7 Deleted `merge_by_score_desc` and the hard-coded "bold-defaults" `SearchFilters` block; `fulltext_dict` no longer needs them.
+  - [x] 4.8 Verified after re-bootstrap: UI shows DPD + bold-definition rows interleaved in Fulltext + Dictionary; `cargo test` passes the relevant suites.
 
 - [ ] 5.0 Stage 5 — Snippet-generator reuse verification and timing-budget cleanup
   - [ ] 5.1 Confirm the `search_single_index` call path still constructs `SnippetGenerator` exactly once per call (introduced in commit b18b4c0) and that with Stage 3's page-only fetch, snippet work is bounded to `page_len` rows.

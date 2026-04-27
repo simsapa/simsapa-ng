@@ -249,7 +249,6 @@ pub struct AppGlobalPaths {
     pub suttas_index_dir: PathBuf,
     pub dict_words_index_dir: PathBuf,
     pub library_index_dir: PathBuf,
-    pub bold_definitions_index_dir: PathBuf,
 
     // Marker files for database upgrade process
     pub download_languages_marker: PathBuf,
@@ -390,7 +389,6 @@ impl AppGlobalPaths {
         let suttas_index_dir = index_dir.join("suttas");
         let dict_words_index_dir = index_dir.join("dict_words");
         let library_index_dir = index_dir.join("library");
-        let bold_definitions_index_dir = index_dir.join("dpd_bold_definitions");
 
         // Marker files for database upgrade process
         let download_languages_marker = app_assets_dir.join("download_languages.txt");
@@ -421,7 +419,6 @@ impl AppGlobalPaths {
             suttas_index_dir,
             dict_words_index_dir,
             library_index_dir,
-            bold_definitions_index_dir,
 
             download_languages_marker,
             auto_start_download_marker,
