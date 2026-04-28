@@ -37,6 +37,8 @@ extern "C" void init_app_data();
 extern "C" void import_user_data_after_upgrade();
 extern "C" void cleanup_stale_legacy_userdata();
 extern "C" void check_and_configure_for_first_start();
+extern "C" bool reconcile_dict_indexes_needed_c();
+extern "C" void reconcile_dict_indexes_blocking_c();
 extern "C" void create_or_update_linux_desktop_icon_file_ffi();
 
 extern "C" char* get_desktop_file_path_ffi();
@@ -240,6 +242,17 @@ int start(int argc, char* argv[]) {
 
   // The port is determined in start_webserver().
   std::thread daemon_server_thread(start_webserver);
+
+  // Reconcile user-imported dictionary indexes before opening the main
+  // window. Runs only if there is work to do (newly imported / renamed /
+  // deleted user dictionaries, or orphan source_uids in the Tantivy dict
+  // index from a release-upgrade DB swap). Tantivy writes happen here so
+  // they never contend with a live searcher in `SuttaSearchWindow`.
+  if (reconcile_dict_indexes_needed_c()) {
+    log_info_c("Running dictionary index reconciliation...");
+    reconcile_dict_indexes_blocking_c();
+    log_info_c("Dictionary index reconciliation complete.");
+  }
 
   // === Create the first app window ===
 

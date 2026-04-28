@@ -72,6 +72,7 @@ fn main() {
         "../assets/qml/BookmarkListItem.qml",
         "../assets/qml/BookmarkEditDialog.qml",
         "../assets/qml/BookmarkFolderDialog.qml",
+        "../assets/qml/DictionaryIndexProgressWindow.qml",
     ];
 
     let builder = CxxQtBuilder::new()

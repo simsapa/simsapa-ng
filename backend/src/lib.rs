@@ -10,6 +10,7 @@ pub mod dir_list;
 pub mod app_data;
 pub mod stardict_parse;
 pub mod dictionary_manager_core;
+pub mod dict_index_reconcile;
 pub mod pali_stemmer;
 pub mod pali_sort;
 pub mod logger;
@@ -213,6 +214,30 @@ where
 #[unsafe(no_mangle)]
 pub extern "C" fn check_and_configure_for_first_start() {
     get_app_data().check_and_configure_for_first_start();
+}
+
+/// FFI: returns true if the dictionary-index reconciliation pass would do
+/// any work on the next call. Cheap probe used by the startup orchestrator
+/// to decide whether to show the progress window.
+#[unsafe(no_mangle)]
+pub extern "C" fn reconcile_dict_indexes_needed_c() -> bool {
+    dict_index_reconcile::reconcile_needed()
+}
+
+/// FFI: run the dictionary-index reconciliation pass synchronously.
+/// Logs progress; intended to run before `SuttaSearchWindow` opens so
+/// it never contends with a live searcher.
+#[unsafe(no_mangle)]
+pub extern "C" fn reconcile_dict_indexes_blocking_c() {
+    if let Err(e) = dict_index_reconcile::reconcile_dict_indexes(|p| {
+        info(&format!("reconcile_dict_indexes: {:?}", p));
+    }) {
+        error(&format!("reconcile_dict_indexes failed: {}", e));
+    }
+
+    // After the dict index has been mutated, drop the in-process searcher
+    // so it gets re-opened and picks up the new segments.
+    reinit_fulltext_searcher();
 }
 
 #[derive(Debug)]
