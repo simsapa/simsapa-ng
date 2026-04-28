@@ -263,7 +263,7 @@ pub fn upgrade_appdata_schema(db_conn: &mut SqliteConnection) {
     }
 }
 
-fn run_dictionaries_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
+pub fn run_dictionaries_migrations(db_conn: &mut SqliteConnection) -> Result<()> {
     info("run_dictionaries_migrations()");
     db_conn.run_pending_migrations(DICTIONARIES_MIGRATIONS)
            .map_err(|e| anyhow::anyhow!("Failed to execute pending database migrations: {}", e))?;

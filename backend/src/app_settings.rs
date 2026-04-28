@@ -86,9 +86,18 @@ pub struct AppSettings {
     pub include_cst_mula_in_translations: bool,
     /// Include Mahāsaṅgīti (MS) Mūla Pāli texts in search results
     pub include_ms_mula_in_search_results: bool,
-    /// Include DPD bold-definition (commentary) entries in Dictionary search results
-    #[serde(default = "default_false")]
+    /// Include DPD bold-definition (commentary) entries in Dictionary search results.
+    /// (Originally backed the "Commentary Definitions in Search" checkbox in the
+    /// advanced options; relocated to the Dictionaries panel in the StarDict
+    /// import feature. Key preserved so user preferences carry over.)
+    #[serde(default = "default_true")]
     pub include_comm_bold_definitions_in_search_results: bool,
+    /// DPD enabled in the Dictionaries panel of the dictionary search.
+    #[serde(default = "default_true")]
+    pub dict_search_dpd_enabled: bool,
+    /// Per-user-imported-dictionary enabled state, keyed by dictionary label.
+    #[serde(default)]
+    pub dict_search_user_dict_enabled: IndexMap<String, bool>,
     /// Whether to restore the last session (open tabs) on startup
     #[serde(default = "default_true")]
     pub restore_last_session: bool,
@@ -98,6 +107,7 @@ fn default_true() -> bool {
     true
 }
 
+#[allow(dead_code)]
 fn default_false() -> bool {
     false
 }
@@ -238,7 +248,9 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             include_cst_commentary_in_search_results: true,
             include_cst_mula_in_translations: false,
             include_ms_mula_in_search_results: true,
-            include_comm_bold_definitions_in_search_results: false,
+            include_comm_bold_definitions_in_search_results: true,
+            dict_search_dpd_enabled: true,
+            dict_search_user_dict_enabled: IndexMap::new(),
             restore_last_session: true,
         }
     }

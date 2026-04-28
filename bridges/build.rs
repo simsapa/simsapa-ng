@@ -93,6 +93,7 @@ fn main() {
                         "src/storage_manager.rs",
                         "src/prompt_manager.rs",
                         "src/clipboard_manager.rs",
+                        "src/dictionary_manager.rs",
                 ],
                 qml_files: &qml_files,
                 ..Default::default()

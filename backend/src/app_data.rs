@@ -1552,16 +1552,43 @@ impl AppData {
 
         // 1.6: clear any pre-existing import-me/ artifacts from a previous
         // cancelled upgrade attempt before writing anything new.
+        //
+        // Exception: `user_dictionaries.sqlite3` (PRD task 5.6) — this snapshot
+        // is consumed at startup by the dictionary reconciliation pass, not
+        // during the upgrade-export phase. If a prior upgrade left one behind,
+        // it must survive until the next startup consumes it; the dictionary
+        // export step (`export_user_dictionaries`) refuses to overwrite it.
         if let Ok(true) = import_dir.try_exists() {
             info(&format!(
-                "Removing pre-existing import-me directory: {}",
+                "Clearing pre-existing import-me directory entries (preserving user_dictionaries.sqlite3): {}",
                 import_dir.display()
             ));
-            if let Err(e) = std::fs::remove_dir_all(&import_dir) {
-                warn(&format!(
-                    "Failed to remove pre-existing import-me directory {}: {}",
-                    import_dir.display(), e
-                ));
+            match std::fs::read_dir(&import_dir) {
+                Ok(entries) => {
+                    for entry in entries.flatten() {
+                        let p = entry.path();
+                        if p.file_name().is_some_and(|n| n == "user_dictionaries.sqlite3") {
+                            continue;
+                        }
+                        let res = if matches!(p.is_dir(), true) {
+                            std::fs::remove_dir_all(&p)
+                        } else {
+                            std::fs::remove_file(&p)
+                        };
+                        if let Err(e) = res {
+                            warn(&format!(
+                                "Failed to remove pre-existing import-me entry {}: {}",
+                                p.display(), e
+                            ));
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn(&format!(
+                        "Failed to read import-me directory {}: {}",
+                        import_dir.display(), e
+                    ));
+                }
             }
         }
 
@@ -1593,6 +1620,10 @@ impl AppData {
 
         if let Err(e) = self.export_user_chanting_data(&import_dir) {
             errors.push(("chanting".to_string(), format!("{:#}", e)));
+        }
+
+        if let Err(e) = self.export_user_dictionaries(&import_dir) {
+            errors.push(("user_dictionaries".to_string(), format!("{:#}", e)));
         }
 
         // One-shot legacy bridge: if userdata.sqlite3 still exists (alpha testers
@@ -1905,6 +1936,13 @@ impl AppData {
             error(&format!("Failed to import user chanting data: {}", e));
         }
 
+        // Import user-imported dictionaries snapshot. Failure here must NOT
+        // wipe the snapshot — the file remains in import-me/ for the next
+        // startup attempt (the cleanup step below excludes it).
+        if let Err(e) = self.import_user_dictionaries(&import_dir) {
+            error(&format!("Failed to import user dictionaries: {}", e));
+        }
+
         // Defensive tail pass for the one-shot legacy bridge: if legacy-userdata.sqlite3
         // is present and the current app_settings in appdata still looks like defaults,
         // re-apply the legacy app_settings. (Bookmark/book/chanting tables already got
@@ -1917,8 +1955,38 @@ impl AppData {
             }
         }
 
-        // Clean up: remove the import-me folder
-        if let Err(e) = std::fs::remove_dir_all(&import_dir) {
+        // Clean up: remove the import-me folder, but preserve
+        // `user_dictionaries.sqlite3` if it is still present (PRD task 5.6).
+        // If the dictionary import succeeded the importer already deleted
+        // the file; if it failed, the file must survive so the next startup
+        // can retry.
+        let dict_snapshot = import_dir.join("user_dictionaries.sqlite3");
+        let preserve_dict_snapshot = matches!(dict_snapshot.try_exists(), Ok(true));
+        if preserve_dict_snapshot {
+            // Remove every entry except the snapshot.
+            match std::fs::read_dir(&import_dir) {
+                Ok(entries) => {
+                    for entry in entries.flatten() {
+                        let p = entry.path();
+                        if p == dict_snapshot {
+                            continue;
+                        }
+                        let res = if matches!(p.is_dir(), true) {
+                            std::fs::remove_dir_all(&p)
+                        } else {
+                            std::fs::remove_file(&p)
+                        };
+                        if let Err(e) = res {
+                            error(&format!("Failed to remove import-me entry {}: {}", p.display(), e));
+                        }
+                    }
+                    info("import_user_data_from_assets(): cleared import-me folder, preserving user_dictionaries.sqlite3 for next startup");
+                }
+                Err(e) => {
+                    error(&format!("Failed to read import-me folder for selective cleanup: {}", e));
+                }
+            }
+        } else if let Err(e) = std::fs::remove_dir_all(&import_dir) {
             error(&format!("Failed to remove import-me folder: {}", e));
         } else {
             info("import_user_data_from_assets(): Removed import-me folder after import");
@@ -3127,6 +3195,357 @@ impl AppData {
                 ));
             }
         }
+    }
+}
+
+impl AppData {
+    /// Persist the in-memory AppSettings cache back to the appdata DB.
+    fn persist_app_settings(&self, settings: &AppSettings) {
+        use crate::db::appdata_schema::app_settings;
+        let settings_json = serde_json::to_string(settings).expect("Can't encode JSON");
+        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
+        if let Err(e) = diesel::update(app_settings::table)
+            .filter(app_settings::key.eq("app_settings"))
+            .set(app_settings::value.eq(Some(settings_json)))
+            .execute(db_conn)
+        {
+            error(&format!("Failed to update app settings: {}", e));
+        }
+    }
+
+    pub fn get_dpd_enabled(&self) -> bool {
+        self.app_settings_cache.read().expect("Failed to read app settings").dict_search_dpd_enabled
+    }
+
+    pub fn set_dpd_enabled(&self, enabled: bool) {
+        let snapshot = {
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.dict_search_dpd_enabled = enabled;
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
+    }
+
+    pub fn get_commentary_definitions_enabled(&self) -> bool {
+        self.app_settings_cache.read().expect("Failed to read app settings").include_comm_bold_definitions_in_search_results
+    }
+
+    pub fn set_commentary_definitions_enabled(&self, enabled: bool) {
+        let snapshot = {
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.include_comm_bold_definitions_in_search_results = enabled;
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
+    }
+
+    pub fn get_user_dict_enabled(&self, label: &str) -> bool {
+        let s = self.app_settings_cache.read().expect("Failed to read app settings");
+        s.dict_search_user_dict_enabled.get(label).copied().unwrap_or(true)
+    }
+
+    pub fn set_user_dict_enabled(&self, label: &str, enabled: bool) {
+        let snapshot = {
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.dict_search_user_dict_enabled.insert(label.to_string(), enabled);
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
+    }
+
+    pub fn list_user_dict_enabled(&self) -> IndexMap<String, bool> {
+        self.app_settings_cache.read().expect("Failed to read app settings").dict_search_user_dict_enabled.clone()
+    }
+
+    /// Export user-imported dictionaries to a self-contained SQLite snapshot
+    /// at `import_dir/user_dictionaries.sqlite3` (PRD §4.8 task 5.1).
+    ///
+    /// `indexed_at` is intentionally cleared on the exported rows so the
+    /// reconciliation pass re-indexes them on the next startup. `description`
+    /// IS carried over.
+    ///
+    /// **Double-upgrade safety (task 5.6):** if a snapshot already exists in
+    /// `import_dir`, this function refuses to overwrite it and returns an
+    /// error so the user knows to restart and complete the previous upgrade
+    /// first. The caller (`export_user_data_to_assets`) treats this as a
+    /// per-category error.
+    pub fn export_user_dictionaries(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::dictionaries_schema::{dictionaries, dict_words};
+        use crate::db::dictionaries_models::{Dictionary, DictWord};
+        use crate::db::run_dictionaries_migrations;
+        use diesel::sqlite::SqliteConnection;
+
+        let dest_path = import_dir.join("user_dictionaries.sqlite3");
+
+        // Task 5.6: refuse to overwrite an existing snapshot.
+        if matches!(dest_path.try_exists(), Ok(true)) {
+            return Err(anyhow!(
+                "A previous dictionary upgrade hasn't completed; please restart the app to finish it before upgrading again. (Pending: {})",
+                dest_path.display()
+            ));
+        }
+
+        // Pull user-imported dictionaries + their dict_words from the live DB.
+        let user_dicts: Vec<Dictionary> = {
+            let db_conn = &mut self.dbm.dictionaries.get_conn()
+                .context("Failed to get dictionaries DB connection for export")?;
+            dictionaries::table
+                .filter(dictionaries::is_user_imported.eq(true))
+                .select(Dictionary::as_select())
+                .load::<Dictionary>(db_conn)
+                .context("Failed to load user dictionaries for export")?
+        };
+
+        if user_dicts.is_empty() {
+            info("export_user_dictionaries(): no user-imported dictionaries to export");
+            return Ok(());
+        }
+
+        let dict_ids: Vec<i32> = user_dicts.iter().map(|d| d.id).collect();
+        let user_words: Vec<DictWord> = {
+            let db_conn = &mut self.dbm.dictionaries.get_conn()
+                .context("Failed to get dictionaries DB connection for dict_words export")?;
+            dict_words::table
+                .filter(dict_words::dictionary_id.eq_any(&dict_ids))
+                .select(DictWord::as_select())
+                .load::<DictWord>(db_conn)
+                .context("Failed to load dict_words for export")?
+        };
+
+        info(&format!(
+            "export_user_dictionaries(): exporting {} dictionaries / {} words",
+            user_dicts.len(), user_words.len()
+        ));
+
+        // Create the snapshot DB and run dictionaries migrations on it.
+        let dest_url = format!("sqlite://{}", dest_path.display());
+        let mut snap_conn = SqliteConnection::establish(&dest_url)
+            .with_context(|| format!("Failed to create snapshot DB {}", dest_path.display()))?;
+        run_dictionaries_migrations(&mut snap_conn)
+            .context("Failed to run migrations on user_dictionaries.sqlite3")?;
+
+        // Insert dictionaries (preserving id) so dict_words.dictionary_id
+        // continues to resolve inside the snapshot. The importer side will
+        // re-key on the way back into the live DB.
+        snap_conn.transaction::<_, anyhow::Error, _>(|tx| {
+            for d in &user_dicts {
+                diesel::insert_into(dictionaries::table)
+                    .values((
+                        dictionaries::id.eq(d.id),
+                        dictionaries::label.eq(&d.label),
+                        dictionaries::title.eq(&d.title),
+                        dictionaries::dict_type.eq(&d.dict_type),
+                        dictionaries::creator.eq(d.creator.as_deref()),
+                        dictionaries::description.eq(d.description.as_deref()),
+                        dictionaries::feedback_email.eq(d.feedback_email.as_deref()),
+                        dictionaries::feedback_url.eq(d.feedback_url.as_deref()),
+                        dictionaries::version.eq(d.version.as_deref()),
+                        dictionaries::is_user_imported.eq(true),
+                        dictionaries::language.eq(d.language.as_deref()),
+                        // Task 5.1: indexed_at is intentionally NOT carried over.
+                        dictionaries::indexed_at.eq::<Option<chrono::NaiveDateTime>>(None),
+                    ))
+                    .execute(tx)
+                    .with_context(|| format!("Insert dictionary {} into snapshot failed", d.label))?;
+            }
+
+            for w in &user_words {
+                diesel::insert_into(dict_words::table)
+                    .values((
+                        dict_words::id.eq(w.id),
+                        dict_words::dictionary_id.eq(w.dictionary_id),
+                        dict_words::dict_label.eq(&w.dict_label),
+                        dict_words::uid.eq(&w.uid),
+                        dict_words::word.eq(&w.word),
+                        dict_words::word_ascii.eq(&w.word_ascii),
+                        dict_words::language.eq(w.language.as_deref()),
+                        dict_words::word_nom_sg.eq(w.word_nom_sg.as_deref()),
+                        dict_words::inflections.eq(w.inflections.as_deref()),
+                        dict_words::phonetic.eq(w.phonetic.as_deref()),
+                        dict_words::transliteration.eq(w.transliteration.as_deref()),
+                        dict_words::meaning_order.eq(w.meaning_order),
+                        dict_words::definition_plain.eq(w.definition_plain.as_deref()),
+                        dict_words::definition_html.eq(w.definition_html.as_deref()),
+                        dict_words::summary.eq(w.summary.as_deref()),
+                        dict_words::synonyms.eq(w.synonyms.as_deref()),
+                        dict_words::antonyms.eq(w.antonyms.as_deref()),
+                        dict_words::homonyms.eq(w.homonyms.as_deref()),
+                        dict_words::also_written_as.eq(w.also_written_as.as_deref()),
+                        dict_words::see_also.eq(w.see_also.as_deref()),
+                    ))
+                    .execute(tx)
+                    .with_context(|| format!("Insert dict_word {} into snapshot failed", w.uid))?;
+            }
+            Ok(())
+        })?;
+
+        info(&format!("export_user_dictionaries(): wrote snapshot to {}", dest_path.display()));
+        Ok(())
+    }
+
+    /// Import user-imported dictionaries from `import_dir/user_dictionaries.sqlite3`
+    /// into the live `dictionaries.sqlite3` (PRD task 5.3).
+    ///
+    /// Each `dictionaries` row is INSERTed into the live DB with a fresh
+    /// autoincrement id; the old→new id map is then used to rewrite
+    /// `dict_words.dictionary_id` on insert. `indexed_at` is left NULL so the
+    /// reconciliation pass re-indexes on the next startup.
+    ///
+    /// All inserts run in a single transaction. On failure, the snapshot is
+    /// left in place for the next startup to retry.
+    ///
+    /// On success, the snapshot file is removed.
+    ///
+    /// Schema-drift safety (task 5.5): the importer reads explicit columns
+    /// via Diesel's typed schema. If a future build adds a `dict_words`
+    /// column with a NULL default the existing snapshots remain importable
+    /// because they will simply lack that column (and Diesel will reject
+    /// only if the new column is NOT NULL without default). If a future
+    /// build removes a column, the importer must be updated alongside.
+    pub fn import_user_dictionaries(&self, import_dir: &Path) -> Result<()> {
+        use crate::db::dictionaries_schema::{dictionaries, dict_words};
+        use crate::db::dictionaries_models::{Dictionary, DictWord};
+        use diesel::sqlite::SqliteConnection;
+        use std::collections::HashMap;
+
+        let snapshot_path = import_dir.join("user_dictionaries.sqlite3");
+        if !matches!(snapshot_path.try_exists(), Ok(true)) {
+            info("import_user_dictionaries(): no user_dictionaries.sqlite3 snapshot, skipping");
+            return Ok(());
+        }
+
+        info(&format!(
+            "import_user_dictionaries(): consuming snapshot {}",
+            snapshot_path.display()
+        ));
+
+        let snap_url = format!("sqlite://{}", snapshot_path.display());
+        let mut snap_conn = SqliteConnection::establish(&snap_url)
+            .with_context(|| format!("Failed to open snapshot {}", snapshot_path.display()))?;
+
+        let snap_dicts: Vec<Dictionary> = dictionaries::table
+            .select(Dictionary::as_select())
+            .load::<Dictionary>(&mut snap_conn)
+            .context("Failed to read dictionaries from snapshot")?;
+
+        if snap_dicts.is_empty() {
+            info("import_user_dictionaries(): snapshot has no dictionaries, removing");
+            let _ = std::fs::remove_file(&snapshot_path);
+            return Ok(());
+        }
+
+        let snap_dict_ids: Vec<i32> = snap_dicts.iter().map(|d| d.id).collect();
+        let snap_words: Vec<DictWord> = dict_words::table
+            .filter(dict_words::dictionary_id.eq_any(&snap_dict_ids))
+            .select(DictWord::as_select())
+            .load::<DictWord>(&mut snap_conn)
+            .context("Failed to read dict_words from snapshot")?;
+
+        info(&format!(
+            "import_user_dictionaries(): re-keying {} dictionaries / {} words",
+            snap_dicts.len(), snap_words.len()
+        ));
+
+        // Insert into the live DB inside a single transaction.
+        self.dbm.dictionaries.do_write(|tx| {
+            tx.transaction::<_, diesel::result::Error, _>(|tx| {
+                let mut id_map: HashMap<i32, i32> = HashMap::with_capacity(snap_dicts.len());
+                for d in &snap_dicts {
+                    // Skip if a dictionary with this label already exists in the
+                    // live DB (e.g. if the user re-installed the same archive
+                    // before the upgrade). Defensive — should be rare.
+                    let existing: Option<i32> = dictionaries::table
+                        .filter(dictionaries::label.eq(&d.label))
+                        .select(dictionaries::id)
+                        .first(tx)
+                        .optional()?;
+                    if let Some(eid) = existing {
+                        warn(&format!(
+                            "import_user_dictionaries(): live DB already has dictionary '{}' (id {}); skipping snapshot row",
+                            d.label, eid
+                        ));
+                        id_map.insert(d.id, eid);
+                        continue;
+                    }
+
+                    diesel::insert_into(dictionaries::table)
+                        .values((
+                            dictionaries::label.eq(&d.label),
+                            dictionaries::title.eq(&d.title),
+                            dictionaries::dict_type.eq(&d.dict_type),
+                            dictionaries::creator.eq(d.creator.as_deref()),
+                            dictionaries::description.eq(d.description.as_deref()),
+                            dictionaries::feedback_email.eq(d.feedback_email.as_deref()),
+                            dictionaries::feedback_url.eq(d.feedback_url.as_deref()),
+                            dictionaries::version.eq(d.version.as_deref()),
+                            dictionaries::is_user_imported.eq(true),
+                            dictionaries::language.eq(d.language.as_deref()),
+                            // Force NULL so the reconciliation pass re-indexes.
+                            dictionaries::indexed_at.eq::<Option<chrono::NaiveDateTime>>(None),
+                        ))
+                        .execute(tx)?;
+
+                    let new_id: i32 = dictionaries::table
+                        .filter(dictionaries::label.eq(&d.label))
+                        .select(dictionaries::id)
+                        .first(tx)?;
+                    id_map.insert(d.id, new_id);
+                }
+
+                for w in &snap_words {
+                    let new_dict_id = match id_map.get(&w.dictionary_id) {
+                        Some(nid) => *nid,
+                        None => {
+                            warn(&format!(
+                                "import_user_dictionaries(): dict_word {} references missing dictionary_id {} in snapshot; skipping",
+                                w.uid, w.dictionary_id
+                            ));
+                            continue;
+                        }
+                    };
+
+                    diesel::insert_into(dict_words::table)
+                        .values((
+                            dict_words::dictionary_id.eq(new_dict_id),
+                            dict_words::dict_label.eq(&w.dict_label),
+                            dict_words::uid.eq(&w.uid),
+                            dict_words::word.eq(&w.word),
+                            dict_words::word_ascii.eq(&w.word_ascii),
+                            dict_words::language.eq(w.language.as_deref()),
+                            dict_words::word_nom_sg.eq(w.word_nom_sg.as_deref()),
+                            dict_words::inflections.eq(w.inflections.as_deref()),
+                            dict_words::phonetic.eq(w.phonetic.as_deref()),
+                            dict_words::transliteration.eq(w.transliteration.as_deref()),
+                            dict_words::meaning_order.eq(w.meaning_order),
+                            dict_words::definition_plain.eq(w.definition_plain.as_deref()),
+                            dict_words::definition_html.eq(w.definition_html.as_deref()),
+                            dict_words::summary.eq(w.summary.as_deref()),
+                            dict_words::synonyms.eq(w.synonyms.as_deref()),
+                            dict_words::antonyms.eq(w.antonyms.as_deref()),
+                            dict_words::homonyms.eq(w.homonyms.as_deref()),
+                            dict_words::also_written_as.eq(w.also_written_as.as_deref()),
+                            dict_words::see_also.eq(w.see_also.as_deref()),
+                        ))
+                        .execute(tx)?;
+                }
+
+                Ok(())
+            })
+        }).context("import_user_dictionaries transaction failed")?;
+
+        // Success — remove the snapshot.
+        if let Err(e) = std::fs::remove_file(&snapshot_path) {
+            warn(&format!(
+                "Failed to remove consumed snapshot {}: {}",
+                snapshot_path.display(), e
+            ));
+        } else {
+            info(&format!(
+                "import_user_dictionaries(): consumed and removed snapshot {}",
+                snapshot_path.display()
+            ));
+        }
+        Ok(())
     }
 }
 
