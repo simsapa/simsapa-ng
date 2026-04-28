@@ -40,8 +40,9 @@ Imported dictionaries are stored in the existing `dictionaries.sqlite3` (in the 
 
 4. Clicking "Import StarDict…" must open a file picker restricted to `.zip` files.
 5. After the file is chosen, the user must be prompted in a small dialog for:
-   1. **Label** — Allowed characters: ASCII alphanumeric and `_-` only. Must be globally unique across all dictionaries in `dictionaries.sqlite3` (shipped and user).
-      - If the label collides with a **shipped/built-in** dictionary (e.g. `dpd`, the bold-definitions sources, or any row with `is_user_imported = false`), the import must be **rejected with an error**. The user must pick a different label. Replace is never offered for built-in labels.
+   1. **Label** — Allowed characters: ASCII alphanumeric and `_-` only. Must be globally unique across all dictionary `source_uid` values used in `dict_words` (shipped and user — see below).
+      - The dialog must pre-fill the label field with a sanitised version of the chosen `.zip` file's stem (e.g. `dppn.zip` → `dppn`, `My Dict v2.zip` → `My_Dict_v2`). Sanitisation rule: replace any character outside ASCII alnum / `_-` with `_`, collapse runs of `_`, and trim leading/trailing `_-`. The user may freely edit the pre-filled value before submitting.
+      - **Built-in label set** = the set of distinct `source_uid` values appearing on any `dict_words` row whose owning `dictionaries` row has `is_user_imported = false`. This is computed at validation time (not from the `dictionaries.label` column) because some shipped sources (notably bold-definitions, which uses `ref_code` as `source_uid`) do not match the parent `dictionaries.label`. If the user-typed label collides with this set, the import must be **rejected with an error**. Replace is never offered for built-in labels.
       - If the label collides with another **user-imported** dictionary, the dialog must offer to **Replace** the existing user dictionary (delete old rows + indexes, then import new) or **Cancel**.
    2. **Language code** — a short text input (e.g. `pli`, `en`), default pre-filled `pli`. Any non-empty ASCII value is accepted; if the value is not a recognised tokenizer language for Tantivy (see `backend/src/search/tokenizer.rs::register_tokenizers`), the dialog must show a warning that the dictionary will be indexed with the fallback tokenizer, but the user may proceed.
 6. The import (inside the running app) must:
@@ -62,6 +63,7 @@ Imported dictionaries are stored in the existing `dictionaries.sqlite3` (in the 
     1. `is_user_imported BOOLEAN NOT NULL DEFAULT 0`
     2. `language TEXT NULL` — stores the language code chosen at import time. Existing shipped rows pick up `NULL` (their per-word language is on `dict_words` and remains the source of truth for them).
     3. `indexed_at TIMESTAMP NULL` — set after FTS5 + Tantivy indexing for the dictionary completes; used by the startup recovery path (see req. 10).
+    4. `description TEXT NULL` — populated at import time from the StarDict `.ifo` `description` field (if present); shown by the info button in the Dictionaries panel. NULL for shipped rows and for imports where no description was found.
 12. The migration must be additive only; no existing rows are modified beyond the column defaults.
 13. Only rows with `is_user_imported = true` may be edited or removed via `DictionariesWindow.qml`. The bridge backend must enforce this — `delete_dictionary`, `rename_label`, and the Replace path must reject any `dictionary_id` whose `is_user_imported` is false.
 
@@ -94,31 +96,35 @@ The advanced search options currently live in `assets/qml/SearchBarInput.qml` in
     - Visible only when `root.search_area === "Dictionary"`.
     - Default state: **open** (`is_dictionaries_collapsed = false`).
     - Implemented as a new QML component `assets/qml/DictionarySearchDictionariesPanel.qml`, integrated into `SearchBarInput.qml` alongside the Filters sub-section.
-    - Lists only user-imported dictionaries (no shipped ones).
-    - Each row uses a wrapper element styled similarly to `user_repeater` items in `ChantingPracticeReviewWindow.qml`, containing: a checkbox, the dictionary name + label, and a lock toggle button.
+    - Lists, in order: (a) two **built-in entries** — "DPD" and "Commentary Definitions" — and (b) the user-imported dictionaries.
+    - Each row uses a wrapper element styled similarly to `user_repeater` items in `ChantingPracticeReviewWindow.qml`, containing: a checkbox, the dictionary name + label, an **info button** (`?` icon), and a lock toggle button.
     - When the row's checkbox is on, the wrapper background must be a light blue.
-    - When there are zero user-imported dictionaries, the section body must show an empty-state hint message: "No imported dictionaries yet — open Windows > Dictionaries… to import one."
+    - **DPD row.** The checkbox is bound to a new persisted setting `dict_search.dpd_enabled` (default `true`). The info button shows DPD's stock description text in a small dialog.
+    - **Commentary Definitions row.** This row replaces the existing "Commentary Definitions in Search" checkbox + info button currently in the advanced options area — that pair must be removed from its current location. The checkbox is bound to the existing setting that backed the old "Commentary Definitions in Search" toggle (preserve the storage key and migration semantics so existing user preferences are not lost). The info button shows the same explanatory text the old info button showed.
+    - **User-imported rows.** The info button is enabled only when the dictionary's `description` column is non-NULL; clicking it shows the description in a small dialog. If there is no description, the info button is hidden (or rendered disabled).
+    - When there are zero user-imported dictionaries, the user-imported section of the list must show an empty-state hint message under the two built-in rows: "No imported dictionaries. See Windows > Dictionaries…" — the built-in DPD and Commentary Definitions rows must always be present regardless.
     - Changes to checkbox or lock state must trigger `advanced_options_changed()` (debounced via the existing `advanced_options_debounce_timer`) so the search re-runs.
 
 ### 4.6 Per-Dictionary Search Selection
 
-20. Each user-imported dictionary in the "Dictionaries" section has a checkbox controlling whether its entries are included in the dictionary search query.
-21. The default state for a newly imported dictionary is **checked on**.
-22. The checkbox state for every user-imported dictionary must be persisted across app restarts (via `app_settings` or equivalent).
+20. Every row in the "Dictionaries" section — both built-in entries (DPD, Commentary Definitions) and each user-imported dictionary — has a checkbox controlling whether its entries are included in the dictionary search query.
+21. The default state for a newly imported dictionary is **checked on**. The default state for both built-in entries (DPD, Commentary Definitions) is also **checked on**.
+22. The checkbox state for every row (built-in and user-imported) must be persisted across app restarts (via `app_settings` or equivalent). Suggested keys: `dict_search.dpd_enabled`, `dict_search.commentary_definitions_enabled` (preserve the existing key for the latter to retain user history), `dict_search.user_dict_enabled.<label>`.
 23. When executing a dictionary search:
-    - The query must be constrained to: shipped dictionaries (always) + the set of user-imported dictionaries that are currently checked-on AND not disabled by a lock (see §4.7).
-    - Filtering must occur in the same query layer that already filters by `dict_label` for shipped dictionaries.
+    - The query must be constrained to the set of currently checked-on rows, further restricted by any active lock (see §4.7).
+    - For shipped sources other than DPD and Commentary Definitions (none expected today, but to be future-proof), the query layer must include them unconditionally — only the two surfaced built-in rows are user-toggleable.
+    - Filtering must occur in the same query layer that already filters by `source_uid` for shipped dictionaries. The DPD toggle removes/keeps `source_uid = "dpd"` and any DPD-related source_uids in the constraint set; the Commentary Definitions toggle removes/keeps the commentary bold-definitions `source_uid` set (the same set the existing checkbox already controls).
 
 ### 4.7 Lock (Solo) Toggle
 
-24. Each user-imported dictionary row has a checkable button with a lock icon.
+24. Every row in the "Dictionaries" section — built-in (DPD, Commentary Definitions) and user-imported — has a checkable button with a lock icon.
 25. When a lock button is activated:
-    1. That dictionary becomes the only **user-imported** dictionary contributing to the search query. (Shipped dictionaries are unaffected — see req. 28.)
-    2. All other user-imported dictionary rows enter a **disabled visual state** (their checkboxes are visually disabled and not interactive).
-    3. The other dictionaries' underlying checkbox states must **not** be modified (so the user's prior selection is preserved).
+    1. That row becomes the **only** dictionary contributing to the search query. All other rows — built-in *and* user-imported — are excluded from the search.
+    2. All other rows enter a **disabled visual state** (their checkboxes and info buttons are visually disabled and not interactive).
+    3. The other rows' underlying checkbox states must **not** be modified (so the user's prior selection is preserved).
 26. When the lock is deactivated, the prior checkbox states are restored as the active selection (no state was lost because none was modified).
 27. Only one lock may be active at a time. Activating a lock on a different row deactivates any previously locked row.
-28. While a lock is active, shipped dictionary inclusion behaviour is unchanged — the lock scopes only the user-imported set, never the shipped set.
+28. The lock scopes the entire dictionary set (built-in + user-imported). There is no "shipped always included" exception under lock — solo means solo.
 
 ### 4.8 Migration & Upgrade Strategy
 
@@ -170,15 +176,17 @@ The advanced search options currently live in `assets/qml/SearchBarInput.qml` in
   - accepts a `.zip` path, label, language,
   - extracts to a temp dir (deleted after import; the `.zip` is not archived — SQL is the source of truth, mirroring the chanting/books export pattern),
   - emits progress signals to QML for the inline progress bar,
-  - sets `is_user_imported = true`, `language = <chosen>`, `indexed_at = NULL` on the new `dictionaries` row.
-- A new Rust bridge (`bridges/src/dictionary_manager.rs`) must expose: `import_zip(path, label, lang)`, `list_user_dictionaries()`, `rename_label(id, new_label)`, `delete_dictionary(id)`, `validate_label(label)`, `is_label_taken_by_user(label)`, `is_label_taken_by_shipped(label)`, `get_user_dict_enabled(label)`, `set_user_dict_enabled(label, enabled)`, `get_user_dict_enabled_map()`. The bridge must enforce req. 13 (no edit / delete on `is_user_imported = false` rows) and req. 9 (single-mutex serialisation of import / rename / delete operations). Register the bridge per the QmlModule procedure in CLAUDE.md and create the `qmllint` stub in `assets/qml/com/profoundlabs/simsapa/`.
+  - sets `is_user_imported = true`, `language = <chosen>`, `indexed_at = NULL`, and `description = <ifo_description_or_NULL>` on the new `dictionaries` row. The StarDict `.ifo` file may include a `description=` line; when present, capture it verbatim (trimmed) and store it.
+- A new Rust bridge (`bridges/src/dictionary_manager.rs`) must expose: `import_zip(path, label, lang)`, `list_user_dictionaries()` (returned JSON includes the `description` column), `rename_label(id, new_label)`, `delete_dictionary(id)`, `validate_label(label)`, `is_label_taken_by_user(label)`, `is_label_taken_by_shipped(label)` (implemented via `SELECT DISTINCT source_uid FROM dict_words WHERE dictionary_id IN (SELECT id FROM dictionaries WHERE is_user_imported = 0)`, *not* a `dictionaries.label` lookup, so bold-definitions `ref_code` source_uids are correctly treated as built-in), `suggested_label_for_zip(zip_path)` (returns the sanitised filename stem), `get_user_dict_enabled(label)`, `set_user_dict_enabled(label, enabled)`, `get_user_dict_enabled_map()`, plus built-in toggles `get_dpd_enabled()`, `set_dpd_enabled(enabled)`, `get_commentary_definitions_enabled()`, `set_commentary_definitions_enabled(enabled)`. The bridge must enforce req. 13 (no edit / delete on `is_user_imported = false` rows) and req. 9 (single-mutex serialisation of import / rename / delete operations). Register the bridge per the QmlModule procedure in CLAUDE.md and create the `qmllint` stub in `assets/qml/com/profoundlabs/simsapa/`.
 - **Tantivy schema**: the existing `build_dict_schema()` in `backend/src/search/schema.rs` exposes a `source_uid` text field (raw tokenizer, indexed) — this is the field used for delete-by-term, with the dictionary label as the term value. There is no separate `dict_label` field; do not invent one. Reuse the same field set used by the bootstrap DPD StarDict import.
 - **FTS5**: use the existing dictionary FTS5 virtual table; insert/delete by `source_uid` (= label).
 - **Tokenizer language**: `register_tokenizers(index, lang)` is called per Tantivy index. If the user-supplied language is not one of the supported codes, the import dialog must warn but still proceed; the indexer falls back to the default tokenizer for unknown languages. Indexing happens in the startup pass, so the warning is shown at import-dialog time only.
 - **Concurrency model**: a single bridge-level `Mutex<()>` (or busy `bool`) gates `import_zip` / `rename_label` / `delete_dictionary` against each other. The startup re-indexing pass runs before `SuttaSearchWindow` opens, so it never contends with a live searcher. This is a single-user app — no IPC-level serialisation is required.
 - **Indexing & live searcher contention**: by design, all FTS5 and Tantivy index writes happen in the startup re-indexing window before `SuttaSearchWindow` opens. Inside the running app no Tantivy `IndexWriter` is opened on the dict index, so no directory-lock contention with the live `IndexReader`.
 - All filesystem existence checks must use `try_exists()` per CLAUDE.md (Android safety).
-- Persisted per-dictionary checkbox state lives in `backend/src/app_settings.rs` (no extra DB table / migration). Suggested key shape: `dict_search.user_dict_enabled.<label> = bool`. The transient lock state is NOT persisted across restarts.
+- Persisted per-dictionary checkbox state lives in `backend/src/app_settings.rs` (no extra DB table / migration). Keys: `dict_search.dpd_enabled = bool` (default true), `dict_search.commentary_definitions_enabled = bool` (default true — reuse the existing key that backed the old "Commentary Definitions in Search" advanced-options checkbox), `dict_search.user_dict_enabled.<label> = bool` (default true). The transient lock state (which row is solo'd) is NOT persisted across restarts.
+- The query layer must accept the per-built-in toggles as part of its filter input (alongside the user-imported filter). Concretely: extend the dictionary-search filter type to carry `include_dpd: bool` and `include_commentary_definitions: bool`. The `DictionaryTab.qml` caller computes these from `app_settings` (or the bridge) before issuing the search. When a lock is active, the lock target overrides all checkbox state and the filter contains exactly the locked dictionary's `source_uid` set.
+- The existing "Commentary Definitions in Search" advanced-options checkbox + info button (currently in `SearchBarInput.qml`) must be **removed** as part of this change — its state and info text are migrated into the new Dictionaries panel row. The setting key is preserved so user preferences carry over without a migration.
 - **Pre-existing release-1 user data**: the very first build that ships this feature only adds the schema columns; no upgrade round-trip is required because there are no user dictionaries yet. From the next release onward, every user-imported dictionary is round-tripped through `import-me/user_dictionaries.sqlite3` on upgrade, mirroring the chanting / books / bookmarks export pattern.
 
 ## 8. Success Metrics
@@ -189,6 +197,17 @@ The advanced search options currently live in `assets/qml/SearchBarInput.qml` in
 - Deleting a dictionary removes all of its entries from SQL, FTS5, and Tantivy results.
 - Existing dictionary search behavior for shipped dictionaries is unchanged when no user dictionaries are imported.
 - Migration runs cleanly on an existing user `dictionaries.sqlite3` from the previous release (no data loss, no manual steps).
+
+## 8a. Built-in Label Detection (Implementation Note)
+
+"Shipped/built-in" labels for the purposes of label-collision validation are NOT read from `dictionaries.label`. They are computed from `dict_words.source_uid` because some shipped sources (notably bold-definitions) use a per-row `ref_code` as `source_uid` rather than the parent `dictionaries.label`. The canonical query is:
+
+```sql
+SELECT DISTINCT source_uid FROM dict_words
+WHERE dictionary_id IN (SELECT id FROM dictionaries WHERE is_user_imported = 0);
+```
+
+The result of that query is the set the import dialog's `label_status` check must reject as `taken_shipped`. Cache it once per app session if performance becomes a concern (the `dict_words` table is large but `DISTINCT source_uid` is selective).
 
 ## 9. Open Questions
 
