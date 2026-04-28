@@ -12,9 +12,11 @@
 #include <QSystemTrayIcon>
 #include <QApplication>
 #include <QMainWindow>
+#include <QEventLoop>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -248,10 +250,37 @@ int start(int argc, char* argv[]) {
   // deleted user dictionaries, or orphan source_uids in the Tantivy dict
   // index from a release-upgrade DB swap). Tantivy writes happen here so
   // they never contend with a live searcher in `SuttaSearchWindow`.
+  //
+  // The QML window drives reconciliation through the `DictionaryManager`
+  // bridge (worker thread + Qt signals) and closes itself on
+  // `reconcileFinished`. We pump a local `QEventLoop` until the window's
+  // QQuickWindow is destroyed, then proceed.
   if (reconcile_dict_indexes_needed_c()) {
-    log_info_c("Running dictionary index reconciliation...");
-    reconcile_dict_indexes_blocking_c();
-    log_info_c("Dictionary index reconciliation complete.");
+    log_info_c("Showing dictionary index reconciliation window...");
+
+    QQmlApplicationEngine reconcile_engine;
+    reconcile_engine.load(QUrl(QStringLiteral(
+      "qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/DictionaryIndexProgressWindow.qml")));
+
+    auto roots = reconcile_engine.rootObjects();
+    if (!roots.isEmpty()) {
+      QObject* window_root = roots.constFirst();
+      QEventLoop reconcile_loop;
+      QObject::connect(window_root, &QObject::destroyed, &reconcile_loop, &QEventLoop::quit);
+      QQuickWindow* qwin = qobject_cast<QQuickWindow*>(window_root);
+      if (qwin) {
+        QObject::connect(qwin, &QQuickWindow::visibleChanged, &reconcile_loop, [&reconcile_loop, qwin]() {
+          if (!qwin->isVisible()) reconcile_loop.quit();
+        });
+      }
+      reconcile_loop.exec();
+      log_info_c("Dictionary index reconciliation complete.");
+    } else {
+      // Fallback — couldn't load the QML; run synchronously so the app still
+      // makes progress.
+      log_info_c("Reconciliation window failed to load; running synchronously.");
+      reconcile_dict_indexes_blocking_c();
+    }
   }
 
   // === Create the first app window ===

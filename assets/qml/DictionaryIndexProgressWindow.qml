@@ -21,13 +21,35 @@ ApplicationWindow {
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property int pointSize: is_mobile ? 16 : 12
 
-    // Bridge wiring is filled in during task 4.0 (DictionaryManager bridge).
-    // The pre-bridge fallback runs reconciliation synchronously from C++ before
-    // SuttaSearchWindow is opened — this window is shown while that work is
-    // delegated to the bridge worker thread and its progress signals.
+    // The window starts reconciliation on Component.onCompleted via the
+    // DictionaryManager bridge, drives the progress bar from
+    // `reconcileProgress`, and closes itself on `reconcileFinished`. C++ shows
+    // the window before the main `SuttaSearchWindow` and waits for it to close.
     property string stage_text: "Re-indexing imported dictionaries — please wait."
     property real progress_value: 0.0
     property bool indeterminate: true
+
+    DictionaryManager {
+        id: dict_mgr
+
+        onReconcileProgress: function(stage, done, total) {
+            root.stage_text = stage;
+            if (total > 0) {
+                root.progress_value = done / total;
+                root.indeterminate = false;
+            } else {
+                root.indeterminate = true;
+            }
+        }
+
+        onReconcileFinished: {
+            root.close();
+        }
+    }
+
+    Component.onCompleted: {
+        dict_mgr.start_reconcile();
+    }
 
     ColumnLayout {
         anchors.fill: parent

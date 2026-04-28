@@ -142,19 +142,24 @@ pub fn import_user_zip(
     archive.extract(&extract_dir)
         .map_err(|e| format!("Failed to extract zip {}: {}", zip_path.display(), e))?;
 
-    // 6. Locate the StarDict directory: the extracted contents may live at
-    //    `<tmp>/` directly, or one level deep inside a wrapper folder.
-    //    Look for a `<label>.ifo` sibling.
-    let unzipped_dir = locate_stardict_dir(&extract_dir, label)
-        .ok_or_else(|| format!("StarDict files for label '{}' not found in archive.", label))?;
+    // 6. Locate the StarDict directory and discover the physical .ifo basename.
+    //    The extracted contents may live at `<tmp>/` directly or one level deep
+    //    inside a wrapper folder; the .ifo basename is whatever the upstream
+    //    archive ships (e.g. `concise-eng-pli.ifo`) and need not match the
+    //    user-chosen label.
+    let (unzipped_dir, physical_stem) = locate_stardict_dir(&extract_dir)
+        .ok_or_else(|| "No `.ifo` file found in archive.".to_string())?;
 
     // 7. Capture the optional .ifo description.
-    let description = read_ifo_description(&unzipped_dir, label);
+    let description = read_ifo_description(&unzipped_dir, &physical_stem);
 
-    // 8. Run the SQL-only import.
+    // 8. Run the SQL-only import. `physical_stem` locates the files on disk;
+    //    `label` is the logical label stored on the dictionaries row and used
+    //    as the `{word}/{label}` uid suffix.
     let dictionary_id = import_stardict_as_new(
         &unzipped_dir,
         lang,
+        &physical_stem,
         label,
         true,            // _ignore_synonyms (kept for parity with shipped path)
         false,           // delete_if_exists — caller has already deleted on Replace
@@ -177,24 +182,38 @@ pub fn import_user_zip(
     Ok(dictionary_id)
 }
 
-/// Find the directory containing `<label>.ifo` inside an extracted archive.
+/// Find a StarDict directory inside an extracted archive and return both the
+/// directory and the basename (stem) of the discovered `.ifo` file.
 ///
 /// Many StarDict zips ship the files at the archive root; some wrap them in a
-/// single folder. We try both.
-fn locate_stardict_dir(extract_dir: &Path, label: &str) -> Option<std::path::PathBuf> {
-    let direct = extract_dir.join(format!("{}.ifo", label));
-    if matches!(direct.try_exists(), Ok(true)) {
-        return Some(extract_dir.to_path_buf());
+/// single folder. We scan both. The `.ifo` basename is whatever the archive
+/// ships and need not match the user-chosen label.
+fn locate_stardict_dir(extract_dir: &Path) -> Option<(std::path::PathBuf, String)> {
+    if let Some(stem) = find_ifo_stem_in(extract_dir) {
+        return Some((extract_dir.to_path_buf(), stem));
     }
 
     // One level deep.
     let entries = std::fs::read_dir(extract_dir).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if matches!(path.is_dir(), true) {
-            let candidate = path.join(format!("{}.ifo", label));
-            if matches!(candidate.try_exists(), Ok(true)) {
-                return Some(path);
+        if path.is_dir() {
+            if let Some(stem) = find_ifo_stem_in(&path) {
+                return Some((path, stem));
+            }
+        }
+    }
+    None
+}
+
+/// Return the file-stem of the first `*.ifo` in `dir`, if any.
+fn find_ifo_stem_in(dir: &Path) -> Option<String> {
+    let entries = std::fs::read_dir(dir).ok()?;
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) == Some("ifo") {
+            if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                return Some(stem.to_string());
             }
         }
     }

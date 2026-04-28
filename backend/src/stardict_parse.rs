@@ -30,8 +30,8 @@ pub enum StardictImportProgress {
 /// The underlying `stardict` crate already parses the `.ifo` description
 /// field (see `stardict::Ifo::description`), so this is a thin convenience
 /// wrapper used by the runtime importer.
-pub fn read_ifo_description(unzipped_dir: &Path, label: &str) -> Option<String> {
-    let ifo_path = unzipped_dir.join(format!("{}.ifo", label));
+pub fn read_ifo_description(unzipped_dir: &Path, physical_stem: &str) -> Option<String> {
+    let ifo_path = unzipped_dir.join(format!("{}.ifo", physical_stem));
     let ifo = Ifo::new(ifo_path).ok()?;
     let trimmed = ifo.description.trim();
     if trimmed.is_empty() { None } else { Some(trimmed.to_string()) }
@@ -235,9 +235,15 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
 /// - `progress` receives stage updates; pass `|_| {}` for no-op.
 /// - `indexed_at` is always set to `NULL` so the next startup picks the
 ///   dictionary up for re-indexing.
+/// `physical_stem` is the basename of the `.ifo`/`.idx`/`.dict` files inside
+/// `unzipped_dir` (i.e. how the StarDict archive names them). `new_dict_label`
+/// is the logical label stored on the `dictionaries` row and used as the
+/// `{word}/{label}` uid suffix; the two may differ when the user picks a custom
+/// label at import time.
 pub fn import_stardict_as_new(
     unzipped_dir: &Path,
     lang: &str,
+    physical_stem: &str,
     new_dict_label: &str,
     _ignore_synonyms: bool,
     delete_if_exists: bool,
@@ -252,7 +258,7 @@ pub fn import_stardict_as_new(
 
     progress(StardictImportProgress::Parsing);
 
-    let ifo_path = unzipped_dir.join(format!("{}.ifo", new_dict_label));
+    let ifo_path = unzipped_dir.join(format!("{}.ifo", physical_stem));
     let ifo = match Ifo::new(ifo_path.clone()) {
         Ok(x) => x,
         Err(e) => {

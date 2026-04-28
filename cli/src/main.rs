@@ -101,7 +101,7 @@ fn import_stardict_dictionary(new_dict_label: &str,
                               unzipped_dir: &Path,
                               limit: Option<usize>)
                               -> Result<(), String> {
-    import_stardict_as_new(unzipped_dir, "pli", new_dict_label, true, true, limit, false, None, &|_| {})?;
+    import_stardict_as_new(unzipped_dir, "pli", new_dict_label, new_dict_label, true, true, limit, false, None, &|_| {})?;
     Ok(())
 }
 
