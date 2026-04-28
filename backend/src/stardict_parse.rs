@@ -11,6 +11,32 @@ use crate::db::dictionaries_models::NewDictWord;
 use crate::helpers as h;
 use crate::logger::{info, warn, error};
 
+/// Stages emitted by the SQL-only StarDict import pipeline.
+///
+/// The startup re-indexing pass owns all FTS5 / Tantivy writes, so this enum
+/// intentionally has no `IndexingFts5` / `IndexingTantivy` variants.
+#[derive(Debug, Clone)]
+pub enum StardictImportProgress {
+    Extracting,
+    Parsing,
+    InsertingWords { done: usize, total: usize },
+    Done,
+    Failed { msg: String },
+}
+
+/// Read the optional `description=` line from a StarDict `.ifo` file.
+///
+/// Returns the trimmed value when present and non-empty; otherwise `None`.
+/// The underlying `stardict` crate already parses the `.ifo` description
+/// field (see `stardict::Ifo::description`), so this is a thin convenience
+/// wrapper used by the runtime importer.
+pub fn read_ifo_description(unzipped_dir: &Path, label: &str) -> Option<String> {
+    let ifo_path = unzipped_dir.join(format!("{}.ifo", label));
+    let ifo = Ifo::new(ifo_path).ok()?;
+    let trimmed = ifo.description.trim();
+    if trimmed.is_empty() { None } else { Some(trimmed.to_string()) }
+}
+
 /// Replaces bword:// links with ssp:// links.
 fn parse_bword_links_to_ssp(definition: &str) -> String {
     // QueryType.words
@@ -197,46 +223,91 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
     words_to_insert
 }
 
-pub fn import_stardict_as_new(unzipped_dir: &Path,
-                              lang: &str,
-                              new_dict_label: &str,
-                              _ignore_synonyms: bool,
-                              delete_if_exists: bool,
-                              limit: Option<usize>)
-                              -> Result<(), String> {
+/// SQL-only StarDict import.
+///
+/// - Parses the `.ifo` + index, builds `dict_words`, inserts them in chunks.
+/// - Does NOT touch FTS5 / Tantivy. Index writes are owned by the startup
+///   reconciliation pass (see `dict_index_reconcile`).
+/// - When `description` is `Some`, that value is stored on the new
+///   `dictionaries` row. When `description` is `None` and `is_user_imported`
+///   is true, the value is taken from the `.ifo` `description=` field if
+///   present (trimmed); otherwise NULL.
+/// - `progress` receives stage updates; pass `|_| {}` for no-op.
+/// - `indexed_at` is always set to `NULL` so the next startup picks the
+///   dictionary up for re-indexing.
+pub fn import_stardict_as_new(
+    unzipped_dir: &Path,
+    lang: &str,
+    new_dict_label: &str,
+    _ignore_synonyms: bool,
+    delete_if_exists: bool,
+    limit: Option<usize>,
+    is_user_imported: bool,
+    description: Option<&str>,
+    progress: &dyn Fn(StardictImportProgress),
+) -> Result<i32, String> {
     use crate::db::dictionaries_models::NewDictionary;
 
     let app_data = get_app_data();
 
+    progress(StardictImportProgress::Parsing);
+
     let ifo_path = unzipped_dir.join(format!("{}.ifo", new_dict_label));
     let ifo = match Ifo::new(ifo_path.clone()) {
         Ok(x) => x,
-        Err(e) => return Err(format!("Error parsing ifo: {}, {}", ifo_path.to_string_lossy(), e)),
+        Err(e) => {
+            let msg = format!("Error parsing ifo: {}, {}", ifo_path.to_string_lossy(), e);
+            progress(StardictImportProgress::Failed { msg: msg.clone() });
+            return Err(msg);
+        }
     };
 
     if delete_if_exists {
         // Delete dictionary. Associated words are dropped due to cascade.
         match app_data.dbm.dictionaries.delete_dictionary_by_label(new_dict_label) {
             Ok(n) => info(&format!("Deleted {} dictionary.", n)),
-            Err(e) => return Err(format!("Error deleting: {}", e)),
+            Err(e) => {
+                let msg = format!("Error deleting: {}", e);
+                progress(StardictImportProgress::Failed { msg: msg.clone() });
+                return Err(msg);
+            }
         };
     }
 
+    // Resolve description: caller-supplied wins; else fall back to the
+    // `.ifo` description for user-imported dictionaries.
+    let ifo_description: Option<String> = if description.is_some() {
+        None
+    } else if is_user_imported {
+        let t = ifo.description.trim();
+        if t.is_empty() { None } else { Some(t.to_string()) }
+    } else {
+        None
+    };
+
     // Add the dictionary, store id
+    let lang_opt = if lang.is_empty() { None } else { Some(lang) };
     let new_dict = NewDictionary {
         label: new_dict_label,
         title: &ifo.bookname,
         dict_type: "stardict",
         creator: None, // TODO: parse from ifo
-        description: None,
+        description: description.or(ifo_description.as_deref()),
         feedback_email: None,
         feedback_url: None,
         version: None,
+        is_user_imported,
+        language: if is_user_imported { lang_opt } else { None },
+        indexed_at: None,
     };
 
     let dictionary_id = match app_data.dbm.dictionaries.create_dictionary(new_dict) {
         Ok(x) => x.id,
-        Err(e) => return Err(format!("{}", e)),
+        Err(e) => {
+            let msg = format!("{}", e);
+            progress(StardictImportProgress::Failed { msg: msg.clone() });
+            return Err(msg);
+        }
     };
 
     // Add dict_word entries, assign dictionary_id to make them related
@@ -244,50 +315,63 @@ pub fn import_stardict_as_new(unzipped_dir: &Path,
     // Load the dictionary data
     let mut dict = match stardict::no_cache(ifo_path) {
         Ok(x) => x,
-        Err(e) => return Err(format!("Error loading stardict dictionary: {}", e)),
+        Err(e) => {
+            // Roll back the dictionaries row we just inserted so the DB stays clean.
+            let _ = app_data.dbm.dictionaries.delete_dictionary_by_label(new_dict_label);
+            let msg = format!("Error loading stardict dictionary: {}", e);
+            progress(StardictImportProgress::Failed { msg: msg.clone() });
+            return Err(msg);
+        }
     };
 
     info(&format!("Importing {}, {} total entries ...", &ifo.bookname, dict.idx.items.len()));
 
     let words_to_insert = parse_dict(&mut dict, dictionary_id, new_dict_label, lang, limit);
+    let total = words_to_insert.len();
 
-    info(&format!("Inserting {} ...", words_to_insert.len()));
-
-    info(&format!("Inserting {} words into the database via batch...", words_to_insert.len()));
+    info(&format!("Inserting {} words into the database via batch...", total));
+    progress(StardictImportProgress::InsertingWords { done: 0, total });
 
     let _lock = app_data.dbm.dictionaries.write_lock.lock();
-    let db_conn = &mut app_data.dbm.dictionaries.get_conn().map_err(|e| format!("{}", e))?;
+    let db_conn = &mut app_data.dbm.dictionaries.get_conn().map_err(|e| {
+        let msg = format!("{}", e);
+        progress(StardictImportProgress::Failed { msg: msg.clone() });
+        msg
+    })?;
 
+    let chunk_size = 5000;
+    let mut inserted: usize = 0;
     let insert_result = db_conn.transaction::<_, diesel::result::Error, _>(|transaction_conn| {
-        let chunk_size = 5000;
         for chunk in words_to_insert.chunks(chunk_size) {
-            info(&format!("Inserting chunk of size {}", chunk.len()));
-            // Explicitly handle the result of the batch insert
             let batch_result = db::dictionaries::create_dict_words_batch(transaction_conn, chunk);
             if let Err(err) = batch_result {
-                // If an error occurs, collect UIDs from the failed chunk
                 error(&format!("Batch insertion failed for chunk. Error: {}", err));
-                // let failed_uids: Vec<String> = chunk.iter()
-                //                                     .map(|word| word.uid.clone())
-                //                                     .collect();
-                // error(&format!("UIDs in failing chunk: {:?}", failed_uids));
-                // Return the error to roll back the transaction
                 return Err(err);
             }
-            // If Ok, loop continues
+            inserted += chunk.len();
+            // Note: progress callback is called outside of transaction lifetime
+            // safety — but it's a `Fn`, so we just emit the count we've committed
+            // in this transaction so far. The callback must not touch the DB.
+            progress(StardictImportProgress::InsertingWords { done: inserted, total });
         }
-        Ok(()) // Commit transaction if all chunks succeeded
+        Ok(())
     });
 
     match insert_result {
         Ok(_) => {},
         Err(e) => {
-            // Transaction automatically rolled back on error
-            return Err(format!("Batch insertion failed: {}", e));
+            // Transaction automatically rolled back on error.
+            // Also drop the parent dictionaries row so we don't leak an empty entry.
+            drop(_lock);
+            let _ = app_data.dbm.dictionaries.delete_dictionary_by_label(new_dict_label);
+            let msg = format!("Batch insertion failed: {}", e);
+            progress(StardictImportProgress::Failed { msg: msg.clone() });
+            return Err(msg);
         }
     }
 
     info(&format!("Import finished for '{}'.", &ifo.bookname));
+    progress(StardictImportProgress::Done);
 
-    Ok(())
+    Ok(dictionary_id)
 }

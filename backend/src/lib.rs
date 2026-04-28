@@ -9,6 +9,7 @@ pub mod html_content;
 pub mod dir_list;
 pub mod app_data;
 pub mod stardict_parse;
+pub mod dictionary_manager_core;
 pub mod pali_stemmer;
 pub mod pali_sort;
 pub mod logger;

@@ -39,6 +39,9 @@ diesel::table! {
         feedback_email -> Nullable<Text>,
         feedback_url -> Nullable<Text>,
         version -> Nullable<Text>,
+        is_user_imported -> Bool,
+        language -> Nullable<Text>,
+        indexed_at -> Nullable<Timestamp>,
         // created_at -> Nullable<Timestamp>,
         // updated_at -> Nullable<Timestamp>,
     }

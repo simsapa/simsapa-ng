@@ -1,6 +1,6 @@
 use diesel::prelude::*;
+use chrono::NaiveDateTime;
 use crate::db::dictionaries_schema::*;
-// use chrono::NaiveDateTime;
 
 #[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq)]
 #[diesel(table_name = dictionaries)]
@@ -15,6 +15,9 @@ pub struct Dictionary {
     pub feedback_email: Option<String>,
     pub feedback_url: Option<String>,
     pub version: Option<String>,
+    pub is_user_imported: bool,
+    pub language: Option<String>,
+    pub indexed_at: Option<NaiveDateTime>,
     // pub created_at: chrono::NaiveDateTime,
     // pub updated_at: Option<chrono::NaiveDateTime>,
 }
@@ -31,6 +34,9 @@ pub struct NewDictionary<'a> {
     pub feedback_email: Option<&'a str>,
     pub feedback_url: Option<&'a str>,
     pub version: Option<&'a str>,
+    pub is_user_imported: bool,
+    pub language: Option<&'a str>,
+    pub indexed_at: Option<NaiveDateTime>,
 }
 
 
