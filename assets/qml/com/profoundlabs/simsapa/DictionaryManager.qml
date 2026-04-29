@@ -20,6 +20,18 @@ Item {
         return "[]";
     }
 
+    function list_shipped_source_uids(): string {
+        return "[]";
+    }
+
+    function dpd_source_uids(): string {
+        return "[\"dpd\"]";
+    }
+
+    function commentary_definitions_source_uids(): string {
+        return "[]";
+    }
+
     function label_status(label: string): string {
         return "available";
     }

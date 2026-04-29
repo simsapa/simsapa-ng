@@ -50,6 +50,7 @@ fn make_params(mode: SearchMode, uid_suffix: Option<&str>) -> SearchParams {
         uid_suffix: uid_suffix.map(str::to_string),
         include_ms_mula: true,
         include_comm_bold_definitions: true,
+        dict_source_uids: None,
     }
 }
 

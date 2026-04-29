@@ -27,6 +27,7 @@ Frame {
     property alias search_input: search_input
     property alias search_mode_dropdown: search_mode_dropdown
     property alias language_filter_dropdown: language_filter_dropdown
+    property alias dictionaries_panel: dictionaries_panel
 
     // Search area state: "Suttas", "Dictionary", or "Library"
     property string search_area: "Suttas"
@@ -38,6 +39,10 @@ Frame {
     readonly property string uid_prefix: uid_prefix_input.text.trim().toLowerCase()
     readonly property string uid_suffix: uid_suffix_input.text.trim().toLowerCase()
     readonly property bool include_ms_mula: include_ms_mula_checkbox.checked
+
+    // Collapsible advanced sub-sections
+    property bool is_filters_collapsed: false
+    property bool is_dictionaries_collapsed: false
 
     signal advanced_options_changed()
 
@@ -343,10 +348,10 @@ Frame {
         }
 
         // === Advanced Search Options Row ===
-        Flow {
+        ColumnLayout {
             id: advanced_options_row
             width: parent.width
-            spacing: 8
+            spacing: 6
             visible: root.advanced_options_visible
 
             Timer {
@@ -356,12 +361,43 @@ Frame {
                 onTriggered: root.advanced_options_changed()
             }
 
+            // --- Filters sub-section header ---
             RowLayout {
+                Layout.fillWidth: true
                 spacing: 4
-                visible: root.search_area === "Suttas"
+
+                Button {
+                    flat: true
+                    icon.source: root.is_filters_collapsed ? "icons/32x32/fa_chevron-right-solid.png" : "icons/32x32/fa_chevron-down-solid.png"
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: root.is_filters_collapsed = !root.is_filters_collapsed
+                }
 
                 Label {
-                    text: "Nikāya prefix:"
+                    text: "Filters"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            // --- Filters content wrapper ---
+            Flow {
+                id: filters_flow
+                Layout.fillWidth: true
+                width: parent.width
+                spacing: 8
+                visible: !root.is_filters_collapsed
+
+                RowLayout {
+                    spacing: 4
+                    visible: root.search_area === "Suttas"
+
+                    Label {
+                        text: "Nikāya prefix:"
                     font.pointSize: root.is_mobile ? 12 : 10
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -555,32 +591,39 @@ Frame {
                 }
             }
 
+            } // end Flow filters_flow
+
+            // --- Dictionaries sub-section header ---
             RowLayout {
-                spacing: 2
+                Layout.fillWidth: true
+                spacing: 4
                 visible: root.search_area === "Dictionary"
 
-                CheckBox {
-                    id: include_comm_bold_definitions_checkbox
-                    text: "Commentary Definitions in Search"
-                    font.pointSize: root.is_mobile ? 12 : 10
-                    checked: SuttaBridge.get_include_comm_bold_definitions_in_search_results()
-                    onCheckedChanged: {
-                        SuttaBridge.set_include_comm_bold_definitions_in_search_results(checked);
-                        root.advanced_options_changed();
-                    }
-                }
-
                 Button {
-                    icon.source: "icons/32x32/fa_circle-info-solid.png"
                     flat: true
+                    icon.source: root.is_dictionaries_collapsed ? "icons/32x32/fa_chevron-right-solid.png" : "icons/32x32/fa_chevron-down-solid.png"
                     implicitWidth: root.icon_size
                     implicitHeight: root.icon_size
-                    onClicked: {
-                        info_dialog.title = "Commentary Definitions in Search";
-                        info_dialog.message = "Also search bold-highlighted terms extracted from Pāli commentaries (bold definitions). Turn off for headword-only results.";
-                        info_dialog.open();
-                    }
+                    onClicked: root.is_dictionaries_collapsed = !root.is_dictionaries_collapsed
                 }
+
+                Label {
+                    text: "Dictionaries"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            DictionarySearchDictionariesPanel {
+                id: dictionaries_panel
+                Layout.fillWidth: true
+                point_size: root.is_mobile ? 12 : 10
+                icon_size: root.icon_size
+                visible: !root.is_dictionaries_collapsed && root.search_area === "Dictionary"
+                onSelection_changed: advanced_options_debounce_timer.restart()
             }
         }
     }

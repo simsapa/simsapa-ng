@@ -548,6 +548,14 @@ ApplicationWindow {
         const uid_prefix = search_bar_input.uid_prefix;
         const uid_suffix = search_bar_input.uid_suffix;
 
+        let dict_source_uids = null;
+        let include_comm_bold_definitions = SuttaBridge.get_include_comm_bold_definitions_in_search_results();
+        if (search_area === "Dictionary") {
+            const result = root.compute_dict_search_filter();
+            dict_source_uids = result.dict_source_uids;
+            include_comm_bold_definitions = result.include_comm_bold_definitions;
+        }
+
         return {
             mode: mode,
             page_len: 10,
@@ -563,9 +571,77 @@ ApplicationWindow {
             uid_prefix: uid_prefix.length > 0 ? uid_prefix : null,
             uid_suffix: uid_suffix.length > 0 ? uid_suffix : null,
             include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
-            include_comm_bold_definitions: SuttaBridge.get_include_comm_bold_definitions_in_search_results(),
+            include_comm_bold_definitions: include_comm_bold_definitions,
+            dict_source_uids: dict_source_uids,
         };
     }
+
+    // Build the per-dictionary inclusion set from the Dictionaries panel
+    // state. Returns { dict_source_uids: [...], include_comm_bold_definitions: bool }.
+    // Solo (lock) takes precedence over the per-row checkboxes; a locked
+    // row is the only one that contributes.
+    function compute_dict_search_filter() {
+        const panel = search_bar_input.dictionaries_panel;
+        const locked = panel ? panel.locked_label : "";
+
+        const parse_array = (s) => {
+            try { return JSON.parse(s); } catch (e) { return []; }
+        };
+        const dpd_uids = parse_array(dictionary_filter_helper.dpd_source_uids());
+        const comm_uids = parse_array(dictionary_filter_helper.commentary_definitions_source_uids());
+        const shipped_uids = parse_array(dictionary_filter_helper.list_shipped_source_uids());
+        const user_dicts = panel ? (panel.user_dicts || []) : [];
+
+        // Set arithmetic helpers.
+        const to_set = (arr) => {
+            const s = {};
+            for (let i = 0; i < arr.length; i++) s[arr[i]] = true;
+            return s;
+        };
+
+        if (locked !== "") {
+            if (locked === "__dpd__") {
+                return { dict_source_uids: dpd_uids, include_comm_bold_definitions: false };
+            }
+            if (locked === "__commentary_definitions__") {
+                // Bold rows are not in dict_words; the dict source-uid set
+                // is empty so only bold rows contribute.
+                return { dict_source_uids: [], include_comm_bold_definitions: true };
+            }
+            // User-imported single label.
+            return { dict_source_uids: [locked], include_comm_bold_definitions: false };
+        }
+
+        // Not locked: build the union of enabled dictionary labels for
+        // dict_words, plus the bold gate from the panel state.
+        const dpd_set = to_set(dpd_uids);
+        const comm_set = to_set(comm_uids);
+        let union = {};
+
+        // Always include shipped source_uids that are not DPD and not
+        // commentary bold-definitions — there are none today, but this
+        // keeps the behaviour future-proof.
+        for (let i = 0; i < shipped_uids.length; i++) {
+            const u = shipped_uids[i];
+            if (!dpd_set[u] && !comm_set[u]) union[u] = true;
+        }
+
+        if (panel && panel.dpd_enabled) {
+            for (let i = 0; i < dpd_uids.length; i++) union[dpd_uids[i]] = true;
+        }
+        for (let i = 0; i < user_dicts.length; i++) {
+            const ud = user_dicts[i];
+            if (ud && ud.enabled && ud.label) union[ud.label] = true;
+        }
+
+        const list = Object.keys(union);
+        return {
+            dict_source_uids: list,
+            include_comm_bold_definitions: panel ? !!panel.commentary_definitions_enabled : true,
+        };
+    }
+
+    DictionaryManager { id: dictionary_filter_helper }
 
     function set_summary_query(query_text: string) {
         word_summary_wrap.visible = true;

@@ -1,0 +1,40 @@
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+
+Dialog {
+    id: root
+
+    property string description_text: ""
+    property string dialog_title: "Dictionary Info"
+
+    title: dialog_title
+    modal: true
+    standardButtons: Dialog.Close
+    width: Math.min(parent ? parent.width - 40 : 500, 500)
+    anchors.centerIn: parent
+
+    function show_with(t: string, d: string) {
+        root.dialog_title = t;
+        root.description_text = d;
+        root.title = t;
+        root.open();
+    }
+
+    contentItem: ColumnLayout {
+        spacing: 8
+
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 240
+            clip: true
+
+            TextArea {
+                readOnly: true
+                wrapMode: TextEdit.Wrap
+                text: root.description_text
+                selectByMouse: true
+            }
+        }
+    }
+}

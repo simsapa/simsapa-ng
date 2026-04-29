@@ -80,6 +80,7 @@ pub struct SearchQueryTask<'a> {
     pub uid_suffix: Option<String>,
     pub include_ms_mula: bool,
     pub include_comm_bold_definitions: bool,
+    pub dict_source_uids: Option<Vec<String>>,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -134,6 +135,7 @@ impl<'a> SearchQueryTask<'a> {
             uid_suffix: params.uid_suffix,
             include_ms_mula: params.include_ms_mula,
             include_comm_bold_definitions: params.include_comm_bold_definitions,
+            dict_source_uids: params.dict_source_uids.clone(),
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }
@@ -1748,6 +1750,7 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_commentary: self.include_cst_commentary,
             include_ms_mula: self.include_ms_mula,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let query_text = self.query_text.clone();
@@ -1798,6 +1801,7 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: self.include_comm_bold_definitions,
+            dict_source_uids: self.dict_source_uids.clone(),
         };
 
         let query_text = self.query_text.clone();
@@ -1841,6 +1845,7 @@ impl<'a> SearchQueryTask<'a> {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let query_text = self.query_text.clone();
@@ -2049,9 +2054,66 @@ impl<'a> SearchQueryTask<'a> {
             }
         };
 
+        // Dictionary inclusion-set post-filter. The Tantivy dict path
+        // already pushes this down via `add_dict_filters`; the SQL paths
+        // (Contains / DpdLookup / HeadwordMatch / UidMatch on Dictionary)
+        // do not. Apply a uniform post-filter here so all paths agree.
+        // Bold-definition rows are gated independently by
+        // `include_comm_bold_definitions`; we never drop them on the basis
+        // of `dict_source_uids` because their source_uid is a per-row
+        // ref_code rather than a dictionary label.
+        let (page, total) = if self.search_area == SearchArea::Dictionary
+            && self.search_mode != SearchMode::FulltextMatch
+        {
+            self.apply_dict_source_uids_filter(page, total)
+        } else {
+            (page, total)
+        };
+
         self.db_query_hits_count = total as i64;
 
         Ok(page.into_iter().map(|r| self.highlight_row(r)).collect())
+    }
+
+    /// Restrict dict_words rows to those whose `source_uid` (= `dict_label`)
+    /// is in `self.dict_source_uids`. Bold-definition rows are never
+    /// dropped here — they're toggled separately by
+    /// `include_comm_bold_definitions`. When the inclusion set is `None`
+    /// the input is returned unchanged; when it is `Some([])` every
+    /// dict_words row is dropped.
+    fn apply_dict_source_uids_filter(
+        &self,
+        page: Vec<SearchResult>,
+        total: usize,
+    ) -> (Vec<SearchResult>, usize) {
+        let Some(set) = self.dict_source_uids.as_ref() else {
+            return (page, total);
+        };
+
+        let set: HashSet<&str> = set.iter().map(|s| s.as_str()).collect();
+        let original_dict_words = page
+            .iter()
+            .filter(|r| r.table_name == "dict_words")
+            .count();
+
+        let filtered: Vec<SearchResult> = page
+            .into_iter()
+            .filter(|r| {
+                if r.table_name != "dict_words" {
+                    return true;
+                }
+                match r.source_uid.as_deref() {
+                    Some(uid) => set.contains(uid),
+                    None => false,
+                }
+            })
+            .collect();
+
+        let dropped = original_dict_words.saturating_sub(
+            filtered.iter().filter(|r| r.table_name == "dict_words").count(),
+        );
+        let new_total = total.saturating_sub(dropped);
+        (filtered, new_total)
     }
 
     fn highlight_row(&self, mut r: SearchResult) -> SearchResult {

@@ -883,6 +883,7 @@ fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
         uid_suffix: None,
         include_ms_mula: true,
         include_comm_bold_definitions: true,
+        dict_source_uids: None,
     };
 
     // Create and execute search task
@@ -973,6 +974,7 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
         uid_suffix: None,
         include_ms_mula: true,
         include_comm_bold_definitions: true,
+        dict_source_uids: None,
     };
 
     // Create and execute search task

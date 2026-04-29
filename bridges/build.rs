@@ -77,6 +77,8 @@ fn main() {
         "../assets/qml/DictionaryListItem.qml",
         "../assets/qml/DictionaryImportDialog.qml",
         "../assets/qml/DictionaryEditDialog.qml",
+        "../assets/qml/DictionarySearchDictionariesPanel.qml",
+        "../assets/qml/DictionaryInfoDialog.qml",
     ];
 
     let builder = CxxQtBuilder::new()

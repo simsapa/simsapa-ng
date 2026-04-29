@@ -55,6 +55,15 @@ pub mod qobject {
         fn list_user_dictionaries(self: &DictionaryManager) -> QString;
 
         #[qinvokable]
+        fn list_shipped_source_uids(self: &DictionaryManager) -> QString;
+
+        #[qinvokable]
+        fn dpd_source_uids(self: &DictionaryManager) -> QString;
+
+        #[qinvokable]
+        fn commentary_definitions_source_uids(self: &DictionaryManager) -> QString;
+
+        #[qinvokable]
         fn label_status(self: &DictionaryManager, label: &QString) -> QString;
 
         #[qinvokable]
@@ -249,6 +258,52 @@ impl qobject::DictionaryManager {
             Ok(s) => QString::from(&s),
             Err(e) => {
                 error(&format!("list_user_dictionaries serialize: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    fn list_shipped_source_uids(&self) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.dictionaries.list_shipped_source_uids() {
+            Ok(set) => {
+                let v: Vec<&String> = set.iter().collect();
+                match serde_json::to_string(&v) {
+                    Ok(s) => QString::from(&s),
+                    Err(e) => {
+                        error(&format!("list_shipped_source_uids serialize: {}", e));
+                        QString::from("[]")
+                    }
+                }
+            }
+            Err(e) => {
+                error(&format!("list_shipped_source_uids: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    fn dpd_source_uids(&self) -> QString {
+        // DPD's dict_words rows are inserted with `dict_label = "dpd"` by
+        // `find_or_create_dpd_dictionary`. The set is fixed and small.
+        QString::from("[\"dpd\"]")
+    }
+
+    fn commentary_definitions_source_uids(&self) -> QString {
+        let app_data = get_app_data();
+        match app_data.dbm.dpd.list_distinct_bold_def_ref_codes() {
+            Ok(set) => {
+                let v: Vec<&String> = set.iter().collect();
+                match serde_json::to_string(&v) {
+                    Ok(s) => QString::from(&s),
+                    Err(e) => {
+                        error(&format!("commentary_definitions_source_uids serialize: {}", e));
+                        QString::from("[]")
+                    }
+                }
+            }
+            Err(e) => {
+                error(&format!("commentary_definitions_source_uids: {}", e));
                 QString::from("[]")
             }
         }

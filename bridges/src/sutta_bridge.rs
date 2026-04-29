@@ -1103,6 +1103,7 @@ impl qobject::SuttaBridge {
                     uid_suffix: None,
                     include_ms_mula: true,
                     include_comm_bold_definitions: true,
+                    dict_source_uids: None,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1488,6 +1489,7 @@ impl qobject::SuttaBridge {
                 include_cst_commentary: true,
                 include_ms_mula: params.include_ms_mula,
                 include_bold_definitions: params.include_comm_bold_definitions,
+                dict_source_uids: params.dict_source_uids.clone(),
             };
 
             let result = with_fulltext_searcher(|searcher| {
