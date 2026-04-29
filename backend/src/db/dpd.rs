@@ -14,7 +14,7 @@ use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
 
 use crate::{get_app_data, get_create_simsapa_app_assets_path, normalize_path_for_sqlite};
-use crate::helpers::{compact_rich_text, word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text, bold_uid_sanitize};
+use crate::helpers::{compact_rich_text, word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text, word_uid_sanitize};
 use crate::pali_stemmer::pali_stem;
 use crate::pali_sort::{pali_sort_key, sort_search_results_natural};
 use crate::types::SearchResult;
@@ -809,7 +809,7 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
     let mut seen: HashMap<(String, String), u32> = HashMap::new();
     let mut updates: Vec<(i32, String, String, String)> = Vec::with_capacity(rows.len());
     for r in &rows {
-        let bold_lc = bold_uid_sanitize(&r.bold).to_lowercase();
+        let bold_lc = word_uid_sanitize(&r.bold).to_lowercase();
         let ref_lc = r.ref_code.to_lowercase();
         let n = seen.entry((bold_lc.clone(), ref_lc.clone())).or_insert(0);
         *n += 1;

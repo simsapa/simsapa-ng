@@ -1469,18 +1469,13 @@ pub fn pali_to_ascii(text: Option<&str>) -> String {
 
 /// Sanitize a word to UID form: remove punctuation, replace spaces with hyphens.
 pub fn word_uid_sanitize(word: &str) -> String {
-    let mut w = RE_PUNCT_PARENS.replace_all(word, " ").to_string();
+    let mut w = strip_html(word);
+    w = RE_PUNCT_PARENS.replace_all(&w, " ").to_string();
     w = w.replace("'", "")
          .replace("\"", "")
          .replace(' ', "-");
     w = RE_DASH.replace_all(&w, "-").to_string();
     w
-}
-
-/// Sanitize a bold-definition term for UID use: trim quotes, punctuation, and
-/// whitespace from the start and end. Interior characters are preserved.
-pub fn bold_uid_sanitize(word: &str) -> String {
-    word.trim_matches(|c: char| !c.is_alphanumeric()).to_string()
 }
 
 /// Create a UID by combining sanitized word and dictionary label.

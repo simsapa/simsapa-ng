@@ -61,8 +61,7 @@ fn db_entries(x: &DictEntry,
               lang: &str) -> NewDictWord {
     // TODO should we check for conflicting uids? generate with meaning count?
     // NOTE: sanitizing dict word uid causes duplicates because of punctuation, and DPD stardict fails to import to db.
-    // let uid = h::word_uid(&x.word, dictionary_label);
-    let uid = format!("{}/{}", &x.word.trim(), dictionary_label);
+    let uid = h::word_uid(&x.word, dictionary_label);
 
     // add a Latinized lowercase synonym
     let mut syn = x.synonyms.clone();
