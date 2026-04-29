@@ -232,7 +232,7 @@ pub extern "C" fn reconcile_dict_indexes_blocking_c() {
     if let Err(e) = dict_index_reconcile::reconcile_dict_indexes(|p| {
         info(&format!("reconcile_dict_indexes: {:?}", p));
     }) {
-        error(&format!("reconcile_dict_indexes failed: {}", e));
+        error(&format!("reconcile_dict_indexes failed: {:#}", e));
     }
 
     // After the dict index has been mutated, drop the in-process searcher

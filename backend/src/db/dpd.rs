@@ -527,6 +527,24 @@ impl DpdDbHandle {
             .flatten()
     }
 
+    /// Distinct `bold_definitions.ref_code` values. Used as the
+    /// authoritative set of valid bold-definition `source_uid` terms in the
+    /// dict Tantivy index — they live in the DPD database, not in the
+    /// `dictionaries` / `dict_words` tables, so the dict-index reconcile
+    /// pass must consult this method to avoid classifying them as orphans.
+    pub fn list_distinct_bold_def_ref_codes(&self) -> Result<HashSet<String>> {
+        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+
+        self.do_read(|db_conn| {
+            bd_dsl::bold_definitions
+                .select(bd_dsl::ref_code)
+                .distinct()
+                .load::<String>(db_conn)
+        })
+        .map(|v| v.into_iter().collect())
+        .context("list_distinct_bold_def_ref_codes failed")
+    }
+
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
         match self.dpd_lookup(query, false, true, None, None) {
             Ok(res) => {

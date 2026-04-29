@@ -73,6 +73,10 @@ fn main() {
         "../assets/qml/BookmarkEditDialog.qml",
         "../assets/qml/BookmarkFolderDialog.qml",
         "../assets/qml/DictionaryIndexProgressWindow.qml",
+        "../assets/qml/DictionariesWindow.qml",
+        "../assets/qml/DictionaryListItem.qml",
+        "../assets/qml/DictionaryImportDialog.qml",
+        "../assets/qml/DictionaryEditDialog.qml",
     ];
 
     let builder = CxxQtBuilder::new()

@@ -511,6 +511,9 @@ pub mod qobject {
         fn open_sutta_languages_window(self: &SuttaBridge);
 
         #[qinvokable]
+        fn open_dictionaries_window(self: &SuttaBridge);
+
+        #[qinvokable]
         fn open_library_window(self: &SuttaBridge);
 
         #[qinvokable]
@@ -2032,6 +2035,11 @@ impl qobject::SuttaBridge {
     pub fn open_sutta_languages_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_sutta_languages_window();
+    }
+
+    pub fn open_dictionaries_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_dictionaries_window();
     }
 
     pub fn open_library_window(&self) {

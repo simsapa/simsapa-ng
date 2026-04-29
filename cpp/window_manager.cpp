@@ -2,6 +2,7 @@
 #include "sutta_search_window.h"
 #include "download_appdata_window.h"
 #include "sutta_languages_window.h"
+#include "dictionaries_window.h"
 #include "library_window.h"
 #include "reference_search_window.h"
 #include "topic_index_window.h"
@@ -51,6 +52,11 @@ WindowManager::~WindowManager() {
 
     while (!sutta_languages_windows.isEmpty()) {
         auto w = sutta_languages_windows.takeFirst();
+        w->deleteLater();
+    }
+
+    while (!dictionaries_windows.isEmpty()) {
+        auto w = dictionaries_windows.takeFirst();
         w->deleteLater();
     }
 
@@ -146,6 +152,21 @@ DownloadAppdataWindow* WindowManager::create_download_appdata_window() {
 SuttaLanguagesWindow* WindowManager::create_sutta_languages_window() {
     SuttaLanguagesWindow* w = new SuttaLanguagesWindow(this->m_app);
     sutta_languages_windows.append(w);
+    return w;
+}
+
+DictionariesWindow* WindowManager::create_dictionaries_window() {
+    // Reuse existing window if one exists
+    for (auto w : this->dictionaries_windows) {
+        if (w->m_root) {
+            QMetaObject::invokeMethod(w->m_root, "show");
+            QMetaObject::invokeMethod(w->m_root, "raise");
+            QMetaObject::invokeMethod(w->m_root, "requestActivate");
+            return w;
+        }
+    }
+    DictionariesWindow* w = new DictionariesWindow(this->m_app);
+    dictionaries_windows.append(w);
     return w;
 }
 

@@ -154,8 +154,12 @@ fn stardict_progress_to_signal(p: &StardictImportProgress) -> (String, i32, i32)
 
 fn reconcile_progress_to_signal(p: &ReconcileProgress) -> (String, i32, i32) {
     match p {
-        ReconcileProgress::DroppingOrphans { done, total } => {
-            ("Dropping orphans".to_string(), *done as i32, *total as i32)
+        ReconcileProgress::DroppingOrphans { done, total, label } => {
+            let stage = match label {
+                Some(l) => format!("Dropping orphan: {}", l),
+                None => "Dropping orphans".to_string(),
+            };
+            (stage, *done as i32, *total as i32)
         }
         ReconcileProgress::IndexingDictionary { label, done, total, dict_index, dict_total } => (
             format!("Indexing {} ({}/{})", label, dict_index, dict_total),
@@ -341,7 +345,7 @@ impl qobject::DictionaryManager {
                 });
             };
             if let Err(e) = dict_index_reconcile::reconcile_dict_indexes(on_progress) {
-                error(&format!("reconcile_dict_indexes failed: {}", e));
+                error(&format!("reconcile_dict_indexes failed: {:#}", e));
             }
             info("start_reconcile: complete");
             let _ = qt_thread.queue(move |mut qo| {

@@ -81,6 +81,10 @@ void callback_open_sutta_languages_window() {
   AppGlobals::manager->create_sutta_languages_window();
 }
 
+void callback_open_dictionaries_window() {
+  AppGlobals::manager->create_dictionaries_window();
+}
+
 void callback_open_library_window() {
   AppGlobals::manager->create_library_window();
 }

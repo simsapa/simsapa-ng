@@ -723,6 +723,10 @@ Item {
         console.log("set_sutta_language_filter_key():", key);
     }
 
+    function open_dictionaries_window() {
+        console.log("open_dictionaries_window()");
+    }
+
     function open_sutta_languages_window() {
         console.log("open_sutta_languages_window()");
     }

@@ -1291,6 +1291,16 @@ ${query_text}`;
 
             CMenuItem {
                 action: Action {
+                    id: action_dictionaries
+                    text: "Dictionaries..."
+                    onTriggered: {
+                        SuttaBridge.open_dictionaries_window()
+                    }
+                }
+            }
+
+            CMenuItem {
+                action: Action {
                     id: action_library
                     text: "Library..."
                     onTriggered: {

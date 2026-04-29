@@ -24,6 +24,7 @@ use diesel::prelude::*;
 
 use crate::db::DatabaseHandle;
 use crate::db::dictionaries_models::DictWord;
+use crate::db::dpd::DpdDbHandle;
 use crate::get_app_data;
 use crate::get_app_globals;
 use crate::logger::{info, warn};
@@ -35,7 +36,7 @@ use crate::search::indexer::{
 
 #[derive(Debug, Clone)]
 pub enum ReconcileProgress {
-    DroppingOrphans { done: usize, total: usize },
+    DroppingOrphans { done: usize, total: usize, label: Option<String> },
     IndexingDictionary {
         label: String,
         done: usize,
@@ -70,7 +71,7 @@ pub fn reconcile_needed() -> bool {
         Err(_) => return false,
     };
 
-    let current = match current_dict_labels(&app_data.dbm.dictionaries) {
+    let current = match current_valid_source_uids(&app_data.dbm.dictionaries, &app_data.dbm.dpd) {
         Ok(s) => s,
         Err(_) => return false,
     };
@@ -90,24 +91,41 @@ where
     let g = get_app_globals();
     let index_dir = &g.paths.dict_words_index_dir;
 
+    // Phase 0: self-heal for DBs that pre-date the bold-definition
+    // parent-dictionary registration (idempotent — no-op once the row
+    // exists).
+    match app_data.dbm.dictionaries.ensure_bold_definitions_parent_dictionary() {
+        Ok(true) => info("reconcile: backfilled bold-definitions parent dictionary"),
+        Ok(false) => {}
+        Err(e) => warn(&format!(
+            "reconcile: ensure_bold_definitions_parent_dictionary failed: {:#}", e
+        )),
+    }
+
     // Phase 1: orphan cleanup.
     let indexed_uids = list_indexed_source_uids_in_dict_index(index_dir)
         .context("list_indexed_source_uids_in_dict_index failed")?;
-    let current_uids = current_dict_labels(&app_data.dbm.dictionaries)?;
+    let current_uids = current_valid_source_uids(&app_data.dbm.dictionaries, &app_data.dbm.dpd)?;
 
-    let orphans: Vec<String> = indexed_uids
+    let mut orphans: Vec<String> = indexed_uids
         .difference(&current_uids)
         .cloned()
         .collect();
+    orphans.sort();
 
     let total_orphans = orphans.len();
     if total_orphans > 0 {
-        info(&format!("reconcile: dropping {} orphan source_uid(s)", total_orphans));
+        info(&format!(
+            "reconcile: dropping {} orphan source_uid(s): {}",
+            total_orphans,
+            orphans.join(", ")
+        ));
     }
     for (i, label) in orphans.iter().enumerate() {
         on_progress(ReconcileProgress::DroppingOrphans {
             done: i,
             total: total_orphans,
+            label: Some(label.clone()),
         });
         if let Err(e) = delete_from_dict_index_by_source_uid(index_dir, label) {
             warn(&format!("reconcile: failed to drop orphan '{}': {}", label, e));
@@ -117,6 +135,7 @@ where
         on_progress(ReconcileProgress::DroppingOrphans {
             done: total_orphans,
             total: total_orphans,
+            label: None,
         });
     }
 
@@ -175,14 +194,56 @@ where
     Ok(())
 }
 
-/// Set of every current `dictionaries.label`.
-fn current_dict_labels(handle: &DatabaseHandle) -> Result<HashSet<String>> {
-    use crate::db::dictionaries_schema::dictionaries::dsl::*;
+/// Set of every `source_uid` term that is legitimately present in the dict
+/// Tantivy index given the current SQL state. Anything indexed that is NOT
+/// in this set is treated as an orphan and dropped.
+///
+/// The set is the union of three sources:
+///
+///   1. `dictionaries.label` for every row (covers a freshly-imported user
+///      dictionary that hasn't been indexed yet, where `dict_words` may not
+///      yet contain rows that match — though in practice every imported
+///      dictionary inserts rows immediately).
+///   2. `DISTINCT dict_words.dict_label` (the canonical PRD §8a query —
+///      covers shipped + user dictionaries that have rows).
+///   3. `DISTINCT bold_definitions.ref_code` from the DPD database — the
+///      bold-definition entries are indexed with `source_uid = ref_code`
+///      (e.g. `vina`, `mna`, `vvt`) and live OUTSIDE of `dictionaries` /
+///      `dict_words`. Without this, the reconcile pass would wrongly drop
+///      every bold-definition entry on every startup.
+fn current_valid_source_uids(
+    dict_handle: &DatabaseHandle,
+    dpd_handle: &DpdDbHandle,
+) -> Result<HashSet<String>> {
+    let mut out: HashSet<String> = HashSet::new();
 
-    let labels: Vec<String> = handle.do_read(|db_conn| {
-        dictionaries.select(label).load::<String>(db_conn)
-    }).context("current_dict_labels failed")?;
-    Ok(labels.into_iter().collect())
+    {
+        use crate::db::dictionaries_schema::dictionaries::dsl::*;
+        let labels: Vec<String> = dict_handle.do_read(|db_conn| {
+            dictionaries.select(label).load::<String>(db_conn)
+        }).context("current_valid_source_uids: read dictionaries.label")?;
+        out.extend(labels);
+    }
+
+    {
+        use crate::db::dictionaries_schema::dict_words::dsl::*;
+        let labels: Vec<String> = dict_handle.do_read(|db_conn| {
+            dict_words.select(dict_label).distinct().load::<String>(db_conn)
+        }).context("current_valid_source_uids: read dict_words.dict_label")?;
+        out.extend(labels);
+    }
+
+    match dpd_handle.list_distinct_bold_def_ref_codes() {
+        Ok(codes) => out.extend(codes),
+        Err(e) => warn(&format!(
+            "current_valid_source_uids: bold_definitions.ref_code unavailable, \
+             continuing without (bold-definition entries may be misclassified \
+             as orphans): {:#}",
+            e
+        )),
+    }
+
+    Ok(out)
 }
 
 fn load_dict_words_for_dictionary(handle: &DatabaseHandle, dict_id: i32) -> Result<Vec<DictWord>> {

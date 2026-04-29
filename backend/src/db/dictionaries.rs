@@ -243,6 +243,53 @@ impl DictionariesDbHandle {
         Ok(self.list_shipped_source_uids()?.contains(label))
     }
 
+    /// Ensure a single shipped parent `dictionaries` row exists for all
+    /// bold-definition entries.
+    ///
+    /// Bold-definition entries live in `dpd.sqlite3::bold_definitions`
+    /// rather than in `dict_words`, and they are indexed into the dict
+    /// Tantivy index with `source_uid = ref_code` (a per-row Nikāya-
+    /// dependent value, e.g. `vina`, `mna`, `vvt`). Creating one
+    /// `dictionaries` row per ref_code would litter the registry with
+    /// dozens of fake "dictionaries"; instead, a single umbrella row with
+    /// `label = "bold_definitions"` represents the category. The reconcile
+    /// pass identifies the legitimate `source_uid` set for this category
+    /// by querying `DISTINCT bold_definitions.ref_code` directly from the
+    /// DPD database.
+    ///
+    /// Idempotent: returns true if the row was just created, false if it
+    /// already existed.
+    pub const BOLD_DEFINITIONS_LABEL: &'static str = "bold_definitions";
+
+    pub fn ensure_bold_definitions_parent_dictionary(&self) -> Result<bool> {
+        use crate::db::dictionaries_schema::dictionaries::dsl::*;
+
+        let existing: Option<i32> = self.do_read(|db_conn| {
+            dictionaries
+                .select(id)
+                .filter(label.eq(Self::BOLD_DEFINITIONS_LABEL))
+                .first::<i32>(db_conn)
+                .optional()
+        }).context("ensure_bold_definitions_parent_dictionary: lookup")?;
+
+        if existing.is_some() {
+            return Ok(false);
+        }
+
+        let new_dict = NewDictionary {
+            label: Self::BOLD_DEFINITIONS_LABEL,
+            title: "Bold Definitions",
+            dict_type: "sql",
+            language: Some("pli"),
+            is_user_imported: false,
+            indexed_at: Some(chrono::Utc::now().naive_utc()),
+            ..Default::default()
+        };
+        self.create_dictionary(new_dict)
+            .context("ensure_bold_definitions_parent_dictionary: insert")?;
+        Ok(true)
+    }
+
     /// Find or create DPD Dictionary record with label 'dpd'
     pub fn find_or_create_dpd_dictionary(&self) -> Result<Dictionary> {
         use crate::db::dictionaries_schema::dictionaries::dsl::*;

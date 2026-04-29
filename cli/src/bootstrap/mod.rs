@@ -347,6 +347,19 @@ RELEASE_CHANNEL=development
             Err(e) => logger::warn(&format!("Failed to get dict_word languages: {}", e)),
         }
 
+        // Register a single parent `dictionaries` row for the bold-
+        // definitions category. The Tantivy `source_uid` values for these
+        // entries are per-row `ref_code`s (Nikāya-dependent), so the
+        // reconcile pass identifies the valid set by querying DPD's
+        // `bold_definitions.ref_code` rather than `dictionaries.label`.
+        match app_data.dbm.dictionaries.ensure_bold_definitions_parent_dictionary() {
+            Ok(true) => logger::info("Registered bold-definitions parent dictionary"),
+            Ok(false) => {}
+            Err(e) => logger::warn(&format!(
+                "Failed to register bold-definitions parent dictionary: {:#}", e
+            )),
+        }
+
         // Append DPD bold-definitions into the unified Pāli dict index.
         // Must run after the "pli" dict index is built since that step
         // clears the index; bold rows share the dict schema and are
