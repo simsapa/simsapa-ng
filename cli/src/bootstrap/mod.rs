@@ -64,7 +64,7 @@ pub fn ensure_directory_exists(path: &Path) -> Result<()> {
 }
 
 /// Main bootstrap function - orchestrates the entire bootstrap process
-pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, skip_languages: bool, only_languages: Option<String>) -> Result<()> {
+pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, skip_languages: bool, only_languages: Option<String>, limit: Option<i32>) -> Result<()> {
     logger::info("=== bootstrap() ===");
     if skip_appdata {
         logger::info("--skip-appdata flag set: Appdata initialization and bootstrap will be skipped");
@@ -91,10 +91,9 @@ pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, ski
     let start_time: DateTime<Local> = Local::now();
     let iso_date = start_time.format("%Y-%m-%d").to_string();
 
-    let bootstrap_limit: Option<i32> = match env::var("BOOTSTRAP_LIMIT") {
-        Ok(s) if !s.is_empty() => s.parse().ok(),
-        _ => None,
-    };
+    if let Some(lim) = limit {
+        logger::info(&format!("Limit set to {}", lim));
+    }
 
     // Running the binary with 'cargo run', the PWD is simsapa-ng/cli/.
     // The asset folders are one level above simsapa-ng/.
@@ -123,14 +122,8 @@ pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, ski
 
     logger::info(&format!("Bootstrap simsapa_dir: {:?}", simsapa_dir));
 
-    let bootstrap_limit_str = match bootstrap_limit {
-        Some(n) => n.to_string(),
-        None => String::new(),
-    };
-
     let dot_env_content = format!(
-        r#"BOOTSTRAP_LIMIT={}
-SIMSAPA_DIR={}
+        r#"SIMSAPA_DIR={}
 BOOTSTRAP_ASSETS_DIR={}
 USE_TEST_DATA=false
 DISABLE_LOG=false
@@ -140,7 +133,6 @@ ENABLE_WIP_FEATURES=false
 SAVE_STATS=false
 RELEASE_CHANNEL=development
 "#,
-        bootstrap_limit_str,
         simsapa_dir.display(),
         bootstrap_assets_dir.display()
     );
@@ -177,7 +169,7 @@ RELEASE_CHANNEL=development
             if sc_data_dir.exists() {
                 logger::info("Importing suttas from SuttaCentral");
                 for lang in ["en", "pli"] {
-                    let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
+                    let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang, limit);
                     importer.import(&mut conn)?;
                 }
             } else {
@@ -198,7 +190,7 @@ RELEASE_CHANNEL=development
             let dhammatalks_path = bootstrap_assets_dir.join("dhammatalks-org/www.dhammatalks.org/suttas");
             if dhammatalks_path.exists() {
                 logger::info("Importing suttas from dhammatalks.org");
-                let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path);
+                let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path, limit);
                 importer.import(&mut conn)?;
             } else {
                 logger::warn("Dhammatalks.org resource path not found, skipping");
@@ -302,7 +294,7 @@ RELEASE_CHANNEL=development
     // Digital Pāli Dictionary
     if !skip_dpd {
         init_app_data();
-        dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
+        dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir, limit)?;
 
         logger::info("=== Create dictionaries.tar.bz2 ===");
         let dict_db_path = assets_dir.join("dictionaries.sqlite3");
@@ -428,7 +420,7 @@ RELEASE_CHANNEL=development
                                 run_migrations(&mut lang_conn)?;
 
                                 // Import suttas for this language
-                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
+                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang, limit);
                                 match importer.import(&mut lang_conn) {
                                     Ok(_) => {
                                         // Check if any suttas were actually imported

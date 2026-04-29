@@ -1038,6 +1038,10 @@ enum Commands {
         /// Only import specific languages (comma-separated list, e.g., "hu,pt,de")
         #[arg(long, value_name = "LANG_CODES")]
         only_languages: Option<String>,
+
+        /// Limit the number of suttas to import (for testing purposes)
+        #[arg(long, value_name = "LIMIT")]
+        limit: Option<i32>,
     },
 
     /// Rebuild the application database using the legacy bootstrap implementation.
@@ -1330,8 +1334,8 @@ fn main() {
              }
         }
 
-        Commands::Bootstrap { write_new_dotenv, skip_appdata, skip_dpd, skip_languages, only_languages } => {
-            bootstrap::bootstrap(write_new_dotenv, skip_appdata, skip_dpd, skip_languages, only_languages )
+        Commands::Bootstrap { write_new_dotenv, skip_appdata, skip_dpd, skip_languages, only_languages, limit } => {
+            bootstrap::bootstrap(write_new_dotenv, skip_appdata, skip_dpd, skip_languages, only_languages, limit)
                 .map_err(|e| e.to_string())
         }
 
