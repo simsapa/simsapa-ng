@@ -3,7 +3,7 @@ use std::path::Path;
 
 use anyhow::Result;
 use diesel::prelude::*;
-use tantivy::{doc, Directory, Index, IndexWriter};
+use tantivy::{doc, Directory, Index, IndexWriter, Term};
 
 use crate::db::DatabaseHandle;
 use crate::db::appdata_models::Sutta;
@@ -205,6 +205,107 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     index.directory().sync_directory()?;
 
     info(&format!("Dict_words index committed: {} documents for language {}", indexed_count, lang));
+
+    Ok(())
+}
+
+/// Append the rows for a single `dict_label` to the per-language dict index
+/// without rebuilding it.
+///
+/// Used by the user-facing StarDict import path so a freshly imported
+/// dictionary becomes searchable without rescanning every other dictionary's
+/// rows. Any previously indexed docs whose `source_uid` equals `dict_label`
+/// are deleted first, so re-imports of the same label don't duplicate docs.
+/// Bold-definition docs are untouched (their `source_uid` is the per-row
+/// `ref_code`, not a dictionary label).
+pub fn append_dict_label_to_dict_index(
+    dict_db: &DatabaseHandle,
+    dict_words_index_dir: &Path,
+    lang: &str,
+    dict_label_value: &str,
+) -> Result<()> {
+    use crate::db::dictionaries_schema::dict_words::dsl::*;
+
+    info(&format!(
+        "Appending dict_label '{}' to dict index for language: {}",
+        dict_label_value, lang
+    ));
+
+    let lang_index_dir = dict_words_index_dir.join(lang);
+    let schema = build_dict_schema(lang);
+    let index = open_or_create_index(&lang_index_dir, schema, lang)?;
+
+    let mut writer: IndexWriter = index.writer(50_000_000)?;
+
+    let schema = index.schema();
+    let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
+    let word_field = schema.get_field("word").unwrap();
+    let synonyms_field = schema.get_field("synonyms").unwrap();
+    let language_field = schema.get_field("language").unwrap();
+    let source_uid_field = schema.get_field("source_uid").unwrap();
+    let content_field = schema.get_field("content").unwrap();
+    let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
+
+    // Drop any prior docs for this label so a re-import doesn't duplicate.
+    // `source_uid` uses the raw tokenizer (see schema.rs), so the label is
+    // stored as a single term and matches via `delete_term`.
+    writer.delete_term(Term::from_field_text(source_uid_field, dict_label_value));
+
+    let lang_clone = lang.to_string();
+    let label_clone = dict_label_value.to_string();
+    let word_list: Vec<DictWord> = dict_db.do_read(|db_conn| {
+        dict_words
+            .filter(language.eq(&lang_clone))
+            .filter(dict_label.eq(&label_clone))
+            .select(DictWord::as_select())
+            .load(db_conn)
+    })?;
+
+    info(&format!(
+        "Indexing {} dict_words for label '{}' / language {}",
+        word_list.len(), dict_label_value, lang
+    ));
+
+    let mut indexed_count = 0;
+    for dw in &word_list {
+        let def = dw.definition_plain.as_deref().unwrap_or("");
+        if def.is_empty() {
+            continue;
+        }
+
+        let w = &dw.word;
+        let syn = dw.synonyms.as_deref().unwrap_or("");
+        let content_text = format!("{} {} {}", w, syn, def);
+
+        let lang_val = dw.language.as_deref().unwrap_or("");
+
+        let uid_rev = reversed_lowercased(&dw.uid);
+
+        writer.add_document(doc!(
+            uid_field => dw.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
+            word_field => w.as_str(),
+            synonyms_field => syn,
+            language_field => lang_val,
+            source_uid_field => dw.dict_label.as_str(),
+            content_field => content_text.as_str(),
+            content_exact_field => content_text.as_str(),
+            is_bold_definition_field => false,
+        ))?;
+
+        indexed_count += 1;
+    }
+
+    writer.commit()?;
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
+
+    info(&format!(
+        "dict_label append committed: {} documents for '{}' / {}",
+        indexed_count, dict_label_value, lang
+    ));
 
     Ok(())
 }

@@ -361,6 +361,19 @@ RELEASE_CHANNEL=development
             Err(e) => logger::warn(&format!("Failed to append bold definitions to dict index: {}", e)),
         }
 
+        // Mark user-imported dictionaries that were just covered by the
+        // `build_dict_index` pass as indexed, so the startup reconcile pass
+        // does not redundantly re-index them. Targeted by label so only the
+        // dictionaries we know are in the freshly-built Tantivy index get
+        // marked; anything else stays NULL and reconcile still picks it up.
+        let now = chrono::Utc::now().naive_utc();
+        for label in ["dppn"] {
+            match app_data.dbm.dictionaries.set_indexed_at_by_label(label, now) {
+                Ok(_) => logger::info(&format!("Marked '{}' as indexed_at = now", label)),
+                Err(e) => logger::warn(&format!("Failed to set indexed_at for '{}': {:#}", label, e)),
+            }
+        }
+
         // Build library indexes for all available languages
         match indexer::get_library_languages(&app_data.dbm.appdata) {
             Ok(library_langs) => {

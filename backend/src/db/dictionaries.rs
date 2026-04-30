@@ -216,6 +216,23 @@ impl DictionariesDbHandle {
         }).context("set_indexed_at failed")
     }
 
+    /// Set `dictionaries.indexed_at` for the row matching `dict_label`.
+    ///
+    /// Targets a single dictionary by label so callers can mark only the
+    /// dictionaries they have just indexed into Tantivy, leaving any other
+    /// rows with `indexed_at IS NULL` untouched (so the startup reconcile
+    /// pass still picks them up).
+    pub fn set_indexed_at_by_label(&self, dict_label_value: &str, ts: NaiveDateTime) -> Result<()> {
+        use crate::db::dictionaries_schema::dictionaries::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::update(dictionaries.filter(label.eq(dict_label_value)))
+                .set(indexed_at.eq(Some(ts)))
+                .execute(db_conn)
+                .map(|_| ())
+        }).with_context(|| format!("set_indexed_at_by_label({}) failed", dict_label_value))
+    }
+
     /// Set of distinct `dict_words.source_uid` values (column `dict_label`)
     /// belonging to non-user-imported dictionaries.
     /// This is the canonical "shipped/built-in label set" for label-collision
