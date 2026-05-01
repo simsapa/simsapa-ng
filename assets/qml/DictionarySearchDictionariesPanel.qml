@@ -22,8 +22,8 @@ ColumnLayout {
     // User-imported rows use the dictionary's label.
     property string locked_label: ""
 
-    readonly property color row_active_bg: Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.18)
-    readonly property color row_inactive_bg: "transparent"
+    readonly property color row_active_bg: Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+    readonly property color row_inactive_bg: palette.midlight
 
     readonly property string dpd_description_text: "DPD (Digital Pāli Dictionary) is the primary dictionary bundled with Simsapa. When enabled, DPD entries are included in dictionary search results."
     readonly property string commentary_description_text: "Also search bold-highlighted terms extracted from Pāli commentaries (bold definitions). Turn off for headword-only results."

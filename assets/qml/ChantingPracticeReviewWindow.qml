@@ -472,7 +472,7 @@ ApplicationWindow {
                                     Layout.fillWidth: true
 
                                     background: Rectangle {
-                                        color: ref_delegate.is_open ? palette.highlight : Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+                                        color: ref_delegate.is_open ? palette.highlight : palette.midlight
                                         border.color: palette.mid
                                         border.width: 1
                                         radius: 4
@@ -610,7 +610,7 @@ ApplicationWindow {
                                     Layout.fillWidth: true
 
                                     background: Rectangle {
-                                        color: user_delegate.is_open ? palette.highlight : Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+                                        color: user_delegate.is_open ? palette.highlight : palette.midlight
                                         border.color: palette.mid
                                         border.width: 1
                                         radius: 4
