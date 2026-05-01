@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document describes the implementation of FTS5 (Full-Text Search) indexes for the dictionary database, specifically for the `dict_words.definition_plain` field. This optimization significantly improves search performance for contains-match queries on dictionary definitions.
+This document describes the implementation of FTS5 (Full-Text Search) indexes for the dictionary database. The trigram-tokenized FTS5 virtual table `dict_words_fts` indexes both the `dict_words.word` (headword) and `dict_words.definition_plain` (definition body) columns, enabling efficient `LIKE '%term%'` substring matching for both Contains and Headword search modes.
+
+> **Re-bootstrap required when this schema changes.** The FTS5 virtual table is rebuilt by re-running `scripts/dictionaries-fts5-indexes.sql` against the dictionaries DB — there is no Diesel migration. After pulling a change that bumps the indexed columns (e.g. the `word` addition described in tasks/prd-integrate-stardict-filtering.md §5.0), manually re-bootstrap the dictionaries DB so the FTS table and triggers are recreated. Verify with `PRAGMA table_info(dict_words_fts);`.
 
 ## Changes Made
 

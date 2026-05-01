@@ -28,29 +28,29 @@ Source PRD: [prd-integrate-stardict-filtering.md](./prd-integrate-stardict-filte
 
 ## Tasks
 
-- [ ] 0.0 Schema: add `word` as a trigram-indexed column to `dict_words_fts`, update triggers, and document the manual re-bootstrap
-  - [ ] 0.1 Edit `scripts/dictionaries-fts5-indexes.sql`:
+- [x] 0.0 Schema: add `word` as a trigram-indexed column to `dict_words_fts`, update triggers, and document the manual re-bootstrap
+  - [x] 0.1 Edit `scripts/dictionaries-fts5-indexes.sql`:
         - Add `word` to the `CREATE VIRTUAL TABLE dict_words_fts USING fts5(...)` declaration alongside `definition_plain` (both indexed; trigram tokenizer unchanged).
         - Update the seed `INSERT INTO dict_words_fts (...) SELECT ...` to include `word`.
         - Update the `dict_words_fts_insert` and `dict_words_fts_update` triggers to write `NEW.word`. The `dict_words_fts_delete` trigger is unchanged (delete-by-`dict_word_id`).
-  - [ ] 0.2 Note in the script header (and in `docs/`) that bumping this script requires a manual re-bootstrap of the dictionaries DB. No Diesel migration is added — the FTS table and triggers are recreated by the script.
-  - [ ] 0.3 Manual step (user): re-bootstrap the dictionaries DB so the FTS table is rebuilt with the new column. Verify with `PRAGMA table_info(dict_words_fts)` that `word` is present and that a new INSERT into `dict_words` populates the FTS row.
-  - [ ] 0.4 Run `make build -B`.
+  - [x] 0.2 Note in the script header (and in `docs/`) that bumping this script requires a manual re-bootstrap of the dictionaries DB. No Diesel migration is added — the FTS table and triggers are recreated by the script.
+  - [x] 0.3 Manual step (user): re-bootstrap the dictionaries DB so the FTS table is rebuilt with the new column. Verify with `PRAGMA table_info(dict_words_fts)` that `word` is present and that a new INSERT into `dict_words` populates the FTS row.
+  - [x] 0.4 Run `make build -B`.
 
-- [ ] 1.0 Backend: extend `ContainsMatch` + Dictionary to retrieve user-imported `dict_words` rows via the unified `dict_words_fts` path, restoring `total` accuracy
-  - [ ] 1.1 Re-read `dict_words_contains_match_fts5_full` (`backend/src/query_task.rs:741`) and locate Phase 3 (the `dict_words_fts.definition_plain LIKE` block, ~line 889). Confirm Task 0 has shipped (the FTS table now has `word`). The new unified Phase 3 will JOIN `dict_words_fts` to `dict_words` so that filtering on `dict_label` rides the existing `dict_words_dict_label_idx` btree.
-  - [ ] 1.2 Add a private helper `fn dict_label_in_clause(set: &[String]) -> Option<(String, Vec<String>)>` returning the placeholder string `"?, ?, …"` and the bind values, or `None` when the set is empty (caller skips the phase entirely). Place it near the top of `query_task.rs` impl alongside `normalized_filter`.
-  - [ ] 1.3 Replace Phase 3 with a unified `dict_words_fts`-driven path:
+- [x] 1.0 Backend: extend `ContainsMatch` + Dictionary to retrieve user-imported `dict_words` rows via the unified `dict_words_fts` path, restoring `total` accuracy
+  - [x] 1.1 Re-read `dict_words_contains_match_fts5_full` (`backend/src/query_task.rs:741`) and locate Phase 3 (the `dict_words_fts.definition_plain LIKE` block, ~line 889). Confirm Task 0 has shipped (the FTS table now has `word`). The new unified Phase 3 will JOIN `dict_words_fts` to `dict_words` so that filtering on `dict_label` rides the existing `dict_words_dict_label_idx` btree.
+  - [x] 1.2 Add a private helper `fn dict_label_in_clause(set: &[String]) -> Option<(String, Vec<String>)>` returning the placeholder string `"?, ?, …"` and the bind values, or `None` when the set is empty (caller skips the phase entirely). Place it near the top of `query_task.rs` impl alongside `normalized_filter`.
+  - [x] 1.3 Replace Phase 3 with a unified `dict_words_fts`-driven path:
         - SQL shape: `SELECT dw.* FROM dict_words dw JOIN dict_words_fts f ON f.dict_word_id = dw.id WHERE (f.word LIKE ? OR f.definition_plain LIKE ?) [AND dw.dict_label IN (?, ?, …)] [AND dw.uid LIKE ?] …` — preserving the existing `uid_prefix_pat` / `uid_suffix_pat` / `self.source` / `self.source_include` push-downs.
         - When `self.dict_source_uids` is `Some(set)` and `set.is_empty()`, skip the phase entirely.
         - When `self.dict_source_uids` is `Some(set)` non-empty, include the `dw.dict_label IN (...)` clause.
         - When `None`, drop the `dict_label` clause — search every dictionary.
-  - [ ] 1.4 Add a new **Phase 5: user-headword substring** — `SELECT dw.* FROM dict_words dw JOIN dict_words_fts f ON f.dict_word_id = dw.id WHERE f.word LIKE ? AND dw.dict_label IN (?, ?, …)`. Cap at `SAFETY_LIMIT_SQL`. Skip when the inclusion set is empty or `None` collapses this into the unified Phase 3 (in which case Phase 5 contributes nothing additional and is skipped).
-  - [ ] 1.5 Switch the cross-phase dedup key from `result.word` to `result.id` so multi-label collisions don't drop legitimate hits. Preserve order: DPD-driven Phases 1+2+4 first, then unified Phase 3, then Phase 5.
-  - [ ] 1.6 `apply_dict_source_uids_filter` (line 2084) becomes a no-op for this mode in normal operation but stays in the dispatcher as a safety net. Emit `debug!("dict_source_uids post-filter dropped {} rows on Contains", dropped)` only when `dropped > 0` so any regression surfaces in logs.
-  - [ ] 1.7 Confirm `dict_contains_with_bold` (the bold-definition wrapper composing `dict_words_contains_match_fts5_full`) still works unchanged. PRD §5.1 item 6: bold append is independent and must not be touched by this task.
-  - [ ] 1.8 Update the function-level rustdoc on `dict_words_contains_match_fts5_full` to document the new phase numbering, the JOIN-based `dict_label IN (set)` push-down, and the dedup-by-id change. Keep the `total = full.len()` materialise-then-slice contract documented.
-  - [ ] 1.9 Run `make build -B`. Compilation must succeed with no new warnings introduced by Phases 3/5.
+  - [x] 1.4 Add a new **Phase 5: user-headword substring** — `SELECT dw.* FROM dict_words dw JOIN dict_words_fts f ON f.dict_word_id = dw.id WHERE f.word LIKE ? AND dw.dict_label IN (?, ?, …)`. Cap at `SAFETY_LIMIT_SQL`. Skip when the inclusion set is empty or `None` collapses this into the unified Phase 3 (in which case Phase 5 contributes nothing additional and is skipped).
+  - [x] 1.5 Switch the cross-phase dedup key from `result.word` to `result.id` so multi-label collisions don't drop legitimate hits. Preserve order: DPD-driven Phases 1+2+4 first, then unified Phase 3, then Phase 5.
+  - [x] 1.6 `apply_dict_source_uids_filter` (line 2084) becomes a no-op for this mode in normal operation but stays in the dispatcher as a safety net. Emit `debug!("dict_source_uids post-filter dropped {} rows on Contains", dropped)` only when `dropped > 0` so any regression surfaces in logs.
+  - [x] 1.7 Confirm `dict_contains_with_bold` (the bold-definition wrapper composing `dict_words_contains_match_fts5_full`) still works unchanged. PRD §5.1 item 6: bold append is independent and must not be touched by this task.
+  - [x] 1.8 Update the function-level rustdoc on `dict_words_contains_match_fts5_full` to document the new phase numbering, the JOIN-based `dict_label IN (set)` push-down, and the dedup-by-id change. Keep the `total = full.len()` materialise-then-slice contract documented.
+  - [x] 1.9 Run `make build -B`. Compilation must succeed with no new warnings introduced by Phases 3/5.
 
 - [ ] 2.0 Backend: extend `HeadwordMatch` + Dictionary to merge a user-headword path against `dict_words_fts.word`, alongside the existing DPD `lemma_1` path
   - [ ] 2.1 Re-read `lemma_1_dpd_headword_match_fts5_full` (`backend/src/query_task.rs:1632`). The DPD-only path resolves DPD `lemma_1` hits to a single `dict_words` row by `word == lemma_1`. Plan: keep this path conditional on `"dpd"` being in the inclusion set (or `dict_source_uids` being `None`), and add a parallel user-headword path for the rest of the set. **Keep the function name** — no rename, no shim — to avoid churn and preserve the descriptive DPD-path label inside the function body.
