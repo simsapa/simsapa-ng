@@ -66,7 +66,11 @@ ApplicationWindow {
     property bool is_loading: false
     property bool has_query_error: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible && !info_dialog.visible)
+
+    // Collapsible advanced sub-sections
+    property bool is_filters_collapsed: false
+    property bool is_dictionaries_collapsed: false
 
     property string last_query_text: ""
     property string last_search_area: ""
@@ -177,6 +181,12 @@ ApplicationWindow {
     // Get shortcut sequences for an action, returns empty array if not found
     function get_sequences(action_id: string): var {
         return root.keybindings[action_id] || [];
+    }
+
+    function advanced_options_changed() {
+        if (search_bar_input.search_input.text.length > 0) {
+            root.handle_query(search_bar_input.search_input.text);
+        }
     }
 
     Logger { id: logger }
@@ -544,9 +554,9 @@ ApplicationWindow {
             lang = null;
         }
 
-        const nikaya_prefix = search_bar_input.nikaya_prefix;
-        const uid_prefix = search_bar_input.uid_prefix;
-        const uid_suffix = search_bar_input.uid_suffix;
+        const nikaya_prefix = nikaya_prefix_input.text.trim().toLowerCase();
+        const uid_prefix = uid_prefix_input.text.trim().toLowerCase();
+        const uid_suffix = uid_suffix_input.text.trim().toLowerCase();
 
         let dict_source_uids = null;
         let include_comm_bold_definitions = SuttaBridge.get_include_comm_bold_definitions_in_search_results();
@@ -581,7 +591,7 @@ ApplicationWindow {
     // Solo (lock) takes precedence over the per-row checkboxes; a locked
     // row is the only one that contributes.
     function compute_dict_search_filter() {
-        const panel = search_bar_input.dictionaries_panel;
+        const panel = dictionaries_panel;
         const locked = panel ? panel.locked_label : "";
 
         const parse_array = (s) => {
@@ -1980,6 +1990,22 @@ ${query_text}`;
         }
     }
 
+    Dialog {
+        id: info_dialog
+        property string message: ""
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(root.width - 40, 500)
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: info_dialog.message
+            wrapMode: Text.WordWrap
+            width: info_dialog.width - 40
+        }
+    }
+
+
     AppSettingsWindow {
         id: app_settings_window
         top_bar_margin: root.top_bar_margin
@@ -2060,11 +2086,6 @@ ${query_text}`;
                 search_as_you_type_checked: app_settings_window.search_as_you_type
                 is_loading: root.is_loading
                 has_query_error: root.has_query_error
-                onAdvanced_options_changed: {
-                    if (search_input.text.length > 0) {
-                        root.handle_query(search_input.text);
-                    }
-                }
             }
 
             Button {
@@ -2081,7 +2102,289 @@ ${query_text}`;
                 ToolTip.visible: hovered
                 ToolTip.text: "Show Sidebar"
             }
+        }
 
+        // === Advanced Search Options Row ===
+        ColumnLayout {
+            id: advanced_options_row
+            Layout.fillWidth: true
+            Layout.leftMargin: 10
+            Layout.rightMargin: 10
+            spacing: 6
+            visible: search_bar_input.advanced_options_btn.checked
+
+            Timer {
+                id: advanced_options_debounce_timer
+                interval: 300
+                repeat: false
+                onTriggered: root.advanced_options_changed()
+            }
+
+            // --- Filters sub-section header ---
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+
+                Button {
+                    flat: true
+                    icon.source: root.is_filters_collapsed ? "icons/32x32/fa_chevron-right-solid.png" : "icons/32x32/fa_chevron-down-solid.png"
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: root.is_filters_collapsed = !root.is_filters_collapsed
+                }
+
+                Label {
+                    text: "Filters"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            // --- Filters content wrapper ---
+            Flow {
+                id: filters_flow
+                Layout.fillWidth: true
+                spacing: 8
+                visible: !root.is_filters_collapsed
+
+                RowLayout {
+                    spacing: 4
+                    visible: search_bar_input.search_area === "Suttas"
+
+                    Label {
+                        text: "Nikāya prefix:"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: nikaya_prefix_input
+                    placeholderText: "e.g. mn, an1"
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: root.icon_size
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    selectByMouse: true
+                    onTextChanged: advanced_options_debounce_timer.restart()
+                }
+            }
+
+            RowLayout {
+                spacing: 4
+
+                Label {
+                    text: "UID prefix:"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: uid_prefix_input
+                    placeholderText: "e.g. vin"
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: root.icon_size
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    selectByMouse: true
+                    onTextChanged: advanced_options_debounce_timer.restart()
+                }
+            }
+
+            RowLayout {
+                spacing: 4
+
+                Label {
+                    text: "UID suffix:"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: uid_suffix_input
+                    placeholderText: "e.g. /vvt"
+                    Layout.preferredWidth: 120
+                    Layout.preferredHeight: root.icon_size
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    selectByMouse: true
+                    onTextChanged: advanced_options_debounce_timer.restart()
+                }
+            }
+
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas"
+
+                CheckBox {
+                    id: include_ms_mula_checkbox
+                    text: "MS Mūla in Search"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: SuttaBridge.get_include_ms_mula_in_search_results()
+                    onCheckedChanged: {
+                        SuttaBridge.set_include_ms_mula_in_search_results(checked);
+                        root.advanced_options_changed();
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "MS Mūla in Search";
+                        info_dialog.message = "Include the MS (Mahāsaṅgīti Tipiṭaka Buddhavasse 2500) Mūla Pāli texts from SuttaCentral in the search results. This is the default Pāli source.";
+                        info_dialog.open();
+                    }
+                }
+            }
+
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas"
+
+                CheckBox {
+                    id: include_cst_mula_checkbox
+                    text: "CST Mūla in Search"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: SuttaBridge.get_include_cst_mula_in_search_results()
+                    onCheckedChanged: {
+                        SuttaBridge.set_include_cst_mula_in_search_results(checked);
+                        root.advanced_options_changed();
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "CST Mūla in Search";
+                        info_dialog.message = "Include the CST (Chaṭṭha Saṅgāyana Tipiṭaka 4) Mūla Pāli texts in the search results. The CST text versions are almost identical to the MS texts from SuttaCentral, but they can be useful to examine variant spellings and other differences.";
+                        info_dialog.open();
+                    }
+                }
+            }
+
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas"
+
+                CheckBox {
+                    id: include_cst_commentary_checkbox
+                    text: "CST Commentaries in Search"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: SuttaBridge.get_include_cst_commentary_in_search_results()
+                    onCheckedChanged: {
+                        SuttaBridge.set_include_cst_commentary_in_search_results(checked);
+                        root.advanced_options_changed();
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "CST Commentaries in Search";
+                        info_dialog.message = "Include the commentary (Aṭṭhakathā: .att, Ṭīkā: .tik) records in sutta search results.";
+                        info_dialog.open();
+                    }
+                }
+            }
+
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas"
+
+                CheckBox {
+                    id: include_cst_commentary_in_translations_checkbox
+                    text: "CST Commentary in Translations"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: SuttaBridge.get_include_cst_commentary_in_translations()
+                    onCheckedChanged: {
+                        SuttaBridge.set_include_cst_commentary_in_translations(checked);
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "CST Commentary in Translations";
+                        info_dialog.message = "When loading the translations for the current sutta, include the commentaries (Aṭṭhakathā: .att, Ṭīkā: .tik).";
+                        info_dialog.open();
+                    }
+                }
+            }
+
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas"
+
+                CheckBox {
+                    id: include_cst_mula_in_translations_checkbox
+                    text: "CST Mūla in Translations"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: SuttaBridge.get_include_cst_mula_in_translations()
+                    onCheckedChanged: {
+                        SuttaBridge.set_include_cst_mula_in_translations(checked);
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "CST Mūla in Translations";
+                        info_dialog.message = "When loading translations for the current sutta, include the CST Pāli version in addition to the MS Pāli.";
+                        info_dialog.open();
+                    }
+                }
+            }
+
+            } // end Flow filters_flow
+
+            // --- Dictionaries sub-section header ---
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                visible: search_bar_input.search_area === "Dictionary"
+
+                Button {
+                    flat: true
+                    icon.source: root.is_dictionaries_collapsed ? "icons/32x32/fa_chevron-right-solid.png" : "icons/32x32/fa_chevron-down-solid.png"
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: root.is_dictionaries_collapsed = !root.is_dictionaries_collapsed
+                }
+
+                Label {
+                    text: "Dictionaries"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            DictionarySearchDictionariesPanel {
+                id: dictionaries_panel
+                Layout.fillWidth: true
+                window_width: root.width
+                is_wide: root.is_wide
+                point_size: root.is_mobile ? 12 : 10
+                icon_size: root.icon_size
+                visible: !root.is_dictionaries_collapsed && search_bar_input.search_area === "Dictionary"
+                onSelection_changed: advanced_options_debounce_timer.restart()
+            }
         }
 
         // Main horizontal layout
