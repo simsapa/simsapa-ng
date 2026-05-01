@@ -2049,6 +2049,7 @@ ${query_text}`;
             SearchBarInput {
                 id: search_bar_input
                 Layout.alignment: Qt.AlignTop
+                window_width: root.width
                 is_wide: root.is_wide
                 is_tall: root.is_tall
                 icon_size: root.icon_size

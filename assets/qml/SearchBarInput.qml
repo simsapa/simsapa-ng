@@ -12,6 +12,7 @@ Frame {
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
 
+    required property int window_width
     required property bool is_wide
     required property bool is_tall
     required property bool db_loaded
@@ -620,6 +621,8 @@ Frame {
             DictionarySearchDictionariesPanel {
                 id: dictionaries_panel
                 Layout.fillWidth: true
+                window_width: root.window_width
+                is_wide: root.is_wide
                 point_size: root.is_mobile ? 12 : 10
                 icon_size: root.icon_size
                 visible: !root.is_dictionaries_collapsed && root.search_area === "Dictionary"

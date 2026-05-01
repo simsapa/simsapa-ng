@@ -9,6 +9,9 @@ import com.profoundlabs.simsapa
 ColumnLayout {
     id: root
 
+    required property int window_width
+    required property bool is_wide
+
     property int point_size: 10
     property int icon_size: 28
 
@@ -27,6 +30,12 @@ ColumnLayout {
 
     readonly property string dpd_description_text: "DPD (Digital Pāli Dictionary) is the primary dictionary bundled with Simsapa. When enabled, DPD entries are included in dictionary search results."
     readonly property string commentary_description_text: "Also search bold-highlighted terms extracted from Pāli commentaries (bold definitions). Turn off for headword-only results."
+
+    readonly property int column_count: {
+        if (root.window_width >= 1000) return 3;
+        if (root.is_wide) return 2;
+        return 1;
+    }
 
     signal selection_changed()
 
@@ -93,238 +102,246 @@ ColumnLayout {
 
     DictionaryInfoDialog { id: info_dialog }
 
-    // --- DPD built-in row ---
-    Rectangle {
-        id: dpd_row
+    GridLayout {
+        id: dicts_grid
         Layout.fillWidth: true
-        Layout.preferredHeight: dpd_layout.implicitHeight + 6
-        color: dpd_check.checked ? root.row_active_bg : root.row_inactive_bg
-        border.color: palette.mid
-        border.width: 1
-        radius: 4
-        opacity: root.is_row_disabled_by_lock("__dpd__") ? 0.5 : 1.0
+        columns: root.column_count
+        columnSpacing: 4
+        rowSpacing: 4
 
-        RowLayout {
-            id: dpd_layout
-            anchors.fill: parent
-            anchors.margins: 4
-            spacing: 6
-
-            CheckBox {
-                id: dpd_check
-                checked: root.dpd_enabled
-                enabled: !root.is_row_disabled_by_lock("__dpd__")
-                onCheckedChanged: {
-                    if (checked !== root.dpd_enabled) {
-                        root.dpd_enabled = checked;
-                        dict_manager.set_dpd_enabled(checked);
-                        root.selection_changed();
-                    }
-                }
-            }
-
-            Label {
-                text: "DPD"
-                font.pointSize: root.point_size
-                font.bold: true
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Item { Layout.fillWidth: true }
-
-            Button {
-                flat: true
-                icon.source: "icons/32x32/fa_circle-info-solid.png"
-                implicitWidth: root.icon_size
-                implicitHeight: root.icon_size
-                ToolTip.visible: hovered
-                ToolTip.text: "Info"
-                onClicked: info_dialog.show_with("DPD", root.dpd_description_text)
-            }
-
-            Button {
-                checkable: true
-                checked: root.is_row_locked("__dpd__")
-                enabled: !root.is_row_disabled_by_lock("__dpd__")
-                icon.source: root.is_row_locked("__dpd__") ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
-                implicitWidth: root.icon_size
-                implicitHeight: root.icon_size
-                ToolTip.visible: hovered
-                ToolTip.text: "Solo this dictionary"
-                onClicked: root.toggle_lock("__dpd__")
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: dpd_check.checked = !dpd_check.checked
-            z: -1
-        }
-    }
-
-    // --- Commentary Definitions built-in row ---
-    Rectangle {
-        id: comm_row
-        Layout.fillWidth: true
-        Layout.preferredHeight: comm_layout.implicitHeight + 6
-        color: comm_check.checked ? root.row_active_bg : root.row_inactive_bg
-        border.color: palette.mid
-        border.width: 1
-        radius: 4
-        opacity: root.is_row_disabled_by_lock("__commentary_definitions__") ? 0.5 : 1.0
-
-        RowLayout {
-            id: comm_layout
-            anchors.fill: parent
-            anchors.margins: 4
-            spacing: 6
-
-            CheckBox {
-                id: comm_check
-                checked: root.commentary_definitions_enabled
-                enabled: !root.is_row_disabled_by_lock("__commentary_definitions__")
-                onCheckedChanged: {
-                    if (checked !== root.commentary_definitions_enabled) {
-                        root.commentary_definitions_enabled = checked;
-                        dict_manager.set_commentary_definitions_enabled(checked);
-                        root.selection_changed();
-                    }
-                }
-            }
-
-            Label {
-                text: "Commentary Definitions"
-                font.pointSize: root.point_size
-                font.bold: true
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Item { Layout.fillWidth: true }
-
-            Button {
-                flat: true
-                icon.source: "icons/32x32/fa_circle-info-solid.png"
-                implicitWidth: root.icon_size
-                implicitHeight: root.icon_size
-                ToolTip.visible: hovered
-                ToolTip.text: "Info"
-                onClicked: info_dialog.show_with("Commentary Definitions", root.commentary_description_text)
-            }
-
-            Button {
-                checkable: true
-                checked: root.is_row_locked("__commentary_definitions__")
-                enabled: !root.is_row_disabled_by_lock("__commentary_definitions__")
-                icon.source: root.is_row_locked("__commentary_definitions__") ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
-                implicitWidth: root.icon_size
-                implicitHeight: root.icon_size
-                ToolTip.visible: hovered
-                ToolTip.text: "Solo this dictionary"
-                onClicked: root.toggle_lock("__commentary_definitions__")
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: comm_check.checked = !comm_check.checked
-            z: -1
-        }
-    }
-
-    // --- User-imported rows ---
-    Repeater {
-        model: root.user_dicts
-
-        delegate: Rectangle {
-            id: user_row
-            required property var modelData
-            required property int index
-
+        // --- DPD built-in row ---
+        Rectangle {
+            id: dpd_row
             Layout.fillWidth: true
-            Layout.preferredHeight: user_layout.implicitHeight + 6
-            color: user_check.checked ? root.row_active_bg : root.row_inactive_bg
+            Layout.preferredHeight: dpd_layout.implicitHeight + 6
+            color: dpd_check.checked ? root.row_active_bg : root.row_inactive_bg
             border.color: palette.mid
             border.width: 1
             radius: 4
-            opacity: root.is_row_disabled_by_lock(user_row.modelData.label) ? 0.5 : 1.0
+            opacity: root.is_row_disabled_by_lock("__dpd__") ? 0.5 : 1.0
 
             RowLayout {
-                id: user_layout
+                id: dpd_layout
                 anchors.fill: parent
                 anchors.margins: 4
                 spacing: 6
 
                 CheckBox {
-                    id: user_check
-                    checked: !!user_row.modelData.enabled
-                    enabled: !root.is_row_disabled_by_lock(user_row.modelData.label)
+                    id: dpd_check
+                    checked: root.dpd_enabled
+                    enabled: !root.is_row_disabled_by_lock("__dpd__")
                     onCheckedChanged: {
-                        if (checked === !!user_row.modelData.enabled) {
-                            return;
+                        if (checked !== root.dpd_enabled) {
+                            root.dpd_enabled = checked;
+                            dict_manager.set_dpd_enabled(checked);
+                            root.selection_changed();
                         }
-                        const lab = user_row.modelData.label;
-                        dict_manager.set_user_dict_enabled(lab, checked);
-                        // Update local copy so the model reflects the new value
-                        const updated = root.user_dicts.slice();
-                        updated[user_row.index] = Object.assign({}, updated[user_row.index], { enabled: checked });
-                        root.user_dicts = updated;
-                        root.selection_changed();
                     }
                 }
 
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 0
-
-                    Label {
-                        text: user_row.modelData.title || user_row.modelData.label
-                        font.pointSize: root.point_size
-                        font.bold: true
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
-
-                    Label {
-                        text: "(" + user_row.modelData.label + ")"
-                        font.pointSize: Math.max(root.point_size - 1, 8)
-                        color: palette.placeholderText
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
+                Label {
+                    text: "DPD"
+                    font.pointSize: root.point_size
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
                 }
+
+                Item { Layout.fillWidth: true }
 
                 Button {
                     flat: true
                     icon.source: "icons/32x32/fa_circle-info-solid.png"
                     implicitWidth: root.icon_size
                     implicitHeight: root.icon_size
-                    visible: !!user_row.modelData.description
-                    enabled: !!user_row.modelData.description
                     ToolTip.visible: hovered
                     ToolTip.text: "Info"
-                    onClicked: info_dialog.show_with(user_row.modelData.title || user_row.modelData.label, user_row.modelData.description || "")
+                    onClicked: info_dialog.show_with("DPD", root.dpd_description_text)
                 }
 
                 Button {
                     checkable: true
-                    checked: root.is_row_locked(user_row.modelData.label)
-                    enabled: !root.is_row_disabled_by_lock(user_row.modelData.label)
-                    icon.source: root.is_row_locked(user_row.modelData.label) ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
+                    checked: root.is_row_locked("__dpd__")
+                    enabled: !root.is_row_disabled_by_lock("__dpd__")
+                    icon.source: root.is_row_locked("__dpd__") ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
                     implicitWidth: root.icon_size
                     implicitHeight: root.icon_size
                     ToolTip.visible: hovered
                     ToolTip.text: "Solo this dictionary"
-                    onClicked: root.toggle_lock(user_row.modelData.label)
+                    onClicked: root.toggle_lock("__dpd__")
                 }
             }
 
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: user_check.checked = !user_check.checked
+                onClicked: dpd_check.checked = !dpd_check.checked
                 z: -1
+            }
+        }
+
+        // --- Commentary Definitions built-in row ---
+        Rectangle {
+            id: comm_row
+            Layout.fillWidth: true
+            Layout.preferredHeight: comm_layout.implicitHeight + 6
+            color: comm_check.checked ? root.row_active_bg : root.row_inactive_bg
+            border.color: palette.mid
+            border.width: 1
+            radius: 4
+            opacity: root.is_row_disabled_by_lock("__commentary_definitions__") ? 0.5 : 1.0
+
+            RowLayout {
+                id: comm_layout
+                anchors.fill: parent
+                anchors.margins: 4
+                spacing: 6
+
+                CheckBox {
+                    id: comm_check
+                    checked: root.commentary_definitions_enabled
+                    enabled: !root.is_row_disabled_by_lock("__commentary_definitions__")
+                    onCheckedChanged: {
+                        if (checked !== root.commentary_definitions_enabled) {
+                            root.commentary_definitions_enabled = checked;
+                            dict_manager.set_commentary_definitions_enabled(checked);
+                            root.selection_changed();
+                        }
+                    }
+                }
+
+                Label {
+                    text: "Commentary Definitions"
+                    font.pointSize: root.point_size
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    flat: true
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Info"
+                    onClicked: info_dialog.show_with("Commentary Definitions", root.commentary_description_text)
+                }
+
+                Button {
+                    checkable: true
+                    checked: root.is_row_locked("__commentary_definitions__")
+                    enabled: !root.is_row_disabled_by_lock("__commentary_definitions__")
+                    icon.source: root.is_row_locked("__commentary_definitions__") ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Solo this dictionary"
+                    onClicked: root.toggle_lock("__commentary_definitions__")
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: comm_check.checked = !comm_check.checked
+                z: -1
+            }
+        }
+
+        // --- User-imported rows ---
+        Repeater {
+            model: root.user_dicts
+
+            delegate: Rectangle {
+                id: user_row
+                required property var modelData
+                required property int index
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: user_layout.implicitHeight + 6
+                color: user_check.checked ? root.row_active_bg : root.row_inactive_bg
+                border.color: palette.mid
+                border.width: 1
+                radius: 4
+                opacity: root.is_row_disabled_by_lock(user_row.modelData.label) ? 0.5 : 1.0
+
+                RowLayout {
+                    id: user_layout
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    spacing: 6
+
+                    CheckBox {
+                        id: user_check
+                        checked: !!user_row.modelData.enabled
+                        enabled: !root.is_row_disabled_by_lock(user_row.modelData.label)
+                        onCheckedChanged: {
+                            if (checked === !!user_row.modelData.enabled) {
+                                return;
+                            }
+                            const lab = user_row.modelData.label;
+                            dict_manager.set_user_dict_enabled(lab, checked);
+                            // Update local copy so the model reflects the new value
+                            const updated = root.user_dicts.slice();
+                            updated[user_row.index] = Object.assign({}, updated[user_row.index], { enabled: checked });
+                            root.user_dicts = updated;
+                            root.selection_changed();
+                        }
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        Label {
+                            text: user_row.modelData.title || user_row.modelData.label
+                            font.pointSize: root.point_size
+                            font.bold: true
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "(" + user_row.modelData.label + ")"
+                            font.pointSize: Math.max(root.point_size - 1, 8)
+                            color: palette.placeholderText
+                            elide: Text.ElideRight
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    Button {
+                        flat: true
+                        icon.source: "icons/32x32/fa_circle-info-solid.png"
+                        implicitWidth: root.icon_size
+                        implicitHeight: root.icon_size
+                        visible: !!user_row.modelData.description
+                        enabled: !!user_row.modelData.description
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Info"
+                        onClicked: info_dialog.show_with(user_row.modelData.title || user_row.modelData.label, user_row.modelData.description || "")
+                    }
+
+                    Button {
+                        checkable: true
+                        checked: root.is_row_locked(user_row.modelData.label)
+                        enabled: !root.is_row_disabled_by_lock(user_row.modelData.label)
+                        icon.source: root.is_row_locked(user_row.modelData.label) ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
+                        implicitWidth: root.icon_size
+                        implicitHeight: root.icon_size
+                        ToolTip.visible: hovered
+                        ToolTip.text: "Solo this dictionary"
+                        onClicked: root.toggle_lock(user_row.modelData.label)
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: user_check.checked = !user_check.checked
+                    z: -1
+                }
             }
         }
     }
