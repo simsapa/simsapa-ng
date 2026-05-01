@@ -154,6 +154,13 @@ ColumnLayout {
                 onClicked: root.toggle_lock("__dpd__")
             }
         }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: dpd_check.checked = !dpd_check.checked
+            z: -1
+        }
     }
 
     // --- Commentary Definitions built-in row ---
@@ -216,6 +223,13 @@ ColumnLayout {
                 ToolTip.text: "Solo this dictionary"
                 onClicked: root.toggle_lock("__commentary_definitions__")
             }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: comm_check.checked = !comm_check.checked
+            z: -1
         }
     }
 
@@ -304,6 +318,13 @@ ColumnLayout {
                     ToolTip.text: "Solo this dictionary"
                     onClicked: root.toggle_lock(user_row.modelData.label)
                 }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: user_check.checked = !user_check.checked
+                z: -1
             }
         }
     }
