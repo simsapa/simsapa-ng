@@ -197,11 +197,10 @@ fn locate_stardict_dir(extract_dir: &Path) -> Option<(std::path::PathBuf, String
     let entries = std::fs::read_dir(extract_dir).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.is_dir() {
-            if let Some(stem) = find_ifo_stem_in(&path) {
+        if path.is_dir()
+            && let Some(stem) = find_ifo_stem_in(&path) {
                 return Some((path, stem));
             }
-        }
     }
     None
 }
@@ -211,11 +210,10 @@ fn find_ifo_stem_in(dir: &Path) -> Option<String> {
     let entries = std::fs::read_dir(dir).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) == Some("ifo") {
-            if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+        if path.extension().and_then(|s| s.to_str()) == Some("ifo")
+            && let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                 return Some(stem.to_string());
             }
-        }
     }
     None
 }

@@ -1570,7 +1570,7 @@ impl AppData {
                         if p.file_name().is_some_and(|n| n == "user_dictionaries.sqlite3") {
                             continue;
                         }
-                        let res = if matches!(p.is_dir(), true) {
+                        let res = if p.is_dir() {
                             std::fs::remove_dir_all(&p)
                         } else {
                             std::fs::remove_file(&p)
@@ -1971,7 +1971,7 @@ impl AppData {
                         if p == dict_snapshot {
                             continue;
                         }
-                        let res = if matches!(p.is_dir(), true) {
+                        let res = if p.is_dir() {
                             std::fs::remove_dir_all(&p)
                         } else {
                             std::fs::remove_file(&p)

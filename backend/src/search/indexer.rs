@@ -836,11 +836,10 @@ pub fn list_indexed_source_uids_in_dict_index(index_dir: &Path) -> Result<HashSe
             };
             while stream.advance() {
                 let key = stream.key();
-                if let Ok(s) = std::str::from_utf8(key) {
-                    if !s.is_empty() {
+                if let Ok(s) = std::str::from_utf8(key)
+                    && !s.is_empty() {
                         out.insert(s.to_string());
                     }
-                }
             }
         }
     }

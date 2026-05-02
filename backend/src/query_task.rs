@@ -832,11 +832,10 @@ impl<'a> SearchQueryTask<'a> {
                     .filter(dict_dsl::uid.like(&uid_suffix_pat))
                     .first::<DictWord>(db_conn);
 
-                if let Ok(dict_word) = dict_word_result {
-                    if result_ids.insert(dict_word.id) {
+                if let Ok(dict_word) = dict_word_result
+                    && result_ids.insert(dict_word.id) {
                         all_results.push(dict_word);
                     }
-                }
             }
         }
 
@@ -897,11 +896,10 @@ impl<'a> SearchQueryTask<'a> {
                     .filter(dict_dsl::uid.like(&uid_suffix_pat))
                     .first::<DictWord>(db_conn);
 
-                if let Ok(dict_word) = dict_word_result {
-                    if result_ids.insert(dict_word.id) {
+                if let Ok(dict_word) = dict_word_result
+                    && result_ids.insert(dict_word.id) {
                         all_results.push(dict_word);
                     }
-                }
             }
         }
 
@@ -1014,11 +1012,10 @@ impl<'a> SearchQueryTask<'a> {
                         .filter(dict_dsl::uid.like(&uid_suffix_pat))
                         .first::<DictWord>(db_conn);
 
-                    if let Ok(dict_word) = dict_word_result {
-                        if result_ids.insert(dict_word.id) {
+                    if let Ok(dict_word) = dict_word_result
+                        && result_ids.insert(dict_word.id) {
                             all_results.push(dict_word);
                         }
-                    }
                 }
 
                 // If still no results, try contains match on word_ascii
@@ -1064,11 +1061,10 @@ impl<'a> SearchQueryTask<'a> {
                             .filter(dict_dsl::uid.like(&uid_suffix_pat))
                             .first::<DictWord>(db_conn);
 
-                        if let Ok(dict_word) = dict_word_result {
-                            if result_ids.insert(dict_word.id) {
+                        if let Ok(dict_word) = dict_word_result
+                            && result_ids.insert(dict_word.id) {
                                 all_results.push(dict_word);
                             }
-                        }
                     }
                 }
             }
@@ -2024,8 +2020,7 @@ impl<'a> SearchQueryTask<'a> {
         if set.is_empty() {
             return None;
         }
-        let placeholders = std::iter::repeat("?")
-            .take(set.len())
+        let placeholders = std::iter::repeat_n("?", set.len())
             .collect::<Vec<_>>()
             .join(", ");
         Some((placeholders, set.to_vec()))
