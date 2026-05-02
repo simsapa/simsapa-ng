@@ -25,8 +25,8 @@ ApplicationWindow {
     property string window_id
     property bool is_dark: theme_helper.is_dark
 
-    // section_uid is set as a context property by C++
-    property string current_section_uid: typeof section_uid !== 'undefined' ? section_uid : ""
+    // current_section_uid is set by C++ as a property on the root object
+    property string current_section_uid: ""
 
     // Section data parsed from JSON
     property string section_title: ""

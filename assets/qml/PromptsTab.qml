@@ -279,7 +279,7 @@ Item {
             content_html: "",
         });
         var item = messages_repeater.itemAt(1);
-        if (item && item.send_btn) { // qmllint disable missing-property
+        if (item && item.send_btn) {
             item.send_btn.click();
         }
     }
