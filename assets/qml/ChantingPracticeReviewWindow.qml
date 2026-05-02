@@ -28,6 +28,16 @@ ApplicationWindow {
     // current_section_uid is set by C++ as a property on the root object
     property string current_section_uid: ""
 
+    // Track which section's data is currently loaded
+    property string loaded_section_uid: ""
+
+    // Reload data when current_section_uid is set (may happen after Component.onCompleted)
+    onCurrent_section_uidChanged: {
+        if (current_section_uid !== "" && current_section_uid !== loaded_section_uid) {
+            load_section_data();
+        }
+    }
+
     // Section data parsed from JSON
     property string section_title: ""
     property string chant_title: ""
@@ -53,7 +63,10 @@ ApplicationWindow {
     Component.onCompleted: {
         theme_helper.apply();
         root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
-        load_section_data();
+        // Only load if current_section_uid is already set (may not be if set by C++ after this)
+        if (root.current_section_uid !== "") {
+            load_section_data();
+        }
     }
 
     // Stop all playback and save state when window is closed
@@ -97,6 +110,7 @@ ApplicationWindow {
         // Load recordings
         root.recordings_data = data.recordings || [];
         update_recording_models();
+        root.loaded_section_uid = root.current_section_uid;
     }
 
     function find_parent_titles(collections: var, chant_uid: string) {
