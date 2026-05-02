@@ -644,8 +644,6 @@ Item {
 
                 property alias send_btn: send_btn
 
-
-
                 RowLayout {
                     Layout.leftMargin: 10
                     Layout.rightMargin: 10

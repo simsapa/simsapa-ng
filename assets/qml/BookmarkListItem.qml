@@ -4,8 +4,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import com.profoundlabs.simsapa
-
 Item {
     id: root
 
@@ -187,7 +185,7 @@ Item {
                     font.pointSize: 10
                     font.bold: root.is_dragging
                     elide: Text.ElideRight
-                    width: parent.width
+                    Layout.fillWidth: true
                 }
 
                 Label {
@@ -195,7 +193,7 @@ Item {
                     text: root.item_data.item_uid
                     font.pointSize: 8
                     elide: Text.ElideRight
-                    width: parent.width
+                    Layout.fillWidth: true
                 }
             }
 

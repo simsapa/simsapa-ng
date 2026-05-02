@@ -906,18 +906,18 @@ ${query_text}`;
 
         // Close pinned tabs from end to start to avoid index shifting
         for (let i = tabs_pinned.count - 1; i >= 0; i--) {
-            tabs_pinned.itemAt(i).closeClicked();
+            (tabs_pinned.itemAt(i) as SuttaTabButton).closeClicked();
         }
 
         // Close translation tabs from end to start
         for (let i = tabs_translations.count - 1; i >= 0; i--) {
-            tabs_translations.itemAt(i).closeClicked();
+            (tabs_translations.itemAt(i) as SuttaTabButton).closeClicked();
         }
 
         // Close results tabs from end to start
         // The last remaining results tab's onCloseClicked resets it to blank "Sutta"
         for (let i = tabs_results.count - 1; i >= 0; i--) {
-            tabs_results.itemAt(i).closeClicked();
+            (tabs_results.itemAt(i) as SuttaTabButton).closeClicked();
         }
 
         root.nav_history_paused = false;
@@ -2005,7 +2005,6 @@ ${query_text}`;
         }
     }
 
-
     AppSettingsWindow {
         id: app_settings_window
         top_bar_margin: root.top_bar_margin
@@ -2580,7 +2579,7 @@ ${query_text}`;
 
                                     // Check pinned tabs
                                     for (let i = 0; i < tabs_pinned.count; i++) {
-                                        let tab = tabs_pinned.itemAt(i);
+                                        let tab = tabs_pinned.itemAt(i) as SuttaTabButton;
                                         if (tab && tab.checked) {
                                             // Pinned tabs can always be closed normally
                                             tab.close_btn.clicked();
@@ -2590,7 +2589,7 @@ ${query_text}`;
 
                                     // Check results tabs
                                     for (let i = 0; i < tabs_results.count; i++) {
-                                        let tab = tabs_results.itemAt(i);
+                                        let tab = tabs_results.itemAt(i) as SuttaTabButton;
                                         if (tab && tab.checked) {
                                             // Special handling for ResultsTab_0
                                             if (tab.id_key === "ResultsTab_0") {
@@ -2619,7 +2618,7 @@ ${query_text}`;
 
                                     // Check translations tabs
                                     for (let i = 0; i < tabs_translations.count; i++) {
-                                        let tab = tabs_translations.itemAt(i);
+                                        let tab = tabs_translations.itemAt(i) as SuttaTabButton;
                                         if (tab && tab.checked) {
                                             tab.close_btn.clicked();
                                             return;
@@ -2632,7 +2631,7 @@ ${query_text}`;
 
                                     // Check pinned tabs (will unpin)
                                     for (let i = 0; i < tabs_pinned.count; i++) {
-                                        let tab = tabs_pinned.itemAt(i);
+                                        let tab = tabs_pinned.itemAt(i) as SuttaTabButton;
                                         if (tab && tab.checked) {
                                             tab.pin_btn.toggle();
                                             return;
@@ -2641,7 +2640,7 @@ ${query_text}`;
 
                                     // Check results tabs (will pin)
                                     for (let i = 0; i < tabs_results.count; i++) {
-                                        let tab = tabs_results.itemAt(i);
+                                        let tab = tabs_results.itemAt(i) as SuttaTabButton;
                                         if (tab && tab.checked) {
                                             tab.pin_btn.toggle();
                                             return;
@@ -2650,7 +2649,7 @@ ${query_text}`;
 
                                     // Check translations tabs (will pin)
                                     for (let i = 0; i < tabs_translations.count; i++) {
-                                        let tab = tabs_translations.itemAt(i);
+                                        let tab = tabs_translations.itemAt(i) as SuttaTabButton;
                                         if (tab && tab.checked) {
                                             tab.pin_btn.toggle();
                                             return;
@@ -3054,7 +3053,7 @@ ${query_text}`;
                             anchors.topMargin: 4
                             anchors.leftMargin: 8
                             visible: sidebar_panel.narrow_tabs
-                            text: rightside_tabs.currentItem ? rightside_tabs.currentItem.text : ""
+                            text: rightside_tabs.currentItem ? (rightside_tabs.currentItem as TabButton).text : ""
                             font.bold: true
                             font.pointSize: 12
                         }

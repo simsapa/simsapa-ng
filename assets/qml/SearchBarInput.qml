@@ -117,7 +117,7 @@ Frame {
                 Layout.preferredWidth: root.icon_size
                 ToolTip.visible: hovered
                 ToolTip.text: "Show Menu"
-                onClicked: mobile_menu.open()
+                onClicked: root.mobile_menu.open()
             }
 
             // === Search Input ====

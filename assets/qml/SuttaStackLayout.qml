@@ -57,7 +57,7 @@ StackLayout {
         };
         let data_json = JSON.stringify(data);
         logger.debug("STACK_LAYOUT: Creating webview component for key: " + key);
-        let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json });
+        let comp = sutta_html_component.createObject(root, { item_key: key, data_json: data_json }) as SuttaHtmlView;
 
         comp.page_loaded.connect(function() { root.page_loaded(); });
 

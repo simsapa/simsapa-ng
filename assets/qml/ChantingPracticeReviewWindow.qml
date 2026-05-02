@@ -69,7 +69,7 @@ ApplicationWindow {
         cleanup_repeater(ref_repeater);
         cleanup_repeater(user_repeater);
         for (let i = 0; i < new_rec_repeater.count; i++) {
-            let item = new_rec_repeater.itemAt(i);
+            let item = new_rec_repeater.itemAt(i) as RecordingPlaybackItem;
             if (item && item.cleanup) {
                 item.cleanup();
             }
@@ -192,7 +192,7 @@ ApplicationWindow {
         property string target_uid: ""
         onAccepted: {
             SuttaBridge.delete_chanting_recording(delete_confirm_dialog.target_uid);
-            load_section_data();
+            root.load_section_data();
         }
     }
 
@@ -202,7 +202,7 @@ ApplicationWindow {
         title: "Select Reference Recording"
         nameFilters: ["Audio files (*.ogg *.opus *.mp3 *.wav *.m4a *.flac *.aac *.wma)", "All files (*)"]
         onAccepted: {
-            add_recording_from_file(selectedFile.toString(), "reference");
+            root.add_recording_from_file(selectedFile.toString(), "reference");
         }
     }
 
@@ -212,7 +212,7 @@ ApplicationWindow {
         title: "Add Recording from File"
         nameFilters: ["Audio files (*.ogg *.opus *.mp3 *.wav *.m4a *.flac *.aac *.wma)", "All files (*)"]
         onAccepted: {
-            add_recording_from_file(selectedFile.toString(), "user");
+            root.add_recording_from_file(selectedFile.toString(), "user");
         }
     }
 
@@ -306,7 +306,7 @@ ApplicationWindow {
             // Separator
             Rectangle {
                 Layout.fillWidth: true
-                height: 1
+                Layout.preferredHeight: 1
                 color: palette.mid
             }
 
@@ -363,7 +363,7 @@ ApplicationWindow {
             // Separator
             Rectangle {
                 Layout.fillWidth: true
-                height: 1
+                Layout.preferredHeight: 1
                 color: palette.mid
             }
 
@@ -463,8 +463,9 @@ ApplicationWindow {
                                 }
 
                                 function cleanup_playback() {
-                                    if (ref_delegate.is_open && ref_playback_loader.item && ref_playback_loader.item.cleanup) {
-                                        ref_playback_loader.item.cleanup();
+                                    let item = ref_playback_loader.item as RecordingPlaybackItem;
+                                    if (ref_delegate.is_open && item && item.cleanup) {
+                                        item.cleanup();
                                     }
                                 }
 
@@ -505,8 +506,9 @@ ApplicationWindow {
                                 Connections {
                                     target: root
                                     function onPause_other_playback(playing_uid: string) {
-                                        if (playing_uid !== ref_delegate.uid && ref_playback_loader.item) {
-                                            ref_playback_loader.item.pause_playback();
+                                        let item = ref_playback_loader.item as RecordingPlaybackItem;
+                                        if (playing_uid !== ref_delegate.uid && item) {
+                                            item.pause_playback();
                                         }
                                     }
                                 }
@@ -600,8 +602,9 @@ ApplicationWindow {
                                 }
 
                                 function cleanup_playback() {
-                                    if (user_delegate.is_open && user_playback_loader.item && user_playback_loader.item.cleanup) {
-                                        user_playback_loader.item.cleanup();
+                                    let item = user_playback_loader.item as RecordingPlaybackItem;
+                                    if (user_delegate.is_open && item && item.cleanup) {
+                                        item.cleanup();
                                     }
                                 }
 
@@ -655,8 +658,9 @@ ApplicationWindow {
                                 Connections {
                                     target: root
                                     function onPause_other_playback(playing_uid: string) {
-                                        if (playing_uid !== user_delegate.uid && user_playback_loader.item) {
-                                            user_playback_loader.item.pause_playback();
+                                        let item = user_playback_loader.item as RecordingPlaybackItem;
+                                        if (playing_uid !== user_delegate.uid && item) {
+                                            item.pause_playback();
                                         }
                                     }
                                 }
