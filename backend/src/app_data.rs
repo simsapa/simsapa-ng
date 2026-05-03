@@ -3239,22 +3239,22 @@ impl AppData {
         self.persist_app_settings(&snapshot);
     }
 
-    pub fn get_user_dict_enabled(&self, label: &str) -> bool {
+    pub fn get_dict_enabled(&self, label: &str) -> bool {
         let s = self.app_settings_cache.read().expect("Failed to read app settings");
-        s.dict_search_user_dict_enabled.get(label).copied().unwrap_or(true)
+        s.dict_search_dict_enabled.get(label).copied().unwrap_or(true)
     }
 
-    pub fn set_user_dict_enabled(&self, label: &str, enabled: bool) {
+    pub fn set_dict_enabled(&self, label: &str, enabled: bool) {
         let snapshot = {
             let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
-            s.dict_search_user_dict_enabled.insert(label.to_string(), enabled);
+            s.dict_search_dict_enabled.insert(label.to_string(), enabled);
             s.clone()
         };
         self.persist_app_settings(&snapshot);
     }
 
-    pub fn list_user_dict_enabled(&self) -> IndexMap<String, bool> {
-        self.app_settings_cache.read().expect("Failed to read app settings").dict_search_user_dict_enabled.clone()
+    pub fn list_dict_enabled(&self) -> IndexMap<String, bool> {
+        self.app_settings_cache.read().expect("Failed to read app settings").dict_search_dict_enabled.clone()
     }
 
     /// Export user-imported dictionaries to a self-contained SQLite snapshot

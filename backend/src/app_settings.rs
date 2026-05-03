@@ -95,9 +95,9 @@ pub struct AppSettings {
     /// DPD enabled in the Dictionaries panel of the dictionary search.
     #[serde(default = "default_true")]
     pub dict_search_dpd_enabled: bool,
-    /// Per-user-imported-dictionary enabled state, keyed by dictionary label.
+    /// Per-dictionary enabled state, keyed by dictionary label (other than DPD and Bold Commentary Definitions).
     #[serde(default)]
-    pub dict_search_user_dict_enabled: IndexMap<String, bool>,
+    pub dict_search_dict_enabled: IndexMap<String, bool>,
     /// Whether to restore the last session (open tabs) on startup
     #[serde(default = "default_true")]
     pub restore_last_session: bool,
@@ -250,7 +250,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             include_ms_mula_in_search_results: true,
             include_comm_bold_definitions_in_search_results: true,
             dict_search_dpd_enabled: true,
-            dict_search_user_dict_enabled: IndexMap::new(),
+            dict_search_dict_enabled: IndexMap::new(),
             restore_last_session: true,
         }
     }

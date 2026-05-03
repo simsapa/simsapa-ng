@@ -8,6 +8,7 @@ pub mod nyanadipa;
 pub mod buddha_ujja;
 pub mod tipitaka_xml;
 pub mod dpd;
+pub mod dppn;
 pub mod completions;
 pub mod library_imports;
 pub mod chanting_practice;
@@ -298,9 +299,13 @@ RELEASE_CHANNEL=development
         init_app_data();
         dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir, limit)?;
 
+        // Import Dictionary of Pāli Proper Names
+        dppn::dppn_bootstrap(&bootstrap_assets_dir, &assets_dir)
+            .map_err(|e| anyhow::anyhow!("DPPN bootstrap failed: {}", e))?;
+
         // Import Whitney's Sanskrit Roots StarDict zip as an English dictionary.
-        let whitney_zip_path = bootstrap_assets_dir.join("stardict-imports/whitney-gd.zip");
-        import_stardict_zip_bootstrap(&whitney_zip_path, "whitney", "en")?;
+        // let whitney_zip_path = bootstrap_assets_dir.join("stardict-imports/whitney-gd.zip");
+        // import_stardict_zip_bootstrap(&whitney_zip_path, "whitney", "en")?;
 
         logger::info("=== Create dictionaries.tar.bz2 ===");
         let dict_db_path = assets_dir.join("dictionaries.sqlite3");
@@ -991,6 +996,7 @@ fn format_duration(duration: chrono::Duration) -> String {
     format!("{}:{:02}:{:02}", hours, minutes, seconds)
 }
 
+#[allow(dead_code)]
 fn import_stardict_zip_bootstrap(zip_path: &Path, label: &str, lang: &str) -> Result<()> {
     logger::info(&format!(
         "=== Import StarDict zip: {} (label: {}, lang: {}) ===",

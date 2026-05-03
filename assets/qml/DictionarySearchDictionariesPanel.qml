@@ -40,7 +40,7 @@ ColumnLayout {
     signal selection_changed()
 
     function refresh_state() {
-        const enabled_str = dict_manager.get_user_dict_enabled_map();
+        const enabled_str = dict_manager.get_dict_enabled_map();
         let enabled_map = {};
         try {
             enabled_map = JSON.parse(enabled_str);
@@ -48,7 +48,9 @@ ColumnLayout {
             enabled_map = {};
         }
 
-        const list_str = dict_manager.list_user_dictionaries();
+        // Get the list without 'dpd' and 'bold_definitions' because they get
+        // special handling with separate dictionary items.
+        const list_str = dict_manager.list_dictionaries_without_dpd_and_bold();
         let list = [];
         try {
             list = JSON.parse(list_str);
@@ -281,7 +283,7 @@ ColumnLayout {
                                 return;
                             }
                             const lab = user_row.modelData.label;
-                            dict_manager.set_user_dict_enabled(lab, checked);
+                            dict_manager.set_dict_enabled(lab, checked);
                             // Update local copy so the model reflects the new value
                             const updated = root.user_dicts.slice();
                             updated[user_row.index] = Object.assign({}, updated[user_row.index], { enabled: checked });

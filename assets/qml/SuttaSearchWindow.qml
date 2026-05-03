@@ -626,14 +626,15 @@ ApplicationWindow {
         // dict_words, plus the bold gate from the panel state.
         const dpd_set = to_set(dpd_uids);
         const comm_set = to_set(comm_uids);
+        const user_dicts_set = to_set(user_dicts.map(ud => ud.label));
         let union = {};
 
-        // Always include shipped source_uids that are not DPD and not
-        // commentary bold-definitions — there are none today, but this
-        // keeps the behaviour future-proof.
+        // Only include shipped source_uids that are not DPD and not
+        // commentary bold-definitions, and are NOT already in user_dicts
+        // (where they have an explicit enabled/disabled state).
         for (let i = 0; i < shipped_uids.length; i++) {
             const u = shipped_uids[i];
-            if (!dpd_set[u] && !comm_set[u]) union[u] = true;
+            if (!dpd_set[u] && !comm_set[u] && !user_dicts_set[u]) union[u] = true;
         }
 
         if (panel && panel.dpd_enabled) {
@@ -645,10 +646,11 @@ ApplicationWindow {
         }
 
         const list = Object.keys(union);
-        return {
+        const result = {
             dict_source_uids: list,
             include_comm_bold_definitions: panel ? !!panel.commentary_definitions_enabled : true,
         };
+        return result;
     }
 
     DictionaryManager { id: dictionary_filter_helper }

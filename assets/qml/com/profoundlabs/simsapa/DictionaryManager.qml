@@ -16,6 +16,14 @@ Item {
         return "ok";
     }
 
+    function list_dictionaries(): string {
+        return "[]";
+    }
+
+    function list_dictionaries_without_dpd_and_bold(): string {
+        return "[]";
+    }
+
     function list_user_dictionaries(): string {
         return "[]";
     }
@@ -44,15 +52,15 @@ Item {
         return true;
     }
 
-    function get_user_dict_enabled(label: string): bool {
+    function get_dict_enabled(label: string): bool {
         return true;
     }
 
-    function set_user_dict_enabled(label: string, enabled: bool) {
+    function set_dict_enabled(label: string, enabled: bool) {
         console.log("set_user_dict_enabled():", label, enabled);
     }
 
-    function get_user_dict_enabled_map(): string {
+    function get_dict_enabled_map(): string {
         return "{}";
     }
 
