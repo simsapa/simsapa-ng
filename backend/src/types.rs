@@ -152,6 +152,8 @@ pub struct SearchResult {
     pub page_number: Option<i32>,
     pub score: Option<f32>,
     pub rank: Option<i32>,
+    #[serde(default)]
+    pub is_section_header: bool,
 }
 
 impl SearchResult {
@@ -188,6 +190,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -207,6 +210,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -225,6 +229,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -245,6 +250,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -265,6 +271,26 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
+        }
+    }
+
+    pub fn from_section_header(title: String) -> SearchResult {
+        SearchResult {
+            uid: String::new(),
+            schema_name: String::new(),
+            table_name: String::new(),
+            source_uid: None,
+            title,
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            lang: None,
+            snippet: String::new(),
+            page_number: None,
+            score: None,
+            rank: None,
+            is_section_header: true,
         }
     }
 
@@ -283,6 +309,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 

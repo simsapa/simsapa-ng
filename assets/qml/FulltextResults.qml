@@ -20,14 +20,23 @@ ColumnLayout {
     /* BojjhangaData { id: results_model } // for qml preview */
     ListModel { id: results_model }
 
+    function next_selectable_index(from: int, direction: int): int {
+        var i = from + direction;
+        while (i >= 0 && i < results_model.count) {
+            var row = results_model.get(i);
+            if (row && !row.is_section_header)
+                return i;
+            i += direction;
+        }
+        return from;
+    }
+
     function select_previous_result() {
-        if (fulltext_list.currentIndex > 0)
-            fulltext_list.currentIndex--
+        fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, -1)
     }
 
     function select_next_result() {
-        if (fulltext_list.currentIndex < fulltext_list.count - 1)
-            fulltext_list.currentIndex++
+        fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, +1)
     }
 
     readonly property int font_point_size: root.is_mobile ? 14 : 11
@@ -155,6 +164,7 @@ ColumnLayout {
         root.total_pages = (root.total_hits > 0 ? Math.ceil(root.total_hits / root.page_len) : 1)
         for (var i = 0; i < root.current_results.length; i++) {
             var item = root.current_results[i];
+            var is_header = !!item.is_section_header;
             var result_data = {
                 index: i,
                 item_uid:    item.uid,
@@ -162,6 +172,8 @@ ColumnLayout {
                 sutta_title: item.title,
                 sutta_ref:   item.sutta_ref || "", // Can be 'None' from SearchResult::from_dict_word()
                 snippet:     item.snippet,
+                is_section_header: is_header,
+                header_title: is_header ? item.title : "",
                 /* author:      item.author, */
             };
             results_model.append(result_data);
@@ -204,14 +216,12 @@ ColumnLayout {
             logger.info("key:" + event.key);
             if (event.key === Qt.Key_Up ||
                 (event.key === Qt.Key_K && event.modifiers & Qt.ControlModifier)) {
-                if (fulltext_list.currentIndex > 0)
-                    fulltext_list.currentIndex--
+                fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, -1)
                 event.accepted = true
             }
             else if (event.key === Qt.Key_Down ||
                         (event.key === Qt.Key_J && event.modifiers & Qt.ControlModifier)) {
-                if (fulltext_list.currentIndex < fulltext_list.count - 1)
-                    fulltext_list.currentIndex++
+                fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, +1)
                 event.accepted = true
             }
         }
@@ -223,7 +233,7 @@ ColumnLayout {
             id: result_item
             // NOTE: parent.width occasionally causes: TypeError: Cannot read property 'width' of null
             width: parent ? parent.width : 0
-            height: fulltext_list.item_height
+            height: result_item.is_section_header ? (root.tm1.height + 8) : fulltext_list.item_height
 
             required property int index
             required property string item_uid
@@ -231,15 +241,34 @@ ColumnLayout {
             required property string sutta_title
             required property string sutta_ref
             required property string snippet
+            required property bool is_section_header
+            required property string header_title
             /* required property string nikaya */
             property string author: ""
             /* required property int page_number */
             /* required property real score */
 
+            // Section header rendering
+            Text {
+                anchors.fill: parent
+                anchors.leftMargin: fulltext_list.item_padding
+                anchors.rightMargin: fulltext_list.item_padding
+                anchors.topMargin: 4
+                anchors.bottomMargin: 4
+                visible: result_item.is_section_header
+                text: result_item.header_title
+                font.bold: true
+                font.pointSize: root.font_point_size + 2
+                color: root.palette.active.text
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            // Real result rendering
             Frame {
                 id: item_frame
                 anchors.fill: parent
                 padding: fulltext_list.item_padding
+                visible: !result_item.is_section_header
 
                 background: ListBackground {
                     is_dark: root.is_dark
@@ -249,6 +278,7 @@ ColumnLayout {
 
                 MouseArea {
                     anchors.fill: parent
+                    enabled: !result_item.is_section_header
                     onClicked: fulltext_list.currentIndex = result_item.index
                 }
 
@@ -261,7 +291,7 @@ ColumnLayout {
                     // Title and metadata
                     RowLayout {
                         spacing: 12
-                        Text { 
+                        Text {
                             text: result_item.sutta_ref
                             visible: result_item.sutta_ref !== ""
                             font.pointSize: root.font_point_size
