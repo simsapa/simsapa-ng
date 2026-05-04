@@ -1686,12 +1686,34 @@ impl<'a> SearchQueryTask<'a> {
         Ok((page, total))
     }
 
-    /// Headword fulltext (lemma_1) match. Issues a single FTS5 query
-    /// against `dpd_headwords_fts`, then resolves matched headword IDs to
-    /// DictWord rows with the uid prefix/suffix push-down inline. Returns
-    /// the full filtered list; callers slice it. The structure is
-    /// "fetch matching IDs → per-row dict join", so a single paginated SQL
-    /// query isn't possible without restructuring the join.
+    /// Headword match — merges two retrieval paths so user-imported StarDict
+    /// dictionaries participate alongside DPD's `lemma_1` index:
+    ///
+    /// - **Path A (DPD):** FTS5 against `dpd_headwords_fts.lemma_1`, then
+    ///   resolve each matched DPD headword to its `dict_words` row by
+    ///   `word == lemma_1` constrained to `dict_label = "dpd"`. Enabled when
+    ///   `dict_source_uids` is `None` (no constraint) or `Some(set)` with
+    ///   `"dpd"` in `set`. Skipped when the user solos a non-DPD dictionary.
+    ///
+    /// - **Path B (user-headword):** SQL against `dict_words` JOINed to
+    ///   `dict_words_fts` with `f.word LIKE ?` and `dw.dict_label IN
+    ///   (non_dpd_set)`. Enabled for the non-DPD subset of the inclusion
+    ///   set; when `dict_source_uids` is `None`, Path B searches every
+    ///   non-DPD dictionary by issuing the same query without the `IN`
+    ///   clause. The trigram index on `dict_words_fts.word` (added in PRD
+    ///   §5.0) serves the substring match; `dict_words_dict_label_idx`
+    ///   serves the inclusion-set filter via the JOIN.
+    ///
+    /// Merge: dedup by `dict_words.id`. Sort: exact `word == query_text`
+    /// rows first, then contains rows; tie-break by `dict_label`, then `id`
+    /// for stable ordering. The materialised union length is the
+    /// authoritative `total` (materialise-then-slice; PRD §2.5 contract
+    /// preserved).
+    ///
+    /// `dict_source_uids` contract:
+    ///   - None             → Path A enabled, Path B over every non-DPD dict.
+    ///   - Some(non-empty)  → Path A iff `"dpd" ∈ set`; Path B over `set \ {"dpd"}`.
+    ///   - Some(empty)      → both paths skipped, returns `(empty, 0)`.
     fn lemma_1_dpd_headword_match_fts5_full(
         &self,
     ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
@@ -1708,45 +1730,28 @@ impl<'a> SearchQueryTask<'a> {
 
         let like_pattern = format!("%{}%", self.query_text);
 
-        // Query the FTS table to get headword IDs efficiently
-        #[derive(QueryableByName)]
-        struct HeadwordId {
-            #[diesel(sql_type = diesel::sql_types::Integer)]
-            headword_id: i32,
-        }
-
-        // Get headword IDs from FTS, capped at SAFETY_LIMIT_SQL.
-        let fts_query = String::from(
-            r#"
-            SELECT headword_id
-            FROM dpd_headwords_fts
-            WHERE lemma_1 LIKE ?
-            ORDER BY headword_id
-            LIMIT ?
-            "#
-        );
-
-        let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
-            .bind::<Text, _>(&like_pattern)
-            .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
-            .load::<HeadwordId>(dpd_conn)?;
-
-        if (headword_ids.len() as i64) >= SAFETY_LIMIT_SQL {
-            warn(&format!(
-                "lemma_1_dpd_headword_match_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
-                SAFETY_LIMIT_SQL, &self.query_text
-            ));
-        }
-
-        let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
-
-        if ids.is_empty() {
-            return Ok((Vec::new(), 0));
-        }
-
-        let headwords: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-            .filter(dpd_dsl::id.eq_any(&ids))
-            .load::<DpdHeadword>(dpd_conn)?;
+        // Decide which paths run based on the inclusion-set contract.
+        let (path_a_enabled, non_dpd_subset): (bool, Option<Vec<String>>) =
+            match self.dict_source_uids.as_deref() {
+                None => (true, None),
+                Some(set) if set.is_empty() => {
+                    return Ok((Vec::new(), 0));
+                }
+                Some(set) => {
+                    let has_dpd = set.iter().any(|s| s == "dpd");
+                    let non_dpd: Vec<String> =
+                        set.iter().filter(|s| *s != "dpd").cloned().collect();
+                    let subset = if non_dpd.is_empty() { None } else { Some(non_dpd) };
+                    (has_dpd, subset)
+                }
+            };
+        // `non_dpd_subset` semantics:
+        //   - Outer `None`  → Path B searches every non-DPD dict (no IN clause).
+        //   - `Some(vec)`   → Path B restricts to that subset.
+        //   - When `dict_source_uids` is `Some(set)` with no non-DPD entries,
+        //     Path B is skipped entirely.
+        let path_b_enabled = matches!(self.dict_source_uids.as_deref(), None)
+            || non_dpd_subset.is_some();
 
         // Push uid_prefix and uid_suffix down to the DictWord lookup. `'%'`
         // is the no-op pattern when the filter is unset.
@@ -1757,29 +1762,160 @@ impl<'a> SearchQueryTask<'a> {
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
 
-        let mut search_results: Vec<SearchResult> = Vec::new();
-        for headword in headwords {
-            let mut dict_query = dict_dsl::dict_words.into_boxed();
+        let mut all_rows: Vec<DictWord> = Vec::new();
+        let mut seen_ids: HashSet<i32> = HashSet::new();
 
-            if let Some(ref source_val) = self.source {
-                if self.source_include {
-                    dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
-                } else {
-                    dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
-                }
+        // ---------- Path A: DPD lemma_1 → dict_words(dict_label="dpd") ----------
+        if path_a_enabled {
+            #[derive(QueryableByName)]
+            struct HeadwordId {
+                #[diesel(sql_type = diesel::sql_types::Integer)]
+                headword_id: i32,
             }
 
-            let dict_word_result: Result<DictWord, _> = dict_query
-                .filter(dict_dsl::word.eq(&headword.lemma_1))
-                .filter(dict_dsl::uid.like(&uid_prefix_pat))
-                .filter(dict_dsl::uid.like(&uid_suffix_pat))
-                .first::<DictWord>(dict_conn);
+            let fts_query = String::from(
+                r#"
+                SELECT headword_id
+                FROM dpd_headwords_fts
+                WHERE lemma_1 LIKE ?
+                ORDER BY headword_id
+                LIMIT ?
+                "#
+            );
 
-            if let Ok(dict_word) = dict_word_result {
-                search_results.push(self.db_word_to_result(&dict_word));
+            let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+                .bind::<Text, _>(&like_pattern)
+                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                .load::<HeadwordId>(dpd_conn)?;
+
+            if (headword_ids.len() as i64) >= SAFETY_LIMIT_SQL {
+                warn(&format!(
+                    "lemma_1_dpd_headword_match_fts5 Path A hit SAFETY_LIMIT_SQL={} (query='{}')",
+                    SAFETY_LIMIT_SQL, &self.query_text
+                ));
+            }
+
+            let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
+
+            if !ids.is_empty() {
+                let headwords: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                    .filter(dpd_dsl::id.eq_any(&ids))
+                    .load::<DpdHeadword>(dpd_conn)?;
+
+                for headword in headwords {
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
+
+                    if let Some(ref source_val) = self.source {
+                        if self.source_include {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                        } else {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                        }
+                    }
+
+                    // Path A is the DPD path; constrain the DictWord lookup
+                    // to dict_label = "dpd" so we don't accidentally surface
+                    // a non-DPD row that happens to share the lemma. This
+                    // keeps Path A's totals in sync with the inclusion set.
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::dict_label.eq("dpd"))
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                        .filter(dict_dsl::uid.like(&uid_suffix_pat))
+                        .first::<DictWord>(dict_conn);
+
+                    if let Ok(dict_word) = dict_word_result
+                        && seen_ids.insert(dict_word.id)
+                    {
+                        all_rows.push(dict_word);
+                    }
+                }
             }
         }
 
+        // ---------- Path B: dict_words_fts.word → user-imported dicts ----------
+        if path_b_enabled {
+            let in_clause: Option<(String, Vec<String>)> = match &non_dpd_subset {
+                Some(set) => Self::dict_label_in_clause(set),
+                None => None,
+            };
+
+            let mut sql = String::from(
+                "SELECT dw.* FROM dict_words dw \
+                 JOIN dict_words_fts f ON f.dict_word_id = dw.id \
+                 WHERE f.word LIKE ?"
+            );
+
+            if self.source.is_some() {
+                if self.source_include {
+                    sql.push_str(" AND dw.dict_label = ?");
+                } else {
+                    sql.push_str(" AND dw.dict_label != ?");
+                }
+            }
+
+            if let Some((ph, _)) = &in_clause {
+                sql.push_str(" AND dw.dict_label IN (");
+                sql.push_str(ph);
+                sql.push(')');
+            } else {
+                // No explicit subset → exclude DPD so Path B doesn't
+                // duplicate Path A's dict_label="dpd" rows.
+                sql.push_str(" AND dw.dict_label != 'dpd'");
+            }
+
+            sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIKE ? ORDER BY dw.id LIMIT ?");
+
+            let mut q = sql_query(&sql)
+                .into_boxed::<diesel::sqlite::Sqlite>()
+                .bind::<Text, _>(like_pattern.clone());
+
+            if let Some(ref source_val) = self.source {
+                q = q.bind::<Text, _>(source_val.clone());
+            }
+
+            if let Some((_, binds)) = &in_clause {
+                for v in binds {
+                    q = q.bind::<Text, _>(v.clone());
+                }
+            }
+
+            q = q
+                .bind::<Text, _>(uid_prefix_pat.clone())
+                .bind::<Text, _>(uid_suffix_pat.clone())
+                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
+
+            let user_rows: Vec<DictWord> = q.load(dict_conn)?;
+
+            if (user_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+                warn(&format!(
+                    "lemma_1_dpd_headword_match_fts5 Path B hit SAFETY_LIMIT_SQL={} (query='{}')",
+                    SAFETY_LIMIT_SQL, &self.query_text
+                ));
+            }
+
+            for row in user_rows {
+                if seen_ids.insert(row.id) {
+                    all_rows.push(row);
+                }
+            }
+        }
+
+        // Merge ordering: exact `word == query_text` rows first, then
+        // contains rows; tie-break by dict_label then id.
+        let qt = self.query_text.as_str();
+        all_rows.sort_by(|a, b| {
+            let a_exact = a.word == qt;
+            let b_exact = b.word == qt;
+            b_exact.cmp(&a_exact)
+                .then_with(|| a.dict_label.cmp(&b.dict_label))
+                .then_with(|| a.id.cmp(&b.id))
+        });
+
+        let search_results: Vec<SearchResult> = all_rows
+            .iter()
+            .map(|dw| self.db_word_to_result(dw))
+            .collect();
         let total = search_results.len();
 
         info(&format!("Query took: {:?}", timer.elapsed()));
