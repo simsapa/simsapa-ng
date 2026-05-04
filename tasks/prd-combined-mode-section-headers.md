@@ -27,16 +27,20 @@ This feature inserts a non-interactive **section header row** at the top of each
 
 ### Backend (Rust)
 
-2. The merged Combined-mode page returned by `fetch_combined_page` (in `bridges/src/sutta_bridge.rs`) must insert two synthetic header rows into the `results` vector returned to the frontend:
-   - A header row with title `"DPD Lookup Results (n)"` immediately before the first DPD Lookup result on the page (or as the only DPD-section row if DPD is empty on this page).
-   - A header row with title `"Fulltext Results (n)"` immediately before the first Fulltext result on the page (or as the only Fulltext-section row if Fulltext is empty on this page).
-   - `n` is the **total** count of real results in that section across the whole query (i.e. `dpd_total` or `ft_total`), not the per-page count. These totals are already computed and cached in `COMBINED_CACHE`, so they are cheaply available at header-insertion time.
-3. Header rows are inserted **after** pagination/slicing of real results, not before. This means `page_len`, the per-page offsets into the DPD and Fulltext sub-buffers, and `total_hits` (= `dpd_total + ft_total`) continue to count only real results. A page may therefore deliver up to `page_len + 2` rows on the wire.
-4. Headers must be inserted in Combined Mode whenever **at least one** section has results across the whole query. For an individually empty section (e.g. `dpd_total = 0` but `ft_total > 0`), only the header row is emitted for that section (e.g. `"DPD Lookup Results (0)"`) with no real-result rows following it. **Exception:** when both sections are empty (`total_hits === 0`), no header rows are emitted at all — see FR 13.
+2. The merged Combined-mode page returned by `fetch_combined_page` (in `bridges/src/sutta_bridge.rs`) must insert section-header rows into the `results` vector returned to the frontend, **only for sections that contribute rows on the current page**:
+   - When the page contains DPD rows, a `"DPD Lookup Results (start-end)"` header row is placed immediately before the first DPD row on the page.
+   - When the page contains Fulltext rows, a `"Fulltext Results (start-end)"` header row is placed immediately before the first Fulltext row on the page.
+   - `start` and `end` are 1-based, inclusive indices into the section's full result list, identifying the slice shown on this page (e.g. items 11..15 of DPD render as `"DPD Lookup Results (11-15)"`). `start = section_lo + 1`, `end = section_hi`, where `section_lo..section_hi` is the half-open per-section slice for the page.
+3. Header rows are inserted **after** pagination/slicing of real results, not before. This means `page_len`, the per-page offsets into the DPD and Fulltext sub-buffers, and `total_hits` (= `dpd_total + ft_total`) continue to count only real results. A page may therefore deliver up to `page_len + 2` rows on the wire (when the page straddles the DPD→Fulltext transition and includes both headers).
+4. A section's header is emitted **only when that section contributes at least one row on the current page**. Consequently:
+   - A page wholly within DPD shows only the DPD header at the top.
+   - A page wholly within Fulltext shows only the Fulltext header at the top.
+   - A page that straddles the DPD→Fulltext transition shows the DPD header at the top, the remaining DPD rows, then the Fulltext header at the transition point, then the Fulltext rows.
+   - When both sections are empty (`total_hits === 0`), no header rows are emitted at all — see FR 13.
 5. Section ordering is fixed: **DPD Lookup header + DPD rows first**, then **Fulltext header + Fulltext rows**, matching the existing sub-query orchestration order.
 6. A header row is represented as the existing `SearchResult`-like struct populated as follows (exact field names to be aligned with the current `SearchResult` shape used by the API; placeholder fields shown):
    - `is_section_header`: `true` (new boolean field on the result struct, default `false` on real rows)
-   - `title`: the header label with embedded count (`"DPD Lookup Results (n)"` or `"Fulltext Results (n)"`) — reusing the existing title field consumed by the QML model as `sutta_title`
+   - `title`: the header label with embedded range (`"DPD Lookup Results (start-end)"` or `"Fulltext Results (start-end)"`) — reusing the existing title field consumed by the QML model as `sutta_title`
    - All other string fields (`uid`, `table_name`, `snippet`, `sutta_ref`, etc.): empty strings (no `null`/missing keys, per clarification 7)
    - Any numeric fields (e.g. score): `0` / sensible defaults
 7. The new `is_section_header` boolean must be added to the result struct and serialized to JSON so it crosses the bridge into QML.
@@ -51,7 +55,7 @@ This feature inserts a non-interactive **section header row** at the top of each
     - Header rows must not respond to mouse clicks (no `MouseArea` selection) and must not be selectable as the `currentIndex`.
 11. Keyboard navigation (`Keys.onPressed` Up/Down/Ctrl-J/Ctrl-K in `FulltextResults.qml`) must **skip header rows**: pressing Down past the last real item before a header should advance to the next real item after the header, and likewise for Up. If the resulting index would land on a header, continue scanning in the same direction until a non-header row is found or until the bounds of the list.
 12. `select_previous_result()` / `select_next_result()` must apply the same header-skipping logic.
-13. The "No results found" empty state (`empty_state` Text) must be shown in Combined Mode when **both** sections are empty across the whole query (`total_hits === 0`). In that case, no header rows are emitted at all — the user sees only the standard "No results found" message. When at least one section has results, headers are emitted as specified (including a `(0)` header for any individually empty section), and the empty-state message is suppressed.
+13. The "No results found" empty state (`empty_state` Text) must be shown in Combined Mode when **both** sections are empty across the whole query (`total_hits === 0`). In that case, no header rows are emitted at all — the user sees only the standard "No results found" message. When at least one section has results, headers are emitted as specified (only for sections contributing rows on the current page), and the empty-state message is suppressed.
 14. The pagination controls (`Page X of Y`, prev/next buttons) continue to use `total_hits` and `page_len` unchanged. No frontend pagination math is modified.
 
 ### Counting & Offsets (cross-cutting)

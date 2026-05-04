@@ -60,6 +60,7 @@ fn bold_definition_to_search_result(bd: &crate::db::dpd_models::BoldDefinition) 
         page_number: None,
         score: None,
         rank: None,
+        is_section_header: false,
     }
 }
 

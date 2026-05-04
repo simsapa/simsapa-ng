@@ -449,17 +449,27 @@ fn fetch_combined_page(
 
     let dpd_lo = lo.min(c.dpd_buffer.len()).min(dpd_total_final);
     let dpd_hi = hi.min(c.dpd_buffer.len()).min(dpd_total_final);
-    let mut merged: Vec<SearchResult> = if dpd_hi > dpd_lo {
-        c.dpd_buffer[dpd_lo..dpd_hi].to_vec()
-    } else {
-        Vec::new()
-    };
 
     let ft_lo_global = lo.saturating_sub(dpd_total_final);
     let ft_hi_global = hi.saturating_sub(dpd_total_final);
     let ft_lo = ft_lo_global.min(c.ft_buffer.len()).min(ft_total_final);
     let ft_hi = ft_hi_global.min(c.ft_buffer.len()).min(ft_total_final);
+
+    // Header is emitted only for sections that contribute rows on this page,
+    // and the range label reflects the slice shown on this page (1-based,
+    // inclusive). If a section starts mid-page (transition), its header is
+    // inserted at the transition point rather than at the top.
+    let mut merged: Vec<SearchResult> = Vec::new();
+    if dpd_hi > dpd_lo {
+        merged.push(SearchResult::from_section_header(
+            format!("DPD Lookup Results ({}-{})", dpd_lo + 1, dpd_hi),
+        ));
+        merged.extend(c.dpd_buffer[dpd_lo..dpd_hi].iter().cloned());
+    }
     if ft_hi > ft_lo {
+        merged.push(SearchResult::from_section_header(
+            format!("Fulltext Results ({}-{})", ft_lo + 1, ft_hi),
+        ));
         merged.extend(c.ft_buffer[ft_lo..ft_hi].iter().cloned());
     }
 
