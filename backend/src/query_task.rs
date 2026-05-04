@@ -759,7 +759,12 @@ impl<'a> SearchQueryTask<'a> {
     /// Pagination contract: returns the dedup-union as `Vec<SearchResult>` along
     /// with `total = full.len()`; callers slice it to produce a page (`total`
     /// remains exact under materialise-then-slice). The unified Phase 3 pushes
-    /// `dict_label IN (...)` into SQL, so the dispatcher's
+    /// `dict_label IN (...)` into SQL; Phases 1, 2, and 4 push the same
+    /// inclusion set into their per-headword `dict_words` lookups (otherwise
+    /// they over-retrieve rows whose `dict_label` is excluded — e.g. DPD's own
+    /// rows when DPD is disabled — leaving the post-filter to empty out early
+    /// pages while `total` reflects the unfiltered union). With every phase
+    /// pushing the inclusion set, the dispatcher's
     /// `apply_dict_source_uids_filter` post-filter is a safety net that should
     /// drop zero rows in normal operation.
     fn dict_words_contains_match_fts5_full(
@@ -801,41 +806,68 @@ impl<'a> SearchQueryTask<'a> {
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
 
+        // Inclusion-set push-down for the DPD-driven phases (1, 2, 4).
+        // These phases resolve a DPD lemma to a `dict_words` row by
+        // `word == lemma_1`, which can match rows in *any* dictionary.
+        // Without this push-down they over-retrieve rows whose `dict_label`
+        // is not in the inclusion set (e.g. DPD's own rows when the user
+        // disables DPD), inflating `total` and leaving the post-filter to
+        // empty out early pages — observable as "Page 1 of 53" with an
+        // empty page 1. Pushing `dict_label IN (set)` here keeps `total`
+        // consistent with the visible page contents (PRD §2.6).
+        //
+        // dict_source_uids contract:
+        //   - None             → no constraint, every dictionary contributes.
+        //   - Some(non-empty)  → restrict to that set.
+        //   - Some(empty)      → skip these phases entirely (would return zero anyway).
+        let skip_dpd_driven_phases =
+            matches!(self.dict_source_uids.as_deref(), Some(s) if s.is_empty());
+        let dpd_driven_inclusion: Option<Vec<String>> = match self.dict_source_uids.as_deref() {
+            Some(set) if !set.is_empty() => Some(set.to_vec()),
+            _ => None,
+        };
+
         // Phase 1: Exact matches on DpdHeadword.lemma_clean
         // dpd.lemma_clean has btree index and dpd.lemma_1 has unique constraint and so implicitly indexed.
-        for term in &terms {
-            let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                .filter(dpd_dsl::lemma_clean.eq(term))
-                .order(dpd_dsl::id)
-                .limit(SAFETY_LIMIT_SQL)
-                .load::<DpdHeadword>(dpd_conn)?;
+        if !skip_dpd_driven_phases {
+            for term in &terms {
+                let exact_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                    .filter(dpd_dsl::lemma_clean.eq(term))
+                    .order(dpd_dsl::id)
+                    .limit(SAFETY_LIMIT_SQL)
+                    .load::<DpdHeadword>(dpd_conn)?;
 
-            // Convert DpdHeadword results to DictWord using their UIDs
-            for headword in exact_matches {
-                // Find corresponding DictWord by matching the word field to headword.lemma_1
-                let mut dict_query = dict_dsl::dict_words.into_boxed();
+                // Convert DpdHeadword results to DictWord using their UIDs
+                for headword in exact_matches {
+                    // Find corresponding DictWord by matching the word field to headword.lemma_1
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
 
-                // Apply source filtering
-                // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
-                if let Some(ref source_val) = self.source {
-                    if self.source_include {
-                        dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
-                    } else {
-                        dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                    // Apply source filtering
+                    // In the dictionaries.sqlite3, the equivalent of source_uid is dict_label.
+                    if let Some(ref source_val) = self.source {
+                        if self.source_include {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                        } else {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                        }
                     }
+
+                    if let Some(ref set) = dpd_driven_inclusion {
+                        dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
+                    }
+
+                    // Match DictWord.word with DpdHeadword.lemma_1
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                        .filter(dict_dsl::uid.like(&uid_suffix_pat))
+                        .first::<DictWord>(db_conn);
+
+                    if let Ok(dict_word) = dict_word_result
+                        && result_ids.insert(dict_word.id) {
+                            all_results.push(dict_word);
+                        }
                 }
-
-                // Match DictWord.word with DpdHeadword.lemma_1
-                let dict_word_result: Result<DictWord, _> = dict_query
-                    .filter(dict_dsl::word.eq(&headword.lemma_1))
-                    .filter(dict_dsl::uid.like(&uid_prefix_pat))
-                    .filter(dict_dsl::uid.like(&uid_suffix_pat))
-                    .first::<DictWord>(db_conn);
-
-                if let Ok(dict_word) = dict_word_result
-                    && result_ids.insert(dict_word.id) {
-                        all_results.push(dict_word);
-                    }
             }
         }
 
@@ -848,58 +880,64 @@ impl<'a> SearchQueryTask<'a> {
 
         // Phase 2: Contains matches on DpdHeadword.lemma_1
         // Use dpd_headwords_fts with trigram tokenizer for efficient substring matching
-        for term in &terms {
-            let like_pattern = format!("%{}%", term);
+        if !skip_dpd_driven_phases {
+            for term in &terms {
+                let like_pattern = format!("%{}%", term);
 
-            let fts_query = String::from(
-                r#"
-                SELECT headword_id
-                FROM dpd_headwords_fts
-                WHERE lemma_1 LIKE ?
-                ORDER BY headword_id
-                LIMIT ?
-                "#
-            );
+                let fts_query = String::from(
+                    r#"
+                    SELECT headword_id
+                    FROM dpd_headwords_fts
+                    WHERE lemma_1 LIKE ?
+                    ORDER BY headword_id
+                    LIMIT ?
+                    "#
+                );
 
-            let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
-                .bind::<Text, _>(&like_pattern)
-                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
-                .load::<HeadwordId>(dpd_conn)?;
+                let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
+                    .bind::<Text, _>(&like_pattern)
+                    .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
+                    .load::<HeadwordId>(dpd_conn)?;
 
-            // Fetch full DpdHeadword records using the IDs
-            let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
-            let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                .filter(dpd_dsl::id.eq_any(&ids))
-                .load::<DpdHeadword>(dpd_conn)?;
+                // Fetch full DpdHeadword records using the IDs
+                let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
+                let mut contains_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
+                    .filter(dpd_dsl::id.eq_any(&ids))
+                    .load::<DpdHeadword>(dpd_conn)?;
 
-            // Sort by lemma_1 length in ascending order (shorter lemmas first)
-            contains_matches.sort_by_key(|h| h.lemma_1.len());
+                // Sort by lemma_1 length in ascending order (shorter lemmas first)
+                contains_matches.sort_by_key(|h| h.lemma_1.len());
 
-            // Convert DpdHeadword results to DictWord by matching lemma_1 to word
-            for headword in contains_matches {
-                // Find corresponding DictWord by matching the word field to headword.lemma_1
-                let mut dict_query = dict_dsl::dict_words.into_boxed();
+                // Convert DpdHeadword results to DictWord by matching lemma_1 to word
+                for headword in contains_matches {
+                    // Find corresponding DictWord by matching the word field to headword.lemma_1
+                    let mut dict_query = dict_dsl::dict_words.into_boxed();
 
-                // Apply source filtering
-                if let Some(ref source_val) = self.source {
-                    if self.source_include {
-                        dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
-                    } else {
-                        dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                    // Apply source filtering
+                    if let Some(ref source_val) = self.source {
+                        if self.source_include {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
+                        } else {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
+                        }
                     }
+
+                    if let Some(ref set) = dpd_driven_inclusion {
+                        dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
+                    }
+
+                    // Match DictWord.word with DpdHeadword.lemma_1
+                    let dict_word_result: Result<DictWord, _> = dict_query
+                        .filter(dict_dsl::word.eq(&headword.lemma_1))
+                        .filter(dict_dsl::uid.like(&uid_prefix_pat))
+                        .filter(dict_dsl::uid.like(&uid_suffix_pat))
+                        .first::<DictWord>(db_conn);
+
+                    if let Ok(dict_word) = dict_word_result
+                        && result_ids.insert(dict_word.id) {
+                            all_results.push(dict_word);
+                        }
                 }
-
-                // Match DictWord.word with DpdHeadword.lemma_1
-                let dict_word_result: Result<DictWord, _> = dict_query
-                    .filter(dict_dsl::word.eq(&headword.lemma_1))
-                    .filter(dict_dsl::uid.like(&uid_prefix_pat))
-                    .filter(dict_dsl::uid.like(&uid_suffix_pat))
-                    .first::<DictWord>(db_conn);
-
-                if let Ok(dict_word) = dict_word_result
-                    && result_ids.insert(dict_word.id) {
-                        all_results.push(dict_word);
-                    }
             }
         }
 
@@ -986,7 +1024,7 @@ impl<'a> SearchQueryTask<'a> {
 
         // Phase 4: Fallback to word_ascii matching if no results found
         // This allows queries like 'sutthu' to find 'suṭṭhu'
-        if all_results.is_empty() {
+        if all_results.is_empty() && !skip_dpd_driven_phases {
             for term in &terms {
                 // Try exact match on word_ascii
                 let ascii_matches: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
@@ -1004,6 +1042,10 @@ impl<'a> SearchQueryTask<'a> {
                         } else {
                             dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
                         }
+                    }
+
+                    if let Some(ref set) = dpd_driven_inclusion {
+                        dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
                     }
 
                     let dict_word_result: Result<DictWord, _> = dict_query
@@ -1053,6 +1095,10 @@ impl<'a> SearchQueryTask<'a> {
                             } else {
                                 dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
                             }
+                        }
+
+                        if let Some(ref set) = dpd_driven_inclusion {
+                            dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
                         }
 
                         let dict_word_result: Result<DictWord, _> = dict_query
