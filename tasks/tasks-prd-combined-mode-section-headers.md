@@ -45,13 +45,13 @@ Source PRD: `tasks/prd-combined-mode-section-headers.md`
   - [x] 3.5 Ensure header rows are visually non-clickable: do not attach a `MouseArea` to the header branch (so clicks on a header do nothing and never set `currentIndex`).
   - [x] 3.6 Run `make build -B`. Manual smoke test: header rows now appear visually styled as section titles inside the Combined Mode result list.
 
-- [ ] 4.0 Make keyboard navigation skip header rows in `FulltextResults.qml`
-  - [ ] 4.1 Add a small helper function `next_selectable_index(from: int, direction: int): int` to the `root` ColumnLayout. It scans `results_model` starting at `from + direction`, in steps of `direction` (±1), and returns the first index whose row has `is_section_header === false`. If the scan reaches the bounds (`< 0` or `>= results_model.count`) without finding a non-header, return the original `from` (no movement).
-  - [ ] 4.2 Update `select_previous_result()` to call `fulltext_list.currentIndex = next_selectable_index(fulltext_list.currentIndex, -1)`.
-  - [ ] 4.3 Update `select_next_result()` to call `fulltext_list.currentIndex = next_selectable_index(fulltext_list.currentIndex, +1)`.
-  - [ ] 4.4 Update the `Keys.onPressed` handler in `fulltext_list` to use the same helper for Up/Ctrl-K and Down/Ctrl-J branches.
-  - [ ] 4.5 Update `update_page()` so that after clearing the model and repopulating it, the initial selection is set to `next_selectable_index(-1, +1)` — the first non-header row — instead of leaving `currentIndex = -1`. (Optional: leave at -1 if the model contains only headers, though FR 13 prevents that case in Combined Mode.)
-  - [ ] 4.6 Run `make build -B`. Manual smoke test: pressing Down/Up through a Combined page lands on every real result exactly once and never on a header; the very first press of Down on a fresh page jumps from the (header) top to the first DPD result.
+- [x] 4.0 Make keyboard navigation skip header rows in `FulltextResults.qml`
+  - [x] 4.1 Add a small helper function `next_selectable_index(from: int, direction: int): int` to the `root` ColumnLayout. It scans `results_model` starting at `from + direction`, in steps of `direction` (±1), and returns the first index whose row has `is_section_header === false`. If the scan reaches the bounds (`< 0` or `>= results_model.count`) without finding a non-header, return the original `from` (no movement).
+  - [x] 4.2 Update `select_previous_result()` to call `fulltext_list.currentIndex = next_selectable_index(fulltext_list.currentIndex, -1)`.
+  - [x] 4.3 Update `select_next_result()` to call `fulltext_list.currentIndex = next_selectable_index(fulltext_list.currentIndex, +1)`.
+  - [x] 4.4 Update the `Keys.onPressed` handler in `fulltext_list` to use the same helper for Up/Ctrl-K and Down/Ctrl-J branches.
+  - [x] 4.5 Leave `update_page()`'s initial selection at `currentIndex = -1` (no auto-selection). The first Down/Ctrl-J keypress calls `next_selectable_index(-1, +1)` which already lands on the first non-header row, so no change to `update_page()` is needed.
+  - [x] 4.6 Run `make build -B`. Manual smoke test: pressing Down/Up through a Combined page lands on every real result exactly once and never on a header; the very first press of Down on a fresh page jumps from the (header) top to the first DPD result.
 
 - [ ] 5.0 Verify end-to-end
   - [ ] 5.1 `make build -B` from a clean state — confirm no errors, no new warnings related to the changed sites.

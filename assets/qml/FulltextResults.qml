@@ -20,14 +20,23 @@ ColumnLayout {
     /* BojjhangaData { id: results_model } // for qml preview */
     ListModel { id: results_model }
 
+    function next_selectable_index(from: int, direction: int): int {
+        var i = from + direction;
+        while (i >= 0 && i < results_model.count) {
+            var row = results_model.get(i);
+            if (row && !row.is_section_header)
+                return i;
+            i += direction;
+        }
+        return from;
+    }
+
     function select_previous_result() {
-        if (fulltext_list.currentIndex > 0)
-            fulltext_list.currentIndex--
+        fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, -1)
     }
 
     function select_next_result() {
-        if (fulltext_list.currentIndex < fulltext_list.count - 1)
-            fulltext_list.currentIndex++
+        fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, +1)
     }
 
     readonly property int font_point_size: root.is_mobile ? 14 : 11
@@ -207,14 +216,12 @@ ColumnLayout {
             logger.info("key:" + event.key);
             if (event.key === Qt.Key_Up ||
                 (event.key === Qt.Key_K && event.modifiers & Qt.ControlModifier)) {
-                if (fulltext_list.currentIndex > 0)
-                    fulltext_list.currentIndex--
+                fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, -1)
                 event.accepted = true
             }
             else if (event.key === Qt.Key_Down ||
                         (event.key === Qt.Key_J && event.modifiers & Qt.ControlModifier)) {
-                if (fulltext_list.currentIndex < fulltext_list.count - 1)
-                    fulltext_list.currentIndex++
+                fulltext_list.currentIndex = root.next_selectable_index(fulltext_list.currentIndex, +1)
                 event.accepted = true
             }
         }
