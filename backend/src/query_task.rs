@@ -2212,6 +2212,22 @@ impl<'a> SearchQueryTask<'a> {
     /// (uid prefix/suffix included) down to the storage layer and returns
     /// `(page, total)`. `db_query_hits_count` is written exactly once here.
     pub fn results_page(&mut self, page_num: usize) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // Combined is bridge-orchestrated for Dictionary (see PRD §5.4) — the
+        // bridge fans out DPD + Fulltext sub-queries and merges them. Reaching
+        // this code path with `Combined + Dictionary` is a programmer error
+        // and must fail loudly. For Suttas / Library, Combined falls back to
+        // FulltextMatch.
+        if matches!(self.search_mode, SearchMode::Combined) {
+            match self.search_area {
+                SearchArea::Dictionary => {
+                    return Err("SearchMode::Combined is bridge-orchestrated; query_task must not be invoked with Combined + Dictionary".into());
+                }
+                SearchArea::Suttas | SearchArea::Library => {
+                    self.search_mode = SearchMode::FulltextMatch;
+                }
+            }
+        }
+
         let (page, total) = match self.search_mode {
             SearchMode::FulltextMatch => match self.search_area {
                 SearchArea::Suttas => self.fulltext_suttas(page_num)?,
@@ -2261,8 +2277,6 @@ impl<'a> SearchQueryTask<'a> {
             },
 
             SearchMode::UidMatch => self.uid_match(page_num)?,
-
-            SearchMode::Combined => (Vec::new(), 0),
 
             _ => {
                 error(&format!("Search mode {:?} not yet implemented.", self.search_mode));

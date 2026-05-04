@@ -227,6 +227,7 @@ Frame {
                         "Title Match",
                     ],
                     "Dictionary": [
+                        "Combined",
                         "DPD Lookup",
                         "Fulltext Match",
                         "Contains Match",
@@ -249,12 +250,22 @@ Frame {
                         "Title",
                     ],
                     "Dictionary": [
+                        "Combined",
                         "Lookup",
                         "Fulltext",
                         "Contains",
                         "Headword",
                     ],
                 }
+
+                // When true, suppress side-effects (persistence + query) of
+                // currentIndex changes caused by programmatic restores rather
+                // than by the user.
+                property bool suppress_persist: false
+
+                // Tracks the area whose saved mode is currently applied, so
+                // is_wide-driven model swaps don't get treated as area changes.
+                property string applied_area: ""
 
                 model: {
                     if (root.is_wide) {
@@ -264,7 +275,29 @@ Frame {
                     }
                 }
 
-                onCurrentIndexChanged: root.handle_query_fn(search_input.text) // qmllint disable use-proper-function
+                onModelChanged: {
+                    if (root.search_area === applied_area) {
+                        // is_wide toggle within same area: keep selection.
+                        return;
+                    }
+                    const saved_mode = SuttaBridge.get_last_search_mode(root.search_area);
+                    const wide_list = search_mode_label_wide[root.search_area];
+                    let idx = wide_list.indexOf(saved_mode);
+                    if (idx === -1) idx = 0;
+                    suppress_persist = true;
+                    currentIndex = idx;
+                    suppress_persist = false;
+                    applied_area = root.search_area;
+                    // Fire a query for the new area regardless of whether the
+                    // index actually changed.
+                    root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
+                }
+
+                onCurrentIndexChanged: {
+                    if (suppress_persist) return;
+                    SuttaBridge.set_last_search_mode(root.search_area, get_text());
+                    root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
+                }
 
                 function get_text(): string {
                     // Return the value using the wide values which is expected for JSON search parameters.

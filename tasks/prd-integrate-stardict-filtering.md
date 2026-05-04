@@ -229,10 +229,10 @@ For combined page `P` with combined page length `L`:
 35. No change to `compute_dict_search_filter` — its output already feeds through `dict_source_uids` and `include_comm_bold_definitions` which every backend handler will read.
 36. No new QML components are added. Combined returns through the same `results_page_ready` signal as every other mode and renders into the existing `FulltextResults` mount point.
 
-### 5.6 Persisted default
+### 5.6 Persisted default (per search area)
 
-37. Persist the user's last-used dictionary search mode under a new `app_settings` key `dict_search.last_mode` (default `"Combined"`). On `SuttaSearchWindow` open, when `search_area === "Dictionary"`, restore that index. When the user switches to Dictionary from another area, restore as well. Switching the dropdown updates the setting.
-38. Migration: existing installs do not have the key. The default kicks in on first read. No data migration required.
+37. Persist the user's last-used search mode **per search area** under a new `app_settings` key `search_last_mode: IndexMap<String, String>`, keyed by area name (`"Suttas"`, `"Dictionary"`, `"Library"`). Per-area defaults on read: `"Combined"` for Dictionary, `"Fulltext Match"` for Suttas/Library. On `SuttaSearchWindow` open, the dropdown restores the saved mode for the current area. When the user switches search area (S/D/L), the dropdown restores the saved mode for the newly-selected area **and** triggers a fresh query in that area with that mode — even if the restored index happens to match the previous one. Switching the dropdown manually updates the setting for the current area only.
+38. Migration: existing installs do not have the key. The per-area defaults kick in on first read. No data migration required. The earlier dictionary-only key (`dict_search_last_mode`) is dropped — there is no shim; the default behaviour for fresh / migrated installs lands on `"Combined"` for Dictionary, which matches the old key's default.
 
 ## 6. Behavioural Matrix (target state)
 
@@ -289,16 +289,16 @@ For combined page `P` with combined page length `L`:
   - Extend `lemma_1_dpd_headword_match_fts5_full` with a Path B against `dict_words_fts.word LIKE` for the non-DPD subset; merge with the existing DPD path. Keep the function name (avoids the rename churn from the original draft); document Path A / Path B inside.
   - In `results_page`, for `SearchMode::Combined + SearchArea::Dictionary` return an explicit `Err`. For `SearchMode::Combined + (Suttas | Library)` shadow to `FulltextMatch` and dispatch normally.
 - `backend/src/search/searcher.rs` — no behavioural change required; `add_dict_filters` already handles the Fulltext side.
-- `backend/src/app_settings.rs` — add `dict_search_last_mode: Option<String>` (default `None`, treated as `"Combined"` on read).
-- `backend/src/app_data.rs` — add `get_last_dict_search_mode()` / `set_last_dict_search_mode(mode)` accessors.
+- `backend/src/app_settings.rs` — add `search_last_mode: IndexMap<String, String>` keyed by area name (`"Suttas"` / `"Dictionary"` / `"Library"`). Missing entries fall back to per-area defaults at read time.
+- `backend/src/app_data.rs` — add `get_last_search_mode(area)` / `set_last_search_mode(area, mode)` accessors. Defaults: `"Combined"` for Dictionary, `"Fulltext Match"` otherwise.
 - `bridges/src/sutta_bridge.rs`:
   - Add `CombinedCache` struct + `static COMBINED_CACHE: Mutex<Option<CombinedCache>>` near the existing `RESULTS_PAGE_CACHE`.
   - Add `fetch_combined_page(cache_key, query, params_json, page_num)` that runs the §5.4.3 algorithm: page-0 fan-out via two `thread::spawn` + `join`, later-page side-aware top-up.
   - In `SuttaBridge::results_page`, dispatch `(area=Dictionary, mode=Combined)` to `fetch_combined_page` instead of `fetch_and_cache_page`. The signal-emission and "cache key changed → abort" paths are reused unchanged.
   - Teach the prefetcher to delegate Combined the same way.
-- `bridges/src/dictionary_manager.rs` — add `get_last_dict_search_mode()` / `set_last_dict_search_mode(mode)` for the dropdown.
-- `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` — qmllint stubs for the two new methods.
-- `assets/qml/SearchBarInput.qml` — add `Combined` to the Dictionary model lists; restore + persist via `DictionaryManager`.
+- `bridges/src/sutta_bridge.rs` — add `get_last_search_mode(area)` / `set_last_search_mode(area, mode)` (area-generic; lives on `SuttaBridge` alongside `get_sutta_language_filter_key`, not on the dict-specific `DictionaryManager`).
+- `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` — qmllint stubs for the two new methods.
+- `assets/qml/SearchBarInput.qml` — add `Combined` to the Dictionary model lists; restore + persist per search area via `SuttaBridge`. On area change, restore the saved mode for the new area and always trigger a fresh query (even if the index didn't change). Use an `applied_area` tracker so `is_wide`-driven model swaps are not mistaken for area changes.
 - Tests:
   - `backend/tests/dict_modes_filtering.rs` — fixture-driven tests for the Contains and Headword retrieval changes and for DPD Lookup's invariants (§8 items 2–5, 14).
   - `bridges/tests/combined_dict_results.rs` (or inline in `sutta_bridge.rs`'s test module) — Combined-specific tests covering merge ordering, page-boundary correctness, DPD-exhausted top-up, and cache isolation (§8 items 6–9).

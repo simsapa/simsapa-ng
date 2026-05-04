@@ -745,6 +745,12 @@ pub mod qobject {
         fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
 
         #[qinvokable]
+        fn get_last_search_mode(self: &SuttaBridge, area: &QString) -> QString;
+
+        #[qinvokable]
+        fn set_last_search_mode(self: &SuttaBridge, area: &QString, mode: &QString);
+
+        #[qinvokable]
         fn get_mobile_top_bar_margin(self: &SuttaBridge) -> i32;
 
         #[qinvokable]
@@ -3123,6 +3129,14 @@ impl qobject::SuttaBridge {
     pub fn set_sutta_language_filter_key(self: Pin<&mut Self>, key: QString) {
         let app_data = get_app_data();
         app_data.set_sutta_language_filter_key(key.to_string());
+    }
+
+    pub fn get_last_search_mode(&self, area: &QString) -> QString {
+        QString::from(&get_app_data().get_last_search_mode(&area.to_string()))
+    }
+
+    pub fn set_last_search_mode(&self, area: &QString, mode: &QString) {
+        get_app_data().set_last_search_mode(&area.to_string(), &mode.to_string());
     }
 
     /// Get the mobile top bar margin value

@@ -8,14 +8,13 @@ Source PRD: [prd-integrate-stardict-filtering.md](./prd-integrate-stardict-filte
 - `backend/src/types.rs` — `SearchMode::Combined` already exists in the enum (line 65); no schema change. `SearchParams.dict_source_uids` (line 108) is already wired. Reused by every dict mode handler.
 - `backend/src/query_task.rs` — Per-mode dispatch + `apply_dict_source_uids_filter` (line 2084). Houses `dict_words_contains_match_fts5_full` (line 741), `lemma_1_dpd_headword_match_fts5_full` (line 1632), `dpd_lookup_full` (line 1380), `fulltext_dict` (line 1783), `results_page` (line 1998).
 - `backend/src/search/searcher.rs` — `add_dict_filters` (line 574) already pushes `dict_source_uids` down to Tantivy for Fulltext. No behavioural change needed.
-- `backend/src/app_settings.rs` — Add `dict_search_last_mode: Option<String>` and accessors. Mirrors existing `dict_search_dpd_enabled` pattern.
-- `backend/src/app_data.rs` — Add `get_last_dict_search_mode()` / `set_last_dict_search_mode(mode)` helpers around the new setting.
-- `bridges/src/sutta_bridge.rs` — Existing `results_page` (line 1302), `fetch_and_cache_page` (line 102), and `RESULTS_PAGE_CACHE` (top of file). Adds the `CombinedCache` struct, the `COMBINED_CACHE` static, `run_sub_query`, `fetch_combined_page`, and a dispatch branch in `results_page` for `(area=Dictionary, mode=Combined)`.
-- `bridges/src/dictionary_manager.rs` — Expose two QObject methods: `get_last_dict_search_mode()` and `set_last_dict_search_mode(mode)`.
-- `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` — qmllint stubs for the two new methods.
-- `assets/qml/SearchBarInput.qml` — `search_mode_dropdown` (line 226). Add `Combined` to the Dictionary lists and wire default + persistence via `DictionaryManager`.
+- `backend/src/app_settings.rs` — Add `search_last_mode: IndexMap<String, String>` (per-area persistence keyed by `"Suttas"` / `"Dictionary"` / `"Library"`). Mirrors existing `dict_search_dict_enabled` IndexMap shape.
+- `backend/src/app_data.rs` — Add `get_last_search_mode(area)` / `set_last_search_mode(area, mode)` helpers around the new setting. Defaults: `"Combined"` for Dictionary, `"Fulltext Match"` for Suttas / Library.
+- `bridges/src/sutta_bridge.rs` — Existing `results_page` (line 1302), `fetch_and_cache_page` (line 102), and `RESULTS_PAGE_CACHE` (top of file). Adds the `CombinedCache` struct, the `COMBINED_CACHE` static, `run_sub_query`, `fetch_combined_page`, and a dispatch branch in `results_page` for `(area=Dictionary, mode=Combined)`. Also exposes `get_last_search_mode(area)` / `set_last_search_mode(area, mode)` (area-generic; lives here, not on `DictionaryManager`).
+- `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` — qmllint stubs for `get_last_search_mode` / `set_last_search_mode`.
+- `assets/qml/SearchBarInput.qml` — `search_mode_dropdown` (line 226). Add `Combined` to the Dictionary lists and wire per-area default + persistence via `SuttaBridge`. On area switch, restore the saved mode for the new area and always trigger a fresh query (even when the restored index didn't change). Uses an `applied_area` tracker to distinguish real area changes from `is_wide`-driven model swaps.
 - `assets/qml/SuttaSearchWindow.qml` — No new components. The existing `FulltextResults` mount point (line 2767) renders Combined results unchanged.
-- `backend/tests/dict_modes_filtering.rs` — **NEW** integration tests for the Contains, Headword, and DPD Lookup invariants (uses the local appdata DB; no `#[ignore]`).
+- `backend/tests/dict_modes_filtering.rs` — **NEW** integration tests. Currently covers `Combined + Dictionary -> Err` and `Combined + Suttas -> FulltextMatch fallback` (task 3.3). Contains/Headword/DPD invariants land in task 7.1.
 - `bridges/src/sutta_bridge.rs` (tests block) or `bridges/tests/combined_dict_results.rs` — **NEW** tests for Combined merge ordering, page-boundary correctness, DPD-exhausted top-up, and cache isolation.
 
 ### Notes
@@ -63,29 +62,29 @@ Source PRD: [prd-integrate-stardict-filtering.md](./prd-integrate-stardict-filte
   - [x] 2.7 Update the rustdoc to describe both paths, the merge, and pagination (`total = full.len()` materialise-then-slice unchanged).
   - [x] 2.8 Run `make build -B`.
 
-- [ ] 3.0 Backend: explicitly reject `SearchMode::Combined + SearchArea::Dictionary` in `results_page`; let `Combined + (Suttas|Library)` fall through to `FulltextMatch`
-  - [ ] 3.1 In `query_task.rs::results_page` (line 1998), replace the `SearchMode::Combined => (Vec::new(), 0)` arm:
+- [x] 3.0 Backend: explicitly reject `SearchMode::Combined + SearchArea::Dictionary` in `results_page`; let `Combined + (Suttas|Library)` fall through to `FulltextMatch`
+  - [x] 3.1 In `query_task.rs::results_page` (line 1998), replace the `SearchMode::Combined => (Vec::new(), 0)` arm:
         - When `search_area == SearchArea::Dictionary`, return `Err("SearchMode::Combined is bridge-orchestrated; query_task must not be invoked with Combined + Dictionary".into())`.
         - When `search_area` is `Suttas` or `Library`, shadow the mode locally to `FulltextMatch` (`let mode = if matches!(self.search_mode, SearchMode::Combined) { SearchMode::FulltextMatch } else { self.search_mode };`) and dispatch as Fulltext. PRD §5.4.17 documents this fallback; no new Suttas-side combined mode in this PRD.
-  - [ ] 3.2 Confirm `bridges/src/sutta_bridge.rs::results_page` already surfaces `Err` from `fetch_and_cache_page` through the `results_page_ready` error-payload path (line ~1429). No change required, but verify and note in the task log.
-  - [ ] 3.3 Add a unit test in `query_task.rs` (or `backend/tests/dict_modes_filtering.rs`) asserting that `Combined + Dictionary` returns `Err`, and that `Combined + Suttas` returns the same shape as `FulltextMatch + Suttas` for a known query.
-  - [ ] 3.4 Run `make build -B`.
+  - [x] 3.2 Confirm `bridges/src/sutta_bridge.rs::results_page` already surfaces `Err` from `fetch_and_cache_page` through the `results_page_ready` error-payload path (line ~1429). No change required, but verify and note in the task log. (Verified: `sutta_bridge.rs:1429-1435` catches the `Err` and emits an `{"error": ...}` payload via `results_page_ready` on the qt thread.)
+  - [x] 3.3 Add a unit test in `query_task.rs` (or `backend/tests/dict_modes_filtering.rs`) asserting that `Combined + Dictionary` returns `Err`, and that `Combined + Suttas` returns the same shape as `FulltextMatch + Suttas` for a known query.
+  - [x] 3.4 Run `make build -B`.
 
-- [ ] 4.0 Settings + bridge: persist last-used dictionary search mode (`dict_search.last_mode`, default `"Combined"`)
-  - [ ] 4.1 Add `dict_search_last_mode: Option<String>` to the `AppSettings` struct in `backend/src/app_settings.rs` with `#[serde(default)]`. Default value is `None`; readers treat `None` as `"Combined"`.
-  - [ ] 4.2 Add `get_last_dict_search_mode() -> String` (returns `"Combined"` when unset) and `set_last_dict_search_mode(mode: &str)` on `AppData` in `backend/src/app_data.rs`. Use the same `persist_app_settings` helper pattern used by `set_dpd_enabled`.
-  - [ ] 4.3 Add `get_last_dict_search_mode(&self) -> QString` and `set_last_dict_search_mode(&self, mode: QString)` to the `DictionaryManager` bridge (`bridges/src/dictionary_manager.rs`). No mutex required — settings writes are not on the import/rename/delete critical path.
-  - [ ] 4.4 Update the qmllint stub `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` with placeholder implementations of the two new methods.
-  - [ ] 4.5 Run `make build -B`.
+- [x] 4.0 Settings + bridge: persist last-used search mode **per search area** (`search_last_mode` keyed by `"Suttas"` / `"Dictionary"` / `"Library"`)
+  - [x] 4.1 Add `search_last_mode: IndexMap<String, String>` to the `AppSettings` struct in `backend/src/app_settings.rs` with `#[serde(default)]`. Empty map by default; per-area defaults are applied at read time. The earlier `dict_search_last_mode: Option<String>` field is removed (no compat shim — feedback memory: don't add backwards-compat hacks).
+  - [x] 4.2 Add `get_last_search_mode(area: &str) -> String` (returns `"Combined"` for `"Dictionary"`, `"Fulltext Match"` otherwise when unset) and `set_last_search_mode(area: &str, mode: &str)` on `AppData` in `backend/src/app_data.rs`. Use the same `persist_app_settings` helper pattern used by `set_dpd_enabled`.
+  - [x] 4.3 Add `get_last_search_mode(&self, area: &QString) -> QString` and `set_last_search_mode(&self, area: &QString, mode: &QString)` to the **`SuttaBridge`** bridge (`bridges/src/sutta_bridge.rs`), placed alongside `get_sutta_language_filter_key`. The methods are area-generic and no longer dictionary-specific; the equivalent dict-only methods on `DictionaryManager` are removed.
+  - [x] 4.4 Update the qmllint stub `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` with placeholder implementations of `get_last_search_mode` / `set_last_search_mode`. Remove the corresponding stubs from `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml`.
+  - [x] 4.5 Run `make build -B`.
 
-- [ ] 5.0 QML dropdown: add `Combined` to the Dictionary search-mode dropdown, default-select it, and restore/persist via `DictionaryManager`
-  - [ ] 5.1 In `assets/qml/SearchBarInput.qml::search_mode_dropdown` (line 226), update both `search_mode_label_wide.Dictionary` (line 241) and `search_mode_label_narrow.Dictionary` (line 263) lists:
+- [x] 5.0 QML dropdown: add `Combined` to the Dictionary search-mode dropdown, and restore/persist the saved mode **per search area** via `SuttaBridge`
+  - [x] 5.1 In `assets/qml/SearchBarInput.qml::search_mode_dropdown` (line 226), update both `search_mode_label_wide.Dictionary` (line 241) and `search_mode_label_narrow.Dictionary` (line 263) lists:
         - Wide: `["Combined", "DPD Lookup", "Fulltext Match", "Contains Match", "Headword Match"]`
         - Narrow: `["Combined", "Lookup", "Fulltext", "Contains", "Headword"]`
-  - [ ] 5.2 On `search_area === "Dictionary"`, set `currentIndex` to the index of `DictionaryManager.get_last_dict_search_mode()` in the wide list (default `"Combined"` → index 0). Do this in a `Connections { target: root; function onSearch_areaChanged() { ... } }` block or the existing search-area handler.
-  - [ ] 5.3 On `currentIndex` change while `search_area === "Dictionary"`, call `DictionaryManager.set_last_dict_search_mode(get_text())`. Fold this into the existing `onCurrentIndexChanged` handler (line 279) without disturbing the `handle_query_fn` call.
-  - [ ] 5.4 Verify other areas (Suttas, Library) keep their existing default (`currentIndex = 0`, "Fulltext Match") — adding the persisted setting must not affect them.
-  - [ ] 5.5 Run `make build -B`. Manual sanity check via build only (no GUI): the QML registers and qmllint passes.
+  - [x] 5.2 On every area change (Suttas / Dictionary / Library), set `currentIndex` to the index of `SuttaBridge.get_last_search_mode(root.search_area)` in the wide list for that area (per-area default applies when unset: `"Combined"` for Dictionary, `"Fulltext Match"` for Suttas / Library). Implemented in `onModelChanged`, gated by an `applied_area` tracker so that `is_wide`-driven model swaps within the same area do not re-restore. Uses `suppress_persist` to keep the restore from triggering a write-back.
+  - [x] 5.3 On `currentIndex` change driven by the user (not by the restore), call `SuttaBridge.set_last_search_mode(root.search_area, get_text())` for the **current area** — no longer gated to Dictionary only. Folded into `onCurrentIndexChanged`; the existing `handle_query_fn` call is preserved.
+  - [x] 5.4 On area change, always call `handle_query_fn(search_input.text)` from `onModelChanged` after the index has been restored, so a fresh query runs in the new area even when the restored index happens to match the previous one (otherwise no `onCurrentIndexChanged` would fire and the user would see the new area's UI but the previous area's results).
+  - [x] 5.5 Run `make build -B`. Build succeeded.
 
 - [ ] 6.0 Bridge: implement Combined as a backend orchestrator inside `SuttaBridge::results_page` — parallel sub-fetches on page 0, side-aware top-ups on later pages, one isolated `CombinedCache`
   - [ ] 6.1 In `bridges/src/sutta_bridge.rs`, near the existing `ResultsPageCache`, define one struct and one top-level static:

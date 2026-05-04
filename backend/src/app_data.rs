@@ -3257,6 +3257,29 @@ impl AppData {
         self.app_settings_cache.read().expect("Failed to read app settings").dict_search_dict_enabled.clone()
     }
 
+    /// Last-used search mode for the given area (`"Suttas"`, `"Dictionary"`,
+    /// `"Library"`). Returns the per-area default when unset: `"Combined"`
+    /// for Dictionary, `"Fulltext Match"` for Suttas/Library.
+    pub fn get_last_search_mode(&self, area: &str) -> String {
+        let s = self.app_settings_cache.read().expect("Failed to read app settings");
+        if let Some(v) = s.search_last_mode.get(area) {
+            return v.clone();
+        }
+        match area {
+            "Dictionary" => "Combined".to_string(),
+            _ => "Fulltext Match".to_string(),
+        }
+    }
+
+    pub fn set_last_search_mode(&self, area: &str, mode: &str) {
+        let snapshot = {
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.search_last_mode.insert(area.to_string(), mode.to_string());
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
+    }
+
     /// Export user-imported dictionaries to a self-contained SQLite snapshot
     /// at `import_dir/user_dictionaries.sqlite3` (PRD §4.8 task 5.1).
     ///
