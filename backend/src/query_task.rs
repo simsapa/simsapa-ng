@@ -2217,18 +2217,23 @@ impl<'a> SearchQueryTask<'a> {
         // this code path with `Combined + Dictionary` is a programmer error
         // and must fail loudly. For Suttas / Library, Combined falls back to
         // FulltextMatch.
-        if matches!(self.search_mode, SearchMode::Combined) {
+        // Locally shadow the dispatch mode so Combined + (Suttas|Library)
+        // falls through to FulltextMatch without mutating `self.search_mode`.
+        // Mutating self would persist across repeated `results_page` calls on
+        // the same task (e.g. an inline page-1 fetch after page-0); the local
+        // shadow keeps the task immutable from the caller's perspective.
+        let mode = if matches!(self.search_mode, SearchMode::Combined) {
             match self.search_area {
                 SearchArea::Dictionary => {
                     return Err("SearchMode::Combined is bridge-orchestrated; query_task must not be invoked with Combined + Dictionary".into());
                 }
-                SearchArea::Suttas | SearchArea::Library => {
-                    self.search_mode = SearchMode::FulltextMatch;
-                }
+                SearchArea::Suttas | SearchArea::Library => SearchMode::FulltextMatch,
             }
-        }
+        } else {
+            self.search_mode.clone()
+        };
 
-        let (page, total) = match self.search_mode {
+        let (page, total) = match mode {
             SearchMode::FulltextMatch => match self.search_area {
                 SearchArea::Suttas => self.fulltext_suttas(page_num)?,
                 SearchArea::Dictionary => self.fulltext_dict(page_num)?,
@@ -2279,7 +2284,7 @@ impl<'a> SearchQueryTask<'a> {
             SearchMode::UidMatch => self.uid_match(page_num)?,
 
             _ => {
-                error(&format!("Search mode {:?} not yet implemented.", self.search_mode));
+                error(&format!("Search mode {:?} not yet implemented.", mode));
                 (Vec::new(), 0)
             }
         };
@@ -2293,7 +2298,7 @@ impl<'a> SearchQueryTask<'a> {
         // of `dict_source_uids` because their source_uid is a per-row
         // ref_code rather than a dictionary label.
         let (page, total) = if self.search_area == SearchArea::Dictionary
-            && self.search_mode != SearchMode::FulltextMatch
+            && mode != SearchMode::FulltextMatch
         {
             self.apply_dict_source_uids_filter(page, total)
         } else {

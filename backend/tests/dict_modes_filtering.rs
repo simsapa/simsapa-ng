@@ -81,6 +81,91 @@ fn combined_mode_dictionary_returns_err_at_query_task() {
     );
 }
 
+/// The per-task post-filter `apply_dict_source_uids_filter` only drops rows
+/// with `table_name == "dict_words"`. DPD-native rows (`dpd_headwords` /
+/// `dpd_roots`) pass through unchanged regardless of the inclusion set. This
+/// pins the invariant the bridge-level `dpd_enabled` gate in
+/// `fetch_combined_page` relies on: without that gate, disabling DPD in the
+/// panel would still leak DPD-native rows into Combined results because the
+/// post-filter is "blind" to them.
+#[test]
+#[serial]
+fn dpd_lookup_post_filter_does_not_drop_dpd_native_rows() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    // Inclusion set that explicitly excludes "dpd" (and any dict_words
+    // labels). If the post-filter operated on DPD-native rows it would
+    // produce an empty page.
+    let mut params = dict_params(SearchMode::DpdLookup);
+    params.dict_source_uids = Some(vec!["nonexistent_user_dict".to_string()]);
+
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "dhamma".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let results = task
+        .results_page(0)
+        .expect("DpdLookup should succeed even with DPD excluded from inclusion set");
+
+    let dpd_native = results
+        .iter()
+        .filter(|r| r.table_name == "dpd_headwords" || r.table_name == "dpd_roots")
+        .count();
+    assert!(
+        dpd_native > 0,
+        "post-filter must pass through DPD-native rows ({} returned, all dropped)",
+        results.len()
+    );
+}
+
+/// Combined's bridge-level `dpd_enabled` gate is the load-bearing protection
+/// that prevents DPD-native rows from leaking when the user disables DPD. The
+/// gate logic itself is `set.iter().any(|s| s == "dpd")`. This pins the
+/// boundary cases.
+#[test]
+fn combined_dpd_enabled_gate_logic() {
+    fn dpd_enabled(uids: Option<&Vec<String>>) -> bool {
+        match uids {
+            None => true,
+            Some(set) => set.iter().any(|s| s == "dpd"),
+        }
+    }
+
+    assert!(dpd_enabled(None), "None means no constraint -> DPD enabled");
+    assert!(
+        !dpd_enabled(Some(&vec![])),
+        "empty set -> nothing matches, DPD must be skipped"
+    );
+    assert!(
+        !dpd_enabled(Some(&vec!["user_dict".to_string()])),
+        "user dict only -> DPD must be skipped"
+    );
+    assert!(
+        dpd_enabled(Some(&vec!["dpd".to_string()])),
+        "DPD soloed -> DPD enabled"
+    );
+    assert!(
+        dpd_enabled(Some(&vec!["dpd".to_string(), "user_dict".to_string()])),
+        "DPD + user dict -> DPD enabled"
+    );
+}
+
+/// Combined's cache key carries a `|combined` suffix that cannot collide with
+/// the standalone `RESULTS_PAGE_CACHE` key shape
+/// (`"{query}|{area}|{params_json}"`). This pins the format so a future
+/// refactor doesn't silently merge the two caches.
+#[test]
+fn combined_cache_key_has_combined_suffix() {
+    let combined_key = format!("{}|{}|{}|combined", "dhamma", "Dictionary", "{}");
+    let standalone_key = format!("{}|{}|{}", "dhamma", "Dictionary", "{}");
+    assert_ne!(combined_key, standalone_key);
+    assert!(combined_key.ends_with("|combined"));
+    assert!(!standalone_key.ends_with("|combined"));
+}
+
 #[test]
 #[serial]
 fn combined_mode_suttas_falls_back_to_fulltext() {

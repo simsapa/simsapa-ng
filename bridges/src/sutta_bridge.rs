@@ -337,73 +337,102 @@ fn fetch_combined_page(
     let lo = page_num.saturating_mul(l);
     let hi = lo.saturating_add(l);
 
-    // Top-up DPD if the requested slice end exceeds what we have buffered.
+    // Top-up loop. When both sides need more, run them concurrently.
+    // The common case is a single side falling short by one sub-page;
+    // the rare case (a Combined page that straddles the DPD/FT
+    // boundary, or a dropped row in either sub-query) is the one that wins
+    // wall-clock from the fan-out. Each iteration:
+    //   1. Snapshot `(have, next_page)` for both sides under the lock.
+    //   2. If both sides are short, fan out two threads and `join()`.
+    //   3. If only one side is short, fetch it inline.
+    //   4. Re-acquire the lock, re-check `cache_key`, install results.
+    //   5. Loop until both sides are satisfied (or empty-rows short-circuit).
     let dpd_needed = hi.min(dpd_total_usize);
-    loop {
-        let (have, next_page) = {
-            let g = COMBINED_CACHE.lock().unwrap();
-            let Some(c) = g.as_ref() else { return Ok(None); };
-            if c.cache_key != cache_key {
-                return Ok(None);
-            }
-            (c.dpd_buffer.len(), c.dpd_pages_fetched)
-        };
-        if have >= dpd_needed {
-            break;
-        }
-        let (rows, total, _) = run_sub_query(
-            query_text,
-            SearchArea::Dictionary,
-            dpd_params.clone(),
-            next_page,
-        )?;
-        let rows_empty = rows.is_empty();
-        let mut g = COMBINED_CACHE.lock().unwrap();
-        let Some(c) = g.as_mut() else { return Ok(None); };
-        if c.cache_key != cache_key {
-            return Ok(None);
-        }
-        c.dpd_buffer.extend(rows);
-        c.dpd_pages_fetched += 1;
-        c.dpd_total = Some(total);
-        if rows_empty {
-            // Defensive: avoid spinning if the sub-query reports total > buffer
-            // but yields no further rows.
-            break;
-        }
-    }
-
-    // Top-up Fulltext for the slice that lies past the DPD block.
     let ft_required_end = hi.saturating_sub(dpd_total_usize);
     let ft_needed = ft_required_end.min(ft_total_usize);
     loop {
-        let (have, next_page) = {
+        let (dpd_have, dpd_next, ft_have, ft_next) = {
             let g = COMBINED_CACHE.lock().unwrap();
             let Some(c) = g.as_ref() else { return Ok(None); };
             if c.cache_key != cache_key {
                 return Ok(None);
             }
-            (c.ft_buffer.len(), c.ft_pages_fetched)
+            (
+                c.dpd_buffer.len(),
+                c.dpd_pages_fetched,
+                c.ft_buffer.len(),
+                c.ft_pages_fetched,
+            )
         };
-        if have >= ft_needed {
+        let dpd_short = dpd_have < dpd_needed;
+        let ft_short = ft_have < ft_needed;
+        if !dpd_short && !ft_short {
             break;
         }
-        let (rows, total, _) = run_sub_query(
-            query_text,
-            SearchArea::Dictionary,
-            ft_params.clone(),
-            next_page,
-        )?;
-        let rows_empty = rows.is_empty();
-        let mut g = COMBINED_CACHE.lock().unwrap();
-        let Some(c) = g.as_mut() else { return Ok(None); };
-        if c.cache_key != cache_key {
-            return Ok(None);
+
+        // Run the needed sub-queries unlocked. When both are short, fan out
+        // into two threads — same pattern as the cold-start fan-out.
+        let (dpd_result, ft_result): (
+            Option<Result<(Vec<SearchResult>, i64, usize), String>>,
+            Option<Result<(Vec<SearchResult>, i64, usize), String>>,
+        ) = if dpd_short && ft_short {
+            let qt_dpd = query_text.to_string();
+            let dpd_p = dpd_params.clone();
+            let dpd_handle = thread::spawn(move || {
+                run_sub_query(&qt_dpd, SearchArea::Dictionary, dpd_p, dpd_next)
+            });
+            let qt_ft = query_text.to_string();
+            let ft_p = ft_params.clone();
+            let ft_handle = thread::spawn(move || {
+                run_sub_query(&qt_ft, SearchArea::Dictionary, ft_p, ft_next)
+            });
+            let dpd_r = dpd_handle
+                .join()
+                .map_err(|_| "DPD top-up thread panicked".to_string())?;
+            let ft_r = ft_handle
+                .join()
+                .map_err(|_| "Fulltext top-up thread panicked".to_string())?;
+            (Some(dpd_r), Some(ft_r))
+        } else if dpd_short {
+            let r = run_sub_query(query_text, SearchArea::Dictionary, dpd_params.clone(), dpd_next);
+            (Some(r), None)
+        } else {
+            let r = run_sub_query(query_text, SearchArea::Dictionary, ft_params.clone(), ft_next);
+            (None, Some(r))
+        };
+
+        let dpd_part = dpd_result.transpose()?;
+        let ft_part = ft_result.transpose()?;
+
+        let mut dpd_empty = false;
+        let mut ft_empty = false;
+        {
+            let mut g = COMBINED_CACHE.lock().unwrap();
+            let Some(c) = g.as_mut() else { return Ok(None); };
+            if c.cache_key != cache_key {
+                return Ok(None);
+            }
+            if let Some((rows, total, _)) = dpd_part {
+                dpd_empty = rows.is_empty();
+                c.dpd_buffer.extend(rows);
+                c.dpd_pages_fetched += 1;
+                c.dpd_total = Some(total);
+            }
+            if let Some((rows, total, _)) = ft_part {
+                ft_empty = rows.is_empty();
+                c.ft_buffer.extend(rows);
+                c.ft_pages_fetched += 1;
+                c.ft_total = Some(total);
+            }
         }
-        c.ft_buffer.extend(rows);
-        c.ft_pages_fetched += 1;
-        c.ft_total = Some(total);
-        if rows_empty {
+        // Defensive: if a side reports total > buffer but yields no further
+        // rows, stop fetching from it to avoid spinning. The next iteration
+        // re-evaluates `dpd_short` / `ft_short` from the buffer length, so
+        // an empty fetch on one side does not block the other from continuing.
+        if (dpd_short && dpd_empty && ft_short && ft_empty)
+            || (dpd_short && dpd_empty && !ft_short)
+            || (ft_short && ft_empty && !dpd_short)
+        {
             break;
         }
     }
@@ -1689,11 +1718,22 @@ impl qobject::SuttaBridge {
                     }
                     Err(e) => {
                         error(&e.to_string());
-                        // Combined errored: clear the partial cache so the
-                        // next user action starts cleanly (PRD §6.7).
+                        // Only reset the cache if cold start never completed.
+                        // On a top-up failure (both totals already populated),
+                        // keep the partial buffers — the next user action
+                        // retries the same top-up path and previously-served
+                        // pages remain consistent.
                         {
                             let mut g = COMBINED_CACHE.lock().unwrap();
-                            *g = None;
+                            let cold_start_failed = match g.as_ref() {
+                                Some(c) => c.cache_key != cache_key
+                                    || c.dpd_total.is_none()
+                                    || c.ft_total.is_none(),
+                                None => true,
+                            };
+                            if cold_start_failed {
+                                *g = None;
+                            }
                         }
                         let error_json = serde_json::json!({"error": format!("{}", e)}).to_string();
                         qt_thread.queue(move |mut qo| {
