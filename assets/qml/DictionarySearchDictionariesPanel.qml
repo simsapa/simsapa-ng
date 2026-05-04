@@ -164,11 +164,11 @@ ColumnLayout {
                     checkable: true
                     checked: root.is_row_locked("__dpd__")
                     enabled: !root.is_row_disabled_by_lock("__dpd__")
-                    icon.source: root.is_row_locked("__dpd__") ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
+                    icon.source: root.is_row_locked("__dpd__") ? "icons/32x32/system-uicons--lock.png" : "icons/32x32/system-uicons--lock-open.png"
                     implicitWidth: root.icon_size
                     implicitHeight: root.icon_size
                     ToolTip.visible: hovered
-                    ToolTip.text: "Solo this dictionary"
+                    ToolTip.text: "Show results only from this dictionary"
                     onClicked: root.toggle_lock("__dpd__")
                 }
             }
@@ -234,11 +234,11 @@ ColumnLayout {
                     checkable: true
                     checked: root.is_row_locked("__commentary_definitions__")
                     enabled: !root.is_row_disabled_by_lock("__commentary_definitions__")
-                    icon.source: root.is_row_locked("__commentary_definitions__") ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
+                    icon.source: root.is_row_locked("__commentary_definitions__") ? "icons/32x32/system-uicons--lock.png" : "icons/32x32/system-uicons--lock-open.png"
                     implicitWidth: root.icon_size
                     implicitHeight: root.icon_size
                     ToolTip.visible: hovered
-                    ToolTip.text: "Solo this dictionary"
+                    ToolTip.text: "Show results only from this dictionary"
                     onClicked: root.toggle_lock("__commentary_definitions__")
                 }
             }
@@ -329,11 +329,11 @@ ColumnLayout {
                         checkable: true
                         checked: root.is_row_locked(user_row.modelData.label)
                         enabled: !root.is_row_disabled_by_lock(user_row.modelData.label)
-                        icon.source: root.is_row_locked(user_row.modelData.label) ? "icons/32x32/material-symbols-light--push-pin.png" : "icons/32x32/material-symbols-light--push-pin-outline.png"
+                        icon.source: root.is_row_locked(user_row.modelData.label) ? "icons/32x32/system-uicons--lock.png" : "icons/32x32/system-uicons--lock-open.png"
                         implicitWidth: root.icon_size
                         implicitHeight: root.icon_size
                         ToolTip.visible: hovered
-                        ToolTip.text: "Solo this dictionary"
+                        ToolTip.text: "Show results only from this dictionary"
                         onClicked: root.toggle_lock(user_row.modelData.label)
                     }
                 }
