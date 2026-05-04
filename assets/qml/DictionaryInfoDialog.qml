@@ -29,11 +29,24 @@ Dialog {
             Layout.preferredHeight: 240
             clip: true
 
-            TextArea {
-                readOnly: true
-                wrapMode: TextEdit.Wrap
-                text: root.description_text
-                selectByMouse: true
+            ColumnLayout {
+                width: parent.width
+                spacing: 15
+
+                Text {
+                    text: root.description_text
+                    textFormat: Text.RichText
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    onLinkActivated: function(link) {
+                        Qt.openUrlExternally(link);
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        acceptedButtons: Qt.NoButton
+                        cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                    }
+                }
             }
         }
     }
