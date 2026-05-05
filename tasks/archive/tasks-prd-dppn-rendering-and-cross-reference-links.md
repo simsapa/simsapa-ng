@@ -77,7 +77,7 @@ PRD: [prd-dppn-rendering-and-cross-reference-links.md](./prd-dppn-rendering-and-
   - [x] 6.6 `make build -B` clean (Rust + C++ + QML registration all link).
   - [x] 6.7 Manual verification (user-driven, per project guidance): open a DPPN entry, click a `t14` link, confirm the side panel opens, the Dictionary results tab activates, and the results list shows DPPN-only Fulltext matches — while the search input field, search mode dropdown, and dict-filter checkboxes remain unchanged.
 
-- [ ] 7.0 Update documentation
-  - [ ] 7.1 In `PROJECT_MAP.md` under "Content Rendering", add a one-line entry for `render_dppn_entry` in `backend/src/html_content.rs` and the `dict_label == "dppn"` dispatch in `app_data.rs::render_word_uid_to_html`.
-  - [ ] 7.2 In `PROJECT_MAP.md` under "Search & Lookup", add a one-line entry for `POST /dppn_lookup` and its non-disruptive semantics (no writes to `search_last_mode`, dict filters, or search input).
-  - [ ] 7.3 If a `docs/` page covers the dictionary rendering pipeline, add a short paragraph there too.
+- [x] 7.0 Update documentation
+  - [x] 7.1 In `PROJECT_MAP.md` under "Content Rendering", add a one-line entry for `render_dppn_entry` in `backend/src/html_content.rs` and the `dict_label == "dppn"` dispatch in `app_data.rs::render_word_uid_to_html`.
+  - [x] 7.2 In `PROJECT_MAP.md` under "Search & Lookup", add an entry for `POST /dppn_lookup`. Note: the implemented behaviour is now **UI-driving** (sets search area to Dictionary, mode to Fulltext Match, populates the search input, solo-locks the DPPN dictionary via the panel's lock toggle) rather than the originally-specified non-disruptive semantics — the change was made to keep the query visible/editable.
+  - [x] 7.3 No `docs/` page currently covers the dictionary rendering pipeline; PROJECT_MAP entries are sufficient.
