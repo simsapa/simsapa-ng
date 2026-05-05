@@ -31,6 +31,7 @@ appimage-tools/
 Simsapa.AppDir/
 
 .opencode/
+.agent-shell/
 .qtcreator/
 
 pali-stemmer-in-snowball

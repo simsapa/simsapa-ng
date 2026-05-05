@@ -117,17 +117,26 @@ impl DictionariesDbHandle {
         })
     }
 
-    /// List user-imported dictionaries, ordered by label.
-    pub fn list_user_dictionaries(&self) -> Result<Vec<Dictionary>> {
+    /// List dictionaries, ordered by label.
+    pub fn list_dictionaries(&self, filter_is_user_imported: Option<bool>) -> Result<Vec<Dictionary>> {
         use crate::db::dictionaries_schema::dictionaries::dsl::*;
 
-        self.do_read(|db_conn| {
-            dictionaries
-                .filter(is_user_imported.eq(true))
-                .order(label.asc())
-                .select(Dictionary::as_select())
-                .load::<Dictionary>(db_conn)
-        }).context("list_user_dictionaries failed")
+        if let Some(is_user_imported_value) = filter_is_user_imported {
+            self.do_read(|db_conn| {
+                dictionaries
+                    .filter(is_user_imported.eq(is_user_imported_value))
+                    .order(label.asc())
+                    .select(Dictionary::as_select())
+                    .load::<Dictionary>(db_conn)
+            }).context("list_dictionaries failed")
+        } else {
+            self.do_read(|db_conn| {
+                dictionaries
+                    .order(label.asc())
+                    .select(Dictionary::as_select())
+                    .load::<Dictionary>(db_conn)
+            }).context("list_dictionaries failed")
+        }
     }
 
     /// Count `dict_words` rows belonging to a given dictionary.

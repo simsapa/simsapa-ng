@@ -647,7 +647,7 @@ lazy_static! {
     // see test_sutta_search_contains_match_with_punctuation()
     static ref RE_PUNCT_QUOTES: Regex = Regex::new(r#"[\.,;:\!\?'‘’"“”…—–-]+"#).unwrap();
 
-    static ref RE_DASH: Regex = Regex::new(r"—–-+").unwrap();
+    static ref RE_DASH: Regex = Regex::new(r"[—–-]+").unwrap();
 
     // Used in word_uid_sanitize() to also remove parens.
     static ref RE_PUNCT_PARENS: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
@@ -1475,6 +1475,7 @@ pub fn word_uid_sanitize(word: &str) -> String {
          .replace("\"", "")
          .replace(' ', "-");
     w = RE_DASH.replace_all(&w, "-").to_string();
+    w = w.trim_matches('-').to_string();
     w
 }
 
@@ -2363,13 +2364,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Pre-existing failure: word_uid_sanitize behavior changed
     fn test_word_uid_sanitize() {
-        assert_eq!(word_uid_sanitize("word.with,punct;"), "word-with-punct-");
-        assert_eq!(word_uid_sanitize("word (bracket)"), "word-bracket-");
+        assert_eq!(word_uid_sanitize("word.with,punct;"), "word-with-punct");
+        assert_eq!(word_uid_sanitize("word (bracket)"), "word-bracket");
         assert_eq!(word_uid_sanitize("word's quote\""), "words-quote");
         assert_eq!(word_uid_sanitize("word--with---dashes"), "word-with-dashes");
-        assert_eq!(word_uid_sanitize("  leading space  "), "-leading-space-");
+        assert_eq!(word_uid_sanitize("  leading space  "), "leading-space");
     }
 
     #[test]

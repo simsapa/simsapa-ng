@@ -95,9 +95,27 @@ pub struct AppSettings {
     /// DPD enabled in the Dictionaries panel of the dictionary search.
     #[serde(default = "default_true")]
     pub dict_search_dpd_enabled: bool,
-    /// Per-user-imported-dictionary enabled state, keyed by dictionary label.
+    /// Per-dictionary enabled state, keyed by dictionary label (other than DPD and Bold Commentary Definitions).
     #[serde(default)]
-    pub dict_search_user_dict_enabled: IndexMap<String, bool>,
+    pub dict_search_dict_enabled: IndexMap<String, bool>,
+    /// Last-used search mode per search area, keyed by area name
+    /// (`"Suttas"`, `"Dictionary"`, `"Library"`). Values are the labels as
+    /// they appear in the QML dropdown. Missing entries fall back to the
+    /// per-area default at read time.
+    #[serde(default)]
+    pub search_last_mode: IndexMap<String, String>,
+    /// Cached set of distinct `dict_words.dict_label` values for non-user-imported
+    /// dictionaries. Populated at startup (and refreshed after user-dict
+    /// import / delete / rename) so the dictionary search bar doesn't run a
+    /// `SELECT DISTINCT` against `dict_words` on every query.
+    #[serde(default)]
+    pub cached_shipped_source_uids: Vec<String>,
+    /// Cached set of distinct DPD `bold_definitions.ref_code` values used as
+    /// commentary-definition source uids. Populated at startup (refreshed on
+    /// user-dict mutations for symmetry — the underlying DPD table is static
+    /// during a session).
+    #[serde(default)]
+    pub cached_commentary_definitions_source_uids: Vec<String>,
     /// Whether to restore the last session (open tabs) on startup
     #[serde(default = "default_true")]
     pub restore_last_session: bool,
@@ -250,7 +268,10 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             include_ms_mula_in_search_results: true,
             include_comm_bold_definitions_in_search_results: true,
             dict_search_dpd_enabled: true,
-            dict_search_user_dict_enabled: IndexMap::new(),
+            dict_search_dict_enabled: IndexMap::new(),
+            search_last_mode: IndexMap::new(),
+            cached_shipped_source_uids: Vec::new(),
+            cached_commentary_definitions_source_uids: Vec::new(),
             restore_last_session: true,
         }
     }

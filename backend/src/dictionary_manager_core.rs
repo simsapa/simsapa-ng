@@ -105,13 +105,13 @@ pub fn import_user_zip(
         ));
     }
 
-    // 3. Reject collisions with existing user dictionaries — caller must have
+    // 3. Reject collisions with existing dictionaries — caller must have
     //    handled Replace before invoking this function.
-    let user_dicts = app_data.dbm.dictionaries.list_user_dictionaries()
-        .map_err(|e| format!("Failed to list user dictionaries: {}", e))?;
+    let user_dicts = app_data.dbm.dictionaries.list_dictionaries(None)
+        .map_err(|e| format!("Failed to list dictionaries: {}", e))?;
     if user_dicts.iter().any(|d| d.label == label) {
         return Err(format!(
-            "A user-imported dictionary with label '{}' already exists.",
+            "A dictionary with label '{}' already exists.",
             label
         ));
     }
@@ -197,11 +197,10 @@ fn locate_stardict_dir(extract_dir: &Path) -> Option<(std::path::PathBuf, String
     let entries = std::fs::read_dir(extract_dir).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.is_dir() {
-            if let Some(stem) = find_ifo_stem_in(&path) {
+        if path.is_dir()
+            && let Some(stem) = find_ifo_stem_in(&path) {
                 return Some((path, stem));
             }
-        }
     }
     None
 }
@@ -211,11 +210,10 @@ fn find_ifo_stem_in(dir: &Path) -> Option<String> {
     let entries = std::fs::read_dir(dir).ok()?;
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) == Some("ifo") {
-            if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+        if path.extension().and_then(|s| s.to_str()) == Some("ifo")
+            && let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
                 return Some(stem.to_string());
             }
-        }
     }
     None
 }
@@ -234,7 +232,7 @@ pub fn delete_user_dictionary(dictionary_id: i32) -> Result<(), String> {
 
     let app_data = get_app_data();
 
-    let user_dicts = app_data.dbm.dictionaries.list_user_dictionaries()
+    let user_dicts = app_data.dbm.dictionaries.list_dictionaries(Some(true))
         .map_err(|e| format!("Failed to list user dictionaries: {}", e))?;
     let target = user_dicts.into_iter()
         .find(|d| d.id == dictionary_id)
@@ -273,7 +271,7 @@ pub fn rename_user_dictionary(dictionary_id: i32, new_label: &str) -> Result<(),
         ));
     }
 
-    let user_dicts = app_data.dbm.dictionaries.list_user_dictionaries()
+    let user_dicts = app_data.dbm.dictionaries.list_dictionaries(Some(true))
         .map_err(|e| format!("Failed to list user dictionaries: {}", e))?;
 
     // Find the target row.

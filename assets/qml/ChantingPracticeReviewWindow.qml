@@ -25,8 +25,18 @@ ApplicationWindow {
     property string window_id
     property bool is_dark: theme_helper.is_dark
 
-    // section_uid is set as a context property by C++
-    property string current_section_uid: typeof section_uid !== 'undefined' ? section_uid : ""
+    // current_section_uid is set by C++ as a property on the root object
+    property string current_section_uid: ""
+
+    // Track which section's data is currently loaded
+    property string loaded_section_uid: ""
+
+    // Reload data when current_section_uid is set (may happen after Component.onCompleted)
+    onCurrent_section_uidChanged: {
+        if (current_section_uid !== "" && current_section_uid !== loaded_section_uid) {
+            load_section_data();
+        }
+    }
 
     // Section data parsed from JSON
     property string section_title: ""
@@ -53,7 +63,10 @@ ApplicationWindow {
     Component.onCompleted: {
         theme_helper.apply();
         root.top_bar_margin = root.is_mobile ? SuttaBridge.get_mobile_top_bar_margin() : 0;
-        load_section_data();
+        // Only load if current_section_uid is already set (may not be if set by C++ after this)
+        if (root.current_section_uid !== "") {
+            load_section_data();
+        }
     }
 
     // Stop all playback and save state when window is closed
@@ -69,7 +82,7 @@ ApplicationWindow {
         cleanup_repeater(ref_repeater);
         cleanup_repeater(user_repeater);
         for (let i = 0; i < new_rec_repeater.count; i++) {
-            let item = new_rec_repeater.itemAt(i);
+            let item = new_rec_repeater.itemAt(i) as RecordingPlaybackItem;
             if (item && item.cleanup) {
                 item.cleanup();
             }
@@ -97,6 +110,7 @@ ApplicationWindow {
         // Load recordings
         root.recordings_data = data.recordings || [];
         update_recording_models();
+        root.loaded_section_uid = root.current_section_uid;
     }
 
     function find_parent_titles(collections: var, chant_uid: string) {
@@ -192,7 +206,7 @@ ApplicationWindow {
         property string target_uid: ""
         onAccepted: {
             SuttaBridge.delete_chanting_recording(delete_confirm_dialog.target_uid);
-            load_section_data();
+            root.load_section_data();
         }
     }
 
@@ -202,7 +216,7 @@ ApplicationWindow {
         title: "Select Reference Recording"
         nameFilters: ["Audio files (*.ogg *.opus *.mp3 *.wav *.m4a *.flac *.aac *.wma)", "All files (*)"]
         onAccepted: {
-            add_recording_from_file(selectedFile.toString(), "reference");
+            root.add_recording_from_file(selectedFile.toString(), "reference");
         }
     }
 
@@ -212,7 +226,7 @@ ApplicationWindow {
         title: "Add Recording from File"
         nameFilters: ["Audio files (*.ogg *.opus *.mp3 *.wav *.m4a *.flac *.aac *.wma)", "All files (*)"]
         onAccepted: {
-            add_recording_from_file(selectedFile.toString(), "user");
+            root.add_recording_from_file(selectedFile.toString(), "user");
         }
     }
 
@@ -306,7 +320,7 @@ ApplicationWindow {
             // Separator
             Rectangle {
                 Layout.fillWidth: true
-                height: 1
+                Layout.preferredHeight: 1
                 color: palette.mid
             }
 
@@ -363,7 +377,7 @@ ApplicationWindow {
             // Separator
             Rectangle {
                 Layout.fillWidth: true
-                height: 1
+                Layout.preferredHeight: 1
                 color: palette.mid
             }
 
@@ -463,8 +477,9 @@ ApplicationWindow {
                                 }
 
                                 function cleanup_playback() {
-                                    if (ref_delegate.is_open && ref_playback_loader.item && ref_playback_loader.item.cleanup) {
-                                        ref_playback_loader.item.cleanup();
+                                    let item = ref_playback_loader.item as RecordingPlaybackItem;
+                                    if (ref_delegate.is_open && item && item.cleanup) {
+                                        item.cleanup();
                                     }
                                 }
 
@@ -472,7 +487,7 @@ ApplicationWindow {
                                     Layout.fillWidth: true
 
                                     background: Rectangle {
-                                        color: ref_delegate.is_open ? palette.highlight : Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+                                        color: ref_delegate.is_open ? palette.highlight : palette.midlight
                                         border.color: palette.mid
                                         border.width: 1
                                         radius: 4
@@ -505,8 +520,9 @@ ApplicationWindow {
                                 Connections {
                                     target: root
                                     function onPause_other_playback(playing_uid: string) {
-                                        if (playing_uid !== ref_delegate.uid && ref_playback_loader.item) {
-                                            ref_playback_loader.item.pause_playback();
+                                        let item = ref_playback_loader.item as RecordingPlaybackItem;
+                                        if (playing_uid !== ref_delegate.uid && item) {
+                                            item.pause_playback();
                                         }
                                     }
                                 }
@@ -600,8 +616,9 @@ ApplicationWindow {
                                 }
 
                                 function cleanup_playback() {
-                                    if (user_delegate.is_open && user_playback_loader.item && user_playback_loader.item.cleanup) {
-                                        user_playback_loader.item.cleanup();
+                                    let item = user_playback_loader.item as RecordingPlaybackItem;
+                                    if (user_delegate.is_open && item && item.cleanup) {
+                                        item.cleanup();
                                     }
                                 }
 
@@ -610,7 +627,7 @@ ApplicationWindow {
                                     Layout.fillWidth: true
 
                                     background: Rectangle {
-                                        color: user_delegate.is_open ? palette.highlight : Qt.tint(palette.base, Qt.rgba(palette.highlight.r, palette.highlight.g, palette.highlight.b, 0.15))
+                                        color: user_delegate.is_open ? palette.highlight : palette.midlight
                                         border.color: palette.mid
                                         border.width: 1
                                         radius: 4
@@ -655,8 +672,9 @@ ApplicationWindow {
                                 Connections {
                                     target: root
                                     function onPause_other_playback(playing_uid: string) {
-                                        if (playing_uid !== user_delegate.uid && user_playback_loader.item) {
-                                            user_playback_loader.item.pause_playback();
+                                        let item = user_playback_loader.item as RecordingPlaybackItem;
+                                        if (playing_uid !== user_delegate.uid && item) {
+                                            item.pause_playback();
                                         }
                                     }
                                 }

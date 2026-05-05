@@ -58,11 +58,10 @@ pub fn reconcile_needed() -> bool {
     };
 
     // Any pending re-indexes?
-    if let Ok(rows) = app_data.dbm.dictionaries.list_dictionaries_needing_index() {
-        if !rows.is_empty() {
+    if let Ok(rows) = app_data.dbm.dictionaries.list_dictionaries_needing_index()
+        && !rows.is_empty() {
             return true;
         }
-    }
 
     // Any orphans in the Tantivy dict index?
     let g = get_app_globals();

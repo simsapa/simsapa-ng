@@ -238,11 +238,10 @@ impl DhammatalksSuttaImporter {
         let mut imported_count = 0;
 
         for file_path in &files {
-            if let Some(lim) = self.limit {
-                if imported_count >= lim {
+            if let Some(lim) = self.limit
+                && imported_count >= lim {
                     break;
                 }
-            }
 
             pb.set_message(format!("{}", file_path.file_name().unwrap().to_string_lossy()));
 

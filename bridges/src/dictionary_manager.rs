@@ -22,6 +22,7 @@ use simsapa_backend::dict_index_reconcile::{self, ReconcileProgress};
 use simsapa_backend::get_app_data;
 use simsapa_backend::logger::{error, info};
 use simsapa_backend::stardict_parse::StardictImportProgress;
+use simsapa_backend::db::dictionaries_models::Dictionary;
 
 #[cxx_qt::bridge]
 pub mod qobject {
@@ -52,6 +53,12 @@ pub mod qobject {
 
         // Read-only / pure helpers.
         #[qinvokable]
+        fn list_dictionaries(self: &DictionaryManager) -> QString;
+
+        #[qinvokable]
+        fn list_dictionaries_without_dpd_and_bold(self: &DictionaryManager) -> QString;
+
+        #[qinvokable]
         fn list_user_dictionaries(self: &DictionaryManager) -> QString;
 
         #[qinvokable]
@@ -74,13 +81,13 @@ pub mod qobject {
 
         // Per-dictionary enabled flags.
         #[qinvokable]
-        fn get_user_dict_enabled(self: &DictionaryManager, label: &QString) -> bool;
+        fn get_dict_enabled(self: &DictionaryManager, label: &QString) -> bool;
 
         #[qinvokable]
-        fn set_user_dict_enabled(self: &DictionaryManager, label: &QString, enabled: bool);
+        fn set_dict_enabled(self: &DictionaryManager, label: &QString, enabled: bool);
 
         #[qinvokable]
-        fn get_user_dict_enabled_map(self: &DictionaryManager) -> QString;
+        fn get_dict_enabled_map(self: &DictionaryManager) -> QString;
 
         #[qinvokable]
         fn get_dpd_enabled(self: &DictionaryManager) -> bool;
@@ -198,6 +205,7 @@ impl qobject::DictionaryManager {
 
             match dictionary_manager_core::import_user_zip(&zip_path, &label, &lang, &on_progress) {
                 Ok(dictionary_id) => {
+                    get_app_data().refresh_dict_source_uid_caches();
                     let label_qs = QString::from(&label);
                     let _ = qt_thread.queue(move |mut qo| {
                         qo.as_mut().import_finished(dictionary_id, label_qs);
@@ -218,21 +226,35 @@ impl qobject::DictionaryManager {
 
     fn delete_dictionary(&self, dictionary_id: i32) -> QString {
         match dictionary_manager_core::delete_user_dictionary(dictionary_id) {
-            Ok(()) => QString::from("ok"),
+            Ok(()) => {
+                get_app_data().refresh_dict_source_uid_caches();
+                QString::from("ok")
+            }
             Err(msg) => QString::from(&msg),
         }
     }
 
     fn rename_label(&self, dictionary_id: i32, new_label: &QString) -> QString {
         match dictionary_manager_core::rename_user_dictionary(dictionary_id, &new_label.to_string()) {
-            Ok(()) => QString::from("ok"),
+            Ok(()) => {
+                get_app_data().refresh_dict_source_uid_caches();
+                QString::from("ok")
+            }
             Err(msg) => QString::from(&msg),
         }
     }
 
+    fn list_dictionaries(&self) -> QString {
+        self.list_dictionaries_call(None)
+    }
+
     fn list_user_dictionaries(&self) -> QString {
+        self.list_dictionaries_call(Some(true))
+    }
+
+    fn list_dictionaries_call(&self, is_user_imported: Option<bool>) -> QString {
         let app_data = get_app_data();
-        let rows = match app_data.dbm.dictionaries.list_user_dictionaries() {
+        let rows = match app_data.dbm.dictionaries.list_dictionaries(is_user_imported) {
             Ok(rs) => rs,
             Err(e) => {
                 error(&format!("list_user_dictionaries: {}", e));
@@ -263,21 +285,51 @@ impl qobject::DictionaryManager {
         }
     }
 
-    fn list_shipped_source_uids(&self) -> QString {
+    fn list_dictionaries_without_dpd_and_bold(&self) -> QString {
         let app_data = get_app_data();
-        match app_data.dbm.dictionaries.list_shipped_source_uids() {
-            Ok(set) => {
-                let v: Vec<&String> = set.iter().collect();
-                match serde_json::to_string(&v) {
-                    Ok(s) => QString::from(&s),
-                    Err(e) => {
-                        error(&format!("list_shipped_source_uids serialize: {}", e));
-                        QString::from("[]")
-                    }
-                }
-            }
+        let rows: Vec<Dictionary> = match app_data.dbm.dictionaries.list_dictionaries(None) {
+            Ok(rs) => rs
+                .into_iter()
+                .filter(|d| d.label != "dpd" && d.label != "bold_definitions")
+                .collect(),
             Err(e) => {
-                error(&format!("list_shipped_source_uids: {}", e));
+                error(&format!("list_user_dictionaries: {}", e));
+                return QString::from("[]");
+            }
+        };
+
+        let json_rows: Vec<UserDictRowJson> = rows.into_iter().map(|d| {
+            let entry_count = app_data.dbm.dictionaries
+                .count_words_for_dictionary(d.id)
+                .unwrap_or(0);
+            UserDictRowJson {
+                id: d.id,
+                label: d.label,
+                title: d.title,
+                language: d.language,
+                entry_count,
+                description: d.description,
+            }
+        }).collect();
+
+        match serde_json::to_string(&json_rows) {
+            Ok(s) => QString::from(&s),
+            Err(e) => {
+                error(&format!("list_user_dictionaries serialize: {}", e));
+                QString::from("[]")
+            }
+        }
+    }
+
+    fn list_shipped_source_uids(&self) -> QString {
+        // Reads from the in-memory AppSettings cache populated at init and
+        // refreshed on user-dict mutations. Avoids a SELECT DISTINCT scan
+        // against dict_words on every dictionary search.
+        let v = get_app_data().get_cached_shipped_source_uids();
+        match serde_json::to_string(&v) {
+            Ok(s) => QString::from(&s),
+            Err(e) => {
+                error(&format!("list_shipped_source_uids serialize: {}", e));
                 QString::from("[]")
             }
         }
@@ -290,20 +342,12 @@ impl qobject::DictionaryManager {
     }
 
     fn commentary_definitions_source_uids(&self) -> QString {
-        let app_data = get_app_data();
-        match app_data.dbm.dpd.list_distinct_bold_def_ref_codes() {
-            Ok(set) => {
-                let v: Vec<&String> = set.iter().collect();
-                match serde_json::to_string(&v) {
-                    Ok(s) => QString::from(&s),
-                    Err(e) => {
-                        error(&format!("commentary_definitions_source_uids serialize: {}", e));
-                        QString::from("[]")
-                    }
-                }
-            }
+        // Reads from the in-memory AppSettings cache populated at init.
+        let v = get_app_data().get_cached_commentary_definitions_source_uids();
+        match serde_json::to_string(&v) {
+            Ok(s) => QString::from(&s),
             Err(e) => {
-                error(&format!("commentary_definitions_source_uids: {}", e));
+                error(&format!("commentary_definitions_source_uids serialize: {}", e));
                 QString::from("[]")
             }
         }
@@ -323,7 +367,7 @@ impl qobject::DictionaryManager {
                 return QString::from("invalid");
             }
         }
-        match app_data.dbm.dictionaries.list_user_dictionaries() {
+        match app_data.dbm.dictionaries.list_dictionaries(None) {
             Ok(rows) => {
                 if rows.iter().any(|d| d.label == label_str) {
                     QString::from("taken_user")
@@ -349,20 +393,20 @@ impl qobject::DictionaryManager {
         KNOWN_TOKENIZER_LANGS.contains(&s.as_str())
     }
 
-    fn get_user_dict_enabled(&self, label: &QString) -> bool {
-        get_app_data().get_user_dict_enabled(&label.to_string())
+    fn get_dict_enabled(&self, label: &QString) -> bool {
+        get_app_data().get_dict_enabled(&label.to_string())
     }
 
-    fn set_user_dict_enabled(&self, label: &QString, enabled: bool) {
-        get_app_data().set_user_dict_enabled(&label.to_string(), enabled);
+    fn set_dict_enabled(&self, label: &QString, enabled: bool) {
+        get_app_data().set_dict_enabled(&label.to_string(), enabled);
     }
 
-    fn get_user_dict_enabled_map(&self) -> QString {
-        let map = get_app_data().list_user_dict_enabled();
+    fn get_dict_enabled_map(&self) -> QString {
+        let map = get_app_data().list_dict_enabled();
         match serde_json::to_string(&map) {
             Ok(s) => QString::from(&s),
             Err(e) => {
-                error(&format!("get_user_dict_enabled_map serialize: {}", e));
+                error(&format!("get_dict_enabled_map serialize: {}", e));
                 QString::from("{}")
             }
         }

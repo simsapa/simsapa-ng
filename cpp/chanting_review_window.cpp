@@ -15,10 +15,10 @@ ChantingReviewWindow::ChantingReviewWindow(QApplication* app, const QString& win
 void ChantingReviewWindow::setup_qml() {
     const QUrl view_qml(QStringLiteral("qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/ChantingPracticeReviewWindow.qml"));
     m_engine = new QQmlApplicationEngine(this);
-    m_engine->rootContext()->setContextProperty("section_uid", m_section_uid);
     m_engine->load(view_qml);
     m_root = m_engine->rootObjects().constFirst();
     m_root->setProperty("window_id", m_window_id);
+    m_root->setProperty("current_section_uid", m_section_uid);
 }
 
 ChantingReviewWindow::~ChantingReviewWindow() {

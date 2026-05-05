@@ -439,7 +439,7 @@ ApplicationWindow {
         width: 300
         title: "Import"
         modal: true
-        closePolicy: Popup.NoClose
+        closePolicy: Popup.NoAutoClose
         standardButtons: Dialog.NoButton
 
         ColumnLayout {

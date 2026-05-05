@@ -8,6 +8,7 @@ pub mod nyanadipa;
 pub mod buddha_ujja;
 pub mod tipitaka_xml;
 pub mod dpd;
+pub mod dppn;
 pub mod completions;
 pub mod library_imports;
 pub mod chanting_practice;
@@ -25,6 +26,8 @@ use diesel_migrations::MigrationHarness;
 use simsapa_backend::db::{DatabaseHandle, APPDATA_MIGRATIONS};
 use simsapa_backend::{init_app_data, get_app_data, get_app_globals, get_create_simsapa_dir, get_create_simsapa_app_assets_path, logger};
 use simsapa_backend::search::indexer;
+use simsapa_backend::dictionary_manager_core::import_user_zip;
+use simsapa_backend::stardict_parse::StardictImportProgress;
 
 pub use helpers::SuttaData;
 pub use appdata::{AppdataBootstrap, DB_VERSION};
@@ -295,6 +298,14 @@ RELEASE_CHANNEL=development
     if !skip_dpd {
         init_app_data();
         dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir, limit)?;
+
+        // Import Dictionary of Pāli Proper Names
+        dppn::dppn_bootstrap(&bootstrap_assets_dir, &assets_dir)
+            .map_err(|e| anyhow::anyhow!("DPPN bootstrap failed: {}", e))?;
+
+        // Import Whitney's Sanskrit Roots StarDict zip as an English dictionary.
+        // let whitney_zip_path = bootstrap_assets_dir.join("stardict-imports/whitney-gd.zip");
+        // import_stardict_zip_bootstrap(&whitney_zip_path, "whitney", "en")?;
 
         logger::info("=== Create dictionaries.tar.bz2 ===");
         let dict_db_path = assets_dir.join("dictionaries.sqlite3");
@@ -983,4 +994,35 @@ fn format_duration(duration: chrono::Duration) -> String {
     let seconds = total_seconds % 60;
 
     format!("{}:{:02}:{:02}", hours, minutes, seconds)
+}
+
+#[allow(dead_code)]
+fn import_stardict_zip_bootstrap(zip_path: &Path, label: &str, lang: &str) -> Result<()> {
+    logger::info(&format!(
+        "=== Import StarDict zip: {} (label: {}, lang: {}) ===",
+        zip_path.display(), label, lang
+    ));
+
+    match zip_path.try_exists() {
+        Ok(true) => {}
+        Ok(false) => return Err(anyhow::anyhow!("Zip file not found: {}", zip_path.display())),
+        Err(e) => return Err(anyhow::anyhow!("Cannot access zip {}: {}", zip_path.display(), e)),
+    }
+
+    import_user_zip(zip_path, label, lang, &|p| {
+        match p {
+            StardictImportProgress::Extracting => logger::info("  extracting..."),
+            StardictImportProgress::Parsing => logger::info("  parsing..."),
+            StardictImportProgress::InsertingWords { done, total } => {
+                if total > 0 && (done == 0 || done == total || done % 1000 == 0) {
+                    logger::info(&format!("  inserting words: {}/{}", done, total));
+                }
+            }
+            StardictImportProgress::Done => logger::info("  done."),
+            StardictImportProgress::Failed { msg } => logger::error(&format!("  failed: {}", msg)),
+        }
+    })
+    .map_err(|e| anyhow::anyhow!("Failed to import StarDict zip {}: {}", zip_path.display(), e))?;
+
+    Ok(())
 }
