@@ -25,12 +25,14 @@ Dialog {
         spacing: 8
 
         ScrollView {
+            id: scroll
             Layout.fillWidth: true
             Layout.preferredHeight: 240
             clip: true
+            contentWidth: availableWidth
 
             ColumnLayout {
-                width: parent.width
+                width: scroll.availableWidth
                 spacing: 15
 
                 Text {
@@ -38,6 +40,7 @@ Dialog {
                     textFormat: Text.RichText
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
+                    Layout.preferredWidth: scroll.availableWidth
                     onLinkActivated: function(link) {
                         Qt.openUrlExternally(link);
                     }
