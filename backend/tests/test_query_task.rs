@@ -213,7 +213,7 @@ fn test_dict_word_uid_match() {
     let app_data = get_app_data();
     let params = h::get_uid_params();
 
-    let query = "satipaṭṭhāna 1/dpd";
+    let query = "satipaṭṭhāna-1/dpd";
 
     let mut query_task = SearchQueryTask::new(
         &app_data.dbm,
@@ -228,6 +228,8 @@ fn test_dict_word_uid_match() {
             panic!("{}", s);
         }
     };
+
+    assert!(!results.is_empty());
 
     println!("{}", results[0].snippet);
 
