@@ -354,6 +354,34 @@ async function open_book_page_in_tab(book_page_url: string): Promise<void> {
 }
 
 /**
+ * Triggers a DPPN-only Fulltext Match query in the dictionary tab without
+ * touching the user's current search input / mode / filter UI state.
+ * Backed by POST /dppn_lookup.
+ */
+async function run_dppn_lookup(query: string): Promise<void> {
+    const win = window as any;
+    const API_URL = win.API_URL || (globalThis as any).API_URL || 'http://localhost:4848';
+    const WINDOW_ID = win.WINDOW_ID || (globalThis as any).WINDOW_ID || '';
+
+    try {
+        const response = await fetch(`${API_URL}/dppn_lookup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ window_id: WINDOW_ID, query: query })
+        });
+
+        if (!response.ok) {
+            await log_error(`Failed DPPN lookup for '${query}': ${response.status}`);
+        }
+    } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        await log_error(`Error during DPPN lookup for '${query}': ${errorMsg}`);
+    }
+}
+
+/**
  * Shows a confirmation dialog for external links
  * Returns a Promise that resolves to true if user confirms, false otherwise
  * NOTE: This function is now imported from confirm_modal.ts
@@ -392,6 +420,21 @@ async function handle_link_click(event: MouseEvent): Promise<void> {
             return;
         }
         // If not a footnote, allow default anchor link behavior
+        return;
+    }
+
+    // Case 2a: DPPN cross-reference lookup link
+    // Format: ssp://dppn_lookup/<percent-encoded-query>
+    if (href.startsWith('ssp://dppn_lookup/')) {
+        event.preventDefault();
+        const encoded = href.substring('ssp://dppn_lookup/'.length);
+        let query: string;
+        try {
+            query = decodeURIComponent(encoded);
+        } catch (_) {
+            query = encoded;
+        }
+        await run_dppn_lookup(query);
         return;
     }
 
@@ -460,6 +503,7 @@ export {
     open_sutta_in_tab,
     open_book_page_in_tab,
     open_external_url,
+    run_dppn_lookup,
     handle_link_click,
     log_info,
     log_error,

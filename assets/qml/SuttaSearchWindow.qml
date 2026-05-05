@@ -1146,6 +1146,46 @@ ${query_text}`;
         root.handle_query(query_text, 1);
     }
 
+    // Run a DPPN-only Fulltext Match query in the dictionary area without
+    // touching the user's current search input / mode / dict-filter UI
+    // state. Used by the t14 cross-reference click path.
+    function run_dppn_dictionary_query(query: string) {
+        if (!query || query.length === 0) {
+            return;
+        }
+
+        // Reveal the side panel and activate the Results tab (idx 0) where
+        // dictionary search results are rendered.
+        if (!show_sidebar_btn.checked) {
+            show_sidebar_btn.checked = true;
+        }
+        rightside_tabs.setCurrentIndex(0);
+
+        // Build params explicitly — do NOT call get_search_params_from_ui()
+        // (it would couple us to the user's current mode / dict-filter
+        // checkboxes / language dropdown).
+        let params = {
+            mode: "Fulltext Match",
+            page_len: 10,
+            lang: null,
+            lang_include: true,
+            source: null,
+            source_include: true,
+            enable_regex: false,
+            fuzzy_distance: 0,
+            include_cst_mula: false,
+            include_cst_commentary: false,
+            nikaya_prefix: null,
+            uid_prefix: null,
+            uid_suffix: null,
+            include_ms_mula: false,
+            include_comm_bold_definitions: false,
+            dict_source_uids: ["dppn"],
+        };
+
+        root.start_search_query_workers(query, "Dictionary", params);
+    }
+
     function get_tab_with_web_item_key(web_item_key) {
         var tab = null;
         for (var i=0; i < tabs_row.children.length; i++) {
