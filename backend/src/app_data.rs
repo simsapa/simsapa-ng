@@ -3268,14 +3268,29 @@ impl AppData {
 impl AppData {
     /// Persist the in-memory AppSettings cache back to the appdata DB.
     fn persist_app_settings(&self, settings: &AppSettings) {
-        use crate::db::appdata_schema::app_settings;
+        use crate::db::appdata_schema::app_settings::dsl::*;
         let settings_json = serde_json::to_string(settings).expect("Can't encode JSON");
         let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
-        if let Err(e) = diesel::update(app_settings::table)
-            .filter(app_settings::key.eq("app_settings"))
-            .set(app_settings::value.eq(Some(settings_json)))
-            .execute(db_conn)
-        {
+        let existing = app_settings
+            .filter(key.eq("app_settings"))
+            .first::<AppSetting>(db_conn)
+            .optional();
+        let res = match existing {
+            Ok(Some(setting)) => diesel::update(app_settings.find(setting.id))
+                .set(value.eq(Some(settings_json.as_str())))
+                .execute(db_conn),
+            Ok(None) => diesel::insert_into(app_settings)
+                .values(NewAppSetting {
+                    key: "app_settings",
+                    value: Some(settings_json.as_str()),
+                })
+                .execute(db_conn),
+            Err(e) => {
+                error(&format!("Failed to read app settings row: {}", e));
+                return;
+            }
+        };
+        if let Err(e) = res {
             error(&format!("Failed to update app settings: {}", e));
         }
     }
