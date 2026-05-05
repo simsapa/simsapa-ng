@@ -172,7 +172,7 @@ Item {
             root.waveform_loading = false;
             root.waveform_json = waveform_json;
             try {
-                parse_waveform_json(waveform_json);
+                root.parse_waveform_json(waveform_json);
             } catch (e) {
                 root.waveform_data = [];
                 root.waveform_num_bars = 0;
@@ -219,9 +219,11 @@ Item {
             id: recorder
             quality: MediaRecorder.NormalQuality
 
+            // NOTE: onRecorderStateChanged is correct according to docs
+            // https://doc.qt.io/qt-6/qml-qtmultimedia-mediarecorder.html#recorderStateChanged-signal
             onRecorderStateChanged: {
                 // File is fully finalized only when state transitions to StoppedState
-                if (recorderState === MediaRecorder.StoppedState && root.pending_recording_stop) {
+                if (recorder.recorderState === MediaRecorder.StoppedState && root.pending_recording_stop) {
                     root.pending_recording_stop = false;
                     root.finalize_recording();
                 }
@@ -353,7 +355,7 @@ Item {
                     let end_pos = root.active_range_end_ms;
                     player.pause();
                     player.position = end_pos;
-                    stop_range_playback();
+                    root.stop_range_playback();
                     // Set override AFTER stop_range_playback (which clears it)
                     root.visual_position_override = end_pos;
                 }
@@ -489,8 +491,8 @@ Item {
 
             Rectangle {
                 id: recording_dot
-                width: 12
-                height: 12
+                Layout.preferredWidth: 12
+                Layout.preferredHeight: 12
                 radius: 6
                 color: "red"
 
@@ -526,9 +528,9 @@ Item {
                 enabled: player.playbackState !== MediaPlayer.PlayingState
                 onClicked: {
                     if (root.is_recording) {
-                        stop_recording();
+                        root.stop_recording();
                     } else {
-                        start_recording();
+                        root.start_recording();
                     }
                 }
             }
@@ -799,161 +801,6 @@ Item {
             }
         }
 
-        // Resample dialog
-        Dialog {
-            id: resample_dialog
-            title: "Resample Waveform"
-            parent: Overlay.overlay
-            anchors.centerIn: parent
-            modal: true
-            standardButtons: Dialog.Ok | Dialog.Cancel
-
-            property int current_samples_per_second: 0
-
-            ColumnLayout {
-                spacing: 12
-
-                Label {
-                    text: "Current: " + resample_dialog.current_samples_per_second + " samples/sec"
-                        + " (" + root.waveform_num_bars + " total)"
-                    wrapMode: Text.Wrap
-                }
-
-                RowLayout {
-                    spacing: 8
-
-                    Label { text: "New rate:" }
-
-                    SpinBox {
-                        id: resample_spinbox
-                        from: 1
-                        to: 500
-                        stepSize: 1
-                        value: 10
-                        editable: true
-                    }
-
-                    Label { text: "samples/sec" }
-                }
-
-                Label {
-                    text: "Higher values show more detail but use more memory."
-                    font.pointSize: 9
-                    color: palette.placeholderText
-                    wrapMode: Text.Wrap
-                }
-            }
-
-            onAccepted: {
-                let sps = resample_spinbox.value;
-                let duration_secs = player.duration / 1000.0;
-                let num_bars = Math.max(10, Math.round(sps * duration_secs));
-                root.waveform_loading = true;
-                root.waveform_data = [];
-                root.waveform_num_bars = 0;
-                SuttaBridge.generate_waveform_data(root.recording_uid, root.file_path, num_bars);
-            }
-        }
-
-        // Marker time edit dialog
-        Dialog {
-            id: marker_time_dialog
-            title: marker_time_dialog.is_position ? "Edit Position" : "Edit Range"
-            standardButtons: Dialog.Ok | Dialog.Cancel
-            anchors.centerIn: parent
-            modal: true
-
-            property string marker_id: ""
-            property bool is_position: true
-
-            function set_time_fields(min_spin: SpinBox, sec_spin: SpinBox, ms_spin: SpinBox, total_ms: int) {
-                let total_secs = Math.floor(total_ms / 1000);
-                min_spin.value = Math.floor(total_secs / 60);
-                sec_spin.value = total_secs % 60;
-                ms_spin.value = total_ms % 1000;
-            }
-
-            function fields_to_ms(min_spin: SpinBox, sec_spin: SpinBox, ms_spin: SpinBox): int {
-                return (min_spin.value * 60 + sec_spin.value) * 1000 + ms_spin.value;
-            }
-
-            ColumnLayout {
-                spacing: 12
-
-                // Position marker fields
-                RowLayout {
-                    visible: marker_time_dialog.is_position
-                    spacing: 4
-
-                    Label { text: "Position:" }
-                    SpinBox { id: pos_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
-                    Label { text: "m" }
-                    SpinBox { id: pos_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
-                    Label { text: "s" }
-                    SpinBox { id: pos_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
-                    Label { text: "ms" }
-                }
-
-                // Range marker fields
-                RowLayout {
-                    visible: !marker_time_dialog.is_position
-                    spacing: 4
-
-                    Label { text: "Start:" }
-                    SpinBox { id: range_start_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
-                    Label { text: "m" }
-                    SpinBox { id: range_start_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
-                    Label { text: "s" }
-                    SpinBox { id: range_start_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
-                    Label { text: "ms" }
-                }
-
-                RowLayout {
-                    visible: !marker_time_dialog.is_position
-                    spacing: 4
-
-                    Label { text: "End:  " }
-                    SpinBox { id: range_end_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
-                    Label { text: "m" }
-                    SpinBox { id: range_end_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
-                    Label { text: "s" }
-                    SpinBox { id: range_end_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
-                    Label { text: "ms" }
-                }
-
-                Label { text: "Comment:" }
-
-                ScrollView {
-                    Layout.fillWidth: true
-                    Layout.preferredHeight: 80
-
-                    TextArea {
-                        id: marker_comment_field
-                        placeholderText: "Add a comment..."
-                        wrapMode: TextEdit.Wrap
-                    }
-                }
-            }
-
-            onAccepted: {
-                if (marker_time_dialog.is_position) {
-                    let ms = marker_time_dialog.fields_to_ms(pos_min_spin, pos_sec_spin, pos_ms_spin);
-                    let max_ms = player.duration > 0 ? player.duration : ms;
-                    root.update_marker_time(marker_time_dialog.marker_id, "position_ms", Math.min(max_ms, Math.max(0, ms)));
-                } else {
-                    let start = marker_time_dialog.fields_to_ms(range_start_min_spin, range_start_sec_spin, range_start_ms_spin);
-                    let end = marker_time_dialog.fields_to_ms(range_end_min_spin, range_end_sec_spin, range_end_ms_spin);
-                    // Ensure correct order
-                    let actual_start = Math.min(start, end);
-                    let actual_end = Math.max(start, end);
-                    let max_ms = player.duration > 0 ? player.duration : actual_end;
-                    root.update_marker_time(marker_time_dialog.marker_id, "start_ms", Math.max(0, actual_start));
-                    root.update_marker_time(marker_time_dialog.marker_id, "end_ms", Math.min(max_ms, actual_end));
-                }
-                root.update_marker_field(marker_time_dialog.marker_id, "comment", marker_comment_field.text);
-            }
-        }
-
         // Marker list (8.6, 8.7, 8.8, 8.10, 8.11)
         ColumnLayout {
             id: marker_list_column
@@ -1051,8 +898,8 @@ Item {
 
                         // Type indicator
                         Rectangle {
-                            width: 8
-                            height: 8
+                            Layout.preferredWidth: 8
+                            Layout.preferredHeight: 8
                             radius: marker_row.is_position ? 4 : 1
                             color: marker_row.is_position ? "red" : palette.highlight
                             Layout.alignment: Qt.AlignVCenter
@@ -1268,6 +1115,161 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    // Resample dialog
+    Dialog {
+        id: resample_dialog
+        title: "Resample Waveform"
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        property int current_samples_per_second: 0
+
+        ColumnLayout {
+            spacing: 12
+
+            Label {
+                text: "Current: " + resample_dialog.current_samples_per_second + " samples/sec"
+                    + " (" + root.waveform_num_bars + " total)"
+                wrapMode: Text.Wrap
+            }
+
+            RowLayout {
+                spacing: 8
+
+                Label { text: "New rate:" }
+
+                SpinBox {
+                    id: resample_spinbox
+                    from: 1
+                    to: 500
+                    stepSize: 1
+                    value: 10
+                    editable: true
+                }
+
+                Label { text: "samples/sec" }
+            }
+
+            Label {
+                text: "Higher values show more detail but use more memory."
+                font.pointSize: 9
+                color: palette.placeholderText
+                wrapMode: Text.Wrap
+            }
+        }
+
+        onAccepted: {
+            let sps = resample_spinbox.value;
+            let duration_secs = player.duration / 1000.0;
+            let num_bars = Math.max(10, Math.round(sps * duration_secs));
+            root.waveform_loading = true;
+            root.waveform_data = [];
+            root.waveform_num_bars = 0;
+            SuttaBridge.generate_waveform_data(root.recording_uid, root.file_path, num_bars);
+        }
+    }
+
+    // Marker time edit dialog
+    Dialog {
+        id: marker_time_dialog
+        title: marker_time_dialog.is_position ? "Edit Position" : "Edit Range"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        anchors.centerIn: parent
+        modal: true
+
+        property string marker_id: ""
+        property bool is_position: true
+
+        function set_time_fields(min_spin: SpinBox, sec_spin: SpinBox, ms_spin: SpinBox, total_ms: int) {
+            let total_secs = Math.floor(total_ms / 1000);
+            min_spin.value = Math.floor(total_secs / 60);
+            sec_spin.value = total_secs % 60;
+            ms_spin.value = total_ms % 1000;
+        }
+
+        function fields_to_ms(min_spin: SpinBox, sec_spin: SpinBox, ms_spin: SpinBox): int {
+            return (min_spin.value * 60 + sec_spin.value) * 1000 + ms_spin.value;
+        }
+
+        ColumnLayout {
+            spacing: 12
+
+            // Position marker fields
+            RowLayout {
+                visible: marker_time_dialog.is_position
+                spacing: 4
+
+                Label { text: "Position:" }
+                SpinBox { id: pos_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
+                Label { text: "m" }
+                SpinBox { id: pos_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
+                Label { text: "s" }
+                SpinBox { id: pos_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
+                Label { text: "ms" }
+            }
+
+            // Range marker fields
+            RowLayout {
+                visible: !marker_time_dialog.is_position
+                spacing: 4
+
+                Label { text: "Start:" }
+                SpinBox { id: range_start_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
+                Label { text: "m" }
+                SpinBox { id: range_start_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
+                Label { text: "s" }
+                SpinBox { id: range_start_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
+                Label { text: "ms" }
+            }
+
+            RowLayout {
+                visible: !marker_time_dialog.is_position
+                spacing: 4
+
+                Label { text: "End:  " }
+                SpinBox { id: range_end_min_spin; from: 0; to: 999; editable: true; implicitWidth: 80 }
+                Label { text: "m" }
+                SpinBox { id: range_end_sec_spin; from: 0; to: 59; editable: true; implicitWidth: 80 }
+                Label { text: "s" }
+                SpinBox { id: range_end_ms_spin; from: 0; to: 999; editable: true; implicitWidth: 90 }
+                Label { text: "ms" }
+            }
+
+            Label { text: "Comment:" }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 80
+
+                TextArea {
+                    id: marker_comment_field
+                    placeholderText: "Add a comment..."
+                    wrapMode: TextEdit.Wrap
+                }
+            }
+        }
+
+        onAccepted: {
+            if (marker_time_dialog.is_position) {
+                let ms = marker_time_dialog.fields_to_ms(pos_min_spin, pos_sec_spin, pos_ms_spin);
+                let max_ms = player.duration > 0 ? player.duration : ms;
+                root.update_marker_time(marker_time_dialog.marker_id, "position_ms", Math.min(max_ms, Math.max(0, ms)));
+            } else {
+                let start = marker_time_dialog.fields_to_ms(range_start_min_spin, range_start_sec_spin, range_start_ms_spin);
+                let end = marker_time_dialog.fields_to_ms(range_end_min_spin, range_end_sec_spin, range_end_ms_spin);
+                // Ensure correct order
+                let actual_start = Math.min(start, end);
+                let actual_end = Math.max(start, end);
+                let max_ms = player.duration > 0 ? player.duration : actual_end;
+                root.update_marker_time(marker_time_dialog.marker_id, "start_ms", Math.max(0, actual_start));
+                root.update_marker_time(marker_time_dialog.marker_id, "end_ms", Math.min(max_ms, actual_end));
+            }
+            root.update_marker_field(marker_time_dialog.marker_id, "comment", marker_comment_field.text);
         }
     }
 

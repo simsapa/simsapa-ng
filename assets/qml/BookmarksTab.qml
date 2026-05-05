@@ -77,7 +77,7 @@ ColumnLayout {
     function load_open_items() {
         if (root.get_open_items_fn) {
             try {
-                let json_str = root.get_open_items_fn();
+                let json_str = root.get_open_items_fn(); // qmllint disable use-proper-function
                 open_items_data = JSON.parse(json_str);
             } catch (e) {
                 console.error("Failed to parse open items:", e);
@@ -123,7 +123,7 @@ ColumnLayout {
         }
 
         Label {
-            text: open_items_data.length + " items"
+            text: root.open_items_data.length + " items"
             color: palette.mid
             font.pointSize: 9
         }
@@ -142,7 +142,7 @@ ColumnLayout {
             spacing: 0
 
             Label {
-                visible: open_items_data.length === 0
+                visible: root.open_items_data.length === 0
                 text: "No open items"
                 color: palette.mid
                 Layout.alignment: Qt.AlignHCenter
@@ -239,7 +239,7 @@ ColumnLayout {
 
         Button {
             text: "Save All as Folder"
-            enabled: open_items_data.length > 0
+            enabled: root.open_items_data.length > 0
             font.pointSize: 9
             onClicked: {
                 let now = new Date();
@@ -310,7 +310,7 @@ ColumnLayout {
             spacing: 0
 
             Label {
-                visible: bookmark_folders_data.length === 0
+                visible: root.bookmark_folders_data.length === 0
                 text: "No saved bookmarks"
                 color: palette.mid
                 Layout.alignment: Qt.AlignHCenter
@@ -468,8 +468,8 @@ ColumnLayout {
             let folder_id = SuttaBridge.create_bookmark_folder(name);
             if (folder_id < 0) return;
 
-            for (let i = 0; i < open_items_data.length; i++) {
-                let item = open_items_data[i];
+            for (let i = 0; i < root.open_items_data.length; i++) {
+                let item = root.open_items_data[i];
                 let item_json = JSON.stringify({
                     folder_id: folder_id,
                     item_uid: item.item_uid,
@@ -550,7 +550,7 @@ ColumnLayout {
                 SuttaBridge.create_bookmark_item(target.id, item_json);
             }
 
-            selected_open_item_ids = ({});
+            root.selected_open_item_ids = ({});
             root.load_bookmarks();
         }
     }

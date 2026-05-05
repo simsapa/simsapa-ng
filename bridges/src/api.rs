@@ -153,6 +153,7 @@ pub mod ffi {
         fn callback_open_sutta_search_window(show_result_data_json: QString);
         fn callback_open_sutta_tab(window_id: QString, show_result_data_json: QString);
         fn callback_open_sutta_languages_window();
+        fn callback_open_dictionaries_window();
         fn callback_open_library_window();
         fn callback_open_reference_search_window();
         fn callback_open_topic_index_window();
@@ -882,6 +883,7 @@ fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
         uid_suffix: None,
         include_ms_mula: true,
         include_comm_bold_definitions: true,
+        dict_source_uids: None,
     };
 
     // Create and execute search task
@@ -972,6 +974,7 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
         uid_suffix: None,
         include_ms_mula: true,
         include_comm_bold_definitions: true,
+        dict_source_uids: None,
     };
 
     // Create and execute search task

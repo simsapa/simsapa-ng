@@ -1,14 +1,15 @@
+use std::collections::HashSet;
 use std::path::Path;
 
 use anyhow::Result;
 use diesel::prelude::*;
-use tantivy::{doc, Directory, Index, IndexWriter};
+use tantivy::{doc, Directory, Index, IndexWriter, Term};
 
 use crate::db::DatabaseHandle;
 use crate::db::appdata_models::Sutta;
 use crate::db::dictionaries_models::DictWord;
 use crate::db::dpd_models::BoldDefinition;
-use crate::logger::info;
+use crate::logger::{info, warn};
 use crate::AppGlobalPaths;
 
 use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
@@ -204,6 +205,107 @@ pub fn build_dict_index(dict_db: &DatabaseHandle, index_dir: &Path, lang: &str) 
     index.directory().sync_directory()?;
 
     info(&format!("Dict_words index committed: {} documents for language {}", indexed_count, lang));
+
+    Ok(())
+}
+
+/// Append the rows for a single `dict_label` to the per-language dict index
+/// without rebuilding it.
+///
+/// Used by the user-facing StarDict import path so a freshly imported
+/// dictionary becomes searchable without rescanning every other dictionary's
+/// rows. Any previously indexed docs whose `source_uid` equals `dict_label`
+/// are deleted first, so re-imports of the same label don't duplicate docs.
+/// Bold-definition docs are untouched (their `source_uid` is the per-row
+/// `ref_code`, not a dictionary label).
+pub fn append_dict_label_to_dict_index(
+    dict_db: &DatabaseHandle,
+    dict_words_index_dir: &Path,
+    lang: &str,
+    dict_label_value: &str,
+) -> Result<()> {
+    use crate::db::dictionaries_schema::dict_words::dsl::*;
+
+    info(&format!(
+        "Appending dict_label '{}' to dict index for language: {}",
+        dict_label_value, lang
+    ));
+
+    let lang_index_dir = dict_words_index_dir.join(lang);
+    let schema = build_dict_schema(lang);
+    let index = open_or_create_index(&lang_index_dir, schema, lang)?;
+
+    let mut writer: IndexWriter = index.writer(50_000_000)?;
+
+    let schema = index.schema();
+    let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
+    let word_field = schema.get_field("word").unwrap();
+    let synonyms_field = schema.get_field("synonyms").unwrap();
+    let language_field = schema.get_field("language").unwrap();
+    let source_uid_field = schema.get_field("source_uid").unwrap();
+    let content_field = schema.get_field("content").unwrap();
+    let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
+
+    // Drop any prior docs for this label so a re-import doesn't duplicate.
+    // `source_uid` uses the raw tokenizer (see schema.rs), so the label is
+    // stored as a single term and matches via `delete_term`.
+    writer.delete_term(Term::from_field_text(source_uid_field, dict_label_value));
+
+    let lang_clone = lang.to_string();
+    let label_clone = dict_label_value.to_string();
+    let word_list: Vec<DictWord> = dict_db.do_read(|db_conn| {
+        dict_words
+            .filter(language.eq(&lang_clone))
+            .filter(dict_label.eq(&label_clone))
+            .select(DictWord::as_select())
+            .load(db_conn)
+    })?;
+
+    info(&format!(
+        "Indexing {} dict_words for label '{}' / language {}",
+        word_list.len(), dict_label_value, lang
+    ));
+
+    let mut indexed_count = 0;
+    for dw in &word_list {
+        let def = dw.definition_plain.as_deref().unwrap_or("");
+        if def.is_empty() {
+            continue;
+        }
+
+        let w = &dw.word;
+        let syn = dw.synonyms.as_deref().unwrap_or("");
+        let content_text = format!("{} {} {}", w, syn, def);
+
+        let lang_val = dw.language.as_deref().unwrap_or("");
+
+        let uid_rev = reversed_lowercased(&dw.uid);
+
+        writer.add_document(doc!(
+            uid_field => dw.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
+            word_field => w.as_str(),
+            synonyms_field => syn,
+            language_field => lang_val,
+            source_uid_field => dw.dict_label.as_str(),
+            content_field => content_text.as_str(),
+            content_exact_field => content_text.as_str(),
+            is_bold_definition_field => false,
+        ))?;
+
+        indexed_count += 1;
+    }
+
+    writer.commit()?;
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
+
+    info(&format!(
+        "dict_label append committed: {} documents for '{}' / {}",
+        indexed_count, dict_label_value, lang
+    ));
 
     Ok(())
 }
@@ -539,4 +641,208 @@ pub fn is_index_current(index_dir: &Path) -> bool {
         Ok(version) => version == INDEX_VERSION,
         Err(_) => false,
     }
+}
+
+// ---------------------------------------------------------------------------
+// Per-dictionary index helpers (used by the startup reconciliation pass).
+//
+// These helpers operate on a single language subdirectory of the unified
+// dict index and use the `source_uid` raw-text field as the dict-label
+// term, mirroring the bootstrap StarDict import path.
+// ---------------------------------------------------------------------------
+
+/// Append `dict_words` (already loaded from SQL) into the per-language dict index.
+///
+/// This is purely additive: callers should first
+/// [`delete_from_dict_index_by_source_uid`] for the same label to make the
+/// operation idempotent.
+///
+/// `on_progress` is called as `(done, total)` at chunk boundaries.
+pub fn index_dict_words_into_dict_index<F>(
+    index_dir: &Path,
+    lang: &str,
+    words: &[crate::db::dictionaries_models::DictWord],
+    on_progress: F,
+) -> Result<()>
+where
+    F: Fn(usize, usize),
+{
+    let lang_index_dir = index_dir.join(lang);
+    let schema = build_dict_schema(lang);
+    let index = open_or_create_index(&lang_index_dir, schema, lang)?;
+
+    let mut writer: IndexWriter = index.writer(50_000_000)?;
+
+    let schema = index.schema();
+    let uid_field = schema.get_field("uid").unwrap();
+    let uid_rev_field = schema.get_field("uid_rev").unwrap();
+    let word_field = schema.get_field("word").unwrap();
+    let synonyms_field = schema.get_field("synonyms").unwrap();
+    let language_field = schema.get_field("language").unwrap();
+    let source_uid_field = schema.get_field("source_uid").unwrap();
+    let content_field = schema.get_field("content").unwrap();
+    let content_exact_field = schema.get_field("content_exact").unwrap();
+    let is_bold_definition_field = schema.get_field("is_bold_definition").unwrap();
+
+    let total = words.len();
+    let chunk = 1000usize;
+
+    let mut indexed = 0usize;
+    for (i, dw) in words.iter().enumerate() {
+        let def = dw.definition_plain.as_deref().unwrap_or("");
+        if def.is_empty() {
+            continue;
+        }
+        let w = &dw.word;
+        let syn = dw.synonyms.as_deref().unwrap_or("");
+        let content_text = format!("{} {} {}", w, syn, def);
+        let lang_val = dw.language.as_deref().unwrap_or(lang);
+        let uid_rev = reversed_lowercased(&dw.uid);
+
+        writer.add_document(doc!(
+            uid_field => dw.uid.as_str(),
+            uid_rev_field => uid_rev.as_str(),
+            word_field => w.as_str(),
+            synonyms_field => syn,
+            language_field => lang_val,
+            source_uid_field => dw.dict_label.as_str(),
+            content_field => content_text.as_str(),
+            content_exact_field => content_text.as_str(),
+            is_bold_definition_field => false,
+        ))?;
+        indexed += 1;
+
+        if (i + 1) % chunk == 0 {
+            on_progress(i + 1, total);
+        }
+    }
+
+    writer.commit()?;
+    writer.wait_merging_threads()?;
+    index.directory().sync_directory()?;
+    on_progress(total, total);
+
+    info(&format!(
+        "index_dict_words_into_dict_index: indexed {} of {} words for lang={}",
+        indexed, total, lang
+    ));
+    Ok(())
+}
+
+/// Delete all dict-index documents whose `source_uid` equals `label`,
+/// across every per-language subdir under `index_dir`.
+pub fn delete_from_dict_index_by_source_uid(index_dir: &Path, label: &str) -> Result<()> {
+    match index_dir.try_exists() {
+        Ok(true) => {}
+        _ => return Ok(()),
+    }
+
+    for entry in std::fs::read_dir(index_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let lang = match path.file_name().and_then(|s| s.to_str()) {
+            Some(s) => s.to_string(),
+            None => continue,
+        };
+
+        let schema = build_dict_schema(&lang);
+        let mmap_dir = match tantivy::directory::MmapDirectory::open(&path) {
+            Ok(d) => d,
+            Err(e) => {
+                warn(&format!("delete_from_dict_index: open {}: {}", path.display(), e));
+                continue;
+            }
+        };
+        let index = match Index::open_or_create(mmap_dir, schema) {
+            Ok(i) => i,
+            Err(e) => {
+                warn(&format!("delete_from_dict_index: open index {}: {}", path.display(), e));
+                continue;
+            }
+        };
+        super::tokenizer::register_tokenizers(&index, &lang);
+
+        let mut writer: IndexWriter = index.writer(50_000_000)?;
+        let source_uid_field = index.schema().get_field("source_uid").unwrap();
+        let term = tantivy::Term::from_field_text(source_uid_field, label);
+        writer.delete_term(term);
+        writer.commit()?;
+        writer.wait_merging_threads()?;
+        index.directory().sync_directory()?;
+    }
+
+    Ok(())
+}
+
+/// Enumerate distinct `source_uid` term values across every per-language
+/// subdir of the unified dict index.
+pub fn list_indexed_source_uids_in_dict_index(index_dir: &Path) -> Result<HashSet<String>> {
+    let mut out: HashSet<String> = HashSet::new();
+
+    match index_dir.try_exists() {
+        Ok(true) => {}
+        _ => return Ok(out),
+    }
+
+    for entry in std::fs::read_dir(index_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let lang = match path.file_name().and_then(|s| s.to_str()) {
+            Some(s) => s.to_string(),
+            None => continue,
+        };
+
+        let schema = build_dict_schema(&lang);
+        let mmap_dir = match tantivy::directory::MmapDirectory::open(&path) {
+            Ok(d) => d,
+            Err(e) => {
+                warn(&format!("list_indexed_source_uids: open {}: {}", path.display(), e));
+                continue;
+            }
+        };
+        let index = match Index::open_or_create(mmap_dir, schema) {
+            Ok(i) => i,
+            Err(e) => {
+                warn(&format!("list_indexed_source_uids: open index {}: {}", path.display(), e));
+                continue;
+            }
+        };
+        super::tokenizer::register_tokenizers(&index, &lang);
+
+        let reader = match index.reader() {
+            Ok(r) => r,
+            Err(e) => {
+                warn(&format!("list_indexed_source_uids: reader {}: {}", path.display(), e));
+                continue;
+            }
+        };
+        let searcher = reader.searcher();
+        let source_uid_field = index.schema().get_field("source_uid").unwrap();
+
+        for segment_reader in searcher.segment_readers() {
+            let inv = match segment_reader.inverted_index(source_uid_field) {
+                Ok(i) => i,
+                Err(_) => continue,
+            };
+            let mut stream = match inv.terms().stream() {
+                Ok(s) => s,
+                Err(_) => continue,
+            };
+            while stream.advance() {
+                let key = stream.key();
+                if let Ok(s) = std::str::from_utf8(key)
+                    && !s.is_empty() {
+                        out.insert(s.to_string());
+                    }
+            }
+        }
+    }
+
+    Ok(out)
 }

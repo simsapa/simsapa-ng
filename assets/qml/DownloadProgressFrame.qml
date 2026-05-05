@@ -179,8 +179,8 @@ Frame {
                 onClicked: {
                     root.show_retry_button = false;
                     download_status.status_text = "Retrying download...";
-                    is_retrying_single_url = true;
-                    retry_download(failed_download_url);
+                    root.is_retrying_single_url = true;
+                    root.retry_download(root.failed_download_url);
                 }
             }
 

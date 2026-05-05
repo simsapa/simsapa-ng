@@ -99,6 +99,14 @@ pub struct SearchParams {
     pub uid_suffix: Option<String>,
     pub include_ms_mula: bool,
     pub include_comm_bold_definitions: bool,
+    /// Dictionary search inclusion set. Restricts dict_words rows to those
+    /// whose `dict_label` (a.k.a. `source_uid` in the dict index) is in
+    /// this set. `None` means no constraint (legacy behaviour). `Some([])`
+    /// means no dict_words rows match — the union of bold-definition rows
+    /// (gated separately by `include_comm_bold_definitions`) is the only
+    /// possible result.
+    #[serde(default)]
+    pub dict_source_uids: Option<Vec<String>>,
 }
 
 impl Default for SearchParams {
@@ -119,6 +127,7 @@ impl Default for SearchParams {
             uid_suffix: None,
             include_ms_mula: true,
             include_comm_bold_definitions: true,
+            dict_source_uids: None,
         }
     }
 }
@@ -143,6 +152,8 @@ pub struct SearchResult {
     pub page_number: Option<i32>,
     pub score: Option<f32>,
     pub rank: Option<i32>,
+    #[serde(default)]
+    pub is_section_header: bool,
 }
 
 impl SearchResult {
@@ -179,6 +190,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -198,6 +210,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -216,6 +229,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -236,6 +250,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 
@@ -256,6 +271,26 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
+        }
+    }
+
+    pub fn from_section_header(title: String) -> SearchResult {
+        SearchResult {
+            uid: String::new(),
+            schema_name: String::new(),
+            table_name: String::new(),
+            source_uid: None,
+            title,
+            sutta_ref: None,
+            nikaya: None,
+            author: None,
+            lang: None,
+            snippet: String::new(),
+            page_number: None,
+            score: None,
+            rank: None,
+            is_section_header: true,
         }
     }
 
@@ -274,6 +309,7 @@ impl SearchResult {
             page_number: None,
             score: None,
             rank: None,
+            is_section_header: false,
         }
     }
 

@@ -21,7 +21,7 @@ ApplicationWindow {
     readonly property bool is_desktop: !root.is_mobile
     readonly property int pointSize: is_mobile ? 16 : 12
 
-    property int top_bar_margin: 0
+    property int top_bar_margin: is_mobile ? 24 : 0
     property var database_validation_dialog: null
 
     signal themeChanged(string theme_name)

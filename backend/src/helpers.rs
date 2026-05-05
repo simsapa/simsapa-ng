@@ -647,7 +647,7 @@ lazy_static! {
     // see test_sutta_search_contains_match_with_punctuation()
     static ref RE_PUNCT_QUOTES: Regex = Regex::new(r#"[\.,;:\!\?'‘’"“”…—–-]+"#).unwrap();
 
-    static ref RE_DASH: Regex = Regex::new(r"—–-+").unwrap();
+    static ref RE_DASH: Regex = Regex::new(r"[—–-]+").unwrap();
 
     // Used in word_uid_sanitize() to also remove parens.
     static ref RE_PUNCT_PARENS: Regex = Regex::new(r"[\.,;:\(\)]").unwrap();
@@ -1469,18 +1469,14 @@ pub fn pali_to_ascii(text: Option<&str>) -> String {
 
 /// Sanitize a word to UID form: remove punctuation, replace spaces with hyphens.
 pub fn word_uid_sanitize(word: &str) -> String {
-    let mut w = RE_PUNCT_PARENS.replace_all(word, " ").to_string();
+    let mut w = strip_html(word);
+    w = RE_PUNCT_PARENS.replace_all(&w, " ").to_string();
     w = w.replace("'", "")
          .replace("\"", "")
          .replace(' ', "-");
     w = RE_DASH.replace_all(&w, "-").to_string();
+    w = w.trim_matches('-').to_string();
     w
-}
-
-/// Sanitize a bold-definition term for UID use: trim quotes, punctuation, and
-/// whitespace from the start and end. Interior characters are preserved.
-pub fn bold_uid_sanitize(word: &str) -> String {
-    word.trim_matches(|c: char| !c.is_alphanumeric()).to_string()
 }
 
 /// Create a UID by combining sanitized word and dictionary label.
@@ -2368,13 +2364,12 @@ mod tests {
     }
 
     #[test]
-    #[ignore] // Pre-existing failure: word_uid_sanitize behavior changed
     fn test_word_uid_sanitize() {
-        assert_eq!(word_uid_sanitize("word.with,punct;"), "word-with-punct-");
-        assert_eq!(word_uid_sanitize("word (bracket)"), "word-bracket-");
+        assert_eq!(word_uid_sanitize("word.with,punct;"), "word-with-punct");
+        assert_eq!(word_uid_sanitize("word (bracket)"), "word-bracket");
         assert_eq!(word_uid_sanitize("word's quote\""), "words-quote");
         assert_eq!(word_uid_sanitize("word--with---dashes"), "word-with-dashes");
-        assert_eq!(word_uid_sanitize("  leading space  "), "-leading-space-");
+        assert_eq!(word_uid_sanitize("  leading space  "), "leading-space");
     }
 
     #[test]

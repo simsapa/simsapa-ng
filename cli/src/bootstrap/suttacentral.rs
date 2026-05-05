@@ -1106,14 +1106,16 @@ fn import_sutta_comments(
 pub struct SuttaCentralImporter {
     sc_data_dir: PathBuf,
     lang: String,
+    limit: Option<i32>,
 }
 
 impl SuttaCentralImporter {
     /// Create a new SuttaCentralImporter
-    pub fn new(sc_data_dir: PathBuf, lang: &str) -> Self {
+    pub fn new(sc_data_dir: PathBuf, lang: &str, limit: Option<i32>) -> Self {
         Self {
             sc_data_dir,
             lang: lang.to_string(),
+            limit,
         }
     }
 
@@ -1201,16 +1203,11 @@ impl SuttaImporter for SuttaCentralImporter {
         let db = connect_to_arangodb()
             .context("Failed to connect to ArangoDB")?;
 
-        // Check for BOOTSTRAP_LIMIT environment variable
-        let limit = std::env::var("BOOTSTRAP_LIMIT")
-            .ok()
-            .and_then(|s| s.parse::<i32>().ok());
-
-        if let Some(lim) = limit {
-            logger::info(&format!("BOOTSTRAP_LIMIT set to {}", lim));
+        if let Some(lim) = self.limit {
+            logger::info(&format!("Limit set to {}", lim));
         }
 
-        self.import_for_language(conn, &db, &self.lang.clone(), limit)?;
+        self.import_for_language(conn, &db, &self.lang.clone(), self.limit)?;
 
         logger::info(&format!("SuttaCentral import completed for lang '{}'", &self.lang));
         Ok(())

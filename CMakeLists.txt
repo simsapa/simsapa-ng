@@ -195,6 +195,7 @@ list(APPEND cpp_files
     cpp/sutta_search_window.cpp
     cpp/download_appdata_window.cpp
     cpp/sutta_languages_window.cpp
+    cpp/dictionaries_window.cpp
     cpp/library_window.cpp
     cpp/reference_search_window.cpp
     cpp/topic_index_window.cpp

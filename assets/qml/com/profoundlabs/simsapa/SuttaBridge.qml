@@ -723,6 +723,18 @@ Item {
         console.log("set_sutta_language_filter_key():", key);
     }
 
+    function get_last_search_mode(area: string): string {
+        return "Fulltext Match";
+    }
+
+    function set_last_search_mode(area: string, mode: string) {
+        console.log("set_last_search_mode():", area, mode);
+    }
+
+    function open_dictionaries_window() {
+        console.log("open_dictionaries_window()");
+    }
+
     function open_sutta_languages_window() {
         console.log("open_sutta_languages_window()");
     }

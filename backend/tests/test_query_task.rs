@@ -201,8 +201,8 @@ fn test_dict_word_search_contains_match() {
     // println!("{}", results[0].snippet);
     // println!("{:#?}", results);
 
-    assert_eq!(results[0].uid, "bojjhaṅga 1/dpd");
-    assert!(results[0].snippet.contains("element of awakening; factor of enlightenment"),
+    assert_eq!(results[0].uid, "bojjhaṅga-2/dpd");
+    assert!(results[0].snippet.contains("element of awakening factor of enlightenment"),
         "Snippet should contain 'element of awakening', got: {}", results[0].snippet);
 }
 
@@ -231,7 +231,7 @@ fn test_dict_word_uid_match() {
 
     println!("{}", results[0].snippet);
 
-    assert_eq!(results[0].uid, "satipaṭṭhāna 1/dpd");
+    assert_eq!(results[0].uid, "satipaṭṭhāna-1/dpd");
     assert!(results[0].snippet.contains("attending mindfully"),
         "Snippet should contain 'attending mindfully', got: {}", results[0].snippet);
 }

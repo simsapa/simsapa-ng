@@ -8,6 +8,7 @@ pub mod nyanadipa;
 pub mod buddha_ujja;
 pub mod tipitaka_xml;
 pub mod dpd;
+pub mod dppn;
 pub mod completions;
 pub mod library_imports;
 pub mod chanting_practice;
@@ -25,6 +26,8 @@ use diesel_migrations::MigrationHarness;
 use simsapa_backend::db::{DatabaseHandle, APPDATA_MIGRATIONS};
 use simsapa_backend::{init_app_data, get_app_data, get_app_globals, get_create_simsapa_dir, get_create_simsapa_app_assets_path, logger};
 use simsapa_backend::search::indexer;
+use simsapa_backend::dictionary_manager_core::import_user_zip;
+use simsapa_backend::stardict_parse::StardictImportProgress;
 
 pub use helpers::SuttaData;
 pub use appdata::{AppdataBootstrap, DB_VERSION};
@@ -64,7 +67,7 @@ pub fn ensure_directory_exists(path: &Path) -> Result<()> {
 }
 
 /// Main bootstrap function - orchestrates the entire bootstrap process
-pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, skip_languages: bool, only_languages: Option<String>) -> Result<()> {
+pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, skip_languages: bool, only_languages: Option<String>, limit: Option<i32>) -> Result<()> {
     logger::info("=== bootstrap() ===");
     if skip_appdata {
         logger::info("--skip-appdata flag set: Appdata initialization and bootstrap will be skipped");
@@ -91,10 +94,9 @@ pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, ski
     let start_time: DateTime<Local> = Local::now();
     let iso_date = start_time.format("%Y-%m-%d").to_string();
 
-    let bootstrap_limit: Option<i32> = match env::var("BOOTSTRAP_LIMIT") {
-        Ok(s) if !s.is_empty() => s.parse().ok(),
-        _ => None,
-    };
+    if let Some(lim) = limit {
+        logger::info(&format!("Limit set to {}", lim));
+    }
 
     // Running the binary with 'cargo run', the PWD is simsapa-ng/cli/.
     // The asset folders are one level above simsapa-ng/.
@@ -123,14 +125,8 @@ pub fn bootstrap(write_new_dotenv: bool, skip_appdata: bool, skip_dpd: bool, ski
 
     logger::info(&format!("Bootstrap simsapa_dir: {:?}", simsapa_dir));
 
-    let bootstrap_limit_str = match bootstrap_limit {
-        Some(n) => n.to_string(),
-        None => String::new(),
-    };
-
     let dot_env_content = format!(
-        r#"BOOTSTRAP_LIMIT={}
-SIMSAPA_DIR={}
+        r#"SIMSAPA_DIR={}
 BOOTSTRAP_ASSETS_DIR={}
 USE_TEST_DATA=false
 DISABLE_LOG=false
@@ -140,7 +136,6 @@ ENABLE_WIP_FEATURES=false
 SAVE_STATS=false
 RELEASE_CHANNEL=development
 "#,
-        bootstrap_limit_str,
         simsapa_dir.display(),
         bootstrap_assets_dir.display()
     );
@@ -177,7 +172,7 @@ RELEASE_CHANNEL=development
             if sc_data_dir.exists() {
                 logger::info("Importing suttas from SuttaCentral");
                 for lang in ["en", "pli"] {
-                    let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
+                    let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang, limit);
                     importer.import(&mut conn)?;
                 }
             } else {
@@ -198,7 +193,7 @@ RELEASE_CHANNEL=development
             let dhammatalks_path = bootstrap_assets_dir.join("dhammatalks-org/www.dhammatalks.org/suttas");
             if dhammatalks_path.exists() {
                 logger::info("Importing suttas from dhammatalks.org");
-                let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path);
+                let mut importer = DhammatalksSuttaImporter::new(dhammatalks_path, limit);
                 importer.import(&mut conn)?;
             } else {
                 logger::warn("Dhammatalks.org resource path not found, skipping");
@@ -302,7 +297,15 @@ RELEASE_CHANNEL=development
     // Digital Pāli Dictionary
     if !skip_dpd {
         init_app_data();
-        dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir)?;
+        dpd::dpd_bootstrap(&bootstrap_assets_dir, &assets_dir, limit)?;
+
+        // Import Dictionary of Pāli Proper Names
+        dppn::dppn_bootstrap(&bootstrap_assets_dir, &assets_dir)
+            .map_err(|e| anyhow::anyhow!("DPPN bootstrap failed: {}", e))?;
+
+        // Import Whitney's Sanskrit Roots StarDict zip as an English dictionary.
+        // let whitney_zip_path = bootstrap_assets_dir.join("stardict-imports/whitney-gd.zip");
+        // import_stardict_zip_bootstrap(&whitney_zip_path, "whitney", "en")?;
 
         logger::info("=== Create dictionaries.tar.bz2 ===");
         let dict_db_path = assets_dir.join("dictionaries.sqlite3");
@@ -347,6 +350,19 @@ RELEASE_CHANNEL=development
             Err(e) => logger::warn(&format!("Failed to get dict_word languages: {}", e)),
         }
 
+        // Register a single parent `dictionaries` row for the bold-
+        // definitions category. The Tantivy `source_uid` values for these
+        // entries are per-row `ref_code`s (Nikāya-dependent), so the
+        // reconcile pass identifies the valid set by querying DPD's
+        // `bold_definitions.ref_code` rather than `dictionaries.label`.
+        match app_data.dbm.dictionaries.ensure_bold_definitions_parent_dictionary() {
+            Ok(true) => logger::info("Registered bold-definitions parent dictionary"),
+            Ok(false) => {}
+            Err(e) => logger::warn(&format!(
+                "Failed to register bold-definitions parent dictionary: {:#}", e
+            )),
+        }
+
         // Append DPD bold-definitions into the unified Pāli dict index.
         // Must run after the "pli" dict index is built since that step
         // clears the index; bold rows share the dict schema and are
@@ -354,6 +370,19 @@ RELEASE_CHANNEL=development
         match indexer::append_bold_definitions_to_dict_index(&app_data.dbm.dpd, &paths.dict_words_index_dir, "pli") {
             Ok(_) => {}
             Err(e) => logger::warn(&format!("Failed to append bold definitions to dict index: {}", e)),
+        }
+
+        // Mark user-imported dictionaries that were just covered by the
+        // `build_dict_index` pass as indexed, so the startup reconcile pass
+        // does not redundantly re-index them. Targeted by label so only the
+        // dictionaries we know are in the freshly-built Tantivy index get
+        // marked; anything else stays NULL and reconcile still picks it up.
+        let now = chrono::Utc::now().naive_utc();
+        for label in ["dppn"] {
+            match app_data.dbm.dictionaries.set_indexed_at_by_label(label, now) {
+                Ok(_) => logger::info(&format!("Marked '{}' as indexed_at = now", label)),
+                Err(e) => logger::warn(&format!("Failed to set indexed_at for '{}': {:#}", label, e)),
+            }
         }
 
         // Build library indexes for all available languages
@@ -415,7 +444,7 @@ RELEASE_CHANNEL=development
                                 run_migrations(&mut lang_conn)?;
 
                                 // Import suttas for this language
-                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang);
+                                let mut importer = SuttaCentralImporter::new(sc_data_dir.clone(), lang, limit);
                                 match importer.import(&mut lang_conn) {
                                     Ok(_) => {
                                         // Check if any suttas were actually imported
@@ -965,4 +994,35 @@ fn format_duration(duration: chrono::Duration) -> String {
     let seconds = total_seconds % 60;
 
     format!("{}:{:02}:{:02}", hours, minutes, seconds)
+}
+
+#[allow(dead_code)]
+fn import_stardict_zip_bootstrap(zip_path: &Path, label: &str, lang: &str) -> Result<()> {
+    logger::info(&format!(
+        "=== Import StarDict zip: {} (label: {}, lang: {}) ===",
+        zip_path.display(), label, lang
+    ));
+
+    match zip_path.try_exists() {
+        Ok(true) => {}
+        Ok(false) => return Err(anyhow::anyhow!("Zip file not found: {}", zip_path.display())),
+        Err(e) => return Err(anyhow::anyhow!("Cannot access zip {}: {}", zip_path.display(), e)),
+    }
+
+    import_user_zip(zip_path, label, lang, &|p| {
+        match p {
+            StardictImportProgress::Extracting => logger::info("  extracting..."),
+            StardictImportProgress::Parsing => logger::info("  parsing..."),
+            StardictImportProgress::InsertingWords { done, total } => {
+                if total > 0 && (done == 0 || done == total || done % 1000 == 0) {
+                    logger::info(&format!("  inserting words: {}/{}", done, total));
+                }
+            }
+            StardictImportProgress::Done => logger::info("  done."),
+            StardictImportProgress::Failed { msg } => logger::error(&format!("  failed: {}", msg)),
+        }
+    })
+    .map_err(|e| anyhow::anyhow!("Failed to import StarDict zip {}: {}", zip_path.display(), e))?;
+
+    Ok(())
 }

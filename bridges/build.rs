@@ -72,6 +72,13 @@ fn main() {
         "../assets/qml/BookmarkListItem.qml",
         "../assets/qml/BookmarkEditDialog.qml",
         "../assets/qml/BookmarkFolderDialog.qml",
+        "../assets/qml/DictionaryIndexProgressWindow.qml",
+        "../assets/qml/DictionariesWindow.qml",
+        "../assets/qml/DictionaryListItem.qml",
+        "../assets/qml/DictionaryImportDialog.qml",
+        "../assets/qml/DictionaryEditDialog.qml",
+        "../assets/qml/DictionarySearchDictionariesPanel.qml",
+        "../assets/qml/DictionaryInfoDialog.qml",
     ];
 
     let builder = CxxQtBuilder::new()
@@ -92,6 +99,7 @@ fn main() {
                         "src/storage_manager.rs",
                         "src/prompt_manager.rs",
                         "src/clipboard_manager.rs",
+                        "src/dictionary_manager.rs",
                 ],
                 qml_files: &qml_files,
                 ..Default::default()

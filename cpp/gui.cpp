@@ -12,9 +12,11 @@
 #include <QSystemTrayIcon>
 #include <QApplication>
 #include <QMainWindow>
+#include <QEventLoop>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickStyle>
+#include <QQuickWindow>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -37,6 +39,8 @@ extern "C" void init_app_data();
 extern "C" void import_user_data_after_upgrade();
 extern "C" void cleanup_stale_legacy_userdata();
 extern "C" void check_and_configure_for_first_start();
+extern "C" bool reconcile_dict_indexes_needed_c();
+extern "C" void reconcile_dict_indexes_blocking_c();
 extern "C" void create_or_update_linux_desktop_icon_file_ffi();
 
 extern "C" char* get_desktop_file_path_ffi();
@@ -75,6 +79,10 @@ void callback_open_sutta_tab(QString window_id, QString show_result_data_json) {
 
 void callback_open_sutta_languages_window() {
   AppGlobals::manager->create_sutta_languages_window();
+}
+
+void callback_open_dictionaries_window() {
+  AppGlobals::manager->create_dictionaries_window();
 }
 
 void callback_open_library_window() {
@@ -240,6 +248,44 @@ int start(int argc, char* argv[]) {
 
   // The port is determined in start_webserver().
   std::thread daemon_server_thread(start_webserver);
+
+  // Reconcile user-imported dictionary indexes before opening the main
+  // window. Runs only if there is work to do (newly imported / renamed /
+  // deleted user dictionaries, or orphan source_uids in the Tantivy dict
+  // index from a release-upgrade DB swap). Tantivy writes happen here so
+  // they never contend with a live searcher in `SuttaSearchWindow`.
+  //
+  // The QML window drives reconciliation through the `DictionaryManager`
+  // bridge (worker thread + Qt signals) and closes itself on
+  // `reconcileFinished`. We pump a local `QEventLoop` until the window's
+  // QQuickWindow is destroyed, then proceed.
+  if (reconcile_dict_indexes_needed_c()) {
+    log_info_c("Showing dictionary index reconciliation window...");
+
+    QQmlApplicationEngine reconcile_engine;
+    reconcile_engine.load(QUrl(QStringLiteral(
+      "qrc:/qt/qml/com/profoundlabs/simsapa/assets/qml/DictionaryIndexProgressWindow.qml")));
+
+    auto roots = reconcile_engine.rootObjects();
+    if (!roots.isEmpty()) {
+      QObject* window_root = roots.constFirst();
+      QEventLoop reconcile_loop;
+      QObject::connect(window_root, &QObject::destroyed, &reconcile_loop, &QEventLoop::quit);
+      QQuickWindow* qwin = qobject_cast<QQuickWindow*>(window_root);
+      if (qwin) {
+        QObject::connect(qwin, &QQuickWindow::visibleChanged, &reconcile_loop, [&reconcile_loop, qwin]() {
+          if (!qwin->isVisible()) reconcile_loop.quit();
+        });
+      }
+      reconcile_loop.exec();
+      log_info_c("Dictionary index reconciliation complete.");
+    } else {
+      // Fallback — couldn't load the QML; run synchronously so the app still
+      // makes progress.
+      log_info_c("Reconciliation window failed to load; running synchronously.");
+      reconcile_dict_indexes_blocking_c();
+    }
+  }
 
   // === Create the first app window ===
 

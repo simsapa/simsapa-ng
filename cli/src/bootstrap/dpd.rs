@@ -7,10 +7,11 @@ use simsapa_backend::helpers::run_fts5_indexes_sql_script;
 
 use crate::import_stardict_dictionary;
 
-pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()> {
+pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path, limit: Option<i32>) -> Result<()> {
     // Import DPD stardict
     let dpd_stardict_path = bootstrap_assets_dir.join("dpd-db-for-bootstrap/current/dpd/");
-    import_stardict_dictionary("dpd", &dpd_stardict_path, None)
+    let limit_usize = limit.map(|l| l as usize);
+    import_stardict_dictionary("dpd", &dpd_stardict_path, limit_usize)
         .map_err(|e| anyhow::anyhow!("Failed to import DPD Stardict: {}", e))?;
 
     // Create FTS5 indexes for dictionaries database

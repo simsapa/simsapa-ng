@@ -16,11 +16,12 @@ use super::SuttaImporter;
 
 pub struct DhammatalksSuttaImporter {
     resource_path: PathBuf,
+    limit: Option<i32>,
 }
 
 impl DhammatalksSuttaImporter {
-    pub fn new(resource_path: PathBuf) -> Self {
-        Self { resource_path }
+    pub fn new(resource_path: PathBuf, limit: Option<i32>) -> Self {
+        Self { resource_path, limit }
     }
 
     fn extract_sutta_content(&self, html_text: &str) -> Result<String> {
@@ -219,7 +220,13 @@ impl DhammatalksSuttaImporter {
 
         logger::info(&format!("Found {} sutta files from Dhammatalks.org", files.len()));
 
-        let pb = ProgressBar::new(files.len() as u64);
+        let file_count = if let Some(lim) = self.limit {
+            std::cmp::min(files.len(), lim as usize)
+        } else {
+            files.len()
+        };
+
+        let pb = ProgressBar::new(file_count as u64);
         pb.set_style(
             ProgressStyle::default_bar()
                 .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")?
@@ -228,8 +235,14 @@ impl DhammatalksSuttaImporter {
 
         let mut success_count = 0;
         let mut error_count = 0;
+        let mut imported_count = 0;
 
         for file_path in &files {
+            if let Some(lim) = self.limit
+                && imported_count >= lim {
+                    break;
+                }
+
             pb.set_message(format!("{}", file_path.file_name().unwrap().to_string_lossy()));
 
             match self.parse_sutta(file_path) {
@@ -239,7 +252,10 @@ impl DhammatalksSuttaImporter {
                         .values(&new_sutta)
                         .execute(conn)
                     {
-                        Ok(_) => success_count += 1,
+                        Ok(_) => {
+                            success_count += 1;
+                            imported_count += 1;
+                        }
                         Err(e) => {
                             error_count += 1;
                             logger::warn(&format!("Failed to insert sutta {}: {}", file_path.display(), e));

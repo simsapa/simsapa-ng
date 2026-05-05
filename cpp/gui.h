@@ -12,6 +12,7 @@ extern "C++" {
     void callback_open_sutta_search_window(QString show_result_data_json = "");
     void callback_open_sutta_tab(QString window_id, QString show_result_data_json = "");
     void callback_open_sutta_languages_window();
+    void callback_open_dictionaries_window();
     void callback_open_library_window();
     void callback_open_reference_search_window();
     void callback_open_topic_index_window();

@@ -35,6 +35,32 @@ struct ResultsPageCache {
 
 static RESULTS_PAGE_CACHE: Mutex<Option<ResultsPageCache>> = Mutex::new(None);
 
+/// Cache for the bridge-orchestrated `Combined` mode. Deliberately isolated
+/// from `RESULTS_PAGE_CACHE` to prevent cross-warming between Combined
+/// sub-fetches (DPD Lookup + Fulltext) and standalone-mode searches that
+/// happen to share the same query / params — bold-definition gating,
+/// post-filter ordering, and result formatting can diverge between
+/// Combined's sub-fetches and a standalone single-mode call. The two
+/// sub-buffers cache the parallel DPD and Fulltext background queries that
+/// Combined fans out on page 0 and tops up side-aware on later pages; the
+/// merged combined page is computed on demand by slicing both buffers, so
+/// no second memo layer is needed. Holding both sub-states under a single
+/// mutex gives a coherent snapshot of `(dpd_buffer, dpd_total, ft_buffer,
+/// ft_total)` for the merge — the lock is never held across an SQLite or
+/// Tantivy call (sub-queries run unlocked and write back briefly).
+struct CombinedCache {
+    cache_key: String,
+    page_len: usize,
+    dpd_buffer: Vec<SearchResult>,
+    dpd_total: Option<i64>,
+    dpd_pages_fetched: usize,
+    ft_buffer: Vec<SearchResult>,
+    ft_total: Option<i64>,
+    ft_pages_fetched: usize,
+}
+
+static COMBINED_CACHE: Mutex<Option<CombinedCache>> = Mutex::new(None);
+
 /// Holds the most recent export-failure reason string from
 /// `prepare_for_database_upgrade()` so that `force_database_upgrade()` can
 /// log which errors the user chose to bypass. See PRD §11.6.
@@ -168,6 +194,289 @@ fn fetch_and_cache_page(
     Ok(Some((results, total_hits, page_len)))
 }
 
+/// Run a single sub-query (one mode, one sub-page) for Combined. Free of
+/// cache logic so it can run inside a spawned thread without coordinating
+/// with `COMBINED_CACHE`. Each call constructs its own `SearchQueryTask`
+/// against `&app_data.dbm`; sub-queries on different threads therefore use
+/// independent SQLite connections.
+fn run_sub_query(
+    query_text: &str,
+    area: SearchArea,
+    params: SearchParams,
+    sub_page_num: usize,
+) -> Result<(Vec<SearchResult>, i64, usize), String> {
+    let app_data = get_app_data();
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        query_text.to_string(),
+        params,
+        area,
+    );
+    let results = task.results_page(sub_page_num).map_err(|e| format!("{}", e))?;
+    let total = task.total_hits();
+    let page_len = task.page_len;
+    Ok((results, total, page_len))
+}
+
+/// Serve a Combined-mode page by orchestrating two parallel sub-queries (DPD
+/// Lookup + Fulltext Match) on page 0 (cold start), then topping up side-aware
+/// on later pages. Returns the merged page, the combined total (`dpd_total +
+/// ft_total`), and the page length. Returns `Ok(None)` if the cache key changed
+/// mid-flight (a new search started).
+///
+/// Lock discipline: the `COMBINED_CACHE` mutex is acquired only for brief state
+/// reads/writes; it is **never** held across an SQLite or Tantivy call. Each
+/// sub-query thread runs unlocked and writes back its buffer + total atomically
+/// after re-checking `cache_key`.
+fn fetch_combined_page(
+    cache_key: &str,
+    query_text: &str,
+    params_json_text: &str,
+    page_num: usize,
+) -> Result<Option<(Vec<SearchResult>, i64, usize)>, String> {
+    let base_params: SearchParams = serde_json::from_str(params_json_text).unwrap_or_default();
+    // Skip the DPD sub-fetch entirely when DPD is excluded from the
+    // inclusion set. `DpdLookup` returns rows with `table_name ==
+    // "dpd_headwords"` / `"dpd_roots"`, which the per-task post-filter
+    // (`apply_dict_source_uids_filter`) only drops for `table_name ==
+    // "dict_words"` — so without this gate, disabling DPD in the panel
+    // still leaks DPD-native rows into Combined results.
+    let dpd_enabled = match base_params.dict_source_uids.as_ref() {
+        None => true,
+        Some(set) => set.iter().any(|s| s == "dpd"),
+    };
+    let mut dpd_params = base_params.clone();
+    dpd_params.mode = SearchMode::DpdLookup;
+    let mut ft_params = base_params.clone();
+    ft_params.mode = SearchMode::FulltextMatch;
+
+    // Read a snapshot of current cache state. The cache cell must already
+    // have been initialized for this `cache_key` by the `results_page`
+    // entry path; if a stale call (e.g. a prefetch thread from a previous
+    // search) finds a different key here, it returns `Ok(None)` rather
+    // than overwriting — otherwise it could clobber a freshly-reset cache
+    // belonging to the current search and cause an in-flight cold-start
+    // join to abort, leaving the QML loader hung. Mirrors the standard
+    // `fetch_and_cache_page` discipline (reset is the caller's job).
+    let (mut dpd_total_opt, mut ft_total_opt, mut page_len) = {
+        let guard = COMBINED_CACHE.lock().unwrap();
+        let Some(c) = guard.as_ref() else {
+            return Ok(None);
+        };
+        if c.cache_key != cache_key {
+            return Ok(None);
+        }
+        (c.dpd_total, c.ft_total, c.page_len)
+    };
+
+    // Cold start: fan out DPD page 0 and Fulltext page 0 in parallel.
+    // When DPD is excluded from the inclusion set, skip the DPD sub-fetch
+    // entirely (its rows would otherwise leak through — `apply_dict_source_uids_filter`
+    // only drops `table_name == "dict_words"` rows, but DpdLookup returns
+    // `dpd_headwords` / `dpd_roots`).
+    if dpd_total_opt.is_none() && ft_total_opt.is_none() {
+        let ((dpd_buf, dpd_total, dpd_pl), (ft_buf, ft_total, ft_pl)) = if dpd_enabled {
+            let qt_dpd = query_text.to_string();
+            let dpd_p = dpd_params.clone();
+            let dpd_handle = thread::spawn(move || {
+                run_sub_query(&qt_dpd, SearchArea::Dictionary, dpd_p, 0)
+            });
+            let qt_ft = query_text.to_string();
+            let ft_p = ft_params.clone();
+            let ft_handle = thread::spawn(move || {
+                run_sub_query(&qt_ft, SearchArea::Dictionary, ft_p, 0)
+            });
+            let dpd_res = dpd_handle
+                .join()
+                .map_err(|_| "DPD sub-query thread panicked".to_string())??;
+            let ft_res = ft_handle
+                .join()
+                .map_err(|_| "Fulltext sub-query thread panicked".to_string())??;
+            (dpd_res, ft_res)
+        } else {
+            let ft_res = run_sub_query(
+                query_text,
+                SearchArea::Dictionary,
+                ft_params.clone(),
+                0,
+            )?;
+            // Empty DPD side; page_len falls back to Fulltext's.
+            ((Vec::new(), 0i64, ft_res.2), ft_res)
+        };
+        let pl = if dpd_pl > 0 { dpd_pl } else { ft_pl };
+
+        let mut guard = COMBINED_CACHE.lock().unwrap();
+        let Some(c) = guard.as_mut() else {
+            return Ok(None);
+        };
+        if c.cache_key != cache_key {
+            return Ok(None);
+        }
+        c.dpd_buffer = dpd_buf;
+        c.dpd_total = Some(dpd_total);
+        // Mark DPD as "page 0 fetched" even when skipped, so the top-up loop
+        // never re-attempts it (dpd_total = 0 already short-circuits the
+        // loop, but this keeps the bookkeeping consistent).
+        c.dpd_pages_fetched = 1;
+        c.ft_buffer = ft_buf;
+        c.ft_total = Some(ft_total);
+        c.ft_pages_fetched = 1;
+        c.page_len = pl;
+
+        dpd_total_opt = Some(dpd_total);
+        ft_total_opt = Some(ft_total);
+        page_len = pl;
+    }
+
+    let l = page_len;
+    if l == 0 {
+        return Ok(Some((Vec::new(), 0, 0)));
+    }
+    let dpd_total_usize = dpd_total_opt.unwrap_or(0).max(0) as usize;
+    let ft_total_usize = ft_total_opt.unwrap_or(0).max(0) as usize;
+    let lo = page_num.saturating_mul(l);
+    let hi = lo.saturating_add(l);
+
+    // Top-up loop. When both sides need more, run them concurrently.
+    // The common case is a single side falling short by one sub-page;
+    // the rare case (a Combined page that straddles the DPD/FT
+    // boundary, or a dropped row in either sub-query) is the one that wins
+    // wall-clock from the fan-out. Each iteration:
+    //   1. Snapshot `(have, next_page)` for both sides under the lock.
+    //   2. If both sides are short, fan out two threads and `join()`.
+    //   3. If only one side is short, fetch it inline.
+    //   4. Re-acquire the lock, re-check `cache_key`, install results.
+    //   5. Loop until both sides are satisfied (or empty-rows short-circuit).
+    let dpd_needed = hi.min(dpd_total_usize);
+    let ft_required_end = hi.saturating_sub(dpd_total_usize);
+    let ft_needed = ft_required_end.min(ft_total_usize);
+    loop {
+        let (dpd_have, dpd_next, ft_have, ft_next) = {
+            let g = COMBINED_CACHE.lock().unwrap();
+            let Some(c) = g.as_ref() else { return Ok(None); };
+            if c.cache_key != cache_key {
+                return Ok(None);
+            }
+            (
+                c.dpd_buffer.len(),
+                c.dpd_pages_fetched,
+                c.ft_buffer.len(),
+                c.ft_pages_fetched,
+            )
+        };
+        let dpd_short = dpd_have < dpd_needed;
+        let ft_short = ft_have < ft_needed;
+        if !dpd_short && !ft_short {
+            break;
+        }
+
+        // Run the needed sub-queries unlocked. When both are short, fan out
+        // into two threads — same pattern as the cold-start fan-out.
+        let (dpd_result, ft_result): (
+            Option<Result<(Vec<SearchResult>, i64, usize), String>>,
+            Option<Result<(Vec<SearchResult>, i64, usize), String>>,
+        ) = if dpd_short && ft_short {
+            let qt_dpd = query_text.to_string();
+            let dpd_p = dpd_params.clone();
+            let dpd_handle = thread::spawn(move || {
+                run_sub_query(&qt_dpd, SearchArea::Dictionary, dpd_p, dpd_next)
+            });
+            let qt_ft = query_text.to_string();
+            let ft_p = ft_params.clone();
+            let ft_handle = thread::spawn(move || {
+                run_sub_query(&qt_ft, SearchArea::Dictionary, ft_p, ft_next)
+            });
+            let dpd_r = dpd_handle
+                .join()
+                .map_err(|_| "DPD top-up thread panicked".to_string())?;
+            let ft_r = ft_handle
+                .join()
+                .map_err(|_| "Fulltext top-up thread panicked".to_string())?;
+            (Some(dpd_r), Some(ft_r))
+        } else if dpd_short {
+            let r = run_sub_query(query_text, SearchArea::Dictionary, dpd_params.clone(), dpd_next);
+            (Some(r), None)
+        } else {
+            let r = run_sub_query(query_text, SearchArea::Dictionary, ft_params.clone(), ft_next);
+            (None, Some(r))
+        };
+
+        let dpd_part = dpd_result.transpose()?;
+        let ft_part = ft_result.transpose()?;
+
+        let mut dpd_empty = false;
+        let mut ft_empty = false;
+        {
+            let mut g = COMBINED_CACHE.lock().unwrap();
+            let Some(c) = g.as_mut() else { return Ok(None); };
+            if c.cache_key != cache_key {
+                return Ok(None);
+            }
+            if let Some((rows, total, _)) = dpd_part {
+                dpd_empty = rows.is_empty();
+                c.dpd_buffer.extend(rows);
+                c.dpd_pages_fetched += 1;
+                c.dpd_total = Some(total);
+            }
+            if let Some((rows, total, _)) = ft_part {
+                ft_empty = rows.is_empty();
+                c.ft_buffer.extend(rows);
+                c.ft_pages_fetched += 1;
+                c.ft_total = Some(total);
+            }
+        }
+        // Defensive: if a side reports total > buffer but yields no further
+        // rows, stop fetching from it to avoid spinning. The next iteration
+        // re-evaluates `dpd_short` / `ft_short` from the buffer length, so
+        // an empty fetch on one side does not block the other from continuing.
+        if (dpd_short && dpd_empty && ft_short && ft_empty)
+            || (dpd_short && dpd_empty && !ft_short)
+            || (ft_short && ft_empty && !dpd_short)
+        {
+            break;
+        }
+    }
+
+    // Final coherent snapshot: slice [lo, hi) over the merged virtual stream
+    // [DPD ..., Fulltext ...] and return.
+    let g = COMBINED_CACHE.lock().unwrap();
+    let Some(c) = g.as_ref() else { return Ok(None); };
+    if c.cache_key != cache_key {
+        return Ok(None);
+    }
+    let dpd_total_final = c.dpd_total.unwrap_or(0).max(0) as usize;
+    let ft_total_final = c.ft_total.unwrap_or(0).max(0) as usize;
+
+    let dpd_lo = lo.min(c.dpd_buffer.len()).min(dpd_total_final);
+    let dpd_hi = hi.min(c.dpd_buffer.len()).min(dpd_total_final);
+
+    let ft_lo_global = lo.saturating_sub(dpd_total_final);
+    let ft_hi_global = hi.saturating_sub(dpd_total_final);
+    let ft_lo = ft_lo_global.min(c.ft_buffer.len()).min(ft_total_final);
+    let ft_hi = ft_hi_global.min(c.ft_buffer.len()).min(ft_total_final);
+
+    // Header is emitted only for sections that contribute rows on this page,
+    // and the range label reflects the slice shown on this page (1-based,
+    // inclusive). If a section starts mid-page (transition), its header is
+    // inserted at the transition point rather than at the top.
+    let mut merged: Vec<SearchResult> = Vec::new();
+    if dpd_hi > dpd_lo {
+        merged.push(SearchResult::from_section_header(
+            format!("DPD Lookup Results ({}-{})", dpd_lo + 1, dpd_hi),
+        ));
+        merged.extend(c.dpd_buffer[dpd_lo..dpd_hi].iter().cloned());
+    }
+    if ft_hi > ft_lo {
+        merged.push(SearchResult::from_section_header(
+            format!("Fulltext Results ({}-{})", ft_lo + 1, ft_hi),
+        ));
+        merged.extend(c.ft_buffer[ft_lo..ft_hi].iter().cloned());
+    }
+
+    let combined_total = (dpd_total_final + ft_total_final) as i64;
+    Ok(Some((merged, combined_total, l)))
+}
+
 /// Spawn a background thread to prefetch pages into RESULTS_PAGE_CACHE.
 fn prefetch_pages(
     cache_key: String,
@@ -179,10 +488,23 @@ fn prefetch_pages(
     total_pages: usize,
 ) {
     thread::spawn(move || {
+        // Combined+Dictionary uses its own cache and orchestrator. Detect
+        // the mode once (parsing JSON per page in the loop is wasteful) and
+        // dispatch accordingly.
+        let is_combined_dict = search_area_text == "Dictionary"
+            && serde_json::from_str::<SearchParams>(&params_json_text)
+                .map(|p| matches!(p.mode, SearchMode::Combined))
+                .unwrap_or(false);
+
         let end_page = (start_page + count).min(total_pages);
         for p in start_page..end_page {
             debug(&format!("Prefetching page {}", p));
-            match fetch_and_cache_page(&cache_key, &query_text, &search_area_text, &params_json_text, p) {
+            let res = if is_combined_dict {
+                fetch_combined_page(&cache_key, &query_text, &params_json_text, p)
+            } else {
+                fetch_and_cache_page(&cache_key, &query_text, &search_area_text, &params_json_text, p)
+            };
+            match res {
                 Ok(None) => {
                     // Cache key changed (new search), abort prefetch
                     debug("Prefetch aborted: cache key changed");
@@ -511,6 +833,9 @@ pub mod qobject {
         fn open_sutta_languages_window(self: &SuttaBridge);
 
         #[qinvokable]
+        fn open_dictionaries_window(self: &SuttaBridge);
+
+        #[qinvokable]
         fn open_library_window(self: &SuttaBridge);
 
         #[qinvokable]
@@ -740,6 +1065,12 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
+
+        #[qinvokable]
+        fn get_last_search_mode(self: &SuttaBridge, area: &QString) -> QString;
+
+        #[qinvokable]
+        fn set_last_search_mode(self: &SuttaBridge, area: &QString, mode: &QString);
 
         #[qinvokable]
         fn get_mobile_top_bar_margin(self: &SuttaBridge) -> i32;
@@ -1100,6 +1431,7 @@ impl qobject::SuttaBridge {
                     uid_suffix: None,
                     include_ms_mula: true,
                     include_comm_bold_definitions: true,
+                    dict_source_uids: None,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1306,6 +1638,122 @@ impl qobject::SuttaBridge {
 
         // Spawn a thread so Qt event loop is not blocked
         thread::spawn(move || {
+            // Combined+Dictionary is bridge-orchestrated: fan out DPD Lookup
+            // and Fulltext Match in parallel and serve a merged virtual stream
+            // through `fetch_combined_page`, with its own isolated cache.
+            // Detect that case up front and dispatch separately so the
+            // standard `RESULTS_PAGE_CACHE` flow stays single-mode.
+            let parsed_params = serde_json::from_str::<SearchParams>(&params_json_text)
+                .unwrap_or_default();
+            let is_combined_dict = search_area_text == "Dictionary"
+                && matches!(parsed_params.mode, SearchMode::Combined);
+
+            if is_combined_dict {
+                // PRD §6.6: distinct `|combined` suffix prevents any chance
+                // of colliding with `RESULTS_PAGE_CACHE` keys.
+                let cache_key = format!(
+                    "{}|{}|{}|combined",
+                    query_text, search_area_text, params_json_text
+                );
+
+                // Reset the combined cache cell if the key has changed (new
+                // search) or if it was never initialized. `fetch_combined_page`
+                // itself never resets — only this top-level entry does — so
+                // stale prefetcher threads from a previous search can't clobber
+                // the live cache while a cold-start join is in flight.
+                {
+                    let mut guard = COMBINED_CACHE.lock().unwrap();
+                    let needs_reset = match *guard {
+                        Some(ref c) => c.cache_key != cache_key,
+                        None => true,
+                    };
+                    if needs_reset {
+                        *guard = Some(CombinedCache {
+                            cache_key: cache_key.clone(),
+                            page_len: 0,
+                            dpd_buffer: Vec::new(),
+                            dpd_total: None,
+                            dpd_pages_fetched: 0,
+                            ft_buffer: Vec::new(),
+                            ft_total: None,
+                            ft_pages_fetched: 0,
+                        });
+                    }
+                }
+
+                match fetch_combined_page(&cache_key, &query_text, &params_json_text, page_num) {
+                    Ok(Some((results, total_hits, page_len))) => {
+                        let results_page_data = SearchResultPage {
+                            total_hits: total_hits as usize,
+                            page_len,
+                            page_num,
+                            results,
+                        };
+                        let json = serde_json::to_string(&results_page_data).unwrap_or_default();
+                        qt_thread.queue(move |mut qo| {
+                            qo.as_mut().results_page_ready(QString::from(json));
+                        }).unwrap();
+
+                        let total_pages = if page_len > 0 {
+                            (total_hits as usize).div_ceil(page_len)
+                        } else {
+                            0
+                        };
+
+                        if page_num + 1 < total_pages {
+                            let _ = fetch_combined_page(
+                                &cache_key,
+                                &query_text,
+                                &params_json_text,
+                                page_num + 1,
+                            );
+
+                            if page_num + 2 < total_pages {
+                                prefetch_pages(
+                                    cache_key.clone(),
+                                    query_text.clone(),
+                                    search_area_text.clone(),
+                                    params_json_text.clone(),
+                                    page_num + 2,
+                                    2,
+                                    total_pages,
+                                );
+                            }
+                        }
+
+                        info("SuttaBridge::results_page() end (combined)");
+                    }
+                    Ok(None) => {
+                        info("SuttaBridge::results_page() aborted (new search started; combined)");
+                    }
+                    Err(e) => {
+                        error(&e.to_string());
+                        // Only reset the cache if cold start never completed.
+                        // On a top-up failure (both totals already populated),
+                        // keep the partial buffers — the next user action
+                        // retries the same top-up path and previously-served
+                        // pages remain consistent.
+                        {
+                            let mut g = COMBINED_CACHE.lock().unwrap();
+                            let cold_start_failed = match g.as_ref() {
+                                Some(c) => c.cache_key != cache_key
+                                    || c.dpd_total.is_none()
+                                    || c.ft_total.is_none(),
+                                None => true,
+                            };
+                            if cold_start_failed {
+                                *g = None;
+                            }
+                        }
+                        let error_json = serde_json::json!({"error": format!("{}", e)}).to_string();
+                        qt_thread.queue(move |mut qo| {
+                            qo.as_mut().results_page_ready(QString::from(error_json));
+                        }).unwrap();
+                    }
+                }
+                return;
+            }
+
             // Build a cache key from the query, search area, and params.
             // CST mula/commentary settings are included in params_json.
             let cache_key = format!("{}|{}|{}", query_text, search_area_text, params_json_text);
@@ -1485,6 +1933,7 @@ impl qobject::SuttaBridge {
                 include_cst_commentary: true,
                 include_ms_mula: params.include_ms_mula,
                 include_bold_definitions: params.include_comm_bold_definitions,
+                dict_source_uids: params.dict_source_uids.clone(),
             };
 
             let result = with_fulltext_searcher(|searcher| {
@@ -2032,6 +2481,11 @@ impl qobject::SuttaBridge {
     pub fn open_sutta_languages_window(&self) {
         use crate::api::ffi;
         ffi::callback_open_sutta_languages_window();
+    }
+
+    pub fn open_dictionaries_window(&self) {
+        use crate::api::ffi;
+        ffi::callback_open_dictionaries_window();
     }
 
     pub fn open_library_window(&self) {
@@ -3113,6 +3567,14 @@ impl qobject::SuttaBridge {
     pub fn set_sutta_language_filter_key(self: Pin<&mut Self>, key: QString) {
         let app_data = get_app_data();
         app_data.set_sutta_language_filter_key(key.to_string());
+    }
+
+    pub fn get_last_search_mode(&self, area: &QString) -> QString {
+        QString::from(&get_app_data().get_last_search_mode(&area.to_string()))
+    }
+
+    pub fn set_last_search_mode(&self, area: &QString, mode: &QString) {
+        get_app_data().set_last_search_mode(&area.to_string(), &mode.to_string());
     }
 
     /// Get the mobile top bar margin value

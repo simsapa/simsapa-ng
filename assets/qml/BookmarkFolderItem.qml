@@ -140,8 +140,8 @@ ColumnLayout {
                     // Drag ghost for folder
                     Item {
                         id: folder_drag_ghost
-                        width: 1
-                        height: 1
+                        Layout.preferredWidth: 1
+                        Layout.preferredHeight: 1
 
                         property string drag_type: "folder"
                         property int drag_index: root.folder_index

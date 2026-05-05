@@ -9,6 +9,7 @@
 class SuttaSearchWindow;
 class DownloadAppdataWindow;
 class SuttaLanguagesWindow;
+class DictionariesWindow;
 class LibraryWindow;
 class ReferenceSearchWindow;
 class TopicIndexWindow;
@@ -26,6 +27,7 @@ class WindowManager : public QObject {
         void restore_last_session();
         DownloadAppdataWindow* create_download_appdata_window();
         SuttaLanguagesWindow* create_sutta_languages_window();
+        DictionariesWindow* create_dictionaries_window();
         LibraryWindow* create_library_window();
         ReferenceSearchWindow* create_reference_search_window();
         TopicIndexWindow* create_topic_index_window();
@@ -38,6 +40,7 @@ class WindowManager : public QObject {
         QList<SuttaSearchWindow*> sutta_search_windows;
         QList<DownloadAppdataWindow*> download_appdata_windows;
         QList<SuttaLanguagesWindow*> sutta_languages_windows;
+        QList<DictionariesWindow*> dictionaries_windows;
         QList<LibraryWindow*> library_windows;
         QList<ReferenceSearchWindow*> reference_search_windows;
         QList<TopicIndexWindow*> topic_index_windows;

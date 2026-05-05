@@ -14,7 +14,7 @@ use crate::db::dpd_models::*;
 use crate::db::DatabaseHandle;
 
 use crate::{get_app_data, get_create_simsapa_app_assets_path, normalize_path_for_sqlite};
-use crate::helpers::{compact_rich_text, word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text, bold_uid_sanitize};
+use crate::helpers::{compact_rich_text, word_uid, pali_to_ascii, strip_html, root_info_clean_plaintext, normalize_query_text, word_uid_sanitize};
 use crate::pali_stemmer::pali_stem;
 use crate::pali_sort::{pali_sort_key, sort_search_results_natural};
 use crate::types::SearchResult;
@@ -527,6 +527,24 @@ impl DpdDbHandle {
             .flatten()
     }
 
+    /// Distinct `bold_definitions.ref_code` values. Used as the
+    /// authoritative set of valid bold-definition `source_uid` terms in the
+    /// dict Tantivy index — they live in the DPD database, not in the
+    /// `dictionaries` / `dict_words` tables, so the dict-index reconcile
+    /// pass must consult this method to avoid classifying them as orphans.
+    pub fn list_distinct_bold_def_ref_codes(&self) -> Result<HashSet<String>> {
+        use crate::db::dpd_schema::bold_definitions::dsl as bd_dsl;
+
+        self.do_read(|db_conn| {
+            bd_dsl::bold_definitions
+                .select(bd_dsl::ref_code)
+                .distinct()
+                .load::<String>(db_conn)
+        })
+        .map(|v| v.into_iter().collect())
+        .context("list_distinct_bold_def_ref_codes failed")
+    }
+
     pub fn dpd_lookup_list(&self, query: &str) -> Vec<String> {
         match self.dpd_lookup(query, false, true, None, None) {
             Ok(res) => {
@@ -791,7 +809,7 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
     let mut seen: HashMap<(String, String), u32> = HashMap::new();
     let mut updates: Vec<(i32, String, String, String)> = Vec::with_capacity(rows.len());
     for r in &rows {
-        let bold_lc = bold_uid_sanitize(&r.bold).to_lowercase();
+        let bold_lc = word_uid_sanitize(&r.bold).to_lowercase();
         let ref_lc = r.ref_code.to_lowercase();
         let n = seen.entry((bold_lc.clone(), ref_lc.clone())).or_insert(0);
         *n += 1;

@@ -104,7 +104,7 @@ Loader {
         loader.item.is_reading_mode = Qt.binding(() => is_reading_mode);
         loader.item.data_json = Qt.binding(() => data_json);
         loader.item.visible = Qt.binding(() => loader.should_be_visible && loader.visible);
-        loader.item.page_loaded.connect(function() { loader.page_loaded(); });
+        (loader.item as SuttaHtmlView).page_loaded.connect(function() { loader.page_loaded(); });
     }
 
 }

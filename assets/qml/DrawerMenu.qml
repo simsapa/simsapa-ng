@@ -73,8 +73,8 @@ Drawer {
                             onLoaded: {
                                 if (item_loader.is_menu) {
                                     item_loader.item.action = Qt.binding(() => item_loader.model_item.action);
-                                    item_loader.item.connect_action();
-                                    item_loader.item.onAction_triggered.connect(control.close);
+                                    (item_loader.item as CMenuItem).connect_action();
+                                    (item_loader.item as CMenuItem).action_triggered.connect(control.close);
                                     /* item_loader.item.drawer_close_action = Qt.binding(() => control.drawer_close_action); */
                                 }
                             }

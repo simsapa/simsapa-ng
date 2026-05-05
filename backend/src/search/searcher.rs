@@ -586,16 +586,79 @@ impl FulltextSearcher {
 
         Self::add_uid_filters(subqueries, filters, schema, "uid", "uid_rev")?;
 
-        // Exclude bold-definition rows from dict-index queries when the
-        // caller opts out. Default `true` adds no constraint, so dict_words
-        // and bold rows are ranked together by BM25 in the unified index.
-        if !filters.include_bold_definitions {
-            let field = schema.get_field("is_bold_definition")?;
-            let term = Term::from_field_bool(field, true);
-            subqueries.push((
-                Occur::MustNot,
-                Box::new(TermQuery::new(term, IndexRecordOption::Basic)),
-            ));
+        // Combine the bold-definition gate with the dict_source_uids
+        // inclusion set. Bold rows are gated by `include_bold_definitions`;
+        // non-bold dict_words rows are restricted by `dict_source_uids`
+        // when supplied. The two are OR-ed under a Must clause so that:
+        //   - bold-only:    Some([]),          include_bold = true   -> only bold rows
+        //   - non-bold-only: Some([labels..]), include_bold = false  -> only those labels
+        //   - both: Some([labels..]),         include_bold = true   -> bold OR labels
+        //   - neither: Some([]),              include_bold = false  -> nothing matches
+        // When `dict_source_uids` is `None`, only the legacy bold gate applies.
+        let is_bold_field = schema.get_field("is_bold_definition")?;
+        let source_uid_field = schema.get_field("source_uid")?;
+
+        match &filters.dict_source_uids {
+            None => {
+                if !filters.include_bold_definitions {
+                    let term = Term::from_field_bool(is_bold_field, true);
+                    subqueries.push((
+                        Occur::MustNot,
+                        Box::new(TermQuery::new(term, IndexRecordOption::Basic)),
+                    ));
+                }
+            }
+            Some(set) => {
+                // Build a Should-of-MustClauses: at least one branch must match.
+                let mut shoulds: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();
+
+                if !set.is_empty() {
+                    // Branch A: NOT bold AND source_uid IN (set)
+                    let mut uid_disj: Vec<(Occur, Box<dyn tantivy::query::Query>)> =
+                        Vec::with_capacity(set.len());
+                    for src in set {
+                        if src.is_empty() { continue; }
+                        let term = Term::from_field_text(source_uid_field, src);
+                        uid_disj.push((
+                            Occur::Should,
+                            Box::new(TermQuery::new(term, IndexRecordOption::Basic)),
+                        ));
+                    }
+                    if !uid_disj.is_empty() {
+                        let non_bold = vec![
+                            (
+                                Occur::Must,
+                                Box::new(TermQuery::new(
+                                    Term::from_field_bool(is_bold_field, false),
+                                    IndexRecordOption::Basic,
+                                )) as Box<dyn tantivy::query::Query>,
+                            ),
+                            (Occur::Must, Box::new(BooleanQuery::new(uid_disj))),
+                        ];
+                        shoulds.push((Occur::Should, Box::new(BooleanQuery::new(non_bold))));
+                    }
+                }
+
+                if filters.include_bold_definitions {
+                    // Branch B: is_bold = true
+                    let term = Term::from_field_bool(is_bold_field, true);
+                    shoulds.push((
+                        Occur::Should,
+                        Box::new(TermQuery::new(term, IndexRecordOption::Basic)),
+                    ));
+                }
+
+                if shoulds.is_empty() {
+                    // No branch — force zero results via a contradiction.
+                    let term = Term::from_field_bool(is_bold_field, true);
+                    let must_bold = TermQuery::new(term.clone(), IndexRecordOption::Basic);
+                    let must_not_bold = TermQuery::new(term, IndexRecordOption::Basic);
+                    subqueries.push((Occur::Must, Box::new(must_bold)));
+                    subqueries.push((Occur::MustNot, Box::new(must_not_bold)));
+                } else {
+                    subqueries.push((Occur::Must, Box::new(BooleanQuery::new(shoulds))));
+                }
+            }
         }
 
         Ok(())
@@ -641,6 +704,7 @@ impl FulltextSearcher {
             page_number: None,
             score: Some(score),
             rank: None,
+            is_section_header: false,
         })
     }
 
@@ -672,6 +736,7 @@ impl FulltextSearcher {
             page_number: None,
             score: Some(score),
             rank: None,
+            is_section_header: false,
         })
     }
 
@@ -713,6 +778,7 @@ impl FulltextSearcher {
             page_number: None,
             score: Some(score),
             rank: None,
+            is_section_header: false,
         })
     }
 
@@ -749,6 +815,7 @@ impl FulltextSearcher {
             page_number: None,
             score: Some(score),
             rank: None,
+            is_section_header: false,
         })
     }
 
@@ -880,6 +947,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let result = searcher.debug_query("bhikkhave", &filters).unwrap();
@@ -918,6 +986,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         // Unbalanced quotes should cause a parse error but still return partial results
@@ -955,6 +1024,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         // "bhikkhūnaṁ" should stem differently than normalize
@@ -988,6 +1058,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
@@ -1025,6 +1096,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10, 0).unwrap();
@@ -1090,6 +1162,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10, 0).unwrap();
@@ -1118,6 +1191,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let result = searcher.debug_query("test", &filters).unwrap();
@@ -1197,6 +1271,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         // suffix "1.1" matches uids ending in "1.1" — only "an1.1/en/sujato" if we
@@ -1247,6 +1322,7 @@ mod tests {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         };
 
         let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();

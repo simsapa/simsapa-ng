@@ -22,6 +22,12 @@ pub struct SearchFilters {
     /// unified dict index. Only consulted by the dict path.
     #[serde(default = "default_true")]
     pub include_bold_definitions: bool,
+    /// Inclusion set for dict_words `source_uid` (a.k.a. `dict_label`).
+    /// `None` means no constraint. `Some([])` means no dict_words rows
+    /// match. Bold-definition rows are gated independently via
+    /// `include_bold_definitions`. Only consulted by the dict path.
+    #[serde(default)]
+    pub dict_source_uids: Option<Vec<String>>,
 }
 
 fn default_true() -> bool { true }
@@ -41,6 +47,7 @@ impl Default for SearchFilters {
             include_cst_commentary: true,
             include_ms_mula: true,
             include_bold_definitions: true,
+            dict_source_uids: None,
         }
     }
 }
