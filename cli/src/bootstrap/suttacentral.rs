@@ -377,12 +377,14 @@ fn res_is_ignored(doc: &Value) -> bool {
 /// - UIDs ending with '/none' (no author)
 /// - UIDs ending with '-blurbs' or '-name' (metadata, not suttas)
 /// - UIDs ending with '/than' or '/thanissaro' (use dhammatalks.org instead)
+/// - UID 'pli-tv-bu-pm/pli/vri' (suttacentral.net also redirects to pli-tv-bu-pm/en/brahmali; pli/ms is used instead)
 fn uid_is_ignored(uid: &str) -> bool {
     uid.ends_with("/none")
         || uid.ends_with("-blurbs")
         || uid.ends_with("-name")
         || uid.ends_with("/than")
         || uid.ends_with("/thanissaro")
+        || uid == "pli-tv-bu-pm/pli/vri"
 }
 
 /// Convert file paths in document to actual content
