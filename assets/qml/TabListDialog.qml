@@ -204,7 +204,8 @@ Dialog {
                             Label {
                                 text: {
                                     if (tab_item_delegate.table_name && tab_item_delegate.table_name === "dpd_headwords") {
-                                        return `${tab_item_delegate.sutta_title}/dpd`;
+                                        // "cakka-1/dpd" (spaces replaced with hyphens)
+                                        return `${tab_item_delegate.sutta_title.replace(/ /g, "-")}/dpd`;
                                     } else {
                                         return tab_item_delegate.item_uid;
                                     }
@@ -304,7 +305,8 @@ Dialog {
                         contentItem: Label {
                             text: {
                                 if (history_item_delegate.table_name && history_item_delegate.table_name === "dpd_headwords") {
-                                    return `${history_item_delegate.sutta_title}/dpd`;
+                                    // "cakka-1/dpd" (spaces replaced with hyphens)
+                                    return `${history_item_delegate.sutta_title.replace(/ /g, "-")}/dpd`;
                                 } else {
                                     return history_item_delegate.item_uid;
                                 }

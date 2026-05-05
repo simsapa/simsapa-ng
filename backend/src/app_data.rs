@@ -14,7 +14,7 @@ use crate::db::appdata_schema::suttas::dsl::*;
 use crate::logger::{warn, error, info, debug};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
-use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html, thebuddhaswords_net_convert_links_in_html};
+use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html, thebuddhaswords_net_convert_links_in_html, word_uid_sanitize};
 use crate::html_content::{blank_html_page, sutta_html_page};
 use crate::{get_app_globals, init_app_globals};
 
@@ -406,8 +406,19 @@ impl AppData {
             return crate::html_content::render_bold_definition(&bd, window_id, Some(body_class.clone()));
         }
 
-        // Try to get the word from database
-        let word = self.dbm.dictionaries.get_word(word_uid);
+        // Try to get the word from database. The uid in dict_words is sanitized
+        // (spaces replaced with dashes). Callers in QML often build the uid by
+        // concatenating a DPD lemma_1 (which contains spaces, e.g. "gacchati 1")
+        // with "/dpd", producing "gacchati 1/dpd". Fall back to a sanitized uid
+        // so those reconstructions still resolve to the dict_words row.
+        let word = self.dbm.dictionaries.get_word(word_uid).or_else(|| {
+            let sanitized = word_uid_sanitize(word_uid).to_lowercase();
+            if sanitized != word_uid {
+                self.dbm.dictionaries.get_word(&sanitized)
+            } else {
+                None
+            }
+        });
 
         lazy_static! {
             // (<link href=")(main.js)(") class="load_js" rel="preload" as="script">

@@ -1900,7 +1900,7 @@ ${main_text}
                                                 } else {
                                                     word = wordItem.modelData.original_word;
                                                 }
-                                                root.handle_open_dict_tab_fn(word + "/dpd"); // qmllint disable use-proper-function
+                                                root.handle_open_dict_tab_fn(word.replace(/ /g, "-") + "/dpd"); // qmllint disable use-proper-function
                                             }
                                         }
                                     }

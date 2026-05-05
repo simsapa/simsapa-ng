@@ -119,7 +119,8 @@ Item {
         }
 
         const api_url = SuttaBridge.get_api_url();
-        let url = `${api_url}/get_sutta_html_by_uid/${root.window_id}/${uid}/`;
+        const enc_uid = uid.split("/").map(encodeURIComponent).join("/");
+        let url = `${api_url}/get_sutta_html_by_uid/${root.window_id}/${enc_uid}/`;
         if (root.anchor && root.anchor.length > 0) {
             // Pass anchor as query parameter so server renders reference elements
             // Also append as URL fragment for browser scrolling
@@ -139,8 +140,8 @@ Item {
             // Results from DPD Lookup are in the form of
             // "item_uid": "25671/dpd", "table_name": "dpd_headwords", "sutta_title":"cakka 1"
             // SuttaBridge.get_word_html() needs the uid for dict_words table in dictionaries.sqlite3
-            // where the form is "uid": "cakka 1/dpd"
-            uid = `${root.sutta_title}/dpd`;
+            // where the form is "uid": "cakka-1/dpd" (spaces replaced with hyphens).
+            uid = `${root.sutta_title.replace(/ /g, "-")}/dpd`;
         }
 
         // For empty UID, use loadHtml to avoid 404 from API endpoint
@@ -151,7 +152,8 @@ Item {
         }
 
         const api_url = SuttaBridge.get_api_url();
-        web.url = `${api_url}/get_word_html_by_uid/${root.window_id}/${uid}/`;
+        const enc_uid = uid.split("/").map(encodeURIComponent).join("/");
+        web.url = `${api_url}/get_word_html_by_uid/${root.window_id}/${enc_uid}/`;
     }
 
     function load_book_spine_uid(spine_item_uid) {
@@ -160,13 +162,15 @@ Item {
         if (SuttaBridge.is_spine_item_pdf(spine_item_uid)) {
             // Load PDF viewer with file parameter
             const book_uid = SuttaBridge.get_book_uid_for_spine_item(spine_item_uid);
-            const pdf_url = `${api_url}/book_resources/${book_uid}/document.pdf`;
+            const enc_book_uid = book_uid.split("/").map(encodeURIComponent).join("/");
+            const pdf_url = `${api_url}/book_resources/${enc_book_uid}/document.pdf`;
             web.url = `${api_url}/assets/pdf-viewer/web/viewer.html?file=${encodeURIComponent(pdf_url)}`;
         } else {
             // Regular book content
             // Append anchor to URL for native browser scrolling (works on all platforms)
             // On same-page reloads, clear and re-set URL to trigger scroll
-            let url = `${api_url}/get_book_spine_item_html_by_uid/${root.window_id}/${spine_item_uid}/`;
+            const enc_spine_uid = spine_item_uid.split("/").map(encodeURIComponent).join("/");
+            let url = `${api_url}/get_book_spine_item_html_by_uid/${root.window_id}/${enc_spine_uid}/`;
             if (root.anchor && root.anchor.length > 0) {
                 // Ensure anchor has # prefix
                 let anchor_fragment = root.anchor.startsWith('#') ? root.anchor : `#${root.anchor}`;
@@ -210,8 +214,8 @@ Item {
 
     Component.onCompleted: {
         root.set_properties_from_data_json();
-        // Dict words, DPD headwords, and bold definitions all load via the word renderer
-        if (root.table_name === "dict_words" || root.table_name === "dpd_headwords" || root.table_name === "bold_definitions") {
+        // Dict words, DPD headwords/roots, and bold definitions all load via the word renderer
+        if (root.table_name === "dict_words" || root.table_name === "dpd_headwords" || root.table_name === "dpd_roots" || root.table_name === "bold_definitions") {
             root.load_word_uid(root.item_uid);
         } else if (root.table_name === "book_spine_items") {
             root.load_book_spine_uid(root.item_uid);
@@ -223,8 +227,8 @@ Item {
     // Load the sutta or dictionary word when the Loader in SuttaHtmlView updates data_json
     onData_jsonChanged: function() {
         root.set_properties_from_data_json();
-        // Dict words, DPD headwords, and bold definitions all load via the word renderer
-        if (root.table_name === "dict_words" || root.table_name === "dpd_headwords" || root.table_name === "bold_definitions") {
+        // Dict words, DPD headwords/roots, and bold definitions all load via the word renderer
+        if (root.table_name === "dict_words" || root.table_name === "dpd_headwords" || root.table_name === "dpd_roots" || root.table_name === "bold_definitions") {
             root.load_word_uid(root.item_uid);
         } else if (root.table_name === "book_spine_items") {
             root.load_book_spine_uid(root.item_uid);

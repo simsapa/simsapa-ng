@@ -35,7 +35,8 @@ Item {
         }
 
         const api_url = SuttaBridge.get_api_url();
-        web.url = `${api_url}/get_word_html_by_uid/${root.window_id}/${uid}/`;
+        const enc_uid = uid.split("/").map(encodeURIComponent).join("/");
+        web.url = `${api_url}/get_word_html_by_uid/${root.window_id}/${enc_uid}/`;
     }
 
     Component.onCompleted: {

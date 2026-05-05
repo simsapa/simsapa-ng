@@ -40,8 +40,8 @@ TabButton {
         Label {
             text: {
                 if (control.table_name && control.table_name === "dpd_headwords") {
-                    // "25671/dpd" -> "cakka 1/dpd"
-                    return `${control.sutta_title}/dpd`;
+                    // "25671/dpd" -> "cakka-1/dpd" (spaces replaced with hyphens)
+                    return `${control.sutta_title.replace(/ /g, "-")}/dpd`;
                 } else {
                     return control.item_uid;
                 }
