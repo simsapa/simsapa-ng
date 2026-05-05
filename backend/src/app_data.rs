@@ -432,6 +432,18 @@ impl AppData {
         match word {
             Some(word) => match word.definition_html {
                 Some(ref definition_html) => {
+                    // DPPN entries are stored as fragments wrapped in
+                    // `<div class="dppn">…</div>` (see bootstrap/dppn.rs). They
+                    // do not have `<html>/<head>/<body>` for the regex rewrite
+                    // path below to operate on, so route them through the
+                    // dedicated full-page wrapper instead.
+                    if word.dict_label == "dppn" {
+                        return crate::html_content::render_dppn_entry(
+                            &word,
+                            window_id,
+                            Some(body_class.clone()),
+                        );
+                    }
                     let mut js_extra = "".to_string();
                     js_extra.push_str(&format!(" const API_URL = '{}'; window.API_URL = API_URL;", &self.api_url));
                     js_extra.push_str(&format!(" const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id));

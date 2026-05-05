@@ -1146,6 +1146,52 @@ ${query_text}`;
         root.handle_query(query_text, 1);
     }
 
+    // Run a DPPN-only Fulltext Match query in the dictionary area by
+    // driving the search bar UI: switch to Dictionary, set Fulltext Match
+    // mode, populate the input, and solo-lock the DPPN dictionary so only
+    // DPPN results are returned. The user can then edit the query / unlock
+    // the filter as needed.
+    function run_dppn_dictionary_query(query: string) {
+        if (!query || query.length === 0) {
+            return;
+        }
+
+        // Reveal the side panel and activate the Results tab (idx 0) where
+        // dictionary search results are rendered.
+        if (!show_sidebar_btn.checked) {
+            show_sidebar_btn.checked = true;
+        }
+        rightside_tabs.setCurrentIndex(0);
+
+        // Switch to Dictionary search area. This rebinds the mode dropdown
+        // model and may fire an intermediate query with the previous input
+        // text — that's fine, our explicit handle_query() call at the end
+        // is the authoritative one.
+        search_bar_input.set_search_area("Dictionary");
+
+        // Force search mode to Fulltext Match — DPPN entries don't have
+        // canonical lookup uids matching the cross-reference text.
+        const dropdown = search_bar_input.search_mode_dropdown;
+        for (let i = 0; i < dropdown.count; i++) {
+            const label = dropdown.textAt(i);
+            if (label === "Fulltext Match" || label === "Fulltext") {
+                dropdown.currentIndex = i;
+                break;
+            }
+        }
+
+        // Solo-lock the DPPN dictionary in the Dictionaries panel so only
+        // DPPN rows contribute. toggle_lock no-ops if it's already locked
+        // to "dppn"; otherwise it switches the lock to "dppn".
+        if (dictionaries_panel.locked_label !== "dppn") {
+            dictionaries_panel.toggle_lock("dppn");
+        }
+
+        // Populate the search input and run the query.
+        search_bar_input.search_input.text = query;
+        root.handle_query(query, 1);
+    }
+
     function get_tab_with_web_item_key(web_item_key) {
         var tab = null;
         for (var i=0; i < tabs_row.children.length; i++) {

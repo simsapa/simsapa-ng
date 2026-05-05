@@ -150,6 +150,7 @@ pub mod ffi {
         fn callback_run_lookup_query(query_text: QString);
         fn callback_run_summary_query(window_id: QString, query_text: QString);
         fn callback_run_sutta_menu_action(window_id: QString, action: QString, query_text: QString);
+        fn callback_run_dppn_dictionary_query(window_id: QString, query: QString);
         fn callback_open_sutta_search_window(show_result_data_json: QString);
         fn callback_open_sutta_tab(window_id: QString, show_result_data_json: QString);
         fn callback_open_sutta_languages_window();
@@ -291,6 +292,22 @@ fn sutta_menu_action(request: Json<SuttaMenuRequest>) -> Status {
     ffi::callback_run_sutta_menu_action(ffi::QString::from(&request.window_id),
                                         ffi::QString::from(&request.action),
                                         ffi::QString::from(&request.text));
+    Status::Ok
+}
+
+#[derive(Deserialize)]
+struct DppnLookupRequest {
+    window_id: String,
+    query: String,
+}
+
+#[post("/dppn_lookup", data = "<request>")]
+fn dppn_lookup(request: Json<DppnLookupRequest>) -> Status {
+    info(&format!("dppn_lookup(): window_id: {}, query: {}",
+                  request.window_id, request.query));
+
+    ffi::callback_run_dppn_dictionary_query(ffi::QString::from(&request.window_id),
+                                            ffi::QString::from(&request.query));
     Status::Ok
 }
 
@@ -1210,6 +1227,7 @@ pub async extern "C" fn start_webserver() {
             summary_query,
             toggle_reading_mode,
             sutta_menu_action,
+            dppn_lookup,
             get_sutta_html_by_uid,
             get_word_html_by_uid,
             get_book_spine_item_html_by_uid,

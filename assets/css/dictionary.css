@@ -62,3 +62,43 @@ html.dark, body.dark {
   color: #8a919b;
   border-top-color: #3a4049;
 }
+
+/* DPPN (Dictionary of Pāli Proper Names) entry rendering.
+   Adapted from the source EPUB's style.css, scoped under .dppn so they
+   never leak into other dictionary entries. */
+
+.dppn {
+  padding-top: 50px;
+}
+
+.dppn .t14 { font-weight: bold; color: #002060; }
+.dppn .t15 { font-weight: bold; color: #0070c0; }
+.dppn .t17 { color: #7030a0; }
+.dppn .t18 { font-style: italic; }
+.dppn .t19 { font-weight: bold; color: #7030a0; }
+.dppn .t20 { color: #800000; }
+.dppn .t21 { font-family: "Times New Roman", serif; }
+.dppn .t25 { font-style: italic; color: #800000; }
+.dppn .t26 { font-style: italic; color: #7030a0; }
+.dppn .t28 { font-weight: bold; font-style: italic; color: #002060; }
+.dppn .t29 { color: #0070c0; }
+
+.dark .dppn .t14 { color: #8ab4f8; }
+.dark .dppn .t15 { color: #6ab0ff; }
+.dark .dppn .t17 { color: #c084fc; }
+.dark .dppn .t19 { color: #c084fc; }
+.dark .dppn .t20 { color: #e57373; }
+.dark .dppn .t25 { color: #e57373; }
+.dark .dppn .t26 { color: #c084fc; }
+.dark .dppn .t28 { color: #8ab4f8; }
+.dark .dppn .t29 { color: #6ab0ff; }
+
+.dppn a.dppn-ref {
+  text-decoration: underline;
+  cursor: pointer;
+  color: inherit;
+}
+
+.dark .dppn a.dppn-ref {
+  color: inherit;
+}

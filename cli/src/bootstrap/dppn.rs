@@ -3,12 +3,37 @@ use anyhow::{Result, Context};
 use diesel::prelude::*;
 use diesel::sql_types::{Text, Nullable, Integer};
 use diesel::SqliteConnection;
+use lazy_static::lazy_static;
+use regex::Regex;
 
 use simsapa_backend::logger;
 use simsapa_backend::db::dictionaries_models::{NewDictionary, NewDictWord};
 use simsapa_backend::db::dictionaries_schema::dictionaries;
 use simsapa_backend::helpers::compact_rich_text;
 use crate::bootstrap::create_database_connection;
+
+lazy_static! {
+    static ref T14_SPAN_RE: Regex =
+        Regex::new(r#"<span class="t14">([^<]*)</span>"#).unwrap();
+}
+
+/// Transform a DPPN `definition_html` fragment for storage:
+/// - Wrap the whole fragment in `<div class="dppn">…</div>`.
+/// - Rewrite every `<span class="t14">TEXT</span>` to a clickable
+///   `<a class="dppn-ref" href="ssp://dppn_lookup/{ENCODED}"><span class="t14">TEXT</span></a>`,
+///   where `ENCODED` is `TEXT.trim()` percent-encoded as UTF-8.
+/// Spans of other classes are left untouched.
+pub(crate) fn transform_dppn_definition_html(fragment: &str) -> String {
+    let rewritten = T14_SPAN_RE.replace_all(fragment, |caps: &regex::Captures| {
+        let inner = &caps[1];
+        let encoded = urlencoding::encode(inner.trim());
+        format!(
+            r#"<a class="dppn-ref" href="ssp://dppn_lookup/{}"><span class="t14">{}</span></a>"#,
+            encoded, inner
+        )
+    });
+    format!(r#"<div class="dppn">{}</div>"#, rewritten)
+}
 
 #[derive(QueryableByName)]
 struct SourceDictWord {
@@ -120,8 +145,11 @@ pub fn dppn_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<
                 phonetic: w.phonetic.clone(),
                 transliteration: w.transliteration.clone(),
                 meaning_order: w.meaning_order,
+                // `definition_plain` is derived from the original fragment;
+                // `compact_rich_text` strips tags so transform vs. original
+                // would yield the same plain text either way.
                 definition_plain: w.definition_html.as_ref().map(|html| compact_rich_text(html)),
-                definition_html: w.definition_html.clone(),
+                definition_html: w.definition_html.as_ref().map(|html| transform_dppn_definition_html(html)),
                 summary: w.summary.clone(),
                 synonyms: w.synonyms.clone(),
                 antonyms: w.antonyms.clone(),
@@ -146,4 +174,55 @@ pub fn dppn_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<
     logger::info(&format!("Successfully imported {} DPPN entries", total_inserted));
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::transform_dppn_definition_html;
+
+    #[test]
+    fn wrapper_present_once() {
+        let out = transform_dppn_definition_html("<p>hello</p>");
+        assert!(out.starts_with(r#"<div class="dppn">"#));
+        assert!(out.ends_with("</div>"));
+        assert_eq!(out.matches(r#"<div class="dppn">"#).count(), 1);
+    }
+
+    #[test]
+    fn rewrites_two_adjacent_t14_spans() {
+        let input = r#"<p>See <span class="t14">Ananda</span> and <span class="t14">Sariputta</span>.</p>"#;
+        let out = transform_dppn_definition_html(input);
+        assert!(out.contains(r#"<a class="dppn-ref" href="ssp://dppn_lookup/Ananda"><span class="t14">Ananda</span></a>"#));
+        assert!(out.contains(r#"<a class="dppn-ref" href="ssp://dppn_lookup/Sariputta"><span class="t14">Sariputta</span></a>"#));
+    }
+
+    #[test]
+    fn leaves_other_span_classes_untouched() {
+        let input = r#"<span class="t18">italic</span> and <span class="t17">purple</span>"#;
+        let out = transform_dppn_definition_html(input);
+        assert!(out.contains(r#"<span class="t18">italic</span>"#));
+        assert!(out.contains(r#"<span class="t17">purple</span>"#));
+        assert!(!out.contains("dppn-ref"));
+    }
+
+    #[test]
+    fn diacritics_percent_encoded() {
+        let input = r#"<span class="t14">Vaṅgīsa</span>"#;
+        let out = transform_dppn_definition_html(input);
+        // Vaṅgīsa → Va%E1%B9%85g%C4%ABsa (ṅ = U+1E45, ī = U+012B).
+        assert!(out.contains("ssp://dppn_lookup/Va%E1%B9%85g%C4%ABsa"),
+            "expected percent-encoded URL, got: {}", out);
+        // Inner span text retains diacritics.
+        assert!(out.contains(r#"<span class="t14">Vaṅgīsa</span>"#));
+    }
+
+    #[test]
+    fn trims_whitespace_before_encoding() {
+        let input = r#"<span class="t14">  Ananda  </span>"#;
+        let out = transform_dppn_definition_html(input);
+        assert!(out.contains("ssp://dppn_lookup/Ananda\""),
+            "URL should use trimmed text, got: {}", out);
+        // Inner display text preserves original spacing.
+        assert!(out.contains(r#"<span class="t14">  Ananda  </span>"#));
+    }
 }

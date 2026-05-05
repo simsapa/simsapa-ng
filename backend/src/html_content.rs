@@ -187,6 +187,34 @@ pub fn render_bold_definition(
     )
 }
 
+/// Render a DPPN dictionary entry as a complete HTML page.
+///
+/// The `definition_html` is already wrapped in `<div class="dppn">…</div>`
+/// at bootstrap time (see `cli/src/bootstrap/dppn.rs::transform_dppn_definition_html`),
+/// so this routes through `sutta_html_page` with `DICTIONARY_CSS` for the
+/// `.dppn` styling, plus `WINDOW_ID` injection so the click handlers in
+/// suttas.js can reach the owning window for the `ssp://dppn_lookup/` callback.
+pub fn render_dppn_entry(
+    word: &crate::db::dictionaries_models::DictWord,
+    window_id: &str,
+    body_class: Option<String>,
+) -> String {
+    let definition_html = word.definition_html.clone().unwrap_or_default();
+
+    let js_extra = format!(
+        " const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;",
+        window_id,
+    );
+
+    sutta_html_page(
+        &definition_html,
+        None,
+        Some(DICTIONARY_CSS.to_string()),
+        Some(js_extra),
+        body_class,
+    )
+}
+
 pub fn blank_html_page(body_class: Option<String>) -> String {
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);

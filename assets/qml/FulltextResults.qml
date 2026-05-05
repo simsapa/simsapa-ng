@@ -178,6 +178,9 @@ ColumnLayout {
             };
             results_model.append(result_data);
         }
+        // Reset scroll position — the model was cleared above, so any
+        // previous scroll offset references items that no longer exist.
+        fulltext_list.positionViewAtBeginning();
     }
 
     Text {
