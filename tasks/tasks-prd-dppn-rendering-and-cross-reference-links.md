@@ -4,10 +4,11 @@ PRD: [prd-dppn-rendering-and-cross-reference-links.md](./prd-dppn-rendering-and-
 
 ## Relevant Files
 
-- `cli/src/bootstrap/dppn.rs` — Bootstrap import; will gain the `<div class="dppn">` wrapper and `t14 → <a href="ssp://dppn_lookup/...">` rewrite before inserting into `dict_words.definition_html`.
-- `backend/src/html_content.rs` — Add `render_dppn_entry()` mirroring `render_bold_definition()`; routes through `sutta_html_page` with `DICTIONARY_CSS` and `WINDOW_ID` injection.
-- `backend/src/app_data.rs` — `render_word_uid_to_html()`: add a `dict_label == "dppn"` branch that calls the new renderer instead of the full-document rewrite path.
-- `backend/tests/test_dppn_render.rs` — New test verifying the bootstrap-style `<div class="dppn">` HTML renders inside the standard page chrome with `dictionary.css` and `simsapa.min.js` present.
+- `cli/src/bootstrap/dppn.rs` — Bootstrap import; gained `transform_dppn_definition_html()` which wraps fragments in `<div class="dppn">` and rewrites `t14` spans into `ssp://dppn_lookup/...` anchors. Includes unit tests for wrapper, multiple t14 spans, untouched other classes, diacritic encoding, and whitespace trimming.
+- `cli/Cargo.toml` — Added `urlencoding = "2.1"` for percent-encoding the cross-reference query in the URL.
+- `backend/src/html_content.rs` — Added `render_dppn_entry()` mirroring `render_bold_definition()`; routes through `sutta_html_page` with `DICTIONARY_CSS` and `WINDOW_ID` injection.
+- `backend/src/app_data.rs` — `render_word_html_by_uid()`: added a `dict_label == "dppn"` branch that calls the new renderer instead of the full-document rewrite path.
+- `backend/tests/test_dppn_render.rs` — New test verifying the bootstrap-style `<div class="dppn">` HTML renders inside the standard page chrome with `<style>`, suttas.js, and `WINDOW_ID` present, and not double-wrapped.
 - `backend/tests/test_dppn_bootstrap.rs` — New test for the bootstrap rewrite helper: input fragment with multiple `t14` spans → wrapped, links present, diacritics percent-encoded, other span classes untouched.
 - `assets/css/dictionary.css` — Add `.dppn`-scoped rules for `t14, t15, t17, t18, t19, t20, t21, t25, t26, t28, t29` plus dark-mode overrides and `a.dppn-ref` link styling.
 - `assets/sass/` — If the `.dppn` rules should originate in Sass (check existing convention), add the source partial there and let `make sass` regenerate `dictionary.css`. Otherwise edit `dictionary.css` directly.
@@ -27,19 +28,19 @@ PRD: [prd-dppn-rendering-and-cross-reference-links.md](./prd-dppn-rendering-and-
 
 ## Tasks
 
-- [ ] 1.0 Implement bootstrap-time DPPN HTML transformation
-  - [ ] 1.1 In `cli/src/bootstrap/dppn.rs`, add a private helper `transform_dppn_definition_html(fragment: &str) -> String` that wraps the input in `<div class="dppn">…</div>` and rewrites every `<span class="t14">TEXT</span>` to `<a class="dppn-ref" href="ssp://dppn_lookup/{ENCODED}"><span class="t14">TEXT</span></a>`, where `ENCODED` is `TEXT.trim()` percent-encoded as UTF-8 (use `urlencoding` or `percent-encoding` crate — check `bridges`/`backend` Cargo.toml for an already-present dep before adding a new one).
-  - [ ] 1.2 Use a single targeted regex (case-insensitive on the class attribute is unnecessary — the source is uniform) plus `regex::Captures` callback for the rewrite. Verify spans of other classes (`t15`, `t17`, `t18`, …) pass through untouched.
-  - [ ] 1.3 Wire the helper into the per-row mapping in `dppn_bootstrap()` so the stored `definition_html` is the transformed string. `definition_plain` should continue to be derived via `compact_rich_text()` (input either pre- or post-transform yields the same plain text — pick one, document choice in a one-liner if non-obvious).
-  - [ ] 1.4 Add `backend/tests/test_dppn_bootstrap.rs` (or a unit test inside `dppn.rs` if the helper is `pub(crate)`-accessible from tests) covering: (a) wrapper present once; (b) two adjacent `t14` spans both rewritten; (c) a `t18` span left untouched; (d) diacritics in query (`Vaṅgīsa`) percent-encoded; (e) leading/trailing whitespace inside the span trimmed before encoding.
-  - [ ] 1.5 `make build -B` clean. Re-run the bootstrap against a scratch DB and spot-check one DPPN row to confirm the wrapped HTML and links appear in `dictionaries.sqlite3.dict_words`.
+- [x] 1.0 Implement bootstrap-time DPPN HTML transformation
+  - [x] 1.1 In `cli/src/bootstrap/dppn.rs`, add a private helper `transform_dppn_definition_html(fragment: &str) -> String` that wraps the input in `<div class="dppn">…</div>` and rewrites every `<span class="t14">TEXT</span>` to `<a class="dppn-ref" href="ssp://dppn_lookup/{ENCODED}"><span class="t14">TEXT</span></a>`, where `ENCODED` is `TEXT.trim()` percent-encoded as UTF-8 (use `urlencoding` or `percent-encoding` crate — check `bridges`/`backend` Cargo.toml for an already-present dep before adding a new one).
+  - [x] 1.2 Use a single targeted regex (case-insensitive on the class attribute is unnecessary — the source is uniform) plus `regex::Captures` callback for the rewrite. Verify spans of other classes (`t15`, `t17`, `t18`, …) pass through untouched.
+  - [x] 1.3 Wire the helper into the per-row mapping in `dppn_bootstrap()` so the stored `definition_html` is the transformed string. `definition_plain` should continue to be derived via `compact_rich_text()` (input either pre- or post-transform yields the same plain text — pick one, document choice in a one-liner if non-obvious).
+  - [x] 1.4 Add `backend/tests/test_dppn_bootstrap.rs` (or a unit test inside `dppn.rs` if the helper is `pub(crate)`-accessible from tests) covering: (a) wrapper present once; (b) two adjacent `t14` spans both rewritten; (c) a `t18` span left untouched; (d) diacritics in query (`Vaṅgīsa`) percent-encoded; (e) leading/trailing whitespace inside the span trimmed before encoding.
+  - [x] 1.5 `make build -B` clean. Re-run the bootstrap against a scratch DB and spot-check one DPPN row to confirm the wrapped HTML and links appear in `dictionaries.sqlite3.dict_words`.
 
-- [ ] 2.0 Route DPPN entries through the standard page-chrome renderer
-  - [ ] 2.1 In `backend/src/html_content.rs`, add `pub fn render_dppn_entry(word: &DictWord, window_id: &str, body_class: Option<String>) -> String` that builds `js_extra` with `WINDOW_ID` (mirroring `render_bold_definition`) and calls `sutta_html_page(definition_html, None, Some(DICTIONARY_CSS.to_string()), Some(js_extra), body_class)`. The DPPN HTML is already wrapped in `<div class="dppn">…</div>` from bootstrap — do not double-wrap.
-  - [ ] 2.2 In `backend/src/app_data.rs::render_word_uid_to_html` (around line 432), add a branch *before* the existing full-document path: if `word.dict_label == "dppn"` and `word.definition_html.is_some()`, call `render_dppn_entry(&word, window_id, Some(body_class.clone()))` and return.
-  - [ ] 2.3 Confirm the existing non-DPPN branch (DPD `/dpd`, StarDict, etc.) is untouched — its regex-based `<html>/<head>/<body>` rewriting still runs for any `dict_label != "dppn"`.
-  - [ ] 2.4 Add `backend/tests/test_dppn_render.rs` that constructs a synthetic `DictWord` with `dict_label = "dppn"` and a small `<div class="dppn">…</div>` definition, calls `render_word_uid_to_html`, and asserts the output contains: `<style>` with `.dppn` rules from `DICTIONARY_CSS`, the `simsapa.min.js`-equivalent inline JS, and the `WINDOW_ID` const.
-  - [ ] 2.5 `cd backend && cargo test` passes (after all sub-tasks of 2.0 done).
+- [x] 2.0 Route DPPN entries through the standard page-chrome renderer
+  - [x] 2.1 In `backend/src/html_content.rs`, add `pub fn render_dppn_entry(word: &DictWord, window_id: &str, body_class: Option<String>) -> String` that builds `js_extra` with `WINDOW_ID` (mirroring `render_bold_definition`) and calls `sutta_html_page(definition_html, None, Some(DICTIONARY_CSS.to_string()), Some(js_extra), body_class)`. The DPPN HTML is already wrapped in `<div class="dppn">…</div>` from bootstrap — do not double-wrap.
+  - [x] 2.2 In `backend/src/app_data.rs::render_word_uid_to_html` (around line 432), add a branch *before* the existing full-document path: if `word.dict_label == "dppn"` and `word.definition_html.is_some()`, call `render_dppn_entry(&word, window_id, Some(body_class.clone()))` and return.
+  - [x] 2.3 Confirm the existing non-DPPN branch (DPD `/dpd`, StarDict, etc.) is untouched — its regex-based `<html>/<head>/<body>` rewriting still runs for any `dict_label != "dppn"`.
+  - [x] 2.4 Add `backend/tests/test_dppn_render.rs` that constructs a synthetic `DictWord` with `dict_label = "dppn"` and a small `<div class="dppn">…</div>` definition, calls `render_word_uid_to_html`, and asserts the output contains: `<style>` with `.dppn` rules from `DICTIONARY_CSS`, the `simsapa.min.js`-equivalent inline JS, and the `WINDOW_ID` const.
+  - [x] 2.5 `cd backend && cargo test` passes (after all sub-tasks of 2.0 done).
 
 - [ ] 3.0 Add `.dppn`-scoped styles to `dictionary.css`
   - [ ] 3.1 Decide whether to edit `assets/css/dictionary.css` directly or add a Sass partial under `assets/sass/` (check if `dictionary.css` is generated from a Sass source by looking at `make sass` output mapping). Use whichever is the canonical source.
