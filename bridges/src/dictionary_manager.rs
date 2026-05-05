@@ -205,6 +205,7 @@ impl qobject::DictionaryManager {
 
             match dictionary_manager_core::import_user_zip(&zip_path, &label, &lang, &on_progress) {
                 Ok(dictionary_id) => {
+                    get_app_data().refresh_dict_source_uid_caches();
                     let label_qs = QString::from(&label);
                     let _ = qt_thread.queue(move |mut qo| {
                         qo.as_mut().import_finished(dictionary_id, label_qs);
@@ -225,14 +226,20 @@ impl qobject::DictionaryManager {
 
     fn delete_dictionary(&self, dictionary_id: i32) -> QString {
         match dictionary_manager_core::delete_user_dictionary(dictionary_id) {
-            Ok(()) => QString::from("ok"),
+            Ok(()) => {
+                get_app_data().refresh_dict_source_uid_caches();
+                QString::from("ok")
+            }
             Err(msg) => QString::from(&msg),
         }
     }
 
     fn rename_label(&self, dictionary_id: i32, new_label: &QString) -> QString {
         match dictionary_manager_core::rename_user_dictionary(dictionary_id, &new_label.to_string()) {
-            Ok(()) => QString::from("ok"),
+            Ok(()) => {
+                get_app_data().refresh_dict_source_uid_caches();
+                QString::from("ok")
+            }
             Err(msg) => QString::from(&msg),
         }
     }
@@ -315,20 +322,14 @@ impl qobject::DictionaryManager {
     }
 
     fn list_shipped_source_uids(&self) -> QString {
-        let app_data = get_app_data();
-        match app_data.dbm.dictionaries.list_shipped_source_uids() {
-            Ok(set) => {
-                let v: Vec<&String> = set.iter().collect();
-                match serde_json::to_string(&v) {
-                    Ok(s) => QString::from(&s),
-                    Err(e) => {
-                        error(&format!("list_shipped_source_uids serialize: {}", e));
-                        QString::from("[]")
-                    }
-                }
-            }
+        // Reads from the in-memory AppSettings cache populated at init and
+        // refreshed on user-dict mutations. Avoids a SELECT DISTINCT scan
+        // against dict_words on every dictionary search.
+        let v = get_app_data().get_cached_shipped_source_uids();
+        match serde_json::to_string(&v) {
+            Ok(s) => QString::from(&s),
             Err(e) => {
-                error(&format!("list_shipped_source_uids: {}", e));
+                error(&format!("list_shipped_source_uids serialize: {}", e));
                 QString::from("[]")
             }
         }
@@ -341,20 +342,12 @@ impl qobject::DictionaryManager {
     }
 
     fn commentary_definitions_source_uids(&self) -> QString {
-        let app_data = get_app_data();
-        match app_data.dbm.dpd.list_distinct_bold_def_ref_codes() {
-            Ok(set) => {
-                let v: Vec<&String> = set.iter().collect();
-                match serde_json::to_string(&v) {
-                    Ok(s) => QString::from(&s),
-                    Err(e) => {
-                        error(&format!("commentary_definitions_source_uids serialize: {}", e));
-                        QString::from("[]")
-                    }
-                }
-            }
+        // Reads from the in-memory AppSettings cache populated at init.
+        let v = get_app_data().get_cached_commentary_definitions_source_uids();
+        match serde_json::to_string(&v) {
+            Ok(s) => QString::from(&s),
             Err(e) => {
-                error(&format!("commentary_definitions_source_uids: {}", e));
+                error(&format!("commentary_definitions_source_uids serialize: {}", e));
                 QString::from("[]")
             }
         }

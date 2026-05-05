@@ -452,6 +452,18 @@ ApplicationWindow {
         if (query_text_orig === 'uid:')
             return;
 
+        // Early-out on empty / too-short input BEFORE building search params.
+        // get_search_params_from_ui() / compute_dict_search_filter() trigger
+        // bridge calls (and historically a SELECT DISTINCT against dict_words),
+        // which is wasted work when no query will run.
+        if (!query_text_orig || query_text_orig.length === 0)
+            return;
+        // For non-uid queries the floor is min_length; uid queries can be
+        // shorter (e.g. "uid:mn8") so we only enforce a length>=3 prefilter
+        // here and re-check after uid resolution below.
+        if (query_text_orig.length < 3)
+            return;
+
         let params = root.get_search_params_from_ui();
         let search_area = search_bar_input.search_area;
 

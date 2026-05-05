@@ -275,13 +275,9 @@ Frame {
                     }
                 }
 
-                onModelChanged: {
-                    if (root.search_area === applied_area) {
-                        // is_wide toggle within same area: keep selection.
-                        return;
-                    }
-                    const saved_mode = SuttaBridge.get_last_search_mode(root.search_area);
+                function restore_for_current_area() {
                     const wide_list = search_mode_label_wide[root.search_area];
+                    const saved_mode = SuttaBridge.get_last_search_mode(root.search_area);
                     let idx = wide_list.indexOf(saved_mode);
                     if (idx === -1) idx = 0;
                     suppress_persist = true;
@@ -293,8 +289,28 @@ Frame {
                     root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                 }
 
+                Component.onCompleted: restore_for_current_area()
+
+                Connections {
+                    target: root
+                    // Driven by area change (not by model change), because
+                    // Suttas and Library share identical model labels — a
+                    // Suttas↔Library switch produces no model-change signal,
+                    // and a Dictionary→shorter-area switch may emit
+                    // model-change after ComboBox auto-clips currentIndex.
+                    function onSearch_areaChanged() {
+                        search_mode_dropdown.restore_for_current_area();
+                    }
+                }
+
                 onCurrentIndexChanged: {
                     if (suppress_persist) return;
+                    // Mid-transition between search areas: the model just
+                    // rebound and ComboBox auto-clipped currentIndex into the
+                    // new (shorter) list before the area-restore could run.
+                    // Ignore — the restore in onModelChanged will set the
+                    // correct index for the new area.
+                    if (applied_area !== root.search_area) return;
                     SuttaBridge.set_last_search_mode(root.search_area, get_text());
                     root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                 }

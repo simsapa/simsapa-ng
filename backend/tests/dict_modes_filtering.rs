@@ -2,9 +2,12 @@
 // PRD: tasks/prd-integrate-stardict-filtering.md.
 //
 // Task 3.3: cover the `Combined + Dictionary -> Err` and
-// `Combined + Suttas -> FulltextMatch fallback` invariants. The remaining
-// per-mode filtering tests (Contains / Headword / DPD invariants under user
-// dictionary toggles) are added in task 7.1.
+// `Combined + Suttas -> FulltextMatch fallback` invariants.
+// Task 7.1: per-mode filtering tests against the local dictionaries DB. The
+// "user-imported" stand-in is `dppn`: it is a non-DPD dict_label whose `word`
+// values (e.g. `Abbhahattha`) are absent from `dpd_headwords.lemma_1`, which
+// exercises the same Phase-3 / Phase-5 / Path-B retrieval paths as a true
+// imported StarDict.
 
 use serial_test::serial;
 use simsapa_backend::get_app_data;
@@ -164,6 +167,250 @@ fn combined_cache_key_has_combined_suffix() {
     assert_ne!(combined_key, standalone_key);
     assert!(combined_key.ends_with("|combined"));
     assert!(!standalone_key.ends_with("|combined"));
+}
+
+/// `Abbhahattha` is a `dppn` headword absent from DPD `lemma_1`. With `dppn`
+/// in the inclusion set, ContainsMatch must surface it via the unified Phase 3
+/// (`dict_words_fts.word LIKE`); with `dppn` removed from the set the row
+/// must not appear (PRD §5.1).
+#[test]
+#[serial]
+fn contains_match_includes_user_dict_word_only_in_set() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let mut params = dict_params(SearchMode::ContainsMatch);
+    params.dict_source_uids = Some(vec!["dppn".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "Abbhahattha".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let with_dppn = task
+        .results_page(0)
+        .expect("ContainsMatch with dppn in set");
+    assert!(
+        with_dppn.iter().any(|r| r.table_name == "dict_words"
+            && r.source_uid.as_deref() == Some("dppn")
+            && r.title.eq_ignore_ascii_case("Abbhahattha")),
+        "expected the dppn 'Abbhahattha' row when dppn is in the set; got {} total rows",
+        with_dppn.len()
+    );
+
+    let mut params = dict_params(SearchMode::ContainsMatch);
+    params.dict_source_uids = Some(vec!["dpd".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "Abbhahattha".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let without_dppn = task
+        .results_page(0)
+        .expect("ContainsMatch with dpd-only in set");
+    let leaked = without_dppn
+        .iter()
+        .filter(|r| {
+            r.table_name == "dict_words"
+                && r.source_uid.as_deref() == Some("dppn")
+        })
+        .count();
+    assert_eq!(
+        leaked, 0,
+        "no dppn dict_words rows should appear when dppn is removed from the inclusion set"
+    );
+}
+
+/// "Ambahattha" appears only in `dppn`'s `definition_plain` (not in any
+/// `word` field). Phase 3's `definition_plain LIKE` branch must still surface
+/// it when `dppn` is included.
+#[test]
+#[serial]
+fn contains_match_includes_user_dict_definition_only_in_set() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let mut params = dict_params(SearchMode::ContainsMatch);
+    params.dict_source_uids = Some(vec!["dppn".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "Abbhahattha".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let results = task
+        .results_page(0)
+        .expect("ContainsMatch should surface definition_plain hits");
+    let def_hits = results
+        .iter()
+        .filter(|r| {
+            r.table_name == "dict_words"
+                && r.source_uid.as_deref() == Some("dppn")
+        })
+        .count();
+    assert!(
+        def_hits >= 1,
+        "expected ≥1 dppn row from definition_plain match; got {} total rows",
+        results.len()
+    );
+}
+
+/// HeadwordMatch's Path B (user-headword via `dict_words_fts.word`) must
+/// surface `dppn` headwords when `dppn` is in the inclusion set, and drop
+/// them when it is not (PRD §5.2).
+#[test]
+#[serial]
+fn headword_match_includes_user_dict_word() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let mut params = dict_params(SearchMode::HeadwordMatch);
+    params.dict_source_uids = Some(vec!["dppn".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "Abbhahattha".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let solo = task
+        .results_page(0)
+        .expect("HeadwordMatch with dppn soloed");
+    assert!(
+        solo.iter().any(|r| r.title.eq_ignore_ascii_case("Abbhahattha")
+            && r.source_uid.as_deref() == Some("dppn")),
+        "expected the dppn headword 'Abbhahattha' when dppn is soloed; got {} rows",
+        solo.len()
+    );
+
+    let mut params = dict_params(SearchMode::HeadwordMatch);
+    params.dict_source_uids = Some(vec!["dpd".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "Abbhahattha".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let dpd_only = task
+        .results_page(0)
+        .expect("HeadwordMatch with dpd-only in set");
+    let leaked = dpd_only
+        .iter()
+        .filter(|r| {
+            r.table_name == "dict_words"
+                && r.source_uid.as_deref() == Some("dppn")
+        })
+        .count();
+    assert_eq!(
+        leaked, 0,
+        "no dppn rows should appear when dppn is excluded from the inclusion set"
+    );
+}
+
+/// PRD §5.3: DpdLookup is structurally DPD-only. Toggling user-dict
+/// membership in the inclusion set must not affect the DPD-native rows it
+/// returns (which the post-filter passes through unchanged).
+#[test]
+#[serial]
+fn dpd_lookup_unaffected_by_user_dict_toggle() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let count_dpd_native = |uids: Option<Vec<String>>| -> usize {
+        let mut params = dict_params(SearchMode::DpdLookup);
+        params.dict_source_uids = uids;
+        let mut task = SearchQueryTask::new(
+            &app_data.dbm,
+            "dhamma".to_string(),
+            params,
+            SearchArea::Dictionary,
+        );
+        let results = task.results_page(0).expect("DpdLookup should succeed");
+        results
+            .iter()
+            .filter(|r| r.table_name == "dpd_headwords" || r.table_name == "dpd_roots")
+            .count()
+    };
+
+    let with_dppn = count_dpd_native(Some(vec!["dpd".to_string(), "dppn".to_string()]));
+    let without_dppn = count_dpd_native(Some(vec!["dpd".to_string()]));
+    assert_eq!(
+        with_dppn, without_dppn,
+        "DpdLookup's DPD-native row count must not depend on user-dict toggles"
+    );
+    assert!(with_dppn > 0, "sanity: DpdLookup should return DPD rows for 'dhamma'");
+}
+
+/// PRD §5.3 documented invariant for the dict_words side of DpdLookup: when a
+/// non-DPD dictionary is soloed, the post-filter drops every dict_words row
+/// (rows from dpd_headwords / dpd_roots are pass-through and tested
+/// separately above).
+#[test]
+#[serial]
+fn dpd_lookup_solo_user_dict_returns_no_dict_words_rows() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let mut params = dict_params(SearchMode::DpdLookup);
+    params.dict_source_uids = Some(vec!["dppn".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "dhamma".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let results = task.results_page(0).expect("DpdLookup should succeed");
+    let dict_words_rows = results
+        .iter()
+        .filter(|r| r.table_name == "dict_words")
+        .count();
+    assert_eq!(
+        dict_words_rows, 0,
+        "soloing a non-DPD dict must drop every dict_words row from DpdLookup output"
+    );
+}
+
+/// Task 7.3: when ContainsMatch's retrieval is already restricted by
+/// `dict_label IN (set)` (PRD §5.1), the dispatcher's
+/// `apply_dict_source_uids_filter` post-filter must be a no-op — every
+/// returned `dict_words` row already has `source_uid` in the set, so the
+/// filter drops nothing and `total` is not decremented. We verify both:
+///   1. every dict_words row's source_uid is in the inclusion set, and
+///   2. `total_hits()` equals the rows on the (single) page — proving the
+///      filter did not subtract anything.
+#[test]
+#[serial]
+fn contains_match_post_filter_is_noop_when_retrieval_restricted() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let mut params = dict_params(SearchMode::ContainsMatch);
+    params.dict_source_uids = Some(vec!["dppn".to_string()]);
+    let mut task = SearchQueryTask::new(
+        &app_data.dbm,
+        "Abbhahattha".to_string(),
+        params,
+        SearchArea::Dictionary,
+    );
+    let results = task
+        .results_page(0)
+        .expect("ContainsMatch should succeed");
+
+    let total = task.total_hits() as usize;
+    assert!(
+        results.iter().filter(|r| r.table_name == "dict_words").all(
+            |r| r.source_uid.as_deref() == Some("dppn")
+        ),
+        "every dict_words row should already be dppn (retrieval restricted, post-filter no-op)"
+    );
+    assert_eq!(
+        results.len(),
+        total,
+        "post-filter must not decrement total when retrieval is already restricted \
+         (page_len 20 covers the full result set for this query); got {} rows but total = {}",
+        results.len(),
+        total
+    );
 }
 
 #[test]

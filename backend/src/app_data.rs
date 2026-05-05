@@ -37,11 +37,67 @@ impl AppData {
         let app_settings_cache = RwLock::new(dbm.appdata.get_app_settings().clone());
         let g = get_app_globals();
 
-        AppData {
+        let app_data = AppData {
             dbm,
             app_settings_cache,
             api_url: g.api_url.clone(),
+        };
+
+        // Warm the static dictionary source-uid caches if missing. Computing
+        // these requires SELECT DISTINCT scans against dict_words / dpd; the
+        // result is effectively constant for a session, so doing it once at
+        // init keeps the dictionary search hot path off the DB.
+        let needs_warm = {
+            let s = app_data.app_settings_cache.read().expect("Failed to read app settings");
+            s.cached_shipped_source_uids.is_empty()
+                || s.cached_commentary_definitions_source_uids.is_empty()
+        };
+        if needs_warm {
+            app_data.refresh_dict_source_uid_caches();
         }
+
+        app_data
+    }
+
+    /// Recompute the cached shipped + commentary-definitions source-uid lists
+    /// from the dictionaries / dpd DBs and persist them. Called at startup
+    /// (when the cache is empty) and after user-dict import / delete / rename.
+    pub fn refresh_dict_source_uid_caches(&self) {
+        let shipped: Vec<String> = match self.dbm.dictionaries.list_shipped_source_uids() {
+            Ok(set) => set.into_iter().collect(),
+            Err(e) => {
+                error(&format!("refresh_dict_source_uid_caches shipped: {}", e));
+                return;
+            }
+        };
+        let commentary: Vec<String> = match self.dbm.dpd.list_distinct_bold_def_ref_codes() {
+            Ok(set) => set.into_iter().collect(),
+            Err(e) => {
+                error(&format!("refresh_dict_source_uid_caches commentary: {}", e));
+                return;
+            }
+        };
+        let snapshot = {
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.cached_shipped_source_uids = shipped;
+            s.cached_commentary_definitions_source_uids = commentary;
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
+    }
+
+    /// Cached non-user-imported `dict_label` set (see PRD §8a). Reads from
+    /// the in-memory `AppSettings`; populated at init.
+    pub fn get_cached_shipped_source_uids(&self) -> Vec<String> {
+        self.app_settings_cache.read().expect("Failed to read app settings")
+            .cached_shipped_source_uids.clone()
+    }
+
+    /// Cached DPD bold-definition `ref_code` set used as commentary-definition
+    /// source uids. Reads from the in-memory `AppSettings`; populated at init.
+    pub fn get_cached_commentary_definitions_source_uids(&self) -> Vec<String> {
+        self.app_settings_cache.read().expect("Failed to read app settings")
+            .cached_commentary_definitions_source_uids.clone()
     }
 
     /// Reset the `app_settings` row in `appdata` to `AppSettings::default()` and
@@ -3272,12 +3328,22 @@ impl AppData {
     }
 
     pub fn set_last_search_mode(&self, area: &str, mode: &str) {
-        let snapshot = {
+        {
             let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
             s.search_last_mode.insert(area.to_string(), mode.to_string());
-            s.clone()
-        };
-        self.persist_app_settings(&snapshot);
+        }
+        // Persist to disk off the calling (UI) thread. The in-memory cache is
+        // already updated, so any subsequent get_last_search_mode reads the
+        // new value immediately.
+        std::thread::spawn(|| {
+            let app_data = crate::get_app_data();
+            let snapshot = app_data
+                .app_settings_cache
+                .read()
+                .expect("Failed to read app settings")
+                .clone();
+            app_data.persist_app_settings(&snapshot);
+        });
     }
 
     /// Export user-imported dictionaries to a self-contained SQLite snapshot

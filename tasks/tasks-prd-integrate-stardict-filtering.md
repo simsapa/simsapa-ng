@@ -119,7 +119,7 @@ Source PRD: [prd-integrate-stardict-filtering.md](./prd-integrate-stardict-filte
   - [x] 6.8 Run `make build -B`. Compilation + qmllint must succeed.
 
 - [ ] 7.0 Tests + final `make build -B` + docs/PROJECT_MAP update
-  - [ ] 7.1 Add `backend/tests/dict_modes_filtering.rs` with tests against the local appdata DB:
+  - [x] 7.1 Add `backend/tests/dict_modes_filtering.rs` with tests against the local appdata DB:
         - `contains_match_includes_user_dict_word_only_in_set`: search for a token present only in a user-imported dict's `word`; assert ≥1 result with the user dict in the inclusion set, 0 with it removed.
         - `contains_match_includes_user_dict_definition_only_in_set`: same for `definition_plain`.
         - `headword_match_includes_user_dict_word`: solo a user dict; expect only that dict's headword. With set `["dpd"]` only, expect zero user-dict rows.
@@ -127,18 +127,20 @@ Source PRD: [prd-integrate-stardict-filtering.md](./prd-integrate-stardict-filte
         - `dpd_lookup_solo_user_dict_returns_zero`: with a non-DPD dict soloed, DPD Lookup returns zero results (PRD §5.3 invariant).
         - `combined_mode_dictionary_returns_err_at_query_task`: `SearchMode::Combined + SearchArea::Dictionary` returns `Err` from `query_task.rs::results_page`.
         - `combined_mode_suttas_falls_back_to_fulltext`: `Combined + Suttas` matches `FulltextMatch + Suttas` for a known query.
-  - [ ] 7.2 Add Combined-specific tests in `bridges/src/sutta_bridge.rs`'s test module (or a new `bridges/tests/combined_dict_results.rs`):
+  - [x] 7.2 Add Combined-specific tests in `bridges/src/sutta_bridge.rs`'s test module (or a new `bridges/tests/combined_dict_results.rs`):
+        - **Infeasible as written**: `cd bridges && cargo test` fails to link because the bridges crate is a `staticlib`/`rlib` that depends on Qt + C++ symbols (`WindowManager::create_dictionaries_window`, etc.) supplied by the CMake build, not by `cargo test`. There is no existing test infrastructure in `bridges/src/` for the same reason.
+        - **What we did instead**: pinned the pure-logic invariants — cache-key shape (`combined_cache_key_has_combined_suffix`) and `dpd_enabled` gate (`combined_dpd_enabled_gate_logic`) — in `backend/tests/dict_modes_filtering.rs` where `cargo test` does work. The orchestration-level invariants (DPD-then-Fulltext ordering, page-boundary, no-DPD-top-up, cache isolation, error payload) require the bridge's static cache and the Qt thread machinery and are covered by manual PRD §8 items 6–10.
         - `combined_page_zero_concatenates_dpd_then_fulltext`: page 0 lists DPD rows first, then Fulltext rows, page-trimmed to `page_len`. `total == dpd_total + ft_total`.
         - `combined_page_boundary_spans_dpd_and_fulltext`: pick `page_len` and a query so combined page 1 spans the DPD/Fulltext boundary; verify ordering.
         - `combined_dpd_exhausted_no_dpd_top_up`: after DPD is exhausted, a later page does not invoke `run_sub_query` for DPD (instrument with a counter or debug log).
         - `combined_cache_isolated_from_results_page_cache`: run Combined, then standalone DPD Lookup with same query/params; verify the standalone call hits the backend (not `COMBINED_CACHE`) by checking call counts.
         - `combined_subquery_error_emits_error_payload`: simulate a sub-query failure and assert `results_page_ready` carries an error payload.
-  - [ ] 7.3 Add a `query_task.rs` unit test verifying `apply_dict_source_uids_filter` is a no-op when retrieval is already restricted by `dict_label IN (set)` (i.e. zero drops, no `total` decrement).
-  - [ ] 7.4 Run `cd backend && cargo test`. Per project memory, ignore pre-existing failures; flag only newly introduced ones.
-  - [ ] 7.5 Run `make build -B` one final time after all sub-tasks complete.
+  - [x] 7.3 Add a `query_task.rs` unit test verifying `apply_dict_source_uids_filter` is a no-op when retrieval is already restricted by `dict_label IN (set)` (i.e. zero drops, no `total` decrement). Implemented in `dict_modes_filtering.rs::contains_match_post_filter_is_noop_when_retrieval_restricted` (the post-filter is not separately exposed; observing `total_hits()` and source_uid invariants on a real ContainsMatch run is the equivalent check).
+  - [x] 7.4 Run `cd backend && cargo test`. All 11 `dict_modes_filtering` tests pass. Pre-existing failures in `test_query_task.rs` (`test_dict_word_uid_match`, `test_dict_word_search_contains_match`, `test_sutta_search_contains_match`) are uid-ordering assertions unrelated to filtering — they fail on the committed baseline, not from this work. Ignored per project memory.
+  - [x] 7.5 Run `make build -B` one final time after all sub-tasks complete.
   - [ ] 7.6 Manual UI verification (PRD §8 items 11–13; not automated):
         - Default mode: open Dictionary tab on a fresh install (or with `dict_search_last_mode = None`) → search-mode dropdown shows `Combined`. Switch to `DPD Lookup`, restart → opens on `DPD Lookup`.
         - Lock interaction: in each of Combined / Fulltext / Contains / Headword, lock each row (DPD, Commentary, each user dict). Verify only that row contributes to results.
         - No-imports baseline: with zero user dictionaries imported, run several known queries in Contains and Headword and confirm result counts are unchanged from current behaviour.
-  - [ ] 7.7 Update `PROJECT_MAP.md`: the `word` column added to `dict_words_fts`, the new `Combined` mode (bridge-orchestrated), the `CombinedCache` struct + `COMBINED_CACHE` static in `bridges/src/sutta_bridge.rs`, the `dict_label IN (set)` JOIN-based push-down on Contains/Headword, and the persisted `dict_search.last_mode` setting and bridge methods.
-  - [ ] 7.8 Update `docs/` with a brief user-facing note: "Combined" is the new default dictionary mode and shows DPD lookups followed by Fulltext matches in a single ranked list, paginated together. The Dictionaries panel checkboxes / lock affect Combined, Fulltext, Contains, and Headword. DPD Lookup remains DPD-only by design. Note the manual re-bootstrap of the dictionaries DB after Task 0 lands.
+  - [x] 7.7 Update `PROJECT_MAP.md`: the `word` column added to `dict_words_fts`, the new `Combined` mode (bridge-orchestrated), the `CombinedCache` struct + `COMBINED_CACHE` static in `bridges/src/sutta_bridge.rs`, the `dict_label IN (set)` JOIN-based push-down on Contains/Headword, and the persisted `search_last_mode` setting and bridge methods.
+  - [x] 7.8 Update `docs/` with a brief user-facing note in `docs/dict-words-fts5-implementation.md`: "Combined" is the new default dictionary mode and shows DPD lookups followed by Fulltext matches in a single ranked list, paginated together. The Dictionaries panel checkboxes / lock affect Combined, Fulltext, Contains, and Headword. DPD Lookup remains DPD-only by design. The re-bootstrap reminder is included.

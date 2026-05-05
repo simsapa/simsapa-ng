@@ -15,9 +15,10 @@ This document describes the implementation of FTS5 (Full-Text Search) indexes fo
 Integrated into the main dictionaries create_tables migration, this adds:
 
 - **FTS5 Virtual Table:** `dict_words_fts` with trigram tokenizer for efficient substring matching
-  - Columns: `dict_word_id` (UNINDEXED), `dict_label` (UNINDEXED), `definition_plain`
+  - Columns: `dict_word_id` (UNINDEXED), `language` (UNINDEXED), `dict_label` (UNINDEXED), `word` (indexed), `definition_plain` (indexed)
   - Uses `tokenize='trigram'` for substring search capability (like LIKE '%query%')
   - Uses `detail='none'` to reduce index size by not storing term positions
+  - Both indexed columns ride the same trigram index — `word` serves headword `LIKE '%term%'` push-downs (Contains Phase 5 and Headword Match Path B for user-imported dictionaries), `definition_plain` serves definition body matching (Contains Phase 3). `dict_label` is `UNINDEXED` in the FTS table, so `dict_label IN (set)` is filtered by JOIN to `dict_words` (rides `idx_dict_words_dict_label_source_uid`).
 
 - **Triggers:** Automatically keep FTS5 table in sync with `dict_words` table
   - `dict_words_fts_insert`: Syncs new insertions
@@ -182,6 +183,20 @@ For existing databases that need these optimizations:
 4. **FTS5 Configuration:**
    - Consider using BM25 ranking instead of simple LIKE matching
    - Could provide better relevance scoring for search results
+
+## Dictionary Search Modes (user-facing)
+
+The Dictionary search-mode dropdown offers five modes, all of which honour the per-dictionary checkboxes / lock controls in the Dictionaries panel — except DPD Lookup, which is intentionally DPD-only.
+
+- **Combined** *(default)* — runs DPD Lookup and Fulltext Match in parallel and shows DPD entries first followed by Fulltext matches in a single ranked, paginated list. The most useful starting point for a typical lookup.
+- **DPD Lookup** — DPD-only canonical view; user-imported StarDict dictionaries do not contribute. Soloing a non-DPD dictionary returns no `dict_words` rows.
+- **Fulltext Match** — Tantivy fulltext search across all enabled dictionaries.
+- **Contains Match** — substring match across both headwords (`word`) and definition bodies of every enabled dictionary.
+- **Headword Match** — substring match against the headword field of every enabled dictionary (DPD `lemma_1` plus user-dict `word` for non-DPD dictionaries).
+
+The last-used mode is persisted **per search area** (Suttas / Dictionary / Library); switching areas restores the saved mode for that area and triggers a fresh query.
+
+> **Re-bootstrap reminder.** The Combined / Contains / Headword paths rely on the `word` column being indexed in `dict_words_fts`. After pulling the change from `tasks/prd-integrate-stardict-filtering.md` §5.0, manually re-bootstrap the dictionaries DB once so the FTS table and its triggers are recreated with the new column. Verify with `PRAGMA table_info(dict_words_fts);`.
 
 ## Related Files
 
