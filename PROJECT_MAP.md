@@ -268,12 +268,13 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 
 - **Entry Point:** `main.cpp:6` - `start()` function called from `main()`
 - **Key Components:**
-  - `gui.cpp/.h` - Main GUI initialization and callbacks
+  - `gui.cpp/.h` - Main GUI initialization and callbacks; owns the global-hotkey lifecycle (`init_global_hotkey_manager`, `reregister_global_hotkeys_c`, aboutToQuit cleanup)
   - `window_manager.cpp/.h` - Multiple window management system
   - `sutta_search_window.cpp/.h` - Sutta search interface
   - `download_appdata_window.cpp/.h` - Data download interface
   - `system_palette.cpp/.h` - System theme integration
   - `errors.cpp/.h` - Custom exception handling
+  - `global_hotkey_manager.cpp/.h`, `global_hotkey_x11.cpp` - Cross-platform OS-level global hotkey manager (`Ctrl+C+C` double-tap state machine, `hotkeyActivated(int)` signal). Linux X11 backend uses `XRecord` on a worker QThread. Windows/macOS backends are stubs pending tasks 5/6. Settings: `backend/src/global_hotkeys.rs`; QML bridge: `bridges/src/global_hotkey_manager.rs`; UI: `assets/qml/GlobalHotkeysSection.qml` and `GlobalHotkeysWaylandNote.qml`. End-user docs: `docs/global-hotkeys.md`.
 
 #### `/src-ts/` - TypeScript Source
 

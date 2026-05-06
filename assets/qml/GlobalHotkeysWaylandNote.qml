@@ -25,7 +25,7 @@ ColumnLayout {
     }
 
     Label {
-        text: "Global Hotkeys"
+        text: "Global Keybindings (Hotkeys)"
         font.pointSize: root.pointSize + 2
         font.bold: true
         Layout.topMargin: 10

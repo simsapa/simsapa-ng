@@ -17,6 +17,17 @@ use simsapa_backend::get_app_data;
 use simsapa_backend::global_hotkeys::GlobalHotkeysConfig;
 use simsapa_backend::logger::error;
 
+unsafe extern "C" {
+    /// Defined in `cpp/gui.cpp`. Tells the C++ `GlobalHotkeyManager` to
+    /// unregister all OS-level grabs and re-register from current settings,
+    /// so that changes made via the QML settings UI take effect without an
+    /// app restart.
+    fn reregister_global_hotkeys_c();
+    /// Defined in `cpp/gui.cpp`. Clears the "registration error already
+    /// shown this session" flag.
+    fn reset_global_hotkey_error_flag_c();
+}
+
 #[cxx_qt::bridge]
 pub mod qobject {
     unsafe extern "C++" {
@@ -111,11 +122,16 @@ impl qobject::GlobalHotkeyManager {
             return;
         }
         get_app_data().set_global_hotkey_binding(&action_id, &sequence);
+        // Reset the one-shot "registration failed" dialog flag so a new
+        // sequence that conflicts surfaces a fresh dialog.
+        unsafe { reset_global_hotkey_error_flag_c(); }
+        unsafe { reregister_global_hotkeys_c(); }
         self.global_hotkeys_changed();
     }
 
     pub fn set_global_hotkeys_enabled(self: Pin<&mut Self>, enabled: bool) {
         get_app_data().set_global_hotkeys_enabled(enabled);
+        unsafe { reregister_global_hotkeys_c(); }
         self.global_hotkeys_changed();
     }
 

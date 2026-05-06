@@ -64,7 +64,7 @@ ColumnLayout {
     }
 
     Label {
-        text: "Global Hotkeys"
+        text: "Global Keybindings (Hotkeys)"
         font.pointSize: root.pointSize + 2
         font.bold: true
         Layout.topMargin: 10
@@ -72,7 +72,7 @@ ColumnLayout {
     }
 
     Label {
-        text: "OS-level shortcuts that trigger Simsapa from any other application. "
+        text: "OS-level keyboard shortcuts that trigger Simsapa from any other application. "
             + "Press the configured key sequence anywhere to look up the currently selected text."
         font.pointSize: root.pointSize - 2
         wrapMode: Text.WordWrap

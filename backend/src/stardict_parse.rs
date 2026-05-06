@@ -234,11 +234,10 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
 /// - `progress` receives stage updates; pass `|_| {}` for no-op.
 /// - `indexed_at` is always set to `NULL` so the next startup picks the
 ///   dictionary up for re-indexing.
-/// `physical_stem` is the basename of the `.ifo`/`.idx`/`.dict` files inside
-/// `unzipped_dir` (i.e. how the StarDict archive names them). `new_dict_label`
-/// is the logical label stored on the `dictionaries` row and used as the
-/// `{word}/{label}` uid suffix; the two may differ when the user picks a custom
-/// label at import time.
+/// - `physical_stem` is the basename of the `.ifo`/`.idx`/`.dict` files inside
+///   `unzipped_dir` (i.e. how the StarDict archive names them).
+/// - `new_dict_label` is the logical label stored on the `dictionaries` row and used as the
+///   `{word}/{label}` uid suffix; the two may differ when the user picks a custom label at import time.
 pub fn import_stardict_as_new(
     unzipped_dir: &Path,
     lang: &str,

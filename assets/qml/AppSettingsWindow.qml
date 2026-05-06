@@ -790,7 +790,7 @@ ApplicationWindow {
                         }
 
                         Label {
-                            text: "Keybindings"
+                            text: "Local Keybindings"
                             font.pointSize: root.pointSize + 2
                             font.bold: true
                             Layout.topMargin: 10
@@ -798,7 +798,7 @@ ApplicationWindow {
                         }
 
                         Label {
-                            text: "Click a keyboard shortcut to edit, or use [+] to add additional shortcuts."
+                            text: "Click on a keyboard shortcut to edit, or use [+] to add additional shortcuts. These keyboard shortcuts work when Simsapa is the focused (active) window."
                             font.pointSize: root.pointSize - 2
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
