@@ -23,6 +23,8 @@ extern "C++" {
     void callback_open_in_lookup_window(QString result_data_json);
     void callback_open_chanting_practice_window(QString window_id);
     void callback_open_chanting_review_window(QString window_id, QString section_uid);
+    /// Connected to GlobalHotkeyManager::hotkeyActivated.
+    void callback_global_hotkey_activated(int handle);
 }
 
 void open_sutta_search_window(QString query_text = "");

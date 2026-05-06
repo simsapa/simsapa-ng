@@ -79,6 +79,8 @@ fn main() {
         "../assets/qml/DictionaryEditDialog.qml",
         "../assets/qml/DictionarySearchDictionariesPanel.qml",
         "../assets/qml/DictionaryInfoDialog.qml",
+        "../assets/qml/GlobalHotkeysSection.qml",
+        "../assets/qml/GlobalHotkeysWaylandNote.qml",
     ];
 
     let builder = CxxQtBuilder::new()
@@ -100,6 +102,7 @@ fn main() {
                         "src/prompt_manager.rs",
                         "src/clipboard_manager.rs",
                         "src/dictionary_manager.rs",
+                        "src/global_hotkey_manager.rs",
                 ],
                 qml_files: &qml_files,
                 ..Default::default()

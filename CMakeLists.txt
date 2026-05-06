@@ -200,7 +200,41 @@ list(APPEND cpp_files
     cpp/reference_search_window.cpp
     cpp/topic_index_window.cpp
     cpp/chanting_practice_window.cpp
-    cpp/chanting_review_window.cpp)
+    cpp/chanting_review_window.cpp
+    cpp/global_hotkey_manager.cpp)
+
+# Linux X11 backend for the global hotkey manager. Detect the X11 dev libs
+# via pkg-config; if present, define WITH_X11 and pull in the X11 / Xtst
+# (XRecord) libraries. Skip on Android (no X11) and other non-Linux
+# platforms. The X11-specific source compiles to an empty TU when WITH_X11
+# is not defined.
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(X11 QUIET x11 xtst)
+    endif()
+    if(X11_FOUND)
+        list(APPEND cpp_files cpp/global_hotkey_x11.cpp)
+        message(STATUS "GlobalHotkeyManager: X11 backend enabled")
+    else()
+        message(STATUS "GlobalHotkeyManager: X11 dev libs not found; X11 backend disabled")
+    endif()
+endif()
+
+# Windows backend for the global hotkey manager. Uses RegisterHotKey +
+# SendInput; no extra link libraries beyond user32 (linked by default).
+if(WIN32)
+    list(APPEND cpp_files cpp/global_hotkey_win.cpp)
+    message(STATUS "GlobalHotkeyManager: Windows backend enabled")
+endif()
+
+# macOS backend for the global hotkey manager. Uses Carbon RegisterEventHotKey
+# + the Accessibility API + CGEventPost; links Carbon, AppKit, and
+# ApplicationServices (see the target_link_libraries block further down).
+if(APPLE AND NOT IOS)
+    list(APPEND cpp_files cpp/global_hotkey_mac.mm)
+    message(STATUS "GlobalHotkeyManager: macOS backend enabled")
+endif()
 
 list(APPEND app_files ${cpp_files} ${icons})
 
@@ -275,12 +309,24 @@ target_link_libraries(simsapadhammareader
         ${qt_modules}
     )
 
-# Link SystemConfiguration framework on macOS (required by Rust dependencies)
+# Link SystemConfiguration framework on macOS (required by Rust dependencies),
+# plus Carbon / AppKit / ApplicationServices for the global hotkey backend
+# (RegisterEventHotKey, [NSWorkspace openURL:], AXIsProcessTrusted, etc.).
 if(APPLE AND NOT IOS)
     target_link_libraries(simsapadhammareader
         PUBLIC
             "-framework SystemConfiguration"
+            "-framework Carbon"
+            "-framework AppKit"
+            "-framework ApplicationServices"
     )
+endif()
+
+# Linux X11 hotkey backend: link X11 + Xtst (XRecord lives in libXtst).
+if(UNIX AND NOT APPLE AND NOT ANDROID AND X11_FOUND)
+    target_compile_definitions(simsapadhammareader PRIVATE WITH_X11)
+    target_include_directories(simsapadhammareader PRIVATE ${X11_INCLUDE_DIRS})
+    target_link_libraries(simsapadhammareader PUBLIC ${X11_LIBRARIES})
 endif()
 
 # Link bcrypt library on Windows (required by Rust getrandom crate)

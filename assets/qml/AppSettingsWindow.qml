@@ -176,6 +176,12 @@ ApplicationWindow {
         }
     }
 
+    // Helper instance used by the Keybindings tab to detect Wayland and to
+    // share state with the embedded GlobalHotkeysSection.
+    GlobalHotkeyManager {
+        id: global_hotkey_helper
+    }
+
     // Keybinding capture dialog
     KeybindingCaptureDialog {
         id: keybinding_capture_dialog
@@ -759,8 +765,32 @@ ApplicationWindow {
                         width: keybindings_scrollview.availableWidth - 20
                         spacing: 10
 
+                        // Global Hotkeys section (above the in-app keybindings).
+                        // On Wayland show only the localhost-API workaround note,
+                        // since OS-level hotkey registration is not feasible.
+                        GlobalHotkeysSection {
+                            visible: !global_hotkey_helper.is_wayland()
+                            pointSize: root.pointSize
+                            top_bar_margin: root.top_bar_margin
+                            Layout.fillWidth: true
+                        }
+
+                        GlobalHotkeysWaylandNote {
+                            visible: global_hotkey_helper.is_wayland()
+                            pointSize: root.pointSize
+                            Layout.fillWidth: true
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 1
+                            Layout.topMargin: 8
+                            Layout.bottomMargin: 8
+                            color: palette.mid
+                        }
+
                         Label {
-                            text: "Keybindings"
+                            text: "Local Keybindings"
                             font.pointSize: root.pointSize + 2
                             font.bold: true
                             Layout.topMargin: 10
@@ -768,7 +798,7 @@ ApplicationWindow {
                         }
 
                         Label {
-                            text: "Click a keyboard shortcut to edit, or use [+] to add additional shortcuts."
+                            text: "Click on a keyboard shortcut to edit, or use [+] to add additional shortcuts. These keyboard shortcuts work when Simsapa is the focused (active) window."
                             font.pointSize: root.pointSize - 2
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true

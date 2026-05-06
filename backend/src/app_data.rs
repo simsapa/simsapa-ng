@@ -14,6 +14,7 @@ use crate::db::appdata_schema::suttas::dsl::*;
 use crate::logger::{warn, error, info, debug};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
+use crate::global_hotkeys::GlobalHotkeysConfig;
 use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html, thebuddhaswords_net_convert_links_in_html, word_uid_sanitize};
 use crate::html_content::{blank_html_page, sutta_html_page};
 use crate::{get_app_globals, init_app_globals};
@@ -3305,6 +3306,40 @@ impl AppData {
         if let Err(e) = res {
             error(&format!("Failed to update app settings: {}", e));
         }
+    }
+
+    /// Snapshot of the in-memory global hotkeys config (a sub-struct of
+    /// `AppSettings`, persisted alongside `app_keybindings`).
+    pub fn get_global_hotkeys(&self) -> GlobalHotkeysConfig {
+        self.app_settings_cache
+            .read()
+            .expect("Failed to read app settings")
+            .global_hotkeys
+            .clone()
+    }
+
+    pub fn set_global_hotkeys_enabled(&self, enabled: bool) {
+        let snapshot = {
+            let mut s = self
+                .app_settings_cache
+                .write()
+                .expect("Failed to write app settings");
+            s.global_hotkeys.set_enabled(enabled);
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
+    }
+
+    pub fn set_global_hotkey_binding(&self, action_id: &str, sequence: &str) {
+        let snapshot = {
+            let mut s = self
+                .app_settings_cache
+                .write()
+                .expect("Failed to write app settings");
+            s.global_hotkeys.set_binding(action_id, sequence);
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
     }
 
     pub fn get_dpd_enabled(&self) -> bool {

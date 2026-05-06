@@ -27,6 +27,13 @@
 #include "errors.h"
 #include "window_manager.h"
 #include "sutta_search_window.h"
+#include "global_hotkey_manager.h"
+
+#include <QClipboard>
+#include <QKeySequence>
+#include <QMessageBox>
+#include <QRegularExpression>
+#include <QTimer>
 
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
@@ -49,13 +56,19 @@ extern "C" void dotenv_c();
 extern "C" bool find_port_set_env_c();
 
 extern "C" void log_info_c(const char* msg);
+extern "C" void log_error_c(const char* msg);
 extern "C" void log_info_with_options_c(const char* msg, bool start_new);
+
+extern "C" bool global_hotkeys_enabled_c();
+extern "C" char* get_global_hotkey_dictionary_lookup_c();
 
 struct AppGlobals {
     static WindowManager* manager;
+    static GlobalHotkeyManager* global_hotkey_manager;
 };
 
 WindowManager* AppGlobals::manager = nullptr;
+GlobalHotkeyManager* AppGlobals::global_hotkey_manager = nullptr;
 
 void callback_run_lookup_query(QString query_text) {
   emit AppGlobals::manager->signal_run_lookup_query(query_text);
@@ -123,6 +136,155 @@ void callback_toggle_reading_mode(QString window_id, bool is_active) {
 
 void callback_open_in_lookup_window(QString result_data_json) {
   emit AppGlobals::manager->signal_open_in_lookup_window(result_data_json);
+}
+
+/// Sanitize the captured selection: strip control chars, collapse whitespace,
+/// trim, and cap at 200 characters per PRD §4.5.
+static QString sanitize_lookup_query(const QString& raw) {
+  QString s = raw;
+  s.replace(QRegularExpression("[\\r\\n\\t]+"), " ");
+  s.replace(QRegularExpression("\\s+"), " ");
+  s = s.trimmed();
+  if (s.length() > 200) {
+    s.truncate(200);
+  }
+  return s;
+}
+
+/// Run the dictionary lookup activation pipeline. The hotkey may have fired
+/// just before the foreground app populated the clipboard with its own copy
+/// (for `Ctrl+C+C` the second `C` is the user's own copy keystroke), so we
+/// give X a brief moment to settle before reading.
+static void run_global_hotkey_lookup(int handle) {
+  Q_UNUSED(handle);
+  // ~80 ms is conservative on X11; <50 ms is usually enough. Single-shot timer
+  // avoids blocking the GUI thread.
+  QTimer::singleShot(80, qApp, [](){
+    QClipboard* clipboard = QGuiApplication::clipboard();
+    if (!clipboard) return;
+    QString raw = clipboard->text(QClipboard::Clipboard);
+    QString query = sanitize_lookup_query(raw);
+    if (query.isEmpty()) {
+      log_info_c("global_hotkey: clipboard empty after sanitize, aborting");
+      return;
+    }
+    log_info_c(QString("global_hotkey: running dictionary lookup for %1 chars")
+               .arg(query.length()).toUtf8().constData());
+    if (AppGlobals::manager) {
+      // run_lookup_query in WindowManager creates/reuses the lookup window,
+      // shows + raises it, and triggers the QML-side run_lookup_query()
+      // which sets search area = Dictionary and runs the search.
+      emit AppGlobals::manager->signal_run_lookup_query(query);
+    }
+  });
+}
+
+void callback_global_hotkey_activated(int handle) {
+  log_info_c(QString("global_hotkey_activated: handle=%1").arg(handle).toUtf8().constData());
+  run_global_hotkey_lookup(handle);
+}
+
+// One-time error dialog suppression flag (PRD §8.5/§8.6). Cleared whenever
+// the user changes the configured sequence so a fresh conflict surfaces a
+// fresh dialog.
+static bool s_global_hotkey_error_shown = false;
+
+/// Show a platform-appropriate one-time error dialog when registerHotkey()
+/// fails. Recorded in `s_global_hotkey_error_shown` for the lifetime of the
+/// session (or until the user changes the sequence).
+static void show_global_hotkey_registration_error(const QString& sequence) {
+  if (s_global_hotkey_error_shown) return;
+  s_global_hotkey_error_shown = true;
+
+  QString detail;
+#if defined(Q_OS_LINUX)
+  detail = "On Linux, make sure your X server has the RECORD extension enabled "
+           "and that no other application is grabbing the same key combination.";
+#elif defined(Q_OS_WIN)
+  detail = "On Windows, the key combination may already be reserved by another "
+           "application. Try a different sequence.";
+#elif defined(Q_OS_MACOS)
+  detail = "On macOS, ensure that Simsapa has Accessibility permission, and that "
+           "the key combination isn't already used by another application.";
+#else
+  detail = "Global hotkeys are not supported on this platform.";
+#endif
+
+  QMessageBox::critical(nullptr,
+    QStringLiteral("Global hotkey registration failed"),
+    QStringLiteral("Could not register the global hotkey \"%1\".\n\n%2")
+      .arg(sequence, detail));
+}
+
+/// Read the configured sequence from settings, register it with the C++
+/// manager, and surface a one-time error dialog on failure. Safe to call
+/// repeatedly (it does NOT call unregisterAll() — the caller is responsible
+/// for that ordering when re-registering after a settings change).
+static void register_dictionary_lookup_from_settings() {
+  auto* m = AppGlobals::global_hotkey_manager;
+  if (!m) return;
+  if (!global_hotkeys_enabled_c()) {
+    log_info_c("global_hotkeys: disabled in settings, manager idle");
+    return;
+  }
+  if (!m->isInitialized()) {
+    log_error_c("global_hotkeys: platform backend not available (Wayland?), skipping registration");
+    return;
+  }
+  char* seq_c = get_global_hotkey_dictionary_lookup_c();
+  if (!seq_c) {
+    log_info_c("global_hotkeys: no dictionary_lookup binding configured");
+    return;
+  }
+  QString seq = QString::fromUtf8(seq_c);
+  free_rust_string(seq_c);
+
+  // QKeySequence parses '+' as the modifier separator only. The user-facing
+  // double-tap form "Ctrl+C+C" must be converted to Qt's chord-separator
+  // form "Ctrl+C, C" first.
+  const QString normalized = GlobalHotkeyManager::normalizeSequenceString(seq);
+  QKeySequence ks(normalized);
+  if (m->registerHotkey(ks, /*handle*/ 0)) {
+    log_info_c(QString("global_hotkeys: registered dictionary_lookup as %1 (parsed as %2)")
+               .arg(seq, normalized).toUtf8().constData());
+  } else {
+    log_error_c(QString("global_hotkeys: failed to register %1 (normalized: %2)")
+                .arg(seq, normalized).toUtf8().constData());
+    show_global_hotkey_registration_error(seq);
+  }
+}
+
+/// Construct the GlobalHotkeyManager and, if enabled in settings, register
+/// the configured `dictionary_lookup` sequence. Connects the activation
+/// signal to the lookup pipeline. Safe to call once from start() after
+/// QApplication has been constructed.
+static void init_global_hotkey_manager(QApplication* app) {
+  if (AppGlobals::global_hotkey_manager) return;
+
+  auto* m = new GlobalHotkeyManager(app);
+  AppGlobals::global_hotkey_manager = m;
+
+  QObject::connect(m, &GlobalHotkeyManager::hotkeyActivated,
+                   m, [](int handle){ callback_global_hotkey_activated(handle); },
+                   Qt::QueuedConnection);
+
+  register_dictionary_lookup_from_settings();
+}
+
+/// FFI: invoked by the Rust bridge when global-hotkey settings change so the
+/// C++ manager unregisters old grabs and re-registers from current settings —
+/// no app restart required (PRD §4.7 / task 8.3).
+extern "C" void reregister_global_hotkeys_c() {
+  auto* m = AppGlobals::global_hotkey_manager;
+  if (!m) return;
+  m->unregisterAll();
+  register_dictionary_lookup_from_settings();
+}
+
+/// FFI: clears the "registration error already shown this session" flag so a
+/// fresh attempt with a new sequence can surface a fresh dialog (task 8.6).
+extern "C" void reset_global_hotkey_error_flag_c() {
+  s_global_hotkey_error_shown = false;
 }
 
 int start(int argc, char* argv[]) {
@@ -297,6 +459,22 @@ int start(int argc, char* argv[]) {
 
   // Restore last session if enabled
   AppGlobals::manager->restore_last_session();
+
+  // Construct and (if enabled in settings) register the OS-level global
+  // hotkey for dictionary lookup. Created after the first sutta window so
+  // that activations have a window to deliver to. Lifetime: parented to the
+  // QApplication, destroyed on app shutdown which unregisters X grabs.
+  init_global_hotkey_manager(&app);
+
+  // Release OS-level global hotkey grabs cleanly on shutdown (task 8.4).
+  // Connected before the session-save handler so grabs are released even if
+  // the latter throws.
+  QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+    if (AppGlobals::global_hotkey_manager) {
+      log_info_c("aboutToQuit: unregistering global hotkeys");
+      AppGlobals::global_hotkey_manager->unregisterAll();
+    }
+  });
 
   // Save last session on exit
   QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
