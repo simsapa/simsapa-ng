@@ -76,6 +76,10 @@ pub struct AppSettings {
     pub release_channel: Option<String>,
     /// Custom keyboard shortcuts for application actions
     pub app_keybindings: AppKeybindings,
+    /// OS-level global hotkeys (separate from `app_keybindings`; carries an
+    /// extra `enabled` flag and is delivered by `GlobalHotkeyManager`).
+    #[serde(default)]
+    pub global_hotkeys: crate::global_hotkeys::GlobalHotkeysConfig,
     /// Include commentary (Aṭṭhakathā .att, Ṭīkā .tik) in translation tab
     pub include_cst_commentary_in_translations: bool,
     /// Include CST Mūla Pāli texts in search results
@@ -261,6 +265,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             notify_about_simsapa_updates: true,
             release_channel: None,
             app_keybindings: AppKeybindings::default(),
+            global_hotkeys: crate::global_hotkeys::GlobalHotkeysConfig::default(),
             include_cst_commentary_in_translations: false,
             include_cst_mula_in_search_results: false,
             include_cst_commentary_in_search_results: true,

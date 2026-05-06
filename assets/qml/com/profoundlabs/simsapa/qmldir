@@ -5,3 +5,4 @@ StorageManager 1.0 StorageManager.qml
 PromptManager 1.0 PromptManager.qml
 ClipboardManager 1.0 ClipboardManager.qml
 DictionaryManager 1.0 DictionaryManager.qml
+GlobalHotkeyManager 1.0 GlobalHotkeyManager.qml

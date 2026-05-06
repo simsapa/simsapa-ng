@@ -31,6 +31,7 @@ pub mod topic_index;
 pub mod snowball;
 pub mod search;
 pub mod waveform;
+pub mod global_hotkeys;
 
 use std::env;
 use std::io::{self, Read, Write};

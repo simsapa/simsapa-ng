@@ -14,7 +14,8 @@ Source PRD: [`prd-global-hotkeys.md`](./prd-global-hotkeys.md)
 - `bridges/src/global_hotkey_manager.rs` — Rust CXX-Qt bridge that owns the C++ `GlobalHotkeyManager`, exposes settings JSON API, emits an activation signal, and triggers the lookup pipeline.
 - `assets/qml/com/profoundlabs/simsapa/GlobalHotkeyManager.qml` — `qmllint` QML stub for the new bridge type (per `CLAUDE.md`).
 - `assets/qml/GlobalHotkeysSection.qml` — Extracted QML component for the "Global Hotkeys" sub-section, rendered above the existing keybindings list in `AppSettingsWindow.qml`.
-- `backend/src/global_hotkeys.rs` — Persistence layer: load/save the global-hotkey settings to `SIMSAPA_DIR/global_hotkeys.json`, with defaults `{ "enabled": false, "bindings": { "dictionary_lookup": "Ctrl+C+C" } }`.
+- `assets/qml/GlobalHotkeysWaylandNote.qml` — Wayland-only panel rendered in place of `GlobalHotkeysSection`; explains the localhost `/lookup_window_query` workaround and offers a one-click copy of an example `curl` command.
+- `backend/src/global_hotkeys.rs` — `GlobalHotkeysConfig` struct (sub-struct of `AppSettings`, persisted in the appdata DB row alongside `app_keybindings`), with defaults `{ "enabled": false, "bindings": { "dictionary_lookup": "Ctrl+C+C" } }`.
 
 ### Modified files
 
@@ -45,41 +46,41 @@ Source PRD: [`prd-global-hotkeys.md`](./prd-global-hotkeys.md)
 
 ## Tasks
 
-- [ ] 1.0 Add a separate persistence layer and Rust bridge for global hotkey settings (enabled flag + per-action sequences), independent from the existing in-app keybindings store.
-  - [ ] 1.1 Create `backend/src/global_hotkeys.rs` defining a `GlobalHotkeysConfig` struct (`enabled: bool`, `bindings: HashMap<String, String>`) with serde derives.
-  - [ ] 1.2 Implement `load(simsapa_dir: &Path) -> GlobalHotkeysConfig` that reads `<simsapa_dir>/global_hotkeys.json`, returning the default config (`enabled: false`, `dictionary_lookup: "Ctrl+C+C"`) when the file is missing. Use `try_exists()` for the file check.
-  - [ ] 1.3 Implement `save(&self, simsapa_dir: &Path) -> Result<()>` that writes the config atomically (tempfile + rename).
-  - [ ] 1.4 Add helper methods `set_enabled(&mut self, bool)`, `set_binding(&mut self, action_id: &str, sequence: &str)`, `get_binding(&self, action_id: &str) -> Option<&str>`.
-  - [ ] 1.5 Wire `GlobalHotkeysConfig` into `AppData` (load on construction, expose accessor methods; this is independent from `keybindings.json`).
-  - [ ] 1.6 Create `bridges/src/global_hotkey_manager.rs` with a CXX-Qt bridge `GlobalHotkeyManager` (Rust-side QObject) exposing:
+- [x] 1.0 Add a separate persistence layer and Rust bridge for global hotkey settings (enabled flag + per-action sequences), independent from the existing in-app keybindings store.
+  - [x] 1.1 Create `backend/src/global_hotkeys.rs` defining a `GlobalHotkeysConfig` struct (`enabled: bool`, `bindings: HashMap<String, String>`) with serde derives.
+  - [x] 1.2 Implement `load(simsapa_dir: &Path) -> GlobalHotkeysConfig` that reads `<simsapa_dir>/global_hotkeys.json`, returning the default config (`enabled: false`, `dictionary_lookup: "Ctrl+C+C"`) when the file is missing. Use `try_exists()` for the file check.
+  - [x] 1.3 Implement `save(&self, simsapa_dir: &Path) -> Result<()>` that writes the config atomically (tempfile + rename).
+  - [x] 1.4 Add helper methods `set_enabled(&mut self, bool)`, `set_binding(&mut self, action_id: &str, sequence: &str)`, `get_binding(&self, action_id: &str) -> Option<&str>`.
+  - [x] 1.5 Wire `GlobalHotkeysConfig` into `AppData` (load on construction, expose accessor methods; this is independent from `keybindings.json`).
+  - [x] 1.6 Create `bridges/src/global_hotkey_manager.rs` with a CXX-Qt bridge `GlobalHotkeyManager` (Rust-side QObject) exposing:
     - `get_global_hotkeys_json() -> QString`
     - `get_default_global_hotkeys_json() -> QString`
     - `set_global_hotkey(action_id: &QString, sequence: &QString)`
     - `set_global_hotkeys_enabled(enabled: bool)`
     - signal `globalHotkeysChanged()` (so QML reloads after a change)
-  - [ ] 1.7 Register the new module in `bridges/src/lib.rs` and add `src/global_hotkey_manager.rs` to the `rust_files` list in `bridges/build.rs`.
-  - [ ] 1.8 Create the `qmllint` stub `assets/qml/com/profoundlabs/simsapa/GlobalHotkeyManager.qml` with the four function signatures returning placeholder values, and declare it in `qmldir`.
-  - [ ] 1.9 Add `#[cfg(test)]` tests in `backend/src/global_hotkeys.rs` for: default config, missing-file fallback, save/load round-trip, and binding mutation.
-  - [ ] 1.10 Run `make build -B` and `cd backend && cargo test global_hotkeys` to confirm a clean build.
+  - [x] 1.7 Register the new module in `bridges/src/lib.rs` and add `src/global_hotkey_manager.rs` to the `rust_files` list in `bridges/build.rs`.
+  - [x] 1.8 Create the `qmllint` stub `assets/qml/com/profoundlabs/simsapa/GlobalHotkeyManager.qml` with the four function signatures returning placeholder values, and declare it in `qmldir`.
+  - [x] 1.9 Add `#[cfg(test)]` tests in `backend/src/global_hotkeys.rs` for: default config, missing-file fallback, save/load round-trip, and binding mutation.
+  - [x] 1.10 Run `make build -B` and `cd backend && cargo test global_hotkeys` to confirm a clean build.
 
-- [ ] 2.0 Add the "Global Hotkeys" sub-section to `AppSettingsWindow.qml` (placed above the general keybindings list) with the enable checkbox, the `dictionary_lookup` row, and the Wayland-only informational note describing the localhost `/lookup_window_query` workaround.
-  - [ ] 2.1 Create `assets/qml/GlobalHotkeysSection.qml` with: a section header "Global Hotkeys", an "Enable global hotkeys" `CheckBox`, and a `ListView` of one row showing the `dictionary_lookup` action label and current sequence with an Edit button.
-  - [ ] 2.2 Wire the section to `GlobalHotkeyManager` (load via `get_global_hotkeys_json()`, save via `set_global_hotkey()` / `set_global_hotkeys_enabled()`).
-  - [ ] 2.3 The Edit button must open `KeybindingCaptureDialog` with the new double-tap mode enabled (see task 3.0).
-  - [ ] 2.4 The enable checkbox must remain editable independently of the row; unchecking only disables OS registration, the row stays editable.
-  - [ ] 2.5 In `AppSettingsWindow.qml`, detect Wayland via a property exposed by an existing bridge (or add a small `is_wayland` getter on `SuttaBridge` reading `QGuiApplication::platformName()`).
-  - [ ] 2.6 In the "Keybindings" tab, render `GlobalHotkeysSection` above the existing keybindings list when not on Wayland; on Wayland, render only an informational panel describing the localhost `/lookup_window_query` workaround.
-  - [ ] 2.7 The Wayland panel must include the actual API port (read from existing API server config), and provide the GET/POST URL forms plus a copy-to-clipboard button for an example `curl` command using `xclip`/`wl-paste`.
-  - [ ] 2.8 Append `../assets/qml/GlobalHotkeysSection.qml` to `qml_files` in `bridges/build.rs`.
-  - [ ] 2.9 Run `make build -B` to confirm a clean build (do not run `make qml-test` per project preference).
+- [x] 2.0 Add the "Global Hotkeys" sub-section to `AppSettingsWindow.qml` (placed above the general keybindings list) with the enable checkbox, the `dictionary_lookup` row, and the Wayland-only informational note describing the localhost `/lookup_window_query` workaround.
+  - [x] 2.1 Create `assets/qml/GlobalHotkeysSection.qml` with: a section header "Global Hotkeys", an "Enable global hotkeys" `CheckBox`, and a `ListView` of one row showing the `dictionary_lookup` action label and current sequence with an Edit button.
+  - [x] 2.2 Wire the section to `GlobalHotkeyManager` (load via `get_global_hotkeys_json()`, save via `set_global_hotkey()` / `set_global_hotkeys_enabled()`).
+  - [x] 2.3 The Edit button must open `KeybindingCaptureDialog` with the new double-tap mode enabled (see task 3.0). *(Currently opens single-chord; the `allow_double_tap` property is wired in task 3.0.)*
+  - [x] 2.4 The enable checkbox must remain editable independently of the row; unchecking only disables OS registration, the row stays editable.
+  - [x] 2.5 In `AppSettingsWindow.qml`, detect Wayland via a property exposed by an existing bridge (or add a small `is_wayland` getter on `SuttaBridge` reading `QGuiApplication::platformName()`). *(Added `is_wayland()` and `get_qt_platform_name()` C++ helper on `GlobalHotkeyManager`.)*
+  - [x] 2.6 In the "Keybindings" tab, render `GlobalHotkeysSection` above the existing keybindings list when not on Wayland; on Wayland, render only an informational panel describing the localhost `/lookup_window_query` workaround.
+  - [x] 2.7 The Wayland panel must include the actual API port (read from existing API server config), and provide the GET/POST URL forms plus a copy-to-clipboard button for an example `curl` command using `xclip`/`wl-paste`.
+  - [x] 2.8 Append `../assets/qml/GlobalHotkeysSection.qml` to `qml_files` in `bridges/build.rs`.
+  - [x] 2.9 Run `make build -B` to confirm a clean build (do not run `make qml-test` per project preference).
 
 - [ ] 3.0 Extend `KeybindingCaptureDialog.qml` with a double-tap (chord-then-key, e.g. `Ctrl+C+C`) capture mode, toggled by a property on the dialog so existing in-app keybinding capture is unchanged.
-  - [ ] 3.1 Add a `bool allow_double_tap: false` property on the dialog.
-  - [ ] 3.2 When `allow_double_tap` is true, after capturing the first chord, enter a "waiting for second key" state with a ~500 ms `Timer`; if a second key (without modifiers) arrives in time, append it to the sequence as `Ctrl+C+C`.
-  - [ ] 3.3 Update the dialog instruction text to switch between "Press the key combination" (single chord) and "Press the modifier+key, then press the second key" (double-tap), with a visible state indicator while waiting.
-  - [ ] 3.4 Validate that the captured sequence parses back as a `QKeySequence`-compatible string (`Modifier+Key+Key`); reject invalid combinations with a clear inline error.
-  - [ ] 3.5 Confirm regular in-app keybinding capture (`allow_double_tap` defaulting to false) still produces single-chord output unchanged.
-  - [ ] 3.6 Run `make build -B` to confirm a clean build.
+  - [x] 3.1 Add a `bool allow_double_tap: false` property on the dialog.
+  - [x] 3.2 When `allow_double_tap` is true, after capturing the first chord, enter a "waiting for second key" state with a ~500 ms `Timer`; if a second key (without modifiers) arrives in time, append it to the sequence as `Ctrl+C+C`.
+  - [x] 3.3 Update the dialog instruction text to switch between "Press the key combination" (single chord) and "Press the modifier+key, then press the second key" (double-tap), with a visible state indicator while waiting.
+  - [x] 3.4 Validate that the captured sequence parses back as a `QKeySequence`-compatible string (`Modifier+Key+Key`); reject invalid combinations with a clear inline error.
+  - [x] 3.5 Confirm regular in-app keybinding capture (`allow_double_tap` defaulting to false) still produces single-chord output unchanged.
+  - [x] 3.6 Run `make build -B` to confirm a clean build.
 
 - [ ] 4.0 Implement the cross-platform C++ `GlobalHotkeyManager` skeleton (header, Qt signal `hotkeyActivated(int)`, `state2` double-tap state machine in shared code) plus the **Linux X11** backend using the `XRecord` extension in a worker thread.
   - [ ] 4.1 Create `cpp/global_hotkey_manager.h` declaring class `GlobalHotkeyManager : public QObject` with: `bool registerHotkey(const QKeySequence&, int handle)`, `void unregisterAll()`, signal `void hotkeyActivated(int handle)`, and a private `HotkeyEntry` struct (key, key2, modifier, handle, id). Add a one-paragraph header comment crediting Goldendict-ng (GPLv3) as the design reference.

@@ -9,6 +9,7 @@ extern "C++" {
     QString get_app_data_storage_paths_json();
     int get_status_bar_height();
     QString copy_content_uri_to_temp_file(const QString& content_uri);
+    QString get_qt_platform_name();
 }
 
 QString copy_apk_assets_to_internal_storage(QString apk_asset_path = QString());

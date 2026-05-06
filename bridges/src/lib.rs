@@ -5,3 +5,4 @@ pub mod storage_manager;
 pub mod prompt_manager;
 pub mod clipboard_manager;
 pub mod dictionary_manager;
+pub mod global_hotkey_manager;
