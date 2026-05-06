@@ -1095,6 +1095,28 @@ pub extern "C" fn get_desktop_file_path_ffi() -> *mut std::os::raw::c_char {
     std::ptr::null_mut()
 }
 
+/// FFI: whether OS-level global hotkeys are currently enabled in settings.
+#[unsafe(no_mangle)]
+pub extern "C" fn global_hotkeys_enabled_c() -> bool {
+    crate::get_app_data().get_global_hotkeys().enabled
+}
+
+/// FFI: returns the configured key sequence for the `dictionary_lookup`
+/// global hotkey action as a C string. Caller must call `free_rust_string`.
+/// Returns null if not configured.
+#[unsafe(no_mangle)]
+pub extern "C" fn get_global_hotkey_dictionary_lookup_c() -> *mut std::os::raw::c_char {
+    use std::ffi::CString;
+    use crate::global_hotkeys::DICTIONARY_LOOKUP_ACTION;
+
+    let cfg = crate::get_app_data().get_global_hotkeys();
+    if let Some(seq) = cfg.get_binding(DICTIONARY_LOOKUP_ACTION)
+        && let Ok(c_string) = CString::new(seq) {
+            return c_string.into_raw();
+        }
+    std::ptr::null_mut()
+}
+
 /// FFI function to free strings allocated by Rust
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn free_rust_string(s: *mut std::os::raw::c_char) {
