@@ -39,6 +39,12 @@ struct HotkeyEntry {
     quint32 modifier = 0;
     int handle       = 0;
     int id           = 0;
+
+#ifdef Q_OS_MACOS
+    // EventHotKeyRef stored as void* so the header doesn't need <Carbon/Carbon.h>.
+    void* hkRef  = nullptr;
+    void* hkRef2 = nullptr;
+#endif
 };
 
 class GlobalHotkeyManager : public QThread {
@@ -95,6 +101,21 @@ private slots:
     bool checkState(quint32 vk, quint32 mod);
 #endif
 
+#ifdef Q_OS_WIN
+public:
+    /// Called by the application's native event filter on every WM_HOTKEY
+    /// message. Returns true if the message belongs to a registered hotkey
+    /// and was handled (so Qt won't dispatch it further).
+    bool checkStateWin(quint32 vk, quint32 mod);
+#endif
+
+#ifdef Q_OS_MACOS
+public:
+    /// Called by the Carbon hotKeyHandler with the EventHotKeyID's id field
+    /// for every kEventHotKeyPressed.
+    void checkStateMac(int hkId);
+#endif
+
 protected:
 #ifdef WITH_X11
     /// QThread entry point -- runs XRecordEnableContext (blocking).
@@ -142,6 +163,28 @@ private:
     bool isKeyGrabbed(quint32 keyCode, quint32 modifiers) const;
     GrabbedKeys::iterator grabKey(quint32 keyCode, quint32 modifiers);
     void ungrabKey(GrabbedKeys::iterator it);
+#endif
+
+#ifdef Q_OS_WIN
+    // Windows backend state. The native-event filter object is allocated in
+    // init() and held as void* here so the header doesn't need <windows.h>.
+    void* m_winFilter = nullptr; // QAbstractNativeEventFilter*
+    int   m_winNextId = 0;
+#endif
+
+#ifdef Q_OS_MACOS
+    // Carbon EventHandlerUPP / EventHandlerRef stored as void* so the header
+    // doesn't drag in <Carbon/Carbon.h>.
+    void* m_macHandlerUPP = nullptr; // EventHandlerUPP
+    void* m_macHandlerRef = nullptr; // EventHandlerRef
+    int   m_macNextId     = 1;
+    quint32 m_macKeyC     = 0; // native key code for 'c'
+    bool m_macAxPromptShown = false;
+
+    void suspendHotkeysMac();
+    void resumeHotkeysMac();
+    void sendCmdC();
+    void checkAndRequestAccessibilityPermission();
 #endif
 };
 
