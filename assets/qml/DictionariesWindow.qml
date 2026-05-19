@@ -75,7 +75,7 @@ ApplicationWindow {
             root.progress_value = 1.0;
             root.progress_indeterminate = false;
             root.refresh_list();
-            restart_dialog.dialog_text = `Dictionary "${label}" was imported. Please close and re-open Simsapa so it can be indexed for searching.`;
+            restart_dialog.dialog_text = `Dictionary "${label}" was imported. Simsapa will now exit, start the application again so that the dictionary can be indexed for fulltext search.`;
             restart_dialog.open();
         }
 
@@ -89,12 +89,23 @@ ApplicationWindow {
         }
     }
 
-    MessageDialog {
+    Dialog {
         id: restart_dialog
         title: "Restart required"
         property string dialog_text: ""
-        text: dialog_text
-        buttons: MessageDialog.Ok
+        modal: true
+        anchors.centerIn: parent
+        closePolicy: Popup.NoAutoClose
+        standardButtons: Dialog.Ok
+
+        Label {
+            text: restart_dialog.dialog_text
+            wrapMode: Text.WordWrap
+            width: Math.min(root.width - 80, 480)
+            font.pointSize: root.pointSize
+        }
+
+        onAccepted: Qt.quit()
     }
 
     MessageDialog {
@@ -118,7 +129,7 @@ ApplicationWindow {
                 const result = dict_manager.delete_dictionary(confirm_delete_dialog.target_id);
                 if (result === "ok") {
                     root.refresh_list();
-                    restart_dialog.dialog_text = `Dictionary "${confirm_delete_dialog.target_label}" was removed. Please close and re-open Simsapa so the search index is updated.`;
+                    restart_dialog.dialog_text = `Dictionary "${confirm_delete_dialog.target_label}" was removed. Simsapa will now exit, start the application again so that the fulltext search index can be updated.`;
                     restart_dialog.open();
                 } else {
                     error_dialog.dialog_text = `Delete failed: ${result}`;
@@ -181,7 +192,7 @@ ApplicationWindow {
 
         onRenamed: function(dictionary_id, new_label) {
             root.refresh_list();
-            restart_dialog.dialog_text = `Dictionary was renamed to "${new_label}". Please close and re-open Simsapa so its entries are re-indexed.`;
+            restart_dialog.dialog_text = `Dictionary was renamed to "${new_label}". Simsapa will now exit, start the application again so that the dictionary entries can be re-indexed for fulltext search.`;
             restart_dialog.open();
         }
 
