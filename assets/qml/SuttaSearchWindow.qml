@@ -20,7 +20,7 @@ ApplicationWindow {
         if (root.is_mobile) {
             close.accepted = false;
             show_sidebar_btn.checked = false;
-            tab_list_dialog.open();
+            root.open_tab_list_dialog();
         }
         // Desktop: close.accepted defaults to true, normal close behavior
     }
@@ -82,6 +82,8 @@ ApplicationWindow {
     property var nav_history: []
     property bool nav_history_paused: false
     property bool is_restoring_session: false
+    property bool suppress_tab_checked_changed: false
+    property string pre_reorder_active_id_key: ""
     function nav_history_push(entry) {
         if (root.nav_history_paused) return;
         // Don't record blank/placeholder tabs in history
@@ -1071,6 +1073,57 @@ ${query_text}`;
         }
     }
 
+    function is_blank_tab_uid(item_uid) {
+        return !item_uid || item_uid === "Sutta" || item_uid === "Word";
+    }
+
+    // Reorder the currently active tab within its own group/source model. Used by
+    // the global Shift+Up / Shift+Down shortcuts when the TabListDialog is closed.
+    // direction: -1 for up, +1 for down. Skips blank placeholder tabs in the
+    // source model, mirroring the dialog's behavior. The active tab remains the
+    // active tab after the move (it is the one being moved).
+    function reorder_active_tab(direction) {
+        let cur_id_key = root.get_active_tab_id_key();
+        if (!cur_id_key) return;
+
+        let models = [tabs_pinned_model, tabs_results_model, tabs_translations_model];
+        let source_model = null;
+        let cur_idx = -1;
+        for (let m = 0; m < models.length; m++) {
+            for (let i = 0; i < models[m].count; i++) {
+                if (models[m].get(i).id_key === cur_id_key) {
+                    source_model = models[m];
+                    cur_idx = i;
+                    break;
+                }
+            }
+            if (source_model) break;
+        }
+        if (!source_model || cur_idx < 0) return;
+
+        // Don't reorder blank placeholder tabs.
+        if (root.is_blank_tab_uid(source_model.get(cur_idx).item_uid)) return;
+
+        // Walk to the nearest non-blank neighbor in the same source model.
+        let neighbor_idx = -1;
+        let i = cur_idx + direction;
+        while (i >= 0 && i < source_model.count) {
+            if (!root.is_blank_tab_uid(source_model.get(i).item_uid)) {
+                neighbor_idx = i;
+                break;
+            }
+            i += direction;
+        }
+        if (neighbor_idx < 0 || neighbor_idx === cur_idx) return;
+
+        root.pre_reorder_active_id_key = cur_id_key;
+        root.suppress_tab_checked_changed = true;
+        source_model.move(cur_idx, neighbor_idx, 1);
+        root.suppress_tab_checked_changed = false;
+        root.focus_on_tab_with_id_key(cur_id_key);
+        root.pre_reorder_active_id_key = "";
+    }
+
     function check_search_index_on_startup() {
         let status_json = SuttaBridge.check_search_index_status();
         try {
@@ -1085,6 +1138,22 @@ ${query_text}`;
         } catch (e) {
             logger.warn("Failed to parse search index status: " + e);
         }
+    }
+
+    // Global shortcuts for reordering the active tab when the TabListDialog
+    // is closed. When the dialog is open, its own Shortcut items handle these
+    // sequences (operating on the dialog's selection instead of the active tab).
+    Shortcut {
+        sequences: root.get_sequences("tab_list_move_tab_up")
+        context: Qt.WindowShortcut
+        enabled: !tab_list_dialog.visible
+        onActivated: root.reorder_active_tab(-1)
+    }
+    Shortcut {
+        sequences: root.get_sequences("tab_list_move_tab_down")
+        context: Qt.WindowShortcut
+        enabled: !tab_list_dialog.visible
+        onActivated: root.reorder_active_tab(1)
     }
 
     Component.onCompleted: {
@@ -1201,6 +1270,21 @@ ${query_text}`;
             }
         }
         return tab;
+    }
+
+    function open_tab_list_dialog() {
+        tab_list_dialog.active_tab_id_key = root.get_active_tab_id_key();
+        tab_list_dialog.open();
+    }
+
+    function get_active_tab_id_key() {
+        for (var i = 0; i < tabs_row.children.length; i++) {
+            var child = tabs_row.children[i];
+            if (child.id_key !== undefined && child.checked === true) {
+                return child.id_key;
+            }
+        }
+        return "";
     }
 
     function get_tab_with_id_key(id_key) {
@@ -1660,7 +1744,7 @@ ${query_text}`;
                         if (tab_list_dialog.visible) {
                             tab_list_dialog.close();
                         } else {
-                            tab_list_dialog.open();
+                            root.open_tab_list_dialog();
                         }
                     }
                 }
@@ -2498,6 +2582,13 @@ ${query_text}`;
                                     // Called when a tab's checked state changes (user clicked on a tab)
                                     // Parameters: tab index, item_uid, web_item_key, checked state, current_key
 
+                                    // Suppress activation handling during in-dialog tab reorders so that
+                                    // ListModel.move() induced delegate re-binding does not lazily create
+                                    // webviews or push spurious nav_history entries for bystander tabs.
+                                    if (root.suppress_tab_checked_changed) {
+                                        return;
+                                    }
+
                                     // Only proceed if the tab is checked (selected)
                                     // When switching tabs: previous tab becomes unchecked (early return here),
                                     // new tab becomes checked (continue processing)
@@ -2896,11 +2987,11 @@ ${query_text}`;
 
                             Button {
                                 id: tab_list_btn
-                                icon.source: "icons/32x32/mdi--menu.png"
-                                Layout.preferredWidth: 36
+                                icon.source: tab_list_dialog.visible ? "icons/32x32/ph--tabs-fill.png" : "icons/32x32/ph--tabs.png"
+                                Layout.preferredWidth: 38
                                 Layout.preferredHeight: 28 // 32 x 32 creates a gap under the tabs
                                 flat: true
-                                onClicked: tab_list_dialog.open()
+                                onClicked: root.open_tab_list_dialog()
 
                                 background: Rectangle {
                                     color: "transparent"
@@ -2918,6 +3009,7 @@ ${query_text}`;
                             tabs_results_model: tabs_results_model
                             tabs_translations_model: tabs_translations_model
                             nav_history: root.nav_history
+                            keybindings: root.keybindings
                             is_wide: root.is_wide
                             is_tall: root.is_tall
 
@@ -2931,6 +3023,27 @@ ${query_text}`;
 
                             onClearAllTabs: root.clear_all_tabs()
                             onClearHistory: root.nav_history = []
+
+                            onReorderStarting: {
+                                // Capture which tab is currently active in suttas_tab_bar so we can
+                                // restore it after the move. Reordering must not change the active tab.
+                                let cur = suttas_tab_bar.currentItem;
+                                root.pre_reorder_active_id_key = (cur && cur.id_key) ? cur.id_key : "";
+                                root.suppress_tab_checked_changed = true;
+                            }
+                            onReorderFinished: function(id_key) {
+                                root.suppress_tab_checked_changed = false;
+                                // Restore the previously-active tab. After ListModel.move, the
+                                // TabBar's currentIndex (a plain int) may point at a different
+                                // delegate, so we re-focus by id_key. If the moved tab was the
+                                // active one, this re-focuses it at its new index; if it wasn't,
+                                // this restores the previously-active tab.
+                                let restore_id_key = root.pre_reorder_active_id_key;
+                                root.pre_reorder_active_id_key = "";
+                                if (restore_id_key) {
+                                    root.focus_on_tab_with_id_key(restore_id_key);
+                                }
+                            }
                         }
 
                         SplitView {

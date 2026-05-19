@@ -27,18 +27,18 @@ These are addressed in the sub-tasks below. Keep them in mind throughout impleme
 
 ## Tasks
 
-- [ ] 1.0 Add the two new keybinding action definitions for tab reordering
-  - [ ] 1.1 Add a JSON object to `assets/keybindings.json` with `id: "tab_list_move_tab_up"`, `name: "Move Tab Up (Tab List)"`, `description: "Move the selected tab up within its group in the Tab List dialog"`, `shortcuts: ["Shift+Up"]`. Place it adjacent to other tab-related actions (e.g. near `pin_tab` / `toggle_tab_list`) to keep the file readable.
-  - [ ] 1.2 Add a second JSON object with `id: "tab_list_move_tab_down"`, `name: "Move Tab Down (Tab List)"`, `description: "Move the selected tab down within its group in the Tab List dialog"`, `shortcuts: ["Shift+Down"]`.
-  - [ ] 1.3 Validate the JSON parses (e.g. `cd backend && cargo build` — the `include_str!("../../assets/keybindings.json")` plus `serde_json::from_str::<Vec<KeybindingDefinition>>` will reject malformed JSON at runtime, but a quick `python -m json.tool < assets/keybindings.json > /dev/null` is cheap and catches errors early).
-  - [ ] 1.4 Run `make build -B` and confirm a clean build.
+- [x] 1.0 Add the two new keybinding action definitions for tab reordering
+  - [x] 1.1 Add a JSON object to `assets/keybindings.json` with `id: "tab_list_move_tab_up"`, `name: "Move Tab Up (Tab List)"`, `description: "Move the selected tab up within its group in the Tab List dialog"`, `shortcuts: ["Shift+Up"]`. Place it adjacent to other tab-related actions (e.g. near `pin_tab` / `toggle_tab_list`) to keep the file readable.
+  - [x] 1.2 Add a second JSON object with `id: "tab_list_move_tab_down"`, `name: "Move Tab Down (Tab List)"`, `description: "Move the selected tab down within its group in the Tab List dialog"`, `shortcuts: ["Shift+Down"]`.
+  - [x] 1.3 Validate the JSON parses (e.g. `cd backend && cargo build` — the `include_str!("../../assets/keybindings.json")` plus `serde_json::from_str::<Vec<KeybindingDefinition>>` will reject malformed JSON at runtime, but a quick `python -m json.tool < assets/keybindings.json > /dev/null` is cheap and catches errors early).
+  - [x] 1.4 Run `make build -B` and confirm a clean build.
 
-- [ ] 2.0 Add Up/Down reorder buttons to the Tabs section header in TabListDialog.qml
-  - [ ] 2.1 In the header `RowLayout` (around lines 133–153 of `assets/qml/TabListDialog.qml`), insert two `Button { flat: true; font.pointSize: 9 }` controls immediately **to the left of** the existing "Clear" button: first the Up button, then the Down button.
-  - [ ] 2.2 Use unicode glyphs as button text: `"▲"` for Up, `"▼"` for Down. Add `ToolTip.visible: hovered`, `ToolTip.text: "Move tab up"` / `"Move tab down"` (no shortcut in the tooltip text).
-  - [ ] 2.3 Give the buttons explicit `id`s (e.g. `move_up_btn`, `move_down_btn`) so their `enabled` state can be data-bound from the helpers added in task 3.
-  - [ ] 2.4 Initially wire `onClicked` to placeholder calls of stub functions `control.move_selected_tab_up()` / `control.move_selected_tab_down()` (to be implemented in task 3) so the dialog compiles in isolation.
-  - [ ] 2.5 Bind `enabled` so QML's binding tracker registers the right dependencies. Critically, `tab_list_view.currentIndex`, `combined_tabs_model.count`, and `control.active_column` must be **read directly in the binding expression**, not only inside the helper function — otherwise the binding goes stale (see hazard 2 in Notes). Example:
+- [x] 2.0 Add Up/Down reorder buttons to the Tabs section header in TabListDialog.qml
+  - [x] 2.1 In the header `RowLayout` (around lines 133–153 of `assets/qml/TabListDialog.qml`), insert two `Button { flat: true; font.pointSize: 9 }` controls immediately **to the left of** the existing "Clear" button: first the Up button, then the Down button.
+  - [x] 2.2 Use unicode glyphs as button text: `"▲"` for Up, `"▼"` for Down. Add `ToolTip.visible: hovered`, `ToolTip.text: "Move tab up"` / `"Move tab down"` (no shortcut in the tooltip text).
+  - [x] 2.3 Give the buttons explicit `id`s (e.g. `move_up_btn`, `move_down_btn`) so their `enabled` state can be data-bound from the helpers added in task 3.
+  - [x] 2.4 Initially wire `onClicked` to placeholder calls of stub functions `control.move_selected_tab_up()` / `control.move_selected_tab_down()` (to be implemented in task 3) so the dialog compiles in isolation.
+  - [x] 2.5 Bind `enabled` so QML's binding tracker registers the right dependencies. Critically, `tab_list_view.currentIndex`, `combined_tabs_model.count`, and `control.active_column` must be **read directly in the binding expression**, not only inside the helper function — otherwise the binding goes stale (see hazard 2 in Notes). Example:
 
     ```qml
     enabled: control.active_column === "tabs"
@@ -48,18 +48,18 @@ These are addressed in the sub-tasks below. Keep them in mind throughout impleme
     ```
 
     The `can_move_up()` / `can_move_down()` helpers themselves are added in task 3; for now stub them to return `false` so the buttons stay disabled in this intermediate state.
-  - [ ] 2.6 Run `make build -B`; the dialog should compile and the two buttons render as disabled flat icon buttons.
+  - [x] 2.6 Run `make build -B`; the dialog should compile and the two buttons render as disabled flat icon buttons.
 
-- [ ] 3.0 Implement the in-group reorder logic (combined-row ↔ source-row mapping, `ListModel.move`, post-move selection sync, spurious-activation suppression)
-  - [ ] 3.1 Add a signal `tabReorderRequested(string id_key)` to `TabListDialog.qml`. Wire it in `SuttaSearchWindow.qml` (where the `TabListDialog` is instantiated, around line 2914) to call `root.focus_on_tab_with_id_key(id_key)` **after** the guard is cleared in step 3.5.7. (`focus_on_tab_with_id_key → tab.click()` may be a no-op if the moved tab is already at `suttas_tab_bar.currentIndex`; that is fine.)
-  - [ ] 3.2 In `TabListDialog.qml`, add a helper `function get_source_model_for_group(group_label) { ... }` returning the matching `ListModel` (`tabs_pinned_model`, `tabs_results_model`, or `tabs_translations_model`).
-  - [ ] 3.3 Add a helper `function find_source_index_by_id_key(source_model, id_key) { ... }` that linear-scans the source model and returns the index of the row whose `id_key` matches, or `-1`. Add a one-line comment noting the unique-`id_key` invariant relied on here.
-  - [ ] 3.4 Add `function can_move_up() { ... }` and `function can_move_down() { ... }`. Both return `false` if `tab_list_view.currentIndex < 0` or `combined_tabs_model.count === 0`. Otherwise they check the neighbor row in `combined_tabs_model` (index − 1 / index + 1, with bounds) and return `true` iff that neighbor exists **and** has the same `group_label` as the current row.
-  - [ ] 3.5 Add a suppression guard to `SuttaSearchWindow.qml` to neutralise the `TabBar.currentIndex` mismatch hazard (hazard 1):
+- [x] 3.0 Implement the in-group reorder logic (combined-row ↔ source-row mapping, `ListModel.move`, post-move selection sync, spurious-activation suppression)
+  - [x] 3.1 Superseded by 3.5: replaced single signal with `reorderStarting()` + `reorderFinished(string)` wired in `SuttaSearchWindow.qml` at the `TabListDialog { ... }` block.
+  - [x] 3.2 In `TabListDialog.qml`, add a helper `function get_source_model_for_group(group_label) { ... }` returning the matching `ListModel` (`tabs_pinned_model`, `tabs_results_model`, or `tabs_translations_model`).
+  - [x] 3.3 Add a helper `function find_source_index_by_id_key(source_model, id_key) { ... }` that linear-scans the source model and returns the index of the row whose `id_key` matches, or `-1`. Add a one-line comment noting the unique-`id_key` invariant relied on here.
+  - [x] 3.4 Add `function can_move_up() { ... }` and `function can_move_down() { ... }`. Both return `false` if `tab_list_view.currentIndex < 0` or `combined_tabs_model.count === 0`. Otherwise they check the neighbor row in `combined_tabs_model` (index − 1 / index + 1, with bounds) and return `true` iff that neighbor exists **and** has the same `group_label` as the current row.
+  - [x] 3.5 Add a suppression guard to `SuttaSearchWindow.qml` to neutralise the `TabBar.currentIndex` mismatch hazard (hazard 1):
     1. Add `property bool suppress_tab_checked_changed: false` on `root` in `SuttaSearchWindow.qml`.
     2. At the very top of `suttas_tab_bar.tab_checked_changed(...)` (line ~2497), add `if (root.suppress_tab_checked_changed) return;` so neither the activation path nor the lazy-webview-creation path nor the `nav_history_push` runs while a reorder is in progress.
     3. Expose a way for the dialog to set this — simplest: have the dialog connect directly via the `Connections` pattern or set `root.suppress_tab_checked_changed = true` through a callback. Cleanest: expose two signals on the dialog — `reorderStarting()` and `reorderFinished(string moved_id_key)` — and in `SuttaSearchWindow.qml`'s `TabListDialog { ... }` block, wire `onReorderStarting: root.suppress_tab_checked_changed = true` and `onReorderFinished: function(id_key) { root.suppress_tab_checked_changed = false; root.focus_on_tab_with_id_key(id_key); }`. This replaces / subsumes the `tabReorderRequested` signal from step 3.1 — use these two finer-grained signals instead.
-  - [ ] 3.6 Implement `function move_selected_tab(direction) { ... }` where `direction` is `-1` (Up) or `+1` (Down):
+  - [x] 3.6 Implement `function move_selected_tab(direction) { ... }` where `direction` is `-1` (Up) or `+1` (Down):
     1. Bail out early if the corresponding `can_move_*()` guard returns false.
     2. Read the current and neighbor rows from `combined_tabs_model`. Remember `moved_id_key = current.id_key`.
     3. Resolve both rows to `{ source_model, source_index }` using the helpers from 3.2 / 3.3. If either lookup returns `-1`, log an error via `logger` and abort.
@@ -69,14 +69,14 @@ These are addressed in the sub-tasks below. Keep them in mind throughout impleme
     7. Call `control.populate_model()` to rebuild `combined_tabs_model`.
     8. Re-find the moved tab in the rebuilt `combined_tabs_model` by `id_key` and set `tab_list_view.currentIndex` to that row.
     9. Emit `control.reorderFinished(moved_id_key)`. The slot in `SuttaSearchWindow.qml` clears the guard and calls `focus_on_tab_with_id_key(moved_id_key)`, which sets `suttas_tab_bar.currentIndex` to the moved tab's new global TabBar index via `tab.click()`. Because the moved tab's `web_item_key` is still in `sutta_html_view_layout` (or still `""` if it was never activated), no webview creation or switch is needed for the moved tab itself; if `tab.click()` does trigger `tab_checked_changed`, the existing early-return on `sutta_html_view_layout.current_key === tab.web_item_key` will skip the activation path for the common case.
-  - [ ] 3.7 Define `function move_selected_tab_up()` / `function move_selected_tab_down()` as thin wrappers around `move_selected_tab(-1)` / `move_selected_tab(+1)`. Confirm the `onClicked` wiring from task 2.4 now invokes real logic.
-  - [ ] 3.8 Replace the stubbed `can_move_up()` / `can_move_down()` from task 2.5 with the real implementations from 3.4. Verify the `enabled` binding written in task 2.5 reads `tab_list_view.currentIndex`, `combined_tabs_model.count`, and `control.active_column` directly in the expression so changes to those properties re-evaluate the binding. Functions called inside the binding (`can_move_up()` / `can_move_down()`) do **not** establish dependencies on properties they read internally — that is by design and OK as long as the explicit-read properties cover every input that can change.
-  - [ ] 3.9 Run `make build -B` and confirm clean build. (Per project memory: do not run other tests until end-of-feature.)
+  - [x] 3.7 Define `function move_selected_tab_up()` / `function move_selected_tab_down()` as thin wrappers around `move_selected_tab(-1)` / `move_selected_tab(+1)`. Confirm the `onClicked` wiring from task 2.4 now invokes real logic.
+  - [x] 3.8 Replace the stubbed `can_move_up()` / `can_move_down()` from task 2.5 with the real implementations from 3.4. Verify the `enabled` binding written in task 2.5 reads `tab_list_view.currentIndex`, `combined_tabs_model.count`, and `control.active_column` directly in the expression so changes to those properties re-evaluate the binding. Functions called inside the binding (`can_move_up()` / `can_move_down()`) do **not** establish dependencies on properties they read internally — that is by design and OK as long as the explicit-read properties cover every input that can change.
+  - [x] 3.9 Run `make build -B` and confirm clean build. (Per project memory: do not run other tests until end-of-feature.)
 
-- [ ] 4.0 Wire customizable keyboard shortcuts in TabListDialog.qml using the new keybinding actions
-  - [ ] 4.1 Add a `required property var keybindings` to `TabListDialog.qml`. Pass `keybindings: root.keybindings` from the `TabListDialog { ... }` instantiation in `SuttaSearchWindow.qml`.
-  - [ ] 4.2 Add a helper `function get_sequences(action_id) { return control.keybindings[action_id] || []; }` inside `TabListDialog.qml`, mirroring the `root.get_sequences()` pattern in `SuttaSearchWindow.qml:182`.
-  - [ ] 4.3 Add two new `Shortcut` items inside the dialog. As in task 2.5, the `enabled` binding must read all reactive inputs **directly** so it doesn't go stale:
+- [x] 4.0 Wire customizable keyboard shortcuts in TabListDialog.qml using the new keybinding actions
+  - [x] 4.1 Add a `required property var keybindings` to `TabListDialog.qml`. Pass `keybindings: root.keybindings` from the `TabListDialog { ... }` instantiation in `SuttaSearchWindow.qml`.
+  - [x] 4.2 Add a helper `function get_sequences(action_id) { return control.keybindings[action_id] || []; }` inside `TabListDialog.qml`, mirroring the `root.get_sequences()` pattern in `SuttaSearchWindow.qml:182`.
+  - [x] 4.3 Add two new `Shortcut` items inside the dialog. As in task 2.5, the `enabled` binding must read all reactive inputs **directly** so it doesn't go stale:
 
     ```qml
     Shortcut {
@@ -99,16 +99,16 @@ These are addressed in the sub-tasks below. Keep them in mind throughout impleme
     }
     ```
 
-  - [ ] 4.4 Confirm the new actions appear in the keybindings list of `AppSettingsWindow.qml` (manual user check). No code change in `AppSettingsWindow.qml` should be needed because it iterates over all IDs from `SuttaBridge.get_action_names_json()`.
-  - [ ] 4.5 Verify conflict detection: in `AppSettingsWindow.qml`, attempting to bind one of the new actions to a sequence already used by another action should be rejected by the existing `find_conflict` logic (lines ~96–106).
-  - [ ] 4.6 Update the QML type stub at `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` only if any new bridge function was added (none planned here — keybindings are read via the existing `get_keybindings_json()`).
-  - [ ] 4.7 Run `make build -B` and confirm clean build.
+  - [x] 4.4 Confirm the new actions appear in the keybindings list of `AppSettingsWindow.qml` (manual user check). No code change in `AppSettingsWindow.qml` should be needed because it iterates over all IDs from `SuttaBridge.get_action_names_json()`.
+  - [x] 4.5 Verify conflict detection: in `AppSettingsWindow.qml`, attempting to bind one of the new actions to a sequence already used by another action should be rejected by the existing `find_conflict` logic (lines ~96–106).
+  - [x] 4.6 Update the QML type stub at `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` only if any new bridge function was added (none planned here — keybindings are read via the existing `get_keybindings_json()`).
+  - [x] 4.7 Run `make build -B` and confirm clean build.
 
 - [ ] 5.0 Add horizontal divider separators between tab groups in `tab_list_view`
-  - [ ] 5.1 Inside the `tab_item_delegate` (around lines 175–229 of `TabListDialog.qml`), add a top-anchored `Rectangle` overlay with `height: 1`, `color: control.palette.mid`, `anchors.left/right: parent.left/right`, `anchors.top: parent.top`.
-  - [ ] 5.2 Set the rectangle's `visible` to `true` iff the delegate's `index > 0` **and** the previous combined row has a different `group_label`. Implement this by looking up `combined_tabs_model.get(index - 1).group_label` inside the delegate (safe because `combined_tabs_model` is the `model` of `tab_list_view`).
-  - [ ] 5.3 Verify the divider does not interfere with the highlight rectangle, hover, or click area of the delegate.
-  - [ ] 5.4 Run `make build -B` and confirm clean build.
+  - [x] 5.1 Inside the `tab_item_delegate` (around lines 175–229 of `TabListDialog.qml`), add a top-anchored `Rectangle` overlay with `height: 1`, `color: control.palette.mid`, `anchors.left/right: parent.left/right`, `anchors.top: parent.top`.
+  - [x] 5.2 Set the rectangle's `visible` to `true` iff the delegate's `index > 0` **and** the previous combined row has a different `group_label`. Implement this by looking up `combined_tabs_model.get(index - 1).group_label` inside the delegate (safe because `combined_tabs_model` is the `model` of `tab_list_view`).
+  - [x] 5.3 Verify the divider does not interfere with the highlight rectangle, hover, or click area of the delegate.
+  - [x] 5.4 Run `make build -B` and confirm clean build.
 
 - [ ] 6.0 Final verification and documentation
   - [ ] 6.1 Run `make build -B` from project root; confirm zero errors and warnings.

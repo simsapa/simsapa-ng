@@ -45,6 +45,26 @@ The goal is to give users direct control over the visual ordering of their sutta
 12. After a swap, the system must update `tab_list_view.currentIndex` so that the **moved tab remains the selected item** in the dialog (i.e. selection follows the moved tab to its new position).
 13. The reorder change must be reflected **immediately and live** in `suttas_tab_bar` in `SuttaSearchWindow.qml` (because that `TabBar` is driven by the same `tabs_pinned_model`, `tabs_results_model`, and `tabs_translations_model` instances, swapping rows in those `ListModel`s using `ListModel.move(from, to, 1)` should propagate naturally; persistence across app restarts is **not** required).
 
+### 4.2.1 Initial selection when opening the dialog
+
+7a. When `TabListDialog.qml` opens, the row in `tab_list_view` that corresponds to the currently active tab in `suttas_tab_bar` must be pre-selected (instead of always defaulting to row 0). The view must be scrolled so that this row is visible.
+
+7b. If no match is found (e.g. the active tab is a blank placeholder that `populate_model()` filters out, or no tab is active), fall back to row 0.
+
+7c. Implementation guidance: `TabListDialog.qml` exposes an `active_tab_id_key` property bound from `suttas_tab_bar.currentItem.id_key` in `SuttaSearchWindow.qml`. The dialog's `onAboutToShow` resolves it to a combined-model index by id_key lookup.
+
+### 4.3.1 Active-tab preservation across a reorder
+
+13a. Reordering tabs in `TabListDialog.qml` must **never change which tab is the active (checked) tab in `suttas_tab_bar`**. The reorder operation is purely a visual reordering — the visible webview in `sutta_html_view_layout` must not change as a side-effect of pressing Up/Down.
+
+13b. Two cases to cover:
+  - **Selected-in-dialog tab is the active tab in `suttas_tab_bar`**: after the move, the same tab must remain active. Because `TabBar.currentIndex` is a plain int that does not follow row reordering, the moved tab's new index must be re-asserted via `root.focus_on_tab_with_id_key(moved_id_key)`.
+  - **Selected-in-dialog tab is NOT the active tab in `suttas_tab_bar`** (e.g. the user opens the dialog, arrow-keys to a different tab, and presses Up/Down to reorder it): the previously-active tab must remain active. Because `ListModel.move()` may shift the previously-active delegate into a different `TabBar` slot, the implementation must capture the active tab's `id_key` *before* the move and call `root.focus_on_tab_with_id_key(previously_active_id_key)` after the move.
+
+13c. Implementation guidance: in the `onReorderStarting` slot in `SuttaSearchWindow.qml`, snapshot `suttas_tab_bar.currentItem.id_key` into a `root` property (e.g. `pre_reorder_active_id_key`). In the `onReorderFinished` slot, call `focus_on_tab_with_id_key(pre_reorder_active_id_key)` — this single restore path covers both cases above (because if the moved tab *was* the active one, its `id_key` matches the snapshot and it gets re-focused at its new index). Clear the snapshot afterwards.
+
+13d. The `moved_id_key` payload on the `reorderFinished` signal is therefore informational only — the slot in `SuttaSearchWindow.qml` ignores it for activation purposes and uses the captured `pre_reorder_active_id_key` instead.
+
 ### 4.4 Keyboard shortcuts
 
 14. The system must add two new keybinding action definitions in `assets/keybindings.json`:
@@ -101,7 +121,7 @@ Understanding this is essential because the reorder operation must **not** destr
 
 23. `ListModel.move(from, to, 1)` preserves all field values on the moved row (including `web_item_key`, which may be `""` for never-activated tabs — that is fine; the lazy-creation path in `tab_checked_changed()` will still work when the tab is later clicked). The webview in `sutta_html_view_layout` is **not** touched, because the move operates only on the `ListModel`, not on the stack layout.
 
-24. After the move, `Repeater` will update the `index` property on the two affected delegates. The currently-checked tab (the one being moved) **must remain checked**. Because `TabBar` tracks `currentIndex` rather than the delegate instance, the implementation must call `root.focus_on_tab_with_id_key(moved_tab.id_key)` (or an equivalent helper) after the move so that `suttas_tab_bar.currentIndex` follows the moved tab to its new position. This must also be done even if the delegate happens to still be checked, to keep dialog selection and tab-bar selection in sync.
+24. After the move, `Repeater` will update the `index` property on the two affected delegates. Because `TabBar` tracks `currentIndex` (a plain int) rather than the delegate instance, the active tab in `suttas_tab_bar` can end up pointing at the wrong delegate. The implementation must therefore **snapshot the previously-active tab's `id_key` before the move** and call `root.focus_on_tab_with_id_key(pre_reorder_active_id_key)` after the move. This single restore path correctly handles both cases described in requirement 13b: the moved tab stays active iff it was active before the move, otherwise the previously-active tab is restored. Do **not** unconditionally refocus the moved tab — that would violate requirement 13a when the user reorders a non-active tab.
 
 ### 7.3 Mapping combined_tabs_model rows to source-model rows
 
