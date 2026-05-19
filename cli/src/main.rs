@@ -102,7 +102,8 @@ fn import_stardict_dictionary(new_dict_label: &str,
                               unzipped_dir: &Path,
                               limit: Option<usize>)
                               -> Result<(), String> {
-    import_stardict_as_new(unzipped_dir, "pli", new_dict_label, new_dict_label, true, true, limit, false, None, &|_| {})?;
+    let cancel = std::sync::atomic::AtomicBool::new(false);
+    import_stardict_as_new(unzipped_dir, "pli", new_dict_label, new_dict_label, true, true, limit, false, None, &|_| {}, &cancel)?;
     Ok(())
 }
 
@@ -157,7 +158,8 @@ fn import_stardict_zip(zip_path: &Path, label: Option<&str>, lang: &str) -> Resu
     println!("Label: {}", resolved_label);
     println!("Language: {}", lang);
 
-    let id = import_user_zip(zip_path, &resolved_label, lang, &|p| {
+    let cancel = std::sync::atomic::AtomicBool::new(false);
+    let outcome = import_user_zip(zip_path, &resolved_label, lang, &|p| {
         match p {
             StardictImportProgress::Extracting => println!("  extracting..."),
             StardictImportProgress::Parsing => println!("  parsing..."),
@@ -168,8 +170,12 @@ fn import_stardict_zip(zip_path: &Path, label: Option<&str>, lang: &str) -> Resu
             }
             StardictImportProgress::Done => println!("  done."),
             StardictImportProgress::Failed { msg } => eprintln!("  failed: {}", msg),
+            StardictImportProgress::Aborted { inserted } => {
+                println!("  aborted (kept {} entries).", inserted);
+            }
         }
-    })?;
+    }, &cancel)?;
+    let id = outcome.dictionary_id;
 
     println!("Successfully imported as dictionary id {}", id);
 

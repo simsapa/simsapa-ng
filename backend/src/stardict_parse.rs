@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use diesel::prelude::*;
 
@@ -22,6 +23,22 @@ pub enum StardictImportProgress {
     InsertingWords { done: usize, total: usize },
     Done,
     Failed { msg: String },
+    /// User-initiated abort: the dictionary row and the rows already
+    /// inserted are left in the DB so the next startup reconcile picks them
+    /// up. `inserted` is the count of rows committed before the abort.
+    Aborted { inserted: usize },
+}
+
+/// Outcome of a successful `import_stardict_as_new` / `import_user_zip`
+/// invocation. `cancelled = true` indicates the user aborted mid-import;
+/// in that case `inserted` is the count of rows that survived in the DB
+/// (the parent `dictionaries` row is also kept so the next reconcile
+/// picks the partial import up).
+#[derive(Debug, Clone)]
+pub struct ImportOutcome {
+    pub dictionary_id: i32,
+    pub inserted: usize,
+    pub cancelled: bool,
 }
 
 /// Read the optional `description=` line from a StarDict `.ifo` file.
@@ -249,7 +266,8 @@ pub fn import_stardict_as_new(
     is_user_imported: bool,
     description: Option<&str>,
     progress: &dyn Fn(StardictImportProgress),
-) -> Result<i32, String> {
+    cancel: &AtomicBool,
+) -> Result<ImportOutcome, String> {
     use crate::db::dictionaries_models::NewDictionary;
 
     let app_data = get_app_data();
@@ -343,39 +361,54 @@ pub fn import_stardict_as_new(
         msg
     })?;
 
-    let chunk_size = 5000;
+    // Chunk size of 1000 doubles as the progress tick cadence AND the abort
+    // checkpoint cadence (PRD §4.8 / §7.3.3). Each chunk commits in its own
+    // transaction so that on cancel the rows already inserted survive in
+    // the DB and the next startup reconcile picks them up.
+    let chunk_size = 1000;
     let mut inserted: usize = 0;
-    let insert_result = db_conn.transaction::<_, diesel::result::Error, _>(|transaction_conn| {
-        for chunk in words_to_insert.chunks(chunk_size) {
-            let batch_result = db::dictionaries::create_dict_words_batch(transaction_conn, chunk);
-            if let Err(err) = batch_result {
-                error(&format!("Batch insertion failed for chunk. Error: {}", err));
-                return Err(err);
-            }
-            inserted += chunk.len();
-            // Note: progress callback is called outside of transaction lifetime
-            // safety — but it's a `Fn`, so we just emit the count we've committed
-            // in this transaction so far. The callback must not touch the DB.
-            progress(StardictImportProgress::InsertingWords { done: inserted, total });
-        }
-        Ok(())
-    });
+    let mut cancelled = false;
 
-    match insert_result {
-        Ok(_) => {},
-        Err(e) => {
-            // Transaction automatically rolled back on error.
-            // Also drop the parent dictionaries row so we don't leak an empty entry.
-            drop(_lock);
-            let _ = app_data.dbm.dictionaries.delete_dictionary_by_label(new_dict_label);
-            let msg = format!("Batch insertion failed: {}", e);
-            progress(StardictImportProgress::Failed { msg: msg.clone() });
-            return Err(msg);
+    for chunk in words_to_insert.chunks(chunk_size) {
+        // Cancel check between chunks. On cancel, KEEP the partial rows
+        // and the parent `dictionaries` row in the DB — the next startup
+        // reconcile pass will index what's there.
+        if cancel.load(Ordering::Relaxed) {
+            cancelled = true;
+            break;
         }
+
+        let chunk_result = db_conn.transaction::<_, diesel::result::Error, _>(|tx| {
+            db::dictionaries::create_dict_words_batch(tx, chunk)
+        });
+
+        match chunk_result {
+            Ok(_) => {
+                inserted += chunk.len();
+                progress(StardictImportProgress::InsertingWords { done: inserted, total });
+            }
+            Err(e) => {
+                // Per-chunk transaction failure is treated as an unrecoverable
+                // error: drop the parent row (and any prior chunks) so we
+                // don't leak a half-imported dictionary. This is the
+                // `Failed` path — distinct from cancel.
+                drop(_lock);
+                let _ = app_data.dbm.dictionaries.delete_dictionary_by_label(new_dict_label);
+                let msg = format!("Batch insertion failed: {}", e);
+                progress(StardictImportProgress::Failed { msg: msg.clone() });
+                return Err(msg);
+            }
+        }
+    }
+
+    if cancelled {
+        info(&format!("Import aborted for '{}' after {} entries.", &ifo.bookname, inserted));
+        progress(StardictImportProgress::Aborted { inserted });
+        return Ok(ImportOutcome { dictionary_id, inserted, cancelled: true });
     }
 
     info(&format!("Import finished for '{}'.", &ifo.bookname));
     progress(StardictImportProgress::Done);
 
-    Ok(dictionary_id)
+    Ok(ImportOutcome { dictionary_id, inserted, cancelled: false })
 }

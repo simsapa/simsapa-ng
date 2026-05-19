@@ -1009,6 +1009,7 @@ fn import_stardict_zip_bootstrap(zip_path: &Path, label: &str, lang: &str) -> Re
         Err(e) => return Err(anyhow::anyhow!("Cannot access zip {}: {}", zip_path.display(), e)),
     }
 
+    let cancel = std::sync::atomic::AtomicBool::new(false);
     import_user_zip(zip_path, label, lang, &|p| {
         match p {
             StardictImportProgress::Extracting => logger::info("  extracting..."),
@@ -1020,8 +1021,11 @@ fn import_stardict_zip_bootstrap(zip_path: &Path, label: &str, lang: &str) -> Re
             }
             StardictImportProgress::Done => logger::info("  done."),
             StardictImportProgress::Failed { msg } => logger::error(&format!("  failed: {}", msg)),
+            StardictImportProgress::Aborted { inserted } => {
+                logger::info(&format!("  aborted (kept {} entries).", inserted))
+            }
         }
-    })
+    }, &cancel)
     .map_err(|e| anyhow::anyhow!("Failed to import StarDict zip {}: {}", zip_path.display(), e))?;
 
     Ok(())

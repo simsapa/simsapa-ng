@@ -6,11 +6,14 @@
 //! holds the global serialisation mutex.
 
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use std::thread;
+use std::time::Instant;
 
 use core::pin::Pin;
 use cxx_qt_lib::QString;
-use cxx_qt::Threading;
+use cxx_qt::{CxxQtType, Threading};
 
 use serde::Serialize;
 
@@ -46,7 +49,7 @@ pub mod qobject {
         fn import_zip(self: Pin<&mut DictionaryManager>, zip_path: &QString, label: &QString, lang: &QString) -> QString;
 
         #[qinvokable]
-        fn delete_dictionary(self: &DictionaryManager, dictionary_id: i32) -> QString;
+        fn delete_dictionary(self: Pin<&mut DictionaryManager>, dictionary_id: i32) -> QString;
 
         #[qinvokable]
         fn rename_label(self: &DictionaryManager, dictionary_id: i32, new_label: &QString) -> QString;
@@ -122,6 +125,14 @@ pub mod qobject {
         fn import_failed(self: Pin<&mut DictionaryManager>, message: QString);
 
         #[qsignal]
+        #[cxx_name = "deleteFinished"]
+        fn delete_finished(self: Pin<&mut DictionaryManager>, dictionary_id: i32, label: QString, removed_count: i32, elapsed_ms: i32);
+
+        #[qsignal]
+        #[cxx_name = "deleteFailed"]
+        fn delete_failed(self: Pin<&mut DictionaryManager>, message: QString);
+
+        #[qsignal]
         #[cxx_name = "reconcileProgress"]
         fn reconcile_progress(self: Pin<&mut DictionaryManager>, stage: QString, done: i32, total: i32);
 
@@ -131,8 +142,21 @@ pub mod qobject {
     }
 }
 
-#[derive(Default)]
-pub struct DictionaryManagerRust;
+pub struct DictionaryManagerRust {
+    /// Cooperative cancellation flag for the in-flight import worker.
+    /// Reset to `false` at the start of each `import_zip` call and flipped
+    /// to `true` by `abort_import`. The worker checks it between insert
+    /// chunks. Delete does not need a cancel flag.
+    pub import_cancel: Arc<AtomicBool>,
+}
+
+impl Default for DictionaryManagerRust {
+    fn default() -> Self {
+        Self {
+            import_cancel: Arc::new(AtomicBool::new(false)),
+        }
+    }
+}
 
 #[derive(Serialize)]
 struct UserDictRowJson {
@@ -165,6 +189,11 @@ fn stardict_progress_to_signal(p: &StardictImportProgress) -> (String, i32, i32)
         }
         StardictImportProgress::Done => ("Done".to_string(), 0, 0),
         StardictImportProgress::Failed { msg } => (format!("Failed: {}", msg), 0, 0),
+        StardictImportProgress::Aborted { inserted } => {
+            // The bridge issues `importCancelled` separately based on the
+            // `ImportOutcome`; this signal is only the progress text.
+            ("Aborted".to_string(), *inserted as i32, 0)
+        }
     }
 }
 
@@ -193,6 +222,10 @@ impl qobject::DictionaryManager {
         let label = label.to_string();
         let lang = lang.to_string();
 
+        // Reset and clone the cancel flag so the worker can observe `abort_import`.
+        let cancel = self.rust().import_cancel.clone();
+        cancel.store(false, std::sync::atomic::Ordering::Relaxed);
+
         thread::spawn(move || {
             let progress_thread = qt_thread.clone();
             let on_progress = move |p: StardictImportProgress| {
@@ -203,12 +236,15 @@ impl qobject::DictionaryManager {
                 });
             };
 
-            match dictionary_manager_core::import_user_zip(&zip_path, &label, &lang, &on_progress) {
-                Ok(dictionary_id) => {
+            match dictionary_manager_core::import_user_zip(&zip_path, &label, &lang, &on_progress, &cancel) {
+                Ok(outcome) => {
+                    // TODO §5: emit `importCancelled` when `outcome.cancelled`
+                    // is true. For now both paths still go through
+                    // `importFinished` so the §3 QML cutover keeps working.
                     get_app_data().refresh_dict_source_uid_caches();
                     let label_qs = QString::from(&label);
                     let _ = qt_thread.queue(move |mut qo| {
-                        qo.as_mut().import_finished(dictionary_id, label_qs);
+                        qo.as_mut().import_finished(outcome.dictionary_id, label_qs);
                     });
                 }
                 Err(msg) => {
@@ -224,14 +260,49 @@ impl qobject::DictionaryManager {
         QString::from("ok")
     }
 
-    fn delete_dictionary(&self, dictionary_id: i32) -> QString {
-        match dictionary_manager_core::delete_user_dictionary(dictionary_id) {
-            Ok(()) => {
-                get_app_data().refresh_dict_source_uid_caches();
-                QString::from("ok")
+    fn delete_dictionary(self: Pin<&mut Self>, dictionary_id: i32) -> QString {
+        // Look up label + entry count BEFORE spawning so we can quick-fail
+        // on a bogus id without leaving the UI hanging on a worker thread.
+        let app_data = get_app_data();
+        let user_dicts = match app_data.dbm.dictionaries.list_dictionaries(Some(true)) {
+            Ok(rs) => rs,
+            Err(e) => return QString::from(&format!("Failed to list user dictionaries: {}", e)),
+        };
+        let target = match user_dicts.into_iter().find(|d| d.id == dictionary_id) {
+            Some(d) => d,
+            None => return QString::from(&format!(
+                "Dictionary id {} is not a user-imported dictionary; refusing to delete.",
+                dictionary_id
+            )),
+        };
+        let removed_count: i32 = app_data.dbm.dictionaries
+            .count_words_for_dictionary(dictionary_id)
+            .unwrap_or(0) as i32;
+        let label = target.label.clone();
+
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let started = Instant::now();
+            match dictionary_manager_core::delete_user_dictionary(dictionary_id) {
+                Ok(()) => {
+                    get_app_data().refresh_dict_source_uid_caches();
+                    let elapsed_ms = started.elapsed().as_millis() as i32;
+                    let label_qs = QString::from(&label);
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().delete_finished(dictionary_id, label_qs, removed_count, elapsed_ms);
+                    });
+                }
+                Err(msg) => {
+                    error(&format!("delete_dictionary failed: {}", msg));
+                    let qs = QString::from(&msg);
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().delete_failed(qs);
+                    });
+                }
             }
-            Err(msg) => QString::from(&msg),
-        }
+        });
+
+        QString::from("ok")
     }
 
     fn rename_label(&self, dictionary_id: i32, new_label: &QString) -> QString {

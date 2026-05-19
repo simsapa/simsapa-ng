@@ -11,10 +11,11 @@
 
 use std::path::Path;
 use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
 
 use crate::{get_app_data, get_app_globals};
 use crate::logger::{info, error};
-use crate::stardict_parse::{import_stardict_as_new, StardictImportProgress, read_ifo_description};
+use crate::stardict_parse::{import_stardict_as_new, ImportOutcome, StardictImportProgress, read_ifo_description};
 
 /// Single global serialisation lock for user-dictionary mutations.
 ///
@@ -84,7 +85,8 @@ pub fn import_user_zip(
     label: &str,
     lang: &str,
     on_progress: &dyn Fn(StardictImportProgress),
-) -> Result<i32, String> {
+    cancel: &AtomicBool,
+) -> Result<ImportOutcome, String> {
     let _guard = match DICT_MGR_LOCK.try_lock() {
         Ok(g) => g,
         Err(_) => return Err(BUSY_MSG.to_string()),
@@ -156,7 +158,7 @@ pub fn import_user_zip(
     // 8. Run the SQL-only import. `physical_stem` locates the files on disk;
     //    `label` is the logical label stored on the dictionaries row and used
     //    as the `{word}/{label}` uid suffix.
-    let dictionary_id = import_stardict_as_new(
+    let outcome = import_stardict_as_new(
         &unzipped_dir,
         lang,
         &physical_stem,
@@ -167,6 +169,7 @@ pub fn import_user_zip(
         true,            // is_user_imported
         description.as_deref(),
         on_progress,
+        cancel,
     ).map_err(|e| {
         // SQL-side failures inside import_stardict_as_new already roll back
         // the dictionaries row + dict_words. Surface the original message.
@@ -174,12 +177,19 @@ pub fn import_user_zip(
         e
     })?;
 
-    info(&format!("import_user_zip: '{}' -> id {}", label, dictionary_id));
+    if outcome.cancelled {
+        info(&format!(
+            "import_user_zip: '{}' cancelled; kept {} partial entries on dict id {}",
+            label, outcome.inserted, outcome.dictionary_id
+        ));
+    } else {
+        info(&format!("import_user_zip: '{}' -> id {}", label, outcome.dictionary_id));
+    }
 
     // tmp drops here; extracted files are deleted.
     drop(tmp);
 
-    Ok(dictionary_id)
+    Ok(outcome)
 }
 
 /// Find a StarDict directory inside an extracted archive and return both the
