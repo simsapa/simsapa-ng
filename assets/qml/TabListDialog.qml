@@ -11,13 +11,24 @@ Dialog {
     required property var tabs_results_model
     required property var tabs_translations_model
     required property var nav_history
+    required property var keybindings
     required property bool is_wide
     required property bool is_tall
+
+    // id_key of the currently active tab in suttas_tab_bar, used to pre-select
+    // the matching row when the dialog opens.
+    property string active_tab_id_key: ""
+
+    function get_sequences(action_id) {
+        return control.keybindings[action_id] || [];
+    }
 
     signal tabSelected(string id_key)
     signal historyItemSelected(string item_uid, string table_name, string sutta_ref, string sutta_title)
     signal clearAllTabs()
     signal clearHistory()
+    signal reorderStarting()
+    signal reorderFinished(string moved_id_key)
 
     // title: "Tabs and History"
     modal: true
@@ -107,6 +118,26 @@ Dialog {
     }
 
     Shortcut {
+        sequences: control.get_sequences("tab_list_move_tab_up")
+        enabled: control.visible
+                 && control.active_column === "tabs"
+                 && combined_tabs_model.count > 0
+                 && tab_list_view.currentIndex >= 0
+                 && control.can_move_up()
+        onActivated: control.move_selected_tab_up()
+    }
+
+    Shortcut {
+        sequences: control.get_sequences("tab_list_move_tab_down")
+        enabled: control.visible
+                 && control.active_column === "tabs"
+                 && combined_tabs_model.count > 0
+                 && tab_list_view.currentIndex >= 0
+                 && control.can_move_down()
+        onActivated: control.move_selected_tab_down()
+    }
+
+    Shortcut {
         sequence: "Return"
         enabled: control.visible
         onActivated: control.open_selected_item()
@@ -132,11 +163,83 @@ Dialog {
 
             RowLayout {
                 Layout.fillWidth: true
+                Layout.preferredHeight: 32
+                spacing: 4
 
                 Label {
                     text: "Tabs"
                     font.bold: true
                     font.underline: control.active_column === "tabs"
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    id: move_up_btn
+                    padding: 4
+                    hoverEnabled: true
+
+                    icon.source: "icons/32x32/fa_chevron-up-solid.png"
+                    icon.width: 16
+                    icon.height: 16
+                    Layout.preferredHeight: 28
+                    Layout.preferredWidth: 28
+                    Layout.alignment: Qt.AlignVCenter
+
+                    background: Rectangle {
+                        radius: 4
+                        border.width: move_up_btn.hovered ? 1 : 0
+                        border.color: control.palette.dark
+                        color: move_up_btn.down ? control.palette.mid
+                                                : (move_up_btn.hovered ? control.palette.midlight : "transparent")
+                    }
+
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Move tab up"
+                    enabled: control.active_column === "tabs"
+                             && combined_tabs_model.count > 0
+                             && tab_list_view.currentIndex >= 0
+                             && control.can_move_up()
+                    onClicked: control.move_selected_tab_up()
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                Button {
+                    id: move_down_btn
+                    padding: 4
+                    hoverEnabled: true
+
+                    icon.source: "icons/32x32/fa_chevron-down-solid.png"
+                    icon.width: 16
+                    icon.height: 16
+                    Layout.preferredHeight: 28
+                    Layout.preferredWidth: 28
+                    Layout.alignment: Qt.AlignVCenter
+
+                    background: Rectangle {
+                        radius: 4
+                        border.width: move_down_btn.hovered ? 1 : 0
+                        border.color: control.palette.dark
+                        color: move_down_btn.down ? control.palette.mid
+                                                  : (move_down_btn.hovered ? control.palette.midlight : "transparent")
+                    }
+
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Move tab down"
+                    enabled: control.active_column === "tabs"
+                             && combined_tabs_model.count > 0
+                             && tab_list_view.currentIndex >= 0
+                             && control.can_move_down()
+                    onClicked: control.move_selected_tab_down()
+                }
+
+                Item {
                     Layout.fillWidth: true
                 }
 
@@ -144,6 +247,7 @@ Dialog {
                     text: "Clear"
                     flat: true
                     font.pointSize: 9
+                    Layout.alignment: Qt.AlignVCenter
                     enabled: combined_tabs_model.count > 0
                     onClicked: {
                         control.clearAllTabs();
@@ -184,6 +288,23 @@ Dialog {
 
                         width: ListView.view.width
                         highlighted: ListView.isCurrentItem && control.active_column === "tabs"
+
+                        // Horizontal divider at the top edge of the delegate when this row
+                        // begins a new group. Drawn as an overlay so it does not affect the
+                        // delegate's highlight or click area.
+                        Rectangle {
+                            height: 1
+                            color: control.palette.mid
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            z: 1
+                            visible: {
+                                if (tab_item_delegate.index <= 0) return false;
+                                let prev = combined_tabs_model.get(tab_item_delegate.index - 1);
+                                return !!prev && prev.group_label !== tab_item_delegate.group_label;
+                            }
+                        }
 
                         contentItem: RowLayout {
                             spacing: 8
@@ -251,18 +372,22 @@ Dialog {
 
             RowLayout {
                 Layout.fillWidth: true
+                Layout.preferredHeight: 32
+                spacing: 4
 
                 Label {
                     text: "History"
                     font.bold: true
                     font.underline: control.active_column === "history"
                     Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 Button {
                     text: "Clear"
                     flat: true
                     font.pointSize: 9
+                    Layout.alignment: Qt.AlignVCenter
                     enabled: history_list_model.count > 0
                     onClicked: {
                         control.clearHistory();
@@ -351,6 +476,93 @@ Dialog {
         }
     }
 
+    function get_source_model_for_group(group_label) {
+        if (group_label === "Pinned") return control.tabs_pinned_model;
+        if (group_label === "Results") return control.tabs_results_model;
+        if (group_label === "Trans") return control.tabs_translations_model;
+        return null;
+    }
+
+    // Assumes id_key is unique across all three source models. This matches
+    // the invariant used by root.focus_on_tab_with_id_key in SuttaSearchWindow.qml.
+    function find_source_index_by_id_key(source_model, id_key) {
+        if (!source_model) return -1;
+        for (let i = 0; i < source_model.count; i++) {
+            if (source_model.get(i).id_key === id_key) return i;
+        }
+        return -1;
+    }
+
+    function can_move_up() {
+        if (tab_list_view.currentIndex < 0) return false;
+        if (combined_tabs_model.count === 0) return false;
+        if (tab_list_view.currentIndex === 0) return false;
+        let cur = combined_tabs_model.get(tab_list_view.currentIndex);
+        let prev = combined_tabs_model.get(tab_list_view.currentIndex - 1);
+        return !!cur && !!prev && cur.group_label === prev.group_label;
+    }
+
+    function can_move_down() {
+        if (tab_list_view.currentIndex < 0) return false;
+        if (combined_tabs_model.count === 0) return false;
+        if (tab_list_view.currentIndex >= combined_tabs_model.count - 1) return false;
+        let cur = combined_tabs_model.get(tab_list_view.currentIndex);
+        let next = combined_tabs_model.get(tab_list_view.currentIndex + 1);
+        return !!cur && !!next && cur.group_label === next.group_label;
+    }
+
+    function move_selected_tab(direction) {
+        if (direction < 0 && !control.can_move_up()) return;
+        if (direction > 0 && !control.can_move_down()) return;
+
+        let cur_idx = tab_list_view.currentIndex;
+        let cur = combined_tabs_model.get(cur_idx);
+        let neighbor = combined_tabs_model.get(cur_idx + direction);
+        if (!cur || !neighbor) return;
+
+        let moved_id_key = cur.id_key;
+        let cur_source_model = control.get_source_model_for_group(cur.group_label);
+        let neighbor_source_model = control.get_source_model_for_group(neighbor.group_label);
+        if (!cur_source_model || cur_source_model !== neighbor_source_model) {
+            console.error("TabListDialog.move_selected_tab: source model mismatch for groups", cur.group_label, neighbor.group_label);
+            return;
+        }
+
+        let cur_src_idx = control.find_source_index_by_id_key(cur_source_model, cur.id_key);
+        let nbr_src_idx = control.find_source_index_by_id_key(neighbor_source_model, neighbor.id_key);
+        if (cur_src_idx < 0 || nbr_src_idx < 0) {
+            console.error("TabListDialog.move_selected_tab: source index lookup failed", cur_src_idx, nbr_src_idx);
+            return;
+        }
+        if (cur_src_idx === nbr_src_idx) return;
+
+        control.reorderStarting();
+        cur_source_model.move(cur_src_idx, nbr_src_idx, 1);
+        control.populate_model();
+
+        // Re-select the moved tab in the rebuilt combined model.
+        let new_idx = -1;
+        for (let i = 0; i < combined_tabs_model.count; i++) {
+            if (combined_tabs_model.get(i).id_key === moved_id_key) {
+                new_idx = i;
+                break;
+            }
+        }
+        if (new_idx >= 0) {
+            tab_list_view.currentIndex = new_idx;
+        }
+
+        control.reorderFinished(moved_id_key);
+    }
+
+    function move_selected_tab_up() {
+        control.move_selected_tab(-1);
+    }
+
+    function move_selected_tab_down() {
+        control.move_selected_tab(1);
+    }
+
     function is_blank_tab(item_uid) {
         return !item_uid || item_uid === "Sutta" || item_uid === "Word";
     }
@@ -420,8 +632,20 @@ Dialog {
         populate_model();
         populate_history_model();
         active_column = "tabs";
-        tab_list_view.currentIndex = 0;
-        tab_list_view.positionViewAtBeginning();
+
+        // Pre-select the row matching the currently active tab in suttas_tab_bar.
+        let initial_idx = 0;
+        if (control.active_tab_id_key) {
+            for (let i = 0; i < combined_tabs_model.count; i++) {
+                if (combined_tabs_model.get(i).id_key === control.active_tab_id_key) {
+                    initial_idx = i;
+                    break;
+                }
+            }
+        }
+        tab_list_view.currentIndex = initial_idx;
+        tab_list_view.positionViewAtIndex(initial_idx, ListView.Contain);
+
         history_list_view.currentIndex = 0;
         history_list_view.positionViewAtBeginning();
     }

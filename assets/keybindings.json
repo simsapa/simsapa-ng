@@ -90,6 +90,18 @@
         "shortcuts": ["Ctrl+Tab"]
     },
     {
+        "id": "tab_list_move_tab_up",
+        "name": "Move Tab Up (Tab List)",
+        "description": "Move the selected tab up within its group in the Tab List dialog",
+        "shortcuts": ["Shift+Up", "Shift+Left", "Shift+J"]
+    },
+    {
+        "id": "tab_list_move_tab_down",
+        "name": "Move Tab Down (Tab List)",
+        "description": "Move the selected tab down within its group in the Tab List dialog",
+        "shortcuts": ["Shift+Down", "Shift+Right", "Shift+K"]
+    },
+    {
         "id": "prev_tab",
         "name": "Previous Tab",
         "description": "Switch to the previous tab",
