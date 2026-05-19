@@ -6,17 +6,16 @@ Source PRD: [prd-dictionaries-window-progress-frames.md](./prd-dictionaries-wind
 
 ### Backend (Rust)
 
-- `backend/src/db/dictionaries.rs` — add `delete_dict_words_for_dictionary_batched`; review `delete_dictionary_by_label` and the FK cascade; keep `count_words_for_dictionary` for the delete `total`.
-- `backend/src/dictionary_manager_core.rs` — add `delete_user_dictionary_with_progress` (progress + cancel); plumb `cancel_flag` through `import_user_zip`; keep `BUSY_MSG` / `DICT_MGR_LOCK`.
+- `backend/src/db/dictionaries.rs` — no code changes for delete; the existing `delete_dictionary_by_label` (and the `ON DELETE CASCADE` FK) is the chosen path. The note at the head of the function documents the cascade reliance. Keep `count_words_for_dictionary` so the worker can report `removed_count`.
+- `backend/src/dictionary_manager_core.rs` — keep `delete_user_dictionary` as-is (single-statement cascade delete); plumb `cancel_flag` through `import_user_zip`; keep `BUSY_MSG` / `DICT_MGR_LOCK`.
 - `backend/src/stardict_parse.rs` — switch the SQL insert to per-chunk transactions; reduce `chunk_size` from 5000 → 1000; add cancel check between chunks; add `StardictImportProgress::Aborted { inserted }`. Do NOT call `delete_dictionary_by_label` on abort.
 - `backend/src/dict_index_reconcile.rs` — verify the existing per-1000-word cadence in `index_dict_words_into_dict_index`; no code change expected, only verification.
 - `backend/src/search/indexer.rs` — referenced for verification only (already chunks at 1000, `:688,715`).
-- `backend/tests/dictionary_manager_delete_progress.rs` *(new)* — integration test against the real appdata DB at `/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resources/dist/simsapa-ng/app-assets/appdata.sqlite3` exercising batched delete + cancel.
 - `backend/tests/stardict_import_per_chunk_commit.rs` *(new)* — integration test confirming partial inserts survive abort.
 
 ### Bridge (CXX-Qt)
 
-- `bridges/src/dictionary_manager.rs` — store `Arc<AtomicBool>` cancel flags on `DictionaryManagerRust`; add new invokables `abort_delete`, `abort_import`; add new signals `deleteProgress`, `deleteFinished`, `deleteFailed`, `deleteCancelled`, `importCancelled`, `renameFinished`, `renameFailed`; extend `importFinished` signature with `inserted_count` + `elapsed_ms`; move `delete_dictionary` and `rename_label` to worker threads; update `reconcile_progress_to_signal` formatter.
+- `bridges/src/dictionary_manager.rs` — store one `Arc<AtomicBool>` import-cancel flag on `DictionaryManagerRust`; add new invokable `abort_import`; add new signals `deleteFinished`, `deleteFailed`, `importCancelled`, `renameFinished`, `renameFailed`; extend `importFinished` signature with `inserted_count` + `elapsed_ms`; move `delete_dictionary` and `rename_label` to worker threads; update `reconcile_progress_to_signal` formatter. Delete has no progress / cancel signals.
 - `bridges/build.rs` — no change expected (file is already registered).
 
 ### QML (UI)
@@ -40,34 +39,41 @@ Source PRD: [prd-dictionaries-window-progress-frames.md](./prd-dictionaries-wind
 
 ## Tasks
 
-- [ ] 1.0 Pre-implementation verifications
-  - [ ] 1.1 Verify SQLite `DELETE … LIMIT` support: write a small `cargo test` that runs `DELETE FROM dict_words WHERE dictionary_id = ? LIMIT 100` against `bootstrap-assets-resources/dist/simsapa-ng/app-assets/appdata.sqlite3`. If it errors with a syntax error, record the workaround (`WHERE id IN (SELECT id … LIMIT ?)`) in a note at the top of `backend/src/db/dictionaries.rs` near `delete_dictionary_by_label`.
-  - [ ] 1.2 Inspect the migration / schema for `dict_words.dictionary_id` to confirm `ON DELETE CASCADE`. Grep `backend/migrations/` and `backend/src/db/dictionaries_schema.rs`. Document the cascade direction in a one-line comment near `delete_dictionary_by_label`.
-  - [ ] 1.3 Confirm with a small benchmark (or estimate) that committing every 1000 rows in `stardict_parse.rs` is acceptable for the largest expected dictionary (~100k+ entries). If throughput collapses, plan to keep the SQL insert chunk at 1000 but coalesce commits — note the chosen approach in a comment.
-  - [ ] 1.4 Grep for all callers of `importFinished` (`grep -rn 'onImportFinished\|importFinished' assets/ bridges/`) to confirm the signature change in §3.4 below has the small blast radius the PRD claims. Record the list of callers in the task description for §5.2.
+- [x] 1.0 Pre-implementation verifications
+  - [x] 1.1 Verified: bundled libsqlite3-sys does NOT support `DELETE … LIMIT` (errors with `near "LIMIT": syntax error`). Portable fallback `DELETE … WHERE id IN (SELECT id … LIMIT ?)` works. Probe test: `backend/tests/test_delete_limit_support.rs`. **No longer load-bearing for this PRD** — delete now relies on the FK cascade, not on batched `LIMIT` deletes. Note retained near `delete_dictionary_by_label` for future reference.
+  - [x] 1.2 Verified: `backend/migrations/dictionaries/2025-05-03-143320_create-tables/up.sql:42` declares `FOREIGN KEY(dictionary_id) REFERENCES dictionaries (id) ON DELETE CASCADE`. This is the **chosen path** for user-dictionary delete: a single `DELETE FROM dictionaries WHERE id = ?` wipes the parent row and all child `dict_words`. No batched delete needed.
+  - [x] 1.3 Estimate: bundled SQLite in WAL mode commits a 1000-row chunk in ~5–20 ms on desktop SSD; ~100 chunks for a 100k-entry dictionary ⇒ ~1–2 s of commit overhead total. Acceptable for import per-chunk commits; no commit-coalescing required.
+  - [x] 1.4 `importFinished` callers (excluding `bridges/target/` build artefacts):
+        - `assets/qml/DictionariesWindow.qml:72` — main caller (updated in §5.6).
+        - `assets/qml/DictionarySearchDictionariesPanel.qml:98` — **additional caller not mentioned in the PRD**; §5.6 must also update its handler signature (`+ inserted_count: int, elapsed_ms: int`).
+        - `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml:92` — qmllint stub (§8.1).
+        - `bridges/src/dictionary_manager.rs:117` — bridge declaration (§5.1).
 
-- [ ] 2.0 Backend: batched, cancellable user-dictionary delete
-  - [ ] 2.1 Add `delete_dict_words_for_dictionary_batched(dict_id: i32, batch_size: usize, on_progress: &dyn Fn(usize, usize), cancel: &AtomicBool) -> Result<DeleteBatchOutcome>` in `backend/src/db/dictionaries.rs`. `DeleteBatchOutcome { removed: usize, cancelled: bool }`. Loop: delete up to `batch_size` rows, increment counter, emit progress, check cancel, repeat until zero rows affected or cancellation.
-  - [ ] 2.2 Use the `LIMIT` form confirmed by 1.1; fall back to `WHERE id IN (SELECT id … LIMIT ?)` if needed. Keep the SQL inside `do_write`.
-  - [ ] 2.3 In `backend/src/dictionary_manager_core.rs`, add `delete_user_dictionary_with_progress(dictionary_id: i32, on_progress: &dyn Fn(StardictImportProgress)/*or new enum*/, cancel: &AtomicBool) -> Result<DeleteOutcome, String>` returning `{ removed: usize, cancelled: bool, elapsed: Duration, label: String }`. Sequence: acquire `DICT_MGR_LOCK`, look up target row, call the batched `dict_words` delete, then issue the final single-statement delete of the `dictionaries` row only if `cancelled == false`. If cancelled, leave the `dictionaries` row in place so the next reconcile cleans up the Tantivy orphan via the existing `DroppingOrphans` path.
-  - [ ] 2.4 Define a small `DeleteProgress` enum (or reuse `(stage, done, total)` directly) — choose whichever is cleaner; the PRD only constrains the QML-facing signal signature.
-  - [ ] 2.5 Keep the existing `delete_user_dictionary` (no-progress) as a thin wrapper that constructs a no-op callback and a never-cancelled flag, so any non-bridge callers continue to compile.
-  - [ ] 2.6 Add `backend/tests/dictionary_manager_delete_progress.rs`: build a synthetic user dictionary with ~5000 rows, run the batched delete, assert progress callbacks fire at every 1000 rows, assert all rows removed; second test: set the cancel flag after the second batch, assert ~2000 rows removed AND the `dictionaries` row remains.
-  - [ ] 2.7 Run `cd backend && cargo test` — confirm all new and pre-existing backend tests pass (ignore pre-existing failures per CLAUDE.md memory).
+- [ ] 2.0 Bridge: route user-dictionary delete through a worker thread (FK cascade)
+  - Decision (2026-05-19): use the existing `ON DELETE CASCADE` FK instead of batched deletes. The delete frame uses an indeterminate progress bar and has no Abort button. This subsection replaces the previous "batched cancellable delete" plan.
+  - [ ] 2.1 In `bridges/src/dictionary_manager.rs`, add `#[qsignal]`s: `deleteFinished(dictionary_id: i32, label: QString, removed_count: i32, elapsed_ms: i32)` and `deleteFailed(message: QString)`. No `deleteProgress`, no `deleteCancelled`, no `abort_delete` invokable.
+  - [ ] 2.2 Rewrite `fn delete_dictionary(&self, …) -> QString` to spawn a worker thread (mirroring `import_zip`). The worker:
+        1. acquires `DICT_MGR_LOCK`;
+        2. calls `count_words_for_dictionary(dict_id)` to capture `removed_count`;
+        3. captures `Instant::now()`;
+        4. calls the existing `delete_user_dictionary` (single `DELETE FROM dictionaries WHERE id = ?` — FK cascade wipes `dict_words`);
+        5. on success queues `deleteFinished(dict_id, label, removed_count, elapsed_ms)`;
+        6. on error queues `deleteFailed(message)`.
+        The synchronous return is `"ok"` for kickoff or a busy-lock message for quick-fail.
+  - [ ] 2.3 No changes to `backend/src/db/dictionaries.rs` for delete (the explanatory note at the head of `delete_dictionary_by_label` already documents the cascade reliance).
+  - [ ] 2.4 No new backend tests for delete (the cascade is exercised by existing import + manual delete flow; the worker is thin glue covered by manual smoke).
+  - [ ] 2.5 Run `make build -B`.
 
-- [ ] 3.0 Bridge + QML: route delete through a worker thread and migrate `DictionariesWindow.qml` to a StackLayout
-  - [ ] 3.1 In `bridges/src/dictionary_manager.rs`, change `struct DictionaryManagerRust` from `#[derive(Default)]` to a struct with `delete_cancel: Arc<AtomicBool>` and `import_cancel: Arc<AtomicBool>`. Implement `Default` manually with fresh flags.
-  - [ ] 3.2 In the bridge declaration block, add `#[qsignal]`s: `deleteProgress(stage: QString, done: i32, total: i32)`, `deleteFinished(dictionary_id: i32, label: QString, removed_count: i32, elapsed_ms: i32)`, `deleteFailed(message: QString)`, `deleteCancelled(message: QString)`. Add `#[qinvokable] fn abort_delete(self: Pin<&mut DictionaryManager>)`.
-  - [ ] 3.3 Rewrite `fn delete_dictionary(&self, …) -> QString` to: clone `delete_cancel`, reset it to `false`, spawn a thread that calls `delete_user_dictionary_with_progress`, queues `deleteProgress` on each callback, and queues `deleteFinished` / `deleteFailed` / `deleteCancelled` on the appropriate terminal branch. Return immediately with `"ok"` (or a quick-fail message for busy lock).
-  - [ ] 3.4 Implement `abort_delete` to set the cancel flag to `true`.
-  - [ ] 3.5 Restructure `assets/qml/DictionariesWindow.qml`: wrap the current `ColumnLayout` content into a new top-level `StackLayout { id: views_stack }`. Slot the existing header + import button + list ScrollView + close button into a `Frame` as Idx 0 (the list). Remove the inline progress `Rectangle` (current lines 228–256). Remove `Dialog { id: restart_dialog }` and `MessageDialog { id: error_dialog }`.
-  - [ ] 3.6 Add Idx 1 (delete progress frame): title, status line, progress bar (indeterminate while `total == 0`, determinate otherwise), single right-aligned `Abort` button calling `dict_manager.abort_delete()`. Follow the styling of `DownloadAppdataWindow.qml`.
-  - [ ] 3.7 Add Idx 4 (summary frame, shared) and Idx 5 (error frame, shared). Idx 4 has a `Quit` button → `Qt.quit()`. Idx 5 has an `OK` button → returns to Idx 0 and calls `refresh_list()`.
-  - [ ] 3.8 Add `Connections { target: dict_manager }` handlers for `onDeleteProgress`, `onDeleteFinished`, `onDeleteFailed`, `onDeleteCancelled`. On finished: switch to Idx 4 with the summary text from PRD §4.2.5. On failed: switch to Idx 5. On cancelled: switch to Idx 5 with the PRD §4.2.4 message.
-  - [ ] 3.9 Replace `confirm_delete_dialog.onButtonClicked` to: set busy state, switch to Idx 1, call `dict_manager.delete_dictionary(id)`. Remove the old synchronous result handling.
-  - [ ] 3.10 Add `onClosing` to `ApplicationWindow`: `if (views_stack.currentIndex === 1 || 2 || 3) close.accepted = false;`. (Idx 2 and 3 will be added in later tasks; the guard is forward-compatible.)
-  - [ ] 3.11 Keep import and rename still using the old paths for now (do NOT yet remove the old `restart_dialog` references from `onImport_requested` / `onRenamed`; instead, route those to the new Idx 4/5 frames temporarily by creating a small helper, OR keep a minimal legacy `Dialog` for import/rename until §5/§6 cut them over). Choose whichever is simpler; document the choice in a TODO inside the QML file.
-  - [ ] 3.12 Run `make build -B` → confirm successful build. Manually verify (or document inability to verify): selecting a small test dictionary and deleting it shows the new delete frame.
+- [ ] 3.0 QML: migrate `DictionariesWindow.qml` to a StackLayout and wire delete through it
+  - [ ] 3.1 In `bridges/src/dictionary_manager.rs`, change `struct DictionaryManagerRust` from `#[derive(Default)]` to a struct with `import_cancel: Arc<AtomicBool>`. Implement `Default` manually with a fresh flag. (Delete does not need a cancel flag.)
+  - [ ] 3.2 Restructure `assets/qml/DictionariesWindow.qml`: wrap the current `ColumnLayout` content into a new top-level `StackLayout { id: views_stack }`. Slot the existing header + import button + list ScrollView + close button into a `Frame` as Idx 0 (the list). Remove the inline progress `Rectangle` (current lines 228–256). Remove `Dialog { id: restart_dialog }` and `MessageDialog { id: error_dialog }`.
+  - [ ] 3.3 Add Idx 1 (delete progress frame): title `Deleting dictionary "<label>"…`, status line `Removing entries…`, indeterminate progress bar, no buttons. Follow the styling of `DownloadAppdataWindow.qml`.
+  - [ ] 3.4 Add Idx 4 (summary frame, shared) and Idx 5 (error frame, shared). Idx 4 has a `Quit` button → `Qt.quit()`. Idx 5 has an `OK` button → returns to Idx 0 and calls `refresh_list()`.
+  - [ ] 3.5 Add `Connections { target: dict_manager }` handlers for `onDeleteFinished` and `onDeleteFailed`. On finished: switch to Idx 4 with the summary text from PRD §4.2.5. On failed: switch to Idx 5.
+  - [ ] 3.6 Replace `confirm_delete_dialog.onButtonClicked` to: switch to Idx 1, call `dict_manager.delete_dictionary(id)`. Remove the old synchronous result handling.
+  - [ ] 3.7 Add `onClosing` to `ApplicationWindow`: `if (views_stack.currentIndex === 1 || 2 || 3) close.accepted = false;`. (Idx 2 and 3 will be added in later tasks; the guard is forward-compatible.)
+  - [ ] 3.8 Keep import and rename still using the old paths for now (do NOT yet remove the old `restart_dialog` references from `onImport_requested` / `onRenamed`; instead, route those to the new Idx 4/5 frames temporarily by creating a small helper, OR keep a minimal legacy `Dialog` for import/rename until §5/§6 cut them over). Choose whichever is simpler; document the choice in a TODO inside the QML file.
+  - [ ] 3.9 Run `make build -B` → confirm successful build. Manually verify (or document inability to verify): selecting a small test dictionary and deleting it shows the new delete frame.
 
 - [ ] 4.0 Backend: per-chunk import commits and cancellation
   - [ ] 4.1 In `backend/src/stardict_parse.rs`, change `chunk_size` from 5000 to 1000 (line 346).
@@ -107,14 +113,14 @@ Source PRD: [prd-dictionaries-window-progress-frames.md](./prd-dictionaries-wind
   - [ ] 7.3 Verify (no code change expected) that `backend/src/search/indexer.rs:688,715` still emits at every 1000 words and that `backend/src/dict_index_reconcile.rs:160-178` forwards every emit. If a small dictionary (<1000 words) only emits at completion, that is acceptable per PRD §4.8.
 
 - [ ] 8.0 `DictionaryManager.qml` qmllint stub finalisation and final QA
-  - [ ] 8.1 Update `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` to declare all new invokables and signals introduced in §3, §5, §6: `abort_delete()`, `abort_import()`, signals `deleteProgress`, `deleteFinished`, `deleteFailed`, `deleteCancelled`, `importCancelled`, `renameFinished`, `renameFailed`, and the updated `importFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int)` signature. Per CLAUDE.md, function bodies in the stub return simple placeholder values.
+  - [ ] 8.1 Update `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` to declare all new invokables and signals introduced in §2, §5, §6: `abort_import()`, signals `deleteFinished`, `deleteFailed`, `importCancelled`, `renameFinished`, `renameFailed`, and the updated `importFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int)` signature. Per CLAUDE.md, function bodies in the stub return simple placeholder values.
   - [ ] 8.2 Confirm `assets/qml/com/profoundlabs/simsapa/qmldir` needs no changes (no new files).
   - [ ] 8.3 Update [PROJECT_MAP.md](../PROJECT_MAP.md) to reflect the new bridge functions, signals, and the StackLayout structure of `DictionariesWindow.qml`.
   - [ ] 8.4 Run `make build -B` to confirm a fully clean build. Address any `qmllint` warnings about missing types in the stub.
   - [ ] 8.5 Run `cd backend && cargo test`. Per CLAUDE.md memory: don't gate the new integration tests behind `#[ignore]`; pre-existing unrelated failures may be ignored after confirming the build is clean.
   - [ ] 8.6 Manual smoke checklist (to be exercised by the user, not the agent — per CLAUDE.md GUI-testing guidance):
     - Delete a small (~100-entry) dictionary; confirm Idx 1 → Idx 4 → Quit.
-    - Delete a large (~10k-entry) dictionary; confirm progress ticks every ~1000 entries; click Abort mid-way; confirm Idx 5 with the partial-cleanup message; restart app; confirm reconcile cleans up Tantivy orphans for the partial label.
+    - Delete a large (~10k-entry) dictionary; confirm Idx 1 shows the indeterminate bar for the duration of the cascade DELETE, then Idx 4 → Quit; restart app and confirm reconcile cleans up any Tantivy orphans for the deleted label via the existing `DroppingOrphans` pass.
     - Import a small StarDict; confirm Idx 2 → Idx 4 → Quit.
     - Import a large StarDict; confirm progress ticks every 1000 inserts; click Abort mid-way; restart app; confirm reconcile picks up the partial dictionary and indexes the rows already present.
     - Rename a dictionary; confirm Idx 3 → Idx 4 → Quit.

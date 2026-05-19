@@ -98,6 +98,19 @@ impl DictionariesDbHandle {
         }).with_context(|| format!("Insert failed for dictionary: {}", new_dict.label))
     }
 
+    // NOTE: the `dict_words.dictionary_id` FK is `ON DELETE CASCADE`
+    // (see `backend/migrations/dictionaries/2025-05-03-143320_create-tables/up.sql:42`),
+    // so deleting the parent `dictionaries` row wipes all child `dict_words`
+    // in a single statement. This is the path used by user-dictionary
+    // delete — it is simpler than batched deletes and acceptable because the
+    // operation runs on a worker thread with an indeterminate progress UI;
+    // no per-row progress or mid-delete cancellation is supported.
+    //
+    // Background: the bundled libsqlite3-sys is built WITHOUT
+    // SQLITE_ENABLE_UPDATE_DELETE_LIMIT, so `DELETE … LIMIT n` returns
+    // `near "LIMIT": syntax error`; if batched deletes are ever needed they
+    // must use the portable form
+    // `DELETE FROM t WHERE id IN (SELECT id FROM t WHERE … LIMIT ?)`.
     pub fn delete_dictionary_by_label(&self, dict_label_val: &str) -> Result<usize> {
         use crate::db::dictionaries_schema::dictionaries::dsl::*;
 

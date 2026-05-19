@@ -23,17 +23,20 @@ and mobile, without changing what the operations themselves do.
 
 1. Replace the inline progress strip with full-frame progress views modeled on
    `DownloadAppdataWindow.qml`.
-2. Provide visible batched progress (every 1000 entries) for delete, import, and the
-   existing startup re-indexing pass.
-3. Block list interactions while an operation is in progress, exposing only a Cancel
-   button.
+2. Provide visible batched progress (every 1000 entries) for import and the
+   existing startup re-indexing pass. Delete runs as a single SQL statement
+   (relying on the `dict_words.dictionary_id` FK `ON DELETE CASCADE`) and is
+   shown with an indeterminate progress bar only.
+3. Block list interactions while an operation is in progress, exposing only a
+   Cancel button where the operation supports cancellation (import only).
 4. Show a summary frame on completion with counts and elapsed time, plus an OK
    button back to the list.
 5. Show an error frame with a message and an OK button when an operation fails — no
    retry button; the user decides what to do next.
 6. Support `Abort` for import (large StarDicts can take a long time and users may
    not realize the duration): partial inserts remain in the DB and are picked up
-   by the next startup reconcile pass.
+   by the next startup reconcile pass. Delete is NOT cancellable (single
+   statement, no useful interruption point).
 7. Adapt the existing `DictionaryIndexProgressWindow.qml` so the indexing label
    matches the user-requested format
    (e.g. `Indexing: 1/3 Whitney's Roots, 1000/12000 words`).
@@ -41,8 +44,8 @@ and mobile, without changing what the operations themselves do.
 ## 3. User Stories
 
 - **As a user who clicks "Yes" on the delete confirmation**, I want the window to
-  visibly switch into a "Deleting…" state with a batch count, so I know the app is
-  working and that I should wait.
+  visibly switch into a "Deleting…" state, so I know the app is working and that
+  I should wait.
 - **As a user importing a large StarDict**, I want to see entries being inserted in
   visible batches and know roughly how many remain, instead of staring at a thin
   progress bar above a still-clickable list.
@@ -81,25 +84,25 @@ and mobile, without changing what the operations themselves do.
 1. Activated when the user clicks `Yes` on `confirm_delete_dialog`.
 2. The frame MUST show:
    - A title: `Deleting dictionary "<label>"…`
-   - A status line updated as the operation proceeds (e.g. `Removing entries: 1000 / 12453`).
-   - An indeterminate progress bar while the row-count is being established, then a
-     determinate bar driven by `done / total`.
-   - An `Abort` button (right-aligned, single-button row; matches the
-     `DownloadAppdataWindow` button-row pattern).
+   - A status line: `Removing entries…` (no running count — the delete is a
+     single SQL statement with no intermediate observable state).
+   - An indeterminate progress bar for the duration of the operation.
+   - No buttons. Delete is not cancellable.
 3. Backend changes (see §7):
-   - Delete MUST run on a worker thread.
-   - A new `deleteProgress(stage: string, done: int, total: int)` signal MUST be
-     emitted by `DictionaryManager` at most every **1000** rows during deletion.
-   - A `deleteFinished(dictionary_id: int, label: string, removed_count: int,
-     elapsed_ms: int)` signal MUST be emitted on success.
+   - Delete MUST run on a worker thread so the UI stays responsive.
+   - A new `deleteFinished(dictionary_id: int, label: string, removed_count: int,
+     elapsed_ms: int)` signal MUST be emitted on success. `removed_count` is
+     obtained via `count_words_for_dictionary` BEFORE issuing the cascading
+     `DELETE FROM dictionaries WHERE id = ?` (so the count reflects what was
+     wiped by the cascade).
    - A `deleteFailed(message: string)` signal MUST be emitted on error.
-4. Abort:
-   - Clicking `Abort` MUST set a shared cancellation flag (`AtomicBool`) checked by
-     the worker between batches. If abort is honored before the dictionary is
-     fully removed, the partial deletion MUST still be committed (FTS orphans are
-     cleaned up by the next startup reconcile) and a `deleteCancelled` signal MUST
-     transition to the error frame with the message `Delete aborted by user;
-     remaining entries will be cleaned up on next start.`
+   - Delete relies on the `dict_words.dictionary_id` FK `ON DELETE CASCADE`
+     (see `backend/migrations/dictionaries/2025-05-03-143320_create-tables/up.sql:42`):
+     a single `DELETE FROM dictionaries WHERE id = ?` wipes the parent row and
+     all child `dict_words` in one statement. Tantivy orphans are reconciled
+     on next startup by the existing `DroppingOrphans` pass.
+4. No abort. The delete is a single uninterruptible SQL statement; offering a
+   cancel button would be misleading.
 5. On `deleteFinished`, the stack MUST switch to Idx 4 (summary) with text:
    `Deleted "<label>" — removed <removed_count> entries in <elapsed_s>s.` followed
    by `Simsapa will now exit. Start the application again so that the fulltext
@@ -175,7 +178,7 @@ and mobile, without changing what the operations themselves do.
 ### 4.5 Completion / summary frame (Idx 4)
 
 1. Shared by delete (success), import (success), import (aborted), and rename
-   (success).
+   (success). Delete has no cancellation path, so it never routes here via abort.
 2. MUST show:
    - A bold title — `Deleted`, `Imported`, `Import aborted`, or `Renamed`.
    - A summary line with counts and elapsed time as specified above.
@@ -231,12 +234,11 @@ and mobile, without changing what the operations themselves do.
 | State | Stack idx | Visible buttons | Window-close enabled |
 | --- | --- | --- | --- |
 | Idle / list | 0 | Import, Close, per-row Edit/Delete | Yes |
-| Deleting | 1 | Abort | No |
+| Deleting | 1 | (none) | No |
 | Importing | 2 | Abort | No |
 | Renaming | 3 | (none) | No |
 | Completed (delete/import/rename) | 4 | Quit (→ Qt.quit) | Yes |
 | Import aborted (partial kept) | 4 | Quit (→ Qt.quit) | Yes |
-| Delete aborted | 5 | OK (→ list) | Yes |
 | Error | 5 | OK (→ list) | Yes |
 
 ## 5. Non-Goals (Out of Scope)
@@ -244,8 +246,9 @@ and mobile, without changing what the operations themselves do.
 1. Reworking the dictionary list itself, `DictionaryListItem`, `DictionaryEditDialog`,
    or `DictionaryImportDialog`.
 2. Backgrounding operations / allowing the user to navigate elsewhere in the app
-   while a delete or import runs (the choice was: Abort only, no Hide/Background).
-3. Adding an Abort button to the startup re-indexing flow.
+   while a delete or import runs (the choice was: Abort only for import, no
+   Hide/Background).
+3. Adding an Abort button to delete or to the startup re-indexing flow.
 4. Adding a Retry button to the error frame.
 5. Changing what triggers a full app restart after delete/import/rename (still
    required for the search-index pass).
@@ -288,27 +291,27 @@ and mobile, without changing what the operations themselves do.
 
 ### 7.2 New signals required
 
-- `deleteProgress(stage: QString, done: i32, total: i32)`
 - `deleteFinished(dictionary_id: i32, label: QString, removed_count: i32, elapsed_ms: i32)`
 - `deleteFailed(message: QString)`
-- `deleteCancelled(message: QString)` — delete-aborted path; routes to error frame.
 - `importCancelled(message: QString, inserted_count: i32)` — import-aborted path;
   routes to summary frame, partial entries kept.
 - `renameFinished(dictionary_id: i32, old_label: QString, new_label: QString, elapsed_ms: i32)`
 - `renameFailed(message: QString)`
 
+No `deleteProgress` / `deleteCancelled` signal: delete is a single SQL
+statement with an indeterminate progress bar and no cancellation path.
+
 ### 7.3 Backend changes
 
 1. `bridges/src/dictionary_manager.rs::delete_dictionary` MUST move to a worker
-   thread (mirror the `import_zip` thread/`qt_thread.queue` pattern).
-2. `backend/src/dictionary_manager_core.rs::delete_user_dictionary` MUST gain a
-   progress callback and a cancellation flag, and MUST delete `dict_words` in
-   batches of ≤1000 rows so progress can be reported and cancellation honored
-   between batches. Today this work is a single `diesel::delete` on the
-   `dictionaries` row with a SQL cascade — the cascade MUST be replaced (or
-   preceded) by explicit batched deletes from `dict_words` joined to the target
-   dictionary, so we can count and report. The final `dictionaries` row delete
-   stays as a single statement.
+   thread (mirror the `import_zip` thread/`qt_thread.queue` pattern) so the UI
+   thread stays responsive while the cascading DELETE runs.
+2. `backend/src/dictionary_manager_core.rs::delete_user_dictionary` keeps its
+   single-statement behaviour (a `DELETE FROM dictionaries WHERE id = ?` that
+   relies on the `ON DELETE CASCADE` FK to wipe child `dict_words`). It MUST
+   call `count_words_for_dictionary` BEFORE the delete so the worker can report
+   the removed count in `deleteFinished`. No per-row progress callback, no
+   cancellation flag, no batching.
 3. `backend/src/stardict_parse.rs` MUST set `chunk_size = 1000` so each committed
    chunk is both a progress tick and an abort checkpoint. Each chunk MUST commit
    in its own transaction (or equivalent) so that aborted imports keep the rows
@@ -317,9 +320,9 @@ and mobile, without changing what the operations themselves do.
    insert MAY be smaller while the progress/abort granularity remains 1000.
 4. `backend/src/dict_index_reconcile.rs` MUST emit `IndexingDictionary` at least
    every 1000 words. Verify current cadence.
-5. Cancellation: delete and import MUST each hold a shared `Arc<AtomicBool>`
-   accessible from the bridge so a QML `abort_delete()` / `abort_import()`
-   invokable can flip it; the worker checks it between batches.
+5. Cancellation: import MUST hold a shared `Arc<AtomicBool>` accessible from
+   the bridge so a QML `abort_import()` invokable can flip it; the worker
+   checks it between insert chunks. Delete has no cancellation.
 6. Rename: `bridges/src/dictionary_manager.rs::rename_label` MUST move to a worker
    thread and emit `renameFinished` / `renameFailed`. No abort flag is required
    (operation is a single SQL statement).
@@ -397,23 +400,21 @@ new. Captured during the review pass on 2026-05-19.
 | `DictionaryIndexProgressWindow.qml` label | `assets/qml/DictionaryIndexProgressWindow.qml:35-43` | Just relays whatever `stage` arrives; if the bridge formats the line as above, no QML change needed. |
 | `importFinished` signature | `bridges/src/dictionary_manager.rs:118`, `:211` | Add `inserted_count: i32, elapsed_ms: i32`. Requires updating QML `Connections.onImportFinished` in `DictionariesWindow.qml:72-80` and the `DictionaryManager.qml` stub. |
 | `rename_label` → worker thread | `bridges/src/dictionary_manager.rs:237-245` and `dictionary_manager_core.rs:254-300` | Currently synchronous. Move to worker thread following the `import_zip` pattern. Existing `Result<(), String>` return becomes the quick-fail path (busy/validation); a successful kickoff returns `"ok"` and emits `renameFinished`/`renameFailed` from the worker. |
-| `delete_dictionary` → worker thread + batched | `bridges/src/dictionary_manager.rs:227-235` and `dictionary_manager_core.rs:227-248` | Same pattern as `import_zip`. Backend `delete_user_dictionary` needs a callback signature `Fn(stage, done, total)` and an `Arc<AtomicBool>` for abort. |
-| Replace SQL cascade with explicit batched `dict_words` delete | `backend/src/db/dictionaries.rs:101-107` (`delete_dictionary_by_label`) | Today: a single `DELETE FROM dictionaries WHERE label = ?` that relies on `ON DELETE CASCADE` for `dict_words`. New helper needed (see §10.3). The existing `delete_dictionary_by_label` MAY remain for `stardict_parse.rs:271,324,370` failure cleanups (those are cleanups for partial *imports*; abort path will NOT call them). |
+| `delete_dictionary` → worker thread | `bridges/src/dictionary_manager.rs:227-235` and `dictionary_manager_core.rs:227-248` | Move to a thread following the `import_zip` pattern. Backend `delete_user_dictionary` keeps its single-statement cascade behaviour; the worker calls `count_words_for_dictionary` first so it can report `removed_count` in `deleteFinished`. No progress callback, no cancellation flag. |
+| Keep SQL cascade for delete | `backend/src/db/dictionaries.rs:109-115` (`delete_dictionary_by_label`) | Unchanged: a single `DELETE FROM dictionaries WHERE label = ?` relying on the `ON DELETE CASCADE` FK. Continues to be reused by the `stardict_parse.rs` failure-cleanup callsites; the new delete worker uses the same helper (or the `id`-based equivalent). |
 | Remove inline progress strip, `restart_dialog`, `error_dialog` | `DictionariesWindow.qml:92-117, 228-256` | Wholesale replacement with `StackLayout` of frames. |
-| `DictionaryManager.qml` qmllint stub | `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` | Add signal declarations + new function stubs for: `abort_delete`, `abort_import`, signals `deleteProgress`, `deleteFinished`, `deleteFailed`, `deleteCancelled`, `importCancelled`, `renameFinished`, `renameFailed`, and the updated `importFinished` signature. |
+| `DictionaryManager.qml` qmllint stub | `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` | Add signal declarations + new function stubs for: `abort_import`, signals `deleteFinished`, `deleteFailed`, `importCancelled`, `renameFinished`, `renameFailed`, and the updated `importFinished` signature. |
 
 ### 10.3 New (does not yet exist)
 
 #### Bridge (`bridges/src/dictionary_manager.rs`)
 
-- `#[qinvokable] fn abort_delete(self: Pin<&mut Self>)` — flips `delete_cancel_flag`.
 - `#[qinvokable] fn abort_import(self: Pin<&mut Self>)` — flips `import_cancel_flag`.
-- Stored state on `DictionaryManagerRust`: two `Arc<AtomicBool>` fields, one each
-  for in-flight delete and import. (Currently struct is `#[derive(Default)]`
-  with no fields.)
-- New signals: `deleteProgress(stage, done, total)`,
+- Stored state on `DictionaryManagerRust`: one `Arc<AtomicBool>` field for the
+  in-flight import. (Currently struct is `#[derive(Default)]` with no fields.)
+- New signals:
   `deleteFinished(dictionary_id, label, removed_count, elapsed_ms)`,
-  `deleteFailed(message)`, `deleteCancelled(message)`,
+  `deleteFailed(message)`,
   `importCancelled(message, inserted_count)`,
   `renameFinished(dictionary_id, old_label, new_label, elapsed_ms)`,
   `renameFailed(message)`.
@@ -421,11 +422,10 @@ new. Captured during the review pass on 2026-05-19.
 
 #### Backend (`backend/src/dictionary_manager_core.rs`)
 
-- New `delete_user_dictionary_with_progress(dictionary_id, on_progress, cancel_flag) -> Result<DeleteOutcome, String>`
-  (or extend existing signature).
-  `DeleteOutcome { removed: usize, cancelled: bool, elapsed: Duration }`.
-  Existing `delete_user_dictionary` becomes a thin wrapper for legacy callers,
-  OR is replaced entirely (verify call sites first).
+- The existing `delete_user_dictionary` remains a single-statement cascade
+  delete; the bridge worker calls `count_words_for_dictionary` immediately
+  before it so the resulting `removed_count` can be reported in
+  `deleteFinished`. No new with-progress / with-cancel variant.
 - Plumb `cancel_flag: &AtomicBool` through `import_user_zip` and
   `import_stardict_as_new` (`stardict_parse.rs:251` signature change) so abort
   can be checked between chunks. Important: on abort, do NOT call
@@ -436,17 +436,11 @@ new. Captured during the review pass on 2026-05-19.
 
 #### Backend (`backend/src/db/dictionaries.rs`)
 
-- New `delete_dict_words_for_dictionary_batched(dict_id: i32, batch_size: usize, on_progress: &dyn Fn(usize, usize), cancel: &AtomicBool) -> Result<DeleteBatchOutcome>`.
-  Implements: `DELETE FROM dict_words WHERE dictionary_id = ? LIMIT 1000` in a
-  loop (SQLite supports `LIMIT` on DELETE with the
-  `SQLITE_ENABLE_UPDATE_DELETE_LIMIT` build flag — **must verify** the bundled
-  rusqlite/diesel build has this enabled; if not, fall back to
-  `WHERE id IN (SELECT id … LIMIT ?)`, or pre-fetch IDs in chunks). The
-  `dictionaries` row delete then becomes a final single statement.
-- Confirm whether the FK is `ON DELETE CASCADE`. If yes, deleting the
-  `dictionaries` row first wipes everything in one shot with no progress,
-  defeating the purpose — so the per-batch `dict_words` DELETE must precede the
-  row delete, and the row delete must come last after `cancel == false`.
+- No new helpers needed for delete. The existing `delete_dictionary_by_label`
+  (and a sibling `id`-based variant if convenient) drives the single-statement
+  cascade. The clarifying note at the head of `delete_dictionary_by_label`
+  documents the cascade reliance and the (intentionally unused) `LIMIT`
+  fallback shape for any future batched scenarios.
 
 #### Backend (`backend/src/stardict_parse.rs`)
 
@@ -478,17 +472,13 @@ new. Captured during the review pass on 2026-05-19.
 
 ### 10.5 Risks / verifications required before implementation
 
-1. **Diesel/SQLite `DELETE … LIMIT` support.** If the build lacks
-   `SQLITE_ENABLE_UPDATE_DELETE_LIMIT`, the batched delete needs the
-   `WHERE id IN (SELECT … LIMIT ?)` workaround. Quick check: try a
-   `LIMIT`-bearing delete in a Rust test against the appdata DB at
-   `bootstrap-assets-resources/dist/simsapa-ng/app-assets/appdata.sqlite3`.
-2. **Foreign-key cascade direction.** Confirm `dict_words.dictionary_id` is
-   `ON DELETE CASCADE`; if so, the batched-delete strategy works (we delete
-   dict_words first, then the dictionaries row). If the cascade is in the
-   other direction (unlikely) or absent, the existing
-   `delete_dictionary_by_label` (line 101) leaves orphans — re-examine.
-3. **`import_stardict_as_new` transaction boundary.** The current single outer
+1. **Foreign-key cascade direction.** Verified (see §10.2): the migration at
+   `backend/migrations/dictionaries/2025-05-03-143320_create-tables/up.sql:42`
+   declares `dict_words.dictionary_id` as `ON DELETE CASCADE`, so a single
+   `DELETE FROM dictionaries WHERE id = ?` is sufficient to wipe a user
+   dictionary. The simpler implementation (no batching, no per-row progress,
+   no cancellation for delete) is preferred and is the chosen path.
+2. **`import_stardict_as_new` transaction boundary.** The current single outer
    transaction at `stardict_parse.rs:348` is intentional for atomicity.
    Splitting it into per-chunk transactions is the only way to satisfy
    "abort keeps partial entries", and is a real semantic change — confirm
@@ -500,22 +490,20 @@ new. Captured during the review pass on 2026-05-19.
    next reconcile re-indexes. The PRD's rename-summary text matches this.
    No conflict.
 6. **No existing `Arc<AtomicBool>` cancellation pattern** in the codebase —
-   establishes a new convention. Worth a tiny shared helper module if delete
-   and import both need it.
+   import establishes the convention. Delete does not need one.
 
 ### 10.6 Suggested implementation order
 
-1. Backend: add `delete_dict_words_for_dictionary_batched` + cancel-aware
-   `delete_user_dictionary_with_progress`. Cargo test against real DB.
-2. Bridge: thread + new signals for delete; QML rewrite of
-   `DictionariesWindow.qml` (delete path first; import/rename still using old
-   path so the UI can be incrementally tested).
-3. Backend: per-chunk commits in `stardict_parse.rs` + cancel check; new
+1. Bridge: move `delete_dictionary` to a worker thread; add `deleteFinished` /
+   `deleteFailed` signals; QML rewrite of `DictionariesWindow.qml` (delete
+   path first, indeterminate progress only; import/rename still using old path
+   so the UI can be incrementally tested).
+2. Backend: per-chunk commits in `stardict_parse.rs` + cancel check; new
    `Aborted` variant.
-4. Bridge: extend `importFinished` signature, add `importCancelled`, add
+3. Bridge: extend `importFinished` signature, add `importCancelled`, add
    `abort_import`.
-5. Bridge: worker-thread `rename_label` + signals.
-6. Bridge: reconcile stage string reformat (one-liner).
-7. QML stub updates (`DictionaryManager.qml`) — last, since signatures stabilise
+4. Bridge: worker-thread `rename_label` + signals.
+5. Bridge: reconcile stage string reformat (one-liner).
+6. QML stub updates (`DictionaryManager.qml`) — last, since signatures stabilise
    by then.
-8. `make build -B`, then `cargo test`, then manual smoke.
+7. `make build -B`, then `cargo test`, then manual smoke.
