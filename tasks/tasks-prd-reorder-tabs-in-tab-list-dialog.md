@@ -3,7 +3,7 @@
 - `tasks/prd-reorder-tabs-in-tab-list-dialog.md` — Source PRD this task list is derived from.
 - `assets/keybindings.json` — Defines all keybinding actions; two new entries (`tab_list_move_tab_up`, `tab_list_move_tab_down`) will be added here.
 - `assets/qml/TabListDialog.qml` — Hosts the Tabs section; needs new Up/Down buttons, reorder logic, per-group separators, and two new `Shortcut` items wired to the keybinding system.
-- `assets/qml/SuttaSearchWindow.qml` — Owns `tabs_pinned_model`, `tabs_results_model`, `tabs_translations_model`, `suttas_tab_bar`, `root.keybindings`, `root.get_sequences()`, and `root.focus_on_tab_with_id_key()`. Pass keybindings into the dialog and add a `tabReorderRequested(id_key)` (or equivalent) hookup so the dialog can focus the moved tab via the existing helper.
+- `assets/qml/SuttaSearchWindow.qml` — Owns `tabs_pinned_model`, `tabs_results_model`, `tabs_translations_model`, `suttas_tab_bar`, `root.keybindings`, `root.get_sequences()`, and `root.focus_on_tab_with_id_key()`. Passes `keybindings` into the dialog; wires `onReorderStarting` / `onReorderFinished` to manage `suppress_tab_checked_changed` and re-focus by `id_key`. Also hosts top-level `Shortcut` items for `tab_list_move_tab_up` / `tab_list_move_tab_down` that fire when the dialog is closed and reorder the active tab via `root.reorder_active_tab(direction)` (uses the same suppression guard, skips blank placeholder tabs).
 - `assets/qml/AppSettingsWindow.qml` — Already iterates over all action IDs returned by `SuttaBridge.get_action_names_json()`. No code change expected; verify the two new actions render and are editable.
 - `bridges/build.rs` — Only needs an edit if any new QML files are added. (None planned, but verify.)
 - `backend/src/app_settings.rs`, `bridges/src/sutta_bridge.rs` — No source changes expected. Verified that `get_default_keybindings_json` / `get_action_names_json` already read from `keybindings.json` via `get_keybinding_definitions()`.
@@ -104,18 +104,18 @@ These are addressed in the sub-tasks below. Keep them in mind throughout impleme
   - [x] 4.6 Update the QML type stub at `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` only if any new bridge function was added (none planned here — keybindings are read via the existing `get_keybindings_json()`).
   - [x] 4.7 Run `make build -B` and confirm clean build.
 
-- [ ] 5.0 Add horizontal divider separators between tab groups in `tab_list_view`
+- [x] 5.0 Add horizontal divider separators between tab groups in `tab_list_view`
   - [x] 5.1 Inside the `tab_item_delegate` (around lines 175–229 of `TabListDialog.qml`), add a top-anchored `Rectangle` overlay with `height: 1`, `color: control.palette.mid`, `anchors.left/right: parent.left/right`, `anchors.top: parent.top`.
   - [x] 5.2 Set the rectangle's `visible` to `true` iff the delegate's `index > 0` **and** the previous combined row has a different `group_label`. Implement this by looking up `combined_tabs_model.get(index - 1).group_label` inside the delegate (safe because `combined_tabs_model` is the `model` of `tab_list_view`).
   - [x] 5.3 Verify the divider does not interfere with the highlight rectangle, hover, or click area of the delegate.
   - [x] 5.4 Run `make build -B` and confirm clean build.
 
-- [ ] 6.0 Final verification and documentation
-  - [ ] 6.1 Run `make build -B` from project root; confirm zero errors and warnings.
-  - [ ] 6.2 Run `cd backend && cargo test` for the Rust backend. Ignore any pre-existing unrelated test failures (per project memory) — just confirm the build is clean and no newly introduced tests fail.
-  - [ ] 6.3 Update `PROJECT_MAP.md` to mention: (a) the new in-dialog tab reorder feature in `TabListDialog.qml`, and (b) the two new keybinding actions in `assets/keybindings.json`.
-  - [ ] 6.4 If `docs/` contains user-facing documentation for the tab list or keybindings, add a short section describing the Up/Down reorder buttons and the customizable shortcuts.
-  - [ ] 6.5 Hand off to the user for manual GUI verification, with particular attention to the design hazards uncovered during review:
+- [x] 6.0 Final verification and documentation
+  - [x] 6.1 Run `make build -B` from project root; confirm zero errors and warnings.
+  - [x] 6.2 Run `cd backend && cargo test` for the Rust backend. (Skipped at user request — no backend changes beyond `assets/keybindings.json`.)
+  - [x] 6.3 Update `PROJECT_MAP.md` to mention: (a) the new in-dialog tab reorder feature in `TabListDialog.qml`, and (b) the two new keybinding actions in `assets/keybindings.json`.
+  - [x] 6.4 If `docs/` contains user-facing documentation for the tab list or keybindings, add a short section describing the Up/Down reorder buttons and the customizable shortcuts. (N/A — no existing tab-list / keybindings doc page in `docs/`.)
+  - [x] 6.5 Hand off to the user for manual GUI verification, with particular attention to the design hazards uncovered during review:
     - Move within each group (Pinned / Results / Translations); group boundaries disable Up/Down correctly.
     - Selection in the dialog follows the moved tab (repeat presses keep moving the same tab).
     - `suttas_tab_bar` order updates live; the moved tab keeps its **scroll position and rendered HTML content** (proves no webview recreation).
