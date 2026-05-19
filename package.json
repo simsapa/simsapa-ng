@@ -8,7 +8,7 @@
     "test:watch": "jest --watch"
   },
   "author": "Gambhiro",
-  "license": "GPLv3",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "dom-find-and-replace": "^1.4.7",

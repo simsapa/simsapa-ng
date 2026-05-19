@@ -3,7 +3,7 @@ name = "simsapa_backend"
 version = "0.4.0-alpha.1"
 edition = "2024"
 authors = ["Gambhiro Bhikkhu <profound.labs@gmail.com>"]
-license = "GPLv3"
+license = "Apache-2.0"
 
 [lib]
 name = "simsapa_backend"
