@@ -54,7 +54,7 @@ pub fn is_pts_sutta_ref(reference: &str) -> bool {
 }
 
 pub fn query_text_to_uid_field_query(query_text: &str) -> String {
-    let query_text = query_text.to_lowercase();
+    let query_text = query_text.trim().to_lowercase();
     if query_text.starts_with("uid:") {
         return query_text.to_string();
     }
