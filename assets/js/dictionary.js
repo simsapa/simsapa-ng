@@ -47,7 +47,7 @@ function open_dpd_button(button_name = 'grammar') {
     // <meta data_key="rootdata_vatt">
     const metaElement = document.querySelector('meta[data_key]');
     if (!metaElement) {
-        console.error('Meta element with data_key not found');
+        // Expected for non-DPD dictionary entries (e.g. Stardict imports).
         return;
     }
 
@@ -57,8 +57,8 @@ function open_dpd_button(button_name = 'grammar') {
         return;
     }
 
-    // <a class="button" data-target="grammar_pāpuṇāti_1" href="#">
-    // <a class="button" data-target="root_info_√vatt" href="#">
+    // <a class="dpd-button" data-target="grammar_pāpuṇāti_1" href="#">
+    // <a class="dpd-button" data-target="root_info_√vatt" href="#">
     //
     // <div class="dpd content hidden" id="grammar_pāpuṇāti_1">
     // <div class="dpd content hidden" id="root_info_√vatt">
@@ -72,7 +72,7 @@ function open_dpd_button(button_name = 'grammar') {
         return;
     }
 
-    const button = document.querySelector(`a.button[data-target="${targetId}"]`);
+    const button = document.querySelector(`a.dpd-button[data-target="${targetId}"]`);
     if (!button) {
         // console.error(`Button with data-target="${targetId}" not found`);
         return;
