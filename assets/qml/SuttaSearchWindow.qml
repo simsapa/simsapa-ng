@@ -3027,7 +3027,7 @@ ${query_text}`;
                             onReorderStarting: {
                                 // Capture which tab is currently active in suttas_tab_bar so we can
                                 // restore it after the move. Reordering must not change the active tab.
-                                let cur = suttas_tab_bar.currentItem;
+                                let cur = suttas_tab_bar.currentItem as SuttaTabButton;
                                 root.pre_reorder_active_id_key = (cur && cur.id_key) ? cur.id_key : "";
                                 root.suppress_tab_checked_changed = true;
                             }
