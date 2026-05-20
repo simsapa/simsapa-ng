@@ -119,6 +119,55 @@ impl DictionariesDbHandle {
         })
     }
 
+    pub fn create_dict_resource(&self, new_resource: &NewDictResource) -> Result<usize> {
+        use crate::db::dictionaries_schema::dict_resources;
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(dict_resources::table)
+                .values(new_resource)
+                .execute(db_conn)
+        }).with_context(|| format!(
+            "Insert failed for dict_resource: dict {} path {}",
+            new_resource.dictionary_id, new_resource.resource_path
+        ))
+    }
+
+    /// Look up a single resource blob by dictionary id + relative path.
+    pub fn get_dict_resource(&self, dictionary_id_param: i32, resource_path_param: &str) -> Result<Option<DictResource>> {
+        use crate::db::dictionaries_schema::dict_resources::dsl::*;
+
+        self.do_read(|db_conn| {
+            dict_resources
+                .filter(dictionary_id.eq(dictionary_id_param))
+                .filter(resource_path.eq(resource_path_param))
+                .select(DictResource::as_select())
+                .first(db_conn)
+                .optional()
+        })
+    }
+
+    /// List all resources for a dictionary (used for CSS/JS injection at render time).
+    pub fn list_dict_resources(&self, dictionary_id_param: i32) -> Result<Vec<DictResource>> {
+        use crate::db::dictionaries_schema::dict_resources::dsl::*;
+
+        self.do_read(|db_conn| {
+            dict_resources
+                .filter(dictionary_id.eq(dictionary_id_param))
+                .select(DictResource::as_select())
+                .load(db_conn)
+        })
+    }
+
+    /// Delete all resources for a dictionary (called on dictionary delete; the
+    /// FK is ON DELETE CASCADE so this is mainly explicit for clarity/safety).
+    pub fn delete_dict_resources(&self, dictionary_id_param: i32) -> Result<usize> {
+        use crate::db::dictionaries_schema::dict_resources::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(dict_resources.filter(dictionary_id.eq(dictionary_id_param))).execute(db_conn)
+        })
+    }
+
     pub fn create_dict_word(&self, new_dict_word: &NewDictWord) -> Result<DictWord> {
         use crate::db::dictionaries_schema::dict_words;
 

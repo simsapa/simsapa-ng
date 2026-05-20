@@ -428,6 +428,13 @@ impl AppData {
             static ref RE_HTML_TAG: Regex = Regex::new(r#"<html[^>]*>"#).unwrap();
             // Match <body> tag with optional attributes
             static ref RE_BODY_TAG: Regex = Regex::new(r#"<body[^>]*>"#).unwrap();
+            // Full <link …> tag (for neutralising/rewriting user-dict res links).
+            static ref RE_LINK_FULL: Regex = Regex::new(r#"<link\b[^>]*>"#).unwrap();
+            // Full <script … src=…></script> tag (for neutralising user-dict res JS).
+            static ref RE_SCRIPT_SRC_FULL: Regex = Regex::new(r#"(?is)<script\b[^>]*\bsrc=['"][^'"]+['"][^>]*>.*?</script>"#).unwrap();
+            // Extract the href/src attribute value from a tag.
+            static ref RE_HREF_ATTR: Regex = Regex::new(r#"href=['"]([^'"]+)['"]"#).unwrap();
+            static ref RE_SRC_ATTR: Regex = Regex::new(r#"src=['"]([^'"]+)['"]"#).unwrap();
         }
 
         match word {
@@ -445,6 +452,50 @@ impl AppData {
                             Some(body_class.clone()),
                         );
                     }
+                    // DPD ships its resources as files under assets/dpd-res/ and
+                    // references them with bare <link href="…"> tags that get
+                    // rewritten to that folder below. User-imported dictionaries
+                    // instead carry their res/ files in the dict_resources table:
+                    // CSS/JS are injected inline here, images/fonts are served via
+                    // the /dict_resources/<id>/… API route.
+                    let is_dpd = word.dict_label == "dpd";
+
+                    let dict_resources: Vec<crate::db::dictionaries_models::DictResource> = if is_dpd {
+                        Vec::new()
+                    } else {
+                        self.dbm.dictionaries.list_dict_resources(word.dictionary_id).unwrap_or_default()
+                    };
+
+                    // Split resources into inline-injected CSS/JS and servable
+                    // (images/fonts/etc.). `resource_path` is relative to res/.
+                    use std::collections::HashSet;
+                    let mut dict_css = String::new();
+                    let mut dict_js = String::new();
+                    let mut css_paths: HashSet<String> = HashSet::new();
+                    let mut js_paths: HashSet<String> = HashSet::new();
+                    let mut servable_paths: HashSet<String> = HashSet::new();
+                    for r in &dict_resources {
+                        match r.mime_type.as_deref().unwrap_or("") {
+                            "text/css" => {
+                                if let Some(ref data) = r.content_data {
+                                    dict_css.push_str(&String::from_utf8_lossy(data));
+                                    dict_css.push('\n');
+                                }
+                                css_paths.insert(r.resource_path.clone());
+                            }
+                            "application/javascript" | "text/javascript" => {
+                                if let Some(ref data) = r.content_data {
+                                    dict_js.push_str(&String::from_utf8_lossy(data));
+                                    dict_js.push('\n');
+                                }
+                                js_paths.insert(r.resource_path.clone());
+                            }
+                            _ => {
+                                servable_paths.insert(r.resource_path.clone());
+                            }
+                        }
+                    }
+
                     let mut js_extra = "".to_string();
                     js_extra.push_str(&format!(" const API_URL = '{}'; window.API_URL = API_URL;", &self.api_url));
                     js_extra.push_str(&format!(" const WINDOW_ID = '{}'; window.WINDOW_ID = WINDOW_ID;", window_id));
@@ -454,9 +505,86 @@ impl AppData {
 
                     let mut word_html = definition_html.clone();
 
+                    // Normalise a res reference to its dict_resources path: strip
+                    // a leading "./" and an optional "res/" prefix (mw-gd refers
+                    // to `mw.css` while the file lives at `res/mw.css`).
+                    let normalize_res = |href: &str| -> String {
+                        let h = href.trim_start_matches("./");
+                        h.strip_prefix("res/").unwrap_or(h).to_string()
+                    };
+
+                    if is_dpd {
+                        // DPD-only: rewrite every <link href> to the dpd-res folder.
+                        word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
+                            format!("{}{}{}{}",
+                                    &caps[1],
+                                    &format!("{}/assets/dpd-res/", &self.api_url),
+                                    &caps[2],
+                                    &caps[3])
+                        }).to_string();
+                    } else {
+                        // Neutralise <link> tags whose href is an injected CSS
+                        // resource; rewrite <link> tags pointing at a servable
+                        // resource to the API route; leave the rest untouched.
+                        word_html = RE_LINK_FULL.replace_all(&word_html, |caps: &Captures| {
+                            let tag = &caps[0];
+                            if let Some(hc) = RE_HREF_ATTR.captures(tag) {
+                                let norm = normalize_res(&hc[1]);
+                                if css_paths.contains(&norm) {
+                                    return String::new();
+                                }
+                                if servable_paths.contains(&norm) {
+                                    let new_attr = format!(r#"href="{}/dict_resources/{}/{}""#, &self.api_url, word.dictionary_id, norm);
+                                    return tag.replace(&hc[0], &new_attr);
+                                }
+                            }
+                            tag.to_string()
+                        }).to_string();
+
+                        // Neutralise <script src=…> tags whose src is an injected
+                        // JS resource (the contents are injected inline below).
+                        if !js_paths.is_empty() {
+                            word_html = RE_SCRIPT_SRC_FULL.replace_all(&word_html, |caps: &Captures| {
+                                let tag = &caps[0];
+                                if let Some(sc) = RE_SRC_ATTR.captures(tag) {
+                                    if js_paths.contains(&normalize_res(&sc[1])) {
+                                        return String::new();
+                                    }
+                                }
+                                tag.to_string()
+                            }).to_string();
+                        }
+
+                        // Rewrite remaining src="…" references to servable
+                        // resources (images/fonts) to the id-keyed API route.
+                        if !servable_paths.is_empty() {
+                            word_html = RE_SRC_ATTR.replace_all(&word_html, |caps: &Captures| {
+                                let norm = normalize_res(&caps[1]);
+                                if servable_paths.contains(&norm) {
+                                    format!(r#"src="{}/dict_resources/{}/{}""#, &self.api_url, word.dictionary_id, norm)
+                                } else {
+                                    caps[0].to_string()
+                                }
+                            }).to_string();
+                        }
+                    }
+
+                    // Inject the shared dictionary CSS/JS plus any per-dictionary
+                    // CSS/JS captured from res/ into <head>. Done after the res
+                    // rewriting above so the injected <script> bodies are not
+                    // themselves rewritten.
+                    let head_style = if dict_css.is_empty() {
+                        format!("<style>{}</style>", DICTIONARY_CSS)
+                    } else {
+                        format!("<style>{}</style><style>{}</style>", DICTIONARY_CSS, dict_css)
+                    };
+                    if !dict_js.is_empty() {
+                        js_extra.push('\n');
+                        js_extra.push_str(&dict_js);
+                    }
                     word_html = word_html.replace(
                         "</head>",
-                        &format!(r#"<style>{}</style><script>{}</script></head>"#, DICTIONARY_CSS, js_extra));
+                        &format!(r#"{}<script>{}</script></head>"#, head_style, js_extra));
 
                     // Replace <html> tag to include dark mode class
                     word_html = RE_HTML_TAG.replace(&word_html, &format!(r#"<html class="{}">"#, body_class)).to_string();
@@ -469,14 +597,6 @@ impl AppData {
             <h1>{}</h1>
         </div>
     </div>"#, body_class, word.word())).to_string();
-
-                    word_html = RE_LINK_HREF.replace_all(&word_html, |caps: &Captures| {
-                        format!("{}{}{}{}",
-                                &caps[1],
-                                &format!("{}/assets/dpd-res/", &self.api_url),
-                                &caps[2],
-                                &caps[3])
-                    }).to_string();
 
                     // Convert thebuddhaswords.net links to ssp:// internal links
                     word_html = thebuddhaswords_net_convert_links_in_html(&word_html);

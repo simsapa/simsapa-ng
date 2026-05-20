@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serial_test::serial;
-use simsapa_backend::dictionary_manager_core::import_user_zip;
+use simsapa_backend::dictionary_manager_core::{delete_user_dictionary, import_user_zip};
 use simsapa_backend::get_app_data;
 use simsapa_backend::stardict_parse::StardictImportProgress;
 
@@ -159,4 +159,68 @@ fn abort_keeps_partial_rows_in_db() {
         .expect("list_dictionaries");
     assert!(dicts.iter().any(|d| d.id == dict_id),
         "parent dictionaries row must persist so next-startup reconcile picks it up");
+}
+
+/// Empty-abort cleanup (PRD §4.3 / task 2.2): when an import is aborted
+/// before ANY entry is committed, `import_user_zip` returns
+/// `cancelled = true, inserted = 0` with a valid `dictionary_id` (the
+/// `dictionaries` row is created before insertion). The bridge then calls
+/// `delete_user_dictionary` to remove the 0-entry row. This test exercises
+/// that exact sequence and asserts no row is left behind.
+///
+/// The cleanup runs in the bridge AFTER `import_user_zip` returns (so the
+/// `DICT_MGR_LOCK` is released) — calling it from inside the importer would
+/// self-deadlock on the same `try_lock`. Here we reproduce the bridge's call.
+#[test]
+#[serial]
+fn empty_abort_removes_zero_entry_row() {
+    h::app_data_setup();
+
+    let total_entries: usize = 2500;
+
+    let millis = SystemTime::now()
+        .duration_since(UNIX_EPOCH).unwrap().as_millis();
+    let label = format!("ssp_test_abort_empty_{}", millis);
+    let label = label.as_str();
+
+    let app_data = get_app_data();
+
+    let tmp = tempfile::Builder::new()
+        .prefix("simsapa-stardict-test-")
+        .tempdir()
+        .expect("tempdir");
+    let stardict_dir = tmp.path().join("sd");
+    fs::create_dir_all(&stardict_dir).unwrap();
+    write_synthetic_stardict(&stardict_dir, "test", total_entries).expect("write stardict");
+
+    let zip_path = tmp.path().join("test.zip");
+    zip_dir_contents(&stardict_dir, &zip_path).expect("zip");
+
+    // Cancel BEFORE any insert: the importer's between-chunk cancel check
+    // fires on the first iteration, so 0 rows are committed.
+    let cancel = AtomicBool::new(true);
+
+    let outcome = import_user_zip(&zip_path, label, "en", &|_p| {}, &cancel)
+        .expect("import_user_zip should return Ok on early cancel");
+
+    assert!(outcome.cancelled, "expected cancelled=true on early abort");
+    assert_eq!(outcome.inserted, 0, "expected 0 rows inserted on early abort");
+
+    let dict_id = outcome.dictionary_id;
+
+    // The 0-entry parent row exists at this point (created before insertion).
+    let dicts = app_data.dbm.dictionaries
+        .list_dictionaries(Some(true))
+        .expect("list_dictionaries");
+    assert!(dicts.iter().any(|d| d.id == dict_id),
+        "0-entry dictionaries row should exist before cleanup");
+
+    // Reproduce the bridge's empty-abort cleanup.
+    delete_user_dictionary(dict_id).expect("delete_user_dictionary should succeed");
+
+    let dicts_after = app_data.dbm.dictionaries
+        .list_dictionaries(Some(true))
+        .expect("list_dictionaries");
+    assert!(!dicts_after.iter().any(|d| d.id == dict_id),
+        "0-entry dictionaries row must be removed after empty-abort cleanup");
 }

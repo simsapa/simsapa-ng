@@ -838,6 +838,54 @@ fn serve_book_resources(book_uid: &str, path: PathBuf, db_manager: &State<Arc<Db
     }
 }
 
+/// Serve user-imported StarDict resources (images, fonts, etc.) from the
+/// dictionaries database. Keyed by the dictionary `id` (stable across rename),
+/// modeled on `serve_book_resources`. CSS/JS are injected inline at render time
+/// rather than served here, but are also reachable through this route.
+#[get("/dict_resources/<dict_id>/<path..>")]
+fn serve_dict_resources(dict_id: i32, path: PathBuf, db_manager: &State<Arc<DbManager>>) -> (Status, (ContentType, Vec<u8>)) {
+    let path_str = pathbuf_to_forward_slash_string(&path);
+    info(&format!("serve_dict_resources: dict_id={}, path={}", dict_id, path_str));
+
+    match db_manager.dictionaries.get_dict_resource(dict_id, &path_str) {
+        Ok(Some(resource)) => {
+            let content_type = if let Some(ref mime) = resource.mime_type {
+                match mime.as_str() {
+                    "image/png" => ContentType::PNG,
+                    "image/jpeg" | "image/jpg" => ContentType::JPEG,
+                    "image/gif" => ContentType::GIF,
+                    "image/svg+xml" => ContentType::SVG,
+                    "image/webp" => ContentType::WEBP,
+                    "text/css" => ContentType::CSS,
+                    "application/javascript" | "text/javascript" => ContentType::JavaScript,
+                    "application/pdf" => ContentType::PDF,
+                    "font/woff" | "font/woff2" => ContentType::WOFF,
+                    "font/ttf" => ContentType::TTF,
+                    "font/otf" => ContentType::OTF,
+                    _ => ContentType::Binary,
+                }
+            } else {
+                ContentType::Binary
+            };
+
+            let data = resource.content_data.unwrap_or_default();
+            (Status::Ok, (content_type, data))
+        }
+        Ok(None) => {
+            let msg = format!("404 Not Found: /dict_resources/{}/{}", dict_id, path_str);
+            warn(&msg);
+            let ret = Vec::from(msg.as_bytes());
+            (Status::NotFound, (ContentType::Plain, ret))
+        }
+        Err(e) => {
+            let msg = format!("500 Internal Server Error: {}", e);
+            error(&msg);
+            let ret = Vec::from(msg.as_bytes());
+            (Status::InternalServerError, (ContentType::Plain, ret))
+        }
+    }
+}
+
 // ============================================================================
 // Browser Extension API Routes
 // ============================================================================
@@ -1220,6 +1268,7 @@ pub async extern "C" fn start_webserver() {
             serve_assets,
             serve_favicon,
             serve_book_resources,
+            serve_dict_resources,
             logger_route,
             copy_to_clipboard,
             open_external_url,

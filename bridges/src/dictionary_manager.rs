@@ -79,6 +79,12 @@ pub mod qobject {
         #[qinvokable]
         fn label_status(self: &DictionaryManager, label: &QString) -> QString;
 
+        // Async variant of `label_status`: runs the DB-backed conflict check on
+        // a worker thread and reports back via `labelStatusChecked`, so the
+        // rename dialog's per-keystroke check never blocks QML rendering.
+        #[qinvokable]
+        fn check_label_status(self: Pin<&mut DictionaryManager>, label: &QString);
+
         #[qinvokable]
         fn suggested_label_for_zip(self: &DictionaryManager, zip_path: &QString) -> QString;
 
@@ -148,6 +154,10 @@ pub mod qobject {
         fn rename_failed(self: Pin<&mut DictionaryManager>, message: QString);
 
         #[qsignal]
+        #[cxx_name = "labelStatusChecked"]
+        fn label_status_checked(self: Pin<&mut DictionaryManager>, label: QString, status: QString);
+
+        #[qsignal]
         #[cxx_name = "reconcileProgress"]
         fn reconcile_progress(self: Pin<&mut DictionaryManager>, stage: QString, done: i32, total: i32);
 
@@ -195,12 +205,50 @@ const KNOWN_TOKENIZER_LANGS: &[&str] = &[
     "sv", "ta", "tr", "yi",
 ];
 
+/// Shared label-conflict logic for both the synchronous `label_status`
+/// invokable and the async `check_label_status` worker. Returns one of
+/// `invalid` / `taken_shipped` / `taken_user` / `available`.
+fn compute_label_status(label_str: &str) -> String {
+    if core_validate_label(label_str).is_err() {
+        return "invalid".to_string();
+    }
+    let app_data = get_app_data();
+    match app_data.dbm.dictionaries.is_label_taken_by_shipped(label_str) {
+        Ok(true) => return "taken_shipped".to_string(),
+        Ok(false) => {}
+        Err(e) => {
+            error(&format!("label_status shipped check: {}", e));
+            return "invalid".to_string();
+        }
+    }
+    match app_data.dbm.dictionaries.list_dictionaries(None) {
+        Ok(rows) => {
+            if rows.iter().any(|d| d.label == label_str) {
+                "taken_user".to_string()
+            } else {
+                "available".to_string()
+            }
+        }
+        Err(e) => {
+            error(&format!("label_status user check: {}", e));
+            "invalid".to_string()
+        }
+    }
+}
+
 fn stardict_progress_to_signal(p: &StardictImportProgress) -> (String, i32, i32) {
     match p {
         StardictImportProgress::Extracting => ("Extracting".to_string(), 0, 0),
         StardictImportProgress::Parsing => ("Parsing".to_string(), 0, 0),
         StardictImportProgress::InsertingWords { done, total } => {
             ("Inserting words".to_string(), *done as i32, *total as i32)
+        }
+        StardictImportProgress::Identified { title, total } => {
+            // Reuse the (stage, done, total) signature: encode the title into
+            // the stage as `Identified:<title>` and pass the raw index count
+            // as `total`. QML splits on the first ':' and composes the
+            // `(<lang>)` part itself (lang is already known to QML).
+            (format!("Identified:{}", title), 0, *total as i32)
         }
         StardictImportProgress::Done => ("Done".to_string(), 0, 0),
         StardictImportProgress::Failed { msg } => (format!("Failed: {}", msg), 0, 0),
@@ -257,14 +305,32 @@ impl qobject::DictionaryManager {
 
             match dictionary_manager_core::import_user_zip(&zip_path, &label, &lang, &on_progress, &cancel) {
                 Ok(outcome) if outcome.cancelled => {
-                    // Abort path: partial rows are intentionally left in the
-                    // DB so the next startup reconcile picks them up.
-                    get_app_data().refresh_dict_source_uid_caches();
                     let inserted = outcome.inserted as i32;
-                    let msg = QString::from(&format!(
-                        "Import aborted — \"{}\" was partially imported ({} entries).",
-                        label, outcome.inserted
-                    ));
+                    let msg = if outcome.inserted == 0 {
+                        // Empty abort: no entries were committed, so remove the
+                        // 0-entry `dictionaries` row that was created before any
+                        // insertion. This MUST run here (after `import_user_zip`
+                        // returned and released `DICT_MGR_LOCK`), NOT inside
+                        // `import_user_zip` — `delete_user_dictionary` re-acquires
+                        // the same `try_lock` and would return BUSY.
+                        if let Err(e) = dictionary_manager_core::delete_user_dictionary(outcome.dictionary_id) {
+                            error(&format!(
+                                "Empty-abort cleanup failed for dictionary id {}: {}",
+                                outcome.dictionary_id, e
+                            ));
+                        }
+                        get_app_data().refresh_dict_source_uid_caches();
+                        format!("Import aborted — \"{}\" was not imported (nothing kept).", label)
+                    } else {
+                        // Partial abort: rows already committed are intentionally
+                        // left in the DB so the next startup reconcile picks them up.
+                        get_app_data().refresh_dict_source_uid_caches();
+                        format!(
+                            "Import aborted — \"{}\" was partially imported ({} entries).",
+                            label, outcome.inserted
+                        )
+                    };
+                    let msg = QString::from(&msg);
                     let _ = qt_thread.queue(move |mut qo| {
                         qo.as_mut().import_cancelled(msg, inserted);
                     });
@@ -499,32 +565,24 @@ impl qobject::DictionaryManager {
     }
 
     fn label_status(&self, label: &QString) -> QString {
+        QString::from(&compute_label_status(&label.to_string()))
+    }
+
+    fn check_label_status(self: Pin<&mut Self>, label: &QString) {
+        // Async sibling of `label_status`: compute the DB-backed conflict
+        // status on a worker thread and report the result (paired with the
+        // queried label so QML can stale-guard against intervening edits)
+        // via `labelStatusChecked`.
         let label_str = label.to_string();
-        if core_validate_label(&label_str).is_err() {
-            return QString::from("invalid");
-        }
-        let app_data = get_app_data();
-        match app_data.dbm.dictionaries.is_label_taken_by_shipped(&label_str) {
-            Ok(true) => return QString::from("taken_shipped"),
-            Ok(false) => {}
-            Err(e) => {
-                error(&format!("label_status shipped check: {}", e));
-                return QString::from("invalid");
-            }
-        }
-        match app_data.dbm.dictionaries.list_dictionaries(None) {
-            Ok(rows) => {
-                if rows.iter().any(|d| d.label == label_str) {
-                    QString::from("taken_user")
-                } else {
-                    QString::from("available")
-                }
-            }
-            Err(e) => {
-                error(&format!("label_status user check: {}", e));
-                QString::from("invalid")
-            }
-        }
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let status = compute_label_status(&label_str);
+            let label_qs = QString::from(&label_str);
+            let status_qs = QString::from(&status);
+            let _ = qt_thread.queue(move |mut qo| {
+                qo.as_mut().label_status_checked(label_qs, status_qs);
+            });
+        });
     }
 
     fn suggested_label_for_zip(&self, zip_path: &QString) -> QString {

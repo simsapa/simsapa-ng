@@ -1019,6 +1019,9 @@ fn import_stardict_zip_bootstrap(zip_path: &Path, label: &str, lang: &str) -> Re
                     logger::info(&format!("  inserting words: {}/{}", done, total));
                 }
             }
+            StardictImportProgress::Identified { title, total } => {
+                logger::info(&format!("  importing {}, {} total entries...", title, total))
+            }
             StardictImportProgress::Done => logger::info("  done."),
             StardictImportProgress::Failed { msg } => logger::error(&format!("  failed: {}", msg)),
             StardictImportProgress::Aborted { inserted } => {

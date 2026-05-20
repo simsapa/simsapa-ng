@@ -21,6 +21,12 @@ pub enum StardictImportProgress {
     Extracting,
     Parsing,
     InsertingWords { done: usize, total: usize },
+    /// Emitted as soon as the dictionary's identity is known (after the
+    /// `.ifo` is parsed and `stardict::no_cache` loads the dict). `total` is
+    /// the raw index item count (`dict.idx.items.len()`), matching the
+    /// `Importing … total entries` log line — NOT the later inserted count.
+    /// `lang` is not carried here; QML already has it from `start_import`.
+    Identified { title: String, total: usize },
     Done,
     Failed { msg: String },
     /// User-initiated abort: the dictionary row and the rows already
@@ -167,11 +173,19 @@ fn parse_word(word_def: &WordDefinition) -> DictEntry {
     parsed_data
 }
 
+/// Parse all (or `limit`) index entries into `NewDictWord` rows.
+///
+/// `cancel` is polled periodically: parsing a large goldendict bundle (e.g.
+/// mw-gd's ~194k entries) takes several seconds, and without this check an
+/// abort clicked during parsing would not take effect until parsing finished.
+/// On cancel the function returns early with `None` so the caller can abort
+/// before any DB insertion.
 fn parse_dict(dict: &mut stardict::StarDictStd,
               dictionary_id: i32,
               new_dict_label: &str,
               lang: &str,
-              limit: Option<usize>) -> Vec<NewDictWord> {
+              limit: Option<usize>,
+              cancel: &AtomicBool) -> Option<Vec<NewDictWord>> {
     let mut words_to_insert: Vec<NewDictWord> = Vec::with_capacity(dict.idx.items.len());
 
     let max_n = if let Some(n) = limit { n } else { dict.idx.items.len() };
@@ -183,6 +197,10 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
             break;
         } else {
             n += 1;
+        }
+        // Cooperative cancel check during parsing (cadence: every 1000 entries).
+        if n % 1000 == 0 && cancel.load(Ordering::Relaxed) {
+            return None;
         }
         let def_result = dict.dict.get_definition(idx_entry, &dict.ifo);
 
@@ -236,7 +254,7 @@ fn parse_dict(dict: &mut stardict::StarDictStd,
         ));
     }
 
-    words_to_insert
+    Some(words_to_insert)
 }
 
 /// SQL-only StarDict import.
@@ -347,8 +365,22 @@ pub fn import_stardict_as_new(
     };
 
     info(&format!("Importing {}, {} total entries ...", &ifo.bookname, dict.idx.items.len()));
+    progress(StardictImportProgress::Identified {
+        title: ifo.bookname.clone(),
+        total: dict.idx.items.len(),
+    });
 
-    let words_to_insert = parse_dict(&mut dict, dictionary_id, new_dict_label, lang, limit);
+    let words_to_insert = match parse_dict(&mut dict, dictionary_id, new_dict_label, lang, limit, cancel) {
+        Some(w) => w,
+        None => {
+            // Aborted during parsing, before any insertion. No rows were
+            // committed, so report a 0-entry cancel; the bridge removes the
+            // empty `dictionaries` row.
+            info(&format!("Import aborted for '{}' during parsing (0 entries).", &ifo.bookname));
+            progress(StardictImportProgress::Aborted { inserted: 0 });
+            return Ok(ImportOutcome { dictionary_id, inserted: 0, cancelled: true });
+        }
+    };
     let total = words_to_insert.len();
 
     info(&format!("Inserting {} words into the database via batch...", total));

@@ -47,9 +47,23 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    dict_resources (id) {
+        id -> Integer,
+        dictionary_id -> Integer,
+        resource_path -> Text,
+        mime_type -> Nullable<Text>,
+        content_data -> Nullable<Binary>,
+        // created_at -> Nullable<Timestamp>,
+        // updated_at -> Nullable<Timestamp>,
+    }
+}
+
 diesel::joinable!(dict_words -> dictionaries (dictionary_id));
+diesel::joinable!(dict_resources -> dictionaries (dictionary_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     dict_words,
     dictionaries,
+    dict_resources,
 );

@@ -86,6 +86,29 @@ impl DictWord {
     }
 }
 
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Associations)]
+#[diesel(belongs_to(Dictionary, foreign_key = dictionary_id))]
+#[diesel(table_name = dict_resources)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct DictResource {
+    pub id: i32,
+    pub dictionary_id: i32,
+    pub resource_path: String,
+    pub mime_type: Option<String>,
+    pub content_data: Option<Vec<u8>>,
+    // pub created_at: NaiveDateTime,
+    // pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = dict_resources)]
+pub struct NewDictResource<'a> {
+    pub dictionary_id: i32,
+    pub resource_path: &'a str,
+    pub mime_type: Option<&'a str>,
+    pub content_data: Option<&'a [u8]>,
+}
+
 // Hold owned Strings for improving batch insert.
 #[derive(Insertable)]
 #[diesel(table_name = dict_words)]
