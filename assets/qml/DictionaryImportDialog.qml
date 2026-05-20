@@ -18,6 +18,33 @@ Item {
 
     DictionaryManager { id: dict_manager }
 
+    Connections {
+        target: dict_manager
+        // Async result of `check_label_status`. Stale-guard: only apply if the
+        // queried label still matches the current input (the user may have
+        // typed more since the debounced request was fired).
+        function onLabelStatusChecked(label: string, status: string) {
+            if (label === label_input.text) {
+                details_dialog.label_status = status;
+            }
+        }
+    }
+
+    // Debounce timer mirroring the search-input idiom in SearchBarInput.qml:
+    // each keystroke restarts it, and only the DB-backed conflict check is
+    // deferred to the timeout — the no-DB fast path runs immediately.
+    Timer {
+        id: label_check_timer
+        interval: 400 // milliseconds
+        repeat: false
+        onTriggered: dict_manager.check_label_status(label_input.text)
+    }
+
+    // Local fast-path validation that needs no DB lookup, for instant feedback
+    // before the debounced backend check returns. Mirrors core_validate_label:
+    // ASCII alphanumeric, '_' or '-' only.
+    readonly property var valid_label_re: /^[A-Za-z0-9_-]+$/
+
     function start() {
         file_dialog.open();
     }
@@ -61,10 +88,13 @@ Item {
 
         function refresh_status() {
             const v = label_input.text;
-            if (v.length === 0) {
+            if (v.length === 0 || !root.valid_label_re.test(v)) {
+                // No DB lookup needed; resolve immediately and cancel any pending check.
+                label_check_timer.stop();
                 details_dialog.label_status = "invalid";
             } else {
-                details_dialog.label_status = dict_manager.label_status(v);
+                // Defer the DB-backed conflict check to the debounce timeout.
+                label_check_timer.restart();
             }
         }
 

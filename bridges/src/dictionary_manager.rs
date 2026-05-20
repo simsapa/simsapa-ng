@@ -79,6 +79,12 @@ pub mod qobject {
         #[qinvokable]
         fn label_status(self: &DictionaryManager, label: &QString) -> QString;
 
+        // Async variant of `label_status`: runs the DB-backed conflict check on
+        // a worker thread and reports back via `labelStatusChecked`, so the
+        // rename dialog's per-keystroke check never blocks QML rendering.
+        #[qinvokable]
+        fn check_label_status(self: Pin<&mut DictionaryManager>, label: &QString);
+
         #[qinvokable]
         fn suggested_label_for_zip(self: &DictionaryManager, zip_path: &QString) -> QString;
 
@@ -148,6 +154,10 @@ pub mod qobject {
         fn rename_failed(self: Pin<&mut DictionaryManager>, message: QString);
 
         #[qsignal]
+        #[cxx_name = "labelStatusChecked"]
+        fn label_status_checked(self: Pin<&mut DictionaryManager>, label: QString, status: QString);
+
+        #[qsignal]
         #[cxx_name = "reconcileProgress"]
         fn reconcile_progress(self: Pin<&mut DictionaryManager>, stage: QString, done: i32, total: i32);
 
@@ -194,6 +204,37 @@ const KNOWN_TOKENIZER_LANGS: &[&str] = &[
     "lt", "ne", "no", "pl", "pt", "ro", "ru", "sr", "es",
     "sv", "ta", "tr", "yi",
 ];
+
+/// Shared label-conflict logic for both the synchronous `label_status`
+/// invokable and the async `check_label_status` worker. Returns one of
+/// `invalid` / `taken_shipped` / `taken_user` / `available`.
+fn compute_label_status(label_str: &str) -> String {
+    if core_validate_label(label_str).is_err() {
+        return "invalid".to_string();
+    }
+    let app_data = get_app_data();
+    match app_data.dbm.dictionaries.is_label_taken_by_shipped(label_str) {
+        Ok(true) => return "taken_shipped".to_string(),
+        Ok(false) => {}
+        Err(e) => {
+            error(&format!("label_status shipped check: {}", e));
+            return "invalid".to_string();
+        }
+    }
+    match app_data.dbm.dictionaries.list_dictionaries(None) {
+        Ok(rows) => {
+            if rows.iter().any(|d| d.label == label_str) {
+                "taken_user".to_string()
+            } else {
+                "available".to_string()
+            }
+        }
+        Err(e) => {
+            error(&format!("label_status user check: {}", e));
+            "invalid".to_string()
+        }
+    }
+}
 
 fn stardict_progress_to_signal(p: &StardictImportProgress) -> (String, i32, i32) {
     match p {
@@ -524,32 +565,24 @@ impl qobject::DictionaryManager {
     }
 
     fn label_status(&self, label: &QString) -> QString {
+        QString::from(&compute_label_status(&label.to_string()))
+    }
+
+    fn check_label_status(self: Pin<&mut Self>, label: &QString) {
+        // Async sibling of `label_status`: compute the DB-backed conflict
+        // status on a worker thread and report the result (paired with the
+        // queried label so QML can stale-guard against intervening edits)
+        // via `labelStatusChecked`.
         let label_str = label.to_string();
-        if core_validate_label(&label_str).is_err() {
-            return QString::from("invalid");
-        }
-        let app_data = get_app_data();
-        match app_data.dbm.dictionaries.is_label_taken_by_shipped(&label_str) {
-            Ok(true) => return QString::from("taken_shipped"),
-            Ok(false) => {}
-            Err(e) => {
-                error(&format!("label_status shipped check: {}", e));
-                return QString::from("invalid");
-            }
-        }
-        match app_data.dbm.dictionaries.list_dictionaries(None) {
-            Ok(rows) => {
-                if rows.iter().any(|d| d.label == label_str) {
-                    QString::from("taken_user")
-                } else {
-                    QString::from("available")
-                }
-            }
-            Err(e) => {
-                error(&format!("label_status user check: {}", e));
-                QString::from("invalid")
-            }
-        }
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let status = compute_label_status(&label_str);
+            let label_qs = QString::from(&label_str);
+            let status_qs = QString::from(&status);
+            let _ = qt_thread.queue(move |mut qo| {
+                qo.as_mut().label_status_checked(label_qs, status_qs);
+            });
+        });
     }
 
     fn suggested_label_for_zip(&self, zip_path: &QString) -> QString {

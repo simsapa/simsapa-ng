@@ -48,6 +48,10 @@ Item {
         return "available";
     }
 
+    function check_label_status(label: string) {
+        console.log("check_label_status():", label);
+    }
+
     function suggested_label_for_zip(zip_path: string): string {
         return "";
     }
@@ -100,6 +104,7 @@ Item {
     signal deleteFailed(message: string);
     signal renameFinished(dictionary_id: int, old_label: string, new_label: string, elapsed_ms: int);
     signal renameFailed(message: string);
+    signal labelStatusChecked(label: string, status: string);
     signal reconcileProgress(stage: string, done: int, total: int);
     signal reconcileFinished();
 }

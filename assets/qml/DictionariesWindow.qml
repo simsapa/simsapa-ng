@@ -366,6 +366,8 @@ ApplicationWindow {
                         text: "Close"
                         onClicked: root.close()
                     }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
         }

@@ -9,7 +9,8 @@ Based on `tasks/prd-dictionary-import-ux-and-stardict-resources.md`.
 - `bridges/src/dictionary_manager.rs` - CXX-Qt bridge: `importProgress`/`importFinished`/`importCancelled` signals, `import_zip`/`abort_import` (abort branch ~line 259 = empty-abort cleanup site), async label-check invokable + signal to add.
 - `backend/src/app_data.rs` - `render_word_html_by_uid` (lines 389-490): the regex-rewrite branch (448-484) is the ACTUAL render path for user-dict words; where stored CSS/JS injection, `res/` image link-rewriting, and the DPD-only `assets/dpd-res/` guard go.
 - `assets/qml/DictionariesWindow.qml` - Import progress UI (progress frame, `Importing "${op_label}"…` line ~413, Abort button ~458, `onImportProgress`/`onImportCancelled` handlers ~110-130). `start_import` already has `lang`.
-- `assets/qml/DictionaryEditDialog.qml` - Rename dialog; per-keystroke `label_status()` call (line 36) to replace with debounced async check.
+- `assets/qml/DictionaryEditDialog.qml` - Rename dialog; per-keystroke `label_status()` call replaced with debounced async `check_label_status` + `labelStatusChecked` handler.
+- `assets/qml/DictionaryImportDialog.qml` - Import dialog; had the same per-keystroke synchronous `label_status()` anti-pattern (not flagged in the PRD); given the identical debounced async treatment to fix typing lag in the label field.
 - `assets/qml/SearchBarInput.qml` - Reference debounce `Timer` idiom (`search_timer.restart()`).
 - `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` - qmllint type definition; must mirror any new invokable/signal on the bridge.
 - `bridges/src/api.rs` - Localhost API; `serve_book_resources` (`api.rs:792`, `/book_resources/<book_uid>/<path..>`, mime→ContentType map) is the template for the new `/dict_resources/<dict_id>/<path..>` route.
@@ -46,13 +47,13 @@ Based on `tasks/prd-dictionary-import-ux-and-stardict-resources.md`.
   - [x] 2.5 Confirm a *normal* (non-aborted) completed import with 0 entries is NOT deleted (work-in-progress dictionaries are kept).
   - [x] 2.6 Add/extend a backend test for the empty-abort cleanup path (cancel before any insert ⇒ no `dictionaries` row left), then build with `make build -B`.
 
-- [ ] 3.0 Debounced, non-blocking rename conflict check
-  - [ ] 3.1 In `bridges/src/dictionary_manager.rs`, add an async label-check invokable (e.g. `check_label_status(label)`) that runs on a worker thread and emits a new signal (e.g. `labelStatusChecked(label, status)`) carrying the same statuses as `label_status` (`invalid`/`taken_shipped`/`taken_user`/`available`), reusing `core_validate_label`, `is_label_taken_by_shipped`, and `list_dictionaries`.
-  - [ ] 3.2 Mirror the new invokable + signal in `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` for qmllint.
-  - [ ] 3.3 In `assets/qml/DictionaryEditDialog.qml`, replace the synchronous `dict_manager.label_status(v)` call in `refresh_status()` with a debounce `Timer` modeled on `SearchBarInput.qml` (`restart()` on text change); on timeout, call the async `check_label_status`.
-  - [ ] 3.4 Keep no-DB fast-path checks immediate in QML (empty input, unchanged label) for instant feedback; defer only the DB-backed conflict check to the debounce.
-  - [ ] 3.5 Handle the `labelStatusChecked` signal in the dialog: update `label_status` (stale-guard against an outdated label if the text changed since the request) and keep the existing error labels (lines ~61-86) and OK-blocking behavior working.
-  - [ ] 3.6 Build with `make build -B` and confirm typing in the label field has no perceptible lag and warnings appear shortly after pausing.
+- [x] 3.0 Debounced, non-blocking rename conflict check
+  - [x] 3.1 In `bridges/src/dictionary_manager.rs`, add an async label-check invokable (e.g. `check_label_status(label)`) that runs on a worker thread and emits a new signal (e.g. `labelStatusChecked(label, status)`) carrying the same statuses as `label_status` (`invalid`/`taken_shipped`/`taken_user`/`available`), reusing `core_validate_label`, `is_label_taken_by_shipped`, and `list_dictionaries`.
+  - [x] 3.2 Mirror the new invokable + signal in `assets/qml/com/profoundlabs/simsapa/DictionaryManager.qml` for qmllint.
+  - [x] 3.3 In `assets/qml/DictionaryEditDialog.qml`, replace the synchronous `dict_manager.label_status(v)` call in `refresh_status()` with a debounce `Timer` modeled on `SearchBarInput.qml` (`restart()` on text change); on timeout, call the async `check_label_status`.
+  - [x] 3.4 Keep no-DB fast-path checks immediate in QML (empty input, unchanged label) for instant feedback; defer only the DB-backed conflict check to the debounce.
+  - [x] 3.5 Handle the `labelStatusChecked` signal in the dialog: update `label_status` (stale-guard against an outdated label if the text changed since the request) and keep the existing error labels (lines ~61-86) and OK-blocking behavior working.
+  - [x] 3.6 Build with `make build -B` and confirm typing in the label field has no perceptible lag and warnings appear shortly after pausing.
 
 - [ ] 4.0 Capture and store StarDict `res/` resources during import
   - [ ] 4.1 Create a Diesel migration under `backend/migrations/dictionaries/` (timestamp after `2026-04-28-120000_add_user_dict_columns`) adding a `dict_resources` table mirroring `book_resources`: `id` (PK), `dictionary_id` (Integer, FK), `resource_path` (Text), `mime_type` (Nullable Text), `content_data` (Nullable Binary); index/lookup by `dictionary_id` + `resource_path`. No extra columns on `dictionaries` — CSS/JS are stored as `dict_resources` rows too (distinguished by `mime_type`).
