@@ -92,6 +92,7 @@ pub fn convert_dpd_res_niggahita() -> Result<()> {
         "family_root_json.js",
         "family_set_json.js",
         "family_word_json.js",
+        "frequency_template.js",
     ];
 
     for name in json_files {
