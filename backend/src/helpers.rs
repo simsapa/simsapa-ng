@@ -482,6 +482,71 @@ pub fn dhammatalk_org_convert_link_href_in_html(link_selector: &Selector, html_t
     modified_html
 }
 
+/// Build the display text for a SuttaCentral code by inserting a space between
+/// the leading letters and the numeric part: "AN6.61" -> "AN 6.61".
+pub fn dpd_sutta_code_display(sc_code: &str) -> String {
+    lazy_static! {
+        static ref RE_DPD_CODE_SPLIT: Regex = Regex::new(r"^([A-Za-z]+)(.*)$").unwrap();
+    }
+    match RE_DPD_CODE_SPLIT.captures(sc_code) {
+        Some(caps) if !caps[2].is_empty() => format!("{} {}", &caps[1], &caps[2]),
+        _ => sc_code.to_string(),
+    }
+}
+
+/// Convert the leading source-reference code inside DPD `<p class=sutta>`
+/// example paragraphs into an internal ssp:// sutta link, leaving the rest of
+/// the paragraph (the sutta name etc.) untouched.
+///
+/// `sutta_map` maps an uppercased DPD source code (e.g. "AN6.61") to a tuple of
+/// (uid_path, display_text), e.g. ("an6.61/pli/ms", "AN 6.61"). Codes not
+/// present in the map are left unchanged.
+///
+/// Input:  `<p class=sutta>AN6.61 majjhesuttaṁ`
+/// Output: `<p class="sutta"><a href="ssp://suttas/an6.61/pli/ms" class="sutta-link">AN 6.61</a> majjhesuttaṁ`
+pub fn dpd_convert_example_sutta_refs(
+    html: &str,
+    sutta_map: &HashMap<String, (String, String)>,
+) -> String {
+    lazy_static! {
+        // <p class=sutta>AN6.61 ...  (class may be quoted or unquoted)
+        // Captures the first whitespace/tag-delimited reference token.
+        static ref RE_DPD_SUTTA_P: Regex =
+            Regex::new(r#"<p class=(?:"sutta"|sutta)>([^\s<]+)"#).unwrap();
+    }
+    RE_DPD_SUTTA_P
+        .replace_all(html, |caps: &regex::Captures| {
+            match sutta_map.get(&caps[1].to_uppercase()) {
+                Some((uid_path, display)) => format!(
+                    r#"<p class="sutta"><a href="ssp://suttas/{}" class="sutta-link">{}</a>"#,
+                    uid_path, display
+                ),
+                None => caps[0].to_string(),
+            }
+        })
+        .to_string()
+}
+
+/// Remove the DPD `<p class=sutta>…</p>` example-source reference paragraphs
+/// (e.g. `<p class=sutta>TH155 sambulakaccānattheragāthā`) from HTML.
+///
+/// These paragraphs hold the source name of the quoted example passage. They
+/// are useful navigation in the rendered word page, but their Pāli sutta names
+/// must not leak into `definition_plain`, which feeds the fulltext / contains
+/// search — otherwise a search for e.g. `kaccāna` matches `viharati-1/dpd`
+/// purely because of `TH155 sambulakaccānattheragāthā` in its examples.
+///
+/// The DPD source has no closing `</p>`; each paragraph runs to the next tag,
+/// so we strip from `<p class=sutta>` (class quoted or unquoted) up to the next
+/// `<`. Run this on the raw `definition_html` before `compact_rich_text`.
+pub fn dpd_strip_sutta_ref_paragraphs(html: &str) -> String {
+    lazy_static! {
+        static ref RE_DPD_SUTTA_P_STRIP: Regex =
+            Regex::new(r#"<p class=(?:"sutta"|sutta)>[^<]*"#).unwrap();
+    }
+    RE_DPD_SUTTA_P_STRIP.replace_all(html, "").to_string()
+}
+
 /// Convert thebuddhaswords.net URL to sutta UID
 /// Handles URLs like:
 /// - https://thebuddhaswords.net/dn/dn11.html → dn11/pli/ms
@@ -2324,6 +2389,59 @@ pub fn run_fts5_indexes_sql_script(db_path: &Path, sql_script_path: &Path) -> Re
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_dpd_sutta_code_display() {
+        assert_eq!(dpd_sutta_code_display("AN6.61"), "AN 6.61");
+        assert_eq!(dpd_sutta_code_display("SNP4.10"), "SNP 4.10");
+        assert_eq!(dpd_sutta_code_display("DN1"), "DN 1");
+        // No numeric part: left as-is.
+        assert_eq!(dpd_sutta_code_display("VIN"), "VIN");
+    }
+
+    #[test]
+    fn test_dpd_convert_example_sutta_refs() {
+        let mut map: HashMap<String, (String, String)> = HashMap::new();
+        map.insert(
+            "AN6.61".to_string(),
+            ("an6.61/pli/ms".to_string(), "AN 6.61".to_string()),
+        );
+        map.insert(
+            "SNP48".to_string(),
+            ("snp4.10/pli/ms".to_string(), "SNP 4.10".to_string()),
+        );
+
+        // Unquoted class, with trailing sutta name and <br>.
+        let input = "<p class=sutta>SNP48 purābhedasuttaṁ<br>aṭṭhakavaggo 10";
+        let expected = "<p class=\"sutta\"><a href=\"ssp://suttas/snp4.10/pli/ms\" class=\"sutta-link\">SNP 4.10</a> purābhedasuttaṁ<br>aṭṭhakavaggo 10";
+        assert_eq!(dpd_convert_example_sutta_refs(input, &map), expected);
+
+        // Quoted class.
+        let input2 = "<p class=\"sutta\">AN6.61 majjhesuttaṁ";
+        let expected2 = "<p class=\"sutta\"><a href=\"ssp://suttas/an6.61/pli/ms\" class=\"sutta-link\">AN 6.61</a> majjhesuttaṁ";
+        assert_eq!(dpd_convert_example_sutta_refs(input2, &map), expected2);
+
+        // Unknown code: left unchanged.
+        let input3 = "<p class=sutta>VIN3.6.161 some text";
+        assert_eq!(dpd_convert_example_sutta_refs(input3, &map), input3);
+    }
+
+    #[test]
+    fn test_dpd_strip_sutta_ref_paragraphs() {
+        // The sutta-source paragraph (and its Pāli name) is removed, while the
+        // surrounding example passage paragraphs are kept.
+        let input = "<p>ekako c'āhaṁ bherave bile <b>viharāmi</b><p class=sutta>TH155 sambulakaccānattheragāthā<p>te ce me evaṁ puṭṭhā";
+        let expected = "<p>ekako c'āhaṁ bherave bile <b>viharāmi</b><p>te ce me evaṁ puṭṭhā";
+        assert_eq!(dpd_strip_sutta_ref_paragraphs(input), expected);
+
+        // Quoted class form is also stripped.
+        let input2 = "<p class=\"sutta\">DN9.6 poṭṭhapādasuttaṁ<p>next";
+        assert_eq!(dpd_strip_sutta_ref_paragraphs(input2), "<p>next");
+
+        // The resulting plain text must not contain the sutta name.
+        let plain = compact_rich_text(&dpd_strip_sutta_ref_paragraphs(input));
+        assert!(!plain.contains("kaccāna"));
+    }
 
     #[test]
     fn test_dhammatalks_org_ref_notation_convert() {

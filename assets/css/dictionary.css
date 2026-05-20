@@ -102,3 +102,13 @@ html.dark, body.dark {
 .dark .dppn a.dppn-ref {
   color: inherit;
 }
+
+.sutta-link {
+  text-decoration: none;
+  border-bottom: 1px dashed #1a8bdb;
+  color: #1a8bdb;
+}
+
+.sutta-link:hover {
+  border-bottom-color: black;
+}

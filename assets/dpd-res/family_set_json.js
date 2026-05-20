@@ -8,9 +8,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aṃ",
+    "aṁ",
     "letter",
-    "(gram) letter ṃ; niggahīta; 41st letter of the alphabet; nasal consonant",
+    "(gram) letter ṁ; niggahīta; 41st letter of the alphabet; nasal consonant",
     "✔"
    ],
    [
@@ -277,7 +277,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "accantasaṃyoga",
+    "accantasaṁyoga",
     "masc",
     "(gram) direct governance of accusative by transitive verb; conjunction concerned with a passage of time",
     "✔"
@@ -379,7 +379,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "attānaṃ ācarati",
+    "attānaṁ ācarati",
     "idiom",
     "(gram) behaves like itself",
     "◑"
@@ -621,25 +621,25 @@ var family_set_json = {
    [
     "anusāra 2.1",
     "masc",
-    "(gram) nasal consonant; niggahīta; letter ṃ; lit. after-sound",
+    "(gram) nasal consonant; niggahīta; letter ṁ; lit. after-sound",
     "◑"
    ],
    [
     "anusāralopa",
     "masc",
-    "(gram) niggahīta elision; cutting of the letter ṃ",
+    "(gram) niggahīta elision; cutting of the letter ṁ",
     "◑"
    ],
    [
     "anusvāra",
     "masc",
-    "(gram) nasal consonant; niggahīta; letter ṃ; lit. after-sound",
+    "(gram) nasal consonant; niggahīta; letter ṁ; lit. after-sound",
     "✔"
    ],
    [
     "anusvāralopa",
     "masc",
-    "(gram) niggahīta elision; cutting of the letter ṃ",
+    "(gram) niggahīta elision; cutting of the letter ṁ",
     "✔"
    ],
    [
@@ -961,7 +961,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "asaṃyoganta",
+    "asaṁyoganta",
     "adj",
     "(gram) not ending in a conjunct consonant; not ending with a double consonant",
     "✔"
@@ -979,9 +979,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aṃ",
+    "aṁ",
     "letter",
-    "(gram) letter ṃ; niggahīta; 41st letter of the alphabet; nasal consonant",
+    "(gram) letter ṁ; niggahīta; 41st letter of the alphabet; nasal consonant",
     "✔"
    ],
    [
@@ -1273,15 +1273,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "iṃ",
+    "iṁ",
     "ve",
-    "(gram) iṃ; verbal ending of the aorist 1st person singular",
+    "(gram) iṁ; verbal ending of the aorist 1st person singular",
     "✔"
    ],
    [
-    "iṃsu",
+    "iṁsu",
     "ve",
-    "(gram) iṃsu; verbal ending of the aorist 3rd person plural",
+    "(gram) iṁsu; verbal ending of the aorist 3rd person plural",
     "✔"
    ],
    [
@@ -1483,15 +1483,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "uṃ",
+    "uṁ",
     "ve",
-    "(gram) uṃ; verbal ending of the aorist 3rd person plural",
+    "(gram) uṁ; verbal ending of the aorist 3rd person plural",
     "✔"
    ],
    [
-    "uṃvibhatti",
+    "uṁvibhatti",
     "ve",
-    "(gram) verbal ending of the aorist 3rd person plural; lit. uṃ conjugation",
+    "(gram) verbal ending of the aorist 3rd person plural; lit. uṁ conjugation",
     "✔"
    ],
    [
@@ -1579,7 +1579,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "evaṃsutivant",
+    "evaṁsutivant",
     "adj",
     "(gram) having such a sound",
     "◑"
@@ -1951,7 +1951,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "kiṃ taṃ",
+    "kiṁ taṁ",
     "idiom",
     "(gram) what does that mean?",
     "◑"
@@ -2011,7 +2011,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "khattuṃ",
+    "khattuṁ",
     "suffix",
     "-times; -fold",
     "✔"
@@ -2503,13 +2503,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tasmiṃ 5",
+    "tasmiṁ 5",
     "pron",
     "(gram) before that",
     "◑"
    ],
    [
-    "taṃ yathā",
+    "taṁ yathā",
     "idiom",
     "(gram) for example; lit. like that",
     "✔"
@@ -2557,15 +2557,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tuṃ",
+    "tuṁ",
     "suffix",
     "(gram) suffix used to create infinitive verbs",
     "◑"
    ],
    [
-    "tuṃpaccaya",
+    "tuṁpaccaya",
     "masc",
-    "(gram) infinitive; lit. -tuṃ suffix",
+    "(gram) infinitive; lit. -tuṁ suffix",
     "◑"
    ],
    [
@@ -2689,13 +2689,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dīghaṃ katvā",
+    "dīghaṁ katvā",
     "idiom",
     "(gram) (of a vowel) having lengthened; having elongated",
     "✔"
    ],
    [
-    "dīghaṃ yāti",
+    "dīghaṁ yāti",
     "idiom",
     "(gram) gets lengthened; becomes long; lit. goes long",
     "✔"
@@ -2797,9 +2797,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dhaṃsu",
+    "dhaṁsu",
     "root",
-    "(gram) √dhaṃs (fall down, destroy)",
+    "(gram) √dhaṁs (fall down, destroy)",
     "✔"
    ],
    [
@@ -2905,25 +2905,25 @@ var family_set_json = {
     "◑"
    ],
    [
-    "napuṃsaka 2",
+    "napuṁsaka 2",
     "masc",
     "(gram) neuter gender; lit. not male",
     "✔"
    ],
    [
-    "napuṃsaka 3",
+    "napuṁsaka 3",
     "adj",
     "(gram) neuter; lit. not male",
     "✔"
    ],
    [
-    "napuṃsakaliṅga",
+    "napuṁsakaliṅga",
     "masc",
     "(gram) neuter gender; lit. not male character",
     "✔"
    ],
    [
-    "napuṃsakaliṅgatta",
+    "napuṁsakaliṅgatta",
     "nt",
     "(gram) neuter gender; lit. not male character state",
     "✔"
@@ -3027,31 +3027,31 @@ var family_set_json = {
    [
     "niggahita 3",
     "nt",
-    "(gram) letter ṃ; 41st letter of the alphabet; nasal consonant; lit. held down",
+    "(gram) letter ṁ; 41st letter of the alphabet; nasal consonant; lit. held down",
     "✔"
    ],
    [
     "niggahitāgama",
     "masc",
-    "(gram) insertion of letter ṃ",
+    "(gram) insertion of letter ṁ",
     "✔"
    ],
    [
     "niggahīta 2",
     "nt",
-    "(gram) letter ṃ; 41st letter of the alphabet; nasal consonant; lit. held down",
+    "(gram) letter ṁ; 41st letter of the alphabet; nasal consonant; lit. held down",
     "✔"
    ],
    [
     "niggahītanta",
     "adj",
-    "(gram) ending with letter ṃ",
+    "(gram) ending with letter ṁ",
     "✔"
    ],
    [
     "niggahītalopa",
     "masc",
-    "(gram) elision of the letter ṃ",
+    "(gram) elision of the letter ṁ",
     "✔"
    ],
    [
@@ -3061,7 +3061,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "niccaṃ 3",
+    "niccaṁ 3",
     "ind",
     "(gram) mandatory; always",
     "◑"
@@ -3415,7 +3415,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "padasaṃsagga",
+    "padasaṁsagga",
     "masc",
     "(gram) combining of words; connecting of words",
     "✔"
@@ -3523,7 +3523,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "parāsaṃ",
+    "parāsaṁ",
     "pron",
     "(gram) ?? of the following; of the next",
     "✔"
@@ -3777,7 +3777,7 @@ var family_set_json = {
    [
     "bindu 5",
     "nt",
-    "(gram) dot over a letter representing the niggahīta letter, represented in Roman script by ṃ, ṃ or ŋ; lit. drop",
+    "(gram) dot over a letter representing the niggahīta letter, represented in Roman script by ṁ, ṁ or ṁ; lit. drop",
     "✔"
    ],
    [
@@ -3859,7 +3859,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "bhāvanapuṃsaka",
+    "bhāvanapuṁsaka",
     "nt",
     "(gram) adverbial expression; lit. state neuter",
     "✔"
@@ -4099,25 +4099,25 @@ var family_set_json = {
     "◑"
    ],
    [
-    "yathākammaṃ 2",
+    "yathākammaṁ 2",
     "ind",
     "(gram) accordingly; according to the order; in sequence",
     "◑"
    ],
    [
-    "yathārahaṃ 2",
+    "yathārahaṁ 2",
     "ind",
     "(gram) accordingly; when suitable",
     "◑"
    ],
    [
-    "yathāsaṅkhyaṃ",
+    "yathāsaṅkhyaṁ",
     "ind",
     "(gram) respectively; in that order; sequentially",
     "✔"
    ],
    [
-    "yathāsambhavaṃ",
+    "yathāsambhavaṁ",
     "ind",
     "(gram) as is relevant",
     "✔"
@@ -4221,13 +4221,13 @@ var family_set_json = {
    [
     "rudhādi",
     "nt",
-    "(gram) √rudh etc.; group 2 roots which take the conjugational sign ṃa",
+    "(gram) √rudh etc.; group 2 roots which take the conjugational sign ṁa",
     "✔"
    ],
    [
     "rudhādigaṇa",
     "masc",
-    "(gram) √rudh etc. group; group 2 roots which take the conjugational sign ṃa",
+    "(gram) √rudh etc. group; group 2 roots which take the conjugational sign ṁa",
     "✔"
    ],
    [
@@ -4351,7 +4351,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "lopaṃ pappoti",
+    "lopaṁ pappoti",
     "idiom",
     "(gram) is elided; is dropped; is cut off",
     "✔"
@@ -4675,7 +4675,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "visaṃyoga 3",
+    "visaṁyoga 3",
     "masc",
     "(gram) simplification of a consonant cluster; lit. causing to unyoke",
     "◑"
@@ -5089,31 +5089,31 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saṃ 1.1",
+    "saṁ 1.1",
     "prefix",
     "together; with",
     "✔"
    ],
    [
-    "saṃpubba",
+    "saṁpubba",
     "adj",
-    "(gram) with saṃ- prefix",
+    "(gram) with saṁ- prefix",
     "◑"
    ],
    [
-    "saṃyoga 3",
+    "saṁyoga 3",
     "masc",
     "(gram) conjunct consonant cluster; double consonant; lit. yoking together",
     "✔"
    ],
    [
-    "saṃyoganta",
+    "saṁyoganta",
     "adj",
     "(gram) ending in a conjunct consonant; ending with a double consonant",
     "◑"
    ],
    [
-    "saṃvaṇṇenta",
+    "saṁvaṇṇenta",
     "prp",
     "(gram) commenting on; explaining",
     "◑"
@@ -5407,9 +5407,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ṃa",
+    "ṁa",
     "cs",
-    "(gram) ṃ-a; conjugational sign of group 2 rudhādigaṇa verbs",
+    "(gram) ṁ-a; conjugational sign of group 2 rudhādigaṇa verbs",
     "◑"
    ]
   ],
@@ -5832,7 +5832,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saṃ 1.1",
+    "saṁ 1.1",
     "prefix",
     "together; with",
     "✔"
@@ -6005,9 +6005,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ṃa",
+    "ṁa",
     "cs",
-    "(gram) ṃ-a; conjugational sign of group 2 rudhādigaṇa verbs",
+    "(gram) ṁ-a; conjugational sign of group 2 rudhādigaṇa verbs",
     "◑"
    ]
   ],
@@ -6052,7 +6052,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kaṃ 2.1",
+    "kaṁ 2.1",
     "abbrev",
     "abbreviation of Cambodia; variant reading occurring in Cambodian texts",
     "✔"
@@ -6126,7 +6126,7 @@ var family_set_json = {
    [
     "ni 2",
     "abbrev",
-    "abbreviation of (Saṃyutta etc.) Nikāya",
+    "abbreviation of (Saṁyutta etc.) Nikāya",
     "✔"
    ],
    [
@@ -6234,7 +6234,7 @@ var family_set_json = {
    [
     "bu",
     "abbrev",
-    "abbreviation of Buddha(vaṃsa)",
+    "abbreviation of Buddha(vaṁsa)",
     "◑"
    ],
    [
@@ -6264,7 +6264,7 @@ var family_set_json = {
    [
     "mahāva 1",
     "abbrev",
-    "abbreviation of Mahāvaṃsa",
+    "abbreviation of Mahāvaṁsa",
     "✔"
    ],
    [
@@ -6292,9 +6292,9 @@ var family_set_json = {
     "◑"
    ],
    [
-    "vaṃ",
+    "vaṁ",
     "abbrev",
-    "abbreviation of (Buddha)vaṃsa",
+    "abbreviation of (Buddha)vaṁsa",
     "◑"
    ],
    [
@@ -6328,9 +6328,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saṃ 2.1",
+    "saṁ 2.1",
     "abbrev",
-    "abbreviation of Saṃyutta (Nikāya)",
+    "abbreviation of Saṁyutta (Nikāya)",
     "✔"
    ],
    [
@@ -6453,19 +6453,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aññesaṃ 1",
+    "aññesaṁ 1",
     "pron",
     "to others; for other people",
     "✔"
    ],
    [
-    "aññesaṃ 2",
+    "aññesaṁ 2",
     "pron",
     "of others; belonging to other people; as others",
     "✔"
    ],
    [
-    "aduṃ",
+    "aduṁ",
     "pron",
     "that; such; so and so",
     "✔"
@@ -6519,13 +6519,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "amūsaṃ 2",
+    "amūsaṁ 2",
     "pron",
     "of such and such; of those people",
     "✔"
    ],
    [
-    "amhaṃ",
+    "amhaṁ",
     "pron",
     "our; of us",
     "✔"
@@ -6537,25 +6537,25 @@ var family_set_json = {
     "✔"
    ],
    [
-    "amhākaṃ 1",
+    "amhākaṁ 1",
     "pron",
     "us (object)",
     "✔"
    ],
    [
-    "amhākaṃ 2",
+    "amhākaṁ 2",
     "pron",
     "to us; for us",
     "✔"
    ],
    [
-    "amhākaṃ 3",
+    "amhākaṁ 3",
     "pron",
     "our; of us",
     "✔"
    ],
    [
-    "amhākaṃ 4",
+    "amhākaṁ 4",
     "pron",
     "(royal plural) my; lit. our",
     "✔"
@@ -6627,7 +6627,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ayaṃ",
+    "ayaṁ",
     "pron",
     "this; this person; this thing",
     "✔"
@@ -6663,7 +6663,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "asmiṃ",
+    "asmiṁ",
     "pron",
     "in this",
     "✔"
@@ -6687,13 +6687,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ahaṃ",
+    "ahaṁ",
     "pron",
     "I",
     "✔"
    ],
    [
-    "āsaṃ",
+    "āsaṁ",
     "pron",
     "of these; their",
     "✔"
@@ -6717,13 +6717,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "idaṃ 1",
+    "idaṁ 1",
     "pron",
     "this; this thing",
     "✔"
    ],
    [
-    "idaṃ 2",
+    "idaṁ 2",
     "pron",
     "this; this thing; this place (object)",
     "✔"
@@ -6759,13 +6759,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "imasmiṃ 1",
+    "imasmiṁ 1",
     "pron",
     "in this",
     "✔"
    ],
    [
-    "imasmiṃ 2",
+    "imasmiṁ 2",
     "pron",
     "when this",
     "✔"
@@ -6783,7 +6783,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "imaṃ",
+    "imaṁ",
     "pron",
     "this; this person; this thing",
     "✔"
@@ -6807,7 +6807,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "imāyaṃ",
+    "imāyaṁ",
     "pron",
     "in this",
     "◑"
@@ -6819,7 +6819,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "imāsaṃ",
+    "imāsaṁ",
     "pron",
     "of these",
     "✔"
@@ -6843,7 +6843,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "imissaṃ",
+    "imissaṁ",
     "pron",
     "in this",
     "✔"
@@ -6867,13 +6867,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "imesaṃ 1",
+    "imesaṁ 1",
     "pron",
     "for these; for them; for those",
     "✔"
    ],
    [
-    "imesaṃ 2",
+    "imesaṁ 2",
     "pron",
     "of these; their",
     "✔"
@@ -6897,13 +6897,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ubhinnaṃ 1",
+    "ubhinnaṁ 1",
     "pron",
     "to both; for both",
     "✔"
    ],
    [
-    "ubhinnaṃ 2",
+    "ubhinnaṁ 2",
     "pron",
     "of both",
     "✔"
@@ -6981,7 +6981,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "etasmiṃ",
+    "etasmiṁ",
     "pron",
     "in this; in this person",
     "✔"
@@ -6999,13 +6999,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "etaṃ 1",
+    "etaṁ 1",
     "pron",
     "this; this thing (subject)",
     "✔"
    ],
    [
-    "etaṃ 2",
+    "etaṁ 2",
     "pron",
     "this; this man; this thing (object)",
     "✔"
@@ -7047,13 +7047,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "etesaṃ 1",
+    "etesaṁ 1",
     "pron",
     "to them; for these",
     "✔"
    ],
    [
-    "etesaṃ 2",
+    "etesaṁ 2",
     "pron",
     "of them; of these",
     "✔"
@@ -7071,7 +7071,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "enaṃ",
+    "enaṁ",
     "pron",
     "him; her; this one",
     "✔"
@@ -7095,7 +7095,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "esānaṃ 2",
+    "esānaṁ 2",
     "pron",
     "of these; their",
     "✔"
@@ -7137,7 +7137,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "katamasmiṃ",
+    "katamasmiṁ",
     "pron",
     "in which?",
     "✔"
@@ -7191,7 +7191,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kaṃ 1.1",
+    "kaṁ 1.1",
     "pron",
     "which?; what?; whom?",
     "✔"
@@ -7275,19 +7275,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kismiṃ 1",
+    "kismiṁ 1",
     "pron",
     "in what?; in which?",
     "✔"
    ],
    [
-    "kismiṃ 2",
+    "kismiṁ 2",
     "pron",
     "on what grounds?",
     "✔"
    ],
    [
-    "kismiṃ 3",
+    "kismiṁ 3",
     "pron",
     "when what?",
     "✔"
@@ -7305,7 +7305,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kiṃ 1",
+    "kiṁ 1",
     "pron",
     "who?; what?; which?",
     "✔"
@@ -7353,13 +7353,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kesaṃ 1",
+    "kesaṁ 1",
     "pron",
     "for who?; to who?",
     "✔"
    ],
    [
-    "kesaṃ 2",
+    "kesaṁ 2",
     "pron",
     "of whom?; whose?",
     "✔"
@@ -7497,31 +7497,31 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tasmiṃ 1",
+    "tasmiṁ 1",
     "pron",
     "in that; in that person",
     "✔"
    ],
    [
-    "tasmiṃ 2",
+    "tasmiṁ 2",
     "pron",
     "when that",
     "✔"
    ],
    [
-    "tasmiṃ 3",
+    "tasmiṁ 3",
     "pron",
     "in that case; in that situation",
     "✔"
    ],
    [
-    "tasmiṃ 4",
+    "tasmiṁ 4",
     "pron",
     "under that; under him",
     "✔"
    ],
    [
-    "tasmiṃ 5",
+    "tasmiṁ 5",
     "pron",
     "(gram) before that",
     "◑"
@@ -7545,7 +7545,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tassaṃ",
+    "tassaṁ",
     "pron",
     "in that",
     "✔"
@@ -7563,19 +7563,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "taṃ 1.1",
+    "taṁ 1.1",
     "pron",
     "it; that",
     "✔"
    ],
    [
-    "taṃ 1.2",
+    "taṁ 1.2",
     "pron",
     "him; her; one; that person; that thing",
     "✔"
    ],
    [
-    "taṃ 2.1",
+    "taṁ 2.1",
     "pron",
     "you (object)",
     "✔"
@@ -7617,19 +7617,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tāyaṃ",
+    "tāyaṁ",
     "pron",
     "in that; on that; at that",
     "✔"
    ],
    [
-    "tāsaṃ 1",
+    "tāsaṁ 1",
     "pron",
     "to those, for those; for them",
     "✔"
    ],
    [
-    "tāsaṃ 2",
+    "tāsaṁ 2",
     "pron",
     "of those; of them; their",
     "✔"
@@ -7653,7 +7653,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tissaṃ",
+    "tissaṁ",
     "pron",
     "in that; regarding that",
     "✔"
@@ -7665,13 +7665,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tumhaṃ 1",
+    "tumhaṁ 1",
     "pron",
     "for you all; to you all",
     "✔"
    ],
    [
-    "tumhaṃ 2",
+    "tumhaṁ 2",
     "pron",
     "your",
     "◑"
@@ -7683,19 +7683,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tumhākaṃ 1",
+    "tumhākaṁ 1",
     "pron",
     "you all; both of you (object)",
     "✔"
    ],
    [
-    "tumhākaṃ 2",
+    "tumhākaṁ 2",
     "pron",
     "for you all; to you all",
     "✔"
    ],
    [
-    "tumhākaṃ 3",
+    "tumhākaṁ 3",
     "pron",
     "of you all; yours",
     "✔"
@@ -7749,25 +7749,25 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tuyhaṃ 1",
+    "tuyhaṁ 1",
     "pron",
     "for you; to you",
     "✔"
    ],
    [
-    "tuyhaṃ 2",
+    "tuyhaṁ 2",
     "pron",
     "your; yours",
     "✔"
    ],
    [
-    "tuvaṃ 1",
+    "tuvaṁ 1",
     "pron",
     "you",
     "✔"
    ],
    [
-    "tuvaṃ 2",
+    "tuvaṁ 2",
     "pron",
     "thou; you (object)",
     "✔"
@@ -7827,19 +7827,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tesaṃ 1",
+    "tesaṁ 1",
     "pron",
     "for them; to them; to those",
     "✔"
    ],
    [
-    "tesaṃ 2",
+    "tesaṁ 2",
     "pron",
     "their; of these; of them; of those",
     "✔"
    ],
    [
-    "tesaṃ 3",
+    "tesaṁ 3",
     "pron",
     "when they; when these",
     "✔"
@@ -7863,13 +7863,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tvaṃ 1",
+    "tvaṁ 1",
     "pron",
     "you (subject)",
     "✔"
    ],
    [
-    "tvaṃ 2",
+    "tvaṁ 2",
     "pron",
     "you (object)",
     "✔"
@@ -7887,7 +7887,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "naṃ",
+    "naṁ",
     "pron",
     "him; her; it; one; that",
     "✔"
@@ -7923,7 +7923,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "nāññesaṃ",
+    "nāññesaṁ",
     "pron",
     "not to others; not for others",
     "✔"
@@ -7959,13 +7959,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "nesaṃ 1",
+    "nesaṁ 1",
     "pron",
     "for them; to them",
     "✔"
    ],
    [
-    "nesaṃ 2",
+    "nesaṁ 2",
     "pron",
     "of them; of those; their",
     "✔"
@@ -8055,7 +8055,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "parāsaṃ",
+    "parāsaṁ",
     "pron",
     "(gram) ?? of the following; of the next",
     "✔"
@@ -8073,19 +8073,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "paresaṃ 1",
+    "paresaṁ 1",
     "pron",
     "to others; for others",
     "✔"
    ],
    [
-    "paresaṃ 2",
+    "paresaṁ 2",
     "pron",
     "of others; others'; (belongings) of others",
     "✔"
    ],
    [
-    "paresaṃ 3",
+    "paresaṁ 3",
     "pron",
     "belonging to others; others' property; lit. of others",
     "✔"
@@ -8103,31 +8103,31 @@ var family_set_json = {
     "✔"
    ],
    [
-    "mamaṃ 1",
+    "mamaṁ 1",
     "pron",
     "me (object); about me",
     "✔"
    ],
    [
-    "mamaṃ 2",
+    "mamaṁ 2",
     "pron",
     "to me; for me",
     "✔"
    ],
    [
-    "mamaṃ 3",
+    "mamaṁ 3",
     "pron",
     "mine; of me",
     "✔"
    ],
    [
-    "mayaṃ 1",
+    "mayaṁ 1",
     "pron",
     "we",
     "✔"
    ],
    [
-    "mayaṃ 2",
+    "mayaṁ 2",
     "pron",
     "(royal plural) I; lit. we",
     "✔"
@@ -8175,25 +8175,25 @@ var family_set_json = {
     "✔"
    ],
    [
-    "mayhaṃ 1",
+    "mayhaṁ 1",
     "pron",
     "to me; for me",
     "✔"
    ],
    [
-    "mayhaṃ 2",
+    "mayhaṁ 2",
     "pron",
     "my; mine",
     "✔"
    ],
    [
-    "maṃ 1",
+    "maṁ 1",
     "pron",
     "me (object)",
     "✔"
    ],
    [
-    "māmaṃ",
+    "māmaṁ",
     "pron",
     "me",
     "✔"
@@ -8289,13 +8289,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "yasmiṃ 1",
+    "yasmiṁ 1",
     "pron",
     "in whoever; in whichever; at whichever",
     "✔"
    ],
    [
-    "yasmiṃ 2",
+    "yasmiṁ 2",
     "pron",
     "about which; in which",
     "✔"
@@ -8313,7 +8313,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "yassaṃ",
+    "yassaṁ",
     "pron",
     "in whatever; in whichever",
     "✔"
@@ -8331,25 +8331,25 @@ var family_set_json = {
     "✔"
    ],
    [
-    "yaṃ 1",
+    "yaṁ 1",
     "pron",
     "which; whoever; whatever; that which",
     "✔"
    ],
    [
-    "yaṃ 2",
+    "yaṁ 2",
     "pron",
     "whoever; whatever; that which",
     "✔"
    ],
    [
-    "yaṃkaci",
+    "yaṁkaci",
     "pron",
     "whatever; any whatsoever; everything; all",
     "✔"
    ],
    [
-    "yaṃkiñci",
+    "yaṁkiñci",
     "pron",
     "whatever; any whatsoever; everything; all",
     "✔"
@@ -8409,13 +8409,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "yesaṃ 1",
+    "yesaṁ 1",
     "pron",
     "for whoever; to whom; for which; for such and such",
     "✔"
    ],
    [
-    "yesaṃ 2",
+    "yesaṁ 2",
     "pron",
     "of whoever; of whom; of which; of such and such; of them",
     "✔"
@@ -8517,7 +8517,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sabbāsaṃ",
+    "sabbāsaṁ",
     "pron",
     "of all",
     "✔"
@@ -8529,13 +8529,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sabbesaṃ 1",
+    "sabbesaṁ 1",
     "pron",
     "for all; for everyone",
     "✔"
    ],
    [
-    "sabbesaṃ 2",
+    "sabbesaṁ 2",
     "pron",
     "of all",
     "✔"
@@ -9054,7 +9054,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "khīṇasaṃyojana",
+    "khīṇasaṁyojana",
     "adj",
     "who has removed the bonds; who has worn away the fetters; epithet of an arahant",
     "✔"
@@ -9108,7 +9108,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "parikkhīṇabhavasaṃyojana",
+    "parikkhīṇabhavasaṁyojana",
     "adj",
     "who has worn away the bonds of being; who has exhausted the fetter of existence; epithet of an arahant",
     "✔"
@@ -9619,682 +9619,682 @@ var family_set_json = {
   ],
   "count": 58
  },
- "suttas of Saṃyutta Nikāya 45": {
+ "suttas of Saṁyutta Nikāya 45": {
   "data": [
    [
     "avijjāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.1 (SN45.1); lit. discourse on ignorance",
+    "Saṁyutta Nikāya 45.1 (SN45.1); lit. discourse on ignorance",
     "✔"
    ],
    [
     "upaḍḍhasutta",
     "nt",
-    "Saṃyutta Nikāya 45.2 (SN45.2); lit. discourse on half",
+    "Saṁyutta Nikāya 45.2 (SN45.2); lit. discourse on half",
     "✔"
    ],
    [
     "sāriputtasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.3 (SN45.3); lit. discourse with Sāriputta",
+    "Saṁyutta Nikāya 45.3 (SN45.3); lit. discourse with Sāriputta",
     "✔"
    ],
    [
     "jāṇussoṇibrāhmaṇasutta",
     "nt",
-    "Saṃyutta Nikāya 45.4 (SN45.4); lit. discourse with Jāṇussoṇi the Brahman",
+    "Saṁyutta Nikāya 45.4 (SN45.4); lit. discourse with Jāṇussoṇi the Brahman",
     "✔"
    ],
    [
     "paṭhamaaññatarabhikkhusutta",
     "nt",
-    "Saṃyutta Nikāya 45.6 (SN45.6); lit. first discourse on a certain monk",
+    "Saṁyutta Nikāya 45.6 (SN45.6); lit. first discourse on a certain monk",
     "✔"
    ],
    [
     "dutiyaaññatarabhikkhusutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.7 (SN45.7); lit. second discourse on a certain monk",
+    "Saṁyutta Nikāya 45.7 (SN45.7); lit. second discourse on a certain monk",
     "✔"
    ],
    [
     "vibhaṅgasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.8 (SN45.8); lit. discourse on analysis",
+    "Saṁyutta Nikāya 45.8 (SN45.8); lit. discourse on analysis",
     "✔"
    ],
    [
     "sūkasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.9 (SN45.9); lit. discourse on the spike",
+    "Saṁyutta Nikāya 45.9 (SN45.9); lit. discourse on the spike",
     "✔"
    ],
    [
     "nandiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.10 (SN45.10); lit. discourse with Nandiya",
+    "Saṁyutta Nikāya 45.10 (SN45.10); lit. discourse with Nandiya",
     "✔"
    ],
    [
     "paṭhamavihārasutta",
     "nt",
-    "Saṃyutta Nikāya 45.11 (SN45.11); lit. first discourse on meditation attainment",
+    "Saṁyutta Nikāya 45.11 (SN45.11); lit. first discourse on meditation attainment",
     "✔"
    ],
    [
     "dutiyavihārasutta",
     "nt",
-    "Saṃyutta Nikāya 45.12 (SN45.12); lit. second discourse on meditation attainment",
+    "Saṁyutta Nikāya 45.12 (SN45.12); lit. second discourse on meditation attainment",
     "✔"
    ],
    [
     "sekkhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.13 (SN45.13); lit. discourse on the trainee",
+    "Saṁyutta Nikāya 45.13 (SN45.13); lit. discourse on the trainee",
     "✔"
    ],
    [
     "paṭhamauppādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.14 (SN45.14); lit. first discourse on arising",
+    "Saṁyutta Nikāya 45.14 (SN45.14); lit. first discourse on arising",
     "✔"
    ],
    [
     "dutiyauppādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.15 (SN45.15); lit. second discourse on arising",
+    "Saṁyutta Nikāya 45.15 (SN45.15); lit. second discourse on arising",
     "✔"
    ],
    [
     "paṭhamaparisuddhasutta",
     "nt",
-    "Saṃyutta Nikāya 45.16 (SN45.16); lit. first discourse on purified",
+    "Saṁyutta Nikāya 45.16 (SN45.16); lit. first discourse on purified",
     "✔"
    ],
    [
     "dutiyaparisuddhasutta",
     "nt",
-    "Saṃyutta Nikāya 45.17 (SN45.17); lit. second discourse on purified",
+    "Saṁyutta Nikāya 45.17 (SN45.17); lit. second discourse on purified",
     "✔"
    ],
    [
     "paṭhamakukkuṭārāmasutta",
     "nt",
-    "Saṃyutta Nikāya 45.18 (SN45.18); lit. first discourse at cockerel park monastery",
+    "Saṁyutta Nikāya 45.18 (SN45.18); lit. first discourse at cockerel park monastery",
     "✔"
    ],
    [
     "dutiyakukkuṭārāmasutta",
     "nt",
-    "Saṃyutta Nikāya 45.19 (SN45.19); lit. second discourse at cockerel park monastery",
+    "Saṁyutta Nikāya 45.19 (SN45.19); lit. second discourse at cockerel park monastery",
     "✔"
    ],
    [
     "tatiyakukkuṭārāmasutta",
     "nt",
-    "Saṃyutta Nikāya 45.20 (SN45.20); lit. third discourse on cockerel park monastery",
+    "Saṁyutta Nikāya 45.20 (SN45.20); lit. third discourse on cockerel park monastery",
     "✔"
    ],
    [
     "micchattasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.21 (SN45.21); lit. discourse on wrongness",
+    "Saṁyutta Nikāya 45.21 (SN45.21); lit. discourse on wrongness",
     "✔"
    ],
    [
     "akusaladhammasutta",
     "nt",
-    "Saṃyutta Nikāya 45.22 (SN45.22); lit. discourse on unwholesome states",
+    "Saṁyutta Nikāya 45.22 (SN45.22); lit. discourse on unwholesome states",
     "✔"
    ],
    [
     "paṭhamapaṭipadāsutta",
     "nt",
-    "Saṃyutta Nikāya 45.23 (SN45.23); lit. first discourse on the path of practice",
+    "Saṁyutta Nikāya 45.23 (SN45.23); lit. first discourse on the path of practice",
     "✔"
    ],
    [
     "dutiyapaṭipadāsutta",
     "nt",
-    "Saṃyutta Nikāya 45.24 (SN45.24); lit. second discourse on the path of practice",
+    "Saṁyutta Nikāya 45.24 (SN45.24); lit. second discourse on the path of practice",
     "✔"
    ],
    [
     "paṭhamaasappurisasutta",
     "nt",
-    "Saṃyutta Nikāya 45.25 (SN45.25); lit. first discourse on the person of no integrity",
+    "Saṁyutta Nikāya 45.25 (SN45.25); lit. first discourse on the person of no integrity",
     "✔"
    ],
    [
     "dutiyaasappurisasutta",
     "nt",
-    "Saṃyutta Nikāya 45.26 (SN45.26); lit. second discourse on the person of no integrity",
+    "Saṁyutta Nikāya 45.26 (SN45.26); lit. second discourse on the person of no integrity",
     "✔"
    ],
    [
     "kumbhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.27 (SN45.27); lit. discourse on the water pot",
+    "Saṁyutta Nikāya 45.27 (SN45.27); lit. discourse on the water pot",
     "✔"
    ],
    [
     "samādhisutta 4",
     "nt",
-    "Saṃyutta Nikāya 45.28 (SN45.28); lit. discourse on mental composure",
+    "Saṁyutta Nikāya 45.28 (SN45.28); lit. discourse on mental composure",
     "✔"
    ],
    [
     "vedanāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.29 (SN45.29); lit. discourse on felt experience",
+    "Saṁyutta Nikāya 45.29 (SN45.29); lit. discourse on felt experience",
     "✔"
    ],
    [
     "uttiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.30 (SN45.30); lit. discourse with Uttiya",
+    "Saṁyutta Nikāya 45.30 (SN45.30); lit. discourse with Uttiya",
     "✔"
    ],
    [
     "paṭhamapaṭipattisutta",
     "nt",
-    "Saṃyutta Nikāya 45.31 (SN45.31); lit. first discourse on practice",
+    "Saṁyutta Nikāya 45.31 (SN45.31); lit. first discourse on practice",
     "✔"
    ],
    [
     "dutiyapaṭipattisutta",
     "nt",
-    "Saṃyutta Nikāya 45.32 (SN45.32); lit. second discourse on practice",
+    "Saṁyutta Nikāya 45.32 (SN45.32); lit. second discourse on practice",
     "✔"
    ],
    [
     "viraddhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.33 (SN45.33); lit. discourse on failed",
+    "Saṁyutta Nikāya 45.33 (SN45.33); lit. discourse on failed",
     "✔"
    ],
    [
     "pāraṅgamasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.34 (SN45.34); lit. discourse on going to the other shore",
+    "Saṁyutta Nikāya 45.34 (SN45.34); lit. discourse on going to the other shore",
     "✔"
    ],
    [
     "paṭhamasāmaññasutta",
     "nt",
-    "Saṃyutta Nikāya 45.35 (SN45.35); lit. first discourse on monkhood",
+    "Saṁyutta Nikāya 45.35 (SN45.35); lit. first discourse on monkhood",
     "✔"
    ],
    [
     "dutiyasāmaññasutta",
     "nt",
-    "Saṃyutta Nikāya 45.36 (SN45.36); lit. second discourse on monkhood",
+    "Saṁyutta Nikāya 45.36 (SN45.36); lit. second discourse on monkhood",
     "✔"
    ],
    [
     "paṭhamabrahmaññasutta",
     "nt",
-    "Saṃyutta Nikāya 45.37 (SN45.37); lit. first discourse on Brahmanhood",
+    "Saṁyutta Nikāya 45.37 (SN45.37); lit. first discourse on Brahmanhood",
     "✔"
    ],
    [
     "dutiyabrahmaññasutta",
     "nt",
-    "Saṃyutta Nikāya 45.38 (SN45.38); lit. second discourse on Brahmanhood",
+    "Saṁyutta Nikāya 45.38 (SN45.38); lit. second discourse on Brahmanhood",
     "✔"
    ],
    [
     "paṭhamabrahmacariyasutta",
     "nt",
-    "Saṃyutta Nikāya 45.39 (SN45.39); lit. first discourse on the holy life",
+    "Saṁyutta Nikāya 45.39 (SN45.39); lit. first discourse on the holy life",
     "✔"
    ],
    [
     "dutiyabrahmacariyasutta",
     "nt",
-    "Saṃyutta Nikāya 45.40 (SN45.40); lit. second discourse on the holy life",
+    "Saṁyutta Nikāya 45.40 (SN45.40); lit. second discourse on the holy life",
     "✔"
    ],
    [
     "rāgavirāgasutta",
     "nt",
-    "Saṃyutta Nikāya 45.41 (SN45.41); lit. discourse on the fading of desire",
+    "Saṁyutta Nikāya 45.41 (SN45.41); lit. discourse on the fading of desire",
     "✔"
    ],
    [
-    "saṃyojanappahānādisuttachakka",
+    "saṁyojanappahānādisuttachakka",
     "nt",
-    "Saṃyutta Nikāya 45.42-47 (SN45.42-47); lit. group of six discourses starting with the discourse on abandoning the fetters",
+    "Saṁyutta Nikāya 45.42-47 (SN45.42-47); lit. group of six discourses starting with the discourse on abandoning the fetters",
     "✔"
    ],
    [
     "anupādāparinibbānasutta",
     "nt",
-    "Saṃyutta Nikāya 45.48 (SN45.48); lit. discourse on complete extinguishing though not grasping",
+    "Saṁyutta Nikāya 45.48 (SN45.48); lit. discourse on complete extinguishing though not grasping",
     "✔"
    ],
    [
     "kalyāṇamittasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.49 (SN45.49); lit. discourse about good friends",
+    "Saṁyutta Nikāya 45.49 (SN45.49); lit. discourse about good friends",
     "✔"
    ],
    [
     "sīlasampadādisuttapañcaka 1",
     "nt",
-    "Saṃyutta Nikāya 45.50-54 (SN45.50-54); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "Saṁyutta Nikāya 45.50-54 (SN45.50-54); lit. group of five discourses starting with the discourse on the attainment of virtue",
     "✔"
    ],
    [
     "yonisomanasikārasampadāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.55 (SN45.55); lit. discourse on success in paying proper attention",
+    "Saṁyutta Nikāya 45.55 (SN45.55); lit. discourse on success in paying proper attention",
     "✔"
    ],
    [
     "kalyāṇamittasutta 3",
     "nt",
-    "Saṃyutta Nikāya 45.56 (SN45.56); lit. discourse about good friends",
+    "Saṁyutta Nikāya 45.56 (SN45.56); lit. discourse about good friends",
     "✔"
    ],
    [
     "sīlasampadādisuttapañcaka 2",
     "nt",
-    "Saṃyutta Nikāya 45.57-61 (SN45.57-61); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "Saṁyutta Nikāya 45.57-61 (SN45.57-61); lit. group of five discourses starting with the discourse on the attainment of virtue",
     "✔"
    ],
    [
     "yonisomanasikārasampadāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.62 (SN45.62); lit. discourse on success in paying proper attention",
+    "Saṁyutta Nikāya 45.62 (SN45.62); lit. discourse on success in paying proper attention",
     "✔"
    ],
    [
     "kalyāṇamittasutta 4",
     "nt",
-    "Saṃyutta Nikāya 45.63 (SN45.63); lit. discourse about good friends",
+    "Saṁyutta Nikāya 45.63 (SN45.63); lit. discourse about good friends",
     "✔"
    ],
    [
     "sīlasampadādisuttapañcaka 3",
     "nt",
-    "Saṃyutta Nikāya 45.64-68 (SN45.64-68); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "Saṁyutta Nikāya 45.64-68 (SN45.64-68); lit. group of five discourses starting with the discourse on the attainment of virtue",
     "✔"
    ],
    [
     "yonisomanasikārasampadāsutta 3",
     "nt",
-    "Saṃyutta Nikāya 45.69 (SN45.69); lit. discourse on success in paying proper attention",
+    "Saṁyutta Nikāya 45.69 (SN45.69); lit. discourse on success in paying proper attention",
     "✔"
    ],
    [
     "kalyāṇamittasutta 5",
     "nt",
-    "Saṃyutta Nikāya 45.70 (SN45.70); lit. discourse about good friends",
+    "Saṁyutta Nikāya 45.70 (SN45.70); lit. discourse about good friends",
     "✔"
    ],
    [
     "sīlasampadādisuttapañcaka 4",
     "nt",
-    "Saṃyutta Nikāya 45.71-75 (SN45.71-75); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "Saṁyutta Nikāya 45.71-75 (SN45.71-75); lit. group of five discourses starting with the discourse on the attainment of virtue",
     "✔"
    ],
    [
     "yonisomanasikārasampadāsutta 4",
     "nt",
-    "Saṃyutta Nikāya 45.76 (SN45.76); lit. discourse on success in paying proper attention",
+    "Saṁyutta Nikāya 45.76 (SN45.76); lit. discourse on success in paying proper attention",
     "✔"
    ],
    [
     "kalyāṇamittasutta 6",
     "nt",
-    "Saṃyutta Nikāya 45.77 (SN45.77); lit. discourse about good friends",
+    "Saṁyutta Nikāya 45.77 (SN45.77); lit. discourse about good friends",
     "✔"
    ],
    [
     "sīlasampadādisuttapañcaka 5",
     "nt",
-    "Saṃyutta Nikāya 45.78-82 (SN45.78-82); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "Saṁyutta Nikāya 45.78-82 (SN45.78-82); lit. group of five discourses starting with the discourse on the attainment of virtue",
     "✔"
    ],
    [
     "yonisomanasikārasampadāsutta 5",
     "nt",
-    "Saṃyutta Nikāya 45.83 (SN45.83); lit. discourse on success in paying proper attention",
+    "Saṁyutta Nikāya 45.83 (SN45.83); lit. discourse on success in paying proper attention",
     "✔"
    ],
    [
     "kalyāṇamittasutta 7",
     "nt",
-    "Saṃyutta Nikāya 45.84 (SN45.84); lit. discourse about good friends",
+    "Saṁyutta Nikāya 45.84 (SN45.84); lit. discourse about good friends",
     "✔"
    ],
    [
     "sīlasampadādisuttapañcaka 6",
     "nt",
-    "Saṃyutta Nikāya 45.85-89 (SN45.85-89); lit. group of five discourses starting with the discourse on the attainment of virtue",
+    "Saṁyutta Nikāya 45.85-89 (SN45.85-89); lit. group of five discourses starting with the discourse on the attainment of virtue",
     "✔"
    ],
    [
     "yonisomanasikārasampadāsutta 6",
     "nt",
-    "Saṃyutta Nikāya 45.90 (SN45.90); lit. discourse on success in paying proper attention",
+    "Saṁyutta Nikāya 45.90 (SN45.90); lit. discourse on success in paying proper attention",
     "✔"
    ],
    [
     "paṭhamapācīnaninnasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.91 (SN45.91); lit. first discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.91 (SN45.91); lit. first discourse on sloping to the east",
     "✔"
    ],
    [
     "dutiyādipācīnaninnasuttacatukka",
     "nt",
-    "Saṃyutta Nikāya 45.92-95 (SN45.92-95); lit. second group of four discourses starting with the discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.92-95 (SN45.92-95); lit. second group of four discourses starting with the discourse on sloping to the east",
     "✔"
    ],
    [
     "chaṭṭhapācīnaninnasutta",
     "nt",
-    "Saṃyutta Nikāya 45.96 (SN45.96); lit. sixth discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.96 (SN45.96); lit. sixth discourse on sloping to the east",
     "✔"
    ],
    [
     "paṭhamasamuddaninnasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.97 (SN45.97); lit. first discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.97 (SN45.97); lit. first discourse on sloping to the ocean",
     "✔"
    ],
    [
     "dutiyādisamuddaninnasuttapañcaka 1",
     "nt",
-    "Saṃyutta Nikāya 45.98-102 (SN45.98-102); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.98-102 (SN45.98-102); lit. group of five discourses starting with the second discourse on sloping to the ocean",
     "✔"
    ],
    [
     "paṭhamapācīnaninnasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.103 (SN45.103); lit. first discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.103 (SN45.103); lit. first discourse on sloping to the east",
     "✔"
    ],
    [
     "dutiyādipācīnaninnasuttapañcaka 1",
     "nt",
-    "Saṃyutta Nikāya 45.104-108 (SN45.104-108); lit. group of five discourses starting with the second discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.104-108 (SN45.104-108); lit. group of five discourses starting with the second discourse on sloping to the east",
     "✔"
    ],
    [
     "paṭhamasamuddaninnasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.109 (SN45.109); lit. first discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.109 (SN45.109); lit. first discourse on sloping to the ocean",
     "✔"
    ],
    [
     "dutiyādisamuddaninnasuttapañcaka 2",
     "nt",
-    "Saṃyutta Nikāya 45.110-114 (SN45.110-114); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.110-114 (SN45.110-114); lit. group of five discourses starting with the second discourse on sloping to the ocean",
     "✔"
    ],
    [
     "paṭhamapācīnaninnasutta 3",
     "nt",
-    "Saṃyutta Nikāya 45.115 (SN45.115); lit. first discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.115 (SN45.115); lit. first discourse on sloping to the east",
     "✔"
    ],
    [
     "dutiyādipācīnaninnasuttapañcaka 2",
     "nt",
-    "Saṃyutta Nikāya 45.116-120 (SN45.116-120); lit. group of five discourses starting with the second discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.116-120 (SN45.116-120); lit. group of five discourses starting with the second discourse on sloping to the east",
     "✔"
    ],
    [
     "paṭhamasamuddaninnasutta 3",
     "nt",
-    "Saṃyutta Nikāya 45.121 (SN45.121); lit. first discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.121 (SN45.121); lit. first discourse on sloping to the ocean",
     "✔"
    ],
    [
     "dutiyādisamuddaninnasuttapañcaka 3",
     "nt",
-    "Saṃyutta Nikāya 45.122-126 (SN45.122-126); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.122-126 (SN45.122-126); lit. group of five discourses starting with the second discourse on sloping to the ocean",
     "✔"
    ],
    [
     "paṭhamapācīnaninnasutta 4",
     "nt",
-    "Saṃyutta Nikāya 45.127 (SN45.127); lit. first discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.127 (SN45.127); lit. first discourse on sloping to the east",
     "✔"
    ],
    [
     "dutiyādipācīnaninnasuttapañcaka 3",
     "nt",
-    "Saṃyutta Nikāya 45.128-132 (SN45.128-132); lit. group of five discourses starting with the second discourse on sloping to the east",
+    "Saṁyutta Nikāya 45.128-132 (SN45.128-132); lit. group of five discourses starting with the second discourse on sloping to the east",
     "✔"
    ],
    [
     "paṭhamasamuddaninnasutta 4",
     "nt",
-    "Saṃyutta Nikāya 45.133 (SN45.133); lit. first discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.133 (SN45.133); lit. first discourse on sloping to the ocean",
     "✔"
    ],
    [
     "dutiyādisamuddaninnasuttapañcaka 4",
     "nt",
-    "Saṃyutta Nikāya 45.134-138 (SN45.134-138); lit. group of five discourses starting with the second discourse on sloping to the ocean",
+    "Saṁyutta Nikāya 45.134-138 (SN45.134-138); lit. group of five discourses starting with the second discourse on sloping to the ocean",
     "✔"
    ],
    [
     "tathāgatasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.139 (SN45.139); lit. discourse on the Such Become",
+    "Saṁyutta Nikāya 45.139 (SN45.139); lit. discourse on the Such Become",
     "✔"
    ],
    [
     "padasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.140 (SN45.140); lit. discourse on the footprint",
+    "Saṁyutta Nikāya 45.140 (SN45.140); lit. discourse on the footprint",
     "✔"
    ],
    [
     "kūṭādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 45.141-145 (SN45.141-145); lit. group of five discourses starting with the discourse on the peak",
+    "Saṁyutta Nikāya 45.141-145 (SN45.141-145); lit. group of five discourses starting with the discourse on the peak",
     "✔"
    ],
    [
     "candimādisuttatatiyaka",
     "nt",
-    "Saṃyutta Nikāya 45.146-148 (SN45.146-148); lit. group of three discourses starting with the discourse on the moon",
+    "Saṁyutta Nikāya 45.146-148 (SN45.146-148); lit. group of three discourses starting with the discourse on the moon",
     "✔"
    ],
    [
     "bījasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.150 (SN45.150); lit. discourse on the seed",
+    "Saṁyutta Nikāya 45.150 (SN45.150); lit. discourse on the seed",
     "✔"
    ],
    [
     "nāgasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.151 (SN45.151); lit. discourse on the bull elephant",
+    "Saṁyutta Nikāya 45.151 (SN45.151); lit. discourse on the bull elephant",
     "✔"
    ],
    [
     "rukkhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.152 (SN45.152); lit. discourse on the tree",
+    "Saṁyutta Nikāya 45.152 (SN45.152); lit. discourse on the tree",
     "✔"
    ],
    [
     "sūkasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.154 (SN45.154); lit. discourse on the spike",
+    "Saṁyutta Nikāya 45.154 (SN45.154); lit. discourse on the spike",
     "✔"
    ],
    [
     "ākāsasutta",
     "nt",
-    "Saṃyutta Nikāya 45.155 (SN45.155); lit. discourse on the sky",
+    "Saṁyutta Nikāya 45.155 (SN45.155); lit. discourse on the sky",
     "✔"
    ],
    [
     "paṭhamameghasutta",
     "nt",
-    "Saṃyutta Nikāya 45.156 (SN45.156); lit. first discourse on the rain shower",
+    "Saṁyutta Nikāya 45.156 (SN45.156); lit. first discourse on the rain shower",
     "✔"
    ],
    [
     "dutiyameghasutta",
     "nt",
-    "Saṃyutta Nikāya 45.157 (SN45.157); lit. second discourse on the rain shower",
+    "Saṁyutta Nikāya 45.157 (SN45.157); lit. second discourse on the rain shower",
     "✔"
    ],
    [
     "nāvāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.158 (SN45.158); lit. discourse on the ship",
+    "Saṁyutta Nikāya 45.158 (SN45.158); lit. discourse on the ship",
     "✔"
    ],
    [
     "āgantukasutta",
     "nt",
-    "Saṃyutta Nikāya 45.159 (SN45.159); lit. discourse on the guest (house)",
+    "Saṁyutta Nikāya 45.159 (SN45.159); lit. discourse on the guest (house)",
     "✔"
    ],
    [
     "nadīsutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.160 (SN45.160); lit. discourse on the river",
+    "Saṁyutta Nikāya 45.160 (SN45.160); lit. discourse on the river",
     "✔"
    ],
    [
     "esanāsutta",
     "nt",
-    "Saṃyutta Nikāya 45.161 (SN45.161); lit. discourse on seeking",
+    "Saṁyutta Nikāya 45.161 (SN45.161); lit. discourse on seeking",
     "✔"
    ],
    [
     "vidhāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.162 (SN45.162); lit. discourse on distinction",
+    "Saṁyutta Nikāya 45.162 (SN45.162); lit. discourse on distinction",
     "✔"
    ],
    [
     "āsavasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.163 (SN45.163); lit. discourse on effluents",
+    "Saṁyutta Nikāya 45.163 (SN45.163); lit. discourse on effluents",
     "✔"
    ],
    [
     "bhavasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.164 (SN45.164); lit. discourse on states of existence",
+    "Saṁyutta Nikāya 45.164 (SN45.164); lit. discourse on states of existence",
     "✔"
    ],
    [
     "dukkhatāsutta",
     "nt",
-    "Saṃyutta Nikāya 45.165 (SN45.165); lit. discourse on states of suffering",
+    "Saṁyutta Nikāya 45.165 (SN45.165); lit. discourse on states of suffering",
     "✔"
    ],
    [
     "khilasutta",
     "nt",
-    "Saṃyutta Nikāya 45.166 (SN45.166); lit. discourse on hardness",
+    "Saṁyutta Nikāya 45.166 (SN45.166); lit. discourse on hardness",
     "✔"
    ],
    [
     "malasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.167 (SN45.167); lit. discourse on impurities",
+    "Saṁyutta Nikāya 45.167 (SN45.167); lit. discourse on impurities",
     "✔"
    ],
    [
     "nīghasutta",
     "nt",
-    "Saṃyutta Nikāya 45.168 (SN45.168); lit. discourse on trouble",
+    "Saṁyutta Nikāya 45.168 (SN45.168); lit. discourse on trouble",
     "✔"
    ],
    [
     "vedanāsutta 3",
     "nt",
-    "Saṃyutta Nikāya 45.169 (SN45.169); lit. discourse on felt experience",
+    "Saṁyutta Nikāya 45.169 (SN45.169); lit. discourse on felt experience",
     "✔"
    ],
    [
     "taṇhāsutta 5",
     "nt",
-    "Saṃyutta Nikāya 45.170 (SN45.170); lit. discourse on craving",
+    "Saṁyutta Nikāya 45.170 (SN45.170); lit. discourse on craving",
     "✔"
    ],
    [
     "tasināsutta",
     "nt",
-    "Saṃyutta Nikāya 45.171 (SN45.171); lit. discourse on thirst",
+    "Saṁyutta Nikāya 45.171 (SN45.171); lit. discourse on thirst",
     "✔"
    ],
    [
     "oghasutta",
     "nt",
-    "Saṃyutta Nikāya 45.172 (SN45.172); lit. discourse on floods",
+    "Saṁyutta Nikāya 45.172 (SN45.172); lit. discourse on floods",
     "✔"
    ],
    [
     "yogasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.173 (SN45.173); lit. discourse on yokes",
+    "Saṁyutta Nikāya 45.173 (SN45.173); lit. discourse on yokes",
     "✔"
    ],
    [
     "upādānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.174 (SN45.174); lit. discourse on grasping",
+    "Saṁyutta Nikāya 45.174 (SN45.174); lit. discourse on grasping",
     "✔"
    ],
    [
     "ganthasutta",
     "nt",
-    "Saṃyutta Nikāya 45.175 (SN45.175); lit. discourse on knots",
+    "Saṁyutta Nikāya 45.175 (SN45.175); lit. discourse on knots",
     "✔"
    ],
    [
     "anusayasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.176 (SN45.176); lit. discourse on underlying tendencies",
+    "Saṁyutta Nikāya 45.176 (SN45.176); lit. discourse on underlying tendencies",
     "✔"
    ],
    [
     "kāmaguṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 45.177 (SN45.177); lit. discourse on sensual pleasure",
+    "Saṁyutta Nikāya 45.177 (SN45.177); lit. discourse on sensual pleasure",
     "✔"
    ],
    [
     "nīvaraṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.178 (SN45.178); lit. discourse on obstacles",
+    "Saṁyutta Nikāya 45.178 (SN45.178); lit. discourse on obstacles",
     "✔"
    ],
    [
     "upādānakkhandhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.179 (SN45.179); lit. discourse on aggregates that are clung to",
+    "Saṁyutta Nikāya 45.179 (SN45.179); lit. discourse on aggregates that are clung to",
     "✔"
    ],
    [
     "orambhāgiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.180 (SN45.180); lit. discourse on lower (fetters)",
+    "Saṁyutta Nikāya 45.180 (SN45.180); lit. discourse on lower (fetters)",
     "✔"
    ],
    [
     "uddhambhāgiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 45.181 (SN45.181); lit. discourse on the higher (fetters)",
+    "Saṁyutta Nikāya 45.181 (SN45.181); lit. discourse on the higher (fetters)",
     "✔"
    ],
    [
-    "pāraṃgama",
+    "pāraṁgama",
     "adj",
     "in reference to SN45.34 Pāraṅgamasutta; lit. going to the other shore",
     "✔"
@@ -10302,90 +10302,90 @@ var family_set_json = {
   ],
   "count": 113
  },
- "suttas of Saṃyutta Nikāya 9": {
+ "suttas of Saṁyutta Nikāya 9": {
   "data": [
    [
     "vivekasutta",
     "nt",
-    "Saṃyutta Nikāya 9.1 (SN9.1); lit. discourse on seclusion",
+    "Saṁyutta Nikāya 9.1 (SN9.1); lit. discourse on seclusion",
     "✔"
    ],
    [
     "upaṭṭhānasutta",
     "nt",
-    "Saṃyutta Nikāya 9.2 (SN9.2); lit. discourse on standing near",
+    "Saṁyutta Nikāya 9.2 (SN9.2); lit. discourse on standing near",
     "✔"
    ],
    [
     "kassapagottasutta",
     "nt",
-    "Saṃyutta Nikāya 9.3 (SN9.3); lit. discourse with Kassapagotta",
+    "Saṁyutta Nikāya 9.3 (SN9.3); lit. discourse with Kassapagotta",
     "✔"
    ],
    [
     "sambahulasutta 2",
     "nt",
-    "Saṃyutta Nikāya 9.4 (SN9.4); lit. discourse on many",
+    "Saṁyutta Nikāya 9.4 (SN9.4); lit. discourse on many",
     "✔"
    ],
    [
     "ānandasutta 02",
     "nt",
-    "Saṃyutta Nikāya 9.5 (SN9.5); lit. discourse with Ānanda",
+    "Saṁyutta Nikāya 9.5 (SN9.5); lit. discourse with Ānanda",
     "✔"
    ],
    [
     "anuruddhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 9.6 (SN9.6); lit. discourse with Anuruddha",
+    "Saṁyutta Nikāya 9.6 (SN9.6); lit. discourse with Anuruddha",
     "✔"
    ],
    [
     "nāgadattasutta",
     "nt",
-    "Saṃyutta Nikāya 9.7 (SN9.7); lit. discourse with Nāgadatta",
+    "Saṁyutta Nikāya 9.7 (SN9.7); lit. discourse with Nāgadatta",
     "✔"
    ],
    [
     "kulagharaṇīsutta",
     "nt",
-    "Saṃyutta Nikāya 9.8 (SN9.8); lit. discourse on the housewife",
+    "Saṁyutta Nikāya 9.8 (SN9.8); lit. discourse on the housewife",
     "✔"
    ],
    [
     "vajjiputtasutta 1",
     "nt",
-    "Saṃyutta Nikāya 9.9 (SN9.9); lit. disourse with the young Vajjian",
+    "Saṁyutta Nikāya 9.9 (SN9.9); lit. disourse with the young Vajjian",
     "✔"
    ],
    [
     "sajjhāyasutta",
     "nt",
-    "Saṃyutta Nikāya 9.10 (SN9.10); lit. discourse on recitation",
+    "Saṁyutta Nikāya 9.10 (SN9.10); lit. discourse on recitation",
     "✔"
    ],
    [
     "akusalavitakkasutta",
     "nt",
-    "Saṃyutta Nikāya 9.11 (SN9.11); lit. discourse on unwholesome thoughts",
+    "Saṁyutta Nikāya 9.11 (SN9.11); lit. discourse on unwholesome thoughts",
     "✔"
    ],
    [
     "majjhanhikasutta",
     "nt",
-    "Saṃyutta Nikāya 9.12 (SN9.12); lit. discourse about midday",
+    "Saṁyutta Nikāya 9.12 (SN9.12); lit. discourse about midday",
     "✔"
    ],
    [
     "pākatindriyasutta",
     "nt",
-    "Saṃyutta Nikāya 9.13 (SN9.13); lit. discourse on having a vulgar faculties",
+    "Saṁyutta Nikāya 9.13 (SN9.13); lit. discourse on having a vulgar faculties",
     "✔"
    ],
    [
     "gandhatthenasutta",
     "nt",
-    "Saṃyutta Nikāya 9.14 (SN9.14); lit. discourse on the scent thief",
+    "Saṁyutta Nikāya 9.14 (SN9.14); lit. discourse on the scent thief",
     "✔"
    ],
    [
@@ -10403,210 +10403,210 @@ var family_set_json = {
   ],
   "count": 16
  },
- "suttas of Saṃyutta Nikāya 37": {
+ "suttas of Saṁyutta Nikāya 37": {
   "data": [
    [
     "mātugāmasutta 2",
     "nt",
-    "Saṃyutta Nikāya 37.1 (SN37.1); lit. discourse on a woman",
+    "Saṁyutta Nikāya 37.1 (SN37.1); lit. discourse on a woman",
     "✔"
    ],
    [
     "purisasutta 2",
     "nt",
-    "Saṃyutta Nikāya 37.2 (SN37.2); lit. discourse on men",
+    "Saṁyutta Nikāya 37.2 (SN37.2); lit. discourse on men",
     "✔"
    ],
    [
     "āveṇikadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 37.3 (SN37.3); lit. discourse on specific suffering",
+    "Saṁyutta Nikāya 37.3 (SN37.3); lit. discourse on specific suffering",
     "✔"
    ],
    [
     "tīhidhammehisutta",
     "nt",
-    "Saṃyutta Nikāya 37.4 (SN37.4); lit. discourse on with three qualities",
+    "Saṁyutta Nikāya 37.4 (SN37.4); lit. discourse on with three qualities",
     "✔"
    ],
    [
     "kodhanasutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.5 (SN37.5); lit. discourse on anger",
+    "Saṁyutta Nikāya 37.5 (SN37.5); lit. discourse on anger",
     "✔"
    ],
    [
     "upanāhīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.6 (SN37.6); lit. discourse on bearing a grudge",
+    "Saṁyutta Nikāya 37.6 (SN37.6); lit. discourse on bearing a grudge",
     "✔"
    ],
    [
     "issukīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.7 (SN37.7); lit. discourse on jealous",
+    "Saṁyutta Nikāya 37.7 (SN37.7); lit. discourse on jealous",
     "✔"
    ],
    [
     "maccharīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.8 (SN37.8); lit. discourse on stingy",
+    "Saṁyutta Nikāya 37.8 (SN37.8); lit. discourse on stingy",
     "✔"
    ],
    [
     "aticārīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.9 (SN37.9); lit. discourse on committing adultery",
+    "Saṁyutta Nikāya 37.9 (SN37.9); lit. discourse on committing adultery",
     "✔"
    ],
    [
     "dussīlasutta 2",
     "nt",
-    "Saṃyutta Nikāya 37.10 (SN37.10); lit. discourse on immoral",
+    "Saṁyutta Nikāya 37.10 (SN37.10); lit. discourse on immoral",
     "✔"
    ],
    [
     "appassutasutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.11 (SN37.11); lit. discourse on uneducated",
+    "Saṁyutta Nikāya 37.11 (SN37.11); lit. discourse on uneducated",
     "✔"
    ],
    [
     "kusītasutta",
     "nt",
-    "Saṃyutta Nikāya 37.12 (SN37.12); lit. discourse on lazy",
+    "Saṁyutta Nikāya 37.12 (SN37.12); lit. discourse on lazy",
     "✔"
    ],
    [
     "muṭṭhassatisutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.13 (SN37.13); lit. discourse on unmindful",
+    "Saṁyutta Nikāya 37.13 (SN37.13); lit. discourse on unmindful",
     "✔"
    ],
    [
     "pañcaverasutta",
     "nt",
-    "Saṃyutta Nikāya 37.14 (SN37.14); lit. discourse on the five enmities",
+    "Saṁyutta Nikāya 37.14 (SN37.14); lit. discourse on the five enmities",
     "✔"
    ],
    [
     "akkodhanasutta",
     "nt",
-    "Saṃyutta Nikāya 37.15 (SN37.15); lit. discourse on without anger",
+    "Saṁyutta Nikāya 37.15 (SN37.15); lit. discourse on without anger",
     "✔"
    ],
    [
     "anupanāhīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.16 (SN37.16); lit. discourse on not bearing a grudge",
+    "Saṁyutta Nikāya 37.16 (SN37.16); lit. discourse on not bearing a grudge",
     "✔"
    ],
    [
     "anissukīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.17 (SN37.17); lit. discourse on not envious",
+    "Saṁyutta Nikāya 37.17 (SN37.17); lit. discourse on not envious",
     "✔"
    ],
    [
     "amaccharīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.18 (SN37.18); lit. discourse on not stingy",
+    "Saṁyutta Nikāya 37.18 (SN37.18); lit. discourse on not stingy",
     "✔"
    ],
    [
     "anaticārīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.19 (SN37.19); lit. discourse on not committing adultery",
+    "Saṁyutta Nikāya 37.19 (SN37.19); lit. discourse on not committing adultery",
     "✔"
    ],
    [
     "susīlasutta",
     "nt",
-    "Saṃyutta Nikāya 37.20 (SN37.20); lit. discourse on virtuous",
+    "Saṁyutta Nikāya 37.20 (SN37.20); lit. discourse on virtuous",
     "✔"
    ],
    [
     "bahussutasutta",
     "nt",
-    "Saṃyutta Nikāya 37.21 (SN37.21); lit. discourse on well educated",
+    "Saṁyutta Nikāya 37.21 (SN37.21); lit. discourse on well educated",
     "✔"
    ],
    [
     "āraddhavīriyasutta",
     "nt",
-    "Saṃyutta Nikāya 37.22 (SN37.22); lit. discourse on energetic",
+    "Saṁyutta Nikāya 37.22 (SN37.22); lit. discourse on energetic",
     "✔"
    ],
    [
     "upaṭṭhitassatisutta",
     "nt",
-    "Saṃyutta Nikāya 37.23 (SN37.23); lit. discourse on attending mindfully",
+    "Saṁyutta Nikāya 37.23 (SN37.23); lit. discourse on attending mindfully",
     "✔"
    ],
    [
     "pañcasīlasutta",
     "nt",
-    "Saṃyutta Nikāya 37.24 (SN37.24); lit. discourse on the five precepts",
+    "Saṁyutta Nikāya 37.24 (SN37.24); lit. discourse on the five precepts",
     "✔"
    ],
    [
     "visāradasutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.25 (SN37.25); lit. discourse on confident",
+    "Saṁyutta Nikāya 37.25 (SN37.25); lit. discourse on confident",
     "✔"
    ],
    [
     "pasayhasutta",
     "nt",
-    "Saṃyutta Nikāya 37.26 (SN37.26); lit. discourse on overcoming",
+    "Saṁyutta Nikāya 37.26 (SN37.26); lit. discourse on overcoming",
     "✔"
    ],
    [
     "abhibhuyyasutta",
     "nt",
-    "Saṃyutta Nikāya 37.27 (SN37.27); lit. discourse on conquering",
+    "Saṁyutta Nikāya 37.27 (SN37.27); lit. discourse on conquering",
     "✔"
    ],
    [
     "ekasutta 2",
     "nt",
-    "Saṃyutta Nikāya 37.28 (SN37.28); lit. discourse on one (thing)",
+    "Saṁyutta Nikāya 37.28 (SN37.28); lit. discourse on one (thing)",
     "✔"
    ],
    [
     "aṅgasutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.29 (SN37.29); lit. discourse on factors",
+    "Saṁyutta Nikāya 37.29 (SN37.29); lit. discourse on factors",
     "✔"
    ],
    [
     "nāsentisutta",
     "nt",
-    "Saṃyutta Nikāya 37.30 (SN37.30); lit. discourse on they drive away",
+    "Saṁyutta Nikāya 37.30 (SN37.30); lit. discourse on they drive away",
     "✔"
    ],
    [
     "hetusutta 2",
     "nt",
-    "Saṃyutta Nikāya 37.31 (SN37.31); lit. discourse on cause",
+    "Saṁyutta Nikāya 37.31 (SN37.31); lit. discourse on cause",
     "✔"
    ],
    [
     "ṭhānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 37.32 (SN37.32); lit. discourse on conditions",
+    "Saṁyutta Nikāya 37.32 (SN37.32); lit. discourse on conditions",
     "✔"
    ],
    [
     "pañcasīlavisāradasutta",
     "nt",
-    "Saṃyutta Nikāya 37.33 (SN37.33); lit. discourse on five precepts and self-confidence",
+    "Saṁyutta Nikāya 37.33 (SN37.33); lit. discourse on five precepts and self-confidence",
     "✔"
    ],
    [
     "vaḍḍhīsutta",
     "nt",
-    "Saṃyutta Nikāya 37.34 (SN37.34); lit. discourse on growth",
+    "Saṁyutta Nikāya 37.34 (SN37.34); lit. discourse on growth",
     "✔"
    ],
    [
@@ -10624,156 +10624,156 @@ var family_set_json = {
   ],
   "count": 36
  },
- "suttas of Saṃyutta Nikāya 11": {
+ "suttas of Saṁyutta Nikāya 11": {
   "data": [
    [
     "suvīrasutta",
     "nt",
-    "Saṃyutta Nikāya 11.1 (SN11.1); lit. discourse with Suvīra",
+    "Saṁyutta Nikāya 11.1 (SN11.1); lit. discourse with Suvīra",
     "✔"
    ],
    [
     "susīmasutta",
     "nt",
-    "Saṃyutta Nikāya 11.2 (SN11.2); lit. discourse with Susīma",
+    "Saṁyutta Nikāya 11.2 (SN11.2); lit. discourse with Susīma",
     "✔"
    ],
    [
     "dhajaggasutta",
     "nt",
-    "Saṃyutta Nikāya 11.3 (SN11.3); lit. discourse on the crest of a banner",
+    "Saṁyutta Nikāya 11.3 (SN11.3); lit. discourse on the crest of a banner",
     "✔"
    ],
    [
     "vepacittisutta",
     "nt",
-    "Saṃyutta Nikāya 11.4 (SN11.4); lit. discourse about Vepacitti",
+    "Saṁyutta Nikāya 11.4 (SN11.4); lit. discourse about Vepacitti",
     "✔"
    ],
    [
     "subhāsitajayasutta",
     "nt",
-    "Saṃyutta Nikāya 11.5 (SN11.5); lit. discourse on victory by eloquence",
+    "Saṁyutta Nikāya 11.5 (SN11.5); lit. discourse on victory by eloquence",
     "✔"
    ],
    [
     "kulāvakasutta",
     "nt",
-    "Saṃyutta Nikāya 11.6 (SN11.6); lit. discourse on the nest",
+    "Saṁyutta Nikāya 11.6 (SN11.6); lit. discourse on the nest",
     "✔"
    ],
    [
     "nadubbhiyasutta",
     "nt",
-    "Saṃyutta Nikāya 11.7 (SN11.7); lit. discourse on not betraying",
+    "Saṁyutta Nikāya 11.7 (SN11.7); lit. discourse on not betraying",
     "✔"
    ],
    [
     "verocanaasurindasutta",
     "nt",
-    "Saṃyutta Nikāya 11.8 (SN11.8)",
+    "Saṁyutta Nikāya 11.8 (SN11.8)",
     "✔"
    ],
    [
     "araññāyatanaisisutta",
     "nt",
-    "Saṃyutta Nikāya 11.9 (SN11.9); lit. discourse on seers in the wilderness area",
+    "Saṁyutta Nikāya 11.9 (SN11.9); lit. discourse on seers in the wilderness area",
     "✔"
    ],
    [
     "samuddakasutta",
     "nt",
-    "Saṃyutta Nikāya 11.10 (SN11.10); lit. discourse on the ocean",
+    "Saṁyutta Nikāya 11.10 (SN11.10); lit. discourse on the ocean",
     "✔"
    ],
    [
     "vatapadasutta",
     "nt",
-    "Saṃyutta Nikāya 11.11 (SN11.11); lit. discourse on religious practice",
+    "Saṁyutta Nikāya 11.11 (SN11.11); lit. discourse on religious practice",
     "✔"
    ],
    [
     "sakkanāmasutta 2",
     "nt",
-    "Saṃyutta Nikāya 11.12 (SN11.12); lit. discourse on Sakka's names",
+    "Saṁyutta Nikāya 11.12 (SN11.12); lit. discourse on Sakka's names",
     "✔"
    ],
    [
     "mahālisutta 2",
     "nt",
-    "Saṃyutta Nikāya 11.13 (SN11.13); lit. discourse about Mahāli",
+    "Saṁyutta Nikāya 11.13 (SN11.13); lit. discourse about Mahāli",
     "✔"
    ],
    [
     "daliddasutta 1",
     "nt",
-    "Saṃyutta Nikāya 11.14 (SN11.14); lit. discourse on the poor man",
+    "Saṁyutta Nikāya 11.14 (SN11.14); lit. discourse on the poor man",
     "✔"
    ],
    [
     "rāmaṇeyyakasutta",
     "nt",
-    "Saṃyutta Nikāya 11.15 (SN11.15); lit. discourse on delightful",
+    "Saṁyutta Nikāya 11.15 (SN11.15); lit. discourse on delightful",
     "✔"
    ],
    [
     "yajamānasutta",
     "nt",
-    "Saṃyutta Nikāya 11.16 (SN11.16); lit. discourse on sacrificing",
+    "Saṁyutta Nikāya 11.16 (SN11.16); lit. discourse on sacrificing",
     "✔"
    ],
    [
     "buddhavandanāsutta",
     "nt",
-    "Saṃyutta Nikāya 11.17 (SN11.17); lit. discourse on venerating the Buddha",
+    "Saṁyutta Nikāya 11.17 (SN11.17); lit. discourse on venerating the Buddha",
     "✔"
    ],
    [
     "gahaṭṭhavandanāsutta",
     "nt",
-    "Saṃyutta Nikāya 11.18 (SN11.18); lit. discourse on venerating laypeople",
+    "Saṁyutta Nikāya 11.18 (SN11.18); lit. discourse on venerating laypeople",
     "✔"
    ],
    [
     "satthāravandanāsutta",
     "nt",
-    "Saṃyutta Nikāya 11.19 (SN11.19); lit. discourse on venerating the teacher",
+    "Saṁyutta Nikāya 11.19 (SN11.19); lit. discourse on venerating the teacher",
     "✔"
    ],
    [
     "saṅghavandanāsutta",
     "nt",
-    "Saṃyutta Nikāya 11.20 (SN11.20); lit. discourse on venerating the community",
+    "Saṁyutta Nikāya 11.20 (SN11.20); lit. discourse on venerating the community",
     "✔"
    ],
    [
     "chetvāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 11.21 (SN11.21); lit. discourse on having cut",
+    "Saṁyutta Nikāya 11.21 (SN11.21); lit. discourse on having cut",
     "✔"
    ],
    [
     "dubbaṇṇiyasutta",
     "nt",
-    "Saṃyutta Nikāya 11.22 (SN11.22); lit. discourse on ugly",
+    "Saṁyutta Nikāya 11.22 (SN11.22); lit. discourse on ugly",
     "✔"
    ],
    [
     "sambarimāyāsutta",
     "nt",
-    "Saṃyutta Nikāya 11.23 (SN11.23); lit. discourse about the Sambara sorcery",
+    "Saṁyutta Nikāya 11.23 (SN11.23); lit. discourse about the Sambara sorcery",
     "✔"
    ],
    [
     "accayasutta 1",
     "nt",
-    "Saṃyutta Nikāya 11.24 (SN11.24); lit. discourse on transgression",
+    "Saṁyutta Nikāya 11.24 (SN11.24); lit. discourse on transgression",
     "✔"
    ],
    [
     "akkodhasutta",
     "nt",
-    "Saṃyutta Nikāya 11.25 (SN11.25); lit. discourse on the absence of anger",
+    "Saṁyutta Nikāya 11.25 (SN11.25); lit. discourse on the absence of anger",
     "✔"
    ],
    [
@@ -10860,7 +10860,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ahiṃsakabhāradvāja",
+    "ahiṁsakabhāradvāja",
     "masc",
     "name of Brahman, and later an arahant monk; lit. harmless Bhāradvāja",
     "✔"
@@ -11486,138 +11486,138 @@ var family_set_json = {
   ],
   "count": 116
  },
- "suttas of Saṃyutta Nikāya 7": {
+ "suttas of Saṁyutta Nikāya 7": {
   "data": [
    [
     "dhanañjānīsutta",
     "nt",
-    "Saṃyutta Nikāya 7.1 (SN7.1); lit. discourse with Dhanañjānī",
+    "Saṁyutta Nikāya 7.1 (SN7.1); lit. discourse with Dhanañjānī",
     "✔"
    ],
    [
     "akkosasutta",
     "nt",
-    "Saṃyutta Nikāya 7.2 (SN7.2); lit. discourse on abuse",
+    "Saṁyutta Nikāya 7.2 (SN7.2); lit. discourse on abuse",
     "✔"
    ],
    [
     "asurindakasutta",
     "nt",
-    "Saṃyutta Nikāya 7.3 (SN7.3); lit. discourse with Asurindaka",
+    "Saṁyutta Nikāya 7.3 (SN7.3); lit. discourse with Asurindaka",
     "✔"
    ],
    [
     "bilaṅgikasutta",
     "nt",
-    "Saṃyutta Nikāya 7.4 (SN7.4); lit. discourse with Bilaṅgika",
+    "Saṁyutta Nikāya 7.4 (SN7.4); lit. discourse with Bilaṅgika",
     "✔"
    ],
    [
-    "ahiṃsakasutta",
+    "ahiṁsakasutta",
     "nt",
-    "Saṃyutta Nikāya 7.5 (SN7.5); lit. discourse with Harmless",
+    "Saṁyutta Nikāya 7.5 (SN7.5); lit. discourse with Harmless",
     "✔"
    ],
    [
     "jaṭāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 7.6 (SN7.6); lit. discourse on the tangle",
+    "Saṁyutta Nikāya 7.6 (SN7.6); lit. discourse on the tangle",
     "✔"
    ],
    [
     "suddhikasutta 01",
     "nt",
-    "Saṃyutta Nikāya 7.7 (SN7.7); lit. discourse with Suddhika",
+    "Saṁyutta Nikāya 7.7 (SN7.7); lit. discourse with Suddhika",
     "✔"
    ],
    [
     "aggikasutta",
     "nt",
-    "Saṃyutta Nikāya 7.8 (SN7.8); lit. discourse with Aggika",
+    "Saṁyutta Nikāya 7.8 (SN7.8); lit. discourse with Aggika",
     "✔"
    ],
    [
     "sundarikasutta",
     "nt",
-    "Saṃyutta Nikāya 7.9 (SN7.9); lit. discourse with Sundarika",
+    "Saṁyutta Nikāya 7.9 (SN7.9); lit. discourse with Sundarika",
     "✔"
    ],
    [
     "bahudhītarasutta",
     "nt",
-    "Saṃyutta Nikāya 7.10 (SN7.10); lit. discourse on many daughters",
+    "Saṁyutta Nikāya 7.10 (SN7.10); lit. discourse on many daughters",
     "✔"
    ],
    [
     "kasibhāradvājasutta 1",
     "nt",
-    "Saṃyutta Nikāya 7.11 (SN7.11); lit. discourse with Farmer Bharadvaja",
+    "Saṁyutta Nikāya 7.11 (SN7.11); lit. discourse with Farmer Bharadvaja",
     "✔"
    ],
    [
     "udayasutta",
     "nt",
-    "Saṃyutta Nikāya 7.12 (SN7.12); lit. discourse with Udaya",
+    "Saṁyutta Nikāya 7.12 (SN7.12); lit. discourse with Udaya",
     "✔"
    ],
    [
     "devahitasutta",
     "nt",
-    "Saṃyutta Nikāya 7.13 (SN7.13); lit. discourse with Devahita",
+    "Saṁyutta Nikāya 7.13 (SN7.13); lit. discourse with Devahita",
     "✔"
    ],
    [
     "mahāsālasutta",
     "nt",
-    "Saṃyutta Nikāya 7.14 (SN7.14); lit. discourse on very rich",
+    "Saṁyutta Nikāya 7.14 (SN7.14); lit. discourse on very rich",
     "✔"
    ],
    [
     "mānatthaddhasutta",
     "nt",
-    "Saṃyutta Nikāya 7.15 (SN7.15); lit. discourse on with Mānatthaddha",
+    "Saṁyutta Nikāya 7.15 (SN7.15); lit. discourse on with Mānatthaddha",
     "✔"
    ],
    [
     "paccanīkasutta",
     "nt",
-    "Saṃyutta Nikāya 7.16 (SN7.16); lit. discourse about contradiction",
+    "Saṁyutta Nikāya 7.16 (SN7.16); lit. discourse about contradiction",
     "✔"
    ],
    [
     "navakammikasutta",
     "nt",
-    "Saṃyutta Nikāya 7.17 (SN7.17); lit. discourse with Builder",
+    "Saṁyutta Nikāya 7.17 (SN7.17); lit. discourse with Builder",
     "✔"
    ],
    [
     "kaṭṭhahārasutta",
     "nt",
-    "Saṃyutta Nikāya 7.18 (SN7.18); lit. discourse on gathering wood",
+    "Saṁyutta Nikāya 7.18 (SN7.18); lit. discourse on gathering wood",
     "✔"
    ],
    [
     "mātuposakasutta",
     "nt",
-    "Saṃyutta Nikāya 7.19 (SN7.19); lit. discourse on supporting one's mother",
+    "Saṁyutta Nikāya 7.19 (SN7.19); lit. discourse on supporting one's mother",
     "✔"
    ],
    [
     "bhikkhakasutta",
     "nt",
-    "Saṃyutta Nikāya 7.20 (SN7.20); lit. discourse on the beggar",
+    "Saṁyutta Nikāya 7.20 (SN7.20); lit. discourse on the beggar",
     "✔"
    ],
    [
     "saṅgāravasutta 2",
     "nt",
-    "Saṃyutta Nikāya 7.21 (SN7.21); lit. discourse with Saṅgārava",
+    "Saṁyutta Nikāya 7.21 (SN7.21); lit. discourse with Saṅgārava",
     "✔"
    ],
    [
     "khomadussasutta",
     "nt",
-    "Saṃyutta Nikāya 7.22 (SN7.22); lit. discourse at Khomadussa",
+    "Saṁyutta Nikāya 7.22 (SN7.22); lit. discourse at Khomadussa",
     "✔"
    ],
    [
@@ -11728,7 +11728,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aṭṭhiṃmiñja",
+    "aṭṭhiṁmiñja",
     "nt",
     "bone marrow",
     "✔"
@@ -11740,13 +11740,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aṃsa 2.1",
+    "aṁsa 2.1",
     "masc",
     "shoulder; shoulder-blade",
     "✔"
    ],
    [
-    "aṃsaṭṭhika",
+    "aṁsaṭṭhika",
     "nt",
     "shoulder blade",
     "✔"
@@ -12034,7 +12034,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "chavimaṃsalohita",
+    "chavimaṁsalohita",
     "nt",
     "skin, flesh and blood",
     "✔"
@@ -13250,7 +13250,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "caṇḍālavaṃsika",
+    "caṇḍālavaṁsika",
     "masc",
     "acrobat; lit. play pole-er",
     "✔"
@@ -13646,13 +13646,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "paṃsudhovaka",
+    "paṁsudhovaka",
     "masc",
     "dirt washer; dirt cleaner",
     "✔"
    ],
    [
-    "paṃsudhovakantevāsī",
+    "paṁsudhovakantevāsī",
     "masc",
     "dirt washer's apprentice; dirt cleaner's assistant",
     "✔"
@@ -14373,168 +14373,168 @@ var family_set_json = {
   ],
   "count": 12
  },
- "suttas of Saṃyutta Nikāya 36": {
+ "suttas of Saṁyutta Nikāya 36": {
   "data": [
    [
     "samādhisutta 3",
     "nt",
-    "Saṃyutta Nikāya 36.1 (SN36.1); lit. discourse on mental composure",
+    "Saṁyutta Nikāya 36.1 (SN36.1); lit. discourse on mental composure",
     "✔"
    ],
    [
     "sukhasutta",
     "nt",
-    "Saṃyutta Nikāya 36.2 (SN36.2); lit. discourse on ease",
+    "Saṁyutta Nikāya 36.2 (SN36.2); lit. discourse on ease",
     "✔"
    ],
    [
     "pahānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 36.3 (SN36.3); lit. discourse on abandoning",
+    "Saṁyutta Nikāya 36.3 (SN36.3); lit. discourse on abandoning",
     "✔"
    ],
    [
     "pātālasutta",
     "nt",
-    "Saṃyutta Nikāya 36.4 (SN36.4); lit. discourse on the abyss",
+    "Saṁyutta Nikāya 36.4 (SN36.4); lit. discourse on the abyss",
     "✔"
    ],
    [
     "daṭṭhabbasutta 1",
     "nt",
-    "Saṃyutta Nikāya 36.5 (SN36.5); lit. discourse on should be seen",
+    "Saṁyutta Nikāya 36.5 (SN36.5); lit. discourse on should be seen",
     "✔"
    ],
    [
     "sallasutta 1",
     "nt",
-    "Saṃyutta Nikāya 36.6 (SN36.6); lit. discourse on the arrow",
+    "Saṁyutta Nikāya 36.6 (SN36.6); lit. discourse on the arrow",
     "✔"
    ],
    [
     "paṭhamagelaññasutta",
     "nt",
-    "Saṃyutta Nikāya 36.7 (SN36.7); lit. first discourse on sickness",
+    "Saṁyutta Nikāya 36.7 (SN36.7); lit. first discourse on sickness",
     "✔"
    ],
    [
     "dutiyagelaññasutta",
     "nt",
-    "Saṃyutta Nikāya 36.8 (SN36.8); lit. second discourse on illness",
+    "Saṁyutta Nikāya 36.8 (SN36.8); lit. second discourse on illness",
     "✔"
    ],
    [
     "aniccasutta 6",
     "nt",
-    "Saṃyutta Nikāya 36.9 (SN36.9); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 36.9 (SN36.9); lit. discourse on impermanence",
     "✔"
    ],
    [
     "phassamūlakasutta",
     "nt",
-    "Saṃyutta Nikāya 36.10 (SN36.10); lit. discourse on rooted in contact",
+    "Saṁyutta Nikāya 36.10 (SN36.10); lit. discourse on rooted in contact",
     "✔"
    ],
    [
     "rahogatasutta",
     "nt",
-    "Saṃyutta Nikāya 36.11 (SN36.11); lit. discourse on gone into seclusion",
+    "Saṁyutta Nikāya 36.11 (SN36.11); lit. discourse on gone into seclusion",
     "✔"
    ],
    [
     "paṭhamaākāsasutta",
     "nt",
-    "Saṃyutta Nikāya 36.12 (SN36.12); lit. first discourse on the sky",
+    "Saṁyutta Nikāya 36.12 (SN36.12); lit. first discourse on the sky",
     "✔"
    ],
    [
     "dutiyaākāsasutta",
     "nt",
-    "Saṃyutta Nikāya 36.13 (SN36.13); lit. second discourse on the sky",
+    "Saṁyutta Nikāya 36.13 (SN36.13); lit. second discourse on the sky",
     "✔"
    ],
    [
     "agārasutta",
     "nt",
-    "Saṃyutta Nikāya 36.14 (SN36.14); lit. discourse on the (guest) house",
+    "Saṁyutta Nikāya 36.14 (SN36.14); lit. discourse on the (guest) house",
     "✔"
    ],
    [
     "paṭhamaānandasutta 1",
     "nt",
-    "Saṃyutta Nikāya 36.15 (SN36.15); lit. first discourse with Ānanda",
+    "Saṁyutta Nikāya 36.15 (SN36.15); lit. first discourse with Ānanda",
     "✔"
    ],
    [
     "dutiyaānandasutta 2",
     "nt",
-    "Saṃyutta Nikāya 36.16 (SN36.16); lit. second discourse with Ānanda",
+    "Saṁyutta Nikāya 36.16 (SN36.16); lit. second discourse with Ānanda",
     "✔"
    ],
    [
     "paṭhamasambahulasutta",
     "nt",
-    "Saṃyutta Nikāya 36.17 (SN36.17); lit. first discourse on many",
+    "Saṁyutta Nikāya 36.17 (SN36.17); lit. first discourse on many",
     "✔"
    ],
    [
     "dutiyasambahulasutta",
     "nt",
-    "Saṃyutta Nikāya 36.18 (SN36.18); lit. second discourse on many",
+    "Saṁyutta Nikāya 36.18 (SN36.18); lit. second discourse on many",
     "✔"
    ],
    [
     "pañcakaṅgasutta",
     "nt",
-    "Saṃyutta Nikāya 36.19 (SN36.19); lit. discourse with Pañcakaṅga",
+    "Saṁyutta Nikāya 36.19 (SN36.19); lit. discourse with Pañcakaṅga",
     "✔"
    ],
    [
     "sīvakasutta",
     "nt",
-    "Saṃyutta Nikāya 36.21 (SN36.21); lit. discourse with Sīvaka",
+    "Saṁyutta Nikāya 36.21 (SN36.21); lit. discourse with Sīvaka",
     "✔"
    ],
    [
     "aṭṭhasatasutta",
     "nt",
-    "Saṃyutta Nikāya 36.22 (SN36.22); lit. discourse on one hundred and eight",
+    "Saṁyutta Nikāya 36.22 (SN36.22); lit. discourse on one hundred and eight",
     "✔"
    ],
    [
     "aññatarabhikkhusutta 2",
     "nt",
-    "Saṃyutta Nikāya 36.23 (SN36.23); lit. discourse on a certain monk",
+    "Saṁyutta Nikāya 36.23 (SN36.23); lit. discourse on a certain monk",
     "✔"
    ],
    [
     "pubbasutta 1",
     "nt",
-    "Saṃyutta Nikāya 36.24 (SN36.24); lit. discourse on before",
+    "Saṁyutta Nikāya 36.24 (SN36.24); lit. discourse on before",
     "✔"
    ],
    [
     "ñāṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 36.25 (SN36.25); lit. discourse on understanding",
+    "Saṁyutta Nikāya 36.25 (SN36.25); lit. discourse on understanding",
     "✔"
    ],
    [
     "sambahulabhikkhusutta 2",
     "nt",
-    "Saṃyutta Nikāya 36.26 (SN36.26); lit. discourse on many monks",
+    "Saṁyutta Nikāya 36.26 (SN36.26); lit. discourse on many monks",
     "✔"
    ],
    [
     "paṭhamasamaṇabrāhmaṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 36.27 (SN36.27); lit. first discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 36.27 (SN36.27); lit. first discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "nirāmisasutta",
     "nt",
-    "Saṃyutta Nikāya 36.31 (SN36.31); lit. discourse on not worldly",
+    "Saṁyutta Nikāya 36.31 (SN36.31); lit. discourse on not worldly",
     "✔"
    ]
   ],
@@ -14993,7 +14993,7 @@ var family_set_json = {
    [
     "ekapuṇḍarīka 1",
     "nt",
-    "name of a pleasure park in Tāvatiṃsa heaven; lit. one lotus",
+    "name of a pleasure park in Tāvatiṁsa heaven; lit. one lotus",
     "✔"
    ],
    [
@@ -15311,7 +15311,7 @@ var family_set_json = {
    [
     "nandanavana",
     "nt",
-    "name of a wood in Tāvatiṃsa heaven; lit. delighting wood",
+    "name of a wood in Tāvatiṁsa heaven; lit. delighting wood",
     "✔"
    ],
    [
@@ -15371,13 +15371,13 @@ var family_set_json = {
    [
     "paṇḍukambala 2",
     "nt",
-    "name of a flat rock in Tāvatiṃsa heaven; lit. made of pale wool",
+    "name of a flat rock in Tāvatiṁsa heaven; lit. made of pale wool",
     "✔"
    ],
    [
     "paṇḍukambalasilā",
     "fem",
-    "name of a place in Tāvatiṃsa heaven; lit. rock spread with a pale coloured woollen cloth",
+    "name of a place in Tāvatiṁsa heaven; lit. rock spread with a pale coloured woollen cloth",
     "✔"
    ],
    [
@@ -15405,13 +15405,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pācīnavaṃsa",
+    "pācīnavaṁsa",
     "masc",
     "previous name of Vepulla mountain; lit. eastern bamboo",
     "✔"
    ],
    [
-    "pācīnavaṃsadāya",
+    "pācīnavaṁsadāya",
     "masc",
     "name of a park; lit. eastern bamboo park",
     "✔"
@@ -15467,7 +15467,7 @@ var family_set_json = {
    [
     "phārusakavana",
     "nt",
-    "name of a wood in Tāvatiṃsa heaven",
+    "name of a wood in Tāvatiṁsa heaven",
     "✔"
    ],
    [
@@ -15635,7 +15635,7 @@ var family_set_json = {
    [
     "missakavana",
     "nt",
-    "name of a grove in Tāvatiṃsa heaven; lit. mixed wood",
+    "name of a grove in Tāvatiṁsa heaven; lit. mixed wood",
     "✔"
    ],
    [
@@ -15681,7 +15681,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vaṭaṃsa",
+    "vaṭaṁsa",
     "masc",
     "name of a palace; lit. wreath; garland; flower ornament",
     "✔"
@@ -16171,7 +16171,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ahiṃsakabhāradvāja",
+    "ahiṁsakabhāradvāja",
     "masc",
     "name of Brahman, and later an arahant monk; lit. harmless Bhāradvāja",
     "✔"
@@ -18123,7 +18123,7 @@ var family_set_json = {
    [
     "saṅkiccathera",
     "masc",
-    "name of an arahant monk; lit. elder descendent of Saṃkiti",
+    "name of an arahant monk; lit. elder descendent of Saṁkiti",
     "◑"
    ],
    [
@@ -18247,15 +18247,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "saṃkicca 2",
+    "saṁkicca 2",
     "masc",
-    "name of an arahant monk; lit. descendent of Saṃkiti",
+    "name of an arahant monk; lit. descendent of Saṁkiti",
     "◑"
    ],
    [
-    "saṃkiccathera",
+    "saṁkiccathera",
     "masc",
-    "name of an arahant monk; lit. elder descendent of Saṃkiti",
+    "name of an arahant monk; lit. elder descendent of Saṁkiti",
     "✔"
    ],
    [
@@ -18900,7 +18900,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ahiṃsakabhāradvāja",
+    "ahiṁsakabhāradvāja",
     "masc",
     "name of Brahman, and later an arahant monk; lit. harmless Bhāradvāja",
     "✔"
@@ -20874,7 +20874,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "lomasakaṃbhiya",
+    "lomasakaṁbhiya",
     "masc",
     "name of a monk; lit. with even finer hair",
     "◑"
@@ -21092,7 +21092,7 @@ var family_set_json = {
    [
     "saṅkiccathera",
     "masc",
-    "name of an arahant monk; lit. elder descendent of Saṃkiti",
+    "name of an arahant monk; lit. elder descendent of Saṁkiti",
     "◑"
    ],
    [
@@ -21252,15 +21252,15 @@ var family_set_json = {
     "◑"
    ],
    [
-    "saṃkicca 2",
+    "saṁkicca 2",
     "masc",
-    "name of an arahant monk; lit. descendent of Saṃkiti",
+    "name of an arahant monk; lit. descendent of Saṁkiti",
     "◑"
    ],
    [
-    "saṃkiccathera",
+    "saṁkiccathera",
     "masc",
-    "name of an arahant monk; lit. elder descendent of Saṃkiti",
+    "name of an arahant monk; lit. elder descendent of Saṁkiti",
     "✔"
    ],
    [
@@ -21965,7 +21965,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "paramahaṃsa",
+    "paramahaṁsa",
     "masc",
     "(Brahman) ascetic of the highest order; lit. great soul",
     "◑"
@@ -21995,7 +21995,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "paṃsukūlika 1",
+    "paṁsukūlika 1",
     "masc",
     "ascetic who wears rag robes; rag robe wearer",
     "✔"
@@ -22468,7 +22468,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vīmaṃsakasutta",
+    "vīmaṁsakasutta",
     "nt",
     "Majjhima Nikāya 47 (MN47); lit. discourse on investigating",
     "✔"
@@ -23134,7 +23134,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "mūlasusaṃvaradhammadāyādā",
+    "mūlasusaṁvaradhammadāyādā",
     "masc",
     "in reference to MN1 Mūlapariyāyasutta , MN2 Sabbāsavasutta, MN3 Dhammadāyādasutta",
     "✔"
@@ -23152,13 +23152,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "cūḷasīhanādalomahaṃsavara",
+    "cūḷasīhanādalomahaṁsavara",
     "masc",
     "in reference to MN11 Cūḷasīhanādasutta and MN12 Mahāsīhanādasutta; lit. smaller lion's roar and excellent goosebumps",
     "✔"
    ],
    [
-    "lomahaṃsanapariyāya",
+    "lomahaṁsanapariyāya",
     "masc",
     "in reference to MN12 Mahāsīhanādasutta; lit. hair-raising discourse",
     "✔"
@@ -23200,7 +23200,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pariharituṃ 2",
+    "pariharituṁ 2",
     "inf",
     "in reference to MN33 Mahāgopālakasutta; lit. to carry around",
     "✔"
@@ -23212,9 +23212,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vīmaṃsakā",
+    "vīmaṁsakā",
     "masc",
-    "in reference to MN47 Vīmaṃsakasutta; lit. investigators",
+    "in reference to MN47 Vīmaṁsakasutta; lit. investigators",
     "✔"
    ],
    [
@@ -23274,7 +23274,7 @@ var family_set_json = {
    [
     "puṇḍarīaggisahakathināma",
     "masc",
-    "in reference to MN71 Tevijjavacchasuttaṃ, MN72 Aggivacchasutta, and MN73 Mahāvacchasuttaṃ; lit. white lotus, fire, and called talking together",
+    "in reference to MN71 Tevijjavacchasuttaṁ, MN72 Aggivacchasutta, and MN73 Mahāvacchasuttaṁ; lit. white lotus, fire, and called talking together",
     "✔"
    ],
    [
@@ -23352,7 +23352,7 @@ var family_set_json = {
    [
     "kinti 2",
     "nt",
-    "in reference to MN103 Kintisuttaṃ; lit. how then?",
+    "in reference to MN103 Kintisuttaṁ; lit. how then?",
     "✔"
    ],
    [
@@ -23388,7 +23388,7 @@ var family_set_json = {
    [
     "mahāpuṇṇa",
     "nt",
-    "in reference to MN109 Mahāpuṇṇamasuttaṃ; lit. great full (moon discourse)",
+    "in reference to MN109 Mahāpuṇṇamasuttaṁ; lit. great full (moon discourse)",
     "✔"
    ],
    [
@@ -23424,19 +23424,19 @@ var family_set_json = {
    [
     "kittināma",
     "nt",
-    "in reference to MN116 Isigilisuttaṃ; lit. famous names; celebrated names",
+    "in reference to MN116 Isigilisuttaṁ; lit. famous names; celebrated names",
     "✔"
    ],
    [
     "cattārīsa",
     "nt",
-    "in reference to MN117 Mahācattārīsakasuttaṃ; lit. consisting of forty",
+    "in reference to MN117 Mahācattārīsakasuttaṁ; lit. consisting of forty",
     "✔"
    ],
    [
     "ānāpāna 3",
     "masc",
-    "in reference to MN118 Ānāpānassatisuttaṃ; lit. breathing in and out",
+    "in reference to MN118 Ānāpānassatisuttaṁ; lit. breathing in and out",
     "✔"
    ],
    [
@@ -24988,930 +24988,930 @@ var family_set_json = {
    [
     "saṅkicca",
     "masc",
-    "family name of an ascetic; Kisa Saṅkicca; lit. descendent of Saṃkiti",
+    "family name of an ascetic; Kisa Saṅkicca; lit. descendent of Saṁkiti",
     "✔"
    ],
    [
-    "saṃkicca 1",
+    "saṁkicca 1",
     "masc",
-    "family name of an ascetic; Kisa Saṃkicca; lit. descendent of Saṃkiti",
+    "family name of an ascetic; Kisa Saṁkicca; lit. descendent of Saṁkiti",
     "✔"
    ]
   ],
   "count": 41
  },
- "suttas of Saṃyutta Nikāya 22": {
+ "suttas of Saṁyutta Nikāya 22": {
   "data": [
    [
     "nakulapitusutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.1 (SN22.1); lit. discourse Nakula's father",
+    "Saṁyutta Nikāya 22.1 (SN22.1); lit. discourse Nakula's father",
     "✔"
    ],
    [
     "devadahasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.2 (SN22.2); lit. discourse at Devadaha",
+    "Saṁyutta Nikāya 22.2 (SN22.2); lit. discourse at Devadaha",
     "✔"
    ],
    [
     "hāliddikānisutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.3 (SN22.3); lit. discourse with Hāliddikāni",
+    "Saṁyutta Nikāya 22.3 (SN22.3); lit. discourse with Hāliddikāni",
     "✔"
    ],
    [
     "dutiyahāliddikānisutta",
     "nt",
-    "Saṃyutta Nikāya 22.4 (SN22.4); lit. second discourse with Hāliddikāni",
+    "Saṁyutta Nikāya 22.4 (SN22.4); lit. second discourse with Hāliddikāni",
     "✔"
    ],
    [
     "samādhisutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.5 (SN22.5); lit. discourse on mental composure",
+    "Saṁyutta Nikāya 22.5 (SN22.5); lit. discourse on mental composure",
     "✔"
    ],
    [
     "paṭisallāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 22.6 (SN22.6); lit. discourse on seclusion",
+    "Saṁyutta Nikāya 22.6 (SN22.6); lit. discourse on seclusion",
     "✔"
    ],
    [
     "upādāparitassanāsutta",
     "nt",
-    "Saṃyutta Nikāya 22.7 (SN22.7); lit. discourse on agitation through clinging",
+    "Saṁyutta Nikāya 22.7 (SN22.7); lit. discourse on agitation through clinging",
     "✔"
    ],
    [
     "dutiyaupādāparitassanāsutta",
     "nt",
-    "Saṃyutta Nikāya 22.8 (SN22.8); lit. second discourse on agitation through clinging",
+    "Saṁyutta Nikāya 22.8 (SN22.8); lit. second discourse on agitation through clinging",
     "✔"
    ],
    [
     "kālattayaaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 22.9 (SN22.9); lit. discourse on impermanence in the three periods of time",
+    "Saṁyutta Nikāya 22.9 (SN22.9); lit. discourse on impermanence in the three periods of time",
     "✔"
    ],
    [
     "kālattayadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.10 (SN22.10); lit. discourse on suffering in the three periods of time",
+    "Saṁyutta Nikāya 22.10 (SN22.10); lit. discourse on suffering in the three periods of time",
     "✔"
    ],
    [
     "kālattayaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 22.11 (SN22.11); lit. discourse on no self in the three periods of time",
+    "Saṁyutta Nikāya 22.11 (SN22.11); lit. discourse on no self in the three periods of time",
     "✔"
    ],
    [
     "aniccasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.12 (SN22.12); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 22.12 (SN22.12); lit. discourse on impermanence",
     "✔"
    ],
    [
     "dukkhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.13 (SN22.13); lit. discourse on suffering",
+    "Saṁyutta Nikāya 22.13 (SN22.13); lit. discourse on suffering",
     "✔"
    ],
    [
     "anattasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.14 (SN22.14); lit. discourse on not oneself",
+    "Saṁyutta Nikāya 22.14 (SN22.14); lit. discourse on not oneself",
     "✔"
    ],
    [
     "yadaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 22.15 (SN22.15); lit. discourse on what is impermanent",
+    "Saṁyutta Nikāya 22.15 (SN22.15); lit. discourse on what is impermanent",
     "✔"
    ],
    [
-    "yaṃdukkhasutta",
+    "yaṁdukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.16 (SN22.16); lit. discourse on whatever is suffering",
+    "Saṁyutta Nikāya 22.16 (SN22.16); lit. discourse on whatever is suffering",
     "✔"
    ],
    [
     "yadanattāsutta",
     "nt",
-    "Saṃyutta Nikāya 22.17 (SN22.17); lit. discourse on whastver is not oneself",
+    "Saṁyutta Nikāya 22.17 (SN22.17); lit. discourse on whastver is not oneself",
     "✔"
    ],
    [
     "sahetuaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 22.18 (SN22.18); lit. discourse on impermanence together with causes",
+    "Saṁyutta Nikāya 22.18 (SN22.18); lit. discourse on impermanence together with causes",
     "✔"
    ],
    [
     "sahetudukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.19 (SN22.19); lit. discourse on suffering together with causes",
+    "Saṁyutta Nikāya 22.19 (SN22.19); lit. discourse on suffering together with causes",
     "✔"
    ],
    [
     "sahetuanattasutta",
     "nt",
-    "Saṃyutta Nikāya 22.20 (SN22.20); lit. discourse on non-self together with causes",
+    "Saṁyutta Nikāya 22.20 (SN22.20); lit. discourse on non-self together with causes",
     "✔"
    ],
    [
     "bhārasutta",
     "nt",
-    "Saṃyutta Nikāya 22.22 (SN22.22)",
+    "Saṁyutta Nikāya 22.22 (SN22.22)",
     "✔"
    ],
    [
     "pariññasutta",
     "nt",
-    "Saṃyutta Nikāya 22.23 (SN22.23); lit. discourse on complete comprehension",
+    "Saṁyutta Nikāya 22.23 (SN22.23); lit. discourse on complete comprehension",
     "✔"
    ],
    [
     "abhijānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.24 (SN22.24); lit. discourse on directly knowing",
+    "Saṁyutta Nikāya 22.24 (SN22.24); lit. discourse on directly knowing",
     "✔"
    ],
    [
     "chandarāgasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.25 (SN22.25); lit. discourse on interest and passion",
+    "Saṁyutta Nikāya 22.25 (SN22.25); lit. discourse on interest and passion",
     "✔"
    ],
    [
     "assādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.26 (SN22.26); lit. discourse on gratification",
+    "Saṁyutta Nikāya 22.26 (SN22.26); lit. discourse on gratification",
     "✔"
    ],
    [
     "dutiyaassādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.27 (SN22.27); lit. second discourse on gratification",
+    "Saṁyutta Nikāya 22.27 (SN22.27); lit. second discourse on gratification",
     "✔"
    ],
    [
     "tatiyaassādasutta",
     "nt",
-    "Saṃyutta Nikāya 22.28 (SN22.28); lit. third discourse on gratification",
+    "Saṁyutta Nikāya 22.28 (SN22.28); lit. third discourse on gratification",
     "✔"
    ],
    [
     "abhinandanasutta",
     "nt",
-    "Saṃyutta Nikāya 22.29 (SN22.29); lit. discourse on taking delight",
+    "Saṁyutta Nikāya 22.29 (SN22.29); lit. discourse on taking delight",
     "✔"
    ],
    [
     "uppādasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.30 (SN22.30); lit. discourse on arising",
+    "Saṁyutta Nikāya 22.30 (SN22.30); lit. discourse on arising",
     "✔"
    ],
    [
     "aghamūlasutta",
     "nt",
-    "Saṃyutta Nikāya 22.31 (SN22.31); lit. discourse on the root of misery",
+    "Saṁyutta Nikāya 22.31 (SN22.31); lit. discourse on the root of misery",
     "✔"
    ],
    [
     "pabhaṅgusutta",
     "nt",
-    "Saṃyutta Nikāya 22.32 (SN22.32); lit. discourse on brittle",
+    "Saṁyutta Nikāya 22.32 (SN22.32); lit. discourse on brittle",
     "✔"
    ],
    [
-    "natumhākaṃsutta",
+    "natumhākaṁsutta",
     "nt",
-    "Saṃyutta Nikāya 22.33 (SN22.33); lit. discourse on not yours",
+    "Saṁyutta Nikāya 22.33 (SN22.33); lit. discourse on not yours",
     "✔"
    ],
    [
-    "dutiyanatumhākaṃsutta 1",
+    "dutiyanatumhākaṁsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.34 (SN22.34); lit. second discourse on not yours",
+    "Saṁyutta Nikāya 22.34 (SN22.34); lit. second discourse on not yours",
     "✔"
    ],
    [
     "aññatarabhikkhusutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.35 (SN22.35); lit. discourse on a certain monk",
+    "Saṁyutta Nikāya 22.35 (SN22.35); lit. discourse on a certain monk",
     "✔"
    ],
    [
     "dutiyaaññatarabhikkhusutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.36 (SN22.36); lit. second discourse on a certain monk",
+    "Saṁyutta Nikāya 22.36 (SN22.36); lit. second discourse on a certain monk",
     "✔"
    ],
    [
     "dutiyaānandasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.38 (SN22.38); lit. second discourse with Ānanda",
+    "Saṁyutta Nikāya 22.38 (SN22.38); lit. second discourse with Ānanda",
     "✔"
    ],
    [
     "anudhammasutta",
     "nt",
-    "Saṃyutta Nikāya 22.39 (SN22.39); lit. discourse on according to Dhamma",
+    "Saṁyutta Nikāya 22.39 (SN22.39); lit. discourse on according to Dhamma",
     "✔"
    ],
    [
     "dutiyaanudhammasutta",
     "nt",
-    "Saṃyutta Nikāya 22.40 (SN22.40); lit. second discourse on according to Dhamma",
+    "Saṁyutta Nikāya 22.40 (SN22.40); lit. second discourse on according to Dhamma",
     "✔"
    ],
    [
     "tatiyaanudhammasutta",
     "nt",
-    "Saṃyutta Nikāya 22.41 (SN22.41); lit. third discourse on according to Dhamma",
+    "Saṁyutta Nikāya 22.41 (SN22.41); lit. third discourse on according to Dhamma",
     "✔"
    ],
    [
     "catutthaanudhammasutta",
     "nt",
-    "Saṃyutta Nikāya 22.42 (SN22.42); lit. fourth discourse on according to Dhamma",
+    "Saṁyutta Nikāya 22.42 (SN22.42); lit. fourth discourse on according to Dhamma",
     "✔"
    ],
    [
     "attadīpasutta",
     "nt",
-    "Saṃyutta Nikāya 22.43 (SN22.43); lit. discourse on self-reliant",
+    "Saṁyutta Nikāya 22.43 (SN22.43); lit. discourse on self-reliant",
     "✔"
    ],
    [
     "paṭipadāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.44 (SN22.44); lit. discourse on the path of practice",
+    "Saṁyutta Nikāya 22.44 (SN22.44); lit. discourse on the path of practice",
     "✔"
    ],
    [
     "aniccasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.45 (SN22.45); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 22.45 (SN22.45); lit. discourse on impermanence",
     "✔"
    ],
    [
     "dutiyaaniccasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.46 (SN22.46); lit. second discourse on impermanence",
+    "Saṁyutta Nikāya 22.46 (SN22.46); lit. second discourse on impermanence",
     "✔"
    ],
    [
     "samanupassanāsutta",
     "nt",
-    "Saṃyutta Nikāya 22.47 (SN22.47); lit. discourse on modes of seeing",
+    "Saṁyutta Nikāya 22.47 (SN22.47); lit. discourse on modes of seeing",
     "✔"
    ],
    [
     "khandhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.48 (SN22.48); lit. discourse on the aggregates",
+    "Saṁyutta Nikāya 22.48 (SN22.48); lit. discourse on the aggregates",
     "✔"
    ],
    [
     "soṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.49 (SN22.49); lit. discourse with Soṇa",
+    "Saṁyutta Nikāya 22.49 (SN22.49); lit. discourse with Soṇa",
     "✔"
    ],
    [
     "dutiyasoṇasutta",
     "nt",
-    "Saṃyutta Nikāya 22.50 (SN22.50); lit. second discourse with Soṇa",
+    "Saṁyutta Nikāya 22.50 (SN22.50); lit. second discourse with Soṇa",
     "✔"
    ],
    [
     "nandikkhayasutta",
     "nt",
-    "Saṃyutta Nikāya 22.51 (SN22.51); lit. discourse on the destruction of delight",
+    "Saṁyutta Nikāya 22.51 (SN22.51); lit. discourse on the destruction of delight",
     "✔"
    ],
    [
     "dutiyanandikkhayasutta",
     "nt",
-    "Saṃyutta Nikāya 22.52 (SN22.52); lit. second discourse on the destruction of delight",
+    "Saṁyutta Nikāya 22.52 (SN22.52); lit. second discourse on the destruction of delight",
     "✔"
    ],
    [
     "upayasutta",
     "nt",
-    "Saṃyutta Nikāya 22.53 (SN22.53); lit. discourse on engagement",
+    "Saṁyutta Nikāya 22.53 (SN22.53); lit. discourse on engagement",
     "✔"
    ],
    [
     "bījasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.54 (SN22.54); lit. discourse on the seed",
+    "Saṁyutta Nikāya 22.54 (SN22.54); lit. discourse on the seed",
     "✔"
    ],
    [
     "udānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.55 (SN22.55); lit. discourse on an inspired saying",
+    "Saṁyutta Nikāya 22.55 (SN22.55); lit. discourse on an inspired saying",
     "✔"
    ],
    [
     "upādānaparipavattasutta",
     "nt",
-    "Saṃyutta Nikāya 22.56 (SN22.56); lit. discourse on the occurrences of grasping",
+    "Saṁyutta Nikāya 22.56 (SN22.56); lit. discourse on the occurrences of grasping",
     "✔"
    ],
    [
     "sattaṭṭhānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.57 (SN22.57); lit. discourse on seven aspects",
+    "Saṁyutta Nikāya 22.57 (SN22.57); lit. discourse on seven aspects",
     "✔"
    ],
    [
     "sammāsambuddhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.58 (SN22.58); lit. discourse on the perfectly awakened Buddha",
+    "Saṁyutta Nikāya 22.58 (SN22.58); lit. discourse on the perfectly awakened Buddha",
     "✔"
    ],
    [
     "anattalakkhaṇasutta",
     "nt",
-    "Saṃyutta Nikāya 22.59 (SN22.59); lit. discourse on the characteristic of non-self",
+    "Saṁyutta Nikāya 22.59 (SN22.59); lit. discourse on the characteristic of non-self",
     "✔"
    ],
    [
     "mahālisutta 3",
     "nt",
-    "Saṃyutta Nikāya 22.60 (SN22.60); lit. discourse with Mahāli",
+    "Saṁyutta Nikāya 22.60 (SN22.60); lit. discourse with Mahāli",
     "✔"
    ],
    [
     "ādittasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.61 (SN22.61); lit. discourse on burning",
+    "Saṁyutta Nikāya 22.61 (SN22.61); lit. discourse on burning",
     "✔"
    ],
    [
     "niruttipathasutta",
     "nt",
-    "Saṃyutta Nikāya 22.62 (SN22.62); lit. discourse on ways of speech",
+    "Saṁyutta Nikāya 22.62 (SN22.62); lit. discourse on ways of speech",
     "✔"
    ],
    [
     "upādiyamānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.63 (SN22.63); lit. discourse on grasping",
+    "Saṁyutta Nikāya 22.63 (SN22.63); lit. discourse on grasping",
     "✔"
    ],
    [
     "maññamānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.64 (SN22.64); lit. discourse on thikning",
+    "Saṁyutta Nikāya 22.64 (SN22.64); lit. discourse on thikning",
     "✔"
    ],
    [
     "abhinandamānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.65 (SN22.65); lit. discourse on delighting",
+    "Saṁyutta Nikāya 22.65 (SN22.65); lit. discourse on delighting",
     "✔"
    ],
    [
     "aniccasutta 3",
     "nt",
-    "Saṃyutta Nikāya 22.66 (SN22.66); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 22.66 (SN22.66); lit. discourse on impermanence",
     "✔"
    ],
    [
     "anattasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.68 (SN22.68); lit. discourse on not oneself",
+    "Saṁyutta Nikāya 22.68 (SN22.68); lit. discourse on not oneself",
     "✔"
    ],
    [
     "anattaniyasutta",
     "nt",
-    "Saṃyutta Nikāya 22.69 (SN22.69); lit. discourse on not belonging to a self",
+    "Saṁyutta Nikāya 22.69 (SN22.69); lit. discourse on not belonging to a self",
     "✔"
    ],
    [
     "rajanīyasaṇṭhitasutta",
     "nt",
-    "Saṃyutta Nikāya 22.70 (SN22.70); lit. discourse on appearing desirable",
+    "Saṁyutta Nikāya 22.70 (SN22.70); lit. discourse on appearing desirable",
     "✔"
    ],
    [
     "rādhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.71 (SN22.71); lit. discourse on with Rādha",
+    "Saṁyutta Nikāya 22.71 (SN22.71); lit. discourse on with Rādha",
     "✔"
    ],
    [
     "surādhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.72 (SN22.72); lit. discourse with Surādha",
+    "Saṁyutta Nikāya 22.72 (SN22.72); lit. discourse with Surādha",
     "✔"
    ],
    [
     "assādasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.73 (SN22.73); lit. discourse on gratification",
+    "Saṁyutta Nikāya 22.73 (SN22.73); lit. discourse on gratification",
     "✔"
    ],
    [
     "samudayasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.74 (SN22.74); lit. discourse on the origin",
+    "Saṁyutta Nikāya 22.74 (SN22.74); lit. discourse on the origin",
     "✔"
    ],
    [
     "dutiyasamudayasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.75 (SN22.75); lit. second discourse on the origin",
+    "Saṁyutta Nikāya 22.75 (SN22.75); lit. second discourse on the origin",
     "✔"
    ],
    [
     "arahantasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.76 (SN22.76); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 22.76 (SN22.76); lit. discourse on the arahant",
     "✔"
    ],
    [
     "dutiyaarahantasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.77 (SN22.77); lit. second discourse on the arahant",
+    "Saṁyutta Nikāya 22.77 (SN22.77); lit. second discourse on the arahant",
     "✔"
    ],
    [
     "sīhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.78 (SN22.78); lit. discourse on the lion",
+    "Saṁyutta Nikāya 22.78 (SN22.78); lit. discourse on the lion",
     "✔"
    ],
    [
     "khajjanīyasutta",
     "nt",
-    "Saṃyutta Nikāya 22.79 (SN22.79); lit. discourse on edible",
+    "Saṁyutta Nikāya 22.79 (SN22.79); lit. discourse on edible",
     "✔"
    ],
    [
     "piṇḍolyasutta",
     "nt",
-    "Saṃyutta Nikāya 22.80 (SN22.80); lit. discourse on living by means of alms",
+    "Saṁyutta Nikāya 22.80 (SN22.80); lit. discourse on living by means of alms",
     "✔"
    ],
    [
     "pālileyyasutta",
     "nt",
-    "Saṃyutta Nikāya 22.81 (SN22.81); lit. discourse at Pālileyya",
+    "Saṁyutta Nikāya 22.81 (SN22.81); lit. discourse at Pālileyya",
     "✔"
    ],
    [
     "puṇṇamasutta",
     "nt",
-    "Saṃyutta Nikāya 22.82 (SN22.82); lit. discourse on the full moon",
+    "Saṁyutta Nikāya 22.82 (SN22.82); lit. discourse on the full moon",
     "✔"
    ],
    [
     "tissasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.84 (SN22.84); lit. discourse with Tissa",
+    "Saṁyutta Nikāya 22.84 (SN22.84); lit. discourse with Tissa",
     "✔"
    ],
    [
     "yamakasutta",
     "nt",
-    "Saṃyutta Nikāya 22.85 (SN22.85); lit. discourse with Yamaka",
+    "Saṁyutta Nikāya 22.85 (SN22.85); lit. discourse with Yamaka",
     "✔"
    ],
    [
     "anurādhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.86 (SN22.86); lit. discourse with Anurādha",
+    "Saṁyutta Nikāya 22.86 (SN22.86); lit. discourse with Anurādha",
     "✔"
    ],
    [
     "vakkalisutta",
     "nt",
-    "Saṃyutta Nikāya 22.87 (SN22.87); lit. discourse with Vakkali",
+    "Saṁyutta Nikāya 22.87 (SN22.87); lit. discourse with Vakkali",
     "✔"
    ],
    [
     "assajisutta",
     "nt",
-    "Saṃyutta Nikāya 22.88 (SN22.88); lit. discourse with Assaji",
+    "Saṁyutta Nikāya 22.88 (SN22.88); lit. discourse with Assaji",
     "✔"
    ],
    [
     "khemakasutta",
     "nt",
-    "Saṃyutta Nikāya 22.89 (SN22.89); lit. discourse with Khemaka",
+    "Saṁyutta Nikāya 22.89 (SN22.89); lit. discourse with Khemaka",
     "✔"
    ],
    [
     "channasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.90 (SN22.90); lit. discourse with Channa",
+    "Saṁyutta Nikāya 22.90 (SN22.90); lit. discourse with Channa",
     "✔"
    ],
    [
     "rāhulasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.91 (SN22.91); lit. discourse with Rāhula",
+    "Saṁyutta Nikāya 22.91 (SN22.91); lit. discourse with Rāhula",
     "✔"
    ],
    [
     "dutiyarāhulasutta",
     "nt",
-    "Saṃyutta Nikāya 22.92 (SN22.92); lit. second discourse with Rāhula",
+    "Saṁyutta Nikāya 22.92 (SN22.92); lit. second discourse with Rāhula",
     "✔"
    ],
    [
     "nadīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.93 (SN22.93); lit. discourse on the river",
+    "Saṁyutta Nikāya 22.93 (SN22.93); lit. discourse on the river",
     "✔"
    ],
    [
     "pupphasutta",
     "nt",
-    "Saṃyutta Nikāya 22.94 (SN22.94); lit. discourse on the flower",
+    "Saṁyutta Nikāya 22.94 (SN22.94); lit. discourse on the flower",
     "✔"
    ],
    [
     "pheṇapiṇḍūpamasutta",
     "nt",
-    "Saṃyutta Nikāya 22.95 (SN22.95); lit. discourse on the simile of the lump of foam",
+    "Saṁyutta Nikāya 22.95 (SN22.95); lit. discourse on the simile of the lump of foam",
     "✔"
    ],
    [
     "gomayapiṇḍasutta",
     "nt",
-    "Saṃyutta Nikāya 22.96 (SN22.96); lit. discourse on the lump of cow-dung",
+    "Saṁyutta Nikāya 22.96 (SN22.96); lit. discourse on the lump of cow-dung",
     "✔"
    ],
    [
     "nakhasikhāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.97 (SN22.97); lit. disourse on the tip of the nail",
+    "Saṁyutta Nikāya 22.97 (SN22.97); lit. disourse on the tip of the nail",
     "✔"
    ],
    [
     "suddhikasutta 02",
     "nt",
-    "Saṃyutta Nikāya 22.98 (SN22.98); lit. clean (version of the) discourse",
+    "Saṁyutta Nikāya 22.98 (SN22.98); lit. clean (version of the) discourse",
     "✔"
    ],
    [
     "gaddulabaddhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.99 (SN22.99); lit. discourse on tied with a leash",
+    "Saṁyutta Nikāya 22.99 (SN22.99); lit. discourse on tied with a leash",
     "✔"
    ],
    [
     "dutiyagaddulabaddhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.100 (SN22.100); lit. second discourse on tied with a leash",
+    "Saṁyutta Nikāya 22.100 (SN22.100); lit. second discourse on tied with a leash",
     "✔"
    ],
    [
     "vāsijaṭasutta",
     "nt",
-    "Saṃyutta Nikāya 22.101 (SN22.101); lit. discourse on the axe-handle",
+    "Saṁyutta Nikāya 22.101 (SN22.101); lit. discourse on the axe-handle",
     "✔"
    ],
    [
     "aniccasaññāsutta",
     "nt",
-    "Saṃyutta Nikāya 22.102 (SN22.102); lit. discourse on perception of impermanence",
+    "Saṁyutta Nikāya 22.102 (SN22.102); lit. discourse on perception of impermanence",
     "✔"
    ],
    [
     "antasutta",
     "nt",
-    "Saṃyutta Nikāya 22.103 (SN22.103); lit. discourse on extremes",
+    "Saṁyutta Nikāya 22.103 (SN22.103); lit. discourse on extremes",
     "✔"
    ],
    [
     "sakkāyasutta",
     "nt",
-    "Saṃyutta Nikāya 22.105 (SN22.105); lit. discourse on individual identity",
+    "Saṁyutta Nikāya 22.105 (SN22.105); lit. discourse on individual identity",
     "✔"
    ],
    [
     "pariññeyyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.106 (SN22.106); lit. discourse on what should be completely comprehended",
+    "Saṁyutta Nikāya 22.106 (SN22.106); lit. discourse on what should be completely comprehended",
     "✔"
    ],
    [
     "samaṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.107 (SN22.107); lit. discourse on the ascetic",
+    "Saṁyutta Nikāya 22.107 (SN22.107); lit. discourse on the ascetic",
     "✔"
    ],
    [
     "dutiyasamaṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.108 (SN22.108); lit. second discourse on the ascetic",
+    "Saṁyutta Nikāya 22.108 (SN22.108); lit. second discourse on the ascetic",
     "✔"
    ],
    [
     "sotāpannasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.109 (SN22.109); lit. discourse on reached the stream",
+    "Saṁyutta Nikāya 22.109 (SN22.109); lit. discourse on reached the stream",
     "✔"
    ],
    [
     "arahantasutta 3",
     "nt",
-    "Saṃyutta Nikāya 22.110 (SN22.110); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 22.110 (SN22.110); lit. discourse on the arahant",
     "✔"
    ],
    [
     "chandappahānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.111 (SN22.111); lit. discourse on giving up interest",
+    "Saṁyutta Nikāya 22.111 (SN22.111); lit. discourse on giving up interest",
     "✔"
    ],
    [
     "dutiyachandappahānasutta",
     "nt",
-    "Saṃyutta Nikāya 22.112 (SN22.112); lit. second discourse on giving up interest",
+    "Saṁyutta Nikāya 22.112 (SN22.112); lit. second discourse on giving up interest",
     "✔"
    ],
    [
     "avijjāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.113 (SN22.113); lit. discourse on ignorance",
+    "Saṁyutta Nikāya 22.113 (SN22.113); lit. discourse on ignorance",
     "✔"
    ],
    [
     "vijjāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.114 (SN22.114); lit. discourse on understanding",
+    "Saṁyutta Nikāya 22.114 (SN22.114); lit. discourse on understanding",
     "✔"
    ],
    [
     "dhammakathikasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.115 (SN22.115); lit. discourse on the Dhamma preacher",
+    "Saṁyutta Nikāya 22.115 (SN22.115); lit. discourse on the Dhamma preacher",
     "✔"
    ],
    [
     "dutiyadhammakathikasutta",
     "nt",
-    "Saṃyutta Nikāya 22.116 (SN22.116); lit. second discourse on the Dhamma preacher",
+    "Saṁyutta Nikāya 22.116 (SN22.116); lit. second discourse on the Dhamma preacher",
     "✔"
    ],
    [
     "bandhanasutta 3",
     "nt",
-    "Saṃyutta Nikāya 22.117 (SN22.117); lit. discourse on bondage",
+    "Saṁyutta Nikāya 22.117 (SN22.117); lit. discourse on bondage",
     "✔"
    ],
    [
     "paripucchitasutta",
     "nt",
-    "Saṃyutta Nikāya 22.118 (SN22.118); lit. discourse on questioning",
+    "Saṁyutta Nikāya 22.118 (SN22.118); lit. discourse on questioning",
     "✔"
    ],
    [
     "dutiyaparipucchitasutta",
     "nt",
-    "Saṃyutta Nikāya 22.119 (SN22.119); lit. second discourse on the questioner",
+    "Saṁyutta Nikāya 22.119 (SN22.119); lit. second discourse on the questioner",
     "✔"
    ],
    [
-    "saṃyojaniyasutta 1",
+    "saṁyojaniyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.120 (SN22.120); lit. discourse on what can bind",
+    "Saṁyutta Nikāya 22.120 (SN22.120); lit. discourse on what can bind",
     "✔"
    ],
    [
     "upādāniyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.121 (SN22.121); lit. discourse on what can be clung to",
+    "Saṁyutta Nikāya 22.121 (SN22.121); lit. discourse on what can be clung to",
     "✔"
    ],
    [
     "sīlavantasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.122 (SN22.122); lit. discourse on a virtuous monk",
+    "Saṁyutta Nikāya 22.122 (SN22.122); lit. discourse on a virtuous monk",
     "✔"
    ],
    [
     "sutavantasutta",
     "nt",
-    "Saṃyutta Nikāya 22.123 (SN22.123); lit. discourse on an educated monk",
+    "Saṁyutta Nikāya 22.123 (SN22.123); lit. discourse on an educated monk",
     "✔"
    ],
    [
     "kappasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.124 (SN22.124); lit. discourse with Kappa",
+    "Saṁyutta Nikāya 22.124 (SN22.124); lit. discourse with Kappa",
     "✔"
    ],
    [
     "dutiyakappasutta",
     "nt",
-    "Saṃyutta Nikāya 22.125 (SN22.125); lit. second discourse with Kappa",
+    "Saṁyutta Nikāya 22.125 (SN22.125); lit. second discourse with Kappa",
     "✔"
    ],
    [
     "samudayadhammasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.126 (SN22.126); lit. discourse on having the nature to arise",
+    "Saṁyutta Nikāya 22.126 (SN22.126); lit. discourse on having the nature to arise",
     "✔"
    ],
    [
     "dutiyasamudayadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 22.127 (SN22.127); lit. second discourse on having the nature to arise",
+    "Saṁyutta Nikāya 22.127 (SN22.127); lit. second discourse on having the nature to arise",
     "✔"
    ],
    [
     "tatiyasamudayadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 22.128 (SN22.128); lit. third discourse on having the nature to arise",
+    "Saṁyutta Nikāya 22.128 (SN22.128); lit. third discourse on having the nature to arise",
     "✔"
    ],
    [
     "assādasutta 3",
     "nt",
-    "Saṃyutta Nikāya 22.129 (SN22.129); lit. discourse on gratification",
+    "Saṁyutta Nikāya 22.129 (SN22.129); lit. discourse on gratification",
     "✔"
    ],
    [
     "dutiyaassādasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.130 (SN22.130); lit. second discourse on gratification",
+    "Saṁyutta Nikāya 22.130 (SN22.130); lit. second discourse on gratification",
     "✔"
    ],
    [
     "samudayasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.131 (SN22.131); lit. discourse on the origin",
+    "Saṁyutta Nikāya 22.131 (SN22.131); lit. discourse on the origin",
     "✔"
    ],
    [
     "dutiyasamudayasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.132 (SN22.132); lit. second discourse on the origin",
+    "Saṁyutta Nikāya 22.132 (SN22.132); lit. second discourse on the origin",
     "✔"
    ],
    [
     "koṭṭhikasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.133 (SN22.133); lit. discourse with Koṭṭhika",
+    "Saṁyutta Nikāya 22.133 (SN22.133); lit. discourse with Koṭṭhika",
     "✔"
    ],
    [
     "dutiyakoṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 22.134 (SN22.134); lit. second discourse with Koṭṭhika",
+    "Saṁyutta Nikāya 22.134 (SN22.134); lit. second discourse with Koṭṭhika",
     "✔"
    ],
    [
     "tatiyakoṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 22.135 (SN22.135); lit. third discourse with Koṭṭhika",
+    "Saṁyutta Nikāya 22.135 (SN22.135); lit. third discourse with Koṭṭhika",
     "✔"
    ],
    [
     "kukkuḷasutta",
     "nt",
-    "Saṃyutta Nikāya 22.136 (SN22.136); lit. discourse on hot ashes",
+    "Saṁyutta Nikāya 22.136 (SN22.136); lit. discourse on hot ashes",
     "✔"
    ],
    [
     "aniccasutta 4",
     "nt",
-    "Saṃyutta Nikāya 22.137 (SN22.137); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 22.137 (SN22.137); lit. discourse on impermanence",
     "✔"
    ],
    [
     "dutiyaaniccasutta 2",
     "nt",
-    "Saṃyutta Nikāya 22.138 (SN22.138); lit. second discourse on impermanence",
+    "Saṁyutta Nikāya 22.138 (SN22.138); lit. second discourse on impermanence",
     "✔"
    ],
    [
     "tatiyaaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 22.139 (SN22.139); lit. third discourse on impermanence",
+    "Saṁyutta Nikāya 22.139 (SN22.139); lit. third discourse on impermanence",
     "✔"
    ],
    [
     "dutiyadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.141 (SN22.141); lit. second discourse on suffering",
+    "Saṁyutta Nikāya 22.141 (SN22.141); lit. second discourse on suffering",
     "✔"
    ],
    [
     "tatiyadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 22.142 (SN22.142); lit. third discourse on suffering",
+    "Saṁyutta Nikāya 22.142 (SN22.142); lit. third discourse on suffering",
     "✔"
    ],
    [
     "anattasutta 3",
     "nt",
-    "Saṃyutta Nikāya 22.143 (SN22.143); lit. discourse on not oneself",
+    "Saṁyutta Nikāya 22.143 (SN22.143); lit. discourse on not oneself",
     "✔"
    ],
    [
     "dutiyaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 22.144 (SN22.144); lit. second discourse on not oneself",
+    "Saṁyutta Nikāya 22.144 (SN22.144); lit. second discourse on not oneself",
     "✔"
    ],
    [
     "tatiyaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 22.145 (SN22.145); lit. third discourse on not oneself",
+    "Saṁyutta Nikāya 22.145 (SN22.145); lit. third discourse on not oneself",
     "✔"
    ],
    [
     "nibbidābahulasutta",
     "nt",
-    "Saṃyutta Nikāya 22.146 (SN22.146); lit. discourse on full of dis-enchantment",
+    "Saṁyutta Nikāya 22.146 (SN22.146); lit. discourse on full of dis-enchantment",
     "✔"
    ],
    [
     "aniccānupassīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.147 (SN22.147); lit. discourse on observing impermanence",
+    "Saṁyutta Nikāya 22.147 (SN22.147); lit. discourse on observing impermanence",
     "✔"
    ],
    [
     "dukkhānupassīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.148 (SN22.148); lit. discourse on observing suffering",
+    "Saṁyutta Nikāya 22.148 (SN22.148); lit. discourse on observing suffering",
     "✔"
    ],
    [
     "anattānupassīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.149 (SN22.149); lit. discourse on seeing non-self",
+    "Saṁyutta Nikāya 22.149 (SN22.149); lit. discourse on seeing non-self",
     "✔"
    ],
    [
     "ajjhattasutta",
     "nt",
-    "Saṃyutta Nikāya 22.150 (SN22.150); lit. discourse on internal",
+    "Saṁyutta Nikāya 22.150 (SN22.150); lit. discourse on internal",
     "✔"
    ],
    [
-    "etaṃmamasutta 1",
+    "etaṁmamasutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.151 (SN22.151); lit. discourse on this is mine",
+    "Saṁyutta Nikāya 22.151 (SN22.151); lit. discourse on this is mine",
     "✔"
    ],
    [
     "soattāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.152 (SN22.152); lit. discourse on this is my self",
+    "Saṁyutta Nikāya 22.152 (SN22.152); lit. discourse on this is my self",
     "✔"
    ],
    [
     "nocamesiyāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.153 (SN22.153); lit. discourse on it might not be mine",
+    "Saṁyutta Nikāya 22.153 (SN22.153); lit. discourse on it might not be mine",
     "✔"
    ],
    [
     "micchādiṭṭhisutta 1",
     "nt",
-    "Saṃyutta Nikāya 22.154 (SN22.154); lit. discourse on wrong view",
+    "Saṁyutta Nikāya 22.154 (SN22.154); lit. discourse on wrong view",
     "✔"
    ],
    [
     "sakkāyadiṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 22.155 (SN22.155); lit. discourse on the view of self-identity",
+    "Saṁyutta Nikāya 22.155 (SN22.155); lit. discourse on the view of self-identity",
     "✔"
    ],
    [
     "attānudiṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 22.156 (SN22.156); lit. discourse on the view of self",
+    "Saṁyutta Nikāya 22.156 (SN22.156); lit. discourse on the view of self",
     "✔"
    ],
    [
     "abhinivesasutta",
     "nt",
-    "Saṃyutta Nikāya 22.157 (SN22.157); lit. discourse on adherence",
+    "Saṁyutta Nikāya 22.157 (SN22.157); lit. discourse on adherence",
     "✔"
    ],
    [
     "dutiyaabhinivesasutta",
     "nt",
-    "Saṃyutta Nikāya 22.158 (SN22.158); lit. second discourse on adherence",
+    "Saṁyutta Nikāya 22.158 (SN22.158); lit. second discourse on adherence",
     "✔"
    ],
    [
@@ -26579,7 +26579,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "lomahaṃsa 2",
+    "lomahaṁsa 2",
     "masc",
     "name of a privately awakened Buddha; lit. goosebumps",
     "✔"
@@ -27507,9 +27507,9 @@ var family_set_json = {
     "◑"
    ],
    [
-    "cetivaṃsā",
+    "cetivaṁsā",
     "masc",
-    "people of Ceta and Vaṃsa",
+    "people of Ceta and Vaṁsa",
     "✔"
    ],
    [
@@ -27657,9 +27657,9 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vaṃsā",
+    "vaṁsā",
     "masc",
-    "name of a people; Vaṃsas",
+    "name of a people; Vaṁsas",
     "✔"
    ],
    [
@@ -27719,18 +27719,18 @@ var family_set_json = {
   ],
   "count": 55
  },
- "suttas of Saṃyutta Nikāya 55": {
+ "suttas of Saṁyutta Nikāya 55": {
   "data": [
    [
     "aṅgasutta 2",
     "nt",
-    "Saṃyutta Nikāya 55.50 (SN55.50); lit. discourse on factors",
+    "Saṁyutta Nikāya 55.50 (SN55.50); lit. discourse on factors",
     "✔"
    ],
    [
     "sagāthakasutta 2",
     "nt",
-    "Saṃyutta Nikāya 55.51 (SN55.51); lit. discourse with verses",
+    "Saṁyutta Nikāya 55.51 (SN55.51); lit. discourse with verses",
     "✔"
    ]
   ],
@@ -27961,7 +27961,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sataraṃsī 2",
+    "sataraṁsī 2",
     "adj",
     "with one hundred rays; epithet of the Buddha",
     "✔"
@@ -28020,13 +28020,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saṃyuttaka",
+    "saṁyuttaka",
     "nt",
     "Book 3 of the Sutta Piṭaka; Connected Discourses; lit. yoked together",
     "◑"
    ],
    [
-    "saṃyuttanikāya",
+    "saṁyuttanikāya",
     "masc",
     "Book 3 of the Sutta Piṭaka; Connected Discourses",
     "✔"
@@ -28109,7 +28109,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tiyojanaparamaṃ",
+    "tiyojanaparamaṁ",
     "ind",
     "for three yojanas at the most; not more than sixty kilometres",
     "✔"
@@ -28528,7 +28528,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "kāyasaṃsaggasikkhāpada",
+    "kāyasaṁsaggasikkhāpada",
     "nt",
     "rule about physical contact; Saṅghādisesa 2",
     "◑"
@@ -28618,7 +28618,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "chandaṃadatvāgamanasikkhāpada",
+    "chandaṁadatvāgamanasikkhāpada",
     "nt",
     "rule about leaving (a legal action) without giving consent; Pācittiya 80",
     "◑"
@@ -28846,7 +28846,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "dutiyasusaṃvutasikkhāpada",
+    "dutiyasusaṁvutasikkhāpada",
     "nt",
     "Sekhiya 6; lit. second rule about being well restrained",
     "◑"
@@ -29092,7 +29092,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "bhiṃsāpanasikkhāpada",
+    "bhiṁsāpanasikkhāpada",
     "nt",
     "rule about frightening; Pācittiya 55",
     "◑"
@@ -29194,7 +29194,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "rūpiyasaṃvohārasikkhāpada",
+    "rūpiyasaṁvohārasikkhāpada",
     "nt",
     "rule about trading with money; Nissaggiya 19",
     "◑"
@@ -29380,13 +29380,13 @@ var family_set_json = {
     "◑"
    ],
    [
-    "saṃvidhānasikkhāpada 1",
+    "saṁvidhānasikkhāpada 1",
     "nt",
     "rule about making (travel) arrangements (with a nun); Pācittiya 27",
     "◑"
    ],
    [
-    "saṃvidhānasikkhāpada 2",
+    "saṁvidhānasikkhāpada 2",
     "nt",
     "rule about making (travel) arrangements (with a woman); Pācittiya 67",
     "◑"
@@ -29452,7 +29452,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "susaṃvutasikkhāpada",
+    "susaṁvutasikkhāpada",
     "nt",
     "Sekhiya 5; lit. rule about being well restrained",
     "◑"
@@ -29615,413 +29615,413 @@ var family_set_json = {
   ],
   "count": 18
  },
- "suttas of Saṃyutta Nikāya 14": {
+ "suttas of Saṁyutta Nikāya 14": {
   "data": [
    [
     "dhātunānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.1 (SN14.1); lit. discourse on the diversity of states",
+    "Saṁyutta Nikāya 14.1 (SN14.1); lit. discourse on the diversity of states",
     "✔"
    ],
    [
     "phassanānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.2 (SN14.2); lit. discourse on diversity of sense experiences",
+    "Saṁyutta Nikāya 14.2 (SN14.2); lit. discourse on diversity of sense experiences",
     "✔"
    ],
    [
     "nophassanānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.3 (SN14.3); lit. discourse on no diversity of sense experiences",
+    "Saṁyutta Nikāya 14.3 (SN14.3); lit. discourse on no diversity of sense experiences",
     "✔"
    ],
    [
     "vedanānānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.4 (SN14.4); lit. diversity of felt experiences",
+    "Saṁyutta Nikāya 14.4 (SN14.4); lit. diversity of felt experiences",
     "✔"
    ],
    [
     "dutiyavedanānānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.5 (SN14.5); lit. second discourse o the diversity of felt experiences",
+    "Saṁyutta Nikāya 14.5 (SN14.5); lit. second discourse o the diversity of felt experiences",
     "✔"
    ],
    [
     "bāhiradhātunānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.6 (SN14.6); lit. discourse on the diversity of external states",
+    "Saṁyutta Nikāya 14.6 (SN14.6); lit. discourse on the diversity of external states",
     "✔"
    ],
    [
     "saññānānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.7 (SN14.7); lit. discourse on diversity of perceptions",
+    "Saṁyutta Nikāya 14.7 (SN14.7); lit. discourse on diversity of perceptions",
     "✔"
    ],
    [
     "nopariyesanānānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.8 (SN14.8); lit. discourse on no diversity of searches",
+    "Saṁyutta Nikāya 14.8 (SN14.8); lit. discourse on no diversity of searches",
     "✔"
    ],
    [
     "bāhiraphassanānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.9 (SN14.9); lit. discourse on the diversity of external sense experiences",
+    "Saṁyutta Nikāya 14.9 (SN14.9); lit. discourse on the diversity of external sense experiences",
     "✔"
    ],
    [
     "dutiyabāhiraphassanānattasutta",
     "nt",
-    "Saṃyutta Nikāya 14.10 (SN14.10); lit. second discourse on the diversity of external sense experiences",
+    "Saṁyutta Nikāya 14.10 (SN14.10); lit. second discourse on the diversity of external sense experiences",
     "✔"
    ],
    [
     "sattadhātusutta",
     "nt",
-    "Saṃyutta Nikāya 14.11 (SN14.11); lit. discourse on seven states",
+    "Saṁyutta Nikāya 14.11 (SN14.11); lit. discourse on seven states",
     "✔"
    ],
    [
     "sanidānasutta",
     "nt",
-    "Saṃyutta Nikāya 14.12 (SN14.12); lit. discourse on with a basis",
+    "Saṁyutta Nikāya 14.12 (SN14.12); lit. discourse on with a basis",
     "✔"
    ],
    [
     "giñjakāvasathasutta",
     "nt",
-    "Saṃyutta Nikāya 14.13 (SN14.13); lit. discourse at the brick house",
+    "Saṁyutta Nikāya 14.13 (SN14.13); lit. discourse at the brick house",
     "✔"
    ],
    [
     "hīnādhimuttikasutta",
     "nt",
-    "Saṃyutta Nikāya 14.14 (SN14.14); lit. discourse on those of inferior disposition",
+    "Saṁyutta Nikāya 14.14 (SN14.14); lit. discourse on those of inferior disposition",
     "✔"
    ],
    [
     "caṅkamasutta 1",
     "nt",
-    "Saṃyutta Nikāya 14.15 (SN14.15); lit. discourse on walking",
+    "Saṁyutta Nikāya 14.15 (SN14.15); lit. discourse on walking",
     "✔"
    ],
    [
     "sagāthāsutta",
     "nt",
-    "Saṃyutta Nikāya 14.16 (SN14.16); lit. discourse with verses",
+    "Saṁyutta Nikāya 14.16 (SN14.16); lit. discourse with verses",
     "✔"
    ],
    [
-    "assaddhasaṃsandanasutta",
+    "assaddhasaṁsandanasutta",
     "nt",
-    "Saṃyutta Nikāya 14.17 (SN14.17); lit. discourse on interacting with the faithless",
+    "Saṁyutta Nikāya 14.17 (SN14.17); lit. discourse on interacting with the faithless",
     "✔"
    ],
    [
     "assaddhamūlakasutta",
     "nt",
-    "Saṃyutta Nikāya 14.18 (SN14.18); lit. discourse on rooted in lack of faith",
+    "Saṁyutta Nikāya 14.18 (SN14.18); lit. discourse on rooted in lack of faith",
     "✔"
    ],
    [
     "ahirikamūlakasutta",
     "nt",
-    "Saṃyutta Nikāya 14.19 (SN14.19); lit. discourse on rooted in lack of conscience",
+    "Saṁyutta Nikāya 14.19 (SN14.19); lit. discourse on rooted in lack of conscience",
     "✔"
    ],
    [
     "anottappamūlakasutta",
     "nt",
-    "Saṃyutta Nikāya 14.20 (SN14.20); lit. discourse on rooted in lack of shame in wrongdoing",
+    "Saṁyutta Nikāya 14.20 (SN14.20); lit. discourse on rooted in lack of shame in wrongdoing",
     "✔"
    ],
    [
     "appassutamūlakasutta",
     "nt",
-    "Saṃyutta Nikāya 14.21 (SN14.21); lit. discourse on rooted in those of little learning",
+    "Saṁyutta Nikāya 14.21 (SN14.21); lit. discourse on rooted in those of little learning",
     "✔"
    ],
    [
     "kusītamūlakasutta",
     "nt",
-    "Saṃyutta Nikāya 14.22 (SN14.22); lit. discourse on rooted in the lazy",
+    "Saṁyutta Nikāya 14.22 (SN14.22); lit. discourse on rooted in the lazy",
     "✔"
    ],
    [
     "asamāhitasutta",
     "nt",
-    "Saṃyutta Nikāya 14.23 (SN14.23); lit. discourse on not meditatively composed",
+    "Saṁyutta Nikāya 14.23 (SN14.23); lit. discourse on not meditatively composed",
     "✔"
    ],
    [
     "dussīlasutta 1",
     "nt",
-    "Saṃyutta Nikāya 14.24 (SN14.24); lit. discourse on the immoral",
+    "Saṁyutta Nikāya 14.24 (SN14.24); lit. discourse on the immoral",
     "✔"
    ],
    [
     "pañcasikkhāpadasutta",
     "nt",
-    "Saṃyutta Nikāya 14.25 (SN14.25); lit. discourse on the five precepts",
+    "Saṁyutta Nikāya 14.25 (SN14.25); lit. discourse on the five precepts",
     "✔"
    ],
    [
     "sattakammapathasutta",
     "nt",
-    "Saṃyutta Nikāya 14.26 (SN14.26); lit. discourse on seven courses of action",
+    "Saṁyutta Nikāya 14.26 (SN14.26); lit. discourse on seven courses of action",
     "✔"
    ],
    [
     "dasakammapathasutta",
     "nt",
-    "Saṃyutta Nikāya 14.27 (SN14.27); lit. discourse on ten courses of action",
+    "Saṁyutta Nikāya 14.27 (SN14.27); lit. discourse on ten courses of action",
     "✔"
    ],
    [
     "aṭṭhaṅgikasutta 1",
     "nt",
-    "Saṃyutta Nikāya 14.28 (SN14.28); lit. discourse on the eightfold (path)",
+    "Saṁyutta Nikāya 14.28 (SN14.28); lit. discourse on the eightfold (path)",
     "✔"
    ],
    [
     "dasaṅgasutta",
     "nt",
-    "Saṃyutta Nikāya 14.29 (SN14.29); lit. discourse on the tenfold (path)",
+    "Saṁyutta Nikāya 14.29 (SN14.29); lit. discourse on the tenfold (path)",
     "✔"
    ],
    [
     "catudhātusutta",
     "nt",
-    "Saṃyutta Nikāya 14.30 (SN14.30); lit. discourse on the four elements",
+    "Saṁyutta Nikāya 14.30 (SN14.30); lit. discourse on the four elements",
     "✔"
    ],
    [
     "pubbesambodhasutta",
     "nt",
-    "Saṃyutta Nikāya 14.31 (SN14.31); lit. discourse on before awakening",
+    "Saṁyutta Nikāya 14.31 (SN14.31); lit. discourse on before awakening",
     "✔"
    ],
    [
-    "acariṃsutta",
+    "acariṁsutta",
     "nt",
-    "Saṃyutta Nikāya 14.32 (SN14.32); lit. discourse on I made",
+    "Saṁyutta Nikāya 14.32 (SN14.32); lit. discourse on I made",
     "✔"
    ],
    [
-    "nocedaṃsutta",
+    "nocedaṁsutta",
     "nt",
-    "Saṃyutta Nikāya 14.33 (SN14.33); lit. discourse on if there (would) not (be)",
+    "Saṁyutta Nikāya 14.33 (SN14.33); lit. discourse on if there (would) not (be)",
     "✔"
    ],
    [
     "ekantadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 14.34 (SN14.34); lit. discourse on exclusively painful",
+    "Saṁyutta Nikāya 14.34 (SN14.34); lit. discourse on exclusively painful",
     "✔"
    ],
    [
     "abhinandasutta",
     "nt",
-    "Saṃyutta Nikāya 14.35 (SN14.35); lit. discourse on delight",
+    "Saṁyutta Nikāya 14.35 (SN14.35); lit. discourse on delight",
     "✔"
    ],
    [
     "uppādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 14.36 (SN14.36); lit. discourse on arising",
+    "Saṁyutta Nikāya 14.36 (SN14.36); lit. discourse on arising",
     "✔"
    ],
    [
     "dutiyasamaṇabrāhmaṇasutta 03",
     "nt",
-    "Saṃyutta Nikāya 14.38 (SN14.38); lit. second discourse on ascetics and Brahmans",
+    "Saṁyutta Nikāya 14.38 (SN14.38); lit. second discourse on ascetics and Brahmans",
     "✔"
    ],
    [
     "tatiyasamaṇabrāhmaṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 14.39 (SN14.39); lit. third discourse on ascetics and Brahmans",
+    "Saṁyutta Nikāya 14.39 (SN14.39); lit. third discourse on ascetics and Brahmans",
     "✔"
    ]
   ],
   "count": 38
  },
- "suttas of Saṃyutta Nikāya 17": {
+ "suttas of Saṁyutta Nikāya 17": {
   "data": [
    [
     "dāruṇasutta",
     "nt",
-    "Saṃyutta Nikāya 17.1 (SN17.1); lit. discourse on brutal",
+    "Saṁyutta Nikāya 17.1 (SN17.1); lit. discourse on brutal",
     "✔"
    ],
    [
     "baḷisasutta",
     "nt",
-    "Saṃyutta Nikāya 17.2 (SN17.2); lit. discourse on the fishing hook",
+    "Saṁyutta Nikāya 17.2 (SN17.2); lit. discourse on the fishing hook",
     "✔"
    ],
    [
     "kummasutta",
     "nt",
-    "Saṃyutta Nikāya 17.3 (SN17.3); lit. discourse on the turtle",
+    "Saṁyutta Nikāya 17.3 (SN17.3); lit. discourse on the turtle",
     "✔"
    ],
    [
     "dīghalomikasutta",
     "nt",
-    "Saṃyutta Nikāya 17.4 (SN17.4); lit. discouse on the woolly",
+    "Saṁyutta Nikāya 17.4 (SN17.4); lit. discouse on the woolly",
     "✔"
    ],
    [
     "mīḷhakasutta",
     "nt",
-    "Saṃyutta Nikāya 17.5 (SN17.5); lit. discourse on the female dung-beetle",
+    "Saṁyutta Nikāya 17.5 (SN17.5); lit. discourse on the female dung-beetle",
     "✔"
    ],
    [
     "asanisutta",
     "nt",
-    "Saṃyutta Nikāya 17.6 (SN17.6); lit. discourse on the thunderbolt",
+    "Saṁyutta Nikāya 17.6 (SN17.6); lit. discourse on the thunderbolt",
     "✔"
    ],
    [
     "diddhasutta",
     "nt",
-    "Saṃyutta Nikāya 17.7 (SN17.7); lit. discourse on smeared (with poison)",
+    "Saṁyutta Nikāya 17.7 (SN17.7); lit. discourse on smeared (with poison)",
     "✔"
    ],
    [
     "siṅgālasutta 2",
     "nt",
-    "Saṃyutta Nikāya 17.8 (SN17.8); lit. discourse on the jackal",
+    "Saṁyutta Nikāya 17.8 (SN17.8); lit. discourse on the jackal",
     "✔"
    ],
    [
     "verambhasutta",
     "nt",
-    "Saṃyutta Nikāya 17.9 (SN17.9); lit. discourse on gale force (wind)",
+    "Saṁyutta Nikāya 17.9 (SN17.9); lit. discourse on gale force (wind)",
     "✔"
    ],
    [
     "sagāthakasutta 1",
     "nt",
-    "Saṃyutta Nikāya 17.10 (SN17.10); lit. discourse with verses",
+    "Saṁyutta Nikāya 17.10 (SN17.10); lit. discourse with verses",
     "✔"
    ],
    [
     "suvaṇṇapātisutta",
     "nt",
-    "Saṃyutta Nikāya 17.11 (SN17.11); lit. discourse on the golded bowl",
+    "Saṁyutta Nikāya 17.11 (SN17.11); lit. discourse on the golded bowl",
     "✔"
    ],
    [
     "rūpiyapātisutta",
     "nt",
-    "Saṃyutta Nikāya 17.12 (SN17.12); lit. discourse on the solver bowl",
+    "Saṁyutta Nikāya 17.12 (SN17.12); lit. discourse on the solver bowl",
     "✔"
    ],
    [
     "suvaṇṇanikkhasuttādiaṭṭhaka",
     "nt",
-    "Saṃyutta Nikāya 17.13-20 (SN17.13-20); lit. eight discourses on the gold coin, etc.",
+    "Saṁyutta Nikāya 17.13-20 (SN17.13-20); lit. eight discourses on the gold coin, etc.",
     "✔"
    ],
    [
     "mātugāmasutta 1",
     "nt",
-    "Saṃyutta Nikāya 17.21 (SN17.21); lit. discourse on a woman",
+    "Saṁyutta Nikāya 17.21 (SN17.21); lit. discourse on a woman",
     "✔"
    ],
    [
     "kalyāṇīsutta",
     "nt",
-    "Saṃyutta Nikāya 17.22 (SN17.22); lit. discourse on the beautiful woman",
+    "Saṁyutta Nikāya 17.22 (SN17.22); lit. discourse on the beautiful woman",
     "✔"
    ],
    [
     "ekaputtakasutta 1",
     "nt",
-    "Saṃyutta Nikāya 17.23 (SN17.23); lit. discourse on having one son",
+    "Saṁyutta Nikāya 17.23 (SN17.23); lit. discourse on having one son",
     "✔"
    ],
    [
     "ekadhītusutta",
     "nt",
-    "Saṃyutta Nikāya 17.24 (SN17.24); lit. discourse on having one daughter",
+    "Saṁyutta Nikāya 17.24 (SN17.24); lit. discourse on having one daughter",
     "✔"
    ],
    [
     "dutiyasamaṇabrāhmaṇasutta 04",
     "nt",
-    "Saṃyutta Nikāya 17.26 (SN17.26); lit. second discourse on ascetics and Brahmans",
+    "Saṁyutta Nikāya 17.26 (SN17.26); lit. second discourse on ascetics and Brahmans",
     "✔"
    ],
    [
     "chavisutta",
     "nt",
-    "Saṃyutta Nikāya 17.28 (SN17.28); lit. discourse on skin",
+    "Saṁyutta Nikāya 17.28 (SN17.28); lit. discourse on skin",
     "✔"
    ],
    [
     "rajjusutta",
     "nt",
-    "Saṃyutta Nikāya 17.29 (SN17.29); lit. discourse on the rope",
+    "Saṁyutta Nikāya 17.29 (SN17.29); lit. discourse on the rope",
     "✔"
    ],
    [
     "bhikkhusutta 02",
     "nt",
-    "Saṃyutta Nikāya 17.30 (SN17.30); lit. discourse on a monk",
+    "Saṁyutta Nikāya 17.30 (SN17.30); lit. discourse on a monk",
     "✔"
    ],
    [
     "bhindisutta",
     "nt",
-    "Saṃyutta Nikāya 17.31 (SN17.31); lit. discourse on he split",
+    "Saṁyutta Nikāya 17.31 (SN17.31); lit. discourse on he split",
     "✔"
    ],
    [
     "kusalamūlasutta",
     "nt",
-    "Saṃyutta Nikāya 17.32 (SN17.32); lit. discourse on the wholesome root",
+    "Saṁyutta Nikāya 17.32 (SN17.32); lit. discourse on the wholesome root",
     "✔"
    ],
    [
     "kusaladhammasutta",
     "nt",
-    "Saṃyutta Nikāya 17.33 (SN17.33); lit. discourse on wholesome qualities",
+    "Saṁyutta Nikāya 17.33 (SN17.33); lit. discourse on wholesome qualities",
     "✔"
    ],
    [
     "sukkadhammasutta 1",
     "nt",
-    "Saṃyutta Nikāya 17.34 (SN17.34); lit. discourse on good qualities",
+    "Saṁyutta Nikāya 17.34 (SN17.34); lit. discourse on good qualities",
     "✔"
    ],
    [
     "acirapakkantasutta",
     "nt",
-    "Saṃyutta Nikāya 17.35 (SN17.35); lit. discourse on recently departed",
+    "Saṁyutta Nikāya 17.35 (SN17.35); lit. discourse on recently departed",
     "✔"
    ],
    [
     "pañcarathasatasutta",
     "nt",
-    "Saṃyutta Nikāya 17.36 (SN17.36); lit. discourse on five hundred vehicles",
+    "Saṁyutta Nikāya 17.36 (SN17.36); lit. discourse on five hundred vehicles",
     "✔"
    ],
    [
     "mātusutta 2",
     "nt",
-    "Saṃyutta Nikāya 17.37 (SN17.37); lit. discourse on mothers",
+    "Saṁyutta Nikāya 17.37 (SN17.37); lit. discourse on mothers",
     "✔"
    ],
    [
     "pitusuttādichakka",
     "nt",
-    "Saṃyutta Nikāya 17.38-43 (SN17.38-43); lit. group of six discourses starting with the discourse on the father",
+    "Saṁyutta Nikāya 17.38-43 (SN17.38-43); lit. group of six discourses starting with the discourse on the father",
     "✔"
    ],
    [
@@ -30403,7 +30403,7 @@ var family_set_json = {
    [
     "kisa 2",
     "masc",
-    "name of an ascetic; Kisa Saṃkicca; lit. thin",
+    "name of an ascetic; Kisa Saṁkicca; lit. thin",
     "✔"
    ],
    [
@@ -30877,503 +30877,503 @@ var family_set_json = {
   ],
   "count": 96
  },
- "suttas of Saṃyutta Nikāya 12": {
+ "suttas of Saṁyutta Nikāya 12": {
   "data": [
    [
     "paṭiccasamuppādasutta",
     "nt",
-    "Saṃyutta Nikāya 12.1 (SN12.1); lit. discourse on dependent origination",
+    "Saṁyutta Nikāya 12.1 (SN12.1); lit. discourse on dependent origination",
     "✔"
    ],
    [
     "vibhaṅgasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.2 (SN12.2); lit. discourse on analysis",
+    "Saṁyutta Nikāya 12.2 (SN12.2); lit. discourse on analysis",
     "✔"
    ],
    [
     "paṭipadāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.3 (SN12.3); lit. discourse on the path of practice",
+    "Saṁyutta Nikāya 12.3 (SN12.3); lit. discourse on the path of practice",
     "✔"
    ],
    [
     "vipassīsutta",
     "nt",
-    "Saṃyutta Nikāya 12.4 (SN12.4); lit. discourse on Vipassī",
+    "Saṁyutta Nikāya 12.4 (SN12.4); lit. discourse on Vipassī",
     "✔"
    ],
    [
     "sikhīsutta",
     "nt",
-    "Saṃyutta Nikāya 12.5 (SN12.5); lit. discourse on Sikhī",
+    "Saṁyutta Nikāya 12.5 (SN12.5); lit. discourse on Sikhī",
     "✔"
    ],
    [
     "vessabhūsutta",
     "nt",
-    "Saṃyutta Nikāya 12.6 (SN12.6); lit. discourse on Vessabhū",
+    "Saṁyutta Nikāya 12.6 (SN12.6); lit. discourse on Vessabhū",
     "✔"
    ],
    [
     "kakusandhasutta",
     "nt",
-    "Saṃyutta Nikāya 12.7 (SN12.7); lit. discourse on Kakusandha",
+    "Saṁyutta Nikāya 12.7 (SN12.7); lit. discourse on Kakusandha",
     "✔"
    ],
    [
     "koṇāgamanasutta",
     "nt",
-    "Saṃyutta Nikāya 12.8 (SN12.8); lit. discourse on Koṇāgamana",
+    "Saṁyutta Nikāya 12.8 (SN12.8); lit. discourse on Koṇāgamana",
     "✔"
    ],
    [
     "kassapasutta",
     "nt",
-    "Saṃyutta Nikāya 12.9 (SN12.9); lit. discourse on Kassapa",
+    "Saṁyutta Nikāya 12.9 (SN12.9); lit. discourse on Kassapa",
     "✔"
    ],
    [
     "gotamasutta",
     "nt",
-    "Saṃyutta Nikāya 12.10 (SN12.10); lit. discourse on Gotama",
+    "Saṁyutta Nikāya 12.10 (SN12.10); lit. discourse on Gotama",
     "✔"
    ],
    [
     "āhārasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.11 (SN12.11); lit. discourse on sustenance",
+    "Saṁyutta Nikāya 12.11 (SN12.11); lit. discourse on sustenance",
     "✔"
    ],
    [
     "moḷiyaphaggunasutta",
     "nt",
-    "Saṃyutta Nikāya 12.12 (SN12.12); lit. discourse with Moḷiyaphagguna",
+    "Saṁyutta Nikāya 12.12 (SN12.12); lit. discourse with Moḷiyaphagguna",
     "✔"
    ],
    [
     "samaṇabrāhmaṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.13 (SN12.13); lit. discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 12.13 (SN12.13); lit. discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "dutiyasamaṇabrāhmaṇasutta 01",
     "nt",
-    "Saṃyutta Nikāya 12.14 (SN12.14); lit. second discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 12.14 (SN12.14); lit. second discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "kaccānagottasutta",
     "nt",
-    "Saṃyutta Nikāya 12.15 (SN12.15); lit. discourse with Kaccānagotta",
+    "Saṁyutta Nikāya 12.15 (SN12.15); lit. discourse with Kaccānagotta",
     "✔"
    ],
    [
     "dhammakathikasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.16 (SN12.16); lit. discourse on the Dhamma preacher",
+    "Saṁyutta Nikāya 12.16 (SN12.16); lit. discourse on the Dhamma preacher",
     "✔"
    ],
    [
     "acelakassapasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.17 (SN12.17); lit. discourse with naked Kassapa",
+    "Saṁyutta Nikāya 12.17 (SN12.17); lit. discourse with naked Kassapa",
     "✔"
    ],
    [
     "timbarukasutta",
     "nt",
-    "Saṃyutta Nikāya 12.18 (SN12.18); lit. discourse with Timbaruka",
+    "Saṁyutta Nikāya 12.18 (SN12.18); lit. discourse with Timbaruka",
     "✔"
    ],
    [
     "bālapaṇḍitasutta 2",
     "nt",
-    "Saṃyutta Nikāya 12.19 (SN12.19); lit. discourse on foolish and the wise",
+    "Saṁyutta Nikāya 12.19 (SN12.19); lit. discourse on foolish and the wise",
     "✔"
    ],
    [
     "paccayasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.20 (SN12.20); lit. discourse on conditions",
+    "Saṁyutta Nikāya 12.20 (SN12.20); lit. discourse on conditions",
     "✔"
    ],
    [
     "dasabalasutta",
     "nt",
-    "Saṃyutta Nikāya 12.21 (SN12.21); lit. discourse on ten powers",
+    "Saṁyutta Nikāya 12.21 (SN12.21); lit. discourse on ten powers",
     "✔"
    ],
    [
     "dutiyadasabalasutta",
     "nt",
-    "Saṃyutta Nikāya 12.22 (SN12.22); lit. second discourse on ten powers",
+    "Saṁyutta Nikāya 12.22 (SN12.22); lit. second discourse on ten powers",
     "✔"
    ],
    [
     "upanisasutta",
     "nt",
-    "Saṃyutta Nikāya 12.23 (SN12.23); lit. discourse on preconditions",
+    "Saṁyutta Nikāya 12.23 (SN12.23); lit. discourse on preconditions",
     "✔"
    ],
    [
     "aññatitthiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.24 (SN12.24); lit. discourse on followers of other religion",
+    "Saṁyutta Nikāya 12.24 (SN12.24); lit. discourse on followers of other religion",
     "✔"
    ],
    [
     "bhūmijasutta 2",
     "nt",
-    "Saṃyutta Nikāya 12.25 (SN12.25); lit. discourse with Bhūmija",
+    "Saṁyutta Nikāya 12.25 (SN12.25); lit. discourse with Bhūmija",
     "✔"
    ],
    [
     "upavāṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.26 (SN12.26); lit. discourse with Upavāṇa",
+    "Saṁyutta Nikāya 12.26 (SN12.26); lit. discourse with Upavāṇa",
     "✔"
    ],
    [
     "paccayasutta 2",
     "nt",
-    "Saṃyutta Nikāya 12.27 (SN12.27); lit. discourse on conditions",
+    "Saṁyutta Nikāya 12.27 (SN12.27); lit. discourse on conditions",
     "✔"
    ],
    [
     "bhikkhusutta 01",
     "nt",
-    "Saṃyutta Nikāya 12.28 (SN12.28); lit. discourse on a monk",
+    "Saṁyutta Nikāya 12.28 (SN12.28); lit. discourse on a monk",
     "✔"
    ],
    [
     "samaṇabrāhmaṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 12.29 (SN12.29); lit. discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 12.29 (SN12.29); lit. discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "dutiyasamaṇabrāhmaṇasutta 02",
     "nt",
-    "Saṃyutta Nikāya 12.30 (SN12.30); lit. second discourse on ascetics and Brahmans",
+    "Saṁyutta Nikāya 12.30 (SN12.30); lit. second discourse on ascetics and Brahmans",
     "✔"
    ],
    [
     "bhūtasutta",
     "nt",
-    "Saṃyutta Nikāya 12.31 (SN12.31); lit. discourse on become",
+    "Saṁyutta Nikāya 12.31 (SN12.31); lit. discourse on become",
     "✔"
    ],
    [
     "kaḷārasutta",
     "nt",
-    "Saṃyutta Nikāya 12.32 (SN12.32); lit. discourse with Kaḷāra",
+    "Saṁyutta Nikāya 12.32 (SN12.32); lit. discourse with Kaḷāra",
     "✔"
    ],
    [
     "ñāṇavatthusutta",
     "nt",
-    "Saṃyutta Nikāya 12.33 (SN12.33); lit. discourse on the grounds for knowledge",
+    "Saṁyutta Nikāya 12.33 (SN12.33); lit. discourse on the grounds for knowledge",
     "✔"
    ],
    [
     "dutiyañāṇavatthusutta",
     "nt",
-    "Saṃyutta Nikāya 12.34 (SN12.34); lit. second discourse on the grounds for knowledge",
+    "Saṁyutta Nikāya 12.34 (SN12.34); lit. second discourse on the grounds for knowledge",
     "✔"
    ],
    [
     "avijjāpaccayasutta",
     "nt",
-    "Saṃyutta Nikāya 12.35 (SN12.35); lit. discourse on dependent on ignorance",
+    "Saṁyutta Nikāya 12.35 (SN12.35); lit. discourse on dependent on ignorance",
     "✔"
    ],
    [
     "dutiyaavijjāpaccayasutta",
     "nt",
-    "Saṃyutta Nikāya 12.36 (SN12.36); lit. second discourse on dependent on ignorance",
+    "Saṁyutta Nikāya 12.36 (SN12.36); lit. second discourse on dependent on ignorance",
     "✔"
    ],
    [
     "natumhasutta",
     "nt",
-    "Saṃyutta Nikāya 12.37 (SN12.37); lit. discourse on not you",
+    "Saṁyutta Nikāya 12.37 (SN12.37); lit. discourse on not you",
     "✔"
    ],
    [
     "cetanāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.38 (SN12.38); lit. discourse on intending",
+    "Saṁyutta Nikāya 12.38 (SN12.38); lit. discourse on intending",
     "✔"
    ],
    [
     "dutiyacetanāsutta",
     "nt",
-    "Saṃyutta Nikāya 12.39 (SN12.39); lit. second discourse on intending",
+    "Saṁyutta Nikāya 12.39 (SN12.39); lit. second discourse on intending",
     "✔"
    ],
    [
     "tatiyacetanāsutta",
     "nt",
-    "Saṃyutta Nikāya 12.40 (SN12.40); lit. third discourse on intending",
+    "Saṁyutta Nikāya 12.40 (SN12.40); lit. third discourse on intending",
     "✔"
    ],
    [
     "pañcaverabhayasutta",
     "nt",
-    "Saṃyutta Nikāya 12.41 (SN12.41); lit. discourse on five fears and enmities",
+    "Saṁyutta Nikāya 12.41 (SN12.41); lit. discourse on five fears and enmities",
     "✔"
    ],
    [
     "dutiyapañcaverabhayasutta",
     "nt",
-    "Saṃyutta Nikāya 12.42 (SN12.42); lit. second discourse on five fears and enmities",
+    "Saṁyutta Nikāya 12.42 (SN12.42); lit. second discourse on five fears and enmities",
     "✔"
    ],
    [
     "dukkhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.43 (SN12.43); lit. discourse on suffering",
+    "Saṁyutta Nikāya 12.43 (SN12.43); lit. discourse on suffering",
     "✔"
    ],
    [
     "ñātikasutta",
     "nt",
-    "Saṃyutta Nikāya 12.45 (SN12.45); lit. discourse at Ñātika",
+    "Saṁyutta Nikāya 12.45 (SN12.45); lit. discourse at Ñātika",
     "✔"
    ],
    [
     "aññatarabrāhmaṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.46 (SN12.46); lit. discourse on a certain Brahman",
+    "Saṁyutta Nikāya 12.46 (SN12.46); lit. discourse on a certain Brahman",
     "✔"
    ],
    [
     "jāṇussoṇisutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.47 (SN12.47); lit. discourse with Jāṇussoṇi",
+    "Saṁyutta Nikāya 12.47 (SN12.47); lit. discourse with Jāṇussoṇi",
     "✔"
    ],
    [
     "lokāyatikasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.48 (SN12.48); lit. discourse on natural philosophy",
+    "Saṁyutta Nikāya 12.48 (SN12.48); lit. discourse on natural philosophy",
     "✔"
    ],
    [
     "ariyasāvakasutta",
     "nt",
-    "Saṃyutta Nikāya 12.49 (SN12.49); lit. discourse on the disciple of the noble ones",
+    "Saṁyutta Nikāya 12.49 (SN12.49); lit. discourse on the disciple of the noble ones",
     "✔"
    ],
    [
     "dutiyaariyasāvakasutta",
     "nt",
-    "Saṃyutta Nikāya 12.50 (SN12.50); lit. second discourse on the disciple of the noble ones",
+    "Saṁyutta Nikāya 12.50 (SN12.50); lit. second discourse on the disciple of the noble ones",
     "✔"
    ],
    [
-    "parivīmaṃsanasutta",
+    "parivīmaṁsanasutta",
     "nt",
-    "Saṃyutta Nikāya 12.51 (SN12.51); lit. discourse on investigating",
+    "Saṁyutta Nikāya 12.51 (SN12.51); lit. discourse on investigating",
     "✔"
    ],
    [
     "upādānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.52 (SN12.52); lit. discourse on grasping",
+    "Saṁyutta Nikāya 12.52 (SN12.52); lit. discourse on grasping",
     "✔"
    ],
    [
-    "dutiyasaṃyojanasutta",
+    "dutiyasaṁyojanasutta",
     "nt",
-    "Saṃyutta Nikāya 12.54 (SN12.54); lit. second discourse on fetters",
+    "Saṁyutta Nikāya 12.54 (SN12.54); lit. second discourse on fetters",
     "✔"
    ],
    [
     "mahārukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 12.55 (SN12.55); lit. discourse on the big tree",
+    "Saṁyutta Nikāya 12.55 (SN12.55); lit. discourse on the big tree",
     "✔"
    ],
    [
     "dutiyamahārukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 12.56 (SN12.56); lit. second discourse on the big tree",
+    "Saṁyutta Nikāya 12.56 (SN12.56); lit. second discourse on the big tree",
     "✔"
    ],
    [
     "taruṇarukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 12.57 (SN12.57); lit. discourse on the young tree",
+    "Saṁyutta Nikāya 12.57 (SN12.57); lit. discourse on the young tree",
     "✔"
    ],
    [
     "nāmarūpasutta",
     "nt",
-    "Saṃyutta Nikāya 12.58 (SN12.58); lit. discourse on name and form",
+    "Saṁyutta Nikāya 12.58 (SN12.58); lit. discourse on name and form",
     "✔"
    ],
    [
     "viññāṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.59 (SN12.59); lit. discourse on consciousness",
+    "Saṁyutta Nikāya 12.59 (SN12.59); lit. discourse on consciousness",
     "✔"
    ],
    [
     "nidānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 12.60 (SN12.60); lit. discourse on the origin",
+    "Saṁyutta Nikāya 12.60 (SN12.60); lit. discourse on the origin",
     "✔"
    ],
    [
     "assutavāsutta",
     "nt",
-    "Saṃyutta Nikāya 12.61 (SN12.61); lit. discourse on the unlearned",
+    "Saṁyutta Nikāya 12.61 (SN12.61); lit. discourse on the unlearned",
     "✔"
    ],
    [
     "dutiyaassutavāsutta",
     "nt",
-    "Saṃyutta Nikāya 12.62 (SN12.62); lit. second discourse on the unlearned",
+    "Saṁyutta Nikāya 12.62 (SN12.62); lit. second discourse on the unlearned",
     "✔"
    ],
    [
-    "puttamaṃsūpamasutta",
+    "puttamaṁsūpamasutta",
     "nt",
-    "Saṃyutta Nikāya 12.63 (SN12.63); lit. discourse with the simile of the son's flesh",
+    "Saṁyutta Nikāya 12.63 (SN12.63); lit. discourse with the simile of the son's flesh",
     "✔"
    ],
    [
     "atthirāgasutta",
     "nt",
-    "Saṃyutta Nikāya 12.64 (SN12.64); lit. discourse on (if) there is desire",
+    "Saṁyutta Nikāya 12.64 (SN12.64); lit. discourse on (if) there is desire",
     "✔"
    ],
    [
     "nagarasutta",
     "nt",
-    "Saṃyutta Nikāya 12.65 (SN12.65); lit. discourse on the town",
+    "Saṁyutta Nikāya 12.65 (SN12.65); lit. discourse on the town",
     "✔"
    ],
    [
     "sammasasutta",
     "nt",
-    "Saṃyutta Nikāya 12.66 (SN12.66); lit. discourse on understanding",
+    "Saṁyutta Nikāya 12.66 (SN12.66); lit. discourse on understanding",
     "✔"
    ],
    [
     "naḷakalāpīsutta",
     "nt",
-    "Saṃyutta Nikāya 12.67 (SN12.67); lit. discourse on the bundle of reeds",
+    "Saṁyutta Nikāya 12.67 (SN12.67); lit. discourse on the bundle of reeds",
     "✔"
    ],
    [
     "kosambisutta",
     "nt",
-    "Saṃyutta Nikāya 12.68 (SN12.68); lit. discourse on Kosambī",
+    "Saṁyutta Nikāya 12.68 (SN12.68); lit. discourse on Kosambī",
     "✔"
    ],
    [
     "upayantisutta",
     "nt",
-    "Saṃyutta Nikāya 12.69 (SN12.69); lit. discourse on surging",
+    "Saṁyutta Nikāya 12.69 (SN12.69); lit. discourse on surging",
     "✔"
    ],
    [
     "susimasutta 2",
     "nt",
-    "Saṃyutta Nikāya 12.70 (SN12.70); lit. discourse with Susima",
+    "Saṁyutta Nikāya 12.70 (SN12.70); lit. discourse with Susima",
     "✔"
    ],
    [
     "jarāmaraṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 12.71 (SN12.71); lit. discourse on old age and death",
+    "Saṁyutta Nikāya 12.71 (SN12.71); lit. discourse on old age and death",
     "✔"
    ],
    [
     "jātisuttādidasaka",
     "nt",
-    "Saṃyutta Nikāya 12.72-81 (SN12.72-81); lit. group of ten discourses beginning with the discourse on birth",
+    "Saṁyutta Nikāya 12.72-81 (SN12.72-81); lit. group of ten discourses beginning with the discourse on birth",
     "✔"
    ],
    [
     "satthusutta",
     "nt",
-    "Saṃyutta Nikāya 12.82 (SN12.82); lit. discourse on the teacher",
+    "Saṁyutta Nikāya 12.82 (SN12.82); lit. discourse on the teacher",
     "✔"
    ],
    [
     "dutiyasatthusuttādidasaka",
     "nt",
-    "Saṃyutta Nikāya 12.83-92 (SN12.83-92); lit. ten discourses starting with the second discourse about the teacher",
+    "Saṁyutta Nikāya 12.83-92 (SN12.83-92); lit. ten discourses starting with the second discourse about the teacher",
     "✔"
    ],
    [
     "sikkhāsuttādipeyyālaekādasaka",
     "nt",
-    "Saṃyutta Nikāya 12.93-103 (SN12.93-103); lit. group of eleven elided discourses starting with the discourse on training",
+    "Saṁyutta Nikāya 12.93-103 (SN12.93-103); lit. group of eleven elided discourses starting with the discourse on training",
     "✔"
    ]
   ],
   "count": 73
  },
- "suttas of Saṃyutta Nikāya 41": {
+ "suttas of Saṁyutta Nikāya 41": {
   "data": [
    [
     "paṭhamaisidattasutta",
     "nt",
-    "Saṃyutta Nikāya 41.2 (SN41.2); lit. first discourse on Isidatta",
+    "Saṁyutta Nikāya 41.2 (SN41.2); lit. first discourse on Isidatta",
     "✔"
    ],
    [
     "dutiyaisidattasutta",
     "nt",
-    "Saṃyutta Nikāya 41.3 (SN41.3); lit. second discourse on Isidatta",
+    "Saṁyutta Nikāya 41.3 (SN41.3); lit. second discourse on Isidatta",
     "✔"
    ],
    [
     "mahakapāṭihāriyasutta",
     "nt",
-    "Saṃyutta Nikāya 41.4 (SN41.4); lit. discourse on Mahaka's miracle",
+    "Saṁyutta Nikāya 41.4 (SN41.4); lit. discourse on Mahaka's miracle",
     "✔"
    ],
    [
     "paṭhamakāmabhūsutta",
     "nt",
-    "Saṃyutta Nikāya 41.5 (SN41.5); lit. first discourse with Kāmabhū",
+    "Saṁyutta Nikāya 41.5 (SN41.5); lit. first discourse with Kāmabhū",
     "✔"
    ],
    [
     "dutiyakāmabhūsutta",
     "nt",
-    "Saṃyutta Nikāya 41.6 (SN41.6); lit. second discourse with Kāmabhū",
+    "Saṁyutta Nikāya 41.6 (SN41.6); lit. second discourse with Kāmabhū",
     "✔"
    ],
    [
     "godattasutta",
     "nt",
-    "Saṃyutta Nikāya 41.7 (SN41.7); lit. discourse with Godatta",
+    "Saṁyutta Nikāya 41.7 (SN41.7); lit. discourse with Godatta",
     "✔"
    ],
    [
     "nigaṇṭhanāṭaputtasutta",
     "nt",
-    "Saṃyutta Nikāya 41.8 (SN41.8); lit. discourse with Mahāvīra",
+    "Saṁyutta Nikāya 41.8 (SN41.8); lit. discourse with Mahāvīra",
     "✔"
    ],
    [
     "acelakassapasutta 2",
     "nt",
-    "Saṃyutta Nikāya 41.9 (SN41.9); lit. discourse with naked Kassapa",
+    "Saṁyutta Nikāya 41.9 (SN41.9); lit. discourse with naked Kassapa",
     "✔"
    ],
    [
     "gilānadassanasutta",
     "nt",
-    "Saṃyutta Nikāya 41.10 (SN41.10); lit. discourse on visiting the sick",
+    "Saṁyutta Nikāya 41.10 (SN41.10); lit. discourse on visiting the sick",
     "✔"
    ],
    [
@@ -32920,486 +32920,486 @@ var family_set_json = {
   ],
   "count": 255
  },
- "suttas of Saṃyutta Nikāya 1": {
+ "suttas of Saṁyutta Nikāya 1": {
   "data": [
    [
     "oghataraṇasutta",
     "nt",
-    "Saṃyutta Nikāya 1.1 (SN1.1); lit. discourse on crossing the flood",
+    "Saṁyutta Nikāya 1.1 (SN1.1); lit. discourse on crossing the flood",
     "✔"
    ],
    [
     "nimokkhasutta",
     "nt",
-    "Saṃyutta Nikāya 1.2 (SN1.2); lit. discourse on release",
+    "Saṁyutta Nikāya 1.2 (SN1.2); lit. discourse on release",
     "✔"
    ],
    [
     "upanīyasutta",
     "nt",
-    "Saṃyutta Nikāya 1.3 (SN1.3); lit. discourse on being carried away",
+    "Saṁyutta Nikāya 1.3 (SN1.3); lit. discourse on being carried away",
     "✔"
    ],
    [
     "accentisutta",
     "nt",
-    "Saṃyutta Nikāya 1.4 (SN1.4); lit. discourse on they pass by",
+    "Saṁyutta Nikāya 1.4 (SN1.4); lit. discourse on they pass by",
     "✔"
    ],
    [
     "katichindasutta",
     "nt",
-    "Saṃyutta Nikāya 1.5 (SN1.5); lit. discourse on cut how many",
+    "Saṁyutta Nikāya 1.5 (SN1.5); lit. discourse on cut how many",
     "✔"
    ],
    [
     "jāgarasutta",
     "nt",
-    "Saṃyutta Nikāya 1.6 (SN1.6); lit. discourse on being awake",
+    "Saṁyutta Nikāya 1.6 (SN1.6); lit. discourse on being awake",
     "✔"
    ],
    [
     "appaṭividitasutta",
     "nt",
-    "Saṃyutta Nikāya 1.7 (SN1.7); lit. discourse on not understood",
+    "Saṁyutta Nikāya 1.7 (SN1.7); lit. discourse on not understood",
     "✔"
    ],
    [
     "susammuṭṭhasutta",
     "nt",
-    "Saṃyutta Nikāya 1.8 (SN1.8); lit. discourse on completely confused",
+    "Saṁyutta Nikāya 1.8 (SN1.8); lit. discourse on completely confused",
     "✔"
    ],
    [
     "mānakāmasutta",
     "nt",
-    "Saṃyutta Nikāya 1.9 (SN1.9); lit. discourse on fond of conceit",
+    "Saṁyutta Nikāya 1.9 (SN1.9); lit. discourse on fond of conceit",
     "✔"
    ],
    [
     "araññasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.10 (SN1.10); lit. discourse on the forest",
+    "Saṁyutta Nikāya 1.10 (SN1.10); lit. discourse on the forest",
     "✔"
    ],
    [
     "nandanasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.11 (SN1.11); lit. discourse on Nandana grove",
+    "Saṁyutta Nikāya 1.11 (SN1.11); lit. discourse on Nandana grove",
     "✔"
    ],
    [
     "nandatisutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.12 (SN1.12); lit. discourse on one rejoices",
+    "Saṁyutta Nikāya 1.12 (SN1.12); lit. discourse on one rejoices",
     "✔"
    ],
    [
     "natthiputtasamasutta",
     "nt",
-    "Saṃyutta Nikāya 1.13 (SN1.13); lit. discourse on not equal to one's children",
+    "Saṁyutta Nikāya 1.13 (SN1.13); lit. discourse on not equal to one's children",
     "✔"
    ],
    [
     "khattiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.14 (SN1.14); lit. discourse on the warrior",
+    "Saṁyutta Nikāya 1.14 (SN1.14); lit. discourse on the warrior",
     "✔"
    ],
    [
     "saṇamānasutta",
     "nt",
-    "Saṃyutta Nikāya 1.15 (SN1.15); lit. discourse on making a noise",
+    "Saṁyutta Nikāya 1.15 (SN1.15); lit. discourse on making a noise",
     "✔"
    ],
    [
     "niddātandīsutta",
     "nt",
-    "Saṃyutta Nikāya 1.16 (SN1.16); lit. discourse on sleep and laziness",
+    "Saṁyutta Nikāya 1.16 (SN1.16); lit. discourse on sleep and laziness",
     "✔"
    ],
    [
     "dukkarasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.17 (SN1.17); lit. discourse on difficult to do",
+    "Saṁyutta Nikāya 1.17 (SN1.17); lit. discourse on difficult to do",
     "✔"
    ],
    [
     "hirīsutta",
     "nt",
-    "Saṃyutta Nikāya 1.18 (SN1.18); lit. discourse on conscience",
+    "Saṁyutta Nikāya 1.18 (SN1.18); lit. discourse on conscience",
     "✔"
    ],
    [
     "kuṭikāsutta",
     "nt",
-    "Saṃyutta Nikāya 1.19 (SN1.19); lit. discourse on the little hut",
+    "Saṁyutta Nikāya 1.19 (SN1.19); lit. discourse on the little hut",
     "✔"
    ],
    [
     "samiddhisutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.20 (SN1.20); lit. discourse with Samiddhi",
+    "Saṁyutta Nikāya 1.20 (SN1.20); lit. discourse with Samiddhi",
     "✔"
    ],
    [
     "sattisutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.21 (SN1.21); lit. discourse on the spear",
+    "Saṁyutta Nikāya 1.21 (SN1.21); lit. discourse on the spear",
     "✔"
    ],
    [
     "phusatisutta",
     "nt",
-    "Saṃyutta Nikāya 1.22 (SN1.22); lit. discourse on it affects",
+    "Saṁyutta Nikāya 1.22 (SN1.22); lit. discourse on it affects",
     "✔"
    ],
    [
     "jaṭāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.23 (SN1.23); lit. discourse on the tangle",
+    "Saṁyutta Nikāya 1.23 (SN1.23); lit. discourse on the tangle",
     "✔"
    ],
    [
     "manonivāraṇasutta",
     "nt",
-    "Saṃyutta Nikāya 1.24 (SN1.24); lit. discourse on mental obstruction",
+    "Saṁyutta Nikāya 1.24 (SN1.24); lit. discourse on mental obstruction",
     "✔"
    ],
    [
     "arahantasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.25 (SN1.25); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 1.25 (SN1.25); lit. discourse on the arahant",
     "✔"
    ],
    [
     "pajjotasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.26 (SN1.26); lit. discourse on the lamp",
+    "Saṁyutta Nikāya 1.26 (SN1.26); lit. discourse on the lamp",
     "✔"
    ],
    [
     "sarasutta",
     "nt",
-    "Saṃyutta Nikāya 1.27 (SN1.27); lit. discourse on streams",
+    "Saṁyutta Nikāya 1.27 (SN1.27); lit. discourse on streams",
     "✔"
    ],
    [
     "mahaddhanasutta",
     "nt",
-    "Saṃyutta Nikāya 1.28 (SN1.28); lit. discourse on great wealth",
+    "Saṁyutta Nikāya 1.28 (SN1.28); lit. discourse on great wealth",
     "✔"
    ],
    [
     "catucakkasutta",
     "nt",
-    "Saṃyutta Nikāya 1.29 (SN1.29); lit. discourse on having four wheels",
+    "Saṁyutta Nikāya 1.29 (SN1.29); lit. discourse on having four wheels",
     "✔"
    ],
    [
     "eṇijaṅghasutta",
     "nt",
-    "Saṃyutta Nikāya 1.30 (SN1.30); lit. discourse on having calves like an antelope",
+    "Saṁyutta Nikāya 1.30 (SN1.30); lit. discourse on having calves like an antelope",
     "✔"
    ],
    [
     "sabbhisutta",
     "nt",
-    "Saṃyutta Nikāya 1.31 (SN1.31); lit. discourse on with the wise",
+    "Saṁyutta Nikāya 1.31 (SN1.31); lit. discourse on with the wise",
     "✔"
    ],
    [
     "maccharisutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.32 (SN1.32); lit. discourse on the miser",
+    "Saṁyutta Nikāya 1.32 (SN1.32); lit. discourse on the miser",
     "✔"
    ],
    [
     "sādhusutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.33 (SN1.33); lit. discourse on good",
+    "Saṁyutta Nikāya 1.33 (SN1.33); lit. discourse on good",
     "✔"
    ],
    [
     "nasantisutta",
     "nt",
-    "Saṃyutta Nikāya 1.34 (SN1.34); lit. discourse on they do not exist",
+    "Saṁyutta Nikāya 1.34 (SN1.34); lit. discourse on they do not exist",
     "✔"
    ],
    [
     "ujjhānasaññisutta",
     "nt",
-    "Saṃyutta Nikāya 1.35 (SN1.35); lit. discourse on perceiving fault",
+    "Saṁyutta Nikāya 1.35 (SN1.35); lit. discourse on perceiving fault",
     "✔"
    ],
    [
     "saddhāsutta",
     "nt",
-    "Saṃyutta Nikāya 1.36 (SN1.36); lit. discourse on faith",
+    "Saṁyutta Nikāya 1.36 (SN1.36); lit. discourse on faith",
     "✔"
    ],
    [
     "samayasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.37 (SN1.37); lit. discourse on the gathering",
+    "Saṁyutta Nikāya 1.37 (SN1.37); lit. discourse on the gathering",
     "✔"
    ],
    [
     "sakalikasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.38 (SN1.38); lit. discourse on the splinter",
+    "Saṁyutta Nikāya 1.38 (SN1.38); lit. discourse on the splinter",
     "✔"
    ],
    [
     "paṭhamapajjunnadhītusutta",
     "nt",
-    "Saṃyutta Nikāya 1.39 (SN1.39); lit. first discourse with Pajjunna's daughter",
+    "Saṁyutta Nikāya 1.39 (SN1.39); lit. first discourse with Pajjunna's daughter",
     "✔"
    ],
    [
     "dutiyapajjunnadhītusutta",
     "nt",
-    "Saṃyutta Nikāya 1.40 (SN1.40); lit. second discourse with Pajjunna's daughter",
+    "Saṁyutta Nikāya 1.40 (SN1.40); lit. second discourse with Pajjunna's daughter",
     "✔"
    ],
    [
     "ādittasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.41 (SN1.41); lit. discourse on burning",
+    "Saṁyutta Nikāya 1.41 (SN1.41); lit. discourse on burning",
     "✔"
    ],
    [
-    "kiṃdadasutta",
+    "kiṁdadasutta",
     "nt",
-    "Saṃyutta Nikāya 1.42 (SN1.42); lit. discourse on giving what",
+    "Saṁyutta Nikāya 1.42 (SN1.42); lit. discourse on giving what",
     "✔"
    ],
    [
     "annasutta",
     "nt",
-    "Saṃyutta Nikāya 1.43 (SN1.43); lit. discourse on food",
+    "Saṁyutta Nikāya 1.43 (SN1.43); lit. discourse on food",
     "✔"
    ],
    [
     "ekamūlasutta",
     "nt",
-    "Saṃyutta Nikāya 1.44 (SN1.44); lit. discourse on having one root",
+    "Saṁyutta Nikāya 1.44 (SN1.44); lit. discourse on having one root",
     "✔"
    ],
    [
     "anomasutta",
     "nt",
-    "Saṃyutta Nikāya 1.45 (SN1.45); lit. discourse on supreme",
+    "Saṁyutta Nikāya 1.45 (SN1.45); lit. discourse on supreme",
     "✔"
    ],
    [
     "accharāsutta",
     "nt",
-    "Saṃyutta Nikāya 1.46 (SN1.46); lit. discourse on the nymphs",
+    "Saṁyutta Nikāya 1.46 (SN1.46); lit. discourse on the nymphs",
     "✔"
    ],
    [
     "vanaropasutta",
     "nt",
-    "Saṃyutta Nikāya 1.47 (SN1.47); lit. discourse on the planter of forests",
+    "Saṁyutta Nikāya 1.47 (SN1.47); lit. discourse on the planter of forests",
     "✔"
    ],
    [
     "jetavanasutta",
     "nt",
-    "Saṃyutta Nikāya 1.48 (SN1.48); lit. discourse n Victor's wood",
+    "Saṁyutta Nikāya 1.48 (SN1.48); lit. discourse n Victor's wood",
     "✔"
    ],
    [
     "maccharisutta 2",
     "nt",
-    "Saṃyutta Nikāya 1.49 (SN1.49); lit. discourse on stingy",
+    "Saṁyutta Nikāya 1.49 (SN1.49); lit. discourse on stingy",
     "✔"
    ],
    [
     "ghaṭīkārasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.50 (SN1.50); lit. discourse with Ghaṭīkāra",
+    "Saṁyutta Nikāya 1.50 (SN1.50); lit. discourse with Ghaṭīkāra",
     "✔"
    ],
    [
     "jarāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.51 (SN1.51); lit. discourse on old age",
+    "Saṁyutta Nikāya 1.51 (SN1.51); lit. discourse on old age",
     "✔"
    ],
    [
     "ajarasāsutta",
     "nt",
-    "Saṃyutta Nikāya 1.52 (SN1.52); lit. discourse on not deteriorating",
+    "Saṁyutta Nikāya 1.52 (SN1.52); lit. discourse on not deteriorating",
     "✔"
    ],
    [
     "mittasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.53 (SN1.53); lit. discourse on the friend",
+    "Saṁyutta Nikāya 1.53 (SN1.53); lit. discourse on the friend",
     "✔"
    ],
    [
     "vatthusutta",
     "nt",
-    "Saṃyutta Nikāya 1.54 (SN1.54); lit. discourse on the basis",
+    "Saṁyutta Nikāya 1.54 (SN1.54); lit. discourse on the basis",
     "✔"
    ],
    [
     "paṭhamajanasutta",
     "nt",
-    "Saṃyutta Nikāya 1.55 (SN1.55); lit. first discourse on people",
+    "Saṁyutta Nikāya 1.55 (SN1.55); lit. first discourse on people",
     "✔"
    ],
    [
     "dutiyajanasutta",
     "nt",
-    "Saṃyutta Nikāya 1.56 (SN1.56); lit. second discourse on people",
+    "Saṁyutta Nikāya 1.56 (SN1.56); lit. second discourse on people",
     "✔"
    ],
    [
     "tatiyajanasutta",
     "nt",
-    "Saṃyutta Nikāya 1.57 (SN1.57); lit. third discourse on people",
+    "Saṁyutta Nikāya 1.57 (SN1.57); lit. third discourse on people",
     "✔"
    ],
    [
     "uppathasutta",
     "nt",
-    "Saṃyutta Nikāya 1.58 (SN1.58); lit. discourse on the wrong path",
+    "Saṁyutta Nikāya 1.58 (SN1.58); lit. discourse on the wrong path",
     "✔"
    ],
    [
     "dutiyasutta 2",
     "nt",
-    "Saṃyutta Nikāya 1.59 (SN1.59); lit. second discourse",
+    "Saṁyutta Nikāya 1.59 (SN1.59); lit. second discourse",
     "✔"
    ],
    [
     "kavisutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.60 (SN1.60); lit. discourse on poets",
+    "Saṁyutta Nikāya 1.60 (SN1.60); lit. discourse on poets",
     "✔"
    ],
    [
     "nāmasutta",
     "nt",
-    "Saṃyutta Nikāya 1.61 (SN1.61); lit. discourse on name",
+    "Saṁyutta Nikāya 1.61 (SN1.61); lit. discourse on name",
     "✔"
    ],
    [
     "cittasutta",
     "nt",
-    "Saṃyutta Nikāya 1.62 (SN1.62); lit. discourse on the mind",
+    "Saṁyutta Nikāya 1.62 (SN1.62); lit. discourse on the mind",
     "✔"
    ],
    [
     "taṇhāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.63 (SN1.63); lit. discourse on craving",
+    "Saṁyutta Nikāya 1.63 (SN1.63); lit. discourse on craving",
     "✔"
    ],
    [
     "bandhanasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.65 (SN1.65); lit. discourse on bonds",
+    "Saṁyutta Nikāya 1.65 (SN1.65); lit. discourse on bonds",
     "✔"
    ],
    [
     "attahatasutta",
     "nt",
-    "Saṃyutta Nikāya 1.66 (SN1.66); lit. discourse on beaten",
+    "Saṁyutta Nikāya 1.66 (SN1.66); lit. discourse on beaten",
     "✔"
    ],
    [
     "uḍḍitasutta",
     "nt",
-    "Saṃyutta Nikāya 1.67 (SN1.67); lit. discourse on ensnared",
+    "Saṁyutta Nikāya 1.67 (SN1.67); lit. discourse on ensnared",
     "✔"
    ],
    [
     "pihitasutta",
     "nt",
-    "Saṃyutta Nikāya 1.68 (SN1.68); lit. discourse on shut off",
+    "Saṁyutta Nikāya 1.68 (SN1.68); lit. discourse on shut off",
     "✔"
    ],
    [
     "icchāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.69 (SN1.69); lit. discourse on desire",
+    "Saṁyutta Nikāya 1.69 (SN1.69); lit. discourse on desire",
     "✔"
    ],
    [
     "lokasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.70 (SN1.70); lit. discourse on the world",
+    "Saṁyutta Nikāya 1.70 (SN1.70); lit. discourse on the world",
     "✔"
    ],
    [
     "chetvāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.71 (SN1.71); lit. discourse on having cut",
+    "Saṁyutta Nikāya 1.71 (SN1.71); lit. discourse on having cut",
     "✔"
    ],
    [
     "rathasutta",
     "nt",
-    "Saṃyutta Nikāya 1.72 (SN1.72); lit. discourse on the chariot",
+    "Saṁyutta Nikāya 1.72 (SN1.72); lit. discourse on the chariot",
     "✔"
    ],
    [
     "vittasutta",
     "nt",
-    "Saṃyutta Nikāya 1.73 (SN1.73); lit. discourse on wealth",
+    "Saṁyutta Nikāya 1.73 (SN1.73); lit. discourse on wealth",
     "✔"
    ],
    [
     "vuṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 1.74 (SN1.74); lit. discourse on rain",
+    "Saṁyutta Nikāya 1.74 (SN1.74); lit. discourse on rain",
     "✔"
    ],
    [
     "bhītāsutta",
     "nt",
-    "Saṃyutta Nikāya 1.75 (SN1.75); lit. discourse on afraid",
+    "Saṁyutta Nikāya 1.75 (SN1.75); lit. discourse on afraid",
     "✔"
    ],
    [
     "najīratisutta",
     "nt",
-    "Saṃyutta Nikāya 1.76 (SN1.76); lit. discourse on does not age",
+    "Saṁyutta Nikāya 1.76 (SN1.76); lit. discourse on does not age",
     "✔"
    ],
    [
     "issariyasutta",
     "nt",
-    "Saṃyutta Nikāya 1.77 (SN1.77); lit. discourse on dominion",
+    "Saṁyutta Nikāya 1.77 (SN1.77); lit. discourse on dominion",
     "✔"
    ],
    [
     "kāmasutta 1",
     "nt",
-    "Saṃyutta Nikāya 1.78 (SN1.78); lit. discourse on desire",
+    "Saṁyutta Nikāya 1.78 (SN1.78); lit. discourse on desire",
     "✔"
    ],
    [
     "pātheyyasutta",
     "nt",
-    "Saṃyutta Nikāya 1.79 (SN1.79); lit. discourse on provisions for a journey",
+    "Saṁyutta Nikāya 1.79 (SN1.79); lit. discourse on provisions for a journey",
     "✔"
    ],
    [
     "pajjotasutta 2",
     "nt",
-    "Saṃyutta Nikāya 1.80 (SN1.80); lit. discourse on the lamp",
+    "Saṁyutta Nikāya 1.80 (SN1.80); lit. discourse on the lamp",
     "✔"
    ],
    [
     "araṇasutta",
     "nt",
-    "Saṃyutta Nikāya 1.81 (SN1.81); lit. sutta on not conflicting",
+    "Saṁyutta Nikāya 1.81 (SN1.81); lit. sutta on not conflicting",
     "✔"
    ],
    [
@@ -33948,7 +33948,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "mahiṃsa",
+    "mahiṁsa",
     "masc",
     "buffalo",
     "✔"
@@ -34092,7 +34092,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "haṃsa 1.1",
+    "haṁsa 1.1",
     "masc",
     "swan; goose; flamingo; water bird",
     "✔"
@@ -34802,19 +34802,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kiṃpakka",
+    "kiṁpakka",
     "nt",
     "poisonous fruit; lit. what fruit?",
     "◑"
    ],
    [
-    "kiṃphala 2",
+    "kiṁphala 2",
     "nt",
     "poisonous fruit; lit. what fruit?",
     "◑"
    ],
    [
-    "kiṃsuka",
+    "kiṁsuka",
     "masc",
     "Bastard Teak; Parrot tree; Butea Monosperma",
     "✔"
@@ -35290,7 +35290,7 @@ var family_set_json = {
    [
     "pāricchattaka 2",
     "masc",
-    "name of a tree in tree in Tāvatiṃsa heaven; lit. coral tree",
+    "name of a tree in tree in Tāvatiṁsa heaven; lit. coral tree",
     "✔"
    ],
    [
@@ -35308,7 +35308,7 @@ var family_set_json = {
    [
     "pārichattaka 2",
     "masc",
-    "name of a tree in Tāvatiṃsa heaven; lit. umbrella all around",
+    "name of a tree in Tāvatiṁsa heaven; lit. umbrella all around",
     "✔"
    ],
    [
@@ -35666,7 +35666,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vaṃsa 1",
+    "vaṁsa 1",
     "masc",
     "bamboo",
     "✔"
@@ -35822,7 +35822,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "siṃsapā",
+    "siṁsapā",
     "fem",
     "Simsapa tree; Dalbergia tree; Indian Rosewood",
     "✔"
@@ -36055,7 +36055,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kiṃsuka",
+    "kiṁsuka",
     "masc",
     "Bastard Teak; Parrot tree; Butea Monosperma",
     "✔"
@@ -36279,7 +36279,7 @@ var family_set_json = {
    [
     "pāricchattaka 2",
     "masc",
-    "name of a tree in tree in Tāvatiṃsa heaven; lit. coral tree",
+    "name of a tree in tree in Tāvatiṁsa heaven; lit. coral tree",
     "✔"
    ],
    [
@@ -36297,7 +36297,7 @@ var family_set_json = {
    [
     "pārichattaka 2",
     "masc",
-    "name of a tree in Tāvatiṃsa heaven; lit. umbrella all around",
+    "name of a tree in Tāvatiṁsa heaven; lit. umbrella all around",
     "✔"
    ],
    [
@@ -36445,7 +36445,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "vaṃsa 1",
+    "vaṁsa 1",
     "masc",
     "bamboo",
     "✔"
@@ -36511,7 +36511,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "siṃsapā",
+    "siṁsapā",
     "fem",
     "Simsapa tree; Dalbergia tree; Indian Rosewood",
     "✔"
@@ -36537,1218 +36537,1218 @@ var family_set_json = {
   ],
   "count": 101
  },
- "suttas of Saṃyutta Nikāya 35": {
+ "suttas of Saṁyutta Nikāya 35": {
   "data": [
    [
     "ajjhattāniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.1 (SN35.1); lit. discourse on internal and impermanent",
+    "Saṁyutta Nikāya 35.1 (SN35.1); lit. discourse on internal and impermanent",
     "✔"
    ],
    [
     "ajjhattadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.2 (SN35.2); lit. discourse on internal and suffering",
+    "Saṁyutta Nikāya 35.2 (SN35.2); lit. discourse on internal and suffering",
     "✔"
    ],
    [
     "ajjhattānattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.3 (SN35.3); lit. discourse on internal and not oneself",
+    "Saṁyutta Nikāya 35.3 (SN35.3); lit. discourse on internal and not oneself",
     "✔"
    ],
    [
     "bāhirāniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.4 (SN35.4); lit. discourse on external and impermanent",
+    "Saṁyutta Nikāya 35.4 (SN35.4); lit. discourse on external and impermanent",
     "✔"
    ],
    [
     "bāhiradukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.5 (SN35.5); lit. discourse on external and uncomfortable",
+    "Saṁyutta Nikāya 35.5 (SN35.5); lit. discourse on external and uncomfortable",
     "✔"
    ],
    [
     "bāhirānattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.6 (SN35.6); lit. discourse on external and not oneself",
+    "Saṁyutta Nikāya 35.6 (SN35.6); lit. discourse on external and not oneself",
     "✔"
    ],
    [
     "ajjhattāniccātītānāgatasutta",
     "nt",
-    "Saṃyutta Nikāya 35.7 (SN35.7); lit. discourse on internal and impersonal in the past and future",
+    "Saṁyutta Nikāya 35.7 (SN35.7); lit. discourse on internal and impersonal in the past and future",
     "✔"
    ],
    [
     "ajjhattadukkhātītānāgatasutta",
     "nt",
-    "Saṃyutta Nikāya 35.8 (SN35.8); lit. discourse on internal and suffering in the past and future",
+    "Saṁyutta Nikāya 35.8 (SN35.8); lit. discourse on internal and suffering in the past and future",
     "✔"
    ],
    [
     "ajjhattānattātītānāgatasutta",
     "nt",
-    "Saṃyutta Nikāya 35.9 (SN35.9); lit. discourse on internal and not oneself in the past and future",
+    "Saṁyutta Nikāya 35.9 (SN35.9); lit. discourse on internal and not oneself in the past and future",
     "✔"
    ],
    [
     "bāhirāniccātītānāgatasutta",
     "nt",
-    "Saṃyutta Nikāya 35.10 (SN35.10); lit. discourse on external and impermanent in the past and future",
+    "Saṁyutta Nikāya 35.10 (SN35.10); lit. discourse on external and impermanent in the past and future",
     "✔"
    ],
    [
     "bāhiradukkhātītānāgatasutta",
     "nt",
-    "Saṃyutta Nikāya 35.11 (SN35.11); lit. discourse on external and suffering in the past and future",
+    "Saṁyutta Nikāya 35.11 (SN35.11); lit. discourse on external and suffering in the past and future",
     "✔"
    ],
    [
     "bāhirānattātītānāgatasutta",
     "nt",
-    "Saṃyutta Nikāya 35.12 (SN35.12); lit. discourse on external and nonself in the past and future",
+    "Saṁyutta Nikāya 35.12 (SN35.12); lit. discourse on external and nonself in the past and future",
     "✔"
    ],
    [
     "paṭhamapubbesambodhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.13 (SN35.13); lit. first discourse on before awakening",
+    "Saṁyutta Nikāya 35.13 (SN35.13); lit. first discourse on before awakening",
     "✔"
    ],
    [
     "dutiyapubbesambodhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.14 (SN35.14); lit. second discourse on before awakening",
+    "Saṁyutta Nikāya 35.14 (SN35.14); lit. second discourse on before awakening",
     "✔"
    ],
    [
     "paṭhamaassādapariyesanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.15 (SN35.15); lit. first discourse on the quest for gratification",
+    "Saṁyutta Nikāya 35.15 (SN35.15); lit. first discourse on the quest for gratification",
     "✔"
    ],
    [
     "dutiyaassādapariyesanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.16 (SN35.16); lit. second discourse on the quest for gratification",
+    "Saṁyutta Nikāya 35.16 (SN35.16); lit. second discourse on the quest for gratification",
     "✔"
    ],
    [
     "paṭhamanoceassādasutta",
     "nt",
-    "Saṃyutta Nikāya 35.17 (SN35.17); lit. first discourse on if there were no gratification",
+    "Saṁyutta Nikāya 35.17 (SN35.17); lit. first discourse on if there were no gratification",
     "✔"
    ],
    [
     "dutiyanoceassādasutta",
     "nt",
-    "Saṃyutta Nikāya 35.18 (SN35.18); lit. second discourse on if there were no gratification",
+    "Saṁyutta Nikāya 35.18 (SN35.18); lit. second discourse on if there were no gratification",
     "✔"
    ],
    [
     "paṭhamābhinandasutta",
     "nt",
-    "Saṃyutta Nikāya 35.19 (SN35.19); lit. first discourse on delight",
+    "Saṁyutta Nikāya 35.19 (SN35.19); lit. first discourse on delight",
     "✔"
    ],
    [
     "dutiyābhinandasutta",
     "nt",
-    "Saṃyutta Nikāya 35.20 (SN35.20); lit. second discourse on delight",
+    "Saṁyutta Nikāya 35.20 (SN35.20); lit. second discourse on delight",
     "✔"
    ],
    [
     "paṭhamadukkhuppādasutta",
     "nt",
-    "Saṃyutta Nikāya 35.21 (SN35.21); lit. first discourse on the arising of suffering",
+    "Saṁyutta Nikāya 35.21 (SN35.21); lit. first discourse on the arising of suffering",
     "✔"
    ],
    [
     "dutiyadukkhuppādasutta",
     "nt",
-    "Saṃyutta Nikāya 35.22 (SN35.22); lit. second discourse on the arising of suffering",
+    "Saṁyutta Nikāya 35.22 (SN35.22); lit. second discourse on the arising of suffering",
     "✔"
    ],
    [
     "sabbasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.23 (SN35.23); lit. discourse on everything",
+    "Saṁyutta Nikāya 35.23 (SN35.23); lit. discourse on everything",
     "✔"
    ],
    [
     "pahānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.24 (SN35.24); lit. discourse on abandoning",
+    "Saṁyutta Nikāya 35.24 (SN35.24); lit. discourse on abandoning",
     "✔"
    ],
    [
     "abhiññāpariññāpahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.25 (SN35.25); lit. discourse on abandoning by direct knowledge and complete comprehension",
+    "Saṁyutta Nikāya 35.25 (SN35.25); lit. discourse on abandoning by direct knowledge and complete comprehension",
     "✔"
    ],
    [
     "paṭhamaaparijānanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.26 (SN35.26); lit. first discourse on not completely understanding",
+    "Saṁyutta Nikāya 35.26 (SN35.26); lit. first discourse on not completely understanding",
     "✔"
    ],
    [
     "dutiyaaparijānanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.27 (SN35.27); lit. second discourse on not completely understanding",
+    "Saṁyutta Nikāya 35.27 (SN35.27); lit. second discourse on not completely understanding",
     "✔"
    ],
    [
     "ādittasutta 3",
     "nt",
-    "Saṃyutta Nikāya 35.28 (SN35.28); lit. discourse on burning",
+    "Saṁyutta Nikāya 35.28 (SN35.28); lit. discourse on burning",
     "✔"
    ],
    [
     "addhabhūtasutta",
     "nt",
-    "Saṃyutta Nikāya 35.29 (SN35.29); lit. discourse on overpowered",
+    "Saṁyutta Nikāya 35.29 (SN35.29); lit. discourse on overpowered",
     "✔"
    ],
    [
     "samugghātasāruppasutta",
     "nt",
-    "Saṃyutta Nikāya 35.30 (SN35.30); lit. discourse on suitable for eradicating",
+    "Saṁyutta Nikāya 35.30 (SN35.30); lit. discourse on suitable for eradicating",
     "✔"
    ],
    [
     "paṭhamasamugghātasappāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.31 (SN35.31); lit. first discourse on suitable for eradicating",
+    "Saṁyutta Nikāya 35.31 (SN35.31); lit. first discourse on suitable for eradicating",
     "✔"
    ],
    [
     "dutiyasamugghātasappāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.32 (SN35.32); lit. second discourse on suitable for eradicating",
+    "Saṁyutta Nikāya 35.32 (SN35.32); lit. second discourse on suitable for eradicating",
     "✔"
    ],
    [
     "jātidhammādisuttadasaka",
     "nt",
-    "Saṃyutta Nikāya 35.33-42 (SN35.33-42); lit. group of ten discourses starting with the discourse on liable to birth",
+    "Saṁyutta Nikāya 35.33-42 (SN35.33-42); lit. group of ten discourses starting with the discourse on liable to birth",
     "✔"
    ],
    [
     "aniccādisuttanavaka",
     "nt",
-    "Saṃyutta Nikāya 35.43-51 (SN35.43-51); lit. group of nine discourses starting with the discourse on impermanence",
+    "Saṁyutta Nikāya 35.43-51 (SN35.43-51); lit. group of nine discourses starting with the discourse on impermanence",
     "✔"
    ],
    [
     "upassaṭṭhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.52 (SN35.52); lit. discourse on afflicted",
+    "Saṁyutta Nikāya 35.52 (SN35.52); lit. discourse on afflicted",
     "✔"
    ],
    [
     "avijjāpahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.53 (SN35.53); lit. discourse on the abandoning of ignorance",
+    "Saṁyutta Nikāya 35.53 (SN35.53); lit. discourse on the abandoning of ignorance",
     "✔"
    ],
    [
-    "saṃyojanapahānasutta",
+    "saṁyojanapahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.54 (SN35.54); lit. discourse on abandoning fetters",
+    "Saṁyutta Nikāya 35.54 (SN35.54); lit. discourse on abandoning fetters",
     "✔"
    ],
    [
-    "saṃyojanasamugghātasutta",
+    "saṁyojanasamugghātasutta",
     "nt",
-    "Saṃyutta Nikāya 35.55 (SN35.55); lit. discourse on the eradication of the fetters",
+    "Saṁyutta Nikāya 35.55 (SN35.55); lit. discourse on the eradication of the fetters",
     "✔"
    ],
    [
     "āsavapahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.56 (SN35.56); lit. discourse on the destruction of the effluents",
+    "Saṁyutta Nikāya 35.56 (SN35.56); lit. discourse on the destruction of the effluents",
     "✔"
    ],
    [
     "āsavasamugghātasutta",
     "nt",
-    "Saṃyutta Nikāya 35.57 (SN35.57); lit. discourse on eradication of the effluents",
+    "Saṁyutta Nikāya 35.57 (SN35.57); lit. discourse on eradication of the effluents",
     "✔"
    ],
    [
     "anusayapahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.58 (SN35.58); lit. discourse on abandoning the underlying tendency",
+    "Saṁyutta Nikāya 35.58 (SN35.58); lit. discourse on abandoning the underlying tendency",
     "✔"
    ],
    [
     "anusayasamugghātasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.59 (SN35.59); lit. discourse on eradication of the underlying tendencies",
+    "Saṁyutta Nikāya 35.59 (SN35.59); lit. discourse on eradication of the underlying tendencies",
     "✔"
    ],
    [
     "sabbupādānapariññāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.60 (SN35.60); lit. discourse on the complete comprehension of all identification",
+    "Saṁyutta Nikāya 35.60 (SN35.60); lit. discourse on the complete comprehension of all identification",
     "✔"
    ],
    [
     "paṭhamasabbupādānapariyādānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.61 (SN35.61); lit. first discourse on exhausting all acquisition",
+    "Saṁyutta Nikāya 35.61 (SN35.61); lit. first discourse on exhausting all acquisition",
     "✔"
    ],
    [
     "dutiyasabbupādānapariyādānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.62 (SN35.62); lit. second discourse on exhausting all acquisition",
+    "Saṁyutta Nikāya 35.62 (SN35.62); lit. second discourse on exhausting all acquisition",
     "✔"
    ],
    [
     "paṭhamamigajālasutta",
     "nt",
-    "Saṃyutta Nikāya 35.63 (SN35.63); lit. first discourse Migajāla",
+    "Saṁyutta Nikāya 35.63 (SN35.63); lit. first discourse Migajāla",
     "✔"
    ],
    [
     "dutiyamigajālasutta",
     "nt",
-    "Saṃyutta Nikāya 35.64 (SN35.64); lit. second discourse with Migajāla",
+    "Saṁyutta Nikāya 35.64 (SN35.64); lit. second discourse with Migajāla",
     "✔"
    ],
    [
     "paṭhamasamiddhimārapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.65 (SN35.65); lit. first discourse on Samiddhi's question about Māra",
+    "Saṁyutta Nikāya 35.65 (SN35.65); lit. first discourse on Samiddhi's question about Māra",
     "✔"
    ],
    [
     "samiddhisattapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.66 (SN35.66); lit. discourse on Samiddhi's question about being",
+    "Saṁyutta Nikāya 35.66 (SN35.66); lit. discourse on Samiddhi's question about being",
     "✔"
    ],
    [
     "samiddhidukkhapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.67 (SN35.67); lit. discourse on Samiddhi's question about suffering",
+    "Saṁyutta Nikāya 35.67 (SN35.67); lit. discourse on Samiddhi's question about suffering",
     "✔"
    ],
    [
     "samiddhilokapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.68 (SN35.68); lit. discourse on Samiddhi's question about the world",
+    "Saṁyutta Nikāya 35.68 (SN35.68); lit. discourse on Samiddhi's question about the world",
     "✔"
    ],
    [
     "upasenaāsīvisasutta",
     "nt",
-    "Saṃyutta Nikāya 35.69 (SN35.69); lit. discourse on Upasena and the venomous snake",
+    "Saṁyutta Nikāya 35.69 (SN35.69); lit. discourse on Upasena and the venomous snake",
     "✔"
    ],
    [
     "upavāṇasandiṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 35.70 (SN35.70); lit. discourse with Upavāna on directly visible",
+    "Saṁyutta Nikāya 35.70 (SN35.70); lit. discourse with Upavāna on directly visible",
     "✔"
    ],
    [
     "paṭhamachaphassāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.71 (SN35.71); lit. first discourse on the six fields of sense experience",
+    "Saṁyutta Nikāya 35.71 (SN35.71); lit. first discourse on the six fields of sense experience",
     "✔"
    ],
    [
     "dutiyachaphassāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.72 (SN35.72); lit. second discourse on the six fields of sense experience",
+    "Saṁyutta Nikāya 35.72 (SN35.72); lit. second discourse on the six fields of sense experience",
     "✔"
    ],
    [
     "tatiyachaphassāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.73 (SN35.73); lit. third discourse on the six fields of sense experience",
+    "Saṁyutta Nikāya 35.73 (SN35.73); lit. third discourse on the six fields of sense experience",
     "✔"
    ],
    [
     "paṭhamagilānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.74 (SN35.74); lit. first discourse on the sick monk",
+    "Saṁyutta Nikāya 35.74 (SN35.74); lit. first discourse on the sick monk",
     "✔"
    ],
    [
     "dutiyagilānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.75 (SN35.75); lit. second discourse on the sick monk",
+    "Saṁyutta Nikāya 35.75 (SN35.75); lit. second discourse on the sick monk",
     "✔"
    ],
    [
     "rādhaaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.76 (SN35.76); lit. discourse with Rādha on impermanence",
+    "Saṁyutta Nikāya 35.76 (SN35.76); lit. discourse with Rādha on impermanence",
     "✔"
    ],
    [
     "rādhadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.77 (SN35.77); lit. discourse with Rādha on suffering",
+    "Saṁyutta Nikāya 35.77 (SN35.77); lit. discourse with Rādha on suffering",
     "✔"
    ],
    [
     "rādhaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.78 (SN35.78); lit. discourse with Rādha on not oneself",
+    "Saṁyutta Nikāya 35.78 (SN35.78); lit. discourse with Rādha on not oneself",
     "✔"
    ],
    [
     "paṭhamaavijjāpahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.79 (SN35.79); lit. first discourse on the abandoning of ignorance",
+    "Saṁyutta Nikāya 35.79 (SN35.79); lit. first discourse on the abandoning of ignorance",
     "✔"
    ],
    [
     "dutiyaavijjāpahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.80 (SN35.80); lit. second discourse on the abandoning of ignorance",
+    "Saṁyutta Nikāya 35.80 (SN35.80); lit. second discourse on the abandoning of ignorance",
     "✔"
    ],
    [
     "sambahulabhikkhusutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.81 (SN35.81); lit. discourse on many monks",
+    "Saṁyutta Nikāya 35.81 (SN35.81); lit. discourse on many monks",
     "✔"
    ],
    [
     "lokapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.82 (SN35.82); lit. discourse on the question about the world",
+    "Saṁyutta Nikāya 35.82 (SN35.82); lit. discourse on the question about the world",
     "✔"
    ],
    [
     "phaggunapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.83 (SN35.83); lit. discourse on Phagguna's question",
+    "Saṁyutta Nikāya 35.83 (SN35.83); lit. discourse on Phagguna's question",
     "✔"
    ],
    [
     "palokadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 35.84 (SN35.84); lit. discourse on liable to fall apart",
+    "Saṁyutta Nikāya 35.84 (SN35.84); lit. discourse on liable to fall apart",
     "✔"
    ],
    [
     "suññatalokasutta",
     "nt",
-    "Saṃyutta Nikāya 35.85 (SN35.85); lit. discourse on the world is empty",
+    "Saṁyutta Nikāya 35.85 (SN35.85); lit. discourse on the world is empty",
     "✔"
    ],
    [
-    "saṃkhittadhammasutta",
+    "saṁkhittadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 35.86 (SN35.86); lit. discourse on the concise teaching",
+    "Saṁyutta Nikāya 35.86 (SN35.86); lit. discourse on the concise teaching",
     "✔"
    ],
    [
     "channasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.87 (SN35.87); lit. discourse with Channa",
+    "Saṁyutta Nikāya 35.87 (SN35.87); lit. discourse with Channa",
     "✔"
    ],
    [
     "puṇṇasutta",
     "nt",
-    "Saṃyutta Nikāya 35.88 (SN35.88); lit. discourse with Puṇṇa",
+    "Saṁyutta Nikāya 35.88 (SN35.88); lit. discourse with Puṇṇa",
     "✔"
    ],
    [
     "bāhiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.89 (SN35.89); lit. discourse with Bāhiya",
+    "Saṁyutta Nikāya 35.89 (SN35.89); lit. discourse with Bāhiya",
     "✔"
    ],
    [
     "paṭhamaejāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.90 (SN35.90); lit. first discourse on perturbance",
+    "Saṁyutta Nikāya 35.90 (SN35.90); lit. first discourse on perturbance",
     "✔"
    ],
    [
     "dutiyaejāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.91 (SN35.91); lit. second discourse on perturbance",
+    "Saṁyutta Nikāya 35.91 (SN35.91); lit. second discourse on perturbance",
     "✔"
    ],
    [
     "paṭhamadvayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.92 (SN35.92); lit. first discourse on the duality",
+    "Saṁyutta Nikāya 35.92 (SN35.92); lit. first discourse on the duality",
     "✔"
    ],
    [
     "dutiyadvayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.93 (SN35.93); lit. second discourse on the duality",
+    "Saṁyutta Nikāya 35.93 (SN35.93); lit. second discourse on the duality",
     "✔"
    ],
    [
     "adantaaguttasutta",
     "nt",
-    "Saṃyutta Nikāya 35.94 (SN35.94); lit. discourse on untamed and unguarded",
+    "Saṁyutta Nikāya 35.94 (SN35.94); lit. discourse on untamed and unguarded",
     "✔"
    ],
    [
     "mālukyaputtasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.95 (SN35.95); lit. discourse with Mālukyaputta",
+    "Saṁyutta Nikāya 35.95 (SN35.95); lit. discourse with Mālukyaputta",
     "✔"
    ],
    [
     "parihānadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 35.96 (SN35.96); lit. discourse on liable to decline",
+    "Saṁyutta Nikāya 35.96 (SN35.96); lit. discourse on liable to decline",
     "✔"
    ],
    [
     "pamādavihārīsutta",
     "nt",
-    "Saṃyutta Nikāya 35.97 (SN35.97); lit. discourse on dwelling negligently",
+    "Saṁyutta Nikāya 35.97 (SN35.97); lit. discourse on dwelling negligently",
     "✔"
    ],
    [
-    "saṃvarasutta 1",
+    "saṁvarasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.98 (SN35.98); lit. discourse on restraint",
+    "Saṁyutta Nikāya 35.98 (SN35.98); lit. discourse on restraint",
     "✔"
    ],
    [
     "samādhisutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.99 (SN35.99); lit. discourse on mental composure",
+    "Saṁyutta Nikāya 35.99 (SN35.99); lit. discourse on mental composure",
     "✔"
    ],
    [
     "paṭisallānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.100 (SN35.100); lit. discourse on seclusion",
+    "Saṁyutta Nikāya 35.100 (SN35.100); lit. discourse on seclusion",
     "✔"
    ],
    [
-    "paṭhamanatumhākaṃsutta 1",
+    "paṭhamanatumhākaṁsutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.101 (SN35.101); lit. first discourse on not yours",
+    "Saṁyutta Nikāya 35.101 (SN35.101); lit. first discourse on not yours",
     "✔"
    ],
    [
-    "dutiyanatumhākaṃsutta 2",
+    "dutiyanatumhākaṁsutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.102 (SN35.102); lit. second discourse on not yours",
+    "Saṁyutta Nikāya 35.102 (SN35.102); lit. second discourse on not yours",
     "✔"
    ],
    [
     "udakasutta",
     "nt",
-    "Saṃyutta Nikāya 35.103 (SN35.103); lit. discourse on water",
+    "Saṁyutta Nikāya 35.103 (SN35.103); lit. discourse on water",
     "✔"
    ],
    [
     "yogakkhemisutta",
     "nt",
-    "Saṃyutta Nikāya 35.104 (SN35.104); lit. discourse on secure from bondage",
+    "Saṁyutta Nikāya 35.104 (SN35.104); lit. discourse on secure from bondage",
     "✔"
    ],
    [
     "upādāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.105 (SN35.105); lit. discourse on grasping",
+    "Saṁyutta Nikāya 35.105 (SN35.105); lit. discourse on grasping",
     "✔"
    ],
    [
     "dukkhasamudayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.106 (SN35.106); lit. discourse on the origin of suffering",
+    "Saṁyutta Nikāya 35.106 (SN35.106); lit. discourse on the origin of suffering",
     "✔"
    ],
    [
     "lokasamudayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.107 (SN35.107); lit. discourse on the origin of the world",
+    "Saṁyutta Nikāya 35.107 (SN35.107); lit. discourse on the origin of the world",
     "✔"
    ],
    [
     "seyyohamasmisutta",
     "nt",
-    "Saṃyutta Nikāya 35.108 (SN35.108); lit. discourse on I am better",
+    "Saṁyutta Nikāya 35.108 (SN35.108); lit. discourse on I am better",
     "✔"
    ],
    [
-    "saṃyojaniyasutta 2",
+    "saṁyojaniyasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.109 (SN35.109); lit. discourse on what can bind",
+    "Saṁyutta Nikāya 35.109 (SN35.109); lit. discourse on what can bind",
     "✔"
    ],
    [
     "upādāniyasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.110 (SN35.110); lit. discourse on what can be clung to",
+    "Saṁyutta Nikāya 35.110 (SN35.110); lit. discourse on what can be clung to",
     "✔"
    ],
    [
     "ajjhattikāyatanaparijānanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.111 (SN35.111); lit. discourse on completely comprehending the internal sense bases",
+    "Saṁyutta Nikāya 35.111 (SN35.111); lit. discourse on completely comprehending the internal sense bases",
     "✔"
    ],
    [
     "bāhirāyatanaparijānanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.112 (SN35.112); lit. discourse on completely comprehending the external sense fields",
+    "Saṁyutta Nikāya 35.112 (SN35.112); lit. discourse on completely comprehending the external sense fields",
     "✔"
    ],
    [
     "upassutisutta",
     "nt",
-    "Saṃyutta Nikāya 35.113 (SN35.113); lit. discourse on overhearing",
+    "Saṁyutta Nikāya 35.113 (SN35.113); lit. discourse on overhearing",
     "✔"
    ],
    [
     "paṭhamamārapāsasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.114 (SN35.114); lit. first discourse on Mara's snare",
+    "Saṁyutta Nikāya 35.114 (SN35.114); lit. first discourse on Mara's snare",
     "✔"
    ],
    [
     "dutiyamārapāsasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.115 (SN35.115); lit. second discourse on Mara's snare",
+    "Saṁyutta Nikāya 35.115 (SN35.115); lit. second discourse on Mara's snare",
     "✔"
    ],
    [
     "lokantagamanasutta",
     "nt",
-    "Saṃyutta Nikāya 35.116 (SN35.116); lit. discourse on going to the end of the world",
+    "Saṁyutta Nikāya 35.116 (SN35.116); lit. discourse on going to the end of the world",
     "✔"
    ],
    [
     "kāmaguṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.117 (SN35.117); lit. discourse on sensual pleasure",
+    "Saṁyutta Nikāya 35.117 (SN35.117); lit. discourse on sensual pleasure",
     "✔"
    ],
    [
     "sakkapañhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.118 (SN35.118); lit. discourse on Sakka's questions",
+    "Saṁyutta Nikāya 35.118 (SN35.118); lit. discourse on Sakka's questions",
     "✔"
    ],
    [
     "pañcasikhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.119 (SN35.119); lit. discourse with Pañcasikha",
+    "Saṁyutta Nikāya 35.119 (SN35.119); lit. discourse with Pañcasikha",
     "✔"
    ],
    [
     "sāriputtasaddhivihārikasutta",
     "nt",
-    "Saṃyutta Nikāya 35.120 (SN35.120); lit. discourse on Sāriputta and the co-resident",
+    "Saṁyutta Nikāya 35.120 (SN35.120); lit. discourse on Sāriputta and the co-resident",
     "✔"
    ],
    [
     "rāhulovādasutta",
     "nt",
-    "Saṃyutta Nikāya 35.121 (SN35.121); lit. discourse on advice to Rāhula",
+    "Saṁyutta Nikāya 35.121 (SN35.121); lit. discourse on advice to Rāhula",
     "✔"
    ],
    [
-    "saṃyojaniyadhammasutta",
+    "saṁyojaniyadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 35.122 (SN35.122); lit. discourse on things which fetter",
+    "Saṁyutta Nikāya 35.122 (SN35.122); lit. discourse on things which fetter",
     "✔"
    ],
    [
     "upādāniyadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 35.123 (SN35.123); lit. discourse on things to be clung to",
+    "Saṁyutta Nikāya 35.123 (SN35.123); lit. discourse on things to be clung to",
     "✔"
    ],
    [
     "vesālīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.124 (SN35.124); lit. discourse at Vesālī",
+    "Saṁyutta Nikāya 35.124 (SN35.124); lit. discourse at Vesālī",
     "✔"
    ],
    [
     "vajjīsutta",
     "nt",
-    "Saṃyutta Nikāya 35.125 (SN35.125); lit. discourse among the Vajjī",
+    "Saṁyutta Nikāya 35.125 (SN35.125); lit. discourse among the Vajjī",
     "✔"
    ],
    [
     "nāḷandasutta",
     "nt",
-    "Saṃyutta Nikāya 35.126 (SN35.126); lit. discourse at Nāḷandā",
+    "Saṁyutta Nikāya 35.126 (SN35.126); lit. discourse at Nāḷandā",
     "✔"
    ],
    [
     "bhāradvājasutta",
     "nt",
-    "Saṃyutta Nikāya 35.127 (SN35.127); lit. discourse with Bhāradvāja",
+    "Saṁyutta Nikāya 35.127 (SN35.127); lit. discourse with Bhāradvāja",
     "✔"
    ],
    [
     "soṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.128 (SN35.128); lit. discourse with Soṇa",
+    "Saṁyutta Nikāya 35.128 (SN35.128); lit. discourse with Soṇa",
     "✔"
    ],
    [
     "ghositasutta",
     "nt",
-    "Saṃyutta Nikāya 35.129 (SN35.129); lit. discourse with Ghosita",
+    "Saṁyutta Nikāya 35.129 (SN35.129); lit. discourse with Ghosita",
     "✔"
    ],
    [
     "hāliddikānisutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.130 (SN35.130); lit. discourse with Hāliddikāni",
+    "Saṁyutta Nikāya 35.130 (SN35.130); lit. discourse with Hāliddikāni",
     "✔"
    ],
    [
     "nakulapitusutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.131 (SN35.131); lit. discourse with Nakula's father",
+    "Saṁyutta Nikāya 35.131 (SN35.131); lit. discourse with Nakula's father",
     "✔"
    ],
    [
     "lohiccasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.132 (SN35.132); lit. discourse with Lohicca",
+    "Saṁyutta Nikāya 35.132 (SN35.132); lit. discourse with Lohicca",
     "✔"
    ],
    [
     "verahaccānisutta",
     "nt",
-    "Saṃyutta Nikāya 35.133 (SN35.133); lit. discourse with Verahaccāni",
+    "Saṁyutta Nikāya 35.133 (SN35.133); lit. discourse with Verahaccāni",
     "✔"
    ],
    [
     "devadahasutta 3",
     "nt",
-    "Saṃyutta Nikāya 35.134 (SN35.134); lit. discourse at Devadaha",
+    "Saṁyutta Nikāya 35.134 (SN35.134); lit. discourse at Devadaha",
     "✔"
    ],
    [
     "khaṇasutta",
     "nt",
-    "Saṃyutta Nikāya 35.135 (SN35.135); lit. discourse on the opportunity",
+    "Saṁyutta Nikāya 35.135 (SN35.135); lit. discourse on the opportunity",
     "✔"
    ],
    [
     "paṭhamarūpārāmasutta",
     "nt",
-    "Saṃyutta Nikāya 35.136 (SN35.136); lit. first discourse on enjoying sights",
+    "Saṁyutta Nikāya 35.136 (SN35.136); lit. first discourse on enjoying sights",
     "✔"
    ],
    [
     "dutiyarūpārāmasutta",
     "nt",
-    "Saṃyutta Nikāya 35.137 (SN35.137); lit. second discourse on enjoying sights",
+    "Saṁyutta Nikāya 35.137 (SN35.137); lit. second discourse on enjoying sights",
     "✔"
    ],
    [
-    "paṭhamanatumhākaṃsutta 2",
+    "paṭhamanatumhākaṁsutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.138 (SN35.138); lit. first discourse on not yours",
+    "Saṁyutta Nikāya 35.138 (SN35.138); lit. first discourse on not yours",
     "✔"
    ],
    [
-    "dutiyanatumhākaṃsutta 3",
+    "dutiyanatumhākaṁsutta 3",
     "nt",
-    "Saṃyutta Nikāya 35.139 (SN35.139); lit. second discourse on not yours",
+    "Saṁyutta Nikāya 35.139 (SN35.139); lit. second discourse on not yours",
     "✔"
    ],
    [
     "ajjhattāniccahetusutta",
     "nt",
-    "Saṃyutta Nikāya 35.140 (SN35.140); lit. discourse on the internal impermanent cause",
+    "Saṁyutta Nikāya 35.140 (SN35.140); lit. discourse on the internal impermanent cause",
     "✔"
    ],
    [
     "ajjhattadukkhahetusutta",
     "nt",
-    "Saṃyutta Nikāya 35.141 (SN35.141); lit. discourse on the internal uncomfortable cause",
+    "Saṁyutta Nikāya 35.141 (SN35.141); lit. discourse on the internal uncomfortable cause",
     "✔"
    ],
    [
     "ajjhattānattahetusutta",
     "nt",
-    "Saṃyutta Nikāya 35.142 (SN35.142); lit. discourse on the internal impersonal cause",
+    "Saṁyutta Nikāya 35.142 (SN35.142); lit. discourse on the internal impersonal cause",
     "✔"
    ],
    [
     "bāhirāniccahetusutta",
     "nt",
-    "Saṃyutta Nikāya 35.143 (SN35.143); lit. discourse on the external impermanent cause",
+    "Saṁyutta Nikāya 35.143 (SN35.143); lit. discourse on the external impermanent cause",
     "✔"
    ],
    [
     "bāhiradukkhahetusutta",
     "nt",
-    "Saṃyutta Nikāya 35.144 (SN35.144); lit. discourse on the external uncomfortable cause",
+    "Saṁyutta Nikāya 35.144 (SN35.144); lit. discourse on the external uncomfortable cause",
     "✔"
    ],
    [
     "bāhirānattahetusutta",
     "nt",
-    "Saṃyutta Nikāya 35.145 (SN35.145); lit. discourse on the external impersonal cause",
+    "Saṁyutta Nikāya 35.145 (SN35.145); lit. discourse on the external impersonal cause",
     "✔"
    ],
    [
     "kammanirodhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.146 (SN35.146); lit. discourse on the cessation of action",
+    "Saṁyutta Nikāya 35.146 (SN35.146); lit. discourse on the cessation of action",
     "✔"
    ],
    [
     "aniccanibbānasappāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.147 (SN35.147); lit. discourse on the impermanent being conducive to complete quenching",
+    "Saṁyutta Nikāya 35.147 (SN35.147); lit. discourse on the impermanent being conducive to complete quenching",
     "✔"
    ],
    [
     "dukkhanibbānasappāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.148 (SN35.148); lit. discourse on the uncomfortable being conducive to complete quenching",
+    "Saṁyutta Nikāya 35.148 (SN35.148); lit. discourse on the uncomfortable being conducive to complete quenching",
     "✔"
    ],
    [
     "anattanibbānasappāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.149 (SN35.149); lit. discourse on the impersonal being conducive to complete quenching",
+    "Saṁyutta Nikāya 35.149 (SN35.149); lit. discourse on the impersonal being conducive to complete quenching",
     "✔"
    ],
    [
     "nibbānasappāyapaṭipadāsutta",
     "nt",
-    "Saṃyutta Nikāya 35.150 (SN35.150); lit. discourse on the practice conducive to complete quenching",
+    "Saṁyutta Nikāya 35.150 (SN35.150); lit. discourse on the practice conducive to complete quenching",
     "✔"
    ],
    [
     "antevāsikasutta",
     "nt",
-    "Saṃyutta Nikāya 35.151 (SN35.151); lit. discourse on the student",
+    "Saṁyutta Nikāya 35.151 (SN35.151); lit. discourse on the student",
     "✔"
    ],
    [
     "kimatthiyabrahmacariyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.152 (SN35.152); lit. discourse on for what purpose is the holy life",
+    "Saṁyutta Nikāya 35.152 (SN35.152); lit. discourse on for what purpose is the holy life",
     "✔"
    ],
    [
     "atthinukhopariyāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.153 (SN35.153); lit. discourse on is there a way",
+    "Saṁyutta Nikāya 35.153 (SN35.153); lit. discourse on is there a way",
     "✔"
    ],
    [
     "indriyasampannasutta",
     "nt",
-    "Saṃyutta Nikāya 35.154 (SN35.154); lit. discourse on accomplished in the sense faculties",
+    "Saṁyutta Nikāya 35.154 (SN35.154); lit. discourse on accomplished in the sense faculties",
     "✔"
    ],
    [
     "dhammakathikapucchasutta",
     "nt",
-    "Saṃyutta Nikāya 35.155 (SN35.155); lit. discourse on the question about the Dhamma teacher",
+    "Saṁyutta Nikāya 35.155 (SN35.155); lit. discourse on the question about the Dhamma teacher",
     "✔"
    ],
    [
     "ajjhattanandikkhayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.156 (SN35.156); lit. discourse on the internal destruction of delight",
+    "Saṁyutta Nikāya 35.156 (SN35.156); lit. discourse on the internal destruction of delight",
     "✔"
    ],
    [
     "bāhiranandikkhayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.157 (SN35.157); lit. discourse on the external destruction of delight",
+    "Saṁyutta Nikāya 35.157 (SN35.157); lit. discourse on the external destruction of delight",
     "✔"
    ],
    [
     "ajjhattaaniccanandikkhayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.158 (SN35.158); lit. discourse on internal, impermanent, and the destruction of delight",
+    "Saṁyutta Nikāya 35.158 (SN35.158); lit. discourse on internal, impermanent, and the destruction of delight",
     "✔"
    ],
    [
     "bāhiraaniccanandikkhayasutta",
     "nt",
-    "Saṃyutta Nikāya 35.159 (SN35.159); lit. discourse on external, impermanent destruction of delight",
+    "Saṁyutta Nikāya 35.159 (SN35.159); lit. discourse on external, impermanent destruction of delight",
     "✔"
    ],
    [
     "jīvakambavanasamādhisutta",
     "nt",
-    "Saṃyutta Nikāya 35.160 (SN35.160); lit. discourse on mental composure in Jīvaka's mango grove",
+    "Saṁyutta Nikāya 35.160 (SN35.160); lit. discourse on mental composure in Jīvaka's mango grove",
     "✔"
    ],
    [
     "jīvakambavanapaṭisallānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.161 (SN35.161); lit. discourse on seclusion in Jīvaka's mango grove",
+    "Saṁyutta Nikāya 35.161 (SN35.161); lit. discourse on seclusion in Jīvaka's mango grove",
     "✔"
    ],
    [
     "koṭṭhikaaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.162 (SN35.162); lit. discourse with Koṭṭhita in the impermanent",
+    "Saṁyutta Nikāya 35.162 (SN35.162); lit. discourse with Koṭṭhita in the impermanent",
     "✔"
    ],
    [
     "koṭṭhikadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.163 (SN35.163); lit. discourse with Koṭṭhita on the uncomfortable",
+    "Saṁyutta Nikāya 35.163 (SN35.163); lit. discourse with Koṭṭhita on the uncomfortable",
     "✔"
    ],
    [
     "koṭṭhikaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.164 (SN35.164); lit. discourse with Koṭṭhita on the impersonal",
+    "Saṁyutta Nikāya 35.164 (SN35.164); lit. discourse with Koṭṭhita on the impersonal",
     "✔"
    ],
    [
     "micchādiṭṭhipahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.165 (SN35.165); lit. discourse on the abandoning of wrong view",
+    "Saṁyutta Nikāya 35.165 (SN35.165); lit. discourse on the abandoning of wrong view",
     "✔"
    ],
    [
     "sakkāyadiṭṭhipahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.166 (SN35.166); lit. discourse on abandoning belief in self-identity",
+    "Saṁyutta Nikāya 35.166 (SN35.166); lit. discourse on abandoning belief in self-identity",
     "✔"
    ],
    [
     "attānudiṭṭhipahānasutta",
     "nt",
-    "Saṃyutta Nikāya 35.167 (SN35.167); lit. discourse on abandoning the concept of self",
+    "Saṁyutta Nikāya 35.167 (SN35.167); lit. discourse on abandoning the concept of self",
     "✔"
    ],
    [
     "ajjhattaaniccachandasutta",
     "nt",
-    "Saṃyutta Nikāya 35.168 (SN35.168); lit. discourse on desire for the internal and impermanent",
+    "Saṁyutta Nikāya 35.168 (SN35.168); lit. discourse on desire for the internal and impermanent",
     "✔"
    ],
    [
     "ajjhattaaniccarāgasutta",
     "nt",
-    "Saṃyutta Nikāya 35.169 (SN35.169); lit. discourse on lust for the internal and impermanent",
+    "Saṁyutta Nikāya 35.169 (SN35.169); lit. discourse on lust for the internal and impermanent",
     "✔"
    ],
    [
     "ajjhattaaniccachandarāgasutta",
     "nt",
-    "Saṃyutta Nikāya 35.170 (SN35.170); lit. discourse on desire and lust for the internal and impermanent",
+    "Saṁyutta Nikāya 35.170 (SN35.170); lit. discourse on desire and lust for the internal and impermanent",
     "✔"
    ],
    [
     "dukkhachandādisutta",
     "nt",
-    "Saṃyutta Nikāya 35.171-173 (SN35.171-173); lit. discourse on desire for the uncomfortable, etc.",
+    "Saṁyutta Nikāya 35.171-173 (SN35.171-173); lit. discourse on desire for the uncomfortable, etc.",
     "✔"
    ],
    [
     "anattachandādisutta",
     "nt",
-    "Saṃyutta Nikāya 35.174-176 (SN35.174-176); lit. discourse on desire for the impersonal, etc.",
+    "Saṁyutta Nikāya 35.174-176 (SN35.174-176); lit. discourse on desire for the impersonal, etc.",
     "✔"
    ],
    [
     "bāhirāniccachandādisutta",
     "nt",
-    "Saṃyutta Nikāya 35.177-179 (SN35.177-179); lit. discourse on desire for the external and impermanent, etc.",
+    "Saṁyutta Nikāya 35.177-179 (SN35.177-179); lit. discourse on desire for the external and impermanent, etc.",
     "✔"
    ],
    [
     "bāhiradukkhachandādisutta",
     "nt",
-    "Saṃyutta Nikāya 35.180-182 (SN35.180-182); lit. discourse on desire for the external and uncomfortable, etc.",
+    "Saṁyutta Nikāya 35.180-182 (SN35.180-182); lit. discourse on desire for the external and uncomfortable, etc.",
     "✔"
    ],
    [
     "bāhirānattachandādisutta",
     "nt",
-    "Saṃyutta Nikāya 35.183-185 (SN35.183-185); lit. discourse on desire for the external and impersonal, etc.",
+    "Saṁyutta Nikāya 35.183-185 (SN35.183-185); lit. discourse on desire for the external and impersonal, etc.",
     "✔"
    ],
    [
     "ajjhattātītāniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.186 (SN35.186); lit. discourse on internal, past and impermanent",
+    "Saṁyutta Nikāya 35.186 (SN35.186); lit. discourse on internal, past and impermanent",
     "✔"
    ],
    [
     "ajjhattānāgatāniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.187 (SN35.187); lit. discourse on the internal, future and impermanent",
+    "Saṁyutta Nikāya 35.187 (SN35.187); lit. discourse on the internal, future and impermanent",
     "✔"
    ],
    [
     "ajjhattapaccuppannāniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.188 (SN35.188); lit. discourse on the internal, present and impermanent",
+    "Saṁyutta Nikāya 35.188 (SN35.188); lit. discourse on the internal, present and impermanent",
     "✔"
    ],
    [
     "ajjhattātītādidukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.189-191 (SN35.189-191); lit. discourse on the internal, past, etc. and uncomfortable",
+    "Saṁyutta Nikāya 35.189-191 (SN35.189-191); lit. discourse on the internal, past, etc. and uncomfortable",
     "✔"
    ],
    [
     "ajjhattātītādianattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.192-194 (SN35.192-194); lit. discourse on the internal, past, etc. and impersonal",
+    "Saṁyutta Nikāya 35.192-194 (SN35.192-194); lit. discourse on the internal, past, etc. and impersonal",
     "✔"
    ],
    [
     "bāhirātītādianiccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.195-197 (SN35.195-197); lit. discourse on the external, past, etc. and impermanent",
+    "Saṁyutta Nikāya 35.195-197 (SN35.195-197); lit. discourse on the external, past, etc. and impermanent",
     "✔"
    ],
    [
     "bāhirātītādidukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.198-200 (SN35.198-200); lit. discourse on the external, past, etc. and uncomfortable",
+    "Saṁyutta Nikāya 35.198-200 (SN35.198-200); lit. discourse on the external, past, etc. and uncomfortable",
     "✔"
    ],
    [
     "bāhirātītādianattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.201-203 (SN35.201-203); lit. discourse on the external, past, etc. and impersonal",
+    "Saṁyutta Nikāya 35.201-203 (SN35.201-203); lit. discourse on the external, past, etc. and impersonal",
     "✔"
    ],
    [
     "ajjhattātītayadaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.204 (SN35.204); lit. discourse on internal, past and what is impermanent",
+    "Saṁyutta Nikāya 35.204 (SN35.204); lit. discourse on internal, past and what is impermanent",
     "✔"
    ],
    [
     "ajjhattānāgatayadaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.205 (SN35.205); lit. discourse on internal, future and what is impermanent",
+    "Saṁyutta Nikāya 35.205 (SN35.205); lit. discourse on internal, future and what is impermanent",
     "✔"
    ],
    [
     "ajjhattapaccuppannayadaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.206 (SN35.206); lit. discourse on internal, present and what is impermanent",
+    "Saṁyutta Nikāya 35.206 (SN35.206); lit. discourse on internal, present and what is impermanent",
     "✔"
    ],
    [
-    "ajjhattātītādiyaṃdukkhasutta",
+    "ajjhattātītādiyaṁdukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.207-209 (SN35.207-209); lit. discourse on internal, past, etc. and what is uncomfortable",
+    "Saṁyutta Nikāya 35.207-209 (SN35.207-209); lit. discourse on internal, past, etc. and what is uncomfortable",
     "✔"
    ],
    [
     "ajjhattātītādiyadanattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.210-212 (SN35.210-212); lit. discourse on the internal, past, etc. and whatever is not oneself",
+    "Saṁyutta Nikāya 35.210-212 (SN35.210-212); lit. discourse on the internal, past, etc. and whatever is not oneself",
     "✔"
    ],
    [
     "bāhirātītādiyadaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.213-215 (SN35.213-215); lit. discourse on the external, past, etc. and whatever is impermanent",
+    "Saṁyutta Nikāya 35.213-215 (SN35.213-215); lit. discourse on the external, past, etc. and whatever is impermanent",
     "✔"
    ],
    [
-    "bāhirātītādiyaṃdukkhasutta",
+    "bāhirātītādiyaṁdukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.216-218 (SN35.216-218); lit. discourse on the external, past, etc. and whatever suffering",
+    "Saṁyutta Nikāya 35.216-218 (SN35.216-218); lit. discourse on the external, past, etc. and whatever suffering",
     "✔"
    ],
    [
     "bāhirātītādiyadanattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.219-221 (SN35.219-221); lit. discourse on external, past, etc. and whatever is impersonal",
+    "Saṁyutta Nikāya 35.219-221 (SN35.219-221); lit. discourse on external, past, etc. and whatever is impersonal",
     "✔"
    ],
    [
     "ajjhattāyatanaaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.222 (SN35.222); lit. discourse on the internal sense bases are impermanent",
+    "Saṁyutta Nikāya 35.222 (SN35.222); lit. discourse on the internal sense bases are impermanent",
     "✔"
    ],
    [
     "ajjhattāyatanadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.223 (SN35.223); lit. discourse on the internal sense bases are uncomfortable",
+    "Saṁyutta Nikāya 35.223 (SN35.223); lit. discourse on the internal sense bases are uncomfortable",
     "✔"
    ],
    [
     "ajjhattāyatanaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.224 (SN35.224); lit. discourse on the internal sense bases are impersonal",
+    "Saṁyutta Nikāya 35.224 (SN35.224); lit. discourse on the internal sense bases are impersonal",
     "✔"
    ],
    [
     "bāhirāyatanaaniccasutta",
     "nt",
-    "Saṃyutta Nikāya 35.225 (SN35.225); lit. discourse on the external sense fields are impermanent",
+    "Saṁyutta Nikāya 35.225 (SN35.225); lit. discourse on the external sense fields are impermanent",
     "✔"
    ],
    [
     "bāhirāyatanadukkhasutta",
     "nt",
-    "Saṃyutta Nikāya 35.226 (SN35.226); lit. discourse on the external sense fields are uncomfortable",
+    "Saṁyutta Nikāya 35.226 (SN35.226); lit. discourse on the external sense fields are uncomfortable",
     "✔"
    ],
    [
     "bāhirāyatanaanattasutta",
     "nt",
-    "Saṃyutta Nikāya 35.227 (SN35.227); lit. discourse on the external sense fields are impersonal",
+    "Saṁyutta Nikāya 35.227 (SN35.227); lit. discourse on the external sense fields are impersonal",
     "✔"
    ],
    [
     "paṭhamasamuddasutta",
     "nt",
-    "Saṃyutta Nikāya 35.228 (SN35.228); lit. first discourse on the ocean",
+    "Saṁyutta Nikāya 35.228 (SN35.228); lit. first discourse on the ocean",
     "✔"
    ],
    [
     "dutiyasamuddasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.229 (SN35.229); lit. second discourse on the ocean",
+    "Saṁyutta Nikāya 35.229 (SN35.229); lit. second discourse on the ocean",
     "✔"
    ],
    [
     "bāḷisikopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.230 (SN35.230); lit. discourse on the simile of the fisherman",
+    "Saṁyutta Nikāya 35.230 (SN35.230); lit. discourse on the simile of the fisherman",
     "✔"
    ],
    [
     "khīrarukkhopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.231 (SN35.231); lit. discourse on the tree with milky sap",
+    "Saṁyutta Nikāya 35.231 (SN35.231); lit. discourse on the tree with milky sap",
     "✔"
    ],
    [
     "koṭṭhikasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.232 (SN35.232); lit. discourse with Koṭṭhika",
+    "Saṁyutta Nikāya 35.232 (SN35.232); lit. discourse with Koṭṭhika",
     "✔"
    ],
    [
     "kāmabhūsutta",
     "nt",
-    "Saṃyutta Nikāya 35.233 (SN35.233); lit. discourse with Kāmabhū",
+    "Saṁyutta Nikāya 35.233 (SN35.233); lit. discourse with Kāmabhū",
     "✔"
    ],
    [
     "udāyīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 35.234 (SN35.234); lit. discourse with Udāyī",
+    "Saṁyutta Nikāya 35.234 (SN35.234); lit. discourse with Udāyī",
     "✔"
    ],
    [
     "ādittapariyāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.235 (SN35.235); lit. discourse on the teaching about on fire",
+    "Saṁyutta Nikāya 35.235 (SN35.235); lit. discourse on the teaching about on fire",
     "✔"
    ],
    [
     "paṭhamahatthapādopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.236 (SN35.236); lit. first discourse on the simile of hands and feet",
+    "Saṁyutta Nikāya 35.236 (SN35.236); lit. first discourse on the simile of hands and feet",
     "✔"
    ],
    [
     "dutiyahatthapādopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.237 (SN35.237); lit. second discourse on the simile of hands and feet",
+    "Saṁyutta Nikāya 35.237 (SN35.237); lit. second discourse on the simile of hands and feet",
     "✔"
    ],
    [
     "āsīvisopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.238 (SN35.238); lit. discourse on the simile of the poisonous snake",
+    "Saṁyutta Nikāya 35.238 (SN35.238); lit. discourse on the simile of the poisonous snake",
     "✔"
    ],
    [
     "rathopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.239 (SN35.239); lit. discourse on the simile of the chariot",
+    "Saṁyutta Nikāya 35.239 (SN35.239); lit. discourse on the simile of the chariot",
     "✔"
    ],
    [
     "kummopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.240 (SN35.240); lit. discourse on the simile of the turtle",
+    "Saṁyutta Nikāya 35.240 (SN35.240); lit. discourse on the simile of the turtle",
     "✔"
    ],
    [
     "paṭhamadārukkhandhopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.241 (SN35.241); lit. first discourse on the log of wood",
+    "Saṁyutta Nikāya 35.241 (SN35.241); lit. first discourse on the log of wood",
     "✔"
    ],
    [
     "dutiyadārukkhandhopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.242 (SN35.242); lit. second discourse on the log of wood",
+    "Saṁyutta Nikāya 35.242 (SN35.242); lit. second discourse on the log of wood",
     "✔"
    ],
    [
     "avassutapariyāyasutta",
     "nt",
-    "Saṃyutta Nikāya 35.243 (SN35.243); lit. discourse on the teaching about seeping (with defilements)",
+    "Saṁyutta Nikāya 35.243 (SN35.243); lit. discourse on the teaching about seeping (with defilements)",
     "✔"
    ],
    [
     "avassutasutta",
     "nt",
-    "Saṃyutta Nikāya 35.243 (SN35.243); lit. discourse on oozing",
+    "Saṁyutta Nikāya 35.243 (SN35.243); lit. discourse on oozing",
     "✔"
    ],
    [
     "dukkhadhammasutta 2",
     "nt",
-    "Saṃyutta Nikāya 35.244 (SN35.244); lit. discourse on uncomfortable in nature",
+    "Saṁyutta Nikāya 35.244 (SN35.244); lit. discourse on uncomfortable in nature",
     "✔"
    ],
    [
-    "kiṃsukopamasutta",
+    "kiṁsukopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.245 (SN35.245); lit. discourse on the simile of the kiṃsuka tree",
+    "Saṁyutta Nikāya 35.245 (SN35.245); lit. discourse on the simile of the kiṁsuka tree",
     "✔"
    ],
    [
     "vīṇopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.246 (SN35.246); lit. discourse on the simile of lute",
+    "Saṁyutta Nikāya 35.246 (SN35.246); lit. discourse on the simile of lute",
     "✔"
    ],
    [
     "chappāṇakopamasutta",
     "nt",
-    "Saṃyutta Nikāya 35.247 (SN35.247); lit. discourse on the simile of the six animals",
+    "Saṁyutta Nikāya 35.247 (SN35.247); lit. discourse on the simile of the six animals",
     "✔"
    ],
    [
     "yavakalāpisutta",
     "nt",
-    "Saṃyutta Nikāya 35.248 (SN35.248); lit. discourse on the bundle of barley",
+    "Saṁyutta Nikāya 35.248 (SN35.248); lit. discourse on the bundle of barley",
     "✔"
    ],
    [
@@ -37897,96 +37897,96 @@ var family_set_json = {
   ],
   "count": 18
  },
- "suttas of Saṃyutta Nikāya 6": {
+ "suttas of Saṁyutta Nikāya 6": {
   "data": [
    [
     "brahmāyācanasutta",
     "nt",
-    "Saṃyutta Nikāya 6.1 (SN6.1); lit. discourse about Brahmā's imploring",
+    "Saṁyutta Nikāya 6.1 (SN6.1); lit. discourse about Brahmā's imploring",
     "✔"
    ],
    [
     "gāravasutta",
     "nt",
-    "Saṃyutta Nikāya 6.2 (SN6.2); lit. discourse on respect",
+    "Saṁyutta Nikāya 6.2 (SN6.2); lit. discourse on respect",
     "✔"
    ],
    [
     "brahmadevasutta",
     "nt",
-    "Saṃyutta Nikāya 6.3 (SN6.3); lit. discourse about Brahmadeva",
+    "Saṁyutta Nikāya 6.3 (SN6.3); lit. discourse about Brahmadeva",
     "✔"
    ],
    [
     "bakabrahmasutta",
     "nt",
-    "Saṃyutta Nikāya 6.4 (SN6.4); lit. discourse about Baka Brahma",
+    "Saṁyutta Nikāya 6.4 (SN6.4); lit. discourse about Baka Brahma",
     "✔"
    ],
    [
     "aññatarabrahmasutta",
     "nt",
-    "Saṃyutta Nikāya 6.5 (SN6.5); lit. discourse about a certain brahma",
+    "Saṁyutta Nikāya 6.5 (SN6.5); lit. discourse about a certain brahma",
     "✔"
    ],
    [
     "brahmalokasutta",
     "nt",
-    "Saṃyutta Nikāya 6.6 (SN6.6); lit. discourse about the brahma world",
+    "Saṁyutta Nikāya 6.6 (SN6.6); lit. discourse about the brahma world",
     "✔"
    ],
    [
     "kokālikasutta 1",
     "nt",
-    "Saṃyutta Nikāya 6.7 (SN6.7); lit. discourse with Kokālika",
+    "Saṁyutta Nikāya 6.7 (SN6.7); lit. discourse with Kokālika",
     "✔"
    ],
    [
     "katamodakatissasutta",
     "nt",
-    "Saṃyutta Nikāya 6.8 (SN6.8); lit. discourse to Katamodakatissa",
+    "Saṁyutta Nikāya 6.8 (SN6.8); lit. discourse to Katamodakatissa",
     "✔"
    ],
    [
     "turūbrahmasutta",
     "nt",
-    "Saṃyutta Nikāya 6.9 (SN6.9); lit. discourse with Turūbrahma",
+    "Saṁyutta Nikāya 6.9 (SN6.9); lit. discourse with Turūbrahma",
     "✔"
    ],
    [
     "kokālikasutta 2",
     "nt",
-    "Saṃyutta Nikāya 6.10 (SN6.10); lit. discourse with Kokālika",
+    "Saṁyutta Nikāya 6.10 (SN6.10); lit. discourse with Kokālika",
     "✔"
    ],
    [
     "sanaṅkumārasutta",
     "nt",
-    "Saṃyutta Nikāya 6.11 (SN6.11); lit. discourse with Sanaṅkumāra",
+    "Saṁyutta Nikāya 6.11 (SN6.11); lit. discourse with Sanaṅkumāra",
     "✔"
    ],
    [
     "devadattasutta 1",
     "nt",
-    "Saṃyutta Nikāya 6.12 (SN6.12); lit. discourse about Devadatta",
+    "Saṁyutta Nikāya 6.12 (SN6.12); lit. discourse about Devadatta",
     "✔"
    ],
    [
     "andhakavindasutta 1",
     "nt",
-    "Saṃyutta Nikāya 6.13 (SN6.13); lit. discourse at Andhakavinda",
+    "Saṁyutta Nikāya 6.13 (SN6.13); lit. discourse at Andhakavinda",
     "✔"
    ],
    [
     "aruṇavatīsutta",
     "nt",
-    "Saṃyutta Nikāya 6.14 (SN6.14); lit. discourse about Aruṇavatī",
+    "Saṁyutta Nikāya 6.14 (SN6.14); lit. discourse about Aruṇavatī",
     "✔"
    ],
    [
     "parinibbānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 6.15 (SN6.15); lit. discourse on Parinibbāna",
+    "Saṁyutta Nikāya 6.15 (SN6.15); lit. discourse on Parinibbāna",
     "✔"
    ],
    [
@@ -37998,48 +37998,48 @@ var family_set_json = {
    [
     "andhakavinda 2",
     "masc",
-    "in reference to SN6.13 Andhakavindasuttaṃ; lit. name of a town",
+    "in reference to SN6.13 Andhakavindasuttaṁ; lit. name of a town",
     "✔"
    ]
   ],
   "count": 17
  },
- "suttas of Saṃyutta Nikāya 47": {
+ "suttas of Saṁyutta Nikāya 47": {
   "data": [
    [
     "bāhiyasutta 2",
     "nt",
-    "Saṃyutta Nikāya 47.15 (SN47.15); lit. discourse with Bāhiya",
+    "Saṁyutta Nikāya 47.15 (SN47.15); lit. discourse with Bāhiya",
     "✔"
    ],
    [
     "aññatarabrāhmaṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 47.25 (SN47.25); lit. discourse on a certain brahmin",
+    "Saṁyutta Nikāya 47.25 (SN47.25); lit. discourse on a certain brahmin",
     "✔"
    ],
    [
     "viraddhasutta 3",
     "nt",
-    "Saṃyutta Nikāya 47.33 (SN47.33); lit. discourse on failed",
+    "Saṁyutta Nikāya 47.33 (SN47.33); lit. discourse on failed",
     "✔"
    ],
    [
     "vibhaṅgasutta 3",
     "nt",
-    "Saṃyutta Nikāya 47.40 (SN47.40); lit. discourse on analysis",
+    "Saṁyutta Nikāya 47.40 (SN47.40); lit. discourse on analysis",
     "✔"
    ],
    [
     "samudayasutta 3",
     "nt",
-    "Saṃyutta Nikāya 47.42 (SN47.42); lit. discourse on the origin",
+    "Saṁyutta Nikāya 47.42 (SN47.42); lit. discourse on the origin",
     "✔"
    ],
    [
     "vedanāsutta 4",
     "nt",
-    "Saṃyutta Nikāya 47.49 (SN47.49); lit. discourse on felt experience",
+    "Saṁyutta Nikāya 47.49 (SN47.49); lit. discourse on felt experience",
     "✔"
    ]
   ],
@@ -38644,287 +38644,287 @@ var family_set_json = {
   ],
   "count": 99
  },
- "vaggas of the Saṃyutta Nikāya 45": {
+ "vaggas of the Saṁyutta Nikāya 45": {
   "data": [
    [
     "avijjāvagga 3",
     "masc",
-    "Chapter 1 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on ignorance",
+    "Chapter 1 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on ignorance",
     "✔"
    ],
    [
     "vihāravagga",
     "masc",
-    "Chapter 2 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on meditation attainment",
+    "Chapter 2 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on meditation attainment",
     "✔"
    ],
    [
     "micchattavagga",
     "masc",
-    "Chapter 3 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on wrongness",
+    "Chapter 3 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on wrongness",
     "✔"
    ],
    [
     "paṭipattivagga",
     "masc",
-    "Chapter 4 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on practice",
+    "Chapter 4 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on practice",
     "✔"
    ],
    [
     "aññatitthiyapeyyālavagga",
     "masc",
-    "Chapter 5 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on followers of other religions with elided repetitions",
+    "Chapter 5 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on followers of other religions with elided repetitions",
     "✔"
    ],
    [
     "sūriyapeyyālavagga",
     "masc",
-    "Chapter 6 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the sun with elided repetitions",
+    "Chapter 6 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the sun with elided repetitions",
     "✔"
    ],
    [
     "ekadhammapeyyālavagga",
     "masc",
-    "Chapter 7 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on one thing with elided repetitions",
+    "Chapter 7 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on one thing with elided repetitions",
     "✔"
    ],
    [
     "dutiyaekadhammapeyyālavagga",
     "masc",
-    "Chapter 8 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. second chapter on one thing with elided repetitions",
+    "Chapter 8 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. second chapter on one thing with elided repetitions",
     "✔"
    ],
    [
     "gaṅgāpeyyālavagga 01",
     "masc",
-    "Chapter 9 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 9 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "dutiyagaṅgāpeyyālavagga",
     "masc",
-    "Chapter 10 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. second chapter on the Ganges with elided repetitions",
+    "Chapter 10 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. second chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "appamādapeyyālavagga",
     "masc",
-    "Chapter 11 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on carefulness with elided repetitions",
+    "Chapter 11 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on carefulness with elided repetitions",
     "✔"
    ],
    [
     "balakaraṇīyavagga 1",
     "masc",
-    "Chapter 12 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "Chapter 12 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on strenuous",
     "✔"
    ],
    [
     "esanāvagga 1",
     "masc",
-    "Chapter 13 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "Chapter 13 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on seeking",
     "✔"
    ],
    [
     "oghavagga 01",
     "masc",
-    "Chapter 15 of the Maggasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 15 of the Maggasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 14
  },
- "suttas of Saṃyutta Nikāya 24": {
+ "suttas of Saṁyutta Nikāya 24": {
   "data": [
    [
     "vātasutta 1",
     "nt",
-    "Saṃyutta Nikāya 24.1 (SN24.1); lit. discourse on winds",
+    "Saṁyutta Nikāya 24.1 (SN24.1); lit. discourse on winds",
     "✔"
    ],
    [
-    "etaṃmamasutta 2",
+    "etaṁmamasutta 2",
     "nt",
-    "Saṃyutta Nikāya 24.2 (SN24.2); lit. discourse on this is mine",
+    "Saṁyutta Nikāya 24.2 (SN24.2); lit. discourse on this is mine",
     "✔"
    ],
    [
     "soattāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 24.3 (SN24.3); lit. discourse on this is my self",
+    "Saṁyutta Nikāya 24.3 (SN24.3); lit. discourse on this is my self",
     "✔"
    ],
    [
     "nocamesiyāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 24.4 (SN24.4); lit. discourse on it might not be mine",
+    "Saṁyutta Nikāya 24.4 (SN24.4); lit. discourse on it might not be mine",
     "✔"
    ],
    [
     "natthidinnasutta",
     "nt",
-    "Saṃyutta Nikāya 24.5 (SN24.5); lit. discourse on nothing is given",
+    "Saṁyutta Nikāya 24.5 (SN24.5); lit. discourse on nothing is given",
     "✔"
    ],
    [
     "karotosutta",
     "nt",
-    "Saṃyutta Nikāya 24.6 (SN24.6); lit. discourse on making",
+    "Saṁyutta Nikāya 24.6 (SN24.6); lit. discourse on making",
     "✔"
    ],
    [
     "hetusutta 1",
     "nt",
-    "Saṃyutta Nikāya 24.7 (SN24.7); lit. discourse on cause",
+    "Saṁyutta Nikāya 24.7 (SN24.7); lit. discourse on cause",
     "✔"
    ],
    [
     "mahādiṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 24.8 (SN24.8); lit. discourse on the great view",
+    "Saṁyutta Nikāya 24.8 (SN24.8); lit. discourse on the great view",
     "✔"
    ],
    [
     "sassatadiṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 24.9 (SN24.9); lit. discourse on the view of eternalism",
+    "Saṁyutta Nikāya 24.9 (SN24.9); lit. discourse on the view of eternalism",
     "✔"
    ],
    [
     "asassatadiṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 24.10 (SN24.10); lit. discourse on the view of non-eternalism",
+    "Saṁyutta Nikāya 24.10 (SN24.10); lit. discourse on the view of non-eternalism",
     "✔"
    ],
    [
     "antavāsutta",
     "nt",
-    "Saṃyutta Nikāya 24.11 (SN24.11); lit. discourse on finite",
+    "Saṁyutta Nikāya 24.11 (SN24.11); lit. discourse on finite",
     "✔"
    ],
    [
     "anantavāsutta",
     "nt",
-    "Saṃyutta Nikāya 24.12 (SN24.12); lit. discourse on infinite",
+    "Saṁyutta Nikāya 24.12 (SN24.12); lit. discourse on infinite",
     "✔"
    ],
    [
-    "taṃjīvaṃtaṃsarīraṃsutta",
+    "taṁjīvaṁtaṁsarīraṁsutta",
     "nt",
-    "Saṃyutta Nikāya 24.13 (SN24.13); lit. discourse on the soul and body are identical",
+    "Saṁyutta Nikāya 24.13 (SN24.13); lit. discourse on the soul and body are identical",
     "✔"
    ],
    [
-    "aññaṃjīvaṃaññaṃsarīraṃsutta",
+    "aññaṁjīvaṁaññaṁsarīraṁsutta",
     "nt",
-    "Saṃyutta Nikāya 24.14 (SN24.14); lit. discourse on the soul is one thing, the body is another",
+    "Saṁyutta Nikāya 24.14 (SN24.14); lit. discourse on the soul is one thing, the body is another",
     "✔"
    ],
    [
     "hotitathāgatosutta",
     "nt",
-    "Saṃyutta Nikāya 24.15 (SN24.15); lit. discourse on the realised one exists (after death)",
+    "Saṁyutta Nikāya 24.15 (SN24.15); lit. discourse on the realised one exists (after death)",
     "✔"
    ],
    [
     "nahotitathāgatosutta",
     "nt",
-    "Saṃyutta Nikāya 24.16 (SN24.16); lit. discourse on the realised one does not exist (after death)",
+    "Saṁyutta Nikāya 24.16 (SN24.16); lit. discourse on the realised one does not exist (after death)",
     "✔"
    ],
    [
     "hoticanacahotitathāgatosutta",
     "nt",
-    "Saṃyutta Nikāya 24.17 (SN24.17); lit. discourse on the realised one does and does not exist (after death)",
+    "Saṁyutta Nikāya 24.17 (SN24.17); lit. discourse on the realised one does and does not exist (after death)",
     "✔"
    ],
    [
     "nevahotinanahotitathāgatosutta",
     "nt",
-    "Saṃyutta Nikāya 24.18 (SN24.18); lit. discourse on the realised one neither exists nor does not exist (after death)",
+    "Saṁyutta Nikāya 24.18 (SN24.18); lit. discourse on the realised one neither exists nor does not exist (after death)",
     "✔"
    ],
    [
     "vātasutta 2",
     "nt",
-    "Saṃyutta Nikāya 24.19-35 (SN24.19-35); lit. discourse on winds",
+    "Saṁyutta Nikāya 24.19-35 (SN24.19-35); lit. discourse on winds",
     "✔"
    ],
    [
     "nevahotinanahotisutta",
     "nt",
-    "Saṃyutta Nikāya 24.36 (SN24.36); lit. discourse on neither is nor is not",
+    "Saṁyutta Nikāya 24.36 (SN24.36); lit. discourse on neither is nor is not",
     "✔"
    ],
    [
     "rūpīattāsutta",
     "nt",
-    "Saṃyutta Nikāya 24.37 (SN24.37); lit. discourse on the self has form",
+    "Saṁyutta Nikāya 24.37 (SN24.37); lit. discourse on the self has form",
     "✔"
    ],
    [
     "arūpīattāsutta",
     "nt",
-    "Saṃyutta Nikāya 24.38 (SN24.38); lit. discourse on the self is formless",
+    "Saṁyutta Nikāya 24.38 (SN24.38); lit. discourse on the self is formless",
     "✔"
    ],
    [
     "rūpīcaarūpīcaattāsutta",
     "nt",
-    "Saṃyutta Nikāya 24.39 (SN24.39); lit. discourse on the self with form and without form",
+    "Saṁyutta Nikāya 24.39 (SN24.39); lit. discourse on the self with form and without form",
     "✔"
    ],
    [
     "nevarūpīnārūpīattāsutta",
     "nt",
-    "Saṃyutta Nikāya 24.40 (SN24.40); lit. discourse on the self neither has form nor is formless",
+    "Saṁyutta Nikāya 24.40 (SN24.40); lit. discourse on the self neither has form nor is formless",
     "✔"
    ],
    [
     "ekantasukhīsutta",
     "nt",
-    "Saṃyutta Nikāya 24.41 (SN24.41); lit. discourse on completely comfortable",
+    "Saṁyutta Nikāya 24.41 (SN24.41); lit. discourse on completely comfortable",
     "✔"
    ],
    [
     "ekantadukkhīsutta",
     "nt",
-    "Saṃyutta Nikāya 24.42 (SN24.42); lit. discourse on entirely uncomfortable",
+    "Saṁyutta Nikāya 24.42 (SN24.42); lit. discourse on entirely uncomfortable",
     "✔"
    ],
    [
     "sukhadukkhīsutta",
     "nt",
-    "Saṃyutta Nikāya 24.43 (SN24.43); lit. discourse on experiencing ease and discomfort",
+    "Saṁyutta Nikāya 24.43 (SN24.43); lit. discourse on experiencing ease and discomfort",
     "✔"
    ],
    [
     "adukkhamasukhīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 24.44 (SN24.44); lit. discourse on experiencing neither ease nor discomfort",
+    "Saṁyutta Nikāya 24.44 (SN24.44); lit. discourse on experiencing neither ease nor discomfort",
     "✔"
    ],
    [
     "navātasutta 1",
     "nt",
-    "Saṃyutta Nikāya 24.45 (SN24.45); lit. discourse on winds do not (blow)",
+    "Saṁyutta Nikāya 24.45 (SN24.45); lit. discourse on winds do not (blow)",
     "✔"
    ],
    [
     "adukkhamasukhīsutta 2",
     "nt",
-    "Saṃyutta Nikāya 24.70 (SN24.70); lit. discourse on experiencing neither ease nor discomfort",
+    "Saṁyutta Nikāya 24.70 (SN24.70); lit. discourse on experiencing neither ease nor discomfort",
     "✔"
    ],
    [
     "navātasutta 2",
     "nt",
-    "Saṃyutta Nikāya 24.71-95 (SN24.71-95); lit. discourse on no winds",
+    "Saṁyutta Nikāya 24.71-95 (SN24.71-95); lit. discourse on no winds",
     "✔"
    ],
    [
     "adukkhamasukhīsutta 3",
     "nt",
-    "Saṃyutta Nikāya 24.96 (SN24.96); lit. discourse on experiencing neither ease nor discomfort",
+    "Saṁyutta Nikāya 24.96 (SN24.96); lit. discourse on experiencing neither ease nor discomfort",
     "✔"
    ]
   ],
@@ -39304,13 +39304,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vīsatiṃsā",
+    "vīsatiṁsā",
     "card",
     "twenty or thirty (20 or 30)",
     "◑"
    ],
    [
-    "vīsaṃ",
+    "vīsaṁ",
     "card",
     "twenty (20)",
     "✔"
@@ -39382,103 +39382,103 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ekūnatiṃsā",
+    "ekūnatiṁsā",
     "card",
     "twenty-nine (29)",
     "◑"
    ],
    [
-    "tiṃsa 1",
+    "tiṁsa 1",
     "card",
     "thirty (30)",
     "✔"
    ],
    [
-    "tiṃsati",
+    "tiṁsati",
     "card",
     "thirty (30)",
     "◑"
    ],
    [
-    "tiṃsaṃ",
+    "tiṁsaṁ",
     "card",
     "thirty (30)",
     "✔"
    ],
    [
-    "tiṃsā",
+    "tiṁsā",
     "card",
     "thirty (30)",
     "✔"
    ],
    [
-    "tiṃse",
+    "tiṁse",
     "card",
     "thirty (30)",
     "✔"
    ],
    [
-    "ekatiṃsā",
+    "ekatiṁsā",
     "card",
     "thirty-one (31)",
     "◑"
    ],
    [
-    "dvattiṃsati",
+    "dvattiṁsati",
     "card",
     "thirty-two (32)",
     "✔"
    ],
    [
-    "dvattiṃsā",
+    "dvattiṁsā",
     "card",
     "thirty-two (32)",
     "✔"
    ],
    [
-    "dvittiṃsā",
+    "dvittiṁsā",
     "card",
     "thirty-two (32)",
     "✔"
    ],
    [
-    "bāttiṃsā",
+    "bāttiṁsā",
     "card",
     "thirty-two (32)",
     "✔"
    ],
    [
-    "tettiṃsā",
+    "tettiṁsā",
     "card",
     "thirty-three (33)",
     "✔"
    ],
    [
-    "chattiṃsati",
+    "chattiṁsati",
     "card",
     "thirty-six (36)",
     "✔"
    ],
    [
-    "chattiṃsā",
+    "chattiṁsā",
     "card",
     "thirty-six (36)",
     "✔"
    ],
    [
-    "aṭṭhatiṃsati",
+    "aṭṭhatiṁsati",
     "card",
     "thirty-eight (38)",
     "✔"
    ],
    [
-    "aṭṭhatiṃsā",
+    "aṭṭhatiṁsā",
     "card",
     "thirty-eight (38)",
     "◑"
    ],
    [
-    "aṭṭhattiṃsā",
+    "aṭṭhattiṁsā",
     "card",
     "thirty-eight (38)",
     "✔"
@@ -39988,13 +39988,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aṭṭhannaṃ 1",
+    "aṭṭhannaṁ 1",
     "card",
     "of eight",
     "✔"
    ],
    [
-    "aṭṭhannaṃ 2",
+    "aṭṭhannaṁ 2",
     "card",
     "to eight; for eight",
     "◑"
@@ -40048,13 +40048,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "catunnaṃ 1",
+    "catunnaṁ 1",
     "card",
     "for four; to four",
     "✔"
    ],
    [
-    "catunnaṃ 2",
+    "catunnaṁ 2",
     "card",
     "of four",
     "✔"
@@ -40096,13 +40096,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "channaṃ 1",
+    "channaṁ 1",
     "card",
     "for six",
     "✔"
    ],
    [
-    "channaṃ 2",
+    "channaṁ 2",
     "card",
     "of six",
     "✔"
@@ -40126,7 +40126,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tiṇṇaṃ",
+    "tiṇṇaṁ",
     "card",
     "of three",
     "✔"
@@ -40144,13 +40144,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dasannaṃ 1",
+    "dasannaṁ 1",
     "card",
     "for ten; to ten",
     "✔"
    ],
    [
-    "dasannaṃ 2",
+    "dasannaṁ 2",
     "card",
     "of ten",
     "✔"
@@ -40168,13 +40168,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dvinnaṃ 1",
+    "dvinnaṁ 1",
     "card",
     "of two",
     "✔"
    ],
    [
-    "dvinnaṃ 2",
+    "dvinnaṁ 2",
     "card",
     "when two",
     "✔"
@@ -40216,19 +40216,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pañcannaṃ 1",
+    "pañcannaṁ 1",
     "card",
     "to five; for five",
     "✔"
    ],
    [
-    "pañcannaṃ 2",
+    "pañcannaṁ 2",
     "card",
     "of five",
     "✔"
    ],
    [
-    "pañcannaṃ 3",
+    "pañcannaṁ 3",
     "card",
     "when five; lit. of five",
     "✔"
@@ -40252,13 +40252,13 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sattannaṃ 1",
+    "sattannaṁ 1",
     "card",
     "to seven; for the seven",
     "✔"
    ],
    [
-    "sattannaṃ 2",
+    "sattannaṁ 2",
     "card",
     "of seven",
     "✔"
@@ -41421,7 +41421,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "sayaṃjāti",
+    "sayaṁjāti",
     "fem",
     "name of a town in Ceta; lit. one's own caste",
     "◑"
@@ -41523,7 +41523,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "suṃsumāragira",
+    "suṁsumāragira",
     "masc",
     "name of the capital city of Bhagga; lit. crocodile's call",
     "✔"
@@ -41618,7 +41618,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "catutthiṃ",
+    "catutthiṁ",
     "ordin",
     "fourth (4th)",
     "✔"
@@ -41888,55 +41888,55 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ekūnatiṃsa",
+    "ekūnatiṁsa",
     "ordin",
     "twenty-ninth (29th)",
     "✔"
    ],
    [
-    "tiṃsa 2",
+    "tiṁsa 2",
     "ordin",
     "thirtieth (30th)",
     "◑"
    ],
    [
-    "tiṃsatima",
+    "tiṁsatima",
     "ordin",
     "thirtieth (30th)",
     "✔"
    ],
    [
-    "ekatiṃsa",
+    "ekatiṁsa",
     "ordin",
     "thirty-first (31st)",
     "✔"
    ],
    [
-    "ekattiṃsatima",
+    "ekattiṁsatima",
     "ordin",
     "thirty-first (31st)",
     "◑"
    ],
    [
-    "bāttiṃsatima",
+    "bāttiṁsatima",
     "ordin",
     "thirty-second (32nd)",
     "✔"
    ],
    [
-    "tettiṃsatima",
+    "tettiṁsatima",
     "ordin",
     "thirty-third (33rd)",
     "✔"
    ],
    [
-    "pañcatiṃsatima",
+    "pañcatiṁsatima",
     "ordin",
     "thirty-fifth (35th)",
     "✔"
    ],
    [
-    "aṭṭhattiṃsa",
+    "aṭṭhattiṁsa",
     "ordin",
     "thirty-eighth (38th)",
     "✔"
@@ -42127,13 +42127,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aḍḍhamāsikaṃ",
+    "aḍḍhamāsikaṁ",
     "ind",
     "once every fortnight; once every two weeks",
     "✔"
    ],
    [
-    "atirekacātumāsaṃ",
+    "atirekacātumāsaṁ",
     "ind",
     "for more than one season; for period of more than four months",
     "✔"
@@ -42181,13 +42181,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "anvaḍḍhamāsaṃ",
+    "anvaḍḍhamāsaṁ",
     "ind",
     "every half a month; every fortnight; every 14 or 15 days",
     "◑"
    ],
    [
-    "anvaddhamāsaṃ",
+    "anvaddhamāsaṁ",
     "ind",
     "every fortnight; after half a month",
     "✔"
@@ -42199,7 +42199,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ahikaṃ",
+    "ahikaṁ",
     "ind",
     "every x days; with x days in between",
     "✔"
@@ -42229,7 +42229,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ūnakaddhamāsaṃ",
+    "ūnakaddhamāsaṁ",
     "ind",
     "within less than half a month",
     "✔"
@@ -42265,19 +42265,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ekāhaṃ 2",
+    "ekāhaṁ 2",
     "ind",
     "for one day; for a single day",
     "✔"
    ],
    [
-    "ekāhikaṃ",
+    "ekāhikaṁ",
     "ind",
     "once a day; (comm) with one day in-between",
     "✔"
    ],
    [
-    "omakacātumāsaṃ",
+    "omakacātumāsaṁ",
     "ind",
     "for less than four months; for a period of less than one season",
     "✔"
@@ -42295,7 +42295,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "orenaddhamāsaṃ",
+    "orenaddhamāsaṁ",
     "ind",
     "sooner than a fortnight; within less than half a month",
     "✔"
@@ -42307,7 +42307,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "katipāhakaṃ",
+    "katipāhakaṁ",
     "ind",
     "for a few days; for some time",
     "✔"
@@ -42385,7 +42385,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tāvatīhaṃ",
+    "tāvatīhaṁ",
     "ind",
     "for that many days; for so many days",
     "✔"
@@ -42457,7 +42457,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dvemāsaṃ",
+    "dvemāsaṁ",
     "ind",
     "for two months; for a period of two months",
     "✔"
@@ -42469,7 +42469,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "nattamahaṃ",
+    "nattamahaṁ",
     "ind",
     "all night and day; day and night; continuously; continually",
     "✔"
@@ -42535,7 +42535,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "māsaparamaṃ",
+    "māsaparamaṁ",
     "ind",
     "for a month at the most; for a maximum of one month",
     "✔"
@@ -42553,7 +42553,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "māsaṃ",
+    "māsaṁ",
     "ind",
     "for a month; for a period of one month",
     "✔"
@@ -42577,13 +42577,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "yāvatīhaṃ",
+    "yāvatīhaṁ",
     "ind",
     "for however many days; for as many days",
     "✔"
    ],
    [
-    "rattamahaṃ",
+    "rattamahaṁ",
     "ind",
     "day and night; continuously; continually",
     "✔"
@@ -42613,13 +42613,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sattāhaṃ 1",
+    "sattāhaṁ 1",
     "ind",
     "for a week; for seven days",
     "✔"
    ],
    [
-    "sattāhaṃ 2",
+    "sattāhaṁ 2",
     "ind",
     "within seven days",
     "◑"
@@ -42631,19 +42631,19 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sattāhikaṃ",
+    "sattāhikaṁ",
     "ind",
     "once every seven days; once a week; (comm) with seven days in-between",
     "✔"
    ],
    [
-    "sabbamahorattaṃ",
+    "sabbamahorattaṁ",
     "ind",
     "all day and all night; all the time",
     "✔"
    ],
    [
-    "sabbamahorattiṃ",
+    "sabbamahorattiṁ",
     "ind",
     "throughout the day and night; continuously; all the time; lit. entire day and night",
     "✔"
@@ -42651,24 +42651,24 @@ var family_set_json = {
   ],
   "count": 93
  },
- "vaggas of the Saṃyutta Nikāya 36": {
+ "vaggas of the Saṁyutta Nikāya 36": {
   "data": [
    [
     "sagāthāvagga 2",
     "masc",
-    "Chapter 1 of the Vedanāsaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter with verses",
+    "Chapter 1 of the Vedanāsaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter with verses",
     "✔"
    ],
    [
     "rahogatavagga 1",
     "masc",
-    "Chapter 2 of the Vedanāsaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on gone into seclusion",
+    "Chapter 2 of the Vedanāsaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on gone into seclusion",
     "✔"
    ],
    [
     "aṭṭhasatapariyāyavagga",
     "masc",
-    "Chapter 3 of the Vedanāsaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the one hundred and eight ways",
+    "Chapter 3 of the Vedanāsaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on the one hundred and eight ways",
     "✔"
    ]
   ],
@@ -42803,7 +42803,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "saṃghabhedasikkhāpadaṭīkā",
+    "saṁghabhedasikkhāpadaṭīkā",
     "fem",
     "sub-commentary to the rule on schism in the monastic order",
     "✔"
@@ -42841,281 +42841,281 @@ var family_set_json = {
   ],
   "count": 27
  },
- "suttas of Saṃyutta Nikāya 19": {
+ "suttas of Saṁyutta Nikāya 19": {
   "data": [
    [
     "aṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 19.1 (SN19.1); lit. discourse on bones",
+    "Saṁyutta Nikāya 19.1 (SN19.1); lit. discourse on bones",
     "✔"
    ],
    [
     "pesisutta",
     "nt",
-    "Saṃyutta Nikāya 19.2 (SN19.2); lit. discourse on the lump of meat",
+    "Saṁyutta Nikāya 19.2 (SN19.2); lit. discourse on the lump of meat",
     "✔"
    ],
    [
     "piṇḍasutta 2",
     "nt",
-    "Saṃyutta Nikāya 19.3 (SN19.3); lit. discourse on the lump",
+    "Saṁyutta Nikāya 19.3 (SN19.3); lit. discourse on the lump",
     "✔"
    ],
    [
     "nicchavisutta",
     "nt",
-    "Saṃyutta Nikāya 19.4 (SN19.4); lit. discourse on skinless",
+    "Saṁyutta Nikāya 19.4 (SN19.4); lit. discourse on skinless",
     "✔"
    ],
    [
     "asilomasutta",
     "nt",
-    "Saṃyutta Nikāya 19.5 (SN19.5); lit. discourse on swords for hair",
+    "Saṁyutta Nikāya 19.5 (SN19.5); lit. discourse on swords for hair",
     "✔"
    ],
    [
     "sattisutta 2",
     "nt",
-    "Saṃyutta Nikāya 19.6 (SN19.6); lit. discourse on spears (for hair)",
+    "Saṁyutta Nikāya 19.6 (SN19.6); lit. discourse on spears (for hair)",
     "✔"
    ],
    [
     "usulomasutta",
     "nt",
-    "Saṃyutta Nikāya 19.7 (SN19.7); lit. discourse on having arrows as hair",
+    "Saṁyutta Nikāya 19.7 (SN19.7); lit. discourse on having arrows as hair",
     "✔"
    ],
    [
     "sūcilomasutta 2",
     "nt",
-    "Saṃyutta Nikāya 19.8 (SN19.8); lit. discourse on having needles as hair",
+    "Saṁyutta Nikāya 19.8 (SN19.8); lit. discourse on having needles as hair",
     "✔"
    ],
    [
     "dutiyasūcilomasutta",
     "nt",
-    "Saṃyutta Nikāya 19.9 (SN19.9); lit. second discourse on having needles as hair",
+    "Saṁyutta Nikāya 19.9 (SN19.9); lit. second discourse on having needles as hair",
     "✔"
    ],
    [
     "kumbhaṇḍasutta",
     "nt",
-    "Saṃyutta Nikāya 19.10 (SN19.10); lit. discourse on pumpkin size testicles",
+    "Saṁyutta Nikāya 19.10 (SN19.10); lit. discourse on pumpkin size testicles",
     "✔"
    ],
    [
     "sasīsakasutta",
     "nt",
-    "Saṃyutta Nikāya 19.11 (SN19.11); lit. discourse on over one's head",
+    "Saṁyutta Nikāya 19.11 (SN19.11); lit. discourse on over one's head",
     "✔"
    ],
    [
     "gūthakhādasutta",
     "nt",
-    "Saṃyutta Nikāya 19.12 (SN19.12); lit. discourse on the eating excrement",
+    "Saṁyutta Nikāya 19.12 (SN19.12); lit. discourse on the eating excrement",
     "✔"
    ],
    [
     "nicchavitthisutta",
     "nt",
-    "Saṃyutta Nikāya 19.13 (SN19.13); lit. discourse on the skinless woman",
+    "Saṁyutta Nikāya 19.13 (SN19.13); lit. discourse on the skinless woman",
     "✔"
    ],
    [
     "maṅgulitthisutta",
     "nt",
-    "Saṃyutta Nikāya 19.14 (SN19.14); lit. discourse on the hideously ugly woman",
+    "Saṁyutta Nikāya 19.14 (SN19.14); lit. discourse on the hideously ugly woman",
     "✔"
    ],
    [
     "okilinīsutta",
     "nt",
-    "Saṃyutta Nikāya 19.15 (SN19.15); lit. discourse on discharging",
+    "Saṁyutta Nikāya 19.15 (SN19.15); lit. discourse on discharging",
     "✔"
    ],
    [
     "asīsakasutta",
     "nt",
-    "Saṃyutta Nikāya 19.16 (SN19.16); lit. discourse on without a head",
+    "Saṁyutta Nikāya 19.16 (SN19.16); lit. discourse on without a head",
     "✔"
    ],
    [
     "pāpabhikkhusutta",
     "nt",
-    "Saṃyutta Nikāya 19.17 (SN19.17); lit. discourse on the evil monk",
+    "Saṁyutta Nikāya 19.17 (SN19.17); lit. discourse on the evil monk",
     "✔"
    ],
    [
     "pāpabhikkhunīsutta",
     "nt",
-    "Saṃyutta Nikāya 19.18 (SN19.18); lit. discourse on the evil nun",
+    "Saṁyutta Nikāya 19.18 (SN19.18); lit. discourse on the evil nun",
     "✔"
    ],
    [
     "pāpasikkhamānasutta",
     "nt",
-    "Saṃyutta Nikāya 19.19 (SN19.19); lit. discourse on the evil nun-in-training",
+    "Saṁyutta Nikāya 19.19 (SN19.19); lit. discourse on the evil nun-in-training",
     "✔"
    ],
    [
     "pāpasāmaṇerasutta",
     "nt",
-    "Saṃyutta Nikāya 19.20 (SN19.20); lit. discourse on the evil novice",
+    "Saṁyutta Nikāya 19.20 (SN19.20); lit. discourse on the evil novice",
     "✔"
    ],
    [
     "pāpasāmaṇerīsutta",
     "nt",
-    "Saṃyutta Nikāya 19.21 (SN19.21); lit. discourse on the evil female novice",
+    "Saṁyutta Nikāya 19.21 (SN19.21); lit. discourse on the evil female novice",
     "✔"
    ]
   ],
   "count": 21
  },
- "suttas of Saṃyutta Nikāya 3": {
+ "suttas of Saṁyutta Nikāya 3": {
   "data": [
    [
     "daharasutta",
     "nt",
-    "Saṃyutta Nikāya 3.1 (SN3.1); lit. discourse on young",
+    "Saṁyutta Nikāya 3.1 (SN3.1); lit. discourse on young",
     "✔"
    ],
    [
     "purisasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.2 (SN3.2); lit. discourse on the man",
+    "Saṁyutta Nikāya 3.2 (SN3.2); lit. discourse on the man",
     "✔"
    ],
    [
     "jarāmaraṇasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.3 (SN3.3); lit. discourse on aging and death",
+    "Saṁyutta Nikāya 3.3 (SN3.3); lit. discourse on aging and death",
     "✔"
    ],
    [
     "piyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.4 (SN3.4); lit. discourse on the dear",
+    "Saṁyutta Nikāya 3.4 (SN3.4); lit. discourse on the dear",
     "✔"
    ],
    [
     "attarakkhitasutta",
     "nt",
-    "Saṃyutta Nikāya 3.5 (SN3.5); lit. discourse on protected by oneself",
+    "Saṁyutta Nikāya 3.5 (SN3.5); lit. discourse on protected by oneself",
     "✔"
    ],
    [
     "appakasutta",
     "nt",
-    "Saṃyutta Nikāya 3.6 (SN3.6); lit. discourse on few",
+    "Saṁyutta Nikāya 3.6 (SN3.6); lit. discourse on few",
     "✔"
    ],
    [
     "aḍḍakaraṇasutta",
     "nt",
-    "Saṃyutta Nikāya 3.7 (SN3.7); lit. discourse on passing judgement",
+    "Saṁyutta Nikāya 3.7 (SN3.7); lit. discourse on passing judgement",
     "✔"
    ],
    [
     "mallikāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.8 (SN3.8); lit. discourse about Mallikā",
+    "Saṁyutta Nikāya 3.8 (SN3.8); lit. discourse about Mallikā",
     "✔"
    ],
    [
     "yaññasutta",
     "nt",
-    "Saṃyutta Nikāya 3.9 (SN3.9); lit. discourse about sacrifice",
+    "Saṁyutta Nikāya 3.9 (SN3.9); lit. discourse about sacrifice",
     "✔"
    ],
    [
     "bandhanasutta 2",
     "nt",
-    "Saṃyutta Nikāya 3.10 (SN3.10); lit. discourse on bondage",
+    "Saṁyutta Nikāya 3.10 (SN3.10); lit. discourse on bondage",
     "✔"
    ],
    [
     "sattajaṭilasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.11 (SN3.11); lit. discourse on seven dreadlocked ascetics",
+    "Saṁyutta Nikāya 3.11 (SN3.11); lit. discourse on seven dreadlocked ascetics",
     "✔"
    ],
    [
     "pañcarājasutta",
     "nt",
-    "Saṃyutta Nikāya 3.12 (SN3.12); lit. discourse on five kings",
+    "Saṁyutta Nikāya 3.12 (SN3.12); lit. discourse on five kings",
     "✔"
    ],
    [
     "doṇapākasutta",
     "nt",
-    "Saṃyutta Nikāya 3.13 (SN3.13); lit. discourse about a bucketful of cooked food",
+    "Saṁyutta Nikāya 3.13 (SN3.13); lit. discourse about a bucketful of cooked food",
     "✔"
    ],
    [
     "paṭhamasaṅgāmasutta",
     "nt",
-    "Saṃyutta Nikāya 3.14 (SN3.14); lit. first discourse about battle",
+    "Saṁyutta Nikāya 3.14 (SN3.14); lit. first discourse about battle",
     "✔"
    ],
    [
     "dutiyasaṅgāmasutta",
     "nt",
-    "Saṃyutta Nikāya 3.15 (SN3.15); lit. second discourse about battle",
+    "Saṁyutta Nikāya 3.15 (SN3.15); lit. second discourse about battle",
     "✔"
    ],
    [
     "mallikāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 3.16 (SN3.16); lit. discourse about Mallikā",
+    "Saṁyutta Nikāya 3.16 (SN3.16); lit. discourse about Mallikā",
     "✔"
    ],
    [
     "appamādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.17 (SN3.17); lit. discourse on heedfulness",
+    "Saṁyutta Nikāya 3.17 (SN3.17); lit. discourse on heedfulness",
     "✔"
    ],
    [
     "kalyāṇamittasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.18 (SN3.18); lit. discourse about good friends",
+    "Saṁyutta Nikāya 3.18 (SN3.18); lit. discourse about good friends",
     "✔"
    ],
    [
     "paṭhamaaputtakasutta",
     "nt",
-    "Saṃyutta Nikāya 3.19 (SN3.19)",
+    "Saṁyutta Nikāya 3.19 (SN3.19)",
     "✔"
    ],
    [
     "dutiyaaputtakasutta",
     "nt",
-    "Saṃyutta Nikāya 3.20 (SN3.20); lit. second discourse on without a son",
+    "Saṁyutta Nikāya 3.20 (SN3.20); lit. second discourse on without a son",
     "✔"
    ],
    [
     "puggalasutta 1",
     "nt",
-    "Saṃyutta Nikāya 3.21 (SN3.21); lit. discourse on the person",
+    "Saṁyutta Nikāya 3.21 (SN3.21); lit. discourse on the person",
     "✔"
    ],
    [
     "ayyikāsutta",
     "nt",
-    "Saṃyutta Nikāya 3.22 (SN3.22); lit. discourse about grandmother",
+    "Saṁyutta Nikāya 3.22 (SN3.22); lit. discourse about grandmother",
     "✔"
    ],
    [
     "issattasutta",
     "nt",
-    "Saṃyutta Nikāya 3.24 (SN3.24); lit. discourse on archery",
+    "Saṁyutta Nikāya 3.24 (SN3.24); lit. discourse on archery",
     "✔"
    ],
    [
     "pabbatūpamasutta",
     "nt",
-    "Saṃyutta Nikāya 3.25 (SN3.25); lit. discourse about the simile of the mountain",
+    "Saṁyutta Nikāya 3.25 (SN3.25); lit. discourse about the simile of the mountain",
     "✔"
    ],
    [
@@ -43142,7 +43142,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "atirekacātumāsaṃ",
+    "atirekacātumāsaṁ",
     "ind",
     "for more than one season; for period of more than four months",
     "✔"
@@ -43166,13 +43166,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "anvaḍḍhamāsaṃ",
+    "anvaḍḍhamāsaṁ",
     "ind",
     "every half a month; every fortnight; every 14 or 15 days",
     "◑"
    ],
    [
-    "anvaddhamāsaṃ",
+    "anvaddhamāsaṁ",
     "ind",
     "every fortnight; after half a month",
     "✔"
@@ -43196,7 +43196,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ūnakaddhamāsaṃ",
+    "ūnakaddhamāsaṁ",
     "ind",
     "within less than half a month",
     "✔"
@@ -43208,7 +43208,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "omakacātumāsaṃ",
+    "omakacātumāsaṁ",
     "ind",
     "for less than four months; for a period of less than one season",
     "✔"
@@ -43758,7 +43758,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pasataṃ",
+    "pasataṁ",
     "ind",
     "by handful; lit. went forward",
     "✔"
@@ -43805,7 +43805,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saṃsedaja",
+    "saṁsedaja",
     "adj",
     "moisture-born",
     "✔"
@@ -43813,119 +43813,119 @@ var family_set_json = {
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 29": {
+ "suttas of Saṁyutta Nikāya 29": {
   "data": [
    [
     "suddhikasutta 03",
     "nt",
-    "Saṃyutta Nikāya 29.1 (SN29.1); lit. clean (version of the) discourse",
+    "Saṁyutta Nikāya 29.1 (SN29.1); lit. clean (version of the) discourse",
     "✔"
    ],
    [
     "paṇītatarasutta",
     "nt",
-    "Saṃyutta Nikāya 29.2 (SN29.2); lit. discourse on more excellent",
+    "Saṁyutta Nikāya 29.2 (SN29.2); lit. discourse on more excellent",
     "✔"
    ],
    [
     "uposathasutta 1",
     "nt",
-    "Saṃyutta Nikāya 29.3 (SN29.3); lit. discourse on the observance day",
+    "Saṁyutta Nikāya 29.3 (SN29.3); lit. discourse on the observance day",
     "✔"
    ],
    [
     "dutiyauposathasutta",
     "nt",
-    "Saṃyutta Nikāya 29.4 (SN29.4); lit. second discourse on the observance day",
+    "Saṁyutta Nikāya 29.4 (SN29.4); lit. second discourse on the observance day",
     "✔"
    ],
    [
     "tatiyauposathasutta",
     "nt",
-    "Saṃyutta Nikāya 29.5 (SN29.5); lit. third discourse on the observance day",
+    "Saṁyutta Nikāya 29.5 (SN29.5); lit. third discourse on the observance day",
     "✔"
    ],
    [
     "catutthauposathasutta",
     "nt",
-    "Saṃyutta Nikāya 29.6 (SN29.6); lit. fourth discourse on the observance day",
+    "Saṁyutta Nikāya 29.6 (SN29.6); lit. fourth discourse on the observance day",
     "✔"
    ],
    [
     "sutasutta 1",
     "nt",
-    "Saṃyutta Nikāya 29.7 (SN29.7); lit. discourse on heard",
+    "Saṁyutta Nikāya 29.7 (SN29.7); lit. discourse on heard",
     "✔"
    ],
    [
     "dutiyasutasutta",
     "nt",
-    "Saṃyutta Nikāya 29.8 (SN29.8); lit. second discourse on heard",
+    "Saṁyutta Nikāya 29.8 (SN29.8); lit. second discourse on heard",
     "✔"
    ],
    [
     "tatiyasutasutta",
     "nt",
-    "Saṃyutta Nikāya 29.9 (SN29.9); lit. third discourse on heard",
+    "Saṁyutta Nikāya 29.9 (SN29.9); lit. third discourse on heard",
     "✔"
    ],
    [
     "catutthasutasutta",
     "nt",
-    "Saṃyutta Nikāya 29.10 (SN29.10); lit. fourth discourse on heard",
+    "Saṁyutta Nikāya 29.10 (SN29.10); lit. fourth discourse on heard",
     "✔"
    ],
    [
     "aṇḍajadānūpakārasuttadasaka 1",
     "nt",
-    "Saṃyutta Nikāya 29.11-20 (SN29.11-20); lit. set of ten discourses on how giving supports becoming an oviparous (nāga)",
+    "Saṁyutta Nikāya 29.11-20 (SN29.11-20); lit. set of ten discourses on how giving supports becoming an oviparous (nāga)",
     "✔"
    ],
    [
-    "jalābujādidānūpakārasuttattiṃsaka",
+    "jalābujādidānūpakārasuttattiṁsaka",
     "nt",
-    "Saṃyutta Nikāya 29.21-50 (SN29.21-50); lit. group of thirty suttas starting with the discourse on how giving supports becoming a viviparous (nāga)",
+    "Saṁyutta Nikāya 29.21-50 (SN29.21-50); lit. group of thirty suttas starting with the discourse on how giving supports becoming a viviparous (nāga)",
     "✔"
    ]
   ],
   "count": 12
  },
- "suttas of Saṃyutta Nikāya 30": {
+ "suttas of Saṁyutta Nikāya 30": {
   "data": [
    [
     "suddhikasutta 04",
     "nt",
-    "Saṃyutta Nikāya 30.1 (SN30.1); lit. clean (version of the) discourse",
+    "Saṁyutta Nikāya 30.1 (SN30.1); lit. clean (version of the) discourse",
     "✔"
    ],
    [
     "harantisutta",
     "nt",
-    "Saṃyutta Nikāya 30.2 (SN30.2); lit. discourse on they carry away",
+    "Saṁyutta Nikāya 30.2 (SN30.2); lit. discourse on they carry away",
     "✔"
    ],
    [
     "dvayakārīsutta",
     "nt",
-    "Saṃyutta Nikāya 30.3 (SN30.3); lit. discourse on doing both",
+    "Saṁyutta Nikāya 30.3 (SN30.3); lit. discourse on doing both",
     "✔"
    ],
    [
     "dutiyādidvayakārīsuttattika",
     "nt",
-    "Saṃyutta Nikāya 30.4-6 (SN30.4-6); lit. group of three discourses starting with the second discourse on doing both",
+    "Saṁyutta Nikāya 30.4-6 (SN30.4-6); lit. group of three discourses starting with the second discourse on doing both",
     "✔"
    ],
    [
     "aṇḍajadānūpakārasuttadasaka 2",
     "nt",
-    "Saṃyutta Nikāya 30.7-16 (SN30.7-16); lit. group of ten discourses on how giving supports becoming an oviparous (nāga)",
+    "Saṁyutta Nikāya 30.7-16 (SN30.7-16); lit. group of ten discourses on how giving supports becoming an oviparous (nāga)",
     "✔"
    ],
    [
-    "jalābujādidānūpakārasuttatiṃsaka",
+    "jalābujādidānūpakārasuttatiṁsaka",
     "nt",
-    "Saṃyutta Nikāya 30.17-46 (SN30.17-46); lit. group of thirty discourses starting with the discourse on how giving supports becoming a viviparous (nāga)",
+    "Saṁyutta Nikāya 30.17-46 (SN30.17-46); lit. group of thirty discourses starting with the discourse on how giving supports becoming a viviparous (nāga)",
     "✔"
    ]
   ],
@@ -43994,7 +43994,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kolaṃkola",
+    "kolaṁkola",
     "masc",
     "stream enterer who returns to the human state two or three times; lit. family to family",
     "✔"
@@ -44084,7 +44084,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "vigatakathaṃkatha",
+    "vigatakathaṁkatha",
     "adj",
     "without doubt; free from confusion; lit. without asking how?",
     "✔"
@@ -44163,90 +44163,90 @@ var family_set_json = {
   ],
   "count": 4
  },
- "vaggas of the Saṃyutta Nikāya 22": {
+ "vaggas of the Saṁyutta Nikāya 22": {
   "data": [
    [
     "nakulapituvagga",
     "masc",
-    "Chapter 1 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on Nakulapita",
+    "Chapter 1 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on Nakulapita",
     "✔"
    ],
    [
     "aniccavagga 1",
     "masc",
-    "Chapter 2 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on impermanence",
+    "Chapter 2 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on impermanence",
     "✔"
    ],
    [
     "bhāravagga",
     "masc",
-    "Chapter 3 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on the burder",
+    "Chapter 3 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on the burder",
     "✔"
    ],
    [
-    "natumhākaṃvagga",
+    "natumhākaṁvagga",
     "masc",
-    "Chapter 4 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on not yours",
+    "Chapter 4 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on not yours",
     "✔"
    ],
    [
     "attadīpavagga",
     "masc",
-    "Chapter 5 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on self-reliant",
+    "Chapter 5 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on self-reliant",
     "✔"
    ],
    [
     "upayavagga",
     "masc",
-    "Chapter 6 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on engagement",
+    "Chapter 6 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on engagement",
     "✔"
    ],
    [
     "khajjanīyavagga",
     "masc",
-    "Chapter 8 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on edible",
+    "Chapter 8 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on edible",
     "✔"
    ],
    [
     "theravagga 1",
     "masc",
-    "Chapter 9 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on elders",
+    "Chapter 9 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on elders",
     "✔"
    ],
    [
     "pupphavagga 1",
     "masc",
-    "Chapter 10 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on flowers",
+    "Chapter 10 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on flowers",
     "✔"
    ],
    [
     "antavagga",
     "masc",
-    "Chapter 11 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on extremes",
+    "Chapter 11 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on extremes",
     "✔"
    ],
    [
     "dhammakathikavagga",
     "masc",
-    "Chapter 12 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on the Dhamma preacher",
+    "Chapter 12 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on the Dhamma preacher",
     "✔"
    ],
    [
     "avijjāvagga 1",
     "masc",
-    "Chapter 13 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on ignorance",
+    "Chapter 13 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on ignorance",
     "✔"
    ],
    [
     "kukkuḷavagga",
     "masc",
-    "Chapter 14 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on hot ashes",
+    "Chapter 14 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on hot ashes",
     "✔"
    ],
    [
     "diṭṭhivagga",
     "masc",
-    "Chapter 15 of the Khandhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on views",
+    "Chapter 15 of the Khandhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on views",
     "✔"
    ]
   ],
@@ -44425,72 +44425,72 @@ var family_set_json = {
   ],
   "count": 28
  },
- "suttas of Saṃyutta Nikāya 13": {
+ "suttas of Saṁyutta Nikāya 13": {
   "data": [
    [
     "nakhasikhāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 13.1 (SN13.1); lit. disourse on the tip of the nail",
+    "Saṁyutta Nikāya 13.1 (SN13.1); lit. disourse on the tip of the nail",
     "✔"
    ],
    [
     "pokkharaṇīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 13.2 (SN13.2); lit. discourse on the water lily pond",
+    "Saṁyutta Nikāya 13.2 (SN13.2); lit. discourse on the water lily pond",
     "✔"
    ],
    [
     "sambhejjaudakasutta",
     "nt",
-    "Saṃyutta Nikāya 13.3 (SN13.3); lit. discourse on the water confluence",
+    "Saṁyutta Nikāya 13.3 (SN13.3); lit. discourse on the water confluence",
     "✔"
    ],
    [
     "dutiyasambhejjaudakasutta",
     "nt",
-    "Saṃyutta Nikāya 13.4 (SN13.4); lit. second discourse on the water confluence",
+    "Saṁyutta Nikāya 13.4 (SN13.4); lit. second discourse on the water confluence",
     "✔"
    ],
    [
     "pathavīsutta 1",
     "nt",
-    "Saṃyutta Nikāya 13.5 (SN13.5); lit. discourse on the earth",
+    "Saṁyutta Nikāya 13.5 (SN13.5); lit. discourse on the earth",
     "✔"
    ],
    [
     "dutiyapathavīsutta",
     "nt",
-    "Saṃyutta Nikāya 13.6 (SN13.6); lit. second discourse on the earth",
+    "Saṁyutta Nikāya 13.6 (SN13.6); lit. second discourse on the earth",
     "✔"
    ],
    [
     "samuddasutta",
     "nt",
-    "Saṃyutta Nikāya 13.7 (SN13.7); lit. discourse on the ocean",
+    "Saṁyutta Nikāya 13.7 (SN13.7); lit. discourse on the ocean",
     "✔"
    ],
    [
     "dutiyasamuddasutta 1",
     "nt",
-    "Saṃyutta Nikāya 13.8 (SN13.8); lit. second discourse on the ocean",
+    "Saṁyutta Nikāya 13.8 (SN13.8); lit. second discourse on the ocean",
     "✔"
    ],
    [
     "pabbatasutta 1",
     "nt",
-    "Saṃyutta Nikāya 13.9 (SN13.9); lit. discourse on the mountain",
+    "Saṁyutta Nikāya 13.9 (SN13.9); lit. discourse on the mountain",
     "✔"
    ],
    [
     "dutiyapabbatasutta",
     "nt",
-    "Saṃyutta Nikāya 13.10 (SN13.10); lit. second discourse on the mountain",
+    "Saṁyutta Nikāya 13.10 (SN13.10); lit. second discourse on the mountain",
     "✔"
    ],
    [
     "tatiyapabbatasutta",
     "nt",
-    "Saṃyutta Nikāya 13.11 (SN13.11); lit. third discourse on the mountain",
+    "Saṁyutta Nikāya 13.11 (SN13.11); lit. third discourse on the mountain",
     "✔"
    ],
    [
@@ -44511,7 +44511,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "addhaṃ",
+    "addhaṁ",
     "ind",
     "most certainly!; for sure!; definitely!",
     "✔"
@@ -44709,7 +44709,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "ubbhaṃ",
+    "ubbhaṁ",
     "ind",
     "upwards; in an upward direction",
     "✔"
@@ -44847,7 +44847,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tuvaṭaṃ",
+    "tuvaṭaṁ",
     "ind",
     "quickly; immediately",
     "✔"
@@ -44949,7 +44949,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pātaṃ",
+    "pātaṁ",
     "ind",
     "early; in the morning",
     "✔"
@@ -45111,7 +45111,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "sakiṃ",
+    "sakiṁ",
     "ind",
     "once",
     "✔"
@@ -45123,7 +45123,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saddhiṃ",
+    "saddhiṁ",
     "ind",
     "together (with); with",
     "✔"
@@ -45243,13 +45243,13 @@ var family_set_json = {
     "✔"
    ],
    [
-    "huraṃ 1",
+    "huraṁ 1",
     "ind",
     "there; in another world",
     "✔"
    ],
    [
-    "huraṃ 2",
+    "huraṁ 2",
     "ind",
     "outside (of); before",
     "✔"
@@ -45281,411 +45281,411 @@ var family_set_json = {
   ],
   "count": 129
  },
- "vaggas of the Saṃyutta Nikāya 1": {
+ "vaggas of the Saṁyutta Nikāya 1": {
   "data": [
    [
     "naḷavagga",
     "masc",
-    "Chapter 1 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.1); lit. reed section",
+    "Chapter 1 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN1.1); lit. reed section",
     "✔"
    ],
    [
     "nandanavagga",
     "masc",
-    "Chapter 2 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.11-20); lit. chapter starting with Nandana",
+    "Chapter 2 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN1.11-20); lit. chapter starting with Nandana",
     "✔"
    ],
    [
     "sattivagga",
     "masc",
-    "Chapter 3 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.21-30); lit. chapter starting with spear",
+    "Chapter 3 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN1.21-30); lit. chapter starting with spear",
     "✔"
    ],
    [
     "satullapakāyikavagga",
     "masc",
-    "Chapter 4 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.31-40); lit. chapter with one hundred Ullāpa devas",
+    "Chapter 4 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN1.31-40); lit. chapter with one hundred Ullāpa devas",
     "✔"
    ],
    [
     "ādittavagga",
     "masc",
-    "Chapter 5 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN1.41); lit. chapter on burning",
+    "Chapter 5 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN1.41); lit. chapter on burning",
     "✔"
    ],
    [
     "jarāvagga 1",
     "masc",
-    "Chapter 6 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on old age",
+    "Chapter 6 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya; lit. chapter on old age",
     "✔"
    ],
    [
     "addhavagga",
     "masc",
-    "Chapter 7 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter starting with overpowered",
+    "Chapter 7 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya; lit. chapter starting with overpowered",
     "✔"
    ],
    [
     "anvavagga",
     "masc",
-    "Chapter 7 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on expereinced",
+    "Chapter 7 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya; lit. chapter on expereinced",
     "✔"
    ],
    [
     "chetvāvagga",
     "masc",
-    "Chapter 8 of the Devatāsaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on having cut",
+    "Chapter 8 of the Devatāsaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya; lit. chapter on having cut",
     "✔"
    ]
   ],
   "count": 9
  },
- "suttas of Saṃyutta Nikāya 43": {
+ "suttas of Saṁyutta Nikāya 43": {
   "data": [
    [
     "kāyagatāsatisutta 2",
     "nt",
-    "Saṃyutta Nikāya 43.1 (SN43.1); lit. discourse on mindfulness immersed in the body",
+    "Saṁyutta Nikāya 43.1 (SN43.1); lit. discourse on mindfulness immersed in the body",
     "✔"
    ],
    [
     "samathavipassanāsutta",
     "nt",
-    "Saṃyutta Nikāya 43.2 (SN43.2); lit. discourse on calm and insight",
+    "Saṁyutta Nikāya 43.2 (SN43.2); lit. discourse on calm and insight",
     "✔"
    ],
    [
     "savitakkasavicārasutta",
     "nt",
-    "Saṃyutta Nikāya 43.3 (SN43.3); lit. discourse on accompanied by thought and examination",
+    "Saṁyutta Nikāya 43.3 (SN43.3); lit. discourse on accompanied by thought and examination",
     "✔"
    ],
    [
     "suññatasamādhisutta",
     "nt",
-    "Saṃyutta Nikāya 43.4 (SN43.4); lit. discourse on emptiness mental composure",
+    "Saṁyutta Nikāya 43.4 (SN43.4); lit. discourse on emptiness mental composure",
     "✔"
    ],
    [
     "satipaṭṭhānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 43.5 (SN43.5); lit. discourse on attending mindfully",
+    "Saṁyutta Nikāya 43.5 (SN43.5); lit. discourse on attending mindfully",
     "✔"
    ],
    [
     "sammappadhānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 43.6 (SN43.6); lit. discourse on the correct application of effort",
+    "Saṁyutta Nikāya 43.6 (SN43.6); lit. discourse on the correct application of effort",
     "✔"
    ],
    [
     "iddhipādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 43.7 (SN43.7); lit. discourse on the basis for spiritual power",
+    "Saṁyutta Nikāya 43.7 (SN43.7); lit. discourse on the basis for spiritual power",
     "✔"
    ],
    [
     "indriyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 43.8 (SN43.8); lit. discourse on the (five) faculties",
+    "Saṁyutta Nikāya 43.8 (SN43.8); lit. discourse on the (five) faculties",
     "✔"
    ],
    [
     "balasutta 1",
     "nt",
-    "Saṃyutta Nikāya 43.9 (SN43.9); lit. discourse on the powers",
+    "Saṁyutta Nikāya 43.9 (SN43.9); lit. discourse on the powers",
     "✔"
    ],
    [
     "bojjhaṅgasutta 1",
     "nt",
-    "Saṃyutta Nikāya 43.10 (SN43.10); lit. discourse on the elements of awakening",
+    "Saṁyutta Nikāya 43.10 (SN43.10); lit. discourse on the elements of awakening",
     "✔"
    ],
    [
     "maggaṅgasutta",
     "nt",
-    "Saṃyutta Nikāya 43.11 (SN43.11); lit. discourse on the path factors",
+    "Saṁyutta Nikāya 43.11 (SN43.11); lit. discourse on the path factors",
     "✔"
    ],
    [
     "asaṅkhatasutta",
     "nt",
-    "Saṃyutta Nikāya 43.12 (SN43.12); lit. discourse on the unconditioned",
+    "Saṁyutta Nikāya 43.12 (SN43.12); lit. discourse on the unconditioned",
     "✔"
    ],
    [
     "anatasutta",
     "nt",
-    "Saṃyutta Nikāya 43.13 (SN43.13); lit. discourse on without inclination",
+    "Saṁyutta Nikāya 43.13 (SN43.13); lit. discourse on without inclination",
     "✔"
    ],
    [
     "anāsavādisutta",
     "nt",
-    "Saṃyutta Nikāya 43.14-43 (SN43.14-43); lit. discourse on free from the effluents, etc.",
+    "Saṁyutta Nikāya 43.14-43 (SN43.14-43); lit. discourse on free from the effluents, etc.",
     "✔"
    ],
    [
     "parāyanasutta",
     "nt",
-    "Saṃyutta Nikāya 43.44 (SN43.44); lit. discourse on the final destination",
+    "Saṁyutta Nikāya 43.44 (SN43.44); lit. discourse on the final destination",
     "✔"
    ]
   ],
   "count": 15
  },
- "suttas of Saṃyutta Nikāya 23": {
+ "suttas of Saṁyutta Nikāya 23": {
   "data": [
    [
     "mārasutta 1",
     "nt",
-    "Saṃyutta Nikāya 23.1 (SN23.1); lit. discourse on Māra",
+    "Saṁyutta Nikāya 23.1 (SN23.1); lit. discourse on Māra",
     "✔"
    ],
    [
     "sattasutta",
     "nt",
-    "Saṃyutta Nikāya 23.2 (SN23.2); lit. discourse on the living being",
+    "Saṁyutta Nikāya 23.2 (SN23.2); lit. discourse on the living being",
     "✔"
    ],
    [
     "bhavanettisutta",
     "nt",
-    "Saṃyutta Nikāya 23.3 (SN23.3); lit. discourse on the conduit to existence",
+    "Saṁyutta Nikāya 23.3 (SN23.3); lit. discourse on the conduit to existence",
     "✔"
    ],
    [
     "pariññeyyasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.4 (SN23.4); lit. discourse on what should be completely comprehended",
+    "Saṁyutta Nikāya 23.4 (SN23.4); lit. discourse on what should be completely comprehended",
     "✔"
    ],
    [
     "samaṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.5 (SN23.5); lit. discourse on ascetics",
+    "Saṁyutta Nikāya 23.5 (SN23.5); lit. discourse on ascetics",
     "✔"
    ],
    [
     "dutiyasamaṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.6 (SN23.6); lit. second discourse on the ascetic",
+    "Saṁyutta Nikāya 23.6 (SN23.6); lit. second discourse on the ascetic",
     "✔"
    ],
    [
     "sotāpannasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.7 (SN23.7); lit. discourse on reached the stream",
+    "Saṁyutta Nikāya 23.7 (SN23.7); lit. discourse on reached the stream",
     "✔"
    ],
    [
     "arahantasutta 4",
     "nt",
-    "Saṃyutta Nikāya 23.8 (SN23.8); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 23.8 (SN23.8); lit. discourse on the arahant",
     "✔"
    ],
    [
     "chandarāgasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.9 (SN23.9); lit. discourse on interest and passion",
+    "Saṁyutta Nikāya 23.9 (SN23.9); lit. discourse on interest and passion",
     "✔"
    ],
    [
     "dutiyachandarāgasutta",
     "nt",
-    "Saṃyutta Nikāya 23.10 (SN23.10); lit. second discourse on interest and passion",
+    "Saṁyutta Nikāya 23.10 (SN23.10); lit. second discourse on interest and passion",
     "✔"
    ],
    [
     "mārasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.11 (SN23.11); lit. discourse on Māra",
+    "Saṁyutta Nikāya 23.11 (SN23.11); lit. discourse on Māra",
     "✔"
    ],
    [
     "māradhammasutta",
     "nt",
-    "Saṃyutta Nikāya 23.12 (SN23.12); lit. discourse on subject to death",
+    "Saṁyutta Nikāya 23.12 (SN23.12); lit. discourse on subject to death",
     "✔"
    ],
    [
     "aniccasutta 5",
     "nt",
-    "Saṃyutta Nikāya 23.13 (SN23.13); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 23.13 (SN23.13); lit. discourse on impermanence",
     "✔"
    ],
    [
     "aniccadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 23.14 (SN23.14); lit. discourse on impermanent in nature",
+    "Saṁyutta Nikāya 23.14 (SN23.14); lit. discourse on impermanent in nature",
     "✔"
    ],
    [
     "dukkhadhammasutta 1",
     "nt",
-    "Saṃyutta Nikāya 23.16 (SN23.16); lit. discourse on uncomfortable in nature",
+    "Saṁyutta Nikāya 23.16 (SN23.16); lit. discourse on uncomfortable in nature",
     "✔"
    ],
    [
     "anattasutta 4",
     "nt",
-    "Saṃyutta Nikāya 23.17 (SN23.17); lit. discourse on not oneself",
+    "Saṁyutta Nikāya 23.17 (SN23.17); lit. discourse on not oneself",
     "✔"
    ],
    [
     "anattadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 23.18 (SN23.18); lit. discourse on impersonal in nature",
+    "Saṁyutta Nikāya 23.18 (SN23.18); lit. discourse on impersonal in nature",
     "✔"
    ],
    [
     "khayadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 23.19 (SN23.19); lit. discourse on liable to decay",
+    "Saṁyutta Nikāya 23.19 (SN23.19); lit. discourse on liable to decay",
     "✔"
    ],
    [
     "vayadhammasutta",
     "nt",
-    "Saṃyutta Nikāya 23.20 (SN23.20); lit. discourse on liable to disappear",
+    "Saṁyutta Nikāya 23.20 (SN23.20); lit. discourse on liable to disappear",
     "✔"
    ],
    [
     "samudayadhammasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.21 (SN23.21); lit. discourse on having the nature to arise",
+    "Saṁyutta Nikāya 23.21 (SN23.21); lit. discourse on having the nature to arise",
     "✔"
    ],
    [
     "nirodhadhammasutta 1",
     "nt",
-    "Saṃyutta Nikāya 23.22 (SN23.22); lit. discourse on liable to end",
+    "Saṁyutta Nikāya 23.22 (SN23.22); lit. discourse on liable to end",
     "✔"
    ],
    [
     "mārādisuttaekādasaka 1",
     "nt",
-    "Saṃyutta Nikāya 23.23-33 (SN23.23-33); lit. group of eleven discourses starting with the discourse on Māra",
+    "Saṁyutta Nikāya 23.23-33 (SN23.23-33); lit. group of eleven discourses starting with the discourse on Māra",
     "✔"
    ],
    [
     "nirodhadhammasutta 2",
     "nt",
-    "Saṃyutta Nikāya 23.34 (SN23.34); lit. discourse on liable to end",
+    "Saṁyutta Nikāya 23.34 (SN23.34); lit. discourse on liable to end",
     "✔"
    ],
    [
     "mārādisuttaekādasaka 2",
     "nt",
-    "Saṃyutta Nikāya 23.35-45 (SN23.35-45); lit. group of eleven discourses starting with the discourse on Māra",
+    "Saṁyutta Nikāya 23.35-45 (SN23.35-45); lit. group of eleven discourses starting with the discourse on Māra",
     "✔"
    ],
    [
     "nirodhadhammasutta 3",
     "nt",
-    "Saṃyutta Nikāya 23.46 (SN23.46); lit. discourse on liable to end",
+    "Saṁyutta Nikāya 23.46 (SN23.46); lit. discourse on liable to end",
     "✔"
    ]
   ],
   "count": 25
  },
- "suttas of Saṃyutta Nikāya 46": {
+ "suttas of Saṁyutta Nikāya 46": {
   "data": [
    [
     "himavantasutta 1",
     "nt",
-    "Saṃyutta Nikāya 46.1 (SN46.1); lit. discourse on the Himalayas",
+    "Saṁyutta Nikāya 46.1 (SN46.1); lit. discourse on the Himalayas",
     "✔"
    ],
    [
     "kāyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 46.2 (SN46.2); lit. discourse on the body",
+    "Saṁyutta Nikāya 46.2 (SN46.2); lit. discourse on the body",
     "✔"
    ],
    [
     "sīlasutta 1",
     "nt",
-    "Saṃyutta Nikāya 46.3 (SN46.3); lit. discourse on ethical conduct",
+    "Saṁyutta Nikāya 46.3 (SN46.3); lit. discourse on ethical conduct",
     "✔"
    ],
    [
     "paṭhamagilānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.14 (SN46.14); lit. first discourse on the sick monk",
+    "Saṁyutta Nikāya 46.14 (SN46.14); lit. first discourse on the sick monk",
     "✔"
    ],
    [
     "dutiyagilānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.15 (SN46.15); lit. second discourse on the sick monk",
+    "Saṁyutta Nikāya 46.15 (SN46.15); lit. second discourse on the sick monk",
     "✔"
    ],
    [
     "pāraṅgamasutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.17 (SN46.17); lit. discourse on going to the other shore",
+    "Saṁyutta Nikāya 46.17 (SN46.17); lit. discourse on going to the other shore",
     "✔"
    ],
    [
     "viraddhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.18 (SN46.18); lit. discourse on failed",
+    "Saṁyutta Nikāya 46.18 (SN46.18); lit. discourse on failed",
     "✔"
    ],
    [
     "vidhāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.41 (SN46.41); lit. discourse on distinction",
+    "Saṁyutta Nikāya 46.41 (SN46.41); lit. discourse on distinction",
     "✔"
    ],
    [
     "mārasutta 3",
     "nt",
-    "Saṃyutta Nikāya 46.43 (SN46.43); lit. discourse on Māra",
+    "Saṁyutta Nikāya 46.43 (SN46.43); lit. discourse on Māra",
     "✔"
    ],
    [
     "daliddasutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.46 (SN46.46)",
+    "Saṁyutta Nikāya 46.46 (SN46.46)",
     "✔"
    ],
    [
     "āhārasutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.51 (SN46.51); lit. discourse on fuel",
+    "Saṁyutta Nikāya 46.51 (SN46.51); lit. discourse on fuel",
     "✔"
    ],
    [
     "saṅgāravasutta 3",
     "nt",
-    "Saṃyutta Nikāya 46.55 (SN46.55); lit. discourse with Saṅgārava",
+    "Saṁyutta Nikāya 46.55 (SN46.55); lit. discourse with Saṅgārava",
     "✔"
    ],
    [
     "upekkhāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 46.65 (SN46.65); lit. discourse on equanimity",
+    "Saṁyutta Nikāya 46.65 (SN46.65); lit. discourse on equanimity",
     "✔"
    ],
    [
     "aniccasutta 7",
     "nt",
-    "Saṃyutta Nikāya 46.71 (SN46.71); lit. discourse on impermanence",
+    "Saṁyutta Nikāya 46.71 (SN46.71); lit. discourse on impermanence",
     "✔"
    ],
    [
     "anattasutta 5",
     "nt",
-    "Saṃyutta Nikāya 46.73 (SN46.73); lit. discourse on not oneself",
+    "Saṁyutta Nikāya 46.73 (SN46.73); lit. discourse on not oneself",
     "✔"
    ],
    [
     "pahānasutta 3",
     "nt",
-    "Saṃyutta Nikāya 46.74 (SN46.74); lit. discourse on abandoning",
+    "Saṁyutta Nikāya 46.74 (SN46.74); lit. discourse on abandoning",
     "✔"
    ]
   ],
@@ -45772,7 +45772,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "kolaṃkola",
+    "kolaṁkola",
     "masc",
     "stream enterer who returns to the human state two or three times; lit. family to family",
     "✔"
@@ -45942,209 +45942,209 @@ var family_set_json = {
   ],
   "count": 41
  },
- "vaggas of the Saṃyutta Nikāya 2": {
+ "vaggas of the Saṁyutta Nikāya 2": {
   "data": [
    [
     "paṭhamavagga 01",
     "masc",
-    "Chapter 1 of the Devaputtasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN2.1); lit. first chapter",
+    "Chapter 1 of the Devaputtasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN2.1); lit. first chapter",
     "✔"
    ],
    [
     "anāthapiṇḍikavagga",
     "masc",
-    "Chapter 2 of the Devaputtasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN2.11); lit. chapter on Anāthapiṇḍika",
+    "Chapter 2 of the Devaputtasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN2.11); lit. chapter on Anāthapiṇḍika",
     "✔"
    ],
    [
     "nānātitthiyavagga",
     "masc",
-    "Chapter 3 of the Devaputtasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN2.21); lit. chapter on  various religious sects",
+    "Chapter 3 of the Devaputtasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN2.21); lit. chapter on  various religious sects",
     "✔"
    ]
   ],
   "count": 3
  },
- "suttas of Saṃyutta Nikāya 2": {
+ "suttas of Saṁyutta Nikāya 2": {
   "data": [
    [
     "paṭhamakassapasutta",
     "nt",
-    "Saṃyutta Nikāya 2.1 (SN2.1); lit. first discourse with Kassapa",
+    "Saṁyutta Nikāya 2.1 (SN2.1); lit. first discourse with Kassapa",
     "✔"
    ],
    [
     "dutiyakassapasutta",
     "nt",
-    "Saṃyutta Nikāya 2.2 (SN2.2); lit. second discourse with Kassapa",
+    "Saṁyutta Nikāya 2.2 (SN2.2); lit. second discourse with Kassapa",
     "✔"
    ],
    [
     "māghasutta 1",
     "nt",
-    "Saṃyutta Nikāya 2.3 (SN2.3); lit. discourse with Māgha",
+    "Saṁyutta Nikāya 2.3 (SN2.3); lit. discourse with Māgha",
     "✔"
    ],
    [
     "māgadhasutta",
     "nt",
-    "Saṃyutta Nikāya 2.4 (SN2.4); lit. discourse with Māgadha",
+    "Saṁyutta Nikāya 2.4 (SN2.4); lit. discourse with Māgadha",
     "✔"
    ],
    [
     "dāmalisutta",
     "nt",
-    "Saṃyutta Nikāya 2.5 (SN2.5); lit. discourse with Dāmali",
+    "Saṁyutta Nikāya 2.5 (SN2.5); lit. discourse with Dāmali",
     "✔"
    ],
    [
     "kāmadasutta",
     "nt",
-    "Saṃyutta Nikāya 2.6 (SN2.6); lit. discourse with Kāmada",
+    "Saṁyutta Nikāya 2.6 (SN2.6); lit. discourse with Kāmada",
     "✔"
    ],
    [
     "pañcālacaṇḍasutta",
     "nt",
-    "Saṃyutta Nikāya 2.7 (SN2.7); lit. discourse with Pañcālacaṇḍa",
+    "Saṁyutta Nikāya 2.7 (SN2.7); lit. discourse with Pañcālacaṇḍa",
     "✔"
    ],
    [
     "tāyanasutta",
     "nt",
-    "Saṃyutta Nikāya 2.8 (SN2.8); lit. discourse with Tāyana",
+    "Saṁyutta Nikāya 2.8 (SN2.8); lit. discourse with Tāyana",
     "✔"
    ],
    [
     "candimasutta",
     "nt",
-    "Saṃyutta Nikāya 2.9 (SN2.9); lit. discourse with the moon",
+    "Saṁyutta Nikāya 2.9 (SN2.9); lit. discourse with the moon",
     "✔"
    ],
    [
     "sūriyasutta",
     "nt",
-    "Saṃyutta Nikāya 2.10 (SN2.10); lit. discourse with the sun",
+    "Saṁyutta Nikāya 2.10 (SN2.10); lit. discourse with the sun",
     "✔"
    ],
    [
     "candimasasutta",
     "nt",
-    "Saṃyutta Nikāya 2.11 (SN2.11); lit. discourse with Candimasa",
+    "Saṁyutta Nikāya 2.11 (SN2.11); lit. discourse with Candimasa",
     "✔"
    ],
    [
     "veṇḍusutta",
     "nt",
-    "Saṃyutta Nikāya 2.12 (SN2.12); lit. discourse with Vishnu",
+    "Saṁyutta Nikāya 2.12 (SN2.12); lit. discourse with Vishnu",
     "✔"
    ],
    [
     "dīghalaṭṭhisutta",
     "nt",
-    "Saṃyutta Nikāya 2.13 (SN2.13); lit. discourse with Long Staff",
+    "Saṁyutta Nikāya 2.13 (SN2.13); lit. discourse with Long Staff",
     "✔"
    ],
    [
     "nandanasutta 2",
     "nt",
-    "Saṃyutta Nikāya 2.14 (SN2.14); lit. discourse with Nandana",
+    "Saṁyutta Nikāya 2.14 (SN2.14); lit. discourse with Nandana",
     "✔"
    ],
    [
     "candanasutta 1",
     "nt",
-    "Saṃyutta Nikāya 2.15 (SN2.15); lit. discourse with Candana",
+    "Saṁyutta Nikāya 2.15 (SN2.15); lit. discourse with Candana",
     "✔"
    ],
    [
     "vāsudattasutta",
     "nt",
-    "Saṃyutta Nikāya 2.16 (SN2.16); lit. discourse to Vāsudatta",
+    "Saṁyutta Nikāya 2.16 (SN2.16); lit. discourse to Vāsudatta",
     "✔"
    ],
    [
     "subrahmasutta",
     "nt",
-    "Saṃyutta Nikāya 2.17 (SN2.17); lit. discourse with Subrahma",
+    "Saṁyutta Nikāya 2.17 (SN2.17); lit. discourse with Subrahma",
     "✔"
    ],
    [
     "kakudhasutta",
     "nt",
-    "Saṃyutta Nikāya 2.18 (SN2.18); lit. discourse with Kakudha",
+    "Saṁyutta Nikāya 2.18 (SN2.18); lit. discourse with Kakudha",
     "✔"
    ],
    [
     "uttarasutta",
     "nt",
-    "Saṃyutta Nikāya 2.19 (SN2.19); lit. discourse with Uttara",
+    "Saṁyutta Nikāya 2.19 (SN2.19); lit. discourse with Uttara",
     "✔"
    ],
    [
     "anāthapiṇḍikasutta",
     "nt",
-    "Saṃyutta Nikāya 2.20 (SN2.20); lit. discourse with Anāthapiṇḍika",
+    "Saṁyutta Nikāya 2.20 (SN2.20); lit. discourse with Anāthapiṇḍika",
     "✔"
    ],
    [
     "sivasutta",
     "nt",
-    "Saṃyutta Nikāya 2.21 (SN2.21); lit. discourse with Siva",
+    "Saṁyutta Nikāya 2.21 (SN2.21); lit. discourse with Siva",
     "✔"
    ],
    [
     "khemasutta 1",
     "nt",
-    "Saṃyutta Nikāya 2.22 (SN2.22); lit. discourse with Khema",
+    "Saṁyutta Nikāya 2.22 (SN2.22); lit. discourse with Khema",
     "✔"
    ],
    [
     "serīsutta",
     "nt",
-    "Saṃyutta Nikāya 2.23 (SN2.23); lit. discourse with Serī",
+    "Saṁyutta Nikāya 2.23 (SN2.23); lit. discourse with Serī",
     "✔"
    ],
    [
     "ghaṭīkārasutta 2",
     "nt",
-    "Saṃyutta Nikāya 2.24 (SN2.24); lit. discourse with Ghaṭīkāra",
+    "Saṁyutta Nikāya 2.24 (SN2.24); lit. discourse with Ghaṭīkāra",
     "✔"
    ],
    [
     "jantusutta",
     "nt",
-    "Saṃyutta Nikāya 2.25 (SN2.25); lit. discourse about Jantu",
+    "Saṁyutta Nikāya 2.25 (SN2.25); lit. discourse about Jantu",
     "✔"
    ],
    [
     "rohitassasutta 1",
     "nt",
-    "Saṃyutta Nikāya 2.26 (SN2.26); lit. discourse with Rohitassa",
+    "Saṁyutta Nikāya 2.26 (SN2.26); lit. discourse with Rohitassa",
     "✔"
    ],
    [
     "nandasutta 1",
     "nt",
-    "Saṃyutta Nikāya 2.27 (SN2.27); lit. discourse with Nanda",
+    "Saṁyutta Nikāya 2.27 (SN2.27); lit. discourse with Nanda",
     "✔"
    ],
    [
     "nandivisālasutta",
     "nt",
-    "Saṃyutta Nikāya 2.28 (SN2.28); lit. discourse with Nandivisāla",
+    "Saṁyutta Nikāya 2.28 (SN2.28); lit. discourse with Nandivisāla",
     "✔"
    ],
    [
     "susimasutta 1",
     "nt",
-    "Saṃyutta Nikāya 2.29 (SN2.29); lit. discourse with Susima",
+    "Saṁyutta Nikāya 2.29 (SN2.29); lit. discourse with Susima",
     "✔"
    ],
    [
     "nānātitthiyasāvakasutta",
     "nt",
-    "Saṃyutta Nikāya 2.30 (SN2.30); lit. discourse with followers of various sects",
+    "Saṁyutta Nikāya 2.30 (SN2.30); lit. discourse with followers of various sects",
     "✔"
    ],
    [
@@ -46156,179 +46156,179 @@ var family_set_json = {
   ],
   "count": 31
  },
- "vaggas of the Saṃyutta Nikāya 35": {
+ "vaggas of the Saṁyutta Nikāya 35": {
   "data": [
    [
     "aniccavagga 2",
     "masc",
-    "Chapter 1 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on impermanence",
+    "Chapter 1 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on impermanence",
     "✔"
    ],
    [
     "yamakavagga 1",
     "masc",
-    "Chapter 2 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on pairs",
+    "Chapter 2 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on pairs",
     "✔"
    ],
    [
     "sabbavagga",
     "masc",
-    "Chapter 3 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on all",
+    "Chapter 3 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on all",
     "✔"
    ],
    [
     "jātidhammavagga",
     "masc",
-    "Chapter 4 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on liable to birth",
+    "Chapter 4 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on liable to birth",
     "✔"
    ],
    [
     "sabbaaniccavagga",
     "masc",
-    "Chapter 5 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on everything is impermanent",
+    "Chapter 5 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on everything is impermanent",
     "✔"
    ],
    [
     "avijjāvagga 2",
     "masc",
-    "Chapter 6 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on ignorance",
+    "Chapter 6 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on ignorance",
     "✔"
    ],
    [
     "migajālavagga",
     "masc",
-    "Chapter 7 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on Migajāla",
+    "Chapter 7 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on Migajāla",
     "✔"
    ],
    [
     "channavagga",
     "masc",
-    "Chapter 9 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on Channa",
+    "Chapter 9 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on Channa",
     "✔"
    ],
    [
     "saḷavagga",
     "masc",
-    "Chapter 10 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on",
+    "Chapter 10 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on",
     "✔"
    ],
    [
     "yogakkhemivagga",
     "masc",
-    "Chapter 11 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on secure from bondage",
+    "Chapter 11 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on secure from bondage",
     "✔"
    ],
    [
     "lokakāmaguṇavagga",
     "masc",
-    "Chapter 12 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on worldly sensual pleasures",
+    "Chapter 12 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on worldly sensual pleasures",
     "✔"
    ],
    [
     "devadahavagga 2",
     "masc",
-    "Chapter 14 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on Devadaha",
+    "Chapter 14 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on Devadaha",
     "✔"
    ],
    [
     "navapurāṇavagga",
     "masc",
-    "Chapter 15 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on new and old",
+    "Chapter 15 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on new and old",
     "✔"
    ],
    [
     "nandikkhayavagga",
     "masc",
-    "Chapter 16 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the destruction of delight",
+    "Chapter 16 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on the destruction of delight",
     "✔"
    ],
    [
     "saṭṭhipeyyālavagga",
     "masc",
-    "Chapter 17 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter with sixty elided repetitions",
+    "Chapter 17 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter with sixty elided repetitions",
     "✔"
    ],
    [
     "samuddavagga",
     "masc",
-    "Chapter 18 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the ocean",
+    "Chapter 18 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on the ocean",
     "✔"
    ],
    [
     "āsīvisavagga",
     "masc",
-    "Chapter 19 of the Saḷāyatanasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on the poisonous snake",
+    "Chapter 19 of the Saḷāyatanasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on the poisonous snake",
     "✔"
    ]
   ],
   "count": 17
  },
- "suttas of Saṃyutta Nikāya 40": {
+ "suttas of Saṁyutta Nikāya 40": {
   "data": [
    [
     "paṭhamajhānapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.1 (SN40.1); lit. discourse on the question about the first jhāna",
+    "Saṁyutta Nikāya 40.1 (SN40.1); lit. discourse on the question about the first jhāna",
     "✔"
    ],
    [
     "dutiyajhānapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.2 (SN40.2); lit. discourse on the question about the second jhāna",
+    "Saṁyutta Nikāya 40.2 (SN40.2); lit. discourse on the question about the second jhāna",
     "✔"
    ],
    [
     "tatiyajhānapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.3 (SN40.3); lit. discourse on the question about the third jhāna",
+    "Saṁyutta Nikāya 40.3 (SN40.3); lit. discourse on the question about the third jhāna",
     "✔"
    ],
    [
     "catutthajhānapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.4 (SN40.4); lit. discourse on the question about the fourth jhāna",
+    "Saṁyutta Nikāya 40.4 (SN40.4); lit. discourse on the question about the fourth jhāna",
     "✔"
    ],
    [
     "ākāsānañcāyatanapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.5 (SN40.5); lit. discourse on the question about the dimension of infinite space",
+    "Saṁyutta Nikāya 40.5 (SN40.5); lit. discourse on the question about the dimension of infinite space",
     "✔"
    ],
    [
     "viññāṇañcāyatanapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.6 (SN40.6); lit. discourse on the question about the dimension of infinite consciousness",
+    "Saṁyutta Nikāya 40.6 (SN40.6); lit. discourse on the question about the dimension of infinite consciousness",
     "✔"
    ],
    [
     "ākiñcaññāyatanapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.7 (SN40.7); lit. discourse on the question about the dimension of nothingness",
+    "Saṁyutta Nikāya 40.7 (SN40.7); lit. discourse on the question about the dimension of nothingness",
     "✔"
    ],
    [
     "nevasaññānāsaññāyatanapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.8 (SN40.8); lit. discourse on the question about the dimension of neither perception nor non-perception",
+    "Saṁyutta Nikāya 40.8 (SN40.8); lit. discourse on the question about the dimension of neither perception nor non-perception",
     "✔"
    ],
    [
     "animittapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 40.9 (SN40.9); lit. discourse on the question about signless",
+    "Saṁyutta Nikāya 40.9 (SN40.9); lit. discourse on the question about signless",
     "✔"
    ],
    [
     "sakkasutta 1",
     "nt",
-    "Saṃyutta Nikāya 40.10 (SN40.10); lit. discourse with Sakka",
+    "Saṁyutta Nikāya 40.10 (SN40.10); lit. discourse with Sakka",
     "✔"
    ],
    [
     "candanasutta 2",
     "nt",
-    "Saṃyutta Nikāya 40.11 (SN40.11); lit. discourse with Candana",
+    "Saṁyutta Nikāya 40.11 (SN40.11); lit. discourse with Candana",
     "✔"
    ],
    [
@@ -46501,66 +46501,66 @@ var family_set_json = {
   ],
   "count": 26
  },
- "suttas of Saṃyutta Nikāya 44": {
+ "suttas of Saṁyutta Nikāya 44": {
   "data": [
    [
     "khemāsutta",
     "nt",
-    "Saṃyutta Nikāya 44.1 (SN44.1); lit. discourse with Khemā",
+    "Saṁyutta Nikāya 44.1 (SN44.1); lit. discourse with Khemā",
     "✔"
    ],
    [
     "anurādhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 44.2 (SN44.2); lit. discourse with Anurādha",
+    "Saṁyutta Nikāya 44.2 (SN44.2); lit. discourse with Anurādha",
     "✔"
    ],
    [
     "paṭhamasāriputtakoṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 44.3 (SN44.3); lit. first discourse with Sāriputta and Koṭṭhika",
+    "Saṁyutta Nikāya 44.3 (SN44.3); lit. first discourse with Sāriputta and Koṭṭhika",
     "✔"
    ],
    [
     "dutiyasāriputtakoṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 44.4 (SN44.4); lit. second discourse with Sāriputta and Koṭṭhika",
+    "Saṁyutta Nikāya 44.4 (SN44.4); lit. second discourse with Sāriputta and Koṭṭhika",
     "✔"
    ],
    [
     "tatiyasāriputtakoṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 44.5 (SN44.5); lit. third second discourse with Sāriputta and Koṭṭhika",
+    "Saṁyutta Nikāya 44.5 (SN44.5); lit. third second discourse with Sāriputta and Koṭṭhika",
     "✔"
    ],
    [
     "catutthasāriputtakoṭṭhikasutta",
     "nt",
-    "Saṃyutta Nikāya 44.6 (SN44.6); lit. fourth discourse with Sāriputta and Koṭṭhika",
+    "Saṁyutta Nikāya 44.6 (SN44.6); lit. fourth discourse with Sāriputta and Koṭṭhika",
     "✔"
    ],
    [
     "moggallānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 44.7 (SN44.7); lit. discourse with Moggallāna",
+    "Saṁyutta Nikāya 44.7 (SN44.7); lit. discourse with Moggallāna",
     "✔"
    ],
    [
     "vacchagottasutta 1",
     "nt",
-    "Saṃyutta Nikāya 44.8 (SN44.8); lit. discourse with Vacchagotta",
+    "Saṁyutta Nikāya 44.8 (SN44.8); lit. discourse with Vacchagotta",
     "✔"
    ],
    [
     "kutūhalasālāsutta",
     "nt",
-    "Saṃyutta Nikāya 44.9 (SN44.9); lit. discourse on the debating hall",
+    "Saṁyutta Nikāya 44.9 (SN44.9); lit. discourse on the debating hall",
     "✔"
    ],
    [
     "sabhiyakaccānasutta",
     "nt",
-    "Saṃyutta Nikāya 44.11 (SN44.11); lit. discourse with Sabhiya Kaccāna",
+    "Saṁyutta Nikāya 44.11 (SN44.11); lit. discourse with Sabhiya Kaccāna",
     "✔"
    ],
    [
@@ -46913,202 +46913,202 @@ var family_set_json = {
   ],
   "count": 56
  },
- "suttas of Saṃyutta Nikāya 54": {
+ "suttas of Saṁyutta Nikāya 54": {
   "data": [
    [
     "mahākappinasutta 2",
     "nt",
-    "Saṃyutta Nikāya 54.7 (SN54.7); lit. discourse on Mahākappina",
+    "Saṁyutta Nikāya 54.7 (SN54.7); lit. discourse on Mahākappina",
     "✔"
    ],
    [
     "vesālīsutta 2",
     "nt",
-    "Saṃyutta Nikāya 54.9 (SN54.9); lit. discourse at Vesālī",
+    "Saṁyutta Nikāya 54.9 (SN54.9); lit. discourse at Vesālī",
     "✔"
    ],
    [
     "dutiyaānandasutta 4",
     "nt",
-    "Saṃyutta Nikāya 54.14 (SN54.14); lit. second discourse with Ānanda",
+    "Saṁyutta Nikāya 54.14 (SN54.14); lit. second discourse with Ānanda",
     "✔"
    ],
    [
     "anusayasamugghātasutta 2",
     "nt",
-    "Saṃyutta Nikāya 54.18 (SN54.18); lit. discourse on eradication of the underlying tendencies",
+    "Saṁyutta Nikāya 54.18 (SN54.18); lit. discourse on eradication of the underlying tendencies",
     "✔"
    ]
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 18": {
+ "suttas of Saṁyutta Nikāya 18": {
   "data": [
    [
     "cakkhusutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.1 (SN18.1); lit. discourse on the eye",
+    "Saṁyutta Nikāya 18.1 (SN18.1); lit. discourse on the eye",
     "✔"
    ],
    [
     "rūpasutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.2 (SN18.2); lit. discourse on forms",
+    "Saṁyutta Nikāya 18.2 (SN18.2); lit. discourse on forms",
     "✔"
    ],
    [
     "viññāṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 18.3 (SN18.3); lit. discourse on consciousness",
+    "Saṁyutta Nikāya 18.3 (SN18.3); lit. discourse on consciousness",
     "✔"
    ],
    [
     "samphassasutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.4 (SN18.4); lit. discourse on sense experience",
+    "Saṁyutta Nikāya 18.4 (SN18.4); lit. discourse on sense experience",
     "✔"
    ],
    [
     "vedanāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.5 (SN18.5); lit. discourse on felt experience",
+    "Saṁyutta Nikāya 18.5 (SN18.5); lit. discourse on felt experience",
     "✔"
    ],
    [
     "saññāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.6 (SN18.6); lit. discourse on perception",
+    "Saṁyutta Nikāya 18.6 (SN18.6); lit. discourse on perception",
     "✔"
    ],
    [
     "sañcetanāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.7 (SN18.7); lit. discourse on intention",
+    "Saṁyutta Nikāya 18.7 (SN18.7); lit. discourse on intention",
     "✔"
    ],
    [
     "dhātusutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.9 (SN18.9); lit. discourse on states",
+    "Saṁyutta Nikāya 18.9 (SN18.9); lit. discourse on states",
     "✔"
    ],
    [
     "khandhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.10 (SN18.10); lit. discourse on the aggregates",
+    "Saṁyutta Nikāya 18.10 (SN18.10); lit. discourse on the aggregates",
     "✔"
    ],
    [
     "cakkhusutta 2",
     "nt",
-    "Saṃyutta Nikāya 18.11 (SN18.11); lit. discourse on the eye",
+    "Saṁyutta Nikāya 18.11 (SN18.11); lit. discourse on the eye",
     "✔"
    ],
    [
     "rūpādisuttanavaka",
     "nt",
-    "Saṃyutta Nikāya 18.12-20 (SN18.12-20); lit. group of nine discourses beginning with the discourse on sights",
+    "Saṁyutta Nikāya 18.12-20 (SN18.12-20); lit. group of nine discourses beginning with the discourse on sights",
     "✔"
    ],
    [
     "anusayasutta 1",
     "nt",
-    "Saṃyutta Nikāya 18.21 (SN18.21); lit. discourse on underlying tendencies",
+    "Saṁyutta Nikāya 18.21 (SN18.21); lit. discourse on underlying tendencies",
     "✔"
    ],
    [
     "apagatasutta",
     "nt",
-    "Saṃyutta Nikāya 18.22 (SN18.22); lit. discourse on free from",
+    "Saṁyutta Nikāya 18.22 (SN18.22); lit. discourse on free from",
     "✔"
    ]
   ],
   "count": 13
  },
- "suttas of Saṃyutta Nikāya 48": {
+ "suttas of Saṁyutta Nikāya 48": {
   "data": [
    [
     "dutiyaarahantasutta 2",
     "nt",
-    "Saṃyutta Nikāya 48.5 (SN48.5); lit. second discourse on the arahant",
+    "Saṁyutta Nikāya 48.5 (SN48.5); lit. second discourse on the arahant",
     "✔"
    ],
    [
     "paṭhamasamaṇabrāhmaṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 48.6 (SN48.6); lit. first discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 48.6 (SN48.6); lit. first discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "daṭṭhabbasutta 2",
     "nt",
-    "Saṃyutta Nikāya 48.8 (SN48.8); lit. discourse on should be seen",
+    "Saṁyutta Nikāya 48.8 (SN48.8); lit. discourse on should be seen",
     "✔"
    ],
    [
     "sotāpannasutta 3",
     "nt",
-    "Saṃyutta Nikāya 48.26 (SN48.26); lit. discourse on reached the stream",
+    "Saṁyutta Nikāya 48.26 (SN48.26); lit. discourse on reached the stream",
     "✔"
    ],
    [
     "arahantasutta 5",
     "nt",
-    "Saṃyutta Nikāya 48.27 (SN48.27); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 48.27 (SN48.27); lit. discourse on the arahant",
     "✔"
    ],
    [
     "paṭhamasamaṇabrāhmaṇasutta 3",
     "nt",
-    "Saṃyutta Nikāya 48.29 (SN48.29); lit. first discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 48.29 (SN48.29); lit. first discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "sotāpannasutta 4",
     "nt",
-    "Saṃyutta Nikāya 48.32 (SN48.32); lit. discourse on reached the stream",
+    "Saṁyutta Nikāya 48.32 (SN48.32); lit. discourse on reached the stream",
     "✔"
    ],
    [
     "arahantasutta 6",
     "nt",
-    "Saṃyutta Nikāya 48.33 (SN48.33); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 48.33 (SN48.33); lit. discourse on the arahant",
     "✔"
    ],
    [
     "paṭhamasamaṇabrāhmaṇasutta 4",
     "nt",
-    "Saṃyutta Nikāya 48.34 (SN48.34); lit. first discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 48.34 (SN48.34); lit. first discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "padasutta 2",
     "nt",
-    "Saṃyutta Nikāya 48.54 (SN48.54); lit. discourse on the footprint",
+    "Saṁyutta Nikāya 48.54 (SN48.54); lit. discourse on the footprint",
     "✔"
    ],
    [
     "paṭhamauppādasutta 2",
     "nt",
-    "Saṃyutta Nikāya 48.59 (SN48.59); lit. first discourse on arising",
+    "Saṁyutta Nikāya 48.59 (SN48.59); lit. first discourse on arising",
     "✔"
    ],
    [
     "dutiyauppādasutta 2",
     "nt",
-    "Saṃyutta Nikāya 48.60 (SN48.60); lit. second discourse on arising",
+    "Saṁyutta Nikāya 48.60 (SN48.60); lit. second discourse on arising",
     "✔"
    ],
    [
-    "saṃyojanasutta 4",
+    "saṁyojanasutta 4",
     "nt",
-    "Saṃyutta Nikāya 48.61 (SN48.61); lit. discourse on fetters",
+    "Saṁyutta Nikāya 48.61 (SN48.61); lit. discourse on fetters",
     "✔"
    ],
    [
     "anusayasutta 3",
     "nt",
-    "Saṃyutta Nikāya 48.62 (SN48.62); lit. discourse on underlying tendencies",
+    "Saṁyutta Nikāya 48.62 (SN48.62); lit. discourse on underlying tendencies",
     "✔"
    ]
   ],
@@ -47119,7 +47119,7 @@ var family_set_json = {
    [
     "anusvāra",
     "masc",
-    "(gram) nasal consonant; niggahīta; letter ṃ; lit. after-sound",
+    "(gram) nasal consonant; niggahīta; letter ṁ; lit. after-sound",
     "✔"
    ],
    [
@@ -47137,84 +47137,84 @@ var family_set_json = {
   ],
   "count": 3
  },
- "suttas of Saṃyutta Nikāya 16": {
+ "suttas of Saṁyutta Nikāya 16": {
   "data": [
    [
     "santuṭṭhasutta",
     "nt",
-    "Saṃyutta Nikāya 16.1 (SN16.1); lit. discourse on content",
+    "Saṁyutta Nikāya 16.1 (SN16.1); lit. discourse on content",
     "✔"
    ],
    [
     "anottappīsutta",
     "nt",
-    "Saṃyutta Nikāya 16.2 (SN16.2); lit. discourse on shameless",
+    "Saṁyutta Nikāya 16.2 (SN16.2); lit. discourse on shameless",
     "✔"
    ],
    [
     "candūpamasutta",
     "nt",
-    "Saṃyutta Nikāya 16.3 (SN16.3); lit. discourse on like the moon",
+    "Saṁyutta Nikāya 16.3 (SN16.3); lit. discourse on like the moon",
     "✔"
    ],
    [
     "kulūpakasutta 1",
     "nt",
-    "Saṃyutta Nikāya 16.4 (SN16.4); lit. discourse on approaching families",
+    "Saṁyutta Nikāya 16.4 (SN16.4); lit. discourse on approaching families",
     "✔"
    ],
    [
     "jiṇṇasutta",
     "nt",
-    "Saṃyutta Nikāya 16.5 (SN16.5); lit. discourse on old",
+    "Saṁyutta Nikāya 16.5 (SN16.5); lit. discourse on old",
     "✔"
    ],
    [
     "ovādasutta 1",
     "nt",
-    "Saṃyutta Nikāya 16.6 (SN16.6); lit. discourse on advice",
+    "Saṁyutta Nikāya 16.6 (SN16.6); lit. discourse on advice",
     "✔"
    ],
    [
     "dutiyaovādasutta",
     "nt",
-    "Saṃyutta Nikāya 16.7 (SN16.7); lit. second discourse on advice",
+    "Saṁyutta Nikāya 16.7 (SN16.7); lit. second discourse on advice",
     "✔"
    ],
    [
     "tatiyaovādasutta",
     "nt",
-    "Saṃyutta Nikāya 16.8 (SN16.8); lit. third discourse on advice",
+    "Saṁyutta Nikāya 16.8 (SN16.8); lit. third discourse on advice",
     "✔"
    ],
    [
     "jhānābhiññasutta",
     "nt",
-    "Saṃyutta Nikāya 16.9 (SN16.9); lit. discourse on meditation and higher understanding",
+    "Saṁyutta Nikāya 16.9 (SN16.9); lit. discourse on meditation and higher understanding",
     "✔"
    ],
    [
     "upassayasutta",
     "nt",
-    "Saṃyutta Nikāya 16.10 (SN16.10); lit. discourse on the residence",
+    "Saṁyutta Nikāya 16.10 (SN16.10); lit. discourse on the residence",
     "✔"
    ],
    [
     "cīvarasutta 1",
     "nt",
-    "Saṃyutta Nikāya 16.11 (SN16.11); lit. discourse on the robe",
+    "Saṁyutta Nikāya 16.11 (SN16.11); lit. discourse on the robe",
     "✔"
    ],
    [
-    "paraṃmaraṇasutta",
+    "paraṁmaraṇasutta",
     "nt",
-    "Saṃyutta Nikāya 16.12 (SN16.12); lit. discourse on after death",
+    "Saṁyutta Nikāya 16.12 (SN16.12); lit. discourse on after death",
     "✔"
    ],
    [
     "saddhammappatirūpakasutta",
     "nt",
-    "Saṃyutta Nikāya 16.13 (SN16.13); lit. discourse on the counterfeit of the good teaching",
+    "Saṁyutta Nikāya 16.13 (SN16.13); lit. discourse on the counterfeit of the good teaching",
     "✔"
    ]
   ],
@@ -47235,7 +47235,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "aṃsā",
+    "aṁsā",
     "fem",
     "piles; hemorrhoids",
     "✔"
@@ -47456,15 +47456,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "iṃ",
+    "iṁ",
     "ve",
-    "(gram) iṃ; verbal ending of the aorist 1st person singular",
+    "(gram) iṁ; verbal ending of the aorist 1st person singular",
     "✔"
    ],
    [
-    "iṃsu",
+    "iṁsu",
     "ve",
-    "(gram) iṃsu; verbal ending of the aorist 3rd person plural",
+    "(gram) iṁsu; verbal ending of the aorist 3rd person plural",
     "✔"
    ],
    [
@@ -47480,15 +47480,15 @@ var family_set_json = {
     "✔"
    ],
    [
-    "uṃ",
+    "uṁ",
     "ve",
-    "(gram) uṃ; verbal ending of the aorist 3rd person plural",
+    "(gram) uṁ; verbal ending of the aorist 3rd person plural",
     "✔"
    ],
    [
-    "uṃvibhatti",
+    "uṁvibhatti",
     "ve",
-    "(gram) verbal ending of the aorist 3rd person plural; lit. uṃ conjugation",
+    "(gram) verbal ending of the aorist 3rd person plural; lit. uṁ conjugation",
     "✔"
    ],
    [
@@ -47641,7 +47641,7 @@ var family_set_json = {
     "◑"
    ],
    [
-    "buddhavaṃsa",
+    "buddhavaṁsa",
     "masc",
     "Book 12 of the Khuddaka Nikāya; lit. lineage of Buddhas",
     "✔"
@@ -47779,54 +47779,54 @@ var family_set_json = {
   ],
   "count": 7
  },
- "suttas of Saṃyutta Nikāya 32": {
+ "suttas of Saṁyutta Nikāya 32": {
   "data": [
    [
     "sucaritasutta 2",
     "nt",
-    "Saṃyutta Nikāya 32.2 (SN32.2); lit. discourse on good conduct",
+    "Saṁyutta Nikāya 32.2 (SN32.2); lit. discourse on good conduct",
     "✔"
    ],
    [
     "sītavalāhakadānūpakārasuttadasaka",
     "nt",
-    "Saṃyutta Nikāya 32.3-12 (SN32.3-12); lit. group of ten discourses on how giving supports (rebirth among the gods living in) cool thunderclouds",
+    "Saṁyutta Nikāya 32.3-12 (SN32.3-12); lit. group of ten discourses on how giving supports (rebirth among the gods living in) cool thunderclouds",
     "✔"
    ],
    [
     "uṇhavalāhakadānūpakārasuttacālīsaka",
     "nt",
-    "Saṃyutta Nikāya 32.13-52 (SN32.13-52); lit. group of forty discourses on how giving supports (rebirth among the gods living in) warm clouds",
+    "Saṁyutta Nikāya 32.13-52 (SN32.13-52); lit. group of forty discourses on how giving supports (rebirth among the gods living in) warm clouds",
     "✔"
    ],
    [
     "sītavalāhakasutta",
     "nt",
-    "Saṃyutta Nikāya 32.53 (SN32.53); lit. discourse on (deities living in) cool clouds",
+    "Saṁyutta Nikāya 32.53 (SN32.53); lit. discourse on (deities living in) cool clouds",
     "✔"
    ],
    [
     "uṇhavalāhakasutta",
     "nt",
-    "Saṃyutta Nikāya 32.54 (SN32.54); lit. discourse on (deities living in) warm clouds",
+    "Saṁyutta Nikāya 32.54 (SN32.54); lit. discourse on (deities living in) warm clouds",
     "✔"
    ],
    [
     "abbhavalāhakasutta",
     "nt",
-    "Saṃyutta Nikāya 32.55 (SN32.55); lit. discourse on (deities living in) thunderclouds",
+    "Saṁyutta Nikāya 32.55 (SN32.55); lit. discourse on (deities living in) thunderclouds",
     "✔"
    ],
    [
     "vātavalāhakasutta",
     "nt",
-    "Saṃyutta Nikāya 32.56 (SN32.56); lit. discourse on (deities living in) wind clouds",
+    "Saṁyutta Nikāya 32.56 (SN32.56); lit. discourse on (deities living in) wind clouds",
     "✔"
    ],
    [
     "vassavalāhakasutta",
     "nt",
-    "Saṃyutta Nikāya 32.57 (SN32.57); lit. discourse on (deities living in) rain clouds",
+    "Saṁyutta Nikāya 32.57 (SN32.57); lit. discourse on (deities living in) rain clouds",
     "✔"
    ]
   ],
@@ -47966,7 +47966,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "citantaraṃsa",
+    "citantaraṁsa",
     "adj",
     "with full upper back; with a swelling between the shoulders; (comm) with space between the shoulders filled; eighteenth of the thirty-two marks of a great man",
     "✔"
@@ -48082,168 +48082,168 @@ var family_set_json = {
   ],
   "count": 31
  },
- "suttas of Saṃyutta Nikāya 34": {
+ "suttas of Saṁyutta Nikāya 34": {
   "data": [
    [
     "samādhimūlakasamāpattisutta",
     "nt",
-    "Saṃyutta Nikāya 34.1 (SN34.1); lit. discourse on meditation attainment based on mental composure",
+    "Saṁyutta Nikāya 34.1 (SN34.1); lit. discourse on meditation attainment based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakaṭhitisutta",
     "nt",
-    "Saṃyutta Nikāya 34.2 (SN34.2); lit. discourse on stability based on mental composure",
+    "Saṁyutta Nikāya 34.2 (SN34.2); lit. discourse on stability based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakavuṭṭhānasutta",
     "nt",
-    "Saṃyutta Nikāya 34.3 (SN34.3); lit. discourse on transcending based on mental composure",
+    "Saṁyutta Nikāya 34.3 (SN34.3); lit. discourse on transcending based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakakallitasutta",
     "nt",
-    "Saṃyutta Nikāya 34.4 (SN34.4); lit. discourse on ability based on mental composure",
+    "Saṁyutta Nikāya 34.4 (SN34.4); lit. discourse on ability based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakaārammaṇasutta",
     "nt",
-    "Saṃyutta Nikāya 34.5 (SN34.5); lit. discourse on meditation theme founded on mental composure",
+    "Saṁyutta Nikāya 34.5 (SN34.5); lit. discourse on meditation theme founded on mental composure",
     "✔"
    ],
    [
     "samādhimūlakagocarasutta",
     "nt",
-    "Saṃyutta Nikāya 34.6 (SN34.6); lit. discourse on environment based on mental composure",
+    "Saṁyutta Nikāya 34.6 (SN34.6); lit. discourse on environment based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakaabhinīhārasutta",
     "nt",
-    "Saṃyutta Nikāya 34.7 (SN34.7); lit. discourse on aspiration based on mental composure",
+    "Saṁyutta Nikāya 34.7 (SN34.7); lit. discourse on aspiration based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakasakkaccakārīsutta",
     "nt",
-    "Saṃyutta Nikāya 34.8 (SN34.8); lit. discourse on acting properly based on mental composure",
+    "Saṁyutta Nikāya 34.8 (SN34.8); lit. discourse on acting properly based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakasātaccakārīsutta",
     "nt",
-    "Saṃyutta Nikāya 34.9 (SN34.9); lit. discourse on persevering based on mental composure",
+    "Saṁyutta Nikāya 34.9 (SN34.9); lit. discourse on persevering based on mental composure",
     "✔"
    ],
    [
     "samādhimūlakasappāyakārīsutta",
     "nt",
-    "Saṃyutta Nikāya 34.10 (SN34.10); lit. discourse on doing what is suitable based on mental composure",
+    "Saṁyutta Nikāya 34.10 (SN34.10); lit. discourse on doing what is suitable based on mental composure",
     "✔"
    ],
    [
     "samāpattimūlakaṭhitisutta",
     "nt",
-    "Saṃyutta Nikāya 34.11 (SN34.11); lit. discourse on stability based on meditation attainment",
+    "Saṁyutta Nikāya 34.11 (SN34.11); lit. discourse on stability based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakavuṭṭhānasutta",
     "nt",
-    "Saṃyutta Nikāya 34.12 (SN34.12); lit. discourse on transcending based on meditation attainment",
+    "Saṁyutta Nikāya 34.12 (SN34.12); lit. discourse on transcending based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakakallitasutta",
     "nt",
-    "Saṃyutta Nikāya 34.13 (SN34.13); lit. discourse on ability based on meditation attainment",
+    "Saṁyutta Nikāya 34.13 (SN34.13); lit. discourse on ability based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakaārammaṇasutta",
     "nt",
-    "Saṃyutta Nikāya 34.14 (SN34.14); lit. discourse on meditation theme based on meditation attainment",
+    "Saṁyutta Nikāya 34.14 (SN34.14); lit. discourse on meditation theme based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakagocarasutta",
     "nt",
-    "Saṃyutta Nikāya 34.15 (SN34.15); lit. discourse on environment based on meditation attainment",
+    "Saṁyutta Nikāya 34.15 (SN34.15); lit. discourse on environment based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakaabhinīhārasutta",
     "nt",
-    "Saṃyutta Nikāya 34.16 (SN34.16); lit. discourse on aspiration based on meditation attainment",
+    "Saṁyutta Nikāya 34.16 (SN34.16); lit. discourse on aspiration based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakasakkaccasutta",
     "nt",
-    "Saṃyutta Nikāya 34.17 (SN34.17); lit. discourse on meditation attainment based on respect",
+    "Saṁyutta Nikāya 34.17 (SN34.17); lit. discourse on meditation attainment based on respect",
     "✔"
    ],
    [
     "samāpattimūlakasātaccasutta",
     "nt",
-    "Saṃyutta Nikāya 34.18 (SN34.18); lit. discourse on perseverance based on meditation attainment",
+    "Saṁyutta Nikāya 34.18 (SN34.18); lit. discourse on perseverance based on meditation attainment",
     "✔"
    ],
    [
     "samāpattimūlakasappāyakārīsutta",
     "nt",
-    "Saṃyutta Nikāya 34.19 (SN34.19); lit. discourse on doing what is suitable based on meditation attainment",
+    "Saṁyutta Nikāya 34.19 (SN34.19); lit. discourse on doing what is suitable based on meditation attainment",
     "✔"
    ],
    [
     "ṭhitimūlakavuṭṭhānasuttādiaṭṭhaka",
     "nt",
-    "Saṃyutta Nikāya 34.20-27 (SN34.20-27); lit. group of eight discourses starting with the discourse on  transcending based on stability",
+    "Saṁyutta Nikāya 34.20-27 (SN34.20-27); lit. group of eight discourses starting with the discourse on  transcending based on stability",
     "✔"
    ],
    [
     "vuṭṭhānamūlakakallitasuttādisattaka",
     "nt",
-    "Saṃyutta Nikāya 34.28-34 (SN34.28-34); lit. group of seven discourses starting with the discourse on ability based on transcending",
+    "Saṁyutta Nikāya 34.28-34 (SN34.28-34); lit. group of seven discourses starting with the discourse on ability based on transcending",
     "✔"
    ],
    [
     "kallitamūlakaārammaṇasuttādichakka",
     "nt",
-    "Saṃyutta Nikāya 34.35-40 (SN34.35-40); lit. group of six discourses starting with the discourse on meditation theme based on ability",
+    "Saṁyutta Nikāya 34.35-40 (SN34.35-40); lit. group of six discourses starting with the discourse on meditation theme based on ability",
     "✔"
    ],
    [
     "ārammaṇamūlakagocarasuttādipañcaka",
     "nt",
-    "Saṃyutta Nikāya 34.41-45 (SN34.41-45); lit. group of five discourses starting with the discourse on environment based on meditation theme",
+    "Saṁyutta Nikāya 34.41-45 (SN34.41-45); lit. group of five discourses starting with the discourse on environment based on meditation theme",
     "✔"
    ],
    [
     "gocaramūlakaabhinīhārasuttādicatukka",
     "nt",
-    "Saṃyutta Nikāya 34.46-49 (SN34.46-49); lit. group of four discourses starting with the discourse on discourse on aspiration based on environment",
+    "Saṁyutta Nikāya 34.46-49 (SN34.46-49); lit. group of four discourses starting with the discourse on discourse on aspiration based on environment",
     "✔"
    ],
    [
     "abhinīhāramūlakasakkaccasuttāditika",
     "nt",
-    "Saṃyutta Nikāya 34.50-52 (SN34.50-52); lit. group of three discourses starting with the discourse on respect based on aspiration",
+    "Saṁyutta Nikāya 34.50-52 (SN34.50-52); lit. group of three discourses starting with the discourse on respect based on aspiration",
     "✔"
    ],
    [
     "sakkaccamūlakasātaccakārīsuttādiduka",
     "nt",
-    "Saṃyutta Nikāya 34.53-54 (SN34.53-54); lit. group of two discourses starting with the discourse on persevering based on respect",
+    "Saṁyutta Nikāya 34.53-54 (SN34.53-54); lit. group of two discourses starting with the discourse on persevering based on respect",
     "✔"
    ],
    [
     "sātaccamūlakasappāyakārīsutta",
     "nt",
-    "Saṃyutta Nikāya 34.55 (SN34.55)Saṃyutta Nikāya 34.55 (SN34.55); lit. discourse on doing what is suitable based on perseverance",
+    "Saṁyutta Nikāya 34.55 (SN34.55)Saṁyutta Nikāya 34.55 (SN34.55); lit. discourse on doing what is suitable based on perseverance",
     "✔"
    ]
   ],
@@ -49393,7 +49393,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "dunduṃ",
+    "dunduṁ",
     "ind",
     "booming sound; thudding sound",
     "✔"
@@ -49405,7 +49405,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "nihuṃhuṅka",
+    "nihuṁhuṅka",
     "adj",
     "not humphy; not huffy; not disgruntled; not disapproving; lit. not humph humph",
     "✔"
@@ -49441,7 +49441,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "bhuṃ",
+    "bhuṁ",
     "ind",
     "bark; woof",
     "✔"
@@ -49501,7 +49501,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "huṃhuṅka",
+    "huṁhuṅka",
     "adj",
     "making a 'humph' sound; lit. humph humph",
     "✔"
@@ -49538,291 +49538,291 @@ var family_set_json = {
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 8": {
+ "suttas of Saṁyutta Nikāya 8": {
   "data": [
    [
     "nikkhantasutta",
     "nt",
-    "Saṃyutta Nikāya 8.1 (SN8.1); lit. discourse on renounced",
+    "Saṁyutta Nikāya 8.1 (SN8.1); lit. discourse on renounced",
     "✔"
    ],
    [
     "aratisutta 1",
     "nt",
-    "Saṃyutta Nikāya 8.2 (SN8.2); lit. discourse on boredom",
+    "Saṁyutta Nikāya 8.2 (SN8.2); lit. discourse on boredom",
     "✔"
    ],
    [
     "pesalasutta",
     "nt",
-    "Saṃyutta Nikāya 8.3 (SN8.3); lit. discourse on goods monks",
+    "Saṁyutta Nikāya 8.3 (SN8.3); lit. discourse on goods monks",
     "✔"
    ],
    [
     "ānandasutta 01",
     "nt",
-    "Saṃyutta Nikāya 8.4 (SN8.4); lit. discourse with Ānanda",
+    "Saṁyutta Nikāya 8.4 (SN8.4); lit. discourse with Ānanda",
     "✔"
    ],
    [
     "subhāsitasutta 1",
     "nt",
-    "Saṃyutta Nikāya 8.5 (SN8.5); lit. discourse on well spoken",
+    "Saṁyutta Nikāya 8.5 (SN8.5); lit. discourse on well spoken",
     "✔"
    ],
    [
     "sāriputtasutta 1",
     "nt",
-    "Saṃyutta Nikāya 8.6 (SN8.6); lit. discourse with Sāriputta",
+    "Saṁyutta Nikāya 8.6 (SN8.6); lit. discourse with Sāriputta",
     "✔"
    ],
    [
     "pavāraṇāsutta",
     "nt",
-    "Saṃyutta Nikāya 8.7 (SN8.7); lit. discourse about the invitation ceremony",
+    "Saṁyutta Nikāya 8.7 (SN8.7); lit. discourse about the invitation ceremony",
     "✔"
    ],
    [
     "parosahassasutta",
     "nt",
-    "Saṃyutta Nikāya 8.8 (SN8.8); lit. discourse on more than a thousand",
+    "Saṁyutta Nikāya 8.8 (SN8.8); lit. discourse on more than a thousand",
     "✔"
    ],
    [
     "koṇḍaññasutta",
     "nt",
-    "Saṃyutta Nikāya 8.9 (SN8.9); lit. discourse with Koṇḍañña",
+    "Saṁyutta Nikāya 8.9 (SN8.9); lit. discourse with Koṇḍañña",
     "✔"
    ],
    [
     "moggallānasutta 1",
     "nt",
-    "Saṃyutta Nikāya 8.10 (SN8.10); lit. discourse with Moggallāna",
+    "Saṁyutta Nikāya 8.10 (SN8.10); lit. discourse with Moggallāna",
     "✔"
    ],
    [
     "gaggarāsutta",
     "nt",
-    "Saṃyutta Nikāya 8.11 (SN8.11); lit. discourse at Gaggarā",
+    "Saṁyutta Nikāya 8.11 (SN8.11); lit. discourse at Gaggarā",
     "✔"
    ],
    [
     "vaṅgīsasutta",
     "nt",
-    "Saṃyutta Nikāya 8.12 (SN8.12); lit. discourse about Vaṅgīsa",
+    "Saṁyutta Nikāya 8.12 (SN8.12); lit. discourse about Vaṅgīsa",
     "✔"
    ]
   ],
   "count": 12
  },
- "suttas of Saṃyutta Nikāya 38": {
+ "suttas of Saṁyutta Nikāya 38": {
   "data": [
    [
     "nibbānapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.1 (SN38.1); lit. discourse on the question about Nibbāna",
+    "Saṁyutta Nikāya 38.1 (SN38.1); lit. discourse on the question about Nibbāna",
     "✔"
    ],
    [
     "arahattapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.2 (SN38.2); lit. discourse on the question about arahantship",
+    "Saṁyutta Nikāya 38.2 (SN38.2); lit. discourse on the question about arahantship",
     "✔"
    ],
    [
     "dhammavādīpañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.3 (SN38.3); lit. discourse on the question about speaking of Dhamma",
+    "Saṁyutta Nikāya 38.3 (SN38.3); lit. discourse on the question about speaking of Dhamma",
     "✔"
    ],
    [
     "kimatthiyasutta 1",
     "nt",
-    "Saṃyutta Nikāya 38.4 (SN38.4); lit. discourse on what's the purpose",
+    "Saṁyutta Nikāya 38.4 (SN38.4); lit. discourse on what's the purpose",
     "✔"
    ],
    [
     "assāsappattasutta",
     "nt",
-    "Saṃyutta Nikāya 38.5 (SN38.5); lit. discourse on gained relief",
+    "Saṁyutta Nikāya 38.5 (SN38.5); lit. discourse on gained relief",
     "✔"
    ],
    [
     "paramassāsappattasutta",
     "nt",
-    "Saṃyutta Nikāya 38.6 (SN38.6); lit. discourse on gained the ultimate relief",
+    "Saṁyutta Nikāya 38.6 (SN38.6); lit. discourse on gained the ultimate relief",
     "✔"
    ],
    [
     "vedanāpañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.7 (SN38.7); lit. discourse on the question about feeling tone",
+    "Saṁyutta Nikāya 38.7 (SN38.7); lit. discourse on the question about feeling tone",
     "✔"
    ],
    [
     "āsavapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.8 (SN38.8); lit. discourse on the question about the effluents",
+    "Saṁyutta Nikāya 38.8 (SN38.8); lit. discourse on the question about the effluents",
     "✔"
    ],
    [
     "avijjāpañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.9 (SN38.9); lit. discourse on the question about ignorance",
+    "Saṁyutta Nikāya 38.9 (SN38.9); lit. discourse on the question about ignorance",
     "✔"
    ],
    [
     "taṇhāpañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.10 (SN38.10); lit. discourse on the question about craving",
+    "Saṁyutta Nikāya 38.10 (SN38.10); lit. discourse on the question about craving",
     "✔"
    ],
    [
     "oghapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.11 (SN38.11); lit. discourse on the question about floods",
+    "Saṁyutta Nikāya 38.11 (SN38.11); lit. discourse on the question about floods",
     "✔"
    ],
    [
     "upādānapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.12 (SN38.12); lit. discourse on the question about grasping",
+    "Saṁyutta Nikāya 38.12 (SN38.12); lit. discourse on the question about grasping",
     "✔"
    ],
    [
     "bhavapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.13 (SN38.13); lit. discourse on the question about being",
+    "Saṁyutta Nikāya 38.13 (SN38.13); lit. discourse on the question about being",
     "✔"
    ],
    [
     "dukkhapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.14 (SN38.14); lit. discourse on the question about suffering",
+    "Saṁyutta Nikāya 38.14 (SN38.14); lit. discourse on the question about suffering",
     "✔"
    ],
    [
     "sakkāyapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.15 (SN38.15); lit. discourse on the question about self-identity",
+    "Saṁyutta Nikāya 38.15 (SN38.15); lit. discourse on the question about self-identity",
     "✔"
    ],
    [
     "dukkarapañhāsutta",
     "nt",
-    "Saṃyutta Nikāya 38.16 (SN38.16); lit. discourse on the question about difficult to do",
+    "Saṁyutta Nikāya 38.16 (SN38.16); lit. discourse on the question about difficult to do",
     "✔"
    ]
   ],
   "count": 16
  },
- "vaggas of the Saṃyutta Nikāya 7": {
+ "vaggas of the Saṁyutta Nikāya 7": {
   "data": [
    [
     "arahantavagga 1",
     "masc",
-    "Chapter 1 of the Brāhmaṇasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on arahants",
+    "Chapter 1 of the Brāhmaṇasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya; lit. chapter on arahants",
     "✔"
    ],
    [
     "upāsakavagga 1",
     "masc",
-    "Chapter 2 of the Brāhmaṇasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya; lit. chapter on disciples",
+    "Chapter 2 of the Brāhmaṇasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya; lit. chapter on disciples",
     "✔"
    ]
   ],
   "count": 2
  },
- "suttas of Saṃyutta Nikāya 56": {
+ "suttas of Saṁyutta Nikāya 56": {
   "data": [
    [
     "samādhisutta 5",
     "nt",
-    "Saṃyutta Nikāya 56.1 (SN56.1); lit. discourse on mental composure",
+    "Saṁyutta Nikāya 56.1 (SN56.1); lit. discourse on mental composure",
     "✔"
    ],
    [
     "paṭisallānasutta 2",
     "nt",
-    "Saṃyutta Nikāya 56.2 (SN56.2); lit. discourse on seclusion",
+    "Saṁyutta Nikāya 56.2 (SN56.2); lit. discourse on seclusion",
     "✔"
    ],
    [
     "paṭhamasamaṇabrāhmaṇasutta 6",
     "nt",
-    "Saṃyutta Nikāya 56.5 (SN56.5); lit. first discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 56.5 (SN56.5); lit. first discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "tathāgatasutta 3",
     "nt",
-    "Saṃyutta Nikāya 56.12 (SN56.12); lit. discourse on the Such Become",
+    "Saṁyutta Nikāya 56.12 (SN56.12); lit. discourse on the Such Become",
     "✔"
    ],
    [
     "khandhasutta 6",
     "nt",
-    "Saṃyutta Nikāya 56.13 (SN56.13); lit. discourse on the aggregates",
+    "Saṁyutta Nikāya 56.13 (SN56.13); lit. discourse on the aggregates",
     "✔"
    ],
    [
     "avijjāsutta 3",
     "nt",
-    "Saṃyutta Nikāya 56.17 (SN56.17); lit. discourse on ignorance",
+    "Saṁyutta Nikāya 56.17 (SN56.17); lit. discourse on ignorance",
     "✔"
    ],
    [
     "vijjāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 56.18 (SN56.18); lit. discourse on understanding",
+    "Saṁyutta Nikāya 56.18 (SN56.18); lit. discourse on understanding",
     "✔"
    ],
    [
     "sammāsambuddhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 56.23 (SN56.23); lit. discourse on the perfectly awakened Buddha",
+    "Saṁyutta Nikāya 56.23 (SN56.23); lit. discourse on the perfectly awakened Buddha",
     "✔"
    ],
    [
     "arahantasutta 7",
     "nt",
-    "Saṃyutta Nikāya 56.24 (SN56.24); lit. discourse on the arahant",
+    "Saṁyutta Nikāya 56.24 (SN56.24); lit. discourse on the arahant",
     "✔"
    ],
    [
     "mittasutta 3",
     "nt",
-    "Saṃyutta Nikāya 56.26 (SN56.26); lit. discourse on friends",
+    "Saṁyutta Nikāya 56.26 (SN56.26); lit. discourse on friends",
     "✔"
    ],
    [
     "lokasutta 5",
     "nt",
-    "Saṃyutta Nikāya 56.28 (SN56.28); lit. discourse on the world",
+    "Saṁyutta Nikāya 56.28 (SN56.28); lit. discourse on the world",
     "✔"
    ],
    [
     "pariññeyyasutta 3",
     "nt",
-    "Saṃyutta Nikāya 56.29 (SN56.29); lit. discourse on what should be completely comprehended",
+    "Saṁyutta Nikāya 56.29 (SN56.29); lit. discourse on what should be completely comprehended",
     "✔"
    ],
    [
     "daṇḍasutta 2",
     "nt",
-    "Saṃyutta Nikāya 56.33 (SN56.33); lit. discourse on the stick",
+    "Saṁyutta Nikāya 56.33 (SN56.33); lit. discourse on the stick",
     "✔"
    ],
    [
     "nakhasikhasutta 2",
     "nt",
-    "Saṃyutta Nikāya 56.51 (SN56.51); lit. discourse on the tip of the nail",
+    "Saṁyutta Nikāya 56.51 (SN56.51); lit. discourse on the tip of the nail",
     "✔"
    ],
    [
     "pokkharaṇīsutta 2",
     "nt",
-    "Saṃyutta Nikāya 56.52 (SN56.52); lit. discourse on the water lily pond",
+    "Saṁyutta Nikāya 56.52 (SN56.52); lit. discourse on the water lily pond",
     "✔"
    ]
   ],
@@ -50027,7 +50027,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "khattuṃ",
+    "khattuṁ",
     "suffix",
     "-times; -fold",
     "✔"
@@ -50099,7 +50099,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "tuṃ",
+    "tuṁ",
     "suffix",
     "(gram) suffix used to create infinitive verbs",
     "◑"
@@ -50249,66 +50249,66 @@ var family_set_json = {
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 28": {
+ "suttas of Saṁyutta Nikāya 28": {
   "data": [
    [
     "vivekajasutta",
     "nt",
-    "Saṃyutta Nikāya 28.1 (SN28.1); lit. discourse on born from seclusion",
+    "Saṁyutta Nikāya 28.1 (SN28.1); lit. discourse on born from seclusion",
     "✔"
    ],
    [
     "avitakkasutta",
     "nt",
-    "Saṃyutta Nikāya 28.2 (SN28.2); lit. discourse on without thought",
+    "Saṁyutta Nikāya 28.2 (SN28.2); lit. discourse on without thought",
     "✔"
    ],
    [
     "pītisutta 1",
     "nt",
-    "Saṃyutta Nikāya 28.3 (SN28.3); lit. discourse on heartfelt joy",
+    "Saṁyutta Nikāya 28.3 (SN28.3); lit. discourse on heartfelt joy",
     "✔"
    ],
    [
     "upekkhāsutta 1",
     "nt",
-    "Saṃyutta Nikāya 28.4 (SN28.4); lit. discourse on equanimity",
+    "Saṁyutta Nikāya 28.4 (SN28.4); lit. discourse on equanimity",
     "✔"
    ],
    [
     "ākāsānañcāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 28.5 (SN28.5); lit. discourse on the base of infinite space",
+    "Saṁyutta Nikāya 28.5 (SN28.5); lit. discourse on the base of infinite space",
     "✔"
    ],
    [
     "viññāṇañcāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 28.6 (SN28.6); lit. discourse on the dimension of infinite consciousness",
+    "Saṁyutta Nikāya 28.6 (SN28.6); lit. discourse on the dimension of infinite consciousness",
     "✔"
    ],
    [
     "ākiñcaññāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 28.7 (SN28.7); lit. discourse on the dimension of nothingness",
+    "Saṁyutta Nikāya 28.7 (SN28.7); lit. discourse on the dimension of nothingness",
     "✔"
    ],
    [
     "nevasaññānāsaññāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 28.8 (SN28.8); lit. discourse on the dimension of neither perception nor non-perception",
+    "Saṁyutta Nikāya 28.8 (SN28.8); lit. discourse on the dimension of neither perception nor non-perception",
     "✔"
    ],
    [
     "nirodhasamāpattisutta",
     "nt",
-    "Saṃyutta Nikāya 28.9 (SN28.9); lit. discourse on the attainment of cessation",
+    "Saṁyutta Nikāya 28.9 (SN28.9); lit. discourse on the attainment of cessation",
     "✔"
    ],
    [
     "sūcimukhīsutta",
     "nt",
-    "Saṃyutta Nikāya 28.10 (SN28.10); lit. discourse with Sucimukhī",
+    "Saṁyutta Nikāya 28.10 (SN28.10); lit. discourse with Sucimukhī",
     "✔"
    ]
   ],
@@ -50524,7 +50524,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "mahiṃsakumāra",
+    "mahiṁsakumāra",
     "masc",
     "name of a prince; previous incarnation of the Buddha; lit. prince buffalo",
     "✔"
@@ -50532,84 +50532,84 @@ var family_set_json = {
   ],
   "count": 3
  },
- "suttas of Saṃyutta Nikāya 42": {
+ "suttas of Saṁyutta Nikāya 42": {
   "data": [
    [
     "caṇḍasutta",
     "nt",
-    "Saṃyutta Nikāya 42.1 (SN42.1); lit. discourse with Caṇḍa",
+    "Saṁyutta Nikāya 42.1 (SN42.1); lit. discourse with Caṇḍa",
     "✔"
    ],
    [
     "tālapuṭasutta",
     "nt",
-    "Saṃyutta Nikāya 42.2 (SN42.2); lit. discourse with Tālapuṭa",
+    "Saṁyutta Nikāya 42.2 (SN42.2); lit. discourse with Tālapuṭa",
     "✔"
    ],
    [
     "yodhājīvasutta 1",
     "nt",
-    "Saṃyutta Nikāya 42.3 (SN42.3); lit. discourse on the warrior",
+    "Saṁyutta Nikāya 42.3 (SN42.3); lit. discourse on the warrior",
     "✔"
    ],
    [
     "hatthārohasutta",
     "nt",
-    "Saṃyutta Nikāya 42.4 (SN42.4); lit. discourse on the elephant cavalryman",
+    "Saṁyutta Nikāya 42.4 (SN42.4); lit. discourse on the elephant cavalryman",
     "✔"
    ],
    [
     "assārohasutta",
     "nt",
-    "Saṃyutta Nikāya 42.5 (SN42.5); lit. discourse on the horse cavalryman",
+    "Saṁyutta Nikāya 42.5 (SN42.5); lit. discourse on the horse cavalryman",
     "✔"
    ],
    [
     "asibandhakaputtasutta",
     "nt",
-    "Saṃyutta Nikāya 42.6 (SN42.6); lit. discourse with Asibandhaka's son",
+    "Saṁyutta Nikāya 42.6 (SN42.6); lit. discourse with Asibandhaka's son",
     "✔"
    ],
    [
     "khettūpamasutta",
     "nt",
-    "Saṃyutta Nikāya 42.7 (SN42.7); lit. discourse on the simile of the field",
+    "Saṁyutta Nikāya 42.7 (SN42.7); lit. discourse on the simile of the field",
     "✔"
    ],
    [
     "saṅkhadhamasutta",
     "nt",
-    "Saṃyutta Nikāya 42.8 (SN42.8); lit. discourse on the conch blower",
+    "Saṁyutta Nikāya 42.8 (SN42.8); lit. discourse on the conch blower",
     "✔"
    ],
    [
     "kulasutta 2",
     "nt",
-    "Saṃyutta Nikāya 42.9 (SN42.9); lit. discourse on families",
+    "Saṁyutta Nikāya 42.9 (SN42.9); lit. discourse on families",
     "✔"
    ],
    [
     "maṇicūḷakasutta",
     "nt",
-    "Saṃyutta Nikāya 42.10 (SN42.10); lit. discourse with Maṇicūḷaka",
+    "Saṁyutta Nikāya 42.10 (SN42.10); lit. discourse with Maṇicūḷaka",
     "✔"
    ],
    [
     "bhadrakasutta",
     "nt",
-    "Saṃyutta Nikāya 42.11 (SN42.11); lit. discourse with Bhadraka",
+    "Saṁyutta Nikāya 42.11 (SN42.11); lit. discourse with Bhadraka",
     "✔"
    ],
    [
     "rāsiyasutta",
     "nt",
-    "Saṃyutta Nikāya 42.12 (SN42.12); lit. discourse with Rāsiya",
+    "Saṁyutta Nikāya 42.12 (SN42.12); lit. discourse with Rāsiya",
     "✔"
    ],
    [
     "pāṭaliyasutta",
     "nt",
-    "Saṃyutta Nikāya 42.13 (SN42.13); lit. discourse with Pāṭaliya",
+    "Saṁyutta Nikāya 42.13 (SN42.13); lit. discourse with Pāṭaliya",
     "✔"
    ]
   ],
@@ -50662,126 +50662,126 @@ var family_set_json = {
   ],
   "count": 7
  },
- "suttas of Saṃyutta Nikāya 15": {
+ "suttas of Saṁyutta Nikāya 15": {
   "data": [
    [
     "tiṇakaṭṭhasutta",
     "nt",
-    "Saṃyutta Nikāya 15.1 (SN15.1); lit. grass and twigs",
+    "Saṁyutta Nikāya 15.1 (SN15.1); lit. grass and twigs",
     "✔"
    ],
    [
     "pathavīsutta 2",
     "nt",
-    "Saṃyutta Nikāya 15.2 (SN15.2); lit. discourse on the earth",
+    "Saṁyutta Nikāya 15.2 (SN15.2); lit. discourse on the earth",
     "✔"
    ],
    [
     "assusutta",
     "nt",
-    "Saṃyutta Nikāya 15.3 (SN15.3); lit. discourse on tears",
+    "Saṁyutta Nikāya 15.3 (SN15.3); lit. discourse on tears",
     "✔"
    ],
    [
     "khīrasutta",
     "nt",
-    "Saṃyutta Nikāya 15.4 (SN15.4); lit. discourse on milk",
+    "Saṁyutta Nikāya 15.4 (SN15.4); lit. discourse on milk",
     "✔"
    ],
    [
     "pabbatasutta 2",
     "nt",
-    "Saṃyutta Nikāya 15.5 (SN15.5); lit. discourse on the mountain",
+    "Saṁyutta Nikāya 15.5 (SN15.5); lit. discourse on the mountain",
     "✔"
    ],
    [
     "sāsapasutta",
     "nt",
-    "Saṃyutta Nikāya 15.6 (SN15.6); lit. discourse on the mustard seed",
+    "Saṁyutta Nikāya 15.6 (SN15.6); lit. discourse on the mustard seed",
     "✔"
    ],
    [
     "sāvakasutta",
     "nt",
-    "Saṃyutta Nikāya 15.7 (SN15.7); lit. discourse on the disciple",
+    "Saṁyutta Nikāya 15.7 (SN15.7); lit. discourse on the disciple",
     "✔"
    ],
    [
     "gaṅgāsutta",
     "nt",
-    "Saṃyutta Nikāya 15.8 (SN15.8); lit. discourse on the Ganges",
+    "Saṁyutta Nikāya 15.8 (SN15.8); lit. discourse on the Ganges",
     "✔"
    ],
    [
     "daṇḍasutta 1",
     "nt",
-    "Saṃyutta Nikāya 15.9 (SN15.9); lit. discourse on the stick",
+    "Saṁyutta Nikāya 15.9 (SN15.9); lit. discourse on the stick",
     "✔"
    ],
    [
     "puggalasutta 2",
     "nt",
-    "Saṃyutta Nikāya 15.10 (SN15.10); lit. discourse about a person",
+    "Saṁyutta Nikāya 15.10 (SN15.10); lit. discourse about a person",
     "✔"
    ],
    [
     "duggatasutta",
     "nt",
-    "Saṃyutta Nikāya 15.11 (SN15.11); lit. discourse on faring badly",
+    "Saṁyutta Nikāya 15.11 (SN15.11); lit. discourse on faring badly",
     "✔"
    ],
    [
     "sukhitasutta",
     "nt",
-    "Saṃyutta Nikāya 15.12 (SN15.12); lit. discourse on the comfortable",
+    "Saṁyutta Nikāya 15.12 (SN15.12); lit. discourse on the comfortable",
     "✔"
    ],
    [
-    "tiṃsamattasutta",
+    "tiṁsamattasutta",
     "nt",
-    "Saṃyutta Nikāya 15.13 (SN15.13); lit. discourse on thirty in number",
+    "Saṁyutta Nikāya 15.13 (SN15.13); lit. discourse on thirty in number",
     "✔"
    ],
    [
     "mātusutta 1",
     "nt",
-    "Saṃyutta Nikāya 15.14 (SN15.14); lit. discourse on mothers",
+    "Saṁyutta Nikāya 15.14 (SN15.14); lit. discourse on mothers",
     "✔"
    ],
    [
     "pitusutta",
     "nt",
-    "Saṃyutta Nikāya 15.15 (SN15.15); lit. discourse on fathers",
+    "Saṁyutta Nikāya 15.15 (SN15.15); lit. discourse on fathers",
     "✔"
    ],
    [
     "bhātusutta",
     "nt",
-    "Saṃyutta Nikāya 15.16 (SN15.16); lit. discourse on brothers",
+    "Saṁyutta Nikāya 15.16 (SN15.16); lit. discourse on brothers",
     "✔"
    ],
    [
     "bhaginisutta",
     "nt",
-    "Saṃyutta Nikāya 15.17 (SN15.17); lit. discourse on sisters",
+    "Saṁyutta Nikāya 15.17 (SN15.17); lit. discourse on sisters",
     "✔"
    ],
    [
     "puttasutta 1",
     "nt",
-    "Saṃyutta Nikāya 15.18 (SN15.18); lit. discourse on sons",
+    "Saṁyutta Nikāya 15.18 (SN15.18); lit. discourse on sons",
     "✔"
    ],
    [
     "dhītusutta",
     "nt",
-    "Saṃyutta Nikāya 15.19 (SN15.19); lit. discourse on daughters",
+    "Saṁyutta Nikāya 15.19 (SN15.19); lit. discourse on daughters",
     "✔"
    ],
    [
     "vepullapabbatasutta",
     "nt",
-    "Saṃyutta Nikāya 15.20 (SN15.20); lit. discourse on Vepulla mountain",
+    "Saṁyutta Nikāya 15.20 (SN15.20); lit. discourse on Vepulla mountain",
     "✔"
    ],
    [
@@ -50881,78 +50881,78 @@ var family_set_json = {
   ],
   "count": 9
  },
- "suttas of Saṃyutta Nikāya 20": {
+ "suttas of Saṁyutta Nikāya 20": {
   "data": [
    [
     "kūṭasutta 1",
     "nt",
-    "Saṃyutta Nikāya 20.1 (SN20.1); lit. discourse on the ridge",
+    "Saṁyutta Nikāya 20.1 (SN20.1); lit. discourse on the ridge",
     "✔"
    ],
    [
     "nakhasikhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 20.2 (SN20.2); lit. discourse on the tip of the nail",
+    "Saṁyutta Nikāya 20.2 (SN20.2); lit. discourse on the tip of the nail",
     "✔"
    ],
    [
     "kulasutta 1",
     "nt",
-    "Saṃyutta Nikāya 20.3 (SN20.3); lit. discourse on families",
+    "Saṁyutta Nikāya 20.3 (SN20.3); lit. discourse on families",
     "✔"
    ],
    [
     "okkhāsutta",
     "nt",
-    "Saṃyutta Nikāya 20.4 (SN20.4); lit. discourse on the cauldron",
+    "Saṁyutta Nikāya 20.4 (SN20.4); lit. discourse on the cauldron",
     "✔"
    ],
    [
     "sattisutta 3",
     "nt",
-    "Saṃyutta Nikāya 20.5 (SN20.5); lit. discourse on the spear",
+    "Saṁyutta Nikāya 20.5 (SN20.5); lit. discourse on the spear",
     "✔"
    ],
    [
     "dhanuggahasutta",
     "nt",
-    "Saṃyutta Nikāya 20.6 (SN20.6); lit. discourse on the archer",
+    "Saṁyutta Nikāya 20.6 (SN20.6); lit. discourse on the archer",
     "✔"
    ],
    [
     "āṇisutta",
     "nt",
-    "Saṃyutta Nikāya 20.7 (SN20.7); lit. discourse on the pin",
+    "Saṁyutta Nikāya 20.7 (SN20.7); lit. discourse on the pin",
     "✔"
    ],
    [
     "kaliṅgarasutta",
     "nt",
-    "Saṃyutta Nikāya 20.8 (SN20.8); lit. discourse on wooded blocks",
+    "Saṁyutta Nikāya 20.8 (SN20.8); lit. discourse on wooded blocks",
     "✔"
    ],
    [
     "nāgasutta 1",
     "nt",
-    "Saṃyutta Nikāya 20.9 (SN20.9); lit. discourse on the bull elephant",
+    "Saṁyutta Nikāya 20.9 (SN20.9); lit. discourse on the bull elephant",
     "✔"
    ],
    [
     "biḷārasutta",
     "nt",
-    "Saṃyutta Nikāya 20.10 (SN20.10); lit. discourse on the cat",
+    "Saṁyutta Nikāya 20.10 (SN20.10); lit. discourse on the cat",
     "✔"
    ],
    [
     "siṅgālasutta 3",
     "nt",
-    "Saṃyutta Nikāya 20.11 (SN20.11); lit. discourse on the jackal",
+    "Saṁyutta Nikāya 20.11 (SN20.11); lit. discourse on the jackal",
     "✔"
    ],
    [
     "dutiyasiṅgālasutta",
     "nt",
-    "Saṃyutta Nikāya 20.12 (SN20.12); lit. second discourse on the jackal",
+    "Saṁyutta Nikāya 20.12 (SN20.12); lit. second discourse on the jackal",
     "✔"
    ]
   ],
@@ -51015,7 +51015,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "maṇivaṃsa",
+    "maṇivaṁsa",
     "masc",
     "jewelled flute",
     "✔"
@@ -51053,225 +51053,225 @@ var family_set_json = {
   ],
   "count": 15
  },
- "vaggas of the Saṃyutta Nikāya 23": {
+ "vaggas of the Saṁyutta Nikāya 23": {
   "data": [
    [
     "paṭhamavagga 10",
     "masc",
-    "Chapter 1 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya (SN23.1-10)",
+    "Chapter 1 of the Rādhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya (SN23.1-10)",
     "✔"
    ],
    [
     "dutiyavagga 10",
     "masc",
-    "Chapter 2 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya (SN23.11-22)",
+    "Chapter 2 of the Rādhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya (SN23.11-22)",
     "✔"
    ],
    [
     "āyācanavagga 1",
     "masc",
-    "Chapter 3 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on imploring",
+    "Chapter 3 of the Rādhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on imploring",
     "✔"
    ],
    [
     "upanisinnavagga",
     "masc",
-    "Chapter 4 of the Rādhasaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on sitting nearby",
+    "Chapter 4 of the Rādhasaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on sitting nearby",
     "✔"
    ]
   ],
   "count": 4
  },
- "vaggas of the Saṃyutta Nikāya 12": {
+ "vaggas of the Saṁyutta Nikāya 12": {
   "data": [
    [
     "buddhavagga 1",
     "masc",
-    "Chapter 1 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on the Buddha",
+    "Chapter 1 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on the Buddha",
     "✔"
    ],
    [
     "āhāravagga",
     "masc",
-    "Chapter 2 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on nutriment",
+    "Chapter 2 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on nutriment",
     "✔"
    ],
    [
     "dasabalavagga",
     "masc",
-    "Chapter 3 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on ten powers",
+    "Chapter 3 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on ten powers",
     "✔"
    ],
    [
     "kaḷārakhattiyavagga",
     "masc",
-    "Chapter 4 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on Kaḷārakhattiya",
+    "Chapter 4 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on Kaḷārakhattiya",
     "✔"
    ],
    [
     "gahapativagga 2",
     "masc",
-    "Chapter 5 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on householders",
+    "Chapter 5 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on householders",
     "✔"
    ],
    [
     "dukkhavagga",
     "masc",
-    "Chapter 6 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on suffering",
+    "Chapter 6 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on suffering",
     "✔"
    ],
    [
     "mahāvagga 04",
     "masc",
-    "Chapter 7 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. great chapter",
+    "Chapter 7 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. great chapter",
     "✔"
    ],
    [
     "samaṇabrāhmaṇavagga",
     "masc",
-    "Chapter 8 of the Nidānasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on ascetics and Brahmans",
+    "Chapter 8 of the Nidānasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on ascetics and Brahmans",
     "✔"
    ]
   ],
   "count": 8
  },
- "suttas of Saṃyutta Nikāya 10": {
+ "suttas of Saṁyutta Nikāya 10": {
   "data": [
    [
     "indakasutta",
     "nt",
-    "Saṃyutta Nikāya 10.1 (SN10.1); lit. discourse with Indaka",
+    "Saṁyutta Nikāya 10.1 (SN10.1); lit. discourse with Indaka",
     "✔"
    ],
    [
     "sakkanāmasutta 1",
     "nt",
-    "Saṃyutta Nikāya 10.2 (SN10.2); lit. discourse on called Sakka",
+    "Saṁyutta Nikāya 10.2 (SN10.2); lit. discourse on called Sakka",
     "✔"
    ],
    [
     "sūcilomasutta 1",
     "nt",
-    "Saṃyutta Nikāya 10.3 (SN10.3); lit. discourse on having needles as hair",
+    "Saṁyutta Nikāya 10.3 (SN10.3); lit. discourse on having needles as hair",
     "✔"
    ],
    [
     "maṇibhaddasutta",
     "nt",
-    "Saṃyutta Nikāya 10.4 (SN10.4); lit. discourse with Auspicious Jewel",
+    "Saṁyutta Nikāya 10.4 (SN10.4); lit. discourse with Auspicious Jewel",
     "✔"
    ],
    [
     "sānusutta",
     "nt",
-    "Saṃyutta Nikāya 10.5 (SN10.5); lit. disourse with Sānu",
+    "Saṁyutta Nikāya 10.5 (SN10.5); lit. disourse with Sānu",
     "✔"
    ],
    [
     "piyaṅkarasutta",
     "nt",
-    "Saṃyutta Nikāya 10.6 (SN10.6); lit. discourse with Piyaṅkara",
+    "Saṁyutta Nikāya 10.6 (SN10.6); lit. discourse with Piyaṅkara",
     "✔"
    ],
    [
     "punabbasusutta",
     "nt",
-    "Saṃyutta Nikāya 10.7 (SN10.7); lit. discourse with Punabbasu",
+    "Saṁyutta Nikāya 10.7 (SN10.7); lit. discourse with Punabbasu",
     "✔"
    ],
    [
     "sudattasutta 1",
     "nt",
-    "Saṃyutta Nikāya 10.8 (SN10.8); lit. discourse about Sudatta",
+    "Saṁyutta Nikāya 10.8 (SN10.8); lit. discourse about Sudatta",
     "✔"
    ],
    [
     "paṭhamasukkāsutta",
     "nt",
-    "Saṃyutta Nikāya 10.9 (SN10.9); lit. first discourse with Sukkā",
+    "Saṁyutta Nikāya 10.9 (SN10.9); lit. first discourse with Sukkā",
     "✔"
    ],
    [
     "dutiyasukkāsutta",
     "nt",
-    "Saṃyutta Nikāya 10.10 (SN10.10); lit. second discourse with Sukkā",
+    "Saṁyutta Nikāya 10.10 (SN10.10); lit. second discourse with Sukkā",
     "✔"
    ],
    [
     "cīrāsutta",
     "nt",
-    "Saṃyutta Nikāya 10.11 (SN10.11); lit. discourse with Cīrā",
+    "Saṁyutta Nikāya 10.11 (SN10.11); lit. discourse with Cīrā",
     "✔"
    ],
    [
     "āḷavakasutta 1",
     "nt",
-    "Saṃyutta Nikāya 10.12 (SN10.12); lit. discourse with Āḷavaka",
+    "Saṁyutta Nikāya 10.12 (SN10.12); lit. discourse with Āḷavaka",
     "✔"
    ]
   ],
   "count": 12
  },
- "suttas of Saṃyutta Nikāya 5": {
+ "suttas of Saṁyutta Nikāya 5": {
   "data": [
    [
     "āḷavikāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.1 (SN5.1); lit. discourse about Āḷavikā",
+    "Saṁyutta Nikāya 5.1 (SN5.1); lit. discourse about Āḷavikā",
     "✔"
    ],
    [
     "somāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.2 (SN5.2); lit. discourse about Somā",
+    "Saṁyutta Nikāya 5.2 (SN5.2); lit. discourse about Somā",
     "✔"
    ],
    [
     "kisāgotamīsutta",
     "nt",
-    "Saṃyutta Nikāya 5.3 (SN5.3); lit. discourse about Skinny Gotamī",
+    "Saṁyutta Nikāya 5.3 (SN5.3); lit. discourse about Skinny Gotamī",
     "✔"
    ],
    [
     "vijayāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.4 (SN5.4); lit. discourse about Vijayā",
+    "Saṁyutta Nikāya 5.4 (SN5.4); lit. discourse about Vijayā",
     "✔"
    ],
    [
     "uppalavaṇṇāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.5 (SN5.5); lit. discourse about Uppalavaṇṇā",
+    "Saṁyutta Nikāya 5.5 (SN5.5); lit. discourse about Uppalavaṇṇā",
     "✔"
    ],
    [
     "cālāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.6 (SN5.6); lit. discourse about Cālā",
+    "Saṁyutta Nikāya 5.6 (SN5.6); lit. discourse about Cālā",
     "✔"
    ],
    [
     "upacālāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.7 (SN5.7); lit. discourse about Upacālā",
+    "Saṁyutta Nikāya 5.7 (SN5.7); lit. discourse about Upacālā",
     "✔"
    ],
    [
     "sīsupacālāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.8 (SN5.8); lit. discourse about Sīsupacālā",
+    "Saṁyutta Nikāya 5.8 (SN5.8); lit. discourse about Sīsupacālā",
     "✔"
    ],
    [
     "selāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.9 (SN5.9); lit. discourse about Selā",
+    "Saṁyutta Nikāya 5.9 (SN5.9); lit. discourse about Selā",
     "✔"
    ],
    [
     "vajirāsutta",
     "nt",
-    "Saṃyutta Nikāya 5.10 (SN5.10); lit. discourse about Vajirā",
+    "Saṁyutta Nikāya 5.10 (SN5.10); lit. discourse about Vajirā",
     "✔"
    ]
   ],
@@ -51405,7 +51405,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "khaṇḍākhaṇḍikaṃ",
+    "khaṇḍākhaṇḍikaṁ",
     "ind",
     "into bits and pieces; into small fragments",
     "✔"
@@ -51548,7 +51548,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "pācīnavaṃsa",
+    "pācīnavaṁsa",
     "masc",
     "previous name of Vepulla mountain; lit. eastern bamboo",
     "✔"
@@ -51842,78 +51842,78 @@ var family_set_json = {
   ],
   "count": 7
  },
- "suttas of Saṃyutta Nikāya 21": {
+ "suttas of Saṁyutta Nikāya 21": {
   "data": [
    [
     "kolitasutta",
     "nt",
-    "Saṃyutta Nikāya 21.1 (SN21.1); lit. discourse with Kolita",
+    "Saṁyutta Nikāya 21.1 (SN21.1); lit. discourse with Kolita",
     "✔"
    ],
    [
     "upatissasutta",
     "nt",
-    "Saṃyutta Nikāya 21.2 (SN21.2); lit. discourse with Upatissa",
+    "Saṁyutta Nikāya 21.2 (SN21.2); lit. discourse with Upatissa",
     "✔"
    ],
    [
     "ghaṭasutta",
     "nt",
-    "Saṃyutta Nikāya 21.3 (SN21.3); lit. discourse on the earthen jar",
+    "Saṁyutta Nikāya 21.3 (SN21.3); lit. discourse on the earthen jar",
     "✔"
    ],
    [
     "navasutta",
     "nt",
-    "Saṃyutta Nikāya 21.4 (SN21.4); lit. discourse on the junior monk",
+    "Saṁyutta Nikāya 21.4 (SN21.4); lit. discourse on the junior monk",
     "✔"
    ],
    [
     "sujātasutta",
     "nt",
-    "Saṃyutta Nikāya 21.5 (SN21.5); lit. discourse with Sujāta",
+    "Saṁyutta Nikāya 21.5 (SN21.5); lit. discourse with Sujāta",
     "✔"
    ],
    [
     "lakuṇḍakabhaddiyasutta",
     "nt",
-    "Saṃyutta Nikāya 21.6 (SN21.6); lit. discourse on the lucky dwarf",
+    "Saṁyutta Nikāya 21.6 (SN21.6); lit. discourse on the lucky dwarf",
     "✔"
    ],
    [
     "visākhasutta 1",
     "nt",
-    "Saṃyutta Nikāya 21.7 (SN21.7); lit. discourse with Visākha",
+    "Saṁyutta Nikāya 21.7 (SN21.7); lit. discourse with Visākha",
     "✔"
    ],
    [
     "nandasutta 2",
     "nt",
-    "Saṃyutta Nikāya 21.8 (SN21.8); lit. discourse with Nanda",
+    "Saṁyutta Nikāya 21.8 (SN21.8); lit. discourse with Nanda",
     "✔"
    ],
    [
     "tissasutta 1",
     "nt",
-    "Saṃyutta Nikāya 21.9 (SN21.9); lit. discourse with Tissa",
+    "Saṁyutta Nikāya 21.9 (SN21.9); lit. discourse with Tissa",
     "✔"
    ],
    [
     "theranāmakasutta",
     "nt",
-    "Saṃyutta Nikāya 21.10 (SN21.10); lit. discourse on a monk called senior",
+    "Saṁyutta Nikāya 21.10 (SN21.10); lit. discourse on a monk called senior",
     "✔"
    ],
    [
     "mahākappinasutta 1",
     "nt",
-    "Saṃyutta Nikāya 21.11 (SN21.11); lit. discourse with Mahākappina",
+    "Saṁyutta Nikāya 21.11 (SN21.11); lit. discourse with Mahākappina",
     "✔"
    ],
    [
     "sahāyakasutta",
     "nt",
-    "Saṃyutta Nikāya 21.12 (SN21.12); lit. discourse on friends",
+    "Saṁyutta Nikāya 21.12 (SN21.12); lit. discourse on friends",
     "✔"
    ],
    [
@@ -52253,7 +52253,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "baḷisamaṃsika",
+    "baḷisamaṁsika",
     "nt",
     "name of a torture; lit. meat-hook",
     "✔"
@@ -52314,204 +52314,204 @@ var family_set_json = {
   ],
   "count": 4
  },
- "vaggas of the Saṃyutta Nikāya 46": {
+ "vaggas of the Saṁyutta Nikāya 46": {
   "data": [
    [
     "pabbatavagga",
     "masc",
-    "Chapter 1 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the mountain",
+    "Chapter 1 of the Bojjhaṅgasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the mountain",
     "✔"
    ],
    [
     "gilānavagga 2",
     "masc",
-    "Chapter 2 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on illness",
+    "Chapter 2 of the Bojjhaṅgasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on illness",
     "✔"
    ],
    [
     "gaṅgāpeyyālavagga 02",
     "masc",
-    "Chapter 9 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 9 of the Bojjhaṅgasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "balakaraṇīyavagga 2",
     "masc",
-    "Chapter 11 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "Chapter 11 of the Bojjhaṅgasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on strenuous",
     "✔"
    ],
    [
     "esanāvagga 2",
     "masc",
-    "Chapter 12 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "Chapter 12 of the Bojjhaṅgasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on seeking",
     "✔"
    ],
    [
     "oghavagga 02",
     "masc",
-    "Chapter 13 of the Bojjhaṅgasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 13 of the Bojjhaṅgasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 6
  },
- "vaggas of the Saṃyutta Nikāya 47": {
+ "vaggas of the Saṁyutta Nikāya 47": {
   "data": [
    [
     "gaṅgāpeyyālavagga 03",
     "masc",
-    "Chapter 6 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 6 of the Satipaṭṭhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "balakaraṇīyavagga 3",
     "masc",
-    "Chapter 8 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "Chapter 8 of the Satipaṭṭhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on strenuous",
     "✔"
    ],
    [
     "esanāvagga 3",
     "masc",
-    "Chapter 9 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "Chapter 9 of the Satipaṭṭhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on seeking",
     "✔"
    ],
    [
     "oghavagga 03",
     "masc",
-    "Chapter 10 of the Satipaṭṭhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 10 of the Satipaṭṭhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 4
  },
- "vaggas of the Saṃyutta Nikāya 49": {
+ "vaggas of the Saṁyutta Nikāya 49": {
   "data": [
    [
     "gaṅgāpeyyālavagga 06",
     "masc",
-    "Chapter 1 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 1 of the Sammappadhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "balakaraṇīyavagga 4",
     "masc",
-    "Chapter 3 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on strenuous",
+    "Chapter 3 of the Sammappadhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on strenuous",
     "✔"
    ],
    [
     "esanāvagga 4",
     "masc",
-    "Chapter 4 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "Chapter 4 of the Sammappadhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on seeking",
     "✔"
    ],
    [
     "oghavagga 06",
     "masc",
-    "Chapter 5 of the Sammappadhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 5 of the Sammappadhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 4
  },
- "vaggas of the Saṃyutta Nikāya 50": {
+ "vaggas of the Saṁyutta Nikāya 50": {
   "data": [
    [
     "gaṅgāpeyyālavagga 07",
     "masc",
-    "Chapter 1 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 1 of the Balasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "oghavagga 07",
     "masc",
-    "Chapter 5 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 5 of the Balasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ],
    [
     "gaṅgāpeyyālavagga 08",
     "masc",
-    "Chapter 6 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 6 of the Balasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "esanāvagga 5",
     "masc",
-    "Chapter 9 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on seeking",
+    "Chapter 9 of the Balasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on seeking",
     "✔"
    ],
    [
     "oghavagga 08",
     "masc",
-    "Chapter 10 of the Balasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 10 of the Balasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 5
  },
- "vaggas of the Saṃyutta Nikāya 48": {
+ "vaggas of the Saṁyutta Nikāya 48": {
   "data": [
    [
     "jarāvagga 2",
     "masc",
-    "Chapter 5 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya (SN48.41)",
+    "Chapter 5 of the Indriyasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya (SN48.41)",
     "✔"
    ],
    [
     "gaṅgāpeyyālavagga 04",
     "masc",
-    "Chapter 8 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 8 of the Indriyasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "oghavagga 04",
     "masc",
-    "Chapter 12 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 12 of the Indriyasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ],
    [
     "gaṅgāpeyyālavagga 05",
     "masc",
-    "Chapter 13 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 13 of the Indriyasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "oghavagga 05",
     "masc",
-    "Chapter 17 of the Indriyasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 17 of the Indriyasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 5
  },
- "vaggas of the Saṃyutta Nikāya 51": {
+ "vaggas of the Saṁyutta Nikāya 51": {
   "data": [
    [
     "gaṅgāpeyyālavagga 09",
     "masc",
-    "Chapter 4 of the Iddhipādasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 4 of the Iddhipādasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "oghavagga 09",
     "masc",
-    "Chapter 8 of the Iddhipādasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 8 of the Iddhipādasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 34": {
+ "vaggas of the Saṁyutta Nikāya 34": {
   "data": [
    [
     "gaṅgāpeyyālavagga 10",
     "masc",
-    "Chapter 1 of the Jhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
+    "Chapter 1 of the Jhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on the Ganges with elided repetitions",
     "✔"
    ],
    [
     "oghavagga 10",
     "masc",
-    "Chapter 5 of the Jhānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on floods",
+    "Chapter 5 of the Jhānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on floods",
     "✔"
    ]
   ],
@@ -52855,7 +52855,7 @@ var family_set_json = {
    [
     "saddanīti",
     "fem",
-    "comprehensive grammatical treatise written by Aggavaṃsa in the twelfth century; lit. principles of grammar",
+    "comprehensive grammatical treatise written by Aggavaṁsa in the twelfth century; lit. principles of grammar",
     "✔"
    ],
    [
@@ -52997,7 +52997,7 @@ var family_set_json = {
    [
     "saddanīti",
     "fem",
-    "comprehensive grammatical treatise written by Aggavaṃsa in the twelfth century; lit. principles of grammar",
+    "comprehensive grammatical treatise written by Aggavaṁsa in the twelfth century; lit. principles of grammar",
     "✔"
    ],
    [
@@ -53082,7 +53082,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "saṃghabhedakakkhandhaka",
+    "saṁghabhedakakkhandhaka",
     "masc",
     "section on schism in the monastic order",
     "✔"
@@ -53131,185 +53131,185 @@ var family_set_json = {
   ],
   "count": 6
  },
- "vaggas of the Saṃyutta Nikāya 14": {
+ "vaggas of the Saṁyutta Nikāya 14": {
   "data": [
    [
     "nānattavagga",
     "masc",
-    "Chapter 1 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on diversity",
+    "Chapter 1 of the Dhātusaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on diversity",
     "✔"
    ],
    [
     "dutiyavagga 05",
     "masc",
-    "Chapter 2 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN14.11-22); lit. second chapter",
+    "Chapter 2 of the Dhātusaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN14.11-22); lit. second chapter",
     "✔"
    ],
    [
     "kammapathavagga 1",
     "masc",
-    "Chapter 3 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. chapter on courses of action",
+    "Chapter 3 of the Dhātusaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. chapter on courses of action",
     "✔"
    ],
    [
     "catutthavagga 1",
     "masc",
-    "Chapter 4 of the Dhātusaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. fourth chapter",
+    "Chapter 4 of the Dhātusaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. fourth chapter",
     "✔"
    ]
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 4": {
+ "suttas of Saṁyutta Nikāya 4": {
   "data": [
    [
     "tapokammasutta",
     "nt",
-    "Saṃyutta Nikāya 4.1 (SN4.1); lit. discourse on ascetic practice",
+    "Saṁyutta Nikāya 4.1 (SN4.1); lit. discourse on ascetic practice",
     "✔"
    ],
    [
     "hatthirājavaṇṇasutta",
     "nt",
-    "Saṃyutta Nikāya 4.2 (SN4.2); lit. discourse about (appearing in) the form of an elephant king",
+    "Saṁyutta Nikāya 4.2 (SN4.2); lit. discourse about (appearing in) the form of an elephant king",
     "✔"
    ],
    [
     "subhasutta 4",
     "nt",
-    "Saṃyutta Nikāya 4.3 (SN4.3); lit. discourse with Subha",
+    "Saṁyutta Nikāya 4.3 (SN4.3); lit. discourse with Subha",
     "✔"
    ],
    [
     "paṭhamamārapāsasutta 1",
     "nt",
-    "Saṃyutta Nikāya 4.4 (SN4.4); lit. first discourse on Mara's snare",
+    "Saṁyutta Nikāya 4.4 (SN4.4); lit. first discourse on Mara's snare",
     "✔"
    ],
    [
     "dutiyamārapāsasutta 1",
     "nt",
-    "Saṃyutta Nikāya 4.5 (SN4.5); lit. second discourse on Māra's snare",
+    "Saṁyutta Nikāya 4.5 (SN4.5); lit. second discourse on Māra's snare",
     "✔"
    ],
    [
     "sappasutta",
     "nt",
-    "Saṃyutta Nikāya 4.6 (SN4.6); lit. discourse about the snake",
+    "Saṁyutta Nikāya 4.6 (SN4.6); lit. discourse about the snake",
     "✔"
    ],
    [
     "supatisutta",
     "nt",
-    "Saṃyutta Nikāya 4.7 (SN4.7); lit. discourse about he sleeps",
+    "Saṁyutta Nikāya 4.7 (SN4.7); lit. discourse about he sleeps",
     "✔"
    ],
    [
     "nandatisutta 2",
     "nt",
-    "Saṃyutta Nikāya 4.8 (SN4.8); lit. discourse on one rejoices",
+    "Saṁyutta Nikāya 4.8 (SN4.8); lit. discourse on one rejoices",
     "✔"
    ],
    [
     "paṭhamaāyusutta",
     "nt",
-    "Saṃyutta Nikāya 4.9 (SN4.9); lit. first discourse about life",
+    "Saṁyutta Nikāya 4.9 (SN4.9); lit. first discourse about life",
     "✔"
    ],
    [
     "dutiyaāyusutta",
     "nt",
-    "Saṃyutta Nikāya 4.10 (SN4.10); lit. second discourse about life",
+    "Saṁyutta Nikāya 4.10 (SN4.10); lit. second discourse about life",
     "✔"
    ],
    [
     "pāsāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 4.11 (SN4.11); lit. discourse about the stone",
+    "Saṁyutta Nikāya 4.11 (SN4.11); lit. discourse about the stone",
     "✔"
    ],
    [
     "kinnusīhasutta",
     "nt",
-    "Saṃyutta Nikāya 4.12 (SN4.12); lit. discourse on didn't the lion",
+    "Saṁyutta Nikāya 4.12 (SN4.12); lit. discourse on didn't the lion",
     "✔"
    ],
    [
     "sakalikasutta 2",
     "nt",
-    "Saṃyutta Nikāya 4.13 (SN4.13); lit. discourse on the splinter",
+    "Saṁyutta Nikāya 4.13 (SN4.13); lit. discourse on the splinter",
     "✔"
    ],
    [
     "patirūpasutta",
     "nt",
-    "Saṃyutta Nikāya 4.14 (SN4.14); lit. discourse on appropriate",
+    "Saṁyutta Nikāya 4.14 (SN4.14); lit. discourse on appropriate",
     "✔"
    ],
    [
     "mānasasutta",
     "nt",
-    "Saṃyutta Nikāya 4.15 (SN4.15); lit. discourse on mental",
+    "Saṁyutta Nikāya 4.15 (SN4.15); lit. discourse on mental",
     "✔"
    ],
    [
     "pattasutta",
     "nt",
-    "Saṃyutta Nikāya 4.16 (SN4.16); lit. discourse about the bowl",
+    "Saṁyutta Nikāya 4.16 (SN4.16); lit. discourse about the bowl",
     "✔"
    ],
    [
     "chaphassāyatanasutta",
     "nt",
-    "Saṃyutta Nikāya 4.17 (SN4.17); lit. discourse on the six fields of sense experience",
+    "Saṁyutta Nikāya 4.17 (SN4.17); lit. discourse on the six fields of sense experience",
     "✔"
    ],
    [
     "piṇḍasutta 1",
     "nt",
-    "Saṃyutta Nikāya 4.18 (SN4.18); lit. discourse on alms-food",
+    "Saṁyutta Nikāya 4.18 (SN4.18); lit. discourse on alms-food",
     "✔"
    ],
    [
     "kassakasutta",
     "nt",
-    "Saṃyutta Nikāya 4.19 (SN4.19); lit. discourse on the farmer",
+    "Saṁyutta Nikāya 4.19 (SN4.19); lit. discourse on the farmer",
     "✔"
    ],
    [
     "rajjasutta",
     "nt",
-    "Saṃyutta Nikāya 4.20 (SN4.20); lit. discourse on kingship",
+    "Saṁyutta Nikāya 4.20 (SN4.20); lit. discourse on kingship",
     "✔"
    ],
    [
     "sambahulasutta 1",
     "nt",
-    "Saṃyutta Nikāya 4.21 (SN4.21); lit. discourse on many",
+    "Saṁyutta Nikāya 4.21 (SN4.21); lit. discourse on many",
     "✔"
    ],
    [
     "samiddhisutta 2",
     "nt",
-    "Saṃyutta Nikāya 4.22 (SN4.22); lit. discourse about Samiddhi",
+    "Saṁyutta Nikāya 4.22 (SN4.22); lit. discourse about Samiddhi",
     "✔"
    ],
    [
     "godhikasutta",
     "nt",
-    "Saṃyutta Nikāya 4.23 (SN4.23); lit. discourse about Godhika",
+    "Saṁyutta Nikāya 4.23 (SN4.23); lit. discourse about Godhika",
     "✔"
    ],
    [
     "sattavassānubandhasutta",
     "nt",
-    "Saṃyutta Nikāya 4.24 (SN4.24); lit. discourse about following for seven years",
+    "Saṁyutta Nikāya 4.24 (SN4.24); lit. discourse about following for seven years",
     "✔"
    ],
    [
     "māradhītusutta",
     "nt",
-    "Saṃyutta Nikāya 4.25 (SN4.25); lit. discourse on Māra's daughters",
+    "Saṁyutta Nikāya 4.25 (SN4.25); lit. discourse on Māra's daughters",
     "✔"
    ]
   ],
@@ -53463,13 +53463,13 @@ var family_set_json = {
    [
     "rudhādi",
     "nt",
-    "(gram) √rudh etc.; group 2 roots which take the conjugational sign ṃa",
+    "(gram) √rudh etc.; group 2 roots which take the conjugational sign ṁa",
     "✔"
    ],
    [
     "rudhādigaṇa",
     "masc",
-    "(gram) √rudh etc. group; group 2 roots which take the conjugational sign ṃa",
+    "(gram) √rudh etc. group; group 2 roots which take the conjugational sign ṁa",
     "✔"
    ],
    [
@@ -53487,72 +53487,72 @@ var family_set_json = {
   ],
   "count": 17
  },
- "collections of the Saṃyutta Nikāya": {
+ "collections of the Saṁyutta Nikāya": {
   "data": [
    [
-    "devatāsaṃyutta",
+    "devatāsaṁyutta",
     "nt",
-    "Chapter 1 of the Saṃyutta Nikāya; lit. connected with deities",
+    "Chapter 1 of the Saṁyutta Nikāya; lit. connected with deities",
     "✔"
    ],
    [
-    "dhātusaṃyutta",
+    "dhātusaṁyutta",
     "nt",
-    "Chapter 14 of the Saṃyutta Nikāya; lit. connected with elements",
+    "Chapter 14 of the Saṁyutta Nikāya; lit. connected with elements",
     "✔"
    ],
    [
-    "sāriputtasaṃyutta",
+    "sāriputtasaṁyutta",
     "nt",
-    "Chapter 28 of the Saṃyutta Nikāya; lit. connected wtih Sāriputta",
+    "Chapter 28 of the Saṁyutta Nikāya; lit. connected wtih Sāriputta",
     "✔"
    ],
    [
-    "jhānasaṃyutta 1",
+    "jhānasaṁyutta 1",
     "nt",
-    "Chapter 34 of the Saṃyutta Nikāya; lit. connected with jhāna",
+    "Chapter 34 of the Saṁyutta Nikāya; lit. connected with jhāna",
     "✔"
    ],
    [
-    "samādhisaṃyutta",
+    "samādhisaṁyutta",
     "nt",
-    "Chapter 34 of the Saṃyutta Nikāya; lit. connected with samādhi",
+    "Chapter 34 of the Saṁyutta Nikāya; lit. connected with samādhi",
     "✔"
    ],
    [
-    "vedanāsaṃyutta",
+    "vedanāsaṁyutta",
     "nt",
-    "Chapter 36 of the Saṃyutta Nikāya; lit. connected with feeling",
+    "Chapter 36 of the Saṁyutta Nikāya; lit. connected with feeling",
     "✔"
    ],
    [
-    "jhānasaṃyutta 2",
+    "jhānasaṁyutta 2",
     "nt",
-    "Chapter 53 of the Saṃyutta Nikāya; lit. connected with jhāna",
+    "Chapter 53 of the Saṁyutta Nikāya; lit. connected with jhāna",
     "✔"
    ],
    [
-    "devaputtasaṃyutta",
+    "devaputtasaṁyutta",
     "nt",
-    "Saṃyutta Nikāya 2 (SN2); lit. connected with sons of god",
+    "Saṁyutta Nikāya 2 (SN2); lit. connected with sons of god",
     "✔"
    ],
    [
-    "kosalasaṃyutta",
+    "kosalasaṁyutta",
     "nt",
-    "Saṃyutta Nikāya 3 (SN3); lit. connected with Kosala",
+    "Saṁyutta Nikāya 3 (SN3); lit. connected with Kosala",
     "✔"
    ],
    [
-    "mārasaṃyutta",
+    "mārasaṁyutta",
     "nt",
-    "Saṃyutta Nikāya 4 (SN4); lit. connected with Māra",
+    "Saṁyutta Nikāya 4 (SN4); lit. connected with Māra",
     "✔"
    ],
    [
     "valāha 1",
     "masc",
-    "in reference to SN32 Valāhakasaṃyutta; lit. cloud",
+    "in reference to SN32 Valāhakasaṁyutta; lit. cloud",
     "✔"
    ]
   ],
@@ -53694,195 +53694,195 @@ var family_set_json = {
   ],
   "count": 4
  },
- "parts of the Saṃyutta Nikāya": {
+ "parts of the Saṁyutta Nikāya": {
   "data": [
    [
     "sagāthāvagga 1",
     "masc",
-    "Book 1 of the Saṃyutta Nikāya; lit. book of verses",
+    "Book 1 of the Saṁyutta Nikāya; lit. book of verses",
     "✔"
    ],
    [
-    "sagāthāvaggasaṃyuttapāḷi",
+    "sagāthāvaggasaṁyuttapāḷi",
     "fem",
-    "Book 1 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, section with verses",
+    "Book 1 of the Saṁyutta Nikāya; lit. canonical text of connected discourses, section with verses",
     "✔"
    ],
    [
     "nidānavagga",
     "masc",
-    "Book 2 of the Saṃyutta Nikāya; lit. causation section",
+    "Book 2 of the Saṁyutta Nikāya; lit. causation section",
     "✔"
    ],
    [
-    "nidānavaggasaṃyuttapāḷi",
+    "nidānavaggasaṁyuttapāḷi",
     "fem",
-    "Book 2 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, the section on cause",
+    "Book 2 of the Saṁyutta Nikāya; lit. canonical text of connected discourses, the section on cause",
     "✔"
    ],
    [
     "khandhavagga",
     "masc",
-    "Book 3 of the Saṃyutta Nikāya; lit. aggregates section",
+    "Book 3 of the Saṁyutta Nikāya; lit. aggregates section",
     "✔"
    ],
    [
-    "khandhavaggasaṃyuttapāḷi",
+    "khandhavaggasaṁyuttapāḷi",
     "fem",
-    "Book 3 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, the section on aggregates",
+    "Book 3 of the Saṁyutta Nikāya; lit. canonical text of connected discourses, the section on aggregates",
     "✔"
    ],
    [
     "khandhakavagga",
     "masc",
-    "Book 3 of the Saṃyutta Nikāya; Book of the Aggregates",
+    "Book 3 of the Saṁyutta Nikāya; Book of the Aggregates",
     "◑"
    ],
    [
     "saḷāyatanavagga 2",
     "masc",
-    "Book 4 of the Saṃyutta Nikāya; lit. section on the six sense fields",
+    "Book 4 of the Saṁyutta Nikāya; lit. section on the six sense fields",
     "✔"
    ],
    [
-    "saḷāyatanavaggasaṃyuttapāḷi",
+    "saḷāyatanavaggasaṁyuttapāḷi",
     "fem",
-    "Book 4 of the Saṃyutta Nikāya; lit. canonical text of connected discourses, section on the six senses",
+    "Book 4 of the Saṁyutta Nikāya; lit. canonical text of connected discourses, section on the six senses",
     "✔"
    ],
    [
-    "mahāvaggasaṃyuttapāḷi",
+    "mahāvaggasaṁyuttapāḷi",
     "fem",
-    "Book 5 of the Saṃyutta Nikāya",
+    "Book 5 of the Saṁyutta Nikāya",
     "◑"
    ],
    [
     "mahāvagga 03",
     "masc",
-    "Book 5 of the Saṃyutta Nikāya; Great Book",
+    "Book 5 of the Saṁyutta Nikāya; Great Book",
     "◑"
    ]
   ],
   "count": 11
  },
- "suttas of Saṃyutta Nikāya 25": {
+ "suttas of Saṁyutta Nikāya 25": {
   "data": [
    [
     "rūpasutta 2",
     "nt",
-    "Saṃyutta Nikāya 25.2 (SN25.2); lit. discourse on sights",
+    "Saṁyutta Nikāya 25.2 (SN25.2); lit. discourse on sights",
     "✔"
    ],
    [
     "samphassasutta 2",
     "nt",
-    "Saṃyutta Nikāya 25.4 (SN25.4); lit. discourse on sense experience",
+    "Saṁyutta Nikāya 25.4 (SN25.4); lit. discourse on sense experience",
     "✔"
    ],
    [
     "samphassajāsutta",
     "nt",
-    "Saṃyutta Nikāya 25.5 (SN25.5); lit. discourse on born from experience",
+    "Saṁyutta Nikāya 25.5 (SN25.5); lit. discourse on born from experience",
     "✔"
    ],
    [
     "rūpasaññāsutta",
     "nt",
-    "Saṃyutta Nikāya 25.6 (SN25.6); lit. discourse on perception of form",
+    "Saṁyutta Nikāya 25.6 (SN25.6); lit. discourse on perception of form",
     "✔"
    ],
    [
     "rūpasañcetanāsutta",
     "nt",
-    "Saṃyutta Nikāya 25.7 (SN25.7); lit. discourse on intention about sights",
+    "Saṁyutta Nikāya 25.7 (SN25.7); lit. discourse on intention about sights",
     "✔"
    ],
    [
     "rūpataṇhāsutta",
     "nt",
-    "Saṃyutta Nikāya 25.8 (SN25.8); lit. discourse on craving for sights",
+    "Saṁyutta Nikāya 25.8 (SN25.8); lit. discourse on craving for sights",
     "✔"
    ],
    [
     "pathavīdhātusutta",
     "nt",
-    "Saṃyutta Nikāya 25.9 (SN25.9); lit. discourse on the solid state",
+    "Saṁyutta Nikāya 25.9 (SN25.9); lit. discourse on the solid state",
     "✔"
    ],
    [
     "khandhasutta 3",
     "nt",
-    "Saṃyutta Nikāya 25.10 (SN25.10); lit. discourse on the aggregates",
+    "Saṁyutta Nikāya 25.10 (SN25.10); lit. discourse on the aggregates",
     "✔"
    ]
   ],
   "count": 8
  },
- "suttas of Saṃyutta Nikāya 26": {
+ "suttas of Saṁyutta Nikāya 26": {
   "data": [
    [
     "samphassasutta 3",
     "nt",
-    "Saṃyutta Nikāya 26.4 (SN26.4); lit. discourse on sense experience",
+    "Saṁyutta Nikāya 26.4 (SN26.4); lit. discourse on sense experience",
     "✔"
    ],
    [
     "samphassajasutta 1",
     "nt",
-    "Saṃyutta Nikāya 26.5 (SN26.5); lit. discourse on born from experience",
+    "Saṁyutta Nikāya 26.5 (SN26.5); lit. discourse on born from experience",
     "✔"
    ],
    [
     "saññāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 26.6 (SN26.6); lit. discourse on perception",
+    "Saṁyutta Nikāya 26.6 (SN26.6); lit. discourse on perception",
     "✔"
    ],
    [
     "sañcetanāsutta 2",
     "nt",
-    "Saṃyutta Nikāya 26.7 (SN26.7); lit. discourse on intention",
+    "Saṁyutta Nikāya 26.7 (SN26.7); lit. discourse on intention",
     "✔"
    ],
    [
     "dhātusutta 2",
     "nt",
-    "Saṃyutta Nikāya 26.9 (SN26.9); lit. discourse on states",
+    "Saṁyutta Nikāya 26.9 (SN26.9); lit. discourse on states",
     "✔"
    ],
    [
     "khandhasutta 4",
     "nt",
-    "Saṃyutta Nikāya 26.10 (SN26.10); lit. discourse on the aggregates",
+    "Saṁyutta Nikāya 26.10 (SN26.10); lit. discourse on the aggregates",
     "✔"
    ]
   ],
   "count": 6
  },
- "suttas of Saṃyutta Nikāya 27": {
+ "suttas of Saṁyutta Nikāya 27": {
   "data": [
    [
     "samphassasutta 4",
     "nt",
-    "Saṃyutta Nikāya 27.4 (SN27.4); lit. discourse on sense experience",
+    "Saṁyutta Nikāya 27.4 (SN27.4); lit. discourse on sense experience",
     "✔"
    ],
    [
     "samphassajasutta 2",
     "nt",
-    "Saṃyutta Nikāya 27.5 (SN27.5); lit. discourse on born from experience",
+    "Saṁyutta Nikāya 27.5 (SN27.5); lit. discourse on born from experience",
     "✔"
    ],
    [
     "sañcetanāsutta 3",
     "nt",
-    "Saṃyutta Nikāya 27.7 (SN27.7); lit. discourse on intention",
+    "Saṁyutta Nikāya 27.7 (SN27.7); lit. discourse on intention",
     "✔"
    ],
    [
     "khandhasutta 5",
     "nt",
-    "Saṃyutta Nikāya 27.10 (SN27.10); lit. discourse on the aggregates",
+    "Saṁyutta Nikāya 27.10 (SN27.10); lit. discourse on the aggregates",
     "✔"
    ]
   ],
@@ -53935,199 +53935,199 @@ var family_set_json = {
   ],
   "count": 7
  },
- "vaggas of the Saṃyutta Nikāya 24": {
+ "vaggas of the Saṁyutta Nikāya 24": {
   "data": [
    [
     "sotāpattivagga",
     "masc",
-    "Chapter 1 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. chapter on stream entry",
+    "Chapter 1 of the Diṭṭhisaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. chapter on stream entry",
     "✔"
    ],
    [
     "dutiyagamanavagga",
     "masc",
-    "Chapter 2 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. second chapter on the round",
+    "Chapter 2 of the Diṭṭhisaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. second chapter on the round",
     "✔"
    ],
    [
     "tatiyagamanavagga",
     "masc",
-    "Chapter 3 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. third chapter on the round",
+    "Chapter 3 of the Diṭṭhisaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. third chapter on the round",
     "✔"
    ],
    [
     "catutthagamanavagga",
     "masc",
-    "Chapter 4 of the Diṭṭhisaṃyuttaṃ, Book 3 of the Saṃyutta Nikāya; lit. fourth chapter on the round",
+    "Chapter 4 of the Diṭṭhisaṁyuttaṁ, Book 3 of the Saṁyutta Nikāya; lit. fourth chapter on the round",
     "✔"
    ]
   ],
   "count": 4
  },
- "vaggas of the Saṃyutta Nikāya 17": {
+ "vaggas of the Saṁyutta Nikāya 17": {
   "data": [
    [
     "paṭhamavagga 07",
     "masc",
-    "Chapter 1 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN17.1-10); lit. first chapter",
+    "Chapter 1 of the Lābhasakkārasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN17.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 07",
     "masc",
-    "Chapter 2 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya SN17.11-20; lit. second chapter",
+    "Chapter 2 of the Lābhasakkārasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya SN17.11-20; lit. second chapter",
     "✔"
    ],
    [
     "tatiyavagga 4",
     "masc",
-    "Chapter 3 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN17.21-30); lit. third chapter",
+    "Chapter 3 of the Lābhasakkārasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN17.21-30); lit. third chapter",
     "✔"
    ],
    [
     "catutthavagga 2",
     "masc",
-    "Chapter 4 of the Lābhasakkārasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya; lit. fourth chapter",
+    "Chapter 4 of the Lābhasakkārasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya; lit. fourth chapter",
     "✔"
    ]
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 51": {
+ "suttas of Saṁyutta Nikāya 51": {
   "data": [
    [
     "viraddhasutta 4",
     "nt",
-    "Saṃyutta Nikāya 51.2 (SN51.2); lit. discourse on failed",
+    "Saṁyutta Nikāya 51.2 (SN51.2); lit. discourse on failed",
     "✔"
    ],
    [
     "ñāṇasutta 2",
     "nt",
-    "Saṃyutta Nikāya 51.9 (SN51.9); lit. discourse on understanding",
+    "Saṁyutta Nikāya 51.9 (SN51.9); lit. discourse on understanding",
     "✔"
    ],
    [
     "pubbasutta 2",
     "nt",
-    "Saṃyutta Nikāya 51.11 (SN51.11); lit. discourse on before",
+    "Saṁyutta Nikāya 51.11 (SN51.11); lit. discourse on before",
     "✔"
    ],
    [
     "moggallānasutta 3",
     "nt",
-    "Saṃyutta Nikāya 51.14 (SN51.14); lit. discourse with Moggallāna",
+    "Saṁyutta Nikāya 51.14 (SN51.14); lit. discourse with Moggallāna",
     "✔"
    ],
    [
     "paṭhamasamaṇabrāhmaṇasutta 5",
     "nt",
-    "Saṃyutta Nikāya 51.16 (SN51.16); lit. first discourse on ascetics and brahmins",
+    "Saṁyutta Nikāya 51.16 (SN51.16); lit. first discourse on ascetics and brahmins",
     "✔"
    ],
    [
     "vibhaṅgasutta 4",
     "nt",
-    "Saṃyutta Nikāya 51.20 (SN51.20); lit. discourse on analysis",
+    "Saṁyutta Nikāya 51.20 (SN51.20); lit. discourse on analysis",
     "✔"
    ],
    [
     "suddhikasutta 10",
     "nt",
-    "Saṃyutta Nikāya 51.24 (SN51.24); lit. clean (version of the) discourse",
+    "Saṁyutta Nikāya 51.24 (SN51.24); lit. clean (version of the) discourse",
     "✔"
    ],
    [
     "paṭhamaānandasutta 2",
     "nt",
-    "Saṃyutta Nikāya 51.27 (SN51.27); lit. first discourse with Ānanda",
+    "Saṁyutta Nikāya 51.27 (SN51.27); lit. first discourse with Ānanda",
     "✔"
    ],
    [
     "dutiyaānandasutta 3",
     "nt",
-    "Saṃyutta Nikāya 51.28 (SN51.28); lit. second discourse with Ānanda",
+    "Saṁyutta Nikāya 51.28 (SN51.28); lit. second discourse with Ānanda",
     "✔"
    ],
    [
     "moggallānasutta 4",
     "nt",
-    "Saṃyutta Nikāya 51.31 (SN51.31); lit. discourse with Moggallāna",
+    "Saṁyutta Nikāya 51.31 (SN51.31); lit. discourse with Moggallāna",
     "✔"
    ],
    [
     "tathāgatasutta 2",
     "nt",
-    "Saṃyutta Nikāya 51.32 (SN51.32); lit. discourse on the Such Become",
+    "Saṁyutta Nikāya 51.32 (SN51.32); lit. discourse on the Such Become",
     "✔"
    ]
   ],
   "count": 11
  },
- "vaggas of the Saṃyutta Nikāya 3": {
+ "vaggas of the Saṁyutta Nikāya 3": {
   "data": [
    [
     "paṭhamavagga 02",
     "masc",
-    "Chapter 1 of the Kosalasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN3.1-10); lit. first chapter",
+    "Chapter 1 of the Kosalasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN3.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 01",
     "masc",
-    "Chapter 2 of the Kosalasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN3.11-20); lit. second chapter",
+    "Chapter 2 of the Kosalasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN3.11-20); lit. second chapter",
     "✔"
    ],
    [
     "tatiyavagga 1",
     "masc",
-    "Chapter 3 of the Kosalasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN3.21-25); lit. third chapter",
+    "Chapter 3 of the Kosalasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN3.21-25); lit. third chapter",
     "✔"
    ]
   ],
   "count": 3
  },
- "vaggas of the Saṃyutta Nikāya 4": {
+ "vaggas of the Saṁyutta Nikāya 4": {
   "data": [
    [
     "paṭhamavagga 03",
     "masc",
-    "Chapter 1 of the Mārasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN4.1-10); lit. first chapter",
+    "Chapter 1 of the Mārasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN4.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 02",
     "masc",
-    "Chapter 2 of the Mārasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN4.11-20); lit. second chapter",
+    "Chapter 2 of the Mārasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN4.11-20); lit. second chapter",
     "✔"
    ],
    [
     "tatiyavagga 2",
     "masc",
-    "Chapter 3 of the Mārasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN4.21-25); lit. third chapter",
+    "Chapter 3 of the Mārasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN4.21-25); lit. third chapter",
     "✔"
    ]
   ],
   "count": 3
  },
- "vaggas of the Saṃyutta Nikāya 11": {
+ "vaggas of the Saṁyutta Nikāya 11": {
   "data": [
    [
     "paṭhamavagga 05",
     "masc",
-    "Chapter 1 of the Sakkasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN11.1-10); lit. first chapter",
+    "Chapter 1 of the Sakkasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN11.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 04",
     "masc",
-    "Chapter 2 of the Sakkasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN11.11-20); lit. second chapter",
+    "Chapter 2 of the Sakkasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN11.11-20); lit. second chapter",
     "✔"
    ],
    [
     "tatiyavagga 3",
     "masc",
-    "Chapter 3 of the Sakkasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN11.21-25); lit. third chapter",
+    "Chapter 3 of the Sakkasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN11.21-25); lit. third chapter",
     "✔"
    ]
   ],
@@ -54248,7 +54248,7 @@ var family_set_json = {
     "✔"
    ],
    [
-    "maṃsacakkhu",
+    "maṁsacakkhu",
     "nt",
     "physical eye; fleshly eye; lit. meat eye",
     "✔"
@@ -54285,154 +54285,154 @@ var family_set_json = {
   ],
   "count": 4
  },
- "suttas of Saṃyutta Nikāya 39": {
+ "suttas of Saṁyutta Nikāya 39": {
   "data": [
    [
     "sāmaṇḍakasutta",
     "nt",
-    "Saṃyutta Nikāya 39.1 (SN39.1); lit. discourse with Sāmaṇḍaka",
+    "Saṁyutta Nikāya 39.1 (SN39.1); lit. discourse with Sāmaṇḍaka",
     "✔"
    ],
    [
     "dukkarasutta 2",
     "nt",
-    "Saṃyutta Nikāya 39.2 (SN39.2); lit. discourse on difficult to do",
+    "Saṁyutta Nikāya 39.2 (SN39.2); lit. discourse on difficult to do",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 37": {
+ "vaggas of the Saṁyutta Nikāya 37": {
   "data": [
    [
     "paṭhamapeyyālavagga",
     "masc",
-    "Chapter 1 of the Mātugāmasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. first chapter of elided repetitions",
+    "Chapter 1 of the Mātugāmasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. first chapter of elided repetitions",
     "✔"
    ],
    [
     "dutiyapeyyālavagga",
     "masc",
-    "Chapter 2 of the Mātugāmasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. second chapter with elided repetitions",
+    "Chapter 2 of the Mātugāmasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. second chapter with elided repetitions",
     "✔"
    ],
    [
     "balavagga 1",
     "masc",
-    "Chapter 3 of the Mātugāmasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya; lit. chapter on strengths",
+    "Chapter 3 of the Mātugāmasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya; lit. chapter on strengths",
     "✔"
    ]
   ],
   "count": 3
  },
- "vaggas of the Saṃyutta Nikāya 6": {
+ "vaggas of the Saṁyutta Nikāya 6": {
   "data": [
    [
     "paṭhamavagga 04",
     "masc",
-    "Chapter 1 of the Brahmasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN6.1-10); lit. first chapter",
+    "Chapter 1 of the Brahmasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN6.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 03",
     "masc",
-    "Chapter 2 of the Brahmasaṃyuttaṃ, Book 1 of the Saṃyutta Nikāya (SN6.11-15); lit. second chapter",
+    "Chapter 2 of the Brahmasaṁyuttaṁ, Book 1 of the Saṁyutta Nikāya (SN6.11-15); lit. second chapter",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 15": {
+ "vaggas of the Saṁyutta Nikāya 15": {
   "data": [
    [
     "paṭhamavagga 06",
     "masc",
-    "Chapter 1 of the Anamataggasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN15.1-10); lit. first chapter",
+    "Chapter 1 of the Anamataggasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN15.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 06",
     "masc",
-    "Chapter 2 of the Anamataggasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN15.11-20); lit. second chapter",
+    "Chapter 2 of the Anamataggasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN15.11-20); lit. second chapter",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 18": {
+ "vaggas of the Saṁyutta Nikāya 18": {
   "data": [
    [
     "paṭhamavagga 08",
     "masc",
-    "Chapter 1 of the Rāhulasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN18.1-10); lit. first chapter",
+    "Chapter 1 of the Rāhulasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN18.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 08",
     "masc",
-    "Chapter 2 of the Rāhulasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN18.11-22); lit. second chapter",
+    "Chapter 2 of the Rāhulasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN18.11-22); lit. second chapter",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 19": {
+ "vaggas of the Saṁyutta Nikāya 19": {
   "data": [
    [
     "paṭhamavagga 09",
     "masc",
-    "Chapter 1 of the Lakkhaṇasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN19.1-10); lit. first chapter",
+    "Chapter 1 of the Lakkhaṇasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN19.1-10); lit. first chapter",
     "✔"
    ],
    [
     "dutiyavagga 09",
     "masc",
-    "Chapter 2 of the Lakkhaṇasaṃyuttaṃ, Book 2 of the Saṃyutta Nikāya (SN19.11-21); lit. second chapter",
+    "Chapter 2 of the Lakkhaṇasaṁyuttaṁ, Book 2 of the Saṁyutta Nikāya (SN19.11-21); lit. second chapter",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 43": {
+ "vaggas of the Saṁyutta Nikāya 43": {
   "data": [
    [
     "paṭhamavagga 11",
     "masc",
-    "Chapter 1 of the Asaṅkhatasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya (SN43.1-11)",
+    "Chapter 1 of the Asaṅkhatasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya (SN43.1-11)",
     "✔"
    ],
    [
     "dutiyavagga 11",
     "masc",
-    "Chapter 2 of the Asaṅkhatasaṃyuttaṃ, Book 4 of the Saṃyutta Nikāya (SN43.12-44)",
+    "Chapter 2 of the Asaṅkhatasaṁyuttaṁ, Book 4 of the Saṁyutta Nikāya (SN43.12-44)",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 52": {
+ "vaggas of the Saṁyutta Nikāya 52": {
   "data": [
    [
     "rahogatavagga 2",
     "masc",
-    "Chapter 1 of the Anuruddhasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya; lit. chapter on gone into seclusion",
+    "Chapter 1 of the Anuruddhasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya; lit. chapter on gone into seclusion",
     "✔"
    ],
    [
     "dutiyavagga 12",
     "masc",
-    "Chapter 2 of the Anuruddhasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya (SN52.11-24)",
+    "Chapter 2 of the Anuruddhasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya (SN52.11-24)",
     "✔"
    ]
   ],
   "count": 2
  },
- "vaggas of the Saṃyutta Nikāya 54": {
+ "vaggas of the Saṁyutta Nikāya 54": {
   "data": [
    [
     "dutiyavagga 13",
     "masc",
-    "Chapter 2 of the Ānāpānasaṃyuttaṃ, Book 5 of the Saṃyutta Nikāya (SN54.11-20)",
+    "Chapter 2 of the Ānāpānasaṁyuttaṁ, Book 5 of the Saṁyutta Nikāya (SN54.11-20)",
     "✔"
    ]
   ],
@@ -54552,7 +54552,7 @@ var family_set_json = {
  "suttas of the Aṅguttara Nikāya 3": {
   "data": [
    [
-    "paṃsudhovakasutta",
+    "paṁsudhovakasutta",
     "nt",
     "Aṅguttara Nikāya 3.102 (AN3.102); lit. discourse about the dirt washer",
     "✔"
@@ -54652,47 +54652,47 @@ var family_set_json = {
   ],
   "count": 1
  },
- "suttas of Saṃyutta Nikāya 31": {
+ "suttas of Saṁyutta Nikāya 31": {
   "data": [
    [
     "sucaritasutta 1",
     "nt",
-    "Saṃyutta Nikāya 31.2 (SN31.2); lit. discourse on good conduct",
+    "Saṁyutta Nikāya 31.2 (SN31.2); lit. discourse on good conduct",
     "✔"
    ],
    [
     "mūlagandhadātāsutta",
     "nt",
-    "Saṃyutta Nikāya 31.3 (SN31.3); lit. discourse on the giver of fragrant roots",
+    "Saṁyutta Nikāya 31.3 (SN31.3); lit. discourse on the giver of fragrant roots",
     "✔"
    ],
    [
     "sāragandhādidātāsuttanavaka",
     "nt",
-    "Saṃyutta Nikāya 31.4-12 (SN31.4-12); lit. group of nine discourses starting with the discourse on the giver of fragrant hardwood",
+    "Saṁyutta Nikāya 31.4-12 (SN31.4-12); lit. group of nine discourses starting with the discourse on the giver of fragrant hardwood",
     "✔"
    ],
    [
     "mūlagandhadānūpakārasuttadasaka",
     "nt",
-    "Saṃyutta Nikāya 31.13-22 (SN31.13-22); lit. group of ten discourses on how giving supports (rebirth among the gods living in) fragrant roots",
+    "Saṁyutta Nikāya 31.13-22 (SN31.13-22); lit. group of ten discourses on how giving supports (rebirth among the gods living in) fragrant roots",
     "✔"
    ],
    [
     "sāragandhādidānūpakārasuttanavutika",
     "nt",
-    "Saṃyutta Nikāya 31.23-112 (SN31.23-112); lit. group of ninety discourses starting with the discourse on how giving supports (rebirth among the gods living in) fragrant hardwood",
+    "Saṁyutta Nikāya 31.23-112 (SN31.23-112); lit. group of ninety discourses starting with the discourse on how giving supports (rebirth among the gods living in) fragrant hardwood",
     "✔"
    ]
   ],
   "count": 5
  },
- "vaggas of the Saṃyutta Nikāya 40": {
+ "vaggas of the Saṁyutta Nikāya 40": {
   "data": [
    [
     "moggallānavagga",
     "masc",
-    "Saṃyutta Nikāya 40.1-11 (SN40.1-11)",
+    "Saṁyutta Nikāya 40.1-11 (SN40.1-11)",
     "◑"
    ]
   ],
@@ -54733,102 +54733,102 @@ var family_set_json = {
   ],
   "count": 5
  },
- "suttas of Saṃyutta Nikāya 33": {
+ "suttas of Saṁyutta Nikāya 33": {
   "data": [
    [
     "rūpaaññāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 33.1 (SN33.1); lit. discourse on ignorance about form",
+    "Saṁyutta Nikāya 33.1 (SN33.1); lit. discourse on ignorance about form",
     "✔"
    ],
    [
     "vedanāaññāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 33.2 (SN33.2); lit. discourse on not knowing feeling",
+    "Saṁyutta Nikāya 33.2 (SN33.2); lit. discourse on not knowing feeling",
     "✔"
    ],
    [
     "saññāaññāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 33.3 (SN33.3); lit. discourse on not knowing perception",
+    "Saṁyutta Nikāya 33.3 (SN33.3); lit. discourse on not knowing perception",
     "✔"
    ],
    [
     "saṅkhāraaññāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 33.4 (SN33.4); lit. discourse on not knowing activities",
+    "Saṁyutta Nikāya 33.4 (SN33.4); lit. discourse on not knowing activities",
     "✔"
    ],
    [
     "viññāṇaaññāṇasutta",
     "nt",
-    "Saṃyutta Nikāya 33.5 (SN33.5); lit. discourse on not knowing consciousness",
+    "Saṁyutta Nikāya 33.5 (SN33.5); lit. discourse on not knowing consciousness",
     "✔"
    ],
    [
     "rūpaadassanādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.6-10 (SN33.6-10); lit. group of five discourses starting with the discourse on not seeing form",
+    "Saṁyutta Nikāya 33.6-10 (SN33.6-10); lit. group of five discourses starting with the discourse on not seeing form",
     "✔"
    ],
    [
     "rūpaanabhisamayādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.11-15 (SN33.11-15); lit. group of five discourses starting with the discourse on not comprehending form",
+    "Saṁyutta Nikāya 33.11-15 (SN33.11-15); lit. group of five discourses starting with the discourse on not comprehending form",
     "✔"
    ],
    [
     "rūpaananubodhādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.16-20 (SN33.16-20); lit. group of five discourses starting with the discourse on not understanding form",
+    "Saṁyutta Nikāya 33.16-20 (SN33.16-20); lit. group of five discourses starting with the discourse on not understanding form",
     "✔"
    ],
    [
     "rūpaappaṭivedhādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.21-25 (SN33.21-25); lit. group of five discourses starting with the discourse on not penetrating form",
+    "Saṁyutta Nikāya 33.21-25 (SN33.21-25); lit. group of five discourses starting with the discourse on not penetrating form",
     "✔"
    ],
    [
     "rūpaasallakkhaṇādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.26-30 (SN33.26-30); lit. group of five discourses starting with the discourse on not distinguishing form",
+    "Saṁyutta Nikāya 33.26-30 (SN33.26-30); lit. group of five discourses starting with the discourse on not distinguishing form",
     "✔"
    ],
    [
     "rūpaanupalakkhaṇādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.31-35 (SN33.31-35); lit. group of five discourses starting with the discourse on not observing form",
+    "Saṁyutta Nikāya 33.31-35 (SN33.31-35); lit. group of five discourses starting with the discourse on not observing form",
     "✔"
    ],
    [
     "rūpaappaccupalakkhaṇādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.36-40 (SN33.36-40); lit. group of five discourses starting with the discourse on not differentiating form",
+    "Saṁyutta Nikāya 33.36-40 (SN33.36-40); lit. group of five discourses starting with the discourse on not differentiating form",
     "✔"
    ],
    [
     "rūpaasamapekkhaṇādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.41-45 (SN33.41-45); lit. group of five discourses starting with the discourse on not considering form properly",
+    "Saṁyutta Nikāya 33.41-45 (SN33.41-45); lit. group of five discourses starting with the discourse on not considering form properly",
     "✔"
    ],
    [
     "rūpaappaccupekkhaṇādisuttapañcaka",
     "nt",
-    "Saṃyutta Nikāya 33.46-50 (SN33.46-50); lit. group of five discourses starting with the discourse on not reviewing form",
+    "Saṁyutta Nikāya 33.46-50 (SN33.46-50); lit. group of five discourses starting with the discourse on not reviewing form",
     "✔"
    ],
    [
     "rūpaappaccakkhakammādisuttacatukka",
     "nt",
-    "Saṃyutta Nikāya 33.51-55 (SN33.51-55); lit. group of four discourses starting with the discourse on not making form clear",
+    "Saṁyutta Nikāya 33.51-55 (SN33.51-55); lit. group of four discourses starting with the discourse on not making form clear",
     "✔"
    ],
    [
     "viññāṇaappaccakkhakammasutta",
     "nt",
-    "Saṃyutta Nikāya 33.56 (SN33.56); lit. discourse on not making consciousness evident",
+    "Saṁyutta Nikāya 33.56 (SN33.56); lit. discourse on not making consciousness evident",
     "✔"
    ]
   ],

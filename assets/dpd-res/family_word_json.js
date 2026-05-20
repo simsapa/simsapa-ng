@@ -151,7 +151,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kiñcanaṃ",
+    "kiñcanaṁ",
     "ind",
     "anything at all; in any way",
     "◑"
@@ -606,7 +606,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "kalyāṇaṃ",
+    "kalyāṇaṁ",
     "ind",
     "well; excellently; splendidly; magnificently",
     "✔"
@@ -766,7 +766,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "karuṇaṃ",
+    "karuṇaṁ",
     "ind",
     "pitiably",
     "✘"
@@ -1144,7 +1144,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kevalaṃ",
+    "kevalaṁ",
     "ind",
     "merely; only; solely; entirely; completely",
     "✔"
@@ -1526,7 +1526,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "atigambhīraṃ",
+    "atigambhīraṁ",
     "ind",
     "too deeply",
     "◑"
@@ -1580,7 +1580,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "gambhīraṃ",
+    "gambhīraṁ",
     "ind",
     "deeply",
     "◑"
@@ -2452,7 +2452,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "aciraṃ",
+    "aciraṁ",
     "ind",
     "soon; shortly; before long",
     "✔"
@@ -2464,7 +2464,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "aticiraṃ",
+    "aticiraṁ",
     "ind",
     "for too long; overly long",
     "✔"
@@ -2476,7 +2476,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "cirataraṃ",
+    "cirataraṁ",
     "ind",
     "even longer; for even more time",
     "✔"
@@ -2500,13 +2500,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "cirassaṃ",
+    "cirassaṁ",
     "ind",
     "at long last; long time since; after a long time",
     "✔"
    ],
    [
-    "ciraṃ",
+    "ciraṁ",
     "ind",
     "for a long time",
     "✔"
@@ -2554,7 +2554,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "na ciraṃ",
+    "na ciraṁ",
     "idiom",
     "recently; soon; not after a long time",
     "✔"
@@ -2572,13 +2572,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nacirassaṃ",
+    "nacirassaṁ",
     "ind",
     "soon; now",
     "✘"
    ],
    [
-    "naciraṃ",
+    "naciraṁ",
     "ind",
     "not long; soon; in a short time",
     "✔"
@@ -2590,7 +2590,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nāticiraṃ",
+    "nāticiraṁ",
     "ind",
     "not for too long; not overly long",
     "✘"
@@ -2608,7 +2608,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "suciraṃ",
+    "suciraṁ",
     "ind",
     "after a long time",
     "◑"
@@ -2743,7 +2743,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "accantaṃ",
+    "accantaṁ",
     "ind",
     "completely; utterly; exceedingly; thoroughly; lit. to the end",
     "✔"
@@ -2809,7 +2809,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "anantaraṃ",
+    "anantaraṁ",
     "ind",
     "immediately after; following straight away; lit. with no interval",
     "✔"
@@ -2947,7 +2947,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "antaraṃ",
+    "antaraṁ",
     "ind",
     "inside; near to; across; in the vicinity of",
     "✔"
@@ -3103,7 +3103,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "abbhantaraṃ",
+    "abbhantaraṁ",
     "ind",
     "inside; internally; within",
     "✔"
@@ -3199,7 +3199,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "nirantaraṃ",
+    "nirantaraṁ",
     "ind",
     "endlessly; continuously",
     "✔"
@@ -3331,7 +3331,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "santikaṃ",
+    "santikaṁ",
     "ind",
     "into the presence (of); towards; near (to); close (to)",
     "✔"
@@ -3385,7 +3385,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "samanantaraṃ",
+    "samanantaraṁ",
     "ind",
     "immediately after; from the moment; from the time (of); lit. with no in-between",
     "✔"
@@ -3433,7 +3433,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "samantaṃ",
+    "samantaṁ",
     "ind",
     "completely; totally; entirely; (or) all around; everywhere; lit. including the ends",
     "✔"
@@ -3540,7 +3540,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "acchariyaṃ",
+    "acchariyaṁ",
     "ind",
     "wonderful!; marvellous!; unbelievable!",
     "✔"
@@ -3576,7 +3576,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "anacchariyaṃ",
+    "anacchariyaṁ",
     "ind",
     "naturally; not surprisingly; it would be no wonder if",
     "✔"
@@ -3670,7 +3670,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "jimhaṃ",
+    "jimhaṁ",
     "ind",
     "crookedly; skew; off course",
     "✔"
@@ -3781,7 +3781,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ajjatanāṃ",
+    "ajjatanāṁ",
     "adj",
     "modern; related to today",
     "✔"
@@ -3835,7 +3835,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ayaṃ",
+    "ayaṁ",
     "pron",
     "this; this person; this thing",
     "✔"
@@ -3847,7 +3847,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "asmiṃ",
+    "asmiṁ",
     "pron",
     "in this",
     "✔"
@@ -3871,7 +3871,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "āsaṃ",
+    "āsaṁ",
     "pron",
     "of these; their",
     "✔"
@@ -3943,7 +3943,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "itthaṃ",
+    "itthaṁ",
     "ind",
     "thus; such; in this way",
     "✔"
@@ -3955,19 +3955,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "idaṃ 1",
+    "idaṁ 1",
     "pron",
     "this; this thing",
     "✔"
    ],
    [
-    "idaṃ 2",
+    "idaṁ 2",
     "pron",
     "this; this thing; this place (object)",
     "✔"
    ],
    [
-    "idaṃ 3",
+    "idaṁ 3",
     "ind",
     "here; in this case",
     "✔"
@@ -4021,13 +4021,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "imasmiṃ 1",
+    "imasmiṁ 1",
     "pron",
     "in this",
     "✔"
    ],
    [
-    "imasmiṃ 2",
+    "imasmiṁ 2",
     "pron",
     "when this",
     "✔"
@@ -4045,7 +4045,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "imaṃ",
+    "imaṁ",
     "pron",
     "this; this person; this thing",
     "✔"
@@ -4069,7 +4069,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "imāyaṃ",
+    "imāyaṁ",
     "pron",
     "in this",
     "◑"
@@ -4081,7 +4081,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "imāsaṃ",
+    "imāsaṁ",
     "pron",
     "of these",
     "✔"
@@ -4105,7 +4105,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "imissaṃ",
+    "imissaṁ",
     "pron",
     "in this",
     "✔"
@@ -4129,13 +4129,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "imesaṃ 1",
+    "imesaṁ 1",
     "pron",
     "for these; for them; for those",
     "✔"
    ],
    [
-    "imesaṃ 2",
+    "imesaṁ 2",
     "pron",
     "of these; their",
     "✔"
@@ -4171,7 +4171,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ettakaṃ",
+    "ettakaṁ",
     "ind",
     "so much; for so long",
     "✔"
@@ -4207,13 +4207,13 @@ var family_word_json = {
     "◑"
    ],
    [
-    "esānaṃ 1",
+    "esānaṁ 1",
     "pron",
     "for these; for them",
     "✘"
    ],
    [
-    "esānaṃ 2",
+    "esānaṁ 2",
     "pron",
     "of these; their",
     "✔"
@@ -4231,13 +4231,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nayidaṃ 2",
+    "nayidaṁ 2",
     "ind",
     "not in this case; not here",
     "✔"
    ],
    [
-    "nayidaṃ 3",
+    "nayidaṁ 3",
     "ind",
     "not here; not to this place",
     "✔"
@@ -4307,7 +4307,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ajjhattaṃ",
+    "ajjhattaṁ",
     "ind",
     "internally; inwardly; personally",
     "✔"
@@ -4343,7 +4343,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "attanaṃ",
+    "attanaṁ",
     "masc",
     "self; himself; herself; itself; yourself; oneself (object)",
     "✔"
@@ -4403,7 +4403,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "attānaṃ",
+    "attānaṁ",
     "masc",
     "self; himself; herself; itself; yourself; oneself (object)",
     "✔"
@@ -4463,7 +4463,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "anattānaṃ",
+    "anattānaṁ",
     "masc",
     "what is not self; something other than self (object)",
     "✔"
@@ -4529,7 +4529,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "paccattaṃ",
+    "paccattaṁ",
     "ind",
     "for oneself; individually; personally; exclusively",
     "✔"
@@ -4683,13 +4683,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "aññesaṃ 1",
+    "aññesaṁ 1",
     "pron",
     "to others; for other people",
     "✔"
    ],
    [
-    "aññesaṃ 2",
+    "aññesaṁ 2",
     "pron",
     "of others; belonging to other people; as others",
     "✔"
@@ -4755,7 +4755,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nāññesaṃ",
+    "nāññesaṁ",
     "pron",
     "not to others; not for others",
     "✔"
@@ -4906,13 +4906,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "aṭṭhannaṃ 1",
+    "aṭṭhannaṁ 1",
     "card",
     "of eight",
     "✔"
    ],
    [
-    "aṭṭhannaṃ 2",
+    "aṭṭhannaṁ 2",
     "card",
     "to eight; for eight",
     "◑"
@@ -4936,7 +4936,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "aṭṭhamaṃ",
+    "aṭṭhamaṁ",
     "ind",
     "for the eighth time",
     "✔"
@@ -5200,7 +5200,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "anvahaṃ",
+    "anvahaṁ",
     "ind",
     "daily",
     "✘"
@@ -5224,7 +5224,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ahikaṃ",
+    "ahikaṁ",
     "ind",
     "every x days; with x days in between",
     "✔"
@@ -5528,31 +5528,31 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tasmiṃ 1",
+    "tasmiṁ 1",
     "pron",
     "in that; in that person",
     "✔"
    ],
    [
-    "tasmiṃ 2",
+    "tasmiṁ 2",
     "pron",
     "when that",
     "✔"
    ],
    [
-    "tasmiṃ 3",
+    "tasmiṁ 3",
     "pron",
     "in that case; in that situation",
     "✔"
    ],
    [
-    "tasmiṃ 4",
+    "tasmiṁ 4",
     "pron",
     "under that; under him",
     "✔"
    ],
    [
-    "tasmiṃ 5",
+    "tasmiṁ 5",
     "pron",
     "(gram) before that",
     "◑"
@@ -5582,7 +5582,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tassaṃ",
+    "tassaṁ",
     "pron",
     "in that",
     "✔"
@@ -5600,25 +5600,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tahaṃ",
+    "tahaṁ",
     "ind",
     "there; in that place",
     "✔"
    ],
    [
-    "tahiṃ",
+    "tahiṁ",
     "ind",
     "there; in that place",
     "✔"
    ],
    [
-    "taṃ 1.1",
+    "taṁ 1.1",
     "pron",
     "it; that",
     "✔"
    ],
    [
-    "taṃ 1.2",
+    "taṁ 1.2",
     "pron",
     "him; her; one; that person; that thing",
     "✔"
@@ -5666,7 +5666,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tāyaṃ",
+    "tāyaṁ",
     "pron",
     "in that; on that; at that",
     "✔"
@@ -5678,13 +5678,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tāsaṃ 1",
+    "tāsaṁ 1",
     "pron",
     "to those, for those; for them",
     "✔"
    ],
    [
-    "tāsaṃ 2",
+    "tāsaṁ 2",
     "pron",
     "of those; of them; their",
     "✔"
@@ -5708,7 +5708,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tissaṃ",
+    "tissaṁ",
     "pron",
     "in that; regarding that",
     "✔"
@@ -5750,19 +5750,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tesaṃ 1",
+    "tesaṁ 1",
     "pron",
     "for them; to them; to those",
     "✔"
    ],
    [
-    "tesaṃ 2",
+    "tesaṁ 2",
     "pron",
     "their; of these; of them; of those",
     "✔"
    ],
    [
-    "tesaṃ 3",
+    "tesaṁ 3",
     "pron",
     "when they; when these",
     "✔"
@@ -5786,7 +5786,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "naṃ",
+    "naṁ",
     "pron",
     "him; her; it; one; that",
     "✔"
@@ -5804,13 +5804,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nesaṃ 1",
+    "nesaṁ 1",
     "pron",
     "for them; to them",
     "✔"
    ],
    [
-    "nesaṃ 2",
+    "nesaṁ 2",
     "pron",
     "of them; of those; their",
     "✔"
@@ -5828,7 +5828,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "vitathaṃ",
+    "vitathaṁ",
     "ind",
     "untruthfully; mendaciously; diverging from the truth",
     "✔"
@@ -5941,7 +5941,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "appaṃ",
+    "appaṁ",
     "ind",
     "seldomly; infrequently; rarely; lit. little",
     "✔"
@@ -6135,7 +6135,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "dīghaṃ",
+    "dīghaṁ",
     "ind",
     "for a long time; deeply",
     "✔"
@@ -6182,7 +6182,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pātaṃ",
+    "pātaṁ",
     "ind",
     "early; in the morning",
     "✔"
@@ -6324,7 +6324,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "manāpaṃ",
+    "manāpaṁ",
     "ind",
     "kindly; pleasantly; nicely",
     "✔"
@@ -6371,7 +6371,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "abhimukhaṃ",
+    "abhimukhaṁ",
     "ind",
     "towards; facing; in the direction of",
     "✔"
@@ -6455,19 +6455,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "parimukhaṃ 1",
+    "parimukhaṁ 1",
     "ind",
     "as first priority; to the fore; (comm) directed towards the meditation object; lit. around the front",
     "✔"
    ],
    [
-    "parimukhaṃ 2",
+    "parimukhaṁ 2",
     "ind",
     "(comm) at the tip of the nose or on the upper lip; lit. around the front",
     "◑"
    ],
    [
-    "parimukhaṃ 3",
+    "parimukhaṁ 3",
     "ind",
     "(comm) on the chest; lit. around the front",
     "◑"
@@ -6569,7 +6569,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "mukhaṃ",
+    "mukhaṁ",
     "ind",
     "facing; looking towards; headed towards",
     "✔"
@@ -6665,7 +6665,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "saṃmukhā",
+    "saṁmukhā",
     "ind",
     "face to face (with); in front (of); present; lit. from face",
     "✔"
@@ -6688,13 +6688,13 @@ var family_word_json = {
  "lahu": {
   "data": [
    [
-    "atilahuṃ",
+    "atilahuṁ",
     "ind",
     "too quickly; too fast; too readily",
     "✔"
    ],
    [
-    "nātilahuṃ",
+    "nātilahuṁ",
     "ind",
     "not too quickly; not too fast; not too readily",
     "✘"
@@ -6766,7 +6766,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "lahukaṃ",
+    "lahukaṁ",
     "ind",
     "quickly",
     "✘"
@@ -6808,7 +6808,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "lahuṃ",
+    "lahuṁ",
     "ind",
     "quickly; swiftly",
     "✔"
@@ -6925,7 +6925,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ativelaṃ",
+    "ativelaṁ",
     "ind",
     "excessively; too long; too much; lit. over the limit",
     "✔"
@@ -6937,7 +6937,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nātivelaṃ",
+    "nātivelaṁ",
     "ind",
     "(of time) concisely; not excessively; not too long; lit. not over the limit",
     "✔"
@@ -6966,19 +6966,19 @@ var family_word_json = {
  "saṇika": {
   "data": [
    [
-    "atisaṇikaṃ",
+    "atisaṇikaṁ",
     "ind",
     "very slowly; too slowly",
     "✘"
    ],
    [
-    "nātisaṇikaṃ",
+    "nātisaṇikaṁ",
     "ind",
     "not too slowly",
     "✔"
    ],
    [
-    "saṇikaṃ",
+    "saṇikaṁ",
     "ind",
     "slowly; gradually",
     "✔"
@@ -7048,13 +7048,13 @@ var family_word_json = {
  "sīgha": {
   "data": [
    [
-    "atisīghaṃ",
+    "atisīghaṁ",
     "ind",
     "very fast; very quickly",
     "✔"
    ],
    [
-    "nātisīghaṃ",
+    "nātisīghaṁ",
     "ind",
     "not too fast; not too quickly",
     "✔"
@@ -7072,13 +7072,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sīghataraṃ",
+    "sīghataraṁ",
     "ind",
     "quicker; faster; more speedily (than)",
     "✔"
    ],
    [
-    "sīghaṃ",
+    "sīghaṁ",
     "ind",
     "quickly; swiftly; rapidly",
     "✔"
@@ -7190,7 +7190,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sundarataraṃ",
+    "sundarataraṁ",
     "ind",
     "more beautifully; more eloquently",
     "✔"
@@ -7421,13 +7421,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tucchakaṃ",
+    "tucchakaṁ",
     "ind",
     "emptily; vainly; without substance",
     "✔"
    ],
    [
-    "tucchaṃ",
+    "tucchaṁ",
     "ind",
     "emptily; vainly; without substance",
     "✔"
@@ -7586,7 +7586,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "abbhatthaṃ",
+    "abbhatthaṁ",
     "ind",
     "homeward; towards home",
     "✔"
@@ -7845,7 +7845,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "abhidantaṃ",
+    "abhidantaṁ",
     "ind",
     "against the teeth; against the upper teeth",
     "✔"
@@ -8182,13 +8182,13 @@ var family_word_json = {
     "◑"
    ],
    [
-    "dutiyakaṃ",
+    "dutiyakaṁ",
     "ind",
     "second time; another time",
     "✔"
    ],
    [
-    "dutiyaṃ",
+    "dutiyaṁ",
     "ind",
     "second time",
     "✔"
@@ -8278,7 +8278,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "dvikkhattuṃ",
+    "dvikkhattuṁ",
     "ind",
     "twice; two times",
     "✔"
@@ -8296,13 +8296,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "dvinnaṃ 1",
+    "dvinnaṁ 1",
     "card",
     "of two",
     "✔"
    ],
    [
-    "dvinnaṃ 2",
+    "dvinnaṁ 2",
     "card",
     "when two",
     "✔"
@@ -8385,7 +8385,7 @@ var family_word_json = {
  "amu": {
   "data": [
    [
-    "aduṃ",
+    "aduṁ",
     "pron",
     "that; such; so and so",
     "✔"
@@ -8415,13 +8415,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "amūsaṃ 1",
+    "amūsaṁ 1",
     "pron",
     "to such and such; for such and such",
     "✘"
    ],
    [
-    "amūsaṃ 2",
+    "amūsaṁ 2",
     "pron",
     "of such and such; of those people",
     "✔"
@@ -8482,7 +8482,7 @@ var family_word_json = {
    [
     "addhāna 3",
     "nt",
-    "course (of saṃsāra); long (cycle of rebirths)",
+    "course (of saṁsāra); long (cycle of rebirths)",
     "✔"
    ],
    [
@@ -8532,7 +8532,7 @@ var family_word_json = {
  "addhā": {
   "data": [
    [
-    "addhaṃ",
+    "addhaṁ",
     "ind",
     "most certainly!; for sure!; definitely!",
     "✔"
@@ -8632,7 +8632,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "adhikaṃ",
+    "adhikaṁ",
     "ind",
     "excessively; exceedingly; too much",
     "◑"
@@ -8863,7 +8863,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "upanagaraṃ",
+    "upanagaraṁ",
     "ind",
     "near the city",
     "✔"
@@ -9112,13 +9112,13 @@ var family_word_json = {
     "✘"
    ],
    [
-    "anulomaṃ 1",
+    "anulomaṁ 1",
     "ind",
     "in forward order; in a natural order; forwards; with the grain; lit. following the hair",
     "✔"
    ],
    [
-    "anulomaṃ 2",
+    "anulomaṁ 2",
     "ind",
     "suitable (for); appropriate (for); conforming (to); lit. following the hair",
     "✔"
@@ -9178,7 +9178,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "paṭilomaṃ",
+    "paṭilomaṁ",
     "ind",
     "in reverse order; backwards; against the grain; lit. against the hair",
     "✔"
@@ -9369,13 +9369,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "aparaṃ 1",
+    "aparaṁ 1",
     "ind",
     "also; secondly; furthermore; on the other hand",
     "✔"
    ],
    [
-    "aparaṃ 2",
+    "aparaṁ 2",
     "ind",
     "later; afterwards",
     "◑"
@@ -9413,7 +9413,7 @@ var family_word_json = {
   ],
   "count": 15
  },
- "puṃ": {
+ "puṁ": {
   "data": [
    [
     "anapumsaka",
@@ -9428,19 +9428,19 @@ var family_word_json = {
     "✘"
    ],
    [
-    "napuṃsaka 1",
+    "napuṁsaka 1",
     "masc",
     "eunuch",
     "✘"
    ],
    [
-    "napuṃsaka 2",
+    "napuṁsaka 2",
     "masc",
     "(gram) neuter gender; lit. not male",
     "✔"
    ],
    [
-    "napuṃsaka 3",
+    "napuṁsaka 3",
     "adj",
     "(gram) neuter; lit. not male",
     "✔"
@@ -9476,19 +9476,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "puṃ",
+    "puṁ",
     "ind",
     "male; masculine",
     "◑"
    ],
    [
-    "puṃs 1",
+    "puṁs 1",
     "ind",
     "male",
     "✘"
    ],
    [
-    "puṃs 2",
+    "puṁs 2",
     "ind",
     "(gram) masculine gender",
     "✘"
@@ -9692,40 +9692,40 @@ var family_word_json = {
   ],
   "count": 25
  },
- "alaṃ": {
+ "alaṁ": {
   "data": [
    [
-    "analaṃ",
+    "analaṁ",
     "ind",
     "not enough; not sufficient; (comm) (or) not to be relied on",
     "✔"
    ],
    [
-    "alaṃ 1",
+    "alaṁ 1",
     "ind",
     "(it is) suitable; proper; worthy; appropriate (to); lit. enough",
     "✔"
    ],
    [
-    "alaṃ 2",
+    "alaṁ 2",
     "ind",
     "is able (to); is possible (to); is capable (of); lit. enough",
     "✔"
    ],
    [
-    "alaṃ 3",
+    "alaṁ 3",
     "ind",
     "enough; it is enough (for)",
     "✔"
    ],
    [
-    "alaṃ 4",
+    "alaṁ 4",
     "ind",
     "able; capable; competent",
     "✔"
    ],
    [
-    "alaṃ 5",
+    "alaṁ 5",
     "ind",
     "that's enough (of)!; stop (with)!",
     "✔"
@@ -10189,19 +10189,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "niccaṃ 1",
+    "niccaṁ 1",
     "ind",
     "continuously; always; permanently; perpetually",
     "✔"
    ],
    [
-    "niccaṃ 2",
+    "niccaṁ 2",
     "ind",
     "always; in every case",
     "✔"
    ],
    [
-    "niccaṃ 3",
+    "niccaṁ 3",
     "ind",
     "(gram) mandatory; always",
     "◑"
@@ -10521,7 +10521,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "uttaritaraṃ",
+    "uttaritaraṁ",
     "ind",
     "even more; still more; all the more",
     "✔"
@@ -10563,25 +10563,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "uddhaṃ 1",
+    "uddhaṁ 1",
     "ind",
     "above; up; on top",
     "✔"
    ],
    [
-    "uddhaṃ 2",
+    "uddhaṁ 2",
     "ind",
     "upwards (from)",
     "✔"
    ],
    [
-    "uddhaṃ 3",
+    "uddhaṁ 3",
     "ind",
     "after; afterwards",
     "✔"
    ],
    [
-    "uddhaṃ 4",
+    "uddhaṁ 4",
     "ind",
     "further; more; all the more",
     "✔"
@@ -10593,7 +10593,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ubbhaṃ",
+    "ubbhaṁ",
     "ind",
     "upwards; in an upward direction",
     "✔"
@@ -10699,7 +10699,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "anupubbaṃ",
+    "anupubbaṁ",
     "ind",
     "gradually; step-by-step; successively; one-by-one",
     "✔"
@@ -10735,7 +10735,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "apubbaṃ",
+    "apubbaṁ",
     "ind",
     "not before",
     "✔"
@@ -10813,13 +10813,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pubbaṃ 1",
+    "pubbaṁ 1",
     "ind",
     "previously, earlier, before, formerly",
     "✘"
    ],
    [
-    "pubbaṃ 2",
+    "pubbaṁ 2",
     "ind",
     "firstly; in front; before",
     "✔"
@@ -10978,7 +10978,7 @@ var family_word_json = {
  "vacchara": {
   "data": [
    [
-    "anusaṃvaccharaṃ",
+    "anusaṁvaccharaṁ",
     "ind",
     "annually; yearly",
     "✔"
@@ -11008,19 +11008,19 @@ var family_word_json = {
     "◑"
    ],
    [
-    "saṃvacchara 1",
+    "saṁvacchara 1",
     "nt",
     "year",
     "✔"
    ],
    [
-    "saṃvacchara 2",
+    "saṁvacchara 2",
     "masc",
     "year",
     "✔"
    ],
    [
-    "saṃvaccharaṃ",
+    "saṁvaccharaṁ",
     "ind",
     "for a year annually; yearly",
     "✔"
@@ -11150,7 +11150,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "ussukkāpetuṃ",
+    "ussukkāpetuṁ",
     "inf",
     "to actively engage; to zealously strive; to make an effort",
     "✘"
@@ -11250,7 +11250,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "anekakkhattuṃ",
+    "anekakkhattuṁ",
     "ind",
     "many times; on countless occasions; lit. not one time",
     "✔"
@@ -11310,7 +11310,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ekakkhattuṃ",
+    "ekakkhattuṁ",
     "ind",
     "once",
     "✘"
@@ -11340,7 +11340,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ekajjhaṃ",
+    "ekajjhaṁ",
     "ind",
     "together; in one place; in the same place",
     "✔"
@@ -11532,7 +11532,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "paccekaṃ",
+    "paccekaṁ",
     "ind",
     "individually; separately; one by one",
     "✔"
@@ -11544,7 +11544,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pāṭiyekkaṃ",
+    "pāṭiyekkaṁ",
     "ind",
     "separately, individually",
     "✘"
@@ -11556,7 +11556,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "pāṭekkaṃ",
+    "pāṭekkaṁ",
     "ind",
     "individually; separately; alone",
     "✔"
@@ -11686,13 +11686,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "oraṃ 1",
+    "oraṁ 1",
     "ind",
     "less (than); under; within",
     "✔"
    ],
    [
-    "oraṃ 2",
+    "oraṁ 2",
     "ind",
     "below, on this side",
     "✘"
@@ -12284,7 +12284,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "apaṇṇakaṃ",
+    "apaṇṇakaṁ",
     "ind",
     "surely; certainly; without a doubt; unquestionably; lit. without a fifth",
     "✔"
@@ -12302,7 +12302,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pañcakkhattuṃ",
+    "pañcakkhattuṁ",
     "ind",
     "five times",
     "✔"
@@ -12314,19 +12314,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pañcannaṃ 1",
+    "pañcannaṁ 1",
     "card",
     "to five; for five",
     "✔"
    ],
    [
-    "pañcannaṃ 2",
+    "pañcannaṁ 2",
     "card",
     "of five",
     "✔"
    ],
    [
-    "pañcannaṃ 3",
+    "pañcannaṁ 3",
     "card",
     "when five; lit. of five",
     "✔"
@@ -12486,7 +12486,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "parimaṇḍalaṃ",
+    "parimaṇḍalaṁ",
     "ind",
     "even all around; level all around; lit. circle all around",
     "✔"
@@ -12627,7 +12627,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "apācīnaṃ",
+    "apācīnaṁ",
     "ind",
     "below; underneath; lit. waning",
     "✔"
@@ -12965,19 +12965,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "paramaṃ",
+    "paramaṁ",
     "ind",
     "at the very most; for a maximum of",
     "✔"
    ],
    [
-    "paraṃ",
+    "paraṁ",
     "ind",
     "after; beyond; on the other side (of)",
     "✔"
    ],
    [
-    "parāsaṃ",
+    "parāsaṁ",
     "pron",
     "(gram) ?? of the following; of the next",
     "✔"
@@ -13007,19 +13007,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "paresaṃ 1",
+    "paresaṁ 1",
     "pron",
     "to others; for others",
     "✔"
    ],
    [
-    "paresaṃ 2",
+    "paresaṁ 2",
     "pron",
     "of others; others'; (belongings) of others",
     "✔"
    ],
    [
-    "paresaṃ 3",
+    "paresaṁ 3",
     "pron",
     "belonging to others; others' property; lit. of others",
     "✔"
@@ -13049,7 +13049,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pāraṃ",
+    "pāraṁ",
     "ind",
     "beyond; across; over",
     "◑"
@@ -13143,7 +13143,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "pitaraṃ",
+    "pitaraṁ",
     "masc",
     "father (object)",
     "✔"
@@ -13434,7 +13434,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "puratthaṃ",
+    "puratthaṁ",
     "ind",
     "before; in front; in the future",
     "✔"
@@ -13578,7 +13578,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "purimataraṃ",
+    "purimataraṁ",
     "ind",
     "earlier; before; lit. more before",
     "✔"
@@ -13602,7 +13602,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "puretaraṃ",
+    "puretaraṁ",
     "ind",
     "before any one else; very first of all",
     "✔"
@@ -13716,7 +13716,7 @@ var family_word_json = {
    [
     "purisa 4",
     "masc",
-    "World Soul (in Sāṃkhya system)",
+    "World Soul (in Sāṁkhya system)",
     "✘"
    ],
    [
@@ -13839,19 +13839,19 @@ var family_word_json = {
     "◑"
    ],
    [
-    "paṭhamataraṃ",
+    "paṭhamataraṁ",
     "ind",
     "very first of all; firstly; before; earlier (than); lit. more forward",
     "✔"
    ],
    [
-    "paṭhamaṃ 1",
+    "paṭhamaṁ 1",
     "ind",
     "first; firstly; at first; first of all; lit. more forward",
     "✔"
    ],
    [
-    "paṭhamaṃ 2",
+    "paṭhamaṁ 2",
     "ind",
     "before; recently; newly; just; lit. more forward",
     "✔"
@@ -14157,7 +14157,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "abbhutaṃ",
+    "abbhutaṁ",
     "ind",
     "wonderful!; marvellous!; extraordinary!; unbelievable!",
     "✔"
@@ -14169,19 +14169,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "abbhuṃ",
+    "abbhuṁ",
     "ind",
     "exclamation of horror, fright or aversion",
     "✘"
    ],
    [
-    "abhuṃ 1",
+    "abhuṁ 1",
     "ind",
     "oh no!; oh dear!; alas!; lit. terrible! horrible!",
     "✔"
    ],
    [
-    "abhuṃ 2",
+    "abhuṁ 2",
     "ind",
     "oh horror!; terrible!; awful!; monstrous!; aaargh!",
     "✔"
@@ -14570,7 +14570,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "mātaraṃ",
+    "mātaraṁ",
     "fem",
     "mother (object)",
     "✔"
@@ -14805,7 +14805,7 @@ var family_word_json = {
    [
     "madhuriya",
     "adj",
-    "in reference to MN84 Madhurasuttaṃ; lit. related to Madhurā",
+    "in reference to MN84 Madhurasuttaṁ; lit. related to Madhurā",
     "✔"
    ],
    [
@@ -15391,10 +15391,10 @@ var family_word_json = {
   ],
   "count": 4
  },
- "ahaṃ": {
+ "ahaṁ": {
   "data": [
    [
-    "amhaṃ",
+    "amhaṁ",
     "pron",
     "our; of us",
     "✔"
@@ -15406,25 +15406,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "amhākaṃ 1",
+    "amhākaṁ 1",
     "pron",
     "us (object)",
     "✔"
    ],
    [
-    "amhākaṃ 2",
+    "amhākaṁ 2",
     "pron",
     "to us; for us",
     "✔"
    ],
    [
-    "amhākaṃ 3",
+    "amhākaṁ 3",
     "pron",
     "our; of us",
     "✔"
    ],
    [
-    "amhākaṃ 4",
+    "amhākaṁ 4",
     "pron",
     "(royal plural) my; lit. our",
     "✔"
@@ -15520,7 +15520,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "ahaṃ",
+    "ahaṁ",
     "pron",
     "I",
     "✔"
@@ -15550,31 +15550,31 @@ var family_word_json = {
     "✔"
    ],
    [
-    "mamaṃ 1",
+    "mamaṁ 1",
     "pron",
     "me (object); about me",
     "✔"
    ],
    [
-    "mamaṃ 2",
+    "mamaṁ 2",
     "pron",
     "to me; for me",
     "✔"
    ],
    [
-    "mamaṃ 3",
+    "mamaṁ 3",
     "pron",
     "mine; of me",
     "✔"
    ],
    [
-    "mayaṃ 1",
+    "mayaṁ 1",
     "pron",
     "we",
     "✔"
    ],
    [
-    "mayaṃ 2",
+    "mayaṁ 2",
     "pron",
     "(royal plural) I; lit. we",
     "✔"
@@ -15622,25 +15622,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "mayhaṃ 1",
+    "mayhaṁ 1",
     "pron",
     "to me; for me",
     "✔"
    ],
    [
-    "mayhaṃ 2",
+    "mayhaṁ 2",
     "pron",
     "my; mine",
     "✔"
    ],
    [
-    "maṃ 1",
+    "maṁ 1",
     "pron",
     "me (object)",
     "✔"
    ],
    [
-    "māmaṃ",
+    "māmaṁ",
     "pron",
     "me",
     "✔"
@@ -15919,13 +15919,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "yasmiṃ 1",
+    "yasmiṁ 1",
     "pron",
     "in whoever; in whichever; at whichever",
     "✔"
    ],
    [
-    "yasmiṃ 2",
+    "yasmiṁ 2",
     "pron",
     "about which; in which",
     "✔"
@@ -15943,7 +15943,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "yassaṃ",
+    "yassaṁ",
     "pron",
     "in whatever; in whichever",
     "✔"
@@ -15961,31 +15961,31 @@ var family_word_json = {
     "✔"
    ],
    [
-    "yahaṃ",
+    "yahaṁ",
     "ind",
     "where, wherever",
     "✘"
    ],
    [
-    "yahiṃ",
+    "yahiṁ",
     "ind",
     "where; wherever",
     "✔"
    ],
    [
-    "yaṃ 1",
+    "yaṁ 1",
     "pron",
     "which; whoever; whatever; that which",
     "✔"
    ],
    [
-    "yaṃ 2",
+    "yaṁ 2",
     "pron",
     "whoever; whatever; that which",
     "✔"
    ],
    [
-    "yaṃ 3",
+    "yaṁ 3",
     "ind",
     "because; because of; since; when",
     "✔"
@@ -16021,7 +16021,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "yāyaṃ 2",
+    "yāyaṁ 2",
     "pron",
     "in whatever; in whichever",
     "✘"
@@ -16129,13 +16129,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "yesaṃ 1",
+    "yesaṁ 1",
     "pron",
     "for whoever; to whom; for which; for such and such",
     "✔"
    ],
    [
-    "yesaṃ 2",
+    "yesaṁ 2",
     "pron",
     "of whoever; of whom; of which; of such and such; of them",
     "✔"
@@ -16823,7 +16823,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "upakaṇṇakaṃ",
+    "upakaṇṇakaṁ",
     "ind",
     "close to the ear; in the ear",
     "✘"
@@ -16895,7 +16895,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "nikaṇṇikaṃ",
+    "nikaṇṇikaṁ",
     "ind",
     "in the ear; in whispers",
     "✘"
@@ -17170,7 +17170,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "upasaradaṃ",
+    "upasaradaṁ",
     "ind",
     "around autumn time",
     "✔"
@@ -17354,13 +17354,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sayaṃ",
+    "sayaṁ",
     "ind",
     "by one's own; oneself; one's own",
     "✔"
    ],
    [
-    "saṃ 3.1",
+    "saṁ 3.1",
     "ind",
     "own; personal; self-",
     "✔"
@@ -17372,13 +17372,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sāmaṃ 1",
+    "sāmaṁ 1",
     "ind",
     "oneself; by oneself; for oneself",
     "✔"
    ],
    [
-    "sāmaṃ 2",
+    "sāmaṁ 2",
     "ind",
     "individually; personally",
     "✔"
@@ -17401,7 +17401,7 @@ var family_word_json = {
  "saki": {
   "data": [
    [
-    "asakiṃ",
+    "asakiṁ",
     "ind",
     "all the time; continuously; lit. not once",
     "✔"
@@ -17419,7 +17419,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sakiṃ",
+    "sakiṁ",
     "ind",
     "once",
     "✔"
@@ -17590,7 +17590,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "visamaṃ",
+    "visamaṁ",
     "ind",
     "unsuitably; wrongly; immorally; unfairly",
     "✔"
@@ -17656,25 +17656,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "samaṃ 1",
+    "samaṁ 1",
     "ind",
     "evenly; equally",
     "✔"
    ],
    [
-    "samaṃ 2",
+    "samaṁ 2",
     "ind",
     "in a similar manner; similarly; likewise; lit. equally",
     "✔"
    ],
    [
-    "samaṃ 3",
+    "samaṁ 3",
     "ind",
     "in a balanced manner; smoothly; lit. equally",
     "✔"
    ],
    [
-    "samaṃ 4",
+    "samaṁ 4",
     "ind",
     "equal (to); the same (as); just like",
     "✔"
@@ -18087,13 +18087,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sasīsakaṃ",
+    "sasīsakaṁ",
     "ind",
     "head high; over one's head; head and all; lit. with the head",
     "✔"
    ],
    [
-    "sasīsaṃ",
+    "sasīsaṁ",
     "ind",
     "up to the head; including the head; lit. with the head",
     "✔"
@@ -18578,16 +18578,16 @@ var family_word_json = {
   ],
   "count": 4
  },
- "sudaṃ": {
+ "sudaṁ": {
   "data": [
    [
-    "assudaṃ",
+    "assudaṁ",
     "ind",
     "indeed; truly; surely",
     "✔"
    ],
    [
-    "sudaṃ 1",
+    "sudaṁ 1",
     "ind",
     "indeed; truly; surely",
     "✔"
@@ -18771,16 +18771,16 @@ var family_word_json = {
   ],
   "count": 4
  },
- "aṃsa2": {
+ "aṁsa2": {
   "data": [
    [
-    "aṃsa 2.1",
+    "aṁsa 2.1",
     "masc",
     "shoulder; shoulder-blade",
     "✔"
    ],
    [
-    "aṃsa 2.2",
+    "aṁsa 2.2",
     "adj",
     "with shoulders; having shoulder-blades",
     "✔"
@@ -18868,34 +18868,34 @@ var family_word_json = {
   ],
   "count": 3
  },
- "ānisaṃsa": {
+ "ānisaṁsa": {
   "data": [
    [
-    "ānisaṃsa 1",
+    "ānisaṁsa 1",
     "masc",
     "profit (in); benefit (in); advantage (of); good result (of)",
     "✔"
    ],
    [
-    "ānisaṃsa 2",
+    "ānisaṁsa 2",
     "adj",
     "for the benefit of; for the advantage of; for the good of",
     "✔"
    ],
    [
-    "ānisaṃsa 3",
+    "ānisaṁsa 3",
     "adj",
     "expecting; anticipating",
     "✔"
    ],
    [
-    "ānisaṃsaka",
+    "ānisaṁsaka",
     "adj",
     "for the benefit; for the advantage; for the good (of)",
     "◑"
    ],
    [
-    "sānisaṃsa",
+    "sānisaṁsa",
     "adj",
     "beneficial; profitable; advantageous; having good results",
     "✔"
@@ -19088,7 +19088,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "āviṃ",
+    "āviṁ",
     "ind",
     "before the eyes; openly, manifestly; in public",
     "✘"
@@ -19192,7 +19192,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ittaraṃ",
+    "ittaraṁ",
     "ind",
     "briefly; for a short time; momentarily; lit. going quickly",
     "✔"
@@ -19326,7 +19326,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "īsakaṃ",
+    "īsakaṁ",
     "ind",
     "slightly",
     "✔"
@@ -19690,7 +19690,7 @@ var family_word_json = {
  "gaṅgā": {
   "data": [
    [
-    "upagaṅgaṃ",
+    "upagaṅgaṁ",
     "ind",
     "near the Ganges River",
     "✔"
@@ -19825,7 +19825,7 @@ var family_word_json = {
  "maṇika": {
   "data": [
    [
-    "upamaṇikaṃ",
+    "upamaṇikaṁ",
     "ind",
     "near the water-jar",
     "✔"
@@ -20178,13 +20178,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "ubhinnaṃ 1",
+    "ubhinnaṁ 1",
     "pron",
     "to both; for both",
     "✔"
    ],
    [
-    "ubhinnaṃ 2",
+    "ubhinnaṁ 2",
     "pron",
     "of both",
     "✔"
@@ -20609,7 +20609,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "etasmiṃ",
+    "etasmiṁ",
     "pron",
     "in this; in this person",
     "✔"
@@ -20627,13 +20627,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "etaṃ 1",
+    "etaṁ 1",
     "pron",
     "this; this thing (subject)",
     "✔"
    ],
    [
-    "etaṃ 2",
+    "etaṁ 2",
     "pron",
     "this; this man; this thing (object)",
     "✔"
@@ -20711,13 +20711,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "etesaṃ 1",
+    "etesaṁ 1",
     "pron",
     "to them; for these",
     "✔"
    ],
    [
-    "etesaṃ 2",
+    "etesaṁ 2",
     "pron",
     "of them; of these",
     "✔"
@@ -20747,7 +20747,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "enaṃ",
+    "enaṁ",
     "pron",
     "him; her; this one",
     "✔"
@@ -20876,13 +20876,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "evaṃ 1",
+    "evaṁ 1",
     "ind",
     "thus; this; like this; similarly; in the same manner; just as; such",
     "✔"
    ],
    [
-    "evaṃ 2",
+    "evaṁ 2",
     "ind",
     "yes!; that is right!; correct!",
     "✔"
@@ -21178,7 +21178,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "katamasmiṃ",
+    "katamasmiṁ",
     "pron",
     "in which?",
     "✔"
@@ -21202,7 +21202,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "katikkhattuṃ",
+    "katikkhattuṁ",
     "ind",
     "how many times?",
     "✔"
@@ -21262,25 +21262,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kathaṃ 1",
+    "kathaṁ 1",
     "ind",
     "how?",
     "✔"
    ],
    [
-    "kathaṃ 2",
+    "kathaṁ 2",
     "ind",
     "why?",
     "✔"
    ],
    [
-    "kathaṃ 3",
+    "kathaṁ 3",
     "ind",
     "what? like what?",
     "✔"
    ],
    [
-    "kathaṃ 4",
+    "kathaṁ 4",
     "ind",
     "what's the reason?",
     "✔"
@@ -21328,13 +21328,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kahaṃ",
+    "kahaṁ",
     "ind",
     "where?",
     "✔"
    ],
    [
-    "kaṃ 1.1",
+    "kaṁ 1.1",
     "pron",
     "which?; what?; whom?",
     "✔"
@@ -21394,19 +21394,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kismiṃ 1",
+    "kismiṁ 1",
     "pron",
     "in what?; in which?",
     "✔"
    ],
    [
-    "kismiṃ 2",
+    "kismiṁ 2",
     "pron",
     "on what grounds?",
     "✔"
    ],
    [
-    "kismiṃ 3",
+    "kismiṁ 3",
     "pron",
     "when what?",
     "✔"
@@ -21424,19 +21424,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kiṃ 1",
+    "kiṁ 1",
     "pron",
     "who?; what?; which?",
     "✔"
    ],
    [
-    "kiṃ 2",
+    "kiṁ 2",
     "ind",
     "how?; what?",
     "✔"
    ],
    [
-    "kiṃ 3",
+    "kiṁ 3",
     "ind",
     "not to mention; much less; what about?",
     "✔"
@@ -21502,13 +21502,13 @@ var family_word_json = {
     "✘"
    ],
    [
-    "kudācanaṃ",
+    "kudācanaṁ",
     "ind",
     "at some time; at any time; ever",
     "✔"
    ],
    [
-    "kuvaṃ",
+    "kuvaṁ",
     "ind",
     "where?",
     "✔"
@@ -21520,7 +21520,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kuhiṃ",
+    "kuhiṁ",
     "ind",
     "where?",
     "✔"
@@ -21544,13 +21544,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kesaṃ 1",
+    "kesaṁ 1",
     "pron",
     "for who?; to who?",
     "✔"
    ],
    [
-    "kesaṃ 2",
+    "kesaṁ 2",
     "pron",
     "of whom?; whose?",
     "✔"
@@ -22975,28 +22975,28 @@ var family_word_json = {
   ],
   "count": 2
  },
- "kaṃsa": {
+ "kaṁsa": {
   "data": [
    [
-    "kaṃsa 1",
+    "kaṁsa 1",
     "masc",
     "bronze; metal",
     "✔"
    ],
    [
-    "kaṃsa 2",
+    "kaṁsa 2",
     "masc",
     "(bronze) plate; bowl",
     "✔"
    ],
    [
-    "kaṃsa 3",
+    "kaṁsa 3",
     "masc",
     "(bronze) cup; goblet; chalice",
     "✔"
    ],
    [
-    "kaṃsa 4",
+    "kaṁsa 4",
     "masc",
     "(bronze) gong",
     "✔"
@@ -23094,7 +23094,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "kiṃkiṇī",
+    "kiṁkiṇī",
     "fem",
     "jingling bell",
     "✘"
@@ -24867,13 +24867,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "gunnaṃ 1",
+    "gunnaṁ 1",
     "masc",
     "of cattle; of cows",
     "✔"
    ],
    [
-    "gunnaṃ 2",
+    "gunnaṁ 2",
     "masc",
     "when cows",
     "✔"
@@ -25474,7 +25474,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "catukkhattuṃ",
+    "catukkhattuṁ",
     "ind",
     "four times",
     "✔"
@@ -25498,13 +25498,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "catutthaṃ",
+    "catutthaṁ",
     "ind",
     "for the fourth time; on the fourth day",
     "✔"
    ],
    [
-    "catutthiṃ",
+    "catutthiṁ",
     "ordin",
     "fourth (4th)",
     "✔"
@@ -25528,13 +25528,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "catunnaṃ 1",
+    "catunnaṁ 1",
     "card",
     "for four; to four",
     "✔"
    ],
    [
-    "catunnaṃ 2",
+    "catunnaṁ 2",
     "card",
     "of four",
     "✔"
@@ -26244,7 +26244,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "chakkhattuṃ",
+    "chakkhattuṁ",
     "ind",
     "six times",
     "✔"
@@ -26280,13 +26280,13 @@ var family_word_json = {
     "✘"
    ],
    [
-    "channaṃ 1",
+    "channaṁ 1",
     "card",
     "for six",
     "✔"
    ],
    [
-    "channaṃ 2",
+    "channaṁ 2",
     "card",
     "of six",
     "✔"
@@ -27028,13 +27028,13 @@ var family_word_json = {
     "◑"
    ],
    [
-    "tatiyakaṃ",
+    "tatiyakaṁ",
     "ind",
     "for the thrird time; occurring for the third time",
     "✔"
    ],
    [
-    "tatiyaṃ",
+    "tatiyaṁ",
     "ind",
     "for the third time",
     "✔"
@@ -27094,13 +27094,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tikkhattuṃ",
+    "tikkhattuṁ",
     "ind",
     "three times; thrice",
     "✔"
    ],
    [
-    "tiṇṇaṃ",
+    "tiṇṇaṁ",
     "card",
     "of three",
     "✔"
@@ -27278,7 +27278,7 @@ var family_word_json = {
   ],
   "count": 3
  },
- "tvaṃ": {
+ "tvaṁ": {
   "data": [
    [
     "tayā 1",
@@ -27311,7 +27311,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "taṃ 2.1",
+    "taṁ 2.1",
     "pron",
     "you (object)",
     "✔"
@@ -27323,13 +27323,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tumhaṃ 1",
+    "tumhaṁ 1",
     "pron",
     "for you all; to you all",
     "✔"
    ],
    [
-    "tumhaṃ 2",
+    "tumhaṁ 2",
     "pron",
     "your",
     "◑"
@@ -27341,19 +27341,19 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tumhākaṃ 1",
+    "tumhākaṁ 1",
     "pron",
     "you all; both of you (object)",
     "✔"
    ],
    [
-    "tumhākaṃ 2",
+    "tumhākaṁ 2",
     "pron",
     "for you all; to you all",
     "✔"
    ],
    [
-    "tumhākaṃ 3",
+    "tumhākaṁ 3",
     "pron",
     "of you all; yours",
     "✔"
@@ -27407,25 +27407,25 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tuyhaṃ 1",
+    "tuyhaṁ 1",
     "pron",
     "for you; to you",
     "✔"
    ],
    [
-    "tuyhaṃ 2",
+    "tuyhaṁ 2",
     "pron",
     "your; yours",
     "✔"
    ],
    [
-    "tuvaṃ 1",
+    "tuvaṁ 1",
     "pron",
     "you",
     "✔"
    ],
    [
-    "tuvaṃ 2",
+    "tuvaṁ 2",
     "pron",
     "thou; you (object)",
     "✔"
@@ -27461,13 +27461,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "tvaṃ 1",
+    "tvaṁ 1",
     "pron",
     "you (subject)",
     "✔"
    ],
    [
-    "tvaṃ 2",
+    "tvaṁ 2",
     "pron",
     "you (object)",
     "✔"
@@ -27785,7 +27785,7 @@ var family_word_json = {
  "tuṇhī": {
   "data": [
    [
-    "tuṇhiṃ",
+    "tuṇhiṁ",
     "ind",
     "silently; quietly",
     "✔"
@@ -28053,7 +28053,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "thokaṃ",
+    "thokaṁ",
     "ind",
     "a little; a tiny bit; a small amount",
     "✔"
@@ -28088,7 +28088,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "dasakkhattuṃ",
+    "dasakkhattuṁ",
     "ind",
     "ten times",
     "◑"
@@ -28100,13 +28100,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "dasannaṃ 1",
+    "dasannaṁ 1",
     "card",
     "for ten; to ten",
     "✔"
    ],
    [
-    "dasannaṃ 2",
+    "dasannaṁ 2",
     "card",
     "of ten",
     "✔"
@@ -28275,7 +28275,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "duṭṭhuṃ",
+    "duṭṭhuṁ",
     "ind",
     "badly; wrongly; with difficulty; horribly",
     "✔"
@@ -28306,7 +28306,7 @@ var family_word_json = {
   ],
   "count": 3
  },
- "dunduṃ": {
+ "dunduṁ": {
   "data": [
    [
     "dudrabhi",
@@ -28327,7 +28327,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "dunduṃ",
+    "dunduṁ",
     "ind",
     "booming sound; thudding sound",
     "✔"
@@ -28874,7 +28874,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "nattaṃ",
+    "nattaṁ",
     "ind",
     "by night; at night",
     "✔"
@@ -28910,7 +28910,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "rattiṃ",
+    "rattiṁ",
     "ind",
     "at night; by night; on the night; for a night",
     "✔"
@@ -29191,7 +29191,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "navakkhattuṃ",
+    "navakkhattuṁ",
     "ind",
     "nine times",
     "✘"
@@ -29507,7 +29507,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "rassaṃ",
+    "rassaṁ",
     "ind",
     "(of breathing) for a short time; shallowly",
     "✔"
@@ -29536,7 +29536,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "nānaṃ",
+    "nānaṁ",
     "ind",
     "various; different; distinct; diverse",
     "✔"
@@ -29726,40 +29726,40 @@ var family_word_json = {
   ],
   "count": 11
  },
- "maṃsa": {
+ "maṁsa": {
   "data": [
    [
-    "nimaṃsa",
+    "nimaṁsa",
     "nt",
     "without a flesh",
     "✘"
    ],
    [
-    "nimmaṃsa",
+    "nimmaṁsa",
     "adj",
     "without meat; fleshless",
     "✔"
    ],
    [
-    "nimmaṃsatta",
+    "nimmaṁsatta",
     "nt",
     "fact of being without meat; fleshlessness",
     "◑"
    ],
    [
-    "maṃsa 1",
+    "maṁsa 1",
     "nt",
     "meat; flesh",
     "✔"
    ],
    [
-    "maṃsa 2",
+    "maṁsa 2",
     "adj",
     "with meat; having flesh",
     "✔"
    ],
    [
-    "maṃsika",
+    "maṁsika",
     "adj",
     "meat; flesh; lit. related to meat",
     "✔"
@@ -29767,16 +29767,16 @@ var family_word_json = {
   ],
   "count": 6
  },
- "huṃhuṃ": {
+ "huṁhuṁ": {
   "data": [
    [
-    "nihuṃhuṅka",
+    "nihuṁhuṅka",
     "adj",
     "not humphy; not huffy; not disgruntled; not disapproving; lit. not humph humph",
     "✔"
    ],
    [
-    "huṃhuṅka",
+    "huṁhuṅka",
     "adj",
     "making a 'humph' sound; lit. humph humph",
     "✔"
@@ -30323,7 +30323,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "satakkhattuṃ",
+    "satakkhattuṁ",
     "ind",
     "one hundred times",
     "✔"
@@ -31015,22 +31015,22 @@ var family_word_json = {
   ],
   "count": 6
  },
- "paṃsu": {
+ "paṁsu": {
   "data": [
    [
-    "paṃsu",
+    "paṁsu",
     "masc",
     "dust; dirt; soil; earth",
     "✔"
    ],
    [
-    "paṃsuka",
+    "paṁsuka",
     "masc",
     "soil; dirt; dust",
     "✔"
    ],
    [
-    "paṃsuni",
+    "paṁsuni",
     "masc",
     "in dust",
     "✔"
@@ -31505,7 +31505,7 @@ var family_word_json = {
    [
     "puṇḍarī",
     "fem",
-    "in reference to MN71 Tevijjavacchasuttaṃ; lit. white lotus",
+    "in reference to MN71 Tevijjavacchasuttaṁ; lit. white lotus",
     "✔"
    ],
    [
@@ -31562,7 +31562,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "punaṃ",
+    "punaṁ",
     "ind",
     "again; once more",
     "✔"
@@ -32307,7 +32307,7 @@ var family_word_json = {
    [
     "bindu 5",
     "nt",
-    "(gram) dot over a letter representing the niggahīta letter, represented in Roman script by ṃ, ṃ or ŋ; lit. drop",
+    "(gram) dot over a letter representing the niggahīta letter, represented in Roman script by ṁ, ṁ or ṁ; lit. drop",
     "✔"
    ],
    [
@@ -33417,7 +33417,7 @@ var family_word_json = {
   ],
   "count": 3
  },
- "mahiṃsa": {
+ "mahiṁsa": {
   "data": [
    [
     "mahisa",
@@ -33426,7 +33426,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "mahiṃsa",
+    "mahiṁsa",
     "masc",
     "buffalo",
     "✔"
@@ -33877,7 +33877,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "muhuttaṃ",
+    "muhuttaṁ",
     "ind",
     "for a moment; for a second",
     "✔"
@@ -33913,13 +33913,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "muhuṃ 1",
+    "muhuṁ 1",
     "ind",
     "repeatedly; again and again; moment by moment",
     "✔"
    ],
    [
-    "muhuṃ 2",
+    "muhuṁ 2",
     "ind",
     "quickly; suddenly",
     "✘"
@@ -34001,7 +34001,7 @@ var family_word_json = {
    [
     "moggalāna",
     "masc",
-    "name of a classical Pāḷi grammar; Moggallānabyākaraṇaṃ",
+    "name of a classical Pāḷi grammar; Moggallānabyākaraṇaṁ",
     "✘"
    ],
    [
@@ -34269,7 +34269,7 @@ var family_word_json = {
   ],
   "count": 7
  },
- "raṃsi": {
+ "raṁsi": {
   "data": [
    [
     "rasmi 1",
@@ -34278,13 +34278,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "raṃsa",
+    "raṁsa",
     "adj",
     "having rays; with light; with radiance",
     "✔"
    ],
    [
-    "raṃsi",
+    "raṁsi",
     "fem",
     "light; ray; beam",
     "✔"
@@ -34301,7 +34301,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "raṃsī",
+    "raṁsī",
     "adj",
     "with light; having rays",
     "◑"
@@ -34688,16 +34688,16 @@ var family_word_json = {
   ],
   "count": 4
  },
- "vaṭaṃsa": {
+ "vaṭaṁsa": {
   "data": [
    [
-    "vaṭaṃsa",
+    "vaṭaṁsa",
     "masc",
     "name of a palace; lit. wreath; garland; flower ornament",
     "✔"
    ],
    [
-    "vaṭaṃsaka",
+    "vaṭaṁsaka",
     "adj",
     "wreathed; garlanded; with flowers",
     "✔"
@@ -34913,7 +34913,7 @@ var family_word_json = {
    [
     "valāha 1",
     "masc",
-    "in reference to SN32 Valāhakasaṃyutta; lit. cloud",
+    "in reference to SN32 Valāhakasaṁyutta; lit. cloud",
     "✔"
    ],
    [
@@ -35012,46 +35012,46 @@ var family_word_json = {
   ],
   "count": 3
  },
- "vaṃsa": {
+ "vaṁsa": {
   "data": [
    [
-    "vaṃsa 1",
+    "vaṁsa 1",
     "masc",
     "bamboo",
     "✔"
    ],
    [
-    "vaṃsa 2",
+    "vaṁsa 2",
     "masc",
     "acrobatics; (comm) playing with a raised bamboo pole; lit. bamboo",
     "✔"
    ],
    [
-    "vaṃsa 3",
+    "vaṁsa 3",
     "masc",
     "lineage; heritage; family tree; lit. bamboo",
     "✔"
    ],
    [
-    "vaṃsa 4",
+    "vaṁsa 4",
     "masc",
     "bamboo flute",
     "✘"
    ],
    [
-    "vaṃsa 5",
+    "vaṁsa 5",
     "masc",
     "ridge-pole of roof (?)",
     "✘"
    ],
    [
-    "vaṃsā",
+    "vaṁsā",
     "masc",
-    "name of a people; Vaṃsas",
+    "name of a people; Vaṁsas",
     "✔"
    ],
    [
-    "vaṃsika",
+    "vaṁsika",
     "adj",
     "belonging to a clan or race",
     "✘"
@@ -35475,7 +35475,7 @@ var family_word_json = {
     "◑"
    ],
    [
-    "visuṃ",
+    "visuṁ",
     "ind",
     "separately; singly; individually",
     "✔"
@@ -35643,7 +35643,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "vehāyasaṃ",
+    "vehāyasaṁ",
     "ind",
     "in the air; by air",
     "◑"
@@ -35661,7 +35661,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "vehāsaṃ",
+    "vehāsaṁ",
     "ind",
     "in the air; in the sky",
     "✔"
@@ -36221,7 +36221,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "saṇhikaṃ",
+    "saṇhikaṁ",
     "ind",
     "softly; gently; carefully",
     "✔"
@@ -36250,7 +36250,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sattakkhattuṃ",
+    "sattakkhattuṁ",
     "ind",
     "seven times",
     "✔"
@@ -36262,13 +36262,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sattannaṃ 1",
+    "sattannaṁ 1",
     "card",
     "to seven; for the seven",
     "✔"
    ],
    [
-    "sattannaṃ 2",
+    "sattannaṁ 2",
     "card",
     "of seven",
     "✔"
@@ -36392,7 +36392,7 @@ var family_word_json = {
     "✘"
    ],
    [
-    "sabbatthakaṃ",
+    "sabbatthakaṁ",
     "ind",
     "everywhere; in every single place",
     "✔"
@@ -36452,7 +36452,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sabbaṃ",
+    "sabbaṁ",
     "ind",
     "completely; altogether",
     "✔"
@@ -36464,7 +36464,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sabbāsaṃ",
+    "sabbāsaṁ",
     "pron",
     "of all",
     "✔"
@@ -36476,13 +36476,13 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sabbesaṃ 1",
+    "sabbesaṁ 1",
     "pron",
     "for all; for everyone",
     "✔"
    ],
    [
-    "sabbesaṃ 2",
+    "sabbesaṁ 2",
     "pron",
     "of all",
     "✔"
@@ -36570,7 +36570,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "samīpaṃ",
+    "samīpaṁ",
     "ind",
     "to; near (to)",
     "✔"
@@ -36684,31 +36684,31 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sarīṃsapa",
+    "sarīṁsapa",
     "masc",
     "snake; reptile; creepy crawly",
     "✔"
    ],
    [
-    "siriṃsapa 1",
+    "siriṁsapa 1",
     "masc",
     "snake; reptile; creepy crawly",
     "✔"
    ],
    [
-    "siriṃsapa 2",
+    "siriṁsapa 2",
     "nt",
     "snake; reptile; creepy crawly",
     "✔"
    ],
    [
-    "siriṃsapa 3",
+    "siriṁsapa 3",
     "masc",
     "artisan",
     "✘"
    ],
    [
-    "siriṃsapatta",
+    "siriṁsapatta",
     "nt",
     "fact of being a snake; fact of being a creepy crawly; lit. snake state",
     "✔"
@@ -36917,7 +36917,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "sahassakkhattuṃ",
+    "sahassakkhattuṁ",
     "ind",
     "one thousand times",
     "✔"
@@ -37668,10 +37668,10 @@ var family_word_json = {
   ],
   "count": 10
  },
- "siṃsapā": {
+ "siṁsapā": {
   "data": [
    [
-    "siṃsapā",
+    "siṁsapā",
     "fem",
     "Simsapa tree; Dalbergia tree; Indian Rosewood",
     "✔"
@@ -38061,7 +38061,7 @@ var family_word_json = {
     "✔"
    ],
    [
-    "suṃsumāra",
+    "suṁsumāra",
     "masc",
     "crocodile; alligator; lit. child killer",
     "✔"
@@ -38438,16 +38438,16 @@ var family_word_json = {
   ],
   "count": 9
  },
- "haṃsa": {
+ "haṁsa": {
   "data": [
    [
-    "haṃsa 1.1",
+    "haṁsa 1.1",
     "masc",
     "swan; goose; flamingo; water bird",
     "✔"
    ],
    [
-    "haṃsavatī",
+    "haṁsavatī",
     "fem",
     "name of a mythical city",
     "✘"
@@ -38566,16 +38566,16 @@ var family_word_json = {
   ],
   "count": 5
  },
- "huraṃ": {
+ "huraṁ": {
   "data": [
    [
-    "huraṃ 1",
+    "huraṁ 1",
     "ind",
     "there; in another world",
     "✔"
    ],
    [
-    "huraṃ 2",
+    "huraṁ 2",
     "ind",
     "outside (of); before",
     "✔"

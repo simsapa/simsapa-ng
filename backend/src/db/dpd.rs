@@ -716,6 +716,157 @@ pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf
 }
 
 #[derive(QueryableByName)]
+struct SuttaInfoRow {
+    #[diesel(sql_type = Text)]
+    dpd_code: String,
+    #[diesel(sql_type = Text)]
+    sc_code: String,
+    #[diesel(sql_type = Text)]
+    sc_file_path: String,
+}
+
+#[derive(QueryableByName)]
+struct DictWordHtmlRow {
+    #[diesel(sql_type = Integer)]
+    id: i32,
+    #[diesel(sql_type = Text)]
+    definition_html: String,
+    #[diesel(sql_type = Text)]
+    definition_plain: String,
+}
+
+/// Convert the DPD example sutta references, e.g.:
+///
+/// ```
+/// <p class="sutta">SNP48 purābhedasuttaṁ<br>aṭṭhakavaggo 10</p>
+/// <p class="sutta">AN6.61 majjhesuttaṁ</p>
+/// ```
+///
+/// in the imported DPD `dict_words.definition_html` into internal ssp:// sutta
+/// links the app can open directly.
+///
+/// ```
+/// <a href="ssp://suttas/an6.61/pli/ms" class="sutta-link">AN 6.61</a>
+/// ```
+///
+/// `dpd_db_path` points at the source DPD database, whose `sutta_info` table
+/// maps DPD source codes (`dpd_code`) to SuttaCentral codes (`sc_code`) and
+/// file paths (`sc_file_path`, which encodes the `lang/author` segment, e.g.
+/// `root/pli/ms`). `dict_db_path` points at the dictionaries database holding
+/// the imported DPD `dict_words` rows.
+///
+/// Intended to run after the DPD Stardict import but *before* the dictionaries
+/// FTS5 indexes are created, so the bulk updates do not fire the FTS sync
+/// triggers. `definition_html` keeps the `<p class=sutta>` paragraphs (now as
+/// ssp:// links for navigation), but `definition_plain` — which feeds the
+/// fulltext / contains search — is recomputed with those paragraphs stripped so
+/// the Pāli sutta names in examples don't pollute search hits.
+pub fn convert_dpd_example_sutta_links(dict_db_path: &Path, dpd_db_path: &Path) -> Result<()> {
+    info("convert_dpd_example_sutta_links()");
+
+    // 1. Build the DPD source-code -> (uid_path, display) map from sutta_info.
+    let dpd_abs = fs::canonicalize(dpd_db_path).unwrap_or_else(|_| dpd_db_path.to_path_buf());
+    let dpd_url = dpd_abs
+        .to_str()
+        .context("dpd db path is not valid UTF-8")?
+        .to_string();
+    let mut dpd_conn = SqliteConnection::establish(&dpd_url)
+        .with_context(|| format!("Failed to connect to {}", dpd_url))?;
+
+    let rows: Vec<SuttaInfoRow> = sql_query(
+        "SELECT dpd_code, sc_code, sc_file_path FROM sutta_info \
+         WHERE dpd_code != '' AND sc_code != ''",
+    )
+    .load(&mut dpd_conn)
+    .context("Failed to load sutta_info")?;
+
+    // sc_file_path looks like "sc_bilara_data/root/pli/ms/sutta/..." — pull the
+    // lang/author segment after "root/". Default to pli/ms when absent.
+    let re_path = regex::Regex::new(r"root/([^/]+)/([^/]+)/").unwrap();
+
+    let mut sutta_map: HashMap<String, (String, String)> = HashMap::new();
+    for r in rows {
+        let (lang, author) = match re_path.captures(&r.sc_file_path) {
+            Some(c) => (c[1].to_string(), c[2].to_string()),
+            None => ("pli".to_string(), "ms".to_string()),
+        };
+        let uid_path = format!("{}/{}/{}", r.sc_code.to_lowercase(), lang, author);
+        let display = crate::helpers::dpd_sutta_code_display(&r.sc_code);
+        sutta_map
+            .entry(r.dpd_code.to_uppercase())
+            .or_insert((uid_path, display));
+    }
+    info(&format!("Loaded {} DPD sutta_info code mappings", sutta_map.len()));
+
+    // 2. Rewrite DPD dict_words definition_html in batches.
+    let dict_abs = fs::canonicalize(dict_db_path).unwrap_or_else(|_| dict_db_path.to_path_buf());
+    let dict_url = dict_abs
+        .to_str()
+        .context("dictionaries db path is not valid UTF-8")?
+        .to_string();
+    let mut dict_conn = SqliteConnection::establish(&dict_url)
+        .with_context(|| format!("Failed to connect to {}", dict_url))?;
+
+    let batch_size: i32 = 2000;
+    let mut last_id: i32 = 0;
+    let mut converted_total: u64 = 0;
+
+    loop {
+        let batch: Vec<DictWordHtmlRow> = sql_query(
+            "SELECT id, definition_html, COALESCE(definition_plain, '') AS definition_plain FROM dict_words \
+             WHERE dict_label = 'dpd' AND id > ? AND definition_html LIKE '%class=sutta%' \
+             ORDER BY id LIMIT ?",
+        )
+        .bind::<Integer, _>(last_id)
+        .bind::<Integer, _>(batch_size)
+        .load(&mut dict_conn)
+        .context("Failed to load dict_words batch")?;
+
+        if batch.is_empty() {
+            break;
+        }
+        last_id = batch.last().unwrap().id;
+
+        let converted_batch = dict_conn.transaction::<u64, diesel::result::Error, _>(|conn| {
+            let mut n = 0u64;
+            for row in &batch {
+                let new_html =
+                    crate::helpers::dpd_convert_example_sutta_refs(&row.definition_html, &sutta_map);
+
+                // Recompute the plain text from the html with the sutta-source
+                // reference paragraphs stripped, so their Pāli names don't leak
+                // into the fulltext / contains search field.
+                let stripped_html =
+                    crate::helpers::dpd_strip_sutta_ref_paragraphs(&row.definition_html);
+                let new_plain = crate::helpers::compact_rich_text(&stripped_html);
+
+                let html_changed = new_html != row.definition_html;
+                let plain_changed = new_plain != row.definition_plain;
+                if html_changed || plain_changed {
+                    sql_query("UPDATE dict_words SET definition_html = ?, definition_plain = ? WHERE id = ?")
+                        .bind::<Text, _>(&new_html)
+                        .bind::<Text, _>(&new_plain)
+                        .bind::<Integer, _>(row.id)
+                        .execute(conn)?;
+                    n += 1;
+                }
+            }
+            Ok(n)
+        })
+        .context("Failed to update dict_words batch")?;
+
+        converted_total += converted_batch;
+    }
+
+    info(&format!(
+        "Converted sutta example links in {} dpd dict_words rows",
+        converted_total
+    ));
+
+    Ok(())
+}
+
+#[derive(QueryableByName)]
 struct BoldDefColInfo {
     #[diesel(sql_type = Text)]
     name: String,

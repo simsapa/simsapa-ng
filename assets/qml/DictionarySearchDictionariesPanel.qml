@@ -95,7 +95,7 @@ ColumnLayout {
 
     Connections {
         target: dict_manager
-        function onImportFinished(dictionary_id: int, label: string) {
+        function onImportFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int) {
             root.refresh_state();
         }
     }

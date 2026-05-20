@@ -657,7 +657,7 @@ impl<'a> SearchQueryTask<'a> {
             c: i64,
         }
         let count_sql = format!(
-            "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id {}",
+            "SELECT COUNT(*) AS c FROM suttas_fts f JOIN suttas s ON f.rowid = s.id {}",
             where_clause
         );
         let total: i64 = if apply_lang_filter {
@@ -679,7 +679,7 @@ impl<'a> SearchQueryTask<'a> {
 
         // --- Page fetch ---
         let select_sql = format!(
-            "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.sutta_id = s.id {} ORDER BY s.id LIMIT ? OFFSET ?",
+            "SELECT s.* FROM suttas_fts f JOIN suttas s ON f.rowid = s.id {} ORDER BY s.id LIMIT ? OFFSET ?",
             where_clause
         );
         let offset = (page_num as i64).saturating_mul(page_len as i64);
@@ -887,10 +887,10 @@ impl<'a> SearchQueryTask<'a> {
 
                 let fts_query = String::from(
                     r#"
-                    SELECT headword_id
+                    SELECT rowid AS headword_id
                     FROM dpd_headwords_fts
                     WHERE lemma_1 LIKE ?
-                    ORDER BY headword_id
+                    ORDER BY rowid
                     LIMIT ?
                     "#
                 );
@@ -967,7 +967,7 @@ impl<'a> SearchQueryTask<'a> {
 
                 let mut sql = String::from(
                     "SELECT d.* FROM dict_words d \
-                     JOIN dict_words_fts f ON f.dict_word_id = d.id \
+                     JOIN dict_words_fts f ON f.rowid = d.id \
                      WHERE (f.word LIKE ? OR f.definition_plain LIKE ?)"
                 );
 
@@ -1178,7 +1178,7 @@ impl<'a> SearchQueryTask<'a> {
                 r#"
                 SELECT COUNT(*) AS c
                 FROM book_spine_items_fts f
-                JOIN book_spine_items b ON f.spine_item_id = b.id
+                JOIN book_spine_items b ON f.rowid = b.id
                 WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 "#
             )
@@ -1193,7 +1193,7 @@ impl<'a> SearchQueryTask<'a> {
                 r#"
                 SELECT COUNT(*) AS c
                 FROM book_spine_items_fts f
-                JOIN book_spine_items b ON f.spine_item_id = b.id
+                JOIN book_spine_items b ON f.rowid = b.id
                 WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 "#
             )
@@ -1211,7 +1211,7 @@ impl<'a> SearchQueryTask<'a> {
                 r#"
                 SELECT b.*
                 FROM book_spine_items_fts f
-                JOIN book_spine_items b ON f.spine_item_id = b.id
+                JOIN book_spine_items b ON f.rowid = b.id
                 WHERE f.content_plain LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ? OFFSET ?
@@ -1229,7 +1229,7 @@ impl<'a> SearchQueryTask<'a> {
                 r#"
                 SELECT b.*
                 FROM book_spine_items_fts f
-                JOIN book_spine_items b ON f.spine_item_id = b.id
+                JOIN book_spine_items b ON f.rowid = b.id
                 WHERE f.content_plain LIKE ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ? OFFSET ?
@@ -1300,7 +1300,7 @@ impl<'a> SearchQueryTask<'a> {
         let count_sql = r#"
             SELECT COUNT(*) AS c
             FROM bold_definitions_bold_fts f
-            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            JOIN bold_definitions bd ON bd.id = f.rowid
             WHERE (f.bold LIKE ? OR f.bold_ascii LIKE ?)
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
@@ -1320,7 +1320,7 @@ impl<'a> SearchQueryTask<'a> {
         let sql = r#"
             SELECT bd.*
             FROM bold_definitions_bold_fts f
-            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            JOIN bold_definitions bd ON bd.id = f.rowid
             WHERE (f.bold LIKE ? OR f.bold_ascii LIKE ?)
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
@@ -1388,7 +1388,7 @@ impl<'a> SearchQueryTask<'a> {
         let count_sql = r#"
             SELECT COUNT(*) AS c
             FROM bold_definitions_fts f
-            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            JOIN bold_definitions bd ON bd.id = f.rowid
             WHERE f.commentary_plain LIKE ?
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
@@ -1407,7 +1407,7 @@ impl<'a> SearchQueryTask<'a> {
         let sql = r#"
             SELECT bd.*
             FROM bold_definitions_fts f
-            JOIN bold_definitions bd ON bd.id = f.bold_definitions_id
+            JOIN bold_definitions bd ON bd.id = f.rowid
             WHERE f.commentary_plain LIKE ?
               AND bd.uid LIKE ?
               AND bd.uid LIKE ?
@@ -1627,7 +1627,7 @@ impl<'a> SearchQueryTask<'a> {
                 r#"
                 SELECT b.*
                 FROM book_spine_items_fts f
-                JOIN book_spine_items b ON f.spine_item_id = b.id
+                JOIN book_spine_items b ON f.rowid = b.id
                 WHERE f.title LIKE ? AND f.language = ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ?
@@ -1644,7 +1644,7 @@ impl<'a> SearchQueryTask<'a> {
                 r#"
                 SELECT b.*
                 FROM book_spine_items_fts f
-                JOIN book_spine_items b ON f.spine_item_id = b.id
+                JOIN book_spine_items b ON f.rowid = b.id
                 WHERE f.title LIKE ? AND b.spine_item_uid LIKE ? AND b.spine_item_uid LIKE ?
                 ORDER BY b.id
                 LIMIT ?
@@ -1776,10 +1776,10 @@ impl<'a> SearchQueryTask<'a> {
 
             let fts_query = String::from(
                 r#"
-                SELECT headword_id
+                SELECT rowid AS headword_id
                 FROM dpd_headwords_fts
                 WHERE lemma_1 LIKE ?
-                ORDER BY headword_id
+                ORDER BY rowid
                 LIMIT ?
                 "#
             );
@@ -1843,7 +1843,7 @@ impl<'a> SearchQueryTask<'a> {
 
             let mut sql = String::from(
                 "SELECT dw.* FROM dict_words dw \
-                 JOIN dict_words_fts f ON f.dict_word_id = dw.id \
+                 JOIN dict_words_fts f ON f.rowid = dw.id \
                  WHERE f.word LIKE ?"
             );
 

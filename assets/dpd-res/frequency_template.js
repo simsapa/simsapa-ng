@@ -182,7 +182,7 @@ function makeFrequency(data) {
             <td class="gr${data.ScGrad[6]}">${data.ScFreq[6]}</td>
         </tr>
         <tr>
-            <th>Saṃyutta</th>
+            <th>Saṁyutta</th>
             <!-- CST -->
             <td class="gr${data.CstGrad[7]}">${data.CstFreq[7]}</td>
             <td class="gr${data.CstGrad[26]}">${data.CstFreq[26]}</td>
@@ -416,7 +416,7 @@ function makeFrequency(data) {
             <td class="gr${data.CstGrad[42]}">${data.CstFreq[42]}</td>
         </tr>
         <tr>
-            <th>Vaṃsa</th>
+            <th>Vaṁsa</th>
             <td class="void"></td>
             <td class="void"></td>
             <td class="gr${data.CstGrad[43]}">${data.CstFreq[43]}</td>
