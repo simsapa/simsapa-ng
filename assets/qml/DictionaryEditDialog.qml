@@ -13,8 +13,10 @@ Dialog {
     property string original_label: ""
     property int point_size: 12
 
-    signal renamed(int dictionary_id, string new_label)
-    signal failed(string message)
+    // Emitted when the user confirms a valid rename. The parent window
+    // switches to the rename progress frame and drives the bridge call so
+    // the result arrives via renameFinished / renameFailed signals.
+    signal rename_requested(int dictionary_id, string old_label, string new_label)
 
     title: "Edit Dictionary"
     modal: true
@@ -110,11 +112,6 @@ Dialog {
         if (root.label_status !== "available") {
             return;
         }
-        const result = dict_manager.rename_label(root.dictionary_id, v);
-        if (result === "ok") {
-            root.renamed(root.dictionary_id, v);
-        } else {
-            root.failed(result);
-        }
+        root.rename_requested(root.dictionary_id, root.original_label, v);
     }
 }

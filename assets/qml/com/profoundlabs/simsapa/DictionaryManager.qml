@@ -6,6 +6,10 @@ Item {
         return "ok";
     }
 
+    function abort_import() {
+        console.log("abort_import()");
+    }
+
     function delete_dictionary(dictionary_id: int): string {
         console.log("delete_dictionary():", dictionary_id);
         return "ok";
@@ -89,8 +93,13 @@ Item {
     }
 
     signal importProgress(stage: string, done: int, total: int);
-    signal importFinished(dictionary_id: int, label: string);
+    signal importFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int);
     signal importFailed(message: string);
+    signal importCancelled(message: string, inserted_count: int);
+    signal deleteFinished(dictionary_id: int, label: string, removed_count: int, elapsed_ms: int);
+    signal deleteFailed(message: string);
+    signal renameFinished(dictionary_id: int, old_label: string, new_label: string, elapsed_ms: int);
+    signal renameFailed(message: string);
     signal reconcileProgress(stage: string, done: int, total: int);
     signal reconcileFinished();
 }

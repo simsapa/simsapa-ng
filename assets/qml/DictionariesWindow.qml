@@ -43,6 +43,13 @@ ApplicationWindow {
     property int import_total: 0
     property bool import_indeterminate: true
 
+    // Replace = delete-then-import. The import is held here while the
+    // async delete runs, then started in onDeleteFinished.
+    property bool replace_pending: false
+    property string pending_zip_path: ""
+    property string pending_label: ""
+    property string pending_lang: ""
+
     ThemeHelper {
         id: theme_helper
         target_window: root
@@ -76,6 +83,22 @@ ApplicationWindow {
         }
     }
 
+    // Kick off an import: reset progress state, switch to the import
+    // progress frame, and call the bridge. Quick-fail routes to Idx 5.
+    function start_import(zip_path: string, label: string, lang: string) {
+        root.op_label = label;
+        root.import_stage = "";
+        root.import_done = 0;
+        root.import_total = 0;
+        root.import_indeterminate = true;
+        views_stack.currentIndex = 2;
+        const result = dict_manager.import_zip(zip_path, label, lang);
+        if (result !== "ok") {
+            root.error_message = "Import could not start: " + result;
+            views_stack.currentIndex = 5;
+        }
+    }
+
     function elapsed_seconds_text(ms: int): string {
         const s = Math.max(0, ms) / 1000.0;
         return s.toFixed(1) + "s";
@@ -84,20 +107,27 @@ ApplicationWindow {
     Connections {
         target: dict_manager
 
-        // TODO §5/§6: replace the legacy import / rename paths below with
-        // the new Idx 2 / Idx 3 progress frames. For now the old
-        // import/rename signals still drive the legacy import_dialog +
-        // edit_dialog flow so this PRD can land the delete cutover first.
-
         function onImportProgress(stage: string, done: int, total: int) {
-            // Legacy: surfaced via the import_dialog's own progress strip
-            // until §5 wires the new Idx 2 frame.
+            root.import_stage = stage;
+            root.import_done = done;
+            root.import_total = total;
+            // Determinate only once the backend reports a positive total for
+            // the inserting-words stage; Extracting/Parsing carry total == 0.
+            root.import_indeterminate = (total <= 0);
         }
 
-        function onImportFinished(dictionary_id: int, label: string) {
+        function onImportFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int) {
             root.op_label = label;
             root.op_kind = "import";
-            root.op_count = 0;
+            root.op_count = inserted_count;
+            root.op_elapsed_ms = elapsed_ms;
+            views_stack.currentIndex = 4;
+            root.refresh_list();
+        }
+
+        function onImportCancelled(message: string, inserted_count: int) {
+            root.op_kind = "import_aborted";
+            root.op_count = inserted_count;
             root.op_elapsed_ms = 0;
             views_stack.currentIndex = 4;
             root.refresh_list();
@@ -109,6 +139,14 @@ ApplicationWindow {
         }
 
         function onDeleteFinished(dictionary_id: int, label: string, removed_count: int, elapsed_ms: int) {
+            // Replace flow: the delete was the first half of a delete-then-import.
+            // Don't show the delete summary — chain straight into the import.
+            if (root.replace_pending) {
+                root.replace_pending = false;
+                root.refresh_list();
+                root.start_import(root.pending_zip_path, root.pending_label, root.pending_lang);
+                return;
+            }
             root.op_label = label;
             root.op_kind = "delete";
             root.op_count = removed_count;
@@ -118,7 +156,23 @@ ApplicationWindow {
         }
 
         function onDeleteFailed(message: string) {
+            root.replace_pending = false;
             root.error_message = "Delete failed: " + message;
+            views_stack.currentIndex = 5;
+            root.refresh_list();
+        }
+
+        function onRenameFinished(dictionary_id: int, old_label: string, new_label: string, elapsed_ms: int) {
+            root.op_label = new_label;
+            root.op_kind = "rename";
+            root.op_count = 0;
+            root.op_elapsed_ms = elapsed_ms;
+            views_stack.currentIndex = 4;
+            root.refresh_list();
+        }
+
+        function onRenameFailed(message: string) {
+            root.error_message = "Rename failed: " + message;
             views_stack.currentIndex = 5;
             root.refresh_list();
         }
@@ -149,31 +203,24 @@ ApplicationWindow {
         id: import_dialog
         point_size: root.pointSize
 
-        // TODO §5: route through views_stack Idx 2 instead of the legacy path.
         onImport_requested: function(zip_path, label, lang) {
-            root.op_label = label;
-            const result = dict_manager.import_zip(zip_path, label, lang);
-            if (result !== "ok") {
-                root.error_message = "Import could not start: " + result;
-                views_stack.currentIndex = 5;
-            }
+            root.start_import(zip_path, label, lang);
         }
 
         onReplace_requested: function(existing_id, zip_path, label, lang) {
-            // TODO §5: replace-then-import sequencing needs to wait on
-            // deleteFinished before starting the import.
+            // Replace = delete-then-import. import_user_zip refuses a label
+            // collision, so the existing dictionary must be deleted first.
+            // Delete is async: stash the import and resume in onDeleteFinished.
+            root.replace_pending = true;
+            root.pending_zip_path = zip_path;
+            root.pending_label = label;
+            root.pending_lang = lang;
+            root.op_label = label;
+            views_stack.currentIndex = 1;
             const del_result = dict_manager.delete_dictionary(existing_id);
             if (del_result !== "ok") {
+                root.replace_pending = false;
                 root.error_message = "Could not replace existing dictionary: " + del_result;
-                views_stack.currentIndex = 5;
-                return;
-            }
-            // Note: this is currently racy because delete is async now. §5
-            // will fix this by chaining via signals.
-            root.op_label = label;
-            const result = dict_manager.import_zip(zip_path, label, lang);
-            if (result !== "ok") {
-                root.error_message = "Import could not start: " + result;
                 views_stack.currentIndex = 5;
             }
         }
@@ -187,19 +234,15 @@ ApplicationWindow {
         id: edit_dialog
         point_size: root.pointSize
 
-        // TODO §6: route through views_stack Idx 3 + renameFinished/Failed signals.
-        onRenamed: function(dictionary_id, new_label) {
-            root.op_label = new_label;
-            root.op_kind = "rename";
-            root.op_count = 0;
-            root.op_elapsed_ms = 0;
-            views_stack.currentIndex = 4;
-            root.refresh_list();
-        }
-
-        onFailed: function(message) {
-            root.error_message = "Rename failed: " + message;
-            views_stack.currentIndex = 5;
+        onRename_requested: function(dictionary_id, old_label, new_label) {
+            root.old_label = old_label;
+            root.new_label = new_label;
+            views_stack.currentIndex = 3;
+            const result = dict_manager.rename_label(dictionary_id, new_label);
+            if (result !== "ok") {
+                root.error_message = "Rename could not start: " + result;
+                views_stack.currentIndex = 5;
+            }
         }
     }
 
@@ -348,7 +391,7 @@ ApplicationWindow {
         }
 
         // -------------------------------------------------------------------
-        // Idx 2 — Import progress frame (§5 placeholder)
+        // Idx 2 — Import progress frame
         // -------------------------------------------------------------------
         Frame {
             Layout.fillWidth: true
@@ -376,10 +419,45 @@ ApplicationWindow {
                             horizontalAlignment: Text.AlignHCenter
                         }
 
+                        Label {
+                            text: root.import_stage
+                            font.pointSize: root.pointSize
+                            color: palette.text
+                            visible: root.import_stage.length > 0
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Label {
+                            text: `Inserting words: ${root.import_done} / ${root.import_total}`
+                            font.pointSize: root.pointSize
+                            color: palette.mid
+                            visible: !root.import_indeterminate && root.import_total > 0
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
                         ProgressBar {
                             Layout.fillWidth: true
-                            indeterminate: true
+                            indeterminate: root.import_indeterminate
+                            from: 0
+                            to: root.import_total > 0 ? root.import_total : 1
+                            value: root.import_done
                         }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.margins: 20
+                    Layout.bottomMargin: root.is_mobile ? 60 : 20
+
+                    Item { Layout.fillWidth: true }
+
+                    Button {
+                        text: "Abort"
+                        font.pointSize: root.pointSize
+                        onClicked: dict_manager.abort_import()
                     }
                 }
             }
@@ -463,7 +541,7 @@ ApplicationWindow {
                                     return `Deleted "${root.op_label}" — removed ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nSimsapa will now exit. Start the application again so that the fulltext search index can be updated.`;
                                 }
                                 if (root.op_kind === "import") {
-                                    return `Imported "${root.op_label}".\nSimsapa will now exit. Start the application again so that the dictionary can be indexed for fulltext search.`;
+                                    return `Imported "${root.op_label}" — ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nSimsapa will now exit. Start the application again so that the dictionary can be indexed for fulltext search.`;
                                 }
                                 if (root.op_kind === "import_aborted") {
                                     return `Import aborted — "${root.op_label}" was partially imported (${root.op_count} entries). The remaining entries can be added by re-running the import; already-imported entries will be indexed on next start.\nSimsapa will now exit.`;
