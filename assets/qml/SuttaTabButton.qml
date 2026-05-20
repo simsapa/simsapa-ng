@@ -26,6 +26,19 @@ TabButton {
 
     /* implicitWidth: Math.min(200, Math.max(150, implicitContentWidth + 30)) */
 
+    function elide_long_uid(uid) {
+        if (uid === undefined || uid === null) {
+            return '';
+        }
+        let parts = uid.split('/');
+        if (parts.length === 1) {
+            return uid;
+        }
+        let first = parts[0].length > 20 ? parts[0].substring(0, 20) + '...' : parts[0];
+        let rest = parts.slice(1).join('/');
+        return `${first}/${rest}`;
+    }
+
     contentItem: RowLayout {
         Button {
             id: pin_btn
@@ -41,9 +54,10 @@ TabButton {
             text: {
                 if (control.table_name && control.table_name === "dpd_headwords") {
                     // "25671/dpd" -> "cakka-1/dpd" (spaces replaced with hyphens)
-                    return `${control.sutta_title.replace(/ /g, "-")}/dpd`;
+                    let base_uid = control.sutta_title.replace(/ /g, "-") + "/dpd";
+                    return control.elide_long_uid(base_uid);
                 } else {
-                    return control.item_uid;
+                    return control.elide_long_uid(control.item_uid);
                 }
             }
             elide: Text.ElideRight
