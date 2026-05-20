@@ -168,6 +168,9 @@ fn import_stardict_zip(zip_path: &Path, label: Option<&str>, lang: &str) -> Resu
                     println!("  inserting words: {}/{}", done, total);
                 }
             }
+            StardictImportProgress::Identified { title, total } => {
+                println!("  importing {}, {} total entries...", title, total);
+            }
             StardictImportProgress::Done => println!("  done."),
             StardictImportProgress::Failed { msg } => eprintln!("  failed: {}", msg),
             StardictImportProgress::Aborted { inserted } => {

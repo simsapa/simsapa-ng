@@ -202,6 +202,13 @@ fn stardict_progress_to_signal(p: &StardictImportProgress) -> (String, i32, i32)
         StardictImportProgress::InsertingWords { done, total } => {
             ("Inserting words".to_string(), *done as i32, *total as i32)
         }
+        StardictImportProgress::Identified { title, total } => {
+            // Reuse the (stage, done, total) signature: encode the title into
+            // the stage as `Identified:<title>` and pass the raw index count
+            // as `total`. QML splits on the first ':' and composes the
+            // `(<lang>)` part itself (lang is already known to QML).
+            (format!("Identified:{}", title), 0, *total as i32)
+        }
         StardictImportProgress::Done => ("Done".to_string(), 0, 0),
         StardictImportProgress::Failed { msg } => (format!("Failed: {}", msg), 0, 0),
         StardictImportProgress::Aborted { inserted } => {
@@ -257,14 +264,32 @@ impl qobject::DictionaryManager {
 
             match dictionary_manager_core::import_user_zip(&zip_path, &label, &lang, &on_progress, &cancel) {
                 Ok(outcome) if outcome.cancelled => {
-                    // Abort path: partial rows are intentionally left in the
-                    // DB so the next startup reconcile picks them up.
-                    get_app_data().refresh_dict_source_uid_caches();
                     let inserted = outcome.inserted as i32;
-                    let msg = QString::from(&format!(
-                        "Import aborted — \"{}\" was partially imported ({} entries).",
-                        label, outcome.inserted
-                    ));
+                    let msg = if outcome.inserted == 0 {
+                        // Empty abort: no entries were committed, so remove the
+                        // 0-entry `dictionaries` row that was created before any
+                        // insertion. This MUST run here (after `import_user_zip`
+                        // returned and released `DICT_MGR_LOCK`), NOT inside
+                        // `import_user_zip` — `delete_user_dictionary` re-acquires
+                        // the same `try_lock` and would return BUSY.
+                        if let Err(e) = dictionary_manager_core::delete_user_dictionary(outcome.dictionary_id) {
+                            error(&format!(
+                                "Empty-abort cleanup failed for dictionary id {}: {}",
+                                outcome.dictionary_id, e
+                            ));
+                        }
+                        get_app_data().refresh_dict_source_uid_caches();
+                        format!("Import aborted — \"{}\" was not imported (nothing kept).", label)
+                    } else {
+                        // Partial abort: rows already committed are intentionally
+                        // left in the DB so the next startup reconcile picks them up.
+                        get_app_data().refresh_dict_source_uid_caches();
+                        format!(
+                            "Import aborted — \"{}\" was partially imported ({} entries).",
+                            label, outcome.inserted
+                        )
+                    };
+                    let msg = QString::from(&msg);
                     let _ = qt_thread.queue(move |mut qo| {
                         qo.as_mut().import_cancelled(msg, inserted);
                     });

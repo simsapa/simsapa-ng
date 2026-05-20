@@ -42,6 +42,15 @@ ApplicationWindow {
     property int import_done: 0
     property int import_total: 0
     property bool import_indeterminate: true
+    // Set true the moment the user clicks Abort, for immediate UI feedback
+    // (before the backend's `importCancelled` arrives).
+    property bool import_aborting: false
+    // Detailed dictionary identity, populated from the `Identified:` progress
+    // event once the `.ifo` is parsed. `import_lang` comes from `start_import`
+    // (QML already has it; it does not travel through the signal).
+    property string import_title: ""
+    property string import_lang: ""
+    property int import_entry_total: 0
 
     // Replace = delete-then-import. The import is held here while the
     // async delete runs, then started in onDeleteFinished.
@@ -91,6 +100,10 @@ ApplicationWindow {
         root.import_done = 0;
         root.import_total = 0;
         root.import_indeterminate = true;
+        root.import_aborting = false;
+        root.import_title = "";
+        root.import_lang = lang;
+        root.import_entry_total = 0;
         views_stack.currentIndex = 2;
         const result = dict_manager.import_zip(zip_path, label, lang);
         if (result !== "ok") {
@@ -108,6 +121,20 @@ ApplicationWindow {
         target: dict_manager
 
         function onImportProgress(stage: string, done: int, total: int) {
+            // Once the user has clicked Abort, keep the "Aborting…" state and
+            // ignore any in-flight progress ticks until `importCancelled`.
+            if (root.import_aborting) {
+                return;
+            }
+            // The `Identified:<title>` stage carries the dictionary's full
+            // identity (title in the stage text, raw index count in `total`).
+            // Capture it for the detailed progress label but don't treat it
+            // as a determinate inserting-words tick.
+            if (stage.indexOf("Identified:") === 0) {
+                root.import_title = stage.substring("Identified:".length);
+                root.import_entry_total = total;
+                return;
+            }
             root.import_stage = stage;
             root.import_done = done;
             root.import_total = total;
@@ -410,7 +437,18 @@ ApplicationWindow {
                         spacing: 16
 
                         Label {
-                            text: `Importing "${root.op_label}"…`
+                            // Once the dictionary identity is known, show the
+                            // detailed form matching the backend log line:
+                            // `Importing <title> (<lang>), <N> total entries…`.
+                            // Fall back to the bare label during
+                            // Extracting/Parsing before the detail arrives.
+                            text: {
+                                if (root.import_title !== "") {
+                                    const lang_part = root.import_lang !== "" ? ` (${root.import_lang})` : "";
+                                    return `Importing ${root.import_title}${lang_part}, ${root.import_entry_total} total entries…`;
+                                }
+                                return `Importing "${root.op_label}"…`;
+                            }
                             font.pointSize: root.largePointSize
                             font.bold: true
                             wrapMode: Text.WordWrap
@@ -457,7 +495,17 @@ ApplicationWindow {
                     Button {
                         text: "Abort"
                         font.pointSize: root.pointSize
-                        onClicked: dict_manager.abort_import()
+                        enabled: !root.import_aborting
+                        onClicked: {
+                            // Immediate visual feedback at click time, before
+                            // the backend's `importCancelled` arrives: switch
+                            // to an indeterminate "Aborting…" state and disable
+                            // this button.
+                            root.import_aborting = true;
+                            root.import_stage = "Aborting…";
+                            root.import_indeterminate = true;
+                            dict_manager.abort_import();
+                        }
                     }
 
                     Item { Layout.fillWidth: true }
@@ -546,6 +594,11 @@ ApplicationWindow {
                                     return `Imported "${root.op_label}" — ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nSimsapa will now exit. Start the application again so that the dictionary can be indexed for fulltext search.`;
                                 }
                                 if (root.op_kind === "import_aborted") {
+                                    if (root.op_count === 0) {
+                                        // Empty abort: the backend removed the
+                                        // 0-entry row, so nothing was kept.
+                                        return `Import aborted — "${root.op_label}" was not imported.`;
+                                    }
                                     return `Import aborted — "${root.op_label}" was partially imported (${root.op_count} entries). The remaining entries can be added by re-running the import; already-imported entries will be indexed on next start.\nSimsapa will now exit.`;
                                 }
                                 if (root.op_kind === "rename") {
@@ -570,9 +623,22 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
 
                     Button {
-                        text: "Quit"
+                        // An empty abort changed nothing in the DB, so no
+                        // restart is needed — offer "OK" back to the list.
+                        // All other summaries (import/delete/rename, and a
+                        // partial abort) need a re-index on next start, so
+                        // they quit.
+                        readonly property bool is_empty_abort: root.op_kind === "import_aborted" && root.op_count === 0
+                        text: is_empty_abort ? "OK" : "Quit"
                         font.pointSize: root.pointSize
-                        onClicked: Qt.quit()
+                        onClicked: {
+                            if (is_empty_abort) {
+                                root.import_aborting = false;
+                                views_stack.currentIndex = 0;
+                            } else {
+                                Qt.quit();
+                            }
+                        }
                     }
 
                     Item { Layout.fillWidth: true }
