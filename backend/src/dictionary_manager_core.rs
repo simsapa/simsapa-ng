@@ -184,12 +184,105 @@ pub fn import_user_zip(
         ));
     } else {
         info(&format!("import_user_zip: '{}' -> id {}", label, outcome.dictionary_id));
+
+        // 9. Capture any bundled `res/` resources into dict_resources, keyed by
+        //    the new dictionary id (stable across rename). Only on a successful
+        //    import — a cancelled/0-entry import is cleaned up by the bridge.
+        if let Err(e) = capture_stardict_resources(&unzipped_dir, outcome.dictionary_id) {
+            // Non-fatal: the dictionary still imported; resources just won't render.
+            error(&format!("import_user_zip: capturing res/ failed: {}", e));
+        }
     }
 
     // tmp drops here; extracted files are deleted.
     drop(tmp);
 
     Ok(outcome)
+}
+
+/// Guess a resource mime type from its file extension.
+fn guess_resource_mime_type(path: &Path) -> &'static str {
+    let extension = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    match extension.as_str() {
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "svg" => "image/svg+xml",
+        "webp" => "image/webp",
+        "css" => "text/css",
+        "js" => "application/javascript",
+        "woff" | "woff2" => "font/woff",
+        "ttf" => "font/ttf",
+        "otf" => "font/otf",
+        _ => "application/octet-stream",
+    }
+}
+
+/// Detect a `res/` folder inside an extracted StarDict directory and store every
+/// file in it as a `dict_resources` row keyed by `dictionary_id`. The stored
+/// `resource_path` is relative to the `res/` folder (e.g. `mw-gd.css`,
+/// `images/foo.png`), matching the `res/<path>` references in definition HTML.
+///
+/// The stored `definition_html` is NOT rewritten here — URL rewriting is
+/// deferred to render time because the API port can change between runs.
+fn capture_stardict_resources(unzipped_dir: &Path, dictionary_id: i32) -> Result<usize, String> {
+    let res_dir = unzipped_dir.join("res");
+    match res_dir.try_exists() {
+        Ok(true) => {}
+        Ok(false) => return Ok(0),
+        Err(e) => return Err(format!("Cannot access {}: {}", res_dir.display(), e)),
+    }
+
+    let app_data = get_app_data();
+    let mut count = 0usize;
+
+    // Walk the res/ tree depth-first, storing each file with its path relative
+    // to res/.
+    let mut stack = vec![res_dir.clone()];
+    while let Some(dir) = stack.pop() {
+        let entries = std::fs::read_dir(&dir)
+            .map_err(|e| format!("Failed to read {}: {}", dir.display(), e))?;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+                continue;
+            }
+            let rel = match path.strip_prefix(&res_dir) {
+                Ok(r) => r.to_string_lossy().replace('\\', "/"),
+                Err(_) => continue,
+            };
+            let data = match std::fs::read(&path) {
+                Ok(d) => d,
+                Err(e) => {
+                    error(&format!("capture_stardict_resources: read {} failed: {}", path.display(), e));
+                    continue;
+                }
+            };
+            let mime = guess_resource_mime_type(&path);
+            let new_resource = crate::db::dictionaries_models::NewDictResource {
+                dictionary_id,
+                resource_path: &rel,
+                mime_type: Some(mime),
+                content_data: Some(&data),
+            };
+            if let Err(e) = app_data.dbm.dictionaries.create_dict_resource(&new_resource) {
+                error(&format!("capture_stardict_resources: insert {} failed: {}", rel, e));
+                continue;
+            }
+            count += 1;
+        }
+    }
+
+    if count > 0 {
+        info(&format!("capture_stardict_resources: stored {} resource(s) for dict id {}", count, dictionary_id));
+    }
+    Ok(count)
 }
 
 /// Find a StarDict directory inside an extracted archive and return both the
@@ -250,6 +343,16 @@ pub fn delete_user_dictionary(dictionary_id: i32) -> Result<(), String> {
             "Dictionary id {} is not a user-imported dictionary; refusing to delete.",
             dictionary_id
         ))?;
+
+    // Remove the dictionary's stored resources first. The FK is ON DELETE
+    // CASCADE, so deleting the dictionaries row would also clear these, but we
+    // delete explicitly for clarity and so it works regardless of PRAGMA
+    // foreign_keys state.
+    match app_data.dbm.dictionaries.delete_dict_resources(dictionary_id) {
+        Ok(r) if r > 0 => info(&format!("delete_user_dictionary: removed {} resource(s) for '{}'", r, target.label)),
+        Ok(_) => {}
+        Err(e) => error(&format!("delete_user_dictionary: delete_dict_resources failed: {}", e)),
+    }
 
     let n = app_data.dbm.dictionaries.delete_dictionary_by_label(&target.label)
         .map_err(|e| format!("delete_dictionary_by_label failed: {}", e))?;

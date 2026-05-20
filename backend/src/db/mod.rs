@@ -128,6 +128,15 @@ impl DbManager {
         if !dictionaries_exists {
             initialize_dictionaries(&g.paths.dict_database_url)
                 .with_context(|| format!("Failed to initialize database at '{}'", g.paths.dict_database_url))?;
+        } else {
+            // The dictionaries DB is shipped pre-built (migrations applied at
+            // bootstrap), but an already-installed DB may predate a newly-added
+            // migration. Run any pending dictionaries migrations on the existing
+            // DB so schema additions (e.g. dict_resources) are present.
+            let mut dict_conn = SqliteConnection::establish(&g.paths.dict_database_url)
+                .with_context(|| format!("Failed to connect to dictionaries DB '{}'", g.paths.dict_database_url))?;
+            run_dictionaries_migrations(&mut dict_conn)
+                .context("Failed to run pending dictionaries migrations")?;
         }
 
         let appdata = DatabaseHandle::new(&g.paths.appdata_database_url)?;

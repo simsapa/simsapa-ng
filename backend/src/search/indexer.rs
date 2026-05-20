@@ -3,7 +3,8 @@ use std::path::Path;
 
 use anyhow::Result;
 use diesel::prelude::*;
-use tantivy::{doc, Directory, Index, IndexWriter, Term};
+use tantivy::{doc, Directory, DocSet, Index, IndexWriter, Term, TERMINATED};
+use tantivy::schema::IndexRecordOption;
 
 use crate::db::DatabaseHandle;
 use crate::db::appdata_models::Sutta;
@@ -830,19 +831,94 @@ pub fn list_indexed_source_uids_in_dict_index(index_dir: &Path) -> Result<HashSe
                 Ok(i) => i,
                 Err(_) => continue,
             };
+            // Documents are removed with `delete_term` (a tombstone) but the
+            // term itself survives in the term dictionary until a segment merge
+            // garbage-collects it. Enumerating terms alone would therefore keep
+            // reporting a deleted dictionary's `source_uid` forever, so the
+            // startup reconcile would treat it as an orphan on EVERY launch.
+            // Only report a term if at least one of its documents is still
+            // alive (not tombstoned) in this segment.
+            let alive = segment_reader.alive_bitset();
             let mut stream = match inv.terms().stream() {
                 Ok(s) => s,
                 Err(_) => continue,
             };
             while stream.advance() {
                 let key = stream.key();
-                if let Ok(s) = std::str::from_utf8(key)
-                    && !s.is_empty() {
-                        out.insert(s.to_string());
+                let s = match std::str::from_utf8(key) {
+                    Ok(s) if !s.is_empty() => s.to_string(),
+                    _ => continue,
+                };
+                // Cheap skip: already confirmed alive in another segment.
+                if out.contains(&s) {
+                    continue;
+                }
+                let term_info = stream.value();
+                let mut postings = match inv.read_postings_from_terminfo(term_info, IndexRecordOption::Basic) {
+                    Ok(p) => p,
+                    Err(_) => continue,
+                };
+                let mut has_alive = false;
+                let mut doc = postings.doc();
+                while doc != TERMINATED {
+                    let is_alive = alive.map_or(true, |a| a.is_alive(doc));
+                    if is_alive {
+                        has_alive = true;
+                        break;
                     }
+                    doc = postings.advance();
+                }
+                if has_alive {
+                    out.insert(s);
+                }
             }
         }
     }
 
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tantivy::doc;
+
+    /// Regression: a dictionary deleted from the index via `delete_term`
+    /// leaves a tombstone — the term survives in the term dictionary until a
+    /// segment merge. `list_indexed_source_uids_in_dict_index` must NOT report
+    /// such tombstoned-only `source_uid`s, otherwise the startup reconcile
+    /// keeps treating the deleted dictionary as an orphan and pops the indexing
+    /// window on every launch.
+    #[test]
+    fn list_indexed_excludes_tombstoned_source_uids() {
+        let tmp = tempfile::tempdir().expect("tempdir");
+        let index_dir = tmp.path().to_path_buf();
+        let lang_dir = index_dir.join("en");
+        std::fs::create_dir_all(&lang_dir).unwrap();
+
+        let schema = build_dict_schema("en");
+        let source_uid_field = schema.get_field("source_uid").unwrap();
+
+        let mmap = tantivy::directory::MmapDirectory::open(&lang_dir).unwrap();
+        let index = Index::open_or_create(mmap, schema).unwrap();
+        register_tokenizers(&index, "en");
+        {
+            let mut writer: IndexWriter = index.writer(50_000_000).unwrap();
+            writer.add_document(doc!(source_uid_field => "keep_label")).unwrap();
+            writer.add_document(doc!(source_uid_field => "remove_label")).unwrap();
+            writer.commit().unwrap();
+        }
+
+        let before = list_indexed_source_uids_in_dict_index(&index_dir).unwrap();
+        assert!(before.contains("keep_label"), "keep_label should be indexed");
+        assert!(before.contains("remove_label"), "remove_label should be indexed");
+
+        // Tombstone every doc for remove_label (does not remove the term).
+        delete_from_dict_index_by_source_uid(&index_dir, "remove_label").unwrap();
+
+        let after = list_indexed_source_uids_in_dict_index(&index_dir).unwrap();
+        assert!(after.contains("keep_label"), "live label must still be reported");
+        assert!(!after.contains("remove_label"),
+            "tombstoned-only label must NOT be reported (regression: perpetual reconcile popup)");
+    }
 }

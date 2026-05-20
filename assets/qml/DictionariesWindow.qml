@@ -590,7 +590,7 @@ ApplicationWindow {
                         Label {
                             text: {
                                 if (root.op_kind === "delete") {
-                                    return `Deleted "${root.op_label}" — removed ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nSimsapa will now exit. Start the application again so that the fulltext search index can be updated.`;
+                                    return `Deleted "${root.op_label}" — removed ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nYou can delete more dictionaries, or quit now. The fulltext search index will be updated the next time you start Simsapa.`;
                                 }
                                 if (root.op_kind === "import") {
                                     return `Imported "${root.op_label}" — ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nSimsapa will now exit. Start the application again so that the dictionary can be indexed for fulltext search.`;
@@ -625,11 +625,27 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
 
                     Button {
+                        // A delete leaves the app usable — the user may want to
+                        // delete more dictionaries before quitting. Offer a way
+                        // back to the list; the re-index happens on next start.
+                        // (Empty abort uses the single "OK" button below.)
+                        visible: root.op_kind === "delete"
+                        text: "Back to Dictionaries"
+                        font.pointSize: root.pointSize
+                        onClicked: {
+                            views_stack.currentIndex = 0;
+                            root.refresh_list();
+                        }
+                    }
+
+                    Button {
                         // An empty abort changed nothing in the DB, so no
                         // restart is needed — offer "OK" back to the list.
-                        // All other summaries (import/delete/rename, and a
-                        // partial abort) need a re-index on next start, so
-                        // they quit.
+                        // A delete keeps the app running (paired with the
+                        // "Back to Dictionaries" button above), so "Quit" is
+                        // optional. All other summaries (import/rename, and a
+                        // partial abort) need a re-index on next start, so they
+                        // quit.
                         readonly property bool is_empty_abort: root.op_kind === "import_aborted" && root.op_count === 0
                         text: is_empty_abort ? "OK" : "Quit"
                         font.pointSize: root.pointSize
