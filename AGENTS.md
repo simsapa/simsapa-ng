@@ -98,6 +98,47 @@ assets/qml/com/profoundlabs/simsapa/PromptManager.qml
 assets/qml/com/profoundlabs/simsapa/qmldir
 ```
 
+### FTS5 fulltext search tables (scripts in `scripts/`)
+
+The fulltext search tables are FTS5 virtual tables created by the SQL scripts in
+`scripts/` (`appdata-fts5-indexes.sql`, `books-fts5-indexes.sql`,
+`dictionaries-fts5-indexes.sql`, `dpd-fts5-indexes.sql`,
+`dpd-bold-definitions-fts5-indexes.sql`). There is **no Diesel migration** for
+these — the scripts drop and recreate the FTS table + sync triggers, so any
+schema change requires a **manual re-bootstrap** of the affected DB (run the
+script again). The scripts are run from the bootstrap code in `cli/src/`.
+
+**IMPORTANT — store the source row id as the FTS5 `rowid`, never as an
+`UNINDEXED` column.** FTS5 has no secondary indexes, so a lookup like
+`WHERE dict_word_id = ?` against an `UNINDEXED` id column is a **full table
+scan**. The `AFTER DELETE` / `AFTER UPDATE` sync triggers run exactly that
+lookup once per affected source row, so a cascade delete of an N-row dictionary
+became N full scans of the entire FTS table — deleting a 2000-entry dictionary
+took ~3 minutes (measured 168 s) against a 198k-row FTS, and ~8 minutes in-app.
+
+The fix (applied to all FTS scripts) is to carry the source `id` as the FTS5
+`rowid`, which makes the trigger lookups O(log n):
+
+```sql
+-- ✅ GOOD: id is the FTS5 rowid (no UNINDEXED id column)
+CREATE VIRTUAL TABLE dict_words_fts USING fts5(
+    language UNINDEXED, dict_label UNINDEXED, word, definition_plain,
+    tokenize='trigram', detail='none'
+);
+INSERT INTO dict_words_fts (rowid, language, dict_label, word, definition_plain)
+SELECT id, language, dict_label, word, definition_plain FROM dict_words ...;
+
+CREATE TRIGGER dict_words_fts_delete AFTER DELETE ON dict_words
+BEGIN
+    DELETE FROM dict_words_fts WHERE rowid = OLD.id;  -- O(log n), not a full scan
+END;
+```
+
+Consequences for query code (`backend/src/query_task.rs`): join on the rowid
+(`JOIN dict_words_fts f ON f.rowid = dict_words.id`) and project it with an
+alias when needed (`SELECT rowid AS headword_id`). When adding a new FTS5 table
+or query, follow this convention — do not reintroduce an `UNINDEXED` id column.
+
 ## Testing with the Database
 
 **SIMSAPA_DIR** (the runtime data directory) is at:

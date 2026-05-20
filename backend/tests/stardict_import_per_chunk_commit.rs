@@ -95,11 +95,12 @@ fn abort_keeps_partial_rows_in_db() {
     let total_entries: usize = 2500;
 
     // Use a unique label per run. We INTENTIONALLY do not clean up at the
-    // end of the test: deleting 2000 dict_words rows fires the FTS5
-    // delete trigger per row, and `dict_word_id` is UNINDEXED in
-    // `dict_words_fts` — so each per-row delete is a full FTS scan.
-    // That's the same reason production aborts leave the partial dict
-    // for the next reconcile to pick up rather than rolling it back.
+    // end of the test: this mirrors production abort semantics, where the
+    // partial dict is left for the next reconcile to pick up rather than
+    // rolled back. (Cleanup is now cheap — the `dict_words_fts` delete
+    // trigger uses the FTS5 rowid, so per-row deletes are O(log n) rather
+    // than the full FTS scans they were when `dict_word_id` was an
+    // UNINDEXED column.)
     let millis = SystemTime::now()
         .duration_since(UNIX_EPOCH).unwrap().as_millis();
     let label = format!("ssp_test_abort_partial_{}", millis);

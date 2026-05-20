@@ -110,6 +110,36 @@ and mobile, without changing what the operations themselves do.
    `restart_dialog`). The summary frame's button is `Quit` (matching
    `DownloadAppdataWindow.qml`'s completion screen) and MUST call `Qt.quit()`.
 
+### 4.2a Delete performance — FTS5 `rowid` requirement (added 2026-05-20)
+
+1. The delete frame's indeterminate progress bar (§4.2) assumes the cascading
+   `DELETE FROM dictionaries WHERE id = ?` is *fast* (a few seconds at most). It
+   was not: a 2000-entry dictionary took ~8 minutes in-app (~168 s measured in
+   raw `sqlite3`) **before** any worker-thread change. Moving delete to a worker
+   thread (§4.2.3) only stops the UI freezing — it does NOT make the operation
+   fast. This requirement fixes the underlying slowness.
+2. **Root cause.** The FTS5 sync trigger `dict_words_fts_delete` runs
+   `DELETE FROM dict_words_fts WHERE dict_word_id = OLD.id` once per cascade-deleted
+   `dict_words` row. `dict_word_id` was an `UNINDEXED` FTS5 column, and FTS5 has
+   no secondary indexes, so each lookup is a **full table scan** of the entire
+   `dict_words_fts` (~198k rows). Deleting N rows ⇒ N full scans.
+3. **Fix.** Carry the source `dict_words.id` as the FTS5 **`rowid`** instead of a
+   separate `UNINDEXED dict_word_id` column, making the trigger's per-row lookup
+   O(log n). After this change the same 2000-entry delete completes in **under a
+   second** against a 100k+ FTS (validated on a synthetic DB).
+4. **Scope.** The same `UNINDEXED`-id anti-pattern existed in **every** FTS5
+   script under `scripts/` (`suttas_fts`, `book_spine_items_fts`,
+   `dpd_headwords_fts`, `bold_definitions_fts`, `bold_definitions_bold_fts`,
+   `dict_words_fts`). All MUST be migrated to the `rowid` convention so the same
+   slowdown cannot recur for sutta / book / DPD edits, and so the codebase has a
+   single consistent FTS5 id convention. Query code in
+   `backend/src/query_task.rs` MUST join on `f.rowid = <src>.id` (and project
+   `rowid AS <id>` where a column is selected).
+5. **Re-bootstrap.** These scripts have no Diesel migration; they drop and
+   recreate the FTS tables + triggers. Applying this change requires a manual
+   re-bootstrap of the affected DBs. The code change (`f.rowid` joins) and the
+   script change MUST ship together.
+
 ### 4.3 Import progress frame (Idx 2)
 
 1. Activated when `DictionaryImportDialog` emits `import_requested` or
@@ -326,6 +356,16 @@ statement with an indeterminate progress bar and no cancellation path.
 6. Rename: `bridges/src/dictionary_manager.rs::rename_label` MUST move to a worker
    thread and emit `renameFinished` / `renameFailed`. No abort flag is required
    (operation is a single SQL statement).
+7. FTS5 `rowid` migration (see §4.2a): every FTS5 script under `scripts/` MUST
+   store the source row `id` as the FTS5 `rowid` rather than an `UNINDEXED` id
+   column, so the per-row sync triggers do O(log n) rowid lookups instead of
+   full table scans. Files: `dictionaries-fts5-indexes.sql` (`dict_words_fts`),
+   `appdata-fts5-indexes.sql` (`suttas_fts`), `books-fts5-indexes.sql`
+   (`book_spine_items_fts`), `dpd-fts5-indexes.sql` (`dpd_headwords_fts`),
+   `dpd-bold-definitions-fts5-indexes.sql` (`bold_definitions_fts` +
+   `bold_definitions_bold_fts`). `backend/src/query_task.rs` MUST be updated to
+   join `f.rowid = <src>.id` and project `rowid AS <id>` where applicable.
+   Requires a manual re-bootstrap of the affected DBs (no Diesel migration).
 
 ### 7.4 Removed UI elements
 

@@ -11,7 +11,16 @@ Source PRD: [prd-dictionaries-window-progress-frames.md](./prd-dictionaries-wind
 - `backend/src/stardict_parse.rs` — switch the SQL insert to per-chunk transactions; reduce `chunk_size` from 5000 → 1000; add cancel check between chunks; add `StardictImportProgress::Aborted { inserted }`. Do NOT call `delete_dictionary_by_label` on abort.
 - `backend/src/dict_index_reconcile.rs` — verify the existing per-1000-word cadence in `index_dict_words_into_dict_index`; no code change expected, only verification.
 - `backend/src/search/indexer.rs` — referenced for verification only (already chunks at 1000, `:688,715`).
-- `backend/tests/stardict_import_per_chunk_commit.rs` *(new)* — integration test confirming partial inserts survive abort.
+- `backend/src/query_task.rs` — FTS5 queries updated to join on `f.rowid = <src>.id` and project `rowid AS headword_id` (see §9.0).
+- `backend/tests/stardict_import_per_chunk_commit.rs` *(new)* — integration test confirming partial inserts survive abort. Comment updated to note FTS deletes are now O(log n) via rowid.
+
+### FTS5 scripts (`scripts/`)
+
+- `scripts/dictionaries-fts5-indexes.sql` — `dict_words_fts`: store `dict_words.id` as FTS5 `rowid` (drop `dict_word_id UNINDEXED`). The slow-delete fix.
+- `scripts/appdata-fts5-indexes.sql` — `suttas_fts`: same rowid migration.
+- `scripts/books-fts5-indexes.sql` — `book_spine_items_fts`: same rowid migration.
+- `scripts/dpd-fts5-indexes.sql` — `dpd_headwords_fts`: same rowid migration.
+- `scripts/dpd-bold-definitions-fts5-indexes.sql` — `bold_definitions_fts` + `bold_definitions_bold_fts`: same rowid migration.
 
 ### Bridge (CXX-Qt)
 
@@ -103,6 +112,17 @@ Source PRD: [prd-dictionaries-window-progress-frames.md](./prd-dictionaries-wind
   - [x] 7.1 In `reconcile_progress_to_signal`, the `IndexingDictionary` arm now formats `"Indexing: <dict_index>/<dict_total> <label>, <done>/<total> words"` (single concatenated line per §4.7.2). `done`/`total` are still passed as the integer fields driving the bar.
   - [x] 7.2 Read-through of `DictionaryIndexProgressWindow.qml`: `stage_label` already has `wrapMode: Text.Wrap` + `Layout.fillWidth: true`, so the longer string wraps on narrow widths. No QML change needed.
   - [x] 7.3 Verified: `index_dict_words_into_dict_index` (`indexer.rs:715`) emits every 1000 words plus a final `on_progress(total, total)` at `:723`; `reconcile_dict_indexes` (`dict_index_reconcile.rs:160-179`) forwards every emit plus an initial `done: 0`. Dictionaries <1000 words emit only at 0 and completion — acceptable per §4.8. No code change.
+
+- [x] 9.0 FTS5 `rowid` migration — fix the slow cascade delete (added 2026-05-20, see PRD §4.2a / §7.3.7)
+  - Symptom: deleting a 2000-entry user dictionary took ~8 minutes in-app (~168 s measured in raw `sqlite3`), even with the worker thread from §2.0. The worker thread only un-freezes the UI; it does not make the delete fast.
+  - Root cause: the `dict_words_fts_delete` trigger does `DELETE FROM dict_words_fts WHERE dict_word_id = OLD.id` per cascade-deleted row; `dict_word_id` was an `UNINDEXED` FTS5 column, and FTS5 has no secondary indexes, so each lookup is a full scan of the ~198k-row FTS. N deleted rows ⇒ N full scans (`EXPLAIN QUERY PLAN` → `SCAN … VIRTUAL TABLE`). Same anti-pattern existed in every FTS5 script.
+  - [x] 9.1 `scripts/dictionaries-fts5-indexes.sql`: drop `dict_word_id UNINDEXED`; set `rowid` in the populate INSERT and insert/update triggers; change delete/update triggers to `WHERE rowid = OLD.id`. Added a perf-rationale comment.
+  - [x] 9.2 Apply the identical rowid migration to the other four scripts: `appdata-fts5-indexes.sql` (`suttas_fts`), `books-fts5-indexes.sql` (`book_spine_items_fts`), `dpd-fts5-indexes.sql` (`dpd_headwords_fts`), `dpd-bold-definitions-fts5-indexes.sql` (`bold_definitions_fts` + `bold_definitions_bold_fts`).
+  - [x] 9.3 `backend/src/query_task.rs`: update all FTS joins to `f.rowid = <src>.id` (suttas ×2, dict_words ×2, book_spine_items ×4, bold_definitions ×4) and the two `dpd_headwords_fts` projections to `SELECT rowid AS headword_id … ORDER BY rowid` (keeps the `HeadwordId` struct unchanged).
+  - [x] 9.4 Updated the stale comment in `backend/tests/stardict_import_per_chunk_commit.rs` (FTS deletes are now O(log n) via rowid; the test still leaves the partial dict to mirror production abort semantics).
+  - [x] 9.5 `make build -B` → clean. Validated on a synthetic 100k+2k DB: populate, `f.rowid` join, and trigram search all correct; cascade delete of the 2000-entry dict dropped from 168 s → <1 s.
+  - [x] 9.6 Documented the decision + the avoided slowdown in `AGENTS.md`/`CLAUDE.md` ("FTS5 fulltext search tables") and updated the `dict_words_fts` Schema note in `PROJECT_MAP.md`.
+  - [ ] 9.7 **User action:** manual re-bootstrap of the affected DBs (appdata, dpd, dictionaries) so the new FTS schema + triggers take effect. The `f.rowid` query code and the new scripts must ship together.
 
 - [ ] 8.0 `DictionaryManager.qml` qmllint stub finalisation and final QA
   - [x] 8.1 `DictionaryManager.qml` stub now declares `abort_import()` and signals `deleteFinished`, `deleteFailed`, `importCancelled`, `renameFinished`, `renameFailed`, plus the updated `importFinished(dictionary_id, label, inserted_count, elapsed_ms)` signature. (`rename_label`'s QML-facing signature is unchanged.)
