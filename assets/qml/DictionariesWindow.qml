@@ -459,6 +459,8 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         onClicked: dict_manager.abort_import()
                     }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
@@ -572,6 +574,8 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         onClicked: Qt.quit()
                     }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
@@ -633,6 +637,8 @@ ApplicationWindow {
                             root.refresh_list();
                         }
                     }
+
+                    Item { Layout.fillWidth: true }
                 }
             }
         }
