@@ -498,7 +498,13 @@ int start(int argc, char* argv[]) {
         }
       }
     }
-    if (!all_windows.isEmpty() && AppGlobals::manager->sutta_search_windows.length() > 0) {
+    // NOTE: Call save_last_session even when all_windows is empty. An empty
+    // array clears the stored session, which is what we want when the user
+    // closed all tabs (the last placeholder tab's Ctrl+W calls root.close(),
+    // hiding the window so it is skipped by the visibility check above). Without
+    // this, an empty session would never overwrite a previously saved one, and
+    // the old tabs would be wrongly restored on the next launch.
+    if (AppGlobals::manager->sutta_search_windows.length() > 0) {
       QString windows_json = QJsonDocument(all_windows).toJson(QJsonDocument::Compact);
       auto first_window = AppGlobals::manager->sutta_search_windows.first();
       if (first_window->m_root) {
