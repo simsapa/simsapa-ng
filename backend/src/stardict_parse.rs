@@ -337,7 +337,11 @@ pub fn import_stardict_as_new(
         feedback_url: None,
         version: None,
         is_user_imported,
-        language: if is_user_imported { lang_opt } else { None },
+        // Store the language on the dictionary row regardless of
+        // `is_user_imported` so the built-in DPD stardict import gets `pli`.
+        // `dict_words.language` is set from `lang` in
+        // `parse_dict`/`db_entries` independently.
+        language: lang_opt,
         indexed_at: None,
     };
 

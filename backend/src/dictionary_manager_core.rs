@@ -13,6 +13,9 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::sync::atomic::AtomicBool;
 
+use serde::Serialize;
+use stardict::{self, Ifo};
+
 use crate::{get_app_data, get_app_globals};
 use crate::logger::{info, error};
 use crate::stardict_parse::{import_stardict_as_new, ImportOutcome, StardictImportProgress, read_ifo_description};
@@ -45,20 +48,15 @@ pub fn validate_label(label: &str) -> Result<(), String> {
     Ok(())
 }
 
-/// Sanitise a `.zip` filename stem into a label suggestion.
+/// Sanitise an arbitrary name into a label suggestion.
 ///
 /// Replaces every non-`[A-Za-z0-9_-]` character with `_`, collapses runs of
 /// `_`, then trims leading/trailing `_-`. Returns `""` if the result is empty
 /// after sanitisation (so the dialog can leave the field blank).
-pub fn suggested_label_for_zip(zip_path: &Path) -> String {
-    let stem = match zip_path.file_stem().and_then(|s| s.to_str()) {
-        Some(s) => s,
-        None => return String::new(),
-    };
-
-    let mut out = String::with_capacity(stem.len());
+fn sanitise_label_name(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
     let mut prev_underscore = false;
-    for c in stem.chars() {
+    for c in name.chars() {
         let ok = c.is_ascii_alphanumeric() || c == '_' || c == '-';
         if ok {
             out.push(c);
@@ -72,26 +70,33 @@ pub fn suggested_label_for_zip(zip_path: &Path) -> String {
     out.trim_matches(|c: char| c == '_' || c == '-').to_string()
 }
 
-/// Import a user-supplied StarDict `.zip`.
+/// Sanitise a `.zip` filename stem into a label suggestion.
+pub fn suggested_label_for_zip(zip_path: &Path) -> String {
+    match zip_path.file_stem().and_then(|s| s.to_str()) {
+        Some(s) => sanitise_label_name(s),
+        None => String::new(),
+    }
+}
+
+/// Sanitise a directory name into a label suggestion.
+///
+/// Uses the full folder name (`file_name`), not `file_stem`, so a dotted
+/// folder name isn't truncated; otherwise applies the same sanitisation as
+/// [`suggested_label_for_zip`].
+pub fn suggested_label_for_dir(dir_path: &Path) -> String {
+    match dir_path.file_name().and_then(|s| s.to_str()) {
+        Some(s) => sanitise_label_name(s),
+        None => String::new(),
+    }
+}
+
+/// Reject a label that is invalid, collides with a shipped source, or already
+/// exists as a user dictionary. Shared by the zip and directory import paths.
 ///
 /// Caller is responsible for resolving Replace-vs-Cancel beforehand: if the
 /// label collides with an existing user dictionary, call
 /// [`delete_user_dictionary`] first.
-///
-/// On success returns the new `dictionaries.id`. The row's `indexed_at` is
-/// `NULL` so the next-startup reconciliation pass picks it up.
-pub fn import_user_zip(
-    zip_path: &Path,
-    label: &str,
-    lang: &str,
-    on_progress: &dyn Fn(StardictImportProgress),
-    cancel: &AtomicBool,
-) -> Result<ImportOutcome, String> {
-    let _guard = match DICT_MGR_LOCK.try_lock() {
-        Ok(g) => g,
-        Err(_) => return Err(BUSY_MSG.to_string()),
-    };
-
+fn check_label_available(label: &str) -> Result<(), String> {
     // 1. Validate label format.
     validate_label(label)?;
 
@@ -118,46 +123,31 @@ pub fn import_user_zip(
         ));
     }
 
-    // 4. Verify the .zip exists.
-    match zip_path.try_exists() {
-        Ok(true) => {}
-        Ok(false) => return Err(format!("Zip not found: {}", zip_path.display())),
-        Err(e) => return Err(format!("Cannot access zip {}: {}", zip_path.display(), e)),
-    }
+    Ok(())
+}
 
-    on_progress(StardictImportProgress::Extracting);
+/// Shared tail for the zip and directory import paths.
+///
+/// Locates the StarDict directory inside `search_root` (root or one level
+/// deep), reads the optional `.ifo` description, runs the SQL-only import, and
+/// captures any bundled `res/` resources. The `physical_stem` locates the files
+/// on disk; `label` is the logical label stored on the dictionaries row and
+/// used as the `{word}/{label}` uid suffix.
+fn import_located_stardict(
+    search_root: &Path,
+    label: &str,
+    lang: &str,
+    on_progress: &dyn Fn(StardictImportProgress),
+    cancel: &AtomicBool,
+) -> Result<ImportOutcome, String> {
+    // The contents may live at `search_root/` directly or one level deep inside
+    // a wrapper folder; the .ifo basename is whatever the upstream archive ships
+    // (e.g. `concise-eng-pli.ifo`) and need not match the user-chosen label.
+    let (unzipped_dir, physical_stem) = locate_stardict_dir(search_root)
+        .ok_or_else(|| "No `.ifo` file found.".to_string())?;
 
-    // 5. Extract the .zip into a temp directory under the app cache so it
-    //    lives somewhere Android tolerates. The TempDir auto-deletes on drop.
-    let _ = app_data; // unused so far in this block; keep handle for downstream calls
-    let cache_root = get_app_globals().paths.simsapa_dir.clone();
-    let tmp = tempfile::Builder::new()
-        .prefix("simsapa-stardict-")
-        .tempdir_in(&cache_root)
-        .map_err(|e| format!("Failed to create temp directory under {}: {}", cache_root.display(), e))?;
-    let extract_dir = tmp.path().to_path_buf();
-
-    let zip_file = std::fs::File::open(zip_path)
-        .map_err(|e| format!("Failed to open zip {}: {}", zip_path.display(), e))?;
-    let mut archive = zip::ZipArchive::new(zip_file)
-        .map_err(|e| format!("Failed to read zip archive {}: {}", zip_path.display(), e))?;
-    archive.extract(&extract_dir)
-        .map_err(|e| format!("Failed to extract zip {}: {}", zip_path.display(), e))?;
-
-    // 6. Locate the StarDict directory and discover the physical .ifo basename.
-    //    The extracted contents may live at `<tmp>/` directly or one level deep
-    //    inside a wrapper folder; the .ifo basename is whatever the upstream
-    //    archive ships (e.g. `concise-eng-pli.ifo`) and need not match the
-    //    user-chosen label.
-    let (unzipped_dir, physical_stem) = locate_stardict_dir(&extract_dir)
-        .ok_or_else(|| "No `.ifo` file found in archive.".to_string())?;
-
-    // 7. Capture the optional .ifo description.
     let description = read_ifo_description(&unzipped_dir, &physical_stem);
 
-    // 8. Run the SQL-only import. `physical_stem` locates the files on disk;
-    //    `label` is the logical label stored on the dictionaries row and used
-    //    as the `{word}/{label}` uid suffix.
     let outcome = import_stardict_as_new(
         &unzipped_dir,
         lang,
@@ -173,31 +163,113 @@ pub fn import_user_zip(
     ).map_err(|e| {
         // SQL-side failures inside import_stardict_as_new already roll back
         // the dictionaries row + dict_words. Surface the original message.
-        error(&format!("import_user_zip: SQL import failed: {}", e));
+        error(&format!("import_located_stardict: SQL import failed: {}", e));
         e
     })?;
 
     if outcome.cancelled {
         info(&format!(
-            "import_user_zip: '{}' cancelled; kept {} partial entries on dict id {}",
+            "import_located_stardict: '{}' cancelled; kept {} partial entries on dict id {}",
             label, outcome.inserted, outcome.dictionary_id
         ));
     } else {
-        info(&format!("import_user_zip: '{}' -> id {}", label, outcome.dictionary_id));
+        info(&format!("import_located_stardict: '{}' -> id {}", label, outcome.dictionary_id));
 
-        // 9. Capture any bundled `res/` resources into dict_resources, keyed by
-        //    the new dictionary id (stable across rename). Only on a successful
-        //    import — a cancelled/0-entry import is cleaned up by the bridge.
+        // Capture any bundled `res/` resources into dict_resources, keyed by
+        // the new dictionary id (stable across rename). Only on a successful
+        // import — a cancelled/0-entry import is cleaned up by the bridge.
         if let Err(e) = capture_stardict_resources(&unzipped_dir, outcome.dictionary_id) {
             // Non-fatal: the dictionary still imported; resources just won't render.
-            error(&format!("import_user_zip: capturing res/ failed: {}", e));
+            error(&format!("import_located_stardict: capturing res/ failed: {}", e));
         }
     }
+
+    Ok(outcome)
+}
+
+/// Import a user-supplied StarDict `.zip`.
+///
+/// Caller is responsible for resolving Replace-vs-Cancel beforehand: if the
+/// label collides with an existing user dictionary, call
+/// [`delete_user_dictionary`] first.
+///
+/// On success returns the new `dictionaries.id`. The row's `indexed_at` is
+/// `NULL` so the next-startup reconciliation pass picks it up.
+pub fn import_user_zip(
+    zip_path: &Path,
+    label: &str,
+    lang: &str,
+    on_progress: &dyn Fn(StardictImportProgress),
+    cancel: &AtomicBool,
+) -> Result<ImportOutcome, String> {
+    let _guard = match DICT_MGR_LOCK.try_lock() {
+        Ok(g) => g,
+        Err(_) => return Err(BUSY_MSG.to_string()),
+    };
+
+    check_label_available(label)?;
+
+    // Verify the .zip exists.
+    match zip_path.try_exists() {
+        Ok(true) => {}
+        Ok(false) => return Err(format!("Zip not found: {}", zip_path.display())),
+        Err(e) => return Err(format!("Cannot access zip {}: {}", zip_path.display(), e)),
+    }
+
+    on_progress(StardictImportProgress::Extracting);
+
+    // Extract the .zip into a temp directory under the app cache so it lives
+    // somewhere Android tolerates. The TempDir auto-deletes on drop.
+    let cache_root = get_app_globals().paths.simsapa_dir.clone();
+    let tmp = tempfile::Builder::new()
+        .prefix("simsapa-stardict-")
+        .tempdir_in(&cache_root)
+        .map_err(|e| format!("Failed to create temp directory under {}: {}", cache_root.display(), e))?;
+    let extract_dir = tmp.path().to_path_buf();
+
+    let zip_file = std::fs::File::open(zip_path)
+        .map_err(|e| format!("Failed to open zip {}: {}", zip_path.display(), e))?;
+    let mut archive = zip::ZipArchive::new(zip_file)
+        .map_err(|e| format!("Failed to read zip archive {}: {}", zip_path.display(), e))?;
+    archive.extract(&extract_dir)
+        .map_err(|e| format!("Failed to extract zip {}: {}", zip_path.display(), e))?;
+
+    let outcome = import_located_stardict(&extract_dir, label, lang, on_progress, cancel)?;
 
     // tmp drops here; extracted files are deleted.
     drop(tmp);
 
     Ok(outcome)
+}
+
+/// Import directly from an already-extracted StarDict directory (PRD §4.5,
+/// req. 21). Skips the unzip step of [`import_user_zip`] but otherwise shares
+/// the same serialisation lock, label checks, SQL import, and `res/` capture.
+///
+/// `dir` may be the StarDict directory itself or a parent containing it one
+/// level deep (matching `locate_stardict_dir`).
+pub fn import_user_dir(
+    dir: &Path,
+    label: &str,
+    lang: &str,
+    on_progress: &dyn Fn(StardictImportProgress),
+    cancel: &AtomicBool,
+) -> Result<ImportOutcome, String> {
+    let _guard = match DICT_MGR_LOCK.try_lock() {
+        Ok(g) => g,
+        Err(_) => return Err(BUSY_MSG.to_string()),
+    };
+
+    check_label_available(label)?;
+
+    // Verify the directory exists.
+    match dir.try_exists() {
+        Ok(true) => {}
+        Ok(false) => return Err(format!("Directory not found: {}", dir.display())),
+        Err(e) => return Err(format!("Cannot access directory {}: {}", dir.display(), e)),
+    }
+
+    import_located_stardict(dir, label, lang, on_progress, cancel)
 }
 
 /// Guess a resource mime type from its file extension.
@@ -319,6 +391,155 @@ fn find_ifo_stem_in(dir: &Path) -> Option<String> {
             }
     }
     None
+}
+
+/// Metadata for one discovered StarDict candidate, returned by [`scan_source`]
+/// to populate the import checklist without committing anything to the DB.
+///
+/// `source_kind` is `"zip"` or `"dir"` so the QML batch driver knows whether to
+/// call `import_zip` or `import_dir` for the item. Language is intentionally
+/// omitted — the dialog defaults every row to `pli` (PRD §4.2 req. 7).
+#[derive(Debug, Clone, Serialize)]
+pub struct CandidateMeta {
+    pub title: String,
+    pub entry_count: i64,
+    pub suggested_label: String,
+    pub source_path: String,
+    pub source_kind: String,
+}
+
+/// The four source kinds accepted by [`scan_source`] (PRD §4.2 req. 4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ScanKind {
+    /// A single `.zip` archive (one candidate).
+    SingleZip,
+    /// A single already-extracted dictionary folder (one candidate).
+    SingleDir,
+    /// A folder containing multiple `.zip` archives (direct children only).
+    ZipFolder,
+    /// A folder containing multiple extracted dictionary folders (direct
+    /// children only).
+    DirFolder,
+}
+
+impl ScanKind {
+    /// Parse the string kind passed from QML. Returns `None` for unknown kinds.
+    pub fn from_str(s: &str) -> Option<ScanKind> {
+        match s {
+            "single_zip" => Some(ScanKind::SingleZip),
+            "single_dir" => Some(ScanKind::SingleDir),
+            "zip_folder" => Some(ScanKind::ZipFolder),
+            "dir_folder" => Some(ScanKind::DirFolder),
+            _ => None,
+        }
+    }
+}
+
+/// Parse the `.ifo` + index of a located StarDict directory and return its
+/// bookname title and raw index item count. Cheap — does not iterate
+/// definitions (PRD §4.2 req. 6). Returns `None` if no `.ifo` is found or it
+/// fails to parse.
+fn probe_stardict_dir(search_root: &Path) -> Option<(String, i64)> {
+    let (unzipped_dir, physical_stem) = locate_stardict_dir(search_root)?;
+    let ifo_path = unzipped_dir.join(format!("{}.ifo", physical_stem));
+    let ifo = Ifo::new(ifo_path.clone()).ok()?;
+    let dict = stardict::no_cache(ifo_path).ok()?;
+    let count = dict.idx.items.len() as i64;
+    Some((ifo.bookname, count))
+}
+
+/// Probe a single `.zip` candidate by extracting it into a temp directory and
+/// parsing the StarDict files inside. Returns `None` (silently skipped) if the
+/// archive is not a valid StarDict.
+fn probe_zip_candidate(zip_path: &Path) -> Option<CandidateMeta> {
+    let cache_root = get_app_globals().paths.simsapa_dir.clone();
+    let tmp = tempfile::Builder::new()
+        .prefix("simsapa-stardict-probe-")
+        .tempdir_in(&cache_root)
+        .ok()?;
+    let extract_dir = tmp.path().to_path_buf();
+
+    let zip_file = std::fs::File::open(zip_path).ok()?;
+    let mut archive = zip::ZipArchive::new(zip_file).ok()?;
+    archive.extract(&extract_dir).ok()?;
+
+    let (title, entry_count) = probe_stardict_dir(&extract_dir)?;
+    Some(CandidateMeta {
+        title,
+        entry_count,
+        suggested_label: suggested_label_for_zip(zip_path),
+        source_path: zip_path.to_string_lossy().to_string(),
+        source_kind: "zip".to_string(),
+    })
+    // tmp drops here.
+}
+
+/// Probe a single extracted-directory candidate. Returns `None` (silently
+/// skipped) if no valid StarDict `.ifo` is found inside.
+fn probe_dir_candidate(dir_path: &Path) -> Option<CandidateMeta> {
+    let (title, entry_count) = probe_stardict_dir(dir_path)?;
+    Some(CandidateMeta {
+        title,
+        entry_count,
+        suggested_label: suggested_label_for_dir(dir_path),
+        source_path: dir_path.to_string_lossy().to_string(),
+        source_kind: "dir".to_string(),
+    })
+}
+
+/// Discover and probe StarDict candidates for the given source kind (PRD §4.2,
+/// req. 4–6). Non-StarDict files/folders are silently skipped. Does NOT mutate
+/// the DB. Folder scans are non-recursive (direct children only).
+pub fn scan_source(kind: ScanKind, path: &Path) -> Result<Vec<CandidateMeta>, String> {
+    match path.try_exists() {
+        Ok(true) => {}
+        Ok(false) => return Err(format!("Path not found: {}", path.display())),
+        Err(e) => return Err(format!("Cannot access {}: {}", path.display(), e)),
+    }
+
+    let mut candidates: Vec<CandidateMeta> = Vec::new();
+
+    match kind {
+        ScanKind::SingleZip => {
+            if let Some(c) = probe_zip_candidate(path) {
+                candidates.push(c);
+            }
+        }
+        ScanKind::SingleDir => {
+            if let Some(c) = probe_dir_candidate(path) {
+                candidates.push(c);
+            }
+        }
+        ScanKind::ZipFolder => {
+            let entries = std::fs::read_dir(path)
+                .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_file()
+                    && p.extension().and_then(|s| s.to_str()).map(|e| e.eq_ignore_ascii_case("zip")) == Some(true)
+                    && let Some(c) = probe_zip_candidate(&p) {
+                        candidates.push(c);
+                    }
+            }
+        }
+        ScanKind::DirFolder => {
+            let entries = std::fs::read_dir(path)
+                .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir()
+                    && let Some(c) = probe_dir_candidate(&p) {
+                        candidates.push(c);
+                    }
+            }
+        }
+    }
+
+    // Stable ordering for predictable checklist display (folders enumerate in
+    // arbitrary order across platforms).
+    candidates.sort_by(|a, b| a.suggested_label.cmp(&b.suggested_label));
+
+    Ok(candidates)
 }
 
 /// Delete a user-imported dictionary (SQL only).

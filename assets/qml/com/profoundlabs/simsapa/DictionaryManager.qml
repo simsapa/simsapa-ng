@@ -6,6 +6,16 @@ Item {
         return "ok";
     }
 
+    function import_dir(dir_path: string, label: string, lang: string): string {
+        console.log("import_dir():", dir_path, label, lang);
+        return "ok";
+    }
+
+    function scan_source(kind: string, path: string): string {
+        console.log("scan_source():", kind, path);
+        return "ok";
+    }
+
     function abort_import() {
         console.log("abort_import()");
     }
@@ -100,6 +110,8 @@ Item {
     signal importFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int);
     signal importFailed(message: string);
     signal importCancelled(message: string, inserted_count: int);
+    signal scanFinished(items_json: string);
+    signal scanFailed(message: string);
     signal deleteFinished(dictionary_id: int, label: string, removed_count: int, elapsed_ms: int);
     signal deleteFailed(message: string);
     signal renameFinished(dictionary_id: int, old_label: string, new_label: string, elapsed_ms: int);

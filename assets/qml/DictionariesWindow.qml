@@ -25,6 +25,10 @@ ApplicationWindow {
     readonly property int largePointSize: pointSize + 5
     property int top_bar_margin: is_mobile ? 24 : 0
 
+    // On a narrow window the title and "Import StarDict..." button would
+    // overlap, so the header collapses to two rows.
+    readonly property bool narrow_layout: width < 480
+
     property var user_dictionaries: []
     property bool is_dark: theme_helper.is_dark
 
@@ -46,18 +50,24 @@ ApplicationWindow {
     // (before the backend's `importCancelled` arrives).
     property bool import_aborting: false
     // Detailed dictionary identity, populated from the `Identified:` progress
-    // event once the `.ifo` is parsed. `import_lang` comes from `start_import`
+    // event once the `.ifo` is parsed. `import_lang` comes from `start_next_item`
     // (QML already has it; it does not travel through the signal).
     property string import_title: ""
     property string import_lang: ""
     property int import_entry_total: 0
 
-    // Replace = delete-then-import. The import is held here while the
-    // async delete runs, then started in onDeleteFinished.
-    property bool replace_pending: false
-    property string pending_zip_path: ""
-    property string pending_label: ""
-    property string pending_lang: ""
+    // Sequential batch import driver state (PRD §4.4). The import dialog emits
+    // the ordered list of selected items; we import them one at a time, reusing
+    // the per-dictionary progress signals. Abort cancels the remaining queue;
+    // a per-item failure is recorded and the batch continues.
+    property var batch_queue: []        // [{path, kind, label, lang}]
+    property int batch_index: 0         // 0-based index of the currently running item
+    property int batch_total: 0
+    property bool batch_active: false
+    property bool batch_aborted: false
+    property int batch_succeeded: 0
+    property var batch_failed: []       // [{label, message}]
+    property int batch_entries_total: 0
 
     ThemeHelper {
         id: theme_helper
@@ -92,24 +102,61 @@ ApplicationWindow {
         }
     }
 
-    // Kick off an import: reset progress state, switch to the import
-    // progress frame, and call the bridge. Quick-fail routes to Idx 5.
-    function start_import(zip_path: string, label: string, lang: string) {
-        root.op_label = label;
+    // Begin a sequential batch import from the dialog's selected items.
+    function start_batch(items) {
+        root.batch_queue = items;
+        root.batch_total = items.length;
+        root.batch_index = 0;
+        root.batch_active = true;
+        root.batch_aborted = false;
+        root.batch_succeeded = 0;
+        root.batch_failed = [];
+        root.batch_entries_total = 0;
+        root.start_next_item();
+    }
+
+    // Start the item at `batch_index`, or finish the batch if the queue is
+    // exhausted. Reuses the per-dictionary progress signals; a quick-fail
+    // (non-"ok" return) is recorded and the batch continues to the next item.
+    function start_next_item() {
+        if (root.batch_index >= root.batch_queue.length) {
+            root.finish_batch();
+            return;
+        }
+        const item = root.batch_queue[root.batch_index];
+        root.op_label = item.label;
         root.import_stage = "";
         root.import_done = 0;
         root.import_total = 0;
         root.import_indeterminate = true;
         root.import_aborting = false;
         root.import_title = "";
-        root.import_lang = lang;
+        root.import_lang = item.lang;
         root.import_entry_total = 0;
         views_stack.currentIndex = 2;
-        const result = dict_manager.import_zip(zip_path, label, lang);
+        const result = item.kind === "dir"
+            ? dict_manager.import_dir(item.path, item.label, item.lang)
+            : dict_manager.import_zip(item.path, item.label, item.lang);
         if (result !== "ok") {
-            root.error_message = "Import could not start: " + result;
-            views_stack.currentIndex = 5;
+            // Could not even start this item; record and advance.
+            root.record_failure(item.label, result);
+            root.batch_index += 1;
+            root.start_next_item();
         }
+    }
+
+    function record_failure(label: string, message: string) {
+        const f = root.batch_failed.slice();
+        f.push({ label: label, message: message });
+        root.batch_failed = f;
+    }
+
+    // Route to the shared summary frame with the aggregated batch outcome.
+    function finish_batch() {
+        root.batch_active = false;
+        root.op_kind = "import_batch";
+        views_stack.currentIndex = 4;
+        root.refresh_list();
     }
 
     function elapsed_seconds_text(ms: int): string {
@@ -144,36 +191,33 @@ ApplicationWindow {
         }
 
         function onImportFinished(dictionary_id: int, label: string, inserted_count: int, elapsed_ms: int) {
-            root.op_label = label;
-            root.op_kind = "import";
-            root.op_count = inserted_count;
-            root.op_elapsed_ms = elapsed_ms;
-            views_stack.currentIndex = 4;
-            root.refresh_list();
+            // One item of the batch finished: accumulate and advance.
+            root.batch_succeeded += 1;
+            root.batch_entries_total += inserted_count;
+            root.batch_index += 1;
+            root.start_next_item();
         }
 
         function onImportCancelled(message: string, inserted_count: int) {
-            root.op_kind = "import_aborted";
-            root.op_count = inserted_count;
-            root.op_elapsed_ms = 0;
-            views_stack.currentIndex = 4;
-            root.refresh_list();
+            // Abort stops the current item and cancels the remaining queue
+            // (PRD req. 18). Whatever was inserted so far for this item counts.
+            root.batch_aborted = true;
+            if (inserted_count > 0) {
+                root.batch_entries_total += inserted_count;
+            }
+            root.finish_batch();
         }
 
         function onImportFailed(message: string) {
-            root.error_message = "Import failed: " + message;
-            views_stack.currentIndex = 5;
+            // A single bad dictionary must not abort the whole batch (req. 19):
+            // record the failure and continue to the next item.
+            const item = root.batch_queue[root.batch_index];
+            root.record_failure(item ? item.label : root.op_label, message);
+            root.batch_index += 1;
+            root.start_next_item();
         }
 
         function onDeleteFinished(dictionary_id: int, label: string, removed_count: int, elapsed_ms: int) {
-            // Replace flow: the delete was the first half of a delete-then-import.
-            // Don't show the delete summary — chain straight into the import.
-            if (root.replace_pending) {
-                root.replace_pending = false;
-                root.refresh_list();
-                root.start_import(root.pending_zip_path, root.pending_label, root.pending_lang);
-                return;
-            }
             root.op_label = label;
             root.op_kind = "delete";
             root.op_count = removed_count;
@@ -183,7 +227,6 @@ ApplicationWindow {
         }
 
         function onDeleteFailed(message: string) {
-            root.replace_pending = false;
             root.error_message = "Delete failed: " + message;
             views_stack.currentIndex = 5;
             root.refresh_list();
@@ -230,25 +273,16 @@ ApplicationWindow {
         id: import_dialog
         point_size: root.pointSize
 
-        onImport_requested: function(zip_path, label, lang) {
-            root.start_import(zip_path, label, lang);
-        }
-
-        onReplace_requested: function(existing_id, zip_path, label, lang) {
-            // Replace = delete-then-import. import_user_zip refuses a label
-            // collision, so the existing dictionary must be deleted first.
-            // Delete is async: stash the import and resume in onDeleteFinished.
-            root.replace_pending = true;
-            root.pending_zip_path = zip_path;
-            root.pending_label = label;
-            root.pending_lang = lang;
-            root.op_label = label;
-            views_stack.currentIndex = 1;
-            const del_result = dict_manager.delete_dictionary(existing_id);
-            if (del_result !== "ok") {
-                root.replace_pending = false;
-                root.error_message = "Could not replace existing dictionary: " + del_result;
-                views_stack.currentIndex = 5;
+        onImport_batch_requested: function(items_json) {
+            let items = [];
+            try {
+                items = JSON.parse(items_json);
+            } catch (e) {
+                console.log("DictionariesWindow import_batch parse error:", e);
+                items = [];
+            }
+            if (items.length > 0) {
+                root.start_batch(items);
             }
         }
 
@@ -291,18 +325,25 @@ ApplicationWindow {
                 anchors.margins: 12
                 spacing: 12
 
-                RowLayout {
+                GridLayout {
                     Layout.fillWidth: true
+                    columnSpacing: 12
+                    rowSpacing: 8
+                    // 2 columns when wide (title | button); 1 column when
+                    // narrow (title over button).
+                    columns: root.narrow_layout ? 1 : 2
 
                     Label {
                         text: "Imported Dictionaries"
                         font.pointSize: root.largePointSize
                         font.bold: true
+                        wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }
 
                     Button {
                         text: "Import StarDict..."
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         onClicked: import_dialog.start()
                     }
                 }
@@ -453,6 +494,16 @@ ApplicationWindow {
                         spacing: 16
 
                         Label {
+                            // "Importing N of M" across the selected batch.
+                            text: `Importing ${root.batch_index + 1} of ${root.batch_total}`
+                            visible: root.batch_total > 1
+                            font.pointSize: root.pointSize
+                            color: palette.mid
+                            Layout.fillWidth: true
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        Label {
                             // Once the dictionary identity is known, show the
                             // detailed form matching the backend log line:
                             // `Importing <title> (<lang>), <N> total entries…`.
@@ -591,6 +642,7 @@ ApplicationWindow {
                                 if (root.op_kind === "delete") return "Deleted";
                                 if (root.op_kind === "import") return "Imported";
                                 if (root.op_kind === "import_aborted") return "Import aborted";
+                                if (root.op_kind === "import_batch") return root.batch_aborted ? "Import aborted" : "Import complete";
                                 if (root.op_kind === "rename") return "Renamed";
                                 return "Completed";
                             }
@@ -620,6 +672,20 @@ ApplicationWindow {
                                 if (root.op_kind === "rename") {
                                     return `Dictionary renamed to "${root.op_label}".\nYou can manage more dictionaries, or quit now. The fulltext search index will be updated the next time you start Simsapa.`;
                                 }
+                                if (root.op_kind === "import_batch") {
+                                    let msg = `Imported ${root.batch_succeeded} of ${root.batch_total} dictionaries — ${root.batch_entries_total} entries total.`;
+                                    if (root.batch_aborted) {
+                                        msg += `\nThe batch was aborted; remaining dictionaries were not imported.`;
+                                    }
+                                    if (root.batch_failed.length > 0) {
+                                        msg += `\n\nFailed (${root.batch_failed.length}):`;
+                                        for (let i = 0; i < root.batch_failed.length; i++) {
+                                            msg += `\n• ${root.batch_failed[i].label}: ${root.batch_failed[i].message}`;
+                                        }
+                                    }
+                                    msg += `\n\nYou can manage more dictionaries, or quit now. The fulltext search index will be updated the next time you start Simsapa.`;
+                                    return msg;
+                                }
                                 return "";
                             }
                             wrapMode: Text.WordWrap
@@ -644,7 +710,7 @@ ApplicationWindow {
                         // quitting. Offer a way back to the list; the re-index
                         // happens on next start.
                         // (Empty abort uses the single "OK" button below.)
-                        visible: root.op_kind === "delete" || root.op_kind === "import" || root.op_kind === "rename"
+                        visible: root.op_kind === "delete" || root.op_kind === "import" || root.op_kind === "rename" || root.op_kind === "import_batch"
                         text: "Back to Dictionaries"
                         font.pointSize: root.pointSize
                         onClicked: {
