@@ -607,7 +607,7 @@ ApplicationWindow {
                                     return `Deleted "${root.op_label}" — removed ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nYou can delete more dictionaries, or quit now. The fulltext search index will be updated the next time you start Simsapa.`;
                                 }
                                 if (root.op_kind === "import") {
-                                    return `Imported "${root.op_label}" — ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nSimsapa will now exit. Start the application again so that the dictionary can be indexed for fulltext search.`;
+                                    return `Imported "${root.op_label}" — ${root.op_count} entries in ${root.elapsed_seconds_text(root.op_elapsed_ms)}.\nYou can manage more dictionaries, or quit now. The fulltext search index will be updated the next time you start Simsapa.`;
                                 }
                                 if (root.op_kind === "import_aborted") {
                                     if (root.op_count === 0) {
@@ -618,7 +618,7 @@ ApplicationWindow {
                                     return `Import aborted — "${root.op_label}" was partially imported (${root.op_count} entries). The remaining entries can be added by re-running the import; already-imported entries will be indexed on next start.\nSimsapa will now exit.`;
                                 }
                                 if (root.op_kind === "rename") {
-                                    return `Dictionary renamed to "${root.op_label}".\nSimsapa will now exit. Start the application again so that the dictionary entries can be re-indexed for fulltext search.`;
+                                    return `Dictionary renamed to "${root.op_label}".\nYou can manage more dictionaries, or quit now. The fulltext search index will be updated the next time you start Simsapa.`;
                                 }
                                 return "";
                             }
@@ -639,11 +639,12 @@ ApplicationWindow {
                     Item { Layout.fillWidth: true }
 
                     Button {
-                        // A delete leaves the app usable — the user may want to
-                        // delete more dictionaries before quitting. Offer a way
-                        // back to the list; the re-index happens on next start.
+                        // Delete, import and rename all leave the app usable —
+                        // the user may want to manage more dictionaries before
+                        // quitting. Offer a way back to the list; the re-index
+                        // happens on next start.
                         // (Empty abort uses the single "OK" button below.)
-                        visible: root.op_kind === "delete"
+                        visible: root.op_kind === "delete" || root.op_kind === "import" || root.op_kind === "rename"
                         text: "Back to Dictionaries"
                         font.pointSize: root.pointSize
                         onClicked: {
@@ -655,11 +656,10 @@ ApplicationWindow {
                     Button {
                         // An empty abort changed nothing in the DB, so no
                         // restart is needed — offer "OK" back to the list.
-                        // A delete keeps the app running (paired with the
-                        // "Back to Dictionaries" button above), so "Quit" is
-                        // optional. All other summaries (import/rename, and a
-                        // partial abort) need a re-index on next start, so they
-                        // quit.
+                        // Delete, import and rename keep the app running (paired
+                        // with the "Back to Dictionaries" button above), so
+                        // "Quit" is optional; the re-index happens on next
+                        // start. A partial abort still quits.
                         readonly property bool is_empty_abort: root.op_kind === "import_aborted" && root.op_count === 0
                         text: is_empty_abort ? "OK" : "Quit"
                         font.pointSize: root.pointSize
