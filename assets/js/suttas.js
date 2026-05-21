@@ -392,6 +392,10 @@ document.addEventListener("DOMContentLoaded", function(_event) {
                 if (!pos) return null;
                 node = pos.offsetNode;
                 offset = pos.offset;
+
+            // caretRangeFromPoint is deprecated but is the only caret-from-point
+            // API on older WebKit/Chromium WebViews that lack the standard
+            // caretPositionFromPoint, so we keep it as a fallback for tap-to-select.
             } else if (typeof document.caretRangeFromPoint === "function") {
                 const range = document.caretRangeFromPoint(x, y);
                 if (!range) return null;
