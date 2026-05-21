@@ -1441,7 +1441,7 @@ fn main() {
              if !dpd_input_path.exists() {
                  Err(format!("DPD input path does not exist: {:?}", dpd_input_path))
              } else {
-                 db::dpd::import_migrate_dpd(&dpd_input_path, dpd_output_path)
+                 db::dpd::import_migrate_dpd(&dpd_input_path, dpd_output_path, None)
              }
         }
 

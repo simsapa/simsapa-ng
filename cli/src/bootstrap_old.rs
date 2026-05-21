@@ -85,7 +85,7 @@ RELEASE_CHANNEL=development
             .map_err(|e| anyhow::anyhow!("Failed to import DPD Stardict: {}", e))?;
 
         // This requires the DPD dictionary ID already present in dictionaries.sqlite3
-        dpd_migrate(&bootstrap_assets_dir, &assets_dir)?;
+        dpd_migrate(&bootstrap_assets_dir, &assets_dir, bootstrap_limit)?;
     } else {
         println!("Skipping DPD initialization and bootstrap");
     }

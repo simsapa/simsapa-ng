@@ -28,12 +28,12 @@ pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path, limit: Opti
     // Migrate DPD. This requires the DPD dictionary ID already present in dictionaries.sqlite3
     // `import_migrate_dpd` internally populates bold_definitions
     // derived columns (uid, commentary_plain) before creating indexes.
-    dpd_migrate(bootstrap_assets_dir, assets_dir)?;
+    dpd_migrate(bootstrap_assets_dir, assets_dir, limit)?;
 
     Ok(())
 }
 
-pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()> {
+pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path, limit: Option<i32>) -> Result<()> {
     logger::info("=== dpd_migrate() ===");
 
     let source_db_path = bootstrap_assets_dir
@@ -62,7 +62,7 @@ pub fn dpd_migrate(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<()>
     let dpd_input_path = dest_db_path;
     let dpd_output_path = assets_dir.join("dpd.sqlite3");
 
-    simsapa_backend::db::dpd::import_migrate_dpd(&dpd_input_path, Some(dpd_output_path))
+    simsapa_backend::db::dpd::import_migrate_dpd(&dpd_input_path, Some(dpd_output_path), limit)
         .map_err(|e| anyhow::anyhow!("Failed to migrate DPD database: {}", e))?;
 
     logger::info("Successfully migrated DPD database");

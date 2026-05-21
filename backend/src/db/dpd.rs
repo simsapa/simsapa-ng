@@ -668,7 +668,7 @@ fn parse_words(
     res_page
 }
 
-pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf>) -> Result<(), String> {
+pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf>, limit: Option<i32>) -> Result<(), String> {
     // Migrate the db at the provided input path.
     let migrate_db_path = dpd_input_path.to_path_buf();
 
@@ -707,7 +707,7 @@ pub fn import_migrate_dpd(dpd_input_path: &Path, dpd_output_path: Option<PathBuf
     // Populate derived columns on `bold_definitions` (uid, commentary_plain)
     // before creating indexes — the B-tree script creates a UNIQUE INDEX on
     // bold_definitions.uid, which depends on population having run.
-    populate_bold_definitions_derived_columns(&output_path)
+    populate_bold_definitions_derived_columns(&output_path, limit)
         .map_err(|e| format!("{}", e))?;
 
     create_dpd_indexes(&output_path).map_err(|e| format!("{}", e))?;
@@ -892,7 +892,8 @@ struct BoldDefRow {
 
 /// Add `uid` and `commentary_plain` columns to `bold_definitions` and
 /// populate them. Idempotent: skipped if all rows already have non-empty uid.
-pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<()> {
+/// `limit` caps the number of rows processed (for bootstrap testing).
+pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path, limit: Option<i32>) -> Result<()> {
     info("populate_bold_definitions_derived_columns()");
 
     let abs = fs::canonicalize(dpd_db_path).unwrap_or_else(|_| dpd_db_path.to_path_buf());
@@ -942,12 +943,17 @@ pub fn populate_bold_definitions_derived_columns(dpd_db_path: &Path) -> Result<(
         return Ok(());
     }
 
-    // Load all rows in deterministic order.
-    let rows: Vec<BoldDefRow> = sql_query(
-        "SELECT id, bold, ref_code, commentary FROM bold_definitions ORDER BY id",
-    )
-    .load(&mut conn)
-    .context("Failed to load bold_definitions rows")?;
+    // Load rows in deterministic order, optionally capped by `limit`.
+    let select_sql = match limit {
+        Some(n) => format!(
+            "SELECT id, bold, ref_code, commentary FROM bold_definitions ORDER BY id LIMIT {}",
+            n
+        ),
+        None => "SELECT id, bold, ref_code, commentary FROM bold_definitions ORDER BY id".to_string(),
+    };
+    let rows: Vec<BoldDefRow> = sql_query(select_sql)
+        .load(&mut conn)
+        .context("Failed to load bold_definitions rows")?;
 
     info(&format!(
         "Populating uid/commentary_plain for {} bold_definitions rows",
