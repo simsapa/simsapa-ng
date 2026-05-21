@@ -34,6 +34,10 @@ ApplicationWindow {
     readonly property int largePointSize: pointSize + 5
     property int top_bar_margin: is_mobile ? 24 : 0
 
+    // On a narrow window the checklist header buttons would crowd the "Found N"
+    // title, so it collapses to two rows.
+    readonly property bool narrow_layout: width < 480
+
     // Kept named `point_size` for parity with the previous component API; the
     // parent (DictionariesWindow) sets it, but internal sizing uses pointSize.
     property int point_size: 12
@@ -218,6 +222,15 @@ ApplicationWindow {
                         checked: true
                         ButtonGroup.group: source_group
                         property string kind: "single_zip"
+                        Layout.fillWidth: true
+                        contentItem: Text {
+                            text: opt_single_zip.text
+                            font: opt_single_zip.font
+                            color: opt_single_zip.palette.windowText
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            leftPadding: opt_single_zip.indicator.width + opt_single_zip.spacing
+                        }
                     }
 
                     RadioButton {
@@ -226,6 +239,15 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         ButtonGroup.group: source_group
                         property string kind: "single_dir"
+                        Layout.fillWidth: true
+                        contentItem: Text {
+                            text: opt_single_dir.text
+                            font: opt_single_dir.font
+                            color: opt_single_dir.palette.windowText
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            leftPadding: opt_single_dir.indicator.width + opt_single_dir.spacing
+                        }
                     }
 
                     RadioButton {
@@ -234,6 +256,15 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         ButtonGroup.group: source_group
                         property string kind: "zip_folder"
+                        Layout.fillWidth: true
+                        contentItem: Text {
+                            text: opt_zip_folder.text
+                            font: opt_zip_folder.font
+                            color: opt_zip_folder.palette.windowText
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            leftPadding: opt_zip_folder.indicator.width + opt_zip_folder.spacing
+                        }
                     }
 
                     RadioButton {
@@ -242,6 +273,15 @@ ApplicationWindow {
                         font.pointSize: root.pointSize
                         ButtonGroup.group: source_group
                         property string kind: "dir_folder"
+                        Layout.fillWidth: true
+                        contentItem: Text {
+                            text: opt_dir_folder.text
+                            font: opt_dir_folder.font
+                            color: opt_dir_folder.palette.windowText
+                            verticalAlignment: Text.AlignVCenter
+                            wrapMode: Text.WordWrap
+                            leftPadding: opt_dir_folder.indicator.width + opt_dir_folder.spacing
+                        }
                     }
                 }
 
@@ -331,37 +371,54 @@ ApplicationWindow {
                 anchors.margins: 12
                 spacing: 10
 
-                RowLayout {
+                GridLayout {
                     Layout.fillWidth: true
+                    columnSpacing: 12
+                    rowSpacing: 8
+                    // 2 columns when wide (title | buttons); 1 column when
+                    // narrow (title over buttons).
+                    columns: root.narrow_layout ? 1 : 2
 
                     Label {
                         text: `Found ${root.scanned_items.length} ${root.scanned_items.length === 1 ? "dictionary" : "dictionaries"}`
                         font.pointSize: root.largePointSize
                         font.bold: true
+                        wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }
 
-                    Button {
-                        text: "Select All"
-                        font.pointSize: root.pointSize
-                        onClicked: {
-                            for (let i = 0; i < checklist_repeater.count; i++) {
-                                const it = checklist_repeater.itemAt(i);
-                                if (it) it.checked = true;
-                            }
-                            root.recompute();
-                        }
-                    }
+                    RowLayout {
+                        spacing: 8
+                        Layout.fillWidth: root.narrow_layout
+                        Layout.alignment: root.narrow_layout ? Qt.AlignRight : (Qt.AlignRight | Qt.AlignVCenter)
 
-                    Button {
-                        text: "Clear Selection"
-                        font.pointSize: root.pointSize
-                        onClicked: {
-                            for (let i = 0; i < checklist_repeater.count; i++) {
-                                const it = checklist_repeater.itemAt(i);
-                                if (it) it.checked = false;
+                        Item {
+                            visible: root.narrow_layout
+                            Layout.fillWidth: true
+                        }
+
+                        Button {
+                            text: "Select All"
+                            font.pointSize: root.pointSize
+                            onClicked: {
+                                for (let i = 0; i < checklist_repeater.count; i++) {
+                                    const it = checklist_repeater.itemAt(i);
+                                    if (it) it.checked = true;
+                                }
+                                root.recompute();
                             }
-                            root.recompute();
+                        }
+
+                        Button {
+                            text: "Clear Selection"
+                            font.pointSize: root.pointSize
+                            onClicked: {
+                                for (let i = 0; i < checklist_repeater.count; i++) {
+                                    const it = checklist_repeater.itemAt(i);
+                                    if (it) it.checked = false;
+                                }
+                                root.recompute();
+                            }
                         }
                     }
                 }

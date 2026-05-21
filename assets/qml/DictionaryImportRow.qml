@@ -32,6 +32,10 @@ Rectangle {
     // within the current selection must be flagged client-side.
     property bool duplicate_in_batch: false
 
+    // On a narrow row the title wraps instead of eliding, and the
+    // Label/Language fields stack on two lines instead of sharing one.
+    readonly property bool narrow: width < 360
+
     // `invalid` / `taken_shipped` / `taken_user` / `available`.
     property string label_status: "available"
     property bool lang_warning: false
@@ -127,7 +131,8 @@ Rectangle {
                 text: root.title_text
                 font.pointSize: root.point_size
                 font.bold: true
-                elide: Text.ElideRight
+                wrapMode: root.narrow ? Text.WordWrap : Text.NoWrap
+                elide: root.narrow ? Text.ElideNone : Text.ElideRight
                 Layout.fillWidth: true
             }
 
@@ -139,9 +144,13 @@ Rectangle {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
+            GridLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                columnSpacing: 8
+                rowSpacing: 6
+                // 4 columns when wide (Label: field Language: field); 2 columns
+                // when narrow (Label: field / Language: field on two rows).
+                columns: root.narrow ? 2 : 4
 
                 Label {
                     text: "Label:"
@@ -165,7 +174,10 @@ Rectangle {
 
                 TextField {
                     id: lang_input
-                    Layout.preferredWidth: 80
+                    // Fill the row when stacked; a fixed compact width when it
+                    // shares the line with the label field.
+                    Layout.fillWidth: root.narrow
+                    Layout.preferredWidth: root.narrow ? -1 : 80
                     font.pointSize: root.point_size - 1
                     onTextChanged: root.refresh_lang_warning()
                 }
