@@ -49,6 +49,12 @@ pub mod qobject {
         fn import_zip(self: Pin<&mut DictionaryManager>, zip_path: &QString, label: &QString, lang: &QString) -> QString;
 
         #[qinvokable]
+        fn import_dir(self: Pin<&mut DictionaryManager>, dir_path: &QString, label: &QString, lang: &QString) -> QString;
+
+        #[qinvokable]
+        fn scan_source(self: Pin<&mut DictionaryManager>, kind: &QString, path: &QString) -> QString;
+
+        #[qinvokable]
         fn abort_import(self: Pin<&mut DictionaryManager>);
 
         #[qinvokable]
@@ -132,6 +138,14 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "importFailed"]
         fn import_failed(self: Pin<&mut DictionaryManager>, message: QString);
+
+        #[qsignal]
+        #[cxx_name = "scanFinished"]
+        fn scan_finished(self: Pin<&mut DictionaryManager>, items_json: QString);
+
+        #[qsignal]
+        #[cxx_name = "scanFailed"]
+        fn scan_failed(self: Pin<&mut DictionaryManager>, message: QString);
 
         #[qsignal]
         #[cxx_name = "importCancelled"]
@@ -277,6 +291,13 @@ fn reconcile_progress_to_signal(p: &ReconcileProgress) -> (String, i32, i32) {
             *done as i32,
             *total as i32,
         ),
+        ReconcileProgress::FinalizingIndex { label, dict_index, dict_total } => (
+            // total = 0 → the QML switches the bar to indeterminate, signalling
+            // ongoing work during the slow commit/merge/sync.
+            format!("Finalizing index: {}/{} {}, please wait…", dict_index, dict_total, label),
+            0,
+            0,
+        ),
         ReconcileProgress::Done => ("Done".to_string(), 0, 0),
     }
 }
@@ -349,6 +370,111 @@ impl qobject::DictionaryManager {
                     let qs = QString::from(&msg);
                     let _ = qt_thread.queue(move |mut qo| {
                         qo.as_mut().import_failed(qs);
+                    });
+                }
+            }
+        });
+
+        QString::from("ok")
+    }
+
+    fn import_dir(self: Pin<&mut Self>, dir_path: &QString, label: &QString, lang: &QString) -> QString {
+        let qt_thread = self.qt_thread();
+        let dir_path = PathBuf::from(dir_path.to_string());
+        let label = label.to_string();
+        let lang = lang.to_string();
+
+        // Reset and clone the cancel flag so the worker can observe `abort_import`.
+        let cancel = self.rust().import_cancel.clone();
+        cancel.store(false, std::sync::atomic::Ordering::Relaxed);
+
+        thread::spawn(move || {
+            let started = Instant::now();
+            let progress_thread = qt_thread.clone();
+            let on_progress = move |p: StardictImportProgress| {
+                let (stage, done, total) = stardict_progress_to_signal(&p);
+                let qs = QString::from(&stage);
+                let _ = progress_thread.queue(move |mut qo| {
+                    qo.as_mut().import_progress(qs, done, total);
+                });
+            };
+
+            match dictionary_manager_core::import_user_dir(&dir_path, &label, &lang, &on_progress, &cancel) {
+                Ok(outcome) if outcome.cancelled => {
+                    let inserted = outcome.inserted as i32;
+                    let msg = if outcome.inserted == 0 {
+                        // Empty abort: remove the 0-entry `dictionaries` row created
+                        // before any insertion. MUST run here (after the lock is
+                        // released), NOT inside `import_user_dir`.
+                        if let Err(e) = dictionary_manager_core::delete_user_dictionary(outcome.dictionary_id) {
+                            error(&format!(
+                                "Empty-abort cleanup failed for dictionary id {}: {}",
+                                outcome.dictionary_id, e
+                            ));
+                        }
+                        get_app_data().refresh_dict_source_uid_caches();
+                        format!("Import aborted — \"{}\" was not imported (nothing kept).", label)
+                    } else {
+                        get_app_data().refresh_dict_source_uid_caches();
+                        format!(
+                            "Import aborted — \"{}\" was partially imported ({} entries).",
+                            label, outcome.inserted
+                        )
+                    };
+                    let msg = QString::from(&msg);
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().import_cancelled(msg, inserted);
+                    });
+                }
+                Ok(outcome) => {
+                    get_app_data().refresh_dict_source_uid_caches();
+                    let label_qs = QString::from(&label);
+                    let inserted = outcome.inserted as i32;
+                    let elapsed_ms = started.elapsed().as_millis() as i32;
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().import_finished(outcome.dictionary_id, label_qs, inserted, elapsed_ms);
+                    });
+                }
+                Err(msg) => {
+                    error(&format!("import_dir failed: {}", msg));
+                    let qs = QString::from(&msg);
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().import_failed(qs);
+                    });
+                }
+            }
+        });
+
+        QString::from("ok")
+    }
+
+    fn scan_source(self: Pin<&mut Self>, kind: &QString, path: &QString) -> QString {
+        let kind_str = kind.to_string();
+        let path = PathBuf::from(path.to_string());
+
+        let scan_kind = match dictionary_manager_core::ScanKind::from_str(&kind_str) {
+            Some(k) => k,
+            None => return QString::from(&format!("Unknown scan source kind: {}", kind_str)),
+        };
+
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            match dictionary_manager_core::scan_source(scan_kind, &path) {
+                Ok(items) => {
+                    let json = serde_json::to_string(&items).unwrap_or_else(|e| {
+                        error(&format!("scan_source serialize: {}", e));
+                        "[]".to_string()
+                    });
+                    let json_qs = QString::from(&json);
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().scan_finished(json_qs);
+                    });
+                }
+                Err(msg) => {
+                    error(&format!("scan_source failed: {}", msg));
+                    let qs = QString::from(&msg);
+                    let _ = qt_thread.queue(move |mut qo| {
+                        qo.as_mut().scan_failed(qs);
                     });
                 }
             }

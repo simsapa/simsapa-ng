@@ -394,6 +394,7 @@ impl DictionariesDbHandle {
             label: "dpd",
             title: "Digital Pāḷi Dictionary",
             dict_type: "sql", // FIXME dict_type = DictTypeName.Sql.value,
+            language: Some("pli"),
             ..Default::default()
         };
 

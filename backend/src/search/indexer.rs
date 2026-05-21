@@ -658,15 +658,21 @@ pub fn is_index_current(index_dir: &Path) -> bool {
 /// [`delete_from_dict_index_by_source_uid`] for the same label to make the
 /// operation idempotent.
 ///
-/// `on_progress` is called as `(done, total)` at chunk boundaries.
-pub fn index_dict_words_into_dict_index<F>(
+/// `on_progress` is called as `(done, total)` at chunk boundaries (and once at
+/// the end with the final count). `on_finalize` is called once after the last
+/// word is queued but before the (potentially slow) commit/merge/sync, so the
+/// caller can tell the user that disk-writing is in progress and the app is not
+/// stuck.
+pub fn index_dict_words_into_dict_index<F, G>(
     index_dir: &Path,
     lang: &str,
     words: &[crate::db::dictionaries_models::DictWord],
     on_progress: F,
+    on_finalize: G,
 ) -> Result<()>
 where
     F: Fn(usize, usize),
+    G: Fn(),
 {
     let lang_index_dir = index_dir.join(lang);
     let schema = build_dict_schema(lang);
@@ -718,10 +724,15 @@ where
         }
     }
 
+    // Show the final count (including the trailing partial chunk) before the
+    // commit, then signal the finalize phase so the UI can switch to an
+    // indeterminate "Finalizing index" indication during the slow commit/merge.
+    on_progress(total, total);
+    on_finalize();
+
     writer.commit()?;
     writer.wait_merging_threads()?;
     index.directory().sync_directory()?;
-    on_progress(total, total);
 
     info(&format!(
         "index_dict_words_into_dict_index: indexed {} of {} words for lang={}",

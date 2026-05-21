@@ -44,6 +44,15 @@ pub enum ReconcileProgress {
         dict_index: usize,
         dict_total: usize,
     },
+    /// All words for a dictionary have been queued; the index is now being
+    /// committed/merged/synced to disk (potentially slow). Drives an
+    /// indeterminate "Finalizing index" indication so the window does not look
+    /// stuck.
+    FinalizingIndex {
+        label: String,
+        dict_index: usize,
+        dict_total: usize,
+    },
     Done,
 }
 
@@ -178,7 +187,16 @@ where
             });
         };
 
-        if let Err(e) = index_dict_words_into_dict_index(index_dir, &lang, &words, progress_cb) {
+        let finalize_label = label.clone();
+        let finalize_cb = || {
+            on_progress(ReconcileProgress::FinalizingIndex {
+                label: finalize_label.clone(),
+                dict_index: dict_index_copy,
+                dict_total: dict_total_copy,
+            });
+        };
+
+        if let Err(e) = index_dict_words_into_dict_index(index_dir, &lang, &words, progress_cb, finalize_cb) {
             warn(&format!("reconcile: index '{}' failed: {}", label, e));
             continue;
         }

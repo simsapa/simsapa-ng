@@ -139,7 +139,10 @@ pub fn dppn_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path) -> Result<
                 uid: w.uid.clone(),
                 word: w.word.clone(),
                 word_ascii: w.word_ascii.clone(),
-                language: w.language.clone(),
+                // Coalesce to "en" when the source value is NULL so DPPN
+                // dict_words carry a language for language-scoped search.
+                // The dictionary row already sets Some("en").
+                language: w.language.clone().or_else(|| Some("en".to_string())),
                 word_nom_sg: w.word_nom_sg.clone(),
                 inflections: w.inflections.clone(),
                 phonetic: w.phonetic.clone(),
