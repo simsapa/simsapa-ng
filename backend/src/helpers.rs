@@ -504,6 +504,11 @@ pub fn dpd_sutta_code_display(sc_code: &str) -> String {
 ///
 /// Input:  `<p class=sutta>AN6.61 majjhesuttaṁ`
 /// Output: `<p class="sutta"><a href="ssp://suttas/an6.61/pli/ms" class="sutta-link">AN 6.61</a> majjhesuttaṁ`
+///
+/// For DN and MN references the dot sub-number is a paragraph index (e.g.
+/// `DN22.3` refers to paragraph 3 of `DN 22`), so when a `DN`/`MN` code with a
+/// dot is not found directly, the sub-number is dropped and the lookup is
+/// retried on the main number (`DN22` -> `dn22/pli/ms`).
 pub fn dpd_convert_example_sutta_refs(
     html: &str,
     sutta_map: &HashMap<String, (String, String)>,
@@ -513,10 +518,19 @@ pub fn dpd_convert_example_sutta_refs(
         // Captures the first whitespace/tag-delimited reference token.
         static ref RE_DPD_SUTTA_P: Regex =
             Regex::new(r#"<p class=(?:"sutta"|sutta)>([^\s<]+)"#).unwrap();
+        // DN/MN code with a paragraph sub-number, e.g. "DN22.3" -> "DN22".
+        static ref RE_DPD_DN_MN_PARA: Regex =
+            Regex::new(r"^((?:DN|MN)\d+)\.\d+$").unwrap();
     }
     RE_DPD_SUTTA_P
         .replace_all(html, |caps: &regex::Captures| {
-            match sutta_map.get(&caps[1].to_uppercase()) {
+            let code = caps[1].to_uppercase();
+            let lookup = sutta_map.get(&code).or_else(|| {
+                RE_DPD_DN_MN_PARA
+                    .captures(&code)
+                    .and_then(|c| sutta_map.get(&c[1].to_string()))
+            });
+            match lookup {
                 Some((uid_path, display)) => format!(
                     r#"<p class="sutta"><a href="ssp://suttas/{}" class="sutta-link">{}</a>"#,
                     uid_path, display
@@ -2410,6 +2424,10 @@ mod tests {
             "SNP48".to_string(),
             ("snp4.10/pli/ms".to_string(), "SNP 4.10".to_string()),
         );
+        map.insert(
+            "DN22".to_string(),
+            ("dn22/pli/ms".to_string(), "DN 22".to_string()),
+        );
 
         // Unquoted class, with trailing sutta name and <br>.
         let input = "<p class=sutta>SNP48 purābhedasuttaṁ<br>aṭṭhakavaggo 10";
@@ -2424,6 +2442,11 @@ mod tests {
         // Unknown code: left unchanged.
         let input3 = "<p class=sutta>VIN3.6.161 some text";
         assert_eq!(dpd_convert_example_sutta_refs(input3, &map), input3);
+
+        // DN paragraph sub-number is dropped and resolved to the main sutta.
+        let input4 = "<p class=sutta>DN22.3 mahāsatipaṭṭhānasuttaṁ";
+        let expected4 = "<p class=\"sutta\"><a href=\"ssp://suttas/dn22/pli/ms\" class=\"sutta-link\">DN 22</a> mahāsatipaṭṭhānasuttaṁ";
+        assert_eq!(dpd_convert_example_sutta_refs(input4, &map), expected4);
     }
 
     #[test]
