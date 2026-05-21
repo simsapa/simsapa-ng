@@ -82,6 +82,10 @@ ApplicationWindow {
     property var nav_history: []
     property bool nav_history_paused: false
     property bool is_restoring_session: false
+    // True while restoring a session and the default blank "Sutta" placeholder
+    // tab at ResultsTab_0 has not yet been replaced. The first restored
+    // results-group item replaces it instead of opening a new tab alongside it.
+    property bool restore_blank_results_pending: false
     property bool suppress_tab_checked_changed: false
     property string pre_reorder_active_id_key: ""
     function nav_history_push(entry) {
@@ -396,10 +400,14 @@ ApplicationWindow {
         let session = JSON.parse(session_json);
         let items = session.items || [];
         root.is_restoring_session = true;
+        // The first restored results-group item should replace the default
+        // blank "Sutta" placeholder tab rather than open alongside it.
+        root.restore_blank_results_pending = true;
         for (let i = 0; i < items.length; i++) {
             let focus = (i === 0);
             root.open_bookmark_in_tab_group(items[i], focus);
         }
+        root.restore_blank_results_pending = false;
         root.is_restoring_session = false;
     }
 
@@ -1346,8 +1354,19 @@ ${query_text}`;
                 toc_tab.update_for_spine_item(tab_data.item_uid);
             }
         } else {
-            // "results" — use the standard function which handles first-tab logic
-            root.show_result_in_html_view(result_data, true);
+            // "results" — during session restore, the first results-group item
+            // replaces the default blank "Sutta" placeholder tab (new_tab=false
+            // updates ResultsTab_0 in place). Subsequent results items, and all
+            // non-restore calls, open a new tab alongside it (new_tab=true).
+            let replace_blank = root.restore_blank_results_pending
+                && tabs_results_model.count > 0
+                && root.is_blank_tab_uid(tabs_results_model.get(0).item_uid);
+            if (replace_blank) {
+                root.restore_blank_results_pending = false;
+                root.show_result_in_html_view(result_data, false);
+            } else {
+                root.show_result_in_html_view(result_data, true);
+            }
         }
 
         // Schedule scroll position restoration if needed
