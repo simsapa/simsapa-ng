@@ -318,13 +318,27 @@ ApplicationWindow {
                         width: scroll_view.availableWidth
                         spacing: 6
 
-                        Label {
+                        Text {
                             visible: root.user_dictionaries.length === 0
-                            text: "No imported dictionaries yet."
+                            text: `<p>No imported dictionaries yet.</p>
+<p>Stardict / Goldendict formats can be imported. Useful dictionaries can be downloaded from:</p>
+<p><a href="https://github.com/digitalpalidictionary/other-dictionaries/releases/">https://github.com/digitalpalidictionary/other-dictionaries/releases/</a></p>`
+                            textFormat: Text.RichText
                             font.pointSize: root.pointSize
-                            color: palette.mid
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                            color: palette.text
                             Layout.alignment: Qt.AlignHCenter
                             Layout.topMargin: 30
+                            onLinkActivated: function(link) {
+                                Qt.openUrlExternally(link);
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                acceptedButtons: Qt.NoButton
+                                cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            }
                         }
 
                         Repeater {
