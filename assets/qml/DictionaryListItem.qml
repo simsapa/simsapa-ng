@@ -15,6 +15,11 @@ Rectangle {
     property bool busy: false
     property int point_size: 12
 
+    // On a narrow window the Edit/Delete buttons would overlap the title, so
+    // the layout collapses to two rows: info on top (wrapped to width), buttons
+    // below.
+    readonly property bool narrow: width < 380
+
     signal edit_clicked()
     signal delete_clicked()
 
@@ -23,13 +28,17 @@ Rectangle {
     border.width: 1
     radius: 4
     Layout.fillWidth: true
-    implicitHeight: row.implicitHeight + 16
+    implicitHeight: grid.implicitHeight + 16
 
-    RowLayout {
-        id: row
+    GridLayout {
+        id: grid
         anchors.fill: parent
         anchors.margins: 8
-        spacing: 12
+        columnSpacing: 12
+        rowSpacing: 8
+        // 2 columns when wide (info | buttons); 1 column when narrow (info over
+        // buttons).
+        columns: root.narrow ? 1 : 2
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -39,7 +48,8 @@ Rectangle {
                 text: root.title_text
                 font.pointSize: root.point_size
                 font.bold: true
-                elide: Text.ElideRight
+                wrapMode: root.narrow ? Text.WordWrap : Text.NoWrap
+                elide: root.narrow ? Text.ElideNone : Text.ElideRight
                 Layout.fillWidth: true
             }
 
@@ -47,23 +57,37 @@ Rectangle {
                 text: `${root.label_text}  ·  ${root.language_text || "—"}  ·  ${root.entry_count} entries`
                 font.pointSize: root.point_size - 2
                 color: palette.mid
-                elide: Text.ElideRight
+                wrapMode: root.narrow ? Text.WordWrap : Text.NoWrap
+                elide: root.narrow ? Text.ElideNone : Text.ElideRight
                 Layout.fillWidth: true
             }
         }
 
-        Button {
-            text: "Edit"
-            enabled: !root.busy
-            onClicked: root.edit_clicked()
-        }
+        RowLayout {
+            spacing: 8
+            // When narrow this row spans the full width; push the buttons to
+            // the right so they line up under the info.
+            Layout.fillWidth: root.narrow
+            Layout.alignment: root.narrow ? Qt.AlignRight : (Qt.AlignRight | Qt.AlignVCenter)
 
-        Button {
-            icon.source: "icons/32x32/ion--trash-outline.png"
-            ToolTip.visible: hovered
-            ToolTip.text: "Delete dictionary"
-            enabled: !root.busy
-            onClicked: root.delete_clicked()
+            Item {
+                visible: root.narrow
+                Layout.fillWidth: true
+            }
+
+            Button {
+                text: "Edit"
+                enabled: !root.busy
+                onClicked: root.edit_clicked()
+            }
+
+            Button {
+                icon.source: "icons/32x32/ion--trash-outline.png"
+                ToolTip.visible: hovered
+                ToolTip.text: "Delete dictionary"
+                enabled: !root.busy
+                onClicked: root.delete_clicked()
+            }
         }
     }
 }

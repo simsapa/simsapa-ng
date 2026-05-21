@@ -25,6 +25,10 @@ ApplicationWindow {
     readonly property int largePointSize: pointSize + 5
     property int top_bar_margin: is_mobile ? 24 : 0
 
+    // On a narrow window the title and "Import StarDict..." button would
+    // overlap, so the header collapses to two rows.
+    readonly property bool narrow_layout: width < 480
+
     property var user_dictionaries: []
     property bool is_dark: theme_helper.is_dark
 
@@ -321,18 +325,25 @@ ApplicationWindow {
                 anchors.margins: 12
                 spacing: 12
 
-                RowLayout {
+                GridLayout {
                     Layout.fillWidth: true
+                    columnSpacing: 12
+                    rowSpacing: 8
+                    // 2 columns when wide (title | button); 1 column when
+                    // narrow (title over button).
+                    columns: root.narrow_layout ? 1 : 2
 
                     Label {
                         text: "Imported Dictionaries"
                         font.pointSize: root.largePointSize
                         font.bold: true
+                        wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                     }
 
                     Button {
                         text: "Import StarDict..."
+                        Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                         onClicked: import_dialog.start()
                     }
                 }
