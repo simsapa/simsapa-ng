@@ -67,7 +67,6 @@ pub struct AppSettings {
     pub open_find_in_sutta_results: bool,
     pub show_bottom_footnotes: bool,
     pub first_time_start: bool,
-    pub sutta_language_filter_key: String,
     pub mobile_top_bar_margin: MobileTopBarMargin,
     /// Whether to show update notifications on startup
     pub notify_about_simsapa_updates: bool,
@@ -108,6 +107,12 @@ pub struct AppSettings {
     /// per-area default at read time.
     #[serde(default)]
     pub search_last_mode: IndexMap<String, String>,
+    /// Last-used language filter key per search area, keyed by area name
+    /// (`"Suttas"`, `"Dictionary"`, `"Library"`). Values are the language codes
+    /// as they appear in the QML dropdown (e.g. `"pli"`, `"en"`). The sentinel
+    /// `"Language"` and any missing entry both mean "no language filter".
+    #[serde(default)]
+    pub search_last_language: IndexMap<String, String>,
     /// Cached set of distinct `dict_words.dict_label` values for non-user-imported
     /// dictionaries. Populated at startup (and refreshed after user-dict
     /// import / delete / rename) so the dictionary search bar doesn't run a
@@ -260,7 +265,6 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             open_find_in_sutta_results: true,
             show_bottom_footnotes: true,
             first_time_start: true,
-            sutta_language_filter_key: String::new(),
             mobile_top_bar_margin: MobileTopBarMargin::default(),
             notify_about_simsapa_updates: true,
             release_channel: None,
@@ -275,6 +279,7 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             dict_search_dpd_enabled: true,
             dict_search_dict_enabled: IndexMap::new(),
             search_last_mode: IndexMap::new(),
+            search_last_language: IndexMap::new(),
             cached_shipped_source_uids: Vec::new(),
             cached_commentary_definitions_source_uids: Vec::new(),
             restore_last_session: true,

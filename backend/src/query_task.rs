@@ -807,6 +807,13 @@ impl<'a> SearchQueryTask<'a> {
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
 
+        // Language filter (mirrors the sutta paths): only applied when a real
+        // language is selected. The dropdown's no-selection sentinel is the
+        // literal "Language", and an unset value is empty — in both cases the
+        // filter clause is omitted entirely, so an unfiltered dictionary search
+        // is no slower than before.
+        let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
         // Inclusion-set push-down for the DPD-driven phases (1, 2, 4).
         // These phases resolve a DPD lemma to a `dict_words` row by
         // `word == lemma_1`, which can match rows in *any* dictionary.
@@ -855,6 +862,10 @@ impl<'a> SearchQueryTask<'a> {
 
                     if let Some(ref set) = dpd_driven_inclusion {
                         dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
+                    }
+
+                    if apply_lang_filter {
+                        dict_query = dict_query.filter(dict_dsl::language.eq(self.lang.clone()));
                     }
 
                     // Match DictWord.word with DpdHeadword.lemma_1
@@ -927,6 +938,10 @@ impl<'a> SearchQueryTask<'a> {
                         dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
                     }
 
+                    if apply_lang_filter {
+                        dict_query = dict_query.filter(dict_dsl::language.eq(self.lang.clone()));
+                    }
+
                     // Match DictWord.word with DpdHeadword.lemma_1
                     let dict_word_result: Result<DictWord, _> = dict_query
                         .filter(dict_dsl::word.eq(&headword.lemma_1))
@@ -985,6 +1000,10 @@ impl<'a> SearchQueryTask<'a> {
                     sql.push(')');
                 }
 
+                if apply_lang_filter {
+                    sql.push_str(" AND d.language = ?");
+                }
+
                 sql.push_str(" AND d.uid LIKE ? AND d.uid LIKE ? ORDER BY d.id LIMIT ?");
 
                 let mut q = sql_query(&sql)
@@ -1000,6 +1019,10 @@ impl<'a> SearchQueryTask<'a> {
                     for v in binds {
                         q = q.bind::<Text, _>(v.clone());
                     }
+                }
+
+                if apply_lang_filter {
+                    q = q.bind::<Text, _>(self.lang.clone());
                 }
 
                 q = q
@@ -1100,6 +1123,10 @@ impl<'a> SearchQueryTask<'a> {
 
                         if let Some(ref set) = dpd_driven_inclusion {
                             dict_query = dict_query.filter(dict_dsl::dict_label.eq_any(set.clone()));
+                        }
+
+                        if apply_lang_filter {
+                            dict_query = dict_query.filter(dict_dsl::language.eq(self.lang.clone()));
                         }
 
                         let dict_word_result: Result<DictWord, _> = dict_query
@@ -1273,6 +1300,11 @@ impl<'a> SearchQueryTask<'a> {
         if q.is_empty() {
             return Ok((0, Vec::new()));
         }
+        // Bold commentary definitions are DPD-derived Pāli text; a non-Pāli
+        // language filter excludes them all.
+        if self.dpd_excluded_by_lang() {
+            return Ok((0, Vec::new()));
+        }
 
         let app_data = get_app_data();
         let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
@@ -1366,6 +1398,11 @@ impl<'a> SearchQueryTask<'a> {
         if q.is_empty() {
             return Ok((0, Vec::new()));
         }
+        // Bold commentary definitions are DPD-derived Pāli text; a non-Pāli
+        // language filter excludes them all.
+        if self.dpd_excluded_by_lang() {
+            return Ok((0, Vec::new()));
+        }
 
         let app_data = get_app_data();
         let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
@@ -1441,7 +1478,20 @@ impl<'a> SearchQueryTask<'a> {
     /// (exact match → roots → inflections → stem → compound → deconstructor →
     /// prefix) means we can't issue a single paginated SQL query, so the full
     /// filtered union is materialised in memory and the caller slices.
+    /// Whether an explicit, non-Pāli language filter is active. DPD headwords
+    /// and DPD-derived bold commentary definitions are all Pāli ("pli"), so
+    /// when this is true they must be excluded entirely. The `"Language"`
+    /// sentinel and an empty value both mean "no filter" (keep everything).
+    fn dpd_excluded_by_lang(&self) -> bool {
+        !self.lang.is_empty() && self.lang != "Language" && self.lang != "pli"
+    }
+
     fn dpd_lookup_full(&self) -> Result<Vec<SearchResult>, Box<dyn Error>> {
+        // DPD entries are Pāli headwords; a non-Pāli language filter excludes
+        // them all (e.g. selecting "en" yields nothing from DPD Lookup).
+        if self.dpd_excluded_by_lang() {
+            return Ok(Vec::new());
+        }
         let app_data = get_app_data();
         let results = app_data.dbm.dpd.dpd_lookup(
             &self.query_text,
@@ -1453,8 +1503,9 @@ impl<'a> SearchQueryTask<'a> {
         Ok(results)
     }
 
-    /// Per-page DPD Lookup with SQL-side uid filtering. DPD is only
-    /// Pāli-to-English so language filters are ignored.
+    /// Per-page DPD Lookup with SQL-side uid filtering. DPD headwords are all
+    /// Pāli, so an active non-Pāli language filter excludes them entirely (see
+    /// `dpd_lookup_full` / `dpd_excluded_by_lang`).
     pub fn dpd_lookup(
         &self,
         page_num: usize,
@@ -1731,6 +1782,12 @@ impl<'a> SearchQueryTask<'a> {
 
         let like_pattern = format!("%{}%", self.query_text);
 
+        // Language filter against `dict_words.language` (mirrors Contains). Both
+        // paths resolve to dict_words rows, so this naturally excludes DPD
+        // (language = "pli") under an "en" filter while keeping non-DPD "en"
+        // headword matches in Path B. Omitted entirely when no filter is set.
+        let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
+
         // Decide which paths run based on the inclusion-set contract.
         let (path_a_enabled, non_dpd_subset): (bool, Option<Vec<String>>) =
             match self.dict_source_uids.as_deref() {
@@ -1814,6 +1871,10 @@ impl<'a> SearchQueryTask<'a> {
                         }
                     }
 
+                    if apply_lang_filter {
+                        dict_query = dict_query.filter(dict_dsl::language.eq(self.lang.clone()));
+                    }
+
                     // Path A is the DPD path; constrain the DictWord lookup
                     // to dict_label = "dpd" so we don't accidentally surface
                     // a non-DPD row that happens to share the lemma. This
@@ -1865,6 +1926,10 @@ impl<'a> SearchQueryTask<'a> {
                 sql.push_str(" AND dw.dict_label != 'dpd'");
             }
 
+            if apply_lang_filter {
+                sql.push_str(" AND dw.language = ?");
+            }
+
             sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIKE ? ORDER BY dw.id LIMIT ?");
 
             let mut q = sql_query(&sql)
@@ -1879,6 +1944,10 @@ impl<'a> SearchQueryTask<'a> {
                 for v in binds {
                     q = q.bind::<Text, _>(v.clone());
                 }
+            }
+
+            if apply_lang_filter {
+                q = q.bind::<Text, _>(self.lang.clone());
             }
 
             q = q

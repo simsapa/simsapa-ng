@@ -180,7 +180,13 @@ fn test_sutta_search_contains_match_exact_results() {
 fn test_dict_word_search_contains_match() {
     h::app_data_setup();
     let app_data = get_app_data();
-    let params = h::get_contains_params_with_lang(Some("en".to_string()));
+    // No language filter (the default "Language" sentinel maps to None): the
+    // expected hit is the DPD headword `bojjhaṅga-2/dpd`, whose `language` is
+    // "pli" (DPD headwords are Pāli words with English definitions). Results are
+    // ordered by row id, so the entry is located by uid rather than asserting a
+    // fixed position. The language filter itself is exercised in
+    // `test_dict_word_search_contains_match_with_language_filter`.
+    let params = h::get_contains_params_with_lang(None);
 
     let query = "element of awakening; factor of enlightenment";
 
@@ -198,12 +204,121 @@ fn test_dict_word_search_contains_match() {
         }
     };
 
-    // println!("{}", results[0].snippet);
-    // println!("{:#?}", results);
+    let hit = results.iter().find(|r| r.uid == "bojjhaṅga-2/dpd")
+        .expect("Expected bojjhaṅga-2/dpd in the results");
+    assert!(hit.snippet.contains("element of awakening factor of enlightenment"),
+        "Snippet should contain 'element of awakening', got: {}", hit.snippet);
+}
 
-    assert_eq!(results[0].uid, "bojjhaṅga-2/dpd");
-    assert!(results[0].snippet.contains("element of awakening factor of enlightenment"),
-        "Snippet should contain 'element of awakening', got: {}", results[0].snippet);
+/// Dictionary ContainsMatch must honor the language filter against the
+/// `dict_words.language` column. `bojjhaṅga-2/dpd` is a DPD headword with
+/// `language = "pli"`, so a "pli" filter includes it while an "en" filter
+/// excludes it. The "Language" sentinel and None must behave as no filter.
+#[test]
+#[serial]
+fn test_dict_word_search_contains_match_with_language_filter() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+
+    let query = "element of awakening; factor of enlightenment";
+    let uids_of = |results: &[simsapa_backend::types::SearchResult]| -> Vec<String> {
+        results.iter().map(|r| r.uid.clone()).collect()
+    };
+
+    // Pāli filter: the DPD headword (language = "pli") is included.
+    let mut task_pli = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_contains_params_with_lang(Some("pli".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_pli = task_pli.results_page(0).expect("pli query failed");
+    assert!(uids_of(&results_pli).contains(&"bojjhaṅga-2/dpd".to_string()),
+        "Pāli filter should include the DPD (pli) headword");
+
+    // English filter: the DPD (pli) headword must be excluded.
+    let mut task_en = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_contains_params_with_lang(Some("en".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_en = task_en.results_page(0).expect("en query failed");
+    assert!(!uids_of(&results_en).contains(&"bojjhaṅga-2/dpd".to_string()),
+        "English filter should exclude the DPD (pli) headword");
+
+    // "Language" sentinel behaves as no filter (the DPD headword is present).
+    let mut task_sentinel = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_contains_params_with_lang(Some("Language".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_sentinel = task_sentinel.results_page(0).expect("sentinel query failed");
+    assert!(uids_of(&results_sentinel).contains(&"bojjhaṅga-2/dpd".to_string()),
+        "\"Language\" sentinel should behave as no filter and include the DPD headword");
+}
+
+/// DPD Lookup is a pure DPD path and DPD headwords are all Pāli, so a non-Pāli
+/// language filter must exclude every result. A "pli" filter (or no filter)
+/// returns the normal hits.
+#[test]
+#[serial]
+fn test_dict_word_dpd_lookup_with_language_filter() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let query = "dhamma";
+
+    let mut task_pli = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_dict_params_with_mode_and_lang(SearchMode::DpdLookup, Some("pli".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_pli = task_pli.results_page(0).expect("pli DPD lookup failed");
+    assert!(!results_pli.is_empty(), "Pāli filter should return DPD Lookup results");
+
+    let mut task_en = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_dict_params_with_mode_and_lang(SearchMode::DpdLookup, Some("en".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_en = task_en.results_page(0).expect("en DPD lookup failed");
+    assert!(results_en.is_empty(),
+        "English filter should exclude all DPD Lookup results, got {}", results_en.len());
+}
+
+/// Headword Match resolves to `dict_words`, so the language filter applies via
+/// `dict_words.language`. DPD headwords (uid `*/dpd`, language "pli") appear
+/// under a "pli" filter and must be excluded under an "en" filter, while any
+/// non-DPD "en" headword matches survive.
+#[test]
+#[serial]
+fn test_dict_word_headword_match_with_language_filter() {
+    h::app_data_setup();
+    let app_data = get_app_data();
+    let query = "dhamma";
+
+    let mut task_pli = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_dict_params_with_mode_and_lang(SearchMode::HeadwordMatch, Some("pli".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_pli = task_pli.results_page(0).expect("pli headword match failed");
+    assert!(results_pli.iter().any(|r| r.uid.ends_with("/dpd")),
+        "Pāli filter should include DPD (pli) headword matches");
+
+    let mut task_en = SearchQueryTask::new(
+        &app_data.dbm,
+        query.to_string(),
+        h::get_dict_params_with_mode_and_lang(SearchMode::HeadwordMatch, Some("en".to_string())),
+        SearchArea::Dictionary,
+    );
+    let results_en = task_en.results_page(0).expect("en headword match failed");
+    assert!(!results_en.iter().any(|r| r.uid.ends_with("/dpd")),
+        "English filter should exclude DPD (pli) headword matches");
 }
 
 #[test]

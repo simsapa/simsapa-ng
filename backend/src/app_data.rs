@@ -1405,25 +1405,32 @@ impl AppData {
         }
     }
 
-    pub fn set_sutta_language_filter_key(&self, key: String) {
-        use crate::db::appdata_schema::app_settings;
+    /// Last-used language filter key for the given area (`"Suttas"`,
+    /// `"Dictionary"`, `"Library"`). Returns an empty string when unset, which
+    /// the UI and query layer both treat as "no language filter" (equivalent to
+    /// the `"Language"` sentinel). Mirrors `get_last_search_mode`.
+    pub fn get_language_filter_key(&self, area: &str) -> String {
+        let s = self.app_settings_cache.read().expect("Failed to read app settings");
+        s.search_last_language.get(area).cloned().unwrap_or_default()
+    }
 
-        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
-        app_settings.sutta_language_filter_key = key;
-
-        let a = app_settings.clone();
-        let settings_json = serde_json::to_string(&a).expect("Can't encode JSON");
-
-        let db_conn = &mut self.dbm.appdata.get_conn().expect("Can't get db conn");
-
-        match diesel::update(app_settings::table)
-            .filter(app_settings::key.eq("app_settings"))
-            .set(app_settings::value.eq(Some(settings_json)))
-            .execute(db_conn)
+    /// Persist the language filter key for the given area. Mirrors
+    /// `set_last_search_mode`: the in-memory cache is updated synchronously and
+    /// the disk write happens off the calling (UI) thread.
+    pub fn set_language_filter_key(&self, area: &str, key: &str) {
         {
-            Ok(_) => (),
-            Err(e) => error(&format!("Failed to update app settings: {}", e)),
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.search_last_language.insert(area.to_string(), key.to_string());
         }
+        std::thread::spawn(|| {
+            let app_data = crate::get_app_data();
+            let snapshot = app_data
+                .app_settings_cache
+                .read()
+                .expect("Failed to read app settings")
+                .clone();
+            app_data.persist_app_settings(&snapshot);
+        });
     }
 
     pub fn set_mobile_top_bar_margin_system(&self) {

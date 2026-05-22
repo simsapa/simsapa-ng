@@ -570,11 +570,20 @@ ApplicationWindow {
 
         const mode = search_bar_input.search_mode_dropdown.get_text();
         const search_area = search_bar_input.search_area;
-        let lang = search_bar_input.language_filter_dropdown.get_text();
-        // Dictionary currently only uses English language from DPD.
-        if (search_area === "Dictionary") {
-            lang = null;
-        }
+        // The language filter applies to all areas, including Dictionary, where
+        // it filters dict_words by their `language` column.
+        //
+        // Read the per-area language from the PERSISTED key (source of truth),
+        // not the ComboBox's currentIndex. On an area switch the language
+        // dropdown's model is reassigned imperatively; Qt defers the ComboBox's
+        // currentIndex reconciliation, so get_text() can briefly return the
+        // PREVIOUS area's value at the moment the area-switch query fires
+        // ("one step behind"). The persisted key is updated synchronously in the
+        // settings cache on every user change and restored per area, so it is
+        // always correct for the current area. Empty/unset means no filter,
+        // which the backend treats identically to the "Language" sentinel.
+        let lang = SuttaBridge.get_language_filter_key(search_area);
+        if (!lang) lang = "Language";
 
         const nikaya_prefix = nikaya_prefix_input.text.trim().toLowerCase();
         const uid_prefix = uid_prefix_input.text.trim().toLowerCase();

@@ -111,6 +111,28 @@ pub fn get_contains_params_with_lang(lang: Option<String>) -> SearchParams {
 }
 
 #[allow(dead_code)]
+pub fn get_dict_params_with_mode_and_lang(mode: SearchMode, lang: Option<String>) -> SearchParams {
+    SearchParams {
+        mode,
+        page_len: None,
+        lang,
+        lang_include: true,
+        source: None,
+        source_include: true,
+        enable_regex: false,
+        fuzzy_distance: 0,
+        include_cst_mula: true,
+        include_cst_commentary: true,
+        nikaya_prefix: None,
+        uid_prefix: None,
+        uid_suffix: None,
+        include_ms_mula: true,
+        include_comm_bold_definitions: true,
+        dict_source_uids: None,
+    }
+}
+
+#[allow(dead_code)]
 pub fn get_uid_params_with_lang(lang: Option<String>) -> SearchParams {
     SearchParams {
         mode: SearchMode::UidMatch,

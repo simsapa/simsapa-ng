@@ -711,16 +711,20 @@ Item {
         return ["en"];
     }
 
+    function get_dict_language_labels(): list<string> {
+        return ["en", "pli"];
+    }
+
     function get_sutta_language_labels_with_counts(): list<string> {
         return ["en|English|1000", "pli|Pāli|1500", "de|Deutsch|500"];
     }
 
-    function get_sutta_language_filter_key(): string {
+    function get_language_filter_key(area: string): string {
         return "Language";
     }
 
-    function set_sutta_language_filter_key(key: string) {
-        console.log("set_sutta_language_filter_key():", key);
+    function set_language_filter_key(area: string, key: string) {
+        console.log("set_language_filter_key():", area, key);
     }
 
     function get_last_search_mode(area: string): string {

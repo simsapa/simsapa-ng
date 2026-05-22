@@ -52,6 +52,11 @@ Frame {
         border.width: 0
     }
 
+    // Build the language dropdown model for the given area from the distinct
+    // language values in the database. The same on-demand distinct-value query
+    // is used for every area (Suttas, Dictionary, Library) for consistency.
+    // Index 0 is the "Language"/"Lang" sentinel meaning "no language filter".
+    // Index restoration is owned by the dropdown's restore_for_current_area().
     function load_language_labels_for_area(area: string) {
         let lang_labels;
         if (area === "Suttas") {
@@ -59,37 +64,33 @@ Frame {
         } else if (area === "Library") {
             lang_labels = SuttaBridge.get_library_language_labels();
         } else {
-            // Dictionary: language filter not used
-            lang_labels = [];
+            // Dictionary: filter by the languages present in the dictionaries DB.
+            lang_labels = SuttaBridge.get_dict_language_labels();
         }
         // Shorter first label for narrow screens.
         const first_label = root.is_wide ? "Language" : "Lang";
         language_filter_dropdown.model = [first_label].concat(lang_labels);
-        language_filter_dropdown.currentIndex = 0;
     }
 
-    Component.onCompleted: {
-        load_language_labels_for_area(search_area);
-
-        // Restore saved language filter key
-        const saved_key = SuttaBridge.get_sutta_language_filter_key();
-        if (saved_key) {
-            const saved_index = language_filter_dropdown.model.indexOf(saved_key);
-            if (saved_index !== -1) {
-                language_filter_dropdown.currentIndex = saved_index;
-            }
-        }
-    }
-
-    onSearch_areaChanged: {
-        load_language_labels_for_area(search_area);
-    }
-
-    onIs_wideChanged: {
-        const saved_index = language_filter_dropdown.currentIndex;
-        load_language_labels_for_area(search_area);
-        language_filter_dropdown.currentIndex = saved_index;
-    }
+    // EXACTLY ONE query per area switch.
+    //
+    // Both dropdowns restore their per-area mode/language independently via
+    // their own `Connections { onSearch_areaChanged }` (pure restores — no
+    // query). The single query is then fired by `area_query_coordinator`, a
+    // Connections declared AFTER both dropdowns so it connects (and therefore
+    // fires) last: after the ComboBox `model` bindings have re-evaluated and
+    // after both restores have run. This guarantees the query reads the correct
+    // mode + language and never fires twice — a second query would cost real
+    // compute and can cause slowdown.
+    //
+    // Connection-order note: a root *inline* onSearch_areaChanged would connect
+    // before the child dropdowns' `model` bindings and fire too early, so the
+    // coordinator must be a Connections object placed after the dropdowns.
+    //
+    // On initial load the dropdowns restore in their own Component.onCompleted
+    // (children complete before the parent), so root.Component.onCompleted can
+    // fire the one initial query.
+    Component.onCompleted: root.handle_query_fn(search_input.text) // qmllint disable use-proper-function
 
     function user_typed() {
         // TODO self._show_search_normal_icon()
@@ -275,6 +276,10 @@ Frame {
                     }
                 }
 
+                // Pure restore (no query). The single query for an area switch
+                // is fired last by root's area_query_coordinator, after BOTH
+                // dropdowns have restored, so it uses the freshly restored mode
+                // + language and never fires twice.
                 function restore_for_current_area() {
                     const wide_list = search_mode_label_wide[root.search_area];
                     const saved_mode = SuttaBridge.get_last_search_mode(root.search_area);
@@ -284,9 +289,6 @@ Frame {
                     currentIndex = idx;
                     suppress_persist = false;
                     applied_area = root.search_area;
-                    // Fire a query for the new area regardless of whether the
-                    // index actually changed.
-                    root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                 }
 
                 Component.onCompleted: restore_for_current_area()
@@ -335,21 +337,77 @@ Frame {
                 id: language_filter_dropdown
                 Layout.preferredHeight: root.icon_size
                 Layout.preferredWidth: root.is_wide ? 120 : 80
-                // Shorter first label for narrow screens.
+                // The model is rebuilt per area by load_language_labels_for_area;
+                // index 0 ("Language"/"Lang") is the no-filter sentinel.
                 model: root.is_wide ? ["Language",] : ["Lang",]
-                enabled: root.search_area === "Suttas" || root.search_area === "Library"
-                onCurrentIndexChanged: {
-                    // Save the language filter selection
-                    if (enabled) {
-                        // currentIndex changed but currentText have not yet updated.
-                        // Have to get the text manually from the model list.
-                        const lang_key = language_filter_dropdown.model[currentIndex];
-                        if (lang_key) {
-                            SuttaBridge.set_sutta_language_filter_key(lang_key);
-                        }
-                        // Re-run search (handle_query will check text min length)
-                        root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
+                enabled: root.search_area === "Suttas" || root.search_area === "Library" || root.search_area === "Dictionary"
+
+                // When true, suppress side-effects (persistence + query) of
+                // currentIndex changes caused by programmatic restores rather
+                // than by the user. Mirrors search_mode_dropdown.
+                property bool suppress_persist: false
+
+                // Tracks the area whose saved language is currently applied, so
+                // is_wide-driven model swaps don't get treated as area changes.
+                property string applied_area: ""
+
+                // Rebuild the model for the current area and restore the
+                // per-area saved language key (defaulting to index 0 = no
+                // filter). The language key is persisted separately per area,
+                // exactly like the search mode (see set_language_filter_key).
+                function restore_for_current_area() {
+                    root.load_language_labels_for_area(root.search_area);
+                    const saved_key = SuttaBridge.get_language_filter_key(root.search_area);
+                    let idx = 0;
+                    if (saved_key && saved_key !== "Language" && saved_key !== "Lang") {
+                        const found = model.indexOf(saved_key);
+                        if (found !== -1) idx = found;
                     }
+                    suppress_persist = true;
+                    currentIndex = idx;
+                    suppress_persist = false;
+                    applied_area = root.search_area;
+                }
+
+                Component.onCompleted: restore_for_current_area()
+
+                Connections {
+                    target: root
+                    // Area change: rebuild labels + restore the saved language
+                    // for the new area. Pure restore — the single query is
+                    // fired afterwards by root's area_query_coordinator.
+                    function onSearch_areaChanged() {
+                        language_filter_dropdown.restore_for_current_area();
+                    }
+                    // is_wide toggles the first-label width ("Language"↔"Lang")
+                    // and rebuilds the model; restore preserves the selection
+                    // from the persisted per-area key. No query is fired (this
+                    // is only a relabel).
+                    function onIs_wideChanged() {
+                        language_filter_dropdown.restore_for_current_area();
+                    }
+                }
+
+                onCurrentIndexChanged: {
+                    if (suppress_persist) return;
+                    if (!enabled) return;
+                    // Mid-transition between search areas: the model just
+                    // rebound and ComboBox auto-clipped currentIndex before the
+                    // area-restore could run. Ignore — restore_for_current_area
+                    // will set the correct index for the new area.
+                    if (applied_area !== root.search_area) return;
+                    // No-op guard: a deferred ComboBox model reconciliation can
+                    // re-assert the already-restored index after restore ended
+                    // (suppress_persist is false by then). If the value already
+                    // matches the persisted per-area key, skip — otherwise we'd
+                    // fire a redundant query on top of the area_query_coordinator.
+                    const new_key = get_text();
+                    let saved = SuttaBridge.get_language_filter_key(root.search_area);
+                    if (!saved) saved = "Language";
+                    if (new_key === saved) return;
+                    SuttaBridge.set_language_filter_key(root.search_area, new_key);
+                    // Re-run search (handle_query will check text min length)
+                    root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                 }
 
                 function get_text(): string {
@@ -360,6 +418,20 @@ Frame {
                     } else {
                         return model[currentIndex];
                     }
+                }
+            }
+
+            // Fires the single per-area-switch query. Declared AFTER both
+            // dropdowns so its connection to root.search_areaChanged is made
+            // last — it therefore runs after the dropdowns' model bindings have
+            // re-evaluated and after both restore_for_current_area() calls, so
+            // the one query reads the freshly restored mode + language. This is
+            // what prevents a second (wasteful) query on an area switch.
+            Connections {
+                id: area_query_coordinator
+                target: root
+                function onSearch_areaChanged() {
+                    root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
                 }
             }
 

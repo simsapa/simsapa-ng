@@ -23,6 +23,13 @@ features.
 
 Documentation is in the `docs/` folder. Keep it updated for relevant features.
 
+Notable feature docs:
+- [Language filter query logic](./docs/language-filter-query-logic.md) — how the
+  search bar's per-area language filter is persisted, how the dropdown options
+  are loaded from distinct DB values, and where the filter is applied in the
+  Suttas / Dictionary / Library query paths (including the "no filter" gate and
+  the DPD `language = "pli"` gotcha).
+
 ## Specific coding procedures
 
 ### Android compatibility: File existence checks

@@ -1061,10 +1061,13 @@ pub mod qobject {
         fn get_library_language_labels(self: &SuttaBridge) -> QStringList;
 
         #[qinvokable]
-        fn get_sutta_language_filter_key(self: &SuttaBridge) -> QString;
+        fn get_dict_language_labels(self: &SuttaBridge) -> QStringList;
 
         #[qinvokable]
-        fn set_sutta_language_filter_key(self: Pin<&mut SuttaBridge>, key: QString);
+        fn get_language_filter_key(self: &SuttaBridge, area: &QString) -> QString;
+
+        #[qinvokable]
+        fn set_language_filter_key(self: &SuttaBridge, area: &QString, key: &QString);
 
         #[qinvokable]
         fn get_last_search_mode(self: &SuttaBridge, area: &QString) -> QString;
@@ -3546,6 +3549,23 @@ impl qobject::SuttaBridge {
         res
     }
 
+    /// Distinct languages present in the dictionaries DB (e.g. "en", "pli"),
+    /// used to populate the search bar's language filter for the Dictionary
+    /// area. Mirrors `get_sutta_language_labels` / `get_library_language_labels`:
+    /// returns exactly the distinct DB values with no fallback default (the
+    /// built-in dictionaries include "en" sources such as DPPN, so a hardcoded
+    /// "pli" default would be wrong).
+    pub fn get_dict_language_labels(&self) -> QStringList {
+        let app_data = get_app_data();
+        let languages = app_data.dbm.dictionaries.get_distinct_languages();
+
+        let mut res = QStringList::default();
+        for lang in languages {
+            res.append(QString::from(lang));
+        }
+        res
+    }
+
     /// Get sutta languages with their counts in format "code|Name|Count"
     pub fn get_sutta_language_labels_with_counts(&self) -> QStringList {
         let app_data = get_app_data();
@@ -3558,15 +3578,12 @@ impl qobject::SuttaBridge {
         res
     }
 
-    pub fn get_sutta_language_filter_key(&self) -> QString {
-        let app_data = get_app_data();
-        let app_settings = app_data.app_settings_cache.read().expect("Failed to read app settings");
-        QString::from(&app_settings.sutta_language_filter_key)
+    pub fn get_language_filter_key(&self, area: &QString) -> QString {
+        QString::from(&get_app_data().get_language_filter_key(&area.to_string()))
     }
 
-    pub fn set_sutta_language_filter_key(self: Pin<&mut Self>, key: QString) {
-        let app_data = get_app_data();
-        app_data.set_sutta_language_filter_key(key.to_string());
+    pub fn set_language_filter_key(&self, area: &QString, key: &QString) {
+        get_app_data().set_language_filter_key(&area.to_string(), &key.to_string());
     }
 
     pub fn get_last_search_mode(&self, area: &QString) -> QString {
