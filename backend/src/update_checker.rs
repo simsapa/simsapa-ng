@@ -244,19 +244,28 @@ pub fn compare_versions(a: &Version, b: &Version) -> Ordering {
 
 /// Get the current application version.
 ///
-/// Returns the version from Cargo.toml via the CARGO_PKG_VERSION environment
-/// variable set at build time.
+/// Checks in order:
+/// 1. `APP_VERSION` environment variable (for testing update flows)
+/// 2. The version from Cargo.toml via the CARGO_PKG_VERSION environment
+///    variable set at build time.
 ///
 /// # Returns
 ///
 /// The application version string (e.g., "0.1.0")
 pub fn get_app_version() -> String {
+    if let Ok(version) = std::env::var("APP_VERSION")
+        && !version.is_empty() {
+            return version;
+        }
+
     env!("CARGO_PKG_VERSION").to_string()
 }
 
 /// Get the database version from the appdata database.
 ///
-/// Queries the `app_settings` table for the 'db_version' key.
+/// Checks in order:
+/// 1. `DB_VERSION` environment variable (for testing update flows)
+/// 2. The `db_version` key in the `app_settings` table.
 ///
 /// # Arguments
 ///
@@ -268,6 +277,11 @@ pub fn get_app_version() -> String {
 /// * `None` - If the database doesn't exist or version not found
 pub fn get_db_version() -> Option<String> {
     use crate::try_get_app_data;
+
+    if let Ok(version) = std::env::var("DB_VERSION")
+        && !version.is_empty() {
+            return Some(version);
+        }
 
     let app_data = try_get_app_data()?;
     let version = app_data.get_db_version()?;
@@ -566,14 +580,9 @@ pub fn has_app_update(info: &ReleasesInfo, current_version: &str) -> Option<Upda
             latest_release.version_tag
         );
 
-        // Truncate release notes if too long
-        let release_notes = latest_release.description.as_ref().map(|desc| {
-            if desc.len() > 500 {
-                format!("{}...", &desc[..500])
-            } else {
-                desc.clone()
-            }
-        });
+        // The release notes are shown in a scrollable area, so render the full
+        // content rather than truncating it.
+        let release_notes = latest_release.description.clone();
 
         Some(UpdateInfo {
             version: latest_release.version_tag.clone(),

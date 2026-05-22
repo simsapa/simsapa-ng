@@ -138,13 +138,6 @@ ApplicationWindow {
         root.requestActivate();
     }
 
-    function truncate_text(text: string, max_length: int): string {
-        if (text.length <= max_length) {
-            return text;
-        }
-        return text.substring(0, max_length) + "...";
-    }
-
     function open_visit_url() {
         if (root.visit_url && root.visit_url.length > 0) {
             Qt.openUrlExternally(root.visit_url);
