@@ -505,10 +505,16 @@ pub fn dpd_sutta_code_display(sc_code: &str) -> String {
 /// Input:  `<p class=sutta>AN6.61 majjhesuttaṁ`
 /// Output: `<p class="sutta"><a href="ssp://suttas/an6.61/pli/ms" class="sutta-link">AN 6.61</a> majjhesuttaṁ`
 ///
-/// For DN and MN references the dot sub-number is a paragraph index (e.g.
-/// `DN22.3` refers to paragraph 3 of `DN 22`), so when a `DN`/`MN` code with a
-/// dot is not found directly, the sub-number is dropped and the lookup is
-/// retried on the main number (`DN22` -> `dn22/pli/ms`).
+/// The trailing dot sub-number is a paragraph index that must be dropped before
+/// the code resolves to a sutta UID, but the rule differs by nikāya:
+///
+/// - For `DN`/`MN`, a single reference number is the whole sutta and a *second*
+///   number is the paragraph (`DN22.3` -> `DN22` -> `dn22/pli/ms`).
+/// - For `SN AN iti kp khp snp th thag thig ud uda`, the standard reference has
+///   one or two numbers (`SN 56.11`, `Thag 22.1`) but never three; a *third*
+///   number is the paragraph and is dropped (`SN56.11.5` -> `SN56.11`).
+///   In this group a lone number is a *verse* number, resolved via
+///   [`verse_sutta_ref_to_uid`] (`Thag1123` -> `thag2.x`).
 pub fn dpd_convert_example_sutta_refs(
     html: &str,
     sutta_map: &HashMap<String, (String, String)>,
@@ -521,16 +527,41 @@ pub fn dpd_convert_example_sutta_refs(
         // DN/MN code with a paragraph sub-number, e.g. "DN22.3" -> "DN22".
         static ref RE_DPD_DN_MN_PARA: Regex =
             Regex::new(r"^((?:DN|MN)\d+)\.\d+$").unwrap();
+        // Group nikāya code with a *third* number (the paragraph index),
+        // e.g. "SN56.11.5" -> "SN56.11". Prefixes are ordered longest-first so
+        // the longer spelling wins (SNP before SN, KHP before KP, etc.).
+        static ref RE_DPD_GROUP_PARA: Regex = Regex::new(
+            r"^((?:THAG|THIG|SNP|ITI|KHP|UDA|AN|SN|TH|KP|UD)\d+\.\d+)\.\d+$"
+        ).unwrap();
     }
     RE_DPD_SUTTA_P
         .replace_all(html, |caps: &regex::Captures| {
-            let code = caps[1].to_uppercase();
-            let lookup = sutta_map.get(&code).or_else(|| {
-                RE_DPD_DN_MN_PARA
-                    .captures(&code)
-                    .and_then(|c| sutta_map.get(&c[1].to_string()))
-            });
-            match lookup {
+            let orig = &caps[1];
+            let code = orig.to_uppercase();
+
+            // Resolve via the DPD sutta_map: try the code directly, then drop a
+            // DN/MN paragraph number, then drop a group-nikāya paragraph number.
+            let from_map = sutta_map
+                .get(&code)
+                .or_else(|| {
+                    RE_DPD_DN_MN_PARA
+                        .captures(&code)
+                        .and_then(|c| sutta_map.get(&c[1].to_string()))
+                })
+                .or_else(|| {
+                    RE_DPD_GROUP_PARA
+                        .captures(&code)
+                        .and_then(|c| sutta_map.get(&c[1].to_string()))
+                });
+
+            let resolved: Option<(String, String)> = match from_map {
+                Some((uid_path, display)) => Some((uid_path.clone(), display.clone())),
+                // A lone number in the group is a verse number, e.g. "Thag1123".
+                None => verse_sutta_ref_to_uid(&code.to_lowercase())
+                    .map(|uid| (format!("{}/pli/ms", uid), dpd_sutta_code_display(orig))),
+            };
+
+            match resolved {
                 Some((uid_path, display)) => format!(
                     r#"<p class="sutta"><a href="ssp://suttas/{}" class="sutta-link">{}</a>"#,
                     uid_path, display
@@ -2447,6 +2478,30 @@ mod tests {
         let input4 = "<p class=sutta>DN22.3 mahāsatipaṭṭhānasuttaṁ";
         let expected4 = "<p class=\"sutta\"><a href=\"ssp://suttas/dn22/pli/ms\" class=\"sutta-link\">DN 22</a> mahāsatipaṭṭhānasuttaṁ";
         assert_eq!(dpd_convert_example_sutta_refs(input4, &map), expected4);
+
+        // Group nikāya with two reference numbers: looked up directly.
+        map.insert(
+            "SN56.11".to_string(),
+            ("sn56.11/pli/ms".to_string(), "SN 56.11".to_string()),
+        );
+        let input5 = "<p class=sutta>SN56.11 dhammacakkappavattanasuttaṁ";
+        let expected5 = "<p class=\"sutta\"><a href=\"ssp://suttas/sn56.11/pli/ms\" class=\"sutta-link\">SN 56.11</a> dhammacakkappavattanasuttaṁ";
+        assert_eq!(dpd_convert_example_sutta_refs(input5, &map), expected5);
+
+        // Group nikāya with a *third* number (paragraph): dropped, then resolved.
+        let input6 = "<p class=sutta>SN56.11.5 dhammacakkappavattanasuttaṁ";
+        assert_eq!(dpd_convert_example_sutta_refs(input6, &map), expected5);
+
+        // Group nikāya lone verse number: converted via verse_sutta_ref_to_uid().
+        // thag1123 -> thag2.x range (here thag verse 50 -> thag1.50).
+        let input7 = "<p class=sutta>Thag50 someName";
+        let expected7 = "<p class=\"sutta\"><a href=\"ssp://suttas/thag1.50/pli/ms\" class=\"sutta-link\">Thag 50</a> someName";
+        assert_eq!(dpd_convert_example_sutta_refs(input7, &map), expected7);
+
+        // Lowercase spelling variation is handled too.
+        let input8 = "<p class=sutta>thag50 someName";
+        let expected8 = "<p class=\"sutta\"><a href=\"ssp://suttas/thag1.50/pli/ms\" class=\"sutta-link\">thag 50</a> someName";
+        assert_eq!(dpd_convert_example_sutta_refs(input8, &map), expected8);
     }
 
     #[test]
