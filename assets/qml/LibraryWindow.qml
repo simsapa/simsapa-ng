@@ -10,6 +10,8 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
 
+    Logger { id: logger }
+
     title: "Library"
     width: is_mobile ? Screen.desktopAvailableWidth : 800
     height: is_mobile ? Screen.desktopAvailableHeight : Math.min(900, Screen.desktopAvailableHeight)
@@ -46,7 +48,7 @@ ApplicationWindow {
         try {
             books_list = JSON.parse(json_str);
         } catch (e) {
-            console.error("Failed to parse books JSON:", e);
+            logger.error("Failed to parse books JSON: " + e);
             books_list = [];
         }
     }
@@ -103,7 +105,7 @@ ApplicationWindow {
                 // Refresh library display
                 root.load_library_books();
             } else {
-                console.error("Failed to remove book:", remove_confirmation_dialog.book_uid);
+                logger.error("Failed to remove book: " + remove_confirmation_dialog.book_uid);
             }
         }
     }

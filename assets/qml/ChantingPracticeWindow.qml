@@ -10,6 +10,9 @@ import com.profoundlabs.simsapa
 
 ApplicationWindow {
     id: root
+
+    Logger { id: logger }
+
     title: "Chanting Practice"
     width: is_mobile ? Screen.desktopAvailableWidth : 600
     height: is_mobile ? Screen.desktopAvailableHeight : Math.min(700, Screen.desktopAvailableHeight)
@@ -45,7 +48,7 @@ ApplicationWindow {
         try {
             collections_list = JSON.parse(json_str);
         } catch (e) {
-            console.error("Failed to parse chanting collections JSON:", e);
+            logger.error("Failed to parse chanting collections JSON: " + e);
             collections_list = [];
         }
     }

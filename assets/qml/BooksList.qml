@@ -9,6 +9,9 @@ import com.profoundlabs.simsapa
 
 ColumnLayout {
     id: root
+
+    Logger { id: logger }
+
     required property var books_list
     required property var selected_book_uid
     required property int pointSize
@@ -116,7 +119,7 @@ ColumnLayout {
                     // Assign the combined list to trigger property change
                     chapter_list = combined_list;
                 } catch (e) {
-                    console.error("Failed to rebuild chapter list:", e);
+                    logger.error("Failed to rebuild chapter list: " + e);
                 }
             }
 
@@ -126,7 +129,7 @@ ColumnLayout {
                 try {
                     spine_items = JSON.parse(json_str);
                 } catch (e) {
-                    console.error("Failed to parse spine items JSON:", e);
+                    logger.error("Failed to parse spine items JSON: " + e);
                     spine_items = [];
                 }
 
@@ -140,7 +143,7 @@ ColumnLayout {
                             return;
                         }
                     } catch (e) {
-                        console.error("Failed to parse TOC JSON:", e);
+                        logger.error("Failed to parse TOC JSON: " + e);
                     }
                 }
 

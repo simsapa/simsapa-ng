@@ -7,6 +7,8 @@ import QtQuick.Controls
 Dialog {
     id: control
 
+    Logger { id: logger }
+
     required property var tabs_pinned_model
     required property var tabs_results_model
     required property var tabs_translations_model
@@ -524,14 +526,14 @@ Dialog {
         let cur_source_model = control.get_source_model_for_group(cur.group_label);
         let neighbor_source_model = control.get_source_model_for_group(neighbor.group_label);
         if (!cur_source_model || cur_source_model !== neighbor_source_model) {
-            console.error("TabListDialog.move_selected_tab: source model mismatch for groups", cur.group_label, neighbor.group_label);
+            logger.error("TabListDialog.move_selected_tab: source model mismatch for groups " + cur.group_label + " " + neighbor.group_label);
             return;
         }
 
         let cur_src_idx = control.find_source_index_by_id_key(cur_source_model, cur.id_key);
         let nbr_src_idx = control.find_source_index_by_id_key(neighbor_source_model, neighbor.id_key);
         if (cur_src_idx < 0 || nbr_src_idx < 0) {
-            console.error("TabListDialog.move_selected_tab: source index lookup failed", cur_src_idx, nbr_src_idx);
+            logger.error("TabListDialog.move_selected_tab: source index lookup failed " + cur_src_idx + " " + nbr_src_idx);
             return;
         }
         if (cur_src_idx === nbr_src_idx) return;

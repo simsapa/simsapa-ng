@@ -10,6 +10,8 @@ import com.profoundlabs.simsapa
 Dialog {
     id: root
 
+    Logger { id: logger }
+
     title: "Import Document"
     modal: true
     standardButtons: Dialog.Cancel
@@ -119,7 +121,7 @@ Dialog {
                 }
             } catch (e) {
                 // Fallback to filename if extraction fails
-                console.log("Failed to extract metadata:", e);
+                logger.error("Failed to extract metadata: " + e);
                 title_field.text = filename;
                 author_field.text = "";
             }

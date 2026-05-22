@@ -11,6 +11,8 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
 
+    Logger { id: logger }
+
     title: "Dictionaries"
     width: is_mobile ? Screen.desktopAvailableWidth : 700
     height: is_mobile ? Screen.desktopAvailableHeight : Math.min(800, Screen.desktopAvailableHeight)
@@ -97,7 +99,7 @@ ApplicationWindow {
         try {
             root.user_dictionaries = JSON.parse(json_str);
         } catch (e) {
-            console.log("DictionariesWindow.refresh_list parse error:", e);
+            logger.error("DictionariesWindow.refresh_list parse error: " + e);
             root.user_dictionaries = [];
         }
     }
@@ -278,7 +280,7 @@ ApplicationWindow {
             try {
                 items = JSON.parse(items_json);
             } catch (e) {
-                console.log("DictionariesWindow import_batch parse error:", e);
+                logger.error("DictionariesWindow import_batch parse error: " + e);
                 items = [];
             }
             if (items.length > 0) {

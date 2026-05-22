@@ -10,6 +10,8 @@ import com.profoundlabs.simsapa
 Item {
     id: root
 
+    Logger { id: logger }
+
     // Properties (6.1)
     property string recording_uid: ""
     property string file_path: ""
@@ -86,7 +88,7 @@ Item {
     function check_file() {
         if (root.file_path !== "" && !root.is_new_recording) {
             let exists = SuttaBridge.check_file_exists(root.file_path);
-            console.log("RecordingPlaybackItem check_file:", root.file_path, "exists:", exists);
+            logger.info("RecordingPlaybackItem check_file: " + root.file_path + " exists: " + exists);
             root.file_not_found = !exists;
             if (!exists) {
                 root.error_message = "Audio file not found:\n" + root.file_path;
@@ -233,7 +235,7 @@ Item {
                 root.is_recording = false;
                 root.pending_recording_stop = false;
                 root.error_message = "Recording error: " + errorString;
-                console.log("MediaRecorder error:", error, errorString);
+                logger.error("MediaRecorder error: " + error + " " + errorString);
             }
         }
     }

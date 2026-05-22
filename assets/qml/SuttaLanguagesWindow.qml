@@ -10,6 +10,8 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
 
+    Logger { id: logger }
+
     title: "Sutta Languages"
     width: is_mobile ? Screen.desktopAvailableWidth : 600
     // Height must not be greater than the screen
@@ -472,7 +474,7 @@ ApplicationWindow {
             urls.push(base_url + selected_codes[i] + ".tar.bz2");
         }
 
-        console.log("Starting download for:", urls);
+        logger.info("Starting download for: " + urls);
 
         // Show progress frame
         root.is_downloading = true;

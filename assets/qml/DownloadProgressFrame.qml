@@ -7,6 +7,8 @@ import QtQuick.Controls
 Frame {
     id: root
 
+    Logger { id: logger }
+
     required property int pointSize
     /* required property bool is_mobile */
     property bool is_mobile: true
@@ -44,7 +46,7 @@ Frame {
         } else {
             // This shouldn't happen, but handle it defensively:
             // If we can't find the URL in the list, just retry this one URL
-            console.warn("Failed URL not found in pending_download_urls:", failed_url);
+            logger.warn("Failed URL not found in pending_download_urls: " + failed_url);
             pending_download_urls = [failed_url];
         }
     }

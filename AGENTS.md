@@ -60,6 +60,52 @@ When you create a new QML component such as `SearchBarInput.qml`, the file has t
 qml_files.push("../assets/qml/SearchBarInput.qml");
 ```
 
+### Logging in QML (no console API)
+
+In the QML files under `assets/qml/`, do **not** use the `console` API
+(`console.log()`, `console.error()`, etc.). Use the `Logger { id: logger }`
+module's functions for logging instead.
+
+The one exception is the folder
+`assets/qml/com/profoundlabs/simsapa/`: the `console` API is allowed there
+because those files are type stubs for `qmllint`.
+
+#### Using the Logger module
+
+`Logger.qml` lives in `assets/qml/`, so it is automatically available to any
+other component in that directory — no `import` statement is needed. Declare an
+instance once in the component's root element, conventionally with `id: logger`:
+
+``` qml
+Item {
+    id: root
+
+    Logger { id: logger }
+
+    // ...
+}
+```
+
+The available functions map to log levels: `logger.debug(message)`,
+`logger.info(message)`, `logger.warn(message)`, `logger.error(message)`.
+
+**IMPORTANT — each function takes a single `message` argument, unlike the
+variadic `console` API.** Do not pass multiple comma-separated arguments;
+build one string with concatenation instead:
+
+``` qml
+// ❌ BAD - console-style multiple arguments; extra args are dropped/ignored
+logger.error("Failed to parse data_json:", e, "data_json:", root.data_json);
+
+// ✅ GOOD - a single concatenated string
+logger.error("Failed to parse data_json: " + e + " data_json: " + root.data_json);
+```
+
+When migrating from `console`, map the methods by severity rather than
+mechanically: `console.error` → `logger.error`, `console.warn` → `logger.warn`,
+and `console.log` → `logger.info` (or `logger.error` when the message actually
+reports a failure).
+
 ### New functions on Rust bridge QML components
 
 When adding new functions to Rust bridge QML components such as SuttaBridge, add a corresponding function in the `qmllint` type definition, e.g. SuttaBridge.qml

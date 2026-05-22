@@ -8,6 +8,9 @@ import com.profoundlabs.simsapa
 
 ColumnLayout {
     id: root
+
+    Logger { id: logger }
+
     required property bool is_dark
 
     // Function reference to get open items JSON from the parent window
@@ -69,7 +72,7 @@ ColumnLayout {
             // Filter out last session folders for saved bookmarks display
             bookmark_folders_data = folders.filter(f => !f.is_last_session);
         } catch (e) {
-            console.error("Failed to parse bookmark folders:", e);
+            logger.error("Failed to parse bookmark folders: " + e);
             bookmark_folders_data = [];
         }
     }
@@ -80,7 +83,7 @@ ColumnLayout {
                 let json_str = root.get_open_items_fn(); // qmllint disable use-proper-function
                 open_items_data = JSON.parse(json_str);
             } catch (e) {
-                console.error("Failed to parse open items:", e);
+                logger.error("Failed to parse open items: " + e);
                 open_items_data = [];
             }
         } else {
@@ -401,7 +404,7 @@ ColumnLayout {
                                     SuttaBridge.reorder_bookmark_items(target_folder_id, JSON.stringify(ids));
                                 }
                             } catch (e) {
-                                console.error("Failed to reorder after cross-folder move:", e);
+                                logger.error("Failed to reorder after cross-folder move: " + e);
                             }
                         }
 

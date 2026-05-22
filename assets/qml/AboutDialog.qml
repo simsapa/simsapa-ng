@@ -10,6 +10,9 @@ import com.profoundlabs.simsapa
 
 ApplicationWindow {
     id: root
+
+    Logger { id: logger }
+
     title: `About ${root.app_name}`
     width: is_mobile ? Screen.desktopAvailableWidth : 600
     height: is_mobile ? Screen.desktopAvailableHeight : Math.min(800, Screen.desktopAvailableHeight)
@@ -280,7 +283,7 @@ ApplicationWindow {
                                            save_log_file_dialog.current_file_name,
                                            contents);
             if (!ok) {
-                console.log("Failed to save log file");
+                logger.error("Failed to save log file");
             }
         }
     }

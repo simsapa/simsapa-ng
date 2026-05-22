@@ -10,6 +10,9 @@ import com.profoundlabs.simsapa
 
 ApplicationWindow {
     id: root
+
+    Logger { id: logger }
+
     title: "Chanting Review"
     width: is_mobile ? Screen.desktopAvailableWidth : 700
     height: is_mobile ? Screen.desktopAvailableHeight : Math.min(800, Screen.desktopAvailableHeight)
@@ -239,7 +242,7 @@ ApplicationWindow {
             source_path = source_path.substring(7);
         }
 
-        console.log("add_recording_from_file: source_path =", source_path);
+        logger.info("add_recording_from_file: source_path = " + source_path);
 
         let timestamp = Date.now();
 
@@ -248,15 +251,15 @@ ApplicationWindow {
         let ext = original_name.includes(".") ? "." + original_name.split(".").pop() : ".ogg";
         let dest_filename = root.current_section_uid + "_" + rec_type + "_" + timestamp + ext;
 
-        console.log("add_recording_from_file: dest_filename =", dest_filename);
+        logger.info("add_recording_from_file: dest_filename = " + dest_filename);
 
         // Copy file to chanting-recordings directory via bridge
         let result_str = SuttaBridge.copy_file_to_chanting_recordings(source_path, dest_filename);
-        console.log("add_recording_from_file: copy result =", result_str);
+        logger.info("add_recording_from_file: copy result = " + result_str);
         let result = JSON.parse(result_str);
 
         if (result.error) {
-            console.error("Failed to copy recording:", result.error);
+            logger.error("Failed to copy recording: " + result.error);
             return;
         }
 

@@ -19,6 +19,8 @@ import com.profoundlabs.simsapa
 ApplicationWindow {
     id: root
 
+    Logger { id: logger }
+
     title: "Import StarDict Dictionaries"
     width: is_mobile ? Screen.desktopAvailableWidth : 640
     height: is_mobile ? Screen.desktopAvailableHeight : Math.min(700, Screen.desktopAvailableHeight)
@@ -131,7 +133,7 @@ ApplicationWindow {
             try {
                 arr = JSON.parse(items_json);
             } catch (e) {
-                console.log("DictionaryImportDialog scanFinished parse error:", e);
+                logger.error("DictionaryImportDialog scanFinished parse error: " + e);
                 arr = [];
             }
             if (!arr || arr.length === 0) {

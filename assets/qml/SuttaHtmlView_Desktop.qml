@@ -5,6 +5,9 @@ import com.profoundlabs.simsapa
 
 Item {
     id: root
+
+    Logger { id: logger }
+
     anchors.fill: parent
 
     property string window_id
@@ -50,7 +53,7 @@ Item {
             root.sutta_title = data.sutta_title || "";
             root.anchor = data.anchor || "";
         } catch (e) {
-            console.error("Failed to parse data_json:", e, "data_json:", root.data_json);
+            logger.error("Failed to parse data_json: " + e + " data_json: " + root.data_json);
         }
     }
 
