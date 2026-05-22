@@ -482,6 +482,38 @@ pub fn dhammatalk_org_convert_link_href_in_html(link_selector: &Selector, html_t
     modified_html
 }
 
+/// Convert SuttaCentral legacy internal sutta links to ssp:// internal links.
+///
+/// Legacy `html_text` suttas (e.g. `sn47.51-62/en/bodhi`) contain relative
+/// links to other suttas in the same collection, where the file is the
+/// collection chapter and the anchor is the dotted sutta number:
+///
+/// Input:  `<a href='sn45.html#45.92'>45:92-102</a>`
+/// Output: `<a href='ssp://suttas/sn45.92/pli/ms'>45:92-102</a>`
+///
+/// The collection letters come from the filename (`sn45.html` -> `sn`) and the
+/// numeric reference comes from the anchor (`45.92`), giving the uid `sn45.92`.
+/// The number may fall within a stored range (e.g. `sn45.92-95/pli/ms`); the
+/// backend lookup resolves that range when the link is followed.
+///
+/// Only numeric dotted anchors are converted, so non-sutta links such as
+/// `endnotes.html#dhp-note001` are left untouched.
+pub fn suttacentral_convert_internal_links_in_html(html_text: &str) -> String {
+    lazy_static! {
+        // href='sn45.html#45.92'  ->  letters="sn", anchor="45.92"
+        static ref RE_SC_INTERNAL_HTML_LINK: Regex = Regex::new(
+            r#"href=(['"])([a-z]+)[0-9.]*\.html#([0-9]+(?:\.[0-9]+)+)['"]"#
+        ).unwrap();
+    }
+
+    RE_SC_INTERNAL_HTML_LINK.replace_all(html_text, |caps: &regex::Captures| {
+        let quote = &caps[1];
+        let letters = &caps[2];
+        let anchor = &caps[3];
+        format!("href={quote}ssp://suttas/{letters}{anchor}/pli/ms{quote}")
+    }).to_string()
+}
+
 /// Build the display text for a SuttaCentral code by inserting a space between
 /// the leading letters and the numeric part: "AN6.61" -> "AN 6.61".
 pub fn dpd_sutta_code_display(sc_code: &str) -> String {
@@ -2548,6 +2580,29 @@ mod tests {
             dhammatalks_org_href_sutta_html_to_ssp("../AN/AN6_20.html"),
             "ssp://suttas/an6.20/en/thanissaro"
         );
+    }
+
+    #[test]
+    fn test_suttacentral_convert_internal_links_in_html() {
+        // Single-quoted internal sutta link with dotted anchor
+        assert_eq!(
+            suttacentral_convert_internal_links_in_html(
+                "elaborated parallel to <a href='sn45.html#45.92'>45:92-102</a>.)"
+            ),
+            "elaborated parallel to <a href='ssp://suttas/sn45.92/pli/ms'>45:92-102</a>.)"
+        );
+
+        // Double-quoted form
+        assert_eq!(
+            suttacentral_convert_internal_links_in_html(
+                r#"<a href="sn11.html#11.12">11:12</a>"#
+            ),
+            r#"<a href="ssp://suttas/sn11.12/pli/ms">11:12</a>"#
+        );
+
+        // Non-sutta endnote links must be left untouched
+        let endnote = r#"<a href="endnotes.html#dhp-note001">1</a>"#;
+        assert_eq!(suttacentral_convert_internal_links_in_html(endnote), endnote);
     }
 
     #[test]

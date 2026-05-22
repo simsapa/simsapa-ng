@@ -132,6 +132,16 @@ fn lookup_sutta_with_fallback(dbm: &DbManager, uid_str: &str) -> Option<Sutta> {
         }
     }
 
+    // Still not found: the uid may be a single reference (e.g. "sn45.92/pli/ms")
+    // that falls within a stored range (e.g. "sn45.92-95/pli/ms"). This mirrors
+    // the range lookup done for the search input box.
+    if sutta_option.is_none() {
+        if let Some(range_sutta) = dbm.appdata.get_sutta_by_range(uid_str) {
+            info(&format!("Using range UID: {} for {}", range_sutta.uid, uid_str));
+            return Some(range_sutta);
+        }
+    }
+
     sutta_option
 }
 

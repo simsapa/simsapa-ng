@@ -74,6 +74,11 @@ impl BuddhaUjjaImporter {
                 let n: u32 = caps[1].parse().unwrap_or(0);
                 return thig_verse_to_uid(n).expect("Can't find thig verse");
             }
+        } else if s.starts_with("uda-") {
+            // Udāna: uda-5.5 -> ud5.5
+            // The rest of the suttas use the 'ud' nikaya code, not 'uda'.
+            let re = Regex::new(r"^uda-([0-9\.]+)(.*)").unwrap();
+            return re.replace(&s, "ud$1$2").to_string();
         } else if s == "mv-10.2.3-20" {
             // Dīghāvu Vatthu
             // pli-tv-kd10 Contains the Kosambiya Jataka about Dighavu
@@ -301,6 +306,7 @@ mod tests {
         
         assert_eq!(importer.code_to_uid("an-10.13"), "an10.13");
         assert_eq!(importer.code_to_uid("an-1.296-305"), "an1.296-305");
+        assert_eq!(importer.code_to_uid("uda-5.5"), "ud5.5");
         assert_eq!(importer.code_to_uid("mv-10.2.3-20"), "pli-tv-kd10");
         assert_eq!(importer.code_to_uid("mv-1.1.5-8"), "pli-tv-kd1");
     }

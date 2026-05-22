@@ -72,6 +72,62 @@ impl AppdataDbHandle {
         }
     }
 
+    /// Look up a sutta whose stored range includes the number in `sutta_uid`.
+    ///
+    /// E.g. a clicked link `sn45.92/pli/ms` has no exact uid, but the sutta
+    /// `sn45.92-95/pli/ms` covers that number. This mirrors the range lookup
+    /// performed for the search input box (see `QueryTask::uid_sutta_range_all`).
+    ///
+    /// When the queried uid carries a `/lang/author` suffix, only suttas with
+    /// the same suffix are considered, so the link resolves to the matching
+    /// translation rather than an arbitrary one.
+    pub fn get_sutta_by_range(&self, sutta_uid: &str) -> Option<Sutta> {
+        use crate::db::appdata_schema::suttas::dsl::*;
+        use crate::helpers::sutta_range_from_ref;
+
+        let range = sutta_range_from_ref(sutta_uid)?;
+
+        // Only proceed when we have a concrete numeric reference.
+        let (range_start, _range_end) = match (range.start, range.end) {
+            (Some(s), Some(e)) => (s as i32, e as i32),
+            _ => return None,
+        };
+
+        // Extract a "/lang/author" suffix from the queried uid, if present
+        // (e.g. "sn45.92/pli/ms" -> "/pli/ms").
+        let suffix = sutta_uid.find('/').map(|i| sutta_uid[i..].to_string());
+
+        let results = self.do_read(|db_conn| {
+            suttas
+                .filter(sutta_range_group.eq(&range.group))
+                .filter(sutta_range_start.is_not_null())
+                .filter(sutta_range_end.is_not_null())
+                .filter(sutta_range_start.le(range_start))
+                .filter(sutta_range_end.ge(range_start))
+                .order(uid.asc())
+                .select(Sutta::as_select())
+                .load::<Sutta>(db_conn)
+        });
+
+        let results = match results {
+            Ok(rows) => rows,
+            Err(e) => {
+                error(&format!("get_sutta_by_range(): {}", e));
+                return None;
+            }
+        };
+
+        match &suffix {
+            // Prefer the sutta matching the requested language/author suffix.
+            Some(s) => results
+                .iter()
+                .find(|x| x.uid.ends_with(s.as_str()))
+                .or_else(|| results.first())
+                .cloned(),
+            None => results.into_iter().next(),
+        }
+    }
+
     /// Find a related sutta (commentary, sub-commentary, or root text) for the given sutta UID.
     ///
     /// `relation` is one of: "att" (commentary), "tik" (sub-commentary), "mula" (root text).

@@ -13,7 +13,7 @@ use crate::bootstrap::SuttaImporter;
 use simsapa_backend::helpers::{
     consistent_niggahita, pali_to_ascii, sutta_html_to_plain_text,
     html_get_sutta_page_body, bilara_html_post_process, bilara_text_to_html,
-    sutta_range_from_ref,
+    sutta_range_from_ref, suttacentral_convert_internal_links_in_html,
 };
 use simsapa_backend::db::appdata_models::{NewSutta, NewSuttaVariant, NewSuttaComment};
 use simsapa_backend::db::appdata_schema::{suttas, sutta_variants, sutta_comments};
@@ -541,6 +541,8 @@ fn html_text_to_sutta(doc: &Value, title: &str) -> Result<SuttaCentralData> {
 
     // Apply post-processing
     body = bilara_html_post_process(&body);
+    // Convert legacy internal sutta links (e.g. sn45.html#45.92) to ssp:// links
+    body = suttacentral_convert_internal_links_in_html(&body);
     body = consistent_niggahita(Some(body));
 
     // Wrap in container div
