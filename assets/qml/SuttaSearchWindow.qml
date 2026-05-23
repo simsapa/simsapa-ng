@@ -1181,9 +1181,11 @@ ${query_text}`;
             root.apply_theme();
             root.load_keybindings();
             SuttaBridge.load_db();
-            SuttaBridge.appdata_first_query();
-            SuttaBridge.dpd_first_query();
-            SuttaBridge.dictionary_first_query();
+            // Database validation queries are deferred until after the update
+            // check completes (see update_check_timer / update result handlers
+            // below). If the update check reports the local DB is obsolete,
+            // validation is skipped — the DB upgrade will replace everything
+            // anyway and showing both dialogs would be confusing.
 
             // Update top_bar_margin after app data is initialized
             // This will automatically update all child dialogs via property bindings
@@ -2193,6 +2195,18 @@ ${query_text}`;
         }
     }
 
+    // Guard: ensures startup validation runs at most once, and is suppressed
+    // entirely when the update check reports the local DB is obsolete.
+    property bool startup_validation_done: false
+
+    function run_startup_validation_once() {
+        if (root.startup_validation_done) return;
+        root.startup_validation_done = true;
+        SuttaBridge.appdata_first_query();
+        SuttaBridge.dpd_first_query();
+        SuttaBridge.dictionary_first_query();
+    }
+
     // Timer for delayed update check on startup (500ms delay)
     // The equivalent of windows.py init_timer which runs _init_tasks()
     Timer {
@@ -2204,8 +2218,13 @@ ${query_text}`;
                 SuttaBridge.set_updates_checked(true);
                 if (SuttaBridge.get_notify_about_simsapa_updates()) {
                     SuttaBridge.check_for_updates(false, Screen.desktopAvailableWidth + " x " + Screen.desktopAvailableHeight, "determine");
+                    // Validation runs from the update result handlers below
+                    // (except for onLocalDbObsolete, which suppresses it).
+                    return;
                 }
             }
+            // No update check will run — proceed with validation now.
+            root.run_startup_validation_once();
         }
     }
 
@@ -2215,24 +2234,33 @@ ${query_text}`;
 
         function onAppUpdateAvailable(update_info_json: string) {
             update_notification_dialog.show_app_update(update_info_json);
+            root.run_startup_validation_once();
         }
 
         function onDbUpdateAvailable(update_info_json: string) {
             update_notification_dialog.show_db_update(update_info_json);
+            root.run_startup_validation_once();
         }
 
         function onLocalDbObsolete(update_info_json: string) {
+            // DB upgrade will replace appdata/dpd/dictionaries — skip the
+            // validation dialog so the user sees only the obsolete warning.
+            root.startup_validation_done = true;
             update_notification_dialog.show_obsolete_warning(update_info_json);
         }
 
         function onNoUpdatesAvailable() {
             update_notification_dialog.show_no_updates();
+            root.run_startup_validation_once();
         }
 
         function onUpdateCheckError(error_message: string) {
             // Log error but don't show dialog on automatic startup check
             // For manual checks, the user will see "no updates" if check succeeds
-            logger.info("Update check error:", error_message);
+            logger.info("Update check error: " + error_message);
+            // Network failure or other error — can't determine obsolescence,
+            // so fall through to validation (matches prior behavior).
+            root.run_startup_validation_once();
         }
     }
 

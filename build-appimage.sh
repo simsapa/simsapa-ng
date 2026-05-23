@@ -305,14 +305,14 @@ create_appimage() {
 
         # Test if AppImage can extract itself (this is the real test)
         print_status "Testing AppImage self-extraction..."
-        if "$APPIMAGE_NAME" --appimage-help > /dev/null 2>&1; then
+        if "./$APPIMAGE_NAME" --appimage-help > /dev/null 2>&1; then
             print_status "✓ AppImage runtime works correctly"
         else
             print_error "✗ AppImage runtime test failed!"
             print_error "This AppImage may not launch properly"
             # Try to get more info about why it failed
             echo "Attempting to get AppImage info:"
-            "$APPIMAGE_NAME" --appimage-help 2>&1 || true
+            "./$APPIMAGE_NAME" --appimage-help 2>&1 || true
         fi
 
         # Show file info
