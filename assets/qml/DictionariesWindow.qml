@@ -371,6 +371,7 @@ ApplicationWindow {
                             wrapMode: Text.WordWrap
                             Layout.fillWidth: true
                             color: palette.text
+                            linkColor: palette.link
                             Layout.alignment: Qt.AlignHCenter
                             Layout.topMargin: 30
                             onLinkActivated: function(link) {

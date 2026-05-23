@@ -81,12 +81,26 @@ ApplicationWindow {
         root.requestActivate();
     }
 
+    // Convert a QML file/folder dialog URL to a local filesystem path.
+    // Handles file:/// (Unix and Windows), file:// (no third slash), and
+    // passes through content:// URIs unchanged for Android handling upstream.
+    // Mirrors the logic in DocumentImportDialog.qml.
     function strip_file_scheme(url: string): string {
-        let path = String(url);
-        if (path.startsWith("file://")) {
-            path = path.substring(7);
+        const url_str = String(url);
+        if (url_str.startsWith("file:///")) {
+            // file:///C:/path on Windows -> C:/path
+            // file:///path on Unix      -> /path
+            const without_prefix = url_str.substring(8);
+            if (Qt.platform.os === "windows" && without_prefix.match(/^[A-Za-z]:/)) {
+                return decodeURIComponent(without_prefix);
+            }
+            return "/" + decodeURIComponent(without_prefix);
         }
-        return path;
+        if (url_str.startsWith("file://")) {
+            return decodeURIComponent(url_str.substring(7));
+        }
+        // content:// (Android SAF) or other scheme — return as-is.
+        return url_str;
     }
 
     // Begin discovery for the chosen source kind + path: switch to the
@@ -106,7 +120,7 @@ ApplicationWindow {
     function recompute() {
         const counts = {};
         for (let i = 0; i < checklist_repeater.count; i++) {
-            const it = checklist_repeater.itemAt(i);
+            const it = checklist_repeater.itemAt(i) as DictionaryImportRow;
             if (it && it.checked) {
                 counts[it.label] = (counts[it.label] || 0) + 1;
             }
@@ -114,7 +128,7 @@ ApplicationWindow {
         let any_checked = false;
         let any_blocking = false;
         for (let i = 0; i < checklist_repeater.count; i++) {
-            const it = checklist_repeater.itemAt(i);
+            const it = checklist_repeater.itemAt(i) as DictionaryImportRow;
             if (!it) continue;
             it.duplicate_in_batch = it.checked && counts[it.label] > 1;
             if (it.checked) {
@@ -157,7 +171,21 @@ ApplicationWindow {
         id: file_dialog
         title: "Choose StarDict .zip"
         nameFilters: ["StarDict archives (*.zip)"]
-        onAccepted: root.begin_scan("single_zip", root.strip_file_scheme(selectedFile))
+        onAccepted: {
+            let path = root.strip_file_scheme(selectedFile);
+            // On Android the picker returns a content:// URI (Storage Access
+            // Framework), not a real filesystem path. Materialize it to a temp
+            // file the Rust scanner can open.
+            if (Qt.platform.os === "android" && path.startsWith("content://")) {
+                const temp_path = SuttaBridge.copy_content_uri_to_temp(path);
+                if (temp_path === "") {
+                    root.scan_message = "Could not access the selected file.";
+                    return;
+                }
+                path = temp_path;
+            }
+            root.begin_scan("single_zip", path);
+        }
         onRejected: root.canceled()
     }
 
@@ -242,6 +270,7 @@ ApplicationWindow {
                         ButtonGroup.group: source_group
                         property string kind: "single_dir"
                         Layout.fillWidth: true
+                        visible: root.is_desktop
                         contentItem: Text {
                             text: opt_single_dir.text
                             font: opt_single_dir.font
@@ -259,6 +288,7 @@ ApplicationWindow {
                         ButtonGroup.group: source_group
                         property string kind: "zip_folder"
                         Layout.fillWidth: true
+                        visible: root.is_desktop
                         contentItem: Text {
                             text: opt_zip_folder.text
                             font: opt_zip_folder.font
@@ -276,6 +306,7 @@ ApplicationWindow {
                         ButtonGroup.group: source_group
                         property string kind: "dir_folder"
                         Layout.fillWidth: true
+                        visible: root.is_desktop
                         contentItem: Text {
                             text: opt_dir_folder.text
                             font: opt_dir_folder.font
@@ -284,6 +315,17 @@ ApplicationWindow {
                             wrapMode: Text.WordWrap
                             leftPadding: opt_dir_folder.indicator.width + opt_dir_folder.spacing
                         }
+                    }
+
+                    Label {
+                        visible: root.is_mobile
+                        text: "On mobile, only .zip imports are supported. Multiple dictionaries have to be imported one at a time."
+                        font.pointSize: root.pointSize
+                        font.italic: true
+                        color: palette.mid
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        Layout.topMargin: 6
                     }
                 }
 
@@ -307,7 +349,14 @@ ApplicationWindow {
                         text: "OK"
                         font.pointSize: root.pointSize
                         onClicked: {
-                            const kind = source_group.checkedButton.kind;
+                            // `kind` is a dynamic property on each RadioButton; ButtonGroup
+                            // types checkedButton as QQuickAbstractButton, so pick the kind
+                            // directly from whichever option is checked.
+                            const kind = opt_single_zip.checked ? opt_single_zip.kind
+                                : opt_single_dir.checked ? opt_single_dir.kind
+                                : opt_zip_folder.checked ? opt_zip_folder.kind
+                                : opt_dir_folder.checked ? opt_dir_folder.kind
+                                : "single_zip";
                             if (kind === "single_zip") {
                                 file_dialog.open();
                             } else {
@@ -404,7 +453,7 @@ ApplicationWindow {
                             font.pointSize: root.pointSize
                             onClicked: {
                                 for (let i = 0; i < checklist_repeater.count; i++) {
-                                    const it = checklist_repeater.itemAt(i);
+                                    const it = checklist_repeater.itemAt(i) as DictionaryImportRow;
                                     if (it) it.checked = true;
                                 }
                                 root.recompute();
@@ -416,7 +465,7 @@ ApplicationWindow {
                             font.pointSize: root.pointSize
                             onClicked: {
                                 for (let i = 0; i < checklist_repeater.count; i++) {
-                                    const it = checklist_repeater.itemAt(i);
+                                    const it = checklist_repeater.itemAt(i) as DictionaryImportRow;
                                     if (it) it.checked = false;
                                 }
                                 root.recompute();
@@ -480,7 +529,7 @@ ApplicationWindow {
                         onClicked: {
                             const items = [];
                             for (let i = 0; i < checklist_repeater.count; i++) {
-                                const it = checklist_repeater.itemAt(i);
+                                const it = checklist_repeater.itemAt(i) as DictionaryImportRow;
                                 if (it && it.checked) {
                                     items.push({
                                         path: it.source_path,

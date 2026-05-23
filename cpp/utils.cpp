@@ -243,10 +243,55 @@ QString copy_content_uri_to_temp_file(const QString& content_uri) {
         return QString("");
     }
 
-    // Extract filename from URI (last part after /)
-    QString filename = content_uri.section('/', -1);
+    // Try to resolve the user-visible filename via ContentResolver
+    // (OpenableColumns.DISPLAY_NAME). The URI's last path segment is often an
+    // opaque id like "msf%3A1003", so falling back to it loses the original
+    // name (e.g. "mw-gd.zip" becomes "msf_3A1003").
+    QString filename;
+    {
+        QJniObject activity = QJniObject::callStaticObjectMethod(
+            "org/qtproject/qt/android/QtNative",
+            "activity",
+            "()Landroid/app/Activity;");
+        QJniObject resolver = activity.isValid()
+            ? activity.callObjectMethod("getContentResolver", "()Landroid/content/ContentResolver;")
+            : QJniObject();
+        QJniObject uri_obj = QJniObject::callStaticObjectMethod(
+            "android/net/Uri",
+            "parse",
+            "(Ljava/lang/String;)Landroid/net/Uri;",
+            QJniObject::fromString(content_uri).object<jstring>());
+
+        if (resolver.isValid() && uri_obj.isValid()) {
+            QJniEnvironment env;
+            jobjectArray projection = env->NewObjectArray(
+                1, env->FindClass("java/lang/String"),
+                QJniObject::fromString("_display_name").object<jstring>());
+
+            QJniObject cursor = resolver.callObjectMethod(
+                "query",
+                "(Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;",
+                uri_obj.object(), projection, nullptr, nullptr, nullptr);
+            env->DeleteLocalRef(projection);
+
+            if (cursor.isValid() && cursor.callMethod<jboolean>("moveToFirst")) {
+                QJniObject name_obj = cursor.callObjectMethod("getString", "(I)Ljava/lang/String;", 0);
+                if (name_obj.isValid()) {
+                    filename = name_obj.toString();
+                }
+            }
+            if (cursor.isValid()) {
+                cursor.callMethod<void>("close");
+            }
+        }
+    }
+
     if (filename.isEmpty()) {
-        filename = "imported_file";
+        // Fallback: last URI segment, or a generic name.
+        filename = content_uri.section('/', -1);
+        if (filename.isEmpty()) {
+            filename = "imported_file";
+        }
     }
 
     // Create temp directory
