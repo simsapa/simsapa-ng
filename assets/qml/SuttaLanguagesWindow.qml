@@ -466,12 +466,26 @@ ApplicationWindow {
             return;
         }
 
-        // Build URLs for selected languages
-        const base_url = "https://github.com/simsapa/simsapa-ng-assets/releases/download/v0.1.5/suttas_lang_";
+        // Build URLs for selected languages using the version reported by SuttaBridge
+        const github_repo = SuttaBridge.get_compatible_asset_github_repo();
+        let version = SuttaBridge.get_compatible_asset_version_tag();
+
+        if (github_repo === "" || version === "") {
+            error_dialog.error_message = "Unable to retrieve download information.\n\nPlease check your internet connection and try again.";
+            error_dialog.open();
+            return;
+        }
+
+        // ensure 'v' prefix
+        if (version[0] !== "v") {
+            version = "v" + version;
+        }
+
         let urls = [];
 
         for (let i = 0; i < selected_codes.length; i++) {
-            urls.push(base_url + selected_codes[i] + ".tar.bz2");
+            const lang_url = `https://github.com/${github_repo}/releases/download/${version}/suttas_lang_${selected_codes[i]}.tar.bz2`;
+            urls.push(lang_url);
         }
 
         logger.info("Starting download for: " + urls);
