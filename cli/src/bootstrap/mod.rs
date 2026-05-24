@@ -286,9 +286,9 @@ RELEASE_CHANNEL=development
         // Drop connection to close database before further operations
         drop(conn);
 
-        logger::info("=== Create appdata.tar.bz2 ===");
-
-        create_appdata_archive(&assets_dir, &release_databases_dir)?;
+        // Note: appdata.tar.bz2 is created later, after DPD bootstrap, FTS5
+        // indexes, and the AppSettings cache warm — so the shipped archive
+        // contains the warmed `app_settings` row.
 
     } else {
         logger::info("Skipping Appdata initialization and bootstrap");
@@ -409,6 +409,21 @@ RELEASE_CHANNEL=development
         // Create index.tar.bz2 from the index/ directory
         logger::info("=== Create index.tar.bz2 ===");
         create_index_archive(&assets_dir, &release_databases_dir)?;
+    }
+
+    // Warm the AppSettings caches into appdata.sqlite3 BEFORE archiving so the
+    // shipped DB launches with zero SELECT DISTINCT work on the GUI thread.
+    // At this point en/pli suttas, libraries, chanting, DPD, DPPN and FTS5
+    // indexes are all in place — the five cache fields can be fully populated.
+    // Additional per-language sutta DBs are imported into separate
+    // `suttas_lang_*.sqlite3` files (not the main appdata), so they don't
+    // affect these caches.
+    if !skip_appdata {
+        logger::info("=== Warm AppSettings caches ===");
+        simsapa_backend::app_data::warm_caches_into_appdata();
+
+        logger::info("=== Create appdata.tar.bz2 ===");
+        create_appdata_archive(&assets_dir, &release_databases_dir)?;
     }
 
     logger::info("=== Bootstrap Languages from SuttaCentral ===");
@@ -584,6 +599,17 @@ RELEASE_CHANNEL=development
         }
     } else {
         logger::info("Skipping Hungarian from Buddha Ujja bootstrap");
+    }
+
+    // Per-language sutta DBs above were imported into separate
+    // `suttas_lang_*.sqlite3` files, so they did not modify the main
+    // appdata.sqlite3's `app_settings` caches. Refresh the local dist copy
+    // anyway so the working dir's appdata reflects everything that was
+    // imported. The shipped `appdata.tar.bz2` was archived earlier and is
+    // NOT re-created here.
+    if !skip_appdata {
+        logger::info("=== Refresh AppSettings caches in dist appdata ===");
+        simsapa_backend::app_data::warm_caches_into_appdata();
     }
 
     logger::info("=== Release Info ===");

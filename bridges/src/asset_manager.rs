@@ -555,6 +555,13 @@ impl qobject::AssetManager {
                             qt_thread.queue(move |mut qo| {
                                 qo.as_mut().download_show_msg(success_msg);
                             }).unwrap();
+                            // Refresh the per-area language caches off the
+                            // calling thread so the search-bar language filter
+                            // dropdown reflects the new sutta language on the
+                            // next area switch.
+                            std::thread::spawn(|| {
+                                simsapa_backend::get_app_data().refresh_language_caches();
+                            });
                         }
                         Err(e) => {
                             error(&format!("Failed to import {}: {}", &download_file_name, e));

@@ -29,6 +29,13 @@ Notable feature docs:
   are loaded from distinct DB values, and where the filter is applied in the
   Suttas / Dictionary / Library query paths (including the "no filter" gate and
   the DPD `language = "pli"` gotcha).
+- [Startup sequence and caches](./docs/startup-sequence-and-caches.md) — what
+  runs synchronously vs. on a background thread vs. deferred to first QML use,
+  the five `AppSettings` caches and their refresh hooks, why background warming
+  lives in `init_app_data()` (not `AppData::new()`), the
+  `Loader` vs. `Component + createObject` rule for QML wrapping based on root
+  element type (`Dialog`/`Popup` vs `ApplicationWindow`), and the eager-binding
+  pre-flight required before deferring components.
 
 ## Specific coding procedures
 

@@ -125,6 +125,19 @@ pub struct AppSettings {
     /// during a session).
     #[serde(default)]
     pub cached_commentary_definitions_source_uids: Vec<String>,
+    /// Cached distinct `suttas.language` values. Populated at bootstrap and
+    /// refreshed after sutta-language download / removal.
+    #[serde(default)]
+    pub cached_sutta_languages: Vec<String>,
+    /// Cached distinct `dict_words.language` values. Populated at bootstrap and
+    /// refreshed after user-dict import / delete / rename.
+    #[serde(default)]
+    pub cached_dict_languages: Vec<String>,
+    /// Cached distinct library languages (merge of `book_spine_items.language`
+    /// and `books.language`). Populated at bootstrap; no runtime book-import
+    /// path exists today.
+    #[serde(default)]
+    pub cached_library_languages: Vec<String>,
     /// Whether to restore the last session (open tabs) on startup
     #[serde(default = "default_true")]
     pub restore_last_session: bool,
@@ -282,6 +295,9 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             search_last_language: IndexMap::new(),
             cached_shipped_source_uids: Vec::new(),
             cached_commentary_definitions_source_uids: Vec::new(),
+            cached_sutta_languages: Vec::new(),
+            cached_dict_languages: Vec::new(),
+            cached_library_languages: Vec::new(),
             restore_last_session: true,
         }
     }

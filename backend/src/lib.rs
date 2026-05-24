@@ -105,10 +105,36 @@ pub extern "C" fn init_app_data() {
         let app_data = AppData::new();
         APP_DATA.set(app_data).expect("Can't set AppData");
         info("init_appdata() end");
+
+        // Background fallback warm: if any of the five caches are empty
+        // (legacy DB, or bootstrap warm did not run), recompute them off
+        // the GUI thread. APP_DATA is already set, so the worker can call
+        // get_app_data() safely. Until it finishes, get_cached_* returns
+        // an empty Vec — the language-filter dropdown shows the sentinel
+        // only and refreshes on the next area switch.
+        let needs_warm = {
+            let s = get_app_data().app_settings_cache.read().expect("Failed to read app settings");
+            s.cached_shipped_source_uids.is_empty()
+                || s.cached_commentary_definitions_source_uids.is_empty()
+                || s.cached_sutta_languages.is_empty()
+                || s.cached_dict_languages.is_empty()
+                || s.cached_library_languages.is_empty()
+        };
+        if needs_warm {
+            std::thread::spawn(|| {
+                let app_data = get_app_data();
+                app_data.refresh_dict_source_uid_caches();
+                app_data.refresh_language_caches();
+            });
+        }
     }
 
-    // Initialize the fulltext searcher (safe to call multiple times, uses OnceLock)
-    init_fulltext_searcher();
+    // The fulltext searcher is initialised lazily off the GUI thread by
+    // `SuttaBridge::load_searcher()` (called from QML alongside
+    // `SuttaBridge.load_db()`). Opening the Tantivy indexes is the slowest
+    // single thing in startup on cold mobile storage and is not needed before
+    // the user fires their first query — keeping it off the critical path
+    // here means `apply_theme()` is reached without paying that cost.
 }
 
 pub fn get_app_data() -> &'static AppData {
