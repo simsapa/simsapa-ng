@@ -459,6 +459,15 @@ ApplicationWindow {
     }
 
     function handle_query(query_text_orig: string, min_length=4) {
+        // Gate on db_loaded && searcher_ready: search button is already
+        // disabled until db_loaded, but keyboard shortcuts, drawer items,
+        // and programmatic triggers (e.g. search-as-you-type, results-tab
+        // re-runs) can fire before the searcher is open. The backend's
+        // with_fulltext_searcher() returns None until ready, so this is a
+        // UX gate (avoid a silent no-op) rather than a safety gate.
+        if (!SuttaBridge.db_loaded || !SuttaBridge.searcher_ready)
+            return;
+
         if (query_text_orig === 'uid:')
             return;
 
@@ -1181,6 +1190,7 @@ ${query_text}`;
             root.apply_theme();
             root.load_keybindings();
             SuttaBridge.load_db();
+            SuttaBridge.load_searcher();
             // Database validation queries are deferred until after the update
             // check completes (see update_check_timer / update result handlers
             // below). If the update check reports the local DB is obsolete,
@@ -2279,6 +2289,7 @@ ${query_text}`;
                 is_tall: root.is_tall
                 icon_size: root.icon_size
                 db_loaded: SuttaBridge.db_loaded
+                searcher_ready: SuttaBridge.searcher_ready
                 handle_query_fn: root.handle_query
                 search_timer: search_timer
                 mobile_menu: mobile_menu

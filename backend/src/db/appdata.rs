@@ -1563,6 +1563,18 @@ impl AppdataDbHandle {
         }
 
         info("remove_sutta_languages(): All languages removed successfully");
+
+        // Refresh the per-area language caches off the calling thread so the
+        // search-bar language filter dropdown reflects the removal on the
+        // next area switch.
+        if any_deleted {
+            std::thread::spawn(|| {
+                if let Some(app_data) = crate::try_get_app_data() {
+                    app_data.refresh_language_caches();
+                }
+            });
+        }
+
         Ok(any_deleted)
     }
 

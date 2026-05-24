@@ -22,7 +22,7 @@ use simsapa_backend::dictionary_manager_core::{
     validate_label as core_validate_label,
 };
 use simsapa_backend::dict_index_reconcile::{self, ReconcileProgress};
-use simsapa_backend::get_app_data;
+use simsapa_backend::{get_app_data, app_data::refresh_all_dict_caches};
 use simsapa_backend::logger::{error, info};
 use simsapa_backend::stardict_parse::StardictImportProgress;
 use simsapa_backend::db::dictionaries_models::Dictionary;
@@ -340,12 +340,12 @@ impl qobject::DictionaryManager {
                                 outcome.dictionary_id, e
                             ));
                         }
-                        get_app_data().refresh_dict_source_uid_caches();
+                        refresh_all_dict_caches();
                         format!("Import aborted — \"{}\" was not imported (nothing kept).", label)
                     } else {
                         // Partial abort: rows already committed are intentionally
                         // left in the DB so the next startup reconcile picks them up.
-                        get_app_data().refresh_dict_source_uid_caches();
+                        refresh_all_dict_caches();
                         format!(
                             "Import aborted — \"{}\" was partially imported ({} entries).",
                             label, outcome.inserted
@@ -357,7 +357,7 @@ impl qobject::DictionaryManager {
                     });
                 }
                 Ok(outcome) => {
-                    get_app_data().refresh_dict_source_uid_caches();
+                    refresh_all_dict_caches();
                     let label_qs = QString::from(&label);
                     let inserted = outcome.inserted as i32;
                     let elapsed_ms = started.elapsed().as_millis() as i32;
@@ -412,10 +412,10 @@ impl qobject::DictionaryManager {
                                 outcome.dictionary_id, e
                             ));
                         }
-                        get_app_data().refresh_dict_source_uid_caches();
+                        refresh_all_dict_caches();
                         format!("Import aborted — \"{}\" was not imported (nothing kept).", label)
                     } else {
-                        get_app_data().refresh_dict_source_uid_caches();
+                        refresh_all_dict_caches();
                         format!(
                             "Import aborted — \"{}\" was partially imported ({} entries).",
                             label, outcome.inserted
@@ -427,7 +427,7 @@ impl qobject::DictionaryManager {
                     });
                 }
                 Ok(outcome) => {
-                    get_app_data().refresh_dict_source_uid_caches();
+                    refresh_all_dict_caches();
                     let label_qs = QString::from(&label);
                     let inserted = outcome.inserted as i32;
                     let elapsed_ms = started.elapsed().as_millis() as i32;
@@ -514,7 +514,7 @@ impl qobject::DictionaryManager {
             let started = Instant::now();
             match dictionary_manager_core::delete_user_dictionary(dictionary_id) {
                 Ok(()) => {
-                    get_app_data().refresh_dict_source_uid_caches();
+                    refresh_all_dict_caches();
                     let elapsed_ms = started.elapsed().as_millis() as i32;
                     let label_qs = QString::from(&label);
                     let _ = qt_thread.queue(move |mut qo| {
@@ -560,7 +560,7 @@ impl qobject::DictionaryManager {
             let started = Instant::now();
             match dictionary_manager_core::rename_user_dictionary(dictionary_id, &new_label) {
                 Ok(()) => {
-                    get_app_data().refresh_dict_source_uid_caches();
+                    refresh_all_dict_caches();
                     let elapsed_ms = started.elapsed().as_millis() as i32;
                     let old_qs = QString::from(&old_label);
                     let new_qs = QString::from(&new_label);

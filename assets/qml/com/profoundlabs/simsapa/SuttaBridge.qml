@@ -6,6 +6,7 @@ Item {
     id: root
 
     property bool db_loaded: false;
+    property bool searcher_ready: false;
     property bool sutta_references_loaded: false;
     property bool topic_index_loaded: false;
     property var dpd_lookup_test_data: ({})
@@ -63,6 +64,13 @@ Item {
 
     function load_db() {
         console.log("load_db()");
+    }
+
+    function load_searcher() {
+        console.log("load_searcher()");
+        Qt.callLater(function() {
+            root.searcher_ready = true;
+        });
     }
 
     function load_sutta_references() {

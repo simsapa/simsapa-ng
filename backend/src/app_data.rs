@@ -38,26 +38,11 @@ impl AppData {
         let app_settings_cache = RwLock::new(dbm.appdata.get_app_settings().clone());
         let g = get_app_globals();
 
-        let app_data = AppData {
+        AppData {
             dbm,
             app_settings_cache,
             api_url: g.api_url.clone(),
-        };
-
-        // Warm the static dictionary source-uid caches if missing. Computing
-        // these requires SELECT DISTINCT scans against dict_words / dpd; the
-        // result is effectively constant for a session, so doing it once at
-        // init keeps the dictionary search hot path off the DB.
-        let needs_warm = {
-            let s = app_data.app_settings_cache.read().expect("Failed to read app settings");
-            s.cached_shipped_source_uids.is_empty()
-                || s.cached_commentary_definitions_source_uids.is_empty()
-        };
-        if needs_warm {
-            app_data.refresh_dict_source_uid_caches();
         }
-
-        app_data
     }
 
     /// Recompute the cached shipped + commentary-definitions source-uid lists

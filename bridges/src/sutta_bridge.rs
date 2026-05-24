@@ -570,6 +570,7 @@ pub mod qobject {
         #[qml_element]
         #[qml_singleton]
         #[qproperty(bool, db_loaded)]
+        #[qproperty(bool, searcher_ready)]
         #[qproperty(bool, sutta_references_loaded)]
         #[qproperty(bool, topic_index_loaded)]
         #[namespace = "sutta_bridge"]
@@ -687,6 +688,9 @@ pub mod qobject {
 
         #[qinvokable]
         fn load_db(self: Pin<&mut SuttaBridge>);
+
+        #[qinvokable]
+        fn load_searcher(self: Pin<&mut SuttaBridge>);
 
         #[qinvokable]
         fn load_sutta_references(self: Pin<&mut SuttaBridge>);
@@ -1342,6 +1346,7 @@ pub mod qobject {
 #[derive(Default)]
 pub struct SuttaBridgeRust {
     db_loaded: bool,
+    searcher_ready: bool,
     sutta_references_loaded: bool,
     /// Flag to track if topic index has been loaded
     topic_index_loaded: bool,
@@ -1375,6 +1380,23 @@ impl qobject::SuttaBridge {
                 qo.as_mut().set_db_loaded(r);
             }).unwrap();
             info("SuttaBridge::load_db() end");
+        });
+    }
+
+    pub fn load_searcher(self: Pin<&mut Self>) {
+        info("SuttaBridge::load_searcher() start");
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            // Opens the Tantivy indexes off the GUI thread. Idempotent —
+            // `init_fulltext_searcher` checks `FULLTEXT_SEARCHER` is empty
+            // before opening. `with_fulltext_searcher` returns `None` until
+            // this completes, so callers that haven't gated on
+            // `searcher_ready` still no-op safely.
+            simsapa_backend::init_fulltext_searcher();
+            qt_thread.queue(move |mut qo| {
+                qo.as_mut().set_searcher_ready(true);
+            }).unwrap();
+            info("SuttaBridge::load_searcher() end");
         });
     }
 
