@@ -51,4 +51,7 @@ CREATE INDEX dict_words_dict_label_idx ON dict_words(dict_label);
 -- Composite index for dict_label + word filtering
 CREATE INDEX dict_words_idx ON dict_words(dict_label, word);
 
+-- Covering index for SELECT DISTINCT language FROM dict_words (search-bar lang filter).
+CREATE INDEX dict_words_language_idx ON dict_words(language);
+
 -- FTS5 trigram indexes will be added with sql script.

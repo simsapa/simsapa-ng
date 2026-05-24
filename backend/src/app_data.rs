@@ -67,14 +67,14 @@ impl AppData {
         let shipped: Vec<String> = match self.dbm.dictionaries.list_shipped_source_uids() {
             Ok(set) => set.into_iter().collect(),
             Err(e) => {
-                error(&format!("refresh_dict_source_uid_caches shipped: {}", e));
+                error(&format!("refresh_dict_source_uid_caches shipped: {:#}", e));
                 return;
             }
         };
         let commentary: Vec<String> = match self.dbm.dpd.list_distinct_bold_def_ref_codes() {
             Ok(set) => set.into_iter().collect(),
             Err(e) => {
-                error(&format!("refresh_dict_source_uid_caches commentary: {}", e));
+                error(&format!("refresh_dict_source_uid_caches commentary: {:#}", e));
                 return;
             }
         };
@@ -99,6 +99,49 @@ impl AppData {
     pub fn get_cached_commentary_definitions_source_uids(&self) -> Vec<String> {
         self.app_settings_cache.read().expect("Failed to read app settings")
             .cached_commentary_definitions_source_uids.clone()
+    }
+
+    pub fn get_cached_sutta_languages(&self) -> Vec<String> {
+        self.app_settings_cache.read().expect("Failed to read app settings")
+            .cached_sutta_languages.clone()
+    }
+
+    pub fn get_cached_dict_languages(&self) -> Vec<String> {
+        self.app_settings_cache.read().expect("Failed to read app settings")
+            .cached_dict_languages.clone()
+    }
+
+    pub fn get_cached_library_languages(&self) -> Vec<String> {
+        self.app_settings_cache.read().expect("Failed to read app settings")
+            .cached_library_languages.clone()
+    }
+
+    /// Recompute the per-area distinct-language caches (sutta / dict / library)
+    /// from the source-of-truth queries and persist them. Called at startup
+    /// when caches are empty, and after sutta language download/removal and
+    /// user-dict import/delete/rename.
+    pub fn refresh_language_caches(&self) {
+        let sutta_langs = self.dbm.appdata.get_sutta_languages();
+        let dict_langs = self.dbm.dictionaries.get_distinct_languages();
+        let library_langs = match crate::search::indexer::get_library_languages(&self.dbm.appdata) {
+            Ok(v) => {
+                let mut v = v;
+                v.sort();
+                v
+            }
+            Err(e) => {
+                error(&format!("refresh_language_caches library: {}", e));
+                return;
+            }
+        };
+        let snapshot = {
+            let mut s = self.app_settings_cache.write().expect("Failed to write app settings");
+            s.cached_sutta_languages = sutta_langs;
+            s.cached_dict_languages = dict_langs;
+            s.cached_library_languages = library_langs;
+            s.clone()
+        };
+        self.persist_app_settings(&snapshot);
     }
 
     /// Reset the `app_settings` row in `appdata` to `AppSettings::default()` and
@@ -4294,4 +4337,30 @@ fn get_ios_cpu_max_frequency_mhz() -> Option<u64> {
             Some(2400) // 2.4 GHz - typical for modern iPhones
         }
     }
+}
+
+
+/// Free-standing umbrella helper: spawn a background thread that refreshes
+/// both the dict source-uid caches and the per-area language caches. Used by
+/// the user-dict mutation call sites in the bridges so the calling thread
+/// (GUI or bridge worker) never blocks on the DISTINCT scans.
+pub fn refresh_all_dict_caches() {
+    std::thread::spawn(|| {
+        let app_data = crate::get_app_data();
+        app_data.refresh_dict_source_uid_caches();
+        app_data.refresh_language_caches();
+    });
+}
+
+/// Synchronous variant used at bootstrap (cli) to pre-warm all five
+/// `AppSettings::cached_*` fields in `appdata.sqlite3` so a freshly
+/// bootstrapped DB ships with the caches populated and first launch never
+/// needs to run the underlying `SELECT DISTINCT` scans on the GUI thread.
+pub fn warm_caches_into_appdata() {
+    crate::logger::info("=== warm_caches_into_appdata() ===");
+    crate::init_app_data();
+    let app_data = crate::get_app_data();
+    app_data.refresh_dict_source_uid_caches();
+    app_data.refresh_language_caches();
+    crate::logger::info("warm_caches_into_appdata: done");
 }

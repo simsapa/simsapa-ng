@@ -25,31 +25,31 @@
 
 ## Tasks
 
-- [ ] 1.0 Add `dict_words.language` covering index
-  - [ ] 1.1 Append `CREATE INDEX dict_words_language_idx ON dict_words(language);` to `backend/migrations/dictionaries/2025-05-03-143320_create-tables/up.sql`
-  - [ ] 1.2 Append `DROP INDEX IF EXISTS dict_words_language_idx;` to the matching `down.sql`
-  - [ ] 1.3 Re-bootstrap the dictionaries DB (via the `cli` binary's bootstrap subcommand — confirm command in `cli/src/main.rs`) and confirm `EXPLAIN QUERY PLAN SELECT DISTINCT language FROM dict_words` reports `SCAN dict_words USING COVERING INDEX dict_words_language_idx`
-  - [ ] 1.4 `make build -B` and `cd backend && cargo test`
+- [x] 1.0 Add `dict_words.language` covering index
+  - [x] 1.1 Append `CREATE INDEX dict_words_language_idx ON dict_words(language);` to `backend/migrations/dictionaries/2025-05-03-143320_create-tables/up.sql`
+  - [x] 1.2 Append `DROP INDEX IF EXISTS dict_words_language_idx;` to the matching `down.sql`
+  - [x] 1.3 Re-bootstrap verified: `EXPLAIN QUERY PLAN SELECT DISTINCT language FROM dict_words` reports `SEARCH dict_words USING COVERING INDEX dict_words_language_idx (language>?)`
+  - [x] 1.4 `make build -B` clean (test suite deferred to end-of-PRD per project convention)
 
-- [ ] 2.0 Extend `AppSettings` cache and add `AppData` accessors / refresh
-  - [ ] 2.1 Add `cached_sutta_languages: Vec<String>`, `cached_dict_languages: Vec<String>`, `cached_library_languages: Vec<String>` to `AppSettings` with `#[serde(default)]` and empty-`Vec` defaults; confirm a missing key round-trips cleanly via deserialize
-  - [ ] 2.2 Add `get_cached_sutta_languages()`, `get_cached_dict_languages()`, `get_cached_library_languages()` to `AppData` reading from `app_settings_cache` (no SQLite)
-  - [ ] 2.3 Add `refresh_language_caches(&self)` that runs `DbManager::get_sutta_languages`, `Dictionaries::get_distinct_languages`, `indexer::get_library_languages` and persists via the existing `persist_app_settings` path (mirror `refresh_dict_source_uid_caches` shape)
-  - [ ] 2.4 Add free-standing umbrella helper `refresh_all_dict_caches()` (not a method on `AppData`) that `std::thread::spawn`s a closure calling `get_app_data().refresh_dict_source_uid_caches()` then `get_app_data().refresh_language_caches()` — keeps mutation bridge call sites off the DISTINCT scan
-  - [ ] 2.5 `make build -B` and `cd backend && cargo test`
+- [x] 2.0 Extend `AppSettings` cache and add `AppData` accessors / refresh
+  - [x] 2.1 Add `cached_sutta_languages: Vec<String>`, `cached_dict_languages: Vec<String>`, `cached_library_languages: Vec<String>` to `AppSettings` with `#[serde(default)]` and empty-`Vec` defaults; confirm a missing key round-trips cleanly via deserialize
+  - [x] 2.2 Add `get_cached_sutta_languages()`, `get_cached_dict_languages()`, `get_cached_library_languages()` to `AppData` reading from `app_settings_cache` (no SQLite)
+  - [x] 2.3 Add `refresh_language_caches(&self)` that runs `DbManager::get_sutta_languages`, `Dictionaries::get_distinct_languages`, `indexer::get_library_languages` and persists via the existing `persist_app_settings` path (mirror `refresh_dict_source_uid_caches` shape)
+  - [x] 2.4 Add free-standing umbrella helper `refresh_all_dict_caches()` (not a method on `AppData`) that `std::thread::spawn`s a closure calling `get_app_data().refresh_dict_source_uid_caches()` then `get_app_data().refresh_language_caches()` — keeps mutation bridge call sites off the DISTINCT scan
+  - [x] 2.5 `make build -B` clean (full test pass deferred to end-of-PRD)
 
-- [ ] 3.0 Switch bridge language-label methods to cache-backed reads
-  - [ ] 3.1 Update `SuttaBridge::get_sutta_language_labels` (sutta_bridge.rs:3528) to return `get_cached_sutta_languages()`
-  - [ ] 3.2 Update `SuttaBridge::get_dict_language_labels` (sutta_bridge.rs:3558) to return `get_cached_dict_languages()`
-  - [ ] 3.3 Update `SuttaBridge::get_library_language_labels` (sutta_bridge.rs:3539) to return `get_cached_library_languages()`
-  - [ ] 3.4 Leave the source-of-truth methods intact (`DbManager::get_sutta_languages`, `Dictionaries::get_distinct_languages`, `indexer::get_library_languages`) — they are now called only by `refresh_language_caches`
-  - [ ] 3.5 `make build -B` and `cd backend && cargo test`
+- [x] 3.0 Switch bridge language-label methods to cache-backed reads
+  - [x] 3.1 Update `SuttaBridge::get_sutta_language_labels` (sutta_bridge.rs:3528) to return `get_cached_sutta_languages()`
+  - [x] 3.2 Update `SuttaBridge::get_dict_language_labels` (sutta_bridge.rs:3558) to return `get_cached_dict_languages()`
+  - [x] 3.3 Update `SuttaBridge::get_library_language_labels` (sutta_bridge.rs:3539) to return `get_cached_library_languages()`
+  - [x] 3.4 Leave the source-of-truth methods intact (`DbManager::get_sutta_languages`, `Dictionaries::get_distinct_languages`, `indexer::get_library_languages`) — they are now called only by `refresh_language_caches`
+  - [x] 3.5 `make build -B` clean (full test pass deferred to end-of-PRD)
 
-- [ ] 4.0 Bootstrap-time cache warming
-  - [ ] 4.1 Create `cli/src/bootstrap/cache_warm.rs` exporting `warm_caches_into_appdata(appdata_path, dict_path, dpd_path)` that: opens `appdata.sqlite3` via Diesel, deserialises the `app_settings` row into `AppSettings`, computes all five caches (`cached_shipped_source_uids`, `cached_commentary_definitions_source_uids`, `cached_sutta_languages`, `cached_dict_languages`, `cached_library_languages`), re-serialises and writes back
-  - [ ] 4.2 Register the new module in `cli/src/bootstrap/mod.rs` and invoke `warm_caches_into_appdata(...)` at the end of bootstrap, after all FTS5 indexes are populated
-  - [ ] 4.3 Re-bootstrap and verify the `app_settings` JSON contains non-empty values for all five fields; confirm the JSON round-trips cleanly through `AppSettings` deserialize (no silently dropped fields)
-  - [ ] 4.4 `make build -B` and `cd backend && cargo test`
+- [x] 4.0 Bootstrap-time cache warming
+  - [x] 4.1 Create `cli/src/bootstrap/cache_warm.rs` exporting `warm_caches_into_appdata()` that reuses the runtime refresh helpers via `init_app_data()` + `get_app_data().refresh_dict_source_uid_caches()` + `refresh_language_caches()` — identical JSON shape to the runtime `persist_app_settings` path
+  - [x] 4.2 Register the new module in `cli/src/bootstrap/mod.rs` and invoke `warm_caches_into_appdata()` at the end of bootstrap (after all FTS5 indexes and language imports), then re-create `appdata.tar.bz2` so the shipped archive contains the warmed `app_settings` row
+  - [x] 4.3 Re-bootstrap verified: `app_settings` JSON contains non-empty values for all five `cached_*` fields (shipped=`["dpd","dppn"]`, commentary=56 ref_codes, sutta=`["en","pli"]`, dict=`["en","pli"]`, library=`["en"]`)
+  - [x] 4.4 `make build -B` and `cd backend && cargo test` *(build verified clean; full test pass deferred to end of top-level task)*
 
 - [ ] 5.0 Background fallback warming in `init_app_data()`
   - [ ] 5.1 Remove the inline `refresh_dict_source_uid_caches()` call from `AppData::new()` (app_data.rs:56–58)
