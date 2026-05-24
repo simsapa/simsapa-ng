@@ -12,7 +12,7 @@
 - `bridges/src/dictionary_manager.rs` - Replace 8 `refresh_dict_source_uid_caches()` call sites (lines 343, 348, 360, 415, 418, 430, 517, 563) with `refresh_all_dict_caches()` (which spawns the work on a background thread).
 - `bridges/src/asset_manager.rs` - Spawn `refresh_language_caches()` on a background thread at the end of the success branch of `import_suttas_lang_to_appdata` (call site at line 551).
 - `cli/src/bootstrap/mod.rs` - Call `warm_caches_into_appdata(...)` at the end of bootstrap.
-- `cli/src/bootstrap/cache_warm.rs` - New helper that opens appdata via Diesel, deserialises `app_settings` into `AppSettings`, populates the five `cached_*` fields, re-serialises and writes back.
+- `backend/src/app_data.rs` - Hosts `warm_caches_into_appdata()` (small enough that the originally-planned dedicated `cli/src/bootstrap/cache_warm.rs` module was not created; the helper lives alongside the runtime refresh methods).
 - `assets/qml/SearchBarInput.qml` - Cache-backed bridge calls land here via `load_language_labels_for_area` (line 60).
 - `assets/qml/SuttaSearchWindow.qml` - Pre-flight binding rewrites (`webview_visible` at line 69; `app_settings_window.search_as_you_type` at lines 428, 2285, 3183; `app_settings_window.open_find_in_sutta_results` at line 1004; `gloss_tab.commonWordsDialog` at lines 69 and 1978; `models_dialog.auto_retry.checked` at lines 3334, 3351 — cross-deferred-component binding; `update_notification_dialog.show_*` calls at lines 2236, 2241, 2249, 2253; menu `.show()` triggers at lines 1490, 1986, 1999, 2007, 2028, 2035; `tab_list_dialog.visible` at lines 1166, 1172, 1296, 1774, 1844, 1861, 1942, 1959); add `searcher_ready` gate on every `handle_query` entry point (not just the button); wrap heavy tabs/dialogs (Loader for `Dialog`/`Popup`/`Item` roots, `Component` + `createObject(null)` for `ApplicationWindow` roots); instrument `Component.onCompleted`.
 - `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` - qmllint stub for `searcher_ready` qproperty.
@@ -46,7 +46,7 @@
   - [x] 3.5 `make build -B` clean (full test pass deferred to end-of-PRD)
 
 - [x] 4.0 Bootstrap-time cache warming
-  - [x] 4.1 Create `cli/src/bootstrap/cache_warm.rs` exporting `warm_caches_into_appdata()` that reuses the runtime refresh helpers via `init_app_data()` + `get_app_data().refresh_dict_source_uid_caches()` + `refresh_language_caches()` — identical JSON shape to the runtime `persist_app_settings` path
+  - [x] 4.1 Add `warm_caches_into_appdata()` in `backend/src/app_data.rs` (rather than a separate `cli/src/bootstrap/cache_warm.rs` — the helper turned out to be small enough to live next to the runtime refresh methods). Reuses the runtime refresh helpers via `init_app_data()` + `get_app_data().refresh_dict_source_uid_caches()` + `refresh_language_caches()` — identical JSON shape to the runtime `persist_app_settings` path
   - [x] 4.2 Register the new module in `cli/src/bootstrap/mod.rs` and invoke `warm_caches_into_appdata()` at the end of bootstrap (after all FTS5 indexes and language imports), then re-create `appdata.tar.bz2` so the shipped archive contains the warmed `app_settings` row
   - [x] 4.3 Re-bootstrap verified: `app_settings` JSON contains non-empty values for all five `cached_*` fields (shipped=`["dpd","dppn"]`, commentary=56 ref_codes, sutta=`["en","pli"]`, dict=`["en","pli"]`, library=`["en"]`)
   - [x] 4.4 `make build -B` and `cd backend && cargo test` *(build verified clean; full test pass deferred to end of top-level task)*
@@ -73,7 +73,7 @@
   - [x] 7.5 Other `reinit_fulltext_searcher()` call sites (lib.rs:263 post-reconcile; sutta_bridge.rs ~2792, 2877, 2995) left synchronous — they run after the cold-start path with their own progress UI
   - [x] 7.6 `make build -B` clean (cargo test deferred — same pre-existing DPD unrelated failure noted in task 5)
 
-- [ ] 8.0 QML pre-flight (no Loader/Component wrapping yet)
+- [~] 8.0 QML pre-flight (no Loader/Component wrapping yet) — **DROPPED.** Prototyped together with tasks 9–10 and rolled back; the QML parse cost before `apply_theme()` is dominated by `SuttaSearchWindow.qml` itself, not its directly-instantiated children, so deferring the children did not move the critical-path number. Text retained below for reference if revisited; the eager-binding catalogue here is the work that would still be required first.
   - [ ] 8.1 Rewrite `webview_visible` at SuttaSearchWindow.qml:69 to use `?.item?.visible ?? false` / `dialog_visible` proxy form for every referenced dialog (`mobile_menu`, `about_dialog`, `models_dialog`, `anki_export_dialog`, `gloss_tab.commonWordsDialog`, `tab_list_dialog`, `database_validation_dialog`, `app_settings_window`, `info_dialog`)
   - [ ] 8.2 Re-route the three `app_settings_window.search_as_you_type` reads (lines 428, 2285, 3183) to `SuttaBridge.get_search_as_you_type()` or a root-level `property bool search_as_you_type` mirror; `AppSettingsWindow` becomes write-only for this value
   - [ ] 8.3 Re-route `app_settings_window.open_find_in_sutta_results` read at line 1004 — same pattern as 8.2; add `SuttaBridge.get_open_find_in_sutta_results()` if it does not already exist, or use a root mirror
@@ -84,7 +84,7 @@
   - [ ] 8.8 Verify the app behaves identically — no Loader/Component wrapping yet
   - [ ] 8.9 `make build -B` and `cd backend && cargo test`
 
-- [ ] 9.0 QML Loader/Component split — phase A (highest impact)
+- [~] 9.0 QML Loader/Component split — phase A (highest impact) — **DROPPED** (see 8.0). Text retained below for reference.
   - [ ] 9.1 Wrap `GlossTab` in a `Loader { active: false }` activated on first gloss-tab selection in the right-side `StackLayout`
   - [ ] 9.2 Wrap `PromptsTab` in a `Loader { active: false }` activated on first prompts-tab selection
   - [ ] 9.3 Wrap `DictionaryTab` in a `Loader { active: false }` activated on first dictionary-tab selection
@@ -93,7 +93,7 @@
   - [ ] 9.6 Instrument `Component.onCompleted` with `Logger.info` `Date.now()` deltas around the start/end of the handler so phase B can be measured against phase A
   - [ ] 9.7 `make build -B` and `cd backend && cargo test`
 
-- [ ] 10.0 QML Loader/Component split — phase B (remaining)
+- [~] 10.0 QML Loader/Component split — phase B (remaining) — **DROPPED** (see 8.0). Text retained below for reference.
   - [ ] 10.1 Defer `AboutDialog` (`ApplicationWindow` root) via `Component` + `createObject(null)`; expose `open_about_window()` proxy and `about_window_visible` mirror; redirect line 2035 `about_dialog.show()`
   - [ ] 10.2 Defer `ModelsDialog`, `AnkiExportDialog`, `SystemPromptsDialog` (all **`ApplicationWindow`** roots, not `Dialog`) via `Component` + `createObject(null)`; expose `open_*_window()` proxies; redirect lines 1986, 1999, 2007 `.show()` calls
   - [ ] 10.3 Defer `DatabaseValidationDialog`, `DhammaTextSourcesDialog` (also **`ApplicationWindow`** roots) via `Component` + `createObject(null)`; redirect line 2028 `dhamma_text_sources_dialog.show()` (and any `database_validation_dialog.show()` site). Wrap `TabListDialog` and `ColorThemeDialog` (true `Dialog` roots) in `Loader`s with `dialog_visible` proxy + `open()` function — finalise the tab_list_dialog redirects prepared in 8.5
@@ -101,7 +101,7 @@
   - [ ] 10.5 Sweep all remaining `<dialog_id>.open()` / `<dialog_id>.show()` / `<dialog_id>.visible` references and switch to the matching proxy form (loader for `Dialog`/`Popup`/`Item` roots; `createObject(null)` proxy for `ApplicationWindow` roots)
   - [ ] 10.6 `make build -B` and `cd backend && cargo test`
 
-- [ ] 11.0 Manual mobile verification and acceptance check
+- [~] 11.0 Manual mobile verification and acceptance check — **DROPPED** for the QML portions (11.4 instrumented `Component.onCompleted` deltas, 11.6 cold-loaded dialog/tab smoke) along with tasks 8–10. The DB/searcher work in tasks 1–7 is in place and was verified during those tasks. Text retained below for reference.
   - [ ] 11.1 Build for Android and confirm `S → D` switch latency matches `S → S` / `S → L` (PRD §6.2)
   - [ ] 11.2 Confirm `apply_theme()` is reached without DB-scan work on the critical path; first-launch and subsequent-launch budgets per PRD §3
   - [ ] 11.3 Verify cache liveness: import / delete / rename user dict, download / remove sutta language — language dropdown reflects new state on next area switch (PRD §6.6, §6.7)

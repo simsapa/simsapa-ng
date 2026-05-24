@@ -1,9 +1,8 @@
 # Startup Sequence, Caches, and Cold-Path Design
 
 This document describes the intended startup sequence of the Simsapa app
-— what runs synchronously, what is deferred to background threads, what
-is deferred to first-use QML instantiation, and the design reasons
-behind each split. It complements the PRD
+— what runs synchronously, what is deferred to background threads, and
+the design reasons behind each split. It complements the PRD
 [`tasks/prd-startup-and-search-area-switch-perf.md`](../tasks/prd-startup-and-search-area-switch-perf.md)
 and is the source of truth for "where should this work go" decisions
 when adding new startup-time code.
@@ -52,7 +51,6 @@ process start
 │   │
 │   └─ WindowManager::create_sutta_search_window
 │       └─ QML parse of SuttaSearchWindow.qml + its directly-instantiated children
-│           (heavy children are wrapped — see §5)
 │
 └─ SuttaSearchWindow.qml::Component.onCompleted
     └─ apply_theme()  ← critical-path target reached
@@ -169,76 +167,25 @@ The three other `reinit_fulltext_searcher()` call sites
 synchronous. They run after the cold-start path is done, with their
 own progress UI; blocking the caller there is intentional.
 
-## 5. QML cold-path: Loader vs. Component + createObject
+## 5. QML cold-path (not pursued)
 
-After the DB and searcher fixes, **QML parse + JS compile is the
-dominant cost on the critical path**. The QML engine parses every
-component that `SuttaSearchWindow.qml` directly instantiates before
-`Component.onCompleted` fires.
+Deferring heavy child components of `SuttaSearchWindow.qml` (GlossTab,
+PromptsTab, AppSettingsWindow, UpdateNotificationDialog, …) via
+`Loader { active: false }` and `Component { … } + createObject(null)`
+was prototyped but **did not measurably reduce time-to-`apply_theme()`**
+in practice and was rolled back. The QML parse work that runs before
+`Component.onCompleted` is dominated by `SuttaSearchWindow.qml` itself,
+not by its directly-instantiated children, so wrapping the children did
+not move the critical-path number.
 
-`SuttaSearchWindow.qml` is 156 KB on its own. The big children are
-GlossTab (80 KB), PromptsTab (43 KB), AppSettingsWindow (42 KB),
-UpdateNotificationDialog (35 KB). These are deferred to first use.
-
-### Two patterns, two reasons
-
-QML offers `Loader` and `Component`; pick by **root element type**:
-
-- **`Dialog` / `Popup` / `Item` roots** → `Loader { active: false }`.
-  Loader hosts an `Item` child; this is the natural shape.
-  `tab_list_dialog`, `info_dialog`, `database_validation_dialog`, etc.
-  follow this pattern. The loader carries a `dialog_visible` proxy
-  property and an `open()` function so call sites don't need to know
-  the dialog is wrapped.
-
-- **`ApplicationWindow` roots** → `Component { … }` +
-  `createObject(null)`. `Loader` cannot host a top-level window;
-  attempting it parents a `Window` inside an `Item` which silently
-  breaks. Every "dialog" in the codebase that opens as its own OS
-  window is `ApplicationWindow`-rooted — verified for
-  `AppSettingsWindow`, `AboutDialog`, `UpdateNotificationDialog`,
-  `ModelsDialog`, `AnkiExportDialog`, `SystemPromptsDialog`,
-  `DatabaseValidationDialog`, `DhammaTextSourcesDialog`. Despite the
-  `*Dialog.qml` filenames, all eight use the `Component` +
-  `createObject(null)` pattern. Only `TabListDialog` and
-  `ColorThemeDialog` are true `Dialog` roots that fit `Loader`.
-  **Classify by reading the .qml root element, not by the filename.**
-  The instance is created once on first show and retained for the
-  session.
-
-  When a component is invoked via more than one entry point —
-  `UpdateNotificationDialog` is called as `show_app_update`,
-  `show_db_update`, `show_obsolete_warning`, `show_no_updates` from
-  update-check signal handlers — the proxy exposes one function per
-  call form, each calling a small `ensure_*_window()` helper that
-  lazily `createObject(null)`s before forwarding.
-
-The right-side `StackLayout` tabs (GlossTab, PromptsTab, DictionaryTab,
-TocTab) are `Item`-rooted and wrapped in `Loader { active: false }`
-flipped to `true` on first activation of that tab.
-
-### Pre-flight: kill eager bindings before wrapping
-
-`SuttaSearchWindow.qml` has bindings that reach *into* components that
-become deferred-load. Each one must be re-routed before wrapping, or
-the deferred component will be `null` and crash on first paint. The
-known sites are:
-
-| Site                                                | Problem                                                                                  | Fix                                                                                                |
-|-----------------------------------------------------|------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
-| `webview_visible` (line 69)                         | Fans out to `.visible` on nearly every dialog                                            | Rewrite to `?.item?.visible ?? false` / `dialog_visible` proxy form for every referenced dialog    |
-| `app_settings_window.search_as_you_type` (×3)       | Read before user opens settings; `null.search_as_you_type` after wrap                    | Re-route to `SuttaBridge.get_search_as_you_type()` (already exists) or a root property mirror      |
-| `app_settings_window.open_find_in_sutta_results`    | Read before user opens settings (line 1004)                                              | Re-route to bridge getter / root mirror, same pattern                                              |
-| `gloss_tab.commonWordsDialog` (lines 69, 1978)      | Root reads into GlossTab, which is itself deferred                                       | Lift `commonWordsDialog` out of `GlossTab` to the root (preferred), or adapt with `item?.…`        |
-| `models_dialog.auto_retry.checked` (lines 3334, 3351) | **Cross-deferred-component binding** — both ModelsDialog *and* the referencing tab are deferred; read is `null.checked` until first ModelsDialog open | Add `SuttaBridge.get_models_auto_retry()` setter/getter pair; ModelsDialog becomes write-only      |
-| `update_notification_dialog.show_*` (lines 2236, 2241, 2249, 2253) | Method calls in `Connections` handlers fire on signals before any user click | Proxy exposes one function per call form, each `ensure_*_window()` + forwards (see §5)             |
-| Menu `.show()` triggers (lines 1490, 1986, 1999, 2007, 2028, 2035) | Direct `.show()` on `ApplicationWindow` instances that are about to be deferred | Replace with `open_*_window()` proxy that lazily `createObject(null)`s on first use                |
-| `tab_list_dialog.visible` / `.open()` (×8)          | Eager `.visible` reads and `.open()` calls                                               | `dialog_visible` proxy property + `open()` function on the loader                                  |
-
-The pre-flight is a discrete step (separate task in the implementation
-plan): the app behaves identically after it, with no wrapping in
-place. This makes the wrapping that follows a series of one-line
-flips of `active`, instead of a thicket of binding edits.
+The DB-cache and async-fulltext-searcher work in §3 and §4 stands; the
+QML splitting work does not. If this is revisited later, the eager
+bindings into would-be-deferred components (`webview_visible` fan-out,
+`app_settings_window.search_as_you_type` reads, `gloss_tab.commonWordsDialog`
+reads, `models_dialog.auto_retry.checked` cross-component reads, the
+`update_notification_dialog.show_*` signal-driven calls, and the menu
+`.show()` triggers) are the gotchas to handle first — see the original
+PRD §5.5.0 for the full catalogue.
 
 ## 6. Design implications (rules to add new code by)
 
@@ -257,17 +204,7 @@ flips of `active`, instead of a thicket of binding edits.
    calls the matching refresh helper. Read paths (`get_cached_*`)
    never go to SQLite.
 
-4. **QML wrapping pattern follows the root element type.**
-   - `ApplicationWindow` root → `Component` + `createObject(null)`.
-   - `Dialog` / `Popup` / `Item` root → `Loader`.
-   Do not Loader-wrap a `Window` — Loader hosts an `Item` child.
-
-5. **Eager bindings into deferred components are a class of bug.**
-   When adding a new binding that reads `<some_id>.<prop>`, check
-   whether `<some_id>` is (or will be) wrapped. If so, use a proxy
-   property on the wrapper, not a direct read.
-
-6. **`SuttaBridge` qproperties are the right pattern for "ready"
+4. **`SuttaBridge` qproperties are the right pattern for "ready"
    gates.** `db_loaded`, `searcher_ready`, and any future readiness
    signal use `#[qproperty(bool, …)]` mirrored to QML; the QML side
    binds `enabled:` on the affordance. No polling, no
@@ -279,10 +216,10 @@ flips of `active`, instead of a thicket of binding edits.
    `with_fulltext_searcher() -> Option<R>` makes this safe but the UX
    is bad).
 
-7. **The critical path ends at `apply_theme()`.** When you add startup
+5. **The critical path ends at `apply_theme()`.** When you add startup
    work, decide whether it has to happen before that point. If it
    doesn't, it goes on a background thread spawned from
-   `init_app_data()` (or deferred to first QML use).
+   `init_app_data()`.
 
 ## 7. References
 
@@ -293,5 +230,6 @@ flips of `active`, instead of a thicket of binding edits.
   `refresh_language_caches`, `refresh_all_dict_caches`),
   `backend/src/lib.rs` (`init_app_data`, `init_fulltext_searcher`),
   `bridges/src/sutta_bridge.rs` (`db_loaded`, `searcher_ready`
-  qproperties), `cli/src/bootstrap/cache_warm.rs`
-  (`warm_caches_into_appdata`).
+  qproperties), `backend/src/app_data.rs`
+  (`warm_caches_into_appdata` — small helper inlined here rather than
+  in its own bootstrap module).

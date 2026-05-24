@@ -197,8 +197,10 @@ caches:
 
 and persist them into the `app_settings` JSON row of `appdata.sqlite3`.
 This means a shipped DB has the caches pre-warmed; first launch never
-needs to compute them. New helper in `cli/src/bootstrap/mod.rs` (or a
-dedicated `cache_warm.rs`): `warm_caches_into_appdata(appdata_path, dict_path, dpd_path)`.
+needs to compute them. The helper lives in `backend/src/app_data.rs`
+as `warm_caches_into_appdata()` (small enough that a dedicated
+`cli/src/bootstrap/cache_warm.rs` module was not warranted); bootstrap
+calls it from `cli/src/bootstrap/mod.rs`.
 
 **Read at startup (backend/src/lib.rs).**
 `AppData::new()` stops calling `refresh_dict_source_uid_caches()`
