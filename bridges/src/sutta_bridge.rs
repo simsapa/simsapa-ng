@@ -2922,6 +2922,10 @@ impl qobject::SuttaBridge {
         match app_data.dbm.appdata.delete_book_by_uid(&uid) {
             Ok(_) => {
                 info(&format!("Successfully removed book: {}", &uid));
+                // Refresh stats: a book delete cascades to its `book_spine_items`
+                // (and via FTS triggers, the matching `book_spine_items_fts`
+                // rows). See docs/user-data-and-sqlite-analyze.md.
+                app_data.dbm.appdata.analyze("appdata");
                 true
             }
             Err(e) => {

@@ -48,9 +48,11 @@ table**.
 |-----------------------------|-----------------------------------------------------------------------|------------------|-------------------------------------------------------------------------------|
 | StarDict `.zip` import      | `dictionary_manager_core::import_user_zip`                            | `dictionaries`   | `dictionary_manager_core::import_located_stardict` (chokepoint for zip + dir) |
 | StarDict directory import   | `dictionary_manager_core::import_user_dir`                            | `dictionaries`   | same chokepoint as above                                                      |
+| User dictionary delete      | `dictionary_manager_core::delete_user_dictionary`                     | `dictionaries`   | tail of `delete_user_dictionary` after the row delete returns `Ok`            |
 | EPUB book import            | `AppData::import_epub_to_db` → `epub_import::import_epub_to_db`       | `appdata`        | wrapper in `app_data.rs` after the inner call returns `Ok`                    |
 | PDF book import             | `AppData::import_pdf_to_db` → `pdf_import::import_pdf_to_db`          | `appdata`        | wrapper in `app_data.rs` after the inner call returns `Ok`                    |
 | HTML book import            | `AppData::import_html_to_db` → `html_import::import_html_to_db`       | `appdata`        | wrapper in `app_data.rs` after the inner call returns `Ok`                    |
+| Book delete                 | `SuttaBridge::remove_book` → `appdata::delete_book_by_uid`            | `appdata`        | success arm of `remove_book` in `bridges/src/sutta_bridge.rs`                 |
 | Sutta language download     | `asset_helpers::import_suttas_lang_to_appdata`                        | `appdata`        | end of `import_suttas_lang_to_appdata` (one `ANALYZE` after the whole batch)  |
 
 ### Pattern for adding a new import
@@ -82,10 +84,11 @@ Notes:
 - Small writes: bookmarks, app settings, the `chanting_recordings` waveform
   cache, etc. These don't move table cardinalities far enough to change a
   query plan.
-- Deletes: stats become slightly stale but `sqlite_stat1` still exists, so the
-  planner still has something. We don't currently re-`ANALYZE` after the user
-  deletes a dictionary or a book — if a future Headword Match regression
-  surfaces specifically after deletes, revisit this.
+- Schema migrations / startup schema upgrades (`run_dictionaries_migrations`,
+  `upgrade_appdata_schema`): we don't `ANALYZE` after these because we ship a
+  new shipped DB on any change large enough to shift selectivity — migrations
+  that run on already-installed DBs are limited to additive ALTERs that don't
+  move row counts.
 - The Tantivy fulltext index — it is not a SQLite table.
 
 ## Related

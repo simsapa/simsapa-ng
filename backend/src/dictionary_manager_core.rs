@@ -583,6 +583,13 @@ pub fn delete_user_dictionary(dictionary_id: i32) -> Result<(), String> {
     let n = app_data.dbm.dictionaries.delete_dictionary_by_label(&target.label)
         .map_err(|e| format!("delete_dictionary_by_label failed: {}", e))?;
     info(&format!("delete_user_dictionary: removed {} dictionaries row(s) for '{}'", n, target.label));
+
+    // Refresh stats: a user dictionary delete cascades to thousands of
+    // `dict_words` rows (and via FTS triggers, the same count from
+    // `dict_words_fts`), which shifts selectivity for the Headword / Contains
+    // queries. See docs/user-data-and-sqlite-analyze.md.
+    app_data.dbm.dictionaries.analyze("dictionaries");
+
     Ok(())
 }
 
