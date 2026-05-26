@@ -12,6 +12,11 @@
 // double-tap state2 timer all follow that proven approach. No source files
 // are copied verbatim; this is Simsapa's own implementation.
 
+// Q_OS_WIN is defined by <QtGlobal> (via qsystemdetection.h), not by the
+// compiler. Include it before the platform guard or the entire TU becomes
+// empty and the linker can't find init/shutdown/registerHotkey/unregisterAll.
+#include <QtGlobal>
+
 #ifdef Q_OS_WIN
 
 #include "global_hotkey_manager.h"

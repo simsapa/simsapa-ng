@@ -24,6 +24,11 @@
 // Design reference (GPLv3): Goldendict-ng's `machotkeywrapper.mm`. No source
 // files are copied verbatim; this is Simsapa's own implementation.
 
+// Q_OS_MACOS is defined by <QtGlobal> (via qsystemdetection.h), not by the
+// compiler. Include it before the platform guard or the entire TU becomes
+// empty and the linker can't find init/shutdown/registerHotkey/unregisterAll.
+#include <QtGlobal>
+
 #ifdef Q_OS_MACOS
 
 #include "global_hotkey_manager.h"
