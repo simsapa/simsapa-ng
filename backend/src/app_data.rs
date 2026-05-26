@@ -1506,25 +1506,39 @@ impl AppData {
     /// Import an EPUB document into the database
     #[allow(clippy::too_many_arguments)]
     pub fn import_epub_to_db(&self, epub_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
-        let db_conn = &mut self.dbm.appdata.get_conn()
-            .context("Failed to get database connection")?;
-        crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)
+        {
+            let db_conn = &mut self.dbm.appdata.get_conn()
+                .context("Failed to get database connection")?;
+            crate::epub_import::import_epub_to_db(db_conn, epub_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)?;
+        }
+        // Refresh stats: a new book adds rows to books / book_spine_items /
+        // book_resources / books_fts. See docs/user-data-and-sqlite-analyze.md.
+        self.dbm.appdata.analyze("appdata");
+        Ok(())
     }
 
     /// Import a PDF document into the database
     #[allow(clippy::too_many_arguments)]
     pub fn import_pdf_to_db(&self, pdf_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
-        let db_conn = &mut self.dbm.appdata.get_conn()
-            .context("Failed to get database connection")?;
-        crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)
+        {
+            let db_conn = &mut self.dbm.appdata.get_conn()
+                .context("Failed to get database connection")?;
+            crate::pdf_import::import_pdf_to_db(db_conn, pdf_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)?;
+        }
+        self.dbm.appdata.analyze("appdata");
+        Ok(())
     }
 
     /// Import an HTML document into the database
     #[allow(clippy::too_many_arguments)]
     pub fn import_html_to_db(&self, html_path: &std::path::Path, book_uid: &str, custom_title: Option<&str>, custom_author: Option<&str>, custom_language: Option<&str>, custom_enable_embedded_css: Option<bool>, is_user_added: bool) -> Result<()> {
-        let db_conn = &mut self.dbm.appdata.get_conn()
-            .context("Failed to get database connection")?;
-        crate::html_import::import_html_to_db(db_conn, html_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)
+        {
+            let db_conn = &mut self.dbm.appdata.get_conn()
+                .context("Failed to get database connection")?;
+            crate::html_import::import_html_to_db(db_conn, html_path, book_uid, custom_title, custom_author, custom_language, custom_enable_embedded_css, is_user_added)?;
+        }
+        self.dbm.appdata.analyze("appdata");
+        Ok(())
     }
 
     pub fn get_first_time_start(&self) -> bool {

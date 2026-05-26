@@ -2463,6 +2463,43 @@ pub fn run_fts5_indexes_sql_script(db_path: &Path, sql_script_path: &Path) -> Re
     Ok(())
 }
 
+/// Run `ANALYZE` on a SQLite DB via the `sqlite3` CLI, so that shipped DBs
+/// arrive with `sqlite_stat1` / `sqlite_stat4` populated. Without those
+/// tables, the bundled-SQLite query planner picks a catastrophic plan for
+/// the Headword Match query (FTS5 trigram LIKE + `dict_label IN (...)`):
+/// ~170 s vs ~17 ms once stats are present. See
+/// `tasks/prd-fixing-headword-match-slow-query.md` and
+/// `docs/user-data-and-sqlite-analyze.md`.
+///
+/// Call this once per shipped DB (`appdata`, `dictionaries`, `dpd`) right
+/// before the `.tar.bz2` archive is created. Caller must ensure all
+/// connections to the DB are closed first (same constraint as
+/// `run_fts5_indexes_sql_script`).
+pub fn analyze_sqlite_db_via_cli(db_path: &Path) -> Result<()> {
+    info(&format!("Running ANALYZE on: {}", db_path.display()));
+
+    let db_abs_path = fs::canonicalize(db_path)
+        .with_context(|| format!("Failed to get absolute path for database: {}", db_path.display()))?;
+
+    let output = Command::new("sqlite3")
+        .arg(&db_abs_path)
+        .arg("ANALYZE;")
+        .output()
+        .with_context(|| "Failed to spawn sqlite3 command for ANALYZE")?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(anyhow::anyhow!(
+            "sqlite3 ANALYZE failed with exit code {}: {}",
+            output.status.code().unwrap_or(-1),
+            stderr
+        ));
+    }
+
+    info("Successfully ran ANALYZE via sqlite3 CLI");
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

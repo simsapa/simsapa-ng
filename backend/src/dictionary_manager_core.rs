@@ -182,6 +182,11 @@ fn import_located_stardict(
             // Non-fatal: the dictionary still imported; resources just won't render.
             error(&format!("import_located_stardict: capturing res/ failed: {}", e));
         }
+
+        // Refresh SQLite stats: a large StarDict import shifts the selectivity
+        // of `dict_label` / `dict_words.word` enough to matter for the
+        // Headword Match plan. See docs/user-data-and-sqlite-analyze.md.
+        get_app_data().dbm.dictionaries.analyze("dictionaries");
     }
 
     Ok(outcome)

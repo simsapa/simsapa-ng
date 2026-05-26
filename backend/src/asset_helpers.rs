@@ -3,6 +3,7 @@ use std::error::Error;
 
 use diesel::prelude::*;
 use diesel::RunQueryDsl;
+use diesel::connection::SimpleConnection;
 
 use crate::logger::{info, error};
 use crate::db::appdata_models::Sutta;
@@ -25,6 +26,7 @@ pub fn import_suttas_lang_to_appdata(extract_temp_dir: &Path, target_database_ur
         }
     };
 
+    let mut imported_any = false;
     for entry in entries {
         let entry = match entry {
             Ok(e) => e,
@@ -52,11 +54,28 @@ pub fn import_suttas_lang_to_appdata(extract_temp_dir: &Path, target_database_ur
                     info(&format!("Successfully imported {}", file_name));
                     // Remove the language db file after successful import
                     let _ = std::fs::remove_file(&path);
+                    imported_any = true;
                 }
                 Err(e) => {
                     error(&format!("Failed to import {}: {}", file_name, e));
                 }
             }
+        }
+    }
+
+    // Refresh stats on appdata: a language download bulk-inserts thousands of
+    // suttas, shifting selectivity for the Suttas query path. See
+    // docs/user-data-and-sqlite-analyze.md.
+    if imported_any {
+        match SqliteConnection::establish(target_database_url) {
+            Ok(mut conn) => {
+                if let Err(e) = conn.batch_execute("ANALYZE;") {
+                    error(&format!("ANALYZE on appdata after language import failed: {}", e));
+                } else {
+                    info("ANALYZE on appdata after language import: done");
+                }
+            }
+            Err(e) => error(&format!("Failed to open appdata for post-import ANALYZE: {}", e)),
         }
     }
 

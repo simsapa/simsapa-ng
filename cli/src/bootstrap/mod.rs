@@ -27,6 +27,7 @@ use simsapa_backend::db::{DatabaseHandle, APPDATA_MIGRATIONS};
 use simsapa_backend::{init_app_data, get_app_data, get_app_globals, get_create_simsapa_dir, get_create_simsapa_app_assets_path, logger};
 use simsapa_backend::search::indexer;
 use simsapa_backend::dictionary_manager_core::import_user_zip;
+use simsapa_backend::helpers::analyze_sqlite_db_via_cli;
 use simsapa_backend::stardict_parse::StardictImportProgress;
 
 pub use helpers::SuttaData;
@@ -309,10 +310,16 @@ RELEASE_CHANNEL=development
 
         logger::info("=== Create dictionaries.tar.bz2 ===");
         let dict_db_path = assets_dir.join("dictionaries.sqlite3");
+        // ANALYZE must run before the archive so shipped DBs arrive with
+        // `sqlite_stat1` / `sqlite_stat4` populated. Without it the bundled
+        // SQLite picks a catastrophic plan for Headword Match — see
+        // tasks/prd-fixing-headword-match-slow-query.md.
+        analyze_sqlite_db_via_cli(&dict_db_path)?;
         create_database_archive(&dict_db_path, &release_databases_dir)?;
 
         logger::info("=== Create dpd.tar.bz2 ===");
         let dpd_db_path = assets_dir.join("dpd.sqlite3");
+        analyze_sqlite_db_via_cli(&dpd_db_path)?;
         create_database_archive(&dpd_db_path, &release_databases_dir)?;
     } else {
         logger::info("Skipping DPD initialization and bootstrap");
@@ -423,6 +430,8 @@ RELEASE_CHANNEL=development
         simsapa_backend::app_data::warm_caches_into_appdata();
 
         logger::info("=== Create appdata.tar.bz2 ===");
+        let appdata_db_path = assets_dir.join("appdata.sqlite3");
+        analyze_sqlite_db_via_cli(&appdata_db_path)?;
         create_appdata_archive(&assets_dir, &release_databases_dir)?;
     }
 

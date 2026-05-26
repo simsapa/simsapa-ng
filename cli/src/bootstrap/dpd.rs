@@ -8,7 +8,16 @@ use simsapa_backend::helpers::{run_fts5_indexes_sql_script, consistent_niggahita
 use crate::import_stardict_dictionary;
 
 pub fn dpd_bootstrap(bootstrap_assets_dir: &Path, assets_dir: &Path, limit: Option<i32>) -> Result<()> {
-    // Import DPD stardict
+    // Import DPD stardict.
+    //
+    // **Load-bearing invariant:** each entry in the DPD StarDict export is
+    // keyed by its `lemma_1`, so the resulting `dict_words.word` values for
+    // `dict_label = "dpd"` rows mirror `dpd_headwords.lemma_1` one-to-one.
+    // `SearchQueryTask::lemma_1_dpd_headword_match_fts5_full` relies on this
+    // to scan `dict_words_fts.word` instead of `dpd_headwords_fts.lemma_1`
+    // (avoiding an N+1 resolve across the dictionaries/dpd DBs). If the DPD
+    // import is ever changed to use a different key, the headword-match path
+    // in `backend/src/query_task.rs` must be revisited.
     let dpd_stardict_path = bootstrap_assets_dir.join("dpd-db-for-bootstrap/current/dpd/");
     let limit_usize = limit.map(|l| l as usize);
     import_stardict_dictionary("dpd", &dpd_stardict_path, limit_usize)

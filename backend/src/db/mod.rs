@@ -106,6 +106,27 @@ impl DatabaseHandle {
             .context("Failed to get connection from pool for read")?;
         operation(&mut db_conn).map_err(AnyhowError::from)
     }
+
+    /// Run `ANALYZE` to refresh `sqlite_stat1` / `sqlite_stat4`. Call after
+    /// inserting/deleting enough rows to materially change selectivity — e.g.
+    /// after importing a StarDict dictionary or an EPUB/PDF/HTML book.
+    /// Failures are logged but non-fatal: stale stats are still better than
+    /// missing stats, and a transient failure here doesn't block the import.
+    /// See `docs/user-data-and-sqlite-analyze.md`.
+    pub fn analyze(&self, label: &str) {
+        let started = std::time::Instant::now();
+        match self.do_write(|conn| {
+            conn.batch_execute("ANALYZE;")
+        }) {
+            Ok(_) => info(&format!(
+                "DatabaseHandle::analyze({}): ANALYZE done in {:?}",
+                label, started.elapsed()
+            )),
+            Err(e) => warn(&format!(
+                "DatabaseHandle::analyze({}): ANALYZE failed: {:#}", label, e
+            )),
+        }
+    }
 }
 
 impl DbManager {
@@ -150,11 +171,26 @@ impl DbManager {
             upgrade_appdata_schema(&mut db_conn);
         }
 
-        Ok(Self {
+        let dbm = Self {
             appdata,
             dictionaries: DatabaseHandle::new(&g.paths.dict_database_url)?,
             dpd: DatabaseHandle::new(&g.paths.dpd_database_url)?,
-        })
+        };
+
+        // NOTE: No runtime `ANALYZE` self-heal here. Shipped DBs are
+        // ANALYZEd at bootstrap time (`cli/src/bootstrap/mod.rs`, just before
+        // each `*.tar.bz2` archive is created), so `sqlite_stat1` /
+        // `sqlite_stat4` arrive with the install. Without those stats the
+        // planner picks a catastrophic plan for FTS5-trigram + `dict_label IN
+        // (...)` queries (~170 s vs ~17 ms) — see
+        // tasks/prd-fixing-headword-match-slow-query.md.
+        //
+        // When the user imports content at runtime (StarDict dictionaries,
+        // EPUB/PDF/HTML books), the import path calls
+        // `DatabaseHandle::analyze()` on the affected DB to refresh stats —
+        // see docs/user-data-and-sqlite-analyze.md.
+
+        Ok(dbm)
     }
 
     pub fn get_theme_name(&self) -> String {

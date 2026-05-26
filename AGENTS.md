@@ -36,6 +36,14 @@ Notable feature docs:
   `Loader` vs. `Component + createObject` rule for QML wrapping based on root
   element type (`Dialog`/`Popup` vs `ApplicationWindow`), and the eager-binding
   pre-flight required before deferring components.
+- [User data imports and SQLite `ANALYZE`](./docs/user-data-and-sqlite-analyze.md) —
+  every code path that grows a shipped DB at runtime (StarDict zip/dir,
+  EPUB/PDF/HTML books, sutta language downloads) and where the matching
+  post-write `ANALYZE` lives. Shipped DBs are `ANALYZE`d at bootstrap;
+  `DatabaseHandle::analyze` is the runtime hook. **If you add a new import
+  path, add an `ANALYZE` call and update the table in that doc.** Background:
+  missing `sqlite_stat1` made the Headword Match query 170 s instead of 17 ms
+  (see `tasks/prd-fixing-headword-match-slow-query.md`).
 
 ## Specific coding procedures
 

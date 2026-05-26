@@ -1734,85 +1734,105 @@ impl<'a> SearchQueryTask<'a> {
     ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
         let (full, total) = self.lemma_1_dpd_headword_match_fts5_full()?;
         let offset = page_num.saturating_mul(page_len);
-        let page: Vec<SearchResult> = full.into_iter().skip(offset).take(page_len).collect();
+        // Snippet generation is deferred until after pagination.
+        //
+        // Why this is asymmetric with the other `_full()` paths (which return
+        // `Vec<SearchResult>` directly): for DPD rows, `db_word_to_result`
+        // calls `get_dpd_meaning_snippet`, which does a fresh `dpd_headwords`
+        // lookup per row to assemble pos/meaning/construction. Headword Match
+        // commonly returns mostly DPD rows (e.g. "gacchati" hits ~96 lemmas,
+        // nearly all DPD), so eagerly building snippets for the entire result
+        // adds ~one `dpd_headwords` lookup per row — measured at ~30–60 ms on
+        // top of the ~17 ms SQL load for "gacchati", a meaningful slice of the
+        // ~137 ms end-to-end budget. Materialising only the page slice avoids
+        // ~(total - page_len) of those lookups.
+        //
+        // Repeat page visits (next / prev within the same search) are
+        // separately served by the bridge-level `RESULTS_PAGE_CACHE` in
+        // `bridges/src/sutta_bridge.rs`, which memoises the rendered
+        // `Vec<SearchResult>` per page_num and is keyed by
+        // `query | search_area | params_json` — so any change to query text,
+        // mode, dict_source_uids, language filter, uid prefix/suffix, source,
+        // or the bold-definitions toggle invalidates the cache automatically.
+        // The two layers compose without overlap: this layer avoids snippet
+        // work for unseen rows within one call; the bridge layer avoids
+        // rerunning SQL when the user navigates to a page already fetched.
+        let page: Vec<SearchResult> = full
+            .iter()
+            .skip(offset)
+            .take(page_len)
+            .map(|dw| self.db_word_to_result(dw))
+            .collect();
         Ok((page, total))
     }
 
-    /// Headword match — merges two retrieval paths so user-imported StarDict
-    /// dictionaries participate alongside DPD's `lemma_1` index:
+    /// Headword match — single FTS5 substring scan against `dict_words_fts.word`
+    /// covering both DPD headwords (whose `dict_words.word` is the same as
+    /// `dpd_headwords.lemma_1` for `dict_label="dpd"`) and user-imported
+    /// StarDict headwords. The previous design separated a DPD path
+    /// (`dpd_headwords_fts.lemma_1` → resolve each match to `dict_words` over
+    /// a second DB connection) from a user-dict path; the DPD resolve was an
+    /// N+1 over hundreds of inflected lemmas (e.g. "gacchati") and dominated
+    /// query time, so both paths are collapsed into one query against
+    /// `dict_words_fts.word`.
     ///
-    /// - **Path A (DPD):** FTS5 against `dpd_headwords_fts.lemma_1`, then
-    ///   resolve each matched DPD headword to its `dict_words` row by
-    ///   `word == lemma_1` constrained to `dict_label = "dpd"`. Enabled when
-    ///   `dict_source_uids` is `None` (no constraint) or `Some(set)` with
-    ///   `"dpd"` in `set`. Skipped when the user solos a non-DPD dictionary.
+    /// **Load-bearing invariant:** for every row in `dict_words` with
+    /// `dict_label = "dpd"`, `dict_words.word` equals the corresponding
+    /// `dpd_headwords.lemma_1`. This holds by construction — DPD is imported
+    /// via `import_stardict_as_new` from the DPD StarDict export, whose entry
+    /// keys are the `lemma_1` values (see `cli/src/bootstrap/dpd.rs`). If a
+    /// future DPD import path breaks this invariant, headword-match results
+    /// for DPD will silently diverge from the old `dpd_headwords_fts.lemma_1`
+    /// retrieval. `dpd_headwords_fts` is retained for DPD Lookup mode.
     ///
-    /// - **Path B (user-headword):** SQL against `dict_words` JOINed to
-    ///   `dict_words_fts` with `f.word LIKE ?` and `dw.dict_label IN
-    ///   (non_dpd_set)`. Enabled for the non-DPD subset of the inclusion
-    ///   set; when `dict_source_uids` is `None`, Path B searches every
-    ///   non-DPD dictionary by issuing the same query without the `IN`
-    ///   clause. The trigram index on `dict_words_fts.word` (added in PRD
-    ///   §5.0) serves the substring match; `dict_words_dict_label_idx`
-    ///   serves the inclusion-set filter via the JOIN.
+    /// `dict_words_fts.word` is trigram-tokenized, so `f.word LIKE '%term%'`
+    /// is index-served. The `dict_label IN (...)` push-down rides
+    /// `dict_words_dict_label_idx` via the JOIN to `dict_words`.
     ///
-    /// Merge: dedup by `dict_words.id`. Sort: exact `word == query_text`
-    /// rows first, then contains rows; tie-break by `dict_label`, then `id`
-    /// for stable ordering. The materialised union length is the
-    /// authoritative `total` (materialise-then-slice; PRD §2.5 contract
-    /// preserved).
+    /// Merge: rows arrive deduplicated by `dict_words.id` from the single
+    /// query. Sort tiers: exact `word == query_text` first, then
+    /// starts-with (`word.starts_with(query_text)`), then contains; tie-break
+    /// by `dict_label`, then `id` for stable ordering. The starts-with tier
+    /// matters for prefix queries like "gacch" — without it, alphabetic
+    /// inflections like `abhigacchati` outrank `gacchati` itself. The
+    /// materialised result length is the authoritative `total`
+    /// (materialise-then-slice; PRD §2.5 contract preserved).
     ///
     /// `dict_source_uids` contract:
-    ///   - None             → Path A enabled, Path B over every non-DPD dict.
-    ///   - Some(non-empty)  → Path A iff `"dpd" ∈ set`; Path B over `set \ {"dpd"}`.
-    ///   - Some(empty)      → both paths skipped, returns `(empty, 0)`.
+    ///   - None             → search every dict (DPD + user).
+    ///   - Some(non-empty)  → restrict via `dict_label IN (set)`.
+    ///   - Some(empty)      → returns `(empty, 0)`.
     fn lemma_1_dpd_headword_match_fts5_full(
         &self,
-    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+    ) -> Result<(Vec<DictWord>, usize), Box<dyn Error>> {
         info(&format!("lemma_1_dpd_headword_match_fts5_full(): query_text: {}", &self.query_text));
         let timer = Instant::now();
 
         let app_data = get_app_data();
-        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;
         let dict_conn = &mut app_data.dbm.dictionaries.get_conn()?;
 
-        use crate::db::dpd_models::DpdHeadword;
-        use crate::db::dpd_schema::dpd_headwords::dsl as dpd_dsl;
-        use crate::db::dictionaries_schema::dict_words::dsl as dict_dsl;
-
+        // Single FTS5 query against `dict_words_fts.word` covers both DPD
+        // headwords (dict_label="dpd", whose `word` mirrors
+        // `dpd_headwords.lemma_1`) and user-imported StarDict headwords. The
+        // previous two-path design did an N+1 resolve from `dpd_headwords` →
+        // `dict_words` over a separate DB connection — collapsed here into one
+        // FTS query.
         let like_pattern = format!("%{}%", self.query_text);
 
-        // Language filter against `dict_words.language` (mirrors Contains). Both
-        // paths resolve to dict_words rows, so this naturally excludes DPD
-        // (language = "pli") under an "en" filter while keeping non-DPD "en"
-        // headword matches in Path B. Omitted entirely when no filter is set.
         let apply_lang_filter = !self.lang.is_empty() && self.lang != "Language";
 
-        // Decide which paths run based on the inclusion-set contract.
-        let (path_a_enabled, non_dpd_subset): (bool, Option<Vec<String>>) =
-            match self.dict_source_uids.as_deref() {
-                None => (true, None),
-                Some(set) if set.is_empty() => {
-                    return Ok((Vec::new(), 0));
-                }
-                Some(set) => {
-                    let has_dpd = set.iter().any(|s| s == "dpd");
-                    let non_dpd: Vec<String> =
-                        set.iter().filter(|s| *s != "dpd").cloned().collect();
-                    let subset = if non_dpd.is_empty() { None } else { Some(non_dpd) };
-                    (has_dpd, subset)
-                }
-            };
-        // `non_dpd_subset` semantics:
-        //   - Outer `None`  → Path B searches every non-DPD dict (no IN clause).
-        //   - `Some(vec)`   → Path B restricts to that subset.
-        //   - When `dict_source_uids` is `Some(set)` with no non-DPD entries,
-        //     Path B is skipped entirely.
-        let path_b_enabled = matches!(self.dict_source_uids.as_deref(), None)
-            || non_dpd_subset.is_some();
+        // Inclusion-set contract:
+        //   None             → no IN clause (search every dict, DPD included).
+        //   Some(empty)      → drop everything.
+        //   Some(non-empty)  → restrict to that set (may or may not contain "dpd").
+        let in_clause: Option<(String, Vec<String>)> = match self.dict_source_uids.as_deref() {
+            None => None,
+            Some(set) if set.is_empty() => {
+                return Ok((Vec::new(), 0));
+            }
+            Some(set) => Self::dict_label_in_clause(set),
+        };
 
-        // Push uid_prefix and uid_suffix down to the DictWord lookup. `'%'`
-        // is the no-op pattern when the filter is unset.
         let uid_prefix_pat = Self::normalized_filter(&self.uid_prefix)
             .map(|p| format!("{}%", p))
             .unwrap_or_else(|| "%".to_string());
@@ -1820,176 +1840,82 @@ impl<'a> SearchQueryTask<'a> {
             .map(|s| format!("%{}", s))
             .unwrap_or_else(|| "%".to_string());
 
-        let mut all_rows: Vec<DictWord> = Vec::new();
-        let mut seen_ids: HashSet<i32> = HashSet::new();
+        let mut sql = String::from(
+            "SELECT dw.* FROM dict_words dw \
+             JOIN dict_words_fts f ON f.rowid = dw.id \
+             WHERE f.word LIKE ?"
+        );
 
-        // ---------- Path A: DPD lemma_1 → dict_words(dict_label="dpd") ----------
-        if path_a_enabled {
-            #[derive(QueryableByName)]
-            struct HeadwordId {
-                #[diesel(sql_type = diesel::sql_types::Integer)]
-                headword_id: i32,
-            }
-
-            let fts_query = String::from(
-                r#"
-                SELECT rowid AS headword_id
-                FROM dpd_headwords_fts
-                WHERE lemma_1 LIKE ?
-                ORDER BY rowid
-                LIMIT ?
-                "#
-            );
-
-            let headword_ids: Vec<HeadwordId> = sql_query(&fts_query)
-                .bind::<Text, _>(&like_pattern)
-                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)
-                .load::<HeadwordId>(dpd_conn)?;
-
-            if (headword_ids.len() as i64) >= SAFETY_LIMIT_SQL {
-                warn(&format!(
-                    "lemma_1_dpd_headword_match_fts5 Path A hit SAFETY_LIMIT_SQL={} (query='{}')",
-                    SAFETY_LIMIT_SQL, &self.query_text
-                ));
-            }
-
-            let ids: Vec<i32> = headword_ids.iter().map(|h| h.headword_id).collect();
-
-            if !ids.is_empty() {
-                let headwords: Vec<DpdHeadword> = dpd_dsl::dpd_headwords
-                    .filter(dpd_dsl::id.eq_any(&ids))
-                    .load::<DpdHeadword>(dpd_conn)?;
-
-                for headword in headwords {
-                    let mut dict_query = dict_dsl::dict_words.into_boxed();
-
-                    if let Some(ref source_val) = self.source {
-                        if self.source_include {
-                            dict_query = dict_query.filter(dict_dsl::dict_label.eq(source_val));
-                        } else {
-                            dict_query = dict_query.filter(dict_dsl::dict_label.ne(source_val));
-                        }
-                    }
-
-                    if apply_lang_filter {
-                        dict_query = dict_query.filter(dict_dsl::language.eq(self.lang.clone()));
-                    }
-
-                    // Path A is the DPD path; constrain the DictWord lookup
-                    // to dict_label = "dpd" so we don't accidentally surface
-                    // a non-DPD row that happens to share the lemma. This
-                    // keeps Path A's totals in sync with the inclusion set.
-                    let dict_word_result: Result<DictWord, _> = dict_query
-                        .filter(dict_dsl::dict_label.eq("dpd"))
-                        .filter(dict_dsl::word.eq(&headword.lemma_1))
-                        .filter(dict_dsl::uid.like(&uid_prefix_pat))
-                        .filter(dict_dsl::uid.like(&uid_suffix_pat))
-                        .first::<DictWord>(dict_conn);
-
-                    if let Ok(dict_word) = dict_word_result
-                        && seen_ids.insert(dict_word.id)
-                    {
-                        all_rows.push(dict_word);
-                    }
-                }
-            }
-        }
-
-        // ---------- Path B: dict_words_fts.word → user-imported dicts ----------
-        if path_b_enabled {
-            let in_clause: Option<(String, Vec<String>)> = match &non_dpd_subset {
-                Some(set) => Self::dict_label_in_clause(set),
-                None => None,
-            };
-
-            let mut sql = String::from(
-                "SELECT dw.* FROM dict_words dw \
-                 JOIN dict_words_fts f ON f.rowid = dw.id \
-                 WHERE f.word LIKE ?"
-            );
-
-            if self.source.is_some() {
-                if self.source_include {
-                    sql.push_str(" AND dw.dict_label = ?");
-                } else {
-                    sql.push_str(" AND dw.dict_label != ?");
-                }
-            }
-
-            if let Some((ph, _)) = &in_clause {
-                sql.push_str(" AND dw.dict_label IN (");
-                sql.push_str(ph);
-                sql.push(')');
+        if self.source.is_some() {
+            if self.source_include {
+                sql.push_str(" AND dw.dict_label = ?");
             } else {
-                // No explicit subset → exclude DPD so Path B doesn't
-                // duplicate Path A's dict_label="dpd" rows.
-                sql.push_str(" AND dw.dict_label != 'dpd'");
-            }
-
-            if apply_lang_filter {
-                sql.push_str(" AND dw.language = ?");
-            }
-
-            sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIKE ? ORDER BY dw.id LIMIT ?");
-
-            let mut q = sql_query(&sql)
-                .into_boxed::<diesel::sqlite::Sqlite>()
-                .bind::<Text, _>(like_pattern.clone());
-
-            if let Some(ref source_val) = self.source {
-                q = q.bind::<Text, _>(source_val.clone());
-            }
-
-            if let Some((_, binds)) = &in_clause {
-                for v in binds {
-                    q = q.bind::<Text, _>(v.clone());
-                }
-            }
-
-            if apply_lang_filter {
-                q = q.bind::<Text, _>(self.lang.clone());
-            }
-
-            q = q
-                .bind::<Text, _>(uid_prefix_pat.clone())
-                .bind::<Text, _>(uid_suffix_pat.clone())
-                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
-
-            let user_rows: Vec<DictWord> = q.load(dict_conn)?;
-
-            if (user_rows.len() as i64) >= SAFETY_LIMIT_SQL {
-                warn(&format!(
-                    "lemma_1_dpd_headword_match_fts5 Path B hit SAFETY_LIMIT_SQL={} (query='{}')",
-                    SAFETY_LIMIT_SQL, &self.query_text
-                ));
-            }
-
-            for row in user_rows {
-                if seen_ids.insert(row.id) {
-                    all_rows.push(row);
-                }
+                sql.push_str(" AND dw.dict_label != ?");
             }
         }
 
-        // Merge ordering: exact `word == query_text` rows first, then
-        // contains rows; tie-break by dict_label then id.
+        if let Some((ph, _)) = &in_clause {
+            sql.push_str(" AND dw.dict_label IN (");
+            sql.push_str(ph);
+            sql.push(')');
+        }
+
+        if apply_lang_filter {
+            sql.push_str(" AND dw.language = ?");
+        }
+
+        sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIKE ? ORDER BY dw.id LIMIT ?");
+
+        let mut q = sql_query(&sql)
+            .into_boxed::<diesel::sqlite::Sqlite>()
+            .bind::<Text, _>(like_pattern.clone());
+
+        if let Some(ref source_val) = self.source {
+            q = q.bind::<Text, _>(source_val.clone());
+        }
+
+        if let Some((_, binds)) = &in_clause {
+            for v in binds {
+                q = q.bind::<Text, _>(v.clone());
+            }
+        }
+
+        if apply_lang_filter {
+            q = q.bind::<Text, _>(self.lang.clone());
+        }
+
+        q = q
+            .bind::<Text, _>(uid_prefix_pat.clone())
+            .bind::<Text, _>(uid_suffix_pat.clone())
+            .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
+
+        let mut all_rows: Vec<DictWord> = q.load(dict_conn)?;
+
+        if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+            warn(&format!(
+                "lemma_1_dpd_headword_match_fts5 hit SAFETY_LIMIT_SQL={} (query='{}')",
+                SAFETY_LIMIT_SQL, &self.query_text
+            ));
+        }
+
+        // Merge ordering tiers: exact `word == query_text` first, then
+        // starts-with, then contains; tie-break by dict_label then id.
+        // The starts-with tier is what makes "gacch" surface `gacchati`,
+        // `gacchanti`, ... before inflected forms like `abhigacchati`.
         let qt = self.query_text.as_str();
+        let tier = |w: &str| -> u8 {
+            if w == qt { 3 } else if w.starts_with(qt) { 2 } else { 1 }
+        };
         all_rows.sort_by(|a, b| {
-            let a_exact = a.word == qt;
-            let b_exact = b.word == qt;
-            b_exact.cmp(&a_exact)
+            tier(&b.word).cmp(&tier(&a.word))
                 .then_with(|| a.dict_label.cmp(&b.dict_label))
                 .then_with(|| a.id.cmp(&b.id))
         });
 
-        let search_results: Vec<SearchResult> = all_rows
-            .iter()
-            .map(|dw| self.db_word_to_result(dw))
-            .collect();
-        let total = search_results.len();
+        let total = all_rows.len();
 
         info(&format!("Query took: {:?}", timer.elapsed()));
-        Ok((search_results, total))
+        Ok((all_rows, total))
     }
 
     // ===== Per-mode handlers (Stage 3 dispatch) =====
@@ -2199,10 +2125,15 @@ impl<'a> SearchQueryTask<'a> {
         let (reg_off, reg_lim, bold_off, bold_lim) =
             Self::split_page_across_streams(regular_total, page_num, self.page_len);
 
+        // Snippets deferred to the page slice — see the long comment on
+        // `lemma_1_dpd_headword_match_fts5` for the rationale and for how
+        // this layer composes with `RESULTS_PAGE_CACHE` (bridge-level
+        // per-page memoization keyed by query | area | params_json).
         let reg_slice: Vec<SearchResult> = regular_full
-            .into_iter()
+            .iter()
             .skip(reg_off)
             .take(reg_lim)
+            .map(|dw| self.db_word_to_result(dw))
             .collect();
 
         let (bold_total, bold_slice) =

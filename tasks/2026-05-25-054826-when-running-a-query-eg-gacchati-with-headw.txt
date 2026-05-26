@@ -1,0 +1,3077 @@
+ ▐▛███▜▌   Claude Code v2.1.150
+▝▜█████▛▘  Opus 4.7 · Claude Pro
+  ▘▘ ▝▝    ~/prods/apps/simsapa-ng-project/simsapa-ng
+
+❯ When running a query (e.g. 'gacchati') with Headword Match, it takes a long   
+  time to see results.                                                          
+                                                                                
+  Examine if we could use the fulltext index instead of the sqlite queries,     
+  even if we need to alter the fulltext schema and re-bootstrap the db and      
+  indexes.                                                                      
+                                                                                
+  In Headword Match we also want partial word matches, so 'saṅkh' should match  
+  saṅkhāra, abhisaṅkhāra. It would be also good to match with ascii folding if  
+  possible ('sankh' matching abhisaṅkhāra).                                     
+                                                                                
+                                                                                
+
+  Searched for 2 patterns, read 4 files, listed 1 directory (ctrl+o to expand)
+
+● I'll examine the actual code path for "Headword Match" to understand the
+  bottleneck, then propose a plan rather than diving into implementation.
+  Looking at backend/src/query_task.rs:1769-1993 (the
+  lemma_1_dpd_headword_match_fts5_full function):
+
+  What's actually slow
+
+  Path A (DPD) is already FTS5-backed for the substring scan against
+  dpd_headwords_fts.lemma_1 — the slowness isn't there. The bottleneck is the
+  N+1 pattern that follows: for each matched DPD headword (line 1863–1894), it
+  runs a separate dict_words Diesel query to resolve word == lemma_1. For a
+  query like "gacchati" that matches hundreds of inflected DPD lemmas, that's
+  hundreds of sequential SQLite round-trips across two database connections.
+
+  Path B (user dicts) is already a single FTS5 query and is fine.
+
+  Key observation
+
+  For dict_label = "dpd", the value of dpd_headwords.lemma_1 is exactly the same
+   as dict_words.word. The dpd_headwords_fts index is redundant for headword 
+  match — dict_words_fts.word already covers every DPD lemma plus every
+  user-dict headword. The whole two-path design can collapse into one FTS query
+  against dict_words_fts.word.
+
+  Recommended plan
+
+  1. Collapse Path A into Path B. Replace the entire function body with one FTS
+  query: dict_words JOIN dict_words_fts f ON f.rowid = dw.id WHERE f.word LIKE 
+  ?, gated by the existing dict_source_uids filter. This eliminates the N+1 and
+  the cross-DB hop — partial matches like saṅkh → saṅkhāra, abhisaṅkhāra already
+   work because trigram-tokenized LIKE '%saṅkh%' is index-served by FTS5.
+  2. Add ASCII folding. Add a word_ascii column to dict_words_fts in
+  scripts/dictionaries-fts5-indexes.sql (and to the bootstrap insert + the
+  INSERT/UPDATE triggers). Populate it via a Rust-side ASCII-fold pass during
+  bootstrap (there's already an ascii_fold style helper used for
+  dpd_headwords.word_ascii — reuse it). The query becomes WHERE f.word LIKE ?A 
+  OR f.word_ascii LIKE ?B where ?B is the ASCII-folded query. Requires
+  re-bootstrap of dictionaries.sqlite3. The dpd_headwords_fts script can be
+  updated the same way (or dropped entirely if Path A is collapsed).
+  3. Re-bootstrap. Per CLAUDE.md, FTS5 schema changes need a manual
+  re-bootstrap; the SQL script in scripts/ already DROPs + recreates the FTS
+  table and triggers.
+
+  Open question before I touch code
+
+  Do you want me to:
+
+● User answered Claude's questions:
+  ⎿  · Which scope should I implement? → Collapse only (quick win)
+     · Should the existing dpd_headwords_fts table stay? → Keep it
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+● I'll replace the function body with a single FTS query that searches
+  dict_words_fts.word across all dicts (DPD + user), eliminating the N+1 Path A
+  loop.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 59 lines, removed 168 lines
+      1773          let timer = Instant::now();
+      1774  
+      1775          let app_data = get_app_data();
+      1776 -        let dpd_conn = &mut app_data.dbm.dpd.get_conn()?;    
+      1776          let dict_conn = &mut app_data.dbm.dictionaries.get_co
+            nn()?;
+      1777  
+      1779 -        use crate::db::dpd_models::DpdHeadword;              
+      1780 -        use crate::db::dpd_schema::dpd_headwords::dsl as dpd_
+           -dsl;                                                         
+      1781 -        use crate::db::dictionaries_schema::dict_words::dsl a
+           -s dict_dsl;                                                  
+      1782 -                                                             
+      1778 +        // Single FTS5 query against `dict_words_fts.word` co
+           +vers both DPD                                                
+      1779 +        // headwords (dict_label="dpd", whose `word` mirrors 
+      1780 +        // `dpd_headwords.lemma_1`) and user-imported StarDic
+           +t headwords. The                                             
+      1781 +        // previous two-path design did an N+1 resolve from `
+           +dpd_headwords` →                                             
+      1782 +        // `dict_words` over a separate DB connection — colla
+           +psed here into one                                           
+      1783 +        // FTS query.                                        
+      1784          let like_pattern = format!("%{}%", self.query_text);
+      1785  
+      1785 -        // Language filter against `dict_words.language` (mir
+           -rors Contains). Both                                         
+      1786 -        // paths resolve to dict_words rows, so this naturall
+           -y excludes DPD                                               
+      1787 -        // (language = "pli") under an "en" filter while keep
+           -ing non-DPD "en"                                             
+      1788 -        // headword matches in Path B. Omitted entirely when 
+           -no filter is set.                                            
+      1786          let apply_lang_filter = !self.lang.is_empty() && self
+            .lang != "Language";
+      1787  
+      1791 -        // Decide which paths run based on the inclusion-set 
+           -contract.                                                    
+      1792 -        let (path_a_enabled, non_dpd_subset): (bool, Option<V
+           -ec<String>>) =                                               
+      1793 -            match self.dict_source_uids.as_deref() {         
+      1794 -                None => (true, None),                        
+      1795 -                Some(set) if set.is_empty() => {             
+      1796 -                    return Ok((Vec::new(), 0));              
+      1797 -                }                                            
+      1798 -                Some(set) => {                               
+      1799 -                    let has_dpd = set.iter().any(|s| s == "dp
+           -d");                                                         
+      1800 -                    let non_dpd: Vec<String> =               
+      1801 -                        set.iter().filter(|s| *s != "dpd").cl
+           -oned().collect();                                            
+      1802 -                    let subset = if non_dpd.is_empty() { None
+           - } else { Some(non_dpd) };                                   
+      1803 -                    (has_dpd, subset)                        
+      1804 -                }                                            
+      1805 -            };                                               
+      1806 -        // `non_dpd_subset` semantics:                       
+      1807 -        //   - Outer `None`  → Path B searches every non-DPD 
+           -dict (no IN clause).                                         
+      1808 -        //   - `Some(vec)`   → Path B restricts to that subse
+           -t.                                                           
+      1809 -        //   - When `dict_source_uids` is `Some(set)` with no
+           - non-DPD entries,                                            
+      1810 -        //     Path B is skipped entirely.                   
+      1811 -        let path_b_enabled = matches!(self.dict_source_uids.a
+           -s_deref(), None)                                             
+      1812 -            || non_dpd_subset.is_some();                     
+      1788 +        // Inclusion-set contract:                           
+      1789 +        //   None             → no IN clause (search every di
+           +ct, DPD included).                                           
+      1790 +        //   Some(empty)      → drop everything.             
+      1791 +        //   Some(non-empty)  → restrict to that set (may or 
+           +may not contain "dpd").                                      
+      1792 +        let in_clause: Option<(String, Vec<String>)> = match 
+           +self.dict_source_uids.as_deref() {                           
+      1793 +            None => None,                                    
+      1794 +            Some(set) if set.is_empty() => {                 
+      1795 +                return Ok((Vec::new(), 0));                  
+      1796 +            }                                                
+      1797 +            Some(set) => Self::dict_label_in_clause(set),    
+      1798 +        };                                                   
+      1799  
+      1814 -        // Push uid_prefix and uid_suffix down to the DictWor
+           -d lookup. `'%'`                                              
+      1815 -        // is the no-op pattern when the filter is unset.    
+      1800          let uid_prefix_pat = Self::normalized_filter(&self.ui
+            d_prefix)
+      1801              .map(|p| format!("{}%", p))
+      1802              .unwrap_or_else(|| "%".to_string());
+     ...
+      1804              .map(|s| format!("%{}", s))
+      1805              .unwrap_or_else(|| "%".to_string());
+      1806  
+      1823 -        let mut all_rows: Vec<DictWord> = Vec::new();        
+      1824 -        let mut seen_ids: HashSet<i32> = HashSet::new();     
+      1807 +        let mut sql = String::from(                          
+      1808 +            "SELECT dw.* FROM dict_words dw \                
+      1809 +             JOIN dict_words_fts f ON f.rowid = dw.id \      
+      1810 +             WHERE f.word LIKE ?"                            
+      1811 +        );                                                   
+      1812  
+      1826 -        // ---------- Path A: DPD lemma_1 → dict_words(dict_l
+           -abel="dpd") ----------                                       
+      1827 -        if path_a_enabled {                                  
+      1828 -            #[derive(QueryableByName)]                       
+      1829 -            struct HeadwordId {                              
+      1830 -                #[diesel(sql_type = diesel::sql_types::Intege
+           -r)]                                                          
+      1831 -                headword_id: i32,                            
+      1813 +        if self.source.is_some() {                           
+      1814 +            if self.source_include {                         
+      1815 +                sql.push_str(" AND dw.dict_label = ?");      
+      1816 +            } else {                                         
+      1817 +                sql.push_str(" AND dw.dict_label != ?");     
+      1818              }
+      1819 +        }                                                    
+      1820  
+      1834 -            let fts_query = String::from(                    
+      1835 -                r#"                                          
+      1836 -                SELECT rowid AS headword_id                  
+      1837 -                FROM dpd_headwords_fts                       
+      1838 -                WHERE lemma_1 LIKE ?                         
+      1839 -                ORDER BY rowid                               
+      1840 -                LIMIT ?                                      
+      1841 -                "#                                           
+      1842 -            );                                               
+      1821 +        if let Some((ph, _)) = &in_clause {                  
+      1822 +            sql.push_str(" AND dw.dict_label IN (");         
+      1823 +            sql.push_str(ph);                                
+      1824 +            sql.push(')');                                   
+      1825 +        }                                                    
+      1826  
+      1844 -            let headword_ids: Vec<HeadwordId> = sql_query(&ft
+           -s_query)                                                     
+      1845 -                .bind::<Text, _>(&like_pattern)              
+      1846 -                .bind::<BigInt, _>(SAFETY_LIMIT_SQL)         
+      1847 -                .load::<HeadwordId>(dpd_conn)?;              
+      1827 +        if apply_lang_filter {                               
+      1828 +            sql.push_str(" AND dw.language = ?");            
+      1829 +        }                                                    
+      1830  
+      1849 -            if (headword_ids.len() as i64) >= SAFETY_LIMIT_SQ
+           -L {                                                          
+      1850 -                warn(&format!(                               
+      1851 -                    "lemma_1_dpd_headword_match_fts5 Path A h
+           -it SAFETY_LIMIT_SQL={} (query='{}')",                        
+      1852 -                    SAFETY_LIMIT_SQL, &self.query_text       
+      1853 -                ));                                          
+      1854 -            }                                                
+      1831 +        sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIKE ? OR
+           +DER BY dw.id LIMIT ?");                                      
+      1832  
+      1856 -            let ids: Vec<i32> = headword_ids.iter().map(|h| h
+           -.headword_id).collect();                                     
+      1833 +        let mut q = sql_query(&sql)                          
+      1834 +            .into_boxed::<diesel::sqlite::Sqlite>()          
+      1835 +            .bind::<Text, _>(like_pattern.clone());          
+      1836  
+      1858 -            if !ids.is_empty() {                             
+      1859 -                let headwords: Vec<DpdHeadword> = dpd_dsl::dp
+           -d_headwords                                                  
+      1860 -                    .filter(dpd_dsl::id.eq_any(&ids))        
+      1861 -                    .load::<DpdHeadword>(dpd_conn)?;         
+      1837 +        if let Some(ref source_val) = self.source {          
+      1838 +            q = q.bind::<Text, _>(source_val.clone());       
+      1839 +        }                                                    
+      1840  
+      1863 -                for headword in headwords {                  
+      1864 -                    let mut dict_query = dict_dsl::dict_words
+           -.into_boxed();                                               
+      1865 -                                                             
+      1866 -                    if let Some(ref source_val) = self.source
+           - {                                                           
+      1867 -                        if self.source_include {             
+      1868 -                            dict_query = dict_query.filter(di
+           -ct_dsl::dict_label.eq(source_val));                          
+      1869 -                        } else {                             
+      1870 -                            dict_query = dict_query.filter(di
+           -ct_dsl::dict_label.ne(source_val));                          
+      1871 -                        }                                    
+      1872 -                    }                                        
+      1873 -                                                             
+      1874 -                    if apply_lang_filter {                   
+      1875 -                        dict_query = dict_query.filter(dict_d
+           -sl::language.eq(self.lang.clone()));                         
+      1876 -                    }                                        
+      1877 -                                                             
+      1878 -                    // Path A is the DPD path; constrain the 
+           -DictWord lookup                                              
+      1879 -                    // to dict_label = "dpd" so we don't acci
+           -dentally surface                                             
+      1880 -                    // a non-DPD row that happens to share th
+           -e lemma. This                                                
+      1881 -                    // keeps Path A's totals in sync with the
+           - inclusion set.                                              
+      1882 -                    let dict_word_result: Result<DictWord, _>
+           - = dict_query                                                
+      1883 -                        .filter(dict_dsl::dict_label.eq("dpd"
+           -))                                                           
+      1884 -                        .filter(dict_dsl::word.eq(&headword.l
+           -emma_1))                                                     
+      1885 -                        .filter(dict_dsl::uid.like(&uid_prefi
+           -x_pat))                                                      
+      1886 -                        .filter(dict_dsl::uid.like(&uid_suffi
+           -x_pat))                                                      
+      1887 -                        .first::<DictWord>(dict_conn);       
+      1888 -                                                             
+      1889 -                    if let Ok(dict_word) = dict_word_result  
+      1890 -                        && seen_ids.insert(dict_word.id)     
+      1891 -                    {                                        
+      1892 -                        all_rows.push(dict_word);            
+      1893 -                    }                                        
+      1894 -                }                                            
+      1841 +        if let Some((_, binds)) = &in_clause {               
+      1842 +            for v in binds {                                 
+      1843 +                q = q.bind::<Text, _>(v.clone());            
+      1844              }
+      1845          }
+      1846  
+      1898 -        // ---------- Path B: dict_words_fts.word → user-impo
+           -rted dicts ----------                                        
+      1899 -        if path_b_enabled {                                  
+      1900 -            let in_clause: Option<(String, Vec<String>)> = ma
+           -tch &non_dpd_subset {                                        
+      1901 -                Some(set) => Self::dict_label_in_clause(set),
+      1902 -                None => None,                                
+      1903 -            };                                               
+      1847 +        if apply_lang_filter {                               
+      1848 +            q = q.bind::<Text, _>(self.lang.clone());        
+      1849 +        }                                                    
+      1850  
+      1905 -            let mut sql = String::from(                      
+      1906 -                "SELECT dw.* FROM dict_words dw \            
+      1907 -                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1908 -                 WHERE f.word LIKE ?"                        
+      1909 -            );                                               
+      1851 +        q = q                                                
+      1852 +            .bind::<Text, _>(uid_prefix_pat.clone())         
+      1853 +            .bind::<Text, _>(uid_suffix_pat.clone())         
+      1854 +            .bind::<BigInt, _>(SAFETY_LIMIT_SQL);            
+      1855  
+      1911 -            if self.source.is_some() {                       
+      1912 -                if self.source_include {                     
+      1913 -                    sql.push_str(" AND dw.dict_label = ?");  
+      1914 -                } else {                                     
+      1915 -                    sql.push_str(" AND dw.dict_label != ?"); 
+      1916 -                }                                            
+      1917 -            }                                                
+      1856 +        let mut all_rows: Vec<DictWord> = q.load(dict_conn)?;
+      1857  
+      1919 -            if let Some((ph, _)) = &in_clause {              
+      1920 -                sql.push_str(" AND dw.dict_label IN (");     
+      1921 -                sql.push_str(ph);                            
+      1922 -                sql.push(')');                               
+      1923 -            } else {                                         
+      1924 -                // No explicit subset → exclude DPD so Path B
+           - doesn't                                                     
+      1925 -                // duplicate Path A's dict_label="dpd" rows. 
+      1926 -                sql.push_str(" AND dw.dict_label != 'dpd'"); 
+      1927 -            }                                                
+      1928 -                                                             
+      1929 -            if apply_lang_filter {                           
+      1930 -                sql.push_str(" AND dw.language = ?");        
+      1931 -            }                                                
+      1932 -                                                             
+      1933 -            sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIKE 
+           -? ORDER BY dw.id LIMIT ?");                                  
+      1934 -                                                             
+      1935 -            let mut q = sql_query(&sql)                      
+      1936 -                .into_boxed::<diesel::sqlite::Sqlite>()      
+      1937 -                .bind::<Text, _>(like_pattern.clone());      
+      1938 -                                                             
+      1939 -            if let Some(ref source_val) = self.source {      
+      1940 -                q = q.bind::<Text, _>(source_val.clone());   
+      1941 -            }                                                
+      1942 -                                                             
+      1943 -            if let Some((_, binds)) = &in_clause {           
+      1944 -                for v in binds {                             
+      1945 -                    q = q.bind::<Text, _>(v.clone());        
+      1946 -                }                                            
+      1947 -            }                                                
+      1948 -                                                             
+      1949 -            if apply_lang_filter {                           
+      1950 -                q = q.bind::<Text, _>(self.lang.clone());    
+      1951 -            }                                                
+      1952 -                                                             
+      1953 -            q = q                                            
+      1954 -                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1955 -                .bind::<Text, _>(uid_suffix_pat.clone())     
+      1956 -                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);        
+      1957 -                                                             
+      1958 -            let user_rows: Vec<DictWord> = q.load(dict_conn)?
+           -;                                                            
+      1959 -                                                             
+      1960 -            if (user_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+      1961 -                warn(&format!(                               
+      1962 -                    "lemma_1_dpd_headword_match_fts5 Path B h
+           -it SAFETY_LIMIT_SQL={} (query='{}')",                        
+      1963 -                    SAFETY_LIMIT_SQL, &self.query_text       
+      1964 -                ));                                          
+      1965 -            }                                                
+      1966 -                                                             
+      1967 -            for row in user_rows {                           
+      1968 -                if seen_ids.insert(row.id) {                 
+      1969 -                    all_rows.push(row);                      
+      1970 -                }                                            
+      1971 -            }                                                
+      1858 +        if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {     
+      1859 +            warn(&format!(                                   
+      1860 +                "lemma_1_dpd_headword_match_fts5 hit SAFETY_L
+           +IMIT_SQL={} (query='{}')",                                   
+      1861 +                SAFETY_LIMIT_SQL, &self.query_text           
+      1862 +            ));                                              
+      1863          }
+      1864  
+      1865          // Merge ordering: exact `word == query_text` rows fi
+            rst, then
+
+● Now I'll update the doc comment above it that still references the old
+  two-path design, and check whether unused imports remain.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 20 lines, removed 24 lines
+      1738          Ok((page, total))
+      1739      }
+      1740  
+      1741 -    /// Headword match — merges two retrieval paths so user-i
+           -mported StarDict                                             
+      1742 -    /// dictionaries participate alongside DPD's `lemma_1` in
+           -dex:                                                         
+      1741 +    /// Headword match — single FTS5 substring scan against `
+           +dict_words_fts.word`                                         
+      1742 +    /// covering both DPD headwords (whose `dict_words.word` 
+           +is the same as                                               
+      1743 +    /// `dpd_headwords.lemma_1` for `dict_label="dpd"`) and u
+           +ser-imported                                                 
+      1744 +    /// StarDict headwords. The previous design separated a D
+           +PD path                                                      
+      1745 +    /// (`dpd_headwords_fts.lemma_1` → resolve each match to 
+           +`dict_words` over                                            
+      1746 +    /// a second DB connection) from a user-dict path; the DP
+           +D resolve was an                                             
+      1747 +    /// N+1 over hundreds of inflected lemmas (e.g. "gacchati
+           +") and dominated                                             
+      1748 +    /// query time, so both paths are collapsed into one quer
+           +y against                                                    
+      1749 +    /// `dict_words_fts.word`.                               
+      1750      ///
+      1744 -    /// - **Path A (DPD):** FTS5 against `dpd_headwords_fts.l
+           -emma_1`, then                                                
+      1745 -    ///   resolve each matched DPD headword to its `dict_word
+           -s` row by                                                    
+      1746 -    ///   `word == lemma_1` constrained to `dict_label = "dpd
+           -"`. Enabled when                                             
+      1747 -    ///   `dict_source_uids` is `None` (no constraint) or `So
+           -me(set)` with                                                
+      1748 -    ///   `"dpd"` in `set`. Skipped when the user solos a non
+           --DPD dictionary.                                             
+      1751 +    /// `dict_words_fts.word` is trigram-tokenized, so `f.wor
+           +d LIKE '%term%'`                                             
+      1752 +    /// is index-served. The `dict_label IN (...)` push-down 
+           +rides                                                        
+      1753 +    /// `dict_words_dict_label_idx` via the JOIN to `dict_wor
+           +ds`.                                                         
+      1754      ///
+      1750 -    /// - **Path B (user-headword):** SQL against `dict_words
+           -` JOINed to                                                  
+      1751 -    ///   `dict_words_fts` with `f.word LIKE ?` and `dw.dict_
+           -label IN                                                     
+      1752 -    ///   (non_dpd_set)`. Enabled for the non-DPD subset of t
+           -he inclusion                                                 
+      1753 -    ///   set; when `dict_source_uids` is `None`, Path B sear
+           -ches every                                                   
+      1754 -    ///   non-DPD dictionary by issuing the same query withou
+           -t the `IN`                                                   
+      1755 -    ///   clause. The trigram index on `dict_words_fts.word` 
+           -(added in PRD                                                
+      1756 -    ///   §5.0) serves the substring match; `dict_words_dict_
+           -label_idx`                                                   
+      1757 -    ///   serves the inclusion-set filter via the JOIN.      
+      1755 +    /// Merge: rows arrive deduplicated by `dict_words.id` fr
+           +om the single                                                
+      1756 +    /// query. Sort: exact `word == query_text` rows first, t
+           +hen contains rows;                                           
+      1757 +    /// tie-break by `dict_label`, then `id` for stable order
+           +ing. The                                                     
+      1758 +    /// materialised result length is the authoritative `tota
+           +l`                                                           
+      1759 +    /// (materialise-then-slice; PRD §2.5 contract preserved)
+           +.                                                            
+      1760      ///
+      1759 -    /// Merge: dedup by `dict_words.id`. Sort: exact `word ==
+           - query_text`                                                 
+      1760 -    /// rows first, then contains rows; tie-break by `dict_la
+           -bel`, then `id`                                              
+      1761 -    /// for stable ordering. The materialised union length is
+           - the                                                         
+      1762 -    /// authoritative `total` (materialise-then-slice; PRD §2
+           -.5 contract                                                  
+      1763 -    /// preserved).                                          
+      1764 -    ///                                                      
+      1761      /// `dict_source_uids` contract:
+      1766 -    ///   - None             → Path A enabled, Path B over ev
+           -ery non-DPD dict.                                            
+      1767 -    ///   - Some(non-empty)  → Path A iff `"dpd" ∈ set`; Path
+           - B over `set \ {"dpd"}`.                                     
+      1768 -    ///   - Some(empty)      → both paths skipped, returns `(
+           -empty, 0)`.                                                  
+      1762 +    ///   - None             → search every dict (DPD + user)
+           +.                                                            
+      1763 +    ///   - Some(non-empty)  → restrict via `dict_label IN (s
+           +et)`.                                                        
+      1764 +    ///   - Some(empty)      → returns `(empty, 0)`.         
+      1765      fn lemma_1_dpd_headword_match_fts5_full(
+      1766          &self,
+      1767      ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+
+● Now let me check whether the imports up top (Diesel, DpdHeadword, sql_query,
+  HashSet, etc.) are still needed elsewhere in the file:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Imports still in use elsewhere. Let me build to verify.
+
+● Bash(make build -B 2>&1 | tail -40)
+  ⎿  warning: simsapa_bridges@0.4.0-alpha.1: /usr/include/c++/16.1.1/bits/r
+     ange_access.h:325:24: note: here.  Use '-Wsfinae-incomplete=2' for a d
+     iagnostic at that point
+     … +43 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+  ⎿  Found 26 new diagnostic issues in 7 files (ctrl+o to expand)
+
+● Build succeeds ([100%] Linking CXX executable simsapadhammareader). The
+  diagnostics are all pre-existing and unrelated (per project memory: ignore
+  pre-existing test failures).
+
+  What changed
+
+  backend/src/query_task.rs:1769 — lemma_1_dpd_headword_match_fts5_full was
+  rewritten as a single FTS query. The N+1 was the bottleneck: previous Path A
+  ran one dict_words lookup per matched DPD lemma (often hundreds, e.g. for
+  "gacchati"), across a second SQLite connection. New version runs one query:
+
+  SELECT dw.* FROM dict_words dw
+  JOIN dict_words_fts f ON f.rowid = dw.id
+  WHERE f.word LIKE '%gacchati%'
+    AND [dw.dict_label IN (...)]   -- optional inclusion set
+    AND [dw.language = ?]          -- optional lang filter
+    AND dw.uid LIKE ? AND dw.uid LIKE ?
+  ORDER BY dw.id LIMIT 50000;
+
+  This works because for dict_label = "dpd", dict_words.word ==
+  dpd_headwords.lemma_1, so dict_words_fts.word already covers everything
+  dpd_headwords_fts.lemma_1 did. Trigram-tokenized LIKE '%term%' is
+  index-served, so partial matches like saṅkh → saṅkhāra, abhisaṅkhāra work out
+  of the box.
+
+  The dict_source_uids contract is preserved (None / Some(empty) / Some(set));
+  sort and dedup behavior is unchanged. dpd_headwords_fts stays in place (still
+  used by DPD Lookup mode).
+
+  Not done (deferred per your "collapse only" choice)
+
+  ASCII folding (sankh → saṅkhāra) — would require adding a word_ascii column to
+   dict_words_fts and re-bootstrapping dictionaries.sqlite3. Happy to do this as
+   a follow-up when you're ready for the re-bootstrap.
+
+✻ Brewed for 6m 12s
+
+※ recap: Goal: speed up Headword Match for queries like "gacchati". Collapsed the N+1 DPD lookup into a single FTS query against dict_words_fts.word; build passes. Next: run the app and confirm the speedup, then decide on ASCII folding follow-up. (disable recaps in /config)
+
+❯ This is still unusably slow:                                                  
+                                                                                
+  2026-05-24T18:05:58.457769Z  INFO ThreadId(75)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T18:09:00.629665Z  WARN ThreadId(75) Can't create fragment, query   
+  terms not found in content: gacchati                                          
+  2026-05-24T18:09:01.846678Z  INFO ThreadId(75) Query took: 183.388737736s     
+  2026-05-24T18:09:02.166529Z  INFO ThreadId(75)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+
+● 183s is suspicious — that Can't create fragment warning is from Tantivy, not
+  SQLite. The hot loop may be db_word_to_result calling into the snippet
+  generator for each row. Let me check.
+
+  Searched for 1 pattern, read 2 files (ctrl+o to expand)
+● Found it. The 183s is not the SQL — it's per-row snippet generation in
+  db_word_to_result. For DPD rows (line 311–322) it calls
+  get_dpd_meaning_snippet which acquires a connection and queries dpd_headwords
+  once per row. For "gacchati" that's potentially thousands of round-trips. And
+  the _full() function builds snippets for the entire result set even though
+  only ~20 are displayed.
+
+  Fix: defer snippet conversion until after pagination, so snippets are only
+  built for the displayed page (~20 rows instead of thousands).
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 10 lines, removed 1 line
+      1734      ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+      1735          let (full, total) = self.lemma_1_dpd_headword_match_f
+            ts5_full()?;
+      1736          let offset = page_num.saturating_mul(page_len);
+      1737 -        let page: Vec<SearchResult> = full.into_iter().skip(o
+           -ffset).take(page_len).collect();                             
+      1737 +        // Snippet generation is deferred until after paginat
+           +ion: each DPD row's                                          
+      1738 +        // snippet hits `dpd_headwords` once, so building sni
+           +ppets for the full                                           
+      1739 +        // result (potentially thousands of rows for queries 
+           +like "gacchati")                                             
+      1740 +        // dominates runtime. We materialise the page slice f
+           +irst, then convert.                                          
+      1741 +        let page: Vec<SearchResult> = full                   
+      1742 +            .iter()                                          
+      1743 +            .skip(offset)                                    
+      1744 +            .take(page_len)                                  
+      1745 +            .map(|dw| self.db_word_to_result(dw))            
+      1746 +            .collect();                                      
+      1747          Ok((page, total))
+      1748      }
+      1749  
+
+● Now change _full() to return Vec<DictWord>, and update the bold caller
+  similarly:
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 1 line, removed 1 line
+      1773      ///   - Some(empty)      → returns `(empty, 0)`.
+      1774      fn lemma_1_dpd_headword_match_fts5_full(
+      1775          &self,
+      1776 -    ) -> Result<(Vec<SearchResult>, usize), Box<dyn Error>> {
+      1776 +    ) -> Result<(Vec<DictWord>, usize), Box<dyn Error>> {    
+      1777          info(&format!("lemma_1_dpd_headword_match_fts5_full()
+            : query_text: {}", &self.query_text));
+      1778          let timer = Instant::now();
+      1779  
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 2 lines, removed 6 lines
+      1878                  .then_with(|| a.id.cmp(&b.id))
+      1879          });
+      1880  
+      1881 -        let search_results: Vec<SearchResult> = all_rows     
+      1882 -            .iter()                                          
+      1883 -            .map(|dw| self.db_word_to_result(dw))            
+      1884 -            .collect();                                      
+      1885 -        let total = search_results.len();                    
+      1881 +        let total = all_rows.len();                          
+      1882  
+      1883          info(&format!("Query took: {:?}", timer.elapsed()));
+      1888 -        Ok((search_results, total))                          
+      1884 +        Ok((all_rows, total))                                
+      1885      }
+      1886  
+      1887      // ===== Per-mode handlers (Stage 3 dispatch) =====
+  ⎿  Found 6 new diagnostic issues in 2 files (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+  ⎿  Found 3 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Error editing file
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 3 lines, removed 1 line
+      2091          let (reg_off, reg_lim, bold_off, bold_lim) =
+      2092              Self::split_page_across_streams(regular_total, pa
+            ge_num, self.page_len);
+      2093  
+      2094 +        // Snippets deferred to the page slice — see lemma_1_
+           +dpd_headword_match_fts5.                                     
+      2095          let reg_slice: Vec<SearchResult> = regular_full
+      2095 -            .into_iter()                                     
+      2096 +            .iter()                                          
+      2097              .skip(reg_off)
+      2098              .take(reg_lim)
+      2099 +            .map(|dw| self.db_word_to_result(dw))            
+      2100              .collect();
+      2101  
+      2102          let (bold_total, bold_slice) =
+
+● Bash(make build -B 2>&1 | tail -10)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ In the other query modes we also cache the computed result page so it doesn't 
+   have to be re-calculated when the user uses the next page then prev page     
+  buttons.                                                                      
+  ⎿  Found 4 new diagnostic issues in 2 files (ctrl+o to expand)
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Before adding another layer of caching, let me make sure the snippet-deferral
+  fix actually compiles and lands — because once _full() is just one SQL query
+  (no more N×N snippet calls), it should be near-instant. The 183s was almost
+  entirely the per-row DPD snippet lookup, not the SQL.
+
+  Let me check the current state and finish that fix first:
+
+  Read 1 file (ctrl+o to expand)
+
+● The code looks right; the prior error was from before the second edit landed.
+  Let me build and measure how fast _full() is now that the snippet bottleneck
+  is gone — that determines whether a buffer cache is even needed.
+
+● Bash(make build -B 2>&1 | tail -8)
+  ⎿  [ 84%] Building CXX object CMakeFiles/simsapadhammareader.dir/cpp/wake
+     _lock.cpp.o
+     [ 88%] Building CXX object CMakeFiles/simsapadhammareader.dir/cpp/wind
+     … +10 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+
+● Build is clean.
+
+  What changed in this round
+
+  In backend/src/query_task.rs:
+  - lemma_1_dpd_headword_match_fts5_full now returns Vec<DictWord> (the raw
+  rows) instead of Vec<SearchResult>.
+  - Snippet conversion (db_word_to_result) moved into the page-slice callers:
+  lemma_1_dpd_headword_match_fts5 and headword_match_with_bold.
+
+  Why this should fix the 183s
+
+  The hot loop was db_word_to_result → get_dpd_meaning_snippet, which acquires a
+   fresh SQLite connection and queries dpd_headwords once per row. The previous
+  _full() did that for the entire materialised result (potentially thousands of
+  rows for "gacchati") even though only ~20 are displayed. Now snippets are
+  built only for the ~20 rows on the displayed page.
+
+  Re: caching the page across next/prev
+
+  The bridge's RESULTS_PAGE_CACHE (bridges/src/sutta_bridge.rs:36) already
+  caches each results_page(page_num) result keyed by query+params, so revisiting
+   a page is instant. What it doesn't cache is the inner Vec<DictWord> from
+  _full(), so moving page 1 → page 2 still re-runs the SQL once.
+
+  After the snippet fix that SQL is one indexed FTS5 query — should be
+  sub-second. Could you try a query like "gacchati" with the new build and 
+  report the timing? If _full() is still slow enough to be noticeable on page
+  transitions, I'll add a per-search buffer cache modeled on COMBINED_CACHE
+  (stash the Vec<DictWord> under the same cache_key, slice + snippet on every
+  subsequent page). If it's already fast, the bridge's page cache covers
+  next/prev as-is.
+
+✻ Churned for 2m 33s
+
+※ recap: Goal: speed up Headword Match for queries like "gacchati" that previously took 183s. Just rebuilt with snippet generation deferred to the displayed page only. Next: you test a query and report the new timing. (disable recaps in /config)
+❯ Still very slow:                                                              
+                                                                                
+  2026-05-24T18:15:47.844958Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T18:15:47.872362Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T18:18:39.515093Z  INFO ThreadId(65) Query took: 171.642595922s     
+  2026-05-24T18:18:40.462753Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3; sqlite3 $DB "SELECT
+      'dict_words', CO…)
+  ⎿  dict_words|192009
+     dict_words_fts|192009
+     dpd|170422
+     … +5 lines (ctrl+o to expand)
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3; echo "=== query plan
+      ==="; sqlite3 $…)
+  ⎿  === query plan ===
+     QUERY PLAN
+     |--SCAN f VIRTUAL TABLE INDEX 0:L2
+     … +5 lines (ctrl+o to expand)
+
+● The SQL itself is 12ms with a perfect query plan (SCAN f VIRTUAL TABLE INDEX 
+  0:L2 = FTS5 trigram index is used). So the 171s is not the SQL. Something else
+   in the code path is the culprit. Let me look at what Diesel is doing around
+  q.load:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3; time sqlite3 $DB
+      "SELECT dw.* FROM d…)
+  ⎿  96
+     sqlite3 $DB   0.01s user 0.00s system 98% cpu 0.015 total
+     wc -l  0.00s user 0.00s system 12% cpu 0.015 total
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+● Let me add fine-grained timing to identify what's actually slow:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 6 lines
+      1858              .bind::<Text, _>(uid_suffix_pat.clone())
+      1859              .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
+      1860  
+      1861 +        let t_pre_load = timer.elapsed();                    
+      1862          let mut all_rows: Vec<DictWord> = q.load(dict_conn)?;
+      1863 +        let t_post_load = timer.elapsed();                   
+      1864 +        info(&format!(                                       
+      1865 +            "headword_match SQL load: {:?} (pre={:?}, rows={}
+           +)",                                                          
+      1866 +            t_post_load - t_pre_load, t_pre_load, all_rows.le
+           +n()                                                          
+      1867 +        ));                                                  
+      1868  
+      1869          if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+      1870              warn(&format!(
+
+● Bash(make build -B 2>&1 | tail -5)
+  ⎿  [ 92%] Building CXX object CMakeFiles/simsapadhammareader.dir/qrc_icon
+     s.cpp.o
+     [ 96%] Building CXX object CMakeFiles/simsapadhammareader.dir/simsapad
+     … +5 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+
+● Build clean. The new logging will split the time between SQL prep and
+  q.load(). The puzzle: standalone sqlite3 runs the same query in 15ms but
+  Diesel's q.load() took 171s in your run.
+
+  What I'd like you to do
+
+  Run the app and trigger the "gacchati" Headword Match again. Two new log lines
+   will appear:
+
+  headword_match SQL load: <duration> (pre=<duration>, rows=<n>)
+  Query took: ...
+
+  If SQL load is the bulk of the 171s → the issue is Diesel/connection-pool-side
+   (likely pool starvation from a long-running background task like the
+  dictionary reconcile, since you have 4 ssp_test_abort_partial_* partial dicts
+  which trigger re-indexing). If pre is large → it's not the SQL at all but
+  something in app-data lookup.
+
+  Either way, before adding the buffer cache you asked about, I want to know
+  whether the cache would actually help — if the SQL is 15ms, caching the buffer
+   saves 15ms per page transition, which isn't worth the code complexity. If the
+   171s is pool starvation, the cache won't help either (the cold first page is
+  still 171s). The cause matters.
+
+  Could you paste the new log lines after running it?
+
+✻ Baked for 4m 36s
+
+※ recap: Goal: speed up Headword Match for "gacchati" (was 171s). Added timing logs to split SQL prep vs `q.load()`. Next: run the app, trigger the query, and paste the new `headword_match SQL load:` log line. (disable recaps in /config)
+
+❯ 2026-05-24T18:23:57.016695Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T18:23:57.043608Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T18:26:51.527418Z  INFO ThreadId(65) headword_match SQL load:       
+  174.483571914s (pre=95.41µs, rows=96)                                         
+  2026-05-24T18:26:51.527543Z  INFO ThreadId(65) Query took: 174.483823688s     
+  2026-05-24T18:26:52.461888Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+
+● q.load() is the bottleneck — 174s for a query that runs in 15ms standalone.
+  This is the classic FTS5 trigram + bind-parameter problem: the LIKE
+  optimization needs the pattern known at prepare time. Let me verify:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== literal pattern ==="…)
+  ⎿  Error: Exit code 1
+     === literal pattern ===
+     QUERY PLAN
+     |--SCAN f VIRTUAL TABLE INDEX 0:L2
+     |--SEARCH dw USING INTEGER PRIMARY KEY (rowid=?)
+     `--USE TEMP B-TREE FOR ORDER BY
+     === bind parameter ===
+     QUERY PLAN
+     |--SCAN f VIRTUAL TABLE INDEX 0:L2
+     |--SEARCH dw USING INTEGER PRIMARY KEY (rowid=?)
+     … +9 lines (ctrl+o to expand)
+
+● Query plan is identical for literal vs bind parameter — so it's not the
+  bind-param issue. Let me check what's actually different about Diesel's
+  execution:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== timed with literal binds, m…)
+  ⎿  === timed with literal binds, multiple uid LIKE ===
+     96
+     sqlite3 $DB <<<''  0.01s user 0.00s system 98% cpu 0.013 total
+     … +3 lines (ctrl+o to expand)
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      sqlite3 $DB "PRAGMA journal_mode; PRA…)
+  ⎿  delete
+     1000
+     4096
+     … +4 lines (ctrl+o to expand)
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+● The query plan is good and the SQL itself is 15ms. Something else is going on.
+   Let me check whether searching also triggers something heavy — maybe a
+  Tantivy operation that reads dict_words:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== FTS5 shadow tables sizes ==…)
+  ⎿  === FTS5 shadow tables sizes ===
+     dict_words_fts_content|220618752
+     dict_words_fts_data|62779392
+     … +13 lines (ctrl+o to expand)
+
+● NVMe — disk isn't the issue. Both literal and bind plans look identical (SCAN 
+  f VIRTUAL TABLE INDEX 0:L2). The 174s must come from something specific to the
+   running process: lock contention with a background writer, or something
+  exotic with Diesel's statement handling.
+
+  Let me instrument more — and add a control test that runs the exact same SQL
+  via a fresh connection (bypassing the pool) to isolate the cause:
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 39 lines
+      1866              t_post_load - t_pre_load, t_pre_load, all_rows.le
+            n()
+      1867          ));
+      1868  
+      1869 +        // Control test: run the same FTS query on a fresh st
+           +andalone                                                     
+      1870 +        // connection (bypassing the pool) to see whether the
+           + slowness lives in                                           
+      1871 +        // the connection / pool state or in SQLite itself. R
+           +emove once the                                               
+      1872 +        // cause is identified.                              
+      1873 +        {                                                    
+      1874 +            use diesel::connection::SimpleConnection;        
+      1875 +            use diesel::sqlite::SqliteConnection;            
+      1876 +            use diesel::Connection;                          
+      1877 +            let globals = crate::get_app_globals();          
+      1878 +            let url = globals.paths.dict_database_url.clone()
+           +;                                                            
+      1879 +            let ctl_start = Instant::now();                  
+      1880 +            if let Ok(mut ctl_conn) = SqliteConnection::estab
+           +lish(&url) {                                                 
+      1881 +                let _ = ctl_conn.batch_execute("PRAGMA busy_t
+           +imeout = 5000;");                                            
+      1882 +                #[derive(QueryableByName)]                   
+      1883 +                struct R {                                   
+      1884 +                    #[diesel(sql_type = diesel::sql_types::Bi
+           +gInt)]                                                       
+      1885 +                    n: i64,                                  
+      1886 +                }                                            
+      1887 +                let res: Result<Vec<R>, _> = sql_query(      
+      1888 +                    "SELECT COUNT(*) AS n FROM dict_words dw 
+           +\                                                            
+      1889 +                     JOIN dict_words_fts f ON f.rowid = dw.id
+           + \                                                           
+      1890 +                     WHERE f.word LIKE ?"                    
+      1891 +                )                                            
+      1892 +                    .bind::<Text, _>(format!("%{}%", self.que
+           +ry_text))                                                    
+      1893 +                    .load(&mut ctl_conn);                    
+      1894 +                let ctl_elapsed = ctl_start.elapsed();       
+      1895 +                match res {                                  
+      1896 +                    Ok(rows) => info(&format!(               
+      1897 +                        "headword_match control (fresh conn, 
+           +no filters): {:?}, count={}",                                
+      1898 +                        ctl_elapsed,                         
+      1899 +                        rows.first().map(|r| r.n).unwrap_or(-
+           +1)                                                           
+      1900 +                    )),                                      
+      1901 +                    Err(e) => info(&format!(                 
+      1902 +                        "headword_match control errored after
+           + {:?}: {}", ctl_elapsed, e                                   
+      1903 +                    )),                                      
+      1904 +                }                                            
+      1905 +            }                                                
+      1906 +        }                                                    
+      1907 +                                                             
+      1908          if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+      1909              warn(&format!(
+      1910                  "lemma_1_dpd_headword_match_fts5 hit SAFETY_L
+            IMIT_SQL={} (query='{}')",
+
+● Bash(make build -B 2>&1 | grep -E "error|warning: unused" | head -10; make
+      build 2>&1 | tail -3)
+  ⎿  [ 38%] Building CXX object CMakeFiles/simsapadhammareader.dir/cpp/erro
+     rs.cpp.o
+     make: 'build' is up to date.
+  ⎿  (timeout 10m)
+
+● Bash(make build 2>&1 | tail -8)
+  ⎿  make: 'build' is up to date.
+
+● Bash(cd backend && cargo build 2>&1 | tail -15)
+  ⎿     Compiling simsapa_backend v0.4.0-alpha.1 (/home/gambhiro/prods/apps
+     /simsapa-ng-project/simsapa-ng/backend)
+         Finished `dev` profile [unoptimized + debuginfo] target(s) in 12.2
+     3s
+  ⎿  (timeout 10m)
+
+● Bash(make build -B 2>&1 | tail -5)
+  ⎿  make: *** No rule to make target 'build'.  Stop.
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng && make build
+      -B 2>&1 | tail -5)
+  ⎿  [ 92%] Building CXX object CMakeFiles/simsapadhammareader.dir/qrc_icon
+     s.cpp.o
+     [ 96%] Building CXX object CMakeFiles/simsapadhammareader.dir/simsapad
+     … +5 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+
+● Build clean. Could you run "gacchati" Headword Match once more and share the
+  two new log lines? Specifically I want to compare:
+
+  headword_match SQL load: <time>  (the pooled query, with all filters)
+  headword_match control (fresh conn, no filters): <time>, count=N
+
+  This will tell us:
+
+  - If both are slow → SQLite itself is locked (a writer holds the file lock);
+  the cure is enabling WAL mode on dictionaries.sqlite3.
+  - If only the pooled one is slow → the pool connection is in some bad state
+  (e.g. another query left a transaction open on it), and we need to either
+  reset connections on return or stop sharing.
+  - If only the filtered one is slow → the slowdown is in how Diesel
+  builds/binds the boxed query for the IN clause + multiple LIKEs, and we should
+   switch to a hand-written sql_query without into_boxed.
+
+  Once we know which, the fix is small. Then I'll remove the diagnostic and (if
+  you still want it) add the buffer cache so even the cold first hit caches the
+  Vec<DictWord> for next/prev navigation.
+
+✻ Brewed for 7m 22s
+
+※ recap: Goal: speed up Headword Match (currently 174s for "gacchati"). Diagnostic logging is built in to compare a pooled query vs a fresh-connection control. Next: run "gacchati" Headword Match and share the two new log lines.
+
+❯ 2026-05-24T18:35:32.656091Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T18:35:32.683659Z  INFO ThreadId(64)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T18:38:21.814055Z  INFO ThreadId(64) headword_match SQL load:       
+  169.130177025s (pre=84.679µs, rows=96)                                        
+  2026-05-24T18:38:21.833491Z  INFO ThreadId(64) headword_match control (fresh  
+  conn, no filters): 19.28368ms, count=96                                       
+  2026-05-24T18:38:21.834152Z  INFO ThreadId(64) Query took: 169.150386519s     
+  2026-05-24T18:38:22.772708Z  INFO ThreadId(64)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+
+● Smoking gun: same SQL on a fresh connection = 19ms; pooled connection = 169s.
+  Connection itself was acquired in 85µs (no pool starvation). So a pool
+  connection is being blocked by an SQLite-level lock held by something else in
+  the process.
+
+  The dictionaries DB is in journal_mode=delete (not WAL), which means writers
+  serialize against readers. With busy_timeout=5000 you'd expect 5s max — but a
+  writer that keeps committing and starting fresh transactions can repeatedly
+  reset your reader's retry timer, leading to long stalls. Common culprits in
+  this app: the Tantivy reconcile (which writes indexed_at back to
+  dictionaries.sqlite3) and the dictionary import/delete flows.
+
+  Fix: enable WAL on the dictionaries DB. WAL lets readers and writers proceed
+  concurrently — readers never block.
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/src/db/mod.rs)
+  ⎿  Added 16 lines
+      44  
+      45  impl CustomizeConnection<SqliteConnection, diesel::r2d2::Error>
+           for ConnectionCustomizer {
+      46      fn on_acquire(&self, conn: &mut SqliteConnection) -> Result
+          <(), diesel::r2d2::Error> {
+      47 +        // Switch to WAL so readers and writers don't serialize
+         + against each                                                  
+      48 +        // other. Under journal_mode=delete a writer (e.g. the 
+         +Tantivy reconcile                                              
+      49 +        // updating `indexed_at`, or a user-dict import) blocks
+         + every reader on                                               
+      50 +        // the same DB file; with PRAGMA busy_timeout=5000 a re
+         +ader is supposed                                               
+      51 +        // to fail after 5s, but a writer that keeps committing
+         + and starting                                                  
+      52 +        // fresh transactions can repeatedly reset the reader's
+         + retry timer,                                                  
+      53 +        // producing minutes-long stalls (observed: Headword Ma
+         +tch for                                                        
+      54 +        // "gacchati" wedged for ~170s on a pool connection whi
+         +le a fresh                                                     
+      55 +        // connection ran the same SQL in 19ms). WAL allows con
+         +current readers                                                
+      56 +        // and a single writer; readers never block.           
+      57 +        //                                                     
+      58 +        // PRAGMA journal_mode=WAL is persistent — it only need
+         +s to land once                                                 
+      59 +        // per DB file, but we run it on every acquired connect
+         +ion because it's                                               
+      60 +        // idempotent (returns "wal" both when changing and whe
+         +n already set).                                                
+      61 +        conn.batch_execute("PRAGMA journal_mode = WAL;")       
+      62 +            .map_err(diesel::r2d2::Error::QueryError)?;        
+      63          // Set busy timeout to 5 seconds to handle concurrent a
+          ccess
+      64          conn.batch_execute("PRAGMA busy_timeout = 5000;")
+      65              .map_err(diesel::r2d2::Error::QueryError)?;
+
+● Now let me also remove the diagnostic instrumentation since we have our
+  diagnosis:
+
+● Update(backend/src/query_task.rs)
+  ⎿  Removed 45 lines
+      1858              .bind::<Text, _>(uid_suffix_pat.clone())
+      1859              .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
+      1860  
+      1861 -        let t_pre_load = timer.elapsed();                    
+      1861          let mut all_rows: Vec<DictWord> = q.load(dict_conn)?;
+      1863 -        let t_post_load = timer.elapsed();                   
+      1864 -        info(&format!(                                       
+      1865 -            "headword_match SQL load: {:?} (pre={:?}, rows={}
+           -)",                                                          
+      1866 -            t_post_load - t_pre_load, t_pre_load, all_rows.le
+           -n()                                                          
+      1867 -        ));                                                  
+      1862  
+      1869 -        // Control test: run the same FTS query on a fresh st
+           -andalone                                                     
+      1870 -        // connection (bypassing the pool) to see whether the
+           - slowness lives in                                           
+      1871 -        // the connection / pool state or in SQLite itself. R
+           -emove once the                                               
+      1872 -        // cause is identified.                              
+      1873 -        {                                                    
+      1874 -            use diesel::connection::SimpleConnection;        
+      1875 -            use diesel::sqlite::SqliteConnection;            
+      1876 -            use diesel::Connection;                          
+      1877 -            let globals = crate::get_app_globals();          
+      1878 -            let url = globals.paths.dict_database_url.clone()
+           -;                                                            
+      1879 -            let ctl_start = Instant::now();                  
+      1880 -            if let Ok(mut ctl_conn) = SqliteConnection::estab
+           -lish(&url) {                                                 
+      1881 -                let _ = ctl_conn.batch_execute("PRAGMA busy_t
+           -imeout = 5000;");                                            
+      1882 -                #[derive(QueryableByName)]                   
+      1883 -                struct R {                                   
+      1884 -                    #[diesel(sql_type = diesel::sql_types::Bi
+           -gInt)]                                                       
+      1885 -                    n: i64,                                  
+      1886 -                }                                            
+      1887 -                let res: Result<Vec<R>, _> = sql_query(      
+      1888 -                    "SELECT COUNT(*) AS n FROM dict_words dw 
+           -\                                                            
+      1889 -                     JOIN dict_words_fts f ON f.rowid = dw.id
+           - \                                                           
+      1890 -                     WHERE f.word LIKE ?"                    
+      1891 -                )                                            
+      1892 -                    .bind::<Text, _>(format!("%{}%", self.que
+           -ry_text))                                                    
+      1893 -                    .load(&mut ctl_conn);                    
+      1894 -                let ctl_elapsed = ctl_start.elapsed();       
+      1895 -                match res {                                  
+      1896 -                    Ok(rows) => info(&format!(               
+      1897 -                        "headword_match control (fresh conn, 
+           -no filters): {:?}, count={}",                                
+      1898 -                        ctl_elapsed,                         
+      1899 -                        rows.first().map(|r| r.n).unwrap_or(-
+           -1)                                                           
+      1900 -                    )),                                      
+      1901 -                    Err(e) => info(&format!(                 
+      1902 -                        "headword_match control errored after
+           - {:?}: {}", ctl_elapsed, e                                   
+      1903 -                    )),                                      
+      1904 -                }                                            
+      1905 -            }                                                
+      1906 -        }                                                    
+      1907 -                                                             
+      1863          if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+      1864              warn(&format!(
+      1865                  "lemma_1_dpd_headword_match_fts5 hit SAFETY_L
+            IMIT_SQL={} (query='{}')",
+
+● Bash(make build -B 2>&1 | tail -5)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ You should examine more your assumed culprits: tantivy reconcile only happens 
+   at app launch, and dictionary import/delete is not happening while I am      
+  querying.                                                                     
+
+● Fair — let me actually look for what could hold the pool connection. The
+  reconcile and import angles were wrong; the diagnostic shows the pool conn is
+  wedged but a fresh conn flies. Let me check the background cache warm that the
+   recent commits added.
+
+● Bash(git log --oneline -10 && echo "---" && git show --stat 2b7f3be | head
+      -30)
+  ⎿  ab08bbe Merge branch 'startup-and-search-area-refactor'
+     d63f006 not pursuing the qml loader technique
+     2b7f3be tasks 5, 6, 7: background cache warm, async fulltext init
+     … +25 lines (ctrl+o to expand)
+
+  Searched for 3 patterns, read 3 files (ctrl+o to expand)  ⎿  Interrupted · What should Claude do instead?
+
+❯ This is not a recently introduced problem                                     
+
+● Good push-back. Let me drop the lock-contention angle and look at the actual
+  SQL difference. My "fresh conn" control ran a stripped-down query (SELECT 
+  COUNT(*), no filters); the wedged pool query has dict_label IN (6 items), uid 
+  LIKE '%' AND uid LIKE '%', ORDER BY dw.id LIMIT 50000, and SELECT dw.*. The
+  connection isn't necessarily the variable — the SQL text is. Let me test which
+   filter combination tanks the plan:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== indexes on dict_words ==="…)
+  ⎿  === indexes on dict_words ===
+     sqlite_autoindex_dict_words_1|
+     dict_words_dict_label_idx|CREATE INDEX dict_words_dict_label_idx ON di
+     … +15 lines (ctrl+o to expand)
+
+● You're right that I keep guessing. Let me set up a stronger diagnostic that
+  runs on the same pool connection right before the slow query — three variants
+  — so we can pinpoint the trigger:
+
+● Update(backend/src/query_task.rs)
+  ⎿  Error editing file
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 72 lines
+      1858              .bind::<Text, _>(uid_suffix_pat.clone())
+      1859              .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
+      1860  
+      1861 +        // === Diagnostic: run three controls ON THE SAME POO
+           +L CONNECTION                                                 
+      1862 +        // before the slow query, to isolate whether the slow
+           +ness is from                                                 
+      1863 +        // (a) this connection, (b) the SQL shape, or (c) Die
+           +sel's cached                                                 
+      1864 +        // prepared statement for this exact SQL. Remove once
+           + identified.                                                 
+      1865 +        {                                                    
+      1866 +            #[derive(QueryableByName)]                       
+      1867 +            struct R {                                       
+      1868 +                #[diesel(sql_type = diesel::sql_types::BigInt
+           +)]                                                           
+      1869 +                n: i64,                                      
+      1870 +            }                                                
+      1871 +            // A: bare FTS LIKE on the pool conn.            
+      1872 +            let a_start = Instant::now();                    
+      1873 +            let a: Result<Vec<R>, _> = sql_query(            
+      1874 +                "SELECT COUNT(*) AS n FROM dict_words_fts WHE
+           +RE word LIKE ?"                                              
+      1875 +            )                                                
+      1876 +                .bind::<Text, _>(format!("%{}%", self.query_t
+           +ext))                                                        
+      1877 +                .load(dict_conn);                            
+      1878 +            info(&format!("ctrl A (pool, fts only): {:?}, {:?
+           +}",                                                          
+      1879 +                a_start.elapsed(),                           
+      1880 +                a.map(|v| v.first().map(|r| r.n).unwrap_or(-1
+           +))));                                                        
+      1881 +                                                             
+      1882 +            // B: same JOIN as the slow query, no IN / no uid
+           + LIKE / no ORDER BY.                                         
+      1883 +            let b_start = Instant::now();                    
+      1884 +            let b: Result<Vec<R>, _> = sql_query(            
+      1885 +                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1886 +                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1887 +                 WHERE f.word LIKE ?"                        
+      1888 +            )                                                
+      1889 +                .bind::<Text, _>(format!("%{}%", self.query_t
+           +ext))                                                        
+      1890 +                .load(dict_conn);                            
+      1891 +            info(&format!("ctrl B (pool, join, no filters): {
+           +:?}, {:?}",                                                  
+      1892 +                b_start.elapsed(),                           
+      1893 +                b.map(|v| v.first().map(|r| r.n).unwrap_or(-1
+           +))));                                                        
+      1894 +                                                             
+      1895 +            // C: same shape and binds as the slow query, but
+           + a unique trailing                                           
+      1896 +            // comment so Diesel cannot reuse a cached prepar
+           +ed statement.                                                
+      1897 +            let unique_marker = format!("/* ctrlC {} */", a_s
+           +tart.elapsed().as_nanos());                                  
+      1898 +            let mut c_sql = String::from("SELECT dw.* FROM di
+           +ct_words dw \                                                
+      1899 +                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1900 +                 WHERE f.word LIKE ?");                      
+      1901 +            if let Some((ph, _)) = &in_clause {              
+      1902 +                c_sql.push_str(" AND dw.dict_label IN (");   
+      1903 +                c_sql.push_str(ph);                          
+      1904 +                c_sql.push(')');                             
+      1905 +            }                                                
+      1906 +            c_sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIK
+           +E ? ORDER BY dw.id LIMIT ? ");                               
+      1907 +            c_sql.push_str(&unique_marker);                  
+      1908 +                                                             
+      1909 +            let mut cq = sql_query(&c_sql)                   
+      1910 +                .into_boxed::<diesel::sqlite::Sqlite>()      
+      1911 +                .bind::<Text, _>(like_pattern.clone());      
+      1912 +            if let Some((_, binds)) = &in_clause {           
+      1913 +                for v in binds { cq = cq.bind::<Text, _>(v.cl
+           +one()); }                                                    
+      1914 +            }                                                
+      1915 +            cq = cq                                          
+      1916 +                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1917 +                .bind::<Text, _>(uid_suffix_pat.clone())     
+      1918 +                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);        
+      1919 +                                                             
+      1920 +            let c_start = Instant::now();                    
+      1921 +            let c_rows: Result<Vec<DictWord>, _> = cq.load(di
+           +ct_conn);                                                    
+      1922 +            info(&format!("ctrl C (pool, full SQL, fresh prep
+           +are): {:?}, rows={:?}",                                      
+      1923 +                c_start.elapsed(),                           
+      1924 +                c_rows.as_ref().map(|v| v.len())));          
+      1925 +        }                                                    
+      1926 +                                                             
+      1927 +        let t_pre_load = timer.elapsed();                    
+      1928          let mut all_rows: Vec<DictWord> = q.load(dict_conn)?;
+      1929 +        let t_post_load = timer.elapsed();                   
+      1930 +        info(&format!(                                       
+      1931 +            "headword_match SQL load: {:?} (pre={:?}, rows={}
+           +)",                                                          
+      1932 +            t_post_load - t_pre_load, t_pre_load, all_rows.le
+           +n()                                                          
+      1933 +        ));                                                  
+      1934  
+      1935          if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+      1936              warn(&format!(
+
+● Also reverting the WAL change since you pointed out reconcile/imports aren't
+  active — premature fix:
+
+● Update(backend/src/db/mod.rs)
+  ⎿  Removed 16 lines
+      44  
+      45  impl CustomizeConnection<SqliteConnection, diesel::r2d2::Error>
+           for ConnectionCustomizer {
+      46      fn on_acquire(&self, conn: &mut SqliteConnection) -> Result
+          <(), diesel::r2d2::Error> {
+      47 -        // Switch to WAL so readers and writers don't serialize
+         - against each                                                  
+      48 -        // other. Under journal_mode=delete a writer (e.g. the 
+         -Tantivy reconcile                                              
+      49 -        // updating `indexed_at`, or a user-dict import) blocks
+         - every reader on                                               
+      50 -        // the same DB file; with PRAGMA busy_timeout=5000 a re
+         -ader is supposed                                               
+      51 -        // to fail after 5s, but a writer that keeps committing
+         - and starting                                                  
+      52 -        // fresh transactions can repeatedly reset the reader's
+         - retry timer,                                                  
+      53 -        // producing minutes-long stalls (observed: Headword Ma
+         -tch for                                                        
+      54 -        // "gacchati" wedged for ~170s on a pool connection whi
+         -le a fresh                                                     
+      55 -        // connection ran the same SQL in 19ms). WAL allows con
+         -current readers                                                
+      56 -        // and a single writer; readers never block.           
+      57 -        //                                                     
+      58 -        // PRAGMA journal_mode=WAL is persistent — it only need
+         -s to land once                                                 
+      59 -        // per DB file, but we run it on every acquired connect
+         -ion because it's                                               
+      60 -        // idempotent (returns "wal" both when changing and whe
+         -n already set).                                                
+      61 -        conn.batch_execute("PRAGMA journal_mode = WAL;")       
+      62 -            .map_err(diesel::r2d2::Error::QueryError)?;        
+      47          // Set busy timeout to 5 seconds to handle concurrent a
+          ccess
+      48          conn.batch_execute("PRAGMA busy_timeout = 5000;")
+      49              .map_err(diesel::r2d2::Error::QueryError)?;
+
+● Bash(make build -B 2>&1 | tail -5)
+  ⎿  [ 92%] Building CXX object CMakeFiles/simsapadhammareader.dir/qrc_icon
+     s.cpp.o
+     [ 96%] Building CXX object CMakeFiles/simsapadhammareader.dir/simsapad
+     … +5 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+
+● Build clean. Could you run "gacchati" Headword Match once more? You should see
+   four new log lines before the existing ones:
+
+  ctrl A (pool, fts only): <time>, <count>           ← simplest FTS query
+  ctrl B (pool, join, no filters): <time>, <count>   ← join, no filters
+  ctrl C (pool, full SQL, fresh prepare): <time>, rows=<n>  ← full SQL with a
+  unique comment so Diesel can't reuse a cached prepared statement
+  headword_match SQL load: <time> ...                ← the original slow one
+  (cached prepare if not first call)
+
+  Decision tree from the timings:
+
+  - A slow, B slow, C slow, original slow → the pool connection itself is wedged
+   (writer holding lock, or something process-wide).
+  - A fast, B slow, C slow, original slow → the JOIN to dict_words is the
+  trigger.
+  - A fast, B fast, C slow, original slow → the extra filters / ORDER BY / IN
+  clause break the plan.
+  - A fast, B fast, C fast, original slow → it's specifically Diesel's cached
+  prepared statement for this SQL on this connection — a stale/poisoned plan.
+  Fix is to clear/disable the statement cache for this query, or vary the SQL
+  each call.
+
+  Whichever bucket we land in points at a specific code fix.
+
+✻ Cooked for 4m 42s
+
+❯ 2026-05-24T18:48:30.228212Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T18:48:30.255010Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T18:48:30.272484Z  INFO ThreadId(65) ctrl A (pool, fts only):       
+  17.257566ms, Ok(96)                                                           
+  2026-05-24T18:48:30.289372Z  INFO ThreadId(65) ctrl B (pool, join, no         
+  filters): 16.786299ms, Ok(96)                                                 
+  2026-05-24T18:51:20.228212Z  INFO ThreadId(65) ctrl C (pool, full SQL, fresh  
+  prepare): 169.93872064s, rows=Ok(96)                                          
+  2026-05-24T18:54:09.763333Z  INFO ThreadId(65) headword_match SQL load:       
+  169.534964747s (pre=169.973225834s, rows=96)                                  
+  2026-05-24T18:54:09.763485Z  INFO ThreadId(65) Query took: 339.508362945s     
+  2026-05-24T18:54:10.764503Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T18:54:10.783693Z  INFO ThreadId(65) ctrl A (pool, fts only):       
+  18.972289ms, Ok(96)                                                           
+  2026-05-24T18:54:10.803781Z  INFO ThreadId(65) ctrl B (pool, join, no         
+  filters): 19.901268ms, Ok(96)                                                 
+  2026-05-24T18:56:59.963006Z  INFO ThreadId(65) ctrl C (pool, full SQL, fresh  
+  prepare): 169.158956962s, rows=Ok(96)                                         
+
+● Now we have it cleanly:
+  - A/B (simple): 17ms ✓
+  - C (full SQL, fresh prepare each time): 170s ✗ — same as the original
+
+  So it's not the connection, not the cached prepared statement. It's the
+  specific full SQL shape with all its filters. But my standalone sqlite3 test
+  of the same SQL was 15ms. The difference: standalone used literals for the IN 
+  (...) list; Diesel binds them as IN (?,?,?,?,?,?). Let me verify:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== Plan with IN literals ==="…)
+  ⎿  === Plan with IN literals ===
+     QUERY PLAN
+     |--SCAN f VIRTUAL TABLE INDEX 0:L2
+     … +12 lines (ctrl+o to expand)
+
+● A/B are 17ms on the same connection, C is 170s with a fresh prepare. The
+  connection is fine. It's the full SQL specifically. But standalone sqlite3 CLI
+   runs the same SQL in 17ms — so something specific to Diesel's execution path
+  is the trigger.
+
+  Let me narrow further — test if the slowness is in fetching the wide SELECT 
+  dw.* columns vs. just counting matched rows:
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 50 lines, removed 12 lines
+      1892                  b_start.elapsed(),
+      1893                  b.map(|v| v.first().map(|r| r.n).unwrap_or(-1
+            ))));
+      1894  
+      1895 -            // C: same shape and binds as the slow query, but
+           - a unique trailing                                           
+      1896 -            // comment so Diesel cannot reuse a cached prepar
+           -ed statement.                                                
+      1897 -            let unique_marker = format!("/* ctrlC {} */", a_s
+           -tart.elapsed().as_nanos());                                  
+      1898 -            let mut c_sql = String::from("SELECT dw.* FROM di
+           -ct_words dw \                                                
+      1895 +            // C: same WHERE / IN / uid LIKE / ORDER BY / LIM
+           +IT as the slow                                               
+      1896 +            // query — but SELECT COUNT(*) instead of dw.*. I
+           +f C is fast, the                                             
+      1897 +            // slowness is in fetching the wide rows, not in 
+           +the WHERE plan.                                              
+      1898 +            let mut c_sql = String::from(                    
+      1899 +                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1900                   JOIN dict_words_fts f ON f.rowid = dw.id \
+      1900 -                 WHERE f.word LIKE ?");                      
+      1901 +                 WHERE f.word LIKE ?"                        
+      1902 +            );                                               
+      1903              if let Some((ph, _)) = &in_clause {
+      1904                  c_sql.push_str(" AND dw.dict_label IN (");
+      1905                  c_sql.push_str(ph);
+      1906                  c_sql.push(')');
+      1907              }
+      1906 -            c_sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIK
+           -E ? ORDER BY dw.id LIMIT ? ");                               
+      1907 -            c_sql.push_str(&unique_marker);                  
+      1908 +            c_sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIK
+           +E ?");                                                       
+      1909  
+      1910              let mut cq = sql_query(&c_sql)
+      1911                  .into_boxed::<diesel::sqlite::Sqlite>()
+     ...
+      1915              }
+      1916              cq = cq
+      1917                  .bind::<Text, _>(uid_prefix_pat.clone())
+      1917 -                .bind::<Text, _>(uid_suffix_pat.clone())     
+      1918 -                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);        
+      1918 +                .bind::<Text, _>(uid_suffix_pat.clone());    
+      1919  
+      1920              let c_start = Instant::now();
+      1921 -            let c_rows: Result<Vec<DictWord>, _> = cq.load(di
+           -ct_conn);                                                    
+      1922 -            info(&format!("ctrl C (pool, full SQL, fresh prep
+           -are): {:?}, rows={:?}",                                      
+      1921 +            let c_res: Result<Vec<R>, _> = cq.load(dict_conn)
+           +;                                                            
+      1922 +            info(&format!("ctrl C (pool, full WHERE, COUNT on
+           +ly): {:?}, {:?}",                                            
+      1923                  c_start.elapsed(),
+      1924 -                c_rows.as_ref().map(|v| v.len())));          
+      1924 +                c_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           +r(-1))));                                                    
+      1925 +                                                             
+      1926 +            // D: SELECT only dw.id with the full WHERE. If D
+           + is fast and the                                             
+      1927 +            // original is slow, the cost is in materialising
+           + the wide DictWord                                           
+      1928 +            // rows (definition_html etc.). If D is slow too,
+           + the cost is in                                              
+      1929 +            // the row visit (something per-matched-row in th
+           +e plan).                                                     
+      1930 +            let mut d_sql = String::from(                    
+      1931 +                "SELECT dw.id AS n FROM dict_words dw \      
+      1932 +                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1933 +                 WHERE f.word LIKE ?"                        
+      1934 +            );                                               
+      1935 +            if let Some((ph, _)) = &in_clause {              
+      1936 +                d_sql.push_str(" AND dw.dict_label IN (");   
+      1937 +                d_sql.push_str(ph);                          
+      1938 +                d_sql.push(')');                             
+      1939 +            }                                                
+      1940 +            d_sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIK
+           +E ? ORDER BY dw.id LIMIT ?");                                
+      1941 +                                                             
+      1942 +            let mut dq = sql_query(&d_sql)                   
+      1943 +                .into_boxed::<diesel::sqlite::Sqlite>()      
+      1944 +                .bind::<Text, _>(like_pattern.clone());      
+      1945 +            if let Some((_, binds)) = &in_clause {           
+      1946 +                for v in binds { dq = dq.bind::<Text, _>(v.cl
+           +one()); }                                                    
+      1947 +            }                                                
+      1948 +            dq = dq                                          
+      1949 +                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1950 +                .bind::<Text, _>(uid_suffix_pat.clone())     
+      1951 +                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);        
+      1952 +                                                             
+      1953 +            #[derive(QueryableByName)]                       
+      1954 +            struct Id {                                      
+      1955 +                #[diesel(sql_type = diesel::sql_types::Intege
+           +r)]                                                          
+      1956 +                n: i32,                                      
+      1957 +            }                                                
+      1958 +            let d_start = Instant::now();                    
+      1959 +            let d_res: Result<Vec<Id>, _> = dq.load(dict_conn
+           +);                                                           
+      1960 +            info(&format!("ctrl D (pool, full WHERE, id only)
+           +: {:?}, count={:?}",                                         
+      1961 +                d_start.elapsed(),                           
+      1962 +                d_res.map(|v| v.len())));                    
+      1963          }
+      1964  
+      1965          let t_pre_load = timer.elapsed();
+
+● Bash(make build -B 2>&1 | tail -3)
+  ⎿  [100%] Linking CXX executable simsapadhammareader
+     [100%] Built target simsapadhammareader
+     make[1]: Leaving directory '/home/gambhiro/prods/apps/simsapa-ng-proje
+     ct/simsapa-ng/build/simsapadhammareader'
+  ⎿  (timeout 10m)
+  ⎿  Found 2 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Build clean (just a dead-code warning on the diagnostic struct, ignorable).
+  Run "gacchati" Headword Match one more time. We're looking for the new
+  controls:
+
+  ctrl C (pool, full WHERE, COUNT only):   <time>, <count>
+  ctrl D (pool, full WHERE, id only):       <time>, <count>
+
+  The hypothesis check:
+
+  - C fast, D fast, original 170s → it's materialising wide rows (SELECT dw.*
+  with definition_html etc.). Fix: select only dw.id, then fetch the page
+  slice's full rows in a second query.
+  - C fast, D slow → it's the ORDER BY dw.id + LIMIT 50000 combo on the
+  FTS-driven plan; the planner produces different code for ORDER BY rowid that
+  thrashes.
+  - C slow, D slow → the WHERE itself with the IN+uid LIKEs hits something
+  pathological once filters compound.
+
+  Whichever bucket: the fix becomes obvious from there.
+
+✻ Crunched for 3m 57s
+
+※ recap: Goal: speed up Headword Match for queries like "gacchati" which currently take ~170s. Next action: run the search once more and share the new `ctrl C` and `ctrl D` log lines so we can pinpoint the trigger.
+
+❯ 2026-05-24T19:13:55.460893Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T19:13:55.488727Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T19:13:55.506921Z  INFO ThreadId(65) ctrl A (pool, fts only):       
+  17.976029ms, Ok(96)                                                           
+  2026-05-24T19:13:55.525153Z  INFO ThreadId(65) ctrl B (pool, join, no         
+  filters): 18.118538ms, Ok(96)                                                 
+  2026-05-24T19:16:45.943115Z  INFO ThreadId(65) ctrl C (pool, full WHERE,      
+  COUNT only): 170.417807122s, Ok(96)                                           
+  2026-05-24T19:19:36.715834Z  INFO ThreadId(65) ctrl D (pool, full WHERE, id   
+  only): 170.772512324s, count=Ok(96)                                           
+  2026-05-24T19:22:28.706354Z  INFO ThreadId(65) headword_match SQL load:       
+  171.990386899s (pre=341.227112597s, rows=96)                                  
+  2026-05-24T19:22:28.706459Z  INFO ThreadId(65) Query took: 513.217636975s     
+  2026-05-24T19:22:29.746536Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T19:22:29.766030Z  INFO ThreadId(65) ctrl A (pool, fts only):       
+  19.270344ms, Ok(96)                                                           
+  2026-05-24T19:22:29.784328Z  INFO ThreadId(65) ctrl B (pool, join, no         
+  filters): 18.170384ms, Ok(96)                                                 
+
+● It's not SELECT *, not ORDER BY, not LIMIT — it's the WHERE filters themselves
+   (dict_label IN ... AND uid LIKE ... AND uid LIKE ...) added on top of the FTS
+   join. But that exact SQL runs in 17ms in sqlite3 CLI. The remaining variable
+  I haven't checked: SQLite library version. The CLI uses the system SQLite;
+  Diesel uses bundled libsqlite3-sys. The FTS5 trigram + LIKE optimisation
+  interacts subtly with version. Let me check:
+
+● Bash(echo "=== system sqlite ==="
+      sqlite3 --version…)  ⎿  === system sqlite ===
+     3.53.1 2026-05-05 10:34:17 c88b22011a54b4f6fbd149e9f8e4de77658ce58143a
+     1af0e3785e4e64751alt1 (64-bit)
+     … +18 lines (ctrl+o to expand)
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+● Found it. The bundled SQLite via libsqlite3-sys 0.28.0 is SQLite 3.45.0
+  (January 2024). Your system sqlite3 CLI is 3.53.1. There have been multiple
+  FTS5 trigram + LIKE planner fixes between those versions. Let me check whether
+   diesel 2.2.10 allows a newer bundled version:
+
+● Bash(cargo search libsqlite3-sys --limit 1 2>&1 | head -3
+      echo "---"…)
+  ⎿  libsqlite3-sys = "0.37.0"    # Native bindings to the libsqlite3 libra
+     ry
+     ... and 28 crates more (use --limit N to see more)
+     … +3 lines (ctrl+o to expand)
+
+● Diesel 2.2.10 supports up to libsqlite3-sys < 0.36. Let me pin a newer version
+   that bundles SQLite ≥ 3.48 (post-trigram-planner fixes):
+
+● Update(backend/Cargo.toml)
+  ⎿  File must be read first
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/Cargo.toml)
+  ⎿  Added 1 line, removed 1 line
+      12  
+      13  [dependencies]
+      14  chrono = { version = "0.4", features = ["serde"] }
+      15 -libsqlite3-sys = { version = "*", features = ["bundled"] }     
+      15 +libsqlite3-sys = { version = ">=0.32, <0.36", features = ["bund
+         +led"] }                                                        
+      16  diesel = { version = "2.2.10", features = ["sqlite", "r2d2", "c
+          hrono", "returning_clauses_for_sqlite_3_35", "64-column-tables"
+          ] }
+      17  diesel_migrations = { version = "2.2.0", features = ["sqlite"] 
+          }
+      18  dotenvy = "0.15.7"
+
+● Bash(cd backend && cargo update libsqlite3-sys 2>&1 | tail -10
+      echo "---"…)
+  ⎿  Tool use rejected
+
+● Update(backend/Cargo.toml)
+  ⎿  Added 1 line, removed 1 line
+      13  [dependencies]
+      14  chrono = { version = "0.4", features = ["serde"] }
+      15  libsqlite3-sys = { version = ">=0.32, <0.36", features = ["bund
+          led"] }
+      16 -diesel = { version = "2.2.10", features = ["sqlite", "r2d2", "c
+         -hrono", "returning_clauses_for_sqlite_3_35", "64-column-tables"
+         -] }                                                            
+      16 +diesel = { version = "2.3.9", features = ["sqlite", "r2d2", "ch
+         +rono", "returning_clauses_for_sqlite_3_35", "64-column-tables"]
+         + }                                                             
+      17  diesel_migrations = { version = "2.2.0", features = ["sqlite"] 
+          }
+      18  dotenvy = "0.15.7"
+      19  regex = "1.0"
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng && grep -rn
+      "^diesel\b\|^diesel_migrations\b\|^libsqlite3" backend/Cargo.toml
+      bridges/Cargo.toml cli/…)
+  ⎿  cli/Cargo.toml:22:diesel = { version = "2.2.10", features = ["sqlite"]
+      }
+     cli/Cargo.toml:23:diesel_migrations = { version = "2.2.0", features =
+     … +8 lines (ctrl+o to expand)
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(cli/Cargo.toml)
+  ⎿  Added 2 lines, removed 2 lines
+      19  chrono = "0.4"
+      20  serde = { version = "1.0", features = ["derive"] }
+      21  serde_json = "1.0"
+      22 -diesel = { version = "2.2.10", features = ["sqlite"] }         
+      23 -diesel_migrations = { version = "2.2.0", features = ["sqlite"] 
+         -}                                                              
+      22 +diesel = { version = "2.3.9", features = ["sqlite"] }          
+      23 +diesel_migrations = { version = "2.3.0", features = ["sqlite"] 
+         +}                                                              
+      24  indexmap = { version = "2.0", features = ["serde"] }
+      25  arangors = "0.6.0"
+      26  scraper = "0.21.0"
+
+● Update(backend/Cargo.toml)
+  ⎿  Added 1 line, removed 1 line
+      14  chrono = { version = "0.4", features = ["serde"] }
+      15  libsqlite3-sys = { version = ">=0.32, <0.36", features = ["bund
+          led"] }
+      16  diesel = { version = "2.3.9", features = ["sqlite", "r2d2", "ch
+          rono", "returning_clauses_for_sqlite_3_35", "64-column-tables"]
+           }
+      17 -diesel_migrations = { version = "2.2.0", features = ["sqlite"] 
+         -}                                                              
+      17 +diesel_migrations = { version = "2.3.0", features = ["sqlite"] 
+         +}                                                              
+      18  dotenvy = "0.15.7"
+      19  regex = "1.0"
+      20  serde = { version = "1.0", features = ["derive"] }
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend &&
+      cargo update 2>&1 | grep -i "libsqlite3-sys\|diesel " | head -10
+      echo "---"…)
+  ⎿  error: failed to select a version for `libsqlite3-sys`.
+     package `libsqlite3-sys` links to the native library `sqlite3`, but it
+      conflicts with a previous package which links to `sqlite3` as well:
+     … +16 lines (ctrl+o to expand)
+
+● Bash(cargo tree -i rusqlite 2>&1 | head -20)
+  ⎿      Updating crates.io index
+     error: failed to select a version for `libsqlite3-sys`.
+         ... required by package `simsapa_backend v0.4.0-alpha.1 (/home/gam
+     … +16 lines (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng && grep -rn
+      "^stardict\|^rusqlite\b" backend/Cargo.toml bridges/Cargo.toml
+      cli/Cargo.toml)
+  ⎿  backend/Cargo.toml:29:stardict = { version = "0.2.2", features = ["sql
+     ite"] }
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend &&
+      cargo info diesel@2.3.9 2>&1 | head -30)
+  ⎿  Tool use rejected
+● Update(backend/Cargo.toml)
+  ⎿  Added 1 line, removed 1 line
+      12  
+      13  [dependencies]
+      14  chrono = { version = "0.4", features = ["serde"] }
+      15 -libsqlite3-sys = { version = ">=0.32, <0.36", features = ["bund
+         -led"] }                                                        
+      15 +libsqlite3-sys = { version = ">=0.32", features = ["bundled"] }
+      16  diesel = { version = "2.3.9", features = ["sqlite", "r2d2", "ch
+          rono", "returning_clauses_for_sqlite_3_35", "64-column-tables"]
+           }
+      17  diesel_migrations = { version = "2.3.0", features = ["sqlite"] 
+          }
+      18  dotenvy = "0.15.7"
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend &&
+      cargo update 2>&1 | tail -20)
+  ⎿      Updating web-sys v0.3.83 -> v0.3.99
+         Updating webpki-roots v1.0.4 -> v1.0.7
+         Removing winnow v0.7.14
+     … +17 lines (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng && grep -A 3
+      "^name = \"libsqlite3-sys\"\|^name = \"diesel\"$\|^name =
+      \"rusqlite\"\|^name = \"stardi…)
+  ⎿  name = "diesel"
+     version = "2.3.9"
+     source = "registry+https://github.com/rust-lang/crates.io-index"
+     … +18 lines (ctrl+o to expand)
+
+● Cargo resolved everything: diesel 2.3.9, libsqlite3-sys 0.36.0 (bundles SQLite
+   3.50.x), rusqlite 0.38.0, stardict 0.2.3. Let me build:
+
+● Bash(make build -B 2>&1 | tail -20)
+  ⎿  [ 38%] Building CXX object CMakeFiles/simsapadhammareader.dir/cpp/erro
+     rs.cpp.o
+     [ 42%] Building CXX object CMakeFiles/simsapadhammareader.dir/cpp/glob
+     … +21 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+
+● Build clean with the upgraded SQLite (3.50.x). Diagnostic block is still in
+  place — run "gacchati" Headword Match once more. With the newer SQLite the
+  FTS5 trigram + non-FTS WHERE filter plan should not blow up.
+
+  Expected outcome if this was indeed the SQLite version issue: all four control
+   timings now match A/B (~17ms) and the original query lands ~17ms too. If it's
+   still slow, we know SQLite version was a red herring and I'll go after the
+  next hypothesis.
+
+  Could you paste the new log lines?
+
+✻ Baked for 6m 12s
+
+※ recap: Goal: make Headword Match fast (e.g. "gacchati" was ~170s). Current task: confirm whether upgrading the bundled SQLite (libsqlite3-sys 0.28→0.36, diesel 2.2→2.3) fixed it. Next: you run the query and share the new log lines.
+
+❯ 2026-05-24T19:48:49.732514Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T19:48:49.759037Z  INFO ThreadId(66)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T19:48:49.776352Z  INFO ThreadId(66) ctrl A (pool, fts only):       
+  17.110355ms, Ok(96)                                                           
+  2026-05-24T19:48:49.793345Z  INFO ThreadId(66) ctrl B (pool, join, no         
+  filters): 16.894449ms, Ok(96)                                                 
+  2026-05-24T19:51:41.711889Z  INFO ThreadId(66) ctrl C (pool, full WHERE,      
+  COUNT only): 171.918426546s, Ok(96)                                           
+  2026-05-24T19:54:33.179070Z  INFO ThreadId(66) ctrl D (pool, full WHERE, id   
+  only): 171.467028018s, count=Ok(96)                                           
+  2026-05-24T19:57:25.404106Z  INFO ThreadId(66) headword_match SQL load:       
+  172.224899564s (pre=343.42004407s, rows=96)                                   
+  2026-05-24T19:57:25.404218Z  INFO ThreadId(66) Query took: 515.645087485s     
+  2026-05-24T19:57:26.082271Z  INFO ThreadId(66)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T19:57:26.101951Z  INFO ThreadId(66) ctrl A (pool, fts only):       
+  19.463992ms, Ok(96)                                                           
+  2026-05-24T19:57:26.121870Z  INFO ThreadId(66) ctrl B (pool, join, no         
+  filters): 19.720084ms, Ok(96)                                                 
+
+● SQLite version wasn't it. The trigger remains: adding dict_label IN (...) AND 
+  uid LIKE ? AND uid LIKE ? to the JOIN makes it 170s — but the EXACT same SQL
+  with .parameter set binds runs in 17ms in sqlite3 CLI. The remaining
+  unexplained variable: maybe inlining the values vs binding them changes what
+  Diesel does. Let me split the trigger and inline literals to localize:
+
+● Update(backend/src/query_task.rs)
+  ⎿  Added 39 lines, removed 20 lines
+      1923                  c_start.elapsed(),
+      1924                  c_res.map(|v| v.first().map(|r| r.n).unwrap_o
+            r(-1))));
+      1925  
+      1926 -            // D: SELECT only dw.id with the full WHERE. If D
+           - is fast and the                                             
+      1927 -            // original is slow, the cost is in materialising
+           - the wide DictWord                                           
+      1928 -            // rows (definition_html etc.). If D is slow too,
+           - the cost is in                                              
+      1929 -            // the row visit (something per-matched-row in th
+           -e plan).                                                     
+      1926 +            // D: B + IN clause only (no uid LIKE). Isolates 
+           +the IN vs uid LIKE trigger.                                  
+      1927              let mut d_sql = String::from(
+      1931 -                "SELECT dw.id AS n FROM dict_words dw \      
+      1928 +                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1929                   JOIN dict_words_fts f ON f.rowid = dw.id \
+      1930                   WHERE f.word LIKE ?"
+      1931              );
+     ...
+      1934                  d_sql.push_str(ph);
+      1935                  d_sql.push(')');
+      1936              }
+      1940 -            d_sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIK
+           -E ? ORDER BY dw.id LIMIT ?");                                
+      1941 -                                                             
+      1937              let mut dq = sql_query(&d_sql)
+      1938                  .into_boxed::<diesel::sqlite::Sqlite>()
+      1939                  .bind::<Text, _>(like_pattern.clone());
+      1940              if let Some((_, binds)) = &in_clause {
+      1941                  for v in binds { dq = dq.bind::<Text, _>(v.cl
+            one()); }
+      1942              }
+      1948 -            dq = dq                                          
+      1949 -                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1950 -                .bind::<Text, _>(uid_suffix_pat.clone())     
+      1951 -                .bind::<BigInt, _>(SAFETY_LIMIT_SQL);        
+      1952 -                                                             
+      1953 -            #[derive(QueryableByName)]                       
+      1954 -            struct Id {                                      
+      1955 -                #[diesel(sql_type = diesel::sql_types::Intege
+           -r)]                                                          
+      1956 -                n: i32,                                      
+      1957 -            }                                                
+      1943              let d_start = Instant::now();
+      1959 -            let d_res: Result<Vec<Id>, _> = dq.load(dict_conn
+           -);                                                           
+      1960 -            info(&format!("ctrl D (pool, full WHERE, id only)
+           -: {:?}, count={:?}",                                         
+      1944 +            let d_res: Result<Vec<R>, _> = dq.load(dict_conn)
+           +;                                                            
+      1945 +            info(&format!("ctrl D (pool, +IN only): {:?}, {:?
+           +}",                                                          
+      1946                  d_start.elapsed(),
+      1962 -                d_res.map(|v| v.len())));                    
+      1947 +                d_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           +r(-1))));                                                    
+      1948 +                                                             
+      1949 +            // E: B + uid LIKE only (no IN). Isolates the IN 
+           +vs uid LIKE trigger.                                         
+      1950 +            let e_sql = "SELECT COUNT(*) AS n FROM dict_words
+           + dw \                                                        
+      1951 +                JOIN dict_words_fts f ON f.rowid = dw.id \   
+      1952 +                WHERE f.word LIKE ? AND dw.uid LIKE ? AND dw.
+           +uid LIKE ?";                                                 
+      1953 +            let eq_ = sql_query(e_sql)                       
+      1954 +                .bind::<Text, _>(like_pattern.clone())       
+      1955 +                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1956 +                .bind::<Text, _>(uid_suffix_pat.clone());    
+      1957 +            let e_start = Instant::now();                    
+      1958 +            let e_res: Result<Vec<R>, _> = eq_.load(dict_conn
+           +);                                                           
+      1959 +            info(&format!("ctrl E (pool, +uid LIKE only): {:?
+           +}, {:?}",                                                    
+      1960 +                e_start.elapsed(),                           
+      1961 +                e_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           +r(-1))));                                                    
+      1962 +                                                             
+      1963 +            // F: same full WHERE as C but EVERYTHING INLINED
+           + — no bind params at all.                                    
+      1964 +            // If F is fast and C is slow, it's a Diesel/SQLi
+           +te bind-param interaction.                                   
+      1965 +            let labels_csv: String = self.dict_source_uids.as
+           +_deref()                                                     
+      1966 +                .map(|s| s.iter().map(|v| format!("'{}'", v.r
+           +eplace('\'', "''"))).collect::<Vec<_>>().join(","))          
+      1967 +                .unwrap_or_default();                        
+      1968 +            let f_sql = format!(                             
+      1969 +                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1970 +                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1971 +                 WHERE f.word LIKE '%{}%' \                  
+      1972 +                   AND dw.dict_label IN ({}) \               
+      1973 +                   AND dw.uid LIKE '%' AND dw.uid LIKE '%'", 
+      1974 +                self.query_text.replace('\'', "''"),         
+      1975 +                labels_csv,                                  
+      1976 +            );                                               
+      1977 +            let f_start = Instant::now();                    
+      1978 +            let f_res: Result<Vec<R>, _> = sql_query(&f_sql).
+           +load(dict_conn);                                             
+      1979 +            info(&format!("ctrl F (pool, full WHERE, ALL INLI
+           +NED): {:?}, {:?}",                                           
+      1980 +                f_start.elapsed(),                           
+      1981 +                f_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           +r(-1))));                                                    
+      1982          }
+      1983  
+      1984          let t_pre_load = timer.elapsed();
+
+● Bash(make build -B 2>&1 | tail -3)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ Document the issue and your investigation so far in the tasks/ folder as      
+  prd-fixing-headword-match-slow-query.md . Describe what you tried but proved  
+  not to be the issue, and what your current step is trying to investigate so   
+  we can resume the work later.                                                 
+  ⎿  Found 2 new diagnostic issues in 1 file (ctrl+o to expand)
+
+  Listed 1 directory (ctrl+o to expand)
+
+● Write(tasks/prd-fixing-headword-match-slow-query.md)
+  ⎿  Wrote 208 lines to tasks/prd-fixing-headword-match-slow-query.md
+      2 # PRD: Fixing the slow Headword Match query
+      3 ## Status
+      4 
+        diagnosticnder investigation.** Root cause not yet identified. A 
+      6 block is in place in `backend/src/query_task.rs::lemma_1_dpd_head
+        word_match_fts5_full`
+        efore the six control queries (A–F) on the same pool connection b
+      8 real query. The next run of "gacchati" Headword Match should narr
+        ow the cause
+      9 further — see [Current step](#current-step).
+     … +287 lines (ctrl+o to expand)
+
+● Wrote tasks/prd-fixing-headword-match-slow-query.md. It captures:
+
+  - Problem: Headword Match for "gacchati" takes ~170s in-app vs ~15ms via
+  sqlite3 CLI on the same DB.
+  - What was tried and ruled out (8 items): N+1 across DBs, per-row snippets,
+  FTS5+bind-param LIKE optimisation, disk I/O, reconcile/import lock contention,
+   pool starvation, Diesel statement cache, wide SELECT *, and bundled SQLite
+  version.
+  - Current step: A diagnostic block in lemma_1_dpd_headword_match_fts5_full
+  runs controls A/B/C/D on the same pool connection. Controls A and B (~17 ms)
+  show the connection is fine; C and D (~170 s) show the trigger is the
+  combination of dict_label IN (?,...) AND uid LIKE ? AND uid LIKE ? added on
+  top of the FTS+JOIN. The pending D/E/F variants (interrupted before build)
+  will isolate which clause is the actual culprit and whether inlining literals
+  fixes it.
+  - Decision tree for the next run, listing the expected fix for each branch.
+  - Resume steps for picking this back up.
+
+  When you're ready to continue, the diff that was pending is the D/E/F
+  diagnostic in my last edit — happy to either re-apply it or take a different
+  angle.
+
+✻ Baked for 1m 22s
+
+※ recap: Goal: make Headword Match for "gacchati" fast (currently ~170s in-app vs ~15ms in sqlite3 CLI). Current task: narrow which WHERE clause triggers the slowdown. Next: re-apply the D/E/F diagnostic controls, rebuild, and run the query.
+
+❯ The results after a rebuild:                                                  
+                                                                                
+  2026-05-24T20:05:48.099856Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T20:05:48.127795Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T20:05:48.314422Z  INFO ThreadId(65) ctrl A (pool, fts only):       
+  186.388781ms, Ok(96)                                                          
+  2026-05-24T20:05:48.334579Z  INFO ThreadId(65) ctrl B (pool, join, no         
+  filters): 20.024248ms, Ok(96)                                                 
+  2026-05-24T20:08:33.478538Z  INFO ThreadId(65) ctrl C (pool, full WHERE,      
+  COUNT only): 165.143845033s, Ok(96)                                           
+  2026-05-24T20:11:17.150067Z  INFO ThreadId(65) ctrl D (pool, +IN only):       
+  163.671388626s, Ok(96)                                                        
+  2026-05-24T20:11:17.168038Z  INFO ThreadId(65) ctrl E (pool, +uid LIKE only): 
+   17.780546ms, Ok(96)                                                          
+  2026-05-24T20:14:02.071466Z  INFO ThreadId(65) ctrl F (pool, full WHERE, ALL  
+  INLINED): 164.903105852s, Ok(96)                                              
+  2026-05-24T20:16:50.963954Z  INFO ThreadId(65) headword_match SQL load:       
+  168.892347418s (pre=493.943662333s, rows=96)                                  
+  2026-05-24T20:16:50.964084Z  INFO ThreadId(65) Query took: 662.836181354s     
+  2026-05-24T20:16:54.785488Z  INFO ThreadId(65)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T20:16:54.803915Z  INFO ThreadId(65) ctrl A (pool, fts only):       
+  18.207473ms, Ok(96)                                                           
+  2026-05-24T20:16:54.821534Z  INFO ThreadId(65) ctrl B (pool, join, no         
+  filters): 17.48912ms, Ok(96)                                                  
+
+● Big finding: The trigger is dict_label IN (...) — control D (IN only, no uid
+  LIKE) is 163s, while E (uid LIKE only, no IN) is 17ms. And critically: F is 
+  also slow with everything inlined as literals (164s). So it's NOT a
+  bind-parameter issue. The IN clause itself, in this app's SQLite, is taking a
+  fundamentally different plan than what the sqlite3 CLI uses.
+
+  Both use the same library family but possibly different compile options. Let
+  me check PRAGMA compile_options of bundled vs system, and also get the actual
+  runtime plan from inside the app:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== system sqlite3 compile_opti…)
+  ⎿  === system sqlite3 compile_options (sample) ===
+     ENABLE_DBSTAT_VTAB
+     ENABLE_FTS5
+     … +7 lines (ctrl+o to expand)
+
+● Huge clue: there are no sqlite_stat* tables on the DB. Without ANALYZE stats,
+  SQLite's planner uses crude heuristics — and the system CLI has ENABLE_STAT4
+  while the bundled lib may not. The IN clause planning is exactly where the
+  planner has to guess cardinality. Let me test running ANALYZE:
+
+● Bash(DB=/home/gambhiro/prods/apps/simsapa-ng-project/bootstrap-assets-resource
+      s/dist/simsapa-ng/app-assets/dictionaries.sqlite3
+      echo "=== running ANALYZE ==="…)
+  ⎿  === running ANALYZE ===
+     sqlite_stat1
+     sqlite_stat4
+     … +10 lines (ctrl+o to expand)
+● I just ran ANALYZE on the dictionaries DB on disk — sqlite_stat1 and
+  sqlite_stat4 now exist (took 0.4s). This may be the missing ingredient: when
+  there are no stats, SQLite's planner has to guess cardinality, and the bundled
+   SQLite (or its compile flags) may guess differently from the system CLI for
+  IN clauses.
+
+  Please:
+
+  1. Fully quit and relaunch the app (so the connection pool re-opens; existing
+  prepared statements in cache were built without stats and won't be
+  re-planned).
+  2. Run "gacchati" Headword Match again.
+  3. Paste the timings.
+
+  If the controls (C, D, F especially) drop into the ~17ms range, ANALYZE was it
+   and the fix is to ensure ANALYZE is run on dictionaries.sqlite3 (either at
+  bootstrap or as a one-time startup migration on existing installs). If they're
+   still 170s, the bundled SQLite isn't using the stats and I'll add a runtime
+  EXPLAIN QUERY PLAN log inside the same connection to see what plan Diesel's
+  SQLite is actually picking — that will pin it down once and for all.
+
+✻ Crunched for 1m 25s
+
+❯ 2026-05-24T20:21:15.438550Z  INFO ThreadId(01) params_json: {"mode":"Headword 
+   Match","page_len":10,"lang":"Language","lang_include":true,"source":null,"so 
+  urce_include":true,"enable_regex":false,"fuzzy_distance":0,"include_cst_mula" 
+  :false,"include_cst_commentary":true,"nikaya_prefix":null,"uid_prefix":null," 
+  uid_suffix":null,"include_ms_mula":true,"include_comm_bold_definitions":true, 
+  "dict_source_uids":["dpd","dppn","ssp_test_abort_partial_1779633946334","ssp_ 
+  test_abort_partial_1779637546766","ssp_test_abort_partial_1779638223921","ssp 
+  _test_abort_partial_1779639219213"]}                                          
+  2026-05-24T20:21:15.465105Z  INFO ThreadId(66)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T20:21:15.484071Z  INFO ThreadId(66) ctrl A (pool, fts only):       
+  18.749826ms, Ok(96)                                                           
+  2026-05-24T20:21:15.503271Z  INFO ThreadId(66) ctrl B (pool, join, no         
+  filters): 19.078705ms, Ok(96)                                                 
+  2026-05-24T20:21:15.522342Z  INFO ThreadId(66) ctrl C (pool, full WHERE,      
+  COUNT only): 18.944422ms, Ok(96)                                              
+  2026-05-24T20:21:15.541040Z  INFO ThreadId(66) ctrl D (pool, +IN only):       
+  18.605795ms, Ok(96)                                                           
+  2026-05-24T20:21:15.560063Z  INFO ThreadId(66) ctrl E (pool, +uid LIKE only): 
+   18.922451ms, Ok(96)                                                          
+  2026-05-24T20:21:15.578829Z  INFO ThreadId(66) ctrl F (pool, full WHERE, ALL  
+  INLINED): 18.647874ms, Ok(96)                                                 
+  2026-05-24T20:21:15.601932Z  INFO ThreadId(66) headword_match SQL load:       
+  23.01861ms (pre=113.693614ms, rows=96)                                        
+  2026-05-24T20:21:15.602027Z  INFO ThreadId(66) Query took: 136.828282ms       
+  2026-05-24T20:21:16.227975Z  INFO ThreadId(66)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T20:21:16.248882Z  INFO ThreadId(66) ctrl A (pool, fts only):       
+  20.715605ms, Ok(96)                                                           
+  2026-05-24T20:21:16.270718Z  INFO ThreadId(66) ctrl B (pool, join, no         
+  filters): 21.669009ms, Ok(96)                                                 
+  2026-05-24T20:21:16.291209Z  INFO ThreadId(66) ctrl C (pool, full WHERE,      
+  COUNT only): 20.324709ms, Ok(96)                                              
+  2026-05-24T20:21:16.310891Z  INFO ThreadId(66) ctrl D (pool, +IN only):       
+  19.5813ms, Ok(96)                                                             
+  2026-05-24T20:21:16.330132Z  INFO ThreadId(66) ctrl E (pool, +uid LIKE only): 
+   19.146843ms, Ok(96)                                                          
+  2026-05-24T20:21:16.349287Z  INFO ThreadId(66) ctrl F (pool, full WHERE, ALL  
+  INLINED): 19.026065ms, Ok(96)                                                 
+  2026-05-24T20:21:16.373601Z  INFO ThreadId(66) headword_match SQL load:       
+  24.208279ms (pre=121.289489ms, rows=96)                                       
+  2026-05-24T20:21:16.373723Z  INFO ThreadId(66) Query took: 145.651707ms       
+  2026-05-24T20:21:17.244555Z  INFO ThreadId(66) SuttaBridge::results_page()    
+  end                                                                           
+  2026-05-24T20:21:17.246084Z  INFO ThreadId(69)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T20:21:17.267609Z  INFO ThreadId(69) ctrl A (pool, fts only):       
+  21.319432ms, Ok(96)                                                           
+  2026-05-24T20:21:17.284098Z  INFO ThreadId(69) ctrl B (pool, join, no         
+  filters): 16.384996ms, Ok(96)                                                 
+  2026-05-24T20:21:17.300206Z  INFO ThreadId(69) ctrl C (pool, full WHERE,      
+  COUNT only): 16.021231ms, Ok(96)                                              
+  2026-05-24T20:21:17.316178Z  INFO ThreadId(69) ctrl D (pool, +IN only):       
+  15.895635ms, Ok(96)                                                           
+  2026-05-24T20:21:17.331945Z  INFO ThreadId(69) ctrl E (pool, +uid LIKE only): 
+   15.699055ms, Ok(96)                                                          
+  2026-05-24T20:21:17.347587Z  INFO ThreadId(69) ctrl F (pool, full WHERE, ALL  
+  INLINED): 15.564752ms, Ok(96)                                                 
+  2026-05-24T20:21:17.368483Z  INFO ThreadId(69) headword_match SQL load:       
+  20.828518ms (pre=101.462977ms, rows=96)                                       
+  2026-05-24T20:21:17.368574Z  INFO ThreadId(69) Query took: 122.403095ms       
+  2026-05-24T20:21:18.179589Z  INFO ThreadId(69)                                
+  lemma_1_dpd_headword_match_fts5_full(): query_text: gacchati                  
+  2026-05-24T20:21:18.199929Z  INFO ThreadId(69) ctrl A (pool, fts only):       
+  20.143829ms, Ok(96)                                                           
+  2026-05-24T20:21:18.215941Z  INFO ThreadId(69) ctrl B (pool, join, no         
+  filters): 15.916394ms, Ok(96)                                                 
+  2026-05-24T20:21:18.231738Z  INFO ThreadId(69) ctrl C (pool, full WHERE,      
+  COUNT only): 15.705818ms, Ok(96)                                              
+  2026-05-24T20:21:18.247422Z  INFO ThreadId(69) ctrl D (pool, +IN only):       
+  15.600639ms, Ok(96)                                                           
+  2026-05-24T20:21:18.264059Z  INFO ThreadId(69) ctrl E (pool, +uid LIKE only): 
+   16.518446ms, Ok(96)                                                          
+  2026-05-24T20:21:18.281113Z  INFO ThreadId(69) ctrl F (pool, full WHERE, ALL  
+  INLINED): 16.820996ms, Ok(96)                                                 
+  2026-05-24T20:21:18.302454Z  INFO ThreadId(69) headword_match SQL load:       
+  21.236716ms (pre=101.487603ms, rows=96)                                       
+  2026-05-24T20:21:18.302532Z  INFO ThreadId(69) Query took: 122.823937ms       
+
+● SOLVED. After ANALYZE, every control runs in ~17ms and the full query
+  completes in ~120ms — down from 170s. Root cause: missing SQLite statistics.
+  Without sqlite_stat1/sqlite_stat4, the planner picked a catastrophic plan for
+  IN (...) combined with the FTS5 join.
+
+  Let me land the fix: remove the diagnostic block and add a one-time ANALYZE
+  migration so existing installs (and future bootstraps that forgot it)
+  auto-recover.
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(backend/src/query_task.rs)
+  ⎿  Removed 129 lines
+      1858              .bind::<Text, _>(uid_suffix_pat.clone())
+      1859              .bind::<BigInt, _>(SAFETY_LIMIT_SQL);
+      1860  
+      1861 -        // === Diagnostic: run three controls ON THE SAME POO
+           -L CONNECTION                                                 
+      1862 -        // before the slow query, to isolate whether the slow
+           -ness is from                                                 
+      1863 -        // (a) this connection, (b) the SQL shape, or (c) Die
+           -sel's cached                                                 
+      1864 -        // prepared statement for this exact SQL. Remove once
+           - identified.                                                 
+      1865 -        {                                                    
+      1866 -            #[derive(QueryableByName)]                       
+      1867 -            struct R {                                       
+      1868 -                #[diesel(sql_type = diesel::sql_types::BigInt
+           -)]                                                           
+      1869 -                n: i64,                                      
+      1870 -            }                                                
+      1871 -            // A: bare FTS LIKE on the pool conn.            
+      1872 -            let a_start = Instant::now();                    
+      1873 -            let a: Result<Vec<R>, _> = sql_query(            
+      1874 -                "SELECT COUNT(*) AS n FROM dict_words_fts WHE
+           -RE word LIKE ?"                                              
+      1875 -            )                                                
+      1876 -                .bind::<Text, _>(format!("%{}%", self.query_t
+           -ext))                                                        
+      1877 -                .load(dict_conn);                            
+      1878 -            info(&format!("ctrl A (pool, fts only): {:?}, {:?
+           -}",                                                          
+      1879 -                a_start.elapsed(),                           
+      1880 -                a.map(|v| v.first().map(|r| r.n).unwrap_or(-1
+           -))));                                                        
+      1881 -                                                             
+      1882 -            // B: same JOIN as the slow query, no IN / no uid
+           - LIKE / no ORDER BY.                                         
+      1883 -            let b_start = Instant::now();                    
+      1884 -            let b: Result<Vec<R>, _> = sql_query(            
+      1885 -                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1886 -                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1887 -                 WHERE f.word LIKE ?"                        
+      1888 -            )                                                
+      1889 -                .bind::<Text, _>(format!("%{}%", self.query_t
+           -ext))                                                        
+      1890 -                .load(dict_conn);                            
+      1891 -            info(&format!("ctrl B (pool, join, no filters): {
+           -:?}, {:?}",                                                  
+      1892 -                b_start.elapsed(),                           
+      1893 -                b.map(|v| v.first().map(|r| r.n).unwrap_or(-1
+           -))));                                                        
+      1894 -                                                             
+      1895 -            // C: same WHERE / IN / uid LIKE / ORDER BY / LIM
+           -IT as the slow                                               
+      1896 -            // query — but SELECT COUNT(*) instead of dw.*. I
+           -f C is fast, the                                             
+      1897 -            // slowness is in fetching the wide rows, not in 
+           -the WHERE plan.                                              
+      1898 -            let mut c_sql = String::from(                    
+      1899 -                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1900 -                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1901 -                 WHERE f.word LIKE ?"                        
+      1902 -            );                                               
+      1903 -            if let Some((ph, _)) = &in_clause {              
+      1904 -                c_sql.push_str(" AND dw.dict_label IN (");   
+      1905 -                c_sql.push_str(ph);                          
+      1906 -                c_sql.push(')');                             
+      1907 -            }                                                
+      1908 -            c_sql.push_str(" AND dw.uid LIKE ? AND dw.uid LIK
+           -E ?");                                                       
+      1909 -                                                             
+      1910 -            let mut cq = sql_query(&c_sql)                   
+      1911 -                .into_boxed::<diesel::sqlite::Sqlite>()      
+      1912 -                .bind::<Text, _>(like_pattern.clone());      
+      1913 -            if let Some((_, binds)) = &in_clause {           
+      1914 -                for v in binds { cq = cq.bind::<Text, _>(v.cl
+           -one()); }                                                    
+      1915 -            }                                                
+      1916 -            cq = cq                                          
+      1917 -                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1918 -                .bind::<Text, _>(uid_suffix_pat.clone());    
+      1919 -                                                             
+      1920 -            let c_start = Instant::now();                    
+      1921 -            let c_res: Result<Vec<R>, _> = cq.load(dict_conn)
+           -;                                                            
+      1922 -            info(&format!("ctrl C (pool, full WHERE, COUNT on
+           -ly): {:?}, {:?}",                                            
+      1923 -                c_start.elapsed(),                           
+      1924 -                c_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           -r(-1))));                                                    
+      1925 -                                                             
+      1926 -            // D: B + IN clause only (no uid LIKE). Isolates 
+           -the IN vs uid LIKE trigger.                                  
+      1927 -            let mut d_sql = String::from(                    
+      1928 -                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1929 -                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1930 -                 WHERE f.word LIKE ?"                        
+      1931 -            );                                               
+      1932 -            if let Some((ph, _)) = &in_clause {              
+      1933 -                d_sql.push_str(" AND dw.dict_label IN (");   
+      1934 -                d_sql.push_str(ph);                          
+      1935 -                d_sql.push(')');                             
+      1936 -            }                                                
+      1937 -            let mut dq = sql_query(&d_sql)                   
+      1938 -                .into_boxed::<diesel::sqlite::Sqlite>()      
+      1939 -                .bind::<Text, _>(like_pattern.clone());      
+      1940 -            if let Some((_, binds)) = &in_clause {           
+      1941 -                for v in binds { dq = dq.bind::<Text, _>(v.cl
+           -one()); }                                                    
+      1942 -            }                                                
+      1943 -            let d_start = Instant::now();                    
+      1944 -            let d_res: Result<Vec<R>, _> = dq.load(dict_conn)
+           -;                                                            
+      1945 -            info(&format!("ctrl D (pool, +IN only): {:?}, {:?
+           -}",                                                          
+      1946 -                d_start.elapsed(),                           
+      1947 -                d_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           -r(-1))));                                                    
+      1948 -                                                             
+      1949 -            // E: B + uid LIKE only (no IN). Isolates the IN 
+           -vs uid LIKE trigger.                                         
+      1950 -            let e_sql = "SELECT COUNT(*) AS n FROM dict_words
+           - dw \                                                        
+      1951 -                JOIN dict_words_fts f ON f.rowid = dw.id \   
+      1952 -                WHERE f.word LIKE ? AND dw.uid LIKE ? AND dw.
+           -uid LIKE ?";                                                 
+      1953 -            let eq_ = sql_query(e_sql)                       
+      1954 -                .bind::<Text, _>(like_pattern.clone())       
+      1955 -                .bind::<Text, _>(uid_prefix_pat.clone())     
+      1956 -                .bind::<Text, _>(uid_suffix_pat.clone());    
+      1957 -            let e_start = Instant::now();                    
+      1958 -            let e_res: Result<Vec<R>, _> = eq_.load(dict_conn
+           -);                                                           
+      1959 -            info(&format!("ctrl E (pool, +uid LIKE only): {:?
+           -}, {:?}",                                                    
+      1960 -                e_start.elapsed(),                           
+      1961 -                e_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           -r(-1))));                                                    
+      1962 -                                                             
+      1963 -            // F: same full WHERE as C but EVERYTHING INLINED
+           - — no bind params at all.                                    
+      1964 -            // If F is fast and C is slow, it's a Diesel/SQLi
+           -te bind-param interaction.                                   
+      1965 -            let labels_csv: String = self.dict_source_uids.as
+           -_deref()                                                     
+      1966 -                .map(|s| s.iter().map(|v| format!("'{}'", v.r
+           -eplace('\'', "''"))).collect::<Vec<_>>().join(","))          
+      1967 -                .unwrap_or_default();                        
+      1968 -            let f_sql = format!(                             
+      1969 -                "SELECT COUNT(*) AS n FROM dict_words dw \   
+      1970 -                 JOIN dict_words_fts f ON f.rowid = dw.id \  
+      1971 -                 WHERE f.word LIKE '%{}%' \                  
+      1972 -                   AND dw.dict_label IN ({}) \               
+      1973 -                   AND dw.uid LIKE '%' AND dw.uid LIKE '%'", 
+      1974 -                self.query_text.replace('\'', "''"),         
+      1975 -                labels_csv,                                  
+      1976 -            );                                               
+      1977 -            let f_start = Instant::now();                    
+      1978 -            let f_res: Result<Vec<R>, _> = sql_query(&f_sql).
+           -load(dict_conn);                                             
+      1979 -            info(&format!("ctrl F (pool, full WHERE, ALL INLI
+           -NED): {:?}, {:?}",                                           
+      1980 -                f_start.elapsed(),                           
+      1981 -                f_res.map(|v| v.first().map(|r| r.n).unwrap_o
+           -r(-1))));                                                    
+      1982 -        }                                                    
+      1983 -                                                             
+      1984 -        let t_pre_load = timer.elapsed();                    
+      1861          let mut all_rows: Vec<DictWord> = q.load(dict_conn)?;
+      1986 -        let t_post_load = timer.elapsed();                   
+      1987 -        info(&format!(                                       
+      1988 -            "headword_match SQL load: {:?} (pre={:?}, rows={}
+           -)",                                                          
+      1989 -            t_post_load - t_pre_load, t_pre_load, all_rows.le
+           -n()                                                          
+      1990 -        ));                                                  
+      1862  
+      1863          if (all_rows.len() as i64) >= SAFETY_LIMIT_SQL {
+      1864              warn(&format!(
+
+● Now add a startup migration that runs ANALYZE once per DB if stats are
+  missing:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(backend/src/db/mod.rs)
+  ⎿  Added 18 lines, removed 2 lines
+      150              upgrade_appdata_schema(&mut db_conn);
+      151          }
+      152  
+      153 -        Ok(Self {                                             
+      153 +        let dbm = Self {                                      
+      154              appdata,
+      155              dictionaries: DatabaseHandle::new(&g.paths.dict_da
+           tabase_url)?,
+      156              dpd: DatabaseHandle::new(&g.paths.dpd_database_url
+           )?,
+      157 -        })                                                    
+      157 +        };                                                    
+      158 +                                                              
+      159 +        // Ensure `sqlite_stat1` / `sqlite_stat4` exist on eve
+          +ry DB. Without                                                
+      160 +        // them, SQLite's query planner falls back to crude ca
+          +rdinality                                                     
+      161 +        // heuristics — for queries that combine FTS5 trigram 
+          +LIKE with a                                                   
+      162 +        // multi-value `dict_label IN (...)` filter (Headword 
+          +Match), this                                                  
+      163 +        // produced a catastrophic plan (~170 s vs ~17 ms with
+          + stats present)                                               
+      164 +        // because the planner couldn't see how selective the 
+          +FTS side was.                                                 
+      165 +        // ANALYZE is idempotent and cheap (<1 s per DB at our
+          + scale), and we                                               
+      166 +        // only re-run it when the stats tables are missing, s
+          +o existing                                                    
+      167 +        // installs without stats self-heal on next launch.   
+      168 +        // See tasks/prd-fixing-headword-match-slow-query.md. 
+      169 +        ensure_sqlite_stats(&dbm.appdata, "appdata");         
+      170 +        ensure_sqlite_stats(&dbm.dictionaries, "dictionaries")
+          +;                                                             
+      171 +        ensure_sqlite_stats(&dbm.dpd, "dpd");                 
+      172 +                                                              
+      173 +        Ok(dbm)                                               
+      174      }
+      175  
+      176      pub fn get_theme_name(&self) -> String {
+
+● Now add the helper function. Let me find a good spot:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Update(backend/src/db/mod.rs)
+  ⎿  Added 47 lines
+      198      }
+      199  }
+      200  
+      201 +/// Run `ANALYZE` on a DB the first time we see it without the
+          + `sqlite_stat1`                                               
+      202 +/// table. Idempotent and cheap; we only do the work when stat
+          +s are missing.                                                
+      203 +/// Failures are logged but non-fatal — a stat-less DB is func
+          +tional, just                                                  
+      204 +/// slow for certain query shapes.                            
+      205 +fn ensure_sqlite_stats(handle: &DatabaseHandle, label: &str) {
+      206 +    use diesel::sql_types::Integer;                           
+      207 +                                                              
+      208 +    #[derive(QueryableByName)]                                
+      209 +    struct ExistsRow {                                        
+      210 +        #[diesel(sql_type = Integer)]                         
+      211 +        n: i32,                                               
+      212 +    }                                                         
+      213 +                                                              
+      214 +    let mut conn = match handle.get_conn() {                  
+      215 +        Ok(c) => c,                                           
+      216 +        Err(e) => {                                           
+      217 +            warn(&format!("ensure_sqlite_stats({}): get_conn f
+          +ailed: {:#}", label, e));                                     
+      218 +            return;                                           
+      219 +        }                                                     
+      220 +    };                                                        
+      221 +                                                              
+      222 +    let has_stats: Result<Vec<ExistsRow>, _> = diesel::sql_que
+          +ry(                                                           
+      223 +        "SELECT COUNT(*) AS n FROM sqlite_master WHERE type='t
+          +able' AND name='sqlite_stat1'"                                
+      224 +    ).load(&mut *conn);                                       
+      225 +                                                              
+      226 +    match has_stats {                                         
+      227 +        Ok(rows) if rows.first().map(|r| r.n).unwrap_or(0) > 0
+          + => {                                                         
+      228 +            // Stats already present — nothing to do.         
+      229 +        }                                                     
+      230 +        Ok(_) => {                                            
+      231 +            info(&format!("ensure_sqlite_stats({}): running AN
+          +ALYZE", label));                                              
+      232 +            let started = std::time::Instant::now();          
+      233 +            if let Err(e) = diesel::connection::SimpleConnecti
+          +on::batch_execute(                                            
+      234 +                &mut *conn,                                   
+      235 +                "ANALYZE;"                                    
+      236 +            ) {                                               
+      237 +                warn(&format!("ensure_sqlite_stats({}): ANALYZ
+          +E failed: {:#}", label, e));                                  
+      238 +            } else {                                          
+      239 +                info(&format!("ensure_sqlite_stats({}): ANALYZ
+          +E done in {:?}", label, started.elapsed()));                  
+      240 +            }                                                 
+      241 +        }                                                     
+      242 +        Err(e) => {                                           
+      243 +            warn(&format!("ensure_sqlite_stats({}): check fail
+          +ed: {:#}", label, e));                                        
+      244 +        }                                                     
+      245 +    }                                                         
+      246 +}                                                             
+      247 +                                                              
+      248  fn initialize_dictionaries(database_url: &str) -> Result<()> {
+      249      info(&format!("initialize_dictionaries(): {}", database_ur
+           l));
+      250  
+
+  Searched for 4 patterns, read 1 file (ctrl+o to expand)
+  ⎿  Found 3 new diagnostic issues in 1 file (ctrl+o to expand)
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng/backend &&
+      cargo check 2>&1 | grep -E "^error|^warning" | head -10)
+  ⎿  (No output)
+
+● Bash(cargo check 2>&1 | tail -10)
+  ⎿      Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33
+     s
+
+● Bash(cd /home/gambhiro/prods/apps/simsapa-ng-project/simsapa-ng && make build
+      -B 2>&1 | tail -5)
+  ⎿  [ 92%] Building CXX object CMakeFiles/simsapadhammareader.dir/qrc_icon
+     s.cpp.o
+     [ 96%] Building CXX object CMakeFiles/simsapadhammareader.dir/simsapad
+     … +5 lines (ctrl+o to expand)
+  ⎿  (timeout 10m)
+
+● Build clean. Now update the PRD to reflect the resolution:
+
+● Write(tasks/prd-fixing-headword-match-slow-query.md)
+  ⎿  Added 125 lines, removed 179 lines
+        2  
+        3  ## Status
+        4  
+        5 -**Open / under investigation.** Root cause not yet identified.
+          - A diagnostic                                                 
+        6 -block is in place in `backend/src/query_task.rs::lemma_1_dpd_h
+          -eadword_match_fts5_full`                                      
+        7 -that runs six control queries (A–F) on the same pool connectio
+          -n before the                                                  
+        8 -real query. The next run of "gacchati" Headword Match should n
+          -arrow the cause                                               
+        9 -further — see [Current step](#current-step).                  
+        5 +**Resolved.** Root cause: the on-disk SQLite databases shipped
+          + without                                                      
+        6 +`sqlite_stat1` / `sqlite_stat4` tables, so SQLite's query plan
+          +ner had no                                                    
+        7 +statistics and fell back to heuristics that produced a catastr
+          +ophic plan for                                                
+        8 +the Headword Match query (FTS5 trigram + `dict_label IN (...)`
+          +). Running                                                    
+        9 +`ANALYZE` once populates the stat tables and brings the query 
+          +from ~170 s to                                                
+       10 +~120 ms end-to-end (~17 ms for the SQL itself).               
+       11  
+       11 -## Problem statement                                          
+       12 +## Resolution                                                 
+       13  
+       13 -Running **Headword Match** for a common Pāli stem like `gaccha
+          -ti` against                                                   
+       14 -`dictionaries.sqlite3` is unusably slow: ~170 seconds per page
+          - on the user's                                                
+       15 -machine (NVMe SSD, 192 k-row `dict_words`, 6-item `dict_source
+          -_uids` including                                              
+       16 -`dpd`, `dppn`, and four `ssp_test_abort_partial_*` user dicts)
+          -. The exact same                                              
+       17 -SQL run against the same DB file via the `sqlite3` CLI complet
+          -es in **~15 ms**.                                             
+       14 +Two changes:                                                  
+       15  
+       19 -The user originally asked whether the FTS5 index could be used
+          -. It already is                                               
+       20 -— `dpd_headwords_fts.lemma_1` is trigram-tokenized — but the i
+          -n-app query path                                              
+       21 -was an N+1 across two SQLite databases, and that turned out *n
+          -ot* to be the                                                 
+       22 -real bottleneck. See [What was tried and ruled out](#what-was-
+          -tried-and-ruled-out).                                         
+       16 +1. **One-time runtime `ANALYZE`** — `backend/src/db/mod.rs::en
+          +sure_sqlite_stats`                                            
+       17 +   runs at `DbManager::new()` for each of `appdata`, `dictiona
+          +ries`, `dpd`.                                                 
+       18 +   It checks for the `sqlite_stat1` table; if missing, it runs
+          + `ANALYZE` once                                               
+       19 +   (idempotent, <1 s per DB at our scale). Existing installs s
+          +elf-heal on                                                   
+       20 +   their next launch.                                         
+       21 +2. **Bundled SQLite version bump** (kept though it wasn't the 
+          +root cause):                                                  
+       22 +   `diesel` 2.2.10 → 2.3.9, `diesel_migrations` 2.2.0 → 2.3.0,
+       23 +   `libsqlite3-sys` `"*"` → `">=0.32"` (Cargo resolves to 0.36
+          +.0, bundles                                                   
+       24 +   SQLite ~3.50.x). Transitively bumps `rusqlite` 0.31 → 0.38 
+          +and                                                           
+       25 +   `stardict` 0.2.2 → 0.2.3.                                  
+       26  
+       24 -The user also asked for **partial substring matches** (`saṅkh 
+          -→ saṅkhāra,                                                   
+       25 -abhisaṅkhāra`) and **ASCII folding** (`sankh → saṅkhāra`). Sub
+          -string matches                                                
+       26 -already work once the slow query is fixed (trigram FTS5 + `LIK
+          -E '%term%'`).                                                 
+       27 -ASCII folding requires a separate `word_ascii` column on `dict
+          -_words_fts` and a                                             
+       28 -re-bootstrap of `dictionaries.sqlite3`; it is **out of scope**
+          - for this PRD and                                             
+       29 -deferred until the slow-query issue is resolved.              
+       27 +A small unrelated improvement also landed during this investig
+          +ation:                                                        
+       28 +**snippet generation in Headword Match is now deferred until a
+          +fter                                                          
+       29 +pagination** (`backend/src/query_task.rs::lemma_1_dpd_headword
+          +_match_fts5` and                                              
+       30 +`headword_match_with_bold`). Previously, `_full()` built a `Se
+          +archResult` for                                               
+       31 +every matched row — for DPD rows that meant a per-row `get_dpd
+          +_meaning_snippet`                                             
+       32 +query (a fresh `dpd_headwords` lookup each time). Now only the
+          + ~20 rows on                                                  
+       33 +the displayed page get snippeted. This wasn't the dominant cos
+          +t in the                                                      
+       34 +174 s wedge (the SQL itself was), but it would have shown up n
+          +ext.                                                          
+       35  
+       31 -## Goals                                                      
+       36 +The two-path retrieval design was also collapsed into one quer
+          +y against                                                     
+       37 +`dict_words_fts.word`, since for `dict_label = "dpd"` the valu
+          +e of                                                          
+       38 +`dict_words.word` mirrors `dpd_headwords.lemma_1`. `dpd_headwo
+          +rds_fts` is                                                   
+       39 +retained for DPD Lookup mode, which still uses it.            
+       40  
+       33 -1. Identify the actual root cause of the 170 s latency.       
+       34 -2. Make `gacchati`-class Headword Match return in well under 1
+          - s per page.                                                  
+       35 -3. Remove the diagnostic block once the cause is known.       
+       41 +## Bootstrap follow-up (recommended)                          
+       42  
+       37 -## Out of scope                                               
+       43 +Bootstrap should `ANALYZE` each DB after building it, so shipp
+          +ed DBs arrive                                                 
+       44 +with stats and the runtime self-heal is just a safety net. Tou
+          +ch points:                                                    
+       45  
+       39 -- ASCII folding (`sankh → saṅkhāra`). Deferred.               
+       40 -- Removing `dpd_headwords_fts` (still used by DPD Lookup mode)
+          -.                                                             
+       41 -- Buffer-caching the materialised `Vec<DictWord>` across page 
+          -transitions.                                                  
+       42 -  Worth revisiting only once `_full()` itself is fast; the bri
+          -dge's                                                         
+       43 -  `RESULTS_PAGE_CACHE` already covers next→prev navigation on 
+          -already-visited                                               
+       44 -  pages.                                                      
+       46 +- `cli/src/bootstrap/` — wherever each of `appdata.sqlite3`,  
+       47 +  `dictionaries.sqlite3`, `dpd.sqlite3` is produced, append `A
+          +NALYZE;` after                                                
+       48 +  inserts and after FTS5 indexing.                            
+       49 +- The FTS5 scripts in `scripts/` already include `INSERT INTO 
+          +<fts>(<fts>) VALUES('optimize');`                             
+       50 +  and `VACUUM;`; an `ANALYZE;` should land right after the opt
+          +imize step.                                                   
+       51  
+       46 -## Background: what the code does today                       
+       52 +Not done here — bootstrap rebuild is out of scope for this fix
+          +.                                                             
+       53  
+       48 -`backend/src/query_task.rs::lemma_1_dpd_headword_match_fts5_fu
+          -ll` previously                                                
+       49 -ran two retrieval paths and was rewritten to one:             
+       54 +## What was tried and ruled out (chronological)               
+       55  
+       51 -```sql                                                        
+       52 -SELECT dw.*                                                   
+       53 -FROM dict_words dw                                            
+       54 -JOIN dict_words_fts f ON f.rowid = dw.id                      
+       55 -WHERE f.word LIKE ?                       -- bind: '%gacchati%
+          -'                                                             
+       56 -  AND dw.dict_label IN (?, ?, ?, ?, ?, ?) -- bind: the 6 dict 
+          -labels                                                        
+       57 -  AND dw.uid LIKE ?                       -- bind: '%' (no-op 
+          -when filter unset)                                            
+       58 -  AND dw.uid LIKE ?                       -- bind: '%'        
+       59 -ORDER BY dw.id                                                
+       60 -LIMIT 50000;                                                  
+       61 -```                                                           
+       56 +1. **N+1 across two databases** (original suspect). Path A did
+          + one                                                          
+       57 +   `dict_words` lookup per matched DPD headword. Collapsed to 
+          +one FTS5 query                                                
+       58 +   against `dict_words_fts`. Genuine improvement, but the wedg
+          +e persisted.                                                  
+       59 +2. **Per-row snippet generation.** Deferred from `_full()` to 
+          +the page slice.                                               
+       60 +   Genuine improvement (would have mattered after the wedge wa
+          +s gone), but                                                  
+       61 +   not the dominant cost.                                     
+       62 +3. **FTS5 trigram + bind-parameter LIKE optimization.** `EXPLA
+          +IN QUERY PLAN`                                                
+       63 +   in `sqlite3` CLI showed identical plans (`SCAN f VIRTUAL TA
+          +BLE INDEX 0:L2`)                                              
+       64 +   for literal and bind variants, both fast. Not the trigger. 
+       65 +4. **Disk I/O / cold page cache.** NVMe SSD; cold `sqlite3` ru
+          +ns still 12 ms.                                               
+       66 +5. **Tantivy reconcile / dictionary import holding a writer lo
+          +ck.** User                                                    
+       67 +   confirmed neither was running during the slow queries. Repr
+          +oducibly slow,                                                
+       68 +   not bursty. WAL-mode change prepared, reverted.            
+       69 +6. **Connection-pool starvation / wedged pool connection.** Co
+          +ntrols A and B                                                
+       70 +   on the same pool connection ran in 17 ms; only the full-WHE
+          +RE query (C, D)                                               
+       71 +   was slow. Connection itself was healthy.                   
+       72 +7. **Diesel cached prepared statement with a bad plan.** Contr
+          +ol C used a                                                   
+       73 +   unique trailing comment so Diesel could not reuse a cached 
+          +statement.                                                    
+       74 +   Still 170 s. Not a cached-plan issue.                      
+       75 +8. **Wide `SELECT dw.*` materialising big `definition_html` co
+          +lumns.**                                                      
+       76 +   `SELECT COUNT(*)` (C) and `SELECT dw.id` (D) were equally s
+          +low as                                                        
+       77 +   `SELECT dw.*`. Not row materialisation.                    
+       78 +9. **Bundled vs system SQLite version mismatch.** Bumped diese
+          +l + libsqlite3-sys                                            
+       79 +   to bring bundled SQLite from 3.45.0 to ~3.50.x. Still 170 s
+          +. Not the cause,                                              
+       80 +   but the bump was kept for hygiene.                         
+       81 +10. **Bind parameters on the IN clause / uid LIKE.** Control F
+          + inlined every                                                
+       82 +    value as a literal — still 170 s. Not a bind-parameter int
+          +eraction.                                                     
+       83  
+       63 -`dict_words_fts` is a trigram-tokenized FTS5 virtual table (`w
+          -ord` indexed,                                                 
+       64 -`detail='none'`), with `rowid = dict_words.id`. The expected p
+          -lan is:                                                       
+       84 +## What it actually was                                       
+       85  
+       66 -```                                                           
+       67 -SCAN f VIRTUAL TABLE INDEX 0:L2          -- FTS5 trigram LIKE 
+          -serves substring match                                        
+       68 -SEARCH dw USING INTEGER PRIMARY KEY (rowid=?)                 
+       69 -USE TEMP B-TREE FOR ORDER BY             -- 96 rows sorted    
+       70 -```                                                           
+       86 +The on-disk `dictionaries.sqlite3` (and the other shipped DBs)
+          + had **no                                                     
+       87 +`sqlite_stat*` tables**. Without them, the planner can't know 
+          +that the FTS5                                                 
+       88 +LIKE side returns ~96 rows out of a 192 k-row table, so on enc
+          +ountering the                                                 
+       89 +combined predicate `f.word LIKE ? AND dw.dict_label IN (?, ?, 
+          +?, ?, ?, ?)` it                                               
+       90 +chose a plan that scanned `dict_words` (or the FTS5 content sh
+          +adow table) in                                                
+       91 +a way that visited the full table per IN-list element rather t
+          +han using the                                                 
+       92 +FTS5 trigram driver. Once `ANALYZE` populated `sqlite_stat1`/`
+          +sqlite_stat4`,                                                
+       93 +the planner switched to the expected `SCAN f VIRTUAL TABLE IND
+          +EX 0:L2` →                                                    
+       94 +`SEARCH dw USING INTEGER PRIMARY KEY (rowid=?)` plan and the s
+          +ame SQL ran in                                                
+       95 +~17 ms.                                                       
+       96  
+       72 -`EXPLAIN QUERY PLAN` shows exactly this plan in `sqlite3` CLI 
+          -for both                                                      
+       73 -literal-pattern and bind-parameter variants. Standalone CLI ti
+          -ming: ~15 ms.                                                 
+       74 -The same SQL through Diesel: ~170 s.                          
+       97 +`EXPLAIN QUERY PLAN` in the `sqlite3` CLI had been showing the
+          + fast plan all                                                
+       98 +along — but the CLI was reading the same DB file without using
+          + stats either,                                                
+       99 +so why does it work without stats? The system SQLite is compil
+          +ed with                                                       
+      100 +`ENABLE_STAT4` plus other defaults that change the no-stats he
+          +uristics; the                                                 
+      101 +bundled SQLite from `libsqlite3-sys` is built with different d
+          +efaults and                                                   
+      102 +made the bad choice. We didn't pin this down precisely (would 
+          +require diffing                                               
+      103 +`PRAGMA compile_options` between the two builds), but the fix 
+          +— ensure stats                                                
+      104 +are present — works for both code paths and is the right thing
+          + to do                                                        
+      105 +regardless of compile flags.                                  
+      106  
+       76 -## What was tried and ruled out                               
+      107 +## Diagnostic timings (final)                                 
+      108  
+       78 -### 1. N+1 across two databases (original suspect)            
+      109 +After `ANALYZE` on the dictionaries DB, with the original full
+          + query                                                        
+      110 +("gacchati", 6 dict_source_uids):                             
+      111  
+       80 -Path A of the old function did one `dict_words` lookup per mat
+          -ched DPD                                                      
+       81 -headword. Collapsed to a single FTS5 query against `dict_words
+          -_fts` —                                                       
+       82 -`dict_words.word` mirrors `dpd_headwords.lemma_1` for `dict_la
+          -bel="dpd"`, so                                                
+       83 -nothing is lost. **Not the bottleneck on its own.**           
+      112 +```                                                           
+      113 +ctrl A (pool, fts only):              18.7 ms                 
+      114 +ctrl B (pool, join, no filters):      19.0 ms                 
+      115 +ctrl C (pool, full WHERE, COUNT only): 18.9 ms                
+      116 +ctrl D (pool, +IN only):              18.6 ms                 
+      117 +ctrl E (pool, +uid LIKE only):        18.9 ms                 
+      118 +ctrl F (pool, full WHERE, ALL INLINED): 18.6 ms               
+      119 +headword_match SQL load:              23.0 ms  (rows=96)      
+      120 +Query took:                          136.8 ms                 
+      121 +```                                                           
+      122  
+       85 -### 2. Per-row snippet generation                             
+      123 +vs the pre-fix figures:                                       
+      124  
+       87 -`db_word_to_result` calls `get_dpd_meaning_snippet` for each D
+          -PD row, which                                                 
+       88 -opens a fresh `dpd_headwords` query per row. For 1000+ matched
+          - DPD lemmas on                                                
+       89 -"gacchati" that's 1000+ round-trips. **Fixed**: snippet genera
+          -tion deferred                                                 
+       90 -from `_full()` to the page-slice callers (`lemma_1_dpd_headwor
+          -d_match_fts5`                                                 
+       91 -and `headword_match_with_bold`) so only the displayed ~20 rows
+          - get snippets.                                                
+       92 -**Did not move the needle** — the SQL itself is still 170 s.  
+      125 +```                                                           
+      126 +ctrl D (pool, +IN only):           163.7 s                    
+      127 +ctrl F (pool, full WHERE, INLINED): 164.9 s                   
+      128 +headword_match SQL load:            172.2 s                   
+      129 +Query took:                         515.6 s   (includes the 6 
+          +controls × ~170 s each)                                       
+      130 +```                                                           
+      131  
+       94 -### 3. SQLite FTS5 trigram + bind-parameter LIKE optimization 
+      132 +## Files touched                                              
+      133  
+       96 -Hypothesised that the LIKE optimization needs a literal patter
+          -n. Refuted:                                                   
+       97 -`EXPLAIN QUERY PLAN` in `sqlite3` CLI shows identical plans fo
+          -r literal and                                                 
+       98 -bind-parameter variants (`SCAN f VIRTUAL TABLE INDEX 0:L2` in 
+          -both cases).                                                  
+       99 -Timed runs in the CLI: ~15 ms either way.                     
+      100 -                                                              
+      101 -### 4. Disk I/O / cold page cache                             
+      102 -                                                              
+      103 -Storage is an NVMe SSD (Samsung 990 PRO). `dict_words_fts_idx`
+          - is only 90 KB.                                               
+      104 -Cold-cache `sqlite3` runs still complete in 12 ms. **Not the c
+          -ause.**                                                       
+      105 -                                                              
+      106 -### 5. Tantivy reconcile or dictionary import holding a writer
+          - lock                                                         
+      107 -                                                              
+      108 -User confirmed reconcile only runs at startup and no import/de
+          -lete is in                                                    
+      109 -flight during the search. Also: the slowness is reproducible a
+          -nd constant                                                   
+      110 -(~170 s every run), which doesn't match the bursty pattern a c
+          -oncurrent                                                     
+      111 -writer would produce. **Wrong angle.** WAL-mode change was pre
+          -pared but                                                     
+      112 -reverted — the journal mode is `delete`, and switching to WAL 
+          -is a separate                                                 
+      113 -hygiene improvement, not the fix.                             
+      114 -                                                              
+      115 -### 6. Connection pool starvation or wedged pool connection   
+      116 -                                                              
+      117 -Diagnostics added (controls A and B) run **on the same pool co
+          -nnection**                                                    
+      118 -right before the slow query. Both come back in ~17 ms. So the 
+          -connection                                                    
+      119 -itself is healthy — the slowness is not connection-wide.      
+      120 -                                                              
+      121 -| Control | Connection            | SQL                       
+          -                         | Time |                             
+      122 -|---------|-----------------------|---------------------------
+          --------------------------|------|                             
+      123 -| A       | pool                  | `SELECT COUNT(*) FROM dict
+          -_words_fts WHERE word LIKE ?` | 17 ms |                       
+      124 -| B       | pool                  | A + JOIN to `dict_words` b
+          -y rowid                  | 17 ms |                            
+      125 -| C       | pool (fresh prepare)  | B + `dict_label IN (...) A
+          -ND uid LIKE ? AND uid LIKE ?`, `SELECT COUNT(*)` | **170 s** |
+      126 -| D       | pool (fresh prepare)  | C + ORDER BY + LIMIT, `SEL
+          -ECT dw.id` only          | **170 s** |                        
+      127 -| —       | pool                  | original query (`SELECT dw
+          -.*`)                     | **170 s** |                        
+      128 -| fresh conn (no filters) | new SqliteConnection | `SELECT COU
+          -NT(*) ... WHERE f.word LIKE ?`     | 19 ms |                  
+      129 -                                                              
+      130 -### 7. Diesel's cached prepared statement on the pool connecti
+          -on                                                            
+      131 -                                                              
+      132 -Control C is built with a unique trailing SQL comment (then la
+          -ter replaced by                                               
+      133 -a structurally different SQL) so Diesel **cannot** reuse a cac
+          -hed prepared                                                  
+      134 -statement. Still 170 s. **Not a cached-bad-plan issue.**      
+      135 -                                                              
+      136 -### 8. Wide `SELECT dw.*` materialising huge `definition_html`
+          - columns                                                      
+      137 -                                                              
+      138 -Control C used `SELECT COUNT(*)`; control D used `SELECT dw.id
+          -`. Both 170 s.                                                
+      139 -**Not the cost of wide-row materialisation.**                 
+      140 -                                                              
+      141 -### 9. SQLite library version mismatch (bundled vs system)    
+      142 -                                                              
+      143 -Hypothesised the bundled SQLite (`libsqlite3-sys 0.28.0` = SQL
+          -ite 3.45.0,                                                   
+      144 -Jan 2024) had an FTS5 trigram planner regression fixed in the 
+          -user's system                                                 
+      145 -SQLite (3.53.1). Bumped:                                      
+      146 -                                                              
+      147 -- `diesel` 2.2.10 → **2.3.9**                                 
+      148 -- `diesel_migrations` 2.2.0 → **2.3.0**                       
+      149 -- `libsqlite3-sys` `"*"` → **`">=0.32"`** (Cargo resolves to 0
+          -.36.0 ≈ SQLite 3.50.x)                                        
+      150 -- (transitively) `rusqlite` 0.31.0 → 0.38.0, `stardict` 0.2.2 
+          -→ 0.2.3                                                       
+      151 -                                                              
+      152 -Rebuild succeeds; behaviour unchanged. C and D still 170 s on 
+          -the new SQLite.                                               
+      153 -**SQLite version was not the cause.**                         
+      154 -                                                              
+      155 -## Current step                                               
+      156 -                                                              
+      157 -The diagnostic block now isolates **the specific bind-paramete
+          -r shape** as                                                  
+      158 -the suspected trigger. Outstanding controls to land next:     
+      159 -                                                              
+      160 -| Control | What it tests                                     
+          -              |                                               
+      161 -|---------|---------------------------------------------------
+          ---------------|                                               
+      162 -| D (new) | B + `dict_label IN (?,...)` only (no `uid LIKE`)  
+          -               |                                              
+      163 -| E       | B + `uid LIKE ? AND uid LIKE ?` only (no `IN`)    
+          -               |                                              
+      164 -| F       | Same full WHERE as C, but **all literals inlined**
+          - — no bind params at all |                                    
+      165 -                                                              
+      166 -Decision tree:                                                
+      167 -                                                              
+      168 -- **D fast, E slow, F fast** → the `uid LIKE ?` bind is poison
+          -ing the plan.                                                 
+      169 -  Likely fix: drop the `uid LIKE ?` filter entirely when the u
+          -id filter is                                                  
+      170 -  the no-op `'%'` pattern, or inline a literal when it is `'%'
+          -`.                                                            
+      171 -- **D slow, E fast, F fast** → the `IN (?,...)` bind is the tr
+          -igger. Likely                                                 
+      172 -  fix: inline the `dict_label` IN list as literals (they're ap
+          -p-controlled                                                  
+      173 -  and a closed set — no SQL injection risk if escaped).       
+      174 -- **D slow AND E slow, F fast** → bind parameters on `dw` colu
+          -mns in general                                                
+      175 -  are the trigger; inline all of them.                        
+      176 -- **F also slow** → the WHERE shape itself blows up under Dies
+          -el's execution                                                
+      177 -  path even with literals. Out of theories I've articulated; n
+          -ext step would                                                
+      178 -  be running the same statement via raw `libsqlite3-sys` (no D
+          -iesel) to see                                                 
+      179 -  if Diesel is the variable, or via `rusqlite` to see if it's 
+          -`libsqlite3-sys`                                              
+      180 -  globally.                                                   
+      181 -                                                              
+      182 -The diagnostic edit adding D/E/F was prepared but the user int
+          -errupted before                                               
+      183 -the build went through. To resume:                            
+      184 -                                                              
+      185 -1. Re-apply the D/E/F controls (see commit-pending diff in    
+      186 -   `lemma_1_dpd_headword_match_fts5_full`'s diagnostic block).
+      187 -2. `make build -B`, then run "gacchati" Headword Match.       
+      188 -3. Read the new log lines and match against the decision tree.
+      189 -4. Apply the indicated fix.                                   
+      190 -5. **Delete the entire diagnostic block** plus the `dead_code`
+          - warning it                                                   
+      191 -   triggers.                                                  
+      192 -6. Once timing is fixed, decide whether to revisit the buffer-
+          -cache                                                         
+      193 -   optimisation the user originally asked about (likely unnece
+          -ssary if SQL                                                  
+      194 -   is ~15 ms — the bridge's `RESULTS_PAGE_CACHE` already cover
+          -s next/prev).                                                 
+      195 -                                                              
+      196 -## Files touched so far                                       
+      197 -                                                              
+      134 +- `backend/src/db/mod.rs` — added `ensure_sqlite_stats`, calle
+          +d from                                                        
+      135 +  `DbManager::new()` for each of the three DBs.               
+      136  - `backend/src/query_task.rs` — collapsed N+1 paths, deferred 
+           snippet
+      199 -  generation to page-slice callers, added the A/B/C/D diagnost
+          -ic block.                                                     
+      200 -- `backend/Cargo.toml`, `cli/Cargo.toml` — bumped diesel + lib
+          -sqlite3-sys                                                   
+      201 -  (kept after investigation; SQLite 3.50.x is preferable to 3.
+          -45.0 even                                                     
+      202 -  though it didn't fix this bug).                             
+      137 +  generation to page-slice callers (`lemma_1_dpd_headword_matc
+          +h_fts5`,                                                      
+      138 +  `headword_match_with_bold`), removed the diagnostic controls
+          +.                                                             
+      139 +- `backend/Cargo.toml`, `cli/Cargo.toml` — diesel 2.3.9, diese
+          +l_migrations                                                  
+      140 +  2.3.0, libsqlite3-sys `>=0.32` (kept after investigation; SQ
+          +Lite 3.50.x is                                                
+      141 +  preferable to 3.45.0 even though the version bump didn't fix
+          + the bug).                                                    
+      142  - `backend/Cargo.lock` (regenerated).
+      143  
+      205 -## Workarounds for end users (none yet)                       
+      144 +## Deferred / future work                                     
+      145  
+      207 -None until the root cause is fixed. Users encountering the iss
+          -ue should use                                                 
+      208 -Contains Match instead of Headword Match for now.             
+      146 +- **ASCII folding** (`sankh → saṅkhāra`). Out of scope here. R
+          +equires a                                                     
+      147 +  `word_ascii` column on `dict_words_fts` plus a bootstrap re-
+          +build of                                                      
+      148 +  `dictionaries.sqlite3`.                                     
+      149 +- **Bootstrap-time `ANALYZE`** (see "Bootstrap follow-up" abov
+          +e) — so we can                                                
+      150 +  remove the runtime self-heal in a future release once all sh
+          +ipped DBs are                                                 
+      151 +  known to have stats.                                        
+      152 +- **Buffer-cache for `_full()`** — originally asked for, no lo
+          +nger urgent now                                               
+      153 +  that `_full()` is ~17 ms. The bridge's `RESULTS_PAGE_CACHE` 
+          +already covers                                                
+      154 +  revisited pages.                                            
+
+● Save the key lesson to memory for future sessions:
+
+  Recalled 1 memory, wrote 3 memories (ctrl+o to expand)
+
+● Resolved
+
+  Root cause: Missing sqlite_stat1/sqlite_stat4 tables on the shipped DBs.
+  Without stats, the bundled SQLite picked a catastrophic plan for FTS5 LIKE + 
+  dict_label IN (...) — 170s instead of 17ms. The system sqlite3 CLI happened to
+   pick the right plan without stats (different compile defaults), which sent us
+   through many wrong theories before finding it.
+
+  What landed:
+  - backend/src/db/mod.rs::ensure_sqlite_stats — runs ANALYZE once per DB at
+  DbManager::new() if sqlite_stat1 is missing. Existing installs self-heal on
+  next launch.
+  - The N+1 collapse and deferred snippet generation from earlier in the session
+   are kept (separate, real improvements).
+  - Diesel + libsqlite3-sys bumps kept for hygiene (SQLite 3.50.x vs 3.45.0).
+  - Diagnostic block removed; build clean.
+
+  Documented:
+  - tasks/prd-fixing-headword-match-slow-query.md — updated to "resolved",
+  documents the 10 dead-end hypotheses chronologically, the actual cause, the
+  diagnostic timings before/after, and a bootstrap follow-up (add ANALYZE; after
+   FTS5 indexing in scripts/).
+  - Memory: project_sqlite_analyze_required.md — for future sessions, check 
+  stats first when a query is wildly slower in-app than in sqlite3 CLI.
+
+  Final timings ("gacchati" Headword Match): 170s → 137ms end-to-end, 17ms for
+  the SQL itself.
+
+  Deferred (mentioned but not done): ASCII folding, bootstrap-time ANALYZE, and
+  the Vec<DictWord> buffer cache — the bridge-level page cache already covers
+  next/prev now that _full() is sub-second.
+
+✻ Sautéed for 5m 47s
