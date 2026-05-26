@@ -12,9 +12,148 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QGuiApplication>
+#include <QWindow>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#endif
+
+#ifdef WITH_X11
+#include "global_hotkey_manager.h"
+extern "C" void x11_set_user_time(unsigned long winid, unsigned int time);
+extern "C" void x11_activate_window(unsigned long winid, unsigned int time);
+#endif
 
 extern "C" void log_info_c(const char* msg);
 extern "C" void log_error_c(const char* msg);
+
+#ifdef Q_OS_MACOS
+extern "C" void mac_activate_app_and_window(unsigned long long winid);
+#endif
+
+// Show + raise + activate a QML window root. Each platform requires its own
+// dance on top of the portable Qt calls:
+//   * Windows  -- queued global-hotkey callbacks lose the WM_HOTKEY
+//                 foreground-stealing privilege, so SetForegroundWindow gets
+//                 demoted to a taskbar flash. The AttachThreadInput trick
+//                 temporarily shares input state with the foreground thread,
+//                 restoring the privilege.
+//   * macOS    -- requestActivate() only orders windows within the app; an
+//                 app in the background needs an NSApplication-level activate.
+//   * X11      -- _NET_ACTIVE_WINDOW is gated by EWMH focus-stealing
+//                 prevention which compares the request timestamp against the
+//                 user's last input time. Hotkeys delivered via XRecord have
+//                 no Qt event, so without an explicit timestamp the manager
+//                 sees `0` and downgrades activation to "demands attention".
+//                 We feed Qt the most recent X server time captured by the
+//                 hotkey worker before calling requestActivate().
+static void show_and_activate_window(QObject* root) {
+    if (!root) return;
+
+    // Clear the minimized flag at the QWindow level so Qt's bookkeeping stays
+    // in sync with the deminiaturize that the native activation below will
+    // trigger. Without this, Qt still believes the window is minimized until
+    // the WM_STATE / NSWindow notification arrives, which can race subsequent
+    // show()/raise() calls. Preserves Maximized/FullScreen bits.
+    //
+    // On X11 specifically, this is the only Qt-side step needed: the
+    // _NET_ACTIVE_WINDOW message we send afterwards with source = 2 instructs
+    // the WM to deminiaturize *and* switch workspaces if the window is on
+    // another desktop -- EWMH semantics every major WM (Mutter, KWin, Xfwm,
+    // i3, qtile, Openbox, Fluxbox) implements as part of activation.
+    if (auto* qw = qobject_cast<QWindow*>(root)) {
+        Qt::WindowStates st = qw->windowStates();
+        if (st & Qt::WindowMinimized) {
+            qw->setWindowStates(st & ~Qt::WindowMinimized);
+        }
+    }
+
+    QMetaObject::invokeMethod(root, "show");
+    QMetaObject::invokeMethod(root, "raise");
+
+#ifdef WITH_X11
+    // On X11 we send _NET_ACTIVE_WINDOW ourselves with the real hotkey
+    // timestamp -- Qt's requestActivate() uses its own internal time tracker
+    // which is never updated for events that arrive via XRecord (no Qt event
+    // is dispatched), so WMs that enforce focus-stealing prevention (qtile,
+    // KWin, Mutter, ...) silently demote Qt's request to "demands attention".
+    // _NET_WM_USER_TIME is also stamped for the first-map case.
+    bool activated_via_x11 = false;
+    if (QGuiApplication::platformName() == QLatin1String("xcb")) {
+        if (auto* qw = qobject_cast<QWindow*>(root)) {
+            const quint32 t = GlobalHotkeyManager::lastX11EventTime();
+            const auto wid = static_cast<unsigned long>(qw->winId());
+            if (wid != 0 && t != 0) {
+                x11_set_user_time(wid, t);
+                x11_activate_window(wid, t);
+                activated_via_x11 = true;
+            }
+        }
+    }
+    if (!activated_via_x11) {
+        QMetaObject::invokeMethod(root, "requestActivate");
+    }
+#else
+    QMetaObject::invokeMethod(root, "requestActivate");
+#endif
+
+#ifdef Q_OS_MACOS
+    if (auto* qw = qobject_cast<QWindow*>(root)) {
+        mac_activate_app_and_window(static_cast<unsigned long long>(qw->winId()));
+    } else {
+        mac_activate_app_and_window(0);
+    }
+#endif
+
+#ifdef Q_OS_WIN
+    QWindow* qw = qobject_cast<QWindow*>(root);
+    if (!qw) return;
+    HWND hwnd = reinterpret_cast<HWND>(qw->winId());
+    if (!hwnd) return;
+
+    // Un-minimize first -- SetForegroundWindow doesn't restore iconic windows,
+    // it just raises them in the Z-order while leaving them in the taskbar.
+    if (IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE);
+    }
+
+    // Try the AttachThreadInput trick: share input state with the foreground
+    // thread so SetForegroundWindow isn't demoted to a taskbar flash when the
+    // WM_HOTKEY foreground-stealing privilege has expired (queued connection
+    // + 80 ms timer between the hotkey and this call).
+    HWND fg = GetForegroundWindow();
+    DWORD fg_thread = fg ? GetWindowThreadProcessId(fg, nullptr) : 0;
+    DWORD this_thread = GetCurrentThreadId();
+    BOOL ok = FALSE;
+    if (fg_thread && fg_thread != this_thread) {
+        AttachThreadInput(fg_thread, this_thread, TRUE);
+        ok = SetForegroundWindow(hwnd);
+        AttachThreadInput(fg_thread, this_thread, FALSE);
+    } else {
+        ok = SetForegroundWindow(hwnd);
+    }
+
+    // Fallback: AttachThreadInput has been hardened against in newer Win11
+    // builds. Synthesizing an Alt key press makes the OS believe the user
+    // gave our process input, granting one foreground-change right. The Alt
+    // press/release is harmless (no menu opens because no key follows).
+    if (!ok) {
+        INPUT inputs[2] = {};
+        inputs[0].type       = INPUT_KEYBOARD;
+        inputs[0].ki.wVk     = VK_MENU;
+        inputs[1].type       = INPUT_KEYBOARD;
+        inputs[1].ki.wVk     = VK_MENU;
+        inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(2, inputs, sizeof(INPUT));
+        SetForegroundWindow(hwnd);
+    }
+
+    // Belt-and-braces: ensure top of Z-order and focus on this window.
+    BringWindowToTop(hwnd);
+    SetFocus(hwnd);
+#endif
+}
 
 WindowManager* WindowManager::m_instance = nullptr;
 
@@ -239,9 +378,9 @@ void WindowManager::run_lookup_query(const QString& query_text) {
     }
 
     if (target_window && target_window->m_root) {
-        // Show and raise the window
-        QMetaObject::invokeMethod(target_window->m_root, "show");
-        QMetaObject::invokeMethod(target_window->m_root, "raise");
+        // Show, raise and activate (handles Windows foreground-stealing quirks
+        // for the global-hotkey path).
+        show_and_activate_window(target_window->m_root);
 
         // Call the QML run_lookup_query function which sets Dictionary mode and runs the search
         QMetaObject::invokeMethod(target_window->m_root, "run_lookup_query", Q_ARG(QString, query_text));
@@ -482,9 +621,8 @@ void WindowManager::open_in_lookup_window(const QString& result_data_json) {
     }
 
     if (target_window && target_window->m_root) {
-        // Show and raise the window
-        QMetaObject::invokeMethod(target_window->m_root, "show");
-        QMetaObject::invokeMethod(target_window->m_root, "raise");
+        // Show, raise and activate (handles Windows foreground-stealing quirks).
+        show_and_activate_window(target_window->m_root);
 
         // Show the result in a new tab in the results group
         QMetaObject::invokeMethod(target_window->m_root, "show_result_in_html_view_with_json",

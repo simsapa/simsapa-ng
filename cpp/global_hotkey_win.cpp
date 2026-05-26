@@ -283,6 +283,8 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
     if (m_state2) {
         waitKey2(); // cancel pending wait
         if (m_state2waiter.key2 == vk && m_state2waiter.modifier == mod) {
+            // See AllowSetForegroundWindow note below.
+            AllowSetForegroundWindow(ASFW_ANY);
             emit hotkeyActivated(m_state2waiter.handle);
             return true;
         }
@@ -311,6 +313,12 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
         }
 
         if (hs.key2 == 0) {
+            // WM_HOTKEY grants our process the right to call
+            // SetForegroundWindow once. Our activation runs through a queued
+            // connection + an 80 ms QTimer, by which time the right may be
+            // gone -- AllowSetForegroundWindow(ASFW_ANY) extends it to any
+            // subsequent SetForegroundWindow call from this process.
+            AllowSetForegroundWindow(ASFW_ANY);
             emit hotkeyActivated(hs.handle);
             return true;
         }

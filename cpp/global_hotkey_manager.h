@@ -25,6 +25,7 @@
   // they reach moc_*.cpp via mocs_compilation.cpp's bulk include. All X11
   // state is held as opaque types here and cast back to its real type
   // inside `cpp/global_hotkey_x11.cpp`.
+  #include <atomic>
   #include <set>
   #include <utility>
 #endif
@@ -74,6 +75,14 @@ public:
     /// platform that has no backend (Wayland, Android) or if init() failed
     /// (e.g. missing X11 RECORD extension).
     bool isInitialized() const { return m_initialized; }
+
+#ifdef WITH_X11
+    /// X11 server timestamp of the most recent key event observed by the
+    /// XRecord worker. Used to satisfy EWMH focus-stealing prevention when
+    /// activating a window in response to a global hotkey (window managers
+    /// compare this against the user's last input time).
+    static quint32 lastX11EventTime() { return s_lastX11EventTime.load(); }
+#endif
 
     /// Parse a Qt-style key sequence string ("Ctrl+C+C", "Ctrl+Alt+L") into
     /// (modifier, key1, key2). key2 is 0 for single-chord sequences.
@@ -158,6 +167,8 @@ private:
     using GrabbedKeys = std::set<std::pair<quint32, quint32>>;
     GrabbedKeys m_grabbedKeys;
     GrabbedKeys::iterator m_keyToUngrab;
+
+    static std::atomic<quint32> s_lastX11EventTime;
 
     bool isCopyToClipboardKey(quint32 keyCode, quint32 modifiers) const;
     bool isKeyGrabbed(quint32 keyCode, quint32 modifiers) const;

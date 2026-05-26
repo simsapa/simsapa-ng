@@ -117,6 +117,8 @@ bool GrabErrorHandler::s_error = false;
 
 } // namespace
 
+std::atomic<quint32> GlobalHotkeyManager::s_lastX11EventTime{0};
+
 bool GlobalHotkeyManager::init() {
     // Wayland or other non-xcb session: no-op success path.
     if (QGuiApplication::platformName() != QLatin1String("xcb")) {
@@ -231,6 +233,14 @@ void GlobalHotkeyManager::handleRecordEvent(void* dataPtr) {
     XRecordInterceptData* data = reinterpret_cast<XRecordInterceptData*>(dataPtr);
     if (data->category == XRecordFromServer) {
         xEvent* event = reinterpret_cast<xEvent*>(data->data);
+
+        if (event->u.u.type == KeyPress || event->u.u.type == KeyRelease) {
+            // Stash the X server time so an activation triggered by this
+            // hotkey can satisfy the window manager's focus-stealing
+            // prevention check (compares against the user's last input).
+            s_lastX11EventTime.store(
+                static_cast<quint32>(event->u.keyButtonPointer.time));
+        }
 
         if (event->u.u.type == KeyPress) {
             KeyCode key = event->u.u.detail;
