@@ -76,6 +76,27 @@ public:
     /// (e.g. missing X11 RECORD extension).
     bool isInitialized() const { return m_initialized; }
 
+    /// Capture the foreground application's currently selected text into the
+    /// system clipboard, so the activation handler can read it. Per-platform:
+    ///   * macOS: try the Accessibility API first (instant, no clipboard
+    ///     pollution); on failure, synthesize ⌘C with hotkey grabs suspended.
+    ///   * X11:   synthesize Ctrl+C via XTestFakeKeyEvent.
+    ///   * Win:   synthesize Ctrl+C via SendInput.
+    /// Called from gui.cpp's activation lambda; the lambda then waits a short
+    /// delay for the foreground app to process the synthetic event before
+    /// reading QClipboard.
+    void captureSelectionToClipboard();
+
+#ifdef Q_OS_MACOS
+    /// True iff macOS reports the running binary has Accessibility permission
+    /// (AXIsProcessTrusted). Exposed for the settings UI status label.
+    static bool macIsAccessibilityTrusted();
+    /// Deep-link to System Settings → Privacy & Security → Accessibility so
+    /// the user can grant/revoke permission. Exposed for the settings UI
+    /// button (the OS doesn't expose programmatic revoke/re-request).
+    static void macOpenAccessibilitySettings();
+#endif
+
 #ifdef WITH_X11
     /// X11 server timestamp of the most recent key event observed by the
     /// XRecord worker. Used to satisfy EWMH focus-stealing prevention when

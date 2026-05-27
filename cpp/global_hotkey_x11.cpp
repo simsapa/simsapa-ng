@@ -14,13 +14,18 @@
 
 #include "global_hotkey_manager.h"
 
+#include <QClipboard>
 #include <QGuiApplication>
 #include <QTimer>
+
+extern "C" void log_info_c(const char* msg);
+extern "C" void log_error_c(const char* msg);
 
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>
 #include <X11/keysym.h>
 #include <X11/extensions/record.h>
+#include <X11/extensions/XTest.h>
 
 // X11 leaks `Bool`, `Status`, `min`, `max` as macros. Undef them after the
 // X11 headers so the rest of this TU (and any later Qt headers) is clean.
@@ -276,21 +281,42 @@ void GlobalHotkeyManager::handleRecordEvent(void* dataPtr) {
 }
 
 bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
+    log_info_c(QString("global_hotkey[x11]: checkState vk=0x%1 mod=0x%2 state2=%3 "
+                       "isCopyCombo=%4")
+               .arg(vk, 0, 16).arg(mod, 0, 16)
+               .arg(m_state2 ? "true" : "false")
+               .arg(isCopyToClipboardKey(vk, mod) ? "true" : "false")
+               .toUtf8().constData());
+
     if (m_state2) {
         waitKey2(); // cancel pending wait
 
         if (m_state2waiter.key2 == vk && m_state2waiter.modifier == mod) {
+            log_info_c(QString("global_hotkey[x11]: second-chord MATCH, emit "
+                               "hotkeyActivated(handle=%1)")
+                       .arg(m_state2waiter.handle).toUtf8().constData());
             emit hotkeyActivated(m_state2waiter.handle);
             return true;
         }
+        log_info_c("global_hotkey[x11]: state2 was set but second chord didn't match, "
+                   "falling through to first-chord matching");
     }
 
     for (const HotkeyEntry& hs : m_hotkeys) {
         if (hs.key == vk && hs.modifier == mod) {
             if (hs.key2 == 0) {
+                log_info_c(QString("global_hotkey[x11]: single-chord MATCH, emit "
+                                   "hotkeyActivated(handle=%1) — note: copy key "
+                                   "not grabbed so foreground app already has it")
+                           .arg(hs.handle).toUtf8().constData());
                 emit hotkeyActivated(hs.handle);
                 return true;
             }
+
+            log_info_c(QString("global_hotkey[x11]: first-chord MATCH (vk=0x%1 "
+                               "mod=0x%2), arming state2 with key2=0x%3")
+                       .arg(hs.key, 0, 16).arg(hs.modifier, 0, 16)
+                       .arg(hs.key2, 0, 16).toUtf8().constData());
 
             m_state2       = true;
             m_state2waiter = hs;
@@ -301,7 +327,14 @@ bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
             if ((isCopyToClipboardKey(hs.key, hs.modifier) ||
                  !isCopyToClipboardKey(hs.key2, hs.modifier)) &&
                 !isKeyGrabbed(hs.key2, hs.modifier)) {
+                log_info_c(QString("global_hotkey[x11]: grabbing second-key chord "
+                                   "key2=0x%1 mod=0x%2 for 500ms window")
+                           .arg(hs.key2, 0, 16).arg(hs.modifier, 0, 16)
+                           .toUtf8().constData());
                 m_keyToUngrab = grabKey(hs.key2, hs.modifier);
+            } else {
+                log_info_c("global_hotkey[x11]: NOT grabbing second key (it is "
+                           "itself a copy combo — relying on XRecord observation)");
             }
             return true;
         }
@@ -372,10 +405,21 @@ bool GlobalHotkeyManager::registerHotkey(const QKeySequence& sequence, int handl
 
     m_hotkeys.append(HotkeyEntry(vk, vk2, mod, handle, 0));
 
+    log_info_c(QString("global_hotkey[x11]: registerHotkey vk=0x%1 vk2=0x%2 "
+                       "mod=0x%3 firstIsCopyCombo=%4 secondIsCopyCombo=%5")
+               .arg(vk, 0, 16).arg(vk2, 0, 16).arg(mod, 0, 16)
+               .arg(isCopyToClipboardKey(vk, mod) ? "true" : "false")
+               .arg(vk2 ? (isCopyToClipboardKey(vk2, mod) ? "true" : "false") : "n/a")
+               .toUtf8().constData());
+
     // Don't grab Ctrl+C globally; intercepting it would block the user's
     // own copy in the foreground app. XRecord observes the press anyway.
     if (!isCopyToClipboardKey(vk, mod)) {
+        log_info_c("global_hotkey[x11]: XGrabKey'ing first chord (not a copy combo)");
         grabKey(vk, mod);
+    } else {
+        log_info_c("global_hotkey[x11]: NOT grabbing first chord (it is a copy "
+                   "combo — XRecord observation only, so foreground app still copies)");
     }
     return true;
 }
@@ -398,6 +442,65 @@ void GlobalHotkeyManager::ungrabKey(GrabbedKeys::iterator it) {
         }
     }
     m_grabbedKeys.erase(it);
+}
+
+void GlobalHotkeyManager::captureSelectionToClipboard() {
+    // On X11 the foreground app already exposes the user's current selection
+    // via the PRIMARY selection (the middle-click buffer), updated
+    // automatically on every text selection — no copy keystroke required.
+    // Reading PRIMARY is far more reliable than synthesizing Ctrl+C because:
+    //   * it works regardless of binding (Ctrl+G, Ctrl+Alt+L, anything),
+    //   * it doesn't fight the user's physical modifier state,
+    //   * it isn't filtered by apps that ignore XTest-injected keystrokes,
+    //   * it doesn't fire SIGINT if focus happens to be on a terminal.
+    // If PRIMARY is empty (rare: apps that don't honour it, or the user
+    // hasn't selected anything since the app started) we fall back to
+    // synthesizing Ctrl+C.
+    QClipboard* cb = QGuiApplication::clipboard();
+    if (cb) {
+        QString primary = cb->text(QClipboard::Selection);
+        log_info_c(QString("global_hotkey[x11]: PRIMARY selection len=%1 "
+                           "preview='%2'")
+                   .arg(primary.length())
+                   .arg(primary.left(40).replace('\n', "\\n"))
+                   .toUtf8().constData());
+        if (!primary.isEmpty()) {
+            cb->setText(primary, QClipboard::Clipboard);
+            return;
+        }
+    }
+
+    Display* display = xDisplay();
+    if (!display || !m_cCode) {
+        log_error_c("global_hotkey[x11]: PRIMARY empty AND no display/C keycode "
+                    "for XTest fallback");
+        return;
+    }
+
+    // Fallback: synthesize Ctrl+C so the foreground app performs its own copy.
+    // Use XTest rather than XSendEvent so the events look "real" to the focused
+    // client (XSendEvent sets the synthetic flag, which many clients filter).
+    //
+    // Only synthesize the Ctrl press/release if the user isn't currently
+    // holding Ctrl physically — otherwise X11's modifier book-keeping gets
+    // confused: a synthetic Ctrl-up while the physical key is still down
+    // makes the foreground app see a bare `C` and corrupts the user's later
+    // physical Ctrl release. Mirrors the Win backend's GetAsyncKeyState dance.
+    KeyCode ctrl = m_lCtrlCode ? m_lCtrlCode : XKeysymToKeycode(display, XK_Control_L);
+    const bool ctrlAlreadyHeld = (m_currentModifiers & ControlMask) != 0;
+    log_info_c(QString("global_hotkey[x11]: PRIMARY empty — falling back to "
+                       "XTest Ctrl+C (ctrl=0x%1 c=0x%2 ctrlAlreadyHeld=%3)")
+               .arg(ctrl, 0, 16).arg(m_cCode, 0, 16)
+               .arg(ctrlAlreadyHeld ? "true" : "false").toUtf8().constData());
+    if (!ctrlAlreadyHeld) {
+        XTestFakeKeyEvent(display, ctrl, True, 0);
+    }
+    XTestFakeKeyEvent(display, m_cCode, True,  0);
+    XTestFakeKeyEvent(display, m_cCode, False, 0);
+    if (!ctrlAlreadyHeld) {
+        XTestFakeKeyEvent(display, ctrl, False, 0);
+    }
+    XFlush(display);
 }
 
 #endif // WITH_X11

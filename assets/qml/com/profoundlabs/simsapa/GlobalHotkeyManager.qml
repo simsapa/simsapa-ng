@@ -23,6 +23,17 @@ Item {
         return "http://localhost:4848";
     }
 
+    function is_macos(): bool {
+        return false;
+    }
+
+    function is_macos_accessibility_trusted(): bool {
+        return false;
+    }
+
+    function open_macos_accessibility_settings() {
+    }
+
     signal globalHotkeysChanged();
 
     signal globalDictionaryLookupRequested(query: string);
