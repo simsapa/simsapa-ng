@@ -14,6 +14,7 @@
 
 #include "global_hotkey_manager.h"
 
+#include <QClipboard>
 #include <QGuiApplication>
 #include <QTimer>
 
@@ -444,22 +445,61 @@ void GlobalHotkeyManager::ungrabKey(GrabbedKeys::iterator it) {
 }
 
 void GlobalHotkeyManager::captureSelectionToClipboard() {
+    // On X11 the foreground app already exposes the user's current selection
+    // via the PRIMARY selection (the middle-click buffer), updated
+    // automatically on every text selection — no copy keystroke required.
+    // Reading PRIMARY is far more reliable than synthesizing Ctrl+C because:
+    //   * it works regardless of binding (Ctrl+G, Ctrl+Alt+L, anything),
+    //   * it doesn't fight the user's physical modifier state,
+    //   * it isn't filtered by apps that ignore XTest-injected keystrokes,
+    //   * it doesn't fire SIGINT if focus happens to be on a terminal.
+    // If PRIMARY is empty (rare: apps that don't honour it, or the user
+    // hasn't selected anything since the app started) we fall back to
+    // synthesizing Ctrl+C.
+    QClipboard* cb = QGuiApplication::clipboard();
+    if (cb) {
+        QString primary = cb->text(QClipboard::Selection);
+        log_info_c(QString("global_hotkey[x11]: PRIMARY selection len=%1 "
+                           "preview='%2'")
+                   .arg(primary.length())
+                   .arg(primary.left(40).replace('\n', "\\n"))
+                   .toUtf8().constData());
+        if (!primary.isEmpty()) {
+            cb->setText(primary, QClipboard::Clipboard);
+            return;
+        }
+    }
+
     Display* display = xDisplay();
     if (!display || !m_cCode) {
-        log_error_c("global_hotkey[x11]: captureSelectionToClipboard — no display or C keycode");
+        log_error_c("global_hotkey[x11]: PRIMARY empty AND no display/C keycode "
+                    "for XTest fallback");
         return;
     }
-    // Synthesize Ctrl+C so the foreground app performs its own copy. We use
-    // XTest rather than XSendEvent so the events look "real" to the focused
+
+    // Fallback: synthesize Ctrl+C so the foreground app performs its own copy.
+    // Use XTest rather than XSendEvent so the events look "real" to the focused
     // client (XSendEvent sets the synthetic flag, which many clients filter).
+    //
+    // Only synthesize the Ctrl press/release if the user isn't currently
+    // holding Ctrl physically — otherwise X11's modifier book-keeping gets
+    // confused: a synthetic Ctrl-up while the physical key is still down
+    // makes the foreground app see a bare `C` and corrupts the user's later
+    // physical Ctrl release. Mirrors the Win backend's GetAsyncKeyState dance.
     KeyCode ctrl = m_lCtrlCode ? m_lCtrlCode : XKeysymToKeycode(display, XK_Control_L);
-    log_info_c(QString("global_hotkey[x11]: synthesizing Ctrl+C via XTest "
-                       "(ctrl=0x%1 c=0x%2)")
-               .arg(ctrl, 0, 16).arg(m_cCode, 0, 16).toUtf8().constData());
-    XTestFakeKeyEvent(display, ctrl,     True,  0);
-    XTestFakeKeyEvent(display, m_cCode,  True,  0);
-    XTestFakeKeyEvent(display, m_cCode,  False, 0);
-    XTestFakeKeyEvent(display, ctrl,     False, 0);
+    const bool ctrlAlreadyHeld = (m_currentModifiers & ControlMask) != 0;
+    log_info_c(QString("global_hotkey[x11]: PRIMARY empty — falling back to "
+                       "XTest Ctrl+C (ctrl=0x%1 c=0x%2 ctrlAlreadyHeld=%3)")
+               .arg(ctrl, 0, 16).arg(m_cCode, 0, 16)
+               .arg(ctrlAlreadyHeld ? "true" : "false").toUtf8().constData());
+    if (!ctrlAlreadyHeld) {
+        XTestFakeKeyEvent(display, ctrl, True, 0);
+    }
+    XTestFakeKeyEvent(display, m_cCode, True,  0);
+    XTestFakeKeyEvent(display, m_cCode, False, 0);
+    if (!ctrlAlreadyHeld) {
+        XTestFakeKeyEvent(display, ctrl, False, 0);
+    }
     XFlush(display);
 }
 
