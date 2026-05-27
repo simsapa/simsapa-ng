@@ -24,8 +24,11 @@ compile_commands.json
 node_modules/
 project_tree.txt
 Simsapa-*.AppImage
+Simsapa-*.AppImage.sha256.txt
 Simsapa-*.dmg
+Simsapa-*.dmg.sha256.txt
 Simsapa-Setup-*.exe
+Simsapa-Setup-*.exe.sha256.txt
 redist/
 appimage-tools/
 Simsapa.AppDir/
