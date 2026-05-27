@@ -25,6 +25,12 @@ ColumnLayout {
     property var bindings: ({})
     property var default_bindings: ({})
 
+    // macOS Accessibility permission status, re-read on demand.
+    property bool is_macos: false
+    property bool ax_trusted: false
+
+    Logger { id: logger }
+
     // State for the capture dialog (one row → no need to track action_id list).
     property string capture_action_id: ""
 
@@ -41,6 +47,15 @@ ColumnLayout {
         root.hotkeys_enabled = !!cfg.enabled;
         root.bindings = cfg.bindings || {};
         root.default_bindings = defaults.bindings || {};
+        root.is_macos = ghm.is_macos();
+        root.refresh_ax_status();
+    }
+
+    function refresh_ax_status() {
+        if (root.is_macos) {
+            root.ax_trusted = ghm.is_macos_accessibility_trusted();
+            logger.info("GlobalHotkeysSection: AXTrusted=" + root.ax_trusted);
+        }
     }
 
     function open_capture_for(action_id: string) {
@@ -86,6 +101,78 @@ ColumnLayout {
         checked: root.hotkeys_enabled
         onToggled: {
             ghm.set_global_hotkeys_enabled(checked);
+        }
+    }
+
+    // macOS-only: Accessibility permission status + actions. The global
+    // hotkey synthesizes ⌘C in the foreground app to capture the current
+    // selection; without Accessibility permission both the AX query and the
+    // synthetic ⌘C are silently denied by the OS.
+    ColumnLayout {
+        Layout.fillWidth: true
+        spacing: 4
+        Layout.topMargin: 8
+        visible: root.is_macos
+
+        Label {
+            text: "macOS Accessibility permission"
+            font.pointSize: root.pointSize
+            font.bold: true
+            Layout.fillWidth: true
+        }
+
+        Label {
+            text: "Required so Simsapa can read the selected text from another "
+                + "application. Without it the global hotkey will return stale "
+                + "clipboard contents."
+            font.pointSize: root.pointSize - 2
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Label {
+                text: "Status:"
+                font.pointSize: root.pointSize
+            }
+            Label {
+                text: root.ax_trusted ? "Granted" : "Not granted"
+                font.pointSize: root.pointSize
+                font.bold: true
+                color: root.ax_trusted ? "#2e7d32" : "#c62828"
+            }
+            Item { Layout.fillWidth: true }
+            Button {
+                text: "Refresh"
+                font.pointSize: root.pointSize - 2
+                padding: 4
+                onClicked: root.refresh_ax_status()
+            }
+            Button {
+                text: "Open Accessibility Settings…"
+                font.pointSize: root.pointSize - 2
+                padding: 4
+                onClicked: {
+                    ghm.open_macos_accessibility_settings();
+                    root.refresh_ax_status();
+                }
+            }
+        }
+
+        Label {
+            text: "If the status still shows \"Not granted\" after enabling Simsapa "
+                + "in System Settings, the OS may have a stale entry pointing at "
+                + "an older binary path. Fix: in System Settings → Privacy & "
+                + "Security → Accessibility, remove Simsapa with the − button, "
+                + "then re-add it with + (or trigger the hotkey once to make the "
+                + "permission prompt re-appear), then click Refresh here."
+            font.pointSize: root.pointSize - 2
+            color: palette.placeholderText
+            wrapMode: Text.WordWrap
+            Layout.fillWidth: true
         }
     }
 

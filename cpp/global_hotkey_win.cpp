@@ -373,4 +373,25 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
     return false;
 }
 
+void GlobalHotkeyManager::captureSelectionToClipboard() {
+    // Synthesize Ctrl+C so the foreground app performs its own copy. We
+    // don't suspend hotkeys here: RegisterHotKey collisions are only an
+    // issue if the user's binding itself is Ctrl+C, in which case
+    // checkStateWin already re-emits via reEmitKeystroke and we'd be
+    // doubling up — but doubling a copy is harmless.
+    log_info_c("global_hotkey[win]: synthesizing Ctrl+C via SendInput");
+    INPUT events[4] = {};
+    events[0].type      = INPUT_KEYBOARD;
+    events[0].ki.wVk    = VK_CONTROL;
+    events[1].type      = INPUT_KEYBOARD;
+    events[1].ki.wVk    = 'C';
+    events[2].type      = INPUT_KEYBOARD;
+    events[2].ki.wVk    = 'C';
+    events[2].ki.dwFlags = KEYEVENTF_KEYUP;
+    events[3].type      = INPUT_KEYBOARD;
+    events[3].ki.wVk    = VK_CONTROL;
+    events[3].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(4, events, sizeof(INPUT));
+}
+
 #endif // Q_OS_WIN

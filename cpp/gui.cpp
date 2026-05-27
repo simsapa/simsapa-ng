@@ -151,15 +151,17 @@ static QString sanitize_lookup_query(const QString& raw) {
   return s;
 }
 
-/// Run the dictionary lookup activation pipeline. The hotkey may have fired
-/// just before the foreground app populated the clipboard with its own copy
-/// (for `Ctrl+C+C` the second `C` is the user's own copy keystroke), so we
-/// give X a brief moment to settle before reading.
+/// Run the dictionary lookup activation pipeline. To support all bindings
+/// (not just Cmd/Ctrl+C-based ones), we first ask the platform to capture
+/// the foreground app's current selection into the clipboard, then wait a
+/// short delay for that synthetic copy to be processed before reading
+/// QClipboard. 150 ms is conservative; browsers in particular need >80 ms.
 static void run_global_hotkey_lookup(int handle) {
   Q_UNUSED(handle);
-  // ~80 ms is conservative on X11; <50 ms is usually enough. Single-shot timer
-  // avoids blocking the GUI thread.
-  QTimer::singleShot(80, qApp, [](){
+  if (AppGlobals::global_hotkey_manager) {
+    AppGlobals::global_hotkey_manager->captureSelectionToClipboard();
+  }
+  QTimer::singleShot(150, qApp, [](){
     QClipboard* clipboard = QGuiApplication::clipboard();
     if (!clipboard) {
       log_error_c("global_hotkey: QGuiApplication::clipboard() returned null");
@@ -167,7 +169,7 @@ static void run_global_hotkey_lookup(int handle) {
     }
     QString raw = clipboard->text(QClipboard::Clipboard);
     QString query = sanitize_lookup_query(raw);
-    log_info_c(QString("global_hotkey: clipboard read (after 80ms) rawLen=%1 "
+    log_info_c(QString("global_hotkey: clipboard read (after 150ms) rawLen=%1 "
                        "sanitizedLen=%2 rawPreview='%3' sanitizedPreview='%4'")
                .arg(raw.length()).arg(query.length())
                .arg(raw.left(40).replace('\n', "\\n"))
@@ -294,6 +296,24 @@ extern "C" void reregister_global_hotkeys_c() {
 /// fresh attempt with a new sequence can surface a fresh dialog (task 8.6).
 extern "C" void reset_global_hotkey_error_flag_c() {
   s_global_hotkey_error_shown = false;
+}
+
+/// FFI: macOS-only — live status of AXIsProcessTrusted(). Returns false on
+/// non-macOS builds so the settings UI hides the Accessibility section.
+extern "C" bool macos_is_accessibility_trusted_c() {
+#ifdef Q_OS_MACOS
+  return GlobalHotkeyManager::macIsAccessibilityTrusted();
+#else
+  return false;
+#endif
+}
+
+/// FFI: macOS-only — opens System Settings → Privacy & Security →
+/// Accessibility. No-op on non-macOS builds.
+extern "C" void macos_open_accessibility_settings_c() {
+#ifdef Q_OS_MACOS
+  GlobalHotkeyManager::macOpenAccessibilitySettings();
+#endif
 }
 
 int start(int argc, char* argv[]) {

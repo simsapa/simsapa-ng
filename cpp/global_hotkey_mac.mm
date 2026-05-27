@@ -487,38 +487,17 @@ void GlobalHotkeyManager::checkStateMac(int hkId) {
             continue;
         }
 
-        // First chord: if it's Cmd+C, capture the user's selection now.
+        // Selection capture is no longer done here on the first chord —
+        // it's done uniformly at activation time via captureSelectionToClipboard()
+        // (called from gui.cpp's run_global_hotkey_lookup), so single-chord
+        // bindings like Cmd+G also get a fresh copy. Keeping this branch as a
+        // no-op log line for diagnostic continuity.
         if (hs.key == m_macKeyC && hs.modifier == cmdKey) {
-            log_info_c("global_hotkey[mac]: first chord is Cmd+C — running AX "
-                       "selection capture (then synth Cmd+C fallback)");
-            checkAndRequestAccessibilityPermission();
-
-            QString clipBefore = QGuiApplication::clipboard()->text(QClipboard::Clipboard);
-            log_info_c(QString("global_hotkey[mac]: clipboard BEFORE capture: "
-                               "len=%1 preview='%2'")
-                       .arg(clipBefore.length())
-                       .arg(clipBefore.left(40).replace('\n', "\\n"))
-                       .toUtf8().constData());
-
-            QString text = getSelectedTextViaAxApi();
-            if (!text.isEmpty()) {
-                log_info_c(QString("global_hotkey[mac]: AX path SUCCEEDED, "
-                                   "writing %1 chars to clipboard").arg(text.length())
-                           .toUtf8().constData());
-                QGuiApplication::clipboard()->setText(text);
-            } else {
-                log_info_c("global_hotkey[mac]: AX returned empty — falling back to "
-                           "synth Cmd+C (suspend hotkeys → post → resume)");
-                // Re-emit Cmd+C so the foreground app performs its own copy.
-                // Suspend our grabs first so we don't trigger ourselves.
-                suspendHotkeysMac();
-                sendCmdC();
-                resumeHotkeysMac();
-            }
+            log_info_c("global_hotkey[mac]: first chord is Cmd+C — selection "
+                       "capture deferred to activation handler");
         } else {
             log_info_c(QString("global_hotkey[mac]: first chord is NOT Cmd+C "
-                               "(key=0x%1 mod=0x%2) — no AX/synth needed, user's own "
-                               "copy keystroke is unrelated to this hotkey")
+                               "(key=0x%1 mod=0x%2)")
                        .arg(hs.key, 0, 16).arg(hs.modifier, 0, 16)
                        .toUtf8().constData());
         }
@@ -543,6 +522,47 @@ void GlobalHotkeyManager::checkStateMac(int hkId) {
 
     log_info_c("global_hotkey[mac]: no hotkey matched this hkId — clearing state2");
     m_state2 = false;
+}
+
+void GlobalHotkeyManager::captureSelectionToClipboard() {
+    checkAndRequestAccessibilityPermission();
+    if (!AXIsProcessTrusted()) {
+        log_error_c("global_hotkey[mac]: cannot capture selection — "
+                    "AXIsProcessTrusted() is false");
+        return;
+    }
+
+    QString clipBefore = QGuiApplication::clipboard()->text(QClipboard::Clipboard);
+    log_info_c(QString("global_hotkey[mac]: capture begin — clipboard before "
+                       "len=%1 preview='%2'")
+               .arg(clipBefore.length())
+               .arg(clipBefore.left(40).replace('\n', "\\n"))
+               .toUtf8().constData());
+
+    QString text = getSelectedTextViaAxApi();
+    if (!text.isEmpty()) {
+        log_info_c(QString("global_hotkey[mac]: AX path SUCCEEDED, writing %1 "
+                           "chars to clipboard").arg(text.length())
+                   .toUtf8().constData());
+        QGuiApplication::clipboard()->setText(text);
+        return;
+    }
+
+    log_info_c("global_hotkey[mac]: AX returned empty — synth Cmd+C "
+               "(suspend hotkeys → post → resume)");
+    suspendHotkeysMac();
+    sendCmdC();
+    resumeHotkeysMac();
+}
+
+bool GlobalHotkeyManager::macIsAccessibilityTrusted() {
+    return AXIsProcessTrusted();
+}
+
+void GlobalHotkeyManager::macOpenAccessibilitySettings() {
+    NSURL* url = [NSURL URLWithString:
+        @"x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"];
+    [[NSWorkspace sharedWorkspace] openURL:url];
 }
 
 #endif // Q_OS_MACOS

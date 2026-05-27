@@ -163,4 +163,8 @@ quint32 GlobalHotkeyManager::nativeKey(int qtKey) const {
     return 0;
 }
 
+void GlobalHotkeyManager::captureSelectionToClipboard() {
+    // No-op on unsupported platforms.
+}
+
 #endif

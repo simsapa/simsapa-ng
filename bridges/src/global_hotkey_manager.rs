@@ -26,6 +26,14 @@ unsafe extern "C" {
     /// Defined in `cpp/gui.cpp`. Clears the "registration error already
     /// shown this session" flag.
     fn reset_global_hotkey_error_flag_c();
+    /// macOS-only. Returns true iff AXIsProcessTrusted() is true at the
+    /// moment of the call. On non-macOS builds this is a no-op stub that
+    /// returns true so the UI hides the AX section entirely (gated by
+    /// `is_macos()`).
+    fn macos_is_accessibility_trusted_c() -> bool;
+    /// macOS-only. Opens System Settings → Privacy & Security →
+    /// Accessibility. No-op on other platforms.
+    fn macos_open_accessibility_settings_c();
 }
 
 #[cxx_qt::bridge]
@@ -65,6 +73,22 @@ pub mod qobject {
 
         #[qinvokable]
         fn get_api_url(self: &GlobalHotkeyManager) -> QString;
+
+        /// True iff the compile-time target is macOS. Used by QML to
+        /// conditionally show the Accessibility-permission section.
+        #[qinvokable]
+        fn is_macos(self: &GlobalHotkeyManager) -> bool;
+
+        /// macOS-only: live status of AXIsProcessTrusted(). Always false on
+        /// non-macOS builds. Re-read on demand from QML (not cached).
+        #[qinvokable]
+        fn is_macos_accessibility_trusted(self: &GlobalHotkeyManager) -> bool;
+
+        /// macOS-only: deep-link to System Settings → Privacy & Security →
+        /// Accessibility so the user can grant/revoke permission. No-op on
+        /// other platforms (the OS exposes no programmatic revoke/re-grant).
+        #[qinvokable]
+        fn open_macos_accessibility_settings(self: &GlobalHotkeyManager);
 
         #[qsignal]
         #[cxx_name = "globalHotkeysChanged"]
@@ -142,6 +166,24 @@ impl qobject::GlobalHotkeyManager {
 
     pub fn get_api_url(&self) -> QString {
         QString::from(&get_app_data().api_url)
+    }
+
+    pub fn is_macos(&self) -> bool {
+        cfg!(target_os = "macos")
+    }
+
+    pub fn is_macos_accessibility_trusted(&self) -> bool {
+        if cfg!(target_os = "macos") {
+            unsafe { macos_is_accessibility_trusted_c() }
+        } else {
+            false
+        }
+    }
+
+    pub fn open_macos_accessibility_settings(&self) {
+        if cfg!(target_os = "macos") {
+            unsafe { macos_open_accessibility_settings_c(); }
+        }
     }
 }
 

@@ -24,6 +24,7 @@ extern "C" void log_error_c(const char* msg);
 #include <X11/Xlibint.h>
 #include <X11/keysym.h>
 #include <X11/extensions/record.h>
+#include <X11/extensions/XTest.h>
 
 // X11 leaks `Bool`, `Status`, `min`, `max` as macros. Undef them after the
 // X11 headers so the rest of this TU (and any later Qt headers) is clean.
@@ -440,6 +441,26 @@ void GlobalHotkeyManager::ungrabKey(GrabbedKeys::iterator it) {
         }
     }
     m_grabbedKeys.erase(it);
+}
+
+void GlobalHotkeyManager::captureSelectionToClipboard() {
+    Display* display = xDisplay();
+    if (!display || !m_cCode) {
+        log_error_c("global_hotkey[x11]: captureSelectionToClipboard — no display or C keycode");
+        return;
+    }
+    // Synthesize Ctrl+C so the foreground app performs its own copy. We use
+    // XTest rather than XSendEvent so the events look "real" to the focused
+    // client (XSendEvent sets the synthetic flag, which many clients filter).
+    KeyCode ctrl = m_lCtrlCode ? m_lCtrlCode : XKeysymToKeycode(display, XK_Control_L);
+    log_info_c(QString("global_hotkey[x11]: synthesizing Ctrl+C via XTest "
+                       "(ctrl=0x%1 c=0x%2)")
+               .arg(ctrl, 0, 16).arg(m_cCode, 0, 16).toUtf8().constData());
+    XTestFakeKeyEvent(display, ctrl,     True,  0);
+    XTestFakeKeyEvent(display, m_cCode,  True,  0);
+    XTestFakeKeyEvent(display, m_cCode,  False, 0);
+    XTestFakeKeyEvent(display, ctrl,     False, 0);
+    XFlush(display);
 }
 
 #endif // WITH_X11
