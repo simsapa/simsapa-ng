@@ -21,6 +21,8 @@ ApplicationWindow {
     readonly property bool is_desktop: !root.is_mobile
     readonly property int pointSize: is_mobile ? 16 : 12
 
+    KeySequenceDisplay { id: key_seq_display }
+
     property int top_bar_margin: is_mobile ? 24 : 0
     property var database_validation_dialog: null
 
@@ -158,7 +160,7 @@ ApplicationWindow {
             // Store pending state and show conflict dialog
             root.pending_shortcut = shortcut;
             root.conflicting_action_id = conflict_action;
-            shortcut_conflict_dialog.shortcut = shortcut;
+            shortcut_conflict_dialog.shortcut = key_seq_display.canonical_to_display(shortcut);
             shortcut_conflict_dialog.conflicting_action_name = root.action_names[conflict_action] || conflict_action;
             shortcut_conflict_dialog.open();
         } else {
@@ -858,7 +860,7 @@ ApplicationWindow {
                                                 required property string modelData
                                                 required property int index
 
-                                                text: modelData
+                                                text: key_seq_display.canonical_to_display(modelData)
                                                 font.pointSize: root.pointSize - 1
                                                 padding: 5
 

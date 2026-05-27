@@ -27,6 +27,7 @@ fn main() {
         "../assets/qml/SearchBarInput.qml",
         "../assets/qml/FulltextResults.qml",
         "../assets/qml/CMenuItem.qml",
+        "../assets/qml/KeySequenceDisplay.qml",
         "../assets/qml/SuttaTabButton.qml",
         "../assets/qml/TabListDialog.qml",
         "../assets/qml/SuttaHtmlView.qml",

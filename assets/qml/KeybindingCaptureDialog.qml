@@ -17,6 +17,11 @@ ApplicationWindow {
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
+    readonly property bool is_macos: Qt.platform.os === "osx"
+
+    KeySequenceDisplay { id: key_seq_display }
+
+    readonly property string display_shortcut: key_seq_display.canonical_to_display(root.captured_shortcut)
 
     readonly property int pointSize: is_mobile ? 14 : 12
     required property int top_bar_margin
@@ -335,7 +340,7 @@ ApplicationWindow {
                 text: {
                     if (root.allow_double_tap) {
                         if (root.waiting_for_second_key) {
-                            return "Now press the second key (e.g. " + root.first_chord_sequence
+                            return "Now press the second key (e.g. " + key_seq_display.canonical_to_display(root.first_chord_sequence)
                                 + " then the key again)…";
                         }
                         return "Press the modifier+key combination, then press the second key:";
@@ -367,7 +372,7 @@ ApplicationWindow {
 
                 Label {
                     anchors.centerIn: parent
-                    text: root.captured_shortcut !== "" ? root.captured_shortcut : (key_capture_area.activeFocus ? "Press a key combination..." : "Click here to capture shortcut")
+                    text: root.captured_shortcut !== "" ? root.display_shortcut : (key_capture_area.activeFocus ? "Press a key combination..." : "Click here to capture shortcut")
                     font.pointSize: root.pointSize + 2
                     font.bold: root.is_valid_shortcut
                     color: root.is_valid_shortcut ? palette.text : palette.placeholderText
@@ -392,6 +397,9 @@ ApplicationWindow {
                         // Don't reset double-tap waiting state: the user is
                         // still holding the modifier between the two taps.
                         if (!root.waiting_for_second_key) {
+                            // build_modifier_display returns canonical tokens
+                            // (Ctrl/Meta); display_shortcut will swap them on
+                            // macOS for the user-visible label.
                             root.captured_shortcut = root.build_modifier_display(event);
                             root.is_valid_shortcut = false;
                         }
@@ -448,8 +456,8 @@ ApplicationWindow {
             Label {
                 visible: root.captured_shortcut.trim() !== "" && !root.is_valid_shortcut
                 text: root.allow_double_tap
-                      ? "Invalid sequence. Expected Modifier+Key or Modifier+Key+Key (e.g. Ctrl+C+C)."
-                      : "Invalid sequence. Expected Modifier+Key (e.g. Ctrl+Shift+S)."
+                      ? "Invalid sequence. Expected Modifier+Key or Modifier+Key+Key (e.g. " + (root.is_macos ? "Command+C+C" : "Ctrl+C+C") + ")."
+                      : "Invalid sequence. Expected Modifier+Key (e.g. " + (root.is_macos ? "Command+Shift+S" : "Ctrl+Shift+S") + ")."
                 font.pointSize: root.pointSize - 1
                 color: "#c0392b"
                 wrapMode: Text.WordWrap
@@ -459,7 +467,7 @@ ApplicationWindow {
             // Current shortcut info (when editing)
             Label {
                 visible: !root.is_new_shortcut && root.current_shortcut !== ""
-                text: `Current: ${root.current_shortcut}`
+                text: `Current: ${key_seq_display.canonical_to_display(root.current_shortcut)}`
                 font.pointSize: root.pointSize - 1
                 color: palette.placeholderText
                 Layout.fillWidth: true
@@ -480,22 +488,24 @@ ApplicationWindow {
                     id: manual_input
                     Layout.fillWidth: true
                     font.pointSize: root.pointSize
-                    placeholderText: "e.g. Ctrl+Shift+S"
+                    placeholderText: root.is_macos ? "e.g. Command+Shift+S" : "e.g. Ctrl+Shift+S"
 
                     // Update text field when captured_shortcut changes from key capture
                     Connections {
                         target: root
                         function onCaptured_shortcutChanged() {
                             if (!manual_input.activeFocus) {
-                                manual_input.text = root.captured_shortcut;
+                                manual_input.text = root.display_shortcut;
                             }
                         }
                     }
 
                     onTextEdited: {
-                        // Only update when user actually edits (not programmatic changes)
-                        root.captured_shortcut = text;
-                        root.is_valid_shortcut = root.is_sequence_valid(text);
+                        // User types display form (Command/Ctrl on macOS); store
+                        // canonical so QKeySequence and storage stay platform-neutral.
+                        let canonical = key_seq_display.display_to_canonical(text);
+                        root.captured_shortcut = canonical;
+                        root.is_valid_shortcut = root.is_sequence_valid(canonical);
                     }
 
                     onAccepted: {
@@ -507,7 +517,7 @@ ApplicationWindow {
                     }
 
                     Component.onCompleted: {
-                        text = root.captured_shortcut;
+                        text = root.display_shortcut;
                     }
                 }
             }

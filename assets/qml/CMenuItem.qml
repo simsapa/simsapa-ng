@@ -24,6 +24,8 @@ T.MenuItem {
         control.action.triggered.connect(control.action_triggered);
     }
 
+    property KeySequenceDisplay key_seq_display: KeySequenceDisplay {}
+
     function action_seq_to_str(action) {
         if (!action) return "";
         if (!action.shortcut) return "";
@@ -32,7 +34,7 @@ T.MenuItem {
         let seq = action.shortcut.sequences;
         let a = [];
         for (var i = 0; i < seq.length; i++) {
-            a.push(seq[i].toString());
+            a.push(control.key_seq_display.canonical_to_display(seq[i].toString()));
         }
         return a.join(", ");
     }
