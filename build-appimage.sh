@@ -315,6 +315,11 @@ create_appimage() {
             "./$APPIMAGE_NAME" --appimage-help 2>&1 || true
         fi
 
+        # Generate SHA256 checksum
+        print_status "Generating SHA256 checksum..."
+        sha256sum "$APPIMAGE_NAME" > "$APPIMAGE_NAME.sha256.txt"
+        print_status "Checksum written to $APPIMAGE_NAME.sha256.txt"
+
         # Show file info
         ls -lh "$APPIMAGE_NAME"
         file "$APPIMAGE_NAME"

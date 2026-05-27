@@ -537,6 +537,12 @@ if (-not $SkipInstaller) {
         Write-Status "Installer created successfully: $installerName"
         $installerSize = (Get-Item $installerName).Length / 1MB
         Write-Status "Installer size: $([math]::Round($installerSize, 2)) MB"
+
+        # Generate SHA256 checksum
+        Write-Status "Generating SHA256 checksum..."
+        $checksumFile = "$installerName.sha256.txt"
+        "$((Get-FileHash $installerName -Algorithm SHA256).Hash.ToLower())  $installerName" | Set-Content -Encoding ASCII $checksumFile
+        Write-Status "Checksum written to $checksumFile"
     } else {
         Write-Warning "Installer was compiled but not found at expected location"
     }

@@ -390,6 +390,13 @@ create_dmg() {
             exit 1
         fi
     fi
+
+    # Generate SHA256 checksum
+    if [ -f "$dmg_name" ]; then
+        print_status "Generating SHA256 checksum..."
+        shasum -a 256 "$dmg_name" > "$dmg_name.sha256.txt"
+        print_status "Checksum written to $dmg_name.sha256.txt"
+    fi
 }
 
 # Code signing (optional - requires Apple Developer account)
