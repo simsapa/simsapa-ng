@@ -66,7 +66,7 @@ ApplicationWindow {
     property bool is_loading: false
     property bool has_query_error: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible && !info_dialog.visible)
+    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible && !info_dialog.visible && !related_sutta_not_found_dialog.visible)
 
     // Collapsible advanced sub-sections
     property bool is_filters_collapsed: false
