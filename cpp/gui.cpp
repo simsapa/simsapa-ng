@@ -161,9 +161,18 @@ static void run_global_hotkey_lookup(int handle) {
   // avoids blocking the GUI thread.
   QTimer::singleShot(80, qApp, [](){
     QClipboard* clipboard = QGuiApplication::clipboard();
-    if (!clipboard) return;
+    if (!clipboard) {
+      log_error_c("global_hotkey: QGuiApplication::clipboard() returned null");
+      return;
+    }
     QString raw = clipboard->text(QClipboard::Clipboard);
     QString query = sanitize_lookup_query(raw);
+    log_info_c(QString("global_hotkey: clipboard read (after 80ms) rawLen=%1 "
+                       "sanitizedLen=%2 rawPreview='%3' sanitizedPreview='%4'")
+               .arg(raw.length()).arg(query.length())
+               .arg(raw.left(40).replace('\n', "\\n"))
+               .arg(query.left(40).replace('\n', "\\n"))
+               .toUtf8().constData());
     if (query.isEmpty()) {
       log_info_c("global_hotkey: clipboard empty after sanitize, aborting");
       return;

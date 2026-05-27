@@ -11,6 +11,9 @@
 #include <QStringList>
 #include <QTimer>
 
+extern "C" void log_info_c(const char* msg);
+extern "C" void log_error_c(const char* msg);
+
 GlobalHotkeyManager::GlobalHotkeyManager(QObject* parent)
     : QThread(parent), m_state2(false) {
 #ifdef WITH_X11
@@ -30,10 +33,13 @@ GlobalHotkeyManager::~GlobalHotkeyManager() {
 }
 
 void GlobalHotkeyManager::waitKey2() {
+    log_info_c(QString("global_hotkey: waitKey2() clearing state2 (was %1)")
+               .arg(m_state2 ? "true" : "false").toUtf8().constData());
     m_state2 = false;
 
 #ifdef WITH_X11
     if (m_keyToUngrab != m_grabbedKeys.end()) {
+        log_info_c("global_hotkey: waitKey2() releasing second-key grab");
         ungrabKey(m_keyToUngrab);
         m_keyToUngrab = m_grabbedKeys.end();
     }

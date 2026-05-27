@@ -40,6 +40,9 @@
 #include <QString>
 #include <QTimer>
 
+extern "C" void log_info_c(const char* msg);
+extern "C" void log_error_c(const char* msg);
+
 #import <AppKit/AppKit.h>
 #import <ApplicationServices/ApplicationServices.h>
 #import <Carbon/Carbon.h>
@@ -148,24 +151,63 @@ QString getSelectedTextViaAxApi() {
     QString result;
     AXUIElementRef systemWide = AXUIElementCreateSystemWide();
     if (!systemWide) {
+        log_error_c("global_hotkey[mac]: AX systemWide is null");
         return result;
     }
 
     AXUIElementRef focused = nullptr;
     AXError err = AXUIElementCopyAttributeValue(
         systemWide, kAXFocusedUIElementAttribute, (CFTypeRef*)&focused);
-    if (err == kAXErrorSuccess && focused) {
-        CFTypeRef selected = nullptr;
-        err = AXUIElementCopyAttributeValue(
-            focused, kAXSelectedTextAttribute, (CFTypeRef*)&selected);
-        if (err == kAXErrorSuccess && selected) {
-            if (CFGetTypeID(selected) == CFStringGetTypeID()) {
-                result = QString::fromCFString((CFStringRef)selected);
-            }
-            CFRelease(selected);
-        }
-        CFRelease(focused);
+    if (err != kAXErrorSuccess || !focused) {
+        log_info_c(QString("global_hotkey[mac]: AX kAXFocusedUIElementAttribute "
+                           "FAILED err=%1 focused=%2")
+                   .arg((int)err).arg(focused ? "non-null" : "null")
+                   .toUtf8().constData());
+        CFRelease(systemWide);
+        return result;
     }
+
+    // Identify which app owns the focused element for diagnostics.
+    pid_t focusedPid = 0;
+    AXUIElementGetPid(focused, &focusedPid);
+    QString focusedAppName = "<unknown>";
+    if (focusedPid > 0) {
+        NSRunningApplication* runApp =
+            [NSRunningApplication runningApplicationWithProcessIdentifier:focusedPid];
+        if (runApp && runApp.localizedName) {
+            focusedAppName = QString::fromNSString(runApp.localizedName);
+        }
+    }
+
+    // Log the focused element's AX role for diagnostics.
+    QString roleStr = "<no-role>";
+    CFTypeRef roleRef = nullptr;
+    if (AXUIElementCopyAttributeValue(focused, kAXRoleAttribute, &roleRef) ==
+            kAXErrorSuccess && roleRef) {
+        if (CFGetTypeID(roleRef) == CFStringGetTypeID()) {
+            roleStr = QString::fromCFString((CFStringRef)roleRef);
+        }
+        CFRelease(roleRef);
+    }
+
+    CFTypeRef selected = nullptr;
+    err = AXUIElementCopyAttributeValue(
+        focused, kAXSelectedTextAttribute, (CFTypeRef*)&selected);
+    if (err == kAXErrorSuccess && selected) {
+        if (CFGetTypeID(selected) == CFStringGetTypeID()) {
+            result = QString::fromCFString((CFStringRef)selected);
+        }
+        CFRelease(selected);
+    }
+
+    log_info_c(QString("global_hotkey[mac]: AX query — focused app='%1' pid=%2 "
+                       "role='%3' err=%4 textLen=%5 textPreview='%6'")
+               .arg(focusedAppName).arg(focusedPid).arg(roleStr).arg((int)err)
+               .arg(result.length())
+               .arg(result.left(40).replace('\n', "\\n"))
+               .toUtf8().constData());
+
+    CFRelease(focused);
     CFRelease(systemWide);
     return result;
 }
@@ -253,6 +295,16 @@ bool GlobalHotkeyManager::registerHotkey(const QKeySequence& sequence, int handl
 
     HotkeyEntry entry(vk, vk2, mod, handle, firstId);
 
+    const bool firstIsCopy  = (vk == m_macKeyC && mod == cmdKey);
+    const bool secondIsCopy = vk2 && (vk2 == m_macKeyC && mod == cmdKey);
+    log_info_c(QString("global_hotkey[mac]: registerHotkey vk=0x%1 vk2=0x%2 "
+                       "mod=0x%3 firstIsCmdC=%4 secondIsCmdC=%5 firstId=%6 "
+                       "(same-key double-tap registers ONE Carbon hotkey only)")
+               .arg(vk, 0, 16).arg(vk2, 0, 16).arg(mod, 0, 16)
+               .arg(firstIsCopy ? "true" : "false")
+               .arg(vk2 ? (secondIsCopy ? "true" : "false") : "n/a")
+               .arg(firstId).toUtf8().constData());
+
     EventHotKeyID hkId{};
     hkId.signature = 'SMSP'; // 'Simsapa'
     hkId.id        = static_cast<UInt32>(firstId);
@@ -260,6 +312,8 @@ bool GlobalHotkeyManager::registerHotkey(const QKeySequence& sequence, int handl
     EventHotKeyRef ref1 = nullptr;
     OSStatus s = RegisterEventHotKey(vk, mod, hkId, GetApplicationEventTarget(), 0, &ref1);
     if (s != noErr) {
+        log_error_c(QString("global_hotkey[mac]: RegisterEventHotKey FAILED for "
+                            "first chord, OSStatus=%1").arg((int)s).toUtf8().constData());
         return false;
     }
     entry.hkRef = reinterpret_cast<void*>(ref1);
@@ -269,6 +323,9 @@ bool GlobalHotkeyManager::registerHotkey(const QKeySequence& sequence, int handl
         EventHotKeyRef ref2 = nullptr;
         s = RegisterEventHotKey(vk2, mod, hkId, GetApplicationEventTarget(), 0, &ref2);
         if (s != noErr) {
+            log_error_c(QString("global_hotkey[mac]: RegisterEventHotKey FAILED "
+                                "for second chord, OSStatus=%1").arg((int)s)
+                        .toUtf8().constData());
             UnregisterEventHotKey(ref1);
             return false;
         }
@@ -332,9 +389,18 @@ void GlobalHotkeyManager::resumeHotkeysMac() {
 
 void GlobalHotkeyManager::sendCmdC() {
     if (!m_macKeyC) {
+        log_error_c("global_hotkey[mac]: sendCmdC() bailing — m_macKeyC is 0");
         return;
     }
+    log_info_c(QString("global_hotkey[mac]: sendCmdC() posting synthetic Cmd+C "
+                       "(keycode=0x%1) via kCGAnnotatedSessionEventTap")
+               .arg(m_macKeyC, 0, 16).toUtf8().constData());
+
     CGEventSourceRef source = CGEventSourceCreate(kCGEventSourceStateCombinedSessionState);
+    if (!source) {
+        log_error_c("global_hotkey[mac]: CGEventSourceCreate returned NULL — likely "
+                    "missing Accessibility permission; synthetic Cmd+C may be ignored");
+    }
     const CGEventFlags cmd = kCGEventFlagMaskCommand;
 
     CGEventRef down = CGEventCreateKeyboardEvent(source, m_macKeyC, true);
@@ -350,6 +416,7 @@ void GlobalHotkeyManager::sendCmdC() {
     if (source) {
         CFRelease(source);
     }
+    log_info_c("global_hotkey[mac]: sendCmdC() done");
 }
 
 void GlobalHotkeyManager::checkAndRequestAccessibilityPermission() {
@@ -385,6 +452,16 @@ void GlobalHotkeyManager::checkAndRequestAccessibilityPermission() {
 }
 
 void GlobalHotkeyManager::checkStateMac(int hkId) {
+    log_info_c(QString("global_hotkey[mac]: checkStateMac hkId=%1 state2=%2 "
+                       "AXTrusted=%3 frontmostApp='%4'")
+               .arg(hkId)
+               .arg(m_state2 ? "true" : "false")
+               .arg(AXIsProcessTrusted() ? "true" : "false")
+               .arg(QString::fromNSString(
+                   [NSWorkspace sharedWorkspace].frontmostApplication.localizedName
+                       ?: @"<unknown>"))
+               .toUtf8().constData());
+
     // Awaiting the second chord of a double-tap?
     if (m_state2) {
         waitKey2(); // cancel pending wait
@@ -392,9 +469,15 @@ void GlobalHotkeyManager::checkStateMac(int hkId) {
         const bool sameRepeat =
             (hkId == m_state2waiter.id && m_state2waiter.key == m_state2waiter.key2);
         if (hkId == m_state2waiter.id + 1 || sameRepeat) {
+            log_info_c(QString("global_hotkey[mac]: second-chord MATCH "
+                               "(sameRepeat=%1), emit hotkeyActivated(handle=%2)")
+                       .arg(sameRepeat ? "true" : "false")
+                       .arg(m_state2waiter.handle).toUtf8().constData());
             emit hotkeyActivated(m_state2waiter.handle);
             return;
         }
+        log_info_c("global_hotkey[mac]: state2 was set but second chord didn't match, "
+                   "falling through to first-chord matching");
         // Fall through: the press might still match an unrelated hotkey.
     }
 
@@ -406,31 +489,59 @@ void GlobalHotkeyManager::checkStateMac(int hkId) {
 
         // First chord: if it's Cmd+C, capture the user's selection now.
         if (hs.key == m_macKeyC && hs.modifier == cmdKey) {
+            log_info_c("global_hotkey[mac]: first chord is Cmd+C — running AX "
+                       "selection capture (then synth Cmd+C fallback)");
             checkAndRequestAccessibilityPermission();
+
+            QString clipBefore = QGuiApplication::clipboard()->text(QClipboard::Clipboard);
+            log_info_c(QString("global_hotkey[mac]: clipboard BEFORE capture: "
+                               "len=%1 preview='%2'")
+                       .arg(clipBefore.length())
+                       .arg(clipBefore.left(40).replace('\n', "\\n"))
+                       .toUtf8().constData());
 
             QString text = getSelectedTextViaAxApi();
             if (!text.isEmpty()) {
+                log_info_c(QString("global_hotkey[mac]: AX path SUCCEEDED, "
+                                   "writing %1 chars to clipboard").arg(text.length())
+                           .toUtf8().constData());
                 QGuiApplication::clipboard()->setText(text);
             } else {
+                log_info_c("global_hotkey[mac]: AX returned empty — falling back to "
+                           "synth Cmd+C (suspend hotkeys → post → resume)");
                 // Re-emit Cmd+C so the foreground app performs its own copy.
                 // Suspend our grabs first so we don't trigger ourselves.
                 suspendHotkeysMac();
                 sendCmdC();
                 resumeHotkeysMac();
             }
+        } else {
+            log_info_c(QString("global_hotkey[mac]: first chord is NOT Cmd+C "
+                               "(key=0x%1 mod=0x%2) — no AX/synth needed, user's own "
+                               "copy keystroke is unrelated to this hotkey")
+                       .arg(hs.key, 0, 16).arg(hs.modifier, 0, 16)
+                       .toUtf8().constData());
         }
 
         if (hs.key2 == 0) {
+            log_info_c(QString("global_hotkey[mac]: single-chord MATCH, emit "
+                               "hotkeyActivated(handle=%1)").arg(hs.handle)
+                       .toUtf8().constData());
             emit hotkeyActivated(hs.handle);
             return;
         }
 
+        log_info_c(QString("global_hotkey[mac]: first-chord MATCH, arming state2 "
+                           "(key2=0x%1 mod=0x%2, 500ms window)")
+                   .arg(hs.key2, 0, 16).arg(hs.modifier, 0, 16)
+                   .toUtf8().constData());
         m_state2       = true;
         m_state2waiter = hs;
         QTimer::singleShot(500, this, &GlobalHotkeyManager::waitKey2);
         return;
     }
 
+    log_info_c("global_hotkey[mac]: no hotkey matched this hkId — clearing state2");
     m_state2 = false;
 }
 

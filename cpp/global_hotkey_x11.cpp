@@ -17,6 +17,9 @@
 #include <QGuiApplication>
 #include <QTimer>
 
+extern "C" void log_info_c(const char* msg);
+extern "C" void log_error_c(const char* msg);
+
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>
 #include <X11/keysym.h>
@@ -276,21 +279,42 @@ void GlobalHotkeyManager::handleRecordEvent(void* dataPtr) {
 }
 
 bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
+    log_info_c(QString("global_hotkey[x11]: checkState vk=0x%1 mod=0x%2 state2=%3 "
+                       "isCopyCombo=%4")
+               .arg(vk, 0, 16).arg(mod, 0, 16)
+               .arg(m_state2 ? "true" : "false")
+               .arg(isCopyToClipboardKey(vk, mod) ? "true" : "false")
+               .toUtf8().constData());
+
     if (m_state2) {
         waitKey2(); // cancel pending wait
 
         if (m_state2waiter.key2 == vk && m_state2waiter.modifier == mod) {
+            log_info_c(QString("global_hotkey[x11]: second-chord MATCH, emit "
+                               "hotkeyActivated(handle=%1)")
+                       .arg(m_state2waiter.handle).toUtf8().constData());
             emit hotkeyActivated(m_state2waiter.handle);
             return true;
         }
+        log_info_c("global_hotkey[x11]: state2 was set but second chord didn't match, "
+                   "falling through to first-chord matching");
     }
 
     for (const HotkeyEntry& hs : m_hotkeys) {
         if (hs.key == vk && hs.modifier == mod) {
             if (hs.key2 == 0) {
+                log_info_c(QString("global_hotkey[x11]: single-chord MATCH, emit "
+                                   "hotkeyActivated(handle=%1) — note: copy key "
+                                   "not grabbed so foreground app already has it")
+                           .arg(hs.handle).toUtf8().constData());
                 emit hotkeyActivated(hs.handle);
                 return true;
             }
+
+            log_info_c(QString("global_hotkey[x11]: first-chord MATCH (vk=0x%1 "
+                               "mod=0x%2), arming state2 with key2=0x%3")
+                       .arg(hs.key, 0, 16).arg(hs.modifier, 0, 16)
+                       .arg(hs.key2, 0, 16).toUtf8().constData());
 
             m_state2       = true;
             m_state2waiter = hs;
@@ -301,7 +325,14 @@ bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
             if ((isCopyToClipboardKey(hs.key, hs.modifier) ||
                  !isCopyToClipboardKey(hs.key2, hs.modifier)) &&
                 !isKeyGrabbed(hs.key2, hs.modifier)) {
+                log_info_c(QString("global_hotkey[x11]: grabbing second-key chord "
+                                   "key2=0x%1 mod=0x%2 for 500ms window")
+                           .arg(hs.key2, 0, 16).arg(hs.modifier, 0, 16)
+                           .toUtf8().constData());
                 m_keyToUngrab = grabKey(hs.key2, hs.modifier);
+            } else {
+                log_info_c("global_hotkey[x11]: NOT grabbing second key (it is "
+                           "itself a copy combo — relying on XRecord observation)");
             }
             return true;
         }
@@ -372,10 +403,21 @@ bool GlobalHotkeyManager::registerHotkey(const QKeySequence& sequence, int handl
 
     m_hotkeys.append(HotkeyEntry(vk, vk2, mod, handle, 0));
 
+    log_info_c(QString("global_hotkey[x11]: registerHotkey vk=0x%1 vk2=0x%2 "
+                       "mod=0x%3 firstIsCopyCombo=%4 secondIsCopyCombo=%5")
+               .arg(vk, 0, 16).arg(vk2, 0, 16).arg(mod, 0, 16)
+               .arg(isCopyToClipboardKey(vk, mod) ? "true" : "false")
+               .arg(vk2 ? (isCopyToClipboardKey(vk2, mod) ? "true" : "false") : "n/a")
+               .toUtf8().constData());
+
     // Don't grab Ctrl+C globally; intercepting it would block the user's
     // own copy in the foreground app. XRecord observes the press anyway.
     if (!isCopyToClipboardKey(vk, mod)) {
+        log_info_c("global_hotkey[x11]: XGrabKey'ing first chord (not a copy combo)");
         grabKey(vk, mod);
+    } else {
+        log_info_c("global_hotkey[x11]: NOT grabbing first chord (it is a copy "
+                   "combo — XRecord observation only, so foreground app still copies)");
     }
     return true;
 }
