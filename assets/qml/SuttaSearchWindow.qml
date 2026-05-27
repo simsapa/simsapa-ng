@@ -2119,7 +2119,7 @@ ${query_text}`;
         anchors.centerIn: parent
         modal: true
         standardButtons: Dialog.Ok | Dialog.Cancel
-        width: 450
+        width: Math.min(root.width - 40, 450)
 
         property string search_title: ""
 
