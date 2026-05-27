@@ -39,6 +39,10 @@ ColumnLayout {
         onGlobalHotkeysChanged: root.load_config()
     }
 
+    // Translates the canonical "Ctrl+C+C" stored form into the platform's
+    // native display form ("Command+C+C" on macOS, unchanged elsewhere).
+    KeySequenceDisplay { id: key_seq_display }
+
     Component.onCompleted: load_config()
 
     function load_config() {
@@ -115,16 +119,14 @@ ColumnLayout {
         visible: root.is_macos
 
         Label {
-            text: "macOS Accessibility permission"
+            text: "MacOS Accessibility permission"
             font.pointSize: root.pointSize
             font.bold: true
             Layout.fillWidth: true
         }
 
         Label {
-            text: "Required so Simsapa can read the selected text from another "
-                + "application. Without it the global hotkey will return stale "
-                + "clipboard contents."
+            text: "Required so Simsapa can read the selected text from another application."
             font.pointSize: root.pointSize - 2
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
@@ -165,10 +167,12 @@ ColumnLayout {
         Label {
             text: "If the status still shows \"Not granted\" after enabling Simsapa "
                 + "in System Settings, the OS may have a stale entry pointing at "
-                + "an older binary path. Fix: in System Settings → Privacy & "
-                + "Security → Accessibility, remove Simsapa with the − button, "
-                + "then re-add it with + (or trigger the hotkey once to make the "
-                + "permission prompt re-appear), then click Refresh here."
+                + "an older binary path. Open: System Settings → Privacy & "
+                + "Security → Allow assistive applications to control the computer. "
+                + "Remove Simsapa with the − (minus) button, "
+                + "then re-launch Simsapa and trigger the hotkey once to make the "
+                + "permission prompt re-appear."
+            visible: root.is_macos && !root.ax_trusted
             font.pointSize: root.pointSize - 2
             color: palette.placeholderText
             wrapMode: Text.WordWrap
@@ -204,7 +208,9 @@ ColumnLayout {
                 }
 
                 Button {
-                    text: hotkey_item.current_shortcut !== "" ? hotkey_item.current_shortcut : "(unset)"
+                    text: hotkey_item.current_shortcut !== ""
+                          ? key_seq_display.canonical_to_display(hotkey_item.current_shortcut)
+                          : "(unset)"
                     font.pointSize: root.pointSize - 1
                     padding: 5
                     onClicked: root.open_capture_for(hotkey_item.action_id)
@@ -225,7 +231,9 @@ ColumnLayout {
             }
 
             Label {
-                text: "Default: " + (hotkey_item.default_shortcut || "(none)")
+                text: "Default: " + (hotkey_item.default_shortcut
+                                     ? key_seq_display.canonical_to_display(hotkey_item.default_shortcut)
+                                     : "(none)")
                 font.pointSize: root.pointSize - 2
                 color: palette.placeholderText
                 Layout.fillWidth: true
