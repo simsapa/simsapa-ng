@@ -54,7 +54,9 @@ UninstallFilesDir={app}\uninst
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Standard-only: Portable mode creates its launcher in the parent folder and
+; would otherwise show a desktop-icon checkbox that does nothing.
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; Check: ShouldRunStandard
 
 [Files]
 ; Main executable
@@ -171,10 +173,18 @@ begin
     'your user profile.');
   ModePage.Add(
     'Portable install - install into any folder you choose (e.g. Desktop or a ' +
-    'USB drive). No administrator rights required; all data is kept in a folder ' +
-    'next to the app so it can travel with you.');
-  ModePage.SelectedValueIndex := 0;
-  IsPortable := False;
+    'USB drive). No administrator rights required (choose "Install for me only" ' +
+    'if prompted at startup); all data is kept in a folder next to the app so it ' +
+    'can travel with you.');
+  // Default the selection to match the privilege mode chosen at the startup
+  // "Select Setup Install Mode" dialog: elevated -> Standard (Program Files),
+  // non-elevated -> Portable (no admin needed). This keeps the two decisions
+  // coherent even though Inno fixes the privilege mode before any wizard page.
+  if IsAdminInstallMode() then
+    ModePage.SelectedValueIndex := 0
+  else
+    ModePage.SelectedValueIndex := 1;
+  IsPortable := not IsAdminInstallMode();
 
   // Launcher-type page (shown after the directory page, Portable only via
   // ShouldSkipPage). The launcher is placed in the parent of the install
@@ -216,17 +226,37 @@ function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
   if CurPageID = ModePage.ID then
+  begin
     IsPortable := (ModePage.SelectedValueIndex = 1);
+    // Standard install targets Program Files and requires administrator rights.
+    // If the user is not in admin install mode (chose "Install for me only" at
+    // startup), block Standard and steer them, keeping the privilege/mode pair
+    // consistent and Standard's Program Files behavior unchanged.
+    if (not IsPortable) and (not IsAdminInstallMode()) then
+    begin
+      MsgBox('Standard install places Simsapa in Program Files and requires ' +
+        'administrator rights. Please re-run the installer and choose ' +
+        '"Install for all users" at the first prompt, or select Portable ' +
+        'install instead.', mbInformation, MB_OK);
+      Result := False;
+    end;
+  end;
   if CurPageID = LauncherPage.ID then
     LauncherIsCmd := (LauncherPage.SelectedValueIndex = 1);
 end;
 
-// The launcher-type page only applies to Portable installs; skip it otherwise.
+// Decide which wizard pages to skip per mode:
+// - The launcher-type page only applies to Portable installs.
+// - In Portable mode the "Select Start Menu Folder" page is meaningless (no
+//   group icons are created, and the launcher goes in the parent folder), so
+//   skip it to avoid confusing the user.
 function ShouldSkipPage(PageID: Integer): Boolean;
 begin
   Result := False;
   if PageID = LauncherPage.ID then
     Result := not IsPortable;
+  if PageID = wpSelectProgramGroup then
+    Result := IsPortable;
 end;
 
 // When entering the directory page, suggest a sensible default per mode:

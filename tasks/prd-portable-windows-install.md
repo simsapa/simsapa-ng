@@ -83,6 +83,25 @@ to the system profile.
    Use `PrivilegesRequiredOverridesAllowed` / dynamic privilege handling so the
    portable path does not elevate while the standard path still can.
 
+   **Implemented approach (privilege/mode coherence).** Inno fixes the elevation
+   mode at **startup**, before any wizard page is shown, via the built-in
+   "Select Setup Install Mode" dialog (`PrivilegesRequiredOverridesAllowed=dialog`
+   with the default `PrivilegesRequired=admin` — both **unchanged** from the
+   pre-feature installer). Because the Standard/Portable `ModePage` comes *after*
+   Welcome, it cannot drive elevation, so the two decisions are kept consistent
+   in `[Code]` using `IsAdminInstallMode()`:
+   - The `ModePage` default selection follows the startup choice: elevated →
+     **Standard**, non-elevated ("Install for me only") → **Portable**;
+     `IsPortable` is initialised the same way.
+   - `NextButtonClick` **blocks** choosing Standard while *not* in admin install
+     mode (Standard targets `{autopf}`/Program Files and needs admin rights),
+     showing an info message steering the user to re-run as "Install for all
+     users" or to pick Portable. This prevents the one broken combination
+     (Standard → per-user Program Files) and keeps Standard's location unchanged.
+   - The Portable option text notes: choose "Install for me only" if prompted at
+     startup. A user without admin rights thus lands on Portable by default with
+     no UAC prompt.
+
 ### Installer — portable target and data folders
 
 4. In portable mode, the directory page must let the user pick the **install
@@ -135,6 +154,18 @@ to the system profile.
 10. The launcher must launch the exe such that the app can locate `config.txt`
     (see app requirements 13–15). It must not depend on the current working
     directory being the install folder.
+
+### Installer — hide Standard-only wizard elements in Portable mode
+
+10b. In Portable mode the installer must **not** show wizard elements that have
+    no effect in that mode, to avoid confusing the user:
+    - The built-in **"Select Start Menu Folder"** page (`wpSelectProgramGroup`)
+      is skipped (no group icons are created in portable mode).
+    - The **"Create a desktop icon"** task is hidden (the portable launcher is
+      created in the parent folder instead).
+    Implemented via `ShouldSkipPage` (for `wpSelectProgramGroup`) and a
+    `Check: ShouldRunStandard` on the `[Tasks]` `desktopicon` entry. Standard
+    mode shows both exactly as before.
 
 ### Installer — no uninstaller in portable mode
 
@@ -212,9 +243,13 @@ to the system profile.
 
 ## 6. Design Considerations
 
-- **Wizard flow (portable):** Welcome → Install type (Standard/Portable) →
-  [Portable] target app folder → launcher type (relative launcher vs `.lnk`,
-  with the explanatory notes from requirement 8) → ready → install.
+- **Wizard flow (portable):** Welcome → [startup "Select Setup Install Mode"
+  dialog: choose "Install for me only" for no admin] → Install type
+  (Standard/Portable; defaults to Portable when non-elevated) → [Portable]
+  target app folder → launcher type (relative launcher vs `.lnk`, with the
+  explanatory notes from requirement 8) → ready → install. The "Select Start
+  Menu Folder" page and the "Create a desktop icon" task are **not** shown in
+  Portable mode (requirement 10b).
 - **Folder layout example (Desktop, portable):**
   ```
   Desktop\

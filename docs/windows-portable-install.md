@@ -15,6 +15,30 @@ chosen on a wizard page shown right after Welcome:
 This document covers the portable mode. Standard mode is unchanged from earlier
 releases.
 
+## Privileges and mode coherence
+
+Inno fixes the privilege (elevation) mode at **startup**, before any wizard page
+is shown, via the built-in "Select Setup Install Mode" dialog
+(`PrivilegesRequiredOverridesAllowed=dialog`, with the default
+`PrivilegesRequired=admin`). The Standard/Portable `ModePage` comes *after*
+Welcome, so it cannot drive elevation — the two decisions are kept consistent in
+`[Code]` instead:
+
+- **Default selection** follows `IsAdminInstallMode()`: if the user is elevated
+  (chose "Install for all users") the mode page defaults to **Standard**; if
+  not (chose "Install for me only") it defaults to **Portable**. `IsPortable` is
+  initialised the same way.
+- **Validation** in `NextButtonClick`: choosing **Standard** while *not* in admin
+  install mode is blocked with an info message, because Standard targets
+  `{autopf}` (Program Files) and needs administrator rights. The user is steered
+  to re-run choosing "Install for all users", or to pick Portable instead.
+
+A user without admin rights therefore just picks "Install for me only" at the
+startup prompt and lands on Portable by default — no UAC, no Program Files. The
+startup dialog and the default `admin` privilege are **unchanged** from the
+pre-feature installer, so Standard's behavior (and its Program Files location) is
+untouched.
+
 ## Folder layout (Desktop example)
 
 ```
@@ -57,6 +81,12 @@ On a USB stick the same layout is rooted at the drive, e.g. `E:\Simsapa.cmd`,
    The path is **relative**, **unquoted**, and uses **forward slashes**. Rust
    accepts `/` as a path separator on Windows; `dotenvy` treats `\` as an escape
    character, so backslashes are avoided. The suffix matches the data-folder name.
+   In Portable mode the standard **"Select Start Menu Folder"** page
+   (`wpSelectProgramGroup`) is skipped via `ShouldSkipPage`, and the
+   **"Create a desktop icon"** task (`[Tasks]` `desktopicon`) is gated with
+   `Check: ShouldRunStandard` — neither does anything for a portable install
+   (the launcher lives in the parent folder), so they are hidden to avoid
+   confusion.
 5. **Launcher page** (`LauncherPage`, Portable only via `ShouldSkipPage`) lets
    the user choose, and the launcher is created in the **parent** of the install
    folder in `CurStepChanged`:

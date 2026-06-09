@@ -90,10 +90,18 @@ Generated from [prd-portable-windows-install.md](./prd-portable-windows-install.
         Portable runs as the current user (lowest) without elevation, while
         Standard retains current elevation behavior (e.g. via
         `PrivilegesRequired` handling / `InitializeSetup` logic appropriate to the
-        chosen mode).
+        chosen mode). Done: privilege settings left **unchanged** from pre-feature
+        (default `admin` + `=dialog`); coherence with the startup install-mode
+        dialog added in 3.6 (see PRD req 3 "Implemented approach").
   - [x] 3.4 Ensure the Standard path is byte-for-byte unchanged: same
         `{autopf}\Simsapa` default, same `[Files]`, `[Icons]`, VC++ redist flow,
         and uninstaller user-data prompt when Portable is not selected.
+  - [x] 3.6 (This session) Add privilege/mode **coherence** in `[Code]` using
+        `IsAdminInstallMode()`: default `ModePage`/`IsPortable` to Portable when
+        non-elevated and Standard when elevated (`InitializeWizard`); in
+        `NextButtonClick`, block choosing Standard while not in admin install mode
+        (info `MsgBox`, keep user on the page); add the "Install for me only" hint
+        to the Portable option text. Standard's privilege mechanism unchanged.
   - [ ] 3.5 (User) Compile the installer on Windows with Inno Setup and confirm
         the new page appears and Standard install still works end-to-end.
 
@@ -138,6 +146,11 @@ Generated from [prd-portable-windows-install.md](./prd-portable-windows-install.
   - [x] 5.5 Ensure the launcher does not rely on a "Start in"/CWD value — the app
         finds `config.txt` via the exe directory (task 1.0), so the launcher only
         needs to start the exe.
+  - [x] 5.7 (This session) Hide Standard-only wizard elements in Portable mode
+        (PRD req 10b): skip the "Select Start Menu Folder" page
+        (`wpSelectProgramGroup` in `ShouldSkipPage` when `IsPortable`) and hide the
+        "Create a desktop icon" task (`Check: ShouldRunStandard` on the `[Tasks]`
+        `desktopicon` entry). Standard mode shows both unchanged.
   - [ ] 5.6 (User) On Windows, verify each launcher type starts the app, and test
         the `.cmd` from a USB drive mounted under a different letter on a second
         machine (no re-download, no reconfiguration).
@@ -165,3 +178,53 @@ Generated from [prd-portable-windows-install.md](./prd-portable-windows-install.
         succeeds. Pre-existing unrelated failure in `dict_modes_filtering`
         (needs the real appdata DB at `DbManager::new()`) is ignored per project
         guidance.
+
+- [ ] 7.0 (User) Windows manual testing — to be done together on Windows
+  Prerequisite: compile the installer on Windows with Inno Setup
+  (`build-windows.ps1`); confirm it compiles cleanly and produces a single
+  `Simsapa-Setup-<version>.exe` (subsumes 3.5/4.7/5.6 above).
+
+  **Privilege / mode coherence (task 3.6):**
+  - [ ] 7.1 At the startup "Select Setup Install Mode" dialog choose **"Install
+        for me only"** → confirm the mode page **defaults to Portable** and the
+        whole portable install completes with **no UAC / admin prompt**.
+  - [ ] 7.2 In that same non-elevated run, try selecting **Standard** on the mode
+        page → confirm the info `MsgBox` appears and the wizard **stays on the
+        mode page** (does not advance).
+  - [ ] 7.3 Run elevated ("Install for all users") → confirm the mode page
+        **defaults to Standard** and a normal Program Files install works exactly
+        as before (location, uninstaller + user-data prompt).
+
+  **Vestigial wizard elements (task 5.7):**
+  - [ ] 7.4 In a Portable run, confirm the wizard order is Welcome → Mode →
+        (VC warning if shown) → Select Directory → Launcher type → Ready, with
+        **no** "Select Start Menu Folder" page and **no** "Create a desktop icon"
+        checkbox on the Tasks page.
+  - [ ] 7.5 In a Standard run, confirm the "Select Start Menu Folder" page and the
+        "Create a desktop icon" task **still appear** as before.
+
+  **Portable install artifacts (tasks 4.x):**
+  - [ ] 7.6 After a portable install to `Desktop\Simsapa`, verify
+        `Desktop\Simsapa\config.txt` contains exactly `SIMSAPA_DIR=../SimsapaData`
+        (relative, unquoted, forward slash), the sibling `Desktop\SimsapaData`
+        folder exists, and there is **no** Add/Remove Programs entry / `unins*.exe`.
+  - [ ] 7.7 Reinstall over an existing `…Data` folder → confirm it is **reused
+        as-is** (downloaded DBs preserved, no warning/rename/delete).
+
+  **Path resolution / first launch (tasks 1.0/2.0, req 14):**
+  - [ ] 7.8 First launch via the created launcher → confirm databases download
+        into `…\SimsapaData\app-assets\` and logs into `…\SimsapaData\logs\`
+        (not `%LOCALAPPDATA%`). Inspect a log path to confirm the resolved
+        `SIMSAPA_DIR` is a clean `C:\…\SimsapaData` with **no `\\?\` prefix**
+        (verifies lexical normalization on Windows, the one path not unit-tested).
+  - [ ] 7.9 Second launch → confirm existing databases are detected and loaded
+        with **no** re-download.
+
+  **Launcher types (task 5.x):**
+  - [ ] 7.10 `.lnk` launcher: confirm it shows the app icon and starts the app.
+  - [ ] 7.11 `.cmd` launcher: confirm it starts the app detached (no lingering
+        console window).
+  - [ ] 7.12 USB drive-letter robustness: copy a `.cmd`-launcher portable install
+        to a USB stick, run it on a **second** machine where the drive mounts
+        under a **different letter** → confirm it launches and loads its databases
+        with no re-download and no reconfiguration.
