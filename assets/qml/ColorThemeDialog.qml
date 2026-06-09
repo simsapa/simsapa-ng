@@ -17,7 +17,7 @@ Dialog {
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
 
-    property string current_theme: "system"
+    property string current_theme: "light"
     signal themeChanged(string theme_name)
 
     property string selected_theme: current_theme
@@ -39,15 +39,6 @@ Dialog {
 
         ButtonGroup {
             id: theme_group
-        }
-
-        RadioButton {
-            id: systemRadio
-            text: "System"
-            font.pointSize: root.pointSize
-            checked: root.selected_theme === "system"
-            ButtonGroup.group: theme_group
-            onClicked: root.selected_theme = "system"
         }
 
         RadioButton {

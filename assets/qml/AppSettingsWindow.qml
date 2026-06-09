@@ -549,18 +549,6 @@ ApplicationWindow {
                         }
 
                         RadioButton {
-                            id: system_theme_radio
-                            text: "System"
-                            font.pointSize: root.pointSize
-                            ButtonGroup.group: theme_group
-                            onClicked: {
-                                SuttaBridge.set_theme_name("system");
-                                theme_helper.apply();
-                                root.themeChanged("system");
-                            }
-                        }
-
-                        RadioButton {
                             id: light_theme_radio
                             text: "Light"
                             font.pointSize: root.pointSize
@@ -961,9 +949,7 @@ ApplicationWindow {
 
         // Load initial state for View tab settings
         let theme_name = SuttaBridge.get_theme_name();
-        if (theme_name === "system") {
-            system_theme_radio.checked = true;
-        } else if (theme_name === "light") {
+        if (theme_name === "light") {
             light_theme_radio.checked = true;
         } else if (theme_name === "dark") {
             dark_theme_radio.checked = true;

@@ -306,7 +306,6 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
 impl AppSettings {
     pub fn theme_name_as_string(&self) -> String {
         match self.theme_name {
-            ThemeName::System => "system".to_string(),
             ThemeName::Light => "light".to_string(),
             ThemeName::Dark => "dark".to_string(),
         }
@@ -314,12 +313,11 @@ impl AppSettings {
 
     pub fn set_theme_name_from_str(&mut self, theme_name: &str) {
         let theme_name = match theme_name.to_lowercase().as_str() {
-            "system" => ThemeName::System,
             "light" => ThemeName::Light,
             "dark" => ThemeName::Dark,
             _ => {
-                error(&format!("Can't recognize theme name: {}", theme_name));
-                return;
+                error(&format!("Can't recognize theme name: {}, using the default ThemeName::Light", theme_name));
+                ThemeName::Light
             }
         };
         self.theme_name = theme_name;
@@ -365,8 +363,6 @@ pub enum MobileTopBarMargin {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ThemeName {
-    #[serde(rename = "system")]
-    System,
     #[serde(rename = "light")]
     Light,
     #[serde(rename = "dark")]
