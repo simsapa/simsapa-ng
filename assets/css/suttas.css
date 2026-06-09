@@ -571,6 +571,10 @@ body {
   max-width: 100%;
 }
 
+#ssp_content {
+  padding-top: 30px;
+}
+
 body {
   padding: 0 1em;
   max-width: 75ex;
