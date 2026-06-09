@@ -558,10 +558,14 @@ if (-not $SkipInstaller) {
     Write-Status "  - Simsapa-Setup-$AppVersion.exe"
 }
 Write-Status ""
-Write-Status "Application details:"
+Write-Status "Application details (Standard install):"
 Write-Status "  - Install location: C:\Program Files\Simsapa"
 Write-Status "  - User data: %LOCALAPPDATA%\profound-labs\simsapa-ng"
 Write-Status "  - Databases: %LOCALAPPDATA%\profound-labs\simsapa-ng\app-assets"
+Write-Status ""
+Write-Status "The same installer also offers a Portable install (user-chosen"
+Write-Status "folder, sibling 'Data' folder via config.txt, no admin/uninstaller)."
+Write-Status "See docs/windows-portable-install.md."
 Write-Status ""
 
 # Report VC++ Redistributable status
