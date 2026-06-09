@@ -41,6 +41,42 @@ function selection_text() {
     return text;
 }
 
+// Clear both selection highlights:
+// - the native browser selection (desktop drag, mobile long-press), and
+// - the persistent .tapped-word spans we wrap around single-tapped words
+//   and finished mobile selections (see highlight_tapped_parts / the mobile
+//   selectionchange timer).
+//
+// Unwrapping by class works regardless of the IS_MOBILE closure scope and
+// covers the desktop case (no .tapped-word spans, only the native selection)
+// with the same code path. The mobile closure's current_tap_highlight_spans
+// array may keep stale references to the removed spans, but that is harmless:
+// the next unwrap_tap_highlight() skips any span whose parentNode is null.
+function clear_html_selection() {
+    // Remove the native browser highlight, if any. On mobile this also
+    // fires selectionchange with an empty selection, which cancels any
+    // pending 3 s re-highlight timer.
+    const selection = document.getSelection ? document.getSelection() : null;
+    if (selection) {
+        selection.removeAllRanges();
+    }
+
+    // Unwrap our own persistent highlight spans back to plain text.
+    const spans = document.querySelectorAll('.tapped-word');
+    spans.forEach(function (span) {
+        const parent = span.parentNode;
+        if (!parent) return;
+        while (span.firstChild) {
+            parent.insertBefore(span.firstChild, span);
+        }
+        parent.removeChild(span);
+    });
+
+    // Drop the cached mobile selection text so subsequent menu actions
+    // don't operate on a selection the user just cleared.
+    last_mobile_selection_text = "";
+}
+
 function lookup_selection() {
     const selected_text = window.getSelection().toString().trim();
 
@@ -146,6 +182,15 @@ class HamburgerMenu {
         e.stopPropagation();
 
         const action = e.currentTarget.dataset.action;
+
+        // Clearing the selection is a pure webview/DOM operation, so it's
+        // handled entirely on the client without a backend round-trip.
+        if (action === "clear-selection") {
+            clear_html_selection();
+            this.closeMenu();
+            return;
+        }
+
         let query_text = "";
         if (action === "summarize-sutta") {
             query_text = this.getAllContentText();
