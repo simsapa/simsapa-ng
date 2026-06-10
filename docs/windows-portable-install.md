@@ -63,8 +63,10 @@ On a USB stick the same layout is rooted at the drive, e.g. `E:\Simsapa.cmd`,
 
 1. **Mode page** (`ModePage`, a `CreateInputOptionPage` after Welcome) sets the
    `IsPortable` script-global. `ShouldRunPortable` / `ShouldRunStandard` gate
-   `[Icons]` and the `Uninstallable={code:GetUninstallable}` directive (Portable
-   registers no uninstaller / Add-Remove-Programs entry).
+   `[Icons]` and the `Uninstallable=ShouldRunStandard` directive (a `[Code]`
+   Boolean function — `Uninstallable` takes a boolean expression, not a
+   `{code:...}` string constant — so Portable registers no uninstaller /
+   Add-Remove-Programs entry).
 2. **Directory page** default is set per mode in `CurPageChanged`: Portable
    suggests `{userdesktop}\Simsapa`; Standard keeps `{autopf}\Simsapa`. The user
    may pick any folder.

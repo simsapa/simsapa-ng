@@ -36,8 +36,9 @@ AllowNoIcons=yes
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 ; Portable installs register no uninstaller (no Add/Remove Programs entry);
-; Standard installs remain fully uninstallable. Evaluated after the mode page.
-Uninstallable={code:GetUninstallable}
+; Standard installs remain fully uninstallable. ShouldRunStandard is a [Code]
+; Boolean function (= not IsPortable), evaluated after the mode page.
+Uninstallable=ShouldRunStandard
 OutputDir=.
 OutputBaseFilename=Simsapa-Setup-{#AppVersion}
 SetupIconFile=assets\icons\appicons\simsapa.ico
@@ -109,18 +110,6 @@ end;
 function ShouldRunStandard: Boolean;
 begin
   Result := not IsPortable;
-end;
-
-// Code-constant used by the Uninstallable directive: Portable mode registers no
-// uninstaller (no Add/Remove Programs entry, no unins*.exe); Standard stays
-// uninstallable. The mode is chosen on ModePage (before installation), so
-// IsPortable is already set when this is evaluated.
-function GetUninstallable(Value: String): String;
-begin
-  if IsPortable then
-    Result := 'no'
-  else
-    Result := 'yes';
 end;
 
 // The portable data folder: a sibling of the install ({app}) folder, named by
