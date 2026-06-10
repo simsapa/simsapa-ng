@@ -29,6 +29,13 @@ AppUpdatesURL={#AppURL}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 AllowNoIcons=yes
+; Always show the "Select Destination Location" page and do not reuse a folder
+; remembered from a previous install. Without these, when a prior install of the
+; same AppId is detected Inno auto-hides the directory page and silently reuses
+; the old path - which meant a Portable re-install never offered the folder
+; (Desktop/USB) chooser and CurPageChanged's per-mode default never applied.
+DisableDirPage=no
+UsePreviousAppDir=no
 ; Uncomment the following line if you have a LICENSE file
 ;LicenseFile=LICENSE
 ; Run with the user's own privileges by default: no UAC prompt and no "Select

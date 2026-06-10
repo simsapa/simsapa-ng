@@ -98,7 +98,11 @@ On a USB stick the same layout is rooted at the drive, e.g. `E:\Simsapa.cmd`,
    — so Portable registers no uninstaller / Add-Remove-Programs entry).
 2. **Directory page** default is set per option in `CurPageChanged`: all users →
    `{commonpf}\Simsapa`, this user → `{localappdata}\Programs\Simsapa`, portable →
-   `{userdesktop}\Simsapa`. The user may pick any folder.
+   `{userdesktop}\Simsapa`. The user may pick any folder. `[Setup]` sets
+   `DisableDirPage=no` and `UsePreviousAppDir=no` so this page **always** appears
+   and never reuses a folder remembered from a previous install — otherwise Inno
+   auto-hides it when a prior install of the same `AppId` is detected, and a
+   Portable re-install would skip the folder chooser entirely.
 3. **Data folder** is a sibling of the install folder named by appending `Data`
    to the install folder's name (`…\Simsapa` → `…\SimsapaData`), computed by
    `GetPortableDataDir`. In `CurStepChanged` (`ssPostInstall`) it is created if
