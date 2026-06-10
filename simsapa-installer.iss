@@ -91,7 +91,10 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(
 var
   ShouldDeleteUserData: Boolean;
   // Install-mode selection page (Standard vs Portable), shown after Welcome.
-  ModePage: TInputOptionWizardPage;
+  // Built from custom controls so the option titles can be shown in bold.
+  ModePage: TWizardPage;
+  StandardRadio: TNewRadioButton;
+  PortableRadio: TNewRadioButton;
   // True when the user chose Portable install on ModePage.
   IsPortable: Boolean;
   // Launcher-type page (Portable only): .lnk shortcut vs .cmd relative launcher.
@@ -143,37 +146,66 @@ begin
   Result := FileExists(ExpandConstant('{src}\redist\vc_redist.x64.exe'));
 end;
 
+// Add one install-mode option to ModePage: a bold radio-button title followed
+// by a wrapped, normal-weight description. Advances NextTop past the block so
+// the next option stacks below it.
+procedure AddModeOption(var Radio: TNewRadioButton; var NextTop: Integer; Title, Desc: String);
+var
+  DescLabel: TNewStaticText;
+begin
+  Radio := TNewRadioButton.Create(ModePage);
+  Radio.Parent := ModePage.Surface;
+  Radio.Caption := Title;
+  Radio.Font.Style := [fsBold];
+  Radio.Left := 0;
+  Radio.Top := NextTop;
+  Radio.Width := ModePage.SurfaceWidth;
+  Radio.Height := ScaleY(17);
+
+  DescLabel := TNewStaticText.Create(ModePage);
+  DescLabel.Parent := ModePage.Surface;
+  DescLabel.AutoSize := True;
+  DescLabel.WordWrap := True;
+  DescLabel.Left := ScaleX(16);
+  DescLabel.Top := Radio.Top + Radio.Height + ScaleY(2);
+  DescLabel.Width := ModePage.SurfaceWidth - ScaleX(16);
+  // Caption set last so the wrapped height is computed against the final Width.
+  DescLabel.Caption := Desc;
+
+  NextTop := DescLabel.Top + DescLabel.Height + ScaleY(16);
+end;
+
 // Initialize the wizard with custom pages
 procedure InitializeWizard;
 var
   WarningPage: TOutputMsgWizardPage;
+  NextTop: Integer;
 begin
   // Install-type selection page, shown early (after Welcome, before the
-  // directory page). Standard is the default (index 0) so the existing
-  // behavior is unchanged unless the user explicitly opts into Portable.
-  ModePage := CreateInputOptionPage(wpWelcome,
+  // directory page). Built from custom controls so the option titles are bold.
+  // Standard is ALWAYS the default so users who do not expect portable mode are
+  // not surprised; the existing behavior is unchanged unless the user explicitly
+  // opts into Portable.
+  ModePage := CreateCustomPage(wpWelcome,
     'Installation Type',
-    'Choose how Simsapa should be installed.',
-    'Select an installation type, then click Next.',
-    True {Exclusive radio buttons}, False {not a list box});
-  ModePage.Add(
-    'Standard install (recommended) - installs to Program Files for all users ' +
-    '(may require administrator rights). Databases and settings are stored in ' +
-    'your user profile.');
-  ModePage.Add(
-    'Portable install - install into any folder you choose (e.g. Desktop or a ' +
-    'USB drive). No administrator rights required (choose "Install for me only" ' +
-    'if prompted at startup); all data is kept in a folder next to the app so it ' +
-    'can travel with you.');
-  // Default the selection to match the privilege mode chosen at the startup
-  // "Select Setup Install Mode" dialog: elevated -> Standard (Program Files),
-  // non-elevated -> Portable (no admin needed). This keeps the two decisions
-  // coherent even though Inno fixes the privilege mode before any wizard page.
-  if IsAdminInstallMode() then
-    ModePage.SelectedValueIndex := 0
-  else
-    ModePage.SelectedValueIndex := 1;
-  IsPortable := not IsAdminInstallMode();
+    'Choose how Simsapa should be installed.');
+
+  NextTop := ScaleY(8);
+  AddModeOption(StandardRadio, NextTop,
+    'Standard Install (recommended)',
+    'Installs to Program Files for all users (requires administrator rights to ' +
+    'install). Databases and settings are stored in your user profile. The app ' +
+    'does not need administrator rights once installed.');
+  AddModeOption(PortableRadio, NextTop,
+    'Portable Install',
+    'Installs into any folder you choose (e.g. your Desktop or a USB drive) and ' +
+    'keeps all data in a folder next to the app, so it can travel with you. No ' +
+    'administrator rights required - choose "Install for me only" if prompted at ' +
+    'startup.');
+
+  // Standard is the unconditional default.
+  StandardRadio.Checked := True;
+  IsPortable := False;
 
   // Launcher-type page (shown after the directory page, Portable only via
   // ShouldSkipPage). The launcher is placed in the parent of the install
@@ -216,7 +248,7 @@ begin
   Result := True;
   if CurPageID = ModePage.ID then
   begin
-    IsPortable := (ModePage.SelectedValueIndex = 1);
+    IsPortable := PortableRadio.Checked;
     // Standard install targets Program Files and requires administrator rights.
     // If the user is not in admin install mode (chose "Install for me only" at
     // startup), block Standard and steer them, keeping the privilege/mode pair
