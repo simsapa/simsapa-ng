@@ -153,12 +153,15 @@ begin
   Result := FileExists(ExpandConstant('{src}\redist\vc_redist.x64.exe'));
 end;
 
-// Add one install-mode option to ModePage: a bold radio-button title followed
-// by a wrapped, normal-weight description. Advances NextTop past the block so
-// the next option stacks below it.
-procedure AddModeOption(var Radio: TNewRadioButton; var NextTop: Integer; Title, Desc: String);
+// Add one install-mode option to ModePage: a bold radio-button title, a wrapped
+// normal-weight description, and (when Note <> '') a bold note line below it
+// (used to flag that the option's default folder already holds an install).
+// Advances NextTop past the block so the next option stacks below it.
+procedure AddModeOption(var Radio: TNewRadioButton; var NextTop: Integer; Title, Desc, Note: String);
 var
   DescLabel: TNewStaticText;
+  NoteLabel: TNewStaticText;
+  BlockBottom: Integer;
 begin
   Radio := TNewRadioButton.Create(ModePage);
   Radio.Parent := ModePage.Surface;
@@ -179,7 +182,35 @@ begin
   // Caption set last so the wrapped height is computed against the final Width.
   DescLabel.Caption := Desc;
 
-  NextTop := DescLabel.Top + DescLabel.Height + ScaleY(16);
+  BlockBottom := DescLabel.Top + DescLabel.Height;
+
+  if Note <> '' then
+  begin
+    NoteLabel := TNewStaticText.Create(ModePage);
+    NoteLabel.Parent := ModePage.Surface;
+    NoteLabel.AutoSize := True;
+    NoteLabel.WordWrap := True;
+    NoteLabel.Font.Style := [fsBold];
+    NoteLabel.Left := ScaleX(16);
+    NoteLabel.Top := BlockBottom + ScaleY(2);
+    NoteLabel.Width := ModePage.SurfaceWidth - ScaleX(16);
+    NoteLabel.Caption := Note;
+    BlockBottom := NoteLabel.Top + NoteLabel.Height;
+  end;
+
+  NextTop := BlockBottom + ScaleY(16);
+end;
+
+// Build the "already installed here" note for a Standard option's default
+// folder, or '' when no install is present there. Helps a re-installing user
+// recognise which location already has Simsapa.
+function ExistingInstallNote(DefaultDir: String): String;
+begin
+  if FileExists(DefaultDir + '\{#AppExeName}') then
+    Result := 'There is already a Simsapa version in ' + DefaultDir +
+              ' - installing will update it.'
+  else
+    Result := '';
 end;
 
 // Initialize the wizard with custom pages
@@ -202,17 +233,20 @@ begin
     'Standard Install - all users',
     'Installs to ' + ExpandConstant('{commonpf}\Simsapa') + ' for everyone on ' +
     'this computer. Requires administrator rights: launch the installer with ' +
-    '"Run as administrator" to use this option.');
+    '"Run as administrator" to use this option.',
+    ExistingInstallNote(ExpandConstant('{commonpf}\Simsapa')));
   AddModeOption(ThisUserRadio, NextTop,
     'Standard Install - this user only',
     'Installs to ' + ExpandConstant('{localappdata}\Programs\Simsapa') + ' for ' +
-    'your account only. No administrator rights required.');
+    'your account only. No administrator rights required.',
+    ExistingInstallNote(ExpandConstant('{localappdata}\Programs\Simsapa')));
   AddModeOption(PortableRadio, NextTop,
     'Portable Install',
     'Installs into any folder you choose (default ' +
-    ExpandConstant('{userdesktop}\Simsapa') + '; e.g. a USB drive) and keeps ' +
-    'all data in a folder next to the app, so it can travel with you. No ' +
-    'administrator rights required.');
+    ExpandConstant('{userdesktop}\Simsapa') + ') and keeps ' +
+    'all data in a folder next to the app, so it can travel with you. No administrator rights required. ' +
+    'For using Simsapa from a USB drive, it is faster to install to a folder in the Desktop first and selecting a .cmd launcher, then move the folder to the USB drive.',
+    '');
 
   // Default to all-users when the installer was launched elevated, otherwise to
   // this-user (always works without admin). Portable is never the default.

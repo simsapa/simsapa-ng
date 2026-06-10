@@ -4,7 +4,10 @@ The Windows installer (`Simsapa-Setup-<version>.exe`, built by
 `build-windows.ps1` from `simsapa-installer.iss`) offers three install options
 on a custom wizard page shown right after Welcome. Each option's title is bold
 and its description lists the default folder it installs to, so the user can pick
-the same location when re-installing:
+the same location when re-installing. For the two Standard options, if Simsapa is
+already installed in that default folder the page shows a bold note ("There is
+already a Simsapa version in … - installing will update it.") via
+`ExistingInstallNote` (a `FileExists` check for the exe in the default folder):
 
 - **Standard Install - all users**: installs to `C:\Program Files\Simsapa`
   (`{commonpf}\Simsapa`) for everyone on the computer. **Requires administrator
