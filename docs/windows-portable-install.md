@@ -1,49 +1,67 @@
 # Windows Portable Install
 
 The Windows installer (`Simsapa-Setup-<version>.exe`, built by
-`build-windows.ps1` from `simsapa-installer.iss`) offers two install modes,
-chosen on a wizard page shown right after Welcome:
+`build-windows.ps1` from `simsapa-installer.iss`) offers three install options
+on a custom wizard page shown right after Welcome. Each option's title is bold
+and its description lists the default folder it installs to, so the user can pick
+the same location when re-installing:
 
-- **Standard install** (default, unchanged): installs to
-  `C:\Program Files\Simsapa` (`{autopf}\Simsapa`), stores user data in
-  `%LOCALAPPDATA%\profound-labs\simsapa-ng`, may require administrator rights,
-  and registers a normal uninstaller (with the user-data prompt).
-- **Portable install**: installs into any folder the user picks (Desktop, a USB
-  drive, …), keeps all data in a sibling folder next to the app, requires no
-  administrator rights, and registers **no** uninstaller.
+- **Standard Install - all users**: installs to `C:\Program Files\Simsapa`
+  (`{commonpf}\Simsapa`) for everyone on the computer. **Requires administrator
+  rights**, supplied by launching the installer with "Run as administrator".
+  Registers a normal uninstaller (with the user-data prompt).
+- **Standard Install - this user only**: installs to
+  `C:\Users\<user>\AppData\Local\Programs\Simsapa` (`{localappdata}\Programs\Simsapa`)
+  for the current account only. **No administrator rights required.** Registers a
+  normal uninstaller (with the user-data prompt).
+- **Portable Install**: installs into any folder the user picks (default
+  `Desktop\Simsapa`; e.g. a USB drive), keeps all data in a sibling folder next
+  to the app, requires no administrator rights, and registers **no** uninstaller.
 
-This document covers the portable mode. Standard mode is unchanged from earlier
-releases.
+Both Standard options store user data in `%LOCALAPPDATA%\profound-labs\simsapa-ng`.
 
-## Privileges and mode coherence
+This document focuses on the portable mode; the rest of this section explains how
+the three options are wired together.
 
-The installer uses a plain administrator install: `PrivilegesRequired=admin`
-(Inno's default) with **no** `PrivilegesRequiredOverridesAllowed`. This means:
+## Privileges
 
-- Launched normally, Setup requests elevation (a **UAC prompt**) at startup.
-- Launched via **"Run as administrator"**, Setup is already elevated and runs
-  straight through — **no "Select Setup Install Mode" dialog** is shown.
+The installer runs with the user's own privileges: `PrivilegesRequired=lowest`
+with **no** `PrivilegesRequiredOverridesAllowed`. So there is **no UAC prompt and
+no "Select Setup Install Mode" dialog at startup**, whether launched normally or
+via "Run as administrator". The install location is chosen explicitly on the mode
+page instead.
 
-Both Standard and Portable installs therefore run elevated. The elevation is an
-**install-time** matter only: writing to `C:\Program Files` (Standard) needs
-admin, and running elevated is harmless for Portable (it can still write to the
-chosen folder and the sibling data folder). **The installed app never needs
-administrator rights at runtime** in either mode — Standard stores data under
-`%LOCALAPPDATA%`, Portable in its sibling data folder.
+Only **Standard - all users** needs administrator rights (it writes to
+`C:\Program Files`). The user supplies those by launching the installer with
+**"Run as administrator"**. On the mode page:
 
-An earlier iteration used `PrivilegesRequiredOverridesAllowed=dialog` (the
-"Select Setup Install Mode" dialog) so Portable could install without elevation,
-but that dialog appeared even when the exe was started with "Run as
-administrator", which was confusing. It was removed in favour of the plain admin
-model above.
+- The **default** option is *all users* when the installer was launched elevated
+  (`IsAdmin()`), otherwise *this user only*. Portable is never the default. A
+  Standard option is therefore always the default so users who do not expect
+  portable mode are not surprised.
+- `NextButtonClick` **warns and blocks** if *all users* is selected while the
+  installer is **not** elevated, steering the user to re-run as administrator or
+  to pick *this user only* / *Portable*.
 
-The Standard/Portable choice is made on the `ModePage` (after Welcome). The
-option titles ("**Standard Install**", "**Portable Install**") are shown in bold;
-the page is built from custom `TNewRadioButton` + `TNewStaticText` controls
-(rather than `CreateInputOptionPage`) so the title is bold while the description
-stays normal weight. **Standard is always the default** (`StandardRadio.Checked
-:= True`, `IsPortable := False`) so users who do not expect a portable mode are
-not surprised; there is no `IsAdminInstallMode()`-based flipping.
+The mode page is built from custom `TNewRadioButton` + `TNewStaticText` controls
+(rather than `CreateInputOptionPage`) so each title is bold while its description
+(including the default path) stays normal weight. The directory-page default is
+set per option in `CurPageChanged` using explicit folder constants (`{commonpf}`,
+`{localappdata}\Programs`, `{userdesktop}`) rather than `{autopf}`, because under
+`lowest` privileges `{autopf}` always resolves to the per-user location.
+
+**The installed app never needs administrator rights at runtime** in any mode —
+the two Standard modes store data under `%LOCALAPPDATA%`, Portable in its sibling
+data folder.
+
+> **Note (uninstaller scope).** Because the installer runs in the lowest
+> (per-user) install mode, even an *all users* install registers its uninstaller
+> under the per-user (HKCU) Add/Remove Programs list rather than HKLM. For this
+> single-user desktop app that is acceptable; the uninstaller works normally for
+> the installing user. An earlier iteration used
+> `PrivilegesRequiredOverridesAllowed=dialog`, but its "Select Setup Install
+> Mode" dialog appeared even when the exe was started with "Run as
+> administrator", which was confusing, so it was removed.
 
 ## Folder layout (Desktop example)
 
@@ -67,15 +85,17 @@ On a USB stick the same layout is rooted at the drive, e.g. `E:\Simsapa.cmd`,
 
 ### Installer (`simsapa-installer.iss`)
 
-1. **Mode page** (`ModePage`, a `CreateInputOptionPage` after Welcome) sets the
-   `IsPortable` script-global. `ShouldRunPortable` / `ShouldRunStandard` gate
-   `[Icons]` and the `Uninstallable=ShouldRunStandard` directive (a `[Code]`
-   Boolean function — `Uninstallable` takes a boolean expression, not a
-   `{code:...}` string constant — so Portable registers no uninstaller /
-   Add-Remove-Programs entry).
-2. **Directory page** default is set per mode in `CurPageChanged`: Portable
-   suggests `{userdesktop}\Simsapa`; Standard keeps `{autopf}\Simsapa`. The user
-   may pick any folder.
+1. **Mode page** (`ModePage`, a `CreateCustomPage` after Welcome) offers three
+   options via custom radio buttons (all users / this user / portable) and sets
+   the `IsPortable` script-global (`PortableRadio.Checked`); the two Standard
+   options are distinguished by `AllUsersRadio.Checked` / `ThisUserRadio.Checked`.
+   `ShouldRunPortable` / `ShouldRunStandard` gate `[Icons]` and the
+   `Uninstallable=ShouldRunStandard` directive (a `[Code]` Boolean function —
+   `Uninstallable` takes a boolean expression, not a `{code:...}` string constant
+   — so Portable registers no uninstaller / Add-Remove-Programs entry).
+2. **Directory page** default is set per option in `CurPageChanged`: all users →
+   `{commonpf}\Simsapa`, this user → `{localappdata}\Programs\Simsapa`, portable →
+   `{userdesktop}\Simsapa`. The user may pick any folder.
 3. **Data folder** is a sibling of the install folder named by appending `Data`
    to the install folder's name (`…\Simsapa` → `…\SimsapaData`), computed by
    `GetPortableDataDir`. In `CurStepChanged` (`ssPostInstall`) it is created if

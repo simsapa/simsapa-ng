@@ -31,13 +31,14 @@ DefaultGroupName={#AppName}
 AllowNoIcons=yes
 ; Uncomment the following line if you have a LICENSE file
 ;LicenseFile=LICENSE
-; Require administrator rights (the default). Setup requests elevation (UAC) at
-; startup when not already elevated, and runs straight through when launched via
-; "Run as administrator" — no "Select Setup Install Mode" dialog is shown. Both
-; Standard and Portable installs run elevated; the installed app itself never
-; needs administrator rights at runtime (data lives in the user profile for
-; Standard, or the sibling data folder for Portable).
-PrivilegesRequired=admin
+; Run with the user's own privileges by default: no UAC prompt and no "Select
+; Setup Install Mode" dialog at startup, in any launch (normal or "Run as
+; administrator"). The install location is chosen explicitly on the custom mode
+; page instead. Only the "Standard - all users" option needs administrator
+; rights; the user supplies those by launching the installer with "Run as
+; administrator" (the mode page warns and blocks that option otherwise). The
+; installed app never needs administrator rights at runtime.
+PrivilegesRequired=lowest
 ; Portable installs register no uninstaller (no Add/Remove Programs entry);
 ; Standard installs remain fully uninstallable. ShouldRunStandard is a [Code]
 ; Boolean function (= not IsPortable), evaluated after the mode page.
@@ -93,12 +94,15 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(
 [Code]
 var
   ShouldDeleteUserData: Boolean;
-  // Install-mode selection page (Standard vs Portable), shown after Welcome.
-  // Built from custom controls so the option titles can be shown in bold.
+  // Install-mode selection page, shown after Welcome. Built from custom controls
+  // so the option titles can be shown in bold and each can list its default path.
+  // Three options: Standard (all users), Standard (this user only), Portable.
   ModePage: TWizardPage;
-  StandardRadio: TNewRadioButton;
+  AllUsersRadio: TNewRadioButton;
+  ThisUserRadio: TNewRadioButton;
   PortableRadio: TNewRadioButton;
-  // True when the user chose Portable install on ModePage.
+  // True when the user chose Portable install on ModePage. The two Standard
+  // options are distinguished by AllUsersRadio.Checked / ThisUserRadio.Checked.
   IsPortable: Boolean;
   // Launcher-type page (Portable only): .lnk shortcut vs .cmd relative launcher.
   LauncherPage: TInputOptionWizardPage;
@@ -185,29 +189,37 @@ var
   NextTop: Integer;
 begin
   // Install-type selection page, shown early (after Welcome, before the
-  // directory page). Built from custom controls so the option titles are bold.
-  // Standard is ALWAYS the default so users who do not expect portable mode are
-  // not surprised; the existing behavior is unchanged unless the user explicitly
-  // opts into Portable.
+  // directory page). Built from custom controls so the option titles are bold
+  // and each option lists the default folder it installs to, which helps the
+  // user pick the same location when re-installing. A Standard option is always
+  // the default so users who do not expect portable mode are not surprised.
   ModePage := CreateCustomPage(wpWelcome,
     'Installation Type',
     'Choose how Simsapa should be installed.');
 
   NextTop := ScaleY(8);
-  AddModeOption(StandardRadio, NextTop,
-    'Standard Install (recommended)',
-    'Installs to Program Files for all users (requires administrator rights to ' +
-    'install). Databases and settings are stored in your user profile. The app ' +
-    'does not need administrator rights once installed.');
+  AddModeOption(AllUsersRadio, NextTop,
+    'Standard Install - all users',
+    'Installs to ' + ExpandConstant('{commonpf}\Simsapa') + ' for everyone on ' +
+    'this computer. Requires administrator rights: launch the installer with ' +
+    '"Run as administrator" to use this option.');
+  AddModeOption(ThisUserRadio, NextTop,
+    'Standard Install - this user only',
+    'Installs to ' + ExpandConstant('{localappdata}\Programs\Simsapa') + ' for ' +
+    'your account only. No administrator rights required.');
   AddModeOption(PortableRadio, NextTop,
     'Portable Install',
-    'Installs into any folder you choose (e.g. your Desktop or a USB drive) and ' +
-    'keeps all data in a folder next to the app, so it can travel with you. No ' +
-    'administrator rights required - choose "Install for me only" if prompted at ' +
-    'startup.');
+    'Installs into any folder you choose (default ' +
+    ExpandConstant('{userdesktop}\Simsapa') + '; e.g. a USB drive) and keeps ' +
+    'all data in a folder next to the app, so it can travel with you. No ' +
+    'administrator rights required.');
 
-  // Standard is the unconditional default.
-  StandardRadio.Checked := True;
+  // Default to all-users when the installer was launched elevated, otherwise to
+  // this-user (always works without admin). Portable is never the default.
+  if IsAdmin() then
+    AllUsersRadio.Checked := True
+  else
+    ThisUserRadio.Checked := True;
   IsPortable := False;
 
   // Launcher-type page (shown after the directory page, Portable only via
@@ -250,7 +262,21 @@ function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
   if CurPageID = ModePage.ID then
+  begin
     IsPortable := PortableRadio.Checked;
+    // "All users" installs to Program Files and needs administrator rights. If
+    // the installer was not launched elevated, warn and keep the user on the
+    // page so they can re-run as administrator or pick a no-admin option.
+    if AllUsersRadio.Checked and (not IsAdmin()) then
+    begin
+      MsgBox('Installing for all users places Simsapa in ' +
+        ExpandConstant('{commonpf}\Simsapa') + ' and requires administrator ' +
+        'rights. Please re-run the installer using "Run as administrator", or ' +
+        'choose "Standard Install - this user only" or "Portable Install".',
+        mbInformation, MB_OK);
+      Result := False;
+    end;
+  end;
   if CurPageID = LauncherPage.ID then
     LauncherIsCmd := (LauncherPage.SelectedValueIndex = 1);
 end;
@@ -269,17 +295,43 @@ begin
     Result := IsPortable;
 end;
 
-// When entering the directory page, suggest a sensible default per mode:
-// Portable defaults to a user-writable Desktop folder (no admin needed);
-// Standard keeps the Program Files default.
+// Build the "Ready to Install" memo. In Portable mode the Start Menu folder
+// section is omitted: no Start Menu group is created (its page is skipped and
+// the [Icons] are gated to Standard), so listing it would be misleading.
+function UpdateReadyMemo(Space, NewLine, MemoUserInfoInfo, MemoDirInfo, MemoTypeInfo, MemoComponentsInfo, MemoGroupInfo, MemoTasksInfo: String): String;
+var
+  S: String;
+begin
+  S := '';
+  if MemoUserInfoInfo <> '' then
+    S := S + MemoUserInfoInfo + NewLine + NewLine;
+  if MemoDirInfo <> '' then
+    S := S + MemoDirInfo + NewLine + NewLine;
+  if MemoTypeInfo <> '' then
+    S := S + MemoTypeInfo + NewLine + NewLine;
+  if MemoComponentsInfo <> '' then
+    S := S + MemoComponentsInfo + NewLine + NewLine;
+  if (not IsPortable) and (MemoGroupInfo <> '') then
+    S := S + MemoGroupInfo + NewLine + NewLine;
+  if MemoTasksInfo <> '' then
+    S := S + MemoTasksInfo + NewLine + NewLine;
+  Result := S;
+end;
+
+// When entering the directory page, suggest the default folder for the chosen
+// mode (matching the paths shown on the mode page). Explicit folder constants
+// are used rather than {autopf} because, in the lowest-privileges install mode,
+// {autopf} would always resolve to the per-user location.
 procedure CurPageChanged(CurPageID: Integer);
 begin
   if CurPageID = wpSelectDir then
   begin
-    if IsPortable then
+    if PortableRadio.Checked then
       WizardForm.DirEdit.Text := ExpandConstant('{userdesktop}\Simsapa')
+    else if AllUsersRadio.Checked then
+      WizardForm.DirEdit.Text := ExpandConstant('{commonpf}\Simsapa')
     else
-      WizardForm.DirEdit.Text := ExpandConstant('{autopf}\Simsapa');
+      WizardForm.DirEdit.Text := ExpandConstant('{localappdata}\Programs\Simsapa');
   end;
 end;
 

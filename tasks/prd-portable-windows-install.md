@@ -70,32 +70,38 @@ to the system profile.
 
 1. The installer (`simsapa-installer.iss`) must present a custom wizard page,
    shown early (after Welcome, before the directory page), letting the user
-   select one of:
-   - **Standard install** (default): existing behavior — `{autopf}\Simsapa`,
-     data in `%LOCALAPPDATA%\profound-labs\simsapa-ng`, admin elevation as
-     today.
-   - **Portable install**: user chooses any target folder; data stored in a
-     sibling folder; no admin required.
-2. When **Standard** is selected, the installer must behave exactly as it does
-   today (files, icons, VC++ redist handling, uninstaller user-data prompt).
-3. The installer requires administrator rights at install time (both modes), but
-   the **installed app must not require administrator rights at runtime** in
-   either mode.
+   select one of three options, each with its **default install path shown** so a
+   re-installing user can pick the same location:
+   - **Standard install — all users**: `{commonpf}\Simsapa`
+     (`C:\Program Files\Simsapa`); needs administrator rights; data in
+     `%LOCALAPPDATA%\profound-labs\simsapa-ng`.
+   - **Standard install — this user only**: `{localappdata}\Programs\Simsapa`;
+     no admin required; data in `%LOCALAPPDATA%\profound-labs\simsapa-ng`.
+   - **Portable install**: user chooses any target folder (default
+     `{userdesktop}\Simsapa`); data stored in a sibling folder; no admin required.
+2. When a **Standard** option is selected, the installer must behave as before
+   (files, icons, VC++ redist handling, uninstaller user-data prompt); only the
+   destination folder differs between the two Standard options.
+3. The **installed app must not require administrator rights at runtime** in any
+   mode. Only the *Standard — all users* install needs admin **at install time**
+   (it writes to Program Files).
 
-   **Implemented approach (plain admin install).** The installer uses
-   `PrivilegesRequired=admin` (Inno's default) with **no**
-   `PrivilegesRequiredOverridesAllowed`. Launched normally, Setup requests
-   elevation (UAC) at startup, exactly like a traditional installer; launched via
-   "Run as administrator" it runs straight through with **no "Select Setup
-   Install Mode" dialog**. Both Standard and Portable installs run elevated —
-   elevation is an install-time concern only (Program Files needs it for
-   Standard; it is harmless for Portable). The running app never needs elevation:
-   Standard stores data under `%LOCALAPPDATA%`, Portable in its sibling data
-   folder.
+   **Implemented approach (lowest privileges + explicit choice).** The installer
+   uses `PrivilegesRequired=lowest` with **no** `PrivilegesRequiredOverridesAllowed`,
+   so there is **no UAC prompt and no "Select Setup Install Mode" dialog** at
+   startup in any launch. The location is chosen explicitly on the mode page. The
+   *all users* option requires the user to have launched the installer with "Run
+   as administrator"; `NextButtonClick` **warns and blocks** that option when not
+   elevated (`IsAdmin()`), steering the user to re-run as administrator or pick a
+   no-admin option. The default option is *all users* when launched elevated,
+   else *this user only*; Portable is never the default (so a Standard option is
+   always preselected). Directory defaults use explicit folder constants
+   (`{commonpf}`, `{localappdata}\Programs`, `{userdesktop}`), not `{autopf}`,
+   which under `lowest` always resolves per-user.
 
-   The Standard/Portable choice is made on the `ModePage` after Welcome, with
-   **Standard always the default** so users who do not expect portable mode are
-   not surprised. (An earlier iteration used
+   *Trade-off:* under `lowest` install mode, even an *all users* install registers
+   its uninstaller per-user (HKCU), not HKLM — acceptable for this single-user
+   desktop app. (An earlier iteration used
    `PrivilegesRequiredOverridesAllowed=dialog` so Portable could install without
    elevation, but that "Select Setup Install Mode" dialog appeared even when the
    exe was started with "Run as administrator", which was confusing, so it was
