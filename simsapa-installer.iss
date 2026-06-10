@@ -252,7 +252,7 @@ begin
     'Installs into any folder you choose (default ' +
     ExpandConstant('{userdesktop}\Simsapa') + ') and keeps ' +
     'all data in a folder next to the app, so it can travel with you. No administrator rights required. ' +
-    'For using Simsapa from a USB drive, it is faster to install to a folder in the Desktop first and selecting a .cmd launcher, then move the folder to the USB drive.',
+    'For using Simsapa from a USB drive, it is faster to install to a folder in the Desktop first and selecting a .cmd launcher, starting the app so that it downloads the databases, and then move the files to the USB drive (Simsapa/ and SimsapaData/ folders and the Simsapa.cmd launcher).',
     '');
 
   // Default to all-users when the installer was launched elevated, otherwise to
