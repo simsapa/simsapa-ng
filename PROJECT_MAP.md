@@ -384,6 +384,18 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **App Settings:** `backend/src/app_settings.rs` — includes `search_last_mode: IndexMap<String, String>` keyed by area name (`"Suttas"` / `"Dictionary"` / `"Library"`); per-area defaults applied at read time (`"Combined"` for Dictionary, `"Fulltext Match"` for Suttas/Library) via `AppData::get_last_search_mode(area)` / `set_last_search_mode(area, mode)`. Surfaced to QML as `SuttaBridge.get_last_search_mode` / `set_last_search_mode` (area-generic).
 - **Theme Colors:** `backend/src/theme_colors.rs`
 - **Directory Paths:** `backend/src/lib.rs:131` - `AppGlobalPaths`
+- **Portable-mode path resolution:** `backend/src/lib.rs` - `init_dotenv()` also
+  loads `config.txt` from the running executable's own directory (via
+  `exe_dir()`), in addition to the CWD `.env`/`config.txt` and the
+  `get_create_simsapa_dir()` `config.txt`; `dotenvy` non-override semantics keep
+  an explicit `SIMSAPA_DIR` env var authoritative. When `SIMSAPA_DIR` is a
+  **relative** value (the portable installer writes `SIMSAPA_DIR=../SimsapaData`),
+  `resolve_simsapa_dir()` joins it onto `exe_dir()` and collapses `..` with
+  `normalize_lexically()` (never `std::fs::canonicalize()`, which yields `\\?\`
+  paths on Windows); absolute values are used as-is. This makes a portable USB
+  install survive drive-letter changes. The Windows installer
+  (`simsapa-installer.iss`) offers Standard vs Portable modes; see
+  [docs/windows-portable-install.md](./docs/windows-portable-install.md).
 
 ### Database Upgrade Flow
 The app uses a single `appdata.sqlite3` for both seeded content and user-generated data. User-generated rows are tagged with `is_user_added = true` (runtime default); bootstrap-seeded rows are inserted with `is_user_added = false`. Export/import filters on that column.

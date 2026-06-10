@@ -54,20 +54,94 @@ use crate::update_checker::ReleasesInfo;
 
 pub static APP_INFO: AppInfo = AppInfo{name: "simsapa-ng", author: "profound-labs"};
 
+/// Return the directory containing the running executable.
+///
+/// Returns `None` (without panicking) if `std::env::current_exe()` errors or
+/// has no parent directory — e.g. on platforms where it is unavailable. Callers
+/// must fall back to existing behavior in that case.
+pub fn exe_dir() -> Option<PathBuf> {
+    match env::current_exe() {
+        Ok(exe) => exe.parent().map(|p| p.to_path_buf()),
+        Err(_) => None,
+    }
+}
+
+/// Normalize a path lexically, collapsing `.` and `..` segments **without**
+/// touching the filesystem.
+///
+/// This is used instead of `std::fs::canonicalize()` on purpose: on Windows
+/// `canonicalize()` returns `\\?\`-prefixed extended-length paths that can
+/// break downstream Qt/SQLite path handling. A `..` is only collapsed when it
+/// follows a normal segment; a leading `..` (with no preceding segment to pop)
+/// is preserved verbatim.
+pub fn normalize_lexically(path: &Path) -> PathBuf {
+    use std::path::Component;
+    let mut result = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                if matches!(result.components().last(), Some(Component::Normal(_))) {
+                    result.pop();
+                } else {
+                    result.push(component.as_os_str());
+                }
+            }
+            Component::CurDir => {}
+            other => result.push(other.as_os_str()),
+        }
+    }
+    result
+}
+
+/// Resolve a raw `SIMSAPA_DIR` value into an absolute path.
+///
+/// - A **relative** value (e.g. `../SimsapaData`, as written by the portable
+///   installer) is joined onto `exe_dir` and normalized lexically (see
+///   [`normalize_lexically`]). Forward slashes are valid path separators on
+///   Windows, so `../SimsapaData` resolves correctly there.
+/// - An **absolute** value is returned unchanged.
+/// - If the value is relative but `exe_dir` is `None` (e.g. `current_exe()`
+///   failed), the raw value is returned unchanged as a graceful fallback.
+///
+/// This is a pure function (no filesystem access) so it can be unit-tested with
+/// an arbitrary `exe_dir`.
+pub fn resolve_simsapa_dir(raw: &str, exe_dir: Option<PathBuf>) -> PathBuf {
+    let p = Path::new(raw);
+    if p.is_relative() {
+        if let Some(dir) = exe_dir {
+            return normalize_lexically(&dir.join(p));
+        }
+    }
+    PathBuf::from(raw)
+}
+
 /// Initialize environment variables from multiple sources.
 ///
-/// Loads environment variables in the following order:
+/// Loads environment variables in the following order (earlier sources win,
+/// because `dotenvy` does **not** override variables already set):
 /// 1. Standard .env file in current directory
 /// 2. config.txt in current directory
-/// 3. config.txt in simsapa directory (from get_create_simsapa_dir())
+/// 3. config.txt in the directory containing the running executable
+///    (portable installs write this next to `simsapadhammareader.exe`)
+/// 4. config.txt in simsapa directory (from get_create_simsapa_dir())
 ///
-/// Does not override existing environment variables.
+/// Does not override existing environment variables, so an explicitly set
+/// `SIMSAPA_DIR` env var always wins. The exe-dir `config.txt` is loaded
+/// **before** step 4 because `get_create_simsapa_dir()` reads `SIMSAPA_DIR`,
+/// which the portable `config.txt` is responsible for setting.
 fn init_dotenv() {
     // Load from standard .env file
     dotenv().ok();
 
     // Try to load from config.txt in current directory
     dotenvy::from_filename("config.txt").ok();
+
+    // Try to load from config.txt next to the running executable. This is how
+    // a portable install supplies SIMSAPA_DIR; it must be loaded before
+    // get_create_simsapa_dir() below resolves the data directory.
+    if let Some(dir) = exe_dir() {
+        dotenvy::from_path(dir.join("config.txt")).ok();
+    }
 
     // Try to load from config.txt in simsapa directory
     if let Ok(simsapa_dir) = get_create_simsapa_dir() {
@@ -555,8 +629,16 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
     }
 
     match env::var("SIMSAPA_DIR") {
-        // If SIMSAPA_DIR env variable was defined, use that.
-        Ok(s) => Ok(PathBuf::from(s)),
+        // If SIMSAPA_DIR env variable was defined, use that. A relative value
+        // (as written by the portable installer's config.txt) is resolved
+        // against the executable's directory; an absolute value is used as-is.
+        Ok(s) => {
+            let p = resolve_simsapa_dir(&s, exe_dir());
+            if !p.try_exists()? {
+                create_dir_all(&p)?;
+            }
+            Ok(p)
+        }
         Err(_) => {
             // Else, check if storage path was selected before.
             let internal_app_root = if let Ok(p) = get_create_simsapa_internal_app_root() {

@@ -44,6 +44,12 @@ Notable feature docs:
   path, add an `ANALYZE` call and update the table in that doc.** Background:
   missing `sqlite_stat1` made the Headword Match query 170 s instead of 17 ms
   (see `tasks/prd-fixing-headword-match-slow-query.md`).
+- [Windows portable install](./docs/windows-portable-install.md) — the Standard
+  vs Portable installer modes, the relocatable folder layout, how the portable
+  `config.txt` sets a relative `SIMSAPA_DIR` resolved against the **exe
+  directory** (`exe_dir()` / `resolve_simsapa_dir()` / `normalize_lexically()`
+  in `backend/src/lib.rs`, not `canonicalize()`), the `.lnk` vs `.cmd` launcher
+  choice, and USB drive-letter robustness.
 
 ## Specific coding procedures
 
