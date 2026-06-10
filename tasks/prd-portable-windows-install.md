@@ -78,29 +78,28 @@ to the system profile.
      sibling folder; no admin required.
 2. When **Standard** is selected, the installer must behave exactly as it does
    today (files, icons, VC++ redist handling, uninstaller user-data prompt).
-3. When **Portable** is selected, the installer must **not** require
-   administrator privileges (run in the lowest-privilege mode for that path).
-   Use `PrivilegesRequiredOverridesAllowed` / dynamic privilege handling so the
-   portable path does not elevate while the standard path still can.
+3. The installer requires administrator rights at install time (both modes), but
+   the **installed app must not require administrator rights at runtime** in
+   either mode.
 
-   **Implemented approach (privilege/mode coherence).** Inno fixes the elevation
-   mode at **startup**, before any wizard page is shown, via the built-in
-   "Select Setup Install Mode" dialog (`PrivilegesRequiredOverridesAllowed=dialog`
-   with the default `PrivilegesRequired=admin` — both **unchanged** from the
-   pre-feature installer). Because the Standard/Portable `ModePage` comes *after*
-   Welcome, it cannot drive elevation, so the two decisions are kept consistent
-   in `[Code]` using `IsAdminInstallMode()`:
-   - The `ModePage` default selection follows the startup choice: elevated →
-     **Standard**, non-elevated ("Install for me only") → **Portable**;
-     `IsPortable` is initialised the same way.
-   - `NextButtonClick` **blocks** choosing Standard while *not* in admin install
-     mode (Standard targets `{autopf}`/Program Files and needs admin rights),
-     showing an info message steering the user to re-run as "Install for all
-     users" or to pick Portable. This prevents the one broken combination
-     (Standard → per-user Program Files) and keeps Standard's location unchanged.
-   - The Portable option text notes: choose "Install for me only" if prompted at
-     startup. A user without admin rights thus lands on Portable by default with
-     no UAC prompt.
+   **Implemented approach (plain admin install).** The installer uses
+   `PrivilegesRequired=admin` (Inno's default) with **no**
+   `PrivilegesRequiredOverridesAllowed`. Launched normally, Setup requests
+   elevation (UAC) at startup, exactly like a traditional installer; launched via
+   "Run as administrator" it runs straight through with **no "Select Setup
+   Install Mode" dialog**. Both Standard and Portable installs run elevated —
+   elevation is an install-time concern only (Program Files needs it for
+   Standard; it is harmless for Portable). The running app never needs elevation:
+   Standard stores data under `%LOCALAPPDATA%`, Portable in its sibling data
+   folder.
+
+   The Standard/Portable choice is made on the `ModePage` after Welcome, with
+   **Standard always the default** so users who do not expect portable mode are
+   not surprised. (An earlier iteration used
+   `PrivilegesRequiredOverridesAllowed=dialog` so Portable could install without
+   elevation, but that "Select Setup Install Mode" dialog appeared even when the
+   exe was started with "Run as administrator", which was confusing, so it was
+   removed.)
 
 ### Installer — portable target and data folders
 

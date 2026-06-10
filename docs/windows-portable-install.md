@@ -17,34 +17,33 @@ releases.
 
 ## Privileges and mode coherence
 
-Inno fixes the privilege (elevation) mode at **startup**, before any wizard page
-is shown, via the built-in "Select Setup Install Mode" dialog
-(`PrivilegesRequiredOverridesAllowed=dialog`, with the default
-`PrivilegesRequired=admin` — both **unchanged** from the pre-feature installer).
-Running the installer therefore prompts for administrator rights at the start,
-exactly as before. The Standard/Portable `ModePage` comes *after* Welcome, so it
-cannot drive elevation; the two decisions are reconciled in `[Code]`:
+The installer uses a plain administrator install: `PrivilegesRequired=admin`
+(Inno's default) with **no** `PrivilegesRequiredOverridesAllowed`. This means:
 
-- **Default selection is always Standard** (`StandardRadio.Checked := True`,
-  `IsPortable := False`), regardless of elevation, so users who do not expect a
-  portable mode are not surprised. The mode page does **not** flip the default
-  based on `IsAdminInstallMode()`.
-- **Validation** in `NextButtonClick`: choosing **Standard** while *not* in admin
-  install mode is blocked with an info message, because Standard targets
-  `{autopf}` (Program Files) and needs administrator rights *to install*. The
-  user is steered to re-run choosing "Install for all users", or to pick Portable
-  instead.
+- Launched normally, Setup requests elevation (a **UAC prompt**) at startup.
+- Launched via **"Run as administrator"**, Setup is already elevated and runs
+  straight through — **no "Select Setup Install Mode" dialog** is shown.
 
-So: run elevated ("Install for all users") and Standard installs to Program
-Files as before; if you are not elevated, either re-run elevated for Standard or
-pick Portable (which needs no admin). **Neither mode requires administrator
-rights once installed** — Standard stores data under `%LOCALAPPDATA%` and
-Portable in its sibling data folder, so the running app never needs elevation.
+Both Standard and Portable installs therefore run elevated. The elevation is an
+**install-time** matter only: writing to `C:\Program Files` (Standard) needs
+admin, and running elevated is harmless for Portable (it can still write to the
+chosen folder and the sibling data folder). **The installed app never needs
+administrator rights at runtime** in either mode — Standard stores data under
+`%LOCALAPPDATA%`, Portable in its sibling data folder.
 
-The option titles ("**Standard Install**", "**Portable Install**") are shown in
-bold; the `ModePage` is built from custom `TNewRadioButton` + `TNewStaticText`
-controls (rather than `CreateInputOptionPage`) so the title can be bold while the
-description stays normal weight.
+An earlier iteration used `PrivilegesRequiredOverridesAllowed=dialog` (the
+"Select Setup Install Mode" dialog) so Portable could install without elevation,
+but that dialog appeared even when the exe was started with "Run as
+administrator", which was confusing. It was removed in favour of the plain admin
+model above.
+
+The Standard/Portable choice is made on the `ModePage` (after Welcome). The
+option titles ("**Standard Install**", "**Portable Install**") are shown in bold;
+the page is built from custom `TNewRadioButton` + `TNewStaticText` controls
+(rather than `CreateInputOptionPage`) so the title is bold while the description
+stays normal weight. **Standard is always the default** (`StandardRadio.Checked
+:= True`, `IsPortable := False`) so users who do not expect a portable mode are
+not surprised; there is no `IsAdminInstallMode()`-based flipping.
 
 ## Folder layout (Desktop example)
 

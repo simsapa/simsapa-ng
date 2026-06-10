@@ -31,10 +31,13 @@ DefaultGroupName={#AppName}
 AllowNoIcons=yes
 ; Uncomment the following line if you have a LICENSE file
 ;LicenseFile=LICENSE
-; Uncomment the following line to run in non-administrative install mode
-; (install for current user only.)
-;PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
+; Require administrator rights (the default). Setup requests elevation (UAC) at
+; startup when not already elevated, and runs straight through when launched via
+; "Run as administrator" — no "Select Setup Install Mode" dialog is shown. Both
+; Standard and Portable installs run elevated; the installed app itself never
+; needs administrator rights at runtime (data lives in the user profile for
+; Standard, or the sibling data folder for Portable).
+PrivilegesRequired=admin
 ; Portable installs register no uninstaller (no Add/Remove Programs entry);
 ; Standard installs remain fully uninstallable. ShouldRunStandard is a [Code]
 ; Boolean function (= not IsPortable), evaluated after the mode page.
@@ -247,21 +250,7 @@ function NextButtonClick(CurPageID: Integer): Boolean;
 begin
   Result := True;
   if CurPageID = ModePage.ID then
-  begin
     IsPortable := PortableRadio.Checked;
-    // Standard install targets Program Files and requires administrator rights.
-    // If the user is not in admin install mode (chose "Install for me only" at
-    // startup), block Standard and steer them, keeping the privilege/mode pair
-    // consistent and Standard's Program Files behavior unchanged.
-    if (not IsPortable) and (not IsAdminInstallMode()) then
-    begin
-      MsgBox('Standard install places Simsapa in Program Files and requires ' +
-        'administrator rights. Please re-run the installer and choose ' +
-        '"Install for all users" at the first prompt, or select Portable ' +
-        'install instead.', mbInformation, MB_OK);
-      Result := False;
-    end;
-  end;
   if CurPageID = LauncherPage.ID then
     LauncherIsCmd := (LauncherPage.SelectedValueIndex = 1);
 end;
