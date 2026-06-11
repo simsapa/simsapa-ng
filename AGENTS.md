@@ -80,6 +80,49 @@ match log_file.try_exists() {
 
 See `backend/src/logger.rs` for examples of this pattern in practice.
 
+### Android "isn't 16 KB compatible" warning (test-deploy only)
+
+If the Android app shows the dialog **"This app isn't 16 KB compatible"** listing
+libraries with "Unknown error", **do not assume the build is broken.** This
+warning is gated on the **install path**, not the APK contents. The dialog text
+says it outright: *"because this is a debuggable app which is currently being
+tested."*
+
+- Installing via **Qt Creator deploy** (`adb install` / `pm install` marks it a
+  test deployment) → the dialog appears.
+- **Sideloading the byte-identical APK** (copy to phone, tap to install in a
+  file manager) → no dialog.
+
+Confirmed empirically: APK sideload → no warning; Qt Creator deploy of the same
+build → warning; sideload again → no warning. End users (and any normal
+sideload/Play install) never see it.
+
+"Unknown error" next to a library does **not** mean it is misaligned — it means
+the on-device checker couldn't verify a library that is stored **compressed**
+(`Defl:N`, `extractNativeLibs=true`) in the APK. To prove a given build is fine,
+verify the libs directly instead of trusting the dialog:
+
+```sh
+# ELF LOAD-segment alignment of a flagged lib (want 0x4000 = 16 KB)
+unzip -p app.apk lib/arm64-v8a/libQt6Widgets_arm64-v8a.so > /tmp/x.so
+readelf -lW /tmp/x.so | grep LOAD          # last column is p_align
+# APK-level 16 KB page alignment
+$ANDROID_SDK/build-tools/<ver>/zipalign -c -P 16 4 app.apk && echo PASS
+```
+
+(June 2026 forensics: a warning build and a known-good no-warning build were
+identical on every 16 KB axis — lib md5s, ELF p_align (Qt libs 0x4000), all 148
+libs `Defl:N`, `zipalign -P16` PASS, compileSdk 36 / targetSdk 35 / debuggable.
+The only variable was the install path.)
+
+**Separate, real gap (not this dialog):** the app is not *truly* 16 KB-compatible
+because Qt's 5 bundled FFmpeg prebuilts (`libavcodec`, `libavformat`,
+`libavutil`, `libswresample`, `libswscale`) are 4 KB-aligned (0x1000). Harmless
+for dev/sideload, but it will fail a Play Store submission targeting API 35+. Fix
+path: swap Qt's FFmpeg multimedia backend for the Android MediaCodec backend, or
+ship 16 KB-aligned FFmpeg builds. The FFmpeg backend is pulled in for recording
+(`RecordingPlaybackItem`, chanting practice).
+
 ### New QML components
 
 When you create a new QML component such as `SearchBarInput.qml`, the file has to be added to the `qml_files` list in `bridges/build.rs`.
