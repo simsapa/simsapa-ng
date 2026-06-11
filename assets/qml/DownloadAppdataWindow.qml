@@ -30,7 +30,7 @@ ApplicationWindow {
 
     Component.onCompleted: {
         if (root.is_mobile) {
-            root.wake_lock_acquired = manager.acquire_wake_lock_rust();
+            manager.set_keep_screen_on(true);
         }
 
         // Check if auto_start_download.txt marker file exists
@@ -94,7 +94,16 @@ ApplicationWindow {
 
     Component.onDestruction: {
         if (root.is_mobile) {
-            manager.release_wake_lock_rust();
+            manager.set_keep_screen_on(false);
+        }
+    }
+
+    // Guard the Android Back button while a download/extract is actively running:
+    // intercept the close request and ask for confirmation instead of aborting.
+    onClosing: function(close) {
+        if (root.is_mobile && root.operation_active && !root.force_close) {
+            close.accepted = false;
+            back_guard_dialog.open();
         }
     }
 
@@ -103,8 +112,14 @@ ApplicationWindow {
     property string init_add_languages: ""
     property var available_languages: []
     property var selected_languages: []
-    property bool wake_lock_acquired: false
     property bool releases_info_checked: false
+
+    // True while a download/extract is actively in flight. Drives the Android
+    // Back-button guard so an in-progress install isn't aborted by accident.
+    property bool operation_active: false
+    // Set true once the user confirms leaving, so the close request goes through
+    // instead of re-triggering the guard dialog.
+    property bool force_close: false
 
     AssetManager { id: manager }
 
@@ -123,6 +138,7 @@ ApplicationWindow {
         download_progress_frame.pending_download_urls = urls;
 
         // Start the download
+        root.operation_active = true;
         manager.download_urls_and_extract(urls, false);
     }
 
@@ -182,6 +198,33 @@ ApplicationWindow {
         }
     }
 
+    // Back-button guard confirmation (Android). Shown when Back is pressed
+    // while a download/extract is actively running.
+    Dialog {
+        id: back_guard_dialog
+        title: "Operation in progress"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Yes | Dialog.No
+
+        ColumnLayout {
+            spacing: 10
+            width: 400
+
+            Label {
+                text: "An operation is in progress. Closing the window now will interrupt it. Close anyway?"
+                font.pointSize: root.pointSize
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+
+        onAccepted: {
+            root.force_close = true;
+            Qt.quit();
+        }
+    }
+
     Connections {
         target: manager
 
@@ -204,6 +247,8 @@ ApplicationWindow {
 
         function onDownloadNeedsRetry(failed_url: string, error_message: string) {
             logger.info("onDownloadNeedsRetry(): " + failed_url + " - " + error_message);
+            // Download is paused waiting for the user to retry — no longer actively running.
+            root.operation_active = false;
             download_progress_frame.handle_download_needs_retry(failed_url, error_message);
         }
 
@@ -211,6 +256,7 @@ ApplicationWindow {
             // Delegate to the progress frame's centralized retry logic
             if (download_progress_frame.handle_downloads_completed(value)) {
                 // All downloads complete - show completion screen
+                root.operation_active = false;
                 views_stack.currentIndex = 4;
             }
         }
@@ -319,6 +365,7 @@ ApplicationWindow {
         // Store URLs in progress frame for potential retry/continuation
         download_progress_frame.pending_download_urls = urls;
 
+        root.operation_active = true;
         manager.download_urls_and_extract(urls, root.is_initial_setup);
     }
 
@@ -643,16 +690,6 @@ ApplicationWindow {
                             horizontalAlignment: Text.AlignHCenter
                             Layout.fillWidth: true
                         }
-
-                        Text {
-                            text: "Open <b>Settings > Display > Screen timeout</b> and increase to the maximum available time setting (for the duration of the install process)."
-                            textFormat: Text.RichText
-                            font.pointSize: root.pointSize
-                            color: palette.text
-                            wrapMode: Text.WordWrap
-                            horizontalAlignment: Text.AlignHCenter
-                            Layout.fillWidth: true
-                        }
                     }
                 }
 
@@ -662,15 +699,6 @@ ApplicationWindow {
                     Layout.margins: 10
                     Layout.bottomMargin: 60
                     spacing: 10
-
-                    Button {
-                        text: "Open Settings"
-                        font.pointSize: root.pointSize
-                        Layout.fillWidth: true
-                        onClicked: {
-                            manager.open_display_settings();
-                        }
-                    }
 
                     Button {
                         text: "Continue"
@@ -693,7 +721,6 @@ ApplicationWindow {
             pointSize: root.pointSize
             is_mobile: root.is_mobile
             status_text: "Downloading ..."
-            wake_lock_acquired: root.wake_lock_acquired
 
             onQuit_clicked: {
                 Qt.quit();
@@ -701,11 +728,13 @@ ApplicationWindow {
 
             onRetry_download: function(url) {
                 logger.info("Retrying download for: " + url);
+                root.operation_active = true;
                 manager.download_urls_and_extract([url], root.is_initial_setup);
             }
 
             onContinue_downloads: function(urls) {
                 logger.info("Continuing with remaining " + urls.length + " URL(s)");
+                root.operation_active = true;
                 manager.download_urls_and_extract(urls, root.is_initial_setup);
             }
         }

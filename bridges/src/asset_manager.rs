@@ -30,10 +30,8 @@ pub mod qobject {
         include!("cxx-qt-lib/qurl.h");
         type QUrl = cxx_qt_lib::QUrl;
 
-        include!("wake_lock.h");
-        fn acquire_wake_lock() -> bool;
-        fn release_wake_lock();
-        fn is_wake_lock_acquired() -> bool;
+        include!("screen.h");
+        fn keep_screen_on(on: bool);
 
         include!("android_helpers.h");
         fn open_android_display_settings();
@@ -64,11 +62,11 @@ pub mod qobject {
         fn should_auto_start_download(self: Pin<&mut AssetManager>) -> bool;
 
         #[qinvokable]
-        fn acquire_wake_lock_rust(self: Pin<&mut AssetManager>) -> bool;
+        fn set_keep_screen_on(self: Pin<&mut AssetManager>, on: bool);
 
-        #[qinvokable]
-        fn release_wake_lock_rust(self: Pin<&mut AssetManager>);
-
+        // NOTE: currently unused — the "Open Settings" button on the large-download
+        // warning screen was removed once keep-screen-on made the screen-timeout
+        // workaround unnecessary. Kept in case it is wired up again.
         #[qinvokable]
         fn open_display_settings(self: Pin<&mut AssetManager>);
 
@@ -167,12 +165,8 @@ fn cleanup_on_failure(download_temp_folder: &Path, extract_temp_folder: &Path, a
 }
 
 impl qobject::AssetManager {
-    fn acquire_wake_lock_rust(self: Pin<&mut Self>) -> bool {
-        qobject::acquire_wake_lock()
-    }
-
-    fn release_wake_lock_rust(self: Pin<&mut Self>) {
-        qobject::release_wake_lock();
+    fn set_keep_screen_on(self: Pin<&mut Self>, on: bool) {
+        qobject::keep_screen_on(on);
     }
 
     fn open_display_settings(self: Pin<&mut Self>) {
