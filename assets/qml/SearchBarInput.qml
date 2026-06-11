@@ -131,6 +131,9 @@ Frame {
                 Layout.preferredHeight: root.icon_size
 
                 focus: true
+                // Pāli queries are lowercase; stop the soft keyboard from
+                // auto-capitalising the first letter (Sentence case).
+                inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase
                 font.pointSize: root.is_mobile ? 14 : 12
                 placeholderText: {
                     if (!root.db_loaded || !root.searcher_ready) return "Loading...";
@@ -142,6 +145,12 @@ Frame {
                 onAccepted: search_btn.clicked()
                 onTextChanged: root.user_typed()
                 selectByMouse: true
+
+                // On Android (incl. Chromebook), tapping a TextField does not
+                // reliably request the soft keyboard — Android can suppress the
+                // on-screen IME. A tap gives the field active focus, so
+                // explicitly request the input panel here on mobile.
+                onActiveFocusChanged: if (activeFocus && root.is_mobile) Qt.inputMethod.show()
             }
 
             Button {
