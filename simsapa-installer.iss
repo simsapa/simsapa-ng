@@ -273,14 +273,14 @@ begin
     'drive root) and starts Simsapa. Select a type, then click Next.',
     True {Exclusive radio buttons}, False {not a list box});
   LauncherPage.Add(
-    'Shortcut (.lnk) - simplest, uses the app icon. May stop working if a USB ' +
-    'drive is given a different drive letter on another computer.');
-  LauncherPage.Add(
     'Batch launcher (.cmd) - recommended for USB drives. Resolves the app ' +
     'relative to its own location, so it keeps working when the drive letter ' +
     'changes on another computer.');
+  LauncherPage.Add(
+    'Shortcut (.lnk) - simplest, uses the app icon. May stop working if a USB ' +
+    'drive is given a different drive letter on another computer.');
   LauncherPage.SelectedValueIndex := 0;
-  LauncherIsCmd := False;
+  LauncherIsCmd := True;
 
   // Add a warning page if VC++ Redistributable is needed but NOT bundled
   // If bundled, it will be installed silently - no warning needed
@@ -319,7 +319,7 @@ begin
     end;
   end;
   if CurPageID = LauncherPage.ID then
-    LauncherIsCmd := (LauncherPage.SelectedValueIndex = 1);
+    LauncherIsCmd := (LauncherPage.SelectedValueIndex = 0);
 end;
 
 // Decide which wizard pages to skip per mode:
