@@ -161,6 +161,8 @@ Rectangle {
                     id: label_input
                     Layout.fillWidth: true
                     font.pointSize: root.point_size - 1
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
                     onTextChanged: {
                         root.refresh_status();
                         root.changed();
@@ -179,6 +181,8 @@ Rectangle {
                     Layout.fillWidth: root.narrow
                     Layout.preferredWidth: root.narrow ? -1 : 80
                     font.pointSize: root.point_size - 1
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
                     onTextChanged: root.refresh_lang_warning()
                 }
             }

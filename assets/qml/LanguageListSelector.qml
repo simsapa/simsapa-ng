@@ -44,6 +44,8 @@ ColumnLayout {
         placeholderText: root.placeholder_text
         font.pointSize: root.font_point_size
         Layout.fillWidth: true
+        EnterKey.type: Qt.EnterKeyDone
+        MobileKeyboardHelper {}
         onTextChanged: {
             // Update selection when user manually edits the input
             root.sync_selection_from_input();

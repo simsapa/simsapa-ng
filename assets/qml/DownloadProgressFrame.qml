@@ -17,7 +17,6 @@ Frame {
     property bool show_cancel_button: false
     property bool show_retry_button: false
     property string quit_button_text: "Quit"
-    property bool wake_lock_acquired: false
 
     // Retry state management
     property string failed_download_url: ""
@@ -121,21 +120,7 @@ Frame {
                     font.pointSize: root.pointSize
                 }
 
-                // Wake lock status for mobile
-                // (NOTE: Not displayed, not useful information for the user.
-                // Even with wake lock, the extraction process can fail when switching apps.)
-                // Label {
-                //     visible: root.is_mobile
-                //     Layout.alignment: Qt.AlignCenter
-                //     Layout.fillWidth: true
-                //     text: root.wake_lock_acquired ? "Wake lock: acquired" : "Wake lock: not acquired"
-                //     font.pointSize: root.pointSize
-                //     color: palette.text
-                //     wrapMode: Text.WordWrap
-                //     horizontalAlignment: Text.AlignHCenter
-                //     Layout.topMargin: 10
-                // }
-
+                // Warning message for mobile users
                 Label {
                     visible: root.is_mobile
                     Layout.alignment: Qt.AlignCenter
@@ -149,12 +134,11 @@ Frame {
                     Layout.topMargin: 10
                 }
 
-                // Warning message for mobile users
                 Label {
                     visible: root.is_mobile
                     Layout.alignment: Qt.AlignCenter
                     Layout.fillWidth: true
-                    text: "Switching apps or suspend mode (black screen) can interrupt the download and extract process. Tap the device periodically to keep it awake and prevent screen timeout suspend."
+                    text: "Switching apps can interrupt the download and extract process."
                     font.pointSize: root.pointSize
                     color: palette.text
                     wrapMode: Text.WordWrap

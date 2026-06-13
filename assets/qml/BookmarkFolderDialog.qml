@@ -26,6 +26,8 @@ Dialog {
             id: name_input
             Layout.preferredWidth: 300
             placeholderText: "Enter folder name"
+            EnterKey.type: Qt.EnterKeyDone
+            MobileKeyboardHelper {}
             onAccepted: root.accept()
         }
     }

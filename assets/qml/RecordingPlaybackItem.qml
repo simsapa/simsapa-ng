@@ -411,6 +411,8 @@ Item {
                 text: root.label
                 font.bold: true
                 Layout.fillWidth: true
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
                 onAccepted: {
                     root.label = text;
                     root.label_edited(text);

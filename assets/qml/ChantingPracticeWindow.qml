@@ -100,6 +100,8 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
                 placeholderText: "Collection title"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
 
             Label { text: "Description:"; font.pointSize: root.pointSize }
@@ -108,6 +110,8 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
                 placeholderText: "Optional description"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -149,6 +153,8 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
                 placeholderText: "Chant title"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
 
             Label { text: "Description:"; font.pointSize: root.pointSize }
@@ -157,6 +163,8 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
                 placeholderText: "Optional description"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -201,6 +209,8 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
                 placeholderText: "Section title"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
 
             Label { text: "Pāli Text:"; font.pointSize: root.pointSize }
@@ -213,6 +223,8 @@ ApplicationWindow {
                     font.pointSize: root.pointSize
                     placeholderText: "Enter Pāli text here..."
                     wrapMode: TextEdit.WordWrap
+                    // Multi-line: no EnterKey override (Enter inserts a newline).
+                    MobileKeyboardHelper {}
                 }
             }
         }
@@ -269,6 +281,8 @@ ApplicationWindow {
                 id: edit_title
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
 
             Label {
@@ -281,6 +295,8 @@ ApplicationWindow {
                 visible: edit_dialog.edit_type === "collection" || edit_dialog.edit_type === "chant"
                 Layout.fillWidth: true
                 font.pointSize: root.pointSize
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
 
             Label {
@@ -297,6 +313,8 @@ ApplicationWindow {
                     id: edit_content_pali
                     font.pointSize: root.pointSize
                     wrapMode: TextEdit.WordWrap
+                    // Multi-line: no EnterKey override (Enter inserts a newline).
+                    MobileKeyboardHelper {}
                 }
             }
         }

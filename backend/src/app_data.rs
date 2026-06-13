@@ -1572,8 +1572,9 @@ impl AppData {
             return;
         }
 
+        // Use 6 MB as the low memory threshold. Phones with 8 MB RAM can handle incremental fulltext search fine.
         if let Some(total_memory_gb) = self.get_system_memory_gb()
-            && total_memory_gb <= 8 {
+            && total_memory_gb <= 6 {
                 self.set_search_as_you_type(false);
             }
 

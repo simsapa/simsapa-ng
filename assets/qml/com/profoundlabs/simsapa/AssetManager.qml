@@ -23,13 +23,8 @@ Item {
         return false;
     }
 
-    function acquire_wake_lock_rust(): bool {
-        console.log("acquire_wake_lock_rust()");
-        return true;
-    }
-
-    function release_wake_lock_rust() {
-        console.log("release_wake_lock_rust()");
+    function set_keep_screen_on(on: bool) {
+        console.log("set_keep_screen_on(" + on + ")");
     }
 
     function open_display_settings() {

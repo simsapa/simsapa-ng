@@ -34,9 +34,6 @@ ApplicationWindow {
     property bool use_system_margin: true
     property int custom_margin_value: 24
 
-    // Wake lock state
-    property bool wake_lock_acquired: false
-
     // Keybindings data
     property var keybindings_data: ({})
     property var default_keybindings: ({})
@@ -464,55 +461,6 @@ ApplicationWindow {
                             font.pointSize: root.pointSize
                             onClicked: rebuild_index_dialog.open()
                         }
-
-                        // Wake Lock section (mobile only)
-                        // 
-                        // NOTE: Commented out for now because the Wake Lock is not sufficient to stop Android from suspending the app when placed in the background.
-                        
-                        /* Label { */
-                        /*     visible: root.is_mobile */
-                        /*     text: "Wake Lock" */
-                        /*     font.pointSize: root.pointSize + 1 */
-                        /*     font.bold: true */
-                        /*     Layout.topMargin: 10 */
-                        /* } */
-
-                        /* Label { */
-                        /*     visible: root.is_mobile */
-                        /*     text: "The wake lock for example allows the Obsidian Simsapa plugin to communicate with the Simsapa app while it is in the background." */
-                        /*     font.pointSize: root.pointSize - 2 */
-                        /*     wrapMode: Text.WordWrap */
-                        /*     Layout.fillWidth: true */
-                        /* } */
-
-                        /* Button { */
-                        /*     visible: root.is_mobile */
-                        /*     text: root.wake_lock_acquired ? "Release Wake Lock" : "Acquire Wake Lock" */
-                        /*     font.pointSize: root.pointSize */
-                        /*     onClicked: { */
-                        /*         if (root.wake_lock_acquired) { */
-                        /*             SuttaBridge.release_wake_lock_rust(); */
-                        /*         } else { */
-                        /*             SuttaBridge.acquire_wake_lock_rust(); */
-                        /*         } */
-                        /*         root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust(); */
-                        /*     } */
-                        /* } */
-
-                        /* Button { */
-                        /*     visible: root.is_mobile */
-                        /*     text: "Refresh Status" */
-                        /*     font.pointSize: root.pointSize */
-                        /*     onClicked: { */
-                        /*         root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust(); */
-                        /*     } */
-                        /* } */
-
-                        /* Label { */
-                        /*     visible: root.is_mobile */
-                        /*     text: "Wake Lock Status: " + (root.wake_lock_acquired ? "Acquired" : "Not Acquired") */
-                        /*     font.pointSize: root.pointSize */
-                        /* } */
 
                         Item { Layout.fillHeight: true }
                     }
@@ -970,11 +918,6 @@ ApplicationWindow {
         // Load initial state for Find tab settings
         search_as_you_type_checkbox.checked = SuttaBridge.get_search_as_you_type();
         open_find_in_results_checkbox.checked = SuttaBridge.get_open_find_in_sutta_results();
-
-        // Load wake lock state (mobile only)
-        if (root.is_mobile) {
-            root.wake_lock_acquired = SuttaBridge.is_wake_lock_acquired_rust();
-        }
 
         // Load keybindings
         root.load_keybindings();

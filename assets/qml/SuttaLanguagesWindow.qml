@@ -39,7 +39,13 @@ ApplicationWindow {
     AssetManager { id: manager }
 
     property bool is_downloading: false
-    property bool wake_lock_acquired: false
+    // True while a language removal is running. Together with is_downloading it
+    // drives the Android Back-button guard so an in-progress operation isn't
+    // aborted by accident.
+    property bool is_removing: false
+    // Set true once the user confirms leaving, so the close request goes through
+    // instead of re-triggering the guard dialog.
+    property bool force_close: false
 
     Connections {
         target: manager
@@ -84,6 +90,7 @@ ApplicationWindow {
         }
 
         function onRemovalCompleted(success: bool, error_msg: string) {
+            root.is_removing = false;
             if (success) {
                 completion_message.text = "Languages have been successfully removed.\n\nQuit and start the application again.";
                 views_stack.currentIndex = 2;
@@ -106,15 +113,25 @@ ApplicationWindow {
         available_languages = manager.get_available_languages();
         installed_languages_with_counts = SuttaBridge.get_sutta_language_labels_with_counts();
 
-        // Acquire wake lock on mobile if needed for any operations
+        // Keep the screen on while this window is open on mobile
         if (root.is_mobile) {
-            root.wake_lock_acquired = manager.acquire_wake_lock_rust();
+            manager.set_keep_screen_on(true);
         }
     }
 
     Component.onDestruction: {
         if (root.is_mobile) {
-            manager.release_wake_lock_rust();
+            manager.set_keep_screen_on(false);
+        }
+    }
+
+    // Guard the Android Back button while a download/import or removal is
+    // actively running: intercept the close request and ask for confirmation
+    // instead of aborting the operation.
+    onClosing: function(close) {
+        if (root.is_mobile && (root.is_downloading || root.is_removing) && !root.force_close) {
+            close.accepted = false;
+            back_guard_dialog.open();
         }
     }
 
@@ -183,6 +200,33 @@ ApplicationWindow {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
+        }
+    }
+
+    // Back-button guard confirmation (Android). Shown when Back is pressed
+    // while a download/import or removal is actively running.
+    Dialog {
+        id: back_guard_dialog
+        title: "Operation in progress"
+        anchors.centerIn: parent
+        modal: true
+        standardButtons: Dialog.Yes | Dialog.No
+
+        ColumnLayout {
+            spacing: 10
+            width: 400
+
+            Label {
+                text: "An operation is in progress. Closing the window now will interrupt it. Close anyway?"
+                font.pointSize: root.pointSize
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+        }
+
+        onAccepted: {
+            root.force_close = true;
+            root.close();
         }
     }
 
@@ -343,7 +387,6 @@ ApplicationWindow {
             status_text: "Processing..."
             show_cancel_button: root.is_downloading
             quit_button_text: root.is_downloading ? "Close" : "Quit"
-            wake_lock_acquired: root.wake_lock_acquired
 
             onQuit_clicked: {
                 if (root.is_downloading) {
@@ -569,6 +612,7 @@ ApplicationWindow {
 
         download_progress_frame.status_text = "Preparing to remove languages...";
         download_progress_frame.progress_value = 0;
+        root.is_removing = true;
         views_stack.currentIndex = 1;
 
         // Call the backend to remove languages (runs in background thread)
