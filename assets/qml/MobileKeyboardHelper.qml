@@ -28,6 +28,11 @@ Item {
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
 
+    // Qt.inputMethod is typed as the base QObject in the QML global object, so
+    // the linter reports its show()/visible members as missing. Cast to the
+    // proper QtQuick InputMethod type once here so the calls below type-check.
+    readonly property InputMethod input_method: Qt.inputMethod as InputMethod
+
     // Keyboard diagnostics: confirm the helper is active and which platform it
     // sees. If is_mobile is false on a Chromebook, the Connections/TapHandler
     // below are disabled and the keyboard is never requested.
@@ -50,17 +55,17 @@ Item {
         property int attempts: 0
         onTriggered: {
             attempts += 1;
-            Qt.inputMethod.show();
+            helper.input_method.show();
             logger.info("MobileKeyboardHelper: retry attempt=" + attempts
-                + " inputMethod.visible=" + Qt.inputMethod.visible);
-            if (Qt.inputMethod.visible || attempts >= 5) stop();
+                + " inputMethod.visible=" + helper.input_method.visible);
+            if (helper.input_method.visible || attempts >= 5) stop();
         }
     }
 
     function request_keyboard() {
         logger.info("MobileKeyboardHelper: request_keyboard() called, "
-            + "inputMethod.visible=" + Qt.inputMethod.visible);
-        Qt.inputMethod.show();
+            + "inputMethod.visible=" + helper.input_method.visible);
+        helper.input_method.show();
         retry_timer.attempts = 0;
         retry_timer.restart();
     }
