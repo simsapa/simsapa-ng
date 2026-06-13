@@ -9,6 +9,8 @@ Frame {
     Layout.fillWidth: true
     Layout.minimumHeight: root.icon_size
 
+    Logger { id: logger }
+
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
 
@@ -91,7 +93,15 @@ Frame {
     // On initial load the dropdowns restore in their own Component.onCompleted
     // (children complete before the parent), so root.Component.onCompleted can
     // fire the one initial query.
-    Component.onCompleted: root.handle_query_fn(search_input.text) // qmllint disable use-proper-function
+    Component.onCompleted: {
+        // Keyboard diagnostics: log the detected platform once at startup so we
+        // can confirm whether a Chromebook (Android app) is treated as mobile.
+        logger.info("SearchBarInput: Qt.platform.os=" + Qt.platform.os
+            + " is_mobile=" + root.is_mobile + " is_desktop=" + root.is_desktop
+            + " search_input.focus=" + search_input.focus
+            + " inputMethod.visible=" + Qt.inputMethod.visible);
+        root.handle_query_fn(search_input.text); // qmllint disable use-proper-function
+    }
 
     function user_typed() {
         // TODO self._show_search_normal_icon()
@@ -157,6 +167,13 @@ Frame {
                 onAccepted: search_btn.clicked()
                 onTextChanged: root.user_typed()
                 selectByMouse: true
+
+                // Keyboard diagnostics: report focus transitions so we can see
+                // whether tapping the field actually moves active focus to it
+                // (the precondition for the IME to be raised).
+                onActiveFocusChanged: logger.info("search_input: activeFocus="
+                    + search_input.activeFocus + " inputMethod.visible="
+                    + Qt.inputMethod.visible)
 
                 // Reliably raise the Android/ChromeOS soft keyboard on the
                 // first tap. See docs/android-soft-keyboard.md.

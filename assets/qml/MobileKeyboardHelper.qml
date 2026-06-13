@@ -20,11 +20,20 @@ import QtQuick
 Item {
     id: helper
 
+    Logger { id: logger }
+
     // The input field to drive. Defaults to the parent element so the helper
     // can be dropped inside a TextField/TextArea with no arguments.
     property Item field: parent
 
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
+
+    // Keyboard diagnostics: confirm the helper is active and which platform it
+    // sees. If is_mobile is false on a Chromebook, the Connections/TapHandler
+    // below are disabled and the keyboard is never requested.
+    Component.onCompleted: logger.info("MobileKeyboardHelper: Qt.platform.os="
+        + Qt.platform.os + " is_mobile=" + helper.is_mobile
+        + " field=" + helper.field)
 
     // Zero-size: this is a behaviour helper, not a visual element.
     width: 0
@@ -42,11 +51,15 @@ Item {
         onTriggered: {
             attempts += 1;
             Qt.inputMethod.show();
+            logger.info("MobileKeyboardHelper: retry attempt=" + attempts
+                + " inputMethod.visible=" + Qt.inputMethod.visible);
             if (Qt.inputMethod.visible || attempts >= 5) stop();
         }
     }
 
     function request_keyboard() {
+        logger.info("MobileKeyboardHelper: request_keyboard() called, "
+            + "inputMethod.visible=" + Qt.inputMethod.visible);
         Qt.inputMethod.show();
         retry_timer.attempts = 0;
         retry_timer.restart();
@@ -58,6 +71,8 @@ Item {
         target: helper.field
         enabled: helper.is_mobile && helper.field !== null
         function onActiveFocusChanged() {
+            logger.info("MobileKeyboardHelper: field.onActiveFocusChanged activeFocus="
+                + helper.field.activeFocus);
             if (helper.field.activeFocus) helper.request_keyboard();
         }
     }
@@ -76,6 +91,9 @@ Item {
         parent: helper.field
         enabled: helper.is_mobile && helper.field !== null
         gesturePolicy: TapHandler.DragThreshold
-        onTapped: helper.request_keyboard()
+        onTapped: {
+            logger.info("MobileKeyboardHelper: TapHandler onTapped");
+            helper.request_keyboard();
+        }
     }
 }
