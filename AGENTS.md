@@ -50,6 +50,14 @@ Notable feature docs:
   directory** (`exe_dir()` / `resolve_simsapa_dir()` / `normalize_lexically()`
   in `backend/src/lib.rs`, not `canonicalize()`), the `.lnk` vs `.cmd` launcher
   choice, and USB drive-letter robustness.
+- [Android / ChromeOS soft keyboard](./docs/android-soft-keyboard.md) — why a
+  Qt `TextField`/`TextArea` needs two taps (or never raises) the on-screen
+  keyboard on Android/ChromeOS, the reusable `MobileKeyboardHelper.qml`
+  (focus-in + tap + retry `Timer` until `Qt.inputMethod.visible`), the
+  `EnterKey.type` rules (`EnterKeySearch` for search fields needs a matching
+  `onAccepted`; `EnterKeyDone` for form fields; omit for multi-line), and the
+  `focus: root.is_desktop` gate for pre-focused persistent fields. **Apply this
+  technique to every new text input.**
 
 ## Specific coding procedures
 

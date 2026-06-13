@@ -460,6 +460,8 @@ ColumnLayout {
             TextField {
                 id: save_all_name_input
                 Layout.preferredWidth: 300
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
                 onAccepted: save_all_folder_dialog.accept()
             }
         }

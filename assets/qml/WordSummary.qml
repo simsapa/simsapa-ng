@@ -134,11 +134,19 @@ Frame {
 
                 font.pointSize: root.is_mobile ? 14 : 12
 
+                // Pāli lookups are lowercase; the action key triggers the search.
+                inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase
+                EnterKey.type: Qt.EnterKeySearch
+
                 onAccepted: search_btn.clicked()
                 onTextChanged: {
                     if (root.search_as_you_type_checked) search_timer.restart();
                 }
                 selectByMouse: true
+
+                // Reliably raise the Android/ChromeOS soft keyboard on the
+                // first tap. See docs/android-soft-keyboard.md.
+                MobileKeyboardHelper {}
             }
             Button {
                 id: search_btn

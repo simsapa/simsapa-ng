@@ -25,6 +25,7 @@ fn main() {
         "../assets/qml/LanguageListSelector.qml",
         "../assets/qml/DownloadProgressFrame.qml",
         "../assets/qml/SearchBarInput.qml",
+        "../assets/qml/MobileKeyboardHelper.qml",
         "../assets/qml/FulltextResults.qml",
         "../assets/qml/CMenuItem.qml",
         "../assets/qml/KeySequenceDisplay.qml",

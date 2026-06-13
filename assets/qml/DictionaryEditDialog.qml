@@ -89,6 +89,8 @@ Dialog {
             id: label_input
             Layout.fillWidth: true
             font.pointSize: root.point_size
+            EnterKey.type: Qt.EnterKeyDone
+            MobileKeyboardHelper {}
             onTextChanged: root.refresh_status()
         }
 

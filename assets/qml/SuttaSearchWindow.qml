@@ -2377,6 +2377,8 @@ ${query_text}`;
                     Layout.preferredHeight: root.icon_size
                     font.pointSize: root.is_mobile ? 12 : 10
                     selectByMouse: true
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
                     onTextChanged: advanced_options_debounce_timer.restart()
                 }
             }
@@ -2397,6 +2399,8 @@ ${query_text}`;
                     Layout.preferredHeight: root.icon_size
                     font.pointSize: root.is_mobile ? 12 : 10
                     selectByMouse: true
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
                     onTextChanged: advanced_options_debounce_timer.restart()
                 }
             }
@@ -2417,6 +2421,8 @@ ${query_text}`;
                     Layout.preferredHeight: root.icon_size
                     font.pointSize: root.is_mobile ? 12 : 10
                     selectByMouse: true
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
                     onTextChanged: advanced_options_debounce_timer.restart()
                 }
             }

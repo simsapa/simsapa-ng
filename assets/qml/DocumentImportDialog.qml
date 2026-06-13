@@ -172,6 +172,8 @@ Dialog {
                 id: title_field
                 Layout.fillWidth: true
                 placeholderText: "Document title"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -189,6 +191,8 @@ Dialog {
                 id: author_field
                 Layout.fillWidth: true
                 placeholderText: "Author name (optional)"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -207,6 +211,8 @@ Dialog {
                 Layout.fillWidth: true
                 placeholderText: "e.g. en, it, pli, etc."
                 text: "en"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -224,6 +230,8 @@ Dialog {
                 id: uid_field
                 Layout.fillWidth: true
                 placeholderText: "unique-identifier"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
                 validator: RegularExpressionValidator {
                     regularExpression: /[a-zA-Z0-9-_]+/
                 }

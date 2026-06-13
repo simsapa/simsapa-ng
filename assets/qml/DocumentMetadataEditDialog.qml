@@ -73,6 +73,8 @@ Dialog {
                 id: title_field
                 Layout.fillWidth: true
                 placeholderText: "Document title"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -90,6 +92,8 @@ Dialog {
                 id: author_field
                 Layout.fillWidth: true
                 placeholderText: "Author name (optional)"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 
@@ -107,6 +111,8 @@ Dialog {
                 id: language_field
                 Layout.fillWidth: true
                 placeholderText: "en"
+                EnterKey.type: Qt.EnterKeyDone
+                MobileKeyboardHelper {}
             }
         }
 

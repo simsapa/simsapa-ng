@@ -313,12 +313,22 @@ ApplicationWindow {
                         selectByMouse: true
                         enabled: !root.is_loading
 
+                        // Soft keyboard's action key fires the search.
+                        EnterKey.type: Qt.EnterKeySearch
+
+                        // Reliably raise the Android/ChromeOS soft keyboard on
+                        // the first tap. See docs/android-soft-keyboard.md.
+                        MobileKeyboardHelper {}
+
                         onTextChanged: {
                             root.current_query = text;
                             search_timer.restart();
                         }
 
-                        Keys.onReturnPressed: {
+                        // Fires on desktop Return/Enter and on the mobile soft
+                        // keyboard's search action (which emits `accepted`, not
+                        // a Return key event).
+                        onAccepted: {
                             search_timer.stop();
                             root.perform_search();
                         }

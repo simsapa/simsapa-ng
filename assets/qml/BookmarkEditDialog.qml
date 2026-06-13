@@ -41,12 +41,16 @@ Dialog {
         TextField {
             id: edit_uid
             Layout.preferredWidth: 350
+            EnterKey.type: Qt.EnterKeyDone
+            MobileKeyboardHelper {}
         }
 
         Label { text: "Title:" }
         TextField {
             id: edit_title
             Layout.preferredWidth: 350
+            EnterKey.type: Qt.EnterKeyDone
+            MobileKeyboardHelper {}
         }
 
         Label { text: "Tab group:" }
@@ -59,6 +63,8 @@ Dialog {
         TextField {
             id: edit_find_query
             Layout.preferredWidth: 350
+            EnterKey.type: Qt.EnterKeyDone
+            MobileKeyboardHelper {}
         }
 
         Label { text: "Find match index:" }

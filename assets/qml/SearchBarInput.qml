@@ -130,10 +130,22 @@ Frame {
                 Layout.preferredWidth: root.is_wide ? 500 : 250
                 Layout.preferredHeight: root.icon_size
 
-                focus: true
+                // Auto-focus on desktop so the user can type immediately. On
+                // mobile do NOT pre-grab focus: with `focus: true` the field
+                // already holds active focus once the DB finishes loading, so
+                // the first physical tap is not a focus transition and Android
+                // never raises the soft keyboard (needing a second tap).
+                // Leaving it unfocused makes the first tap a real focus change.
+                focus: root.is_desktop
                 // Pāli queries are lowercase; stop the soft keyboard from
                 // auto-capitalising the first letter (Sentence case).
                 inputMethodHints: Qt.ImhNoAutoUppercase | Qt.ImhPreferLowercase
+                // Make the soft keyboard's action key a "Search" button. On
+                // Android this maps to IME_ACTION_SEARCH, which is consistent
+                // across taps (otherwise the first focus can show a "Next"
+                // arrow that does not emit `accepted`) and fires `onAccepted`
+                // when pressed, starting the query.
+                EnterKey.type: Qt.EnterKeySearch
                 font.pointSize: root.is_mobile ? 14 : 12
                 placeholderText: {
                     if (!root.db_loaded || !root.searcher_ready) return "Loading...";
@@ -146,11 +158,9 @@ Frame {
                 onTextChanged: root.user_typed()
                 selectByMouse: true
 
-                // On Android (incl. Chromebook), tapping a TextField does not
-                // reliably request the soft keyboard — Android can suppress the
-                // on-screen IME. A tap gives the field active focus, so
-                // explicitly request the input panel here on mobile.
-                onActiveFocusChanged: if (activeFocus && root.is_mobile) Qt.inputMethod.show()
+                // Reliably raise the Android/ChromeOS soft keyboard on the
+                // first tap. See docs/android-soft-keyboard.md.
+                MobileKeyboardHelper {}
             }
 
             Button {

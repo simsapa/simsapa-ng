@@ -422,6 +422,8 @@ ApplicationWindow {
                                             echoMode: show_key.checked ? TextInput.Normal : TextInput.Password
                                             font.pointSize: root.pointSize
                                             enabled: root.selected_provider !== ""
+                                            EnterKey.type: Qt.EnterKeyDone
+                                            MobileKeyboardHelper {}
                                             onTextChanged: {
                                                 if (root.visible && root.selected_provider !== "") {
                                                     root.save_provider_api_key();
@@ -474,6 +476,8 @@ ApplicationWindow {
                                             placeholderText: "Enter model name..."
                                             font.pointSize: root.pointSize
                                             enabled: root.selected_provider !== ""
+                                            EnterKey.type: Qt.EnterKeyDone
+                                            MobileKeyboardHelper {}
                                             onAccepted: root.add_model()
                                         }
 
