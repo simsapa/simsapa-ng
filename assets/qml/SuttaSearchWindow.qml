@@ -63,6 +63,12 @@ ApplicationWindow {
     property bool is_dark: false
     property bool is_reading_mode: false
 
+    // Mobile rendering troubleshooting toggles (see AppSettingsWindow.qml →
+    // "Rendering"). Read once at startup and passed to FulltextResults. The
+    // env-var backed toggles are applied in gui.cpp instead.
+    readonly property bool render_use_flat_results_background: SuttaBridge.get_render_use_flat_results_background()
+    readonly property bool render_disable_results_clip: SuttaBridge.get_render_disable_results_clip()
+
     property bool is_loading: false
     property bool has_query_error: false
 
@@ -3317,6 +3323,8 @@ ${query_text}`;
                                 id: fulltext_results
                                 is_loading: root.is_loading
                                 is_dark: root.is_dark
+                                render_use_flat_results_background: root.render_use_flat_results_background
+                                render_disable_results_clip: root.render_disable_results_clip
                                 new_results_page_fn: root.new_results_page
 
                                 function update_item() {

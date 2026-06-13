@@ -58,6 +58,15 @@ Notable feature docs:
   `onAccepted`; `EnterKeyDone` for form fields; omit for multi-line), and the
   `focus: root.is_desktop` gate for pre-focused persistent fields. **Apply this
   technique to every new text input.**
+- [Mobile rendering troubleshooting](./docs/mobile-rendering-troubleshooting.md) —
+  the three mobile-only **Settings → Rendering** tab toggles that work around
+  GPU framebuffer / scene-graph corruption on flaky Android drivers (flat result
+  backgrounds, disable list clip, `QSG_RENDER_LOOP=basic`; `QSG_RHI_BACKEND=vulkan`
+  and `QT_QUICK_BACKEND=software` toggles were removed — the first crashed the
+  app, the second produced an unusable UI). Explains why the `render_loop_basic`
+  env-var toggle is read from the DB in `gui.cpp` before `QApplication`
+  (standalone `db::get_app_settings()` + `render_loop_basic_c()` FFI, cached,
+  restart-only) vs. the two QML toggles passed down to `FulltextResults.qml`.
 
 ## Specific coding procedures
 

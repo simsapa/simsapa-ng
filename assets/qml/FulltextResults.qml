@@ -11,6 +11,11 @@ ColumnLayout {
     id: root
 
     required property bool is_dark
+    // Mobile rendering troubleshooting toggles (see AppSettingsWindow.qml →
+    // "Rendering"). Passed down from the parent window which reads them from
+    // SuttaBridge. Default off so QML preview / desktop are unaffected.
+    property bool render_use_flat_results_background: false
+    property bool render_disable_results_clip: false
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
     readonly property string match_bg: root.is_dark ? "#007A31" : "#F6E600"
@@ -204,7 +209,7 @@ ColumnLayout {
         Layout.fillWidth: true
 
         model: results_model
-        clip: true
+        clip: !root.render_disable_results_clip
         spacing: 0
         visible: results_model.count > 0
         delegate: search_result_delegate
@@ -275,6 +280,7 @@ ColumnLayout {
 
                 background: ListBackground {
                     is_dark: root.is_dark
+                    use_flat_bg: root.render_use_flat_results_background
                     results_list: fulltext_list
                     result_item_index: result_item.index
                 }

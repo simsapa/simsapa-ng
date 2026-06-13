@@ -1674,6 +1674,39 @@ impl AppData {
         }
     }
 
+    pub fn get_render_use_flat_results_background(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.render_use_flat_results_background
+    }
+
+    pub fn set_render_use_flat_results_background(&self, enabled: bool) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.render_use_flat_results_background = enabled;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_render_disable_results_clip(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.render_disable_results_clip
+    }
+
+    pub fn set_render_disable_results_clip(&self, enabled: bool) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.render_disable_results_clip = enabled;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_render_loop_basic(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.render_loop_basic
+    }
+
+    pub fn set_render_loop_basic(&self, enabled: bool) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.render_loop_basic = enabled;
+        self.persist_app_settings(&app_settings);
+    }
+
     /// Get the current keybindings as a JSON string.
     pub fn get_keybindings_json(&self) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");

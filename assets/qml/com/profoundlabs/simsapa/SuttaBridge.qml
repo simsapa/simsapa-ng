@@ -1092,6 +1092,30 @@ Item {
         console.log("set_restore_last_session():", value);
     }
 
+    function get_render_use_flat_results_background(): bool {
+        return false;
+    }
+
+    function set_render_use_flat_results_background(value: bool) {
+        console.log("set_render_use_flat_results_background():", value);
+    }
+
+    function get_render_disable_results_clip(): bool {
+        return false;
+    }
+
+    function set_render_disable_results_clip(value: bool) {
+        console.log("set_render_disable_results_clip():", value);
+    }
+
+    function get_render_loop_basic(): bool {
+        return false;
+    }
+
+    function set_render_loop_basic(value: bool) {
+        console.log("set_render_loop_basic():", value);
+    }
+
     Item {
         id: dpd_lookup_data
         visible: false

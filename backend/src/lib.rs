@@ -1209,6 +1209,28 @@ pub extern "C" fn global_hotkeys_enabled_c() -> bool {
     crate::get_app_data().get_global_hotkeys().enabled
 }
 
+// --- Mobile rendering troubleshooting toggles (read before QApplication) ---
+//
+// `render_loop_basic` maps to a Qt environment variable that must be set in
+// `gui.cpp` *before* the QApplication is constructed, which is before
+// `init_app_data()` runs. So it is read here directly from the DB via the
+// standalone `db::get_app_settings()` (which only needs `AppGlobals`, already
+// initialized by `init_app_globals()`). The settings are read once and cached;
+// changing them in the UI only takes effect after an app restart.
+static RENDER_SETTINGS_CACHE: std::sync::OnceLock<crate::app_settings::AppSettings> =
+    std::sync::OnceLock::new();
+
+fn render_settings() -> &'static crate::app_settings::AppSettings {
+    RENDER_SETTINGS_CACHE.get_or_init(crate::db::get_app_settings)
+}
+
+/// FFI: force the single-threaded `basic` Qt Quick render loop
+/// (`QSG_RENDER_LOOP=basic`). Read before the QApplication is constructed.
+#[unsafe(no_mangle)]
+pub extern "C" fn render_loop_basic_c() -> bool {
+    render_settings().render_loop_basic
+}
+
 /// FFI: returns the configured key sequence for the `dictionary_lookup`
 /// global hotkey action as a C string. Caller must call `free_rust_string`.
 /// Returns null if not configured.

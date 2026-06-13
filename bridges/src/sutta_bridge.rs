@@ -1331,6 +1331,24 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_restore_last_session(self: Pin<&mut SuttaBridge>, value: bool);
+
+        #[qinvokable]
+        fn get_render_use_flat_results_background(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_render_use_flat_results_background(self: Pin<&mut SuttaBridge>, value: bool);
+
+        #[qinvokable]
+        fn get_render_disable_results_clip(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_render_disable_results_clip(self: Pin<&mut SuttaBridge>, value: bool);
+
+        #[qinvokable]
+        fn get_render_loop_basic(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_render_loop_basic(self: Pin<&mut SuttaBridge>, value: bool);
     }
 }
 
@@ -4850,5 +4868,29 @@ impl qobject::SuttaBridge {
     pub fn set_restore_last_session(self: Pin<&mut Self>, value: bool) {
         let app_data = get_app_data();
         app_data.set_restore_last_session(value);
+    }
+
+    pub fn get_render_use_flat_results_background(&self) -> bool {
+        get_app_data().get_render_use_flat_results_background()
+    }
+
+    pub fn set_render_use_flat_results_background(self: Pin<&mut Self>, value: bool) {
+        get_app_data().set_render_use_flat_results_background(value);
+    }
+
+    pub fn get_render_disable_results_clip(&self) -> bool {
+        get_app_data().get_render_disable_results_clip()
+    }
+
+    pub fn set_render_disable_results_clip(self: Pin<&mut Self>, value: bool) {
+        get_app_data().set_render_disable_results_clip(value);
+    }
+
+    pub fn get_render_loop_basic(&self) -> bool {
+        get_app_data().get_render_loop_basic()
+    }
+
+    pub fn set_render_loop_basic(self: Pin<&mut Self>, value: bool) {
+        get_app_data().set_render_loop_basic(value);
     }
 }

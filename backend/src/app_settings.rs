@@ -141,6 +141,25 @@ pub struct AppSettings {
     /// Whether to restore the last session (open tabs) on startup
     #[serde(default = "default_true")]
     pub restore_last_session: bool,
+
+    // --- Mobile rendering troubleshooting toggles ---
+    // These work around GPU framebuffer / scene-graph corruption seen on some
+    // flaky Android GPU drivers. All default to off; the user enables them in
+    // the Settings → Rendering tab (mobile only). The env-var backed one
+    // (`render_loop_basic`) is read in `gui.cpp` before the QApplication is
+    // constructed, so it requires an app restart to take effect.
+    /// Collapse the per-result-card gradient background to a flat color
+    /// (sets `use_flat_bg` on `ListBackground` in `FulltextResults.qml`).
+    #[serde(default)]
+    pub render_use_flat_results_background: bool,
+    /// Disable `clip: true` on the results `ListView` (stencil/scissor clip is
+    /// mishandled by some drivers).
+    #[serde(default)]
+    pub render_disable_results_clip: bool,
+    /// Force the single-threaded `basic` Qt Quick render loop
+    /// (`QSG_RENDER_LOOP=basic`).
+    #[serde(default)]
+    pub render_loop_basic: bool,
 }
 
 fn default_true() -> bool {
@@ -299,6 +318,9 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             cached_dict_languages: Vec::new(),
             cached_library_languages: Vec::new(),
             restore_last_session: true,
+            render_use_flat_results_background: false,
+            render_disable_results_clip: false,
+            render_loop_basic: false,
         }
     }
 }

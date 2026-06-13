@@ -62,6 +62,12 @@ extern "C" void log_info_with_options_c(const char* msg, bool start_new);
 extern "C" bool global_hotkeys_enabled_c();
 extern "C" char* get_global_hotkey_dictionary_lookup_c();
 
+// Mobile rendering troubleshooting toggles. Read from settings before the
+// QApplication is constructed (see assets/qml/AppSettingsWindow.qml →
+// "Rendering" section). Each maps to a Qt env var that must be set before
+// QApplication, so changes only take effect after an app restart.
+extern "C" bool render_loop_basic_c();
+
 struct AppGlobals {
     static WindowManager* manager;
     static GlobalHotkeyManager* global_hotkey_manager;
@@ -364,6 +370,18 @@ int start(int argc, char* argv[]) {
   // (0 sample rate / 0 channels) from Android's AudioManager.
   qputenv("QT_MEDIA_BACKEND", "android");
 #endif
+
+  // Apply mobile rendering troubleshooting toggles from settings. These work
+  // around GPU framebuffer / scene-graph corruption on some flaky Android GPU
+  // drivers. The corresponding Qt env vars must be set before the QApplication
+  // is constructed. Settings are read directly from the DB here (before
+  // init_app_data()), so we only read them when the appdata DB already exists.
+  if (appdata_db_exists()) {
+    if (render_loop_basic_c()) {
+      log_info_c("Rendering: QSG_RENDER_LOOP=basic");
+      qputenv("QSG_RENDER_LOOP", "basic");
+    }
+  }
 
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);

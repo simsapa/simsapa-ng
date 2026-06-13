@@ -362,6 +362,15 @@ ApplicationWindow {
                     text: "Keybindings"
                     padding: 5
                     visible: root.is_desktop
+                    // Collapse width when hidden so it doesn't leave a gap
+                    // before the mobile-only Rendering tab.
+                    width: visible ? implicitWidth : 0
+                }
+
+                TabButton {
+                    text: "Rendering"
+                    padding: 5
+                    visible: root.is_mobile
                 }
             }
 
@@ -871,6 +880,109 @@ ApplicationWindow {
                         Item { Layout.fillHeight: true }
                     }
                 }
+
+                // Rendering Tab (only shown on mobile)
+                ScrollView {
+                    id: rendering_scrollview
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    contentWidth: availableWidth
+                    clip: true
+
+                    ColumnLayout {
+                        // Bind to the ScrollView's availableWidth (not
+                        // parent.width) so a long CheckBox label can't push the
+                        // column wider than the viewport and break Label wrapping.
+                        width: rendering_scrollview.availableWidth
+                        spacing: 15
+
+                        Label {
+                            text: "Rendering Settings"
+                            font.pointSize: root.pointSize + 2
+                            font.bold: true
+                            Layout.topMargin: 10
+                        }
+
+                        Label {
+                            text: "Normally you don't want to enable any of these options. Only "
+                                + "use them if you are seeing rendering errors, such as UI elements "
+                                + "shown with scrambled colours (coloured blocks or streaks over the "
+                                + "search results)."
+                            font.pointSize: root.pointSize - 1
+                            font.bold: true
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        Label {
+                            text: "These options work around problems on devices with flaky GPU "
+                                + "drivers. Try enabling one or more, then restart the app for the "
+                                + "changes to take effect."
+                            font.pointSize: root.pointSize - 2
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                        CheckBox {
+                            id: render_flat_background_checkbox
+                            text: "Flat result backgrounds (no gradient)"
+                            font.pointSize: root.pointSize
+                            Layout.fillWidth: true
+                            contentItem: Text {
+                                text: render_flat_background_checkbox.text
+                                font: render_flat_background_checkbox.font
+                                color: render_flat_background_checkbox.palette.windowText
+                                wrapMode: Text.WordWrap
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: render_flat_background_checkbox.indicator.width
+                                    + render_flat_background_checkbox.spacing
+                            }
+                            onCheckedChanged: {
+                                SuttaBridge.set_render_use_flat_results_background(checked);
+                            }
+                        }
+
+                        CheckBox {
+                            id: render_disable_clip_checkbox
+                            text: "Disable clipping of the results list"
+                            font.pointSize: root.pointSize
+                            Layout.fillWidth: true
+                            contentItem: Text {
+                                text: render_disable_clip_checkbox.text
+                                font: render_disable_clip_checkbox.font
+                                color: render_disable_clip_checkbox.palette.windowText
+                                wrapMode: Text.WordWrap
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: render_disable_clip_checkbox.indicator.width
+                                    + render_disable_clip_checkbox.spacing
+                            }
+                            onCheckedChanged: {
+                                SuttaBridge.set_render_disable_results_clip(checked);
+                            }
+                        }
+
+                        CheckBox {
+                            id: render_loop_basic_checkbox
+                            text: "Use the basic (single-threaded) render loop"
+                            font.pointSize: root.pointSize
+                            Layout.fillWidth: true
+                            contentItem: Text {
+                                text: render_loop_basic_checkbox.text
+                                font: render_loop_basic_checkbox.font
+                                color: render_loop_basic_checkbox.palette.windowText
+                                wrapMode: Text.WordWrap
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: render_loop_basic_checkbox.indicator.width
+                                    + render_loop_basic_checkbox.spacing
+                            }
+                            onCheckedChanged: {
+                                SuttaBridge.set_render_loop_basic(checked);
+                            }
+                        }
+
+                        Item { Layout.fillHeight: true }
+                    }
+                }
             }
 
             // Fixed bottom area with Close button
@@ -894,6 +1006,11 @@ ApplicationWindow {
         // Load initial state for General tab settings
         notify_updates_checkbox.checked = SuttaBridge.get_notify_about_simsapa_updates();
         restore_last_session_checkbox.checked = SuttaBridge.get_restore_last_session();
+
+        // Mobile rendering troubleshooting toggles
+        render_flat_background_checkbox.checked = SuttaBridge.get_render_use_flat_results_background();
+        render_disable_clip_checkbox.checked = SuttaBridge.get_render_disable_results_clip();
+        render_loop_basic_checkbox.checked = SuttaBridge.get_render_loop_basic();
 
         // Load initial state for View tab settings
         let theme_name = SuttaBridge.get_theme_name();
