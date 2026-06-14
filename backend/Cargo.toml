@@ -1,6 +1,6 @@
 [package]
 name = "simsapa_backend"
-version = "0.4.3"
+version = "0.4.4"
 edition = "2024"
 authors = ["Gambhiro Bhikkhu <profound.labs@gmail.com>"]
 license = "Apache-2.0"
@@ -45,6 +45,9 @@ base64 = "0.22"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 tantivy = "0.25"
 symphonia = { version = "0.5", features = ["all"] }
+cpal = "0.18"
+flacenc = "0.5"
+rubato = "3"
 tempfile = "3"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 

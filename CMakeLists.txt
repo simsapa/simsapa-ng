@@ -340,6 +340,22 @@ if(UNIX AND NOT APPLE AND NOT ANDROID AND X11_FOUND)
     target_link_libraries(simsapadhammareader PUBLIC ${X11_LIBRARIES})
 endif()
 
+# Linux audio capture/playback: cpal's ALSA backend (in the Rust staticlib)
+# references libasound symbols that must be resolved at the final link.
+if(UNIX AND NOT APPLE AND NOT ANDROID)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(ALSA QUIET alsa)
+    endif()
+    if(ALSA_FOUND)
+        target_link_libraries(simsapadhammareader PUBLIC ${ALSA_LIBRARIES})
+        message(STATUS "Audio: ALSA backend linked (${ALSA_LIBRARIES})")
+    else()
+        target_link_libraries(simsapadhammareader PUBLIC asound)
+        message(STATUS "Audio: linking libasound directly (pkg-config alsa not found)")
+    endif()
+endif()
+
 # Link bcrypt library on Windows (required by Rust getrandom crate)
 if(WIN32)
     target_link_libraries(simsapadhammareader
