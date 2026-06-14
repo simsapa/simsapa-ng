@@ -161,6 +161,20 @@ On a USB stick the same layout is rooted at the drive, e.g. `E:\Simsapa.cmd`,
    `get_create_simsapa_appdata_db_path()`, logging), so databases, `app-assets/`,
    and logs all land under the portable data folder.
 
+**Development fallback (cwd-relative `.env`):** the project `.env` sets a
+`SIMSAPA_DIR` relative to the **current working directory** (the project root,
+where `make run` is invoked), not the exe directory
+(`build/simsapadhammareader/`). To support both conventions,
+`get_create_simsapa_dir()` resolves a relative value against the exe directory
+first (portable), and if that path does **not** exist but the **cwd-relative**
+path does, it falls back to the cwd-relative path. This keeps the dev workflow
+working without breaking portable installs (whose exe-relative data folder is
+created on first run when no cwd-relative match exists). Without this fallback,
+a dev `SIMSAPA_DIR=../bootstrap-assets-resources/dist/simsapa-ng` resolved
+against `build/simsapadhammareader/` to a nonexistent
+`build/bootstrap-assets-resources/...`, so the app saw no databases and showed
+the download window.
+
 On **first** portable launch the data folder exists but has no databases, so the
 existing first-run/download flow downloads them into it. On **subsequent**
 launches the existing asset-presence checks find them and load without

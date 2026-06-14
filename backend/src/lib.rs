@@ -633,7 +633,24 @@ pub fn get_create_simsapa_dir() -> Result<PathBuf, Box<dyn Error>> {
         // (as written by the portable installer's config.txt) is resolved
         // against the executable's directory; an absolute value is used as-is.
         Ok(s) => {
-            let p = resolve_simsapa_dir(&s, exe_dir());
+            // A relative SIMSAPA_DIR is resolved against the executable's
+            // directory to support portable installs, where the path must
+            // stay relative for USB drive-letter robustness (see
+            // docs/windows-portable-install.md).
+            //
+            // In development, however, the project `.env` sets a SIMSAPA_DIR
+            // that is relative to the current working directory (the project
+            // root, where `make run` is invoked), not the exe directory
+            // (build/simsapadhammareader/). If the exe-relative resolution
+            // does not exist but the cwd-relative path does, prefer the
+            // cwd-relative path so the dev workflow keeps working.
+            let mut p = resolve_simsapa_dir(&s, exe_dir());
+            if Path::new(&s).is_relative() && !p.try_exists().unwrap_or(false) {
+                let cwd_relative = PathBuf::from(&s);
+                if cwd_relative.try_exists().unwrap_or(false) {
+                    p = cwd_relative;
+                }
+            }
             if !p.try_exists()? {
                 create_dir_all(&p)?;
             }
