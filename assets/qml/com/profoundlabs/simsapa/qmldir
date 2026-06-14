@@ -1,6 +1,7 @@
 module com.profoundlabs.simsapa
 singleton SuttaBridge 1.0 SuttaBridge.qml
 AssetManager 1.0 AssetManager.qml
+AudioManager 1.0 AudioManager.qml
 StorageManager 1.0 StorageManager.qml
 PromptManager 1.0 PromptManager.qml
 ClipboardManager 1.0 ClipboardManager.qml

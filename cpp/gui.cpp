@@ -35,6 +35,12 @@
 #include <QRegularExpression>
 #include <QTimer>
 
+#ifdef Q_OS_ANDROID
+#include <QJniEnvironment>
+#include <QJniObject>
+#include <QCoreApplication>
+#endif
+
 extern "C" void start_webserver();
 extern "C" void shutdown_webserver();
 extern "C" bool appdata_db_exists();
@@ -43,6 +49,9 @@ extern "C" void check_delete_files_for_upgrade();
 extern "C" void remove_download_temp_folder();
 extern "C" void init_app_globals();
 extern "C" void init_app_data();
+#ifdef Q_OS_ANDROID
+extern "C" void init_android_context(void* java_vm, void* context);
+#endif
 extern "C" void import_user_data_after_upgrade();
 extern "C" void cleanup_stale_legacy_userdata();
 extern "C" void check_and_configure_for_first_start();
@@ -362,15 +371,6 @@ int start(int argc, char* argv[]) {
   // number.
   create_or_update_linux_desktop_icon_file_ffi();
 
-#ifdef Q_OS_ANDROID
-  // Use the native Android multimedia backend instead of FFmpeg.
-  // The FFmpeg backend's MediaRecorder fails on Android with
-  // "Audio device has invalid preferred format" because
-  // QAudioDevice::preferredFormat() returns an invalid format
-  // (0 sample rate / 0 channels) from Android's AudioManager.
-  qputenv("QT_MEDIA_BACKEND", "android");
-#endif
-
   // Apply mobile rendering troubleshooting toggles from settings. These work
   // around GPU framebuffer / scene-graph corruption on some flaky Android GPU
   // drivers. The corresponding Qt env vars must be set before the QApplication
@@ -385,6 +385,23 @@ int start(int argc, char* argv[]) {
 
   // QApplication has to be constructed before other windows or dialogs.
   QApplication app(argc, argv);
+
+#ifdef Q_OS_ANDROID
+  // Register the JavaVM + Activity context with ndk_context so cpal's AAudio
+  // backend can reach them over JNI. Qt for Android never initializes
+  // ndk_context, so without this the first audio stream build aborts on a null
+  // VM pointer. The context is wrapped in a JNI global ref (the QJniObject is
+  // transient) that lives for the app's lifetime. See
+  // docs/pure-rust-audio-backend.md.
+  {
+    JavaVM* java_vm = QJniEnvironment::javaVM();
+    QJniObject activity = QNativeInterface::QAndroidApplication::context();
+    QJniEnvironment env;
+    jobject global_context = env->NewGlobalRef(activity.object());
+    init_android_context(reinterpret_cast<void*>(java_vm),
+                         reinterpret_cast<void*>(global_context));
+  }
+#endif
 
   QQuickStyle::setStyle("Fusion");
 
@@ -401,7 +418,7 @@ int start(int argc, char* argv[]) {
     free_rust_string(desktop_file_path);
   }
 
-  app.setApplicationVersion("v0.4.3");
+  app.setApplicationVersion("v0.4.4");
 
   // app_windows = AppWindows(app, app_data, hotkeys_manager, enable_tray_icon)
 

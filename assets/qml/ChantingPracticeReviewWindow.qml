@@ -512,11 +512,16 @@ ApplicationWindow {
                                         }
                                     }
 
-                                    MouseArea {
-                                        anchors.fill: parent
+                                    // Make the whole frame clickable. Pointer
+                                    // handlers attach to the Frame itself (not its
+                                    // contentItem layout), so unlike a MouseArea
+                                    // child they need no anchors. The Button above
+                                    // still receives its own clicks.
+                                    TapHandler {
+                                        onTapped: ref_delegate.is_open = !ref_delegate.is_open
+                                    }
+                                    HoverHandler {
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: ref_delegate.is_open = !ref_delegate.is_open
-                                        z: -1
                                     }
                                 }
 
@@ -664,11 +669,14 @@ ApplicationWindow {
                                         }
                                     }
 
-                                    MouseArea {
-                                        anchors.fill: parent
+                                    // Make the whole frame clickable (see the
+                                    // reference delegate above for why pointer
+                                    // handlers are used instead of a MouseArea).
+                                    TapHandler {
+                                        onTapped: user_delegate.is_open = !user_delegate.is_open
+                                    }
+                                    HoverHandler {
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: user_delegate.is_open = !user_delegate.is_open
-                                        z: -1
                                     }
                                 }
 
