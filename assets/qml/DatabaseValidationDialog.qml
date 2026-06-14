@@ -24,6 +24,14 @@ ApplicationWindow {
     readonly property int pointSize: is_mobile ? 14 : 12
     required property int top_bar_margin
 
+    // Theme support
+    property bool is_dark: theme_helper.is_dark
+
+    ThemeHelper {
+        id: theme_helper
+        target_window: root
+    }
+
     // Properties to track validation results for each database
     property var validation_results: ({})
 
@@ -46,6 +54,8 @@ ApplicationWindow {
         root.appdata_failed = false;
         root.dpd_failed = false;
         root.dictionaries_failed = false;
+
+        theme_helper.apply();
 
         root.show();
         root.raise();
@@ -75,6 +85,8 @@ ApplicationWindow {
         root.appdata_failed = failed_databases.includes("appdata");
         root.dpd_failed = failed_databases.includes("dpd");
         root.dictionaries_failed = failed_databases.includes("dictionaries");
+
+        theme_helper.apply();
 
         root.show();
         root.raise();
