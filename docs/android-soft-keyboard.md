@@ -61,6 +61,39 @@ in `onAccepted`. A field that previously relied on `Keys.onReturnPressed` should
 the mobile IME action) — do **not** keep both, or a desktop Return can run the
 action twice.
 
+### 3. ChromeOS: keyboard suppressed when a hardware keyboard is present
+
+Symptom (reported on a Chromebook running the Android app): tapping the search
+field focuses it (`activeFocus=true` in the log) but the soft keyboard **never**
+appears, and `Qt.inputMethod.show()` is ignored on every retry
+(`inputMethod.visible=false` through all attempts). The user can only enter text
+after enabling ChromeOS's on-screen keyboard — and once enabled, even the
+**physical** keyboard starts working.
+
+This is **not** an `MobileKeyboardHelper` wiring bug — the diagnostic log proved
+the whole chain (platform detection, focus gating, tap → focus, repeated
+`show()`) runs correctly. The cause is platform-level, in two layers:
+
+- **Hardware-keyboard IME suppression.** When Android detects a hardware
+  keyboard (true on a Chromebook in laptop mode), `showSoftInput()` is a no-op
+  unless the secure setting *"Show on-screen keyboard while hardware keyboard is
+  connected"* is on. That setting is what the user toggles. An app **cannot**
+  override it — `Qt.inputMethod.show()` and the retry `Timer` are powerless here,
+  so on ChromeOS the retry loop just spams a call the platform ignores.
+- **No input connection until the IME shows.** Qt routes text through the IME's
+  `InputConnection`; on ARC that connection isn't active until the IME actually
+  comes up, so physical keystrokes also produce no text until the OSK is forced
+  on. (Compare the closely related ChromeOS-only Flutter issue #104031: after
+  focusing a field, key events aren't delivered to the view.)
+
+**Experiment in progress:** `android:windowSoftInputMode="adjustResize|stateVisible"`
+was added to the `<activity>` in `android/AndroidManifest.xml` to nudge the IME
+to show on window focus. Low confidence (it should not beat the hardware-keyboard
+suppression), pending on-device confirmation — there is no local repro (no
+Chromebook). If it does not help, the documented user workaround is to enable the
+ChromeOS on-screen keyboard; do not keep adding QML-side retry logic, which
+cannot affect this.
+
 ## How to apply it
 
 Drop `MobileKeyboardHelper {}` as a child of the input — with no arguments it
@@ -130,3 +163,20 @@ When adding a **new** text input, apply this technique.
 `MobileKeyboardHelper.qml` lives in `assets/qml/` and is listed in the
 `qml_files` array in `bridges/build.rs`. New QML components must be added there
 (see AGENTS.md → "New QML components").
+
+## References
+
+ChromeOS hardware-keyboard suppression / input-connection issue (section 3):
+
+- [Flutter #104031 — ChromeOS: after focusing a text field, no printable key
+  events are received](https://github.com/flutter/flutter/issues/104031) — same
+  class of bug in another framework; ARC intercepts key events after focus.
+- [ChromeOS input compatibility](https://chromeos.dev/en/android/input-compatibility)
+  — how ChromeOS handles text input / IME for Android apps.
+- [Android — Handle input method visibility](https://developer.android.com/develop/ui/views/touch-and-input/keyboard-input/visibility)
+  — `showSoftInput()` semantics and window-focus requirements.
+
+Qt soft-keyboard handling on Android (sections 1–2):
+
+- [Qt Forum — Android virtual keyboard input trouble](https://forum.qt.io/topic/46231/android-virtual-keyboard-input-trouble)
+- [Qt Forum — Qt 6.7.1 / 6.6.1 Android soft keyboard handling](https://forum.qt.io/topic/157124/qt-6-7-1-and-qt-6-6-1-android-softkeyboard-handling)
