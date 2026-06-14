@@ -36,6 +36,15 @@ activeFocus=true` fires, a second `request_keyboard` runs, Qt's
 `QtInputDelegate.showKeyboard` drives `InsetsController.show(ime())`, and the
 retry observes `im.visible=true` on attempt 1 and stops.
 
+> **Pitfall — never cast `Qt.inputMethod`.** Access it as an untyped `var`
+> (`readonly property var input_method: Qt.inputMethod`). A `Qt.inputMethod as
+> InputMethod` cast (added once to silence qmllint) returns **null at runtime on
+> some devices** (observed on Samsung/Android 16), so the first
+> `input_method.visible` / `.show()` access throws a `TypeError`, aborting
+> `request_keyboard()` before `show()` and the retry `Timer` run — which silently
+> reintroduces the two-tap bug. The `var` holds the real object on every
+> platform and `var` member access isn't type-checked, so qmllint stays quiet.
+
 ### 2. The action key does not start the search
 
 Symptom: on first show the keyboard's action key was a generic "Next" arrow that

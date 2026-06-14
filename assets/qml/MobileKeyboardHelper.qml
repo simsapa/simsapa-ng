@@ -29,9 +29,15 @@ Item {
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
 
     // Qt.inputMethod is typed as the base QObject in the QML global object, so
-    // the linter reports its show()/visible members as missing. Cast to the
-    // proper QtQuick InputMethod type once here so the calls below type-check.
-    readonly property InputMethod input_method: Qt.inputMethod as InputMethod
+    // the linter reports its show()/visible members as missing. Expose it as an
+    // untyped `var` so the calls below are not type-checked.
+    //
+    // Do NOT use `Qt.inputMethod as InputMethod`: that cast returns **null** at
+    // runtime on some devices (observed on Samsung/Android 16), so every
+    // `input_method.show()` / `.visible` access throws a TypeError. That aborted
+    // request_keyboard() before show()/the retry Timer ran and reintroduced the
+    // two-tap bug. A plain `var` holds the real object on every platform.
+    readonly property var input_method: Qt.inputMethod
 
     // Keyboard diagnostics: confirm the helper is active and which platform it
     // sees. If is_mobile is false on a Chromebook, the Connections/TapHandler
