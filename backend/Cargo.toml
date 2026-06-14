@@ -54,6 +54,10 @@ zip = { version = "2", default-features = false, features = ["deflate"] }
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.15"
 log = "0.4"
+# cpal's AAudio backend reads the JavaVM/Activity through ndk_context, which Qt
+# for Android does not initialize. We set it explicitly at startup (see
+# init_android_context in lib.rs).
+ndk-context = "0.1"
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 colored = "3.0"

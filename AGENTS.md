@@ -67,6 +67,14 @@ Notable feature docs:
   env-var toggle is read from the DB in `gui.cpp` before `QApplication`
   (standalone `db::get_app_settings()` + `render_loop_basic_c()` FFI, cached,
   restart-only) vs. the two QML toggles passed down to `FulltextResults.qml`.
+- [Pure-Rust audio backend](./docs/pure-rust-audio-backend.md) — the chanting
+  recorder/player stack (`cpal` + `flacenc` + `rubato` + `symphonia`) that
+  replaced Qt Multimedia / FFmpeg for 16 KB compliance. cpal 0.18's Android
+  backend is **AAudio via the `ndk` crate** (no `oboe`, no bundled audio lib).
+  **Do NOT use NDK r28** (incompatible with Qt 6.9.3 at minSdk 27 —
+  `pthread_cond_clockwait` breaks the `cxx` C++ build); stay on r26b/r27 and
+  16 KB-align the main app `.so` with `-Wl,-z,max-page-size=16384` in
+  `CMakeLists.txt`.
 
 ## Specific coding procedures
 
@@ -132,13 +140,20 @@ identical on every 16 KB axis — lib md5s, ELF p_align (Qt libs 0x4000), all 14
 libs `Defl:N`, `zipalign -P16` PASS, compileSdk 36 / targetSdk 35 / debuggable.
 The only variable was the install path.)
 
-**Separate, real gap (not this dialog):** the app is not *truly* 16 KB-compatible
+**Separate gap — now resolved:** the app *used to* not be truly 16 KB-compatible
 because Qt's 5 bundled FFmpeg prebuilts (`libavcodec`, `libavformat`,
-`libavutil`, `libswresample`, `libswscale`) are 4 KB-aligned (0x1000). Harmless
-for dev/sideload, but it will fail a Play Store submission targeting API 35+. Fix
-path: swap Qt's FFmpeg multimedia backend for the Android MediaCodec backend, or
-ship 16 KB-aligned FFmpeg builds. The FFmpeg backend is pulled in for recording
-(`RecordingPlaybackItem`, chanting practice).
+`libavutil`, `libswresample`, `libswscale`) were 4 KB-aligned (0x1000), pulled in
+by Qt Multimedia for chanting-practice recording/playback. This was fixed by
+replacing Qt Multimedia with a **pure-Rust audio stack** (`cpal` + `flacenc` +
+`rubato` + `symphonia`); cpal's Android backend is AAudio (a system lib), so no
+audio native library is bundled at all. See
+[Pure-Rust audio backend](./docs/pure-rust-audio-backend.md).
+
+**Android NDK — do NOT use r28.** It is incompatible with Qt 6.9.3 at
+`minSdkVersion 27` (libc++ `pthread_cond_clockwait` needs API 30+, breaking the
+`cxx` C++ build). Stay on the Qt-supported NDK (r26b/r27); 16 KB alignment of the
+main app `.so` is achieved with `target_link_options(... "-Wl,-z,max-page-size=16384")`
+in `CMakeLists.txt`, not by relying on r28's default. Details in the doc above.
 
 ### New QML components
 

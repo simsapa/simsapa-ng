@@ -168,6 +168,22 @@ pub fn get_app_globals() -> &'static AppGlobals {
     APP_GLOBALS.get().expect("AppGlobals is not initialized")
 }
 
+/// Register the JavaVM and Android `Context` with `ndk_context`. cpal's AAudio
+/// backend reads them via `ndk_context::android_context()` (e.g. to query
+/// `aaudio.mixer_bursts` over JNI); Qt for Android uses its own entry point and
+/// never initializes `ndk_context`, so without this the first audio stream build
+/// dereferences a null VM pointer and aborts. Called once from C++ startup
+/// (`gui.cpp`) after `QApplication` exists, passing Qt's `JavaVM*` and a JNI
+/// global ref to the Activity context. See `docs/pure-rust-audio-backend.md`.
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn init_android_context(
+    java_vm: *mut std::os::raw::c_void,
+    context: *mut std::os::raw::c_void,
+) {
+    unsafe { ndk_context::initialize_android_context(java_vm, context) };
+}
+
 // #[unsafe(no_mangle)]
 // pub extern "C" fn rust_backend_init_db() -> bool {
 //     db::rust_backend_init_db()

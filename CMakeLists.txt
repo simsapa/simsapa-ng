@@ -80,7 +80,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTORCC_OPTIONS --format-version 1)
 list(APPEND CMAKE_AUTORCC_OPTIONS --compress-algo zlib)
 
-set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test Multimedia)
+set(CXXQT_QTCOMPONENTS Core Gui Qml QuickControls2 QuickTest Test)
 
 list(APPEND app_components Widgets Quick)
 
@@ -91,8 +91,7 @@ list(APPEND qt_modules
         Qt::Network
         Qt::Widgets
         Qt::Quick
-        Qt::QuickControls2
-        Qt::Multimedia)
+        Qt::QuickControls2)
 
 if (ANDROID)
     # Detect Android ABI and set appropriate Qt paths
@@ -299,6 +298,27 @@ elseif (ANDROID)
         android/res/xml/qtprovider_paths.xml)
 
     qt_add_executable(simsapadhammareader ${app_files} ${android_files})
+
+    # 16 KB page alignment (required for Play Store, targetSdk >= 35). Qt's own
+    # prebuilt libs are already 16 KB-aligned, and the pure-Rust audio stack
+    # (cpal AAudio backend) bundles no native libs, so the main app .so is the
+    # only artifact we link here that needs aligning. NDK r28 would make this the
+    # default, but it is incompatible with Qt 6.9.3 at minSdk 27 (libc++ uses
+    # pthread_cond_clockwait, API 30+ only), so we stay on the Qt-supported NDK
+    # (r26b/r27) and set max-page-size explicitly. See docs/pure-rust-audio-backend.md.
+    target_link_options(simsapadhammareader PRIVATE "-Wl,-z,max-page-size=16384")
+
+    # NDK system libraries needed by the Rust audio stack. cpal's AAudio backend
+    # and the `ndk`/`ndk-sys` crates declare these via #[link(...)] attributes,
+    # but those are only honoured when rustc drives the final link. Here CMake
+    # links the staticlib (libsimsapa_bridges.a) into the app .so, so the
+    # libraries must be named explicitly or the link fails with undefined
+    # symbols (AAudio_*, ASharedMemory_*, ANativeWindow_*, ALooper_*, …).
+    #   android       → ASharedMemory_*, ATrace_*, AInputQueue_*, ALooper_*
+    #   nativewindow  → ANativeWindow_*
+    #   aaudio        → cpal AAudio capture/playback
+    # See docs/pure-rust-audio-backend.md.
+    target_link_libraries(simsapadhammareader PRIVATE android nativewindow aaudio)
 
 else()
     qt_add_executable(simsapadhammareader ${app_files})

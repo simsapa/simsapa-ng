@@ -3956,6 +3956,7 @@ dependencies = [
  "markdown",
  "markup5ever 0.12.1",
  "markup5ever_rcdom",
+ "ndk-context",
  "parking_lot",
  "pdf-extract",
  "regex",
