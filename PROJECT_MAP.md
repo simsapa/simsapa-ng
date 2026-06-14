@@ -374,6 +374,18 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - **Qt Integration:** `cpp/gui.cpp:93` - Calls desktop file creation during startup
   - **Desktop Filename Setting:** `cpp/gui.cpp:111` - Sets Qt desktop filename for proper integration
 
+### Audio (Chanting Practice)
+- **Pure-Rust audio stack** (replaced Qt Multimedia / FFmpeg for 16 KB Android
+  compliance — see [docs/pure-rust-audio-backend.md](./docs/pure-rust-audio-backend.md)):
+  - **Recorder:** `backend/src/audio/recorder.rs` — cpal capture → canonical PCM → FLAC (`flacenc`).
+  - **Player:** `backend/src/audio/player.rs` — symphonia decode (FLAC + MP3) → cpal output; `PlaybackCore` holds the cpal-independent cursor/seek/range/loop logic (unit-tested).
+  - **Format:** `backend/src/audio/format.rs` — canonical mono/16-bit/48 kHz constants + downmix/resample helpers.
+  - **Bridge:** `bridges/src/audio_manager.rs` — instantiable `AudioManager` QObject (one per `RecordingPlaybackItem`); record/play/seek/range invokables, position/state via a background poll thread marshalled with `qt_thread().queue()`.
+  - **QML:** `assets/qml/RecordingPlaybackItem.qml` — recording/playback UI (no `QtMultimedia`).
+  - **Waveform:** `backend/src/waveform.rs` — `get_waveform_peaks()` / `get_audio_duration_ms()` (symphonia; FLAC + MP3).
+  - **Android JNI init:** `backend/src/lib.rs` `init_android_context()` (called from `cpp/gui.cpp`) registers Qt's JavaVM + Activity with `ndk_context` so cpal's AAudio backend works.
+  - **Mic permission:** native via `cpp/android_helpers.*` + `AssetManager` (not Qt Multimedia).
+
 ### AI Integration
 - **Prompt Manager:** `bridges/src/prompt_manager.rs` - AI API communication and request handling
 - **Translation Requests:** Multi-model support with automatic retry logic and error handling
