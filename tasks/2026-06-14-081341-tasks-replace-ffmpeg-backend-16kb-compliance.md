@@ -19,7 +19,7 @@ Rejected alternative (reference): [2026-06-14-081341-reference-compiled-ffmpeg-1
 - `backend/src/waveform.rs` - Verify FLAC decodes; no functional change expected.
 - `backend/tests/test_audio_recorder.rs` - Unit/integration tests for capture→FLAC (encode a synthetic buffer, decode back with symphonia).
 - `backend/tests/test_audio_player.rs` - Tests for decode/seek/position math and range/loop boundary logic.
-- `bridges/src/audio_manager.rs` - New CXX-Qt bridge: instantiable `AudioManager` QObject exposing record/playback to QML, with signals.
+- `bridges/src/audio_manager.rs` - New CXX-Qt bridge: instantiable `AudioManager` QObject exposing record/playback to QML, with signals. Invokables include `clear_range()` (added in Task 4 so a normal seek/stop can reset an active range).
 - `bridges/build.rs` - Register `src/audio_manager.rs` in `rust_files`; remove no qml entries (RecordingPlaybackItem stays).
 - `assets/qml/com/profoundlabs/simsapa/AudioManager.qml` - `qmllint` type stub for the new bridge.
 - `assets/qml/com/profoundlabs/simsapa/qmldir` - Declare `AudioManager 1.0 AudioManager.qml` (non-singleton, like `AssetManager`).
@@ -74,14 +74,14 @@ Rejected alternative (reference): [2026-06-14-081341-reference-compiled-ffmpeg-1
 - **Decode coverage (IMPORTANT):** the player must decode **MP3** as well as FLAC. The app **ships reference recordings as `.mp3`** (`cli/src/bootstrap/chanting_practice.rs` → `recordings/namo-tassa.mp3`, and `app-assets/chanting-recordings/itipiso-sumedharama-2022.mp3`). Only *user* recordings are FLAC; reference playback must keep working. `symphonia` `features = ["all"]` already decodes MP3 (the existing waveform renders for these reference files), so no new decode dependency — but the player must not assume FLAC input.
 - **Reuse:** decoding reuses the existing `symphonia` setup pattern from `backend/src/waveform.rs` (probe by extension, default track, decoder).
 
-- [ ] 2.0 Implement the Rust audio **playback engine** (decode + cpal output, position, seek, duration, volume, range/loop)
-  - [ ] 2.1 Implement `backend/src/audio/player.rs` skeleton: load file (symphonia probe/decoder reusing the `waveform.rs` pattern), open a cpal output stream, define the state enum and a shared playback state (`Arc<Mutex<…>>` / atomics for position + volume + range).
-  - [ ] 2.2 Implement decode→output feeding loop: pull decoded frames, apply volume, write to the output stream; track played frames as the position source of truth.
-  - [ ] 2.3 Implement `play`/`pause`/`stop` and `seek_ms` (seek the symphonia stream / reset the frame counter; guard against premature end-detection right after a seek, mirroring the existing `range_seek_pending` concept).
-  - [ ] 2.4 Implement `play_range(start_ms, end_ms, looping)`: start playback at `start_ms`, stop or loop back to `start_ms` when `position >= end_ms`.
-  - [ ] 2.5 Implement `position_ms()` / `duration_ms()` and a mechanism to push periodic position updates (poll target for the bridge's position signal).
-  - [ ] 2.6 Add `backend/tests/test_audio_player.rs`: cover position/duration math, seek target rounding, and range/loop boundary logic against a short generated FLAC fixture (created via the Task 1 encode path).
-  - [ ] 2.7 Run `cd backend && cargo test`; confirm `make build -B` is clean.
+- [x] 2.0 Implement the Rust audio **playback engine** (decode + cpal output, position, seek, duration, volume, range/loop)
+  - [x] 2.1 Implement `backend/src/audio/player.rs` skeleton: load file (symphonia probe/decoder reusing the `waveform.rs` pattern), open a cpal output stream, define the state enum and a shared playback state (`Arc<Mutex<…>>` / atomics for position + volume + range).
+  - [x] 2.2 Implement decode→output feeding loop: pull decoded frames, apply volume, write to the output stream; track played frames as the position source of truth.
+  - [x] 2.3 Implement `play`/`pause`/`stop` and `seek_ms` (seek the symphonia stream / reset the frame counter; guard against premature end-detection right after a seek, mirroring the existing `range_seek_pending` concept).
+  - [x] 2.4 Implement `play_range(start_ms, end_ms, looping)`: start playback at `start_ms`, stop or loop back to `start_ms` when `position >= end_ms`.
+  - [x] 2.5 Implement `position_ms()` / `duration_ms()` and a mechanism to push periodic position updates (poll target for the bridge's position signal).
+  - [x] 2.6 Add `backend/tests/test_audio_player.rs`: cover position/duration math, seek target rounding, and range/loop boundary logic against a short generated FLAC fixture (created via the Task 1 encode path).
+  - [x] 2.7 Run `cd backend && cargo test`; confirm `make build -B` is clean.
 
 ---
 
@@ -95,13 +95,13 @@ Rejected alternative (reference): [2026-06-14-081341-reference-compiled-ffmpeg-1
 - **Lifecycle (IMPORTANT):** the chanting review window holds **multiple** `RecordingPlaybackItem`s at once (a `Repeater` of new recordings + reference + user loaders), so multiple `AudioManager` instances coexist. Each must release its cpal stream(s) and audio thread on destruction (Rust `Drop`), and should create the output stream lazily on first play (not at construction) to avoid many idle streams. Recording uses the exclusive mic input — only one item records at a time (UI-enforced via sibling `cleanup()`/`pause_playback()`).
 - **Depends on:** Tasks 1 & 2 (backend `audio::recorder` / `audio::player`).
 
-- [ ] 3.0 Expose the recorder and player to QML through the **CXX-Qt bridge**
-  - [ ] 3.1 Create `bridges/src/audio_manager.rs` with the `AudioManager` QObject: properties, `#[qsignal]`s, and `#[qinvokable]`s per the spec; hold the backend `Recorder`/`Player` instances.
-  - [ ] 3.2 Wire backend callbacks → Qt signals using the `qt_thread().queue()` marshalling pattern (position ticks, state changes, recording-finished, errors). Ensure no QObject access happens on the audio thread.
-  - [ ] 3.3 Register `src/audio_manager.rs` in the `rust_files` list in `bridges/build.rs`.
-  - [ ] 3.4 Create `assets/qml/com/profoundlabs/simsapa/AudioManager.qml` `qmllint` stub with matching function signatures, the state-enum constants (`Stopped`/`Playing`/`Paused`), and dummy return values; add `AudioManager 1.0 AudioManager.qml` to `qmldir`.
-  - [ ] 3.5 Implement `Drop` for the recorder/player so cpal streams and audio threads are torn down when an `AudioManager` is destroyed; create the output stream lazily on first `play()`/`load()`.
-  - [ ] 3.6 Confirm `make build -B` is clean (bridge compiles and the QML module registers) without yet using `AudioManager` from any window.
+- [x] 3.0 Expose the recorder and player to QML through the **CXX-Qt bridge**
+  - [x] 3.1 Create `bridges/src/audio_manager.rs` with the `AudioManager` QObject: properties, `#[qsignal]`s, and `#[qinvokable]`s per the spec; hold the backend `Recorder`/`Player` instances.
+  - [x] 3.2 Wire backend callbacks → Qt signals using the `qt_thread().queue()` marshalling pattern (position ticks, state changes, recording-finished, errors). Ensure no QObject access happens on the audio thread.
+  - [x] 3.3 Register `src/audio_manager.rs` in the `rust_files` list in `bridges/build.rs`.
+  - [x] 3.4 Create `assets/qml/com/profoundlabs/simsapa/AudioManager.qml` `qmllint` stub with matching function signatures, the state-enum constants (`Stopped`/`Playing`/`Paused`), and dummy return values; add `AudioManager 1.0 AudioManager.qml` to `qmldir`.
+  - [x] 3.5 Implement `Drop` for the recorder/player so cpal streams and audio threads are torn down when an `AudioManager` is destroyed; create the output stream lazily on first `play()`/`load()`.
+  - [x] 3.6 Confirm `make build -B` is clean (bridge compiles and the QML module registers) without yet using `AudioManager` from any window.
 
 ---
 
@@ -117,12 +117,24 @@ Rejected alternative (reference): [2026-06-14-081341-reference-compiled-ffmpeg-1
   - `range_playback_timer` (50 ms QML polling for `position >= end_ms`) and `range_seek_timer` / `range_seek_pending` → the Rust `play_range(start, end, looping)` handles boundary + loop and emits on stop/loop; QML only needs the position for the playhead.
 - **Logging:** use the `Logger` module, not `console` (per project rules).
 
-- [ ] 4.0 Refactor **`RecordingPlaybackItem.qml`** to the Rust audio stack
-  - [ ] 4.1 Replace the `MediaPlayer`/`AudioOutput` block with `AudioManager` playback; rewire `effective_position`, `onMediaStatusChanged` position-restore, and `onPlaybackStateChanged` → `playback_started()` to `AudioManager` signals/properties.
-  - [ ] 4.2 Replace the `CaptureSession`/`AudioInput`/`MediaRecorder` block + `start_recording()`/`stop_recording()`/`finalize_recording()` with `AudioManager.start_recording()`/`stop_recording()` and the `recording_finished(path)` signal; change the output extension to `.flac`.
-  - [ ] 4.3 Update every `player.playbackState === MediaPlayer.*State` reference (≈15 sites incl. range/loop, button enable states) to the `AudioManager` state enum.
-  - [ ] 4.4 Replace seek + range/loop with `AudioManager.seek()` / `play_range()`, **removing** the Qt-quirk workarounds listed in the spec (`seek_resume_timer`, `range_seek_timer`, `range_playback_timer`, `visual_position_override`/`effective_position`, `range_seek_pending`) where the Rust player makes them unnecessary; map `MediaRecorder.onErrorOccurred` → `AudioManager.error_occurred`. Keep the `volume_save_timer`/`position_save_timer` debounce persistence (uses existing `SuttaBridge` calls).
-  - [ ] 4.5 Remove the now-unused `import QtMultimedia` and confirm `qmllint`/`make build -B` pass with no residual `QtMultimedia` symbols.
+- [x] 4.0 Refactor **`RecordingPlaybackItem.qml`** to the Rust audio stack
+  - [x] 4.1 Replace the `MediaPlayer`/`AudioOutput` block with `AudioManager` playback; rewire `effective_position`, `onMediaStatusChanged` position-restore, and `onPlaybackStateChanged` → `playback_started()` to `AudioManager` signals/properties. (Position restore now via `load_audio()` → `audio.seek()` after `audio.load()`; `playback_started()` emitted from the `audio.onStateChanged` handler when state becomes Playing.)
+  - [x] 4.2 Replace the `CaptureSession`/`AudioInput`/`MediaRecorder` block + `start_recording()`/`stop_recording()`/`finalize_recording()` with `AudioManager.start_recording()`/`stop_recording()` and the `recordingFinished(path)` signal; change the output extension to `.flac`. (Removed `MediaDevices`; cpal re-detects the default input at `start()`.)
+  - [x] 4.3 Update every `player.playbackState === MediaPlayer.*State` reference to the player-state values. The Rust `AudioManager` QObject has no `Q_ENUM`, so `AudioManager.Playing` would not resolve at runtime — used local `readonly property int player_stopped/playing/paused` constants instead.
+  - [x] 4.4 Replace seek + range/loop with `AudioManager.seek()` / `play_range()` / `clear_range()`, **removing** the Qt-quirk workarounds (`seek_resume_timer`, `range_seek_timer`, `range_playback_timer`, `visual_position_override`/`effective_position`, `range_seek_pending`); map errors → `AudioManager.errorOccurred`. Kept the `volume_save_timer`/`position_save_timer` debounce persistence. **Added a `clear_range()` `#[qinvokable]` to the bridge** (not in the original Task 3 spec) so normal seek/stop can reset an active range.
+  - [x] 4.5 Removed the `import QtMultimedia`; `make build -B` is clean with no residual `QtMultimedia` symbols (only comments mention it).
+  - [x] 4.6 Fixes from the first runtime smoke test (backend/bridge, found during Task 4 verification):
+    - **ALSA `snd_pcm_avail_delay` I/O error flood + idle device:** the cpal output stream was kept running continuously. Now built **paused** and toggled with playback state (`play()`/`play_range()` start it; `pause()`/`stop()`/`halt()` pause it). The output error callback is throttled to once / 2 s. (`backend/src/audio/player.rs`)
+    - **Slow window open / no background waveform:** `Player::load()` decoded the whole MP3/FLAC synchronously on the GUI thread. Split into public `decode_to_mono` (run off-thread in the bridge) + `Player::from_samples` (cheap stream build, back on the Qt thread). (`backend/src/audio/player.rs`, `bridges/src/audio_manager.rs`)
+    - **Position not advancing in the UI:** consequence of the blocked GUI thread above; resolved by the async decode. The `AudioManager` now remembers `pending_volume`/`pending_seek_ms` so `set_volume`/`seek` called right after the async `load()` (before the player exists) are applied on player creation — preserving saved-position restore. (`bridges/src/audio_manager.rs`)
+    - On a non-looping natural end the poll thread now also `halt()`s the stream so the device stops feeding silence.
+  - [x] 4.7 Fixes from the second runtime smoke test:
+    - **Playback position never advanced in the UI:** `load_audio()` ran twice (`onFile_pathChanged` + `Component.onCompleted`), so two players/cores were built but `ensure_polling()` early-returned and the poll thread stayed bound to the *first* (discarded) core. Now the bridge holds a `current_core: Arc<Mutex<Option<Arc<Mutex<PlaybackCore>>>>>` slot that `load()` updates each time; the single poll thread reads the current core, so a re-load rebinds it. Also added a `loaded_path` guard in QML so the same file isn't decoded twice. (`bridges/src/audio_manager.rs`, `assets/qml/RecordingPlaybackItem.qml`)
+    - **`MouseArea ... anchors on an item managed by a layout` warning** (`ChantingPracticeReviewWindow.qml`, both reference & user delegates): the `MouseArea` was `contentData` of a `Frame` whose `contentItem` is an explicit `RowLayout`, so it got reparented into that layout. Replaced with `TapHandler` + `HoverHandler` (pointer handlers attach to the `Frame`, need no anchors).
+  - [x] 4.8 Fixes from the third runtime smoke test:
+    - **First play click ignored:** because `load()` decodes asynchronously, a `play()` pressed before the player exists was a no-op. The bridge now records a `pending_play` flag and auto-starts the player when it becomes ready (cleared by `pause`/`stop`). (`bridges/src/audio_manager.rs`)
+    - **Every position marker's button showed "pause" during normal playback:** `is_playing_this` for position markers keyed off the global play state. Added `active_position_marker_id` in QML so only the marker that started playback shows "pause"; main play / seek (`stop_range_playback`, ±5 s) / `play_range` / any stop clear it. (`assets/qml/RecordingPlaybackItem.qml`)
+  - [x] 4.9 Loading state for the async decode: added a `loading` (bool) qproperty to `AudioManager`, set true at the start of `load()` and false on ready/error. The QML shows a "Loading…" placeholder instead of the waveform and disables the playback/seek/marker controls (via `enabled: !audio.loading` on the control containers) while decoding, so the user knows to wait. (`bridges/src/audio_manager.rs`, `assets/qml/com/profoundlabs/simsapa/AudioManager.qml`, `assets/qml/RecordingPlaybackItem.qml`)
 
 ---
 

@@ -101,6 +101,7 @@ fn main() {
                         "src/api.rs",
                         "src/sutta_bridge.rs",
                         "src/asset_manager.rs",
+                        "src/audio_manager.rs",
                         "src/storage_manager.rs",
                         "src/prompt_manager.rs",
                         "src/clipboard_manager.rs",

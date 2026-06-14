@@ -42,11 +42,19 @@ fn downmix_to_mono(samples: &[f32], channels: u16) -> Vec<f32> {
 /// using a sinc interpolator. Returns the input unchanged when the rate already
 /// matches or the buffer is empty.
 fn resample_mono(mono: &[f32], in_rate: u32) -> Result<Vec<f32>> {
-    if mono.is_empty() || in_rate == CANONICAL_SAMPLE_RATE {
+    resample_mono_to(mono, in_rate, CANONICAL_SAMPLE_RATE)
+}
+
+/// Resample a mono `f32` buffer from `in_rate` to `out_rate` using a sinc
+/// interpolator. Returns the input unchanged when the rates already match or the
+/// buffer is empty. Shared by the recorder (capture → canonical 48 kHz) and the
+/// player (decoded audio → the output device's rate).
+pub fn resample_mono_to(mono: &[f32], in_rate: u32, out_rate: u32) -> Result<Vec<f32>> {
+    if mono.is_empty() || in_rate == out_rate {
         return Ok(mono.to_vec());
     }
 
-    let f_ratio = CANONICAL_SAMPLE_RATE as f64 / in_rate as f64;
+    let f_ratio = out_rate as f64 / in_rate as f64;
 
     let sinc_len = 128;
     let oversampling_factor = 256;

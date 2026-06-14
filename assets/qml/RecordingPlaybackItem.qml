@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtMultimedia
 
 import com.profoundlabs.simsapa
 
@@ -11,6 +10,13 @@ Item {
     id: root
 
     Logger { id: logger }
+
+    // PlayerState integer values exposed by the Rust AudioManager
+    // (see backend/src/audio/player.rs `PlayerState::as_i32`). The Rust QObject
+    // has no Q_ENUM, so the named values live here rather than on AudioManager.
+    readonly property int player_stopped: 0
+    readonly property int player_playing: 1
+    readonly property int player_paused: 2
 
     // Properties (6.1)
     property string recording_uid: ""
@@ -29,8 +35,8 @@ Item {
     signal label_edited(string new_label)
 
     function pause_playback() {
-        if (player.playbackState === MediaPlayer.PlayingState) {
-            player.pause();
+        if (audio.state === root.player_playing) {
+            audio.pause();
         }
     }
 
@@ -49,33 +55,66 @@ Item {
     property var waveform_data: []
     property int waveform_num_bars: 0  // total number of bars stored in cached waveform
     property bool waveform_loading: false
-    property bool pending_recording_stop: false
 
     // Range creation state: "idle", "waiting_start", "waiting_end"
     property string range_create_state: "idle"
     property int range_create_start_ms: -1
 
-    // Range playback state (8.8, 8.9)
+    // Range playback state (8.8, 8.9) — the Rust player owns the range/loop
+    // boundary + looping; these track which marker is active for the UI.
     property bool loop_enabled: false
     property string active_range_id: ""  // ID of range marker currently being played
     property int active_range_start_ms: 0
     property int active_range_end_ms: 0
-    property bool range_seek_pending: false  // Guard against premature end-detection after seek
-    // Last position we explicitly seeked to. Used as the display position
-    // when the player is NOT playing, because player.position is unreliable
-    // after an async seek while paused.  Set to -1 when no pending seek.
-    property int visual_position_override: -1
-    property int effective_position: {
-        // While playing, player.position updates continuously and is reliable.
-        if (player.playbackState === MediaPlayer.PlayingState)
-            return player.position;
-        // While paused/stopped, prefer our explicit seek target if set.
-        if (visual_position_override >= 0)
-            return visual_position_override;
-        return player.position;
-    }
+    // ID of the position marker that started the current playback, so only that
+    // marker's button shows "pause" (not every marker during normal playback).
+    property string active_position_marker_id: ""
 
     implicitHeight: main_column.implicitHeight + 16
+
+    // The Rust audio backend instance — replaces Qt's MediaPlayer + MediaRecorder.
+    // The cpal output stream is created lazily on load()/play() and torn down on
+    // destruction (Rust Drop). See docs/pure-rust-audio-backend.md.
+    AudioManager {
+        id: audio
+    }
+
+    Connections {
+        target: audio
+
+        function onStateChanged() {
+            if (audio.state === root.player_playing) {
+                root.playback_started();
+            } else if (audio.state === root.player_stopped) {
+                // Playback stopped (natural end or stop) — clear active markers.
+                root.active_position_marker_id = "";
+                if (root.active_range_id !== "") {
+                    root.active_range_id = "";
+                    root.active_range_start_ms = 0;
+                    root.active_range_end_ms = 0;
+                }
+            }
+        }
+
+        function onRecordingFinished(file_path: string) {
+            root.is_recording = false;
+            root.file_not_found = false;
+            root.error_message = "";
+            // Clear cached waveform so it regenerates from the new file.
+            root.waveform_json = "";
+            root.waveform_data = [];
+            root.waveform_num_bars = 0;
+            // Setting file_path triggers onFile_pathChanged → check_file / load.
+            root.file_path = file_path;
+            root.recording_completed(file_path);
+        }
+
+        function onErrorOccurred(message: string) {
+            root.is_recording = false;
+            root.error_message = message;
+            logger.error("AudioManager error: " + message);
+        }
+    }
 
     Rectangle {
         anchors.fill: parent
@@ -101,9 +140,30 @@ Item {
         }
     }
 
+    // Path already handed to audio.load(); avoids decoding the same file twice
+    // (onFile_pathChanged and Component.onCompleted both call load_audio).
+    property string loaded_path: ""
+
+    // Load the file into the Rust player and restore the saved position/volume.
+    function load_audio() {
+        if (root.file_path !== "" && !root.file_not_found && root.file_path !== root.loaded_path) {
+            root.loaded_path = root.file_path;
+            audio.load(root.file_path);
+            audio.set_volume(root.volume);
+            if (root.playback_position_ms > 0) {
+                audio.seek(root.playback_position_ms);
+            }
+        }
+    }
+
     onFile_pathChanged: {
         check_file();
         load_waveform();
+        load_audio();
+    }
+
+    onVolumeChanged: {
+        audio.set_volume(root.volume);
     }
 
     onMarkers_jsonChanged: {
@@ -118,6 +178,7 @@ Item {
         // Delay check slightly to ensure all properties are bound
         Qt.callLater(check_file);
         Qt.callLater(load_waveform);
+        Qt.callLater(load_audio);
         // Parse initial markers
         try {
             root.markers = JSON.parse(root.markers_json);
@@ -182,90 +243,6 @@ Item {
         }
     }
 
-    // Audio playback (6.2) — only set source if file exists
-    MediaPlayer {
-        id: player
-        source: root.file_path !== "" && !root.file_not_found
-            ? Qt.resolvedUrl("file://" + root.file_path)
-            : ""
-        audioOutput: AudioOutput {
-            id: audio_output
-            volume: root.volume
-        }
-
-        // Restore saved playback position once media is loaded
-        onMediaStatusChanged: {
-            if (mediaStatus === MediaPlayer.LoadedMedia && root.playback_position_ms > 0) {
-                player.position = root.playback_position_ms;
-                // Stay paused — don't auto-play
-            }
-        }
-
-        onPlaybackStateChanged: {
-            if (playbackState === MediaPlayer.PlayingState) {
-                root.playback_started();
-            }
-        }
-    }
-
-    // Used to re-detect the current default audio input when starting a recording
-    MediaDevices { id: media_devices }
-
-    // Audio recording (6.4) — no hardcoded format, let system pick best available
-    CaptureSession {
-        id: capture_session
-        audioInput: AudioInput {
-            id: audio_input
-        }
-        recorder: MediaRecorder {
-            id: recorder
-            quality: MediaRecorder.NormalQuality
-
-            // NOTE: onRecorderStateChanged is correct according to docs
-            // https://doc.qt.io/qt-6/qml-qtmultimedia-mediarecorder.html#recorderStateChanged-signal
-            onRecorderStateChanged: {
-                // File is fully finalized only when state transitions to StoppedState
-                if (recorder.recorderState === MediaRecorder.StoppedState && root.pending_recording_stop) {
-                    root.pending_recording_stop = false;
-                    root.finalize_recording();
-                }
-            }
-
-            onErrorOccurred: function(error, errorString) {
-                root.is_recording = false;
-                root.pending_recording_stop = false;
-                root.error_message = "Recording error: " + errorString;
-                logger.error("MediaRecorder error: " + error + " " + errorString);
-            }
-        }
-    }
-
-    // Resumes playback after a brief pause-seek cycle.
-    Timer {
-        id: seek_resume_timer
-        interval: 80
-        repeat: false
-        onTriggered: {
-            player.position = root.visual_position_override;
-            root.visual_position_override = -1;
-            player.play();
-        }
-    }
-
-    // Seek to a position reliably.  While playing, Qt often ignores a bare
-    // `player.position = X`, so we pause → seek → short delay → resume.
-    function seek_to(position_ms: int) {
-        let was_playing = (player.playbackState === MediaPlayer.PlayingState);
-        if (was_playing) {
-            player.pause();
-        }
-        root.visual_position_override = position_ms;
-        player.position = position_ms;
-        if (was_playing) {
-            seek_resume_timer.restart();
-        }
-    }
-
     // Debounce timer for persisting volume changes
     Timer {
         id: volume_save_timer
@@ -290,78 +267,21 @@ Item {
 
     function save_position() {
         if (root.recording_uid !== "" && !root.is_new_recording) {
-            SuttaBridge.update_recording_playback_position(root.recording_uid, Math.round(player.position));
+            SuttaBridge.update_recording_playback_position(root.recording_uid, audio.position_ms);
         }
     }
 
     // Stop playback/recording and persist volume + position
     function cleanup() {
-        seek_resume_timer.stop();
         if (root.is_recording) {
             stop_recording();
         }
-        if (player.playbackState === MediaPlayer.PlayingState) {
-            player.stop();
+        if (audio.state === root.player_playing) {
+            audio.stop();
         }
-        root.visual_position_override = -1;
         save_position();
         if (root.recording_uid !== "") {
             SuttaBridge.update_recording_volume(root.recording_uid, root.volume);
-        }
-    }
-
-    // One-shot timer: after seeking to range start, pause briefly then play.
-    // This gives Qt MediaPlayer time to honour the position change before
-    // playback resumes.
-    Timer {
-        id: range_seek_timer
-        interval: 80
-        repeat: false
-        onTriggered: {
-            // Re-assert the seek position in case the first assignment was
-            // swallowed, then start playback.
-            player.position = root.active_range_start_ms;
-            root.visual_position_override = -1;
-            player.play();
-        }
-    }
-
-    // Range playback polling timer (8.8, 8.9) — checks if player reached end_ms
-    Timer {
-        id: range_playback_timer
-        interval: 50
-        repeat: true
-        running: root.active_range_id !== "" && player.playbackState === MediaPlayer.PlayingState
-        onTriggered: {
-            // After a seek (play_range or loop-back), wait until the player
-            // position is near the range start before checking for the end.
-            // "Near" = within 500 ms of start, to tolerate seek imprecision
-            // while avoiding false-clear when paused in the middle of the range.
-            if (root.range_seek_pending) {
-                let tolerance = Math.min(500, (root.active_range_end_ms - root.active_range_start_ms) / 2);
-                if (player.position >= root.active_range_start_ms
-                    && player.position <= root.active_range_start_ms + tolerance) {
-                    root.range_seek_pending = false;
-                }
-                return;
-            }
-
-            if (player.position >= root.active_range_end_ms) {
-                if (root.loop_enabled) {
-                    root.range_seek_pending = true;
-                    root.visual_position_override = root.active_range_start_ms;
-                    player.pause();
-                    player.position = root.active_range_start_ms;
-                    range_seek_timer.restart();
-                } else {
-                    let end_pos = root.active_range_end_ms;
-                    player.pause();
-                    player.position = end_pos;
-                    root.stop_range_playback();
-                    // Set override AFTER stop_range_playback (which clears it)
-                    root.visual_position_override = end_pos;
-                }
-            }
         }
     }
 
@@ -398,7 +318,7 @@ Item {
 
             Label {
                 id: title_label
-                text: root.label + (player.duration > 0 ? " (" + root.format_time(player.duration) + ")" : "")
+                text: root.label + (audio.duration_ms > 0 ? " (" + root.format_time(audio.duration_ms) + ")" : "")
                 font.bold: true
                 elide: Text.ElideRight
                 Layout.fillWidth: true
@@ -515,11 +435,13 @@ Item {
             }
         }
 
-        // Audio controls row (6.2) — hidden when file not found
+        // Audio controls row (6.2) — hidden when file not found, disabled while
+        // the player is still decoding.
         RowLayout {
             Layout.fillWidth: true
             spacing: 4
             visible: !root.file_not_found
+            enabled: !audio.loading
 
             // Record button — only for new/user recordings (6.4)
             Button {
@@ -529,7 +451,7 @@ Item {
                 icon.height: 16
                 text: root.is_recording ? "Stop" : "Record"
                 visible: root.is_new_recording || root.recording_type === "user"
-                enabled: player.playbackState !== MediaPlayer.PlayingState
+                enabled: audio.state !== root.player_playing
                 onClicked: {
                     if (root.is_recording) {
                         root.stop_recording();
@@ -541,24 +463,19 @@ Item {
 
             // Play/Pause button
             Button {
-                icon.source: player.playbackState === MediaPlayer.PlayingState ? "icons/32x32/fluent--pause-circle-24-regular.png" : "icons/32x32/fluent--play-circle-24-regular.png"
+                icon.source: audio.state === root.player_playing ? "icons/32x32/fluent--pause-circle-24-regular.png" : "icons/32x32/fluent--play-circle-24-regular.png"
                 icon.width: 20
                 icon.height: 20
                 enabled: !root.is_recording && root.file_path !== "" && !root.file_not_found
                 implicitWidth: 40
                 onClicked: {
-                    if (player.playbackState === MediaPlayer.PlayingState) {
-                        player.pause();
+                    if (audio.state === root.player_playing) {
+                        audio.pause();
                         position_save_timer.restart();
                     } else {
-                        // If the user seeked while paused (waveform click or
-                        // scrubber drag), re-assert that position before playing
-                        // because Qt may not have processed the seek yet.
-                        if (root.visual_position_override >= 0) {
-                            player.position = root.visual_position_override;
-                        }
-                        root.visual_position_override = -1;
-                        player.play();
+                        // Main play is general playback, not tied to a marker.
+                        root.active_position_marker_id = "";
+                        audio.play();
                     }
                 }
             }
@@ -568,14 +485,11 @@ Item {
                 icon.source: "icons/32x32/fluent--record-stop-24-regular.png"
                 icon.width: 20
                 icon.height: 20
-                enabled: !root.is_recording && player.playbackState !== MediaPlayer.StoppedState
+                enabled: !root.is_recording && audio.state !== root.player_stopped
                 implicitWidth: 40
                 onClicked: {
-                    seek_resume_timer.stop();
                     root.stop_range_playback();
-                    player.stop();
-                    player.position = 0;
-                    root.visual_position_override = 0;
+                    audio.stop();
                     position_save_timer.restart();
                 }
             }
@@ -586,12 +500,9 @@ Item {
                 enabled: !root.is_recording && root.file_path !== "" && !root.file_not_found
                 implicitWidth: 40
                 onClicked: {
-                    let new_pos = Math.max(0, root.effective_position - 5000);
-                    if (player.playbackState === MediaPlayer.PlayingState) {
-                        player.position = new_pos;
-                    } else {
-                        root.seek_to(new_pos);
-                    }
+                    root.active_position_marker_id = "";
+                    let new_pos = Math.max(0, audio.position_ms - 5000);
+                    audio.seek(new_pos);
                     position_save_timer.restart();
                 }
             }
@@ -601,13 +512,10 @@ Item {
                 enabled: !root.is_recording && root.file_path !== "" && !root.file_not_found
                 implicitWidth: 40
                 onClicked: {
-                    let max_pos = player.duration > 0 ? player.duration : root.effective_position;
-                    let new_pos = Math.min(max_pos, root.effective_position + 5000);
-                    if (player.playbackState === MediaPlayer.PlayingState) {
-                        player.position = new_pos;
-                    } else {
-                        root.seek_to(new_pos);
-                    }
+                    root.active_position_marker_id = "";
+                    let max_pos = audio.duration_ms > 0 ? audio.duration_ms : audio.position_ms;
+                    let new_pos = Math.min(max_pos, audio.position_ms + 5000);
+                    audio.seek(new_pos);
                     position_save_timer.restart();
                 }
             }
@@ -616,17 +524,19 @@ Item {
 
             // Time display (6.3)
             Label {
-                text: root.format_time(root.effective_position) + " / " + root.format_time(player.duration)
+                text: root.format_time(audio.position_ms) + " / " + root.format_time(audio.duration_ms)
                 font.family: "monospace"
                 visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
             }
         }
 
-        // Waveform placeholder while loading
+        // Loading / waveform placeholder. Shown while the Rust player decodes
+        // the file (audio.loading) or while the waveform is being generated.
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 60
-            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found && root.waveform_loading && root.waveform_data.length === 0
+            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
+                && (audio.loading || (root.waveform_loading && root.waveform_data.length === 0))
             color: palette.base
             border.color: palette.mid
             border.width: 1
@@ -634,7 +544,7 @@ Item {
 
             Label {
                 anchors.centerIn: parent
-                text: "Loading waveform..."
+                text: audio.loading ? "Loading…" : "Loading waveform…"
                 color: palette.placeholderText
                 font.pointSize: 10
             }
@@ -645,12 +555,12 @@ Item {
             id: waveform_view
             Layout.fillWidth: true
             Layout.preferredHeight: 60
-            visible: !root.is_recording && root.file_path !== "" && !root.file_not_found && root.waveform_data.length > 0
+            visible: !root.is_recording && !audio.loading && root.file_path !== "" && !root.file_not_found && root.waveform_data.length > 0
 
             waveform_data: root.waveform_data
-            duration_ms: player.duration
-            playback_position_ms: root.effective_position
-            is_playing: player.playbackState === MediaPlayer.PlayingState
+            duration_ms: audio.duration_ms
+            playback_position_ms: audio.position_ms
+            is_playing: audio.state === root.player_playing
             markers: root.markers
             range_create_active: root.range_create_state !== "idle"
             range_create_pending_ms: root.range_create_start_ms
@@ -667,7 +577,7 @@ Item {
                     root.range_create_start_ms = -1;
                 } else {
                     root.stop_range_playback();
-                    root.seek_to(position_ms);
+                    audio.seek(position_ms);
                     position_save_timer.restart();
                 }
             }
@@ -686,13 +596,14 @@ Item {
             id: scrubber
             Layout.fillWidth: true
             visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
+            enabled: !audio.loading
             from: 0
-            to: player.duration > 0 ? player.duration : 1
-            value: root.effective_position
+            to: audio.duration_ms > 0 ? audio.duration_ms : 1
+            value: audio.position_ms
 
             onMoved: {
                 root.stop_range_playback();
-                root.seek_to(Math.round(value));
+                audio.seek(Math.round(value));
                 position_save_timer.restart();
             }
         }
@@ -737,10 +648,11 @@ Item {
             Layout.fillWidth: true
             spacing: 6
             visible: !root.is_recording && root.file_path !== "" && !root.file_not_found
+            enabled: !audio.loading
 
             Button {
                 text: "＋ Position"
-                enabled: player.duration > 0
+                enabled: audio.duration_ms > 0
                 onClicked: root.add_position_marker()
 
                 ToolTip.visible: hovered
@@ -752,7 +664,7 @@ Item {
                 text: root.range_create_state === "idle" ? "＋ Range"
                     : root.range_create_state === "waiting_start" ? "Set Start"
                     : "Set End"
-                enabled: player.duration > 0
+                enabled: audio.duration_ms > 0
                 highlighted: root.range_create_state !== "idle"
                 onClicked: {
                     if (root.range_create_state === "idle") {
@@ -788,10 +700,10 @@ Item {
             Button {
                 id: resample_button
                 text: "Resample"
-                enabled: root.waveform_data.length > 0 && !root.waveform_loading && player.duration > 0
+                enabled: root.waveform_data.length > 0 && !root.waveform_loading && audio.duration_ms > 0
                 onClicked: {
                     // Calculate current samples per second from num_bars and duration
-                    let duration_secs = player.duration / 1000.0;
+                    let duration_secs = audio.duration_ms / 1000.0;
                     let current_sps = duration_secs > 0
                         ? Math.round(root.waveform_num_bars / duration_secs)
                         : 10;
@@ -811,6 +723,7 @@ Item {
             Layout.fillWidth: true
             spacing: 2
             visible: !root.is_recording && root.file_path !== "" && !root.file_not_found && root.markers.length > 0
+            enabled: !audio.loading
 
             // Sorted copy: position markers by position_ms, range markers by start_ms
             property var sorted_markers: {
@@ -861,8 +774,8 @@ Item {
                         // Seek / Play / Pause button
                         Button {
                             property bool is_playing_this: marker_row.is_position
-                                ? (player.playbackState === MediaPlayer.PlayingState && root.active_range_id === "")
-                                : marker_row.is_active_range && player.playbackState === MediaPlayer.PlayingState
+                                ? (marker_row.marker !== null && marker_row.marker.id === root.active_position_marker_id && audio.state === root.player_playing)
+                                : marker_row.is_active_range && audio.state === root.player_playing
 
                             icon.source: is_playing_this ? "icons/32x32/fluent--pause-circle-24-regular.png" : "icons/32x32/fluent--play-circle-24-regular.png"
                             icon.width: 16
@@ -874,22 +787,21 @@ Item {
                                 if (marker_row.marker === null) return;
                                 if (marker_row.is_position) {
                                     if (is_playing_this) {
-                                        player.pause();
+                                        audio.pause();
                                         position_save_timer.restart();
                                     } else {
                                         root.stop_range_playback();
-                                        root.seek_to(marker_row.marker.position_ms);
-                                        root.visual_position_override = -1;
-                                        player.position = marker_row.marker.position_ms;
-                                        player.play();
+                                        root.active_position_marker_id = marker_row.marker.id;
+                                        audio.seek(marker_row.marker.position_ms);
+                                        audio.play();
                                         position_save_timer.restart();
                                     }
                                 } else {
                                     if (is_playing_this) {
-                                        player.pause();
+                                        audio.pause();
                                     } else if (marker_row.is_active_range) {
                                         // Range is active but paused — resume
-                                        player.play();
+                                        audio.play();
                                     } else {
                                         root.play_range(marker_row.marker.id, marker_row.marker.start_ms, marker_row.marker.end_ms);
                                     }
@@ -908,35 +820,6 @@ Item {
                             color: marker_row.is_position ? "red" : palette.highlight
                             Layout.alignment: Qt.AlignVCenter
                         }
-
-                        // Editable label
-                        // NOTE: Not using the editable feature now, just a plain label.
-                        // TextInput {
-                        //     id: label_edit
-                        //     text: marker_row.marker !== null ? marker_row.marker.label : ""
-                        //     Layout.preferredWidth: 80
-                        //     Layout.alignment: Qt.AlignVCenter
-                        //     selectByMouse: true
-                        //     color: palette.text
-                        //     selectionColor: palette.highlight
-                        //     selectedTextColor: palette.highlightedText
-
-                        //     onEditingFinished: {
-                        //         if (marker_row.marker !== null) {
-                        //             root.update_marker_label(marker_row.marker.id, text);
-                        //         }
-                        //     }
-
-                        //     Rectangle {
-                        //         anchors.fill: parent
-                        //         anchors.margins: -2
-                        //         color: "transparent"
-                        //         border.color: label_edit.activeFocus ? palette.highlight : palette.mid
-                        //         border.width: label_edit.activeFocus ? 1 : 0
-                        //         radius: 2
-                        //         z: -1
-                        //     }
-                        // }
 
                         // Mark / Range label
                         Label {
@@ -1031,7 +914,7 @@ Item {
                             LayoutMirroring.enabled: true
                             onClicked: {
                                 if (marker_row.marker === null) return;
-                                let max_ms = player.duration > 0 ? player.duration : marker_row.marker.position_ms;
+                                let max_ms = audio.duration_ms > 0 ? audio.duration_ms : marker_row.marker.position_ms;
                                 root.update_marker_time(marker_row.marker.id, "position_ms", Math.min(max_ms, marker_row.marker.position_ms + 1000));
                             }
                         }
@@ -1096,7 +979,7 @@ Item {
                             LayoutMirroring.enabled: true
                             onClicked: {
                                 if (marker_row.marker === null) return;
-                                let max_ms = player.duration > 0 ? player.duration : marker_row.marker.end_ms;
+                                let max_ms = audio.duration_ms > 0 ? audio.duration_ms : marker_row.marker.end_ms;
                                 root.update_marker_time(marker_row.marker.id, "end_ms", Math.min(max_ms, marker_row.marker.end_ms + 1000));
                             }
                         }
@@ -1169,7 +1052,7 @@ Item {
 
         onAccepted: {
             let sps = resample_spinbox.value;
-            let duration_secs = player.duration / 1000.0;
+            let duration_secs = audio.duration_ms / 1000.0;
             let num_bars = Math.max(10, Math.round(sps * duration_secs));
             root.waveform_loading = true;
             root.waveform_data = [];
@@ -1261,7 +1144,7 @@ Item {
         onAccepted: {
             if (marker_time_dialog.is_position) {
                 let ms = marker_time_dialog.fields_to_ms(pos_min_spin, pos_sec_spin, pos_ms_spin);
-                let max_ms = player.duration > 0 ? player.duration : ms;
+                let max_ms = audio.duration_ms > 0 ? audio.duration_ms : ms;
                 root.update_marker_time(marker_time_dialog.marker_id, "position_ms", Math.min(max_ms, Math.max(0, ms)));
             } else {
                 let start = marker_time_dialog.fields_to_ms(range_start_min_spin, range_start_sec_spin, range_start_ms_spin);
@@ -1269,7 +1152,7 @@ Item {
                 // Ensure correct order
                 let actual_start = Math.min(start, end);
                 let actual_end = Math.max(start, end);
-                let max_ms = player.duration > 0 ? player.duration : actual_end;
+                let max_ms = audio.duration_ms > 0 ? audio.duration_ms : actual_end;
                 root.update_marker_time(marker_time_dialog.marker_id, "start_ms", Math.max(0, actual_start));
                 root.update_marker_time(marker_time_dialog.marker_id, "end_ms", Math.min(max_ms, actual_end));
             }
@@ -1293,7 +1176,7 @@ Item {
             "type": "position",
             "label": "Mark",
             "comment": "",
-            "position_ms": Math.round(player.position)
+            "position_ms": audio.position_ms
         });
         root.markers = new_markers;
         save_markers();
@@ -1368,31 +1251,22 @@ Item {
         save_markers();
     }
 
-    // Range playback (8.8)
+    // Range playback (8.8) — the Rust player owns the boundary + loop logic.
     function play_range(marker_id: string, start_ms: int, end_ms: int) {
+        root.active_position_marker_id = "";
         root.active_range_id = marker_id;
         root.active_range_start_ms = start_ms;
         root.active_range_end_ms = end_ms;
-        root.range_seek_pending = true;
-        // Immediately move the visual cursor so the user sees no jump
-        // to the old position.
-        root.visual_position_override = start_ms;
-
-        if (player.playbackState === MediaPlayer.PlayingState) {
-            player.pause();
-        }
-        player.position = start_ms;
-        range_seek_timer.restart();
+        audio.play_range(start_ms, end_ms, root.loop_enabled);
     }
 
     function stop_range_playback() {
         root.active_range_id = "";
         root.active_range_start_ms = 0;
         root.active_range_end_ms = 0;
-        root.range_seek_pending = false;
-        root.visual_position_override = -1;
-        range_seek_timer.stop();
-        range_playback_timer.stop();
+        // Seeking/stopping away also ends any position-marker playback context.
+        root.active_position_marker_id = "";
+        audio.clear_range();
     }
 
     // Permission helper (instantiated once per RecordingPlaybackItem)
@@ -1429,50 +1303,30 @@ Item {
 
     function start_recording() {
         // On macOS, skip the explicit Qt permission check. The OS triggers the
-        // TCC dialog automatically when CaptureSession accesses the hardware.
+        // TCC dialog automatically when CoreAudio (cpal) accesses the hardware.
         // Qt's QMicrophonePermission API does not reliably reflect TCC state
-        // for unsigned/ad-hoc signed apps. Failures are caught by onErrorOccurred.
+        // for unsigned/ad-hoc signed apps. Failures arrive via errorOccurred.
         if (Qt.platform.os !== "osx" && !check_microphone_permission()) {
             return;
         }
 
         root.error_message = "";
 
-        // Re-detect the current default audio input device so that OS-level
-        // changes made after the app started are picked up.
-        audio_input.device = media_devices.defaultAudioInput;
-
-        // Generate output file path
+        // Generate output file path. The Rust recorder captures from the default
+        // input device (re-detected at start), so no Qt MediaDevices step.
         let recordings_dir = SuttaBridge.get_chanting_recordings_dir();
         let timestamp = Date.now();
-        let output_file = recordings_dir + "/" + root.recording_uid + "_" + timestamp + ".ogg";
+        let output_file = recordings_dir + "/" + root.recording_uid + "_" + timestamp + ".flac";
 
-        recorder.outputLocation = Qt.resolvedUrl("file://" + output_file);
         root.recording_elapsed_ms = 0;
         root.is_recording = true;
-        recorder.record();
+        audio.start_recording(output_file);
     }
 
     function stop_recording() {
-        root.pending_recording_stop = true;
         root.is_recording = false;
-        recorder.stop();
-        // File finalization happens async — see recorder.onRecorderStateChanged
-    }
-
-    function finalize_recording() {
-        let recorded_path = recorder.actualLocation.toString().replace("file://", "");
-        if (recorded_path !== "") {
-            root.file_path = recorded_path;
-            root.file_not_found = false;
-            root.error_message = "";
-            player.source = recorder.actualLocation;
-            // Clear cached waveform so it regenerates from the new file
-            root.waveform_json = "";
-            root.waveform_data = [];
-            root.waveform_num_bars = 0;
-            load_waveform();
-            root.recording_completed(recorded_path);
-        }
+        // File finalization happens in Rust; the recordingFinished signal
+        // delivers the final path (see the AudioManager Connections above).
+        audio.stop_recording();
     }
 }

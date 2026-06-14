@@ -3,4 +3,5 @@
 //! FFmpeg backend. See `docs/pure-rust-audio-backend.md`.
 
 pub mod format;
+pub mod player;
 pub mod recorder;
