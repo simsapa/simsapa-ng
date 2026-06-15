@@ -3200,6 +3200,8 @@ ${query_text}`;
                                     id: word_summary
                                     anchors.fill: parent
                                     is_dark: root.is_dark
+                                    render_use_flat_results_background: root.render_use_flat_results_background
+                                    render_disable_results_clip: root.render_disable_results_clip
                                     window_height: root.height
                                     handle_summary_close_fn: word_summary_wrap.handle_summary_close
                                     handle_open_dict_tab_fn: root.open_dict_tab

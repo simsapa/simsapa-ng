@@ -11,6 +11,8 @@ Frame {
     height: Math.min(root.window_height*0.5, min_height)
 
     required property bool is_dark
+    property bool render_use_flat_results_background: false
+    property bool render_disable_results_clip: false
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
 
@@ -199,7 +201,7 @@ Frame {
         ListView {
             id: summaries_list
             orientation: ListView.Vertical
-            clip: true
+            clip: !root.render_disable_results_clip
             spacing: 0
 
             readonly property int item_height: root.tm1.height*2 + root.item_padding*2
@@ -236,6 +238,7 @@ Frame {
 
                     background: ListBackground {
                         is_dark: root.is_dark
+                        use_flat_bg: root.render_use_flat_results_background
                         results_list: summaries_list
                         result_item_index: result_item.index
                     }
