@@ -243,10 +243,18 @@ After the per-mode handler returns the (possibly expanded) page:
    for `total_pages`. *Never* the snippet count.
 3. **Highlight fallback** (`highlight_row`, §3) over each row.
 4. **Snippet exclusion** (`snippet_exclude`): drop any `SearchResult` whose
-   snippet (tags stripped, `normalize_plain_text` applied to both sides) contains
-   any CSV term. A record whose snippets are *all* excluded simply contributes no
-   rows — it disappears from the page — but `db_query_hits_count` is left
-   unchanged (the user knows they are filtering, so "shown < total" is expected).
+   snippet contains any CSV term. The snippet has its highlight tags stripped,
+   then both the snippet text and each exclude string are run through
+   `normalize_for_exclude` = `pali_to_ascii(normalize_plain_text(…))` before the
+   substring test. The extra `pali_to_ascii` (diacritic folding) is what makes
+   matching **diacritic-insensitive** — a typed `pajahitva` matches a snippet
+   `pajahitvā` — which `normalize_plain_text` alone (it preserves diacritics)
+   would not achieve. (This is deliberately *stronger* than the highlight match,
+   which is case-insensitive only: `pali_to_ascii` changes byte lengths (ā→a) and
+   so cannot be used for the offset-based `wrap_ranges` highlighter. See §3.)
+   A record whose snippets are *all* excluded simply contributes no rows — it
+   disappears from the page — but `db_query_hits_count` is left unchanged (the
+   user knows they are filtering, so "shown < total" is expected).
 
 ---
 

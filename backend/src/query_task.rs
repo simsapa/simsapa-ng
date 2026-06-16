@@ -442,7 +442,7 @@ impl<'a> SearchQueryTask<'a> {
                 .iter()
                 .map(|r| {
                     let (window, focal) =
-                        Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 40);
+                        Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 500);
                     wrap_ranges(&window, &[focal])
                 })
                 .collect(),
