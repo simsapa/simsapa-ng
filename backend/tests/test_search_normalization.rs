@@ -263,6 +263,8 @@ fn search_finds_uid(query: &str, mode: SearchMode, want_uid: &str) -> bool {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     };
 
     let mut task = SearchQueryTask::new(
@@ -358,6 +360,8 @@ fn search_has_results(query: &str, mode: SearchMode) -> bool {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     };
 
     let mut task = SearchQueryTask::new(

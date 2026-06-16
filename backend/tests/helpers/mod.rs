@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use dotenvy::dotenv;
 
-use simsapa_backend::{init_app_data, get_app_data, get_app_globals};
+use simsapa_backend::{init_app_data, init_fulltext_searcher, get_app_data, get_app_globals};
 use simsapa_backend::query_task::SearchQueryTask;
 use simsapa_backend::types::{SearchArea, SearchMode, SearchParams};
 
@@ -86,6 +86,12 @@ pub fn app_data_setup() {
     // unsafe { env::set_var("SIMSAPA_DIR", "../../assets-testing/"); }
     dotenv().ok();
     init_app_data();
+    // The real app opens the Tantivy fulltext indexes lazily off the GUI thread
+    // (QML `SuttaBridge::load_searcher()`), so `init_app_data()` deliberately
+    // does NOT. Tests have no such trigger, so FulltextMatch queries would
+    // silently return empty unless we open the searcher here. The call is
+    // idempotent (guarded) and runs before any timing measurement.
+    init_fulltext_searcher();
 }
 
 #[allow(dead_code)]
@@ -107,6 +113,8 @@ pub fn get_contains_params_with_lang(lang: Option<String>) -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -129,6 +137,8 @@ pub fn get_dict_params_with_mode_and_lang(mode: SearchMode, lang: Option<String>
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -151,6 +161,8 @@ pub fn get_uid_params_with_lang(lang: Option<String>) -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -173,6 +185,8 @@ pub fn get_uid_params() -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -198,6 +212,8 @@ pub fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQuer
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     };
 
     SearchQueryTask::new(

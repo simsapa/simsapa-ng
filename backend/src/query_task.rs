@@ -8,7 +8,8 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::{normalize_plain_text, normalize_query_text, remove_inter_word_hyphens, sutta_range_from_ref};
+use crate::helpers::{normalize_plain_text, normalize_query_text, pali_to_ascii, remove_inter_word_hyphens, strip_html, sutta_range_from_ref};
+use crate::highlight::{literal_ranges, wrap_ranges};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::{Sutta, BookSpineItem};
@@ -61,7 +62,28 @@ fn bold_definition_to_search_result(bd: &crate::db::dpd_models::BoldDefinition) 
         score: None,
         rank: None,
         is_section_header: false,
+        is_snippet: false,
     }
+}
+
+/// Normalize text for the snippet exclusion filter: diacritic-insensitive,
+/// lowercased, niggahita/iti-sandhi normalized (so a typed `pajahitva` matches
+/// a snippet containing `pajahitvā`). See
+/// docs/search-snippet-highlight-pipeline.md §6.
+fn normalize_for_exclude(text: &str) -> String {
+    pali_to_ascii(Some(&normalize_plain_text(text)))
+}
+
+/// Returns true if `snippet` should be removed because its plain text contains
+/// any of the `normalized_excludes` strings. Highlight tags are stripped and
+/// the snippet text is normalized the same way as the exclude strings (which
+/// the caller must have already passed through `normalize_for_exclude`).
+fn snippet_is_excluded(snippet: &str, normalized_excludes: &[String]) -> bool {
+    if normalized_excludes.is_empty() {
+        return false;
+    }
+    let plain = normalize_for_exclude(&strip_html(snippet));
+    normalized_excludes.iter().any(|ex| plain.contains(ex.as_str()))
 }
 
 pub struct SearchQueryTask<'a> {
@@ -82,6 +104,8 @@ pub struct SearchQueryTask<'a> {
     pub include_ms_mula: bool,
     pub include_comm_bold_definitions: bool,
     pub dict_source_uids: Option<Vec<String>>,
+    pub show_all_snippets: bool,
+    pub snippet_exclude: Option<Vec<String>>,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -137,6 +161,8 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: params.include_ms_mula,
             include_comm_bold_definitions: params.include_comm_bold_definitions,
             dict_source_uids: params.dict_source_uids.clone(),
+            show_all_snippets: params.show_all_snippets,
+            snippet_exclude: params.snippet_exclude.clone(),
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }
@@ -262,6 +288,92 @@ impl<'a> SearchQueryTask<'a> {
         }
     }
 
+    /// Window around a known match occurrence at byte `match_start` (length
+    /// `match_len`) in `content`. Unlike [`fragment_around_text`], which always
+    /// windows the **first** occurrence found by `find()`, this targets a
+    /// specific byte offset, so it can window the Nth occurrence in
+    /// all-snippets mode. Returns the window text (with `...` ellipses) and the
+    /// focal match's byte range **within that window text**, ready to pass to
+    /// `highlight::wrap_ranges`. See
+    /// docs/search-snippet-highlight-pipeline.md.
+    ///
+    /// [`fragment_around_text`]: Self::fragment_around_text
+    pub fn fragment_around_offset(
+        content: &str,
+        match_start: usize,
+        match_len: usize,
+        chars_before: usize,
+        chars_after: usize,
+    ) -> (String, std::ops::Range<usize>) {
+        // Clamp offsets defensively to char boundaries.
+        let match_start = {
+            let mut s = match_start.min(content.len());
+            while s > 0 && !content.is_char_boundary(s) { s -= 1; }
+            s
+        };
+        let match_end = {
+            let mut e = (match_start + match_len).min(content.len());
+            while e < content.len() && !content.is_char_boundary(e) { e += 1; }
+            e
+        };
+
+        let match_start_char = content[..match_start].chars().count();
+        let match_end_char = content[..match_end].chars().count();
+        let total_chars = content.chars().count();
+
+        let target_start_char = match_start_char.saturating_sub(chars_before);
+        let target_end_char = (match_end_char + chars_after).min(total_chars);
+
+        let start_byte = content.char_indices()
+            .nth(target_start_char)
+            .map(|(b, _)| b)
+            .unwrap_or(0);
+        let end_byte = content.char_indices()
+            .nth(target_end_char)
+            .map(|(b, _)| b)
+            .unwrap_or(content.len());
+
+        // Refine boundaries to whitespace, mirroring fragment_around_text.
+        let mut final_start = start_byte;
+        let mut prefix = "";
+        if target_start_char > 0 && start_byte > 0 {
+            prefix = "... ";
+            final_start = content[..start_byte]
+                .rfind(|c: char| c.is_whitespace())
+                .map_or(start_byte, |pos| {
+                    pos + content[pos..].chars().next().map_or(0, |c| c.len_utf8())
+                });
+        }
+        let mut final_end = end_byte;
+        let mut postfix = "";
+        if target_end_char < total_chars && end_byte < content.len() {
+            postfix = " ...";
+            final_end = content[end_byte..]
+                .find(|c: char| c.is_whitespace())
+                .map_or(end_byte, |pos| end_byte + pos);
+        }
+
+        // Keep the focal match inside [final_start, final_end]; revert the
+        // whitespace refinement if it would clip the match.
+        if final_start > match_start {
+            final_start = start_byte;
+            prefix = if target_start_char > 0 { "... " } else { "" };
+        }
+        if final_end < match_end {
+            final_end = end_byte;
+            postfix = if target_end_char < total_chars { " ..." } else { "" };
+        }
+        if final_start > final_end {
+            final_start = start_byte;
+            final_end = end_byte;
+        }
+
+        let window = format!("{}{}{}", prefix, &content[final_start..final_end], postfix);
+        let focal_start = prefix.len() + (match_start - final_start);
+        let focal_end = focal_start + (match_end - match_start);
+        (window, focal_start..focal_end)
+    }
+
     /// Creates a snippet around query terms (handles "AND").
     pub fn fragment_around_query(&self, query: &str, content: &str) -> String {
         if query.starts_with("uid:") || query.ends_with("/dpd") {
@@ -295,8 +407,93 @@ impl<'a> SearchQueryTask<'a> {
             .or(x.content_html.as_deref()) // Fallback to HTML
             .unwrap_or(""); // Default to empty string if both are None/empty
 
-        let snippet = self.fragment_around_query(&self.query_text, content);
+        let snippet = self.contains_highlighted_snippet(content);
         SearchResult::from_sutta(x, snippet)
+    }
+
+    /// Build a single Contains-mode snippet with producer-owned highlighting:
+    /// window around the query (via `fragment_around_query`) then wrap **all**
+    /// literal occurrences of the normalized query in that window. Non-nested by
+    /// construction, so the central `highlight_row` fallback leaves it alone.
+    /// See docs/search-snippet-highlight-pipeline.md.
+    fn contains_highlighted_snippet(&self, content: &str) -> String {
+        let fragment = self.fragment_around_query(&self.query_text, content);
+        let norm_query = normalize_plain_text(&self.query_text);
+        let ranges = literal_ranges(&fragment, &norm_query);
+        wrap_ranges(&fragment, &ranges)
+    }
+
+    /// All-snippets (Contains): one focal-highlighted snippet per **literal**
+    /// occurrence of the normalized query in `content`. Each occurrence gets its
+    /// own window (`fragment_around_offset`) and only that occurrence is
+    /// highlighted, matching the focal-only rule. Returns `None` when there is
+    /// no literal occurrence (the caller then falls back to a single snippet so
+    /// the record still appears). Contains never highlights inflected forms —
+    /// only the literal query string. See
+    /// docs/search-snippet-highlight-pipeline.md.
+    fn contains_occurrence_snippets(&self, content: &str) -> Option<Vec<String>> {
+        let norm_query = normalize_plain_text(&self.query_text);
+        let ranges = literal_ranges(content, &norm_query);
+        if ranges.is_empty() {
+            return None;
+        }
+        Some(
+            ranges
+                .iter()
+                .map(|r| {
+                    // Use 200 for shorter results text in all-snippets mode
+                    let (window, focal) = Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 200);
+                    wrap_ranges(&window, &[focal])
+                })
+                .collect(),
+        )
+    }
+
+    /// Expand one Contains-match sutta row into one focal-highlighted
+    /// `SearchResult` per literal occurrence (`is_snippet: true`). Zero-occurrence
+    /// fallback returns the single-snippet `db_sutta_to_result` so the record
+    /// still appears.
+    fn db_sutta_to_results(&self, x: &Sutta) -> Vec<SearchResult> {
+        let content = x.content_plain.as_deref()
+            .filter(|s| !s.is_empty())
+            .or(x.content_html.as_deref())
+            .unwrap_or("");
+
+        match self.contains_occurrence_snippets(content) {
+            Some(snippets) => snippets
+                .into_iter()
+                .map(|snip| {
+                    let mut r = SearchResult::from_sutta(x, snip);
+                    r.is_snippet = true;
+                    r
+                })
+                .collect(),
+            None => vec![self.db_sutta_to_result(x)],
+        }
+    }
+
+    /// Library equivalent of [`db_sutta_to_results`]. Each occurrence row reuses
+    /// the spine item's metadata (including `page_number`), differing only in the
+    /// focal snippet.
+    ///
+    /// [`db_sutta_to_results`]: Self::db_sutta_to_results
+    fn db_book_spine_item_to_results(&self, x: &BookSpineItem) -> Vec<SearchResult> {
+        let content = x.content_plain.as_deref()
+            .filter(|s| !s.is_empty())
+            .or(x.content_html.as_deref())
+            .unwrap_or("");
+
+        match self.contains_occurrence_snippets(content) {
+            Some(snippets) => snippets
+                .into_iter()
+                .map(|snip| {
+                    let mut r = SearchResult::from_book_spine_item(x, snip);
+                    r.is_snippet = true;
+                    r
+                })
+                .collect(),
+            None => vec![self.db_book_spine_item_to_result(x)],
+        }
     }
 
     fn db_word_to_result(&self, x: &DictWord) -> SearchResult {
@@ -340,7 +537,7 @@ impl<'a> SearchQueryTask<'a> {
             .or(x.content_html.as_deref())
             .unwrap_or("");
 
-        let snippet = self.fragment_around_query(&self.query_text, content);
+        let snippet = self.contains_highlighted_snippet(content);
         SearchResult::from_book_spine_item(x, snippet)
     }
 
@@ -702,10 +899,19 @@ impl<'a> SearchQueryTask<'a> {
                 .load(db_conn)?
         };
 
-        let search_results: Vec<SearchResult> = db_results
-            .iter()
-            .map(|sutta| self.db_sutta_to_result(sutta))
-            .collect();
+        // All-snippets expands each record into one row per literal occurrence;
+        // `total` stays the record COUNT(*) so pagination is unaffected.
+        let search_results: Vec<SearchResult> = if self.show_all_snippets {
+            db_results
+                .iter()
+                .flat_map(|sutta| self.db_sutta_to_results(sutta))
+                .collect()
+        } else {
+            db_results
+                .iter()
+                .map(|sutta| self.db_sutta_to_result(sutta))
+                .collect()
+        };
 
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok((search_results, total as usize))
@@ -1270,10 +1476,19 @@ impl<'a> SearchQueryTask<'a> {
             .load(db_conn)?
         };
 
-        let search_results: Vec<SearchResult> = db_results
-            .iter()
-            .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
-            .collect();
+        // All-snippets expands each record into one row per literal occurrence;
+        // `total` stays the record COUNT(*) so pagination is unaffected.
+        let search_results: Vec<SearchResult> = if self.show_all_snippets {
+            db_results
+                .iter()
+                .flat_map(|spine_item| self.db_book_spine_item_to_results(spine_item))
+                .collect()
+        } else {
+            db_results
+                .iter()
+                .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
+                .collect()
+        };
 
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok((search_results, total as usize))
@@ -1946,6 +2161,7 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: self.include_ms_mula,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: self.show_all_snippets,
         };
 
         let query_text = self.query_text.clone();
@@ -1997,6 +2213,7 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: true,
             include_bold_definitions: self.include_comm_bold_definitions,
             dict_source_uids: self.dict_source_uids.clone(),
+            show_all_snippets: false,
         };
 
         let query_text = self.query_text.clone();
@@ -2041,6 +2258,7 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: self.show_all_snippets,
         };
 
         let query_text = self.query_text.clone();
@@ -2308,7 +2526,37 @@ impl<'a> SearchQueryTask<'a> {
 
         self.db_query_hits_count = total as i64;
 
-        Ok(page.into_iter().map(|r| self.highlight_row(r)).collect())
+        let page: Vec<SearchResult> = page.into_iter().map(|r| self.highlight_row(r)).collect();
+
+        // Snippet exclusion filter — drop any row whose snippet contains an
+        // excluded string (diacritic-insensitive). A record left with zero
+        // snippets simply contributes no rows; db_query_hits_count (the record
+        // total) is intentionally left unchanged. See
+        // docs/search-snippet-highlight-pipeline.md §6.
+        Ok(self.apply_snippet_exclude(page))
+    }
+
+    /// Remove rows whose snippet matches any entry in `snippet_exclude`. The
+    /// match is diacritic-insensitive: highlight tags are stripped and both the
+    /// snippet text and each exclude string are run through `normalize_plain_text`
+    /// + `pali_to_ascii` before a substring test. `None`/empty list is a no-op
+    /// fast path (no normalization work). See
+    /// docs/search-snippet-highlight-pipeline.md §6.
+    fn apply_snippet_exclude(&self, page: Vec<SearchResult>) -> Vec<SearchResult> {
+        let Some(excludes) = self.snippet_exclude.as_ref() else {
+            return page;
+        };
+        let normalized: Vec<String> = excludes
+            .iter()
+            .map(|s| normalize_for_exclude(s))
+            .filter(|s| !s.is_empty())
+            .collect();
+        if normalized.is_empty() {
+            return page;
+        }
+        page.into_iter()
+            .filter(|r| !snippet_is_excluded(&r.snippet, &normalized))
+            .collect()
     }
 
     /// Restrict dict_words rows to those whose `source_uid` (= `dict_label`)
@@ -2358,11 +2606,25 @@ impl<'a> SearchQueryTask<'a> {
         (filtered, new_total)
     }
 
+    /// Central highlight pass — now a **fallback** only. Snippets that a
+    /// producer already highlighted (Fulltext `render_snippet`, Contains
+    /// `contains_highlighted_snippet`, and the focal all-snippets rows) carry a
+    /// `class='match'` span and pass through untouched, so this can never
+    /// double-wrap into nested spans. It still highlights the remaining
+    /// plain-snippet modes (TitleMatch, UidMatch, non-DPD dict). DPD rows are
+    /// never highlighted here, as before. See
+    /// docs/search-snippet-highlight-pipeline.md.
     fn highlight_row(&self, mut r: SearchResult) -> SearchResult {
         let is_dpd_result = r.table_name == "dpd_headwords"
             || r.table_name == "dpd_roots"
             || (r.table_name == "dict_words"
                 && r.source_uid.as_ref().is_some_and(|s| s.to_lowercase().contains("dpd")));
+
+        // Producer already owns the highlighting — leave it alone (no second
+        // pass, no nesting).
+        if r.snippet.contains("class='match'") {
+            return r;
+        }
 
         if !is_dpd_result {
             let q = normalize_plain_text(&self.query_text);
@@ -2374,5 +2636,57 @@ impl<'a> SearchQueryTask<'a> {
     /// Returns the total number of hits found in the last database query.
     pub fn total_hits(&self) -> i64 {
         self.db_query_hits_count
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{normalize_for_exclude, snippet_is_excluded};
+
+    fn excludes(terms: &[&str]) -> Vec<String> {
+        terms.iter().map(|t| normalize_for_exclude(t)).collect()
+    }
+
+    #[test]
+    fn excluded_form_is_removed() {
+        let ex = excludes(&["pajahitvā"]);
+        assert!(snippet_is_excluded(
+            "… pajahati na upādiyati <span class='match'>pajahitvā</span> ṭhito …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn exclusion_is_diacritic_insensitive() {
+        // Typed without diacritics still matches the diacritic snippet.
+        let ex = excludes(&["pajahitva"]);
+        assert!(snippet_is_excluded(
+            "… <span class='match'>pajahitvā</span> ṭhito …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn non_matching_snippet_passes_through() {
+        let ex = excludes(&["akusalaṁ"]);
+        assert!(!snippet_is_excluded(
+            "… <span class='match'>pajahati</span> na upādiyati …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn highlight_tags_are_ignored() {
+        // The span markup must not prevent a match on the wrapped word.
+        let ex = excludes(&["upādiyati"]);
+        assert!(snippet_is_excluded(
+            "… pajahati na <span class='match'>upādiyati</span> …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn empty_exclude_list_is_noop() {
+        assert!(!snippet_is_excluded("anything at all", &[]));
     }
 }

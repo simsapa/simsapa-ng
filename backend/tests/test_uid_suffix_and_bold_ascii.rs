@@ -24,6 +24,8 @@ fn make_params(mode: SearchMode, uid_prefix: Option<&str>, uid_suffix: Option<&s
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 

@@ -164,6 +164,33 @@ describe('Find functionality', () => {
         });
     });
 
+    describe('Inter-word punctuation tolerance', () => {
+        test('should match "non reactive" across the hyphen in "non-reactive"', () => {
+            // The page has "non-reactive" (twice, one capitalized); a space in
+            // the search term must match the hyphen between the words.
+            findManager.search('non reactive');
+
+            const highlights = document.querySelectorAll('.ssp-find-highlight');
+            expect(highlights.length).toBeGreaterThan(0);
+            const matchedText = Array.from(highlights).map(h => h.textContent).join(' ');
+            expect(matchedText.toLowerCase()).toContain('non-reactive');
+        });
+
+        test('makeInterWordFlexible leaves a single word unchanged', () => {
+            const testFindManager = findManager as any;
+            expect(testFindManager.makeInterWordFlexible('pajahitva')).toBe('pajahitva');
+        });
+
+        test('makeInterWordFlexible replaces an inter-word space with a punctuation class', () => {
+            const testFindManager = findManager as any;
+            const out = testFindManager.makeInterWordFlexible('pajahitva thito');
+            // The space becomes a whitespace+punctuation class, so the words
+            // still match when separated by a comma in the rendered page.
+            expect(new RegExp(out, 'i').test('pajahitva, thito')).toBe(true);
+            expect(new RegExp(out, 'i').test('pajahitva thito')).toBe(true);
+        });
+    });
+
     describe('Double character accent folding', () => {
         beforeEach(() => {
             // Add content with Pali double characters

@@ -49,6 +49,7 @@ fn generate_fulltext_fixture() {
         include_ms_mula: true,
         include_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
     };
 
     let query = r#""so ce" evaṁ vadeyya"#;
@@ -102,6 +103,7 @@ fn test_fulltext_search_so_ce_evam_vadeyya() {
         include_ms_mula: true,
         include_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
     };
 
     let query = r#""so ce" evaṁ vadeyya"#;

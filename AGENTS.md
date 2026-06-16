@@ -75,6 +75,26 @@ Notable feature docs:
   `pthread_cond_clockwait` breaks the `cxx` C++ build); stay on r26b/r27 and
   16 KB-align the main app `.so` with `-Wl,-z,max-page-size=16384` in
   `CMakeLists.txt`.
+- [Search snippet & highlight pipeline](./docs/search-snippet-highlight-pipeline.md) —
+  how ContainsMatch (FTS5) and FulltextMatch (Tantivy) produce result snippets
+  and highlight them. Highlighting is **producer-owned and range-based**
+  (`backend/src/highlight.rs`: `merge_ranges`/`wrap_ranges`/`literal_ranges`),
+  **non-nested by construction**; the central `highlight_row` pass is only a
+  **fallback** for plain-snippet modes (TitleMatch/UidMatch/non-DPD dict) —
+  guarded by `snippet.contains("class='match'")` so it never double-wraps (the
+  old Fulltext double pass produced nested `<span class='match'>`). Covers
+  per-mode highlight semantics (Contains = literal only; Fulltext = stemmed ∪
+  literal), the "Show All Snippets" per-occurrence expansion (record-based
+  pagination with post-slice expansion, `is_snippet`, focal-only highlight,
+  `fragment_around_offset`), the `snippet_exclude` filter, and the `show_header`
+  / `find_query` QML render. Also covers the **snippet-aware find-bar jump**
+  (clicking a snippet opens the sutta and jumps the find bar to *that* snippet's
+  text — including the same-sutta "already open, no reload" immediate re-run, and
+  the punctuation-tolerant inter-word matching in `src-ts/find.ts`
+  `makeInterWordFlexible` that bridges punctuation-stripped `content_plain` vs.
+  the punctuation-bearing rendered HTML). Pairs with the bootstrap-time
+  normalization in
+  [text-processing-for-contains-match-and-fulltext-match-search.md](./docs/text-processing-for-contains-match-and-fulltext-match-search.md).
 
 ## Specific coding procedures
 

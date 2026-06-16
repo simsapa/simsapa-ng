@@ -35,6 +35,8 @@ fn dict_params(mode: SearchMode) -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: false,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -56,6 +58,8 @@ fn suttas_params(mode: SearchMode) -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: false,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 

@@ -54,6 +54,11 @@ ColumnLayout {
     property int page_num: 0
     property int total_hits: 0
     property int total_pages: (total_hits > 0 ? Math.ceil(total_hits / page_len) : 1)
+    // Active "Exclude snippets containing" terms (cleaned, comma-joined), set by
+    // the parent. When a page is empty because every snippet was excluded
+    // (total_hits > 0 but no rows), the empty state names the filter instead of
+    // saying "No results found.". See docs/search-snippet-highlight-pipeline.md.
+    property string snippet_exclude_terms: ""
     property bool is_loading: false
     property alias currentIndex: fulltext_list.currentIndex
     property alias currentItem: fulltext_list.currentItem
@@ -160,6 +165,32 @@ ColumnLayout {
         }
     }
 
+    // Pure derivation of the per-snippet find-bar query: the matched word (the
+    // first `<span class='match'>`) plus the following 1–2 words, with HTML tags
+    // stripped, ellipses and trailing punctuation dropped. Returns "" when the
+    // snippet has no match span. On click this lets the find bar jump to *this*
+    // snippet's passage instead of the original query. Kept pure for testing.
+    // See docs/search-snippet-highlight-pipeline.md §7.
+    function derive_find_query(snippet: string): string {
+        if (!snippet) return "";
+        var marker = "<span class='match'>";
+        var idx = snippet.indexOf(marker);
+        if (idx === -1) return "";
+        // From the start of the matched word to the end of the snippet.
+        var tail = snippet.substring(idx + marker.length);
+        // Strip any remaining HTML tags (defensive; the refactor removed nesting).
+        tail = tail.replace(/<[^>]*>/g, "");
+        // Drop ellipses and collapse whitespace.
+        tail = tail.replace(/…/g, " ").replace(/\s+/g, " ").trim();
+        if (tail.length === 0) return "";
+        // Matched word + up to 2 following words.
+        var words = tail.split(" ").filter(function(w) { return w.length > 0; });
+        var phrase = words.slice(0, 3).join(" ");
+        // Drop trailing punctuation.
+        phrase = phrase.replace(/[.,;:!?'"\)\]]+$/, "").trim();
+        return phrase;
+    }
+
     function update_page() {
         // Remove existing item selection.
         fulltext_list.currentIndex = -1;
@@ -167,9 +198,23 @@ ColumnLayout {
         results_model.clear()
         // Populate model with new items.
         root.total_pages = (root.total_hits > 0 ? Math.ceil(root.total_hits / root.page_len) : 1)
+        // Header dedup: in "Show All Snippets" mode a record expands to several
+        // adjacent rows sharing one uid; the metadata header is shown only on
+        // the first row of each record group. A section-header row is a group
+        // boundary, so the next real row always shows its header. See
+        // docs/search-snippet-highlight-pipeline.md.
+        var prev_uid = null;
         for (var i = 0; i < root.current_results.length; i++) {
             var item = root.current_results[i];
             var is_header = !!item.is_section_header;
+            var show_header;
+            if (is_header) {
+                show_header = false;
+                prev_uid = null;
+            } else {
+                show_header = (item.uid !== prev_uid);
+                prev_uid = item.uid;
+            }
             var result_data = {
                 index: i,
                 item_uid:    item.uid,
@@ -178,6 +223,17 @@ ColumnLayout {
                 sutta_ref:   item.sutta_ref || "", // Can be 'None' from SearchResult::from_dict_word()
                 snippet:     item.snippet,
                 is_section_header: is_header,
+                // Marks an expanded-snippet row vs. a whole-record row (see
+                // docs/search-snippet-highlight-pipeline.md). Used by header
+                // dedup / record grouping (Task 6.0).
+                is_snippet:  !!item.is_snippet,
+                // Show the metadata header only on the first row of a record
+                // group (uid differs from the previous appended row).
+                show_header: show_header,
+                // Per-snippet find-bar query (matched word + following words),
+                // read via current_result_data() on click. See
+                // docs/search-snippet-highlight-pipeline.md §7.
+                find_query:  root.derive_find_query(item.snippet),
                 header_title: is_header ? item.title : "",
                 /* author:      item.author, */
             };
@@ -190,11 +246,17 @@ ColumnLayout {
 
     Text {
         id: empty_state
-        text: "No results found."
+        // When records matched (total_hits > 0) but this page has no rows, every
+        // snippet on the page was removed by the exclusion filter — name it
+        // instead of the generic "No results found.".
+        text: (root.total_hits > 0 && root.snippet_exclude_terms.trim().length > 0)
+            ? "Results from this page were excluded by the filter: " + root.snippet_exclude_terms.trim()
+            : "No results found."
         visible: !root.is_loading && results_model.count === 0
         horizontalAlignment: Text.AlignHCenter
         font.italic: true
         color: "grey"
+        wrapMode: Text.WordWrap
         Layout.fillWidth: true
     }
 
@@ -250,6 +312,7 @@ ColumnLayout {
             required property string sutta_ref
             required property string snippet
             required property bool is_section_header
+            required property bool show_header
             required property string header_title
             /* required property string nikaya */
             property string author: ""
@@ -297,9 +360,12 @@ ColumnLayout {
 
                     // property color text_color: fulltext_list.currentIndex === result_item.index ? "#000" : "#fff"
 
-                    // Title and metadata
+                    // Title and metadata — shown only on the first row of a
+                    // record group (header dedup; see
+                    // docs/search-snippet-highlight-pipeline.md).
                     RowLayout {
                         spacing: 12
+                        visible: result_item.show_header
                         Text {
                             text: result_item.sutta_ref
                             visible: result_item.sutta_ref !== ""

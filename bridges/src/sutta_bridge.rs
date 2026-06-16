@@ -1466,6 +1466,8 @@ impl qobject::SuttaBridge {
                     include_ms_mula: true,
                     include_comm_bold_definitions: true,
                     dict_source_uids: None,
+                    show_all_snippets: false,
+                    snippet_exclude: None,
                 };
 
                 let mut query_task = SearchQueryTask::new(
@@ -1789,7 +1791,10 @@ impl qobject::SuttaBridge {
             }
 
             // Build a cache key from the query, search area, and params.
-            // CST mula/commentary settings are included in params_json.
+            // CST mula/commentary settings are included in params_json, as are
+            // show_all_snippets / snippet_exclude (they live on SearchParams),
+            // so toggling either invalidates cached pages automatically — no
+            // extra key plumbing. See docs/search-snippet-highlight-pipeline.md.
             let cache_key = format!("{}|{}|{}", query_text, search_area_text, params_json_text);
 
             // Check cache for a hit
@@ -1968,6 +1973,7 @@ impl qobject::SuttaBridge {
                 include_ms_mula: params.include_ms_mula,
                 include_bold_definitions: params.include_comm_bold_definitions,
                 dict_source_uids: params.dict_source_uids.clone(),
+                show_all_snippets: false,
             };
 
             let result = with_fulltext_searcher(|searcher| {

@@ -84,6 +84,8 @@ fn make_params(
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 

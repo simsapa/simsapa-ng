@@ -80,6 +80,11 @@ ApplicationWindow {
 
     property string last_query_text: ""
     property string last_search_area: ""
+    // Session-only "Show All Snippets" state (Suttas/Library). Not persisted to
+    // the settings DB; resets on restart. The Advanced Options controls (Task
+    // 6.0) bind to these. See docs/search-snippet-highlight-pipeline.md.
+    property bool show_all_snippets: false
+    property string snippet_exclude_text: ""
     property var last_params: null
     property string pending_find_query: ""
     property real pending_bookmark_scroll: 0.0
@@ -327,6 +332,9 @@ ApplicationWindow {
             sutta_title: fulltext_results_data.sutta_title || "",
             sutta_ref:   fulltext_results_data.sutta_ref || "",
             anchor:      fulltext_results_data.anchor || "",
+            // Per-snippet find-bar query (see FulltextResults.derive_find_query);
+            // used by the find-on-open block to jump to this snippet's passage.
+            find_query:  fulltext_results_data.find_query || "",
             pinned: pinned,
             focus_on_new: focus_on_new,
             id_key: id_key,
@@ -629,7 +637,20 @@ ApplicationWindow {
             include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
             include_comm_bold_definitions: include_comm_bold_definitions,
             dict_source_uids: dict_source_uids,
+            show_all_snippets: root.show_all_snippets,
+            snippet_exclude: root.parse_snippet_exclude_csv(root.snippet_exclude_text),
         };
+    }
+
+    // Parse the "Exclude snippets containing" CSV input into a trimmed,
+    // empty-dropped array; returns null when nothing remains (so the backend
+    // treats it as no exclusion). See docs/search-snippet-highlight-pipeline.md.
+    function parse_snippet_exclude_csv(csv: string): var {
+        if (!csv) return null;
+        const parts = csv.split(",")
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+        return parts.length > 0 ? parts : null;
     }
 
     // Build the per-dictionary inclusion set from the Dictionaries panel
@@ -979,6 +1000,19 @@ ${query_text}`;
 
     function show_result_in_html_view(result_data: var, new_tab) {
         if (new_tab === undefined) new_tab = false;
+        // Capture the uid currently shown in the content view BEFORE we (maybe)
+        // replace it, so the find-on-open logic can tell whether the page will
+        // actually reload. When the clicked result is the sutta already
+        // displayed (e.g. clicking another snippet of the same record in
+        // all-snippets mode), the content does not reload and onPage_loaded
+        // won't fire — so the find must be run immediately instead.
+        let already_open_uid = "";
+        {
+            let cur_item = sutta_html_view_layout.get_current_item();
+            if (cur_item) {
+                already_open_uid = cur_item.get_data_value('item_uid') || "";
+            }
+        }
         logger.debug("SHOW_RESULT: show_result_in_html_view() called - item_uid: " + result_data.item_uid + " new_tab: " + new_tab);
         let tab_data = root.new_tab_data(result_data);
         logger.debug("SHOW_RESULT: Created tab_data - id_key: " + tab_data.id_key + " web_item_key: " + tab_data.web_item_key);
@@ -1022,7 +1056,21 @@ ${query_text}`;
                 root.last_query_text.length > 0) {
                 let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
                 if (!query_as_uid.startsWith('uid:')) {
-                    root.pending_find_query = root.last_query_text;
+                    // Prefer the clicked snippet's find query (matched word +
+                    // following words) so the page jumps to that occurrence;
+                    // fall back to the original query when absent. See
+                    // docs/search-snippet-highlight-pipeline.md §7.
+                    let find_q = (tab_data.find_query && tab_data.find_query.length > 0)
+                        ? tab_data.find_query
+                        : root.last_query_text;
+                    if (already_open_uid.length > 0 && already_open_uid === tab_data.item_uid) {
+                        // Same sutta already displayed — no page reload, so run
+                        // the find now to jump to this snippet's text.
+                        root.open_find_in_sutta_with_query(find_q);
+                        root.pending_find_query = "";
+                    } else {
+                        root.pending_find_query = find_q;
+                    }
                 }
             }
         } else {
@@ -2433,6 +2481,53 @@ ${query_text}`;
                 }
             }
 
+            // "Show All Snippets" + snippet exclusion filter (Suttas + Library
+            // only; session-only state held on root.show_all_snippets /
+            // root.snippet_exclude_text). See
+            // docs/search-snippet-highlight-pipeline.md.
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas" || search_bar_input.search_area === "Library"
+
+                CheckBox {
+                    id: show_all_snippets_checkbox
+                    text: "Show All Snippets"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: root.show_all_snippets
+                    onToggled: {
+                        root.show_all_snippets = checked;
+                        root.advanced_options_changed();
+                    }
+                }
+            }
+
+            RowLayout {
+                spacing: 4
+                visible: search_bar_input.search_area === "Suttas" || search_bar_input.search_area === "Library"
+
+                Label {
+                    text: "Exclude snippets containing:"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: snippet_exclude_input
+                    placeholderText: "e.g. pajahitvā, na upādiyati"
+                    Layout.preferredWidth: 200
+                    Layout.preferredHeight: root.icon_size
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    selectByMouse: true
+                    text: root.snippet_exclude_text
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
+                    onTextChanged: {
+                        root.snippet_exclude_text = text;
+                        advanced_options_debounce_timer.restart();
+                    }
+                }
+            }
+
             RowLayout {
                 spacing: 2
                 visible: search_bar_input.search_area === "Suttas"
@@ -3328,6 +3423,12 @@ ${query_text}`;
                                 render_use_flat_results_background: root.render_use_flat_results_background
                                 render_disable_results_clip: root.render_disable_results_clip
                                 new_results_page_fn: root.new_results_page
+                                // Cleaned, comma-joined exclude terms so an
+                                // all-excluded page can name the active filter.
+                                snippet_exclude_terms: {
+                                    let terms = root.parse_snippet_exclude_csv(root.snippet_exclude_text);
+                                    return terms ? terms.join(", ") : "";
+                                }
 
                                 function update_item() {
                                     /* logger.info("update_item()"); */
