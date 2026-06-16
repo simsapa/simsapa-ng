@@ -827,8 +827,6 @@ fn fulltext_search(
         include_ms_mula: true,
         include_bold_definitions: true,
         dict_source_uids: None,
-        show_all_snippets: false,
-        snippet_exclude: None,
     };
 
     let (total_hits, results) = match area {

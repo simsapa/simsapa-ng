@@ -10,6 +10,8 @@ use tantivy::{Index, IndexReader, Term};
 
 use crate::logger::{info, warn};
 use crate::types::SearchResult;
+use crate::highlight::{literal_ranges, wrap_ranges};
+use crate::helpers::normalize_plain_text;
 use crate::AppGlobalPaths;
 
 use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
@@ -442,7 +444,7 @@ impl FulltextSearcher {
             let doc: tantivy::TantivyDocument = searcher.doc(doc_address)?;
 
             let result = match index_type {
-                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::Sutta => self.sutta_doc_to_result(&doc, &schema, score, &snippet_gen, query_text)?,
                 IndexType::Dict => {
                     // Dict index unifies dict_words + bold-definition rows;
                     // dispatch per-doc so bold rows render via their own
@@ -454,12 +456,12 @@ impl FulltextSearcher {
                         .and_then(|v| v.as_bool())
                         .unwrap_or(false);
                     if is_bold {
-                        self.bold_definition_doc_to_result(&doc, &schema, score, &snippet_gen)?
+                        self.bold_definition_doc_to_result(&doc, &schema, score, &snippet_gen, query_text)?
                     } else {
-                        self.dict_doc_to_result(&doc, &schema, score, &snippet_gen)?
+                        self.dict_doc_to_result(&doc, &schema, score, &snippet_gen, query_text)?
                     }
                 }
-                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, &snippet_gen)?,
+                IndexType::Library => self.library_doc_to_result(&doc, &schema, score, &snippet_gen, query_text)?,
             };
 
             results.push((score, result));
@@ -680,6 +682,7 @@ impl FulltextSearcher {
         schema: &tantivy::schema::Schema,
         score: f32,
         snippet_gen: &tantivy::snippet::SnippetGenerator,
+        query_text: &str,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let title = Self::get_text_field(doc, schema, "title");
@@ -688,7 +691,7 @@ impl FulltextSearcher {
         let sutta_ref = Self::get_text_field(doc, schema, "sutta_ref");
         let nikaya = Self::get_text_field(doc, schema, "nikaya");
 
-        let snippet = Self::render_snippet(snippet_gen, doc);
+        let snippet = Self::render_snippet(snippet_gen, doc, query_text);
 
         Ok(SearchResult {
             uid,
@@ -715,13 +718,14 @@ impl FulltextSearcher {
         schema: &tantivy::schema::Schema,
         score: f32,
         snippet_gen: &tantivy::snippet::SnippetGenerator,
+        query_text: &str,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let word = Self::get_text_field(doc, schema, "word");
         let language = Self::get_text_field(doc, schema, "language");
         let source_uid = Self::get_text_field(doc, schema, "source_uid");
 
-        let snippet = Self::render_snippet(snippet_gen, doc);
+        let snippet = Self::render_snippet(snippet_gen, doc, query_text);
 
         Ok(SearchResult {
             uid,
@@ -748,6 +752,7 @@ impl FulltextSearcher {
         schema: &tantivy::schema::Schema,
         score: f32,
         snippet_gen: &tantivy::snippet::SnippetGenerator,
+        query_text: &str,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "spine_item_uid");
         let title = Self::get_text_field(doc, schema, "title");
@@ -764,7 +769,7 @@ impl FulltextSearcher {
             book_title.clone()
         };
 
-        let snippet = Self::render_snippet(snippet_gen, doc);
+        let snippet = Self::render_snippet(snippet_gen, doc, query_text);
 
         Ok(SearchResult {
             uid,
@@ -791,13 +796,14 @@ impl FulltextSearcher {
         schema: &tantivy::schema::Schema,
         score: f32,
         snippet_gen: &tantivy::snippet::SnippetGenerator,
+        query_text: &str,
     ) -> Result<SearchResult> {
         let uid = Self::get_text_field(doc, schema, "uid");
         let bold = Self::get_text_field(doc, schema, "word");
         let ref_code = Self::get_text_field(doc, schema, "source_uid");
         let group_path = Self::get_text_field(doc, schema, "nikaya_group_path");
 
-        let snippet = Self::render_snippet(snippet_gen, doc);
+        let snippet = Self::render_snippet(snippet_gen, doc, query_text);
 
         Ok(SearchResult {
             uid,
@@ -837,15 +843,33 @@ impl FulltextSearcher {
     /// The generator is constructed once per `search_single_index` call —
     /// constructing it per-doc dominated runtime for queries returning many
     /// hits.
+    ///
+    /// Highlighting is **producer-owned and range-based** (see
+    /// docs/search-snippet-highlight-pipeline.md): we take tantivy's stemmed
+    /// match ranges (`Snippet::highlighted()`) unioned with literal occurrences
+    /// of the normalized query, then emit exactly one `<span class='match'>`
+    /// per merged range via `wrap_ranges`. This is **non-nested by
+    /// construction** — it replaces the old `.to_html()` path that, combined
+    /// with the central `highlight_row` pass, produced nested match spans for
+    /// the literal query term.
     fn render_snippet(
         snippet_gen: &tantivy::snippet::SnippetGenerator,
         doc: &tantivy::TantivyDocument,
+        query_text: &str,
     ) -> String {
         let snippet = snippet_gen.snippet_from_doc(doc);
-        snippet
-            .to_html()
-            .replace("<b>", "<span class='match'>")
-            .replace("</b>", "</span>")
+        let fragment = snippet.fragment();
+        if fragment.is_empty() {
+            return String::new();
+        }
+
+        // Stemmed ranges from tantivy (e.g. pajahati → pajahitvā) ∪ literal
+        // occurrences of the normalized query (so an exact typed form is also
+        // wrapped). wrap_ranges merges + emits non-nested spans.
+        let mut ranges = snippet.highlighted().to_vec();
+        let norm_query = normalize_plain_text(query_text);
+        ranges.extend(literal_ranges(fragment, &norm_query));
+        wrap_ranges(fragment, &ranges)
     }
 }
 
@@ -900,6 +924,81 @@ mod tests {
 
         let reader = index.reader().unwrap();
         (index, reader)
+    }
+
+    /// Create an in-RAM sutta index with one document of the given content.
+    fn create_test_index_with_content(lang: &str, doc_uid: &str, text: &str) -> (Index, IndexReader) {
+        let schema = build_sutta_schema(lang);
+        let index = Index::create_in_ram(schema.clone());
+        register_tokenizers(&index, lang);
+
+        let mut writer = index.writer_with_num_threads(1, 15_000_000).unwrap();
+        let uid = schema.get_field("uid").unwrap();
+        let title = schema.get_field("title").unwrap();
+        let language = schema.get_field("language").unwrap();
+        let source_uid = schema.get_field("source_uid").unwrap();
+        let sutta_ref = schema.get_field("sutta_ref").unwrap();
+        let nikaya = schema.get_field("nikaya").unwrap();
+        let content = schema.get_field("content").unwrap();
+        let content_exact = schema.get_field("content_exact").unwrap();
+
+        writer
+            .add_document(doc!(
+                uid => doc_uid,
+                title => "Test",
+                language => lang,
+                source_uid => "ms",
+                sutta_ref => "CND 8",
+                nikaya => "cnd",
+                content => text,
+                content_exact => text
+            ))
+            .unwrap();
+        writer.commit().unwrap();
+        let reader = index.reader().unwrap();
+        (index, reader)
+    }
+
+    /// render_snippet must wrap both the stemmed match (pajahati → pajahitvā)
+    /// and the literal query occurrence, each exactly once, with no nested
+    /// spans. This is the regression guard for the old double-highlight bug.
+    #[test]
+    fn test_render_snippet_stemmed_and_literal_non_nested() {
+        let text = "pajahati na upādiyati pajahitvā ṭhito";
+        let (index, reader) = create_test_index_with_content("pli", "cnd8/pli/ms", text);
+        let searcher = reader.searcher();
+        let schema = index.schema();
+        let content_field = schema.get_field("content").unwrap();
+
+        let query_text = "pajahati";
+        let parser = QueryParser::for_index(&index, vec![content_field]);
+        let parsed = parser.parse_query(query_text).unwrap();
+        let mut snippet_gen = tantivy::snippet::SnippetGenerator::create(&searcher, &parsed, content_field).unwrap();
+        snippet_gen.set_max_num_chars(200);
+
+        let top = searcher.search(&parsed, &TopDocs::with_limit(1)).unwrap();
+        assert_eq!(top.len(), 1, "expected the doc to match query 'pajahati'");
+        let doc: tantivy::TantivyDocument = searcher.doc(top[0].1).unwrap();
+
+        let snippet = FulltextSearcher::render_snippet(&snippet_gen, &doc, query_text);
+
+        assert!(
+            !snippet.contains("class='match'><span"),
+            "snippet has nested match spans: {snippet}"
+        );
+        assert_eq!(
+            snippet.matches("class='match'").count(),
+            2,
+            "expected exactly two highlighted occurrences: {snippet}"
+        );
+        assert!(
+            snippet.contains("<span class='match'>pajahati</span>"),
+            "literal 'pajahati' not highlighted: {snippet}"
+        );
+        assert!(
+            snippet.contains("<span class='match'>pajahitvā</span>"),
+            "stemmed 'pajahitvā' not highlighted: {snippet}"
+        );
     }
 
     #[test]

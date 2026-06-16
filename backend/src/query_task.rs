@@ -9,6 +9,7 @@ use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
 use crate::helpers::{normalize_plain_text, normalize_query_text, remove_inter_word_hyphens, sutta_range_from_ref};
+use crate::highlight::{literal_ranges, wrap_ranges};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
 use crate::db::appdata_models::{Sutta, BookSpineItem};
@@ -267,6 +268,93 @@ impl<'a> SearchQueryTask<'a> {
         }
     }
 
+    /// Window around a known match occurrence at byte `match_start` (length
+    /// `match_len`) in `content`. Unlike [`fragment_around_text`], which always
+    /// windows the **first** occurrence found by `find()`, this targets a
+    /// specific byte offset, so it can window the Nth occurrence in
+    /// all-snippets mode. Returns the window text (with `...` ellipses) and the
+    /// focal match's byte range **within that window text**, ready to pass to
+    /// `highlight::wrap_ranges`. See
+    /// docs/search-snippet-highlight-pipeline.md.
+    ///
+    /// [`fragment_around_text`]: Self::fragment_around_text
+    pub fn fragment_around_offset(
+        &self,
+        content: &str,
+        match_start: usize,
+        match_len: usize,
+        chars_before: usize,
+        chars_after: usize,
+    ) -> (String, std::ops::Range<usize>) {
+        // Clamp offsets defensively to char boundaries.
+        let match_start = {
+            let mut s = match_start.min(content.len());
+            while s > 0 && !content.is_char_boundary(s) { s -= 1; }
+            s
+        };
+        let match_end = {
+            let mut e = (match_start + match_len).min(content.len());
+            while e < content.len() && !content.is_char_boundary(e) { e += 1; }
+            e
+        };
+
+        let match_start_char = content[..match_start].chars().count();
+        let match_end_char = content[..match_end].chars().count();
+        let total_chars = content.chars().count();
+
+        let target_start_char = match_start_char.saturating_sub(chars_before);
+        let target_end_char = (match_end_char + chars_after).min(total_chars);
+
+        let start_byte = content.char_indices()
+            .nth(target_start_char)
+            .map(|(b, _)| b)
+            .unwrap_or(0);
+        let end_byte = content.char_indices()
+            .nth(target_end_char)
+            .map(|(b, _)| b)
+            .unwrap_or(content.len());
+
+        // Refine boundaries to whitespace, mirroring fragment_around_text.
+        let mut final_start = start_byte;
+        let mut prefix = "";
+        if target_start_char > 0 && start_byte > 0 {
+            prefix = "... ";
+            final_start = content[..start_byte]
+                .rfind(|c: char| c.is_whitespace())
+                .map_or(start_byte, |pos| {
+                    pos + content[pos..].chars().next().map_or(0, |c| c.len_utf8())
+                });
+        }
+        let mut final_end = end_byte;
+        let mut postfix = "";
+        if target_end_char < total_chars && end_byte < content.len() {
+            postfix = " ...";
+            final_end = content[end_byte..]
+                .find(|c: char| c.is_whitespace())
+                .map_or(end_byte, |pos| end_byte + pos);
+        }
+
+        // Keep the focal match inside [final_start, final_end]; revert the
+        // whitespace refinement if it would clip the match.
+        if final_start > match_start {
+            final_start = start_byte;
+            prefix = if target_start_char > 0 { "... " } else { "" };
+        }
+        if final_end < match_end {
+            final_end = end_byte;
+            postfix = if target_end_char < total_chars { " ..." } else { "" };
+        }
+        if final_start > final_end {
+            final_start = start_byte;
+            final_end = end_byte;
+        }
+
+        let window = format!("{}{}{}", prefix, &content[final_start..final_end], postfix);
+        let focal_start = prefix.len() + (match_start - final_start);
+        let focal_end = focal_start + (match_end - match_start);
+        (window, focal_start..focal_end)
+    }
+
     /// Creates a snippet around query terms (handles "AND").
     pub fn fragment_around_query(&self, query: &str, content: &str) -> String {
         if query.starts_with("uid:") || query.ends_with("/dpd") {
@@ -300,8 +388,20 @@ impl<'a> SearchQueryTask<'a> {
             .or(x.content_html.as_deref()) // Fallback to HTML
             .unwrap_or(""); // Default to empty string if both are None/empty
 
-        let snippet = self.fragment_around_query(&self.query_text, content);
+        let snippet = self.contains_highlighted_snippet(content);
         SearchResult::from_sutta(x, snippet)
+    }
+
+    /// Build a single Contains-mode snippet with producer-owned highlighting:
+    /// window around the query (via `fragment_around_query`) then wrap **all**
+    /// literal occurrences of the normalized query in that window. Non-nested by
+    /// construction, so the central `highlight_row` fallback leaves it alone.
+    /// See docs/search-snippet-highlight-pipeline.md.
+    fn contains_highlighted_snippet(&self, content: &str) -> String {
+        let fragment = self.fragment_around_query(&self.query_text, content);
+        let norm_query = normalize_plain_text(&self.query_text);
+        let ranges = literal_ranges(&fragment, &norm_query);
+        wrap_ranges(&fragment, &ranges)
     }
 
     fn db_word_to_result(&self, x: &DictWord) -> SearchResult {
@@ -345,7 +445,7 @@ impl<'a> SearchQueryTask<'a> {
             .or(x.content_html.as_deref())
             .unwrap_or("");
 
-        let snippet = self.fragment_around_query(&self.query_text, content);
+        let snippet = self.contains_highlighted_snippet(content);
         SearchResult::from_book_spine_item(x, snippet)
     }
 
@@ -2363,11 +2463,25 @@ impl<'a> SearchQueryTask<'a> {
         (filtered, new_total)
     }
 
+    /// Central highlight pass — now a **fallback** only. Snippets that a
+    /// producer already highlighted (Fulltext `render_snippet`, Contains
+    /// `contains_highlighted_snippet`, and the focal all-snippets rows) carry a
+    /// `class='match'` span and pass through untouched, so this can never
+    /// double-wrap into nested spans. It still highlights the remaining
+    /// plain-snippet modes (TitleMatch, UidMatch, non-DPD dict). DPD rows are
+    /// never highlighted here, as before. See
+    /// docs/search-snippet-highlight-pipeline.md.
     fn highlight_row(&self, mut r: SearchResult) -> SearchResult {
         let is_dpd_result = r.table_name == "dpd_headwords"
             || r.table_name == "dpd_roots"
             || (r.table_name == "dict_words"
                 && r.source_uid.as_ref().is_some_and(|s| s.to_lowercase().contains("dpd")));
+
+        // Producer already owns the highlighting — leave it alone (no second
+        // pass, no nesting).
+        if r.snippet.contains("class='match'") {
+            return r;
+        }
 
         if !is_dpd_result {
             let q = normalize_plain_text(&self.query_text);
