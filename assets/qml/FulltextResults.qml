@@ -160,6 +160,32 @@ ColumnLayout {
         }
     }
 
+    // Pure derivation of the per-snippet find-bar query: the matched word (the
+    // first `<span class='match'>`) plus the following 1–2 words, with HTML tags
+    // stripped, ellipses and trailing punctuation dropped. Returns "" when the
+    // snippet has no match span. On click this lets the find bar jump to *this*
+    // snippet's passage instead of the original query. Kept pure for testing.
+    // See docs/search-snippet-highlight-pipeline.md §7.
+    function derive_find_query(snippet: string): string {
+        if (!snippet) return "";
+        var marker = "<span class='match'>";
+        var idx = snippet.indexOf(marker);
+        if (idx === -1) return "";
+        // From the start of the matched word to the end of the snippet.
+        var tail = snippet.substring(idx + marker.length);
+        // Strip any remaining HTML tags (defensive; the refactor removed nesting).
+        tail = tail.replace(/<[^>]*>/g, "");
+        // Drop ellipses and collapse whitespace.
+        tail = tail.replace(/…/g, " ").replace(/\s+/g, " ").trim();
+        if (tail.length === 0) return "";
+        // Matched word + up to 2 following words.
+        var words = tail.split(" ").filter(function(w) { return w.length > 0; });
+        var phrase = words.slice(0, 3).join(" ");
+        // Drop trailing punctuation.
+        phrase = phrase.replace(/[.,;:!?'"\)\]]+$/, "").trim();
+        return phrase;
+    }
+
     function update_page() {
         // Remove existing item selection.
         fulltext_list.currentIndex = -1;
@@ -199,6 +225,10 @@ ColumnLayout {
                 // Show the metadata header only on the first row of a record
                 // group (uid differs from the previous appended row).
                 show_header: show_header,
+                // Per-snippet find-bar query (matched word + following words),
+                // read via current_result_data() on click. See
+                // docs/search-snippet-highlight-pipeline.md §7.
+                find_query:  root.derive_find_query(item.snippet),
                 header_title: is_header ? item.title : "",
                 /* author:      item.author, */
             };

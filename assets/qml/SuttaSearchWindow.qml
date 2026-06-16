@@ -332,6 +332,9 @@ ApplicationWindow {
             sutta_title: fulltext_results_data.sutta_title || "",
             sutta_ref:   fulltext_results_data.sutta_ref || "",
             anchor:      fulltext_results_data.anchor || "",
+            // Per-snippet find-bar query (see FulltextResults.derive_find_query);
+            // used by the find-on-open block to jump to this snippet's passage.
+            find_query:  fulltext_results_data.find_query || "",
             pinned: pinned,
             focus_on_new: focus_on_new,
             id_key: id_key,
@@ -997,6 +1000,19 @@ ${query_text}`;
 
     function show_result_in_html_view(result_data: var, new_tab) {
         if (new_tab === undefined) new_tab = false;
+        // Capture the uid currently shown in the content view BEFORE we (maybe)
+        // replace it, so the find-on-open logic can tell whether the page will
+        // actually reload. When the clicked result is the sutta already
+        // displayed (e.g. clicking another snippet of the same record in
+        // all-snippets mode), the content does not reload and onPage_loaded
+        // won't fire — so the find must be run immediately instead.
+        let already_open_uid = "";
+        {
+            let cur_item = sutta_html_view_layout.get_current_item();
+            if (cur_item) {
+                already_open_uid = cur_item.get_data_value('item_uid') || "";
+            }
+        }
         logger.debug("SHOW_RESULT: show_result_in_html_view() called - item_uid: " + result_data.item_uid + " new_tab: " + new_tab);
         let tab_data = root.new_tab_data(result_data);
         logger.debug("SHOW_RESULT: Created tab_data - id_key: " + tab_data.id_key + " web_item_key: " + tab_data.web_item_key);
@@ -1040,7 +1056,21 @@ ${query_text}`;
                 root.last_query_text.length > 0) {
                 let query_as_uid = SuttaBridge.query_text_to_uid_field_query(root.last_query_text);
                 if (!query_as_uid.startsWith('uid:')) {
-                    root.pending_find_query = root.last_query_text;
+                    // Prefer the clicked snippet's find query (matched word +
+                    // following words) so the page jumps to that occurrence;
+                    // fall back to the original query when absent. See
+                    // docs/search-snippet-highlight-pipeline.md §7.
+                    let find_q = (tab_data.find_query && tab_data.find_query.length > 0)
+                        ? tab_data.find_query
+                        : root.last_query_text;
+                    if (already_open_uid.length > 0 && already_open_uid === tab_data.item_uid) {
+                        // Same sutta already displayed — no page reload, so run
+                        // the find now to jump to this snippet's text.
+                        root.open_find_in_sutta_with_query(find_q);
+                        root.pending_find_query = "";
+                    } else {
+                        root.pending_find_query = find_q;
+                    }
                 }
             }
         } else {

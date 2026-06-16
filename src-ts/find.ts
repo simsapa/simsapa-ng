@@ -335,7 +335,9 @@ class FindManager {
         }
 
         // Process term for accent folding if enabled
-        const searchTerm = this.isAccentFoldingEnabled() ? this.createAccentFoldedPattern(term) : term;
+        let searchTerm = this.isAccentFoldingEnabled() ? this.createAccentFoldedPattern(term) : term;
+        // Make inter-word gaps tolerate punctuation (see makeInterWordFlexible).
+        searchTerm = this.makeInterWordFlexible(searchTerm);
 
         // Use dom-find-and-replace to highlight matches
         const recover = findAndReplace(this.contentArea, {
@@ -369,6 +371,26 @@ class FindManager {
         this.scrollToElement(highlights[0] as HTMLElement);
 
         return recover as Recover;
+    }
+
+    /**
+     * Make inter-word gaps in a search pattern match whitespace AND punctuation.
+     *
+     * A search term's words often come from punctuation-stripped, normalized
+     * text (e.g. the "jump to this snippet" find query is derived from the
+     * indexed `content_plain`, which has punctuation removed), while the
+     * rendered page keeps punctuation between words. So "non reactive" should
+     * match "non-reactive" and "pajahitvā ṭhito" should match "pajahitvā, ṭhito".
+     *
+     * Each run of whitespace in the pattern is replaced with a class that
+     * matches one-or-more whitespace/punctuation characters. NOTE: `\W` is
+     * unsuitable — without the `u` flag it treats Pāli accented letters
+     * (ā, ṭ, ñ, ...) as non-word and would over-match across them; hence the
+     * explicit whitespace + punctuation class. A single-word term (no internal
+     * whitespace) is returned unchanged.
+     */
+    private makeInterWordFlexible(pattern: string): string {
+        return pattern.replace(/\s+/g, "[-\\s.,;:!?…·'’‘\"“”()\\[\\]{}«»<>/\\\\|—–]+");
     }
 
     /**
