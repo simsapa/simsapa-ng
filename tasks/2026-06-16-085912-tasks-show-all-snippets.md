@@ -132,13 +132,13 @@ As you complete each sub-task, change `- [ ]` to `- [x]` in this file, updating 
 - **Header dedup (depends on 1.1a `is_snippet`):** delegate metadata header `RowLayout` (`FulltextResults.qml:301`) gated on a `show_header` model role computed in `update_page()` (`:163`) while appending rows (uid differs from previous appended row's uid). Single-snippet record = one-row group, header always shows. Fixed item height (`:244`) unchanged.
 
 - [ ] 6.0 Advanced Search Options UI + header dedup
-  - [ ] 6.1 Add `CheckBox { id: show_all_snippets_checkbox; text: "Show All Snippets" }` after `uid_suffix_input`, gated to Suttas + Library; `onCheckedChanged` → `root.advanced_options_changed()`.
-  - [ ] 6.2 Add `TextField { id: snippet_exclude_input }` (label "Exclude snippets containing:", placeholder `e.g. pajahitvā, na upādiyati`), `MobileKeyboardHelper`, `EnterKey.type: Qt.EnterKeyDone`, `onTextChanged: advanced_options_debounce_timer.restart()`, gated to Suttas + Library.
-  - [ ] 6.3 Wire both into `get_search_params()` (checkbox → `show_all_snippets`; input → CSV split/trim/drop-empties → `snippet_exclude` array or `null`).
-  - [ ] 6.4 In `update_page()`, compute per-row `show_header` (uid differs from previous appended uid; first row true) and append to `results_model`; add the `show_header` role to the delegate's `required property` set. Treat `is_section_header` rows as group boundaries (reset "previous uid") and don't disturb the section-header path.
-  - [ ] 6.5 Gate the metadata header `RowLayout` (`:301`) on `result_item.show_header`; keep the snippet `Text` always visible and the item height fixed.
-  - [ ] 6.6 Confirm controls reset on restart (no persistence); Dictionary area hides them and is unaffected.
-  - [ ] 6.7 Build (`make build -B`); confirm controls appear, re-trigger the query, and header shows once per record group (GUI check is the user's).
+  - [x] 6.1 Add `CheckBox { id: show_all_snippets_checkbox; text: "Show All Snippets" }` after `uid_suffix_input`, gated to Suttas + Library; `onCheckedChanged` → `root.advanced_options_changed()`.
+  - [x] 6.2 Add `TextField { id: snippet_exclude_input }` (label "Exclude snippets containing:", placeholder `e.g. pajahitvā, na upādiyati`), `MobileKeyboardHelper`, `EnterKey.type: Qt.EnterKeyDone`, `onTextChanged: advanced_options_debounce_timer.restart()`, gated to Suttas + Library.
+  - [x] 6.3 Wire both into `get_search_params()` (checkbox → `show_all_snippets`; input → CSV split/trim/drop-empties → `snippet_exclude` array or `null`). (Controls feed the session-only root props `show_all_snippets` / `snippet_exclude_text` that `get_search_params()` already reads, per Task 1.4.)
+  - [x] 6.4 In `update_page()`, compute per-row `show_header` (uid differs from previous appended uid; first row true) and append to `results_model`; add the `show_header` role to the delegate's `required property` set. Treat `is_section_header` rows as group boundaries (reset "previous uid") and don't disturb the section-header path.
+  - [x] 6.5 Gate the metadata header `RowLayout` (`:301`) on `result_item.show_header`; keep the snippet `Text` always visible and the item height fixed.
+  - [x] 6.6 Confirm controls reset on restart (no persistence); Dictionary area hides them and is unaffected. (Plain root props default `false`/`""`; the `visible` gate excludes Dictionary.)
+  - [x] 6.7 Build (`make build -B`); confirm controls appear, re-trigger the query, and header shows once per record group (GUI check is the user's).
 
 ### Specs & dependencies for 7.0 (snippet-aware find-bar jump)
 

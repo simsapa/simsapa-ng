@@ -441,8 +441,8 @@ impl<'a> SearchQueryTask<'a> {
             ranges
                 .iter()
                 .map(|r| {
-                    let (window, focal) =
-                        Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 500);
+                    // Use 200 for shorter results text in all-snippets mode
+                    let (window, focal) = Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 200);
                     wrap_ranges(&window, &[focal])
                 })
                 .collect(),

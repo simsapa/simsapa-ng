@@ -642,7 +642,7 @@ ApplicationWindow {
     // Parse the "Exclude snippets containing" CSV input into a trimmed,
     // empty-dropped array; returns null when nothing remains (so the backend
     // treats it as no exclusion). See docs/search-snippet-highlight-pipeline.md.
-    function parse_snippet_exclude_csv(csv: string) {
+    function parse_snippet_exclude_csv(csv: string): var {
         if (!csv) return null;
         const parts = csv.split(",")
             .map(s => s.trim())
@@ -2448,6 +2448,53 @@ ${query_text}`;
                     EnterKey.type: Qt.EnterKeyDone
                     MobileKeyboardHelper {}
                     onTextChanged: advanced_options_debounce_timer.restart()
+                }
+            }
+
+            // "Show All Snippets" + snippet exclusion filter (Suttas + Library
+            // only; session-only state held on root.show_all_snippets /
+            // root.snippet_exclude_text). See
+            // docs/search-snippet-highlight-pipeline.md.
+            RowLayout {
+                spacing: 2
+                visible: search_bar_input.search_area === "Suttas" || search_bar_input.search_area === "Library"
+
+                CheckBox {
+                    id: show_all_snippets_checkbox
+                    text: "Show All Snippets"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    checked: root.show_all_snippets
+                    onToggled: {
+                        root.show_all_snippets = checked;
+                        root.advanced_options_changed();
+                    }
+                }
+            }
+
+            RowLayout {
+                spacing: 4
+                visible: search_bar_input.search_area === "Suttas" || search_bar_input.search_area === "Library"
+
+                Label {
+                    text: "Exclude snippets containing:"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                TextField {
+                    id: snippet_exclude_input
+                    placeholderText: "e.g. pajahitvā, na upādiyati"
+                    Layout.preferredWidth: 200
+                    Layout.preferredHeight: root.icon_size
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    selectByMouse: true
+                    text: root.snippet_exclude_text
+                    EnterKey.type: Qt.EnterKeyDone
+                    MobileKeyboardHelper {}
+                    onTextChanged: {
+                        root.snippet_exclude_text = text;
+                        advanced_options_debounce_timer.restart();
+                    }
                 }
             }
 

@@ -167,9 +167,23 @@ ColumnLayout {
         results_model.clear()
         // Populate model with new items.
         root.total_pages = (root.total_hits > 0 ? Math.ceil(root.total_hits / root.page_len) : 1)
+        // Header dedup: in "Show All Snippets" mode a record expands to several
+        // adjacent rows sharing one uid; the metadata header is shown only on
+        // the first row of each record group. A section-header row is a group
+        // boundary, so the next real row always shows its header. See
+        // docs/search-snippet-highlight-pipeline.md.
+        var prev_uid = null;
         for (var i = 0; i < root.current_results.length; i++) {
             var item = root.current_results[i];
             var is_header = !!item.is_section_header;
+            var show_header;
+            if (is_header) {
+                show_header = false;
+                prev_uid = null;
+            } else {
+                show_header = (item.uid !== prev_uid);
+                prev_uid = item.uid;
+            }
             var result_data = {
                 index: i,
                 item_uid:    item.uid,
@@ -182,6 +196,9 @@ ColumnLayout {
                 // docs/search-snippet-highlight-pipeline.md). Used by header
                 // dedup / record grouping (Task 6.0).
                 is_snippet:  !!item.is_snippet,
+                // Show the metadata header only on the first row of a record
+                // group (uid differs from the previous appended row).
+                show_header: show_header,
                 header_title: is_header ? item.title : "",
                 /* author:      item.author, */
             };
@@ -254,6 +271,7 @@ ColumnLayout {
             required property string sutta_ref
             required property string snippet
             required property bool is_section_header
+            required property bool show_header
             required property string header_title
             /* required property string nikaya */
             property string author: ""
@@ -301,9 +319,12 @@ ColumnLayout {
 
                     // property color text_color: fulltext_list.currentIndex === result_item.index ? "#000" : "#fff"
 
-                    // Title and metadata
+                    // Title and metadata — shown only on the first row of a
+                    // record group (header dedup; see
+                    // docs/search-snippet-highlight-pipeline.md).
                     RowLayout {
                         spacing: 12
+                        visible: result_item.show_header
                         Text {
                             text: result_item.sutta_ref
                             visible: result_item.sutta_ref !== ""

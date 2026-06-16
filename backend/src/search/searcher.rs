@@ -482,8 +482,8 @@ impl FulltextSearcher {
 
         let mut out: Vec<SearchResult> = Vec::with_capacity(ranges.len());
         for r in ranges {
-            let (window, focal) =
-                SearchQueryTask::fragment_around_offset(&content, r.start, r.end - r.start, 20, 500);
+            // Use 200 for shorter results text in all-snippets mode
+            let (window, focal) = SearchQueryTask::fragment_around_offset(&content, r.start, r.end - r.start, 20, 200);
             let mut row = base.clone();
             row.snippet = wrap_ranges(&window, &[focal]);
             row.is_snippet = true;
