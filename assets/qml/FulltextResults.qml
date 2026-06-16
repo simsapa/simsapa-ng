@@ -54,6 +54,11 @@ ColumnLayout {
     property int page_num: 0
     property int total_hits: 0
     property int total_pages: (total_hits > 0 ? Math.ceil(total_hits / page_len) : 1)
+    // Active "Exclude snippets containing" terms (cleaned, comma-joined), set by
+    // the parent. When a page is empty because every snippet was excluded
+    // (total_hits > 0 but no rows), the empty state names the filter instead of
+    // saying "No results found.". See docs/search-snippet-highlight-pipeline.md.
+    property string snippet_exclude_terms: ""
     property bool is_loading: false
     property alias currentIndex: fulltext_list.currentIndex
     property alias currentItem: fulltext_list.currentItem
@@ -241,11 +246,17 @@ ColumnLayout {
 
     Text {
         id: empty_state
-        text: "No results found."
+        // When records matched (total_hits > 0) but this page has no rows, every
+        // snippet on the page was removed by the exclusion filter — name it
+        // instead of the generic "No results found.".
+        text: (root.total_hits > 0 && root.snippet_exclude_terms.trim().length > 0)
+            ? "Results from this page were excluded by the filter: " + root.snippet_exclude_terms.trim()
+            : "No results found."
         visible: !root.is_loading && results_model.count === 0
         horizontalAlignment: Text.AlignHCenter
         font.italic: true
         color: "grey"
+        wrapMode: Text.WordWrap
         Layout.fillWidth: true
     }
 

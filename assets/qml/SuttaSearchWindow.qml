@@ -3423,6 +3423,12 @@ ${query_text}`;
                                 render_use_flat_results_background: root.render_use_flat_results_background
                                 render_disable_results_clip: root.render_disable_results_clip
                                 new_results_page_fn: root.new_results_page
+                                // Cleaned, comma-joined exclude terms so an
+                                // all-excluded page can name the active filter.
+                                snippet_exclude_terms: {
+                                    let terms = root.parse_snippet_exclude_csv(root.snippet_exclude_text);
+                                    return terms ? terms.join(", ") : "";
+                                }
 
                                 function update_item() {
                                     /* logger.info("update_item()"); */
