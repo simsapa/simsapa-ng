@@ -252,9 +252,27 @@ filter out unwanted contexts.
 - New highlight styling/colors — reuse the existing `span.match` highlight.
 - Regex or boolean logic in the exclusion filter (plain comma-separated
   substrings only).
-- Browser-extension search API (`bridges/src/api.rs`
-  `callback_run_*` paths) — this feature targets the in-app
-  `SuttaSearchWindow` results only unless trivially shared.
+- Localhost / browser-extension search API (`bridges/src/api.rs` Rocket routes,
+  e.g. `POST /suttas_fulltext_search`) — exposing Fulltext/Contains search over
+  curl with pagination, highlights, and single-/all-snippets mode is **deferred
+  to a later change**, not part of this release. This release targets the in-app
+  `SuttaSearchWindow` results.
+
+  **The design is intentionally API-ready and must not block that follow-up:**
+  the API endpoints already call `SearchQueryTask::results_page`, the same choke
+  point the UI uses, so the new `show_all_snippets` / `snippet_exclude` params
+  (which live on `SearchParams`), the producer-owned **non-nested** highlight
+  refactor (Goal 9 / Reqs 12b–12e), the per-occurrence expansion, and the
+  exclusion filter are all produced **backend-side** and serialized into the
+  `SearchResult` JSON automatically (including the `is_snippet` marker). The only
+  two values an API client would not receive directly — `show_header` and
+  `find_query` — are derived **QML-side** in `update_page()` and are trivially
+  recomputable by any client (uid adjacency; parsing the snippet HTML), so the
+  later API exposure is request-plumbing only (add `mode` / `search_area` /
+  `page_len` / `show_all_snippets` / `snippet_exclude` to the request and set
+  them on `SearchParams`). Keep all data-shaping (expansion, highlight,
+  exclusion) in the backend — never in `FulltextResults.update_page()` — so it
+  stays on the shared path.
 
 ## 6. Design Considerations
 

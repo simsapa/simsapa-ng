@@ -80,6 +80,11 @@ ApplicationWindow {
 
     property string last_query_text: ""
     property string last_search_area: ""
+    // Session-only "Show All Snippets" state (Suttas/Library). Not persisted to
+    // the settings DB; resets on restart. The Advanced Options controls (Task
+    // 6.0) bind to these. See docs/search-snippet-highlight-pipeline.md.
+    property bool show_all_snippets: false
+    property string snippet_exclude_text: ""
     property var last_params: null
     property string pending_find_query: ""
     property real pending_bookmark_scroll: 0.0
@@ -629,7 +634,20 @@ ApplicationWindow {
             include_ms_mula: SuttaBridge.get_include_ms_mula_in_search_results(),
             include_comm_bold_definitions: include_comm_bold_definitions,
             dict_source_uids: dict_source_uids,
+            show_all_snippets: root.show_all_snippets,
+            snippet_exclude: root.parse_snippet_exclude_csv(root.snippet_exclude_text),
         };
+    }
+
+    // Parse the "Exclude snippets containing" CSV input into a trimmed,
+    // empty-dropped array; returns null when nothing remains (so the backend
+    // treats it as no exclusion). See docs/search-snippet-highlight-pipeline.md.
+    function parse_snippet_exclude_csv(csv: string) {
+        if (!csv) return null;
+        const parts = csv.split(",")
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+        return parts.length > 0 ? parts : null;
     }
 
     // Build the per-dictionary inclusion set from the Dictionaries panel

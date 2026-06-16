@@ -705,6 +705,7 @@ impl FulltextSearcher {
             score: Some(score),
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         })
     }
 
@@ -737,6 +738,7 @@ impl FulltextSearcher {
             score: Some(score),
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         })
     }
 
@@ -779,6 +781,7 @@ impl FulltextSearcher {
             score: Some(score),
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         })
     }
 
@@ -816,6 +819,7 @@ impl FulltextSearcher {
             score: Some(score),
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         })
     }
 

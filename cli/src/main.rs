@@ -41,6 +41,8 @@ fn get_query_results(query: &str, area: SearchArea) -> Vec<SearchResult> {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     };
 
     let mut query_task = SearchQueryTask::new(
@@ -825,6 +827,8 @@ fn fulltext_search(
         include_ms_mula: true,
         include_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     };
 
     let (total_hits, results) = match area {

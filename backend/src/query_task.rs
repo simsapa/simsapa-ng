@@ -61,6 +61,7 @@ fn bold_definition_to_search_result(bd: &crate::db::dpd_models::BoldDefinition) 
         score: None,
         rank: None,
         is_section_header: false,
+        is_snippet: false,
     }
 }
 
@@ -82,6 +83,8 @@ pub struct SearchQueryTask<'a> {
     pub include_ms_mula: bool,
     pub include_comm_bold_definitions: bool,
     pub dict_source_uids: Option<Vec<String>>,
+    pub show_all_snippets: bool,
+    pub snippet_exclude: Option<Vec<String>>,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -137,6 +140,8 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: params.include_ms_mula,
             include_comm_bold_definitions: params.include_comm_bold_definitions,
             dict_source_uids: params.dict_source_uids.clone(),
+            show_all_snippets: params.show_all_snippets,
+            snippet_exclude: params.snippet_exclude.clone(),
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }

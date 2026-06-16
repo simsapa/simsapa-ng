@@ -107,6 +107,16 @@ pub struct SearchParams {
     /// possible result.
     #[serde(default)]
     pub dict_source_uids: Option<Vec<String>>,
+    /// When true, expand each matched record into one result row per matched
+    /// occurrence (Fulltext/Contains, Suttas/Library). See
+    /// docs/search-snippet-highlight-pipeline.md. Session-only; `false` = legacy
+    /// one-snippet-per-record behaviour.
+    #[serde(default)]
+    pub show_all_snippets: bool,
+    /// CSV-derived list of strings; any snippet containing one of them
+    /// (diacritic-insensitive) is dropped. `None`/empty = no exclusion.
+    #[serde(default)]
+    pub snippet_exclude: Option<Vec<String>>,
 }
 
 impl Default for SearchParams {
@@ -128,6 +138,8 @@ impl Default for SearchParams {
             include_ms_mula: true,
             include_comm_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
+            snippet_exclude: None,
         }
     }
 }
@@ -154,6 +166,11 @@ pub struct SearchResult {
     pub rank: Option<i32>,
     #[serde(default)]
     pub is_section_header: bool,
+    /// Marks an expanded-snippet row (one matched occurrence of a record) vs. a
+    /// whole-record row. Used QML-side to group rows by record for header dedup
+    /// and record-count logic. See docs/search-snippet-highlight-pipeline.md.
+    #[serde(default)]
+    pub is_snippet: bool,
 }
 
 impl SearchResult {
@@ -191,6 +208,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         }
     }
 
@@ -211,6 +229,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         }
     }
 
@@ -230,6 +249,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         }
     }
 
@@ -251,6 +271,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         }
     }
 
@@ -272,6 +293,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         }
     }
 
@@ -291,6 +313,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: true,
+            is_snippet: false,
         }
     }
 
@@ -310,6 +333,7 @@ impl SearchResult {
             score: None,
             rank: None,
             is_section_header: false,
+            is_snippet: false,
         }
     }
 

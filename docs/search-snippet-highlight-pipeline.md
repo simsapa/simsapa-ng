@@ -279,6 +279,30 @@ plumbing. Prev/next navigation re-serves cached pages without recomputation.
 
 ---
 
+## 8a. Reuse by the localhost API (deferred, but kept unblocked)
+
+The Rocket endpoints in `bridges/src/api.rs` (e.g. `POST /suttas_fulltext_search`)
+call the **same** `SearchQueryTask::results_page` the UI uses. As a result,
+everything in §3–§6 is produced **backend-side** and is already serialized into
+the `SearchResult` JSON those endpoints return: the producer-owned non-nested
+highlight markup, the per-occurrence expansion (`is_snippet: true` rows), the
+exclusion filter, and the record-based `total_hits`. Exposing Fulltext/Contains
+search over curl with single-/all-snippets mode is therefore **request-plumbing
+only** (add `mode` / `search_area` / `page_len` / `show_all_snippets` /
+`snippet_exclude` to the request struct and set them on `SearchParams`) — it is
+deferred to a later change.
+
+The only two values an API client does **not** receive directly are
+`show_header` and `find_query`, because they are derived in
+`FulltextResults.update_page()` (§7), not stored on `SearchResult`. Both are
+trivially recomputable by any client: `show_header` from `uid`/`is_snippet`
+adjacency, and `find_query` from the (non-nested, hence parseable) snippet HTML.
+**Invariant to preserve:** keep all data-shaping (expansion, highlight,
+exclusion) in the backend on the `results_page` path — never move it into
+`update_page()` — so the API and UI stay in parity.
+
+---
+
 ## 9. Where to look in the code
 
 | Concern                         | Location                                                        |

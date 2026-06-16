@@ -25,6 +25,7 @@ PRD: [2026-06-16-085912-prd---show-all-snippets.md](./2026-06-16-085912-prd---sh
 - This feature edits existing QML only (no new QML files to register in `bridges/build.rs`).
 - Session-only state = plain QML root properties (no `SuttaBridge` getter/setter, no settings-DB persistence), unlike the persisted include-checkboxes.
 - **Highlight invariant (all tasks):** a snippet must never contain nested `<span class='match'>`. Several tests assert `!snippet.contains("class='match'><span")` and that the span count equals the expected occurrence count.
+- **API-readiness invariant (all tasks):** keep all data-shaping — per-occurrence expansion (3.0/4.0), highlighting (2.0), and the exclusion filter (5.0) — on the backend `results_page` path, **never** in `FulltextResults.update_page()`. The localhost API (`bridges/src/api.rs`) calls the same `results_page`, so this keeps a later API exposure (Fulltext/Contains over curl with single-/all-snippets mode) to request-plumbing only. `show_header`/`find_query` stay QML-derived (Tasks 6/7) but are client-recomputable. Exposing the API is out of scope for this release (see PRD §5). Don't add the new request fields to api.rs endpoints yet (task 1.3 only added the off/none defaults so the crate compiles).
 
 ## Instructions for Completing Tasks
 
@@ -38,14 +39,14 @@ As you complete each sub-task, change `- [ ]` to `- [x]` in this file, updating 
 - **Flow:** QML `get_search_params()` → JSON → `SearchParams` (deserialized in `sutta_bridge.rs::fetch_and_cache_page` / combined path) → `QueryTask`. Mirror the existing `uid_suffix` plumbing exactly.
 - **Cache dependency:** `cache_key = format!("{}|{}|{}", query_text, search_area_text, params_json_text)` (`sutta_bridge.rs:1793`, and the `|combined` variant at `:1688`). Because the params are inside `params_json_text`, no cache-key code changes are required — only verify.
 
-- [ ] 1.0 Thread `show_all_snippets` and `snippet_exclude` search params through the backend and QML param builder (no behaviour change yet)
-  - [ ] 1.1 Add `show_all_snippets: bool` and `snippet_exclude: Option<Vec<String>>` (both `#[serde(default)]`) to `SearchParams` in `backend/src/types.rs`, and set them in the `Default` impl (`false` / `None`).
-  - [ ] 1.1a Add an `is_snippet: bool` field (`#[serde(default)]`, default `false`) to `SearchResult` in `backend/src/types.rs`, set `false` in the existing `from_sutta` / `from_dict_word` / `from_book_spine_item` constructors (those are whole-record rows), and read it in `update_page()` in `FulltextResults.qml` (default `false`). Marks expanded-snippet rows so record-count logic groups rows by record (a record = the run of rows sharing one `uid`, snippet rows flagged `is_snippet: true`). (`find_query` for the find-bar jump is derived QML-side in Task 7, not stored on `SearchResult`.)
-  - [ ] 1.2 Add matching fields to `QueryTask` in `backend/src/query_task.rs` (near `uid_suffix` at `:81`) and populate them from `params` in the constructor (near `:136`).
-  - [ ] 1.3 Add the new fields to the two `SearchParams { .. }` literals in `bridges/src/api.rs` (~958, ~1049) so the crate compiles (default off/none).
-  - [ ] 1.4 Add session-only root properties to `SuttaSearchWindow.qml` (e.g. `property bool show_all_snippets: false`) — or read directly from the new controls — and include `show_all_snippets` + parsed `snippet_exclude` (CSV → trimmed array, drop empties, `null` if empty) in the object returned by `get_search_params()` (~line 615).
-  - [ ] 1.5 Confirm (read-through, add a code comment if helpful) that `RESULTS_PAGE_CACHE` and the combined cache key include the new params via `params_json_text`, so toggling them invalidates cached pages automatically.
-  - [ ] 1.6 Build (`make build -B`) and confirm clean compile with no behaviour change (params accepted, ignored by query logic so far).
+- [x] 1.0 Thread `show_all_snippets` and `snippet_exclude` search params through the backend and QML param builder (no behaviour change yet)
+  - [x] 1.1 Add `show_all_snippets: bool` and `snippet_exclude: Option<Vec<String>>` (both `#[serde(default)]`) to `SearchParams` in `backend/src/types.rs`, and set them in the `Default` impl (`false` / `None`).
+  - [x] 1.1a Add an `is_snippet: bool` field (`#[serde(default)]`, default `false`) to `SearchResult` in `backend/src/types.rs`, set `false` in the existing `from_sutta` / `from_dict_word` / `from_book_spine_item` constructors (those are whole-record rows), and read it in `update_page()` in `FulltextResults.qml` (default `false`). Marks expanded-snippet rows so record-count logic groups rows by record (a record = the run of rows sharing one `uid`, snippet rows flagged `is_snippet: true`). (`find_query` for the find-bar jump is derived QML-side in Task 7, not stored on `SearchResult`.)
+  - [x] 1.2 Add matching fields to `QueryTask` in `backend/src/query_task.rs` (near `uid_suffix` at `:81`) and populate them from `params` in the constructor (near `:136`).
+  - [x] 1.3 Add the new fields to the two `SearchParams { .. }` literals in `bridges/src/api.rs` (~958, ~1049) so the crate compiles (default off/none).
+  - [x] 1.4 Add session-only root properties to `SuttaSearchWindow.qml` (e.g. `property bool show_all_snippets: false`) — or read directly from the new controls — and include `show_all_snippets` + parsed `snippet_exclude` (CSV → trimmed array, drop empties, `null` if empty) in the object returned by `get_search_params()` (~line 615).
+  - [x] 1.5 Confirm (read-through, add a code comment if helpful) that `RESULTS_PAGE_CACHE` and the combined cache key include the new params via `params_json_text`, so toggling them invalidates cached pages automatically.
+  - [x] 1.6 Build (`make build -B`) and confirm clean compile with no behaviour change (params accepted, ignored by query logic so far).
 
 ### Specs & dependencies for 2.0 (highlight pipeline refactor — prerequisite)
 

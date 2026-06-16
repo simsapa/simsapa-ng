@@ -107,6 +107,8 @@ pub fn get_contains_params_with_lang(lang: Option<String>) -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -129,6 +131,8 @@ pub fn get_dict_params_with_mode_and_lang(mode: SearchMode, lang: Option<String>
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -151,6 +155,8 @@ pub fn get_uid_params_with_lang(lang: Option<String>) -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -173,6 +179,8 @@ pub fn get_uid_params() -> SearchParams {
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     }
 }
 
@@ -198,6 +206,8 @@ pub fn create_test_task(query_text: &str, search_mode: SearchMode) -> SearchQuer
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
+        show_all_snippets: false,
+        snippet_exclude: None,
     };
 
     SearchQueryTask::new(

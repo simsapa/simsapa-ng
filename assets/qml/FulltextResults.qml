@@ -178,6 +178,10 @@ ColumnLayout {
                 sutta_ref:   item.sutta_ref || "", // Can be 'None' from SearchResult::from_dict_word()
                 snippet:     item.snippet,
                 is_section_header: is_header,
+                // Marks an expanded-snippet row vs. a whole-record row (see
+                // docs/search-snippet-highlight-pipeline.md). Used by header
+                // dedup / record grouping (Task 6.0).
+                is_snippet:  !!item.is_snippet,
                 header_title: is_header ? item.title : "",
                 /* author:      item.author, */
             };
