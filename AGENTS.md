@@ -87,7 +87,13 @@ Notable feature docs:
   literal), the "Show All Snippets" per-occurrence expansion (record-based
   pagination with post-slice expansion, `is_snippet`, focal-only highlight,
   `fragment_around_offset`), the `snippet_exclude` filter, and the `show_header`
-  / `find_query` QML render. Pairs with the bootstrap-time normalization in
+  / `find_query` QML render. Also covers the **snippet-aware find-bar jump**
+  (clicking a snippet opens the sutta and jumps the find bar to *that* snippet's
+  text — including the same-sutta "already open, no reload" immediate re-run, and
+  the punctuation-tolerant inter-word matching in `src-ts/find.ts`
+  `makeInterWordFlexible` that bridges punctuation-stripped `content_plain` vs.
+  the punctuation-bearing rendered HTML). Pairs with the bootstrap-time
+  normalization in
   [text-processing-for-contains-match-and-fulltext-match-search.md](./docs/text-processing-for-contains-match-and-fulltext-match-search.md).
 
 ## Specific coding procedures

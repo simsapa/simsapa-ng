@@ -1,10 +1,10 @@
 # Search snippet & highlight pipeline (ContainsMatch / FulltextMatch)
 
-**Status:** target design after the "Show All Snippets" refactor
-(see `tasks/2026-06-16-085912-prd---show-all-snippets.md` and the matching
+**Status:** implemented (the "Show All Snippets" feature; see
+`tasks/2026-06-16-085912-prd---show-all-snippets.md` and the matching
 `...-tasks-...` file). This document describes how the **snippet** and
-**highlight** stages of the Suttas / Library search pipeline are *intended* to
-work once the highlight-pipeline refactor (PRD §Goal 9, Reqs 12b–12e) lands. It
+**highlight** stages of the Suttas / Library search pipeline work after the
+highlight-pipeline refactor (PRD §Goal 9, Reqs 12b–12e). It
 complements [text-processing-for-contains-match-and-fulltext-match-search.md](./text-processing-for-contains-match-and-fulltext-match-search.md),
 which covers how `content_plain` is normalized at bootstrap; here we cover what
 happens at **query time**.
@@ -267,13 +267,46 @@ QML-side while appending:
   `uid`. The delegate shows the metadata header (sutta_ref / title / uid) only
   when true, so a record's follow-on snippet rows read as one group. Item height
   is unchanged.
-- **`find_query`** = parsed from the snippet HTML: the first
-  `<span class='match'>` word plus the following 1–2 words (tags stripped,
-  ellipses/punctuation dropped). On click, the find-bar jumps to *this* snippet's
-  passage (`pajahitvā ṭhito`) instead of the original query.
+- **`find_query`** = parsed from the snippet HTML by
+  `FulltextResults.derive_find_query()`: the first `<span class='match'>` word
+  plus the following 1–2 words (tags stripped, ellipses/punctuation dropped;
+  `""` when there is no match span). It is a **model role** consumed via
+  `current_result_data()` (like `is_snippet`), not a delegate-rendered property.
 
 `is_snippet` is carried for record-grouping/counting; `total_pages` stays derived
 from the record-count `total_hits`.
+
+### 7a. Snippet-aware find-bar jump
+
+When a sutta result is opened with the **"open find in sutta results"**
+preference on (Suttas area, content-replace open, non-uid query), the find bar
+is triggered with that row's `find_query` instead of the original
+`last_query_text`, so the page jumps to *this* snippet's passage
+(`pajahitvā ṭhito`) rather than the first occurrence of the query. Empty
+`find_query` falls back to `last_query_text`. Plumbing:
+`current_result_data()` → `show_result_in_html_view()` → `new_tab_data()`
+(`find_query` key) → the find-on-open block (`SuttaSearchWindow.qml`).
+
+Two behaviours make the jump robust:
+
+- **Already-open record (all-snippets).** `pending_find_query` is normally
+  consumed in the content view's `onPage_loaded`. Clicking a *different* snippet
+  of the **same** sutta does **not** reload the page, so `onPage_loaded` never
+  fires. `show_result_in_html_view()` captures the currently-displayed uid
+  *before* the content-replace; when it equals the clicked row's uid it runs
+  `open_find_in_sutta_with_query()` **immediately** (and clears
+  `pending_find_query`) so the find re-runs for the newly clicked snippet.
+- **Punctuation-tolerant matching (`src-ts/find.ts`).** The `find_query` words
+  come from punctuation-stripped `content_plain`, but the rendered HTML keeps
+  punctuation between words. `FindManager.makeInterWordFlexible()` (applied in
+  `performSearch`, after accent folding) rewrites each inter-word whitespace run
+  into a class matching one-or-more whitespace **or** punctuation characters, so
+  `pajahitvā ṭhito` matches `pajahitvā, ṭhito` and `non reactive` matches
+  `non-reactive`. NB: `\W` is unsuitable — without the `u` flag it treats Pāli
+  accented letters as non-word and would over-match; hence an explicit
+  whitespace+punctuation class (the `u` flag is avoided because it would make the
+  *whole* pattern strict-parse and could throw on lenient user-typed find terms).
+  This applies to all multi-word find searches, not only the auto-jump.
 
 ---
 
@@ -323,5 +356,7 @@ exclusion) in the backend on the `results_page` path — never move it into
 | Occurrence enumerator (stemmed) | `searcher.rs` + `search/tokenizer.rs` analyzer                  |
 | Page assembly / exclusion       | `query_task.rs` `results_page`                                  |
 | Cache                           | `bridges/src/sutta_bridge.rs` `RESULTS_PAGE_CACHE`              |
-| QML render                      | `assets/qml/FulltextResults.qml` `update_page`                  |
+| QML render / header dedup       | `assets/qml/FulltextResults.qml` `update_page` (`show_header`, `find_query`) |
+| Find-bar jump / open path       | `assets/qml/SuttaSearchWindow.qml` `show_result_in_html_view` / `new_tab_data` |
+| Find-bar punctuation tolerance  | `src-ts/find.ts` `makeInterWordFlexible` (+ `find.test.ts`)     |
 | Normalization (bootstrap)       | [text-processing doc](./text-processing-for-contains-match-and-fulltext-match-search.md) |
