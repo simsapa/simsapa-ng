@@ -116,13 +116,13 @@ As you complete each sub-task, change `- [ ]` to `- [x]` in this file, updating 
 - **Record drop:** a record whose snippets are all excluded contributes no rows (disappears). `total` (record count) is **not** adjusted (Req 15 / Resolved Decision 1).
 - **Placement:** in `results_page` (`query_task.rs:2215`) after the per-area handler returns and after `highlight_row`, so it covers both modes and snippets may carry highlight tags.
 
-- [ ] 5.0 Snippet exclusion filter: drop snippets matching any CSV entry (diacritic-insensitive); omit records whose snippets are all excluded
-  - [ ] 5.1 Add a helper testing one snippet against the normalized exclude list (strip highlight tags; normalize both sides; substring test) → true if it should be removed.
-  - [ ] 5.2 In `results_page`, when `snippet_exclude` is non-empty, filter the page list through the helper (works for one-per-record and one-per-snippet lists).
-  - [ ] 5.3 Records left with zero snippets simply have no rows; leave `total` unchanged; don't backfill the page.
-  - [ ] 5.4 `None`/empty list = no-op fast path (no normalization work).
-  - [ ] 5.5 Tests (write now, run at 5.6): query whose snippets include an excluded form (e.g. `pajahitvā`) — those snippets removed (diacritic-insensitive, e.g. `pajahitva` also matches); a record with all snippets excluded disappears while `total` is unchanged.
-  - [ ] 5.6 Build (`make build -B`) + `cargo test`.
+- [x] 5.0 Snippet exclusion filter: drop snippets matching any CSV entry (diacritic-insensitive); omit records whose snippets are all excluded
+  - [x] 5.1 Add a helper testing one snippet against the normalized exclude list (strip highlight tags; normalize both sides; substring test) → true if it should be removed.
+  - [x] 5.2 In `results_page`, when `snippet_exclude` is non-empty, filter the page list through the helper (works for one-per-record and one-per-snippet lists).
+  - [x] 5.3 Records left with zero snippets simply have no rows; leave `total` unchanged; don't backfill the page.
+  - [x] 5.4 `None`/empty list = no-op fast path (no normalization work).
+  - [x] 5.5 Tests (write now, run at 5.6): query whose snippets include an excluded form (e.g. `pajahitvā`) — those snippets removed (diacritic-insensitive, e.g. `pajahitva` also matches); a record with all snippets excluded disappears while `total` is unchanged.
+  - [x] 5.6 Build (`make build -B`) + `cargo test`.
 
 ### Specs & dependencies for 6.0 (UI + header dedup)
 

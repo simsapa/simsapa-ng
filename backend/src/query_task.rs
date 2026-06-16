@@ -8,7 +8,7 @@ use diesel::prelude::*;
 use diesel::sql_query;
 use diesel::sql_types::{Text, BigInt};
 
-use crate::helpers::{normalize_plain_text, normalize_query_text, remove_inter_word_hyphens, sutta_range_from_ref};
+use crate::helpers::{normalize_plain_text, normalize_query_text, pali_to_ascii, remove_inter_word_hyphens, strip_html, sutta_range_from_ref};
 use crate::highlight::{literal_ranges, wrap_ranges};
 use crate::{get_app_data, get_app_globals};
 use crate::types::{SearchArea, SearchMode, SearchParams, SearchResult};
@@ -64,6 +64,26 @@ fn bold_definition_to_search_result(bd: &crate::db::dpd_models::BoldDefinition) 
         is_section_header: false,
         is_snippet: false,
     }
+}
+
+/// Normalize text for the snippet exclusion filter: diacritic-insensitive,
+/// lowercased, niggahita/iti-sandhi normalized (so a typed `pajahitva` matches
+/// a snippet containing `pajahitvā`). See
+/// docs/search-snippet-highlight-pipeline.md §6.
+fn normalize_for_exclude(text: &str) -> String {
+    pali_to_ascii(Some(&normalize_plain_text(text)))
+}
+
+/// Returns true if `snippet` should be removed because its plain text contains
+/// any of the `normalized_excludes` strings. Highlight tags are stripped and
+/// the snippet text is normalized the same way as the exclude strings (which
+/// the caller must have already passed through `normalize_for_exclude`).
+fn snippet_is_excluded(snippet: &str, normalized_excludes: &[String]) -> bool {
+    if normalized_excludes.is_empty() {
+        return false;
+    }
+    let plain = normalize_for_exclude(&strip_html(snippet));
+    normalized_excludes.iter().any(|ex| plain.contains(ex.as_str()))
 }
 
 pub struct SearchQueryTask<'a> {
@@ -2506,7 +2526,37 @@ impl<'a> SearchQueryTask<'a> {
 
         self.db_query_hits_count = total as i64;
 
-        Ok(page.into_iter().map(|r| self.highlight_row(r)).collect())
+        let page: Vec<SearchResult> = page.into_iter().map(|r| self.highlight_row(r)).collect();
+
+        // Snippet exclusion filter — drop any row whose snippet contains an
+        // excluded string (diacritic-insensitive). A record left with zero
+        // snippets simply contributes no rows; db_query_hits_count (the record
+        // total) is intentionally left unchanged. See
+        // docs/search-snippet-highlight-pipeline.md §6.
+        Ok(self.apply_snippet_exclude(page))
+    }
+
+    /// Remove rows whose snippet matches any entry in `snippet_exclude`. The
+    /// match is diacritic-insensitive: highlight tags are stripped and both the
+    /// snippet text and each exclude string are run through `normalize_plain_text`
+    /// + `pali_to_ascii` before a substring test. `None`/empty list is a no-op
+    /// fast path (no normalization work). See
+    /// docs/search-snippet-highlight-pipeline.md §6.
+    fn apply_snippet_exclude(&self, page: Vec<SearchResult>) -> Vec<SearchResult> {
+        let Some(excludes) = self.snippet_exclude.as_ref() else {
+            return page;
+        };
+        let normalized: Vec<String> = excludes
+            .iter()
+            .map(|s| normalize_for_exclude(s))
+            .filter(|s| !s.is_empty())
+            .collect();
+        if normalized.is_empty() {
+            return page;
+        }
+        page.into_iter()
+            .filter(|r| !snippet_is_excluded(&r.snippet, &normalized))
+            .collect()
     }
 
     /// Restrict dict_words rows to those whose `source_uid` (= `dict_label`)
@@ -2586,5 +2636,57 @@ impl<'a> SearchQueryTask<'a> {
     /// Returns the total number of hits found in the last database query.
     pub fn total_hits(&self) -> i64 {
         self.db_query_hits_count
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{normalize_for_exclude, snippet_is_excluded};
+
+    fn excludes(terms: &[&str]) -> Vec<String> {
+        terms.iter().map(|t| normalize_for_exclude(t)).collect()
+    }
+
+    #[test]
+    fn excluded_form_is_removed() {
+        let ex = excludes(&["pajahitvā"]);
+        assert!(snippet_is_excluded(
+            "… pajahati na upādiyati <span class='match'>pajahitvā</span> ṭhito …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn exclusion_is_diacritic_insensitive() {
+        // Typed without diacritics still matches the diacritic snippet.
+        let ex = excludes(&["pajahitva"]);
+        assert!(snippet_is_excluded(
+            "… <span class='match'>pajahitvā</span> ṭhito …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn non_matching_snippet_passes_through() {
+        let ex = excludes(&["akusalaṁ"]);
+        assert!(!snippet_is_excluded(
+            "… <span class='match'>pajahati</span> na upādiyati …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn highlight_tags_are_ignored() {
+        // The span markup must not prevent a match on the wrapped word.
+        let ex = excludes(&["upādiyati"]);
+        assert!(snippet_is_excluded(
+            "… pajahati na <span class='match'>upādiyati</span> …",
+            &ex
+        ));
+    }
+
+    #[test]
+    fn empty_exclude_list_is_noop() {
+        assert!(!snippet_is_excluded("anything at all", &[]));
     }
 }
