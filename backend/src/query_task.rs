@@ -279,7 +279,6 @@ impl<'a> SearchQueryTask<'a> {
     ///
     /// [`fragment_around_text`]: Self::fragment_around_text
     pub fn fragment_around_offset(
-        &self,
         content: &str,
         match_start: usize,
         match_len: usize,
@@ -402,6 +401,79 @@ impl<'a> SearchQueryTask<'a> {
         let norm_query = normalize_plain_text(&self.query_text);
         let ranges = literal_ranges(&fragment, &norm_query);
         wrap_ranges(&fragment, &ranges)
+    }
+
+    /// All-snippets (Contains): one focal-highlighted snippet per **literal**
+    /// occurrence of the normalized query in `content`. Each occurrence gets its
+    /// own window (`fragment_around_offset`) and only that occurrence is
+    /// highlighted, matching the focal-only rule. Returns `None` when there is
+    /// no literal occurrence (the caller then falls back to a single snippet so
+    /// the record still appears). Contains never highlights inflected forms —
+    /// only the literal query string. See
+    /// docs/search-snippet-highlight-pipeline.md.
+    fn contains_occurrence_snippets(&self, content: &str) -> Option<Vec<String>> {
+        let norm_query = normalize_plain_text(&self.query_text);
+        let ranges = literal_ranges(content, &norm_query);
+        if ranges.is_empty() {
+            return None;
+        }
+        Some(
+            ranges
+                .iter()
+                .map(|r| {
+                    let (window, focal) =
+                        Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 40);
+                    wrap_ranges(&window, &[focal])
+                })
+                .collect(),
+        )
+    }
+
+    /// Expand one Contains-match sutta row into one focal-highlighted
+    /// `SearchResult` per literal occurrence (`is_snippet: true`). Zero-occurrence
+    /// fallback returns the single-snippet `db_sutta_to_result` so the record
+    /// still appears.
+    fn db_sutta_to_results(&self, x: &Sutta) -> Vec<SearchResult> {
+        let content = x.content_plain.as_deref()
+            .filter(|s| !s.is_empty())
+            .or(x.content_html.as_deref())
+            .unwrap_or("");
+
+        match self.contains_occurrence_snippets(content) {
+            Some(snippets) => snippets
+                .into_iter()
+                .map(|snip| {
+                    let mut r = SearchResult::from_sutta(x, snip);
+                    r.is_snippet = true;
+                    r
+                })
+                .collect(),
+            None => vec![self.db_sutta_to_result(x)],
+        }
+    }
+
+    /// Library equivalent of [`db_sutta_to_results`]. Each occurrence row reuses
+    /// the spine item's metadata (including `page_number`), differing only in the
+    /// focal snippet.
+    ///
+    /// [`db_sutta_to_results`]: Self::db_sutta_to_results
+    fn db_book_spine_item_to_results(&self, x: &BookSpineItem) -> Vec<SearchResult> {
+        let content = x.content_plain.as_deref()
+            .filter(|s| !s.is_empty())
+            .or(x.content_html.as_deref())
+            .unwrap_or("");
+
+        match self.contains_occurrence_snippets(content) {
+            Some(snippets) => snippets
+                .into_iter()
+                .map(|snip| {
+                    let mut r = SearchResult::from_book_spine_item(x, snip);
+                    r.is_snippet = true;
+                    r
+                })
+                .collect(),
+            None => vec![self.db_book_spine_item_to_result(x)],
+        }
     }
 
     fn db_word_to_result(&self, x: &DictWord) -> SearchResult {
@@ -807,10 +879,19 @@ impl<'a> SearchQueryTask<'a> {
                 .load(db_conn)?
         };
 
-        let search_results: Vec<SearchResult> = db_results
-            .iter()
-            .map(|sutta| self.db_sutta_to_result(sutta))
-            .collect();
+        // All-snippets expands each record into one row per literal occurrence;
+        // `total` stays the record COUNT(*) so pagination is unaffected.
+        let search_results: Vec<SearchResult> = if self.show_all_snippets {
+            db_results
+                .iter()
+                .flat_map(|sutta| self.db_sutta_to_results(sutta))
+                .collect()
+        } else {
+            db_results
+                .iter()
+                .map(|sutta| self.db_sutta_to_result(sutta))
+                .collect()
+        };
 
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok((search_results, total as usize))
@@ -1375,10 +1456,19 @@ impl<'a> SearchQueryTask<'a> {
             .load(db_conn)?
         };
 
-        let search_results: Vec<SearchResult> = db_results
-            .iter()
-            .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
-            .collect();
+        // All-snippets expands each record into one row per literal occurrence;
+        // `total` stays the record COUNT(*) so pagination is unaffected.
+        let search_results: Vec<SearchResult> = if self.show_all_snippets {
+            db_results
+                .iter()
+                .flat_map(|spine_item| self.db_book_spine_item_to_results(spine_item))
+                .collect()
+        } else {
+            db_results
+                .iter()
+                .map(|spine_item| self.db_book_spine_item_to_result(spine_item))
+                .collect()
+        };
 
         info(&format!("Query took: {:?}", timer.elapsed()));
         Ok((search_results, total as usize))
@@ -2051,6 +2141,7 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: self.include_ms_mula,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: self.show_all_snippets,
         };
 
         let query_text = self.query_text.clone();
@@ -2102,6 +2193,7 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: true,
             include_bold_definitions: self.include_comm_bold_definitions,
             dict_source_uids: self.dict_source_uids.clone(),
+            show_all_snippets: false,
         };
 
         let query_text = self.query_text.clone();
@@ -2146,6 +2238,7 @@ impl<'a> SearchQueryTask<'a> {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: self.show_all_snippets,
         };
 
         let query_text = self.query_text.clone();

@@ -12,6 +12,7 @@ use crate::logger::{info, warn};
 use crate::types::SearchResult;
 use crate::highlight::{literal_ranges, wrap_ranges};
 use crate::helpers::normalize_plain_text;
+use crate::query_task::SearchQueryTask;
 use crate::AppGlobalPaths;
 
 use super::schema::{build_dict_schema, build_library_schema, build_sutta_schema};
@@ -343,8 +344,11 @@ impl FulltextSearcher {
         // Fetch enough results from each index to cover all pages up to the requested one
         let limit = (page_num + 1) * page_len;
 
-        // Collect results from all matching languages with scores
-        let mut all_scored: Vec<(f32, SearchResult)> = Vec::new();
+        // Collect results from all matching languages with scores. Each scored
+        // entry carries its source language key + tantivy DocAddress so a sliced
+        // record can be re-associated with its own (index, reader) to re-fetch
+        // the stored content for per-occurrence expansion (Show All Snippets).
+        let mut all_scored: Vec<(f32, String, tantivy::DocAddress, SearchResult)> = Vec::new();
         let mut total_hits: usize = 0;
 
         for lang in langs_to_search {
@@ -352,7 +356,9 @@ impl FulltextSearcher {
                 match self.search_single_index(query_text, filters, limit, index, reader, index_type, with_count) {
                     Ok((count, scored_results)) => {
                         total_hits += count;
-                        all_scored.extend(scored_results);
+                        for (score, addr, r) in scored_results {
+                            all_scored.push((score, lang.clone(), addr, r));
+                        }
                     }
                     Err(e) => {
                         warn(&format!("Fulltext search error for lang {}: {}", lang, e));
@@ -364,15 +370,126 @@ impl FulltextSearcher {
         // Sort by score descending (interleaved by score, not grouped by language)
         all_scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
 
-        // Extract the correct page
-        let results: Vec<SearchResult> = all_scored
+        // Slice the requested page at the **record** level so a page always
+        // holds at most `page_len` records, regardless of snippet expansion.
+        let sliced: Vec<(f32, String, tantivy::DocAddress, SearchResult)> = all_scored
             .into_iter()
             .skip(page_num * page_len)
             .take(page_len)
-            .map(|(_, r)| r)
             .collect();
 
+        // Per-occurrence expansion happens **after** the slice so its cost is
+        // bounded to `page_len` records. Only Suttas + Library honour it; the
+        // Dict index stays single-snippet.
+        let expand = filters.show_all_snippets
+            && matches!(index_type, IndexType::Sutta | IndexType::Library);
+
+        let results: Vec<SearchResult> = if expand {
+            let mut out: Vec<SearchResult> = Vec::with_capacity(sliced.len());
+            for (_score, lang, addr, base) in sliced {
+                match indexes.get(&lang) {
+                    Some((index, reader)) => {
+                        match Self::expand_doc_occurrences(query_text, &lang, index, reader, addr, &base) {
+                            Ok(mut rows) => out.append(&mut rows),
+                            Err(e) => {
+                                warn(&format!("Snippet expansion error for lang {}: {}", lang, e));
+                                out.push(base);
+                            }
+                        }
+                    }
+                    None => out.push(base),
+                }
+            }
+            out
+        } else {
+            sliced.into_iter().map(|(_, _, _, r)| r).collect()
+        };
+
         Ok((total_hits, results))
+    }
+
+    /// Enumerate every match byte range of the query terms in `content` by
+    /// re-tokenizing it with the index's `{lang}_stem` analyzer and keeping
+    /// each token whose stem equals a query term's stem. This is what surfaces
+    /// inflected forms (query `pajahati` → content `pajahitvā`) and, for AND
+    /// queries, covers every term. Returns ranges in document order. See
+    /// docs/search-snippet-highlight-pipeline.md.
+    fn enumerate_match_ranges(
+        index: &Index,
+        lang: &str,
+        content: &str,
+        query_text: &str,
+    ) -> Result<Vec<std::ops::Range<usize>>> {
+        let tokenizer_name = format!("{lang}_stem");
+        let mut tokenizer = index
+            .tokenizers()
+            .get(&tokenizer_name)
+            .ok_or_else(|| anyhow::anyhow!("tokenizer '{}' not registered", tokenizer_name))?;
+
+        // Collect the set of query stems.
+        let mut query_stems: std::collections::HashSet<String> = std::collections::HashSet::new();
+        {
+            let mut qs = tokenizer.token_stream(query_text);
+            while qs.advance() {
+                query_stems.insert(qs.token().text.clone());
+            }
+        }
+        if query_stems.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        // One range per content token whose stem matches a query stem. Token
+        // offsets are byte offsets into the original `content`.
+        let mut ranges: Vec<std::ops::Range<usize>> = Vec::new();
+        let mut cs = tokenizer.token_stream(content);
+        while cs.advance() {
+            let tok = cs.token();
+            if query_stems.contains(&tok.text) {
+                ranges.push(tok.offset_from..tok.offset_to);
+            }
+        }
+        Ok(ranges)
+    }
+
+    /// Expand one matched record into one focal-highlighted `SearchResult` per
+    /// matched occurrence in its stored `content`. Each occurrence gets its own
+    /// window (`fragment_around_offset`) and only that occurrence is highlighted
+    /// (`wrap_ranges` with the focal range), satisfying the focal-only rule.
+    /// `is_snippet` is set so QML can group rows by record. If no occurrence is
+    /// found (analyzer/normalization edge case) the single best snippet (`base`)
+    /// is emitted so the record still appears. See
+    /// docs/search-snippet-highlight-pipeline.md.
+    fn expand_doc_occurrences(
+        query_text: &str,
+        lang: &str,
+        index: &Index,
+        reader: &IndexReader,
+        doc_address: tantivy::DocAddress,
+        base: &SearchResult,
+    ) -> Result<Vec<SearchResult>> {
+        let searcher = reader.searcher();
+        let schema = index.schema();
+        let doc: tantivy::TantivyDocument = searcher.doc(doc_address)?;
+        let content = Self::get_text_field(&doc, &schema, "content");
+        if content.is_empty() {
+            return Ok(vec![base.clone()]);
+        }
+
+        let ranges = Self::enumerate_match_ranges(index, lang, &content, query_text)?;
+        if ranges.is_empty() {
+            return Ok(vec![base.clone()]);
+        }
+
+        let mut out: Vec<SearchResult> = Vec::with_capacity(ranges.len());
+        for r in ranges {
+            let (window, focal) =
+                SearchQueryTask::fragment_around_offset(&content, r.start, r.end - r.start, 20, 40);
+            let mut row = base.clone();
+            row.snippet = wrap_ranges(&window, &[focal]);
+            row.is_snippet = true;
+            out.push(row);
+        }
+        Ok(out)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -385,7 +502,7 @@ impl FulltextSearcher {
         reader: &IndexReader,
         index_type: IndexType,
         with_count: bool,
-    ) -> Result<(usize, Vec<(f32, SearchResult)>)> {
+    ) -> Result<(usize, Vec<(f32, tantivy::DocAddress, SearchResult)>)> {
         let searcher = reader.searcher();
         let schema = index.schema();
 
@@ -464,7 +581,7 @@ impl FulltextSearcher {
                 IndexType::Library => self.library_doc_to_result(&doc, &schema, score, &snippet_gen, query_text)?,
             };
 
-            results.push((score, result));
+            results.push((score, doc_address, result));
         }
 
         Ok((count, results))
@@ -1001,6 +1118,66 @@ mod tests {
         );
     }
 
+    /// With `show_all_snippets` on, a record containing two matched
+    /// occurrences (one literal `pajahati`, one inflected `pajahitvā` that
+    /// stems to the same root) expands into two `SearchResult` rows, each
+    /// `is_snippet: true` and each highlighting **only its own** occurrence
+    /// (single non-nested span). With the flag off, exactly one row.
+    #[test]
+    fn test_show_all_snippets_expands_per_occurrence() {
+        let text = "pajahati na upādiyati pajahitvā ṭhito";
+        let (index, reader) = create_test_index_with_content("pli", "cnd8/pli/ms", text);
+        let mut sutta_indexes = HashMap::new();
+        sutta_indexes.insert("pli".to_string(), (index, reader));
+        let searcher = FulltextSearcher {
+            sutta_indexes,
+            dict_indexes: HashMap::new(),
+            library_indexes: HashMap::new(),
+        };
+
+        // Flag off: one row per record, not flagged as a snippet.
+        let off = SearchFilters { show_all_snippets: false, ..SearchFilters::default() };
+        let (count_off, res_off) = searcher.search_suttas_with_count("pajahati", &off, 10, 0).unwrap();
+        assert_eq!(count_off, 1, "record count is unaffected by expansion");
+        assert_eq!(res_off.len(), 1, "flag off yields one row per record");
+        assert!(!res_off[0].is_snippet);
+
+        // Flag on: two rows, one per occurrence.
+        let on = SearchFilters { show_all_snippets: true, ..SearchFilters::default() };
+        let (count_on, res_on) = searcher.search_suttas_with_count("pajahati", &on, 10, 0).unwrap();
+        assert_eq!(count_on, 1, "record count stays the record total, not the snippet count");
+        assert_eq!(res_on.len(), 2, "two occurrences → two snippet rows");
+
+        for r in &res_on {
+            assert!(r.is_snippet, "expanded rows are flagged is_snippet");
+            assert_eq!(r.uid, "cnd8/pli/ms");
+            assert!(
+                !r.snippet.contains("class='match'><span"),
+                "no nested spans: {}",
+                r.snippet
+            );
+            assert_eq!(
+                r.snippet.matches("class='match'").count(),
+                1,
+                "each expanded snippet highlights exactly its focal occurrence: {}",
+                r.snippet
+            );
+        }
+
+        // Focal-only: one row highlights pajahati (not pajahitvā), the other
+        // highlights pajahitvā (not pajahati).
+        let hl_pajahati = res_on.iter().any(|r| {
+            r.snippet.contains("<span class='match'>pajahati</span>")
+                && !r.snippet.contains("<span class='match'>pajahitvā</span>")
+        });
+        let hl_pajahitva = res_on.iter().any(|r| {
+            r.snippet.contains("<span class='match'>pajahitvā</span>")
+                && !r.snippet.contains("<span class='match'>pajahati</span>")
+        });
+        assert!(hl_pajahati, "one snippet must focal-highlight pajahati only: {res_on:?}");
+        assert!(hl_pajahitva, "one snippet must focal-highlight pajahitvā only: {res_on:?}");
+    }
+
     #[test]
     fn test_tokenize_to_string_stem() {
         let (index, _reader) = create_test_index("pli");
@@ -1051,6 +1228,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         let result = searcher.debug_query("bhikkhave", &filters).unwrap();
@@ -1090,6 +1268,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         // Unbalanced quotes should cause a parse error but still return partial results
@@ -1128,6 +1307,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         // "bhikkhūnaṁ" should stem differently than normalize
@@ -1162,6 +1342,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         // "sattanam" is the ASCII-folded form of "sattānaṁ" in the test document.
@@ -1200,6 +1381,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         let (count, results) = searcher.search_suttas_with_count("jaramaranam", &filters, 10, 0).unwrap();
@@ -1266,6 +1448,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         let (count, results) = searcher.search_suttas_with_count("vinnanam", &filters, 10, 0).unwrap();
@@ -1295,6 +1478,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         let result = searcher.debug_query("test", &filters).unwrap();
@@ -1375,6 +1559,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         // suffix "1.1" matches uids ending in "1.1" — only "an1.1/en/sujato" if we
@@ -1426,6 +1611,7 @@ mod tests {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         };
 
         let mut subqueries: Vec<(Occur, Box<dyn tantivy::query::Query>)> = Vec::new();

@@ -28,6 +28,12 @@ pub struct SearchFilters {
     /// `include_bold_definitions`. Only consulted by the dict path.
     #[serde(default)]
     pub dict_source_uids: Option<Vec<String>>,
+    /// When `true`, each matched page record is expanded into one
+    /// `SearchResult` per matched occurrence (focal-highlighted). Only the
+    /// Suttas and Library indexes honour this; the Dict path stays
+    /// single-snippet. See docs/search-snippet-highlight-pipeline.md.
+    #[serde(default)]
+    pub show_all_snippets: bool,
 }
 
 fn default_true() -> bool { true }
@@ -48,6 +54,7 @@ impl Default for SearchFilters {
             include_ms_mula: true,
             include_bold_definitions: true,
             dict_source_uids: None,
+            show_all_snippets: false,
         }
     }
 }

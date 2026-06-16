@@ -1973,6 +1973,7 @@ impl qobject::SuttaBridge {
                 include_ms_mula: params.include_ms_mula,
                 include_bold_definitions: params.include_comm_bold_definitions,
                 dict_source_uids: params.dict_source_uids.clone(),
+                show_all_snippets: false,
             };
 
             let result = with_fulltext_searcher(|searcher| {
