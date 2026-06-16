@@ -404,6 +404,9 @@ int start(int argc, char* argv[]) {
 #endif
 
   QQuickStyle::setStyle("Fusion");
+  // QQuickStyle::setStyle("Universal");
+  // QQuickStyle::setStyle("Basic");
+  // QQuickStyle::setStyle("Imagine");
 
   QCoreApplication::setApplicationName("simsapa-ng");
   // NOTE: Don't use setOrganizationName(), because Qt adds it as a folder to the internal storage path.

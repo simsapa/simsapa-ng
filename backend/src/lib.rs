@@ -197,6 +197,18 @@ pub extern "C" fn init_app_data() {
         APP_DATA.set(app_data).expect("Can't set AppData");
         info("init_appdata() end");
 
+        // TEMPORARY (testing): force-enable the three Settings → Rendering
+        // toggles so they can be exercised without opening the Settings
+        // window. Persists them as `true` so subsequent reads see them
+        // enabled. Remove once the rendering settings have been verified.
+        // {
+        //     let app_data = get_app_data();
+        //     app_data.set_render_use_flat_results_background(true);
+        //     app_data.set_render_disable_results_clip(true);
+        //     app_data.set_render_loop_basic(true);
+        //     info("Forced render settings enabled for testing");
+        // }
+
         // Background fallback warm: if any of the five caches are empty
         // (legacy DB, or bootstrap warm did not run), recompute them off
         // the GUI thread. APP_DATA is already set, so the worker can call

@@ -367,11 +367,14 @@ ApplicationWindow {
                     width: visible ? implicitWidth : 0
                 }
 
-                TabButton {
-                    text: "Rendering"
-                    padding: 5
-                    visible: root.is_mobile
-                }
+                // NOTE: Commented out because when the rendering problems are seen, even this menu is inaccessible,
+                // so we manually set the variables in init_app_data() for test builds.
+                //
+                // TabButton {
+                //     text: "Rendering"
+                //     padding: 5
+                //     visible: root.is_mobile
+                // }
             }
 
             StackLayout {
