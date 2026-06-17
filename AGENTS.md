@@ -95,6 +95,21 @@ Notable feature docs:
   the punctuation-bearing rendered HTML). Pairs with the bootstrap-time
   normalization in
   [text-processing-for-contains-match-and-fulltext-match-search.md](./docs/text-processing-for-contains-match-and-fulltext-match-search.md).
+- [Localhost API search endpoints](./docs/localhost-api-search-endpoints.md) —
+  the four Rocket search routes in `bridges/src/api.rs`: general `POST /search`
+  (area-specific default mode, exact `SearchMode`/`SearchArea` serde names,
+  HTTP 400 on unknown mode/area), `POST /suttas_fulltext_search` (FulltextMatch),
+  `POST /suttas_contains_search` (ContainsMatch), and `POST /dict_combined_search`
+  (DpdLookup + deconstructor). Covers the request/response JSON, the shared
+  helpers (`parse_search_mode`/`parse_search_area`, `build_search_params`,
+  `run_search`, `run_suttas_search`), pagination + `show_all_snippets` /
+  `snippet_exclude` pass-through, the named-route sutta-reference → `UidMatch`
+  auto-detect (and why `/search` is strict), the **Dictionary `Combined` →
+  `DpdLookup` remap** (query_task rejects `Combined + Dictionary`), and the
+  **lazy, idempotent, mode-gated `init_fulltext_searcher()`** in `run_search`
+  (shared process-global searcher; not eager at `start_webserver()` to avoid
+  reconcile-write contention). Pairs with
+  [search-snippet-highlight-pipeline.md](./docs/search-snippet-highlight-pipeline.md).
 
 ## Specific coding procedures
 
