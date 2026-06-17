@@ -76,6 +76,7 @@ ApplicationWindow {
 
     // Collapsible advanced sub-sections
     property bool is_filters_collapsed: false
+    property bool is_ms_cst_sources_collapsed: true
     property bool is_dictionaries_collapsed: false
 
     property string last_query_text: ""
@@ -2562,6 +2563,39 @@ ${query_text}`;
                 }
             }
 
+            } // end Flow filters_flow
+
+            // --- MS/CST Sources sub-section header ---
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 4
+                visible: search_bar_input.search_area === "Suttas"
+
+                Button {
+                    flat: true
+                    icon.source: root.is_ms_cst_sources_collapsed ? "icons/32x32/fa_chevron-right-solid.png" : "icons/32x32/fa_chevron-down-solid.png"
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: root.is_ms_cst_sources_collapsed = !root.is_ms_cst_sources_collapsed
+                }
+
+                Label {
+                    text: "MS/CST Sources"
+                    font.pointSize: root.is_mobile ? 12 : 10
+                    font.bold: true
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            // --- MS/CST Sources content wrapper ---
+            Flow {
+                id: ms_cst_sources_flow
+                Layout.fillWidth: true
+                spacing: 8
+                visible: !root.is_ms_cst_sources_collapsed && search_bar_input.search_area === "Suttas"
+
             RowLayout {
                 spacing: 2
                 visible: search_bar_input.search_area === "Suttas"
@@ -2700,7 +2734,7 @@ ${query_text}`;
                 }
             }
 
-            } // end Flow filters_flow
+            } // end Flow ms_cst_sources_flow
 
             // --- Dictionaries sub-section header ---
             RowLayout {
