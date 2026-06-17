@@ -2499,21 +2499,43 @@ ${query_text}`;
                         root.advanced_options_changed();
                     }
                 }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "Show All Snippets";
+                        info_dialog.message = "Show all the matched snippets within a result text, not only one snippet per result.";
+                        info_dialog.open();
+                    }
+                }
             }
 
             RowLayout {
                 spacing: 4
                 visible: search_bar_input.search_area === "Suttas" || search_bar_input.search_area === "Library"
 
+                // The label is in a separate row because both the label text and the snippet_exclude_input is longer.
+                // Give the label the input field's height (this RowLayout is a child
+                // of a Flow, so Layout.* on the RowLayout itself is ignored; the
+                // height must come from a child, as it does for the TextField rows).
                 Label {
                     text: "Exclude snippets containing:"
                     font.pointSize: root.is_mobile ? 12 : 10
-                    Layout.alignment: Qt.AlignVCenter
+                    Layout.preferredHeight: root.icon_size
+                    verticalAlignment: Text.AlignVCenter
                 }
+            }
+
+            RowLayout {
+                spacing: 4
+                visible: search_bar_input.search_area === "Suttas" || search_bar_input.search_area === "Library"
 
                 TextField {
                     id: snippet_exclude_input
-                    placeholderText: "e.g. pajahitvā, na upādiyati"
+                    placeholderText: "e.g. kiñca, na meso"
                     Layout.preferredWidth: 200
                     Layout.preferredHeight: root.icon_size
                     font.pointSize: root.is_mobile ? 12 : 10
@@ -2524,6 +2546,18 @@ ${query_text}`;
                     onTextChanged: {
                         root.snippet_exclude_text = text;
                         advanced_options_debounce_timer.restart();
+                    }
+                }
+
+                Button {
+                    icon.source: "icons/32x32/fa_circle-info-solid.png"
+                    flat: true
+                    implicitWidth: root.icon_size
+                    implicitHeight: root.icon_size
+                    onClicked: {
+                        info_dialog.title = "Exclude snippets containing";
+                        info_dialog.message = "Comma-separated list of terms. A text result snippet will be excluded from the result page if it contains any of the terms.";
+                        info_dialog.open();
                     }
                 }
             }
