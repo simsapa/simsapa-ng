@@ -39,6 +39,11 @@ pub struct ApiSearchResult {
 }
 
 /// Request body for POST search endpoints
+///
+/// All fields beyond `query_text` are optional; serde deserializes missing
+/// `Option` fields to `None`, so existing clients that omit `mode`,
+/// `search_area`, `page_len`, `show_all_snippets`, or `snippet_exclude` keep
+/// working unchanged. See docs/localhost-api-search-endpoints.md.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApiSearchRequest {
     pub query_text: String,
@@ -49,6 +54,17 @@ pub struct ApiSearchRequest {
     pub dict_lang_include: Option<bool>,
     pub dict_dict: Option<String>,
     pub dict_dict_include: Option<bool>,
+    /// Exact `SearchMode` serde label, e.g. "Fulltext Match", "Contains Match",
+    /// "Combined", "DPD Lookup". Parsed via `parse_search_mode`.
+    pub mode: Option<String>,
+    /// Exact `SearchArea` serde label: "Suttas", "Library", "Dictionary".
+    /// Parsed via `parse_search_area`.
+    pub search_area: Option<String>,
+    pub page_len: Option<i32>,
+    pub show_all_snippets: Option<bool>,
+    /// Already-split list of exclusion strings (the API client sends an array,
+    /// not a CSV string; CSV-splitting is a QML/UI concern).
+    pub snippet_exclude: Option<Vec<String>>,
 }
 
 /// Response structure for /sutta_and_dict_search_options endpoint
@@ -63,6 +79,34 @@ pub struct SearchOptions {
 #[derive(Debug, Clone, Deserialize)]
 pub struct LookupWindowRequest {
     pub query_text: String,
+}
+
+/// Map a request `mode` string (exact `SearchMode` serde label) to the enum.
+/// Returns `None` for an unrecognized value (caller returns HTTP 400).
+fn parse_search_mode(s: &str) -> Option<SearchMode> {
+    match s {
+        "Combined" => Some(SearchMode::Combined),
+        "Fulltext Match" => Some(SearchMode::FulltextMatch),
+        "Contains Match" => Some(SearchMode::ContainsMatch),
+        "Headword Match" => Some(SearchMode::HeadwordMatch),
+        "Title Match" => Some(SearchMode::TitleMatch),
+        "DPD ID Match" => Some(SearchMode::DpdIdMatch),
+        "DPD Lookup" => Some(SearchMode::DpdLookup),
+        "Uid Match" => Some(SearchMode::UidMatch),
+        "RegEx Match" => Some(SearchMode::RegExMatch),
+        _ => None,
+    }
+}
+
+/// Map a request `search_area` string (exact `SearchArea` serde label) to the
+/// enum. Returns `None` for an unrecognized value (caller returns HTTP 400).
+fn parse_search_area(s: &str) -> Option<SearchArea> {
+    match s {
+        "Suttas" => Some(SearchArea::Suttas),
+        "Library" => Some(SearchArea::Library),
+        "Dictionary" => Some(SearchArea::Dictionary),
+        _ => None,
+    }
 }
 
 pub static APP_GLOBALS_API: OnceLock<AppGlobals> = OnceLock::new();
@@ -915,132 +959,43 @@ fn get_search_options(dbm: &State<Arc<DbManager>>) -> Json<SearchOptions> {
     })
 }
 
-/// POST /suttas_fulltext_search
-/// Search suttas using ContainsMatch (placeholder for fulltext search)
-#[post("/suttas_fulltext_search", data = "<request>")]
-fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
-    let query_text_orig = request.query_text.clone();
-    let page_num = request.page_num.unwrap_or(0) as usize;
-
-    // Build language filter - only apply if not "Languages" (the default placeholder)
-    let lang_filter = match &request.suttas_lang {
-        Some(lang) if lang != "Languages" && lang != "Language" && !lang.is_empty() => Some(lang.clone()),
-        _ => None,
-    };
-    let lang_include = request.suttas_lang_include.unwrap_or(true);
-
-    // Check if query is a sutta reference pattern (e.g., "sn56.11", "MN 44", "dhp182")
-    // query_text_to_uid_field_query returns "uid:..." if it's a UID/reference pattern
-    let uid_query = query_text_to_uid_field_query(&query_text_orig);
-    let (query_text, search_mode) = if uid_query.starts_with("uid:") {
-        (uid_query, SearchMode::UidMatch)
-    } else {
-        (query_text_orig.clone(), SearchMode::ContainsMatch)
-    };
-
-    info(&format!("suttas_fulltext_search(): query='{}', page={}, lang={:?}, include={}, mode={:?}",
-                  query_text, page_num, lang_filter, lang_include, search_mode));
-
-    // Create search params - use UidMatch for reference patterns, ContainsMatch otherwise
-    let params = SearchParams {
-        mode: search_mode,
-        page_len: Some(20), // Browser extension uses 20 results per page
-        lang: lang_filter,
-        lang_include,
-        source: None,
-        source_include: true,
-        enable_regex: false,
-        fuzzy_distance: 0,
-        include_cst_mula: true,
-        include_cst_commentary: true,
-        nikaya_prefix: None,
-        uid_prefix: None,
-        uid_suffix: None,
-        include_ms_mula: true,
-        include_comm_bold_definitions: true,
-        dict_source_uids: None,
-        show_all_snippets: false,
-        snippet_exclude: None,
-    };
-
-    // Create and execute search task
-    let mut search_task = SearchQueryTask::new(
-        dbm.inner(),
-        query_text,
-        params,
-        SearchArea::Suttas,
-    );
-
-    match search_task.results_page(page_num) {
-        Ok(results) => {
-            let hits = search_task.total_hits() as i32;
-            Json(ApiSearchResult {
-                hits,
-                results,
-                deconstructor: None, // Not applicable for sutta search
-            })
+/// Build a `SearchParams` from the request, the resolved `mode`, and the search
+/// `area`. For Suttas/Library this applies the suttas language filter; for
+/// Dictionary it applies the dict language + source filters. `page_len`
+/// defaults to 20 (the browser-extension default). `show_all_snippets` /
+/// `snippet_exclude` are read straight from the request (the backend only
+/// applies them for Suttas/Library). All other fields keep their defaults.
+/// See docs/localhost-api-search-endpoints.md.
+fn build_search_params(request: &ApiSearchRequest, mode: SearchMode, area: &SearchArea) -> SearchParams {
+    // "Languages"/"Language" (and empty) are the no-filter placeholders; same
+    // for "Dictionaries"/"Dictionary" on the source filter.
+    let (lang, lang_include, source, source_include) = match area {
+        SearchArea::Dictionary => {
+            let lang = match &request.dict_lang {
+                Some(lang) if lang != "Languages" && lang != "Language" && !lang.is_empty() => Some(lang.clone()),
+                _ => None,
+            };
+            let source = match &request.dict_dict {
+                Some(source) if source != "Dictionaries" && source != "Dictionary" && !source.is_empty() => Some(source.clone()),
+                _ => None,
+            };
+            (lang, request.dict_lang_include.unwrap_or(true), source, request.dict_dict_include.unwrap_or(true))
         }
-        Err(e) => {
-            error(&format!("suttas_fulltext_search error: {}", e));
-            Json(ApiSearchResult {
-                hits: 0,
-                results: Vec::new(),
-                deconstructor: None,
-            })
+        _ => {
+            let lang = match &request.suttas_lang {
+                Some(lang) if lang != "Languages" && lang != "Language" && !lang.is_empty() => Some(lang.clone()),
+                _ => None,
+            };
+            (lang, request.suttas_lang_include.unwrap_or(true), None, true)
         }
-    }
-}
-
-/// POST /dict_combined_search
-/// Search dictionary words with language and source filtering, includes deconstructor results
-#[post("/dict_combined_search", data = "<request>")]
-fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
-    let query_text_orig = request.query_text.clone();
-    let page_num = request.page_num.unwrap_or(0) as usize;
-
-    // Build language filter - only apply if not "Languages" (the default placeholder)
-    let lang_filter = match &request.dict_lang {
-        Some(lang) if lang != "Languages" && lang != "Language" && !lang.is_empty() => Some(lang.clone()),
-        _ => None,
-    };
-    let lang_include = request.dict_lang_include.unwrap_or(true);
-
-    // Build source filter - only apply if not "Dictionaries" (the default placeholder)
-    let source_filter = match &request.dict_dict {
-        Some(source) if source != "Dictionaries" && source != "Dictionary" && !source.is_empty() => Some(source.clone()),
-        _ => None,
-    };
-    let source_include = request.dict_dict_include.unwrap_or(true);
-
-    // Check if query is a UID pattern (e.g., "dhamma 1.01", "dhamma 1.01/dpd", "123/dpd")
-    // query_text_to_uid_field_query returns "uid:..." if it's a UID pattern
-    let uid_query = query_text_to_uid_field_query(&query_text_orig);
-    let (query_text, search_mode) = if uid_query.starts_with("uid:") {
-        (uid_query, SearchMode::UidMatch)
-    } else {
-        // Use DpdLookup as the default mode for dictionary search (same as SuttaSearchWindow QML)
-        // This searches DPD headwords by lemma rather than doing a broad contains search
-        (query_text_orig.clone(), SearchMode::DpdLookup)
     };
 
-    info(&format!("dict_combined_search(): query='{}', page={}, lang={:?}, source={:?}, mode={:?}",
-                  query_text, page_num, lang_filter, source_filter, search_mode));
-
-    // Get deconstructor results for the original query (not the uid: prefixed version)
-    let deconstructor_results = dbm.dpd.dpd_deconstructor_list(&query_text_orig);
-    let deconstructor = if deconstructor_results.is_empty() {
-        None
-    } else {
-        Some(deconstructor_results)
-    };
-
-    // Create search params - use UidMatch for UID patterns, ContainsMatch otherwise
-    let params = SearchParams {
-        mode: search_mode,
-        page_len: Some(20), // Browser extension uses 20 results per page
-        lang: lang_filter,
+    SearchParams {
+        mode,
+        page_len: Some(request.page_len.unwrap_or(20) as usize),
+        lang,
         lang_include,
-        source: source_filter,
+        source,
         source_include,
         enable_regex: false,
         fuzzy_distance: 0,
@@ -1052,36 +1007,181 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
         include_ms_mula: true,
         include_comm_bold_definitions: true,
         dict_source_uids: None,
-        show_all_snippets: false,
-        snippet_exclude: None,
-    };
+        show_all_snippets: request.show_all_snippets.unwrap_or(false),
+        snippet_exclude: request.snippet_exclude.clone(),
+    }
+}
 
-    // Create and execute search task
-    let mut search_task = SearchQueryTask::new(
-        dbm.inner(),
-        query_text,
-        params,
-        SearchArea::Dictionary,
-    );
+/// Construct and run a `SearchQueryTask`, returning the API JSON. On error this
+/// logs and returns an empty result set (preserving the prior route behaviour).
+///
+/// Lazily initializes the process-global fulltext searcher (idempotent,
+/// mode-gated) immediately before running FulltextMatch / Combined queries: the
+/// webserver shares the GUI's `FULLTEXT_SEARCHER`, and the query path returns
+/// silent-empty if it was never initialized (e.g. a curl request before QML
+/// `load_searcher` ran). Non-fulltext modes never touch the index.
+/// See docs/localhost-api-search-endpoints.md.
+fn run_search(
+    dbm: &Arc<DbManager>,
+    query_text: String,
+    params: SearchParams,
+    area: SearchArea,
+    page_num: usize,
+    deconstructor: Option<Vec<String>>,
+) -> Json<ApiSearchResult> {
+    if matches!(params.mode, SearchMode::FulltextMatch | SearchMode::Combined) {
+        simsapa_backend::init_fulltext_searcher();
+    }
+
+    let mut search_task = SearchQueryTask::new(dbm, query_text, params, area);
 
     match search_task.results_page(page_num) {
         Ok(results) => {
             let hits = search_task.total_hits() as i32;
-            Json(ApiSearchResult {
-                hits,
-                results,
-                deconstructor,
-            })
+            Json(ApiSearchResult { hits, results, deconstructor })
         }
         Err(e) => {
-            error(&format!("dict_combined_search error: {}", e));
-            Json(ApiSearchResult {
-                hits: 0,
-                results: Vec::new(),
-                deconstructor,
-            })
+            error(&format!("run_search error: {}", e));
+            Json(ApiSearchResult { hits: 0, results: Vec::new(), deconstructor })
         }
     }
+}
+
+/// Shared body for the named Suttas search routes. Runs the sutta-reference →
+/// `UidMatch` auto-detect (`query_text_to_uid_field_query`); for ordinary
+/// queries it uses `fallback_mode` (FulltextMatch for `/suttas_fulltext_search`,
+/// ContainsMatch for `/suttas_contains_search`). Builds params via
+/// `build_search_params` and executes via `run_search` (deconstructor `None`).
+/// See docs/localhost-api-search-endpoints.md.
+fn run_suttas_search(request: &ApiSearchRequest, dbm: &Arc<DbManager>, fallback_mode: SearchMode) -> Json<ApiSearchResult> {
+    let query_text_orig = request.query_text.clone();
+    let page_num = request.page_num.unwrap_or(0) as usize;
+
+    // Reference auto-detect: query_text_to_uid_field_query returns "uid:..." for
+    // reference-like queries (e.g. "sn56.11", "MN 44", "dhp182").
+    let uid_query = query_text_to_uid_field_query(&query_text_orig);
+    let (query_text, mode) = if uid_query.starts_with("uid:") {
+        (uid_query, SearchMode::UidMatch)
+    } else {
+        (query_text_orig, fallback_mode)
+    };
+
+    info(&format!("run_suttas_search(): query='{}', page={}, mode={:?}", query_text, page_num, mode));
+
+    let params = build_search_params(request, mode, &SearchArea::Suttas);
+    run_search(dbm, query_text, params, SearchArea::Suttas, page_num, None)
+}
+
+/// POST /suttas_fulltext_search
+/// Search suttas using FulltextMatch (tantivy), or UidMatch for reference-like
+/// queries. See docs/localhost-api-search-endpoints.md.
+#[post("/suttas_fulltext_search", data = "<request>")]
+fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
+    run_suttas_search(&request, dbm.inner(), SearchMode::FulltextMatch)
+}
+
+/// POST /suttas_contains_search
+/// Search suttas using ContainsMatch (literal substring), or UidMatch for
+/// reference-like queries. See docs/localhost-api-search-endpoints.md.
+#[post("/suttas_contains_search", data = "<request>")]
+fn suttas_contains_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
+    run_suttas_search(&request, dbm.inner(), SearchMode::ContainsMatch)
+}
+
+/// POST /search
+/// General search route: runs any `mode` in any `search_area`. `search_area`
+/// defaults to "Suttas"; `mode` defaults per area (Suttas/Library →
+/// "Fulltext Match", Dictionary → "Combined"). An unrecognized `mode` /
+/// `search_area` returns HTTP 400. Unlike the named convenience routes, `/search`
+/// honors the requested mode strictly (no reference → UidMatch override).
+/// See docs/localhost-api-search-endpoints.md.
+#[post("/search", data = "<request>")]
+fn search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Result<Json<ApiSearchResult>, (Status, String)> {
+    let query_text_orig = request.query_text.clone();
+    let page_num = request.page_num.unwrap_or(0) as usize;
+
+    // Resolve search area: default Suttas, unknown → 400.
+    let area = match &request.search_area {
+        Some(s) => parse_search_area(s)
+            .ok_or_else(|| (Status::BadRequest, format!("Unknown search_area: '{}'", s)))?,
+        None => SearchArea::Suttas,
+    };
+
+    // Resolve mode: parse if present (unknown → 400), else area-specific default
+    // (Suttas/Library → FulltextMatch, Dictionary → Combined).
+    let mode = match &request.mode {
+        Some(m) => parse_search_mode(m)
+            .ok_or_else(|| (Status::BadRequest, format!("Unknown mode: '{}'", m)))?,
+        None => match area {
+            SearchArea::Dictionary => SearchMode::Combined,
+            _ => SearchMode::FulltextMatch,
+        },
+    };
+
+    // Dictionary "Combined" is bridge-orchestrated and must NOT reach
+    // SearchQueryTask as Combined (it errors there). Map it to the
+    // /dict_combined_search behaviour: UID pattern → UidMatch, else DpdLookup.
+    // For Suttas/Library, Combined is handled inside results_page (→ FulltextMatch).
+    let (query_text, mode) = if area == SearchArea::Dictionary && mode == SearchMode::Combined {
+        let uid_query = query_text_to_uid_field_query(&query_text_orig);
+        if uid_query.starts_with("uid:") {
+            (uid_query, SearchMode::UidMatch)
+        } else {
+            (query_text_orig.clone(), SearchMode::DpdLookup)
+        }
+    } else {
+        (query_text_orig.clone(), mode)
+    };
+
+    // Dictionary returns the deconstructor (same as /dict_combined_search),
+    // computed on the original query; for Suttas/Library it is None.
+    let deconstructor = if area == SearchArea::Dictionary {
+        let deconstructor_results = dbm.dpd.dpd_deconstructor_list(&query_text_orig);
+        if deconstructor_results.is_empty() {
+            None
+        } else {
+            Some(deconstructor_results)
+        }
+    } else {
+        None
+    };
+
+    info(&format!("search(): query='{}', page={}, area={:?}, mode={:?}", query_text, page_num, area, mode));
+
+    let params = build_search_params(&request, mode, &area);
+    Ok(run_search(dbm.inner(), query_text, params, area, page_num, deconstructor))
+}
+
+/// POST /dict_combined_search
+/// Search dictionary words with language and source filtering, includes deconstructor results
+#[post("/dict_combined_search", data = "<request>")]
+fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
+    let query_text_orig = request.query_text.clone();
+    let page_num = request.page_num.unwrap_or(0) as usize;
+
+    // Check if query is a UID pattern (e.g., "dhamma 1.01", "dhamma 1.01/dpd", "123/dpd").
+    // query_text_to_uid_field_query returns "uid:..." if it's a UID pattern; otherwise
+    // DpdLookup is the default (same as SuttaSearchWindow QML) — searches DPD headwords
+    // by lemma rather than a broad contains search.
+    let uid_query = query_text_to_uid_field_query(&query_text_orig);
+    let (query_text, mode) = if uid_query.starts_with("uid:") {
+        (uid_query, SearchMode::UidMatch)
+    } else {
+        (query_text_orig.clone(), SearchMode::DpdLookup)
+    };
+
+    // Deconstructor results for the original query (not the uid: prefixed version).
+    let deconstructor_results = dbm.dpd.dpd_deconstructor_list(&query_text_orig);
+    let deconstructor = if deconstructor_results.is_empty() {
+        None
+    } else {
+        Some(deconstructor_results)
+    };
+
+    info(&format!("dict_combined_search(): query='{}', page={}, mode={:?}", query_text, page_num, mode));
+
+    let params = build_search_params(&request, mode, &SearchArea::Dictionary);
+    run_search(dbm.inner(), query_text, params, SearchArea::Dictionary, page_num, deconstructor)
 }
 
 /// GET /suttas/<uid>
@@ -1305,7 +1405,9 @@ pub async extern "C" fn start_webserver() {
             next_sutta,
             // Browser Extension API routes
             get_search_options,
+            search,
             suttas_fulltext_search,
+            suttas_contains_search,
             dict_combined_search,
             open_sutta_by_uid,
             lookup_window_query_post,
@@ -1406,5 +1508,28 @@ pub extern "C" fn shutdown_webserver_tcp() {
         Err(e) => {
             error(&format!("Error connecting to server: {}", e));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_search_mode() {
+        assert_eq!(parse_search_mode("Fulltext Match"), Some(SearchMode::FulltextMatch));
+        assert_eq!(parse_search_mode("Contains Match"), Some(SearchMode::ContainsMatch));
+        assert_eq!(parse_search_mode("Combined"), Some(SearchMode::Combined));
+        assert_eq!(parse_search_mode("DPD Lookup"), Some(SearchMode::DpdLookup));
+        assert_eq!(parse_search_mode("Uid Match"), Some(SearchMode::UidMatch));
+        assert_eq!(parse_search_mode("nonsense"), None);
+    }
+
+    #[test]
+    fn test_parse_search_area() {
+        assert_eq!(parse_search_area("Suttas"), Some(SearchArea::Suttas));
+        assert_eq!(parse_search_area("Library"), Some(SearchArea::Library));
+        assert_eq!(parse_search_area("Dictionary"), Some(SearchArea::Dictionary));
+        assert_eq!(parse_search_area("nonsense"), None);
     }
 }
