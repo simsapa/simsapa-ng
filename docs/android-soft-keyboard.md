@@ -86,13 +86,8 @@ the whole chain (platform detection, focus gating, tap → focus, repeated
   on. (Compare the closely related ChromeOS-only Flutter issue #104031: after
   focusing a field, key events aren't delivered to the view.)
 
-**Experiment in progress:** `android:windowSoftInputMode="adjustResize|stateVisible"`
-was added to the `<activity>` in `android/AndroidManifest.xml` to nudge the IME
-to show on window focus. Low confidence (it should not beat the hardware-keyboard
-suppression), pending on-device confirmation — there is no local repro (no
-Chromebook). If it does not help, the documented user workaround is to enable the
-ChromeOS on-screen keyboard; do not keep adding QML-side retry logic, which
-cannot affect this.
+We tried adding `android:windowSoftInputMode="adjustResize|stateVisible"` to the
+`<activity>` in `android/AndroidManifest.xml` but it did not fix the issue.
 
 ## How to apply it
 
