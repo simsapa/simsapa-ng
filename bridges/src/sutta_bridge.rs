@@ -19,6 +19,7 @@ use simsapa_backend::helpers::{extract_words, normalize_query_text, query_text_t
 use simsapa_backend::prompt_utils::markdown_to_html;
 use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_log_level_str};
 use simsapa_backend::topic_index;
+use simsapa_backend::update_checker;
 use simsapa_backend::types::SearchResult;
 
 /// Cache for search result pages to avoid re-querying for previously fetched pages.
@@ -123,6 +124,23 @@ fn format_category_errors(errs: &[(String, String)]) -> String {
         .map(|(cat, msg)| format!("{}: {}", cat, msg))
         .collect::<Vec<_>>()
         .join("\n")
+}
+
+/// Resolve the highest assets release that is compatible with the running app
+/// version, used to build the GitHub asset download URLs (appdata / dictionaries
+/// / DPD / index / per-language archives).
+///
+/// Prefers the live releases info stored in the process-global (populated by a
+/// successful `check_for_updates()`), and falls back to the embedded snapshot
+/// (`assets/releases-fallback.json`) when the global is empty — e.g. the server
+/// was unreachable, or no update check ran this session because update
+/// notifications are disabled. This is why language downloads from
+/// `SuttaLanguagesWindow` keep working offline without an explicit update check.
+fn compatible_assets_release() -> Option<update_checker::ReleaseEntry> {
+    let releases_info = simsapa_backend::try_get_releases_info()
+        .or_else(update_checker::get_fallback_releases_info)?;
+    let app_version = update_checker::to_version(&update_checker::get_app_version()).ok()?;
+    update_checker::get_latest_app_compatible_assets_release(&releases_info, &app_version).cloned()
 }
 
 fn fetch_and_cache_page(
@@ -3853,14 +3871,34 @@ impl qobject::SuttaBridge {
                     info
                 },
                 Err(e) => {
-                    let error_msg = format!("Failed to fetch updates: {}", e);
-                    error(&error_msg);
-                    qt_thread.queue(move |mut qo| {
-                        qo.as_mut().update_check_error(QString::from(error_msg));
-                        qo.as_mut().releases_check_completed();
-                    }).unwrap();
-                    info("SuttaBridge::check_for_updates() - fetch error");
-                    return;
+                    // The live fetch from the releases server failed (e.g. no
+                    // network). Fall back to the embedded snapshot so the app can
+                    // still resolve compatible asset download URLs for setup /
+                    // language downloads. The actual asset download is attempted
+                    // separately (AssetManager), and any network failure there is
+                    // surfaced to the user from that path.
+                    match update_checker::get_fallback_releases_info() {
+                        Some(fallback_info) => {
+                            warn(&format!(
+                                "Failed to fetch releases info ({}), using embedded fallback",
+                                e
+                            ));
+                            simsapa_backend::set_releases_info(fallback_info.clone());
+                            fallback_info
+                        }
+                        None => {
+                            // Neither the server nor the embedded fallback is
+                            // usable: report the failure to the user.
+                            let error_msg = format!("Failed to fetch updates: {}", e);
+                            error(&error_msg);
+                            qt_thread.queue(move |mut qo| {
+                                qo.as_mut().update_check_error(QString::from(error_msg));
+                                qo.as_mut().releases_check_completed();
+                            }).unwrap();
+                            info("SuttaBridge::check_for_updates() - fetch error, no fallback");
+                            return;
+                        }
+                    }
                 }
             };
 
@@ -4130,43 +4168,21 @@ impl qobject::SuttaBridge {
     }
 
     /// Get the version_tag of the highest compatible assets release.
-    /// Returns empty string if releases info has not been fetched or no compatible release found.
+    /// Returns empty string if no compatible release can be determined.
     pub fn get_compatible_asset_version_tag(&self) -> QString {
-        use simsapa_backend::update_checker;
-
-        // Try to get the releases info from the global
-        if let Some(releases_info) = simsapa_backend::try_get_releases_info() {
-            let app_version_str = update_checker::get_app_version();
-            if let Ok(app_version) = update_checker::to_version(&app_version_str) {
-                // Find the latest compatible assets release
-                if let Some(release) = update_checker::get_latest_app_compatible_assets_release(&releases_info, &app_version) {
-                    return QString::from(&release.version_tag);
-                }
-            }
+        match compatible_assets_release() {
+            Some(release) => QString::from(&release.version_tag),
+            None => QString::from(""),
         }
-
-        // Return empty string when releases info is not available
-        QString::from("")
     }
 
     /// Get the github_repo of the highest compatible assets release.
-    /// Returns empty string if releases info has not been fetched or no compatible release found.
+    /// Returns empty string if no compatible release can be determined.
     pub fn get_compatible_asset_github_repo(&self) -> QString {
-        use simsapa_backend::update_checker;
-
-        // Try to get the releases info from the global
-        if let Some(releases_info) = simsapa_backend::try_get_releases_info() {
-            let app_version_str = update_checker::get_app_version();
-            if let Ok(app_version) = update_checker::to_version(&app_version_str) {
-                // Find the latest compatible assets release
-                if let Some(release) = update_checker::get_latest_app_compatible_assets_release(&releases_info, &app_version) {
-                    return QString::from(&release.github_repo);
-                }
-            }
+        match compatible_assets_release() {
+            Some(release) => QString::from(&release.github_repo),
+            None => QString::from(""),
         }
-
-        // Return empty string when releases info is not available
-        QString::from("")
     }
 
     // =========================================================================

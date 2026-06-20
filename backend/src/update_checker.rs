@@ -35,6 +35,15 @@ use serde::{Deserialize, Serialize};
 
 use crate::logger::info;
 
+/// Embedded fallback releases info.
+///
+/// This is a snapshot of the releases API JSON response, refreshed manually with
+/// the CLI `update-releases-fallback` command after the server data is updated.
+/// It is used when every attempt to fetch live releases info from the server
+/// fails (e.g. no network during first-run setup), so the app can still resolve
+/// compatible asset download URLs.
+static FALLBACK_RELEASES_INFO_JSON: &str = include_str!("../../assets/releases-fallback.json");
+
 /// Behaviour for saving statistics when fetching releases info.
 ///
 /// This enum controls whether system information is sent to the server
@@ -360,7 +369,7 @@ pub fn is_app_version_compatible_with_db_version(app: &Version, db: &Version) ->
 // ============================================================================
 
 /// API endpoint for fetching release information
-const RELEASES_API_URL: &str = "https://simsapa.eu.pythonanywhere.com/releases";
+pub const RELEASES_API_URL: &str = "https://simsapa.eu.pythonanywhere.com/releases";
 
 /// Request timeout in seconds
 const REQUEST_TIMEOUT_SECS: u64 = 30;
@@ -553,6 +562,20 @@ pub fn fetch_releases_info(screen_size: Option<&str>, save_stats_behaviour: Save
         .map_err(|e| anyhow!("Failed to parse releases response: {}", e))?;
 
     Ok(releases_info)
+}
+
+/// Parse the embedded fallback releases info snapshot.
+///
+/// Returns `None` only if the bundled JSON cannot be parsed (which would be a
+/// build-time data error).
+pub fn get_fallback_releases_info() -> Option<ReleasesInfo> {
+    match serde_json::from_str::<ReleasesInfo>(FALLBACK_RELEASES_INFO_JSON) {
+        Ok(info) => Some(info),
+        Err(e) => {
+            crate::logger::error(&format!("Failed to parse embedded fallback releases info: {}", e));
+            None
+        }
+    }
 }
 
 /// Check if there's an application update available.

@@ -110,6 +110,27 @@ Notable feature docs:
   (shared process-global searcher; not eager at `start_webserver()` to avoid
   reconcile-write contention). Pairs with
   [search-snippet-highlight-pipeline.md](./docs/search-snippet-highlight-pipeline.md).
+- [Releases info lookup and the embedded fallback JSON](./docs/releases-info-and-fallback.md) —
+  how the app obtains **releases info** (the `github_repo` / `version_tag` used
+  to build GitHub asset download URLs for setup and language downloads). The live
+  source is the pythonanywhere `POST /releases` endpoint
+  (`fetch_releases_info()`, strict — `Err` on any failure); the bundled
+  `assets/releases-fallback.json` (`FALLBACK_RELEASES_INFO_JSON` /
+  `get_fallback_releases_info()`, `include_str!`, mirrors `PROVIDERS_JSON`) is
+  used only when the live fetch fails. Covers the `check_for_updates()` decision
+  flow (live → fallback-silent → `update_check_error` only if the fallback itself
+  won't parse), the **independent asset-URL fallback** in
+  `compatible_assets_release()` (`get_compatible_asset_*` prefer the live global
+  but fall back to the embedded snapshot, so `SuttaLanguagesWindow` language
+  downloads resolve URLs offline even when no update check ran),
+  **why a pythonanywhere outage is not a user-facing error** (the
+  fallback covers it; the real user-facing failure is the **asset download**,
+  surfaced by `AssetManager`'s retry loop + `cleanup_on_failure` and
+  `DownloadAppdataWindow.run_download()`'s `error_dialog`), and the manual
+  refresh CLI command `update-releases-fallback` (`cli/src/update_releases_fallback.rs`;
+  `GET …?channel=…&no_stats=true`, validates before writing, rebuild needed to
+  re-embed). The channel comes from `get_release_channel()`
+  (`RELEASE_CHANNEL` env → `AppSettings` → default `simsapa-ng`).
 
 ## Specific coding procedures
 

@@ -1,6 +1,7 @@
 pub mod bootstrap;
 pub mod bootstrap_old;
 pub mod update_provider_models;
+pub mod update_releases_fallback;
 
 use std::path::{Path, PathBuf};
 use std::process::exit;
@@ -1317,7 +1318,32 @@ enum Commands {
         #[arg(long, value_name = "OUTPUT_PATH")]
         output: PathBuf,
     },
+
+    /// Refresh the embedded fallback releases info snapshot
+    /// (assets/releases-fallback.json) from the Simsapa releases API.
+    ///
+    /// Run this manually after updating the server-side releases data. The JSON
+    /// is bundled into the app binary at build time, so a rebuild is required
+    /// for the change to take effect. The request uses no_stats=true so the
+    /// server does not log it.
+    UpdateReleasesFallback {
+        /// Release channel to query
+        #[arg(long, value_name = "CHANNEL", default_value = "simsapa-ng")]
+        channel: String,
+
+        /// Path to write the fallback releases JSON.
+        /// Defaults to the source-tree assets/ folder regardless of the current
+        /// working directory, so the command works when run from cli/.
+        #[arg(long, value_name = "OUTPUT_PATH", default_value = DEFAULT_RELEASES_FALLBACK_PATH)]
+        output: PathBuf,
+    },
 }
+
+/// Default output path for `update-releases-fallback`, resolved at compile time
+/// relative to this crate so it points at the workspace `assets/` folder no
+/// matter where the binary is run from.
+const DEFAULT_RELEASES_FALLBACK_PATH: &str =
+    concat!(env!("CARGO_MANIFEST_DIR"), "/../assets/releases-fallback.json");
 
 /// Enum for the different types of queries available.
 #[derive(ValueEnum, Clone, Debug, PartialEq, Eq)]
@@ -1378,7 +1404,7 @@ fn main() {
 
     // Don't initialize app data for bootstrap commands since they need to create directories first
     match &cli.command {
-        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } | Commands::ImportLanguage { .. } | Commands::UpdateProviderModels { .. } => {
+        Commands::Bootstrap { .. } | Commands::BootstrapOld { .. } | Commands::DhammapadaTipitakaNetExport { .. } | Commands::AppdataStats { .. } | Commands::SuttacentralImportLanguagesList | Commands::SuttacentralLangCodeToName | Commands::ImportEpub { .. } | Commands::ImportHtml { .. } | Commands::ParseCipsIndex { .. } | Commands::ImportLanguage { .. } | Commands::UpdateProviderModels { .. } | Commands::UpdateReleasesFallback { .. } => {
             // Skip app data initialization for bootstrap, export, stats, suttacentral, import, and parse commands
         }
         _ => {
@@ -1498,6 +1524,13 @@ fn main() {
         Commands::UpdateProviderModels { input, output } => {
             update_provider_models::update_provider_models(&input, &output)
                 .map_err(|e| e.to_string())
+        }
+
+        Commands::UpdateReleasesFallback { channel, output } => {
+            update_releases_fallback::update_releases_fallback(&channel, &output)
+                // `{:#}` includes the anyhow context chain (e.g. the underlying
+                // "No such file or directory") instead of just the top message.
+                .map_err(|e| format!("{:#}", e))
         }
 
         Commands::FulltextSearch { query, limit, snippet, lang, source, format, area, output } => {
