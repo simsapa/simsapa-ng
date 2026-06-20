@@ -42,7 +42,7 @@ Item {
     // Keyboard diagnostics: confirm the helper is active and which platform it
     // sees. If is_mobile is false on a Chromebook, the Connections/TapHandler
     // below are disabled and the keyboard is never requested.
-    Component.onCompleted: logger.info("MobileKeyboardHelper: Qt.platform.os="
+    Component.onCompleted: logger.debug("MobileKeyboardHelper: Qt.platform.os="
         + Qt.platform.os + " is_mobile=" + helper.is_mobile
         + " field=" + helper.field)
 
@@ -62,14 +62,14 @@ Item {
         onTriggered: {
             attempts += 1;
             helper.input_method.show();
-            logger.info("MobileKeyboardHelper: retry attempt=" + attempts
+            logger.debug("MobileKeyboardHelper: retry attempt=" + attempts
                 + " inputMethod.visible=" + helper.input_method.visible);
             if (helper.input_method.visible || attempts >= 5) stop();
         }
     }
 
     function request_keyboard() {
-        logger.info("MobileKeyboardHelper: request_keyboard() called, "
+        logger.debug("MobileKeyboardHelper: request_keyboard() called, "
             + "inputMethod.visible=" + helper.input_method.visible);
         helper.input_method.show();
         retry_timer.attempts = 0;
@@ -82,7 +82,7 @@ Item {
         target: helper.field
         enabled: helper.is_mobile && helper.field !== null
         function onActiveFocusChanged() {
-            logger.info("MobileKeyboardHelper: field.onActiveFocusChanged activeFocus="
+            logger.debug("MobileKeyboardHelper: field.onActiveFocusChanged activeFocus="
                 + helper.field.activeFocus);
             if (helper.field.activeFocus) helper.request_keyboard();
         }
@@ -103,7 +103,7 @@ Item {
         enabled: helper.is_mobile && helper.field !== null
         gesturePolicy: TapHandler.DragThreshold
         onTapped: {
-            logger.info("MobileKeyboardHelper: TapHandler onTapped");
+            logger.debug("MobileKeyboardHelper: TapHandler onTapped");
             helper.request_keyboard();
         }
     }

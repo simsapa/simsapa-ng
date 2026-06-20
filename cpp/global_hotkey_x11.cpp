@@ -19,6 +19,7 @@
 #include <QTimer>
 
 extern "C" void log_info_c(const char* msg);
+extern "C" void log_debug_c(const char* msg);
 extern "C" void log_error_c(const char* msg);
 
 #include <X11/Xlib.h>
@@ -281,7 +282,7 @@ void GlobalHotkeyManager::handleRecordEvent(void* dataPtr) {
 }
 
 bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
-    log_info_c(QString("global_hotkey[x11]: checkState vk=0x%1 mod=0x%2 state2=%3 "
+    log_debug_c(QString("global_hotkey[x11]: checkState vk=0x%1 mod=0x%2 state2=%3 "
                        "isCopyCombo=%4")
                .arg(vk, 0, 16).arg(mod, 0, 16)
                .arg(m_state2 ? "true" : "false")
@@ -292,20 +293,20 @@ bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
         waitKey2(); // cancel pending wait
 
         if (m_state2waiter.key2 == vk && m_state2waiter.modifier == mod) {
-            log_info_c(QString("global_hotkey[x11]: second-chord MATCH, emit "
+            log_debug_c(QString("global_hotkey[x11]: second-chord MATCH, emit "
                                "hotkeyActivated(handle=%1)")
                        .arg(m_state2waiter.handle).toUtf8().constData());
             emit hotkeyActivated(m_state2waiter.handle);
             return true;
         }
-        log_info_c("global_hotkey[x11]: state2 was set but second chord didn't match, "
+        log_debug_c("global_hotkey[x11]: state2 was set but second chord didn't match, "
                    "falling through to first-chord matching");
     }
 
     for (const HotkeyEntry& hs : m_hotkeys) {
         if (hs.key == vk && hs.modifier == mod) {
             if (hs.key2 == 0) {
-                log_info_c(QString("global_hotkey[x11]: single-chord MATCH, emit "
+                log_debug_c(QString("global_hotkey[x11]: single-chord MATCH, emit "
                                    "hotkeyActivated(handle=%1) — note: copy key "
                                    "not grabbed so foreground app already has it")
                            .arg(hs.handle).toUtf8().constData());
@@ -313,7 +314,7 @@ bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
                 return true;
             }
 
-            log_info_c(QString("global_hotkey[x11]: first-chord MATCH (vk=0x%1 "
+            log_debug_c(QString("global_hotkey[x11]: first-chord MATCH (vk=0x%1 "
                                "mod=0x%2), arming state2 with key2=0x%3")
                        .arg(hs.key, 0, 16).arg(hs.modifier, 0, 16)
                        .arg(hs.key2, 0, 16).toUtf8().constData());
@@ -327,13 +328,13 @@ bool GlobalHotkeyManager::checkState(quint32 vk, quint32 mod) {
             if ((isCopyToClipboardKey(hs.key, hs.modifier) ||
                  !isCopyToClipboardKey(hs.key2, hs.modifier)) &&
                 !isKeyGrabbed(hs.key2, hs.modifier)) {
-                log_info_c(QString("global_hotkey[x11]: grabbing second-key chord "
+                log_debug_c(QString("global_hotkey[x11]: grabbing second-key chord "
                                    "key2=0x%1 mod=0x%2 for 500ms window")
                            .arg(hs.key2, 0, 16).arg(hs.modifier, 0, 16)
                            .toUtf8().constData());
                 m_keyToUngrab = grabKey(hs.key2, hs.modifier);
             } else {
-                log_info_c("global_hotkey[x11]: NOT grabbing second key (it is "
+                log_debug_c("global_hotkey[x11]: NOT grabbing second key (it is "
                            "itself a copy combo — relying on XRecord observation)");
             }
             return true;
@@ -459,7 +460,7 @@ void GlobalHotkeyManager::captureSelectionToClipboard() {
     QClipboard* cb = QGuiApplication::clipboard();
     if (cb) {
         QString primary = cb->text(QClipboard::Selection);
-        log_info_c(QString("global_hotkey[x11]: PRIMARY selection len=%1 "
+        log_debug_c(QString("global_hotkey[x11]: PRIMARY selection len=%1 "
                            "preview='%2'")
                    .arg(primary.length())
                    .arg(primary.left(40).replace('\n', "\\n"))
@@ -488,7 +489,7 @@ void GlobalHotkeyManager::captureSelectionToClipboard() {
     // physical Ctrl release. Mirrors the Win backend's GetAsyncKeyState dance.
     KeyCode ctrl = m_lCtrlCode ? m_lCtrlCode : XKeysymToKeycode(display, XK_Control_L);
     const bool ctrlAlreadyHeld = (m_currentModifiers & ControlMask) != 0;
-    log_info_c(QString("global_hotkey[x11]: PRIMARY empty — falling back to "
+    log_debug_c(QString("global_hotkey[x11]: PRIMARY empty — falling back to "
                        "XTest Ctrl+C (ctrl=0x%1 c=0x%2 ctrlAlreadyHeld=%3)")
                .arg(ctrl, 0, 16).arg(m_cCode, 0, 16)
                .arg(ctrlAlreadyHeld ? "true" : "false").toUtf8().constData());

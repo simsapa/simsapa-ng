@@ -28,6 +28,7 @@
 #include <windows.h>
 
 extern "C" void log_info_c(const char* msg);
+extern "C" void log_debug_c(const char* msg);
 extern "C" void log_error_c(const char* msg);
 
 namespace {
@@ -295,7 +296,7 @@ void GlobalHotkeyManager::unregisterAll() {
 }
 
 bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
-    log_info_c(QString("global_hotkey[win]: checkStateWin vk=0x%1 mod=0x%2 state2=%3")
+    log_debug_c(QString("global_hotkey[win]: checkStateWin vk=0x%1 mod=0x%2 state2=%3")
                .arg(vk, 0, 16).arg(mod, 0, 16)
                .arg(m_state2 ? "true" : "false").toUtf8().constData());
 
@@ -303,7 +304,7 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
     if (m_state2) {
         waitKey2(); // cancel pending wait
         if (m_state2waiter.key2 == vk && m_state2waiter.modifier == mod) {
-            log_info_c(QString("global_hotkey[win]: second-chord MATCH, emit "
+            log_debug_c(QString("global_hotkey[win]: second-chord MATCH, emit "
                                "hotkeyActivated(handle=%1)")
                        .arg(m_state2waiter.handle).toUtf8().constData());
             // See AllowSetForegroundWindow note below.
@@ -311,7 +312,7 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
             emit hotkeyActivated(m_state2waiter.handle);
             return true;
         }
-        log_info_c("global_hotkey[win]: state2 was set but second chord didn't match, "
+        log_debug_c("global_hotkey[win]: state2 was set but second chord didn't match, "
                    "falling through to first-chord matching");
         // Fall through: the press might still match an unrelated hotkey.
     }
@@ -332,7 +333,7 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
         const bool isCopyCombo = (mod == MOD_CONTROL) &&
                                  (vk == 'C' || vk == 'c' || vk == VK_INSERT);
         if (hs.key2 != 0 || isCopyCombo) {
-            log_info_c(QString("global_hotkey[win]: re-emitting keystroke vk=0x%1 "
+            log_debug_c(QString("global_hotkey[win]: re-emitting keystroke vk=0x%1 "
                                "mod=0x%2 (key2!=0=%3 isCopyCombo=%4) — temporary "
                                "unregister around SendInput")
                        .arg(vk, 0, 16).arg(mod, 0, 16)
@@ -342,11 +343,11 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
             reEmitKeystroke(vk, mod);
             RegisterHotKey(nullptr, hs.id, hs.modifier, hs.key);
         } else {
-            log_info_c("global_hotkey[win]: NOT re-emitting (single chord, not a copy combo)");
+            log_debug_c("global_hotkey[win]: NOT re-emitting (single chord, not a copy combo)");
         }
 
         if (hs.key2 == 0) {
-            log_info_c(QString("global_hotkey[win]: single-chord MATCH, emit "
+            log_debug_c(QString("global_hotkey[win]: single-chord MATCH, emit "
                                "hotkeyActivated(handle=%1)")
                        .arg(hs.handle).toUtf8().constData());
             // WM_HOTKEY grants our process the right to call
@@ -359,7 +360,7 @@ bool GlobalHotkeyManager::checkStateWin(quint32 vk, quint32 mod) {
             return true;
         }
 
-        log_info_c(QString("global_hotkey[win]: first-chord MATCH, arming state2 "
+        log_debug_c(QString("global_hotkey[win]: first-chord MATCH, arming state2 "
                            "(key2=0x%1 mod=0x%2)")
                    .arg(hs.key2, 0, 16).arg(hs.modifier, 0, 16).toUtf8().constData());
         // Begin double-tap wait window.
@@ -379,7 +380,7 @@ void GlobalHotkeyManager::captureSelectionToClipboard() {
     // issue if the user's binding itself is Ctrl+C, in which case
     // checkStateWin already re-emits via reEmitKeystroke and we'd be
     // doubling up — but doubling a copy is harmless.
-    log_info_c("global_hotkey[win]: synthesizing Ctrl+C via SendInput");
+    log_debug_c("global_hotkey[win]: synthesizing Ctrl+C via SendInput");
     INPUT events[4] = {};
     events[0].type      = INPUT_KEYBOARD;
     events[0].ki.wVk    = VK_CONTROL;

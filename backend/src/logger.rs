@@ -693,6 +693,17 @@ pub unsafe extern "C" fn log_info_c(msg: *const c_char) {
 }
 
 #[unsafe(no_mangle)]
+pub unsafe extern "C" fn log_debug_c(msg: *const c_char) {
+    if msg.is_null() {
+        return;
+    }
+    let c_str = unsafe { CStr::from_ptr(msg) };
+    if let Ok(rust_str) = c_str.to_str() {
+        debug(rust_str);
+    }
+}
+
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn log_info_with_options_c(msg: *const c_char, start_new: bool) {
     if msg.is_null() {
         return;

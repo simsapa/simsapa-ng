@@ -96,7 +96,7 @@ Frame {
     Component.onCompleted: {
         // Keyboard diagnostics: log the detected platform once at startup so we
         // can confirm whether a Chromebook (Android app) is treated as mobile.
-        logger.info("SearchBarInput: Qt.platform.os=" + Qt.platform.os
+        logger.debug("SearchBarInput: Qt.platform.os=" + Qt.platform.os
             + " is_mobile=" + root.is_mobile + " is_desktop=" + root.is_desktop
             + " search_input.focus=" + search_input.focus
             + " inputMethod.visible=" + Qt.inputMethod.visible);
@@ -171,7 +171,7 @@ Frame {
                 // Keyboard diagnostics: report focus transitions so we can see
                 // whether tapping the field actually moves active focus to it
                 // (the precondition for the IME to be raised).
-                onActiveFocusChanged: logger.info("search_input: activeFocus="
+                onActiveFocusChanged: logger.debug("search_input: activeFocus="
                     + search_input.activeFocus + " inputMethod.visible="
                     + Qt.inputMethod.visible)
 
